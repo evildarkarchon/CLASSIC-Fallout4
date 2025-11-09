@@ -6,6 +6,8 @@
 use lasso::{Spur, ThreadedRodeo};
 use rayon::prelude::*;
 use smartstring::alias::String as SmartString;
+use std::fmt;
+use std::str::FromStr;
 use std::sync::Arc;
 
 /// String processor with interning and parallel operations
@@ -164,15 +166,36 @@ pub enum StringOperation {
     Normalize,
 }
 
-impl StringOperation {
-    /// Parse operation name from string
-    pub fn from_str(s: &str) -> Option<Self> {
+/// Error type for parsing `StringOperation`
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ParseStringOperationError {
+    invalid_value: String,
+}
+
+impl fmt::Display for ParseStringOperationError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Invalid string operation: '{}'. Valid values are: upper, lower, trim, normalize",
+            self.invalid_value
+        )
+    }
+}
+
+impl std::error::Error for ParseStringOperationError {}
+
+impl FromStr for StringOperation {
+    type Err = ParseStringOperationError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "upper" => Some(Self::Upper),
-            "lower" => Some(Self::Lower),
-            "trim" => Some(Self::Trim),
-            "normalize" => Some(Self::Normalize),
-            _ => None,
+            "upper" => Ok(Self::Upper),
+            "lower" => Ok(Self::Lower),
+            "trim" => Ok(Self::Trim),
+            "normalize" => Ok(Self::Normalize),
+            _ => Err(ParseStringOperationError {
+                invalid_value: s.to_string(),
+            }),
         }
     }
 }

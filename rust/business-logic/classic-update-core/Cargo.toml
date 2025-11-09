@@ -39,9 +39,6 @@ semver = "1.0"
 # URL parsing
 url = "2.5"
 
-[profile.release]
-# Inherits from workspace
-
 [dev-dependencies]
 tempfile = { workspace = true }
 mockito = "1.5"  # HTTP mocking for tests

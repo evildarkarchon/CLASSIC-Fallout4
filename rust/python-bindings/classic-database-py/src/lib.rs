@@ -82,9 +82,24 @@ use pyo3::prelude::*;
 use pyo3::{create_exception, exceptions::PyException};
 
 // Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(classic_database, RustDatabaseError, PyException, "Base for Database Rust errors");
-create_exception!(classic_database, RustDatabaseIOError, RustDatabaseError, "Database I/O errors");
-create_exception!(classic_database, RustDatabaseQueryError, RustDatabaseError, "Database query errors");
+create_exception!(
+    classic_database,
+    RustDatabaseError,
+    PyException,
+    "Base for Database Rust errors"
+);
+create_exception!(
+    classic_database,
+    RustDatabaseIOError,
+    RustDatabaseError,
+    "Database I/O errors"
+);
+create_exception!(
+    classic_database,
+    RustDatabaseQueryError,
+    RustDatabaseError,
+    "Database query errors"
+);
 
 mod pool;
 
@@ -105,9 +120,7 @@ pub fn to_pyerr(err: classic_database_core::DatabaseError) -> PyErr {
         DatabaseError::NotFound(msg) => {
             RustDatabaseIOError::new_err(format!("Database file not found: {}", msg))
         }
-        DatabaseError::IoError(e) => {
-            RustDatabaseIOError::new_err(format!("I/O error: {}", e))
-        }
+        DatabaseError::IoError(e) => RustDatabaseIOError::new_err(format!("I/O error: {}", e)),
 
         // Query errors map to RustDatabaseQueryError
         DatabaseError::QueryError(msg) => {
@@ -127,8 +140,14 @@ fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register custom exception types
     m.add("RustDatabaseError", m.py().get_type::<RustDatabaseError>())?;
-    m.add("RustDatabaseIOError", m.py().get_type::<RustDatabaseIOError>())?;
-    m.add("RustDatabaseQueryError", m.py().get_type::<RustDatabaseQueryError>())?;
+    m.add(
+        "RustDatabaseIOError",
+        m.py().get_type::<RustDatabaseIOError>(),
+    )?;
+    m.add(
+        "RustDatabaseQueryError",
+        m.py().get_type::<RustDatabaseQueryError>(),
+    )?;
 
     Ok(())
 }

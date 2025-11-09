@@ -76,9 +76,7 @@ impl SettingsValidator {
             && (xse_modules.contains("achievements.dll")
                 || xse_modules.contains("unlimitedsurvivalmode.dll"))
         {
-            lines.push(format!(
-                "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n"
-            ));
+            lines.push("# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n".to_string());
             lines.push(format!(
                 " FIX: Open {}'s TOML file and change Achievements to FALSE, this prevents conflicts with {}.\n\n-----\n",
                 self.crashgen_name, self.crashgen_name

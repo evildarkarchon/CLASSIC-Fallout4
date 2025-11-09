@@ -143,7 +143,7 @@ pub fn version_is_newer(latest: &str, current: &str) -> Result<bool> {
 }
 
 /// User preference for update checking
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UpdatePreferences {
     /// Don't check for updates again
     pub dont_check_again: bool,
@@ -151,14 +151,6 @@ pub struct UpdatePreferences {
     pub skipped_version: Option<String>,
 }
 
-impl Default for UpdatePreferences {
-    fn default() -> Self {
-        Self {
-            dont_check_again: false,
-            skipped_version: None,
-        }
-    }
-}
 
 impl UpdatePreferences {
     /// Load update preferences from config file
@@ -232,11 +224,10 @@ impl UpdatePreferences {
             return true;
         }
 
-        if let Some(ref skipped) = self.skipped_version {
-            if skipped == available_version {
+        if let Some(ref skipped) = self.skipped_version
+            && skipped == available_version {
                 return true;
             }
-        }
 
         false
     }

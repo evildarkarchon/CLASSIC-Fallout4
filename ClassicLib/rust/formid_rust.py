@@ -51,6 +51,36 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.integration.exceptions import RustDatabaseError, RustError, RustParseError
+from ClassicLib.integration.detector import detect_component
+
+# Detect Rust-specific exception types
+_, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
+_, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
+_, _rust_db_error = detect_component("classic_database", "RustDatabaseError")
+
+
+def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tuple[type, ...]]:
+    """Get tuple of Rust exception types to catch.
+
+    Returns tuple of (ParseError types, DatabaseError types, generic RustError types).
+    """
+    parse_errors = (RustParseError,)
+    db_errors = (RustDatabaseError,)
+    rust_errors = (RustError,)
+
+    # Add module-specific exceptions if available
+    if _rust_parse_error:
+        parse_errors = (RustParseError, _rust_parse_error)
+    if _rust_db_error:
+        db_errors = (RustDatabaseError, _rust_db_error)
+    if _rust_scanlog_error:
+        rust_errors = (RustError, _rust_scanlog_error)
+
+    return parse_errors, db_errors, rust_errors
+
+
+# Get exception type tuples at module level for use in exception handlers
+parse_errors, db_errors, rust_errors = _get_rust_exception_types()
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -118,7 +148,7 @@ class FormIDAnalyzer:
                 logger.debug("🚀 FormIDAnalyzer: Using RUST FormIDAnalyzer (50x faster)")
             else:
                 logger.debug("⚠️  FormIDAnalyzer: FormIDAnalyzer not found in classic_scanlog")
-        except RustError as e:
+        except rust_errors as e:
             logger.error(f"❌ Rust error initializing FormIDAnalyzer: {e}")
         except Exception as e:
             logger.error(f"❌ Failed to initialize Rust FormIDAnalyzer: {e}")
@@ -150,9 +180,9 @@ class FormIDAnalyzer:
                     return self._rust_core_analyzer.extract_formids_nocopy(segment_callstack)
                 # Fallback to standard method
                 return self._rust_core_analyzer.extract_formids(segment_callstack)
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.warning(f"Rust parse error in FormIDAnalyzerCore extraction: {e}")
-            except RustError as e:
+            except rust_errors as e:
                 logger.warning(f"Rust FormIDAnalyzerCore extraction failed: {e}")
             except Exception as e:
                 logger.warning(f"FormIDAnalyzerCore extraction error: {e}")
@@ -167,9 +197,9 @@ class FormIDAnalyzer:
                     return formids[0] if formids else []
                 # Try direct method if available
                 return self._rust_analyzer.extract_formids(segment_callstack)
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.warning(f"Rust parse error in FormID extraction: {e}")
-            except RustError as e:
+            except rust_errors as e:
                 logger.warning(f"Rust FormID extraction failed: {e}")
             except Exception as e:
                 logger.warning(f"FormID extraction error: {e}")
@@ -223,9 +253,9 @@ class FormIDAnalyzer:
                 else:
                     # Use regular formid_match
                     self._rust_core_analyzer.formid_match(formids, plugins, report)
-            except RustDatabaseError as e:
+            except db_errors as e:
                 logger.warning(f"Rust database error in formid_match: {e}, using Python fallback")
-            except RustError as e:
+            except rust_errors as e:
                 logger.warning(f"Rust formid_match failed: {e}, using Python fallback")
             except Exception as e:
                 logger.warning(f"formid_match error: {e}, using Python fallback")
@@ -264,9 +294,9 @@ class FormIDAnalyzer:
                 if hasattr(classic_scanlog, "extract_formids_batch"):
                     extract_formids_batch = classic_scanlog.extract_formids_batch
                     return extract_formids_batch(segments)
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.debug(f"Rust parse error in batch extraction: {e}")
-            except RustError as e:
+            except rust_errors as e:
                 logger.debug(f"Rust batch extraction failed: {e}")
             except Exception as e:
                 logger.debug(f"Batch extraction error: {e}")

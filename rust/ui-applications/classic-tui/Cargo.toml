@@ -76,17 +76,6 @@ pretty_assertions = "1.4"
 name = "tui_benchmarks"
 harness = false
 
-[profile.release]
-opt-level = 3
-lto = "fat"
-codegen-units = 1
-strip = true
-panic = "abort"
-
-[profile.release-with-debug]
-inherits = "release"
-debug = true
-
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"

@@ -27,6 +27,7 @@ use classic_constants_core::GameId;
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use thiserror::Error;
 
 // Re-export version utilities
@@ -118,37 +119,6 @@ impl XseType {
         }
     }
 
-    /// Parse an XSE type from a string.
-    ///
-    /// # Arguments
-    ///
-    /// * `s` - The string to parse (case-insensitive)
-    ///
-    /// # Returns
-    ///
-    /// The corresponding `XseType`, or an error if unknown.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use classic_xse_core::XseType;
-    ///
-    /// assert_eq!(XseType::from_str("f4se").unwrap(), XseType::F4SE);
-    /// assert_eq!(XseType::from_str("SKSE64").unwrap(), XseType::SKSE64);
-    /// assert!(XseType::from_str("unknown").is_err());
-    /// ```
-    pub fn from_str(s: &str) -> XseResult<Self> {
-        match s.to_uppercase().as_str() {
-            "F4SE" => Ok(Self::F4SE),
-            "F4SEVR" => Ok(Self::F4SEVR),
-            "SKSE" => Ok(Self::SKSE),
-            "SKSE64" => Ok(Self::SKSE64),
-            "SKSEVR" => Ok(Self::SKSEVR),
-            "SFSE" => Ok(Self::SFSE),
-            _ => Err(XseError::InvalidType(s.to_string())),
-        }
-    }
-
     /// Get the XSE type for a game ID.
     ///
     /// # Arguments
@@ -228,6 +198,22 @@ impl XseType {
             Self::SKSE64 => "skse64_",
             Self::SKSEVR => "sksevr_",
             Self::SFSE => "sfse_",
+        }
+    }
+}
+
+impl FromStr for XseType {
+    type Err = XseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_uppercase().as_str() {
+            "F4SE" => Ok(Self::F4SE),
+            "F4SEVR" => Ok(Self::F4SEVR),
+            "SKSE" => Ok(Self::SKSE),
+            "SKSE64" => Ok(Self::SKSE64),
+            "SKSEVR" => Ok(Self::SKSEVR),
+            "SFSE" => Ok(Self::SFSE),
+            _ => Err(XseError::InvalidType(s.to_string())),
         }
     }
 }
@@ -516,10 +502,10 @@ mod tests {
 
     #[test]
     fn test_xse_type_from_str() {
-        assert_eq!(XseType::from_str("f4se").unwrap(), XseType::F4SE);
-        assert_eq!(XseType::from_str("F4SE").unwrap(), XseType::F4SE);
-        assert_eq!(XseType::from_str("skse64").unwrap(), XseType::SKSE64);
-        assert!(XseType::from_str("unknown").is_err());
+        assert_eq!("f4se".parse::<XseType>().unwrap(), XseType::F4SE);
+        assert_eq!("F4SE".parse::<XseType>().unwrap(), XseType::F4SE);
+        assert_eq!("skse64".parse::<XseType>().unwrap(), XseType::SKSE64);
+        assert!("unknown".parse::<XseType>().is_err());
     }
 
     #[test]

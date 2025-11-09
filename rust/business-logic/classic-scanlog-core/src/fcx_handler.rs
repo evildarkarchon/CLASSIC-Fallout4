@@ -236,11 +236,11 @@ impl FcxModeHandler {
 
         self.main_files_check
             .as_ref()
-            .map_or(false, |s| !s.is_empty())
+            .is_some_and(|s| !s.is_empty())
             || self
                 .game_files_check
                 .as_ref()
-                .map_or(false, |s| !s.is_empty())
+                .is_some_and(|s| !s.is_empty())
     }
 
     /// Reset all FCX check results (for new scan session)

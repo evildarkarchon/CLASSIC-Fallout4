@@ -73,6 +73,35 @@ RUST_AVAILABLE, DatabasePool = detect_component("classic_database", "DatabasePoo
 if not RUST_AVAILABLE:
     DatabasePool = None  # type: ignore[assignment]
 
+# Detect Rust-specific exception types for classic_database
+_, _rust_db_error = detect_component("classic_database", "RustDatabaseError")
+_, _rust_db_io_error = detect_component("classic_database", "RustDatabaseIOError")
+_, _rust_db_query_error = detect_component("classic_database", "RustDatabaseQueryError")
+
+
+def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tuple[type, ...]]:
+    """Get tuple of Rust exception types to catch.
+
+    Returns tuple of (DatabaseError types, IOError types, QueryError types).
+    """
+    db_errors = (RustDatabaseError,)
+    io_errors = (RustError,)  # RustDatabaseIOError inherits from RustDatabaseError
+    query_errors = (RustError,)  # RustDatabaseQueryError inherits from RustDatabaseError
+
+    # Add module-specific exceptions if available
+    if _rust_db_error:
+        db_errors = (RustDatabaseError, _rust_db_error)
+    if _rust_db_io_error:
+        io_errors = (RustError, _rust_db_io_error)
+    if _rust_db_query_error:
+        query_errors = (RustError, _rust_db_query_error)
+
+    return db_errors, io_errors, query_errors
+
+
+# Get exception type tuples at module level for use in exception handlers
+db_errors, io_errors, query_errors = _get_rust_exception_types()
+
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS
 from ClassicLib.Logger import logger

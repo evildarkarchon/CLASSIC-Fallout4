@@ -164,3 +164,7 @@ opt-level = 3
 lto = "thin"
 codegen-units = 1
 strip = true
+
+[profile.release-with-debug]
+inherits = "release"
+debug = true

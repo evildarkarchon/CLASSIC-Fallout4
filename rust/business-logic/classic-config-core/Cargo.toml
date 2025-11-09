@@ -35,9 +35,6 @@ anyhow = { workspace = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 
-[profile.release]
-# Inherits from workspace
-
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "warn"

@@ -56,6 +56,31 @@ from ClassicLib.integration.detector import detect_component
 
 logger = logging.getLogger(__name__)
 
+# Detect Rust-specific exception types for classic_scanlog
+_, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
+_, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
+
+
+def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+    """Get tuple of Rust exception types to catch.
+
+    Returns tuple of (ParseError types, generic RustError types).
+    """
+    parse_errors = (RustParseError,)
+    rust_errors = (RustError,)
+
+    # Add module-specific exceptions if available
+    if _rust_parse_error:
+        parse_errors = (RustParseError, _rust_parse_error)
+    if _rust_scanlog_error:
+        rust_errors = (RustError, _rust_scanlog_error)
+
+    return parse_errors, rust_errors
+
+
+# Get exception type tuples at module level for use in exception handlers
+parse_errors, rust_errors = _get_rust_exception_types()
+
 
 class RustLogParser:
     """
@@ -94,7 +119,7 @@ class RustLogParser:
                 self._rust_parser = LogParser()
                 self._use_rust = True
                 logger.debug("🚀 RustLogParser: Using RUST implementation (150x faster)")
-            except RustError as e:
+            except rust_errors as e:
                 logger.error(f"❌ Rust error initializing parser: {e}")
             except (TypeError, ValueError) as e:
                 logger.error(f"❌ Failed to initialize Rust parser: {e}")
@@ -184,10 +209,10 @@ class RustLogParser:
                 if missing_segments > 0:
                     processed_segments.extend([[]] * missing_segments)
 
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.warning(f"Rust parse error, falling back to Python: {e}")
                 # Fall through to Python implementation
-            except RustError as e:
+            except rust_errors as e:
                 logger.warning(f"Rust parser failed, falling back to Python: {e}")
                 # Fall through to Python implementation
             except (AttributeError, TypeError, ValueError) as e:
@@ -221,9 +246,9 @@ class RustLogParser:
         if self._use_rust and self._rust_parser:
             try:
                 return self._rust_parser.extract_section(crash_data, start_marker, end_marker)
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.debug(f"Rust parse error in extract_section: {e}")
-            except RustError as e:
+            except rust_errors as e:
                 logger.debug(f"Rust extract_section failed: {e}")
             except (AttributeError, TypeError, ValueError) as e:
                 logger.debug(f"Rust extract_section error: {e}")

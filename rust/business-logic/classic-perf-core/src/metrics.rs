@@ -82,7 +82,7 @@ impl MetricsSummary {
 pub fn record_timing(name: &str, duration_secs: f64) {
     METRICS
         .entry(name.to_string())
-        .or_insert_with(Vec::new)
+        .or_default()
         .push(duration_secs);
 }
 

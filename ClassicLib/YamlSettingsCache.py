@@ -39,6 +39,7 @@ from typing import Any, ClassVar, TypeVar
 
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.AsyncYamlSettings.core import (
+    AsyncYamlSettingsCore,
     classic_settings_async,
     get_async_yaml_core,
     yaml_settings_async,
@@ -74,16 +75,13 @@ class YamlSettingsCache:
     _lock: ClassVar[threading.Lock] = threading.Lock()
 
     def __init__(self) -> None:
-        """Initialize the sync wrapper with async core and lazy AsyncBridge.
+        """Initialize the sync wrapper with lazy AsyncBridge and async core.
 
-        AsyncBridge is initialized lazily only when needed (typically in GUI contexts).
-        CLI contexts should use async methods directly without needing the bridge.
+        Both AsyncBridge and async core are initialized lazily only when needed.
+        This prevents event loop conflicts in testing contexts.
         """
         self._bridge: AsyncBridge | None = None
-        # Get the async core instance directly (no bridge needed for initialization)
-        # Use asyncio.run for initialization - this is a one-time operation at startup
-        self._async_core = asyncio.run(get_async_yaml_core())
-
+        self._async_core: AsyncYamlSettingsCore | None = None
         self._init_lock = threading.Lock()
 
     def _get_bridge(self) -> AsyncBridge:
@@ -101,6 +99,42 @@ class YamlSettingsCache:
                 if self._bridge is None:
                     self._bridge = AsyncBridge.get_instance()
         return self._bridge
+
+    def _get_async_core(self) -> AsyncYamlSettingsCore:
+        """Get or create AsyncYamlSettingsCore instance lazily (sync contexts only).
+
+        This method initializes the async core on first access, using AsyncBridge
+        to handle event loop management. Use this ONLY from sync methods (GUI contexts).
+        For async contexts, use _ensure_async_core_async() instead.
+
+        Returns:
+            AsyncYamlSettingsCore: The async core instance for this cache.
+        """
+        if self._async_core is None:
+            with self._init_lock:
+                # Double-check pattern
+                if self._async_core is None:
+                    # Use AsyncBridge to run async initialization
+                    # This works in sync contexts (GUI)
+                    self._async_core = self._get_bridge().run_async(get_async_yaml_core())
+        return self._async_core
+
+    async def _ensure_async_core_async(self) -> AsyncYamlSettingsCore:
+        """Get or create AsyncYamlSettingsCore instance lazily (async contexts).
+
+        This method initializes the async core on first access without using AsyncBridge,
+        making it suitable for async contexts (CLI, tests) where an event loop is already running.
+
+        Returns:
+            AsyncYamlSettingsCore: The async core instance for this cache.
+        """
+        if self._async_core is None:
+            # No lock needed in async context - await is atomic enough
+            # and we're running in single-threaded async context
+            if self._async_core is None:
+                # Directly await initialization without AsyncBridge
+                self._async_core = await get_async_yaml_core()
+        return self._async_core
 
     @classmethod
     def get_instance(cls) -> "YamlSettingsCache":
@@ -149,7 +183,7 @@ class YamlSettingsCache:
             Path: The file system path corresponding to the given YAML store.
         """
         # Get path through file_ops
-        return self._async_core.file_ops.get_path_for_store(yaml_store)
+        return self._get_async_core().file_ops.get_path_for_store(yaml_store)
 
     async def load_yaml_async(self, yaml_path: Path) -> YAMLMapping:
         """
@@ -167,7 +201,8 @@ class YamlSettingsCache:
         Raises:
             Exception: If an error occurs during file operations or parsing.
         """
-        return await self._async_core.file_ops.load_yaml_file(yaml_path)
+        core = await self._ensure_async_core_async()
+        return await core.file_ops.load_yaml_file(yaml_path)
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
         """
@@ -187,7 +222,7 @@ class YamlSettingsCache:
             YAMLMapping: The parsed YAML content as a mapping.
         """
         # Load through file_ops using AsyncBridge (lazy initialization)
-        return self._get_bridge().run_async(self._async_core.file_ops.load_yaml_file(yaml_path))
+        return self._get_bridge().run_async(self._get_async_core().file_ops.load_yaml_file(yaml_path))
 
     def async_yaml_settings(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """
@@ -214,7 +249,7 @@ class YamlSettingsCache:
             after modification. Returns `None` if no value is found or no update
             is performed.
         """
-        return self._get_bridge().run_async(self._async_core.async_yaml_settings(_type, yaml_store, key_path, new_value))
+        return self._get_bridge().run_async(self._get_async_core().async_yaml_settings(_type, yaml_store, key_path, new_value))
 
     async def load_multiple_stores_async(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """
@@ -232,10 +267,11 @@ class YamlSettingsCache:
             dict[YAML, YAMLMapping]: A dictionary mapping each input YAML store to its
             corresponding loaded YAML content.
         """
+        core = await self._ensure_async_core_async()
         results = {}
         for store in stores:
-            path = self._async_core.file_ops.get_path_for_store(store)
-            results[store] = await self._async_core.file_ops.load_yaml_file(path)
+            path = core.file_ops.get_path_for_store(store)
+            results[store] = await core.file_ops.load_yaml_file(path)
         return results
 
     def load_multiple_stores(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
@@ -274,7 +310,8 @@ class YamlSettingsCache:
         Returns:
             list[Any]: A list containing the results for each of the provided requests.
         """
-        return await self._async_core.batch_get_settings(requests)
+        core = await self._ensure_async_core_async()
+        return await core.batch_get_settings(requests)
 
     def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
         """
@@ -294,7 +331,7 @@ class YamlSettingsCache:
         Returns:
             list[Any]: A list containing the results of the processed settings requests.
         """
-        return self._get_bridge().run_async(self._async_core.batch_get_settings(requests))
+        return self._get_bridge().run_async(self._get_async_core().batch_get_settings(requests))
 
     def prefetch_all_settings(self) -> None:
         """
@@ -319,9 +356,9 @@ class YamlSettingsCache:
 
         for store in stores_to_prefetch:
             try:
-                file_path = self._async_core.file_ops.get_path_for_store(store)
+                file_path = self._get_async_core().file_ops.get_path_for_store(store)
                 # Trigger file load which will cache it (uses lazy bridge initialization)
-                self._get_bridge().run_async(self._async_core.file_ops.load_yaml_file(file_path, use_cache=True))
+                self._get_bridge().run_async(self._get_async_core().file_ops.load_yaml_file(file_path, use_cache=True))
             except Exception as e:  # noqa: BLE001
                 # Broad catch is intentional: prefetch is best-effort and should never crash.
                 # Possible exceptions: FileNotFoundError, PermissionError, YAML parse errors, etc.
@@ -357,7 +394,7 @@ class YamlSettingsCache:
         Returns:
             Any: The cache instance retrieved from the asynchronous core.
         """
-        return self._async_core.cache
+        return self._get_async_core().cache
 
     @property
     def path_cache(self) -> dict:
@@ -371,7 +408,7 @@ class YamlSettingsCache:
         Returns:
             dict: A dictionary containing the cached path data.
         """
-        return self._async_core.cache.path_cache
+        return self._get_async_core().cache.path_cache
 
     @property
     def settings_cache(self) -> dict:
@@ -385,7 +422,7 @@ class YamlSettingsCache:
         Returns:
             dict: A dictionary containing the cached settings.
         """
-        return self._async_core.cache.settings_cache
+        return self._get_async_core().cache.settings_cache
 
     @property
     def file_mod_times(self) -> dict:
@@ -402,7 +439,7 @@ class YamlSettingsCache:
             their respective last modification times (str or datetime, based on
             implementation).
         """
-        return self._async_core.cache.file_mod_times
+        return self._get_async_core().cache.file_mod_times
 
 
 # Lazy initialization - don't create at module load time

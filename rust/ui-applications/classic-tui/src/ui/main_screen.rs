@@ -22,8 +22,8 @@ pub fn render_main_screen(f: &mut Frame, app: &mut App) {
     }
 
     // Render update notification banner if visible (at top)
-    if let Some(ref notification) = app.update_notification {
-        if notification.is_visible() {
+    if let Some(ref notification) = app.update_notification
+        && notification.is_visible() {
             notification.render(f, working_area);
             // Adjust working area to account for banner height
             working_area = Rect {
@@ -33,7 +33,6 @@ pub fn render_main_screen(f: &mut Frame, app: &mut App) {
                 height: working_area.height.saturating_sub(notification.height()),
             };
         }
-    }
 
     let (header_area, folder_area, button_area, output_area, status_area) =
         TuiLayout::main_screen(working_area);
@@ -45,18 +44,16 @@ pub fn render_main_screen(f: &mut Frame, app: &mut App) {
     render_status_bar(f, status_area, app);
 
     // Render folder picker overlay if active
-    if let Some(ref mut picker) = app.staging_picker {
-        if picker.is_active() {
+    if let Some(ref mut picker) = app.staging_picker
+        && picker.is_active() {
             render_folder_picker_overlay(f, picker, "Select Staging Mods Folder");
         }
-    }
-    if let Some(ref mut picker) = app.custom_picker {
-        if picker.is_active() {
+    if let Some(ref mut picker) = app.custom_picker
+        && picker.is_active() {
             render_folder_picker_overlay(f, picker, "Select Custom Scan Folder");
         }
-    }
-    if let Some(ref mut picker) = app.settings_path_picker {
-        if picker.is_active() {
+    if let Some(ref mut picker) = app.settings_path_picker
+        && picker.is_active() {
             // Determine title based on which path is being edited
             let title = if let Some(path_item) = app.editing_path {
                 format!("Select {} Path", path_item.label())
@@ -65,14 +62,12 @@ pub fn render_main_screen(f: &mut Frame, app: &mut App) {
             };
             render_folder_picker_overlay(f, picker, &title);
         }
-    }
 
     // Render error dialog overlay if active (should be last so it appears on top)
-    if let Some(ref dialog) = app.error_dialog {
-        if dialog.is_active() {
+    if let Some(ref dialog) = app.error_dialog
+        && dialog.is_active() {
             dialog.render(f, f.area());
         }
-    }
 }
 
 /// Render the header with title

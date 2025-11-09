@@ -238,11 +238,9 @@ class ClassicOrchestrator:
         log_paths_str = [str(p) for p in log_paths]
 
         # Process logs in parallel using Orchestrator
-        results = self.orchestrator.process_logs_parallel(
-            log_paths=log_paths_str,
-            max_concurrent=max_concurrent,
-            progress_callback=progress_callback,
-        )
+        # Note: Rust Orchestrator handles parallelism internally based on CPU count
+        # max_concurrent and progress_callback are not yet supported in Rust implementation
+        results = self.orchestrator.process_logs_batch(log_paths_str)
 
         total_time_ms = int((time.perf_counter() - start) * 1000)
 

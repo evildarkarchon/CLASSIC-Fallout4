@@ -127,7 +127,7 @@ mod tests {
             .map(|i| {
                 thread::spawn(move || {
                     for _ in 0..10 {
-                        let timer = start_timer(&format!("thread_{}", i));
+                        let timer = start_timer(format!("thread_{}", i));
                         thread::sleep(Duration::from_micros(100));
                         timer.finish();
                     }

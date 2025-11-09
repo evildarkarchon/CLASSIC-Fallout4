@@ -126,8 +126,7 @@ impl ScanExecutor {
         // Try to find XSE folder from ini folder path
         if let Some(ref ini_folder) = self.config.paths.ini_folder {
             let xse_folder = ini_folder
-                .parent()
-                .and_then(|p| Some(p.join("Fallout 4").join("F4SE")))
+                .parent().map(|p| p.join("Fallout 4").join("F4SE"))
                 .filter(|p| p.exists());
 
             if xse_folder.is_some() {
@@ -143,22 +142,42 @@ impl ScanExecutor {
 
     /// Build AnalysisConfig from YamlDataCore
     fn build_analysis_config(&self) -> AnalysisConfig {
+        // Convert suspects_stack from HashMap<String, String> to HashMap<String, Vec<String>>
+        // Each string value is split by newlines and converted to a vector
+        let suspects_stack: std::collections::HashMap<String, Vec<String>> = self
+            .yaml_data
+            .suspects_stack_list
+            .iter()
+            .map(|(k, v)| {
+                let patterns: Vec<String> = v
+                    .lines()
+                    .map(|line| line.trim().to_string())
+                    .filter(|line| !line.is_empty())
+                    .collect();
+                (k.clone(), patterns)
+            })
+            .collect();
+
         AnalysisConfig {
             game: "Fallout4".to_string(),
-            vr_mode: false, // TODO: Detect VR mode from config
+            vr_mode: self.config.vr_mode,
             crashgen_name: self.yaml_data.crashgen_name.clone(),
             crashgen_latest: self.yaml_data.crashgen_latest_og.clone(),
             game_version: self.yaml_data.game_version.clone(),
+            game_version_vr: self.yaml_data.game_version_vr.clone(),
+            game_version_new: self.yaml_data.game_version_new.clone(),
             xse_acronym: self.yaml_data.xse_acronym.clone(),
             ignore_plugins: self.yaml_data.game_ignore_plugins.clone(),
             ignore_records: self.yaml_data.game_ignore_records.clone(),
             ignore_list: self.yaml_data.ignore_list.clone(),
+            show_formid_values: self.config.show_formid_values,
             suspects_error: self.yaml_data.suspects_error_list.clone(),
-            suspects_stack: self.yaml_data.suspects_stack_list.clone(),
+            suspects_stack,
             mods_core: self.yaml_data.game_mods_core.clone(),
             mods_freq: self.yaml_data.game_mods_freq.clone(),
             mods_conf: self.yaml_data.game_mods_conf.clone(),
             mods_solu: self.yaml_data.game_mods_solu.clone(),
+            mods_opc2: self.yaml_data.game_mods_opc2.clone(),
         }
     }
 

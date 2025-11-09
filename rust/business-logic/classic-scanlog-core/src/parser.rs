@@ -19,6 +19,16 @@ use std::collections::HashMap;
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 
+// Type aliases for complex cache types (Clippy type_complexity fix)
+/// Cache for parsed segments indexed by hash, containing vectors of segment lines
+type SegmentCache = Arc<RwLock<LruCache<u64, Vec<Vec<Arc<str>>>>>>;
+
+/// Cache for pattern matches indexed by cache key, containing tuples of (line_num, pattern_name, matched_text)
+type PatternCache = Arc<RwLock<LruCache<String, Vec<(usize, String, String)>>>>;
+
+/// Snapshot of custom patterns as (name, compiled_regex) pairs for lock-free iteration
+type CustomPatternsSnapshot = Arc<RwLock<Vec<(Arc<str>, Arc<Regex>)>>>;
+
 /// Pre-compiled regex patterns for common crash log patterns
 static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
     let mut patterns = HashMap::new();
@@ -65,15 +75,15 @@ pub struct LogParser {
     segment_boundaries: Vec<(String, String)>,
     compiled_patterns: Arc<Vec<Regex>>,
     /// Bounded LRU cache for parsed segments (prevents memory leaks)
-    segment_cache: Arc<RwLock<LruCache<u64, Vec<Vec<Arc<str>>>>>>,
+    segment_cache: SegmentCache,
     /// Bounded LRU cache for pattern matches (prevents memory leaks)
-    pattern_cache: Arc<RwLock<LruCache<String, Vec<(usize, String, String)>>>>,
+    pattern_cache: PatternCache,
     /// Custom patterns added at runtime
     custom_patterns: Arc<DashMap<String, Regex>>,
     /// Snapshot of custom patterns for fast iteration (Optimization 1.5)
     /// Pre-compiled patterns cached as Arc<Vec<>> to avoid DashMap iteration overhead
     /// in hot paths. Updated on pattern add (rare operation).
-    custom_patterns_snapshot: Arc<RwLock<Vec<(Arc<str>, Arc<Regex>)>>>,
+    custom_patterns_snapshot: CustomPatternsSnapshot,
 }
 
 impl LogParser {
@@ -1351,8 +1361,7 @@ where
         Ok(self
             .inner
             .enumerate()
-            .filter(move |(_, line)| regex.is_match(line))
-            .map(|(idx, line)| (idx, line)))
+            .filter(move |(_, line)| regex.is_match(line)))
     }
 }
 

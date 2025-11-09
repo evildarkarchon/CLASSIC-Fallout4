@@ -82,9 +82,24 @@ use pyo3::prelude::*;
 use pyo3::{create_exception, exceptions::PyException};
 
 // Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(classic_scanlog, RustScanLogError, PyException, "Base for ScanLog Rust errors");
-create_exception!(classic_scanlog, RustParseError, RustScanLogError, "Parse/analysis errors");
-create_exception!(classic_scanlog, RustConfigError, RustScanLogError, "Configuration errors");
+create_exception!(
+    classic_scanlog,
+    RustScanLogError,
+    PyException,
+    "Base for ScanLog Rust errors"
+);
+create_exception!(
+    classic_scanlog,
+    RustParseError,
+    RustScanLogError,
+    "Parse/analysis errors"
+);
+create_exception!(
+    classic_scanlog,
+    RustConfigError,
+    RustScanLogError,
+    "Configuration errors"
+);
 
 // Import all wrapper modules
 pub mod fcx_handler;
@@ -134,8 +149,11 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
     // Check error message patterns to determine exception type
     if err_str.contains("config") || err_str.contains("setting") || err_str.contains("invalid") {
         RustConfigError::new_err(err.to_string())
-    } else if err_str.contains("parse") || err_str.contains("segment") || err_str.contains("formid")
-        || err_str.contains("analysis") || err_str.contains("detect")
+    } else if err_str.contains("parse")
+        || err_str.contains("segment")
+        || err_str.contains("formid")
+        || err_str.contains("analysis")
+        || err_str.contains("detect")
     {
         RustParseError::new_err(err.to_string())
     } else {

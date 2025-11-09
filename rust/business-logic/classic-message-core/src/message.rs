@@ -1,4 +1,4 @@
-///! Message data structure for managing messages and their associated metadata.
+//! Message data structure for managing messages and their associated metadata.
 use crate::enums::{MessageTarget, MessageType};
 use serde::{Deserialize, Serialize};
 

@@ -18,6 +18,32 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.detector import detect_component
+
+# Detect Rust-specific exception types for classic_scanlog
+_, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
+_, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
+
+
+def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+    """Get tuple of Rust exception types to catch.
+
+    Returns tuple of (ParseError types, generic RustError types).
+    """
+    parse_errors = (RustParseError,)
+    rust_errors = (RustError,)
+
+    # Add module-specific exceptions if available
+    if _rust_parse_error:
+        parse_errors = (RustParseError, _rust_parse_error)
+    if _rust_scanlog_error:
+        rust_errors = (RustError, _rust_scanlog_error)
+
+    return parse_errors, rust_errors
+
+
+# Get exception type tuples at module level for use in exception handlers
+parse_errors, rust_errors = _get_rust_exception_types()
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -68,7 +94,7 @@ class RustRecordScanner:
                 logger.debug("🚀 RustRecordScanner: Using RUST implementation (40x faster)")
             else:
                 logger.debug("⚠️  RustRecordScanner: RecordScanner not found in classic_scanlog")
-        except RustError as e:
+        except rust_errors as e:
             logger.error(f"❌ Rust error initializing RecordScanner: {e}")
         except (ImportError, AttributeError) as e:
             logger.error(f"❌ Failed to initialize Rust RecordScanner: {e}")
@@ -100,9 +126,9 @@ class RustRecordScanner:
             try:
                 # Rust returns (list[str], list[str]) - formatted lines and matches
                 report_lines, matches = self._rust_scanner.scan_named_records(segment_callstack)
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.warning(f"Rust parse error in scan_named_records: {e}")
-            except RustError as e:
+            except rust_errors as e:
                 logger.warning(f"Rust scan_named_records failed: {e}")
             except (TypeError, ValueError) as e:
                 logger.warning(f"Rust scan_named_records error: {e}")
@@ -132,10 +158,10 @@ class RustRecordScanner:
         if self._use_rust and self._rust_scanner:
             try:
                 return self._rust_scanner.extract_records(segment_callstack)
-            except RustParseError as e:
+            except parse_errors as e:
                 logger.warning(f"Rust parse error in extract_records: {e}")
                 # Fall through to Python fallback
-            except RustError as e:
+            except rust_errors as e:
                 logger.warning(f"Rust extract_records failed: {e}")
                 # Fall through to Python fallback
             except (TypeError, ValueError) as e:
@@ -161,7 +187,7 @@ class RustRecordScanner:
         if self._rust_scanner:
             try:
                 self._rust_scanner.clear_cache()
-            except RustError as e:
+            except rust_errors as e:
                 logger.debug(f"Rust clear_cache failed: {e}")
             except AttributeError as e:
                 logger.debug(f"Rust clear_cache not available: {e}")

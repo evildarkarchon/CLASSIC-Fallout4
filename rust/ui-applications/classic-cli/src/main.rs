@@ -260,8 +260,8 @@ fn get_config_path() -> Result<PathBuf> {
 /// ```
 fn find_yaml_directories(_config: &CliConfig) -> Result<Vec<PathBuf>> {
     // Try executable directory first
-    if let Ok(exe_path) = std::env::current_exe() {
-        if let Some(exe_dir) = exe_path.parent() {
+    if let Ok(exe_path) = std::env::current_exe()
+        && let Some(exe_dir) = exe_path.parent() {
             let databases_dir = exe_dir.join("CLASSIC Data/databases");
             if databases_dir.exists() {
                 // Return: [databases (Main), databases (Game), exe_dir (Ignore)]
@@ -272,7 +272,6 @@ fn find_yaml_directories(_config: &CliConfig) -> Result<Vec<PathBuf>> {
                 ]);
             }
         }
-    }
 
     // Try current directory
     if let Ok(current_dir) = std::env::current_dir() {

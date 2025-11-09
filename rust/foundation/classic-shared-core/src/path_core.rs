@@ -297,10 +297,10 @@ impl PathHandler {
         let first_components: Vec<_> = path_bufs[0].components().collect();
 
         let mut common_len = 0;
-        for i in 0..first_components.len() {
+        for (i, component) in first_components.iter().enumerate() {
             if path_bufs
                 .iter()
-                .all(|p| p.components().nth(i) == Some(first_components[i]))
+                .all(|p| p.components().nth(i) == Some(*component))
             {
                 common_len = i + 1;
             } else {

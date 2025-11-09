@@ -39,6 +39,7 @@ MODULE_CONFIGS = {
             "SettingsValidator": "settings_validator",
             "GpuDetector": "gpu_detector",
             "FcxModeHandler": "fcx_handler",
+            "Orchestrator": "orchestrator",
         },
         "special_checks": [
             (("detect_mods_batch", "detect_mods_single"), "mod_detector"),
@@ -249,6 +250,7 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "settings_validator": False,
         "gpu_detector": False,
         "fcx_handler": False,
+        "orchestrator": False,
         # Phase 4 - Constants and Utilities
         "constants": False,
         "version_utils": False,

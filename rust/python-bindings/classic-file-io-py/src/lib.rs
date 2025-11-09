@@ -96,9 +96,24 @@ use pyo3::prelude::*;
 use pyo3::{create_exception, exceptions::PyException};
 
 // Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(classic_file_io, RustFileIOError, PyException, "Base for File I/O Rust errors");
-create_exception!(classic_file_io, RustFileIOIOError, RustFileIOError, "File I/O errors");
-create_exception!(classic_file_io, RustFileIOParseError, RustFileIOError, "File parsing errors (DDS, encoding)");
+create_exception!(
+    classic_file_io,
+    RustFileIOError,
+    PyException,
+    "Base for File I/O Rust errors"
+);
+create_exception!(
+    classic_file_io,
+    RustFileIOIOError,
+    RustFileIOError,
+    "File I/O errors"
+);
+create_exception!(
+    classic_file_io,
+    RustFileIOParseError,
+    RustFileIOError,
+    "File parsing errors (DDS, encoding)"
+);
 
 mod core;
 mod dds;
@@ -135,31 +150,29 @@ pub fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
         FileIOError::IoError(e) => RustFileIOIOError::new_err(format!("I/O error: {}", e)),
         FileIOError::NotFound(s) => RustFileIOIOError::new_err(format!("File not found: {}", s)),
         FileIOError::Io(s) => RustFileIOIOError::new_err(format!("I/O error: {}", s)),
-        FileIOError::WriteError { path, source } => {
-            RustFileIOIOError::new_err(format!("Failed to write file {}: {}", path.display(), source))
-        }
-        FileIOError::CreateDirectoryError { path, source } => {
-            RustFileIOIOError::new_err(format!("Failed to create directory {}: {}", path.display(), source))
-        }
+        FileIOError::WriteError { path, source } => RustFileIOIOError::new_err(format!(
+            "Failed to write file {}: {}",
+            path.display(),
+            source
+        )),
+        FileIOError::CreateDirectoryError { path, source } => RustFileIOIOError::new_err(format!(
+            "Failed to create directory {}: {}",
+            path.display(),
+            source
+        )),
 
         // Parse/format errors map to RustFileIOParseError
         FileIOError::EncodingError(s) => {
             RustFileIOParseError::new_err(format!("Encoding error: {}", s))
         }
-        FileIOError::DDSError(s) => {
-            RustFileIOParseError::new_err(format!("DDS error: {}", s))
-        }
+        FileIOError::DDSError(s) => RustFileIOParseError::new_err(format!("DDS error: {}", s)),
         FileIOError::InvalidPath(s) => {
             RustFileIOParseError::new_err(format!("Invalid path: {}", s))
         }
 
         // Generic errors map to base RustFileIOError
-        FileIOError::JoinError(s) => {
-            RustFileIOError::new_err(format!("Task error: {}", s))
-        }
-        FileIOError::CacheError(s) => {
-            RustFileIOError::new_err(format!("Cache error: {}", s))
-        }
+        FileIOError::JoinError(s) => RustFileIOError::new_err(format!("Task error: {}", s)),
+        FileIOError::CacheError(s) => RustFileIOError::new_err(format!("Cache error: {}", s)),
     }
 }
 
@@ -183,7 +196,10 @@ pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types
     m.add("RustFileIOError", m.py().get_type::<RustFileIOError>())?;
     m.add("RustFileIOIOError", m.py().get_type::<RustFileIOIOError>())?;
-    m.add("RustFileIOParseError", m.py().get_type::<RustFileIOParseError>())?;
+    m.add(
+        "RustFileIOParseError",
+        m.py().get_type::<RustFileIOParseError>(),
+    )?;
 
     Ok(())
 }

@@ -287,7 +287,7 @@ impl NexusClient {
         })?;
 
         // Remove commas and other formatting
-        let cleaned = text.replace(',', "").replace(' ', "");
+        let cleaned = text.replace([',', ' '], "");
 
         // Extract first number sequence
         let number_str: String = cleaned.chars().filter(|c| c.is_ascii_digit()).collect();

@@ -240,7 +240,8 @@ impl PyXseInfo {
 /// ```
 #[pyfunction]
 fn parse_xse_type(type_name: &str) -> PyResult<PyXseType> {
-    classic_xse_core::XseType::from_str(type_name)
+    type_name
+        .parse::<classic_xse_core::XseType>()
         .map(|inner| PyXseType { inner })
         .map_err(|e| PyValueError::new_err(e.to_string()))
 }

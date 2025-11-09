@@ -420,8 +420,8 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &
     let mut working_area = f.area();
 
     // Render update notification banner if visible (at top)
-    if let Some(ref notification) = app.update_notification {
-        if notification.is_visible() {
+    if let Some(ref notification) = app.update_notification
+        && notification.is_visible() {
             notification.render(f, working_area);
             // Adjust working area to account for banner height
             working_area = Rect {
@@ -431,7 +431,6 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &
                 height: working_area.height.saturating_sub(notification.height()),
             };
         }
-    }
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -464,8 +463,8 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &
     render_instructions(f, chunks[4]);
 
     // Render folder picker overlay if active (for path editing)
-    if let Some(ref mut picker) = app.settings_path_picker {
-        if picker.is_active() {
+    if let Some(ref mut picker) = app.settings_path_picker
+        && picker.is_active() {
             use crate::widgets::FolderPicker;
             let title = if let Some(path_item) = app.editing_path {
                 format!("Select {} Path", path_item.label())
@@ -488,14 +487,12 @@ pub fn render_settings_screen_interactive(f: &mut Frame, app: &mut App, state: &
                 );
             folder_picker.render(f, popup_area, picker);
         }
-    }
 
     // Render error dialog overlay if active (should be last so it appears on top)
-    if let Some(ref dialog) = app.error_dialog {
-        if dialog.is_active() {
+    if let Some(ref dialog) = app.error_dialog
+        && dialog.is_active() {
             dialog.render(f, f.area());
         }
-    }
 }
 
 /// Helper function to create a centered rect for popups

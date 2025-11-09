@@ -250,9 +250,7 @@ impl GameIntegrityChecker {
             (
                 false,
                 self.config
-                    .root_warn
-                    .as_ref()
-                    .map(|s| s.clone())
+                    .root_warn.clone()
                     .unwrap_or_default(),
             )
         };

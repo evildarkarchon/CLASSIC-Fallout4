@@ -120,15 +120,13 @@ pub fn detect_mods_single(
         if let Some(mat) = combined_pattern.find(plugin_name) {
             let matched_mod = mat.as_str().to_lowercase();
             // Only store the first match for each mod
-            if !mod_matches.contains_key(&matched_mod) {
-                mod_matches.insert(matched_mod, plugin_id.clone());
-            }
+            mod_matches.entry(matched_mod).or_insert_with(|| plugin_id.clone());
         }
     }
 
     // Build output lines for all matches
     let mut sorted_mods: Vec<_> = mod_matches.keys().cloned().collect();
-    sorted_mods.sort_by(|a, b| b.len().cmp(&a.len()));
+    sorted_mods.sort_by_key(|b| std::cmp::Reverse(b.len()));
 
     for mod_name in sorted_mods {
         let mod_warning = &mod_lookup[&mod_name];
@@ -512,9 +510,7 @@ pub fn detect_mods_batch(
             for (plugin_name, plugin_id) in &crashlog_plugins_lower {
                 if let Some(mat) = combined_pattern.find(plugin_name) {
                     let matched_mod = mat.as_str().to_lowercase();
-                    if !mod_matches.contains_key(&matched_mod) {
-                        mod_matches.insert(matched_mod, plugin_id.clone());
-                    }
+                    mod_matches.entry(matched_mod).or_insert_with(|| plugin_id.clone());
                 }
             }
 

@@ -123,8 +123,8 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
                     match event_result {
                         Ok(event) => {
                             // Only process modify events for the Papyrus log
-                            if matches!(event.kind, EventKind::Modify(_)) {
-                                if event
+                            if matches!(event.kind, EventKind::Modify(_))
+                                && event
                                     .paths
                                     .iter()
                                     .any(|p| p.file_name() == papyrus_log_path.file_name())
@@ -157,7 +157,6 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
                                         }
                                     }
                                 }
-                            }
                         }
                         Err(e) => {
                             tracing::error!("File watcher error: {}", e);

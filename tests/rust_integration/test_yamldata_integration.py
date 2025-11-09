@@ -31,15 +31,18 @@ class TestYamlDataIntegration:
     def test_yamldata_instantiation(self):
         """Test YamlData can be instantiated with real YAML files."""
         # Get paths to real YAML files
+        # Rust YamlData expects 3 directories: [main, game, ignore]
+        data_dir = Path("CLASSIC Data")
         yaml_dirs = [
-            Path("YAML"),
-            Path("YAML/Fallout4"),
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
         ]
 
         # Ensure files exist
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         # Create YamlData
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
@@ -50,11 +53,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_required_fields(self):
         """Test all required fields are present."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -94,11 +102,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_field_types(self):
         """Test fields have correct Python types."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -125,11 +138,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_non_empty_data(self):
         """Test that data is actually loaded (not empty)."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -145,11 +163,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_game_specific_loading(self):
         """Test game-specific YAML loading."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         # Load for Fallout 4
         yamldata_fo4 = YamlData(yaml_dirs, "Fallout4", False)
@@ -160,11 +183,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_vr_mode(self):
         """Test VR mode loading."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         # Load with VR mode
         yamldata_vr = YamlData(yaml_dirs, "Fallout4", True)
@@ -177,11 +205,16 @@ class TestYamlDataIntegration:
     @pytest.mark.performance
     def test_yamldata_performance(self):
         """Test YamlData loading performance."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         # Time the load
         start_time = time.perf_counter()
@@ -205,11 +238,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_multiple_instantiation(self):
         """Test multiple YamlData instances don't interfere."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         # Create multiple instances
         yamldata1 = YamlData(yaml_dirs, "Fallout4", False)
@@ -239,11 +277,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_suspects_error_list_content(self):
         """Test suspects_error_list contains expected patterns."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -255,11 +298,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_suspects_stack_list_content(self):
         """Test suspects_stack_list contains expected patterns."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -271,11 +319,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_ignore_lists_content(self):
         """Test ignore lists contain expected data."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -291,11 +344,16 @@ class TestYamlDataIntegration:
 
     def test_yamldata_mod_databases_structure(self):
         """Test mod databases have correct structure."""
-        yaml_dirs = [Path("YAML"), Path("YAML/Fallout4")]
-        settings_file = Path("YAML/CLASSIC Settings.yaml")
+        data_dir = Path("CLASSIC Data")
+        yaml_dirs = [
+            data_dir / "databases",  # Main YAML
+            data_dir / "databases",  # Game YAML
+            Path("."),  # Ignore YAML (project root)
+        ]
+        main_file = yaml_dirs[0] / "CLASSIC Main.yaml"
 
-        if not settings_file.exists():
-            pytest.skip("YAML/CLASSIC Settings.yaml not found")
+        if not main_file.exists():
+            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 

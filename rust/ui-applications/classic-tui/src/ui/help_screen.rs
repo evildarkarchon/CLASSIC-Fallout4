@@ -50,8 +50,8 @@ pub fn render_help_screen(f: &mut Frame, app: &App) {
     let mut working_area = f.area();
 
     // Render update notification banner if visible (at top)
-    if let Some(ref notification) = app.update_notification {
-        if notification.is_visible() {
+    if let Some(ref notification) = app.update_notification
+        && notification.is_visible() {
             notification.render(f, working_area);
             // Adjust working area to account for banner height
             working_area = Rect {
@@ -61,7 +61,6 @@ pub fn render_help_screen(f: &mut Frame, app: &App) {
                 height: working_area.height.saturating_sub(notification.height()),
             };
         }
-    }
 
     let help_text = vec![
         Line::from(""),

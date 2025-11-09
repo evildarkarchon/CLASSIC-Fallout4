@@ -273,7 +273,7 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 /// assert_eq!(get_vr(), "SkyrimVR");
 /// ```
 pub fn get_vr() -> String {
-    get::<_, String>(Keys::VR).unwrap_or_else(|| String::new())
+    get::<_, String>(Keys::VR).unwrap_or_else(String::new)
 }
 
 /// Get the local application directory.

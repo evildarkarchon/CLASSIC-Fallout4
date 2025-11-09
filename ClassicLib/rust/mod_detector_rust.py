@@ -24,6 +24,31 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
+# Detect Rust-specific exception types for classic_scanlog
+_, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
+_, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
+
+
+def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...]]:
+    """Get tuple of Rust exception types to catch.
+
+    Returns tuple of (ParseError types, generic RustError types).
+    """
+    parse_errors = (RustParseError,)
+    rust_errors = (RustError,)
+
+    # Add module-specific exceptions if available
+    if _rust_parse_error:
+        parse_errors = (RustParseError, _rust_parse_error)
+    if _rust_scanlog_error:
+        rust_errors = (RustError, _rust_scanlog_error)
+
+    return parse_errors, rust_errors
+
+
+# Get exception type tuples at module level for use in exception handlers
+parse_errors, rust_errors = _get_rust_exception_types()
+
 # Centralized detection of Rust mod detector functions
 _has_single, _rust_detect_single = detect_component("classic_scanlog", "detect_mods_single")
 _has_double, _rust_detect_double = detect_component("classic_scanlog", "detect_mods_double")
@@ -60,14 +85,13 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     if RUST_AVAILABLE and _rust_detect_single:
         try:
-            # Convert plugins dict to searchable text for Rust
-            plugins_text = " ".join(crashlog_plugins.keys())
             # Rust returns Vec<String>, convert to ReportFragment
-            lines = _rust_detect_single(plugins_text, yaml_dict)
+            # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
+            lines = _rust_detect_single(yaml_dict, crashlog_plugins)
             return ReportFragment.from_lines(lines)
-        except RustParseError as e:
+        except parse_errors as e:
             logger.warning(f"Rust parse error in mod detection, falling back to Python: {e}")
-        except RustError as e:
+        except rust_errors as e:
             logger.warning(f"Rust mod detection failed, falling back to Python: {e}")
         except ValueError as e:
             logger.warning(f"Rust mod detection error, falling back to Python: {e}")
@@ -98,14 +122,13 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     if RUST_AVAILABLE and _rust_detect_double:
         try:
-            # Convert plugins dict to searchable text for Rust
-            plugins_text = " ".join(crashlog_plugins.keys())
             # Rust returns Vec<String>, convert to ReportFragment
-            lines = _rust_detect_double(plugins_text, yaml_dict)
+            # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
+            lines = _rust_detect_double(yaml_dict, crashlog_plugins)
             return ReportFragment.from_lines(lines)
-        except RustParseError as e:
+        except parse_errors as e:
             logger.warning(f"Rust parse error in mod conflict detection, falling back to Python: {e}")
-        except RustError as e:
+        except rust_errors as e:
             logger.warning(f"Rust mod conflict detection failed, falling back to Python: {e}")
         except ValueError as e:
             logger.warning(f"Rust mod conflict detection error, falling back to Python: {e}")
@@ -119,6 +142,7 @@ def detect_mods_important(
     yaml_dict: dict[str, str],
     crashlog_plugins: dict[str, str],
     gpu_rival: Literal["nvidia", "amd"] | None,
+    xse_modules: set[str] | None = None,
 ) -> ReportFragment:
     """
     Detects important modifications (mods) using either Rust or Python implementation.
@@ -132,6 +156,7 @@ def detect_mods_important(
         yaml_dict (dict[str, str]): A dictionary containing YAML configuration data.
         crashlog_plugins (dict[str, str]): A dictionary of plugin crash logs.
         gpu_rival (Literal["nvidia", "amd"] | None): GPU vendor for compatibility checking.
+        xse_modules (set[str] | None): Optional set of XSE module names for additional checking.
 
     Returns:
         ReportFragment: The result of the analysis represented in the form of a
@@ -140,18 +165,19 @@ def detect_mods_important(
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
-    # Note: Rust implementation doesn't support gpu_rival parameter yet
-    # Only use Rust if gpu_rival is None for now
-    if RUST_AVAILABLE and _rust_detect_important and gpu_rival is None:
+    # Default to empty set if not provided
+    if xse_modules is None:
+        xse_modules = set()
+
+    if RUST_AVAILABLE and _rust_detect_important:
         try:
-            # Convert plugins dict to searchable text for Rust
-            plugins_text = " ".join(crashlog_plugins.keys())
             # Rust returns Vec<String>, convert to ReportFragment
-            lines = _rust_detect_important(plugins_text, yaml_dict)
+            # Rust function expects (yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
+            lines = _rust_detect_important(yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
             return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()
-        except RustParseError as e:
+        except parse_errors as e:
             logger.warning(f"Rust parse error in important mod detection, falling back to Python: {e}")
-        except RustError as e:
+        except rust_errors as e:
             logger.warning(f"Rust important mod detection failed, falling back to Python: {e}")
         except ValueError as e:
             logger.warning(f"Rust important mod detection error, falling back to Python: {e}")

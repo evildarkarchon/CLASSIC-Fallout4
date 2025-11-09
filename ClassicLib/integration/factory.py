@@ -534,11 +534,28 @@ def get_yamldata(yaml_dirs: list | None = None, game: str | None = None, is_vr: 
     if not _is_rust_disabled() and components.get("yamldata", False):
         try:
             from classic_config import YamlData
+            from ClassicLib import GlobalRegistry
+            from ClassicLib.ResourceLoader import ResourceLoader
+
             logger.debug("Using Rust YamlData (15-30x faster YAML loading)")
-            # Note: YamlData initialization may have changed - check Rust implementation
-            return YamlData()  # type: ignore[call-arg]
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to import Rust YamlData: {e}")
+
+            # Get YAML directories from ResourceLoader
+            data_dir = ResourceLoader.get_data_directory()
+            # Rust YamlData expects 3 directories: [main, game, ignore]
+            # Main and Game YAMLs are in databases/, Ignore YAML is in project root
+            yaml_dirs = [
+                str(data_dir / "databases"),  # Main YAML: CLASSIC Data/databases/CLASSIC Main.yaml
+                str(data_dir / "databases"),  # Game YAML: CLASSIC Data/databases/CLASSIC Fallout4.yaml
+                str(data_dir.parent),  # Ignore YAML: (project root)/CLASSIC Ignore.yaml
+            ]
+
+            # Get game and VR mode from GlobalRegistry
+            game = GlobalRegistry.get_game()
+            vr_mode = GlobalRegistry.get_vr() == "VR"
+
+            return YamlData(yaml_dirs=yaml_dirs, game=game, vr_mode=vr_mode)
+        except (ImportError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.warning(f"Failed to initialize Rust YamlData: {e}")
 
     # Fall back to Python implementation
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -875,3 +892,97 @@ def get_path_operations() -> Any | None:
 
     logger.debug("Path operations module not available, using Python fallback")
     return None
+
+
+def get_orchestrator(
+    yamldata: Any,
+    fcx_mode: bool,
+    show_formid_values: bool,
+    formid_db_exists: bool,
+    remove_list: list[str] | None = None,
+) -> Any:
+    """
+    Returns an orchestrator instance for crash log processing and analysis.
+
+    This function provides a hybrid orchestrator that uses both Python and Rust
+    implementations to maximize performance. The hybrid approach uses:
+    - Python OrchestratorCore for single-log processing (complex analysis logic)
+    - Rust ClassicOrchestrator for batch processing (10-20x speedup via parallelism)
+
+    The factory automatically detects Rust availability and provides graceful
+    degradation to pure Python when Rust components are unavailable.
+
+    Args:
+        yamldata: Configuration data loaded from YAML files (ClassicScanLogsInfo
+            or YamlData instance).
+        fcx_mode: Whether to enable FCX (File Configuration eXtender) mode for
+            detecting configuration issues in game INI files.
+        show_formid_values: Whether to display FormID hexadecimal values in the
+            generated analysis reports.
+        formid_db_exists: Whether the FormID database file exists and can be
+            used for FormID-to-plugin resolution.
+        remove_list: Optional list of strings to filter out during processing.
+            Defaults to None.
+
+    Returns:
+        Any: A HybridOrchestrator instance if Rust is available for batch
+        processing, otherwise a pure Python OrchestratorCore instance.
+        Both provide the same async interface:
+        - async with orchestrator: context manager for resource management
+        - async process_crash_log(path): process single log
+        - async process_crash_logs_batch(paths): process multiple logs
+
+    Performance:
+        - Single log: Uses Python (same performance as OrchestratorCore)
+        - Batch (5+ logs): Uses Rust if available (10-20x speedup)
+        - Small batches (1-4 logs): Uses Python (avoid Rust overhead)
+
+    Example:
+        >>> yamldata = get_yamldata()
+        >>> orch = get_orchestrator(
+        ...     yamldata=yamldata,
+        ...     fcx_mode=False,
+        ...     show_formid_values=True,
+        ...     formid_db_exists=True
+        ... )
+        >>> async with orch:
+        ...     # Process single log
+        ...     result = await orch.process_crash_log(Path("crash.log"))
+        ...
+        ...     # Process batch with Rust acceleration
+        ...     results = await orch.process_crash_logs_batch(log_paths)
+
+    Note:
+        The HybridOrchestrator maintains full backward compatibility with
+        OrchestratorCore. Existing code can switch to the factory without
+        any changes to the calling code.
+    """
+    components = _get_components()
+
+    # Check if Rust orchestrator is available for batch processing
+    if not _is_rust_disabled() and components.get("orchestrator", False):
+        try:
+            from ClassicLib.ScanLog.HybridOrchestrator import HybridOrchestrator
+
+            logger.debug("Using HybridOrchestrator (Rust-accelerated batch processing, 10-20x speedup)")
+            return HybridOrchestrator(
+                yamldata=yamldata,
+                fcx_mode=fcx_mode,
+                show_formid_values=show_formid_values,
+                formid_db_exists=formid_db_exists,
+                remove_list=remove_list,
+            )
+        except (ImportError, AttributeError) as e:
+            logger.warning(f"Failed to import HybridOrchestrator: {e}")
+
+    # Fall back to pure Python orchestrator
+    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+
+    logger.debug("Using Python OrchestratorCore implementation")
+    return OrchestratorCore(
+        yamldata=yamldata,
+        fcx_mode=fcx_mode,
+        show_formid_values=show_formid_values,
+        formid_db_exists=formid_db_exists,
+        remove_list=remove_list,
+    )

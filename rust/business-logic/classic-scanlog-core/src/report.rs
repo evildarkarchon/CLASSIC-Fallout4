@@ -15,7 +15,7 @@ use std::sync::Arc;
 use string_cache::DefaultAtom;
 
 /// Global string pool for interning frequently used strings
-static STRING_POOL: Lazy<StringPool> = Lazy::new(|| StringPool::new());
+static STRING_POOL: Lazy<StringPool> = Lazy::new(StringPool::new);
 
 /// String pool for efficient memory usage through string interning
 #[derive(Clone, Debug)]
@@ -29,6 +29,12 @@ struct PoolStats {
     lookups: usize,
     hits: usize,
     insertions: usize,
+}
+
+impl Default for StringPool {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StringPool {
@@ -172,6 +178,12 @@ pub struct ReportComposer {
     parallel_threshold: usize,
 }
 
+impl Default for ReportComposer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ReportComposer {
     /// Create a new composer
     pub fn new() -> Self {
@@ -225,7 +237,7 @@ impl ReportComposer {
         self.fragments
             .par_iter()
             .cloned()
-            .reduce(|| ReportFragment::empty(), |a, b| a.combine(&b))
+            .reduce(ReportFragment::empty, |a, b| a.combine(&b))
     }
 
     /// Compose fragments and optimize memory usage
@@ -233,7 +245,7 @@ impl ReportComposer {
         let fragment = self.compose();
 
         // If using string pool, intern all strings
-        if self.pool.pool.len() > 0 {
+        if !self.pool.pool.is_empty() {
             let optimized_content = fragment
                 .content
                 .par_iter()
@@ -289,6 +301,12 @@ impl ReportComposer {
 /// Generator for report fragments with efficient string building
 pub struct ReportGenerator {
     pool: StringPool,
+}
+
+impl Default for ReportGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl ReportGenerator {

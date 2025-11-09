@@ -124,8 +124,8 @@ impl GamePathFinder {
         cached_path: Option<String>,
         xse_log_path: Option<String>,
     ) -> PyResult<String> {
-        let cached = cached_path.as_ref().map(|s| PathBuf::from(s));
-        let xse_log = xse_log_path.as_ref().map(|s| PathBuf::from(s));
+        let cached = cached_path.as_ref().map(PathBuf::from);
+        let xse_log = xse_log_path.as_ref().map(PathBuf::from);
 
         self.inner
             .find_game_path(cached.as_deref(), xse_log.as_deref())

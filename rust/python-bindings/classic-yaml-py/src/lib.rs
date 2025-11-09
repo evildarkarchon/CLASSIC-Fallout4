@@ -88,16 +88,31 @@
 use classic_shared::PathLike;
 use classic_yaml_core::{YamlError, YamlOperations};
 use pyo3::prelude::*;
-use pyo3::{create_exception, exceptions::PyException};
 use pyo3::types::{PyDict, PyList};
+use pyo3::{create_exception, exceptions::PyException};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use yaml_rust2::Yaml;
 
 // Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(classic_yaml, RustYamlError, PyException, "Base for YAML Rust errors");
-create_exception!(classic_yaml, RustYamlIOError, RustYamlError, "YAML I/O errors");
-create_exception!(classic_yaml, RustYamlParseError, RustYamlError, "YAML parse errors");
+create_exception!(
+    classic_yaml,
+    RustYamlError,
+    PyException,
+    "Base for YAML Rust errors"
+);
+create_exception!(
+    classic_yaml,
+    RustYamlIOError,
+    RustYamlError,
+    "YAML I/O errors"
+);
+create_exception!(
+    classic_yaml,
+    RustYamlParseError,
+    RustYamlError,
+    "YAML parse errors"
+);
 
 /// Python-facing YAML operations wrapper
 #[pyclass(name = "YamlOperations")]
@@ -144,10 +159,7 @@ impl PyYamlOperations {
     #[pyo3(signature = (path))]
     fn load_yaml_file(&self, py: Python<'_>, path: PathLike) -> PyResult<Py<PyAny>> {
         let path_buf: PathBuf = path.into();
-        let yaml = self
-            .inner
-            .load_yaml_file(&path_buf)
-            .map_err(to_pyerr)?;
+        let yaml = self.inner.load_yaml_file(&path_buf).map_err(to_pyerr)?;
         yaml_to_python(py, &yaml)
     }
 
@@ -459,9 +471,7 @@ fn to_pyerr(err: YamlError) -> PyErr {
         }
 
         // I/O errors map to RustYamlIOError
-        YamlError::IoError(e) => {
-            RustYamlIOError::new_err(format!("Failed to read file: {}", e))
-        }
+        YamlError::IoError(e) => RustYamlIOError::new_err(format!("Failed to read file: {}", e)),
     }
 }
 
@@ -474,7 +484,10 @@ fn classic_yaml(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types
     m.add("RustYamlError", m.py().get_type::<RustYamlError>())?;
     m.add("RustYamlIOError", m.py().get_type::<RustYamlIOError>())?;
-    m.add("RustYamlParseError", m.py().get_type::<RustYamlParseError>())?;
+    m.add(
+        "RustYamlParseError",
+        m.py().get_type::<RustYamlParseError>(),
+    )?;
 
     Ok(())
 }

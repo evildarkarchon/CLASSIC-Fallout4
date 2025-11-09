@@ -659,10 +659,20 @@ class AnalysisConfig:
     crashgen_name: str
     crashgen_latest: str
     game_version: str
+    game_version_vr: str
+    game_version_new: str
     xse_acronym: str
     ignore_plugins: list[str]
     ignore_records: list[str]
     ignore_list: list[str]
+    show_formid_values: bool
+    suspects_error: dict[str, str]
+    suspects_stack: dict[str, list[str]]
+    mods_core: dict[str, str]
+    mods_freq: dict[str, str]
+    mods_conf: dict[str, str]
+    mods_solu: dict[str, str]
+    mods_opc2: dict[str, str]
 
     def __init__(self, game: str, vr_mode: bool = False) -> None:
         """Create analysis config.
@@ -1096,70 +1106,74 @@ def contains_plugin(text: str, plugin: str) -> bool:
 
 
 def detect_mods_single(
-    text: str,
-    mod_db: dict[str, str]
+    yaml_dict: dict[str, str],
+    crashlog_plugins: dict[str, str]
 ) -> list[str]:
     """Detect mods using single-pass algorithm.
 
     Fast detection for simple mod identification.
 
     Args:
-        text: Text to search (typically crash log)
-        mod_db: Mod database dictionary {signature: mod_name}
+        yaml_dict: Mod database dictionary {mod_signature: warning_message}
+        crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
 
     Returns:
-        List of detected mod names
+        List of warning messages for detected mods
     """
 
 
 def detect_mods_double(
-    text: str,
-    mod_db: dict[str, str]
+    yaml_dict: dict[str, str],
+    crashlog_plugins: dict[str, str]
 ) -> list[str]:
     """Detect mods using double-pass algorithm.
 
-    More accurate detection using two-stage matching.
+    More accurate detection using two-stage matching for conflict detection.
 
     Args:
-        text: Text to search
-        mod_db: Mod database dictionary
+        yaml_dict: Mod conflict database dictionary {mod1+mod2: warning_message}
+        crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
 
     Returns:
-        List of detected mod names
+        List of warning messages for detected mod conflicts
     """
 
 
 def detect_mods_important(
-    text: str,
-    mod_db: dict[str, str]
+    yaml_dict: dict[str, str],
+    crashlog_plugins: dict[str, str],
+    gpu_rival: str | None = None,
+    xse_modules: set[str] = ...
 ) -> list[str]:
     """Detect important mods (core mods, framework mods).
 
     Prioritizes detection of essential mods that affect stability.
 
     Args:
-        text: Text to search
-        mod_db: Mod database dictionary
+        yaml_dict: Important mods database dictionary {mod_signature: warning_message}
+        crashlog_plugins: Dictionary of plugins from crash log {plugin_name: details}
+        gpu_rival: Optional GPU vendor filter ("nvidia" or "amd")
+        xse_modules: Set of XSE module names for additional checking
 
     Returns:
-        List of detected important mod names
+        List of warning messages for detected important mods
     """
 
 
 def detect_mods_batch(
-    texts: list[str],
-    mod_db: dict[str, str]
+    yaml_dict: dict[str, str],
+    crashlog_plugins_list: list[dict[str, str]]
 ) -> list[list[str]]:
-    """Detect mods in multiple texts (35x speedup).
+    """Detect mods in multiple crash logs (35x speedup).
 
     Parallel mod detection across multiple crash logs.
 
     Args:
-        texts: List of texts to search
-        mod_db: Mod database dictionary
+        yaml_dict: Mod database dictionary {mod_signature: warning_message}
+        crashlog_plugins_list: List of plugin dictionaries, one per crash log
 
     Returns:
-        List of detected mods for each text
+        List of warning message lists, one per crash log
     """
 
 

@@ -54,7 +54,7 @@ impl PyStringProcessor {
         strings: Vec<String>,
         operation: String,
     ) -> Vec<String> {
-        let op = StringOperation::from_str(&operation).unwrap_or(StringOperation::Trim);
+        let op = operation.parse().unwrap_or(StringOperation::Trim);
         let string_refs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
 
         // Release GIL for parallel work (PyO3 0.26)
@@ -172,7 +172,7 @@ impl PyStringProcessor {
         strings: Vec<String>,
         operation: String,
     ) -> PyResult<Bound<'py, PyList>> {
-        let op = StringOperation::from_str(&operation).unwrap_or(StringOperation::Trim);
+        let op = operation.parse().unwrap_or(StringOperation::Trim);
         let string_refs: Vec<&str> = strings.iter().map(|s| s.as_str()).collect();
 
         let results = crate::without_gil(py, || self.inner.process_batch(&string_refs, op));

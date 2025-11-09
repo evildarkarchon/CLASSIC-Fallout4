@@ -82,14 +82,29 @@
 use classic_config_core::{ConfigError, YamlDataCore};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
-use pyo3::{create_exception, exceptions::PyException};
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
+use pyo3::{create_exception, exceptions::PyException};
 use std::path::PathBuf;
 
 // Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(classic_config, RustConfigError, PyException, "Base for Config Rust errors");
-create_exception!(classic_config, RustConfigIOError, RustConfigError, "Config I/O errors");
-create_exception!(classic_config, RustConfigParseError, RustConfigError, "Config parse errors");
+create_exception!(
+    classic_config,
+    RustConfigError,
+    PyException,
+    "Base for Config Rust errors"
+);
+create_exception!(
+    classic_config,
+    RustConfigIOError,
+    RustConfigError,
+    "Config I/O errors"
+);
+create_exception!(
+    classic_config,
+    RustConfigParseError,
+    RustConfigError,
+    "Config parse errors"
+);
 
 /// Python wrapper for YamlDataCore
 ///
@@ -347,9 +362,7 @@ impl PyYamlData {
 fn to_pyerr(err: ConfigError) -> PyErr {
     match err {
         // I/O errors map to RustConfigIOError
-        ConfigError::IOError(msg) => {
-            RustConfigIOError::new_err(format!("I/O error: {}", msg))
-        }
+        ConfigError::IOError(msg) => RustConfigIOError::new_err(format!("I/O error: {}", msg)),
 
         // Parse errors map to RustConfigParseError
         ConfigError::ParseError(msg) => {
@@ -390,7 +403,10 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types
     m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
     m.add("RustConfigIOError", m.py().get_type::<RustConfigIOError>())?;
-    m.add("RustConfigParseError", m.py().get_type::<RustConfigParseError>())?;
+    m.add(
+        "RustConfigParseError",
+        m.py().get_type::<RustConfigParseError>(),
+    )?;
 
     Ok(())
 }
@@ -404,7 +420,10 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Register custom exception types
     m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
     m.add("RustConfigIOError", m.py().get_type::<RustConfigIOError>())?;
-    m.add("RustConfigParseError", m.py().get_type::<RustConfigParseError>())?;
+    m.add(
+        "RustConfigParseError",
+        m.py().get_type::<RustConfigParseError>(),
+    )?;
 
     Ok(())
 }

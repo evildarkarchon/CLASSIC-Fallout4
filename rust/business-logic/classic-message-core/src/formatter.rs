@@ -1,4 +1,4 @@
-///! Message formatting utilities including emoji stripping.
+//! Message formatting utilities including emoji stripping.
 
 /// Strips emojis and symbols from the given text.
 ///

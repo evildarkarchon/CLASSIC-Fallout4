@@ -35,16 +35,6 @@ struct RollingStats {
 }
 
 impl RollingStats {
-    /// Create a new RollingStats instance
-    fn new() -> Self {
-        Self {
-            count: AtomicUsize::new(0),
-            sum_nanos: AtomicU64::new(0),
-            min_nanos: AtomicU64::new(u64::MAX), // Start with max value
-            max_nanos: AtomicU64::new(0),
-        }
-    }
-
     /// Record a new timing measurement
     fn record(&self, duration: Duration) {
         let nanos = duration.as_nanos() as u64;
@@ -150,7 +140,7 @@ impl PerformanceMetrics {
     pub fn record_timing(&self, operation: &str, duration: Duration) {
         self.stats
             .entry(operation.to_string())
-            .or_insert_with(RollingStats::new)
+            .or_default()
             .record(duration);
     }
 

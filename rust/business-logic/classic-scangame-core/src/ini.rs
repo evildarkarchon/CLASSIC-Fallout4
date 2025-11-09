@@ -193,7 +193,7 @@ impl IniValidator {
 
         // Parse INI
         let mut ini = Ini::new();
-        ini.read(content).map_err(|e| IniError::ParseError(e))?;
+        ini.read(content).map_err(IniError::ParseError)?;
 
         self.ini_cache.insert(file_name_lower, ini);
         Ok(())

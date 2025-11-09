@@ -43,7 +43,7 @@ use rayon::ThreadPool;
 static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
     // Optimization: Smaller pool for I/O-bound bridging work
     // Bridge threads just call block_on() - Tokio runtime handles parallelism
-    let bridge_threads = (num_cpus::get() / 2).max(2).min(4);
+    let bridge_threads = (num_cpus::get() / 2).clamp(2, 8); // 2 to 8 threads
 
     rayon::ThreadPoolBuilder::new()
         .num_threads(bridge_threads)

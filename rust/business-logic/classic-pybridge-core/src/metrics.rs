@@ -101,7 +101,7 @@ pub fn record_bridge_operation(operation: BridgeOperation, duration_secs: f64, s
     let mut stats = metrics
         .operations
         .entry(operation)
-        .or_insert_with(OperationStats::default);
+        .or_default();
 
     stats.count += 1;
     if success {

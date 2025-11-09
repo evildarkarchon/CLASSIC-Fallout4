@@ -19,7 +19,6 @@ use classic_shared_core::AsyncBridge;
 use geometry::WindowGeometry;
 use slint::{PhysicalPosition, PhysicalSize};
 use std::sync::Arc;
-use tracing_subscriber;
 
 /// Pending action awaiting user confirmation
 ///
@@ -231,8 +230,8 @@ fn main() -> Result<(), slint::PlatformError> {
         let state = app_state.clone();
         move || {
             tracing::debug!("Browse mods folder clicked");
-            if let Ok(Some(path)) = handlers::folders::browse_mods_folder() {
-                if let Some(window) = window_weak.upgrade() {
+            if let Ok(Some(path)) = handlers::folders::browse_mods_folder()
+                && let Some(window) = window_weak.upgrade() {
                     // Update UI
                     window.set_mods_folder_path(path.to_string_lossy().to_string().into());
 
@@ -241,7 +240,6 @@ fn main() -> Result<(), slint::PlatformError> {
                     state_guard.set_mods_folder(path);
                     tracing::info!("Mods folder updated in AppState");
                 }
-            }
         }
     });
 
@@ -250,8 +248,8 @@ fn main() -> Result<(), slint::PlatformError> {
         let state = app_state.clone();
         move || {
             tracing::debug!("Browse scan folder clicked");
-            if let Ok(Some(path)) = handlers::folders::browse_scan_folder() {
-                if let Some(window) = window_weak.upgrade() {
+            if let Ok(Some(path)) = handlers::folders::browse_scan_folder()
+                && let Some(window) = window_weak.upgrade() {
                     // Update UI
                     window.set_scan_folder_path(path.to_string_lossy().to_string().into());
 
@@ -260,7 +258,6 @@ fn main() -> Result<(), slint::PlatformError> {
                     state_guard.set_scan_folder(path);
                     tracing::info!("Scan folder updated in AppState");
                 }
-            }
         }
     });
 
@@ -883,7 +880,7 @@ fn main() -> Result<(), slint::PlatformError> {
                             w.set_reports_list(model.into());
 
                             // Auto-select first report if available
-                            if reports.len() > 0 {
+                            if !reports.is_empty() {
                                 w.set_selected_report_index(0);
                                 w.set_selected_report_path(
                                     reports[0].path.to_string_lossy().to_string().into(),
@@ -1734,8 +1731,8 @@ fn main() -> Result<(), slint::PlatformError> {
 
                         // Save to Crash Logs folder for scanning
                         let crashlogs_dir = std::path::PathBuf::from("Crash Logs");
-                        if !crashlogs_dir.exists() {
-                            if let Err(e) = std::fs::create_dir_all(&crashlogs_dir) {
+                        if !crashlogs_dir.exists()
+                            && let Err(e) = std::fs::create_dir_all(&crashlogs_dir) {
                                 tracing::error!("Failed to create Crash Logs directory: {}", e);
                                 if let Some(w) = window.upgrade() {
                                     w.set_pastebin_loading(false);
@@ -1745,7 +1742,6 @@ fn main() -> Result<(), slint::PlatformError> {
                                 }
                                 return;
                             }
-                        }
 
                         // Generate filename with timestamp
                         let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");

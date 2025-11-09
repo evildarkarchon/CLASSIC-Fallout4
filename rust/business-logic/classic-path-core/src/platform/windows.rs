@@ -142,6 +142,7 @@ fn query_registry_path(hkey: &RegKey, path: &str, value_name: &str) -> GamePathR
 /// remove_readonly(file)?;
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[allow(clippy::permissions_set_readonly_false)]
 pub fn remove_readonly(file_path: &Path) -> PathResult<()> {
     // Get current permissions
     let metadata = fs::metadata(file_path).map_err(|e| PathError::IoError {

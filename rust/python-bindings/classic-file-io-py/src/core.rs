@@ -66,7 +66,11 @@ impl PyFileIOCore {
     /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_file")]
-    pub fn py_read_file<'py>(&self, py: Python<'py>, path: PathLike) -> PyResult<Bound<'py, PyAny>> {
+    pub fn py_read_file<'py>(
+        &self,
+        py: Python<'py>,
+        path: PathLike,
+    ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
         let path_buf: PathBuf = path.into();
 
@@ -104,7 +108,11 @@ impl PyFileIOCore {
     /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_lines")]
-    pub fn py_read_lines<'py>(&self, py: Python<'py>, path: PathLike) -> PyResult<Bound<'py, PyAny>> {
+    pub fn py_read_lines<'py>(
+        &self,
+        py: Python<'py>,
+        path: PathLike,
+    ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
         let path_buf: PathBuf = path.into();
 
@@ -119,7 +127,11 @@ impl PyFileIOCore {
     /// Accepts both string paths and pathlib.Path objects.
     /// Returns a Python coroutine - use with await in Python.
     #[pyo3(name = "read_bytes")]
-    pub fn py_read_bytes<'py>(&self, py: Python<'py>, path: PathLike) -> PyResult<Bound<'py, PyAny>> {
+    pub fn py_read_bytes<'py>(
+        &self,
+        py: Python<'py>,
+        path: PathLike,
+    ) -> PyResult<Bound<'py, PyAny>> {
         let inner = self.inner.clone();
         let path_buf: PathBuf = path.into();
 

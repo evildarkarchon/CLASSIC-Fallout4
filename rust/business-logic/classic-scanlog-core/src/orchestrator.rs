@@ -4,9 +4,16 @@
 //! components into a unified pipeline for processing crash logs.
 
 use crate::error::Result;
+use crate::formid_analyzer::FormIDAnalyzerCore;
+use crate::gpu_detector::GpuDetector;
+use crate::mod_detector::{detect_mods_double, detect_mods_important, detect_mods_single};
 use crate::parser::LogParser;
+use crate::plugin_analyzer::PluginAnalyzer;
+use crate::suspect_scanner::SuspectScanner;
 use classic_file_io_core::FileIOCore;
-use std::collections::HashMap;
+use once_cell::sync::Lazy;
+use regex::Regex;
+use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 /// Analysis configuration
@@ -29,6 +36,12 @@ pub struct AnalysisConfig {
     /// Game version
     pub game_version: String,
 
+    /// Game version for VR variant (if applicable)
+    pub game_version_vr: String,
+
+    /// New/updated game version (for compatibility checks)
+    pub game_version_new: String,
+
     /// XSE acronym (e.g., "F4SE")
     pub xse_acronym: String,
 
@@ -39,10 +52,13 @@ pub struct AnalysisConfig {
     /// General items to ignore during analysis (catch-all ignore list)
     pub ignore_list: Vec<String>,
 
+    /// Whether to show FormID values in reports (requires database pool)
+    pub show_formid_values: bool,
+
     /// Pattern dictionaries for suspect detection
     pub suspects_error: HashMap<String, String>,
     /// Stack-based suspect patterns for crash analysis (e.g., function names, memory addresses)
-    pub suspects_stack: HashMap<String, String>,
+    pub suspects_stack: HashMap<String, Vec<String>>,
 
     /// Mod databases
     pub mods_core: HashMap<String, String>,
@@ -52,14 +68,16 @@ pub struct AnalysisConfig {
     pub mods_conf: HashMap<String, String>,
     /// Mod solutions database for providing fixes and workarounds (e.g., compatibility patches, configuration changes)
     pub mods_solu: HashMap<String, String>,
+    /// Outdated, redundant, or community patch mods database
+    pub mods_opc2: HashMap<String, String>,
 }
 
 impl AnalysisConfig {
     /// Creates a new analysis configuration with default values for all optional fields.
     ///
     /// This constructor initializes an `AnalysisConfig` with the specified game and VR mode,
-    /// setting all other fields (crash generator info, ignore lists, pattern dictionaries, mod databases)
-    /// to empty defaults. These fields should be populated before analysis begins.
+    /// setting all other fields (crash generator info, game versions, ignore lists, pattern dictionaries,
+    /// mod databases) to empty defaults. These fields should be populated before analysis begins.
     ///
     /// # Arguments
     ///
@@ -93,16 +111,20 @@ impl AnalysisConfig {
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
             game_version: String::new(),
+            game_version_vr: String::new(),
+            game_version_new: String::new(),
             xse_acronym: String::new(),
             ignore_plugins: Vec::new(),
             ignore_records: Vec::new(),
             ignore_list: Vec::new(),
+            show_formid_values: false,
             suspects_error: HashMap::new(),
             suspects_stack: HashMap::new(),
             mods_core: HashMap::new(),
             mods_freq: HashMap::new(),
             mods_conf: HashMap::new(),
             mods_solu: HashMap::new(),
+            mods_opc2: HashMap::new(),
         }
     }
 }
@@ -231,6 +253,44 @@ impl AnalysisResult {
     }
 }
 
+/// Extract module names (DLL filenames) from module segment lines
+///
+/// This function extracts just the module filename (e.g., "f4se_loader.dll")
+/// from module lines that may include version info (e.g., "f4se_loader.dll v0.6.20").
+///
+/// # Arguments
+///
+/// * `module_lines` - Lines from the MODULES segment
+///
+/// # Returns
+///
+/// A HashSet of lowercase module names (DLL filenames only)
+fn extract_module_names(module_lines: &[Arc<str>]) -> HashSet<String> {
+    // Pre-compiled regex pattern to extract module name (everything up to .dll)
+    // Pattern: (.*?\.dll)\s*v?.* - captures filename.dll, ignoring version info
+    static MODULE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i)(.*?\.dll)\s*v?.*").unwrap());
+
+    let mut result = HashSet::new();
+
+    for line in module_lines {
+        let text = line.trim();
+        if text.is_empty() {
+            continue;
+        }
+
+        if let Some(captures) = MODULE_PATTERN.captures(text) {
+            if let Some(module_name) = captures.get(1) {
+                result.insert(module_name.as_str().to_lowercase());
+            }
+        } else {
+            // If no pattern match, add the whole line
+            result.insert(text.to_lowercase());
+        }
+    }
+
+    result
+}
+
 /// Main orchestrator for crash log analysis (Pure Rust - NO PyO3)
 ///
 /// Coordinates all analysis components to process crash logs from start to finish.
@@ -239,6 +299,9 @@ pub struct OrchestratorCore {
     config: AnalysisConfig,
     file_io: FileIOCore,
     parser: LogParser,
+    plugin_analyzer: Option<PluginAnalyzer>,
+    formid_analyzer: FormIDAnalyzerCore,
+    suspect_scanner: Option<SuspectScanner>,
 }
 
 impl OrchestratorCore {
@@ -284,10 +347,53 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub fn new(config: AnalysisConfig) -> Result<Self> {
+        // Initialize plugin analyzer if ignore lists are available
+        let plugin_analyzer = if !config.ignore_plugins.is_empty() || !config.ignore_list.is_empty()
+        {
+            Some(PluginAnalyzer::new(
+                config.ignore_plugins.clone(),
+                config.ignore_list.clone(),
+                config.crashgen_name.clone(),
+                config.game_version.clone(),
+                config.game_version_vr.clone(),
+                config.game_version_new.clone(),
+            )?)
+        } else {
+            None
+        };
+
+        // Initialize suspect scanner if suspect patterns are available
+        let suspect_scanner =
+            if !config.suspects_error.is_empty() || !config.suspects_stack.is_empty() {
+                Some(SuspectScanner::new(
+                    config.suspects_error.clone(),
+                    config.suspects_stack.clone(),
+                ))
+            } else {
+                None
+            };
+
+        // Extract values before moving config
+        let show_formid_values = config.show_formid_values;
+        let crashgen_name = config.crashgen_name.clone();
+        let mods_core = config.mods_core.clone();
+        let mods_freq = config.mods_freq.clone();
+        let mods_conf = config.mods_conf.clone();
+
         Ok(Self {
             config,
             file_io: FileIOCore::new("utf-8", "ignore", 100, 50),
             parser: LogParser::new(None)?,
+            plugin_analyzer,
+            formid_analyzer: FormIDAnalyzerCore::new(
+                None, // No database pool
+                show_formid_values,
+                crashgen_name,
+                mods_core,
+                mods_freq,
+                mods_conf,
+            )?,
+            suspect_scanner,
         })
     }
 
@@ -356,23 +462,232 @@ impl OrchestratorCore {
         let log_content = self.file_io.read_file(Path::new(&log_path)).await?;
 
         // Convert to lines for parser (using Arc<str> for efficient memory sharing)
-        let lines: Vec<Arc<str>> = log_content.lines().map(|s| Arc::from(s)).collect();
+        let lines: Vec<Arc<str>> = log_content.lines().map(Arc::from).collect();
 
         // Parse log into segments
         let segments = self.parser.parse_segments(&lines);
 
-        // Extract metadata, plugins, etc.
+        // Initialize report
         let mut report_lines = Vec::new();
         report_lines.push(format!("Analysis of: {}\n", log_path));
         report_lines.push(format!("Segments found: {}\n", segments.len()));
+        report_lines.push("\n".to_string());
+
+        // Statistics
+        let mut formid_count = 0;
+        let mut plugin_count = 0;
+        let mut suspect_count = 0;
+
+        // Store plugins for mod detection
+        let mut plugins_map: Option<HashMap<String, String>> = None;
+
+        // Extract plugins from segments (if plugin analyzer is available)
+        if let Some(ref analyzer) = self.plugin_analyzer {
+            // Find plugin segment (typically the 6th segment in Buffout logs)
+            if segments.len() > 5 {
+                let plugin_segment = &segments[5];
+
+                // Convert Arc<str> to String for compatibility
+                let plugin_lines: Vec<String> =
+                    plugin_segment.iter().map(|s| s.to_string()).collect();
+
+                // Scan plugins using the analyzer
+                if let Ok((plugins, loaded, _)) = analyzer.loadorder_scan_log(
+                    plugin_lines,
+                    Some(self.config.game_version.as_str()),
+                    Some(self.config.crashgen_latest.as_str()),
+                ) {
+                    plugin_count = plugins.len();
+                    if loaded {
+                        report_lines.push(format!("PLUGINS: {} loaded\n", plugin_count));
+
+                        // Add top 5 plugins to report
+                        let sample_plugins: Vec<_> = plugins.keys().take(5).collect();
+                        for (i, plugin) in sample_plugins.iter().enumerate() {
+                            report_lines.push(format!("  {}. {}\n", i + 1, plugin));
+                        }
+                        if plugin_count > 5 {
+                            report_lines.push(format!("  ... and {} more\n", plugin_count - 5));
+                        }
+                        report_lines.push("\n".to_string());
+                    }
+                    // Store plugins for mod detection
+                    plugins_map = Some(plugins);
+                }
+            }
+        }
+
+        // Extract FormIDs from callstack (typically the 3rd segment)
+        if segments.len() > 2 {
+            let callstack_segment = &segments[2];
+
+            // Convert Arc<str> to String for FormID extraction
+            let callstack_lines: Vec<String> =
+                callstack_segment.iter().map(|s| s.to_string()).collect();
+
+            // Extract FormIDs using FormIDAnalyzerCore
+            let formids = self.formid_analyzer.extract_formids(callstack_lines);
+            formid_count = formids.len();
+
+            if formid_count > 0 {
+                report_lines.push(format!("FORMIDS: {} found\n", formid_count));
+
+                // Add top 5 FormIDs to report
+                for (i, formid) in formids.iter().take(5).enumerate() {
+                    report_lines.push(format!("  {}. {}\n", i + 1, formid));
+                }
+                if formid_count > 5 {
+                    report_lines.push(format!("  ... and {} more\n", formid_count - 5));
+                }
+                report_lines.push("\n".to_string());
+            }
+        }
+
+        // Scan for suspects (if suspect scanner is available)
+        if let Some(ref scanner) = self.suspect_scanner {
+            // Extract main error (typically first segment)
+            let main_error = if !segments.is_empty() {
+                segments[0].join("\n")
+            } else {
+                String::new()
+            };
+
+            // Extract callstack (typically third segment)
+            let callstack = if segments.len() > 2 {
+                segments[2].join("\n")
+            } else {
+                String::new()
+            };
+
+            let max_warn_length = 50; // Default width for formatting
+
+            // Scan for error suspects
+            let (error_fragment, error_found) = scanner
+                .suspect_scan_mainerror(&main_error, max_warn_length)
+                .unwrap_or_else(|_| (crate::report::ReportFragment::empty(), false));
+
+            // Scan for stack suspects
+            let (stack_fragment, stack_found) = scanner
+                .suspect_scan_stack(&main_error, &callstack, max_warn_length)
+                .unwrap_or_else(|_| (crate::report::ReportFragment::empty(), false));
+
+            if error_found || stack_found {
+                report_lines.push("SUSPECTS FOUND:\n".to_string());
+                report_lines.push("─".repeat(60).to_string());
+                report_lines.push("\n".to_string());
+
+                if error_found {
+                    report_lines.extend(error_fragment.to_list());
+                }
+
+                if stack_found {
+                    report_lines.extend(stack_fragment.to_list());
+                }
+
+                report_lines.push("\n".to_string());
+                suspect_count = if error_found { 1 } else { 0 } + if stack_found { 1 } else { 0 };
+            }
+        }
+
+        // Mod detection (if we have plugin data)
+        if let Some(plugins) = plugins_map {
+            // Extract GPU info from system segment (segment 1)
+            let gpu_rival_string: Option<String> = if segments.len() > 1 {
+                let system_segment: Vec<String> = segments[1].iter().map(|s| s.to_string()).collect();
+                let gpu_info = GpuDetector::get_gpu_info(&system_segment);
+                gpu_info.rival
+            } else {
+                None
+            };
+            let gpu_rival = gpu_rival_string.as_deref();
+
+            // Extract XSE modules from MODULES segment (segment 3)
+            let xse_modules: HashSet<String> = if segments.len() > 3 {
+                extract_module_names(&segments[3])
+            } else {
+                HashSet::new()
+            };
+
+            // Check for conflicting mods
+            if !self.config.mods_conf.is_empty() {
+                if let Ok(conflict_lines) = detect_mods_double(
+                    self.config.mods_conf.clone(),
+                    plugins.clone(),
+                ) {
+                    if !conflict_lines.is_empty() {
+                        report_lines.extend(conflict_lines);
+                    }
+                }
+            }
+
+            // Check for frequently problematic mods
+            if !self.config.mods_freq.is_empty() {
+                if let Ok(freq_lines) = detect_mods_single(
+                    self.config.mods_freq.clone(),
+                    plugins.clone(),
+                ) {
+                    if !freq_lines.is_empty() {
+                        report_lines.extend(freq_lines);
+                    }
+                }
+            }
+
+            // Check for mods with known solutions
+            if !self.config.mods_solu.is_empty() {
+                if let Ok(solu_lines) = detect_mods_single(
+                    self.config.mods_solu.clone(),
+                    plugins.clone(),
+                ) {
+                    if !solu_lines.is_empty() {
+                        report_lines.extend(solu_lines);
+                    }
+                }
+            }
+
+            // Check for important core mods with GPU considerations
+            if !self.config.mods_core.is_empty() {
+                if let Ok(important_lines) = detect_mods_important(
+                    self.config.mods_core.clone(),
+                    plugins.clone(),
+                    gpu_rival,
+                    xse_modules.clone(),
+                ) {
+                    if !important_lines.is_empty() {
+                        report_lines.extend(important_lines);
+                    }
+                }
+            }
+
+            // Check for OPC2 mods (outdated, redundant, or have community patches)
+            if !self.config.mods_opc2.is_empty() {
+                if let Ok(opc2_lines) = detect_mods_single(
+                    self.config.mods_opc2.clone(),
+                    plugins.clone(),
+                ) {
+                    if !opc2_lines.is_empty() {
+                        report_lines.extend(opc2_lines);
+                    }
+                }
+            }
+        }
+
+        report_lines.push("─".repeat(60).to_string());
+        report_lines.push("\n".to_string());
+        report_lines.push(format!(
+            "Analysis completed in {}ms\n",
+            start_time.elapsed().as_millis()
+        ));
 
         let processing_time_ms = start_time.elapsed().as_millis() as u64;
 
-        Ok(AnalysisResult::success(
-            log_path,
-            report_lines,
-            processing_time_ms,
-        ))
+        let mut result = AnalysisResult::success(log_path, report_lines, processing_time_ms);
+
+        // Update statistics
+        result.formid_count = formid_count;
+        result.plugin_count = plugin_count;
+        result.suspect_count = suspect_count;
+
+        Ok(result)
     }
 
     /// Asynchronously processes multiple crash log files sequentially.

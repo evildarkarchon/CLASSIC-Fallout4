@@ -22,9 +22,6 @@ pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
 # Async runtime
 tokio = { workspace = true }
 
-[profile.release]
-# Inherits from workspace
-
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"

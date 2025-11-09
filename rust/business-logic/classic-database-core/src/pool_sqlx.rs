@@ -418,7 +418,7 @@ impl DatabasePool {
 
     /// Get the maximum number of connections per pool
     pub fn get_max_connections(&self) -> Option<usize> {
-        self.max_connections.read().unwrap().clone()
+        *self.max_connections.read().unwrap()
     }
 
     /// Set the maximum number of connections per pool

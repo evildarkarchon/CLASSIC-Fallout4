@@ -49,12 +49,11 @@ pub fn scan_reports(state: SharedAppState) -> Result<Vec<ReportItem>> {
     }
 
     // Location 2: Custom scan folder from settings
-    if let Some(scan_folder) = state_guard.scan_folder() {
-        if scan_folder.exists() {
+    if let Some(scan_folder) = state_guard.scan_folder()
+        && scan_folder.exists() {
             tracing::debug!("Scanning custom path: {}", scan_folder.display());
             scan_directory(scan_folder, &mut report_paths)?;
         }
-    }
 
     // Location 3: Backup folder for unsolved logs
     if let Some(docs_root) = state_guard.docs_root() {
@@ -98,11 +97,10 @@ fn scan_directory(dir: &Path, reports: &mut HashSet<PathBuf>) -> Result<()> {
         let path = entry.path();
 
         // Check if it's an AUTOSCAN report
-        if let Some(filename) = path.file_name().and_then(|n| n.to_str()) {
-            if filename.ends_with("-AUTOSCAN.md") {
+        if let Some(filename) = path.file_name().and_then(|n| n.to_str())
+            && filename.ends_with("-AUTOSCAN.md") {
                 reports.insert(path.to_path_buf());
             }
-        }
     }
 
     Ok(())
@@ -215,14 +213,13 @@ impl ReportWatcher {
         }
 
         // Location 2: Custom scan folder
-        if let Some(scan_folder) = state_guard.scan_folder() {
-            if scan_folder.exists() {
+        if let Some(scan_folder) = state_guard.scan_folder()
+            && scan_folder.exists() {
                 watcher
                     .watch(scan_folder, RecursiveMode::NonRecursive)
                     .with_context(|| format!("Failed to watch: {}", scan_folder.display()))?;
                 tracing::debug!("Watching: {}", scan_folder.display());
             }
-        }
 
         // Location 3: Backup folder
         if let Some(docs_root) = state_guard.docs_root() {

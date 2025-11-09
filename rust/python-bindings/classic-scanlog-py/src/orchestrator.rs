@@ -30,6 +30,78 @@ impl PyAnalysisConfig {
         }
     }
 
+    /// Create AnalysisConfig from YamlData
+    ///
+    /// Converts a YamlData object from classic_config into an AnalysisConfig
+    /// for use with the orchestrator.
+    ///
+    /// # Arguments
+    /// * `yamldata` - YamlData object from classic_config module
+    ///
+    /// # Returns
+    /// Configured AnalysisConfig instance
+    #[staticmethod]
+    pub fn from_yamldata(yamldata: &Bound<'_, pyo3::types::PyAny>) -> PyResult<Self> {
+        // Extract game and vr_mode (not available in YamlData, use defaults)
+        let game = yamldata.getattr("crashgen_name")?.extract::<String>()?;
+        let vr_mode = false; // YamlData doesn't expose this directly
+
+        // Create base config
+        let mut config = AnalysisConfig::new(game, vr_mode);
+
+        // Populate from YamlData fields
+        config.crashgen_name = yamldata.getattr("crashgen_name")?.extract::<String>()?;
+        config.crashgen_latest = yamldata.getattr("crashgen_latest_og")?.extract::<String>()?;
+        config.game_version = yamldata.getattr("game_version")?.extract::<String>()?;
+        config.game_version_vr = yamldata.getattr("game_version_vr")?.extract::<String>()?;
+        config.game_version_new = yamldata.getattr("game_version_new")?.extract::<String>()?;
+        config.xse_acronym = yamldata.getattr("xse_acronym")?.extract::<String>()?;
+
+        config.ignore_plugins = yamldata.getattr("game_ignore_plugins")?.extract::<Vec<String>>()?;
+        config.ignore_records = yamldata.getattr("game_ignore_records")?.extract::<Vec<String>>()?;
+        config.ignore_list = yamldata.getattr("ignore_list")?.extract::<Vec<String>>()?;
+
+        config.show_formid_values = false; // Not in YamlData
+
+        // Extract dictionaries
+        config.suspects_error = yamldata
+            .getattr("suspects_error_list")?
+            .extract::<std::collections::HashMap<String, String>>()?;
+
+        config.suspects_stack = yamldata
+            .getattr("suspects_stack_list")?
+            .extract::<std::collections::HashMap<String, String>>()?
+            .into_iter()
+            .map(|(k, v)| {
+                // Convert string values to Vec<String> by splitting on newlines
+                let patterns: Vec<String> = v
+                    .lines()
+                    .map(|line| line.trim().to_string())
+                    .filter(|line| !line.is_empty())
+                    .collect();
+                (k, patterns)
+            })
+            .collect();
+
+        config.mods_core = yamldata
+            .getattr("game_mods_core")?
+            .extract::<std::collections::HashMap<String, String>>()?;
+        config.mods_freq = yamldata
+            .getattr("game_mods_freq")?
+            .extract::<std::collections::HashMap<String, String>>()?;
+        config.mods_conf = yamldata
+            .getattr("game_mods_conf")?
+            .extract::<std::collections::HashMap<String, String>>()?;
+        config.mods_solu = yamldata
+            .getattr("game_mods_solu")?
+            .extract::<std::collections::HashMap<String, String>>()?;
+        config.mods_opc2 = yamldata
+            .getattr("game_mods_opc2")?
+            .extract::<std::collections::HashMap<String, String>>()?;
+
+        Ok(Self { inner: config })
+    }
+
     /// Get the game identifier
     #[getter]
     pub fn game(&self) -> String {
@@ -90,6 +162,30 @@ impl PyAnalysisConfig {
         self.inner.game_version = value;
     }
 
+    /// Get the VR game version
+    #[getter]
+    pub fn game_version_vr(&self) -> String {
+        self.inner.game_version_vr.clone()
+    }
+
+    /// Set the VR game version
+    #[setter]
+    pub fn set_game_version_vr(&mut self, value: String) {
+        self.inner.game_version_vr = value;
+    }
+
+    /// Get the new/updated game version
+    #[getter]
+    pub fn game_version_new(&self) -> String {
+        self.inner.game_version_new.clone()
+    }
+
+    /// Set the new/updated game version
+    #[setter]
+    pub fn set_game_version_new(&mut self, value: String) {
+        self.inner.game_version_new = value;
+    }
+
     /// Get the XSE (script extender) acronym
     #[getter]
     pub fn xse_acronym(&self) -> String {
@@ -136,6 +232,130 @@ impl PyAnalysisConfig {
     #[setter]
     pub fn set_ignore_list(&mut self, value: Vec<String>) {
         self.inner.ignore_list = value;
+    }
+
+    /// Get whether to show FormID values in reports
+    #[getter]
+    pub fn show_formid_values(&self) -> bool {
+        self.inner.show_formid_values
+    }
+
+    /// Set whether to show FormID values in reports
+    #[setter]
+    pub fn set_show_formid_values(&mut self, value: bool) {
+        self.inner.show_formid_values = value;
+    }
+
+    /// Get the suspect error patterns dictionary
+    #[getter]
+    pub fn suspects_error(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.suspects_error {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the suspect error patterns dictionary
+    #[setter]
+    pub fn set_suspects_error(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.suspects_error = value;
+    }
+
+    /// Get the suspect stack patterns dictionary
+    #[getter]
+    pub fn suspects_stack(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.suspects_stack {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the suspect stack patterns dictionary
+    #[setter]
+    pub fn set_suspects_stack(&mut self, value: std::collections::HashMap<String, Vec<String>>) {
+        self.inner.suspects_stack = value;
+    }
+
+    /// Get the core mods database
+    #[getter]
+    pub fn mods_core(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.mods_core {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the core mods database
+    #[setter]
+    pub fn set_mods_core(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.mods_core = value;
+    }
+
+    /// Get the frequently problematic mods database
+    #[getter]
+    pub fn mods_freq(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.mods_freq {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the frequently problematic mods database
+    #[setter]
+    pub fn set_mods_freq(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.mods_freq = value;
+    }
+
+    /// Get the mod conflicts database
+    #[getter]
+    pub fn mods_conf(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.mods_conf {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the mod conflicts database
+    #[setter]
+    pub fn set_mods_conf(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.mods_conf = value;
+    }
+
+    /// Get the mod solutions database
+    #[getter]
+    pub fn mods_solu(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.mods_solu {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the mod solutions database
+    #[setter]
+    pub fn set_mods_solu(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.mods_solu = value;
+    }
+
+    /// Get the outdated/redundant/community patch mods database
+    #[getter]
+    pub fn mods_opc2(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.mods_opc2 {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the outdated/redundant/community patch mods database
+    #[setter]
+    pub fn set_mods_opc2(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.mods_opc2 = value;
     }
 }
 

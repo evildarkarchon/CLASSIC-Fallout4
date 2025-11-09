@@ -175,11 +175,10 @@ async fn monitor_loop(
             // File system event received
             Some(event) = watch_rx.recv() => {
                 // Check if this event is for our log file
-                if event.paths.iter().any(|p| p == &log_path) {
-                    if let Err(e) = check_for_updates(&analyzer, &tx).await {
+                if event.paths.iter().any(|p| p == &log_path)
+                    && let Err(e) = check_for_updates(&analyzer, &tx).await {
                         tracing::error!("Error checking for updates: {}", e);
                     }
-                }
             }
 
             // Periodic poll (fallback)

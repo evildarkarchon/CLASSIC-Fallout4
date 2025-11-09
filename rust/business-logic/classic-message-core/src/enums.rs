@@ -1,4 +1,4 @@
-///! Message type and target enumerations for the MessageHandler system.
+//! Message type and target enumerations for the MessageHandler system.
 use serde::{Deserialize, Serialize};
 
 /// Represents various types of messages categorized by their context and severity.
@@ -108,9 +108,10 @@ impl MessageType {
 /// assert!(target.should_display_in_gui());
 /// assert!(target.should_display_in_cli());
 /// ```
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
 pub enum MessageTarget {
     /// Show in both GUI and CLI.
+    #[default]
     All,
     /// Show only in GUI mode (legacy, prefer `Gui`).
     GuiOnly,
@@ -195,11 +196,6 @@ impl MessageTarget {
     }
 }
 
-impl Default for MessageTarget {
-    fn default() -> Self {
-        Self::All
-    }
-}
 
 #[cfg(test)]
 mod tests {

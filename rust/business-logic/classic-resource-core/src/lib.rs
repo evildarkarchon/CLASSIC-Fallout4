@@ -25,7 +25,9 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
+use std::convert::Infallible;
 use std::path::{Path, PathBuf};
+use std::str::FromStr;
 use thiserror::Error;
 use walkdir::WalkDir;
 
@@ -124,42 +126,6 @@ impl ResourceType {
         }
     }
 
-    /// Parse a resource type from a string.
-    ///
-    /// # Arguments
-    ///
-    /// * `s` - The string to parse (case-insensitive)
-    ///
-    /// # Returns
-    ///
-    /// The corresponding `ResourceType`, or `ResourceType::Other` if unknown.
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use classic_resource_core::ResourceType;
-    ///
-    /// assert_eq!(ResourceType::from_str("texture"), ResourceType::Texture);
-    /// assert_eq!(ResourceType::from_str("PLUGIN"), ResourceType::Plugin);
-    /// assert_eq!(ResourceType::from_str("unknown"), ResourceType::Other);
-    /// ```
-    #[must_use]
-    pub fn from_str(s: &str) -> Self {
-        match s.to_lowercase().as_str() {
-            "texture" => Self::Texture,
-            "mesh" => Self::Mesh,
-            "script" => Self::Script,
-            "plugin" => Self::Plugin,
-            "sound" => Self::Sound,
-            "animation" => Self::Animation,
-            "interface" => Self::Interface,
-            "strings" => Self::Strings,
-            "archive" => Self::Archive,
-            "config" => Self::Config,
-            _ => Self::Other,
-        }
-    }
-
     /// Get all standard file extensions for this resource type.
     ///
     /// # Returns
@@ -189,6 +155,26 @@ impl ResourceType {
             Self::Config => &["ini"],
             Self::Other => &[],
         }
+    }
+}
+
+impl FromStr for ResourceType {
+    type Err = Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(match s.to_lowercase().as_str() {
+            "texture" => Self::Texture,
+            "mesh" => Self::Mesh,
+            "script" => Self::Script,
+            "plugin" => Self::Plugin,
+            "sound" => Self::Sound,
+            "animation" => Self::Animation,
+            "interface" => Self::Interface,
+            "strings" => Self::Strings,
+            "archive" => Self::Archive,
+            "config" => Self::Config,
+            _ => Self::Other,
+        })
     }
 }
 
@@ -562,10 +548,10 @@ mod tests {
 
     #[test]
     fn test_resource_type_from_str() {
-        assert_eq!(ResourceType::from_str("texture"), ResourceType::Texture);
-        assert_eq!(ResourceType::from_str("TEXTURE"), ResourceType::Texture);
-        assert_eq!(ResourceType::from_str("plugin"), ResourceType::Plugin);
-        assert_eq!(ResourceType::from_str("unknown"), ResourceType::Other);
+        assert_eq!("texture".parse::<ResourceType>().unwrap(), ResourceType::Texture);
+        assert_eq!("TEXTURE".parse::<ResourceType>().unwrap(), ResourceType::Texture);
+        assert_eq!("plugin".parse::<ResourceType>().unwrap(), ResourceType::Plugin);
+        assert_eq!("unknown".parse::<ResourceType>().unwrap(), ResourceType::Other);
     }
 
     #[test]

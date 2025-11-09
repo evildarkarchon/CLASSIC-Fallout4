@@ -285,12 +285,12 @@ def _crashlogs_get_files_rust() -> list[Path]:
     """
     Rust-accelerated implementation of crash log file collection (10x faster).
 
-    Uses PyLogCollector from classic_core.file_io for high-performance async file operations.
+    Uses PyLogCollector from classic_file_io for high-performance async file operations.
 
     Returns:
         list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
     """
-    from classic_core import file_io
+    import classic_file_io
 
     logger.debug("- - - INITIATED CRASH LOG FILE LIST GENERATION (Rust)")
 
@@ -304,7 +304,7 @@ def _crashlogs_get_files_rust() -> list[Path]:
     custom_folder_str = str(custom_folder) if custom_folder else None
 
     # Create LogCollector
-    collector = file_io.PyLogCollector(
+    collector = classic_file_io.PyLogCollector(
         base_folder=base_folder_str,
         xse_folder=xse_folder_str,
         custom_folder=custom_folder_str

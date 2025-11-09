@@ -15,7 +15,7 @@ from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.integration.factory import get_file_io, get_plugin_analyzer
+from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager, write_file_async
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
@@ -24,7 +24,7 @@ from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
-from ClassicLib.ScanLog.Parser import extract_module_names, find_segments
+from ClassicLib.ScanLog.Parser import extract_module_names
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
@@ -215,8 +215,9 @@ class OrchestratorCore:
         # Generate report header
         composer.add(self.report_generator.generate_header(crashlog_file.name))
 
-        # Parse crash log segments (direct call - we're in a thread pool thread)
-        (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = find_segments(
+        # Parse crash log segments using Rust acceleration if available
+        parser = get_parser()
+        (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = parser.find_segments(
             crash_data, self.yamldata.crashgen_name, self.yamldata.xse_acronym, self.game_root_name or ""
         )
 
@@ -389,7 +390,11 @@ class OrchestratorCore:
             ReportFragment: A composed report fragment summarizing findings from the asynchronous
             mod detection process, including identified issues or problematic mods.
         """
-        from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
+        # Get mod detector functions (Rust-accelerated if available)
+        mod_funcs = get_mod_detector()
+        detect_mods_single = mod_funcs["detect_mods_single"]
+        detect_mods_double = mod_funcs["detect_mods_double"]
+        detect_mods_important = mod_funcs["detect_mods_important"]
 
         composer = ReportComposer()
 
