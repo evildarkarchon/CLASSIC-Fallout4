@@ -421,23 +421,6 @@ class RustAsyncDatabasePool:
         """
         return self._rust_pool.get_stats()
 
-    async def optimize(self) -> None:
-        """
-        Optimizes the underlying system resources asynchronously.
-
-        This method leverages an asynchronous operation to perform optimization
-        on specified resources, ensuring improved system performance and efficiency.
-
-        Note:
-            This method is deprecated and may not be available in newer versions
-            of the Rust database pool. It will silently do nothing if not available.
-
-        Raises:
-            RuntimeError: If the operation fails or encounters issues.
-        """
-        if hasattr(self._rust_pool, "optimize"):
-            await self._rust_pool.optimize()  # pyright: ignore[reportAttributeAccessIssue]
-
     def set_game_table(self, table: str) -> None:
         """
         Sets the game table for the current instance.

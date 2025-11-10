@@ -27,7 +27,7 @@ class TestMixinIntegration:
                 self.settings_applied = True
 
         window = TestWindow()
-        with patch("ClassicLib.Interface.SettingsDialog.SettingsDialog.exec") as mock_exec:
+        with patch("ClassicLib.Interface.Settings.dialog.SettingsDialog.exec") as mock_exec:
             mock_exec.return_value = QDialog.DialogCode.Accepted
             window.open_settings()
             assert hasattr(window, "settings_applied")
@@ -42,7 +42,7 @@ class TestMixinIntegration:
 
         window = TestWindow()
         window.settings_applied = False
-        with patch("ClassicLib.Interface.SettingsDialog.SettingsDialog.exec") as mock_exec:
+        with patch("ClassicLib.Interface.Settings.dialog.SettingsDialog.exec") as mock_exec:
             mock_exec.return_value = QDialog.DialogCode.Rejected
             window.open_settings()
             assert not window.settings_applied
@@ -55,7 +55,7 @@ class TestMixinIntegration:
                 pass
 
         window = TestWindow()
-        with patch("ClassicLib.Interface.SettingsDialog.SettingsDialog") as mock_dialog_class:
+        with patch("ClassicLib.Interface.Settings.dialog.SettingsDialog") as mock_dialog_class:
             mock_instance = mock_dialog_class.return_value
             mock_instance.exec.return_value = QDialog.DialogCode.Rejected
             window.open_settings()
@@ -96,7 +96,7 @@ class TestErrorHandling:
             pass
 
         window = IncompleteWindow()
-        with patch("ClassicLib.Interface.SettingsDialog.SettingsDialog.exec") as mock_exec:
+        with patch("ClassicLib.Interface.Settings.dialog.SettingsDialog.exec") as mock_exec:
             mock_exec.return_value = QDialog.DialogCode.Accepted
             try:
                 window.open_settings()

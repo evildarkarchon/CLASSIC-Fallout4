@@ -21,6 +21,7 @@ from iniparse import configparser
 from tomlkit import TOMLDocument
 
 from ClassicLib import GlobalRegistry, msg_error
+from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssueSeverity
@@ -270,57 +271,6 @@ class ConfigFileCache:
         """
         return self._config_files[file_name_lower]
 
-    def _load_config(self, file_name_lower: str) -> None:
-        """
-        Loads and parses a configuration file, caching its contents (DEPRECATED).
-
-        .. deprecated::
-            Use :meth:`_load_config_async` instead. This synchronous method performs
-            blocking I/O operations that can degrade async performance.
-
-        Args:
-            file_name_lower (str): The lowercase name of the configuration file to be
-                loaded. Must correspond to a key in the internal `_config_files`
-                mapping.
-
-        Raises:
-            FileNotFoundError: If the specified `file_name_lower` does not exist in
-                the `_config_files` mapping.
-
-        Warning:
-            This method is deprecated and will be removed in a future version.
-            It performs blocking file I/O in an async-first codebase.
-        """
-        import warnings
-
-        warnings.warn(
-            "_load_config is deprecated, use _load_config_async instead. Blocking I/O degrades async performance.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-
-        if file_name_lower not in self._config_files:
-            raise FileNotFoundError
-
-        if file_name_lower in self._config_file_cache:
-            # Delete the cache and reload the file
-            del self._config_file_cache[file_name_lower]
-
-        file_path: Path = self._config_files[file_name_lower]
-        file_bytes: bytes = file_path.read_bytes()
-        file_encoding: str = chardet.detect(file_bytes)["encoding"] or "utf-8"
-        file_text: str = file_bytes.decode(file_encoding)
-        config: iniparse.ConfigParser = iniparse.ConfigParser()
-        config.readfp(io.StringIO(file_text, newline=None))
-
-        config_entry: ConfigFile = {
-            "encoding": file_encoding,
-            "path": file_path,
-            "settings": config,
-            "text": file_text,
-        }
-        self._config_file_cache[file_name_lower] = config_entry
-
     async def _load_config_async(self, file_name_lower: str) -> None:
         """
         Asynchronously loads and parses a configuration file with optimized I/O.
@@ -397,7 +347,9 @@ class ConfigFileCache:
 
         if file_name_lower not in self._config_file_cache:
             try:
-                self._load_config(file_name_lower)
+                # Use AsyncBridge to call async version for non-blocking I/O
+                bridge = AsyncBridge.get_instance()
+                bridge.run_async(self._load_config_async(file_name_lower))
             except FileNotFoundError:
                 logger.debug(f"Config file not found: {file_name_lower}")
                 msg_error(f"Config file not found: {file_name_lower}")
@@ -618,7 +570,9 @@ class ConfigFileCache:
             return False
         try:
             if file_name_lower not in self._config_file_cache:
-                self._load_config(file_name_lower)
+                # Use AsyncBridge to call async version for non-blocking I/O
+                bridge = AsyncBridge.get_instance()
+                bridge.run_async(self._load_config_async(file_name_lower))
             config: iniparse.ConfigParser = self._config_file_cache[file_name_lower]["settings"]
             return config.has_option(section, setting)
         except (FileNotFoundError, configparser.NoSectionError):

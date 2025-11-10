@@ -43,7 +43,11 @@ if TYPE_CHECKING:
 
 class FormIDAnalyzer:
     """
-    Analyzes FormID data and integrates with crash logs for synchronization and reporting.
+    GUI-ONLY synchronous adapter for FormID analysis (Backward Compatibility Wrapper).
+
+    ⚠️ WARNING: This class is designed for GUI contexts only and uses synchronous wrappers
+    around async operations. It will error in CLI/TUI mode. New code should use
+    FormIDAnalyzerCore directly for proper async-first operation.
 
     This class provides synchronous functionality for processing and analyzing FormID data,
     including extracting Form IDs from call stacks, matching them with crash logs, and
@@ -51,11 +55,19 @@ class FormIDAnalyzer:
     form ID extraction and matching with plugins listed in crash logs and synchronous
     database lookups for FormID values.
 
+    Usage Guidelines:
+        - GUI applications: Use FormIDAnalyzer (this class) with AsyncBridge
+        - CLI/TUI/Production: Use FormIDAnalyzerCore directly in async contexts
+        - Testing: Can use either depending on test environment
+
     Attributes:
         yamldata (ClassicScanLogsInfo): Configuration data for the analyzer.
         show_formid_values (bool): Whether to display the FormID values in the output.
         formid_db_exists (bool): Indicates whether a FormID database exists.
         formid_pattern (str): A predefined pattern used for FormID extraction.
+
+    See Also:
+        FormIDAnalyzerCore: Async-first implementation for production use
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo, show_formid_values: bool, formid_db_exists: bool) -> None:

@@ -13,7 +13,7 @@ import pytest
 from PySide6.QtWidgets import QWidget
 
 from ClassicLib.Constants import YAML
-from ClassicLib.Interface.SettingsDialog import SettingsDialog
+from ClassicLib.Interface.Settings.dialog import SettingsDialog
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.YamlSettingsCache import yaml_settings
 

@@ -521,7 +521,7 @@ def get_mod_detector() -> dict[str, Any]:
     }
 
 
-def get_yamldata(yaml_dirs: list | None = None, game: str | None = None, is_vr: bool | None = None) -> Any:  # noqa: ARG001
+def get_yamldata() -> Any:
     """
     Loads YAML data depending on the available components and configurations.
 
@@ -529,18 +529,9 @@ def get_yamldata(yaml_dirs: list | None = None, game: str | None = None, is_vr: 
     performance if the component is available and Rust is enabled. If Rust is not
     available, it falls back to a Python-based implementation.
 
-    Args:
-        yaml_dirs: A list of directories containing YAML files (deprecated, not used).
-        game: The name of the game for which data is being loaded (deprecated, not used).
-        is_vr: Indicates if the game is in virtual reality mode (deprecated, not used).
-
     Returns:
         Any: An instance of the YAML data handler, either Rust or Python-based,
         depending on availability.
-
-    Note:
-        The yaml_dirs, game, and is_vr parameters are deprecated and no longer used.
-        They are kept for backward compatibility but will be removed in a future version.
     """
     components = _get_components()
 

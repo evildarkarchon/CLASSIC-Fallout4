@@ -101,14 +101,6 @@ pub enum GamePathError {
     #[error("Failed to parse XSE log: {0}")]
     XseLogParseError(String),
 
-    /// XSE log file not found or unreadable (deprecated - use XseLogNotFound or XseLogReadError).
-    #[error("XSE log file not found or unreadable: {0}")]
-    XseLogMissing(PathBuf),
-
-    /// XSE log does not contain plugin directory path (deprecated - use XseLogParseError).
-    #[error("XSE log does not contain plugin directory path")]
-    XsePathNotFound,
-
     /// Game executable not found in detected path.
     #[error("Game executable '{exe}' not found in path: {path}")]
     ExecutableNotFound {

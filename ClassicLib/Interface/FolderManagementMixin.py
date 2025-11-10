@@ -176,7 +176,7 @@ class FolderManagementMixin:
             instance.
 
         """
-        from ClassicLib.Interface.SettingsDialog import SettingsDialog
+        from ClassicLib.Interface.Settings.dialog import SettingsDialog
 
         # noinspection PyTypeChecker
         dialog = SettingsDialog(self)
