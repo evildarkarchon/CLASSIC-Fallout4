@@ -144,3 +144,4 @@ CLASSIC Data/graphics/Scanner 111*.svg
 test-collection.txt
 rust/clippy_full_report.txt
 rust/clippy_report.txt
+rust/CLASSIC_Settings.yaml

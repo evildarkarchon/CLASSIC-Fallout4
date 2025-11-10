@@ -277,9 +277,8 @@ impl Default for PathConfig {
             ini_folder: None,
             scan_custom: None,
             mods_folder: None,
-            game_root: PathBuf::from(
-                "C:\\Program Files (x86)\\Steam\\steamapps\\common\\Fallout 4",
-            ),
+            // NO hardcoded paths - must be loaded from config or Local.yaml
+            game_root: PathBuf::new(),
             docs_root: None,
         }
     }
@@ -694,7 +693,9 @@ mod tests {
         assert!(config.ini_folder.is_none());
         assert!(config.scan_custom.is_none());
         assert!(config.mods_folder.is_none());
-        assert!(config.game_root.to_string_lossy().contains("Fallout 4"));
+        // Default should be empty - must be loaded from config or Local.yaml
+        assert_eq!(config.game_root, PathBuf::new());
+        assert!(config.docs_root.is_none());
     }
 
     #[tokio::test]

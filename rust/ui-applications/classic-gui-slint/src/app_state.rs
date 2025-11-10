@@ -130,12 +130,28 @@ impl AppState {
 
     /// Set the mods folder path (from UI)
     pub fn set_mods_folder(&mut self, path: PathBuf) {
-        self.mods_folder = Some(path);
+        self.mods_folder = Some(path.clone());
+        // Also update config so it gets saved to YAML
+        self.config.paths.mods_folder = Some(path);
+    }
+
+    /// Clear the mods folder path
+    pub fn clear_mods_folder(&mut self) {
+        self.mods_folder = None;
+        self.config.paths.mods_folder = None;
     }
 
     /// Set the custom scan folder path (from UI)
     pub fn set_scan_folder(&mut self, path: PathBuf) {
-        self.scan_folder = Some(path);
+        self.scan_folder = Some(path.clone());
+        // Also update config so it gets saved to YAML
+        self.config.paths.scan_custom = Some(path);
+    }
+
+    /// Clear the custom scan folder path
+    pub fn clear_scan_folder(&mut self) {
+        self.scan_folder = None;
+        self.config.paths.scan_custom = None;
     }
 
     /// Set FCX mode setting

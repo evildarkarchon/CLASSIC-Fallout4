@@ -137,11 +137,15 @@ impl SettingsData {
             tracing::debug!("  Mods Folder: {}", self.mods_folder);
             if !self.mods_folder.is_empty() {
                 state_guard.set_mods_folder(PathBuf::from(&self.mods_folder));
+            } else {
+                state_guard.clear_mods_folder();
             }
 
             tracing::debug!("  Scan Custom: {}", self.scan_custom);
             if !self.scan_custom.is_empty() {
                 state_guard.set_scan_folder(PathBuf::from(&self.scan_custom));
+            } else {
+                state_guard.clear_scan_folder();
             }
         }
 

@@ -41,7 +41,15 @@ export component SettingsDialog inherits Rectangle {
     width: 100%;
     height: 100%;
 
-    // Semi-transparent backdrop
+    // Semi-transparent backdrop with click-to-close
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        clicked => {
+            root.cancel-clicked();
+        }
+    }
+
     background: #00000080;
 
     // Animate fade in/out
@@ -98,6 +106,12 @@ export component SettingsDialog inherits Rectangle {
                 animate y {
                     duration: FluentDark.animation-normal;
                     easing: cubic-bezier(0.1, 0.9, 0.2, 1);
+                }
+
+                // Prevent clicks from propagating to backdrop
+                TouchArea {
+                    width: 100%;
+                    height: 100%;
                 }
 
                 VerticalLayout {
@@ -403,12 +417,5 @@ export component SettingsDialog inherits Rectangle {
             }
         }  // End HorizontalLayout (center)
     }  // End VerticalLayout (center)
-
-    // Handle click outside to cancel
-    TouchArea {
-            clicked => {
-                root.cancel-clicked();
-            }
-        }
     }  // End FocusScope
 }
