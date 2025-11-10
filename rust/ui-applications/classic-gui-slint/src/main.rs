@@ -121,68 +121,61 @@ fn main() -> Result<(), slint::PlatformError> {
                             let window_for_update = w.as_weak();
                             let version = w.get_app_version().to_string();
 
-                            // Spawn async task for update check
-                            if let Err(e) = slint::spawn_local(async move {
-                                // Load update preferences
-                                match handlers::update_check::UpdatePreferences::load().await {
-                                    Ok(prefs) => {
-                                        if prefs.dont_check_again {
-                                            tracing::info!(
-                                                "Update checking disabled by user preference"
-                                            );
-                                            return;
-                                        }
+                            // Use AsyncBridge to run update check with proper Tokio runtime context
+                            classic_shared_core::AsyncBridge::run_with_ui_update(
+                                async move {
+                                    // Load update preferences
+                                    let prefs = handlers::update_check::UpdatePreferences::load().await
+                                        .unwrap_or_default();
 
-                                        // Check for updates
-                                        match handlers::update_check::check_for_updates(&version)
-                                            .await
-                                        {
-                                            Ok(Some(info)) => {
-                                                // Check if this version was skipped
-                                                if prefs.should_skip(&info.version) {
-                                                    tracing::info!(
-                                                        "Skipping previously dismissed update: {}",
-                                                        info.version
-                                                    );
-                                                    return;
-                                                }
+                                    if prefs.dont_check_again {
+                                        tracing::info!(
+                                            "Update checking disabled by user preference"
+                                        );
+                                        return None;
+                                    }
 
-                                                // Show update dialog
-                                                if let Some(w) = window_for_update.upgrade() {
-                                                    tracing::info!(
-                                                        "Update available on startup: {}",
-                                                        info.version
-                                                    );
-                                                    w.set_update_available(true);
-                                                    w.set_update_current_version(version.into());
-                                                    w.set_update_latest_version(
-                                                        info.version.into(),
-                                                    );
-                                                    w.set_update_release_notes(
-                                                        info.release_notes.into(),
-                                                    );
-                                                    w.set_update_error_message("".into());
-                                                    w.set_show_update_dialog(true);
-                                                }
-                                            }
-                                            Ok(None) => {
-                                                tracing::info!("No update available on startup");
-                                            }
-                                            Err(e) => {
-                                                tracing::warn!(
-                                                    "Automatic update check failed: {}",
-                                                    e
+                                    // Check for updates
+                                    match handlers::update_check::check_for_updates(&version).await {
+                                        Ok(Some(info)) => {
+                                            // Check if this version was skipped
+                                            if prefs.should_skip(&info.version) {
+                                                tracing::info!(
+                                                    "Skipping previously dismissed update: {}",
+                                                    info.version
                                                 );
+                                                return None;
                                             }
+                                            Some((version, info))
+                                        }
+                                        Ok(None) => {
+                                            tracing::info!("No update available on startup");
+                                            None
+                                        }
+                                        Err(e) => {
+                                            tracing::warn!("Automatic update check failed: {}", e);
+                                            None
                                         }
                                     }
-                                    Err(e) => {
-                                        tracing::warn!("Failed to load update preferences: {}", e);
+                                },
+                                move |result| {
+                                    if let Some((version, info)) = result {
+                                        // Show update dialog
+                                        if let Some(w) = window_for_update.upgrade() {
+                                            tracing::info!(
+                                                "Update available on startup: {}",
+                                                info.version
+                                            );
+                                            w.set_update_available(true);
+                                            w.set_update_current_version(version.into());
+                                            w.set_update_latest_version(info.version.into());
+                                            w.set_update_release_notes(info.release_notes.into());
+                                            w.set_update_error_message("".into());
+                                            w.set_show_update_dialog(true);
+                                        }
                                     }
-                                }
-                            }) {
-                                tracing::error!("Failed to spawn update check task: {:?}", e);
-                            }
+                                },
+                            );
                         } else {
                             tracing::debug!("Automatic update check disabled in settings");
                         }
@@ -268,81 +261,86 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::debug!("Scan crash logs clicked");
             let window = window_weak.clone();
-            let state = state.clone();
+            let state_clone = state.clone();
+            let state_for_callback = state.clone();
 
-            // Spawn async task for scanning
-            if let Err(e) = slint::spawn_local(async move {
-                if let Some(w) = window.upgrade() {
-                    w.set_scan_in_progress(true);
-                }
+            // Set loading state immediately
+            if let Some(w) = window.upgrade() {
+                w.set_scan_in_progress(true);
+            }
 
-                match handlers::scan::handle_scan_crash_logs(state.clone()).await {
-                    Ok(scan_result) => {
-                        if let Some(w) = window.upgrade() {
-                            w.set_scan_in_progress(false);
+            // Clone state again for the callback closure to avoid move error
+            let callback_state = state_for_callback.clone();
 
-                            // Auto-refresh results list to show new/updated reports
-                            w.invoke_refresh_reports();
-                            tracing::debug!("Auto-refreshed results list after scan completion");
+            // Use AsyncBridge to run scan with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    handlers::scan::handle_scan_crash_logs(state_clone.clone()).await
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        w.set_scan_in_progress(false);
 
-                            if scan_result.success {
-                                // Auto-switch to Results tab if setting is enabled
-                                let auto_switch = {
-                                    let state_guard = state.read();
-                                    state_guard.auto_switch_to_results()
-                                };
+                        match result {
+                            Ok(scan_result) => {
+                                // Auto-refresh results list to show new/updated reports
+                                w.invoke_refresh_reports();
+                                tracing::debug!("Auto-refreshed results list after scan completion");
 
-                                if auto_switch {
-                                    w.set_current_tab(3); // Tab 3 = Results
-                                    tracing::debug!(
-                                        "Auto-switched to Results tab after successful scan"
+                                if scan_result.success {
+                                    // Auto-switch to Results tab if setting is enabled
+                                    let auto_switch = {
+                                        let state_guard = callback_state.read();
+                                        state_guard.auto_switch_to_results()
+                                    };
+
+                                    if auto_switch {
+                                        w.set_current_tab(3); // Tab 3 = Results
+                                        tracing::debug!(
+                                            "Auto-switched to Results tab after successful scan"
+                                        );
+                                    }
+
+                                    // Show success dialog
+                                    w.set_success_title("Crash Logs Scan Complete".into());
+                                    let message = format!(
+                                        "{}\n\n{}",
+                                        scan_result.message,
+                                        scan_result.details.join("\n")
                                     );
+                                    w.set_success_message(message.into());
+                                    w.set_show_success_dialog(true);
+                                    tracing::info!("Crash logs scan succeeded");
+                                } else {
+                                    // Show error dialog (no logs found or partial failure)
+                                    w.set_error_title("Crash Logs Scan Issue".into());
+                                    let message = format!(
+                                        "{}\n\n{}",
+                                        scan_result.message,
+                                        scan_result.details.join("\n")
+                                    );
+                                    w.set_error_message(message.into());
+                                    w.set_show_error_dialog(true);
+                                    tracing::warn!("Crash logs scan completed with issues");
                                 }
+                            }
+                            Err(e) => {
+                                tracing::error!("Crash logs scan failed: {}", e);
 
-                                // Show success dialog
-                                w.set_success_title("Crash Logs Scan Complete".into());
-                                let message = format!(
-                                    "{}\n\n{}",
-                                    scan_result.message,
-                                    scan_result.details.join("\n")
+                                // Auto-refresh even on error (partial results may exist)
+                                w.invoke_refresh_reports();
+                                tracing::debug!("Auto-refreshed results list after scan error");
+
+                                w.set_error_title("Crash Logs Scan Error".into());
+                                w.set_error_message(
+                                    format!("Failed to scan crash logs:\n\n{}", e).into(),
                                 );
-                                w.set_success_message(message.into());
-                                w.set_show_success_dialog(true);
-                                tracing::info!("Crash logs scan succeeded");
-                            } else {
-                                // Show error dialog (no logs found or partial failure)
-                                w.set_error_title("Crash Logs Scan Issue".into());
-                                let message = format!(
-                                    "{}\n\n{}",
-                                    scan_result.message,
-                                    scan_result.details.join("\n")
-                                );
-                                w.set_error_message(message.into());
                                 w.set_show_error_dialog(true);
-                                tracing::warn!("Crash logs scan completed with issues");
                             }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Crash logs scan failed: {}", e);
-                        if let Some(w) = window.upgrade() {
-                            w.set_scan_in_progress(false);
-
-                            // Auto-refresh even on error (partial results may exist)
-                            w.invoke_refresh_reports();
-                            tracing::debug!("Auto-refreshed results list after scan error");
-
-                            w.set_error_title("Crash Logs Scan Error".into());
-                            w.set_error_message(
-                                format!("Failed to scan crash logs:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -352,81 +350,86 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::debug!("Scan game files clicked");
             let window = window_weak.clone();
-            let state = state.clone();
+            let state_clone = state.clone();
+            let state_for_callback = state.clone();
 
-            // Spawn async task for scanning
-            if let Err(e) = slint::spawn_local(async move {
-                if let Some(w) = window.upgrade() {
-                    w.set_scan_in_progress(true);
-                }
+            // Set loading state immediately
+            if let Some(w) = window.upgrade() {
+                w.set_scan_in_progress(true);
+            }
 
-                match handlers::scan::handle_scan_game_files(state.clone()).await {
-                    Ok(scan_result) => {
-                        if let Some(w) = window.upgrade() {
-                            w.set_scan_in_progress(false);
+            // Clone state again for the callback closure to avoid move error
+            let callback_state = state_for_callback.clone();
 
-                            // Auto-refresh results list to show new/updated reports
-                            w.invoke_refresh_reports();
-                            tracing::debug!("Auto-refreshed results list after scan completion");
+            // Use AsyncBridge to run scan with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    handlers::scan::handle_scan_game_files(state_clone.clone()).await
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        w.set_scan_in_progress(false);
 
-                            if scan_result.success {
-                                // Auto-switch to Results tab if setting is enabled
-                                let auto_switch = {
-                                    let state_guard = state.read();
-                                    state_guard.auto_switch_to_results()
-                                };
+                        match result {
+                            Ok(scan_result) => {
+                                // Auto-refresh results list to show new/updated reports
+                                w.invoke_refresh_reports();
+                                tracing::debug!("Auto-refreshed results list after scan completion");
 
-                                if auto_switch {
-                                    w.set_current_tab(3); // Tab 3 = Results
-                                    tracing::debug!(
-                                        "Auto-switched to Results tab after successful scan"
+                                if scan_result.success {
+                                    // Auto-switch to Results tab if setting is enabled
+                                    let auto_switch = {
+                                        let state_guard = callback_state.read();
+                                        state_guard.auto_switch_to_results()
+                                    };
+
+                                    if auto_switch {
+                                        w.set_current_tab(3); // Tab 3 = Results
+                                        tracing::debug!(
+                                            "Auto-switched to Results tab after successful scan"
+                                        );
+                                    }
+
+                                    // Show success dialog
+                                    w.set_success_title("Game Files Scan Complete".into());
+                                    let message = format!(
+                                        "{}\n\n{}",
+                                        scan_result.message,
+                                        scan_result.details.join("\n")
                                     );
+                                    w.set_success_message(message.into());
+                                    w.set_show_success_dialog(true);
+                                    tracing::info!("Game files scan succeeded");
+                                } else {
+                                    // Show error dialog
+                                    w.set_error_title("Game Files Scan Issue".into());
+                                    let message = format!(
+                                        "{}\n\n{}",
+                                        scan_result.message,
+                                        scan_result.details.join("\n")
+                                    );
+                                    w.set_error_message(message.into());
+                                    w.set_show_error_dialog(true);
+                                    tracing::warn!("Game files scan completed with issues");
                                 }
+                            }
+                            Err(e) => {
+                                tracing::error!("Game files scan failed: {}", e);
 
-                                // Show success dialog
-                                w.set_success_title("Game Files Scan Complete".into());
-                                let message = format!(
-                                    "{}\n\n{}",
-                                    scan_result.message,
-                                    scan_result.details.join("\n")
+                                // Auto-refresh even on error (partial results may exist)
+                                w.invoke_refresh_reports();
+                                tracing::debug!("Auto-refreshed results list after scan error");
+
+                                w.set_error_title("Game Files Scan Error".into());
+                                w.set_error_message(
+                                    format!("Failed to scan game files:\n\n{}", e).into(),
                                 );
-                                w.set_success_message(message.into());
-                                w.set_show_success_dialog(true);
-                                tracing::info!("Game files scan succeeded");
-                            } else {
-                                // Show error dialog
-                                w.set_error_title("Game Files Scan Issue".into());
-                                let message = format!(
-                                    "{}\n\n{}",
-                                    scan_result.message,
-                                    scan_result.details.join("\n")
-                                );
-                                w.set_error_message(message.into());
                                 w.set_show_error_dialog(true);
-                                tracing::warn!("Game files scan completed with issues");
                             }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Game files scan failed: {}", e);
-                        if let Some(w) = window.upgrade() {
-                            w.set_scan_in_progress(false);
-
-                            // Auto-refresh even on error (partial results may exist)
-                            w.invoke_refresh_reports();
-                            tracing::debug!("Auto-refreshed results list after scan error");
-
-                            w.set_error_title("Game Files Scan Error".into());
-                            w.set_error_message(
-                                format!("Failed to scan game files:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -495,62 +498,71 @@ fn main() -> Result<(), slint::PlatformError> {
             tracing::debug!("Check updates clicked");
             let window = window_weak.clone();
 
-            // Spawn async task for update check
-            if let Err(e) = slint::spawn_local(async move {
-                if let Some(w) = window.upgrade() {
-                    // Set checking state
-                    w.set_update_checking(true);
+            // Set checking state immediately
+            if let Some(w) = window.upgrade() {
+                w.set_update_checking(true);
+            }
 
-                    // Get current version from app
-                    let current_version = w.get_app_version().to_string();
+            // Get current version
+            let current_version = if let Some(w) = window.upgrade() {
+                w.get_app_version().to_string()
+            } else {
+                return;
+            };
+            let current_version_for_callback = current_version.clone();
 
-                    match handlers::update_check::check_for_updates(&current_version).await {
-                        Ok(Some(info)) => {
-                            // Update available
-                            tracing::info!(
-                                "Update available: {} -> {}",
-                                current_version,
-                                info.version
-                            );
+            // Use AsyncBridge to run update check with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    handlers::update_check::check_for_updates(&current_version).await
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        w.set_update_checking(false);
 
-                            w.set_update_checking(false);
-                            w.set_update_available(true);
-                            w.set_update_current_version(current_version.into());
-                            w.set_update_latest_version(info.version.into());
-                            w.set_update_release_notes(info.release_notes.into());
-                            w.set_update_error_message("".into());
-                            w.set_show_update_dialog(true);
-                        }
-                        Ok(None) => {
-                            // No update available
-                            tracing::info!("No update available (current: {})", current_version);
+                        match result {
+                            Ok(Some(info)) => {
+                                // Update available
+                                tracing::info!(
+                                    "Update available: {} -> {}",
+                                    current_version_for_callback,
+                                    info.version
+                                );
 
-                            w.set_update_checking(false);
-                            w.set_success_title("No Updates Available".into());
-                            w.set_success_message(
-                                format!("You are using the latest version ({})", current_version)
-                                    .into(),
-                            );
-                            w.set_show_success_dialog(true);
-                        }
-                        Err(e) => {
-                            // Update check failed
-                            tracing::error!("Update check failed: {}", e);
+                                w.set_update_available(true);
+                                w.set_update_current_version(current_version_for_callback.clone().into());
+                                w.set_update_latest_version(info.version.into());
+                                w.set_update_release_notes(info.release_notes.into());
+                                w.set_update_error_message("".into());
+                                w.set_show_update_dialog(true);
+                            }
+                            Ok(None) => {
+                                // No update available
+                                tracing::info!("No update available (current: {})", current_version_for_callback);
 
-                            w.set_update_checking(false);
-                            w.set_update_available(false);
-                            w.set_update_error_message(
-                                format!("Failed to check for updates:\n\n{}", e).into(),
-                            );
+                                w.set_success_title("No Updates Available".into());
+                                w.set_success_message(
+                                    format!("You are using the latest version ({})", current_version_for_callback)
+                                        .into(),
+                                );
+                                w.set_show_success_dialog(true);
+                            }
+                            Err(e) => {
+                                // Update check failed
+                                tracing::error!("Update check failed: {}", e);
 
-                            // Show error in update dialog for context
-                            w.set_show_update_dialog(true);
+                                w.set_update_available(false);
+                                w.set_update_error_message(
+                                    format!("Failed to check for updates:\n\n{}", e).into(),
+                                );
+
+                                // Show error in update dialog for context
+                                w.set_show_update_dialog(true);
+                            }
                         }
                     }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -561,35 +573,43 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::debug!("Toggle Papyrus clicked");
             let window = window_weak.clone();
-            let state = state.clone();
+            let state_clone = state.clone();
 
-            // Spawn async task for toggle
-            if let Err(e) = slint::spawn_local(async move {
-                if let Some(w) = window.upgrade() {
-                    let current_state = w.get_papyrus_monitoring();
+            // Get current state
+            let current_state = if let Some(w) = window.upgrade() {
+                w.get_papyrus_monitoring()
+            } else {
+                return;
+            };
 
-                    match handlers::papyrus::toggle_papyrus_monitoring(current_state, state).await {
-                        Ok(new_state) => {
-                            w.set_papyrus_monitoring(new_state);
-                            if new_state {
-                                tracing::info!("Papyrus monitoring started");
-                            } else {
-                                tracing::info!("Papyrus monitoring stopped");
+            // Use AsyncBridge to run toggle with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    handlers::papyrus::toggle_papyrus_monitoring(current_state, state_clone).await
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(new_state) => {
+                                w.set_papyrus_monitoring(new_state);
+                                if new_state {
+                                    tracing::info!("Papyrus monitoring started");
+                                } else {
+                                    tracing::info!("Papyrus monitoring stopped");
+                                }
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to toggle Papyrus monitoring: {}", e);
+                                w.set_error_title("Papyrus Monitoring Error".into());
+                                w.set_error_message(
+                                    format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into(),
+                                );
+                                w.set_show_error_dialog(true);
                             }
                         }
-                        Err(e) => {
-                            tracing::error!("Failed to toggle Papyrus monitoring: {}", e);
-                            w.set_error_title("Papyrus Monitoring Error".into());
-                            w.set_error_message(
-                                format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
                     }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -864,47 +884,49 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::info!("Refreshing reports list...");
             let window = window_weak.clone();
-            let state = state.clone();
+            let state_clone = state.clone();
 
-            // Spawn async task to scan reports
-            if let Err(e) = slint::spawn_local(async move {
-                match handlers::results::scan_reports(state) {
-                    Ok(reports) => {
-                        if let Some(w) = window.upgrade() {
-                            // Convert to Slint ReportData structs
-                            let slint_reports: Vec<ReportData> =
-                                reports.iter().map(report_item_to_slint).collect();
+            // Use AsyncBridge to run scan off UI thread
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    // Wrap synchronous operation in async block
+                    handlers::results::scan_reports(state_clone)
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(reports) => {
+                                // Convert to Slint ReportData structs
+                                let slint_reports: Vec<ReportData> =
+                                    reports.iter().map(report_item_to_slint).collect();
 
-                            // Update UI
-                            let model = std::rc::Rc::new(slint::VecModel::from(slint_reports));
-                            w.set_reports_list(model.into());
+                                // Update UI
+                                let model = std::rc::Rc::new(slint::VecModel::from(slint_reports));
+                                w.set_reports_list(model.into());
 
-                            // Auto-select first report if available
-                            if !reports.is_empty() {
-                                w.set_selected_report_index(0);
-                                w.set_selected_report_path(
-                                    reports[0].path.to_string_lossy().to_string().into(),
-                                );
-                            } else {
-                                w.set_selected_report_index(-1);
-                                w.set_selected_report_path("".into());
+                                // Auto-select first report if available
+                                if !reports.is_empty() {
+                                    w.set_selected_report_index(0);
+                                    w.set_selected_report_path(
+                                        reports[0].path.to_string_lossy().to_string().into(),
+                                    );
+                                } else {
+                                    w.set_selected_report_index(-1);
+                                    w.set_selected_report_path("".into());
+                                }
+
+                                tracing::info!("Reports list updated: {} report(s)", reports.len());
                             }
-
-                            tracing::info!("Reports list updated: {} report(s)", reports.len());
+                            Err(e) => {
+                                tracing::error!("Failed to scan reports: {}", e);
+                                w.set_error_title("Report Scan Error".into());
+                                w.set_error_message(format!("Failed to scan reports:\n\n{}", e).into());
+                                w.set_show_error_dialog(true);
+                            }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to scan reports: {}", e);
-                        if let Some(w) = window.upgrade() {
-                            w.set_error_title("Report Scan Error".into());
-                            w.set_error_message(format!("Failed to scan reports:\n\n{}", e).into());
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -986,42 +1008,44 @@ fn main() -> Result<(), slint::PlatformError> {
             let window = window_weak.clone();
             let report_path = std::path::PathBuf::from(path_str.clone());
 
-            // Spawn async task to load markdown
-            if let Err(e) = slint::spawn_local(async move {
-                match handlers::markdown::load_markdown(&report_path) {
-                    Ok(markdown_content) => {
-                        if let Some(w) = window.upgrade() {
-                            // Update markdown content
-                            w.set_markdown_content(markdown_content.text.into());
+            // Use AsyncBridge to load markdown off UI thread
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    // Wrap synchronous operation in async block
+                    handlers::markdown::load_markdown(&report_path)
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(markdown_content) => {
+                                // Update markdown content
+                                w.set_markdown_content(markdown_content.text.into());
 
-                            // Update metadata
-                            let metadata = MarkdownMetadata {
-                                filename: markdown_content.filename.into(),
-                                file_size: markdown_content.file_size.into(),
-                                display_date: markdown_content.display_date.into(),
-                            };
-                            w.set_markdown_metadata(metadata);
+                                // Update metadata
+                                let metadata = MarkdownMetadata {
+                                    filename: markdown_content.filename.into(),
+                                    file_size: markdown_content.file_size.into(),
+                                    display_date: markdown_content.display_date.into(),
+                                };
+                                w.set_markdown_metadata(metadata);
 
-                            // Reset zoom level
-                            w.set_zoom_level(100);
+                                // Reset zoom level
+                                w.set_zoom_level(100);
 
-                            tracing::info!("Loaded markdown report: {}", path_str);
+                                tracing::info!("Loaded markdown report: {}", path_str);
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to load markdown: {}", e);
+                                w.set_error_title("Failed to Load Report".into());
+                                w.set_error_message(
+                                    format!("Could not load markdown file:\n\n{}", e).into(),
+                                );
+                                w.set_show_error_dialog(true);
+                            }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to load markdown: {}", e);
-                        if let Some(w) = window.upgrade() {
-                            w.set_error_title("Failed to Load Report".into());
-                            w.set_error_message(
-                                format!("Could not load markdown file:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -1168,67 +1192,67 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::info!("Saving settings...");
             let window = window_weak.clone();
-            let state = state.clone();
+            let state_clone = state.clone();
 
-            // Spawn async task to save settings
-            if let Err(e) = slint::spawn_local(async move {
-                if let Some(w) = window.upgrade() {
-                    // Gather settings from UI
-                    let settings = handlers::settings_dialog::SettingsData {
-                        fcx_mode: w.get_settings_fcx_mode(),
-                        show_formid_values: w.get_settings_show_formid_values(),
-                        stat_logging: w.get_settings_stat_logging(),
-                        update_check: w.get_settings_update_check(),
-                        vr_mode: w.get_settings_vr_mode(),
-                        auto_switch_to_results: w.get_settings_auto_switch_to_results(),
-                        move_unsolved_logs: w.get_settings_move_unsolved_logs(),
-                        simplify_logs: w.get_settings_simplify_logs(),
-                        game_root: w.get_settings_game_root().to_string(),
-                        docs_root: w.get_settings_docs_root().to_string(),
-                        ini_folder: w.get_settings_ini_folder().to_string(),
-                        mods_folder: w.get_settings_mods_folder().to_string(),
-                        scan_custom: w.get_settings_scan_custom().to_string(),
-                    };
+            // Gather settings from UI
+            let settings = if let Some(w) = window.upgrade() {
+                handlers::settings_dialog::SettingsData {
+                    fcx_mode: w.get_settings_fcx_mode(),
+                    show_formid_values: w.get_settings_show_formid_values(),
+                    stat_logging: w.get_settings_stat_logging(),
+                    update_check: w.get_settings_update_check(),
+                    vr_mode: w.get_settings_vr_mode(),
+                    auto_switch_to_results: w.get_settings_auto_switch_to_results(),
+                    move_unsolved_logs: w.get_settings_move_unsolved_logs(),
+                    simplify_logs: w.get_settings_simplify_logs(),
+                    game_root: w.get_settings_game_root().to_string(),
+                    docs_root: w.get_settings_docs_root().to_string(),
+                    ini_folder: w.get_settings_ini_folder().to_string(),
+                    mods_folder: w.get_settings_mods_folder().to_string(),
+                    scan_custom: w.get_settings_scan_custom().to_string(),
+                }
+            } else {
+                return;
+            };
 
+            // Use AsyncBridge to save settings with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
                     // Validate settings
                     match settings.validate() {
                         Ok(()) => {
                             // Save to AppState and YAML
-                            match settings.save_to_app_state(state).await {
-                                Ok(()) => {
-                                    tracing::info!("Settings saved successfully");
-                                    w.set_show_settings_dialog(false);
+                            settings.save_to_app_state(state_clone).await
+                        }
+                        Err(e) => Err(e),
+                    }
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(()) => {
+                                tracing::info!("Settings saved successfully");
+                                w.set_show_settings_dialog(false);
 
-                                    // Show success message
-                                    w.set_success_title("Settings Saved".into());
-                                    w.set_success_message(
-                                        "Your settings have been saved successfully.".into(),
-                                    );
-                                    w.set_show_success_dialog(true);
-                                }
-                                Err(e) => {
-                                    tracing::error!("Failed to save settings: {}", e);
-                                    w.set_error_title("Save Failed".into());
-                                    w.set_error_message(
-                                        format!("Failed to save settings:\n\n{}", e).into(),
-                                    );
-                                    w.set_show_error_dialog(true);
-                                }
+                                // Show success message
+                                w.set_success_title("Settings Saved".into());
+                                w.set_success_message(
+                                    "Your settings have been saved successfully.".into(),
+                                );
+                                w.set_show_success_dialog(true);
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to save/validate settings: {}", e);
+                                w.set_error_title("Settings Error".into());
+                                w.set_error_message(
+                                    format!("Failed to save settings:\n\n{}", e).into(),
+                                );
+                                w.set_show_error_dialog(true);
                             }
                         }
-                        Err(e) => {
-                            tracing::warn!("Settings validation failed: {}", e);
-                            w.set_error_title("Invalid Settings".into());
-                            w.set_error_message(
-                                format!("Settings validation failed:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
                     }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -1356,42 +1380,47 @@ fn main() -> Result<(), slint::PlatformError> {
             tracing::debug!("Update skipped");
             let window = window_weak.clone();
 
-            // Spawn async task to save preferences
-            if let Err(e) = slint::spawn_local(async move {
-                if let Some(w) = window.upgrade() {
-                    let latest_version = w.get_update_latest_version().to_string();
-                    let dont_check_again = w.get_update_dont_check_again();
+            // Get settings from UI
+            let (latest_version, dont_check_again) = if let Some(w) = window.upgrade() {
+                (
+                    w.get_update_latest_version().to_string(),
+                    w.get_update_dont_check_again(),
+                )
+            } else {
+                return;
+            };
 
+            // Use AsyncBridge to save preferences with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
                     // Load current preferences
-                    match handlers::update_check::UpdatePreferences::load().await {
-                        Ok(mut prefs) => {
-                            // Save skipped version
-                            prefs.skip_version(latest_version.clone());
+                    let mut prefs = handlers::update_check::UpdatePreferences::load().await?;
 
-                            // Save "don't check again" if checkbox was checked
-                            if dont_check_again {
-                                prefs.set_dont_check_again(true);
-                                tracing::info!("User opted to disable update checking");
-                            } else {
-                                tracing::info!("User skipped version: {}", latest_version);
-                            }
+                    // Save skipped version
+                    prefs.skip_version(latest_version.clone());
 
-                            // Persist preferences
-                            if let Err(e) = prefs.save().await {
-                                tracing::error!("Failed to save update preferences: {}", e);
-                            }
-                        }
-                        Err(e) => {
-                            tracing::error!("Failed to load update preferences: {}", e);
-                        }
+                    // Save "don't check again" if checkbox was checked
+                    if dont_check_again {
+                        prefs.set_dont_check_again(true);
+                        tracing::info!("User opted to disable update checking");
+                    } else {
+                        tracing::info!("User skipped version: {}", latest_version);
                     }
 
-                    // Close dialog
-                    w.set_show_update_dialog(false);
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                    // Persist preferences
+                    prefs.save().await?;
+                    Ok(())
+                },
+                move |result: anyhow::Result<()>| {
+                    if let Some(w) = window.upgrade() {
+                        if let Err(e) = result {
+                            tracing::error!("Failed to save update preferences: {}", e);
+                        }
+                        // Close dialog regardless of result
+                        w.set_show_update_dialog(false);
+                    }
+                },
+            );
         }
     });
 
@@ -1412,30 +1441,30 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::info!("Starting Papyrus monitoring...");
             let window = window_weak.clone();
-            let state = state.clone();
+            let state_clone = state.clone();
 
-            if let Err(e) = slint::spawn_local(async move {
-                match handlers::papyrus::start_monitoring(state).await {
-                    Ok(()) => {
-                        if let Some(w) = window.upgrade() {
-                            w.set_papyrus_monitoring(true);
-                            tracing::info!("Papyrus monitoring started successfully");
+            // Use AsyncBridge to start monitoring with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move { handlers::papyrus::start_monitoring(state_clone).await },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(()) => {
+                                w.set_papyrus_monitoring(true);
+                                tracing::info!("Papyrus monitoring started successfully");
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to start Papyrus monitoring: {}", e);
+                                w.set_error_title("Monitoring Error".into());
+                                w.set_error_message(
+                                    format!("Failed to start monitoring:\n\n{}", e).into(),
+                                );
+                                w.set_show_error_dialog(true);
+                            }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to start Papyrus monitoring: {}", e);
-                        if let Some(w) = window.upgrade() {
-                            w.set_error_title("Monitoring Error".into());
-                            w.set_error_message(
-                                format!("Failed to start monitoring:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -1445,21 +1474,23 @@ fn main() -> Result<(), slint::PlatformError> {
             tracing::info!("Stopping Papyrus monitoring...");
             let window = window_weak.clone();
 
-            if let Err(e) = slint::spawn_local(async move {
-                match handlers::papyrus::stop_monitoring().await {
-                    Ok(()) => {
-                        if let Some(w) = window.upgrade() {
-                            w.set_papyrus_monitoring(false);
-                            tracing::info!("Papyrus monitoring stopped successfully");
+            // Use AsyncBridge to stop monitoring with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move { handlers::papyrus::stop_monitoring().await },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(()) => {
+                                w.set_papyrus_monitoring(false);
+                                tracing::info!("Papyrus monitoring stopped successfully");
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to stop Papyrus monitoring: {}", e);
+                            }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to stop Papyrus monitoring: {}", e);
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -1569,62 +1600,65 @@ fn main() -> Result<(), slint::PlatformError> {
             let window = window_weak.clone();
             let category_str = category.to_string();
             let topic_str = topic.to_string();
+            let category_for_error = category_str.clone();
+            let topic_for_error = topic_str.clone();
 
-            // Spawn async task to load help topic
-            if let Err(e) = slint::spawn_local(async move {
-                match handlers::help::get_help_topic(&category_str, &topic_str).await {
-                    Ok(help_topic) => {
-                        if let Some(w) = window.upgrade() {
-                            // Log before moving values
-                            tracing::info!("Help topic loaded: {}", help_topic.title);
-                            tracing::debug!(
-                                "Help topic has {} related topics",
-                                help_topic.related.len()
-                            );
+            // Use AsyncBridge to load help topic with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    handlers::help::get_help_topic(&category_str, &topic_str).await
+                },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(help_topic) => {
+                                // Log before moving values
+                                tracing::info!("Help topic loaded: {}", help_topic.title);
+                                tracing::debug!(
+                                    "Help topic has {} related topics",
+                                    help_topic.related.len()
+                                );
 
-                            // Set help dialog properties
-                            w.set_help_title(help_topic.title.into());
-                            w.set_help_content(help_topic.content.into());
+                                // Set help dialog properties
+                                w.set_help_title(help_topic.title.into());
+                                w.set_help_content(help_topic.content.into());
 
-                            // Convert related topics to Slint format
-                            let related_topics: Vec<RelatedTopicData> = help_topic
-                                .related
-                                .into_iter()
-                                .map(|rt| RelatedTopicData {
-                                    category: rt.category.into(),
-                                    topic: rt.topic.into(),
-                                    display: rt.display.into(),
-                                })
-                                .collect();
+                                // Convert related topics to Slint format
+                                let related_topics: Vec<RelatedTopicData> = help_topic
+                                    .related
+                                    .into_iter()
+                                    .map(|rt| RelatedTopicData {
+                                        category: rt.category.into(),
+                                        topic: rt.topic.into(),
+                                        display: rt.display.into(),
+                                    })
+                                    .collect();
 
-                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
-                                related_topics,
-                            )));
+                                w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
+                                    related_topics,
+                                )));
 
-                            // Show the dialog
-                            w.set_show_help_dialog(true);
+                                // Show the dialog
+                                w.set_show_help_dialog(true);
+                            }
+                            Err(e) => {
+                                tracing::error!(
+                                    "Failed to load help topic {}/{}: {}",
+                                    category_for_error,
+                                    topic_for_error,
+                                    e
+                                );
+                                // Show error in dialog
+                                w.set_error_title("Help Error".into());
+                                w.set_error_message(
+                                    format!("Failed to load help topic:\n\n{}", e).into(),
+                                );
+                                w.set_show_error_dialog(true);
+                            }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!(
-                            "Failed to load help topic {}/{}: {}",
-                            category_str,
-                            topic_str,
-                            e
-                        );
-                        if let Some(w) = window.upgrade() {
-                            // Show error in dialog
-                            w.set_error_title("Help Error".into());
-                            w.set_error_message(
-                                format!("Failed to load help topic:\n\n{}", e).into(),
-                            );
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -1647,44 +1681,45 @@ fn main() -> Result<(), slint::PlatformError> {
                 return;
             };
 
-            // Spawn async task to load help topic
-            if let Err(e) = slint::spawn_local(async move {
-                match handlers::help::get_help_topic(category, topic).await {
-                    Ok(help_topic) => {
-                        if let Some(w) = window.upgrade() {
-                            tracing::info!("F1 Help: Loaded {}/{}", category, topic);
+            // Use AsyncBridge to load help topic with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move { handlers::help::get_help_topic(category, topic).await },
+                move |result| {
+                    if let Some(w) = window.upgrade() {
+                        match result {
+                            Ok(help_topic) => {
+                                tracing::info!("F1 Help: Loaded {}/{}", category, topic);
 
-                            // Set help dialog properties
-                            w.set_help_title(help_topic.title.into());
-                            w.set_help_content(help_topic.content.into());
+                                // Set help dialog properties
+                                w.set_help_title(help_topic.title.into());
+                                w.set_help_content(help_topic.content.into());
 
-                            // Convert related topics to Slint format
-                            let related_topics: Vec<RelatedTopicData> = help_topic
-                                .related
-                                .into_iter()
-                                .map(|rt| RelatedTopicData {
-                                    category: rt.category.into(),
-                                    topic: rt.topic.into(),
-                                    display: rt.display.into(),
-                                })
-                                .collect();
+                                // Convert related topics to Slint format
+                                let related_topics: Vec<RelatedTopicData> = help_topic
+                                    .related
+                                    .into_iter()
+                                    .map(|rt| RelatedTopicData {
+                                        category: rt.category.into(),
+                                        topic: rt.topic.into(),
+                                        display: rt.display.into(),
+                                    })
+                                    .collect();
 
-                            w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
-                                related_topics,
-                            )));
+                                w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
+                                    related_topics,
+                                )));
 
-                            // Show the dialog
-                            w.set_show_help_dialog(true);
+                                // Show the dialog
+                                w.set_show_help_dialog(true);
+                            }
+                            Err(e) => {
+                                tracing::error!("Failed to load context help: {}", e);
+                                // Silently fail - don't show error for F1
+                            }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to load context help: {}", e);
-                        // Silently fail - don't show error for F1
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 
@@ -1718,90 +1753,72 @@ fn main() -> Result<(), slint::PlatformError> {
                 return;
             }
 
-            // Spawn async task to download from Pastebin
-            if let Err(e) = slint::spawn_local(async move {
-                // Set loading state
-                if let Some(w) = window.upgrade() {
-                    w.set_pastebin_loading(true);
-                }
+            // Set loading state immediately
+            if let Some(w) = window.upgrade() {
+                w.set_pastebin_loading(true);
+            }
 
-                match handlers::pastebin::download_from_pastebin(&url).await {
-                    Ok(content) => {
-                        tracing::info!("Successfully downloaded {} bytes from Pastebin", content.len());
+            // Use AsyncBridge to download from Pastebin with proper Tokio runtime context
+            classic_shared_core::AsyncBridge::run_with_ui_update(
+                async move {
+                    // Download from Pastebin
+                    let content = handlers::pastebin::download_from_pastebin(&url).await?;
+                    tracing::info!("Successfully downloaded {} bytes from Pastebin", content.len());
 
-                        // Save to Crash Logs folder for scanning
-                        let crashlogs_dir = std::path::PathBuf::from("Crash Logs");
-                        if !crashlogs_dir.exists()
-                            && let Err(e) = std::fs::create_dir_all(&crashlogs_dir) {
-                                tracing::error!("Failed to create Crash Logs directory: {}", e);
-                                if let Some(w) = window.upgrade() {
-                                    w.set_pastebin_loading(false);
-                                    w.set_error_title("Save Failed".into());
-                                    w.set_error_message(format!("Failed to create Crash Logs directory:\n\n{}", e).into());
-                                    w.set_show_error_dialog(true);
-                                }
-                                return;
-                            }
+                    // Save to Crash Logs folder for scanning
+                    let crashlogs_dir = std::path::PathBuf::from("Crash Logs");
+                    if !crashlogs_dir.exists() {
+                        std::fs::create_dir_all(&crashlogs_dir)?;
+                    }
 
-                        // Generate filename with timestamp
-                        let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
-                        let filename = format!("crash-{}.log", timestamp);
-                        let file_path = crashlogs_dir.join(&filename);
+                    // Generate filename with timestamp
+                    let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
+                    let filename = format!("crash-{}.log", timestamp);
+                    let file_path = crashlogs_dir.join(&filename);
 
-                        // Write content to crash log file
-                        match tokio::fs::write(&file_path, &content).await {
-                            Ok(_) => {
-                                tracing::info!("Saved Pastebin crash log to: {}", file_path.display());
+                    // Write content to crash log file
+                    tokio::fs::write(&file_path, &content).await?;
+                    tracing::info!("Saved Pastebin crash log to: {}", file_path.display());
 
-                                if let Some(w) = window.upgrade() {
-                                    // Close Pastebin dialog
-                                    w.set_pastebin_loading(false);
-                                    w.set_show_pastebin_dialog(false);
-                                    w.set_pastebin_url_input("".into());
+                    Ok((filename, content.len()))
+                },
+                move |result: anyhow::Result<(String, usize)>| {
+                    if let Some(w) = window.upgrade() {
+                        w.set_pastebin_loading(false);
 
-                                    // Show success message and offer to scan
-                                    w.set_success_title("Crash Log Downloaded".into());
-                                    w.set_success_message(
-                                        format!(
-                                            "Successfully downloaded crash log from Pastebin.\n\nFile: {}\nSize: {} bytes\n\nThe crash log has been saved to the Crash Logs folder.\nYou can now scan it using the 'Scan Crash Logs' button.",
-                                            filename,
-                                            content.len()
-                                        ).into()
-                                    );
-                                    w.set_show_success_dialog(true);
+                        match result {
+                            Ok((filename, size)) => {
+                                // Close Pastebin dialog
+                                w.set_show_pastebin_dialog(false);
+                                w.set_pastebin_url_input("".into());
 
-                                    tracing::info!("Pastebin crash log ready for scanning");
-                                }
+                                // Show success message and offer to scan
+                                w.set_success_title("Crash Log Downloaded".into());
+                                w.set_success_message(
+                                    format!(
+                                        "Successfully downloaded crash log from Pastebin.\n\nFile: {}\nSize: {} bytes\n\nThe crash log has been saved to the Crash Logs folder.\nYou can now scan it using the 'Scan Crash Logs' button.",
+                                        filename,
+                                        size
+                                    ).into()
+                                );
+                                w.set_show_success_dialog(true);
+
+                                tracing::info!("Pastebin crash log ready for scanning");
                             }
                             Err(e) => {
-                                tracing::error!("Failed to save Pastebin content: {}", e);
-                                if let Some(w) = window.upgrade() {
-                                    w.set_pastebin_loading(false);
-                                    w.set_error_title("Save Failed".into());
-                                    w.set_error_message(format!("Failed to save crash log:\n\n{}", e).into());
-                                    w.set_show_error_dialog(true);
-                                }
+                                tracing::error!("Failed to download/save from Pastebin: {}", e);
+
+                                // Show error dialog
+                                w.set_error_title("Pastebin Error".into());
+                                w.set_error_message(
+                                    format!("Failed to download crash log from Pastebin:\n\n{}", e).into()
+                                );
+                                w.set_show_error_dialog(true);
                             }
                         }
                     }
-                    Err(e) => {
-                        tracing::error!("Failed to download from Pastebin: {}", e);
-
-                        if let Some(w) = window.upgrade() {
-                            w.set_pastebin_loading(false);
-
-                            // Show error dialog
-                            w.set_error_title("Pastebin Download Failed".into());
-                            w.set_error_message(
-                                format!("Failed to download crash log from Pastebin:\n\n{}", e).into()
-                            );
-                            w.set_show_error_dialog(true);
-                        }
-                    }
-                }
-            }) {
-                tracing::error!("Failed to spawn async task: {:?}", e);
-            }
+                },
+            );
         }
     });
 

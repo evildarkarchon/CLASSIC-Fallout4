@@ -271,6 +271,12 @@ impl AppState {
             .context("Failed to save configuration")
     }
 
+    /// Get config data for external saving (avoids holding lock across await)
+    #[allow(dead_code)]
+    pub fn get_config_for_save(&self) -> (PathBuf, classic_config_core::ClassicConfig) {
+        (self.config.get_config_path(), self.config.clone())
+    }
+
     /// Reload configuration from disk
     ///
     /// This is useful if configuration was modified externally.

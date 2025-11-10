@@ -148,11 +148,14 @@ impl SettingsData {
         // Save configuration to YAML file
         tracing::info!("Persisting settings to YAML file...");
 
-        state
-            .read()
-            .save_config()
-            .await
-            .context("Failed to save configuration to YAML")?;
+        // Use helper method to get config data without holding lock across await
+        let save_result = {
+            let (config_path, config_clone) = state.read().get_config_for_save();
+            // Guard is dropped here
+            config_clone.save_to_yaml(&config_path).await
+        };
+
+        save_result.context("Failed to save configuration to YAML")?;
 
         tracing::info!("Settings saved successfully");
         Ok(())

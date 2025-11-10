@@ -227,12 +227,11 @@ pub async fn handle_scan_game_files(state: SharedAppState) -> Result<ScanResult>
 /// Loads configuration values from AppState including game name, settings, and
 /// game-specific YAML configuration (crash generator info, game version, XSE acronym).
 async fn create_config_from_state(state: SharedAppState) -> Result<AnalysisConfig> {
-    let state_guard = state.read();
-
-    let game_name = state_guard.game_name().to_string();
-    let fcx_mode = state_guard.fcx_mode();
-
-    drop(state_guard); // Release read lock before async operations
+    // Use scope block to ensure guard is dropped before async operations
+    let (game_name, fcx_mode) = {
+        let state_guard = state.read();
+        (state_guard.game_name().to_string(), state_guard.fcx_mode())
+    }; // Guard is definitely dropped here
 
     let mut config = AnalysisConfig::new(game_name.clone(), fcx_mode);
 
@@ -271,14 +270,15 @@ async fn create_config_from_state(state: SharedAppState) -> Result<AnalysisConfi
 /// - Moving logs from working directory to Crash Logs
 /// - Collecting from custom scan folder if configured
 async fn find_crash_logs(state: SharedAppState) -> Result<Vec<String>> {
-    let state_guard = state.read();
-
-    // Get paths and game name from AppState
-    let docs_root = state_guard.docs_root().cloned();
-    let custom_folder = state_guard.scan_folder().cloned();
-    let game_name = state_guard.game_name().to_string();
-
-    drop(state_guard); // Release lock before async operations
+    // Use scope block to ensure guard is dropped before async operations
+    let (docs_root, custom_folder, game_name) = {
+        let state_guard = state.read();
+        (
+            state_guard.docs_root().cloned(),
+            state_guard.scan_folder().cloned(),
+            state_guard.game_name().to_string(),
+        )
+    }; // Guard is definitely dropped here
 
     // Load XSE acronym from game YAML
     let yaml_data = YamlSource::Game

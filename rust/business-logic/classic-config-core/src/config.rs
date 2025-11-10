@@ -434,16 +434,24 @@ impl ClassicConfig {
                 .context(format!("Failed to create directory: {}", parent.display()))?;
         }
 
-        let yaml = self.to_yaml();
-        let mut output = String::new();
-        let mut emitter = YamlEmitter::new(&mut output);
-        emitter.dump(&yaml).context("Failed to emit YAML")?;
+        // Clone path and self for the blocking task
+        let path = path.to_path_buf();
+        let config = self.clone();
 
-        fs::write(path, output)
-            .await
-            .context(format!("Failed to write config file: {}", path.display()))?;
+        // Run YAML serialization in blocking thread (YamlEmitter is not Send)
+        tokio::task::spawn_blocking(move || {
+            let yaml = config.to_yaml();
+            let mut output = String::new();
+            let mut emitter = YamlEmitter::new(&mut output);
+            emitter.dump(&yaml).context("Failed to emit YAML")?;
 
-        Ok(())
+            std::fs::write(&path, output)
+                .context(format!("Failed to write config file: {}", path.display()))?;
+
+            Ok(())
+        })
+        .await
+        .context("YAML serialization task panicked")?
     }
 
     /// Load configuration from default location or return defaults
