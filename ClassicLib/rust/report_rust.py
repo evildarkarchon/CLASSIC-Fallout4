@@ -443,14 +443,20 @@ class RustAcceleratedReportComposer:
         Provides information about the pool's current state in a tuple format if available.
 
         Returns:
-            tuple[int, int, int, int] | None: A tuple containing pool statistics if the
-            Rust-based composer is used, otherwise None.
+            tuple[int, int, int, int] | None: A tuple containing pool statistics
+            (size, lookups, hits, insertions) if the Rust-based composer is used,
+            otherwise None.
 
-        Note:
-            The Rust ReportComposer does not expose pool statistics directly.
-            This method always returns None.
+            - size: Number of unique interned strings in the pool
+            - lookups: Total number of intern attempts
+            - hits: Number of cache hits (string already in pool)
+            - insertions: Number of new strings added to pool
         """
-        # Note: ReportComposer doesn't have pool_stats property in Rust implementation
+        if self._use_rust:
+            assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
+            return cast("RustReportComposer", self._composer).pool_stats()  # type: ignore[misc]
+
+        # Python fallback doesn't have string pool
         return None
 
 

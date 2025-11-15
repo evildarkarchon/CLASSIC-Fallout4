@@ -396,25 +396,6 @@ class FileIOCore:
     # Advanced Operations (Rust-specific)
     # ==========================================
 
-    async def read_file_mmap(self, path: Path | str) -> str:
-        """
-        Reads a file using memory-mapped I/O if available, with a fallback to regular
-        file reading.
-
-        Note: The Rust implementation doesn't have a separate mmap method, so this
-        falls back to regular read_file which is already highly optimized. The encoding
-        used is the one specified in the constructor.
-
-        Args:
-            path (Path | str): The path to the file to be read. Can be a Path object
-                or a string.
-
-        Returns:
-            str: The content of the file as a string.
-        """
-        # Rust FileIOCore doesn't expose mmap separately - regular read is already optimized
-        return await self.read_file(path)
-
     def read_dds_header(self, path: Path | str) -> tuple[int, int] | None:
         """
         Reads the DDS header from the specified file path and returns the extracted header

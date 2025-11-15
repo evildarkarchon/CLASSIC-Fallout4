@@ -181,8 +181,28 @@ class RustPluginAnalyzer:
 
         Returns:
             tuple[bool, bool]: A tuple containing two boolean values. The first indicates whether the plugin limit
-                was successfully checked, and the second indicates if the plugin count is within an acceptable range.
+                was triggered, and the second indicates if the limit checks are disabled.
         """
+        if self._use_rust and self._rust_analyzer:
+            try:
+                # Convert Version objects to strings for Rust compatibility
+                game_ver_str = str(game_version) if game_version else ""
+                version_cur_str = str(version_current) if version_current else ""
+
+                # Call Rust implementation
+                plugin_limit_triggered, limit_check_disabled = self._rust_analyzer.check_plugin_limit(
+                    segment_plugins, game_ver_str, version_cur_str
+                )
+            except parse_errors as e:
+                logger.warning(f"Rust parse error in check_plugin_limit: {e}")
+            except rust_errors as e:
+                logger.warning(f"Rust check_plugin_limit failed: {e}")
+            except (TypeError, ValueError) as e:
+                logger.warning(f"Rust check_plugin_limit error: {e}")
+            else:
+                return plugin_limit_triggered, limit_check_disabled
+
+        # Use Python fallback
         if self._python_analyzer:
             return self._python_analyzer.check_plugin_limit(segment_plugins, game_version, version_current)
         from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer

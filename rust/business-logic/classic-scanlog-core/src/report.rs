@@ -296,6 +296,32 @@ impl ReportComposer {
     {
         self.fragments = self.fragments.par_iter().map(transform).collect();
     }
+
+    /// Get string pool statistics (size, lookups, hits, insertions).
+    ///
+    /// Returns a tuple containing:
+    /// - Pool size (number of unique interned strings)
+    /// - Lookup count (total number of intern attempts)
+    /// - Hit count (cache hits from pool)
+    /// - Insertion count (new strings added to pool)
+    ///
+    /// # Returns
+    ///
+    /// A tuple `(pool_size, lookups, hits, insertions)` representing
+    /// the current state of the string interning pool.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::report::ReportComposer;
+    ///
+    /// let composer = ReportComposer::new();
+    /// let (size, lookups, hits, insertions) = composer.get_pool_stats();
+    /// println!("Pool has {} strings", size);
+    /// ```
+    pub fn get_pool_stats(&self) -> (usize, usize, usize, usize) {
+        self.pool.get_stats()
+    }
 }
 
 /// Generator for report fragments with efficient string building

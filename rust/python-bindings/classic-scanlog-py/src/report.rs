@@ -154,6 +154,11 @@ impl PyReportComposer {
     pub fn fragment_count(&self) -> usize {
         self.inner.fragment_count()
     }
+
+    /// Get pool statistics (size, lookups, hits, insertions)
+    pub fn pool_stats(&self) -> (usize, usize, usize, usize) {
+        self.inner.get_pool_stats()
+    }
 }
 
 /// Python wrapper for ReportGenerator

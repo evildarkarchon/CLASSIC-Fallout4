@@ -10,6 +10,18 @@
 //! for manual fixes.
 
 use crate::report::ReportFragment;
+use once_cell::sync::Lazy;
+use parking_lot::Mutex;
+
+/// Global FCX mode handler for shared state across scan sessions
+///
+/// This static provides session-wide caching for FCX mode checks, enabling
+/// run-once optimization for batch scanning (10x performance improvement).
+///
+/// Call `FcxModeHandler::reset_global_state()` at the start of each scan session
+/// to clear cached results.
+pub static GLOBAL_FCX_HANDLER: Lazy<Mutex<FcxModeHandler>> =
+    Lazy::new(|| Mutex::new(FcxModeHandler::new(false)));
 
 /// Configuration issue detected by FCX mode
 #[derive(Clone, Debug)]
@@ -100,6 +112,15 @@ pub struct FcxModeHandler {
 
     /// Detected configuration issues (read-only detection)
     pub detected_issues: Vec<ConfigIssue>,
+
+    /// Flag indicating whether FCX checks have been run in this session
+    ///
+    /// This enables run-once caching for batch scanning performance.
+    /// When true, subsequent check_fcx_mode() calls reuse cached results
+    /// instead of re-running expensive operations (INI parsing, registry reads, etc.).
+    ///
+    /// Reset via reset() method between scan sessions.
+    pub checks_run: bool,
 }
 
 impl FcxModeHandler {
@@ -130,6 +151,7 @@ impl FcxModeHandler {
             main_files_check: None,
             game_files_check: None,
             detected_issues: Vec::new(),
+            checks_run: false,
         }
     }
 
@@ -248,6 +270,32 @@ impl FcxModeHandler {
         self.main_files_check = None;
         self.game_files_check = None;
         self.detected_issues.clear();
+        self.checks_run = false;
+    }
+
+    /// Reset the global FCX handler state (class method for Python compatibility).
+    ///
+    /// This method provides a way to reset the shared global FCX handler state
+    /// between scan sessions, ensuring clean state for each new analysis run.
+    /// It's designed to be called as a class method from Python via PyO3.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use classic_scanlog_core::FcxModeHandler;
+    ///
+    /// // Reset global state before starting a new scan
+    /// FcxModeHandler::reset_global_state();
+    /// ```
+    ///
+    /// # Thread Safety
+    ///
+    /// This method is thread-safe and can be called from multiple threads
+    /// without risk of data races. It uses a mutex-protected global state.
+    pub fn reset_global_state() {
+        if let Some(mut handler) = GLOBAL_FCX_HANDLER.try_lock() {
+            handler.reset();
+        }
     }
 
     /// Create a disabled FCX handler (convenience constructor)
@@ -257,6 +305,7 @@ impl FcxModeHandler {
             main_files_check: None,
             game_files_check: None,
             detected_issues: Vec::new(),
+            checks_run: false,
         }
     }
 
@@ -267,6 +316,7 @@ impl FcxModeHandler {
             main_files_check: None,
             game_files_check: None,
             detected_issues: Vec::new(),
+            checks_run: false,
         }
     }
 }

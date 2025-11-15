@@ -867,6 +867,17 @@ class ReportComposer:
             Number of fragments currently in the composer
         """
 
+    def pool_stats(self) -> tuple[int, int, int, int]:
+        """Get string pool statistics.
+
+        Returns:
+            Tuple of (pool_size, lookups, hits, insertions):
+                - pool_size: Number of unique interned strings
+                - lookups: Total number of intern attempts
+                - hits: Number of cache hits (string already in pool)
+                - insertions: Number of new strings added to pool
+        """
+
 class ReportGenerator:
     """High-performance report generation (75x speedup).
 
@@ -1479,6 +1490,21 @@ class FcxModeHandler:
 
     def reset(self) -> None:
         """Reset all FCX check results."""
+
+    @classmethod
+    def reset_fcx_checks(cls) -> None:
+        """Reset the global FCX handler state (class method).
+
+        This class method resets the shared global FCX handler state
+        between scan sessions. It provides API compatibility with the
+        Python implementation where FCXModeHandler.reset_fcx_checks()
+        is called as a class method.
+
+        Example:
+            >>> from classic_scanlog import FcxModeHandler
+            >>> # Reset global FCX state before starting a new scan
+            >>> FcxModeHandler.reset_fcx_checks()
+        """
 
 # =============================================================================
 # Test Classes

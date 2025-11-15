@@ -138,8 +138,8 @@ MANIFEST.txt
 cprofile.bin
 cprofile*.txt
 /rust_extensions/
-CLASSIC Data/databases/Fallout4 FormIDs Main.db-shm
-CLASSIC Data/databases/Fallout4 FormIDs Main.db-wal
+*.db-shm
+*.db-wal
 CLASSIC Data/graphics/Scanner 111*.svg
 test-collection.txt
 rust/clippy_full_report.txt

@@ -220,20 +220,81 @@ class RustRecordScanner:
         pattern_re = re.compile(pattern, re.IGNORECASE)
         return [line for line in lines if pattern_re.search(line)]
 
+    def _generate_report_lines(self, matches: list[str]) -> list[str]:
+        """
+        Generate formatted report lines from matched records.
+
+        Helper method to format record matches into report lines, mirroring
+        the Rust implementation's output format.
+
+        Args:
+            matches: List of matched record names
+
+        Returns:
+            list[str]: Formatted report lines
+        """
+        if not matches:
+            return ["* COULDN'T FIND ANY NAMED RECORDS *\n\n"]
+
+        from collections import Counter
+
+        lines = []
+        records_found = dict(Counter(sorted(matches)))
+
+        for record, count in records_found.items():
+            lines.append(f"- {record} | {count}\n")
+
+        lines.extend([
+            "\n[Last number counts how many times each Named Record shows up in the crash log.]\n",
+            f"These records were caught by {self.yamldata.crashgen_name} and some of them might be related to this crash.\n",
+            "Named records should give extra info on involved game objects, record types or mod files.\n\n",
+        ])
+
+        return lines
+
     def batch_scan_records(self, segments: list[list[str]]) -> list[tuple[Any, list[str]]]:
         """
-        Scans multiple segments of records sequentially.
+        Scans multiple segments of records in parallel using Rust acceleration.
 
-        Note: This method processes segments sequentially using scan_named_records.
-        The Rust implementation does not provide a batch method as the standalone
-        function scan_records_batch requires different parameters.
+        This method processes multiple segments concurrently when Rust is available,
+        providing significant performance improvements for batch operations. Falls back
+        to sequential processing with Python if Rust is unavailable.
 
         Args:
             segments: A list of segments, where each segment is a list of string records.
 
         Returns:
-            A list of tuples, where each tuple contains the scan result and list of matches.
+            A list of tuples, where each tuple contains:
+                - Rust: list[str] of formatted report lines
+                - Python: ReportFragment object
+                - list[str] of matched record names
         """
+        if self._use_rust and self._rust_scanner:
+            try:
+                import classic_scanlog
+
+                # Get stored patterns from initialization
+                target_records = list(getattr(self.yamldata, "classic_records_list", []) or [])
+                ignore_records = list(getattr(self.yamldata, "game_ignore_records", []) or [])
+
+                # Call standalone batch function for parallel processing
+                matches_batch = classic_scanlog.scan_records_batch(segments, target_records, ignore_records)
+
+                # Format results to match Python API: list[tuple[report_lines, matches]]
+                results = []
+                for matches in matches_batch:
+                    report_lines = self._generate_report_lines(matches)
+                    results.append((report_lines, matches))
+
+                return results
+            except parse_errors as e:
+                logger.warning(f"Rust parse error in batch_scan_records: {e}")
+            except rust_errors as e:
+                logger.warning(f"Rust batch_scan_records failed: {e}")
+            except (TypeError, ValueError, AttributeError) as e:
+                logger.warning(f"Rust batch_scan_records error: {e}")
+
+        # Fallback: sequential processing
         return [self.scan_named_records(segment) for segment in segments]
 
     @property
@@ -251,23 +312,3 @@ class RustRecordScanner:
         """
         return self._use_rust
 
-    @property
-    def scan_patterns(self) -> list[str] | None:
-        """
-        Gets the scan patterns used by the scanner.
-
-        This property retrieves the patterns utilized by the scanner, either from
-        a Rust-based or Python-based implementation, if available. If neither
-        scanner is accessible or patterns cannot be fetched, it will return None.
-
-        Note: The Rust implementation does not expose patterns via get_patterns().
-        This property primarily exists for compatibility with Python RecordScanner.
-
-        Returns:
-            list[str] | None: A list of scan patterns or None if patterns are not available.
-        """
-        # Check Python scanner (Rust doesn't expose patterns)
-        if self._python_scanner and hasattr(self._python_scanner, "patterns"):
-            return self._python_scanner.patterns  # pyright: ignore[reportAttributeAccessIssue]
-
-        return None
