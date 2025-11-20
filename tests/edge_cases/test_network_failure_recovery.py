@@ -307,11 +307,11 @@ class TestDownloadResilience:
 
         # Test successful verification
         result = await download_with_verification("http://example.com/file", expected_hash)
-        assert result == True
+        assert result
 
         # Test failed verification (wrong checksum)
         result = await download_with_verification("http://example.com/file", "wrong_hash")
-        assert result == False
+        assert not result
 
     @pytest.mark.asyncio
     async def test_mirror_fallback(self):
@@ -496,7 +496,7 @@ class TestNetworkRecoveryPatterns:
                 await breaker.call(failing_network_call)
 
         # Circuit should be open now
-        assert breaker.is_open == True
+        assert breaker.is_open
 
         # Further calls should fail immediately
         with pytest.raises(Exception) as exc:
@@ -537,7 +537,7 @@ class TestNetworkRecoveryPatterns:
         # Should degrade gracefully
         result = await service.get_data("fail")
         assert result in ["offline_data", "degraded_default", "offline_default"]
-        assert service.online_mode == False
+        assert not service.online_mode
 
         # Should continue in degraded mode
         result = await service.get_data("other")

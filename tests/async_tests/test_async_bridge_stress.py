@@ -326,7 +326,7 @@ class TestAsyncBridgeStress:
 
             async def failing_task():
                 await asyncio.sleep(0.001)
-                if exc_type == KeyError:
+                if exc_type is KeyError:
                     raise exc_type(exc_msg)
                 raise exc_type(exc_msg)
 
@@ -335,7 +335,7 @@ class TestAsyncBridgeStress:
                 bridge.run_async(failing_task())
 
             # Verify message is preserved
-            if exc_type == KeyError:
+            if exc_type is KeyError:
                 assert exc_msg in str(exc_info.value)
             else:
                 assert exc_msg == str(exc_info.value)

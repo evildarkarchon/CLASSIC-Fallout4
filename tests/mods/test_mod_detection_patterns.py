@@ -158,7 +158,7 @@ class TestModDetectionPatterns:
         ]
 
         for formid in valid_formids:
-            assert validate_light_plugin_formid(formid) == True
+            assert validate_light_plugin_formid(formid)
 
         # Invalid light plugin FormIDs
         invalid_formids = [
@@ -169,7 +169,7 @@ class TestModDetectionPatterns:
         ]
 
         for formid in invalid_formids:
-            assert validate_light_plugin_formid(formid) == False
+            assert not validate_light_plugin_formid(formid)
 
     def test_ba2_archive_detection(self):
         """Test detection of BA2 archives in crash logs."""
@@ -300,7 +300,7 @@ class TestModDetectionPatterns:
 
         compatibility = check_prp_compatibility(plugins)
 
-        assert compatibility["has_prp"] == True
+        assert compatibility["has_prp"]
         assert len(compatibility["patches"]) >= 3
         assert compatibility["potential_conflicts"] is not None
 

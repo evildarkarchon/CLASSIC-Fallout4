@@ -536,7 +536,7 @@ class TestComponentCommunication:
         # Test boundary crossing
         result = sync_wrapper(test_data)
 
-        assert result["processed"] == True
+        assert result["processed"]
         assert result["item_count"] == 7  # 2 + 2 + 3
 
     @pytest.mark.asyncio

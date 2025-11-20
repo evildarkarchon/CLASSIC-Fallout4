@@ -345,9 +345,9 @@ class PerformanceReportGenerator:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CLASSIC Performance Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; margin-bottom: 30px; }
-        .metric { margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }
+        body {{ font-family: Arial, sans-serif; margin: 20px; }}
+        .header {{ text-align: center; margin-bottom: 30px; }}
+        .metric {{ margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 5px; }}
     </style>
 </head>
 <body>

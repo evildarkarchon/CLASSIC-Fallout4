@@ -41,6 +41,8 @@ from ClassicLib.integration.factory import (
 from ClassicLib.integration.status import (
     is_rust_accelerated,
 )
+from ClassicLib.rust.formid_rust import FormIDAnalyzer as RustFormIDAnalyzer
+from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
 from tests.test_infra.performance_utils import PerformanceTimer
 
 

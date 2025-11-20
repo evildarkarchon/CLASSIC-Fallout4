@@ -718,7 +718,7 @@ class PyLogCollector:
         >>> # Create log collector
         >>> collector = PyLogCollector(
         ...     base_folder=".",
-        ...     xse_folder=r"C:\Users\Username\Documents\My Games\Fallout4\F4SE",
+        ...     xse_folder="C:/Users/Username/Documents/My Games/Fallout4/F4SE",
         ...     custom_folder=None
         ... )
         >>> # Collect all crash logs

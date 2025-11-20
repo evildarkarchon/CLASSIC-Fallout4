@@ -62,10 +62,10 @@ class TestClassicScanLogs:
         # Assert - Backward compatibility attributes
         assert scanner.crashlog_list == mock_executor.crashlog_list
         assert scanner.yamldata == mock_executor.yamldata
-        assert scanner.fcx_mode == True
-        assert scanner.show_formid_values == False
-        assert scanner.formid_db_exists == True
-        assert scanner.move_unsolved_logs == False
+        assert scanner.fcx_mode
+        assert not scanner.show_formid_values
+        assert scanner.formid_db_exists
+        assert not scanner.move_unsolved_logs
         assert scanner.scan_start_time == 12345.0
         assert scanner.crashlogs == mock_executor.crashlogs
         assert scanner.crashlog_stats == Counter({"test": 1})

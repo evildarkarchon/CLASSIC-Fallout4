@@ -279,8 +279,8 @@ PLUGINS:
 
         # Compare results structure (allowing for minor differences in processing)
         assert len(rust_result) == len(python_result), "Result structure mismatch"
-        assert type(rust_result[0]) == type(python_result[0]), "Game version type mismatch"
-        assert type(rust_result[1]) == type(python_result[1]), "Crashgen version type mismatch"
+        assert type(rust_result[0]) is type(python_result[0]), "Game version type mismatch"
+        assert type(rust_result[1]) is type(python_result[1]), "Crashgen version type mismatch"
         assert len(rust_result[3]) == len(python_result[3]), "Segments count mismatch"
 
     @pytest.mark.asyncio

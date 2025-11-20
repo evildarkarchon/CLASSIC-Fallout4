@@ -167,7 +167,7 @@ class ParityValidator(ABC):
         differences = []
 
         # Type comparison
-        if type(rust_result) != type(python_result):
+        if type(rust_result) is not type(python_result):
             differences.append(f"Type mismatch: Rust={type(rust_result).__name__}, Python={type(python_result).__name__}")
             return False, differences
 

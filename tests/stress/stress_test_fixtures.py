@@ -9,6 +9,7 @@ import gc
 import os
 import threading
 import time
+import traceback
 import tracemalloc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any

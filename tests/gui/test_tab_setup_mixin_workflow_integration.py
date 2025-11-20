@@ -362,12 +362,12 @@ class TestBackupWorkflow:
             full_tab_setup.setup_backups_tab()
 
             # Verify button states match expected backup status
-            assert button_states["XSE"]["restore_enabled"] == True
-            assert button_states["XSE"]["backup_enabled"] == False
-            assert button_states["RESHADE"]["restore_enabled"] == False
-            assert button_states["RESHADE"]["backup_enabled"] == True
-            assert button_states["VULKAN"]["restore_enabled"] == True
-            assert button_states["ENB"]["restore_enabled"] == False
+            assert button_states["XSE"]["restore_enabled"]
+            assert not button_states["XSE"]["backup_enabled"]
+            assert not button_states["RESHADE"]["restore_enabled"]
+            assert button_states["RESHADE"]["backup_enabled"]
+            assert button_states["VULKAN"]["restore_enabled"]
+            assert not button_states["ENB"]["restore_enabled"]
 
 
 @pytest.mark.integration
@@ -475,7 +475,7 @@ class TestMultiTabInteraction:
 
                 # Verify scan results stored
                 assert hasattr(full_tab_setup, "scan_results")
-                assert full_tab_setup.scan_results["errors_found"] == True
+                assert full_tab_setup.scan_results["errors_found"]
 
 
 @pytest.mark.integration

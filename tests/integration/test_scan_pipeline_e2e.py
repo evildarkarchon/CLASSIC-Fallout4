@@ -528,7 +528,7 @@ class TestScanPipelineE2E:
                 checker = GameIntegrityChecker(str(game_path))
                 with patch.object(checker, "validate_game_directory", return_value=True):
                     integrity_result = checker.validate_game_directory()
-                    assert integrity_result == True
+                    assert integrity_result
 
     @pytest.mark.asyncio
     async def test_mod_detection_to_conflict_resolution_pipeline(self, setup_pipeline):

@@ -722,16 +722,16 @@ class StressTestReporter:
         <head>
             <title>CLASSIC Phase 6 Stress Test Report</title>
             <style>
-                body { font-family: Arial, sans-serif; margin: 40px; }
-                .header { background: #2c3e50; color: white; padding: 20px; border-radius: 8px; }
-                .section { margin: 20px 0; padding: 15px; border-left: 4px solid #3498db; }
-                .metric { background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 4px; }
-                .pass { color: #27ae60; }
-                .fail { color: #e74c3c; }
-                .warning { color: #f39c12; }
-                table { width: 100%; border-collapse: collapse; margin: 10px 0; }
-                th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }
-                th { background-color: #f8f9fa; }
+                body {{ font-family: Arial, sans-serif; margin: 40px; }}
+                .header {{ background: #2c3e50; color: white; padding: 20px; border-radius: 8px; }}
+                .section {{ margin: 20px 0; padding: 15px; border-left: 4px solid #3498db; }}
+                .metric {{ background: #f8f9fa; padding: 10px; margin: 5px 0; border-radius: 4px; }}
+                .pass {{ color: #27ae60; }}
+                .fail {{ color: #e74c3c; }}
+                .warning {{ color: #f39c12; }}
+                table {{ width: 100%; border-collapse: collapse; margin: 10px 0; }}
+                th, td {{ padding: 8px 12px; text-align: left; border-bottom: 1px solid #ddd; }}
+                th {{ background-color: #f8f9fa; }}
             </style>
         </head>
         <body>

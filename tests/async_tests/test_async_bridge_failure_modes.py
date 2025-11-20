@@ -271,7 +271,7 @@ class TestAsyncBridgeFailureModes:
 
             # KeyError adds quotes around the message, others don't
             exc_str = str(exc_info.value)
-            if exc_type == KeyError:
+            if exc_type is KeyError:
                 # KeyError wraps message in quotes
                 assert message in exc_str
             else:

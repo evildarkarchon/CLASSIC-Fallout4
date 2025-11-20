@@ -521,7 +521,7 @@ class TestPermissionRecoveryStrategies:
             # Retry with "elevation"
             result = await write_with_elevation(Path("/protected/path"), "content")
 
-        assert result == True
+        assert result
         assert attempt_count == 2
 
     @pytest.mark.asyncio
