@@ -300,35 +300,33 @@ impl LogProcessor {
     fn format_report(&self, results: &[Option<LogErrorEntry>]) -> String {
         let mut report = String::new();
 
-        for entry_opt in results {
-            if let Some(entry) = entry_opt {
-                report
-                    .push_str("[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n");
-                report
-                    .push_str("[ Errors do not necessarily mean that the mod is not working. ]\n");
-                report.push_str(&format!("\nLOG PATH > {}\n", entry.file_path.display()));
+        for entry in results.iter().flatten() {
+            report
+                .push_str("[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n");
+            report
+                .push_str("[ Errors do not necessarily mean that the mod is not working. ]\n");
+            report.push_str(&format!("\nLOG PATH > {}\n", entry.file_path.display()));
 
-                // Show truncation notice if errors were limited
-                if entry.total_errors > entry.errors.len() {
-                    report.push_str(&format!(
-                        "[ Showing last {} of {} total errors ]\n\n",
-                        entry.errors.len(),
-                        entry.total_errors
-                    ));
-                } else {
-                    report.push('\n');
-                }
-
-                for error in &entry.errors {
-                    report.push_str(error);
-                    report.push('\n');
-                }
-
+            // Show truncation notice if errors were limited
+            if entry.total_errors > entry.errors.len() {
                 report.push_str(&format!(
-                    "\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : {}\n",
+                    "[ Showing last {} of {} total errors ]\n\n",
+                    entry.errors.len(),
                     entry.total_errors
                 ));
+            } else {
+                report.push('\n');
             }
+
+            for error in &entry.errors {
+                report.push_str(error);
+                report.push('\n');
+            }
+
+            report.push_str(&format!(
+                "\n* TOTAL NUMBER OF DETECTED LOG ERRORS * : {}\n",
+                entry.total_errors
+            ));
         }
 
         report

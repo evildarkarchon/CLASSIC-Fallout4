@@ -337,25 +337,25 @@ impl Default for YamlFormatConfig {
 /// # Fields
 ///
 /// - `data`:
-///     A thread-safe, shared reference-counted pointer (`Arc`) to the parsed YAML data.
-///     This allows safe shared usage of the YAML data across threads.
+///   A thread-safe, shared reference-counted pointer (`Arc`) to the parsed YAML data.
+///   This allows safe shared usage of the YAML data across threads.
 ///
 /// - `modified`:
-///     A `SystemTime` instance representing the last time the YAML resource
-///     was modified. This can be used to determine whether the cached data
-///     is up-to-date with the source.
+///   A `SystemTime` instance representing the last time the YAML resource
+///   was modified. This can be used to determine whether the cached data
+///   is up-to-date with the source.
 ///
 /// - `raw_content`:
-///     An optional `String` containing the raw content of the YAML file.
-///     This is only present if the raw text representation is required in addition
-///     to the parsed YAML data.
+///   An optional `String` containing the raw content of the YAML file.
+///   This is only present if the raw text representation is required in addition
+///   to the parsed YAML data.
 ///
 /// # Derives
 ///
 /// - `Clone`:
-///     The `Clone` trait allows creating a duplicate `CachedYaml` instance efficiently.
-///     This is made possible due to the usage of `Arc` for the `data` field, which ensures
-///     that the cloned instance shares the same underlying data rather than duplicating it.
+///   The `Clone` trait allows creating a duplicate `CachedYaml` instance efficiently.
+///   This is made possible due to the usage of `Arc` for the `data` field, which ensures
+///   that the cloned instance shares the same underlying data rather than duplicating it.
 ///
 /// # Usage
 ///

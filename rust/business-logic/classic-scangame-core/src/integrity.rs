@@ -271,13 +271,12 @@ impl GameIntegrityChecker {
     ///
     /// Returns error if any check fails
     pub fn run_all_checks(&self) -> Result<Vec<IntegrityCheckResult>, IntegrityError> {
-        let mut results = Vec::new();
-
-        // Check game executable version
-        results.push(self.check_executable_version()?);
-
-        // Check installation location
-        results.push(self.check_installation_location()?);
+        let results = vec![
+            // Check game executable version
+            self.check_executable_version()?,
+            // Check installation location
+            self.check_installation_location()?,
+        ];
 
         Ok(results)
     }

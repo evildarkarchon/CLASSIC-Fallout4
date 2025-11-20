@@ -11,10 +11,15 @@ pub struct PyRustFormIDAnalyzer {
     inner: RustFormIDAnalyzer,
 }
 
+impl Default for PyRustFormIDAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyRustFormIDAnalyzer {
     /// Create a new instance
-
     #[new]
     pub fn new() -> Self {
         Self {
@@ -64,10 +69,15 @@ pub struct PyFormIDAnalyzer {
     inner: FormIDAnalyzer,
 }
 
+impl Default for PyFormIDAnalyzer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyFormIDAnalyzer {
     /// Create a new instance
-
     #[new]
     pub fn new() -> Self {
         Self {

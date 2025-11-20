@@ -10,8 +10,8 @@ use criterion::{Criterion, black_box, criterion_group, criterion_main};
 fn bench_widget_creation(c: &mut Criterion) {
     c.bench_function("checkbox_creation", |b| {
         b.iter(|| {
-            let widget = black_box(Checkbox::new("Option", false));
-            widget
+            
+            black_box(Checkbox::new("Option", false))
         })
     });
 }

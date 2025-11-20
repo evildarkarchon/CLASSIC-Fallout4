@@ -132,7 +132,7 @@ mod tests {
     #[test]
     fn test_output_formatter_creation() {
         let _formatter = OutputFormatter::new();
-        assert!(true); // Just verify it can be created
+        // Verify creation works - no panic means success
     }
 
     #[test]

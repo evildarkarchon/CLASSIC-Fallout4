@@ -584,9 +584,11 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let config_path = temp_dir.path().join("test_config.yaml");
 
-        let mut config = ClassicConfig::default();
-        config.fcx_mode = true;
-        config.show_formid_values = true;
+        let mut config = ClassicConfig {
+            fcx_mode: true,
+            show_formid_values: true,
+            ..Default::default()
+        };
         config.paths.ini_folder = Some(PathBuf::from("C:\\Test"));
 
         // Save config

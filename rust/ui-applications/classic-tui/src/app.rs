@@ -75,6 +75,7 @@ pub struct App {
 
 /// UI state representing which screen is active
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(clippy::enum_variant_names)]
 pub enum UiState {
     /// Main screen with folder selectors and scan buttons
     MainScreen,

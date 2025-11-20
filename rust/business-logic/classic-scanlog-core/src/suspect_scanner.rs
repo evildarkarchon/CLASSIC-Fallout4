@@ -334,7 +334,7 @@ mod tests {
             .unwrap();
 
         assert!(found);
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
     }
 
     #[test]
@@ -342,12 +342,12 @@ mod tests {
         let fragment =
             SuspectScanner::check_dll_crash("Error in plugin.dll at address 0x12345").unwrap();
 
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
 
         // Should not trigger for tbbmalloc
         let fragment2 = SuspectScanner::check_dll_crash("Error in tbbmalloc.dll").unwrap();
 
-        assert!(fragment2.len() == 0);
+        assert!(fragment2.is_empty());
     }
 
     #[test]

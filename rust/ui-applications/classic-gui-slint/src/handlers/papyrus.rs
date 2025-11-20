@@ -150,7 +150,7 @@ pub async fn start_monitoring(_state: SharedAppState) -> Result<()> {
     #[cfg(test)]
     {
         tracing::debug!("Skipping Papyrus monitoring in test mode");
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(not(test))]

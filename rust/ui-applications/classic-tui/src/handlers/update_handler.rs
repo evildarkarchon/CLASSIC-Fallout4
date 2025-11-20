@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_semantic_version_ordering() {
-        let mut versions = vec![
+        let mut versions = [
             SemanticVersion::parse("2.0.0").unwrap(),
             SemanticVersion::parse("1.0.0").unwrap(),
             SemanticVersion::parse("1.2.0").unwrap(),

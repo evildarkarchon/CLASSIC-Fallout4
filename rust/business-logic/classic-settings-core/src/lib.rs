@@ -173,6 +173,6 @@ mod tests {
         assert_eq!(docs.len(), 1);
 
         let doc = &docs[0];
-        assert!(doc.is_badvalue() == false);
+        assert!(!doc.is_badvalue());
     }
 }

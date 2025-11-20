@@ -330,7 +330,7 @@ mod tests {
         let handler = FcxModeHandler::new(false);
         let fragment = handler.get_fcx_messages();
 
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("DISABLED")));
     }
@@ -340,7 +340,7 @@ mod tests {
         let handler = FcxModeHandler::new(true);
         let fragment = handler.get_fcx_messages();
 
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("ENABLED")));
     }

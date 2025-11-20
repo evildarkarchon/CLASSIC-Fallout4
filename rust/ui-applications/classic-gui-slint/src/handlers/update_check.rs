@@ -304,7 +304,7 @@ mod tests {
 
         // Load
         let loaded = UpdatePreferences::load().await.unwrap();
-        assert_eq!(loaded.dont_check_again, true);
+        assert!(loaded.dont_check_again);
         assert_eq!(loaded.skipped_version, Some("8.0.1".to_string()));
 
         // Restore original directory

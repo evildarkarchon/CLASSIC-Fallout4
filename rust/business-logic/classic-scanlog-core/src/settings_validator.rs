@@ -414,7 +414,7 @@ mod tests {
             .scan_buffout_achievements_setting(xse_modules, &crashgen)
             .unwrap();
 
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("CAUTION")));
     }
@@ -434,7 +434,7 @@ mod tests {
             )
             .unwrap();
 
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("X-Cell")));
     }
@@ -450,7 +450,7 @@ mod tests {
             .scan_archivelimit_setting(&crashgen, Some((1, 28, 0)))
             .unwrap();
 
-        assert!(fragment.len() > 0);
+        assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("ArchiveLimit")));
     }

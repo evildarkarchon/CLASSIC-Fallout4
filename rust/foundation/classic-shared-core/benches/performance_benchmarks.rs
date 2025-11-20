@@ -16,7 +16,8 @@ fn bench_record_timing(c: &mut Criterion) {
     // Benchmark recording timing (now with rolling stats - O(1) memory)
     group.bench_function("record_single", |b| {
         b.iter(|| {
-            black_box(metrics.record_timing("test_op", Duration::from_micros(100)));
+            metrics.record_timing("test_op", Duration::from_micros(100));
+            black_box(());
         });
     });
 
@@ -30,7 +31,8 @@ fn bench_record_timing(c: &mut Criterion) {
                 b.iter(|| {
                     for i in 0..count {
                         let duration = Duration::from_micros(100 + (i as u64 % 100));
-                        black_box(metrics.record_timing("bulk_op", duration));
+                        metrics.record_timing("bulk_op", duration);
+                        black_box(());
                     }
                 });
             },
@@ -116,15 +118,18 @@ fn bench_record_bytes(c: &mut Criterion) {
     // Benchmark bytes recording
     group.bench_function("record_bytes", |b| {
         b.iter(|| {
-            black_box(metrics.record_bytes("file_op", 1024 * 1024));
+            metrics.record_bytes("file_op", 1024 * 1024);
+            black_box(());
         });
     });
 
     // Benchmark with timing and bytes
     group.bench_function("record_timing_and_bytes", |b| {
         b.iter(|| {
-            black_box(metrics.record_timing("file_op", Duration::from_millis(10)));
-            black_box(metrics.record_bytes("file_op", 1024 * 1024));
+            metrics.record_timing("file_op", Duration::from_millis(10));
+            black_box(());
+            metrics.record_bytes("file_op", 1024 * 1024);
+            black_box(());
         });
     });
 
@@ -229,7 +234,8 @@ fn bench_memory_efficiency(c: &mut Criterion) {
                 b.iter(|| {
                     for i in 0..count {
                         let duration = Duration::from_micros(100 + (i as u64 % 100));
-                        black_box(metrics.record_timing("memory_test", duration));
+                        metrics.record_timing("memory_test", duration);
+                        black_box(());
                     }
                     // Stats should be instant (O(1)) regardless of record count
                     black_box(metrics.get_stats("memory_test"));

@@ -11,6 +11,12 @@ use std::time::Duration;
 #[pyclass(name = "RustPerformanceMonitor")]
 pub struct PyRustPerformanceMonitor;
 
+impl Default for PyRustPerformanceMonitor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyRustPerformanceMonitor {
     /// Creates a new `RustPerformanceMonitor` instance.
