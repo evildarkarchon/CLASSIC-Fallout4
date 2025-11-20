@@ -15,9 +15,9 @@ from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
 from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
 
 
-# Create a test class that combines the mixin with QMainWindow
-class TestMainWindow(ScanOperationsMixin, QMainWindow):
-    """Test window combining ScanOperationsMixin with QMainWindow."""
+# Create a fixture class that combines the mixin with QMainWindow
+class MainWindowFixture(ScanOperationsMixin, QMainWindow):
+    """Fixture window combining ScanOperationsMixin with QMainWindow for testing."""
 
     def __init__(self):
         super().__init__()
@@ -66,7 +66,7 @@ class TestScanErrorDialogIntegration:
     @pytest.fixture
     def main_window(self, qtbot):
         """Create test main window."""
-        window = TestMainWindow()
+        window = MainWindowFixture()
         qtbot.addWidget(window)
         return window
 

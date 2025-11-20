@@ -5,6 +5,14 @@ This minimal configuration file imports organized fixtures from subdirectories
 and defines test type markers for selective test execution.
 """
 
+# Python 3.13 compatibility patch for pyffi
+# pyffi uses time.clock() which was removed in Python 3.8+
+import time
+
+if not hasattr(time, "clock"):
+    # Monkey-patch time.clock for compatibility with old libraries
+    time.clock = time.perf_counter
+
 import sys
 from pathlib import Path
 

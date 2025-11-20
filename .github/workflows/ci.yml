@@ -1,0 +1,306 @@
+name: CI
+
+on:
+  push:
+    branches: [main, classic-next, develop]
+  pull_request:
+    branches: [main, classic-next, develop]
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+  # Python version must match project requirements
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # Fast checks that run first to fail fast
+  lint-python:
+    name: Python Linting (Ruff)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run ruff check
+        run: uv run ruff check .
+
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+
+  lint-rust:
+    name: Rust Linting (Clippy)
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-build-
+
+      - name: Run rustfmt check
+        run: cargo fmt --all --manifest-path rust/Cargo.toml -- --check
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --all-features --manifest-path rust/Cargo.toml -- -D warnings
+
+  # Build Rust components
+  build-rust:
+    name: Build Rust Components
+    runs-on: windows-latest
+    needs: [lint-rust]
+    timeout-minutes: 20  # Prevent build from hanging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-build-
+
+      - name: Build all Rust workspace
+        run: cargo build --workspace --release --manifest-path rust/Cargo.toml
+
+      - name: Run Rust tests
+        run: cargo test --workspace --release --manifest-path rust/Cargo.toml
+
+      - name: Upload Rust build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: rust-libs
+          path: |
+            rust/target/release/*.dll
+            rust/target/release/*.pdb
+          retention-days: 1
+
+  # Build Python bindings with maturin
+  build-python-bindings:
+    name: Build Python Bindings
+    runs-on: windows-latest
+    needs: [lint-python, build-rust]
+    timeout-minutes: 30  # Maturin builds can be slow
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-build-
+
+      - name: Install maturin
+        run: uv tool install maturin
+
+      - name: Build all Python bindings
+        run: |
+          $ErrorActionPreference = "Stop"
+          $bindings = @(
+            "classic-yaml-py",
+            "classic-database-py",
+            "classic-file-io-py",
+            "classic-scanlog-py",
+            "classic-config-py",
+            "classic-registry-py",
+            "classic-perf-py",
+            "classic-pybridge-py",
+            "classic-settings-py",
+            "classic-message-py",
+            "classic-path-py",
+            "classic-shared-py"
+          )
+
+          foreach ($binding in $bindings) {
+            Write-Host "Building $binding..."
+            Set-Location "rust/python-bindings/$binding"
+            maturin build --release --out dist
+            if ($LASTEXITCODE -ne 0) {
+              throw "Failed to build $binding"
+            }
+            Set-Location ../../..
+          }
+        shell: pwsh
+
+      - name: Upload Python binding wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-wheels
+          path: rust/python-bindings/*/dist/*.whl
+          retention-days: 1
+
+  # Run Python tests
+  test-python:
+    name: Python Tests
+    runs-on: windows-latest
+    needs: [build-python-bindings]
+    timeout-minutes: 30  # Kill job if tests hang for 30 minutes
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Download Python binding wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: python-wheels
+          path: wheels
+
+      - name: Install Python dependencies and wheels
+        run: |
+          uv sync --all-extras
+          Get-ChildItem -Path wheels -Filter *.whl -Recurse | ForEach-Object {
+            uv pip install $_.FullName --force-reinstall
+          }
+        shell: pwsh
+
+      - name: Verify Rust acceleration
+        run: |
+          uv run python -c "import classic_yaml; print(f'Rust YAML version: {classic_yaml.__version__}')"
+          uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
+
+      - name: Run pytest (unit tests)
+        run: uv run pytest -n 4 -m "unit and not slow" --maxfail=5 --tb=short --timeout=300 --timeout-method=thread
+        timeout-minutes: 10
+
+      - name: Run pytest (integration tests)
+        run: uv run pytest -n 4 -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread
+        timeout-minutes: 15
+
+      - name: Run pytest (Rust integration tests)
+        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread
+        timeout-minutes: 10
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: |
+            .pytest_cache/
+            test-results/
+          retention-days: 7
+
+  # Type checking
+  type-check:
+    name: Type Checking (mypy)
+    runs-on: windows-latest
+    needs: [build-python-bindings]
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Download Python binding wheels
+        uses: actions/download-artifact@v4
+        with:
+          name: python-wheels
+          path: wheels
+
+      - name: Install dependencies and wheels
+        run: |
+          uv sync --all-extras
+          Get-ChildItem -Path wheels -Filter *.whl -Recurse | ForEach-Object {
+            uv pip install $_.FullName --force-reinstall
+          }
+        shell: pwsh
+
+      - name: Run mypy
+        run: uv run mypy src/ ClassicLib/ --ignore-missing-imports
+        continue-on-error: true  # Mypy can be noisy, don't fail CI

@@ -23,9 +23,9 @@ import pytest
 try:
     import classic_yaml
 
-    RustYamlOperations = classic_yaml.RustYamlOperations
+    YamlOperations = classic_yaml.YamlOperations
     RUST_AVAILABLE = True
-except ImportError:
+except (ImportError, AttributeError):
     RUST_AVAILABLE = False
 
 
@@ -41,7 +41,7 @@ class TestParseYaml:
 
     def test_parse_yaml_simple_types(self):
         """Test parsing simple YAML types."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Null
         result = yaml_ops.parse_yaml("null")
@@ -68,7 +68,7 @@ class TestParseYaml:
 
     def test_parse_yaml_list(self):
         """Test parsing YAML lists."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         list_yaml = """
 - item1
@@ -85,7 +85,7 @@ class TestParseYaml:
 
     def test_parse_yaml_dict(self):
         """Test parsing YAML dictionaries."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         dict_yaml = """
 key1: value1
@@ -102,7 +102,7 @@ key3: true
 
     def test_parse_yaml_nested_structure(self):
         """Test parsing nested YAML structures."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         nested_yaml = """
 database:
@@ -133,7 +133,7 @@ servers:
 
     def test_parse_yaml_invalid(self):
         """Test error handling for invalid YAML."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Invalid YAML syntax
         invalid_yaml = "{ invalid: yaml: content"
@@ -156,7 +156,7 @@ class TestDumpYaml:
 
     def test_dump_yaml_simple_types(self):
         """Test dumping simple Python types to YAML."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Boolean
         yaml_str = yaml_ops.dump_yaml(True)
@@ -172,7 +172,7 @@ class TestDumpYaml:
 
     def test_dump_yaml_complex(self):
         """Test dumping complex Python structures to YAML."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Create a complex structure
         data = {
@@ -192,7 +192,7 @@ class TestDumpYaml:
 
     def test_roundtrip_yaml(self):
         """Test YAML roundtrip (parse → dump → parse)."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         original_yaml = """
 settings:
@@ -226,7 +226,7 @@ class TestFileOperations:
 
     def test_load_yaml_file(self):
         """Test loading YAML from file."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             yaml_file = Path(tmpdir) / "test.yaml"
@@ -249,7 +249,7 @@ features:
 
     def test_load_yaml_file_nonexistent(self):
         """Test error handling for nonexistent files."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with pytest.raises(Exception) as exc_info:
             yaml_ops.load_yaml_file("/nonexistent/path/file.yaml")
@@ -258,7 +258,7 @@ features:
 
     def test_load_yaml_file_invalid_content(self):
         """Test error handling for invalid YAML content."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             yaml_file = Path(tmpdir) / "invalid.yaml"
@@ -273,7 +273,7 @@ features:
 
     def test_save_yaml_file(self):
         """Test saving YAML to file."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             yaml_file = Path(tmpdir) / "output.yaml"
@@ -297,7 +297,7 @@ features:
 
     def test_save_yaml_file_cache_invalidation(self):
         """Test that saving invalidates cache."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             yaml_file = Path(tmpdir) / "cache_test.yaml"
@@ -330,7 +330,7 @@ class TestCaching:
 
     def test_yaml_file_caching(self):
         """Test that files are cached."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             yaml_file = Path(tmpdir) / "cached.yaml"
@@ -355,7 +355,7 @@ class TestCaching:
 
     def test_cache_modification_detection(self):
         """Test that cache detects file modifications."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             yaml_file = Path(tmpdir) / "modified.yaml"
@@ -375,7 +375,7 @@ class TestCaching:
 
     def test_clear_cache(self):
         """Test cache clearing."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             # Load multiple files to populate cache
@@ -396,7 +396,7 @@ class TestCaching:
 
     def test_cache_stats(self):
         """Test cache statistics."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Clear cache first
         yaml_ops.clear_cache()
@@ -430,7 +430,7 @@ class TestSettingsNavigation:
 
     def test_get_setting_simple(self):
         """Test getting simple settings."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         data = {
             "key1": "value1",
@@ -448,7 +448,7 @@ class TestSettingsNavigation:
 
     def test_get_setting_nested(self):
         """Test getting nested settings with dot notation."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         yaml_content = """
 database:
@@ -476,7 +476,7 @@ database:
 
     def test_get_setting_non_mapping(self):
         """Test navigation through non-mapping values."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         yaml_content = """
 settings:
@@ -490,7 +490,7 @@ settings:
 
     def test_set_setting_simple(self):
         """Test setting simple values."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         data = {
             "existing": "old",
@@ -503,7 +503,7 @@ settings:
 
     def test_set_setting_create_nested(self):
         """Test creating nested paths."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Start with empty dict
         data = {}
@@ -518,7 +518,7 @@ settings:
 
     def test_set_setting_overwrite_non_mapping(self):
         """Test overwriting non-mapping values."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         yaml_content = """
 settings: 42
@@ -535,7 +535,7 @@ settings: 42
 
     def test_set_setting_empty_key_path(self):
         """Test error handling for empty key path."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         data = {}
 
@@ -547,7 +547,7 @@ settings: 42
 
     def test_set_setting_update_existing_nested(self):
         """Test updating existing nested values."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         yaml_content = """
 server:
@@ -581,7 +581,7 @@ class TestPythonTypeConversion:
 
     def test_python_to_yaml_all_types(self):
         """Test conversion of all Python types to YAML."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Create complex Python structure
         root = {
@@ -630,7 +630,7 @@ class TestIntegration:
 
     def test_full_workflow(self):
         """Test complete workflow: create → save → load → update → save → load."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = Path(tmpdir) / "config.yaml"
@@ -672,7 +672,7 @@ class TestIntegration:
 
     def test_concurrent_file_loads(self):
         """Test loading multiple files (cache should handle concurrent access)."""
-        yaml_ops = RustYamlOperations()
+        yaml_ops = YamlOperations()
 
         # Clear cache from previous tests
         yaml_ops.clear_cache()
