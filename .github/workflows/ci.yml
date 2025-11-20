@@ -13,7 +13,44 @@ env:
   PYTHON_VERSION: "3.12"
 
 jobs:
-  # Fast checks that run first to fail fast
+  # Formatting checks (non-blocking, aesthetic only)
+  format-python:
+    name: Python Formatting (Ruff)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't block CI on formatting issues
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --all-extras
+
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+
+  format-rust:
+    name: Rust Formatting (rustfmt)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    continue-on-error: true  # Don't block CI on formatting issues
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Run rustfmt check
+        run: cargo fmt --all --manifest-path rust/Cargo.toml -- --check
+
+  # Linting checks (can catch real bugs, run in parallel with builds)
   lint-python:
     name: Python Linting (Ruff)
     runs-on: windows-latest
@@ -33,9 +70,6 @@ jobs:
       - name: Run ruff check
         run: uv run ruff check .
 
-      - name: Run ruff format check
-        run: uv run ruff format --check .
-
   lint-rust:
     name: Rust Linting (Clippy)
     runs-on: windows-latest
@@ -46,7 +80,7 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
-          components: clippy, rustfmt
+          components: clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -73,17 +107,13 @@ jobs:
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
 
-      - name: Run rustfmt check
-        run: cargo fmt --all --manifest-path rust/Cargo.toml -- --check
-
       - name: Run clippy
         run: cargo clippy --workspace --all-targets --all-features --manifest-path rust/Cargo.toml -- -D warnings
 
-  # Build Rust components
+  # Build Rust components (no dependencies - runs immediately)
   build-rust:
     name: Build Rust Components
     runs-on: windows-latest
-    needs: [lint-rust]
     timeout-minutes: 20  # Prevent build from hanging
     steps:
       - uses: actions/checkout@v4
@@ -135,7 +165,7 @@ jobs:
   build-python-bindings:
     name: Build Python Bindings
     runs-on: windows-latest
-    needs: [lint-python, build-rust]
+    needs: [build-rust]  # Only wait for Rust build, not linting
     timeout-minutes: 30  # Maturin builds can be slow
     steps:
       - uses: actions/checkout@v4

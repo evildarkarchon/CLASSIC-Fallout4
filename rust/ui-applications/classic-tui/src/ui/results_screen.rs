@@ -96,16 +96,17 @@ pub fn render_results_screen(f: &mut Frame, app: &App) {
 
     // Render update notification banner if visible (at top)
     if let Some(ref notification) = app.update_notification
-        && notification.is_visible() {
-            notification.render(f, working_area);
-            // Adjust working area to account for banner height
-            working_area = Rect {
-                x: working_area.x,
-                y: working_area.y + notification.height(),
-                width: working_area.width,
-                height: working_area.height.saturating_sub(notification.height()),
-            };
-        }
+        && notification.is_visible()
+    {
+        notification.render(f, working_area);
+        // Adjust working area to account for banner height
+        working_area = Rect {
+            x: working_area.x,
+            y: working_area.y + notification.height(),
+            width: working_area.width,
+            height: working_area.height.saturating_sub(notification.height()),
+        };
+    }
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -120,9 +121,10 @@ pub fn render_results_screen(f: &mut Frame, app: &App) {
 
     // Render error dialog overlay if active (should be last so it appears on top)
     if let Some(ref dialog) = app.error_dialog
-        && dialog.is_active() {
-            dialog.render(f, f.area());
-        }
+        && dialog.is_active()
+    {
+        dialog.render(f, f.area());
+    }
 }
 
 /// Render the report list on the left pane

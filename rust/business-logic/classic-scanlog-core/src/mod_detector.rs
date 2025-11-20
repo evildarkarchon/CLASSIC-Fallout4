@@ -120,7 +120,9 @@ pub fn detect_mods_single(
         if let Some(mat) = combined_pattern.find(plugin_name) {
             let matched_mod = mat.as_str().to_lowercase();
             // Only store the first match for each mod
-            mod_matches.entry(matched_mod).or_insert_with(|| plugin_id.clone());
+            mod_matches
+                .entry(matched_mod)
+                .or_insert_with(|| plugin_id.clone());
         }
     }
 
@@ -510,7 +512,9 @@ pub fn detect_mods_batch(
             for (plugin_name, plugin_id) in &crashlog_plugins_lower {
                 if let Some(mat) = combined_pattern.find(plugin_name) {
                     let matched_mod = mat.as_str().to_lowercase();
-                    mod_matches.entry(matched_mod).or_insert_with(|| plugin_id.clone());
+                    mod_matches
+                        .entry(matched_mod)
+                        .or_insert_with(|| plugin_id.clone());
                 }
             }
 

@@ -520,13 +520,15 @@ impl App {
 
                 // Use async metadata check instead of blocking is_file()
                 if let Ok(metadata) = fs::metadata(&path).await
-                    && metadata.is_file() {
-                        // Check if it's a text file (has .txt or .log extension)
-                        if let Some(ext) = path.extension()
-                            && (ext == "txt" || ext == "log") {
-                                files.push(path);
-                            }
+                    && metadata.is_file()
+                {
+                    // Check if it's a text file (has .txt or .log extension)
+                    if let Some(ext) = path.extension()
+                        && (ext == "txt" || ext == "log")
+                    {
+                        files.push(path);
                     }
+                }
             }
         }
 

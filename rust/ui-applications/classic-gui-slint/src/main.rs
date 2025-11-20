@@ -125,7 +125,8 @@ fn main() -> Result<(), slint::PlatformError> {
                             classic_shared_core::AsyncBridge::run_with_ui_update(
                                 async move {
                                     // Load update preferences
-                                    let prefs = handlers::update_check::UpdatePreferences::load().await
+                                    let prefs = handlers::update_check::UpdatePreferences::load()
+                                        .await
                                         .unwrap_or_default();
 
                                     if prefs.dont_check_again {
@@ -136,7 +137,8 @@ fn main() -> Result<(), slint::PlatformError> {
                                     }
 
                                     // Check for updates
-                                    match handlers::update_check::check_for_updates(&version).await {
+                                    match handlers::update_check::check_for_updates(&version).await
+                                    {
                                         Ok(Some(info)) => {
                                             // Check if this version was skipped
                                             if prefs.should_skip(&info.version) {
@@ -224,15 +226,16 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::debug!("Browse mods folder clicked");
             if let Ok(Some(path)) = handlers::folders::browse_mods_folder()
-                && let Some(window) = window_weak.upgrade() {
-                    // Update UI
-                    window.set_mods_folder_path(path.to_string_lossy().to_string().into());
+                && let Some(window) = window_weak.upgrade()
+            {
+                // Update UI
+                window.set_mods_folder_path(path.to_string_lossy().to_string().into());
 
-                    // Save to AppState
-                    let mut state_guard = state.write();
-                    state_guard.set_mods_folder(path);
-                    tracing::info!("Mods folder updated in AppState");
-                }
+                // Save to AppState
+                let mut state_guard = state.write();
+                state_guard.set_mods_folder(path);
+                tracing::info!("Mods folder updated in AppState");
+            }
         }
     });
 
@@ -242,15 +245,16 @@ fn main() -> Result<(), slint::PlatformError> {
         move || {
             tracing::debug!("Browse scan folder clicked");
             if let Ok(Some(path)) = handlers::folders::browse_scan_folder()
-                && let Some(window) = window_weak.upgrade() {
-                    // Update UI
-                    window.set_scan_folder_path(path.to_string_lossy().to_string().into());
+                && let Some(window) = window_weak.upgrade()
+            {
+                // Update UI
+                window.set_scan_folder_path(path.to_string_lossy().to_string().into());
 
-                    // Save to AppState
-                    let mut state_guard = state.write();
-                    state_guard.set_scan_folder(path);
-                    tracing::info!("Scan folder updated in AppState");
-                }
+                // Save to AppState
+                let mut state_guard = state.write();
+                state_guard.set_scan_folder(path);
+                tracing::info!("Scan folder updated in AppState");
+            }
         }
     });
 
@@ -274,9 +278,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
             // Use AsyncBridge to run scan with proper Tokio runtime context
             classic_shared_core::AsyncBridge::run_with_ui_update(
-                async move {
-                    handlers::scan::handle_scan_crash_logs(state_clone.clone()).await
-                },
+                async move { handlers::scan::handle_scan_crash_logs(state_clone.clone()).await },
                 move |result| {
                     if let Some(w) = window.upgrade() {
                         w.set_scan_in_progress(false);
@@ -285,7 +287,9 @@ fn main() -> Result<(), slint::PlatformError> {
                             Ok(scan_result) => {
                                 // Auto-refresh results list to show new/updated reports
                                 w.invoke_refresh_reports();
-                                tracing::debug!("Auto-refreshed results list after scan completion");
+                                tracing::debug!(
+                                    "Auto-refreshed results list after scan completion"
+                                );
 
                                 if scan_result.success {
                                     // Auto-switch to Results tab if setting is enabled
@@ -363,9 +367,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
             // Use AsyncBridge to run scan with proper Tokio runtime context
             classic_shared_core::AsyncBridge::run_with_ui_update(
-                async move {
-                    handlers::scan::handle_scan_game_files(state_clone.clone()).await
-                },
+                async move { handlers::scan::handle_scan_game_files(state_clone.clone()).await },
                 move |result| {
                     if let Some(w) = window.upgrade() {
                         w.set_scan_in_progress(false);
@@ -374,7 +376,9 @@ fn main() -> Result<(), slint::PlatformError> {
                             Ok(scan_result) => {
                                 // Auto-refresh results list to show new/updated reports
                                 w.invoke_refresh_reports();
-                                tracing::debug!("Auto-refreshed results list after scan completion");
+                                tracing::debug!(
+                                    "Auto-refreshed results list after scan completion"
+                                );
 
                                 if scan_result.success {
                                     // Auto-switch to Results tab if setting is enabled
@@ -513,9 +517,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
             // Use AsyncBridge to run update check with proper Tokio runtime context
             classic_shared_core::AsyncBridge::run_with_ui_update(
-                async move {
-                    handlers::update_check::check_for_updates(&current_version).await
-                },
+                async move { handlers::update_check::check_for_updates(&current_version).await },
                 move |result| {
                     if let Some(w) = window.upgrade() {
                         w.set_update_checking(false);
@@ -530,7 +532,9 @@ fn main() -> Result<(), slint::PlatformError> {
                                 );
 
                                 w.set_update_available(true);
-                                w.set_update_current_version(current_version_for_callback.clone().into());
+                                w.set_update_current_version(
+                                    current_version_for_callback.clone().into(),
+                                );
                                 w.set_update_latest_version(info.version.into());
                                 w.set_update_release_notes(info.release_notes.into());
                                 w.set_update_error_message("".into());
@@ -538,12 +542,18 @@ fn main() -> Result<(), slint::PlatformError> {
                             }
                             Ok(None) => {
                                 // No update available
-                                tracing::info!("No update available (current: {})", current_version_for_callback);
+                                tracing::info!(
+                                    "No update available (current: {})",
+                                    current_version_for_callback
+                                );
 
                                 w.set_success_title("No Updates Available".into());
                                 w.set_success_message(
-                                    format!("You are using the latest version ({})", current_version_for_callback)
-                                        .into(),
+                                    format!(
+                                        "You are using the latest version ({})",
+                                        current_version_for_callback
+                                    )
+                                    .into(),
                                 );
                                 w.set_show_success_dialog(true);
                             }
@@ -920,7 +930,9 @@ fn main() -> Result<(), slint::PlatformError> {
                             Err(e) => {
                                 tracing::error!("Failed to scan reports: {}", e);
                                 w.set_error_title("Report Scan Error".into());
-                                w.set_error_message(format!("Failed to scan reports:\n\n{}", e).into());
+                                w.set_error_message(
+                                    format!("Failed to scan reports:\n\n{}", e).into(),
+                                );
                                 w.set_show_error_dialog(true);
                             }
                         }
@@ -1605,9 +1617,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
             // Use AsyncBridge to load help topic with proper Tokio runtime context
             classic_shared_core::AsyncBridge::run_with_ui_update(
-                async move {
-                    handlers::help::get_help_topic(&category_str, &topic_str).await
-                },
+                async move { handlers::help::get_help_topic(&category_str, &topic_str).await },
                 move |result| {
                     if let Some(w) = window.upgrade() {
                         match result {
@@ -1634,9 +1644,9 @@ fn main() -> Result<(), slint::PlatformError> {
                                     })
                                     .collect();
 
-                                w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
-                                    related_topics,
-                                )));
+                                w.set_help_related_topics(slint::ModelRc::new(
+                                    slint::VecModel::from(related_topics),
+                                ));
 
                                 // Show the dialog
                                 w.set_show_help_dialog(true);
@@ -1705,9 +1715,9 @@ fn main() -> Result<(), slint::PlatformError> {
                                     })
                                     .collect();
 
-                                w.set_help_related_topics(slint::ModelRc::new(slint::VecModel::from(
-                                    related_topics,
-                                )));
+                                w.set_help_related_topics(slint::ModelRc::new(
+                                    slint::VecModel::from(related_topics),
+                                ));
 
                                 // Show the dialog
                                 w.set_show_help_dialog(true);

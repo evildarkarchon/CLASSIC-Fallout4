@@ -316,7 +316,9 @@ fn is_supported_resource(path: &str) -> bool {
 #[pyfunction]
 fn parse_resource_type(type_name: &str) -> PyResourceType {
     PyResourceType {
-        inner: type_name.parse().unwrap_or(classic_resource_core::ResourceType::Other),
+        inner: type_name
+            .parse()
+            .unwrap_or(classic_resource_core::ResourceType::Other),
     }
 }
 

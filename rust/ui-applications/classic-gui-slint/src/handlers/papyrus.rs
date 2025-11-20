@@ -128,35 +128,32 @@ pub async fn start_monitoring(state: SharedAppState) -> Result<()> {
                                     .paths
                                     .iter()
                                     .any(|p| p.file_name() == papyrus_log_path.file_name())
-                                {
-                                    tracing::debug!("Papyrus log modified");
+                            {
+                                tracing::debug!("Papyrus log modified");
 
-                                    // Check for updates using core analyzer
-                                    let mut analyzer_guard = ANALYZER.lock();
-                                    if let Some(analyzer) = analyzer_guard.as_mut() {
-                                        match analyzer.check_for_updates() {
-                                            Ok(Some((new_lines, stats))) => {
-                                                tracing::debug!(
-                                                    "Processed {} new lines. Stats: E={} W={} D={} S={}",
-                                                    new_lines.len(),
-                                                    stats.errors,
-                                                    stats.warnings,
-                                                    stats.dumps,
-                                                    stats.stacks
-                                                );
-                                            }
-                                            Ok(None) => {
-                                                // No updates
-                                            }
-                                            Err(e) => {
-                                                tracing::error!(
-                                                    "Failed to check for updates: {}",
-                                                    e
-                                                );
-                                            }
+                                // Check for updates using core analyzer
+                                let mut analyzer_guard = ANALYZER.lock();
+                                if let Some(analyzer) = analyzer_guard.as_mut() {
+                                    match analyzer.check_for_updates() {
+                                        Ok(Some((new_lines, stats))) => {
+                                            tracing::debug!(
+                                                "Processed {} new lines. Stats: E={} W={} D={} S={}",
+                                                new_lines.len(),
+                                                stats.errors,
+                                                stats.warnings,
+                                                stats.dumps,
+                                                stats.stacks
+                                            );
+                                        }
+                                        Ok(None) => {
+                                            // No updates
+                                        }
+                                        Err(e) => {
+                                            tracing::error!("Failed to check for updates: {}", e);
                                         }
                                     }
                                 }
+                            }
                         }
                         Err(e) => {
                             tracing::error!("File watcher error: {}", e);

@@ -51,14 +51,20 @@ impl PyAnalysisConfig {
 
         // Populate from YamlData fields
         config.crashgen_name = yamldata.getattr("crashgen_name")?.extract::<String>()?;
-        config.crashgen_latest = yamldata.getattr("crashgen_latest_og")?.extract::<String>()?;
+        config.crashgen_latest = yamldata
+            .getattr("crashgen_latest_og")?
+            .extract::<String>()?;
         config.game_version = yamldata.getattr("game_version")?.extract::<String>()?;
         config.game_version_vr = yamldata.getattr("game_version_vr")?.extract::<String>()?;
         config.game_version_new = yamldata.getattr("game_version_new")?.extract::<String>()?;
         config.xse_acronym = yamldata.getattr("xse_acronym")?.extract::<String>()?;
 
-        config.ignore_plugins = yamldata.getattr("game_ignore_plugins")?.extract::<Vec<String>>()?;
-        config.ignore_records = yamldata.getattr("game_ignore_records")?.extract::<Vec<String>>()?;
+        config.ignore_plugins = yamldata
+            .getattr("game_ignore_plugins")?
+            .extract::<Vec<String>>()?;
+        config.ignore_records = yamldata
+            .getattr("game_ignore_records")?
+            .extract::<Vec<String>>()?;
         config.ignore_list = yamldata.getattr("ignore_list")?.extract::<Vec<String>>()?;
 
         config.show_formid_values = false; // Not in YamlData

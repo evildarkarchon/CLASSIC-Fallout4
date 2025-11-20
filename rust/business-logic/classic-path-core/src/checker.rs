@@ -282,7 +282,8 @@ impl DocumentsChecker {
                 issue = Some("missing_archive_section".to_string());
             } else {
                 message = "✔️ Archive Invalidation / Loose Files setting is enabled!\n\
-                     -----".to_string();
+                     -----"
+                    .to_string();
             }
         }
 

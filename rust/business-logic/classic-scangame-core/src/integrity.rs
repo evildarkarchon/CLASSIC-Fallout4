@@ -247,12 +247,7 @@ impl GameIntegrityChecker {
                 ),
             )
         } else {
-            (
-                false,
-                self.config
-                    .root_warn.clone()
-                    .unwrap_or_default(),
-            )
+            (false, self.config.root_warn.clone().unwrap_or_default())
         };
 
         Ok(IntegrityCheckResult::new(

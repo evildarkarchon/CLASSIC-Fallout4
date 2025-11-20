@@ -220,12 +220,10 @@ impl PyFcxModeHandler {
         // Cache results in global handler for subsequent calls
         global_handler.checks_run = true;
         global_handler.fcx_mode = self.inner.fcx_mode;
-        global_handler.set_main_files_result(
-            self.inner.main_files_check.clone().unwrap_or_default(),
-        );
-        global_handler.set_game_files_result(
-            self.inner.game_files_check.clone().unwrap_or_default(),
-        );
+        global_handler
+            .set_main_files_result(self.inner.main_files_check.clone().unwrap_or_default());
+        global_handler
+            .set_game_files_result(self.inner.game_files_check.clone().unwrap_or_default());
         global_handler.set_detected_issues(rust_issues);
 
         Ok(())

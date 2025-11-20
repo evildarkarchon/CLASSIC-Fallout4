@@ -126,7 +126,8 @@ impl ScanExecutor {
         // Try to find XSE folder from ini folder path
         if let Some(ref ini_folder) = self.config.paths.ini_folder {
             let xse_folder = ini_folder
-                .parent().map(|p| p.join("Fallout 4").join("F4SE"))
+                .parent()
+                .map(|p| p.join("Fallout 4").join("F4SE"))
                 .filter(|p| p.exists());
 
             if xse_folder.is_some() {

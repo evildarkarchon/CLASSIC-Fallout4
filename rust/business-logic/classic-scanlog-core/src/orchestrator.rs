@@ -268,7 +268,8 @@ impl AnalysisResult {
 fn extract_module_names(module_lines: &[Arc<str>]) -> HashSet<String> {
     // Pre-compiled regex pattern to extract module name (everything up to .dll)
     // Pattern: (.*?\.dll)\s*v?.* - captures filename.dll, ignoring version info
-    static MODULE_PATTERN: Lazy<Regex> = Lazy::new(|| Regex::new(r"(?i)(.*?\.dll)\s*v?.*").unwrap());
+    static MODULE_PATTERN: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(?i)(.*?\.dll)\s*v?.*").unwrap());
 
     let mut result = HashSet::new();
 
@@ -593,7 +594,8 @@ impl OrchestratorCore {
         if let Some(plugins) = plugins_map {
             // Extract GPU info from system segment (segment 1)
             let gpu_rival_string: Option<String> = if segments.len() > 1 {
-                let system_segment: Vec<String> = segments[1].iter().map(|s| s.to_string()).collect();
+                let system_segment: Vec<String> =
+                    segments[1].iter().map(|s| s.to_string()).collect();
                 let gpu_info = GpuDetector::get_gpu_info(&system_segment);
                 gpu_info.rival
             } else {
@@ -610,10 +612,9 @@ impl OrchestratorCore {
 
             // Check for conflicting mods
             if !self.config.mods_conf.is_empty() {
-                if let Ok(conflict_lines) = detect_mods_double(
-                    self.config.mods_conf.clone(),
-                    plugins.clone(),
-                ) {
+                if let Ok(conflict_lines) =
+                    detect_mods_double(self.config.mods_conf.clone(), plugins.clone())
+                {
                     if !conflict_lines.is_empty() {
                         report_lines.extend(conflict_lines);
                     }
@@ -622,10 +623,9 @@ impl OrchestratorCore {
 
             // Check for frequently problematic mods
             if !self.config.mods_freq.is_empty() {
-                if let Ok(freq_lines) = detect_mods_single(
-                    self.config.mods_freq.clone(),
-                    plugins.clone(),
-                ) {
+                if let Ok(freq_lines) =
+                    detect_mods_single(self.config.mods_freq.clone(), plugins.clone())
+                {
                     if !freq_lines.is_empty() {
                         report_lines.extend(freq_lines);
                     }
@@ -634,10 +634,9 @@ impl OrchestratorCore {
 
             // Check for mods with known solutions
             if !self.config.mods_solu.is_empty() {
-                if let Ok(solu_lines) = detect_mods_single(
-                    self.config.mods_solu.clone(),
-                    plugins.clone(),
-                ) {
+                if let Ok(solu_lines) =
+                    detect_mods_single(self.config.mods_solu.clone(), plugins.clone())
+                {
                     if !solu_lines.is_empty() {
                         report_lines.extend(solu_lines);
                     }
@@ -660,10 +659,9 @@ impl OrchestratorCore {
 
             // Check for OPC2 mods (outdated, redundant, or have community patches)
             if !self.config.mods_opc2.is_empty() {
-                if let Ok(opc2_lines) = detect_mods_single(
-                    self.config.mods_opc2.clone(),
-                    plugins.clone(),
-                ) {
+                if let Ok(opc2_lines) =
+                    detect_mods_single(self.config.mods_opc2.clone(), plugins.clone())
+                {
                     if !opc2_lines.is_empty() {
                         report_lines.extend(opc2_lines);
                     }

@@ -548,10 +548,22 @@ mod tests {
 
     #[test]
     fn test_resource_type_from_str() {
-        assert_eq!("texture".parse::<ResourceType>().unwrap(), ResourceType::Texture);
-        assert_eq!("TEXTURE".parse::<ResourceType>().unwrap(), ResourceType::Texture);
-        assert_eq!("plugin".parse::<ResourceType>().unwrap(), ResourceType::Plugin);
-        assert_eq!("unknown".parse::<ResourceType>().unwrap(), ResourceType::Other);
+        assert_eq!(
+            "texture".parse::<ResourceType>().unwrap(),
+            ResourceType::Texture
+        );
+        assert_eq!(
+            "TEXTURE".parse::<ResourceType>().unwrap(),
+            ResourceType::Texture
+        );
+        assert_eq!(
+            "plugin".parse::<ResourceType>().unwrap(),
+            ResourceType::Plugin
+        );
+        assert_eq!(
+            "unknown".parse::<ResourceType>().unwrap(),
+            ResourceType::Other
+        );
     }
 
     #[test]

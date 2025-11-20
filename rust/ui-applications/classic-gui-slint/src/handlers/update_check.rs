@@ -151,7 +151,6 @@ pub struct UpdatePreferences {
     pub skipped_version: Option<String>,
 }
 
-
 impl UpdatePreferences {
     /// Load update preferences from config file
     ///
@@ -225,9 +224,10 @@ impl UpdatePreferences {
         }
 
         if let Some(ref skipped) = self.skipped_version
-            && skipped == available_version {
-                return true;
-            }
+            && skipped == available_version
+        {
+            return true;
+        }
 
         false
     }

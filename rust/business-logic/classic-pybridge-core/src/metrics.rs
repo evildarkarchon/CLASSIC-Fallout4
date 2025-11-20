@@ -98,10 +98,7 @@ static METRICS: Lazy<Arc<RwLock<ThreadMetrics>>> = Lazy::new(|| {
 /// ```
 pub fn record_bridge_operation(operation: BridgeOperation, duration_secs: f64, success: bool) {
     let metrics = METRICS.read();
-    let mut stats = metrics
-        .operations
-        .entry(operation)
-        .or_default();
+    let mut stats = metrics.operations.entry(operation).or_default();
 
     stats.count += 1;
     if success {

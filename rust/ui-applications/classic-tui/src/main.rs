@@ -124,9 +124,10 @@ async fn main() -> Result<()> {
 
     // Check for updates on startup if enabled
     if app.check_updates
-        && let Ok(Some(update_info)) = handlers::update_handler::check_for_updates().await {
-            app.show_update_notification(crate::widgets::UpdateNotification::new(update_info));
-        }
+        && let Ok(Some(update_info)) = handlers::update_handler::check_for_updates().await
+    {
+        app.show_update_notification(crate::widgets::UpdateNotification::new(update_info));
+    }
 
     // Main event loop
     let result = run_app(
@@ -171,10 +172,11 @@ async fn run_app(
     loop {
         // Update terminal height for scroll calculations
         if let Ok(size) = terminal.size()
-            && app.terminal_height != size.height {
-                app.terminal_height = size.height;
-                app.needs_redraw = true;
-            }
+            && app.terminal_height != size.height
+        {
+            app.terminal_height = size.height;
+            app.needs_redraw = true;
+        }
 
         // Render UI only if something changed (event-driven rendering)
         if app.needs_redraw {
@@ -202,20 +204,21 @@ async fn run_app(
         // This reduces wake-ups from ~30 FPS to ~10 FPS when idle
         if event::poll(Duration::from_millis(100))?
             && let Event::Key(key) = event::read()?
-                && let Some(msg) = handle_key_event(app, key) {
-                    handle_ui_message(
-                        app,
-                        msg,
-                        scan_handler,
-                        scan_tx,
-                        papyrus_tx,
-                        &mut papyrus_handler,
-                        backup_handler,
-                    )
-                    .await?;
-                    // Request redraw after handling user input
-                    app.needs_redraw = true;
-                }
+            && let Some(msg) = handle_key_event(app, key)
+        {
+            handle_ui_message(
+                app,
+                msg,
+                scan_handler,
+                scan_tx,
+                papyrus_tx,
+                &mut papyrus_handler,
+                backup_handler,
+            )
+            .await?;
+            // Request redraw after handling user input
+            app.needs_redraw = true;
+        }
 
         // Process scan messages
         while let Ok(msg) = scan_rx.try_recv() {
@@ -224,10 +227,12 @@ async fn run_app(
             handle_scan_message(app, msg);
 
             // Auto-refresh results if on Results screen and scan completed/failed
-            if should_refresh_results && app.ui_state == UiState::ResultsScreen
-                && let Err(e) = app.load_report_files().await {
-                    app.add_output(format!("Error auto-refreshing reports: {}", e));
-                }
+            if should_refresh_results
+                && app.ui_state == UiState::ResultsScreen
+                && let Err(e) = app.load_report_files().await
+            {
+                app.add_output(format!("Error auto-refreshing reports: {}", e));
+            }
             // Request redraw after processing scan message
             app.needs_redraw = true;
         }
@@ -493,30 +498,31 @@ async fn handle_folder_picker_msg(app: &mut App, msg: &UiMessage) -> Result<bool
                     }
                 }
             } else if let Some(ref picker) = app.settings_path_picker
-                && picker.is_active() {
-                    let selected_path = picker.get_selected_path();
-                    let editing_path = app.editing_path;
-                    app.close_settings_path_picker();
+                && picker.is_active()
+            {
+                let selected_path = picker.get_selected_path();
+                let editing_path = app.editing_path;
+                app.close_settings_path_picker();
 
-                    if let Some(path_item) = editing_path {
-                        use crate::app::PathItem;
-                        match path_item {
-                            PathItem::GameRoot => {
-                                app.config.paths.game_root = selected_path;
-                            }
-                            PathItem::DocsRoot => {
-                                app.config.paths.docs_root = Some(selected_path);
-                            }
-                            PathItem::ModsFolder => {
-                                app.config.paths.mods_folder = Some(selected_path);
-                            }
-                            PathItem::CustomScan => {
-                                app.config.paths.scan_custom = Some(selected_path);
-                            }
+                if let Some(path_item) = editing_path {
+                    use crate::app::PathItem;
+                    match path_item {
+                        PathItem::GameRoot => {
+                            app.config.paths.game_root = selected_path;
                         }
-                        app.add_output(format!("Updated {} path", path_item.label()));
+                        PathItem::DocsRoot => {
+                            app.config.paths.docs_root = Some(selected_path);
+                        }
+                        PathItem::ModsFolder => {
+                            app.config.paths.mods_folder = Some(selected_path);
+                        }
+                        PathItem::CustomScan => {
+                            app.config.paths.scan_custom = Some(selected_path);
+                        }
                     }
+                    app.add_output(format!("Updated {} path", path_item.label()));
                 }
+            }
             Ok(true)
         }
         UiMessage::FolderPickerUp => {
@@ -765,16 +771,17 @@ fn handle_articles_msg(app: &mut App, msg: &UiMessage) -> Result<bool> {
         }
         UiMessage::OpenArticleLink => {
             if let Some(url) = app.articles_state.get_selected_link_url()
-                && let Err(e) = open::that(&url) {
-                    tracing::error!("Failed to open link {}: {}", url, e);
-                    let dialog = crate::widgets::ErrorDialog::new(
-                        "Failed to Open Link",
-                        "Could not open URL in browser",
-                        Some(&format!("URL: {}\n\nError: {}", url, e)),
-                        crate::widgets::ErrorSeverity::Error,
-                    );
-                    app.show_error_dialog(dialog);
-                }
+                && let Err(e) = open::that(&url)
+            {
+                tracing::error!("Failed to open link {}: {}", url, e);
+                let dialog = crate::widgets::ErrorDialog::new(
+                    "Failed to Open Link",
+                    "Could not open URL in browser",
+                    Some(&format!("URL: {}\n\nError: {}", url, e)),
+                    crate::widgets::ErrorSeverity::Error,
+                );
+                app.show_error_dialog(dialog);
+            }
             Ok(true)
         }
         _ => Ok(false),

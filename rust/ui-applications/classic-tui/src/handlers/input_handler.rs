@@ -142,9 +142,10 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Option<UiMessage> {
 
     // If update notification is visible, check for update-specific keys
     if app.is_update_notification_visible()
-        && let Some(msg) = handle_update_notification_keys(key) {
-            return Some(msg);
-        }
+        && let Some(msg) = handle_update_notification_keys(key)
+    {
+        return Some(msg);
+    }
 
     // If folder picker is active, handle picker-specific keys first
     if app.is_folder_picker_active() {
