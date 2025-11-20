@@ -1,6 +1,4 @@
-"""
-Tests for checksum and hash verification algorithms.
-"""
+"""Tests for checksum and hash verification algorithms."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from pathlib import Path

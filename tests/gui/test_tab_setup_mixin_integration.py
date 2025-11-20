@@ -391,7 +391,7 @@ class TestButtonBehaviorIntegration:
             mock_button.isCheckable.return_value = True
             mock_button_class.return_value = mock_button
 
-            result = integrated_tab_setup._create_button("TOGGLE", "Toggle tooltip", toggle_callback)
+            integrated_tab_setup._create_button("TOGGLE", "Toggle tooltip", toggle_callback)
 
             # Should use toggled for checkable buttons
             mock_button.toggled.connect.assert_called_with(toggle_callback)

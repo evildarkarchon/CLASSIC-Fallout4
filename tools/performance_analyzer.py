@@ -216,7 +216,7 @@ class StatisticalAnalyzer:
         t_stat = (mean1 - mean2) / math.sqrt(var1 / n1 + var2 / n2)
 
         # Approximate degrees of freedom (Welch-Satterthwaite equation)
-        df = (var1 / n1 + var2 / n2) ** 2 / (var1**2 / (n1**2 * (n1 - 1)) + var2**2 / (n2**2 * (n2 - 1)))
+        (var1 / n1 + var2 / n2) ** 2 / (var1**2 / (n1**2 * (n1 - 1)) + var2**2 / (n2**2 * (n2 - 1)))
 
         # Rough p-value approximation (conservative)
         # This is a simplified approximation
@@ -268,9 +268,7 @@ class StatisticalAnalyzer:
 
 
 class PerformanceBenchmark:
-    """
-    High-precision benchmarking tool for performance measurements.
-    """
+    """High-precision benchmarking tool for performance measurements."""
 
     def __init__(self, warmup_runs: int = 3, measurement_runs: int = 10):
         self.warmup_runs = warmup_runs
@@ -323,7 +321,7 @@ class PerformanceBenchmark:
 
         for run_idx in range(self.measurement_runs):
             # Memory before run
-            memory_before = self._process.memory_info().rss / 1024 / 1024
+            self._process.memory_info().rss / 1024 / 1024
 
             # Timing measurement
             wall_start = time.perf_counter()
@@ -389,7 +387,7 @@ class PerformanceBenchmark:
         total_cpu_time = sum(cpu_times)
 
         # Get system CPU times for more detailed analysis
-        cpu_percent = self._process.cpu_percent()
+        self._process.cpu_percent()
 
         # Peak memory (approximate)
         peak_memory = max(memory_readings) if memory_readings else initial_memory
@@ -462,9 +460,7 @@ class PerformanceBenchmark:
 
 
 class PerformanceAnalyzer:
-    """
-    Main performance analysis coordinator providing comprehensive analysis capabilities.
-    """
+    """Main performance analysis coordinator providing comprehensive analysis capabilities."""
 
     def __init__(self, confidence_level: float = 0.95):
         self.confidence_level = confidence_level
@@ -628,7 +624,7 @@ class PerformanceAnalyzer:
         # Analyze scaling characteristics
         scale_factors_sorted = sorted(scale_factors)
         times = [scaling_results[sf]["metrics"].wall_time for sf in scale_factors_sorted]
-        items = [scaling_results[sf]["metrics"].items_processed for sf in scale_factors_sorted]
+        [scaling_results[sf]["metrics"].items_processed for sf in scale_factors_sorted]
 
         # Calculate complexity (rough estimate)
         complexity_estimate = "Unknown"

@@ -195,7 +195,7 @@ class TestRustDatabasePool:
 
         # Should still be in cache with new TTL
         stats = pool.get_stats()
-        initial_queries = stats["total_queries"]
+        stats["total_queries"]
 
         pool.get_entry("00012345", "Fallout4.esm", "Fallout4")
         stats = pool.get_stats()

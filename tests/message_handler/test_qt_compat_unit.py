@@ -79,7 +79,7 @@ class TestQtCompatibility:
         """Test dummy QThread.currentThread method."""
         from ClassicLib.MessageHandler.qt_compat import HAS_QT, QThread
 
-        thread = QThread()
+        QThread()
         current = QThread.currentThread()
 
         # When real Qt is available, currentThread returns a thread object
@@ -311,7 +311,7 @@ class TestQtCompatibility:
 
         # Create multiple threads
         threads = []
-        for i in range(5):
+        for _i in range(5):
             thread = threading.Thread(target=create_and_use_qt_objects)
             threads.append(thread)
             thread.start()

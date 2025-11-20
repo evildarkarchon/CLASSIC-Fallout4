@@ -292,7 +292,7 @@ class TestClassicScanLogs:
 
     def test_main_module_execution(self) -> None:
         """Test that the module can be executed as __main__."""
-        with patch("CLASSIC_ScanLogs.crashlogs_scan") as mock_scan, patch("CLASSIC_ScanLogs.__name__", "__main__"):
+        with patch("CLASSIC_ScanLogs.crashlogs_scan"), patch("CLASSIC_ScanLogs.__name__", "__main__"):
             pass
             # Module doesn't have __main__ block, but crashlogs_scan would be called
             # if it did have one

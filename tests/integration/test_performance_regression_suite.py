@@ -151,7 +151,7 @@ class SyntheticDataGenerator:
     def generate_formid_list(count: int) -> list[str]:
         """Generate list of synthetic FormIDs."""
         formids = []
-        for i in range(count):
+        for _i in range(count):
             plugin_index = random.randint(0x00, 0xFE)
             local_id = random.randint(0x000001, 0xFFFFFF)
             formids.append(f"{plugin_index:02X}{local_id:06X}")
@@ -166,7 +166,7 @@ class SyntheticDataGenerator:
             plugin_index = i if i < 50 else 0xFE
 
             formids = []
-            for j in range(formids_per_plugin):
+            for _j in range(formids_per_plugin):
                 local_id = random.randint(0x000001, 0xFFFFFF)
                 formids.append(f"{plugin_index:02X}{local_id:06X}")
 
@@ -497,7 +497,7 @@ class TestPluginAnalysisPerformance:
         plugin_data = generator.generate_plugin_data(num_plugins=100, formids_per_plugin=100)
 
         with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=plugin_data):
-            analyzer = get_plugin_analyzer()
+            get_plugin_analyzer()
 
             # Measure conflict detection
             start = time.perf_counter()
@@ -621,7 +621,7 @@ class TestMemoryPerformance:
         # Track objects with weak references
         tracked_objects = []
 
-        for i in range(10):
+        for _i in range(10):
             log = generator.generate_crash_log(0.5, "simple")
             lines = log.splitlines()
             game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")

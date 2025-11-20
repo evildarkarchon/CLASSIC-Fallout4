@@ -4,9 +4,8 @@ Tests the Rust-accelerated web utilities module, including URL validation,
 building, parsing, user agent generation, and mod site enumeration.
 """
 
-import pytest
-
 import classic_web
+import pytest
 
 
 @pytest.mark.rust

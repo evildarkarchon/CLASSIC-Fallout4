@@ -549,13 +549,13 @@ class TestSettingsValidatorParity:
         # Rust performance
         start_time = time.perf_counter()
         for _ in range(iterations):
-            rust_fragment = rust_validator.scan_buffout_achievements_setting(xsemodules, crashgen)
+            rust_validator.scan_buffout_achievements_setting(xsemodules, crashgen)
         rust_time = time.perf_counter() - start_time
 
         # Python performance
         start_time = time.perf_counter()
         for _ in range(iterations):
-            python_fragment = python_validator.scan_buffout_achievements_setting(xsemodules, crashgen)
+            python_validator.scan_buffout_achievements_setting(xsemodules, crashgen)
         python_time = time.perf_counter() - start_time
 
         # Validate parity

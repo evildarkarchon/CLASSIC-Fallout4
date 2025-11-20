@@ -126,12 +126,6 @@ class TestFFIErrorConditions:
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
         # Test with wrong types
-        wrong_type_inputs = [
-            123,  # Integer instead of string
-            [1, 2, 3],  # List instead of string
-            {"formid": "test"},  # Dict instead of string
-            b"bytes",  # Bytes instead of string
-        ]
 
         # analyzer.extract_formids expects a list of strings
         # Test with wrong types for the list itself
@@ -264,7 +258,7 @@ class TestFFIErrorConditions:
         def failing_callback(data):
             raise RuntimeError("Callback failed")
 
-        with patch.object(parser, "set_callback", create=True) as mock_set:
+        with patch.object(parser, "set_callback", create=True):
             try:
                 parser.set_callback(failing_callback)
                 # Process data that would trigger callback

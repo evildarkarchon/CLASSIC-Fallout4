@@ -169,7 +169,7 @@ def extract_version_from_filename(filename: str) -> Version | None:
     """
 
 def extract_version_from_log(log_content: str) -> Version | None:
-    """Extract a version from log content.
+    r"""Extract a version from log content.
 
     Searches for version patterns in log file content, typically looking
     for patterns like "Version: 1.10.163.0" or similar.

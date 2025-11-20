@@ -41,7 +41,7 @@ from ClassicLib.Interface.UIHelpers import (
 def init_message_handler_fixture():
     """Initialize MessageHandler for all tests in this module."""
     # Initialize the MessageHandler to prevent RuntimeError
-    handler = init_message_handler(parent=None, is_gui_mode=False)
+    init_message_handler(parent=None, is_gui_mode=False)
     yield
     # Clean up the global message handler after tests
     import ClassicLib.MessageHandler
@@ -401,7 +401,7 @@ class TestCreateButton:
             mock_button_class.return_value = mock_button
 
             # _create_button in UIHelpers doesn't take self
-            button = _create_button("Toggle", "Toggle tooltip", callback)
+            _create_button("Toggle", "Toggle tooltip", callback)
 
             # Verify toggled signal was connected (not clicked)
             mock_button.toggled.connect.assert_called_once_with(callback)

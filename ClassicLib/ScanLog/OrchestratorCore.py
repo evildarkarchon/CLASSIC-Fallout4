@@ -684,7 +684,7 @@ class OrchestratorCore:
                         async with aiofiles.open(loadorder_path, encoding="utf-8", errors="ignore") as loadorder_file:
                             content = await loadorder_file.read()
                             loadorder_data = content.splitlines()
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust file I/O fails
                     logging.getLogger(__name__).debug(f"Rust file I/O failed, using Python: {e}")
                     # Fall back to Python async file reading
                     async with aiofiles.open(loadorder_path, encoding="utf-8", errors="ignore") as loadorder_file:

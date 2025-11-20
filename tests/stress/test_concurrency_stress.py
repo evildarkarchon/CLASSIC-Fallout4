@@ -289,7 +289,7 @@ class TestRaceConditionDetection:
             GlobalRegistry.register(component_name, component)
 
             # Access the component
-            retrieved = GlobalRegistry.get(component_name)
+            GlobalRegistry.get(component_name)
 
             # Modify shared state
             shared_state["counter"] = shared_state.get("counter", 0) + 1
@@ -317,7 +317,7 @@ class TestRaceConditionDetection:
         """
         # Create fresh message handler
         handler = MessageHandler()
-        message_queue = Queue()
+        Queue()
 
         def concurrent_logging_operation(thread_id: int, iteration: int, shared_data: list):
             """Worker function for concurrent message logging."""
@@ -425,7 +425,7 @@ class TestHighContentionScenarios:
         def database_operation(thread_id: int, iteration: int, shared_data: None):
             """Worker function that uses database pool."""
             try:
-                result = pool.execute_query(f"SELECT * FROM test WHERE thread={thread_id}")
+                pool.execute_query(f"SELECT * FROM test WHERE thread={thread_id}")
                 with operation_lock:
                     successful_operations.append((thread_id, iteration))
                 return 1
@@ -434,7 +434,7 @@ class TestHighContentionScenarios:
                     failed_operations.append((thread_id, iteration, str(e)))
                 return 0
 
-        results = concurrency_helper.create_contention_scenario(
+        concurrency_helper.create_contention_scenario(
             target_func=database_operation,
             num_threads=50,  # More threads than pool capacity
             iterations_per_thread=5,
@@ -541,7 +541,7 @@ class TestHighContentionScenarios:
 
                 # Pattern matching
                 patterns = ["ERROR", "WARNING", "FormID"]
-                matches = processor.find_all_patterns(large_log_content, patterns)
+                processor.find_all_patterns(large_log_content, patterns)
 
                 processing_time = time.time() - start_time
 
@@ -557,7 +557,7 @@ class TestHighContentionScenarios:
                     processing_results["errors"].append(str(e))
                 return -1
 
-        results = concurrency_helper.create_contention_scenario(
+        concurrency_helper.create_contention_scenario(
             target_func=extreme_load_operation,
             num_threads=40,  # High thread count
             iterations_per_thread=10,  # Multiple operations per thread
@@ -625,7 +625,7 @@ class TestHighContentionScenarios:
         # Take memory measurement before stress
         fresh_memory_tracker.take_measurement("before_stress")
 
-        results = concurrency_helper.create_contention_scenario(
+        concurrency_helper.create_contention_scenario(
             target_func=concurrent_memory_operation, num_threads=30, iterations_per_thread=20, shared_data=None
         )
 

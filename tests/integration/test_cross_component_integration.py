@@ -81,7 +81,7 @@ class TestGUIToRustIntegration:
             AsyncBridge._instances.clear()
 
         bridge = AsyncBridge.get_instance()
-        msg_handler = MessageHandler()
+        MessageHandler()
         parser = get_parser()
 
         # Create synthetic crash log
@@ -93,8 +93,7 @@ class TestGUIToRustIntegration:
 
         try:
             # Mock GUI components
-            with patch("ClassicLib.Interface.MainWindow.MainWindow") as MockMainWindow:
-                main_window = MockMainWindow.return_value
+            with patch("ClassicLib.Interface.MainWindow.MainWindow"):
 
                 # Simulate GUI triggering scan
                 async def gui_scan_operation():
@@ -169,7 +168,7 @@ class TestGUIToRustIntegration:
         # Simulate GUI launching multiple scans
         async def concurrent_scans():
             tasks = []
-            for i, log in enumerate(logs):
+            for _i, log in enumerate(logs):
                 lines = log.splitlines()
                 task = asyncio.create_task(asyncio.to_thread(parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"))
                 tasks.append(task)
@@ -228,7 +227,7 @@ class TestTUIAsyncIntegration:
         """Test TUI monitoring log file for changes."""
         from ClassicLib.FileIOCore import FileIOCore
 
-        io_core = FileIOCore()
+        FileIOCore()
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
             f.write("Initial content\n")
@@ -277,7 +276,7 @@ class TestTUIAsyncIntegration:
 
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
 
-        msg_handler = MessageHandler()
+        MessageHandler()
         messages_received = []
 
         # Mock TUI component that receives updates
@@ -469,7 +468,7 @@ class TestComponentCommunication:
         # Simulate component interaction
         gui.send_message("Starting scan")
         processed = backend.process("crash_log.txt")
-        result = report.generate(processed)
+        report.generate(processed)
 
         # Verify communication chain
         assert len(messages_log) == 3
@@ -502,7 +501,7 @@ class TestComponentCommunication:
 
         # UI component catching error
         try:
-            result = bridge.run_async(backend_operation_with_error())
+            bridge.run_async(backend_operation_with_error())
         except ValueError as e:
             handle_error(str(e))
 
@@ -546,7 +545,7 @@ class TestComponentCommunication:
 
         # Note: GlobalRegistry is module-level now, no cleanup needed
 
-        registry = GlobalRegistry()
+        GlobalRegistry()
 
         # Shared state
         shared_state = {"scan_count": 0, "errors": [], "last_scan": None}
@@ -656,7 +655,7 @@ class TestResourceManagement:
 
         # Note: GlobalRegistry is module-level now, no cleanup needed
 
-        registry = GlobalRegistry()
+        GlobalRegistry()
 
         # Shared resource
         resource_lock = asyncio.Lock()

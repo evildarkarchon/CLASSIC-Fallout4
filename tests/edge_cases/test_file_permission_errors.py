@@ -233,7 +233,7 @@ class TestDirectoryPermissionErrors:
         """Test listing a directory without read permissions."""
         from ClassicLib.FileIOCore import FileIOCore
 
-        io_core = FileIOCore()
+        FileIOCore()
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -263,7 +263,7 @@ class TestDirectoryPermissionErrors:
         """Test creating directories in protected system locations."""
         from ClassicLib.FileIOCore import FileIOCore
 
-        io_core = FileIOCore()
+        FileIOCore()
 
         # Try to create in system directories (should fail)
         protected_paths = []
@@ -500,7 +500,7 @@ class TestPermissionRecoveryStrategies:
         """Test retry logic with permission elevation (mock)."""
         from ClassicLib.FileIOCore import FileIOCore
 
-        io_core = FileIOCore()
+        FileIOCore()
         attempt_count = 0
 
         async def write_with_elevation(path: Path, content: str) -> bool:

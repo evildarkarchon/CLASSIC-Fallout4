@@ -1,6 +1,4 @@
-"""
-Shared fixtures for file I/O tests.
-"""
+"""Shared fixtures for file I/O tests."""
 
 import tempfile
 from pathlib import Path

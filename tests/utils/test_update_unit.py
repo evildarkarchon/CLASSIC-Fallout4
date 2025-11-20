@@ -276,7 +276,7 @@ class TestGetGithubLatestPrerelease:
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.Update.logger"):
             result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
@@ -291,7 +291,7 @@ class TestGetGithubLatestPrerelease:
         mock_response.json = create_async_json_mock([])
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.Update.logger"):
             result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None

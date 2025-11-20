@@ -89,7 +89,7 @@ class YamlOperations:
         """
 
     def parse_yaml(self, content: str) -> dict[str, Any]:
-        """Parse YAML content from a string.
+        r"""Parse YAML content from a string.
 
         Parses YAML text and returns the parsed data as a Python dictionary.
         Supports all YAML 1.2 features including anchors, aliases, and
@@ -154,7 +154,7 @@ class YamlOperations:
         """
 
     def get_setting(self, data: dict[str, Any], key_path: str) -> Any | None:
-        """Get a setting value from YAML data using dot notation.
+        r"""Get a setting value from YAML data using dot notation.
 
         Retrieves a value from YAML data using a dot-separated key path.
         Returns None if the key path is not found.

@@ -166,7 +166,7 @@ class TestOrchestratorPerformance:
             mock_yamldata = MagicMock()
             mock_crashlogs = MagicMock()
 
-            orchestrator = OrchestratorCore(
+            OrchestratorCore(
                 yamldata=mock_yamldata,
                 crashlogs=mock_crashlogs,
                 fcx_mode=False,
@@ -210,7 +210,7 @@ class TestOrchestratorPerformance:
         mock_yamldata = MagicMock()
         mock_yamldata.game_ignore_plugins = []
         mock_yamldata.game_ignore_records = []
-        analyzer = FormIDAnalyzerCore(mock_yamldata, False, False, None)
+        FormIDAnalyzerCore(mock_yamldata, False, False, None)
 
         # After creating an instance, the pattern should be cached
         # The actual key depends on the implementation

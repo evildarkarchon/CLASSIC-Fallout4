@@ -847,7 +847,7 @@ if __name__ == "__main__":
 
     with profiler.profile_ffi_calls():
         # Simulate some "FFI calls" with sleeps
-        for i in range(10):
+        for _i in range(10):
             time.sleep(random.uniform(0.001, 0.01))
 
     profiler.print_report()

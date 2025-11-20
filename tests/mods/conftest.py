@@ -1,6 +1,4 @@
-"""
-Shared fixtures for mod detection and analysis tests.
-"""
+"""Shared fixtures for mod detection and analysis tests."""
 
 import pytest
 

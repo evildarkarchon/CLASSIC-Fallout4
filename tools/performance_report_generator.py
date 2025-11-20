@@ -463,7 +463,7 @@ class PerformanceReportGenerator:
         generated_files = {}
 
         # Step 1: Check Rust availability
-        rust_status = self.check_rust_availability()
+        self.check_rust_availability()
 
         # Step 2: Run benchmarks if requested
         if run_benchmarks:

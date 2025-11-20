@@ -345,7 +345,7 @@ class EnhancedDDSAnalyzer:
                 pixel_format=self._get_pyffi_format_name(header),
                 file_size=file_path.stat().st_size,
             )
-        except Exception:
+        except Exception:  # noqa: BLE001 - Intentional: PyFFI may raise various exceptions for malformed DDS files
             return None
 
     def _get_pyffi_format_name(self, header: Any) -> str:
@@ -406,7 +406,7 @@ class EnhancedDDSAnalyzer:
                     if hasattr(img, "format_description"):
                         info.pixel_format = img.format_description
                 return info
-        except Exception:
+        except Exception:  # noqa: BLE001 - Intentional: PIL may raise various exceptions for malformed image files
             return None
 
     async def analyze_file_async(self, file_path: Path) -> DDSInfo | None:

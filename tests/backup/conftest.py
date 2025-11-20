@@ -1,6 +1,4 @@
-"""
-Shared fixtures for backup management tests.
-"""
+"""Shared fixtures for backup management tests."""
 
 from pathlib import Path
 

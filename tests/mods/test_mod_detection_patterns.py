@@ -147,7 +147,7 @@ class TestModDetectionPatterns:
         """Test validation of light plugin FormID ranges."""
         from ClassicLib.ScanLog.FormIDAnalyzer import validate_light_plugin_formid
 
-        generator = SyntheticModGenerator()
+        SyntheticModGenerator()
 
         # Valid light plugin FormIDs (FE000800-FE000FFF)
         valid_formids = [

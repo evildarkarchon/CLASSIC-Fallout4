@@ -309,7 +309,7 @@ class TestAsyncBridgeFailureModes:
                 cleanup_called = True
 
         async def use_resource():
-            async with AsyncResource() as resource:
+            async with AsyncResource():
                 return "resource_used"
 
         result = bridge.run_async(use_resource())
@@ -345,14 +345,14 @@ class TestAsyncBridgeFailureModes:
 
         async def outer():
             # Intentionally not awaiting
-            inner_coro = inner()  # This creates a coroutine
+            inner()  # This creates a coroutine
             return "completed"
 
         async def inner():
             return "inner_result"
 
         # This should complete but might generate a warning
-        with warnings.catch_warnings(record=True) as w:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("always")
             result = bridge.run_async(outer())
 

@@ -800,9 +800,7 @@ class TestReportGenerationRegression:
                 logger.warning(f"Rust template rendering not available for {format_test['name']}")
 
     async def test_established_output_patterns(self):
-        """
-        Test that known output patterns are preserved between implementations.
-        """
+        """Test that known output patterns are preserved between implementations."""
         # Define established patterns that should be maintained
         patterns = [
             {

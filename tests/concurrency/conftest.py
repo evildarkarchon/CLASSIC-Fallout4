@@ -1,6 +1,4 @@
-"""
-Shared fixtures for concurrency and thread safety tests.
-"""
+"""Shared fixtures for concurrency and thread safety tests."""
 
 from pathlib import Path
 

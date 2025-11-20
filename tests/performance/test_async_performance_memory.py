@@ -103,7 +103,7 @@ class TestAsyncPerformanceMemory:
             return await load_crash_logs_async_optimized(test_files)
 
         bridge = AsyncBridge.get_instance()
-        async_data = bridge.run_async(async_load())
+        bridge.run_async(async_load())
 
         async_peak_memory = process.memory_info().rss / 1024 / 1024  # MB
         async_memory_increase = async_peak_memory - initial_memory

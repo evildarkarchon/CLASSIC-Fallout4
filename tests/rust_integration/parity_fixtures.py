@@ -288,7 +288,7 @@ class ParityValidator(ABC):
 
 
 class CrashLogParityGenerator:
-    """
+    r"""
     Generator for comprehensive crash log test cases for parity validation.
 
     Creates diverse test scenarios including edge cases, malformed data,
@@ -377,7 +377,7 @@ class CrashLogParityGenerator:
         return test_cases
 
     def _generate_real_crash_log_cases(self) -> list[ParityTestCase]:
-        """Generate test cases from real crash logs in the D:\\Crash Logs directory."""
+        r"""Generate test cases from real crash logs in the D:\\Crash Logs directory."""
         test_cases = []
 
         if not self.crash_logs_dir or not self.crash_logs_dir.exists():

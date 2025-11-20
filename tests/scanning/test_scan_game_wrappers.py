@@ -17,12 +17,11 @@ class TestSyncWrappers:
     def test_scan_mods_archived_wrapper(self):
         """Test synchronous wrapper for scan_mods_archived."""
         # Mock the get_scan_game_core function and AsyncBridge
-        with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core, patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+        with patch("CLASSIC_ScanGame.get_scan_game_core"), patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
 
             # Create a regular mock for the core
-            mock_core = mock_get_core.return_value
 
             # Since AsyncBridge.run_async will handle the async execution,
             # we just need to mock what run_async returns
@@ -40,12 +39,11 @@ class TestSyncWrappers:
         mock_path = MagicMock()
 
         # Mock the get_scan_game_core function and AsyncBridge
-        with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core, patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+        with patch("CLASSIC_ScanGame.get_scan_game_core"), patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
 
             # Create a regular mock for the core
-            mock_core = mock_get_core.return_value
 
             # Since AsyncBridge.run_async will handle the async execution,
             # we just need to mock what run_async returns
@@ -60,12 +58,11 @@ class TestSyncWrappers:
     def test_scan_mods_unpacked_wrapper(self):
         """Test synchronous wrapper for scan_mods_unpacked."""
         # Mock the get_scan_game_core function and AsyncBridge
-        with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core, patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
+        with patch("CLASSIC_ScanGame.get_scan_game_core"), patch("CLASSIC_ScanGame.AsyncBridge") as mock_bridge_class:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
 
             # Create a regular mock for the core
-            mock_core = mock_get_core.return_value
 
             # Since AsyncBridge.run_async will handle the async execution,
             # we just need to mock what run_async returns

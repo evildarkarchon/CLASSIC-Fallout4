@@ -63,7 +63,7 @@ def fcx_test_config(tmp_path: Path) -> ConfigFileCache:
 
 @pytest.fixture
 def assert_no_file_modifications(tmp_path: Path) -> Generator[dict[Path, float], None, None]:
-    """
+    r"""
     Context manager fixture to verify files are not modified during test.
 
     Tracks file modification times before test and verifies they remain

@@ -195,7 +195,7 @@ class TestAutoRefreshIntegration:
             integrated_viewer._on_directory_changed(str(integrated_viewer.crash_logs_dir))
 
             # After debounce, should trigger refresh
-            with patch.object(integrated_viewer, "_debounced_refresh") as mock_debounced:
+            with patch.object(integrated_viewer, "_debounced_refresh"):
                 integrated_viewer._refresh_pending = False
                 integrated_viewer._debounced_refresh()
 

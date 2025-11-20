@@ -77,7 +77,7 @@ class TestSingleLogPerformance:
         # Process same log 10 times
         for _ in range(10):
             start = time.perf_counter()
-            result = orchestrator.process_crash_log(single_crash_log)
+            orchestrator.process_crash_log(single_crash_log)
             elapsed_ms = (time.perf_counter() - start) * 1000
             times.append(elapsed_ms)
 
@@ -280,7 +280,7 @@ class TestMemoryEfficiency:
         baseline_memory = process.memory_info().rss
 
         # Process log
-        result = orchestrator.process_crash_log(single_crash_log)
+        orchestrator.process_crash_log(single_crash_log)
 
         # Force garbage collection
         gc.collect()
@@ -316,7 +316,7 @@ class TestMemoryEfficiency:
         baseline_memory = process.memory_info().rss
 
         # Process batch
-        result = orchestrator.process_crash_logs_batch(
+        orchestrator.process_crash_logs_batch(
             log_paths=logs,
             max_concurrent=10,
         )
@@ -355,14 +355,14 @@ class TestMemoryEfficiency:
         # Process multiple times and track memory
         memory_samples = []
 
-        for iteration in range(5):
+        for _iteration in range(5):
             # Force garbage collection before measuring
             gc.collect()
 
             baseline = process.memory_info().rss
 
             # Process batch
-            result = orchestrator.process_crash_logs_batch(
+            orchestrator.process_crash_logs_batch(
                 log_paths=logs,
                 max_concurrent=3,
             )

@@ -90,7 +90,7 @@ class TestMassiveFormIDProcessing:
 
         total_time = time.time() - start_time
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze massive FormID processing
@@ -148,7 +148,7 @@ class TestMassiveFormIDProcessing:
             results = processor.process_batch(batch)
 
             # Track unique FormIDs found
-            for j, result in enumerate(results):
+            for _j, result in enumerate(results):
                 if result is not None:
                     unique_formids_found.add(result)
 
@@ -159,7 +159,7 @@ class TestMassiveFormIDProcessing:
 
         total_time = time.time() - start_time
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze deduplication performance
         # Should find approximately 5000 unique FormIDs (accounting for invalid ones)
@@ -217,7 +217,7 @@ class TestMassiveFormIDProcessing:
 
             # Simulate cross-referencing logic
             valid_cross_refs = 0
-            for j, processed in enumerate(processed_formids):
+            for _j, processed in enumerate(processed_formids):
                 if processed is not None:
                     valid_cross_refs += 1
 
@@ -234,7 +234,7 @@ class TestMassiveFormIDProcessing:
 
         total_time = time.time() - start_time
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze cross-referencing performance
         total_processed = sum(r["formids_processed"] for r in cross_ref_results)
@@ -323,18 +323,18 @@ class TestMassivePluginLoadOrders:
         pattern_start = time.time()
         patterns = ["ERROR", "WARNING", "FormID", "Plugin"]
         processor.init_pattern_matcher(patterns)
-        pattern_matches = processor.find_all_patterns(massive_log_content, patterns)
+        processor.find_all_patterns(massive_log_content, patterns)
         pattern_matching_time = time.time() - pattern_start
 
         fresh_memory_tracker.take_measurement("patterns_matched")
 
-        total_processing_time = time.time() - start_time
+        time.time() - start_time
 
         performance_profiler.record_operation("massive_plugin_extraction", plugin_extraction_time)
         performance_profiler.record_operation("massive_formid_extraction", formid_extraction_time)
         performance_profiler.record_operation("massive_pattern_matching", pattern_matching_time)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze massive plugin processing
@@ -442,12 +442,12 @@ class TestMassivePluginLoadOrders:
 
         total_time = time.time() - start_time
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze dependency resolution performance
         total_resolved = sum(r["resolved_count"] for r in resolution_results)
         total_circular = sum(r["circular_dependencies"] for r in resolution_results)
-        total_missing = sum(r["missing_dependencies"] for r in resolution_results)
+        sum(r["missing_dependencies"] for r in resolution_results)
 
         # Most plugins should resolve successfully
         resolution_rate = total_resolved / plugin_count
@@ -531,7 +531,7 @@ class TestMassivePluginLoadOrders:
 
         performance_profiler.record_operation("massive_conflict_detection", total_time)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze conflict detection performance
         assert len(detected_formids) >= 800, f"Too few FormIDs detected in conflicts: {len(detected_formids)}"
@@ -641,14 +641,14 @@ class TestMassiveCallStackProcessing:
 
         fresh_memory_tracker.take_measurement("patterns_processed")
 
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         performance_profiler.record_operation("deep_stack_file_read", read_time)
         performance_profiler.record_operation("deep_stack_formid_extraction", formid_time)
         performance_profiler.record_operation("deep_stack_plugin_extraction", plugin_time)
         performance_profiler.record_operation("deep_stack_pattern_matching", pattern_time)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze deep call stack processing
@@ -744,18 +744,18 @@ class TestMassiveCallStackProcessing:
         # Process lines for memory statistics
         lines_start = time.time()
         lines = massive_memory_dump.split("\n")
-        processed_lines = processor.process_lines_parallel(lines[:10000], "trim")  # Process subset
+        processor.process_lines_parallel(lines[:10000], "trim")  # Process subset
         lines_time = time.time() - lines_start
 
         fresh_memory_tracker.take_measurement("lines_processed")
 
-        total_time = time.time() - start_time
+        time.time() - start_time
 
         performance_profiler.record_operation("memory_dump_formid_extraction", formid_time)
         performance_profiler.record_operation("memory_dump_pattern_matching", pattern_time)
         performance_profiler.record_operation("memory_dump_line_processing", lines_time)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze memory dump processing
@@ -818,7 +818,7 @@ class TestBatchProcessingAtScale:
         fresh_memory_tracker.take_measurement("batch_files_created")
 
         with AsyncBridge.get_instance() as bridge:
-            io_core = FileIOCore()
+            FileIOCore()
             orchestrator = OrchestratorCore()
 
             # Process batch sequentially (simulating single-threaded batch processing)
@@ -879,7 +879,7 @@ class TestBatchProcessingAtScale:
             performance_profiler.record_operation("batch_sequential_total", sequential_total_time)
             performance_profiler.record_operation("batch_concurrent_total", concurrent_total_time)
 
-            performance_stats = performance_profiler.stop_profiling()
+            performance_profiler.stop_profiling()
             memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze batch processing performance
@@ -990,7 +990,7 @@ class TestBatchProcessingAtScale:
 
         performance_profiler.record_operation("streaming_total", total_time)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze streaming batch processing
         assert total_formids > file_count * 200, f"Too few FormIDs from streaming processing: {total_formids}"

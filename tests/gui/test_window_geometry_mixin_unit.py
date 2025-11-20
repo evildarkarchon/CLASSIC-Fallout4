@@ -406,7 +406,7 @@ class TestTabGeometrySaving:
         """Test saving geometry when Qt is disabled."""
         with (
             patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
-            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
         ):
             mock_qt_disabled.save_tab_geometry(0)
 
@@ -502,7 +502,7 @@ class TestTabGeometryRestoring:
         """Test restoring geometry when saved size is smaller than minimum."""
         with (
             patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
-            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
         ):
             # Mock saved settings: very small size
             def mock_settings(*args):
@@ -808,7 +808,7 @@ class TestWindowGeometryIntegration:
         """
         with (
             patch("ClassicLib.Interface.WindowGeometryMixin.yaml_settings") as mock_yaml,
-            patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
+            patch("ClassicLib.Interface.WindowGeometryMixin.logger"),
         ):
             # Mock yaml_settings to raise an exception
             mock_yaml.side_effect = Exception("Settings error")

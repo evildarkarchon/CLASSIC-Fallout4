@@ -90,7 +90,7 @@ class TestDatabasePoolResourceManagement:
             db_path.write_text("dummy")
 
             mock_connections = []
-            for i in range(3):
+            for _i in range(3):
                 mock_conn = AsyncMock()
                 mock_conn.execute = AsyncMock(return_value=AsyncMock())
                 mock_conn.close = AsyncMock()

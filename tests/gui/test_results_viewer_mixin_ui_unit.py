@@ -273,7 +273,7 @@ class TestContextMenu:
 
         with (
             patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class,
-            patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QAction"),
         ):
             mock_menu = MagicMock()
             mock_menu_class.return_value = mock_menu

@@ -7,9 +7,8 @@ including version detection, installation checking, and type enumeration.
 import tempfile
 from pathlib import Path
 
-import pytest
-
 import classic_xse
+import pytest
 
 
 @pytest.mark.rust
@@ -339,7 +338,7 @@ class TestXseTypeConsistency:
         for xse_type in xse_types:
             loader = xse_type.loader_name()
             dll_prefix = xse_type.dll_prefix()
-            type_str = xse_type.as_str().lower()
+            xse_type.as_str().lower()
 
             # Loader should contain the prefix
             assert dll_prefix.rstrip("_") in loader, f"{dll_prefix} should be in {loader}"

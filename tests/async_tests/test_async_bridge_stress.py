@@ -213,7 +213,7 @@ class TestAsyncBridgeStress:
         assert result == "Success!"
 
         # Run more tasks to ensure stability
-        for i in range(10):
+        for _i in range(10):
             result = bridge.run_async(normal_task())
             assert result == "Success!"
 

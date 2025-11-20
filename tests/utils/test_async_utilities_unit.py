@@ -406,7 +406,7 @@ class TestThrottle:
         operations = []
 
         try:
-            for i in range(5):
+            for _i in range(5):
                 await throttle(2, 0.1)  # 2 ops per 0.1 second
                 operations.append(time.time())
 
@@ -435,7 +435,7 @@ class TestThrottler:
         operations = []
 
         try:
-            for i in range(5):
+            for _i in range(5):
                 async with throttler:
                     operations.append(time.time())
 

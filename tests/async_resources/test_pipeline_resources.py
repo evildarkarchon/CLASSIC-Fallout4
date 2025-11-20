@@ -33,7 +33,7 @@ class TestAsyncPipelineResourceManagement:
         # Mock to make processing fail
         with (
             patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async") as mock_load,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async"),
         ):
             # Make reformat raise an exception
             mock_reformat.side_effect = Exception("Simulated error")

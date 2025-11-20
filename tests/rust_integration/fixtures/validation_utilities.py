@@ -174,7 +174,6 @@ class ValidationUtilities:
             "load_order_indices": [],
         }
 
-        essential_masters = {"Fallout4.esm", "DLCRobot.esm", "DLCworkshop01.esm", "DLCCoast.esm", "DLCNukaWorld.esm"}
         found_masters = set()
 
         for i, plugin_name in enumerate(plugin_names):

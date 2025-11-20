@@ -135,7 +135,7 @@ class BatchCache:
         current_time = time.time()
         expired_keys = []
 
-        for key, (value, expiry, access_count) in self._cache.items():
+        for key, (_value, expiry, _access_count) in self._cache.items():
             if current_time > expiry:
                 expired_keys.append(key)
 
@@ -737,9 +737,7 @@ class FFIOptimizer:
         return optimized_func
 
     def generate_optimization_report(self) -> OptimizationResult:
-        """
-        Generate a comprehensive optimization report based on profiling data.
-        """
+        """Generate a comprehensive optimization report based on profiling data."""
         if not self._baseline_profiler or not self._optimized_profiler:
             raise ValueError("Must run analyze_ffi_performance first")
 

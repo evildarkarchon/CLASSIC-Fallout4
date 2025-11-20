@@ -123,7 +123,6 @@ class TestAsyncUtilitiesIntegration:
         """Test timing concurrent operations."""
         async with AsyncTimer() as timer:
             # Run multiple operations concurrently
-            tasks = []
 
             async def operation(n: int) -> int:
                 await asyncio.sleep(0.05)

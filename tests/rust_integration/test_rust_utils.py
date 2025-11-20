@@ -145,9 +145,9 @@ class TestRustStringProcessor:
         To reset the pool, create a new StringProcessor instance.
         """
         # Intern the same string multiple times
-        s1 = processor.intern("test_string")
-        s2 = processor.intern("test_string")
-        s3 = processor.intern("test_string")
+        processor.intern("test_string")
+        processor.intern("test_string")
+        processor.intern("test_string")
 
         # Should only have one entry in the pool
         assert processor.pool_stats() == 1
@@ -184,7 +184,7 @@ class TestRustStringProcessor:
         assert trimmed == ["hello", "world", "python", "rust"]
 
     def test_line_operations(self, processor):
-        """Test line splitting and joining.
+        r"""Test line splitting and joining.
 
         Note: Standard line splitting only recognizes \n and \r\n as line endings,
         not lone \r (which is only used by old Mac OS Classic).

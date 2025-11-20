@@ -406,7 +406,7 @@ class TestArticleNavigationWorkflow:
             full_tab_setup.setup_articles_tab()
 
             # Simulate clicking each article button
-            for url, callback in url_callbacks.items():
+            for _url, callback in url_callbacks.items():
                 callback()
 
             # Verify all URLs were opened

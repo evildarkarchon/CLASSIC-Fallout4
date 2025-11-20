@@ -1,6 +1,4 @@
-"""
-Tests for backup configuration loading and validation.
-"""
+"""Tests for backup configuration loading and validation."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from unittest.mock import MagicMock, patch

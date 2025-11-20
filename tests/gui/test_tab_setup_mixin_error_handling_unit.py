@@ -189,7 +189,7 @@ class TestMissingDependencies:
                 delattr(mock_button, "isCheckable")
             mock_button_class.return_value = mock_button
 
-            result = tab_setup_mixin_minimal._create_button("Test", "Tooltip", callback)
+            tab_setup_mixin_minimal._create_button("Test", "Tooltip", callback)
 
             # Should use clicked.connect as fallback
             mock_button.clicked.connect.assert_called_with(callback)
@@ -229,7 +229,6 @@ class TestEmptyOrInvalidData:
             tab_setup_mixin_minimal.add_backup_section = MagicMock()
 
             # Create custom implementation with empty categories
-            original_method = TabSetupMixin.setup_backups_tab
 
             def setup_with_empty_categories(self):
                 # Call original but with mocked empty categories

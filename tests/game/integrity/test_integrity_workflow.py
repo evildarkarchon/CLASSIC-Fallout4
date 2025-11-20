@@ -1,6 +1,4 @@
-"""
-Tests for complete integrity check workflow and report generation.
-"""
+"""Tests for complete integrity check workflow and report generation."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from unittest.mock import MagicMock, patch
@@ -59,7 +57,7 @@ class TestFullIntegrityCheck:
 
         with patch.object(checker, "load_configuration") as mock_load:
             # Run full check
-            result = checker.run_full_check()
+            checker.run_full_check()
 
             # Verify configuration was loaded
             mock_load.assert_called_once()

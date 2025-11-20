@@ -207,7 +207,7 @@ class CrashLogFactory:
 
         # Find the plugins section and add ESLs
         try:
-            plugins_index = lines.index("PLUGINS:")
+            lines.index("PLUGINS:")
             # Insert ESL plugins after regular plugins
             lines.extend(esl_plugins)
         except ValueError:

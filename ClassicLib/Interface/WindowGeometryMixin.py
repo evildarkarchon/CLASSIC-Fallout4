@@ -46,15 +46,15 @@ class WindowGeometryMixin:
     if TYPE_CHECKING:
         tab_widget: QTabWidget
 
-        def size(self) -> QSize: ...  # noqa: D102
+        def size(self) -> QSize: ...
 
-        def windowState(self) -> Qt.WindowState: ...  # pyright: ignore[reportInvalidTypeForm] # noqa: D102
+        def windowState(self) -> Qt.WindowState: ...  # pyright: ignore[reportInvalidTypeForm]
 
-        def showMaximized(self) -> None: ...  # noqa: D102
+        def showMaximized(self) -> None: ...
 
-        def showNormal(self) -> None: ...  # noqa: D102
+        def showNormal(self) -> None: ...
 
-        def normalGeometry(self) -> Any: ...  # noqa: D102
+        def normalGeometry(self) -> Any: ...
 
     def __init__(self) -> None:
         """

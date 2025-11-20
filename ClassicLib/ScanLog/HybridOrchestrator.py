@@ -88,7 +88,7 @@ class HybridOrchestrator:
 
                 self._rust_orch = ClassicOrchestrator()
                 logger.debug("Rust orchestrator initialized for batch processing (10-20x speedup)")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust module fails for any reason
                 logger.warning(f"Rust orchestrator unavailable, using Python fallback: {e}")
 
     async def __aenter__(self) -> "HybridOrchestrator":
@@ -180,7 +180,7 @@ class HybridOrchestrator:
                 # Convert Rust results to Python format
                 return self._convert_rust_results(batch_result)
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust batch processing fails
                 logger.warning(f"Rust batch processing failed, falling back to Python: {e}")
                 # Fall through to Python fallback
 

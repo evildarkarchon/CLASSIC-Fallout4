@@ -334,7 +334,7 @@ def crashlogs_get_files() -> list[Path]:
         # Rust not available, use Python fallback
         logger.debug("Rust acceleration not available, using Python implementation")
         return _crashlogs_get_files_python()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust log collection fails
         # Rust failed for some reason, fall back to Python
         logger.warning(f"Rust log collection failed ({e}), falling back to Python implementation")
         return _crashlogs_get_files_python()

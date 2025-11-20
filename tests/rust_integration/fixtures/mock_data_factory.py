@@ -205,7 +205,7 @@ class MockDataFactory:
         def mock_batch_get_settings(settings_requests):
             """Mock implementation of batch_get_settings."""
             results = []
-            for type_class, yaml_enum, key in settings_requests:
+            for _type_class, _yaml_enum, key in settings_requests:
                 if key == "show_formid_values" or key == "formid_database_enabled":
                     results.append(True)
                 elif key == "problematic_plugins":

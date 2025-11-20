@@ -228,7 +228,7 @@ class TestMainTabSetup:
         with (
             patch.object(tab_setup_mixin, "_create_button") as mock_create_button,
             patch("PySide6.QtWidgets.QApplication") as mock_app,
-            patch.object(tab_setup_mixin, "update_papyrus_button_style") as mock_update_style,
+            patch.object(tab_setup_mixin, "update_papyrus_button_style"),
             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True),
             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox,
         ):
@@ -464,7 +464,7 @@ class TestLayoutStructure:
         with (
             patch("ClassicLib.Interface.TabSetupMixin.QVBoxLayout") as mock_vbox_class,
             patch("ClassicLib.Interface.TabSetupMixin.QHBoxLayout") as mock_hbox_class,
-            patch("ClassicLib.Interface.TabSetupMixin.QWidget") as mock_widget_class,
+            patch("ClassicLib.Interface.TabSetupMixin.QWidget"),
             patch("ClassicLib.Interface.TabSetupMixin.setup_folder_section"),
         ):
             # Track layout creation
@@ -645,7 +645,7 @@ class TestStaticMethod:
             patch("ClassicLib.Interface.TabSetupMixin.QLabel") as mock_label,
             patch("ClassicLib.Interface.TabSetupMixin.QGridLayout") as mock_grid,
             patch("ClassicLib.Interface.TabSetupMixin.QPushButton") as mock_button,
-            patch("ClassicLib.Interface.TabSetupMixin.QDesktopServices") as mock_desktop,
+            patch("ClassicLib.Interface.TabSetupMixin.QDesktopServices"),
             patch("ClassicLib.Interface.TabSetupMixin.supports_add_layout", return_value=True),
         ):
             mock_vbox.return_value = MagicMock()
@@ -745,7 +745,7 @@ class TestTooltipsAndStyles:
             mock_button_class.return_value = mock_button
 
             # Test bottom button style
-            btn = tab_setup_mixin._create_button("TEST", "Tooltip", MagicMock())
+            tab_setup_mixin._create_button("TEST", "Tooltip", MagicMock())
 
             # Should apply BOTTOM_BUTTON_STYLE from UIHelpers
             mock_button.setStyleSheet.assert_called()

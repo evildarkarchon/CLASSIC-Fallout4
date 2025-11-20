@@ -52,7 +52,7 @@ def _normalize_path(path: str | Path) -> Path:
                 # Path is valid, use Python Path for normalization
                 # (Rust PathValidator focuses on validation, not normalization)
                 return Path(path_str).resolve()
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, OSError) as e:
             logger.debug(f"Rust path validation failed, using Python: {e}")
 
     # Fall back to Python pathlib
@@ -79,7 +79,7 @@ def _is_valid_directory(path: str | Path) -> bool:
                 return False
             # Then check if it's a directory using Python (since PathValidator doesn't have is_directory)
             return Path(path_str).is_dir()
-        except Exception as e:
+        except (AttributeError, TypeError, ValueError, OSError) as e:
             logger.debug(f"Rust path validation failed, using Python: {e}")
 
     # Fall back to Python pathlib

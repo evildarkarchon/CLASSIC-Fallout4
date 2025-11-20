@@ -1,6 +1,4 @@
-"""
-Tests for game integrity configuration loading.
-"""
+"""Tests for game integrity configuration loading."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from unittest.mock import MagicMock, patch

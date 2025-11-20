@@ -152,7 +152,7 @@ class FormIDAnalyzer:
                 logger.debug("⚠️  FormIDAnalyzer: FormIDAnalyzer not found in classic_scanlog")
         except rust_errors as e:
             logger.error(f"❌ Rust error initializing FormIDAnalyzer: {e}")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - Intentional: catch-all for non-Rust errors after specific Rust error handling
             logger.error(f"❌ Failed to initialize Rust FormIDAnalyzer: {e}")
 
         # Only create Python analyzer if Rust truly unavailable
@@ -187,7 +187,7 @@ class FormIDAnalyzer:
                 logger.warning(f"Rust parse error in FormIDAnalyzerCore extraction: {e}")
             except rust_errors as e:
                 logger.warning(f"Rust FormIDAnalyzerCore extraction failed: {e}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentional: catch-all for non-Rust errors after specific Rust error handling
                 logger.warning(f"FormIDAnalyzerCore extraction error: {e}")
         elif self._use_rust and self._rust_analyzer:
             try:
@@ -205,7 +205,7 @@ class FormIDAnalyzer:
                 logger.warning(f"Rust parse error in FormID extraction: {e}")
             except rust_errors as e:
                 logger.warning(f"Rust FormID extraction failed: {e}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentional: catch-all for non-Rust errors after specific Rust error handling
                 logger.warning(f"FormID extraction error: {e}")
 
         # Use Python fallback
@@ -264,7 +264,7 @@ class FormIDAnalyzer:
                 logger.warning(f"Rust database error in formid_match: {e}, using Python fallback")
             except rust_errors as e:
                 logger.warning(f"Rust formid_match failed: {e}, using Python fallback")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentional: catch-all for non-Rust errors after specific Rust error handling
                 logger.warning(f"formid_match error: {e}, using Python fallback")
             else:
                 return
@@ -307,7 +307,7 @@ class FormIDAnalyzer:
                 logger.debug(f"Rust parse error in batch extraction: {e}")
             except rust_errors as e:
                 logger.debug(f"Rust batch extraction failed: {e}")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Intentional: catch-all for non-Rust errors after specific Rust error handling
                 logger.debug(f"Batch extraction error: {e}")
 
         # Python fallback - process sequentially

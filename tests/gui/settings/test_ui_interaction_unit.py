@@ -62,7 +62,7 @@ class TestComboBoxInteraction:
     def test_combobox_invalid_selection(self, settings_dialog):
         """Test combo box behavior with invalid selection."""
         combo = settings_dialog.update_source_combo
-        original_index = combo.currentIndex()
+        combo.currentIndex()
         combo.setCurrentText("InvalidOption")
         assert combo.currentText() in ["Nexus", "GitHub", "Both"]
 

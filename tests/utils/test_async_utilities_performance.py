@@ -40,7 +40,7 @@ class TestPerformanceCharacteristics:
             return n * 2
 
         items = list(range(100))
-        coros = [work_unit(i) for i in items]
+        [work_unit(i) for i in items]
 
         # Test different concurrency levels
         timings = {}
@@ -206,7 +206,7 @@ class TestStressConditions:
         # Mix of durations, some will timeout
         durations = [0.01, 0.1, 0.02, 0.2, 0.03, 0.15] * 10
 
-        results = await asyncio.gather(*[process_with_timeout(d) for d in durations], return_exceptions=False)
+        await asyncio.gather(*[process_with_timeout(d) for d in durations], return_exceptions=False)
 
         assert success_count > 0
         assert timeout_count > 0
@@ -319,7 +319,7 @@ class TestMemoryAndResourceManagement:
             return item
 
         # Run multiple batches to ensure semaphore reuse works
-        for batch_num in range(3):
+        for _batch_num in range(3):
             call_times.clear()
             coros = [track_timing(i) for i in range(10)]
             results = await gather_with_concurrency(3, *coros)

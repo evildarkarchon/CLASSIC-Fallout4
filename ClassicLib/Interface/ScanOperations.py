@@ -58,9 +58,9 @@ class ScanOperationsMixin:
         results_tab: object | None  # Results tab widget
 
         # Required methods that must be implemented by the mixing class
-        def start_papyrus_monitoring(self) -> None: ...  # noqa: D102
-        def stop_papyrus_monitoring(self) -> None: ...  # noqa: D102
-        def refresh_reports_list(self) -> None: ...  # From ResultsViewerMixin  # noqa: D102
+        def start_papyrus_monitoring(self) -> None: ...
+        def stop_papyrus_monitoring(self) -> None: ...
+        def refresh_reports_list(self) -> None: ...  # From ResultsViewerMixin
 
     def crash_logs_scan(self) -> None:
         """

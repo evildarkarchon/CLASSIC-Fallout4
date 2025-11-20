@@ -56,7 +56,6 @@ class NetworkFailureSimulator:
     @staticmethod
     async def simulate_partial_response():
         """Simulate receiving partial data before connection drop."""
-        partial_data = '{"status": "ok", "data": ['
         await asyncio.sleep(0.1)
         raise aiohttp.ClientPayloadError("Connection lost while reading response")
 
@@ -260,7 +259,7 @@ class TestDownloadResilience:
         """Test ability to resume interrupted downloads."""
         from ClassicLib.FileIOCore import FileIOCore
 
-        io_core = FileIOCore()
+        FileIOCore()
 
         # Simulate partial download
         partial_content = b"First part of file content"
@@ -347,7 +346,7 @@ class TestDownloadResilience:
             bandwidth_bytes_per_sec = bandwidth_mbps * 1024 * 1024 / 8
 
             # Calculate download time
-            download_time = size_bytes / bandwidth_bytes_per_sec
+            size_bytes / bandwidth_bytes_per_sec
 
             # Simulate download with throttling
             start = time.time()
@@ -491,7 +490,7 @@ class TestNetworkRecoveryPatterns:
             raise aiohttp.ClientError("Network error")
 
         # Test circuit breaker opening after threshold
-        for i in range(3):
+        for _i in range(3):
             with pytest.raises(aiohttp.ClientError):
                 await breaker.call(failing_network_call)
 

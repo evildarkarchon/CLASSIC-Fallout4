@@ -72,7 +72,7 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        app = QApplication.instance() or QApplication([])
+        QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False  # Disable update check
         mock_global_registry.get_local_dir.return_value = Path()
@@ -136,7 +136,7 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        app = QApplication.instance() or QApplication([])
+        QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = True  # Enable update check
         mock_global_registry.get_local_dir.return_value = Path()
@@ -169,7 +169,7 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        app = QApplication.instance() or QApplication([])
+        QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
         mock_global_registry.get_local_dir.return_value = Path()
@@ -208,7 +208,7 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        app = QApplication.instance() or QApplication([])
+        QApplication.instance() or QApplication([])
         test_url = "https://example.com"
 
         # Act
@@ -231,7 +231,7 @@ class TestClassicInterface:
         mock_app_instance.exec.side_effect = KeyboardInterrupt()
 
         # Act & Assert
-        with patch("CLASSIC_Interface.MainWindow"), patch.object(sys, "exit") as mock_exit, patch.object(sys, "argv", ["test"]):
+        with patch("CLASSIC_Interface.MainWindow"), patch.object(sys, "exit"), patch.object(sys, "argv", ["test"]):
             with patch("CLASSIC_Interface.__name__", "__main__"):
                 import importlib
 
@@ -280,7 +280,7 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        app = QApplication.instance() or QApplication([])
+        QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
         mock_global_registry.get_local_dir.return_value = Path()

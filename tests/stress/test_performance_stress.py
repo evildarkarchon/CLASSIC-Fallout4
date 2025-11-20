@@ -88,7 +88,7 @@ class TestSustainedLoadPerformance:
             if batch_duration < target_interval:
                 time.sleep(target_interval - batch_duration)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze performance characteristics
         assert operations_completed >= duration_seconds * target_ops_per_second * 0.8, (
@@ -147,7 +147,7 @@ class TestSustainedLoadPerformance:
             # Pattern matching
             patterns = ["ERROR", "WARNING", "FormID", "Plugin"]
             processor.init_pattern_matcher(patterns)
-            matches = processor.find_all_patterns(log_content, patterns)
+            processor.find_all_patterns(log_content, patterns)
 
             iteration_end = time.time()
             processing_time = iteration_end - iteration_start
@@ -161,7 +161,7 @@ class TestSustainedLoadPerformance:
 
             iteration += 1
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Validate consistent results
         assert len(set(formid_counts)) <= 2, "FormID extraction results should be consistent"
@@ -234,11 +234,11 @@ class TestSustainedLoadPerformance:
 
                 file_index += 1
 
-            performance_stats = performance_profiler.stop_profiling()
+            performance_profiler.stop_profiling()
 
             # Analyze I/O performance
             total_bytes = sum(bytes_read)
-            total_time = max(read_times) if read_times else 1
+            max(read_times) if read_times else 1
             avg_throughput_mb_s = (total_bytes / (1024 * 1024)) / (duration_seconds)
 
             # Should maintain reasonable I/O throughput
@@ -288,7 +288,7 @@ class TestSustainedLoadPerformance:
 
             with patch.object(yaml_cache, "_load_yaml_file", return_value=mock_data):
                 # Single setting access
-                result = yaml_cache.get_setting(str, "TEST", key, "default")
+                yaml_cache.get_setting(str, "TEST", key, "default")
 
             operation_end = time.time()
             operation_time = operation_end - operation_start
@@ -304,7 +304,7 @@ class TestSustainedLoadPerformance:
 
             operation_count += 1
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze cache performance
         hit_rate = cache_hits / (cache_hits + cache_misses) if (cache_hits + cache_misses) > 0 else 0
@@ -384,7 +384,7 @@ class TestConcurrentPerformance:
 
             performance_profiler.record_operation(f"concurrent_ops_level_{concurrency}", total_time, 0)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze scalability
         # Throughput should generally increase with concurrency up to a point
@@ -426,15 +426,15 @@ class TestConcurrentPerformance:
                 """I/O intensive task."""
                 start = time.time()
                 for file_path in log_files:
-                    content = bridge.run_async(io_core.read_file(file_path))
+                    bridge.run_async(io_core.read_file(file_path))
                 return time.time() - start
 
             def cpu_heavy_task():
                 """CPU intensive task."""
                 start = time.time()
                 for _ in range(5):
-                    upper = string_processor.process_batch(test_strings, "upper")
-                    lower = string_processor.process_batch(test_strings, "lower")
+                    string_processor.process_batch(test_strings, "upper")
+                    string_processor.process_batch(test_strings, "lower")
                 return time.time() - start
 
             def log_processing_task():
@@ -442,8 +442,8 @@ class TestConcurrentPerformance:
                 start = time.time()
                 content = log_files[0].read_text()
                 for _ in range(3):
-                    formids = log_processor.extract_formids(content)
-                    plugins = log_processor.extract_plugins(content)
+                    log_processor.extract_formids(content)
+                    log_processor.extract_plugins(content)
                 return time.time() - start
 
             # Run mixed workload
@@ -462,7 +462,7 @@ class TestConcurrentPerformance:
 
             total_workload_time = time.time() - workload_start
 
-            performance_stats = performance_profiler.stop_profiling()
+            performance_profiler.stop_profiling()
 
             # Analyze mixed workload performance
             avg_io_time = mean(io_times)
@@ -544,7 +544,7 @@ class TestConcurrentPerformance:
 
         total_execution_time = time.time() - start_time
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
         memory_stats = fresh_memory_tracker.stop_tracking()
 
         # Analyze resource utilization
@@ -615,7 +615,7 @@ class TestPerformanceDegradation:
             # Pattern matching
             patterns = ["ERROR", "WARNING", "FormID"]
             processor.init_pattern_matcher(patterns)
-            matches = processor.find_all_patterns(log_content, patterns)
+            processor.find_all_patterns(log_content, patterns)
 
             operation_end = time.time()
             operation_duration = operation_end - operation_start
@@ -635,7 +635,7 @@ class TestPerformanceDegradation:
 
             performance_profiler.record_operation("long_running_operation", operation_duration, 0)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze performance degradation
         if len(performance_measurements) >= 4:
@@ -691,7 +691,7 @@ class TestPerformanceDegradation:
                 mock_data = {"TEST": {key: f"value_{i}"}}
 
                 with patch.object(yaml_cache, "_load_yaml_file", return_value=mock_data):
-                    result = yaml_cache.get_setting(str, "TEST", key, "default")
+                    yaml_cache.get_setting(str, "TEST", key, "default")
 
                 operation_end = time.time()
                 operation_times.append(operation_end - operation_start)
@@ -707,7 +707,7 @@ class TestPerformanceDegradation:
 
             performance_profiler.record_operation(f"cache_phase_{phase['name']}", phase_end - phase_start, 0)
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze cache performance patterns
         warmup_avg = phase_results["warmup"]["avg_operation_time"]
@@ -773,7 +773,7 @@ class TestPerformanceDegradation:
 
                 performance_profiler.record_operation(f"orchestrator_batch_{batch_size}", batch_duration, 0)
 
-            performance_stats = performance_profiler.stop_profiling()
+            performance_profiler.stop_profiling()
 
             # Analyze scaling characteristics
             single_file_time = scaling_results[1]["avg_time_per_file"]

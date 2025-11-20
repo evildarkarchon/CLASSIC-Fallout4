@@ -401,7 +401,7 @@ class TestRustFileIOCore:
 
         start = time.perf_counter()
         asyncio.run(io.read_file(temp_dir / "test.txt"))
-        first_read_time = time.perf_counter() - start
+        time.perf_counter() - start
 
         # Second read (should be cached and faster)
         start = time.perf_counter()

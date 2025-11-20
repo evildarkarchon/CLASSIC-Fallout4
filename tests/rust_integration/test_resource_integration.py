@@ -4,9 +4,8 @@ Tests the Rust-accelerated resource management module, including resource type
 detection, enumeration, validation, and resource information handling.
 """
 
-import pytest
-
 import classic_resource
+import pytest
 
 
 @pytest.mark.rust
@@ -103,7 +102,7 @@ class TestResourceEnumeration:
         # The function should return a list or similar collection
         # The exact signature depends on implementation
         # Just verify it's callable and returns something
-        pass  # Skip actual execution as it may require setup
+        # Skip actual execution as it may require setup
 
     def test_count_resources_by_type_function_exists(self):
         """Test count_resources_by_type() function is available."""
@@ -166,7 +165,7 @@ class TestResourceWorkflow:
     def test_detect_and_validate_workflow(self):
         """Test detecting resource type and validating it."""
         # Detect resource type
-        resource_type = classic_resource.detect_resource_type("test.txt")
+        classic_resource.detect_resource_type("test.txt")
 
         # Validate resource may raise for non-existent files
         try:
@@ -184,7 +183,7 @@ class TestResourceWorkflow:
 
         # If supported, should be able to detect type
         if is_supported:
-            resource_type = classic_resource.detect_resource_type("test.txt")
+            classic_resource.detect_resource_type("test.txt")
             # Type detection should work for supported resources
             # (or may return None if file doesn't exist)
 
@@ -198,7 +197,7 @@ class TestResourceTypeConsistency:
         """Test parse_resource_type and detect_resource_type are consistent."""
         # If we can parse a type, we should be able to detect resources of that type
         # The exact test depends on what types are available
-        pass  # Basic consistency check - implementation-specific
+        # Basic consistency check - implementation-specific
 
     def test_supported_implies_detectable(self):
         """Test that supported resources have detectable types."""

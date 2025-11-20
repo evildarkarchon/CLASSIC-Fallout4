@@ -709,8 +709,8 @@ class TestPluginParity:
         rust_esl_count = sum(1 for k in rust_plugins.keys() if k.startswith("FE:"))
         rust_total = len(rust_plugins)
 
-        python_esp_count = sum(1 for k in python_plugins.keys() if not k.startswith("FE:"))
-        python_esl_count = sum(1 for k in python_plugins.keys() if k.startswith("FE:"))
+        sum(1 for k in python_plugins.keys() if not k.startswith("FE:"))
+        sum(1 for k in python_plugins.keys() if k.startswith("FE:"))
         python_total = len(python_plugins)
 
         assert rust_total == expected_total, f"Rust total plugin count mismatch: got {rust_total}, expected {expected_total}"

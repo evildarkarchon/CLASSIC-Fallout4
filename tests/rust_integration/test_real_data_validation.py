@@ -659,7 +659,7 @@ class TestRealDataAccuracy:
         pattern_counts = dict.fromkeys(known_patterns, 0)
         total_logs_processed = 0
 
-        for log_category, log_path in real_crash_logs.items():
+        for _log_category, log_path in real_crash_logs.items():
             crash_data = self._read_crash_log(log_path)
             formids = formid_analyzer.extract_formids(crash_data)
 
@@ -704,7 +704,7 @@ class TestRealDataAccuracy:
         pattern_findings = dict.fromkeys(expected_plugins, 0)
         total_load_orders = 0
 
-        for log_category, log_path in real_crash_logs.items():
+        for _log_category, log_path in real_crash_logs.items():
             crash_data = self._read_crash_log(log_path)
             plugins_dict, _, _ = plugin_analyzer.loadorder_scan_log(crash_data)
 

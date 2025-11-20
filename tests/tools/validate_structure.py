@@ -242,7 +242,7 @@ def _print_priority_actions(result: ValidationResult, test_dir: Path) -> None:
 
     if result.mixed_type_files:
         print("   2. Separate mixed test types:")
-        for file_path, test_types in result.mixed_type_files[:3]:
+        for file_path, _test_types in result.mixed_type_files[:3]:
             rel_path = file_path.relative_to(test_dir)
             print(f"      • {rel_path}")
 
@@ -284,12 +284,12 @@ def suggest_fixes(result: ValidationResult, test_dir: Path) -> None:
 
     print("\n🔧 Suggested fixes:")
 
-    for file_path, line_count in result.oversized_files[:3]:
+    for file_path, _line_count in result.oversized_files[:3]:
         rel_path = file_path.relative_to(test_dir)
         print("   Split oversized file:")
         print(f"   python tests/tools/migrate_tests.py {rel_path}")
 
-    for file_path, test_types in result.mixed_type_files[:3]:
+    for file_path, _test_types in result.mixed_type_files[:3]:
         rel_path = file_path.relative_to(test_dir)
         print("   Split mixed types:")
         print(f"   python tests/tools/migrate_tests.py {rel_path}")

@@ -27,17 +27,17 @@ except ImportError:
     HAS_TQDM = False
 
     # Define dummy tqdm for runtime when not available
-    class TqdmProgress:  # type: ignore[no-redef]  # noqa: D101
-        def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: D107
+    class TqdmProgress:  # type: ignore[no-redef]
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def update(self, n: int = 1) -> None:  # noqa: D102
+        def update(self, n: int = 1) -> None:
             pass
 
-        def set_description(self, desc: str) -> None:  # noqa: D102
+        def set_description(self, desc: str) -> None:
             pass
 
-        def close(self) -> None:  # noqa: D102
+        def close(self) -> None:
             pass
 
 

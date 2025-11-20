@@ -1,4 +1,4 @@
-"""Type stubs for classic_xse.
+r"""Type stubs for classic_xse.
 
 Python bindings for classic-xse-core, providing comprehensive Script Extender (XSE)
 handling for Bethesda games, including version detection, file location, and status checking.
@@ -114,7 +114,7 @@ class XseInfo:
     """
 
     def __init__(self, xse_type: XseType, path: str) -> None:
-        """Create a new XseInfo.
+        r"""Create a new XseInfo.
 
         Args:
             xse_type: The XSE type.
@@ -202,7 +202,7 @@ def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
     """
 
 def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
-    """Check if XSE is installed in a directory.
+    r"""Check if XSE is installed in a directory.
 
     Args:
         game_path: The game installation directory.
@@ -217,7 +217,7 @@ def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
     """
 
 def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:
-    """Get XSE information for a game directory.
+    r"""Get XSE information for a game directory.
 
     Args:
         game_path: The game installation directory.

@@ -84,7 +84,7 @@ class TestRealWorldSyncAsyncComparison:
         # Sequential processing
         seq_start = time.perf_counter()
         seq_results = []
-        for name, lines in sync_data.items():
+        for _name, lines in sync_data.items():
             # Simulate processing
             result = len([l for l in lines if "Form ID:" in l or "EXCEPTION_" in l])
             seq_results.append(result)

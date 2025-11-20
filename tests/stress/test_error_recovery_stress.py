@@ -351,19 +351,19 @@ class TestResourceFailureRecovery:
                     try:
                         if file_type == "locked":
                             # Simulate locked file by trying to open with exclusive access
-                            with Path(file_path).open("r+") as f:
-                                content = bridge.run_async(io_core.read_file(file_path))
+                            with Path(file_path).open("r+"):
+                                bridge.run_async(io_core.read_file(file_path))
                         elif file_type == "permission":
                             # Make file read-only to simulate permission issues
                             if iteration == 0:  # Only on first iteration
                                 Path(file_path).chmod(0o444)  # Read-only
-                            content = bridge.run_async(io_core.read_file(file_path))
+                            bridge.run_async(io_core.read_file(file_path))
                         elif file_type == "nonexistent":
                             # Try to read non-existent file
-                            content = bridge.run_async(io_core.read_file(file_path))
+                            bridge.run_async(io_core.read_file(file_path))
                         else:
                             # Normal file read
-                            content = bridge.run_async(io_core.read_file(file_path))
+                            bridge.run_async(io_core.read_file(file_path))
 
                         results["successful"] += 1
 
@@ -380,12 +380,12 @@ class TestResourceFailureRecovery:
                 target_func=file_operation_with_recovery, num_threads=10, iterations_per_thread=3, shared_data=shared_results
             )
 
-            performance_stats = performance_profiler.stop_profiling()
+            performance_profiler.stop_profiling()
 
             # Analyze recovery behavior
             total_successful = sum(r["successful"] for r in shared_results)
             total_failed = sum(r["failed"] for r in shared_results)
-            total_attempts = total_successful + total_failed
+            total_successful + total_failed
 
             # Valid files should mostly succeed
             expected_successful = 10 * 3 * 5  # 10 threads * 3 iterations * 5 valid files
@@ -643,8 +643,8 @@ class TestPartialFailureHandling:
             for i, content in enumerate(test_contents):
                 try:
                     # Process content that may be valid or invalid
-                    formids = processor.extract_formids(content)
-                    plugins = processor.extract_plugins(content)
+                    processor.extract_formids(content)
+                    processor.extract_plugins(content)
 
                     results["processed"] += 1
 
@@ -664,7 +664,7 @@ class TestPartialFailureHandling:
             target_func=concurrent_operation_with_failures, num_threads=15, iterations_per_thread=5, shared_data=shared_results
         )
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze concurrent partial failure handling
         total_processed = sum(r["processed"] for r in shared_results)
@@ -810,14 +810,14 @@ class TestCascadingFailureRecovery:
             try:
                 # Try to allocate file handles
                 handles = []
-                for i in range(5):  # Try to allocate 5 handles
+                for _i in range(5):  # Try to allocate 5 handles
                     handle = simulator.allocate_file_handle()
                     handles.append(handle)
                     operation_result["file_handles_used"] += 1
 
                 # Try to allocate memory
                 memory_chunks = []
-                for i in range(3):  # Try to allocate 3 chunks
+                for _i in range(3):  # Try to allocate 3 chunks
                     chunk = simulator.allocate_memory(10 * 1024 * 1024)  # 10MB each
                     memory_chunks.append(chunk)
                     operation_result["memory_allocated"] += 10 * 1024 * 1024
@@ -865,7 +865,7 @@ class TestCascadingFailureRecovery:
             shared_data=shared_state,
         )
 
-        performance_stats = performance_profiler.stop_profiling()
+        performance_profiler.stop_profiling()
 
         # Analyze cascading failure patterns
         operation_results = shared_state.get("results", [])
@@ -951,34 +951,34 @@ Error injection point: {error_point}
                         if error_point == "formid_extraction":
                             # Inject corrupted content for FormID extraction
                             if operation_id % 5 == 0:
-                                formids = processor.extract_formids("CORRUPTED_FORMID_DATA_0xINVALID")
+                                processor.extract_formids("CORRUPTED_FORMID_DATA_0xINVALID")
                             else:
-                                formids = processor.extract_formids(content)
+                                processor.extract_formids(content)
                         else:
-                            formids = processor.extract_formids(content)
+                            processor.extract_formids(content)
 
                         # Plugin extraction
                         if error_point == "plugin_extraction":
                             # Inject corrupted content for plugin extraction
                             if operation_id % 5 == 0:
-                                plugins = processor.extract_plugins("CORRUPTED_PLUGIN_DATA")
+                                processor.extract_plugins("CORRUPTED_PLUGIN_DATA")
                             else:
-                                plugins = processor.extract_plugins(content)
+                                processor.extract_plugins(content)
                         else:
-                            plugins = processor.extract_plugins(content)
+                            processor.extract_plugins(content)
 
                         # Pattern matching
                         if error_point == "pattern_matching":
                             # Use invalid patterns occasionally
                             if operation_id % 5 == 0:
                                 patterns = ["\x00\x01\x02"]  # Invalid regex patterns
-                                matches = processor.find_all_patterns(content, patterns)
+                                processor.find_all_patterns(content, patterns)
                             else:
                                 patterns = ["FormID", "Plugin"]
-                                matches = processor.find_all_patterns(content, patterns)
+                                processor.find_all_patterns(content, patterns)
                         else:
                             patterns = ["FormID", "Plugin"]
-                            matches = processor.find_all_patterns(content, patterns)
+                            processor.find_all_patterns(content, patterns)
 
                         test_result["operations_succeeded"] += 1
 
@@ -998,7 +998,7 @@ Error injection point: {error_point}
 
                 containment_results.append(test_result)
 
-            performance_stats = performance_profiler.stop_profiling()
+            performance_profiler.stop_profiling()
 
             # Analyze error containment
             for result in containment_results:

@@ -342,7 +342,7 @@ class PythonFileIO:
             path = self._ensure_path(path)
             try:
                 content = await self.read_file(path)
-            except Exception as e:
+            except OSError as e:
                 logger.error(f"Error reading {path}: {e}")
                 return path.name, ""
             else:
@@ -376,7 +376,7 @@ class PythonFileIO:
             """
             try:
                 await self.write_file(path, content)
-            except Exception as e:
+            except OSError as e:
                 logger.error(f"Error writing {path}: {e}")
 
         tasks = list(starmap(write_single, files.items()))

@@ -4,9 +4,8 @@ Tests the Rust-accelerated constants module, including version constants,
 YAML file enumeration, game identifiers, and settings validation.
 """
 
-import pytest
-
 import classic_constants
+import pytest
 
 
 @pytest.mark.rust

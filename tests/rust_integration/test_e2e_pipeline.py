@@ -131,7 +131,7 @@ class TestE2EPipeline:
         # MessageHandler doesn't have clear_instance() - use fixtures for cleanup
 
         # Initialize async bridge
-        bridge = AsyncBridge.get_instance()
+        AsyncBridge.get_instance()
 
         # Create orchestrator with test configuration
         orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
@@ -236,7 +236,6 @@ PLUGINS:
                 assert report_fragments is not None, f"No output from pipeline: {sample_name}"
 
                 # Validate report structure contains expected sections
-                expected_sections = ["game_version", "crashgen_version", "main_error", "segments"]
 
                 # Log performance for analysis
                 logging.info(f"Pipeline processing time for {sample_name}: {timer.elapsed:.3f}s")

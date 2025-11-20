@@ -402,7 +402,7 @@ class TestMemoryEfficiency:
 
         # Create many duplicate strings
         duplicates = ["duplicate"] * 1000
-        interned = pool.intern_batch(duplicates)
+        pool.intern_batch(duplicates)
 
         # Check pool statistics
         stats = pool.stats()

@@ -310,7 +310,7 @@ class TestGetLatestAndTopReleaseDetails:
         """Create multiple mock response context managers."""
         contexts = []
         responses = []
-        for i in range(2):
+        for _i in range(2):
             mock_response = AsyncMock()
             mock_context = AsyncMock()
             mock_context.__aenter__ = AsyncMock(return_value=mock_response)
@@ -419,7 +419,7 @@ class TestGetLatestAndTopReleaseDetails:
 
         responses[1].raise_for_status = MagicMock(side_effect=aiohttp.ClientError("Releases endpoint failed"))
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.Update.logger"):
             result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             # When both endpoints fail, the function returns a structure with None values

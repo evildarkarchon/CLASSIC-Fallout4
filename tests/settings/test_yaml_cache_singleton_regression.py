@@ -164,14 +164,14 @@ class TestFixtureIsolation:
         """
         # Get initial instance
         initial_instance = YamlSettingsCache.get_instance()
-        initial_id = id(initial_instance)
+        id(initial_instance)
 
         # Simulate test completion and fixture cleanup
         YamlSettingsCache._instance = None
 
         # Get new instance - should be different object
         new_instance = YamlSettingsCache.get_instance()
-        new_id = id(new_instance)
+        id(new_instance)
 
         # In a real test scenario with fixture, these would be different
         # Here we're testing that clearing _instance allows new instance creation
@@ -352,7 +352,7 @@ class TestThreadSafetyParallel:
         """
         # Get both singletons in main thread
         yaml_cache_instance = YamlSettingsCache.get_instance()
-        main_thread_id = threading.get_ident()
+        threading.get_ident()
         bridge_instance = AsyncBridge.get_instance()
 
         # Verify they're independent
@@ -494,7 +494,7 @@ class TestEdgeCases:
         """
         # Get initial instance
         instance1 = YamlSettingsCache.get_instance()
-        id1 = id(instance1)
+        id(instance1)
 
         # Force delete the instance
         YamlSettingsCache._instance = None
@@ -503,7 +503,7 @@ class TestEdgeCases:
 
         # Get new instance - should create a new one
         instance2 = YamlSettingsCache.get_instance()
-        id2 = id(instance2)
+        id(instance2)
 
         # Should be a new object (different memory address)
         assert instance2 is not None
@@ -649,7 +649,7 @@ class TestRegressionScenarios:
             gc.collect()
 
         # Get final instance for comparison
-        final_instance = YamlSettingsCache.get_instance()
+        YamlSettingsCache.get_instance()
         final_objects = len(gc.get_objects())
 
         # Should not have significant memory growth

@@ -848,7 +848,7 @@ class TestComponentPerformance:
         initial_memory = process.memory_info().rss
 
         # Run pipeline multiple times
-        for iteration in range(10):
+        for _iteration in range(10):
             if "parser" in available_components:
                 parser = get_parser()
                 result = parser.find_segments(
@@ -862,7 +862,7 @@ class TestComponentPerformance:
             if "formid_analyzer" in available_components and segments:
                 formid_analyzer = get_formid_analyzer(mock_yamldata, True, True)
                 callstack = segments[2] if len(segments) > 2 else large_crash_data
-                formids = formid_analyzer.extract_formids(callstack)
+                formid_analyzer.extract_formids(callstack)
 
             if "plugin_analyzer" in available_components:
                 plugin_analyzer = get_plugin_analyzer(mock_yamldata)

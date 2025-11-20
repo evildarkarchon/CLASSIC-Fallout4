@@ -14,7 +14,7 @@ from ClassicLib.DocsPath import DocumentsPathManager
 def init_message_handler_fixture():
     """Initialize MessageHandler for all tests in this module."""
     # Initialize the MessageHandler to prevent RuntimeError
-    handler = init_message_handler(parent=None, is_gui_mode=False)
+    init_message_handler(parent=None, is_gui_mode=False)
     yield
     # Clean up the global message handler after tests
     import ClassicLib.MessageHandler

@@ -254,7 +254,7 @@ class StressTestReporter:
 
         # Calculate overall readiness score
         readiness_scores = []
-        for criterion, result in criteria.items():
+        for _criterion, result in criteria.items():
             readiness_scores.append(result["score"])
 
         overall_score = mean(readiness_scores) if readiness_scores else 0

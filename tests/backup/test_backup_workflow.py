@@ -1,6 +1,4 @@
-"""
-Tests for the complete backup workflow and run operations.
-"""
+"""Tests for the complete backup workflow and run operations."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from unittest.mock import MagicMock, patch

@@ -175,7 +175,7 @@ class TestConcurrentOperationsStress:
 
         # Parse all logs concurrently
         tasks = [parse_log(log, i) for i, log in enumerate(logs)]
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        await asyncio.gather(*tasks, return_exceptions=True)
 
         # Update metrics
         metrics.update_memory()
@@ -244,7 +244,7 @@ class TestConcurrentOperationsStress:
         total_successes = 0
         total_failures = 0
 
-        for round_num in range(5):
+        for _round_num in range(5):
             successes, failures, duration = await mixed_operations()
             total_successes += successes
             total_failures += failures
@@ -352,7 +352,7 @@ class TestMemoryLeakDetection:
 
         # Get memory allocation stats
         snapshot = tracemalloc.take_snapshot()
-        top_stats = snapshot.statistics("lineno")[:10]
+        snapshot.statistics("lineno")[:10]
 
         print("\nMemory Leak Test (Parser):")
         print(f"  Initial Memory: {initial_memory:.1f}MB")
@@ -373,7 +373,7 @@ class TestMemoryLeakDetection:
         from ClassicLib.FileIOCore import FileIOCore
 
         io_core = FileIOCore()
-        bridge = AsyncBridge.get_instance()
+        AsyncBridge.get_instance()
 
         # Track memory
         process = psutil.Process()
@@ -422,7 +422,7 @@ class TestMemoryLeakDetection:
         # Track objects with weak references
         tracked_objects = []
 
-        for i in range(50):
+        for _i in range(50):
             log = generator.generate_typical_crash_log()
             lines = log.splitlines()
             game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
@@ -541,7 +541,7 @@ class TestThreadSafetyValidation:
                     pass
             AsyncBridge._instances.clear()
 
-        bridge = AsyncBridge.get_instance()
+        AsyncBridge.get_instance()
 
         # Track concurrent executions
         concurrent_count = 0
@@ -642,14 +642,14 @@ class TestResourceExhaustion:
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             # Submit many tasks
             futures = []
-            for i in range(100):
+            for _i in range(100):
                 future = executor.submit(cpu_bound_task, 10000)
                 futures.append(future)
 
             # Should queue and complete all tasks
             completed = 0
             for future in concurrent.futures.as_completed(futures, timeout=30):
-                result = future.result()
+                future.result()
                 completed += 1
 
             print(f"\nCompleted {completed}/100 tasks with 2 worker threads")

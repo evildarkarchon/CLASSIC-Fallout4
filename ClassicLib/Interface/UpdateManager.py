@@ -45,8 +45,8 @@ class UpdateManagerMixin:
         update_check_worker: UpdateCheckWorker | None
 
         # Required methods that must be implemented by the mixing class
-        def perform_update_check(self) -> None: ...  # noqa: D102
-        def force_update_check(self) -> None: ...  # noqa: D102
+        def perform_update_check(self) -> None: ...
+        def force_update_check(self) -> None: ...
 
     def update_popup(self) -> None:
         """

@@ -338,7 +338,7 @@ class TestLargeDatasetProcessing:
             assert len(esl_plugins) > 50, "Should have some ESL files"
 
             # Simulate FormID processing for each plugin
-            for plugin in massive_plugin_list[:100]:  # Limit to avoid timeout
+            for _plugin in massive_plugin_list[:100]:  # Limit to avoid timeout
                 # Simulate FormID extraction for this plugin
                 plugin_formids = [f"0x{i:08X}" for i in range(100)]  # 100 FormIDs per plugin
 

@@ -161,7 +161,7 @@ def test_rust_status_logging():
             with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
                     with patch.object(logger, "info") as mock_log_info:
-                        with patch.object(logger, "debug") as mock_log_debug:
+                        with patch.object(logger, "debug"):
                             # Test with Rust available
                             mock_rust_check.return_value = True
 

@@ -12,38 +12,38 @@ except ImportError:
     HAS_QT = False
 
     # Define dummy classes for type checking when Qt is not available
-    class QObject:  # noqa: D101
+    class QObject:
         pass
 
-    class QWidget:  # noqa: D101
+    class QWidget:
         pass
 
-    class QThread:  # noqa: D101
+    class QThread:
         # noinspection PyPep8Naming
         @staticmethod
-        def currentThread() -> "QThread":  # pyright: ignore[reportReturnType] # noqa: D102
+        def currentThread() -> "QThread":  # pyright: ignore[reportReturnType]
             pass
 
     # noinspection PyUnusedLocal,PyPep8Naming
-    class QMessageBox:  # noqa: D101
-        class Icon:  # noqa: D106
+    class QMessageBox:
+        class Icon:
             Information = 0
             Warning = 1
             Critical = 2
 
-        def __init__(  # noqa: D107
+        def __init__(
             self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any
         ) -> None:
             pass
 
-        def setDetailedText(self, text: str) -> None:  # noqa: D102
+        def setDetailedText(self, text: str) -> None:
             pass
 
-        def setWindowTitle(self, title: str) -> None:  # noqa: D102
+        def setWindowTitle(self, title: str) -> None:
             pass
 
         # noinspection PyMethodMayBeStatic
-        def exec(self) -> int:  # noqa: D102, PLR6301
+        def exec(self) -> int:  # noqa: PLR6301
             return 0
 
     # noinspection PyPep8Naming,PyUnusedLocal
@@ -85,38 +85,38 @@ except ImportError:
                 **kwargs: Additional keyword arguments for further customization.
             """
 
-        def setWindowTitle(self, title: str) -> None:  # noqa: D102
+        def setWindowTitle(self, title: str) -> None:
             pass
 
-        def setAutoClose(self, close: bool) -> None:  # noqa: D102
+        def setAutoClose(self, close: bool) -> None:
             pass
 
-        def setAutoReset(self, reset: bool) -> None:  # noqa: D102
+        def setAutoReset(self, reset: bool) -> None:
             pass
 
-        def setRange(self, minimum: int, maximum: int) -> None:  # noqa: D102
+        def setRange(self, minimum: int, maximum: int) -> None:
             pass
 
-        def show(self) -> None:  # noqa: D102
+        def show(self) -> None:
             pass
 
-        def hide(self) -> None:  # noqa: D102
+        def hide(self) -> None:
             pass
 
-        def setValue(self, value: int) -> None:  # noqa: D102
+        def setValue(self, value: int) -> None:
             pass
 
-        def setLabelText(self, text: str) -> None:  # noqa: D102
+        def setLabelText(self, text: str) -> None:
             pass
 
-    class Signal:  # noqa: D101
-        def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: D107
+    class Signal:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             pass
 
-        def emit(self, *args: Any) -> None:  # noqa: D102
+        def emit(self, *args: Any) -> None:
             pass
 
-        def connect(self, func: Any) -> None:  # noqa: D102
+        def connect(self, func: Any) -> None:
             pass
 
 

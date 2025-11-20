@@ -202,9 +202,9 @@ class TestPerformanceBenchmarks:
 
             # Run multiple iterations for statistical accuracy
             times = []
-            for iteration in range(5):
+            for _iteration in range(5):
                 with PerformanceTimer() as timer:
-                    result = parser.find_segments(
+                    parser.find_segments(
                         crash_data=crash_data,
                         crashgen_name=mock_yamldata.crashgen_name,
                         xse_acronym=mock_yamldata.xse_acronym,
@@ -285,7 +285,7 @@ class TestPerformanceBenchmarks:
             times = []
             formid_counts = []
 
-            for iteration in range(5):
+            for _iteration in range(5):
                 with PerformanceTimer() as timer:
                     formids = analyzer.extract_formids(callstack_data)
                 times.append(timer.elapsed)
@@ -342,7 +342,7 @@ class TestPerformanceBenchmarks:
             times = []
             plugin_counts = []
 
-            for iteration in range(5):
+            for _iteration in range(5):
                 with PerformanceTimer() as timer:
                     plugins_dict, limit_triggered, limit_disabled = analyzer.loadorder_scan_log(plugin_data)
                 times.append(timer.elapsed)
@@ -393,7 +393,7 @@ class TestPerformanceBenchmarks:
             times = []
             results_data = []
 
-            for iteration in range(3):  # Fewer iterations due to complexity
+            for _iteration in range(3):  # Fewer iterations due to complexity
                 with PerformanceTimer() as timer:
                     # Initialize components
                     if "parser" in available_components:
@@ -594,7 +594,7 @@ class TestMemoryPerformance:
 
             # Process data multiple times to check for accumulation
             for _ in range(10):
-                formids = formid_analyzer.extract_formids(large_test_data)
+                formid_analyzer.extract_formids(large_test_data)
 
         growth_mb = memory_stats["rss_growth_mb"]
         formid_count = len(large_test_data)  # Approximate

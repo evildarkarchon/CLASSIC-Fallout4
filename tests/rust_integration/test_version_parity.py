@@ -4,9 +4,8 @@ Tests Rust implementation parity with Python version handling, including
 parsing, comparison, extraction, and validation of semantic versions.
 """
 
-import pytest
-
 import classic_version
+import pytest
 
 
 @pytest.mark.rust

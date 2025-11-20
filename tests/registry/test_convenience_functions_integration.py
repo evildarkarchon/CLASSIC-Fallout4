@@ -26,5 +26,5 @@ class TestConvenienceFunctions:
         mock_func.return_value.__exit__ = MagicMock(return_value=None)
         GlobalRegistry.register(GlobalRegistry.Keys.OPEN_FILE_FUNC, mock_func)
         with GlobalRegistry.open_file_with_encoding(test_file) as f:
-            content = f.read()
+            f.read()
         mock_func.assert_called_once_with(test_file, "utf-8", "ignore")

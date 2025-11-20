@@ -53,7 +53,7 @@ class TestYamlBatchOperations:
             individual_start = time.time()
             for i in range(1, 6):
                 cache.get_setting(str, YAML.TEST, f"section{(i - 1) // 3 + 1}.key{i}")
-            individual_time = time.time() - individual_start
+            time.time() - individual_start
 
             # Clear cache for fair comparison
             cache._cache.clear()
@@ -68,7 +68,7 @@ class TestYamlBatchOperations:
                 (str, YAML.TEST, "section2.key5"),
             ]
             cache.batch_get_settings(keys)
-            batch_time = time.time() - batch_start
+            time.time() - batch_start
 
             # Batch should be called fewer times than individual
             # (exact timing may vary, but calls should be optimized)

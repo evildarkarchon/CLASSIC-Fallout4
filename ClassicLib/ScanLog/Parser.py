@@ -117,7 +117,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
             # If we got valid segments, return them
             if any(segments):
                 return segments
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust parser fails
             logger.debug(f"Rust parser failed for segments, falling back to Python: {e}")
 
     # Python fallback implementation (original code)
@@ -196,7 +196,7 @@ def find_segments(
     if _rust_available and hasattr(_rust_parser, "find_segments"):
         try:
             return _rust_parser.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust parser fails
             logger.warning(f"Rust parser failed, falling back to Python: {e}")
             # Fall through to Python implementation
 
@@ -285,7 +285,7 @@ def get_parser_stats() -> dict[str, Any]:
         try:
             rust_stats = _rust_parser.get_stats()
             stats.update(rust_stats)
-        except Exception:
+        except Exception:  # noqa: BLE001 - Intentional: stats collection is optional, failures are non-critical
             pass
 
     return stats

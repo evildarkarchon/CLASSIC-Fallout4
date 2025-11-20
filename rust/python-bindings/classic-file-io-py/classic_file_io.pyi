@@ -211,7 +211,7 @@ class FileIOCore:
         """
 
     def write_bytes(self, path: str, data: bytes) -> Coroutine[Any, Any, None]:
-        """Write raw bytes to file asynchronously.
+        r"""Write raw bytes to file asynchronously.
 
         Writes binary data to a file. Creates parent directories if they
         don't exist. Overwrites existing files.
@@ -236,7 +236,7 @@ class FileIOCore:
         """
 
     def append_file(self, path: str, content: str) -> Coroutine[Any, Any, None]:
-        """Append string content to file asynchronously.
+        r"""Append string content to file asynchronously.
 
         Appends text content to the end of a file. Creates the file if it
         doesn't exist.
@@ -357,7 +357,7 @@ class FileIOCore:
         pattern: str | None = None,
         max_depth: int | None = None
     ) -> list[str]:
-        """Walk directory tree and collect file paths (synchronous).
+        r"""Walk directory tree and collect file paths (synchronous).
 
         Traverses a directory tree and collects file paths matching an
         optional pattern. Supports depth limiting. This is a synchronous
@@ -820,7 +820,7 @@ class PyLogCollector:
         """
 
 class FileGeneratorConfig:
-    """Configuration for file generation.
+    r"""Configuration for file generation.
 
     Holds configuration data for generating CLASSIC configuration files.
     Used by FileGenerator to create properly structured files with
@@ -860,7 +860,7 @@ class FileGeneratorConfig:
         """
 
 class FileGenerator:
-    """File generation operations.
+    r"""File generation operations.
 
     Generates CLASSIC configuration files with proper structure and content.
     Handles creation of both Ignore.yaml and game-specific local YAML files.
@@ -979,7 +979,7 @@ class FileGenerator:
         """
 
 async def generate_ignore_file_async(content: str) -> bool:
-    """Generate CLASSIC Ignore.yaml if it doesn't exist (async).
+    r"""Generate CLASSIC Ignore.yaml if it doesn't exist (async).
 
     Standalone function that creates the ignore file with provided content.
 

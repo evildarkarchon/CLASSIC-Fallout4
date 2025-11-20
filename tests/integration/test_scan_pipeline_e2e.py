@@ -216,8 +216,8 @@ class TestScanPipelineE2E:
     @pytest.mark.asyncio
     async def test_complete_scan_pipeline_1mb_log(self, setup_pipeline):
         """Test complete pipeline with typical 1MB crash log."""
-        orchestrator = setup_pipeline["orchestrator"]
-        io_core = setup_pipeline["io_core"]
+        setup_pipeline["orchestrator"]
+        setup_pipeline["io_core"]
         generator = SyntheticCrashLogGenerator()
 
         # Generate synthetic 1MB crash log (typical size)
@@ -312,7 +312,7 @@ class TestScanPipelineE2E:
     @pytest.mark.asyncio
     async def test_complete_scan_pipeline_2mb_log(self, setup_pipeline):
         """Test complete pipeline with large 2MB crash log."""
-        orchestrator = setup_pipeline["orchestrator"]
+        setup_pipeline["orchestrator"]
         generator = SyntheticCrashLogGenerator()
 
         # Generate synthetic 2MB crash log (upper typical size)
@@ -401,7 +401,7 @@ class TestScanPipelineE2E:
 
         parser = get_parser()
 
-        for i, malformed_log in enumerate(malformed_logs):
+        for _i, malformed_log in enumerate(malformed_logs):
             try:
                 # Use find_segments which is the actual API
                 lines = malformed_log.splitlines() if isinstance(malformed_log, str) else [malformed_log]
@@ -516,7 +516,7 @@ class TestScanPipelineE2E:
                 )
 
                 # Run game scan pipeline
-                scanner = GameScanner(str(game_path))
+                GameScanner(str(game_path))
                 scan_result = await scanner_instance.scan_game_directory()
 
                 # Validate scan results
@@ -551,7 +551,7 @@ class TestScanPipelineE2E:
         }
 
         with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=plugin_data):
-            analyzer = get_plugin_analyzer()
+            get_plugin_analyzer()
 
             # Analyze for conflicts
             conflicts = []

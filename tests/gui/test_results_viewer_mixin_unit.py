@@ -126,7 +126,7 @@ class TestResultsViewerMixinInit:
             mock_list_instance = MagicMock()
             mock_list_widget.return_value = mock_list_instance
 
-            panel = viewer_mixin._create_reports_panel()
+            viewer_mixin._create_reports_panel()
 
             # Verify list widget created
             mock_list_widget.assert_called_once()
@@ -147,7 +147,7 @@ class TestResultsViewerMixinInit:
             mock_markdown.return_value = mock_markdown_instance
             mock_metadata.return_value = mock_metadata_instance
 
-            panel = viewer_mixin._create_viewer_panel()
+            viewer_mixin._create_viewer_panel()
 
             # Verify components created
             assert viewer_mixin.markdown_viewer == mock_markdown_instance
@@ -309,9 +309,9 @@ class TestReportManagement:
         with (
             patch("ClassicLib.Interface.ResultsViewerMixin.QMessageBox") as mock_msgbox,
             patch("ClassicLib.Interface.ResultsViewerMixin.msg_info") as mock_info,
-            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
-            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
-            patch("ClassicLib.Interface.ResultsViewerMixin.logger") as mock_logger,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning"),
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error"),
+            patch("ClassicLib.Interface.ResultsViewerMixin.logger"),
             patch.object(viewer_mixin, "refresh_reports_list") as mock_refresh,
         ):
             # Set up StandardButton enum on the mock
@@ -518,7 +518,7 @@ class TestContextMenu:
 
         with (
             patch("ClassicLib.Interface.ResultsViewerMixin.QMenu") as mock_menu_class,
-            patch("ClassicLib.Interface.ResultsViewerMixin.QAction") as mock_action_class,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QAction"),
         ):
             mock_menu = MagicMock()
             mock_menu_class.return_value = mock_menu

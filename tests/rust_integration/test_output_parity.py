@@ -677,7 +677,7 @@ class TestOutputParity:
                     performance_results.append(result)
 
         # Validate performance improvements
-        significant_improvements = [
+        [
             r
             for r in performance_results
             if r.performance_improvement >= 2.0  # At least 2x improvement

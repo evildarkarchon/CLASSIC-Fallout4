@@ -75,7 +75,7 @@ class TestDocumentsChecker:
         mock_yaml_settings.return_value = "C:/Users/TestUser/Documents/My Games/Fallout4VR"
 
         # Check folder configuration
-        result = checker.check_folder_configuration()
+        checker.check_folder_configuration()
 
         # Verify VR suffix was used
         mock_yaml_settings.assert_called_once_with(str, YAML.Game, "GameVR_Info.Main_Docs_Name")
@@ -189,7 +189,7 @@ class TestDocumentsChecker:
         mock_validate_ini.return_value = "OK"
 
         # Run all checks
-        results = checker.run_all_checks()
+        checker.run_all_checks()
 
         # Verify correct INI files were checked for Skyrim
         assert mock_validate_ini.call_count == 3

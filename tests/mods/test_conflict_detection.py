@@ -1,6 +1,4 @@
-"""
-Tests for detecting conflicts between mods.
-"""
+"""Tests for detecting conflicts between mods."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from typing import Any

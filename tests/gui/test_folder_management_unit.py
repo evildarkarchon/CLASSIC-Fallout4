@@ -27,7 +27,7 @@ class TestFolderManagementMixin:
         from ClassicLib.MessageHandler import init_message_handler
 
         # Initialize message handler for non-GUI mode
-        handler = init_message_handler(parent=None, is_gui_mode=False)
+        init_message_handler(parent=None, is_gui_mode=False)
         yield
         # Clean up the handler after test
         import ClassicLib.MessageHandler

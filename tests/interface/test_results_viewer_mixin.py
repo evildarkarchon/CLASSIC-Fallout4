@@ -101,7 +101,7 @@ def test_rust_status_logging_on_setup():
 
                 with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
                     with patch.object(logger, "info") as mock_log_info:
-                        with patch.object(logger, "debug") as mock_log_debug:
+                        with patch.object(logger, "debug"):
                             with patch.object(viewer, "scan_for_reports", return_value=[]):
                                 with patch.object(viewer, "refresh_reports_list"):
                                     # Test with Rust available

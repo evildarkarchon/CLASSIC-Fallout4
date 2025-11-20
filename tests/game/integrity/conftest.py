@@ -1,6 +1,4 @@
-"""
-Shared fixtures for game integrity tests.
-"""
+"""Shared fixtures for game integrity tests."""
 
 from pathlib import Path
 

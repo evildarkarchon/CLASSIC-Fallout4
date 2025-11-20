@@ -295,13 +295,13 @@ class TestFcxHandlerParity:
         # Rust performance
         start_time = time.perf_counter()
         for _ in range(iterations):
-            rust_fragment = rust_handler.get_fcx_messages()
+            rust_handler.get_fcx_messages()
         rust_time = time.perf_counter() - start_time
 
         # Python performance
         start_time = time.perf_counter()
         for _ in range(iterations):
-            python_fragment = python_handler.get_fcx_messages()
+            python_handler.get_fcx_messages()
         python_time = time.perf_counter() - start_time
 
         # Validate parity
@@ -348,10 +348,10 @@ class TestFcxHandlerParity:
         # This test verifies the handler structure doesn't modify files
 
         # For Rust handler
-        rust_fragment = rust_handler.get_fcx_messages()
+        rust_handler.get_fcx_messages()
 
         # For Python handler
-        python_fragment = python_handler.get_fcx_messages()
+        python_handler.get_fcx_messages()
 
         # Verify file was NOT modified
         final_mtime = test_ini_path.stat().st_mtime

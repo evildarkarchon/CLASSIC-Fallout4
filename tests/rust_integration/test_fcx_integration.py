@@ -57,7 +57,7 @@ class TestRustFCXIntegration:
         assert "Rust" in handler_type or handler_type == "FCXModeHandler", f"Expected Rust handler, got {handler_type}"
 
         # Perform FCX operations
-        messages = handler.get_fcx_messages()
+        handler.get_fcx_messages()
 
         # Verify file was NOT modified
         assert test_ini.stat().st_mtime == initial_mtime, "Rust FCX handler modified file - read-only contract violated"
@@ -157,7 +157,7 @@ class TestRustFCXIntegration:
         rust_handler = get_fcx_handler(fcx_mode=True)
         rust_start = time.perf_counter()
         for _ in range(iterations):
-            rust_messages = rust_handler.get_fcx_messages()
+            rust_handler.get_fcx_messages()
         rust_time = time.perf_counter() - rust_start
 
         # Benchmark Python implementation
@@ -165,7 +165,7 @@ class TestRustFCXIntegration:
         python_handler = FCXModeHandlerFragments(fcx_mode=True)
         python_start = time.perf_counter()
         for _ in range(iterations):
-            python_messages = python_handler.get_fcx_messages()
+            python_handler.get_fcx_messages()
         python_time = time.perf_counter() - python_start
 
         # Calculate performance gain

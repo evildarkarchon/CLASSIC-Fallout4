@@ -92,7 +92,7 @@ class PerformanceTestFixtures:
         results = []
         errors = []
 
-        for i in range(iterations):
+        for _i in range(iterations):
             start_time = time.perf_counter()
             try:
                 result = target_function(test_data)
@@ -250,7 +250,6 @@ class PerformanceTestFixtures:
                 process = psutil.Process(os.getpid())
 
                 initial_memory = process.memory_info()
-                peak_memory = initial_memory
                 samples = []
 
                 memory_info = {
@@ -397,7 +396,7 @@ class PerformanceTestFixtures:
                 def concurrent_test(test_data):
                     def worker(thread_id, data):
                         results = []
-                        for i in range(iterations_per_thread):
+                        for _i in range(iterations_per_thread):
                             try:
                                 result = base_operation(data)
                                 results.append(result)
@@ -442,7 +441,7 @@ class PerformanceTestFixtures:
 
             # Summary section
             report_lines.append("SUMMARY:")
-            total_operations = len(benchmark_results)
+            len(benchmark_results)
             avg_times = []
 
             for operation_name, results in benchmark_results.items():

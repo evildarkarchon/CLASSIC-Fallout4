@@ -582,7 +582,7 @@ class TestThrottleEdgeCases:
         from ClassicLib.AsyncUtilities import _throttler_registry
 
         # First set of operations
-        for i in range(2):
+        for _i in range(2):
             await throttle(2, 0.1)
 
         # Should have created a throttler in the registry
@@ -734,7 +734,7 @@ class TestAsyncLazyLoaderEdgeCases:
             asyncio.create_task(loader.get()),
         ]
 
-        results = await asyncio.gather(*tasks[::2])  # Get results from get() calls
+        await asyncio.gather(*tasks[::2])  # Get results from get() calls
 
         # Should have loaded at least once
         assert call_count >= 1

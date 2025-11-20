@@ -490,7 +490,7 @@ class ResultsViewerMixin:
 
                 msg_info(f"Report deleted: {report_path.name}")
 
-            except Exception as e:
+            except OSError as e:
                 msg_error(f"Failed to delete report: {e}")
                 logger.error(f"Error deleting report {report_path}: {e}")
 
@@ -507,7 +507,7 @@ class ResultsViewerMixin:
             QApplication.clipboard().setText(content)
             msg_info("Report copied to clipboard")
 
-        except Exception as e:
+        except (OSError, RuntimeError) as e:
             msg_error(f"Failed to copy report: {e}")
             logger.error(f"Error copying report: {e}")
 
@@ -531,7 +531,7 @@ class ResultsViewerMixin:
 
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(crash_logs_dir)))
 
-        except Exception as e:
+        except (ImportError, RuntimeError, OSError) as e:
             msg_error(f"Failed to open folder: {e}")
             logger.error(f"Error opening folder: {e}")
 

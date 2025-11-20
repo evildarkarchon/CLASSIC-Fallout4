@@ -95,7 +95,7 @@ class SyntheticDataGenerator:
     def generate_formid_batch(count: int) -> list[str]:
         """Generate a batch of synthetic FormIDs."""
         formids = []
-        for i in range(count):
+        for _i in range(count):
             plugin_index = random.randint(0x00, 0xFF)
             local_id = random.randint(0x000001, 0xFFFFFF)
             formid = f"{plugin_index:02X}{local_id:06X}"
@@ -250,7 +250,7 @@ class TestMemorySafetyStress:
         # Create objects and track with weak references
         weak_refs = []
 
-        for i in range(100):
+        for _i in range(100):
             # Create synthetic data
             data = generator.generate_large_log(1)
             lines = data.splitlines()
@@ -364,7 +364,7 @@ class TestMemorySafetyStress:
         generator = SyntheticDataGenerator()
 
         # Create structures with potential circular references
-        for i in range(100):
+        for _i in range(100):
             # Create plugin data that references itself
             plugin_data = generator.generate_plugin_data(10)
 
@@ -374,7 +374,7 @@ class TestMemorySafetyStress:
 
             # Process through Rust
             try:
-                result = analyzer.process_plugin_data(plugin_data)
+                analyzer.process_plugin_data(plugin_data)
             except (AttributeError, TypeError):
                 # Method might not exist or handle this data
                 pass
@@ -408,7 +408,7 @@ class TestMemorySafetyStress:
         repeated_formid = "FE000800"
         repeated_plugin = "SyntheticPlugin.esp"
 
-        for i in range(1000):
+        for _i in range(1000):
             # Log with many repeated strings
             log = (
                 f"""
@@ -498,7 +498,7 @@ class TestMemorySafetyStress:
         with ProcessPoolExecutor(max_workers=4) as executor:
             futures = [executor.submit(worker_process, 10) for _ in range(20)]
 
-            results = [f.result() for f in as_completed(futures)]
+            [f.result() for f in as_completed(futures)]
 
         # Main process memory should not be affected
         leak = monitor.get_leak_estimate()
