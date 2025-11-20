@@ -168,7 +168,7 @@ class ConfigFileCache:
 
         self._game_root_path = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
         if self._game_root_path is None:
-            # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)
+            # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)  # noqa: FIX002
             raise FileNotFoundError
 
         for path, _dirs, files in self._game_root_path.walk():  # pyrefly: ignore
@@ -251,7 +251,7 @@ class ConfigFileCache:
         """
         return file_name_lower in self._config_files
 
-    # TODO: Useful for checking how many INIs found
+    # TODO: Useful for checking how many INIs found  # noqa: FIX002
     # def __bool__(self) -> bool:
     #     return bool(self._config_files)
 

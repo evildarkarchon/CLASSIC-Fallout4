@@ -286,7 +286,7 @@ class RustRecordScanner:
                     report_lines = self._generate_report_lines(matches)
                     results.append((report_lines, matches))
 
-                return results
+                return results  # noqa: TRY300 - Return in try block is clear here
             except parse_errors as e:
                 logger.warning(f"Rust parse error in batch_scan_records: {e}")
             except rust_errors as e:

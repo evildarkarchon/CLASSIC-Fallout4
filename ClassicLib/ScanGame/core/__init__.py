@@ -1,4 +1,5 @@
 """ScanGame core module - refactored components."""
+# ruff: noqa: TID252 - Relative imports intentional for __init__.py re-exports
 
 from .ba2_scanner import BA2ArchiveScanner
 from .dds_processor import DDSProcessor

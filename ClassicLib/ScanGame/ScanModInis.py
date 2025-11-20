@@ -56,7 +56,7 @@ async def scan_mod_inis_async() -> str:
     message_list: list[str] = []
     config_files: ConfigFileCache = ConfigFileCache()
 
-    # TODO: Maybe return a message that no ini files were found? (See also: TODO in ConfigFileCache)
+    # TODO: Maybe return a message that no ini files were found? (See also: TODO in ConfigFileCache)  # noqa: FIX002
     # if not config_files:
     #     pass
 

@@ -4,6 +4,7 @@ This module provides backwards compatibility for the refactored MessageHandler.
 All classes and functions are re-exported from their new locations to maintain
 API compatibility.
 """
+# ruff: noqa: TID252 - Relative imports intentional for __init__.py re-exports
 
 # Re-export all public components
 from .cli_progress import CLIProgressBar
