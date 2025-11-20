@@ -53,6 +53,7 @@ chrono = "0.4"
 
 [dev-dependencies]
 tempfile = { workspace = true }
+serial_test = "3.2"
 
 [lints.rust]
 deprecated = "deny"

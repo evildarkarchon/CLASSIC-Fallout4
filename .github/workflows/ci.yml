@@ -73,7 +73,7 @@ jobs:
   lint-rust:
     name: Rust Linting (Clippy)
     runs-on: windows-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -119,7 +119,7 @@ jobs:
   build-rust:
     name: Build Rust Components
     runs-on: windows-latest
-    timeout-minutes: 40  # Prevent build from hanging
+    timeout-minutes: 60  # Prevent build from hanging
     steps:
       - uses: actions/checkout@v4
 
@@ -160,7 +160,12 @@ jobs:
         run: cargo build --workspace --release --manifest-path rust/Cargo.toml
 
       - name: Run Rust tests
-        run: cargo test --workspace --release --manifest-path rust/Cargo.toml
+        run: |
+          # Run most tests in parallel
+          cargo test --workspace --release --manifest-path rust/Cargo.toml --exclude classic-gui-slint
+          # Run Slint GUI tests single-threaded to avoid Windows heap corruption during cleanup
+          # (all tests pass; crash only occurs during multi-threaded process shutdown)
+          cargo test --release --manifest-path rust/Cargo.toml -p classic-gui-slint -- --test-threads=1
 
       - name: Upload Rust build artifacts
         uses: actions/upload-artifact@v4

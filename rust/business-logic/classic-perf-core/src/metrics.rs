@@ -82,8 +82,8 @@ impl MetricsSummary {
 pub fn record_timing(name: &str, duration_secs: f64) {
     METRICS
         .entry(name.to_string())
-        .or_default()
-        .push(duration_secs);
+        .and_modify(|v| v.push(duration_secs))
+        .or_insert_with(|| vec![duration_secs]);
 }
 
 /// Get summary statistics for all recorded operations.

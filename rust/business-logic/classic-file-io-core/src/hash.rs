@@ -259,10 +259,12 @@ impl FileHasher {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use std::io::Write;
     use tempfile::NamedTempFile;
 
     #[test]
+    #[serial]
     fn test_hash_file_basic() -> Result<(), Box<dyn std::error::Error>> {
         // Create temp file with known content
         let mut temp_file = NamedTempFile::new()?;
@@ -283,6 +285,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_hash_file_caching() -> Result<(), Box<dyn std::error::Error>> {
         FileHasher::clear_cache();
 
@@ -313,6 +316,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_hash_files_parallel() -> Result<(), Box<dyn std::error::Error>> {
         FileHasher::clear_cache();
 
@@ -342,6 +346,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_hash_files_to_map() -> Result<(), Box<dyn std::error::Error>> {
         FileHasher::clear_cache();
 
@@ -360,6 +365,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_large_file_chunked_reading() -> Result<(), Box<dyn std::error::Error>> {
         // Create file larger than chunk size
         let mut temp_file = NamedTempFile::new()?;

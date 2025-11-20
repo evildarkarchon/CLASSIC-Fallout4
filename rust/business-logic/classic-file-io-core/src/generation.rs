@@ -274,9 +274,11 @@ pub async fn generate_local_yaml(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use tempfile::TempDir;
 
     #[tokio::test]
+    #[serial]
     async fn test_generate_ignore_file() {
         let temp_dir = TempDir::new().unwrap();
         let original_dir = std::env::current_dir().unwrap();
@@ -311,6 +313,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_generate_local_yaml() {
         let temp_dir = TempDir::new().unwrap();
         let original_dir = std::env::current_dir().unwrap();
@@ -348,6 +351,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_generate_all_files() {
         let temp_dir = TempDir::new().unwrap();
         let original_dir = std::env::current_dir().unwrap();
@@ -386,6 +390,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[serial]
     async fn test_standalone_functions() {
         let temp_dir = TempDir::new().unwrap();
         let original_dir = std::env::current_dir().unwrap();

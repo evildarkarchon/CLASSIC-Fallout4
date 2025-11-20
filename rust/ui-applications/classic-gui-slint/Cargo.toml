@@ -38,6 +38,7 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = "0.3"
 parking_lot = { workspace = true }  # For RwLock in AppState
+once_cell = { workspace = true }  # For lazy static initialization
 chrono = "0.4"  # Date/time formatting
 
 # File system operations
