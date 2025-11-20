@@ -73,7 +73,7 @@ jobs:
   lint-rust:
     name: Rust Linting (Clippy)
     runs-on: windows-latest
-    timeout-minutes: 15
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -119,7 +119,7 @@ jobs:
   build-rust:
     name: Build Rust Components
     runs-on: windows-latest
-    timeout-minutes: 20  # Prevent build from hanging
+    timeout-minutes: 40  # Prevent build from hanging
     steps:
       - uses: actions/checkout@v4
 
