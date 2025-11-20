@@ -158,38 +158,98 @@ class TestAsyncBridgeBehavior:
         assert bridge1 is bridge2
         assert bridge1 is async_bridge
 
-    def test_bridge_thread_safety(self, async_bridge):
-        """Test AsyncBridge thread safety characteristics.
+    def test_bridge_thread_safety(self):
+        """Test AsyncBridge thread safety - each thread gets own instance.
 
-        Args:
-            async_bridge: Properly isolated AsyncBridge instance from fixture
+        This test validates that AsyncBridge correctly provides per-thread
+        instances and that each thread can safely execute async operations
+        without interfering with other threads.
+
+        Note: We don't use the async_bridge fixture here because we need to test
+        the per-thread instance behavior, not a shared instance.
         """
+        from ClassicLib.AsyncBridge import AsyncBridge
         import threading
+        import asyncio
 
-        # Use the fixture-provided bridge instance for proper test isolation
         results = []
+        errors = []
+        lock = threading.Lock()
 
         async def async_work(thread_id):
-            await asyncio.sleep(0.001)
+            """Async work to be executed from thread.
+
+            Args:
+                thread_id: Unique identifier for this thread
+
+            Returns:
+                String identifying the thread that executed the work
+            """
+            await asyncio.sleep(0.001)  # Simulate async work
             return f"thread_{thread_id}"
 
         def thread_work(thread_id):
-            # Each thread uses the same bridge instance from the fixture
-            result = async_bridge.run_async(async_work(thread_id))
-            results.append(result)
+            """Worker function - each thread gets its own AsyncBridge instance.
 
+            Each thread MUST call get_instance() to obtain its own bridge.
+            Sharing a bridge instance across threads is an error.
+
+            Args:
+                thread_id: Unique identifier for this thread
+            """
+            try:
+                # ✅ CORRECT: Each thread gets its own bridge instance
+                # AsyncBridge uses per-thread instances stored by thread ID
+                bridge = AsyncBridge.get_instance()
+
+                # Execute async work via this thread's bridge
+                result = bridge.run_async(async_work(thread_id))
+
+                # Thread-safe result storage
+                with lock:
+                    results.append(result)
+
+            except Exception as e:
+                # Thread-safe error storage
+                with lock:
+                    errors.append((thread_id, str(e), type(e).__name__))
+
+        # Launch worker threads
         threads = []
         for i in range(3):
-            t = threading.Thread(target=thread_work, args=(i,))
+            t = threading.Thread(target=thread_work, args=(i,), name=f"TestWorker-{i}")
             threads.append(t)
             t.start()
 
+        # Wait for all threads with timeout
         for t in threads:
-            t.join()
+            t.join(timeout=10.0)  # Generous timeout for debugging
+            if t.is_alive():
+                errors.append((-1, f"Thread {t.name} timed out", "TimeoutError"))
 
-        # All threads should complete successfully
-        assert len(results) == 3
-        assert all(r.startswith("thread_") for r in results)
+        # Verify no errors occurred
+        assert len(errors) == 0, f"Errors occurred in worker threads: {errors}"
+
+        # Verify all threads completed successfully
+        assert len(results) == 3, f"Expected 3 results, got {len(results)}: {results}"
+
+        # Verify each result is correctly formatted
+        assert all(r.startswith("thread_") for r in results), f"Invalid result format: {results}"
+
+        # Verify we got results from all 3 threads
+        thread_ids = [r.split("_")[1] for r in results]
+        assert set(thread_ids) == {"0", "1", "2"}, f"Missing thread results: {thread_ids}"
+
+        # Cleanup: shutdown all bridge instances created by threads
+        # This is important to prevent test pollution
+        with AsyncBridge._lock:
+            for instance in list(AsyncBridge._instances.values()):
+                try:
+                    instance.shutdown()
+                except Exception as e:
+                    # Log but don't fail test on cleanup errors
+                    logger.debug(f"Error during bridge cleanup: {e}")
+            AsyncBridge._instances.clear()
 
     def test_bridge_error_propagation(self, async_bridge):
         """Test that AsyncBridge properly propagates errors.

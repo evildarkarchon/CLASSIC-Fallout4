@@ -125,13 +125,12 @@ class TestAsyncPipeline:
 
         with (
             patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async") as mock_load,
             patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch") as mock_write,
             patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Setup mocks - use AsyncMock for async functions
+            # Note: load_crash_logs_async was removed - pipeline now uses direct file I/O
             mock_reformat.return_value = AsyncMock()
-            mock_load.return_value = {log_file.name: ["line1", "line2"] for log_file in crash_log_files}
             mock_write.return_value = AsyncMock()
 
             # Create mock orchestrator instance
@@ -152,14 +151,14 @@ class TestAsyncPipeline:
             assert isinstance(stats, dict)
             assert "total_time" in stats
             assert "reformat_time" in stats
-            assert "load_time" in stats
+            # Note: "load_time" removed - pipeline now uses direct file I/O for performance
             assert "process_time" in stats
             assert "write_time" in stats
             assert "logs_per_second" in stats
 
             # Verify pipeline stages were called
             mock_reformat.assert_called_once_with(crash_log_files, ("test_remove",))
-            mock_load.assert_called_once_with(crash_log_files)
+            # Note: mock_load removed - load_crash_logs_async was removed from pipeline
             mock_write.assert_called_once()
 
     @pytest.mark.asyncio
@@ -168,7 +167,7 @@ class TestAsyncPipeline:
         async_stats: dict[str, float] = {
             "total_time": 5.0,
             "reformat_time": 1.0,
-            "load_time": 1.5,
+            # Note: "load_time" removed - pipeline now uses direct file I/O
             "process_time": 2.0,
             "write_time": 0.5,
             "logs_per_second": 10.0,

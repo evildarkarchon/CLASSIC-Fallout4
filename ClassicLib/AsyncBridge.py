@@ -247,42 +247,54 @@ class AsyncBridge:
             self._loop = None
             self._thread = None
 
-        # Create new event loop with error handling
-        try:
-            self._loop = asyncio.new_event_loop()
-            logger.debug(f"AsyncBridge: Created new event loop for thread {self._thread_id}")
-        except Exception as e:
-            raise RuntimeError(f"Failed to create event loop for AsyncBridge in thread {self._thread_id}: {e}") from e
+        # Create new event loop for background thread
+        self._loop = asyncio.new_event_loop()
 
-        # Create a reusable event for waiting
+        # Create event for thread synchronization
         ready_event = threading.Event()
 
-        def mark_ready() -> None:
-            """Mark the loop as ready after it starts."""
-            ready_event.set()
-            logger.debug(f"AsyncBridge: Loop marked ready for thread {self._thread_id}")
-
-        # Schedule a callback to mark when loop is running
-        self._loop.call_soon(mark_ready)
-
-        # Start the loop in a background thread with timestamp for uniqueness
+        # Start background thread FIRST (before any operations on the loop)
+        # Pass ready_event so thread can signal when it's ready
         thread_name = f"AsyncBridge-{self._thread_id}-{self._creation_time:.0f}"
-        self._thread = threading.Thread(target=self._run_loop, daemon=True, name=thread_name)
+        self._thread = threading.Thread(
+            target=self._run_loop,
+            args=(ready_event,),  # Pass ready_event as argument
+            daemon=True,
+            name=thread_name
+        )
         self._thread.start()
         logger.debug(f"AsyncBridge: Started background thread {thread_name}")
 
-        # Wait with timeout for loop to be ready
+        # Wait with timeout for thread to signal it's ready
+        # Thread signals AFTER set_event_loop() but BEFORE run_forever()
         if not ready_event.wait(timeout=5.0):
             logger.error(f"AsyncBridge: Loop failed to start within 5 seconds for thread {self._thread_id}")
             raise RuntimeError(f"AsyncBridge event loop failed to start within 5 seconds for thread {self._thread_id}")
 
-    def _run_loop(self) -> None:
-        """Run the event loop in the background thread."""
+        logger.debug(f"AsyncBridge: Loop confirmed running for thread {self._thread_id}")
+
+    def _run_loop(self, ready_event: threading.Event) -> None:
+        """Run the event loop in the background thread.
+
+        This method runs in a dedicated background thread and manages the event loop lifecycle.
+        It signals when the loop is ready to accept work, then runs until shutdown.
+
+        Args:
+            ready_event: Threading event to signal when loop is ready for operations
+        """
         if self._loop is None:
             return  # Should never happen, but satisfies type checker
 
+        # Set this loop as the event loop for this thread
         asyncio.set_event_loop(self._loop)
+
+        # Signal that we're ready AFTER set_event_loop() but BEFORE run_forever()
+        # This ensures the loop is properly initialized before any operations are scheduled
+        ready_event.set()
+        logger.debug(f"AsyncBridge: Event loop ready for thread {self._thread_id}")
+
         try:
+            # Run the event loop until shutdown() is called
             self._loop.run_forever()
         finally:
             # Simplified cleanup - just close the loop

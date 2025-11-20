@@ -179,6 +179,8 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
 
     This autouse fixture runs for ALL tests and ensures that any AsyncBridge
     instances are properly cleaned up, preventing event loop leakage between tests.
+    Only performs expensive thread cleanup (including waiting for thread termination)
+    when AsyncBridge was actually used in the test, keeping test suite fast.
     """
     yield
 
@@ -186,8 +188,9 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
     try:
         from ClassicLib.AsyncBridge import AsyncBridge
 
-        # Clean up current thread's instance if it exists
+        # Quick check: if no instances exist, skip expensive cleanup
         thread_id = threading.get_ident()
+        has_instances = bool(AsyncBridge._instances)
 
         # Only clean up if not managed by another fixture
         if not hasattr(_bridge_states, "instance_stack") or not _bridge_states.instance_stack:
@@ -218,6 +221,52 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
                 instance = AsyncBridge._instances[tid]
                 instance.shutdown()
                 AsyncBridge._instances.pop(tid, None)
+
+        # Check thread-local instance and shut it down if it exists
+        # This handles zombie instances that were cleared from _instances dict
+        if hasattr(AsyncBridge._thread_local, "instance"):
+            try:
+                instance = AsyncBridge._thread_local.instance
+                if instance is not None:
+                    instance.shutdown()
+            except Exception:
+                pass
+            # Clear thread-local storage
+            if hasattr(AsyncBridge._thread_local, "__dict__"):
+                AsyncBridge._thread_local.__dict__.clear()
+
+        # Only do expensive thread cleanup if instances were actually used
+        if has_instances:
+            # Call _cleanup_all to ensure all instances are shutdown
+            AsyncBridge._cleanup_all()
+
+            # Clear the instances dict
+            with AsyncBridge._lock:
+                AsyncBridge._instances.clear()
+
+            # Collect AsyncBridge threads that need cleanup
+            async_bridge_threads = [
+                t
+                for t in threading.enumerate()
+                if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
+            ]
+
+            # Wait for threads to terminate, but with reasonable timeout
+            # AsyncBridge's internal shutdown has a 2s timeout, so we give it time
+            # to complete before forcefully terminating threads
+            for thread in async_bridge_threads:
+                if thread.is_alive():
+                    # Match AsyncBridge's internal 2-second shutdown timeout
+                    # On slower systems or under high test load, threads may need
+                    # additional time to complete cleanup operations
+                    thread.join(timeout=2.0)
+
+                    # Log if thread is still alive after timeout (diagnostic info)
+                    if thread.is_alive():
+                        logger.debug(
+                            f"AsyncBridge thread {thread.name} still alive after 2s timeout. "
+                            "This may indicate a deadlock or slow cleanup."
+                        )
 
     except (ImportError, AttributeError):
         # Module not imported or doesn't exist - nothing to clean
@@ -622,19 +671,40 @@ def ensure_yaml_cache_cleanup() -> Generator[None, None, None]:
         import ClassicLib.YamlSettingsCache
         from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
-        # Clear singleton instance to ensure fresh state for next test
-        # This is critical for parallel testing with pytest-xdist
-        if hasattr(YamlSettingsCache, "_instance"):
-            YamlSettingsCache._instance = None
-
-        # Also clear the module-level yaml_cache reference
+        # Clear caches BEFORE clearing singleton reference
+        # This ensures we access cache data while the instance is still valid
         if hasattr(ClassicLib.YamlSettingsCache, "yaml_cache"):
             cache = ClassicLib.YamlSettingsCache.yaml_cache
-            # Clear internal caches if they exist
-            if hasattr(cache, "_async_core") and hasattr(cache._async_core, "cache"):
-                cache._async_core.cache.settings_cache.clear()
-                cache._async_core.cache.file_mod_times.clear()
-                cache._async_core.cache.path_cache.clear()
+
+            # Only proceed if cache is not None
+            if cache is not None:
+                # Clear internal caches if they exist
+                # Use try-except to handle partially initialized instances
+                try:
+                    if hasattr(cache, "_async_core") and cache._async_core is not None:
+                        async_core = cache._async_core
+
+                        if hasattr(async_core, "cache") and async_core.cache is not None:
+                            core_cache = async_core.cache
+
+                            # Clear all cache dictionaries
+                            if hasattr(core_cache, "settings_cache"):
+                                core_cache.settings_cache.clear()
+
+                            if hasattr(core_cache, "file_mod_times"):
+                                core_cache.file_mod_times.clear()
+
+                            if hasattr(core_cache, "path_cache"):
+                                core_cache.path_cache.clear()
+
+                except (AttributeError, TypeError) as e:
+                    # Silently handle cases where cache was partially initialized
+                    # or already cleaned up by another fixture
+                    pass
+
+        # NOW clear the singleton reference (after cache cleanup)
+        if hasattr(YamlSettingsCache, "_instance"):
+            YamlSettingsCache._instance = None
 
     except (ImportError, AttributeError):
         # Module not imported or doesn't exist - nothing to clean
