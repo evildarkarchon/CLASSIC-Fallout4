@@ -27,7 +27,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -45,7 +45,7 @@ class PerformanceReportGenerator:
     4. Creating deployment-ready documentation
     """
 
-    def __init__(self, output_dir: Path = None, verbose: bool = False):
+    def __init__(self, output_dir: Optional[Path] = None, verbose: bool = False):
         self.project_root = project_root
         self.output_dir = output_dir or (self.project_root / "reports")
         self.verbose = verbose
@@ -71,19 +71,29 @@ class PerformanceReportGenerator:
         self.log("Checking Rust component availability...")
 
         try:
-            import classic_core
+            from ClassicLib.integration.detector import get_available_components
+
+            info = get_available_components()
+            components = info.get("components", {})
+            versions = info.get("versions", {})
+
+            # Count available modules (true values in components dict)
+            available_count = sum(1 for v in components.values() if v)
 
             availability = {
-                "rust_available": True,
-                "classic_core_version": getattr(classic_core, "__version__", "unknown"),
-                "available_modules": [attr for attr in dir(classic_core) if not attr.startswith("_")],
-                "scanlog_available": hasattr(classic_core, "scanlog"),
+                "rust_available": available_count > 0,
+                "architecture_type": "modular",  # Replaces monolithic classic_core
+                "available_modules": [k for k, v in components.items() if v],
+                "scanlog_available": components.get("parser", False),  # Parser is part of scanlog
+                "versions": versions,
             }
 
             if availability["scanlog_available"]:
-                availability["scanlog_components"] = [attr for attr in dir(classic_core.scanlog) if not attr.startswith("_")]
+                # List components that are part of scanlog (parser, formid_analyzer, etc.)
+                scanlog_keys = ["parser", "formid_analyzer", "plugin_analyzer", "record_scanner"]
+                availability["scanlog_components"] = [k for k in scanlog_keys if components.get(k)]
 
-            self.log(f"✅ Rust components available: {len(availability['available_modules'])} modules")
+            self.log(f"✅ Rust components available: {available_count} modules")
             return availability
 
         except ImportError as e:
@@ -610,6 +620,7 @@ Examples:
             generator.benchmark_results = {}  # Would load existing results
             generator.analysis_results = generator.analyze_benchmark_results(generator.benchmark_results)
 
+            output_file = None
             if args.format == "markdown":
                 output_file = generator.generate_markdown_report(generator.analysis_results)
             elif args.format == "html":
@@ -619,7 +630,8 @@ Examples:
             elif args.format == "summary":
                 output_file = generator.generate_executive_summary(generator.analysis_results)
 
-            print(f"✅ {args.format} report generated: {output_file}")
+            if output_file:
+                print(f"✅ {args.format} report generated: {output_file}")
 
     except KeyboardInterrupt:
         print("\n⚠️ Report generation interrupted by user")

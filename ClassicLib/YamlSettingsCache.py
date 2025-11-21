@@ -82,7 +82,7 @@ class YamlSettingsCache:
         """
         self._bridge: AsyncBridge | None = None
         self._async_core: AsyncYamlSettingsCore | None = None
-        self._init_lock = threading.Lock()
+        self._init_lock = threading.RLock()
 
     def _get_bridge(self) -> AsyncBridge:
         """Get or create AsyncBridge instance lazily.

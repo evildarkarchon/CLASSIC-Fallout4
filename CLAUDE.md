@@ -13,9 +13,6 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a high-performance
 ### Installation & Distribution
 - **DO NOT use `pip install`** for normal use (not published to PyPI)
 - **Exception**: `uv pip install -e . --force-reinstall` for Rust development only
-- **Supported methods**:
-  1. PyInstaller executables for end users
-  2. `uvx --from github:evildarkarchon/CLASSIC-Fallout4 classic` for developers
 
 ### Development Setup
 ```bash
@@ -30,8 +27,8 @@ uv run python CLASSIC_ScanLogs.py   # CLI
 
 # Testing (use terminal, not VS Code test tool)
 uv run pytest -n auto               # All tests, parallel
-uv run pytest -n 4 -m "unit and not slow"  # Quick unit tests
-uv run pytest -n 4 -m "integration"        # Integration tests
+uv run pytest -n auto -m "unit and not slow"  # Quick unit tests
+uv run pytest -n auto -m "integration"        # Integration tests
 uv run pytest tests/rust_integration/ -v   # Rust integration tests
 
 # Linting

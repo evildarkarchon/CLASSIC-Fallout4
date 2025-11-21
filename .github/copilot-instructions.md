@@ -81,3 +81,6 @@ The project uses a strict layered architecture to separate concerns and maximize
 - `rust/Cargo.toml`: Rust workspace definition.
 - `pyproject.toml`: Python dependencies and tool config.
 - `rebuild_rust.ps1`: Script to rebuild and install Rust extensions.
+
+## Miscellaneous
+- For reasons unknown, PyTest can only reliably be run with the `python -m` method. Trying to run pytest directly results in a `Failed to canonicalize script path` error. Always use `uv run python -m pytest ...` to run Python tests.

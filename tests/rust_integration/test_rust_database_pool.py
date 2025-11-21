@@ -68,6 +68,7 @@ def create_test_database(db_path: Path, table_name: str = "Fallout4") -> None:
 
     conn.commit()
     conn.close()
+    time.sleep(0.1)  # Ensure file handle is released
 
 
 @pytest.mark.skipif(not RUST_CORE_AVAILABLE, reason="Rust core module not available")
@@ -307,12 +308,12 @@ class TestRustAsyncDatabasePool:
         if hasattr(pool, "initialize"):
             if RUST_AVAILABLE and hasattr(pool, "_rust_pool"):
                 # Rust version can take paths
-                await pool.initialize([str(db_path)])
+                await pool.initialize()
             else:
                 # Python version uses global DB_PATHS
                 from unittest.mock import patch
 
-                with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+                with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
                     await pool.initialize()
 
         # Verify it's the Rust implementation if available
@@ -328,14 +329,15 @@ class TestRustAsyncDatabasePool:
 
         # Initialize the pool
         if hasattr(pool, "initialize"):
-            await pool.initialize([str(db_path)])
+            await pool.initialize()
 
         # Test context manager if available
         if hasattr(pool, "__aenter__"):
-            async with pool:
-                # Should be able to query
-                result = await pool.get_entry("00012345", "Fallout4.esm")
-                assert result == "Power Armor Frame"
+            with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):
+                async with pool:
+                    # Should be able to query
+                    result = await pool.get_entry("00012345", "Fallout4.esm")
+                    assert result == "Power Armor Frame"
         else:
             # Test without context manager
             result = await pool.get_entry("00012345", "Fallout4.esm")
@@ -349,12 +351,12 @@ class TestRustAsyncDatabasePool:
         pool = get_database_pool()
         if hasattr(pool, "initialize"):
             if RUST_WRAPPER_AVAILABLE and isinstance(pool, RustAsyncDatabasePool):
-                await pool.initialize([str(db_path)])
+                await pool.initialize()
             else:
-                with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+                with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
                     await pool.initialize()
 
-        with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
+        with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):
             result = await pool.get_entry("00023456", "DLCCoast.esm")
             assert result == "Fog Condenser"
 
@@ -370,7 +372,7 @@ class TestRustAsyncDatabasePool:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+        with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
@@ -380,7 +382,7 @@ class TestRustAsyncDatabasePool:
                 ("00045678", "TestMod.esp"),
             ]
 
-            with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
+            with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):
                 results = await pool.get_entries_batch(pairs)
 
                 assert len(results) == 3
@@ -393,7 +395,7 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("ClassicLib.Constants.DB_PATHS", [db_path]):
+        with patch("ClassicLib.rust.database_rust.DB_PATHS", [db_path]):
             pool = RustAsyncDatabasePool(cache_ttl_seconds=60)
             await pool.initialize()
 
@@ -418,7 +420,7 @@ class TestRustAsyncDatabasePool:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+        with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
@@ -430,7 +432,7 @@ class TestRustAsyncDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        with patch("ClassicLib.Constants.DB_PATHS", [db_path]):
+        with patch("ClassicLib.rust.database_rust.DB_PATHS", [db_path]):
             manager1 = DatabasePoolManager()
             manager2 = DatabasePoolManager()
 
@@ -454,13 +456,13 @@ class TestRustAsyncDatabasePool:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+        with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
             async def worker(worker_id):
                 results = []
-                with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
+                with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):
                     for i in range(10):
                         formid = f"{12345 + worker_id:08}"
                         result = await pool.get_entry(formid, "Fallout4.esm")
@@ -527,11 +529,11 @@ class TestDatabasePoolPerformance:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.Constants.DB_PATHS", (db_path,)):
+        with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()
             await pool.initialize()
 
-            with patch("ClassicLib.registry.GlobalRegistry.get_game", return_value="Fallout4"):
+            with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):
                 # Warm up cache
                 await pool.get_entry("00012345", "Fallout4.esm")
 

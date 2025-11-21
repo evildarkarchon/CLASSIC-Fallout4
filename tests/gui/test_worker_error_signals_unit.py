@@ -40,7 +40,7 @@ class TestCrashLogsScanWorkerErrorSignals:
                 worker.run()
 
                 # Wait for signals to be processed
-                qtbot.wait(100)
+                # qtbot.wait(100)
 
         # Verify error_occurred signal was emitted
         assert len(error_occurred_spy) == 1
@@ -66,7 +66,7 @@ class TestCrashLogsScanWorkerErrorSignals:
         with patch.object(worker, "_perform_crash_logs_scan", side_effect=ValueError("Bad value")):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 worker.run()
-                qtbot.wait(100)
+                #qtbot.wait(100)
 
         # Verify traceback is present
         assert error_details is not None
@@ -94,7 +94,7 @@ class TestCrashLogsScanWorkerErrorSignals:
         with patch.object(worker, "_perform_crash_logs_scan", side_effect=RuntimeError("Error")):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 worker.run()
-                qtbot.wait(100)
+                #qtbot.wait(100)
 
         # Both signals should be emitted
         assert audio_emitted, "Audio signal should be emitted when audio is enabled"
@@ -117,7 +117,7 @@ class TestCrashLogsScanWorkerErrorSignals:
                 with pytest.raises(RuntimeError):
                     worker.run()
 
-                qtbot.wait(100)
+                #qtbot.wait(100)
 
         # Error dialog signal should still be emitted before re-raise
         assert error_emitted, "Error dialog signal should be emitted even when audio disabled"
@@ -147,7 +147,7 @@ class TestGameFilesScanWorkerErrorSignals:
         with patch.object(worker, "_process_game_results", side_effect=test_error):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 worker.run()
-                qtbot.wait(100)
+                #qtbot.wait(100)
 
         # Verify error_occurred signal was emitted
         assert len(error_occurred_spy) == 1
@@ -173,7 +173,7 @@ class TestGameFilesScanWorkerErrorSignals:
         with patch.object(worker, "_process_game_results", side_effect=PermissionError(error_msg)):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 worker.run()
-                qtbot.wait(100)
+                #qtbot.wait(100)
 
         # Verify message format
         assert captured_message is not None
@@ -200,7 +200,7 @@ class TestGameFilesScanWorkerErrorSignals:
         with patch.object(worker, "_process_game_results", side_effect=RuntimeError("Error")):
             with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
                 worker.run()
-                qtbot.wait(100)
+                #qtbot.wait(100)
 
         # Both signals should be emitted
         assert error_emitted, "Error signal should be emitted"

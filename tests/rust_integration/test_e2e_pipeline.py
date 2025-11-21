@@ -115,6 +115,19 @@ class TestE2EPipeline:
         # Mock record patterns for scanning
         mock_yaml.record_patterns = ["TESForm", "BGSKeyword", "TESObjectSTAT"]
 
+        # Initialize list attributes
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+        
+        # Initialize dict attributes
+        mock_yaml.game_mods_core = {}
+        mock_yaml.game_mods_conf = {}
+        mock_yaml.game_mods_freq = {}
+        mock_yaml.game_mods_solu = {}
+        mock_yaml.suspects_error_list = {}
+        mock_yaml.suspects_stack_list = {}
+
         return mock_yaml
 
     @pytest.fixture
@@ -134,7 +147,7 @@ class TestE2EPipeline:
         AsyncBridge.get_instance()
 
         # Create orchestrator with test configuration
-        orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
 
         return orchestrator
 
@@ -434,7 +447,7 @@ PLUGINS:
         corrupted_data = crash_data[:10] + ["CORRUPTED LINE"] * 5 + crash_data[10:]
 
         # Create orchestrator
-        orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
 
         # Process should not crash even with corrupted data
         try:
@@ -467,7 +480,7 @@ PLUGINS:
         crash_data_sets = []
 
         for sample_name, log_path in list(crash_log_samples.items())[:3]:  # Limit to 3 for performance
-            orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
+            orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
             crash_data = self._read_crash_log(log_path)
 
             orchestrators.append(orchestrator)
@@ -567,7 +580,7 @@ class TestE2EPerformance:
         crash_data = self._read_crash_log(log_path)
 
         # Measure Rust performance
-        orchestrator = OrchestratorCore(yamldata=mock_yamldata, show_values=True, db_exists=True)
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
 
         rust_times = []
         for _ in range(3):  # Run multiple times for average

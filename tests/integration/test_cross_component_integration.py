@@ -65,7 +65,7 @@ class TestGUIToRustIntegration:
     @pytest.mark.asyncio
     async def test_gui_scan_with_rust_parser(self):
         """Test GUI initiating scan that uses Rust parser."""
-        from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.integration.factory import get_parser
@@ -272,7 +272,7 @@ class TestTUIAsyncIntegration:
     @pytest.mark.asyncio
     async def test_tui_async_ui_updates(self):
         """Test TUI updating UI components asynchronously."""
-        from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
 
@@ -426,7 +426,7 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_message_passing_between_components(self):
         """Test message passing between GUI, backend, and report components."""
-        from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         from ClassicLib.GlobalRegistry import GlobalRegistry
 
@@ -479,7 +479,7 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_error_propagation_across_components(self):
         """Test error propagation from backend to UI components."""
-        from ClassicLib.MessageHandler.MessageHandler import MessageHandler
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         from ClassicLib.AsyncBridge import AsyncBridge
 

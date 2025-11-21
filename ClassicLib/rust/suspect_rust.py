@@ -13,6 +13,7 @@ Key API Translations:
 
 from __future__ import annotations
 
+import json
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.integration.detector import detect_component
@@ -32,7 +33,7 @@ class RustAcceleratedSuspectScanner:
     Rust-accelerated suspect scanner with Python API compatibility.
 
     This wrapper bridges the API differences between Rust and Python implementations:
-    - Rust constructor takes suspects lists directly
+    - Rust constructor takes suspects lists directly (as JSON strings)
     - Python constructor takes yamldata object
     - Rust returns list[str], Python returns ReportFragment
     """
@@ -56,7 +57,18 @@ class RustAcceleratedSuspectScanner:
         if self._use_rust and RustSuspectScanner is not None:
             # Extract suspects lists from yamldata for Rust constructor
             suspects_error_list = getattr(yamldata, "suspects_error_list", {})
-            suspects_stack_list = getattr(yamldata, "suspects_stack_list", {})
+            raw_stack_list = getattr(yamldata, "suspects_stack_list", {})
+            
+            # Rust expects Dict[String, List[String]], but we have Dict[String, List[Dict]]
+            # Convert inner dictionaries to JSON strings if they are dicts (for legacy compat)
+            # If they are already strings (as required by Python impl), keep them.
+            suspects_stack_list = {}
+            for k, v in raw_stack_list.items():
+                if isinstance(v, list):
+                    suspects_stack_list[k] = [json.dumps(item) if isinstance(item, dict) else str(item) for item in v]
+                else:
+                    suspects_stack_list[k] = v
+
             self._scanner = RustSuspectScanner(suspects_error_list, suspects_stack_list)  # type: ignore[misc]
         else:
             # Fallback to Python implementation

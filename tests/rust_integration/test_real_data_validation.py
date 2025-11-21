@@ -181,6 +181,11 @@ class TestRealCrashLogValidation:
             "BGSCameraPath",
         ]
 
+        # Initialize list attributes
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+
         return mock_yaml
 
     def _create_realistic_crash_log(self) -> str:

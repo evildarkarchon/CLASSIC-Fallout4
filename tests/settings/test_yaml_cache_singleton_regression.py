@@ -135,21 +135,38 @@ class TestSingletonBehavior:
         Note: The module-level yaml_cache is created at import time using get_instance().
         """
         # Import the module to ensure yaml_cache is initialized
-        import ClassicLib.YamlSettingsCache
+        import importlib
+        import sys
+        
+        # Force reload to ensure we get the module? No, that might break singletons.
+        # Just try to get it.
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
+        
+        print(f"DEBUG: YamlSettingsCacheModule type: {type(YamlSettingsCacheModule)}")
+        print(f"DEBUG: sys.modules['ClassicLib.YamlSettingsCache']: {sys.modules.get('ClassicLib.YamlSettingsCache')}")
 
         # Get the singleton instance AFTER import
         singleton_instance = YamlSettingsCache.get_instance()
 
         # Get the module-level cache
-        module_cache = ClassicLib.YamlSettingsCache.yaml_cache
+        # Handle case where it might resolve to class (though it shouldn't)
+        if isinstance(YamlSettingsCacheModule, type):
+             # If it's the class, we can't get the module variable from it easily unless we look at sys.modules
+             # But wait, if sys.modules has the class, we are in trouble.
+             pytest.fail(f"ClassicLib.YamlSettingsCache resolved to a class: {YamlSettingsCacheModule}")
+             
+        module_cache = getattr(YamlSettingsCacheModule, "yaml_cache", None)
+        assert module_cache is not None, "yaml_cache not found in module"
 
-        # They should be the same instance after the module initializes
-        # The module creates yaml_cache at import time using get_instance()
-        assert module_cache is singleton_instance
+        # The module_cache is a Proxy object that forwards calls to the singleton
+        # It is NOT the singleton instance itself, but acts like it
+        # Calling the proxy returns the singleton
+        assert module_cache() is singleton_instance
 
-        # Verify they share the same internal state
-        assert module_cache._bridge is singleton_instance._bridge
-        assert module_cache._async_core is singleton_instance._async_core
+        # Accessing attributes on the proxy should return attributes from the singleton
+        # Accessing private attributes requires initialization
+        assert module_cache._get_bridge() is singleton_instance._get_bridge()
+        assert module_cache._get_async_core() is singleton_instance._get_async_core()
 
 
 class TestFixtureIsolation:
@@ -194,8 +211,9 @@ class TestFixtureIsolation:
         assert YamlSettingsCache.get_instance() is clean_yaml_cache_singleton
 
         # Add some test data to verify cleanup
-        if hasattr(clean_yaml_cache_singleton, "_async_core"):
-            clean_yaml_cache_singleton._async_core.cache.settings_cache["test_key"] = "test_value"
+        # Ensure initialized before access
+        core = clean_yaml_cache_singleton._get_async_core()
+        core.cache.settings_cache["test_key"] = "test_value"
 
     def test_fixture_nested_usage(self, clean_yaml_cache_singleton) -> None:
         """
@@ -226,15 +244,16 @@ class TestFixtureIsolation:
         cache = clean_yaml_cache_singleton
 
         # Add data to internal caches
-        if hasattr(cache, "_async_core") and hasattr(cache._async_core, "cache"):
-            cache._async_core.cache.settings_cache["test_setting"] = "value"
-            cache._async_core.cache.file_mod_times["test_file"] = 123456
-            if hasattr(cache._async_core.cache, "path_cache"):
-                cache._async_core.cache.path_cache[YAML.TEST] = Path("/test/path")
+        # Ensure initialized
+        core = cache._get_async_core()
+        core.cache.settings_cache["test_setting"] = "value"
+        core.cache.file_mod_times["test_file"] = 123456
+        if hasattr(core.cache, "path_cache"):
+            core.cache.path_cache[YAML.TEST] = Path("/test/path")
 
         # In actual fixture cleanup, these would be cleared
         # Here we verify they can be accessed and modified
-        assert len(cache._async_core.cache.settings_cache) > 0
+        assert len(core.cache.settings_cache) > 0
 
 
 class TestThreadSafetyParallel:
@@ -257,13 +276,15 @@ class TestThreadSafetyParallel:
                 instance = YamlSettingsCache.get_instance()
 
                 # Perform some operations
-                if hasattr(instance, "_async_core"):
-                    # Simulate cache operations
-                    cache_key = f"worker_{worker_id}_key"
-                    instance._async_core.cache.settings_cache[cache_key] = f"value_{worker_id}"
+                # Ensure initialized
+                core = instance._get_async_core()
+                
+                # Simulate cache operations
+                cache_key = f"worker_{worker_id}_key"
+                core.cache.settings_cache[cache_key] = f"value_{worker_id}"
 
-                    # Verify write was successful
-                    assert instance._async_core.cache.settings_cache[cache_key] == f"value_{worker_id}"
+                # Verify write was successful
+                assert core.cache.settings_cache[cache_key] == f"value_{worker_id}"
 
                 results[worker_id] = id(instance)
             except Exception as e:
@@ -306,16 +327,18 @@ class TestThreadSafetyParallel:
                     key = f"thread_{thread_id}_item_{i}"
                     value = f"value_{thread_id}_{i}"
 
-                    if hasattr(cache, "_async_core"):
-                        cache._async_core.cache.settings_cache[key] = value
+                    # Ensure initialized
+                    # We access _get_async_core here which is thread-safe
+                    core = cache._get_async_core()
+                    core.cache.settings_cache[key] = value
 
-                        # Read operation - verify our write
-                        read_value = cache._async_core.cache.settings_cache.get(key)
-                        assert read_value == value, f"Data corruption: expected {value}, got {read_value}"
+                    # Read operation - verify our write
+                    read_value = core.cache.settings_cache.get(key)
+                    assert read_value == value, f"Data corruption: expected {value}, got {read_value}"
 
-                        # Read other thread's data (if exists)
-                        other_key = f"thread_{(thread_id + 1) % 5}_item_{i}"
-                        _ = cache._async_core.cache.settings_cache.get(other_key)
+                    # Read other thread's data (if exists)
+                    other_key = f"thread_{(thread_id + 1) % 5}_item_{i}"
+                    _ = core.cache.settings_cache.get(other_key)
 
             except Exception as e:
                 errors.append((thread_id, e))
@@ -335,13 +358,13 @@ class TestThreadSafetyParallel:
         assert len(errors) == 0, f"Errors during concurrent operations: {errors}"
 
         # Verify all data was written correctly
-        if hasattr(cache, "_async_core"):
-            for thread_id in range(5):
-                for i in range(iterations):
-                    key = f"thread_{thread_id}_item_{i}"
-                    expected_value = f"value_{thread_id}_{i}"
-                    actual_value = cache._async_core.cache.settings_cache.get(key)
-                    assert actual_value == expected_value
+        core = cache._get_async_core()
+        for thread_id in range(5):
+            for i in range(iterations):
+                key = f"thread_{thread_id}_item_{i}"
+                expected_value = f"value_{thread_id}_{i}"
+                actual_value = core.cache.settings_cache.get(key)
+                assert actual_value == expected_value
 
     def test_async_bridge_interaction(self) -> None:
         """
@@ -360,7 +383,7 @@ class TestThreadSafetyParallel:
         assert bridge_instance is not None
 
         # Verify YamlSettingsCache uses the bridge from the same thread
-        assert yaml_cache_instance._bridge is bridge_instance
+        assert yaml_cache_instance._get_bridge() is bridge_instance
 
         # Test that YamlCache is singleton but AsyncBridge is thread-local
         results = []
@@ -375,7 +398,7 @@ class TestThreadSafetyParallel:
                 "thread_id": threading.get_ident(),
                 "cache_id": id(cache),
                 "bridge_id": id(bridge),
-                "cache_bridge_id": id(cache._bridge),
+                "cache_bridge_id": id(cache._get_bridge()),
             })
 
         threads = [threading.Thread(target=test_thread) for _ in range(10)]
@@ -417,12 +440,18 @@ class TestBackwardCompatibility:
         mock_cache.async_yaml_settings.side_effect = lambda t, s, k, v=None: {"test.key": "value", "test.number": 42}.get(k)
 
         # Patch the module-level yaml_cache
-        with patch("ClassicLib.YamlSettingsCache.yaml_cache", mock_cache):
-            # Test yaml_settings function
-            result = yaml_settings(str, YAML.TEST, "test.key")
+        # Use importlib to ensure we target the module
+        import importlib
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
+        
+        # We need to patch _get_yaml_cache because yaml_settings calls it directly
+        # Patching 'yaml_cache' variable won't work for internal calls
+        with patch.object(YamlSettingsCacheModule, "_get_yaml_cache", return_value=mock_cache):
+            # Test yaml_settings function from the module
+            result = YamlSettingsCacheModule.yaml_settings(str, YAML.TEST, "test.key")
             assert result == "value"
 
-            result = yaml_settings(int, YAML.TEST, "test.number")
+            result = YamlSettingsCacheModule.yaml_settings(int, YAML.TEST, "test.number")
             assert result == 42
 
     def test_global_registry_integration(self) -> None:
@@ -433,14 +462,30 @@ class TestBackwardCompatibility:
         other components to access.
         """
         # Import should trigger registration
+        import importlib
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
+
+        # Manually ensure registration if cleared (since module load only happens once)
+        # Accessing an attribute on the proxy triggers _get_yaml_cache() which registers the real instance
+        _ = getattr(YamlSettingsCacheModule.yaml_cache, "any_attribute", None)
 
         # Verify registration in GlobalRegistry
         assert GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE)
         registered_cache = GlobalRegistry.get(GlobalRegistry.Keys.YAML_CACHE)
 
         # Should be the same as singleton and module-level instances
-        assert registered_cache is yaml_cache
-        assert registered_cache is YamlSettingsCache.get_instance()
+        # Note: module.yaml_cache is a proxy in the new implementation, 
+        # but get_instance() returns the real instance.
+        # The proxy returns the real instance when called or accessed.
+        # GlobalRegistry might store the proxy or the real instance depending on implementation.
+        # _get_yaml_cache() registers the real instance.
+        
+        # Force resolution
+        real_cache = YamlSettingsCache.get_instance()
+        
+        # The registered object should be the real cache OR the proxy
+        # Based on _get_yaml_cache implementation, it registers the real instance
+        assert registered_cache is real_cache
 
     def test_existing_test_patterns_work(self, mock_yaml_settings) -> None:
         """
@@ -457,7 +502,11 @@ class TestBackwardCompatibility:
 
         # The mock should intercept calls when patched properly
         # The mock_yaml_settings fixture patches the module function
-        result = mock_yaml_settings(str, YAML.TEST, "any.key")
+        # We need to ensure we call the function from the module to see the patch
+        import importlib
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
+        
+        result = YamlSettingsCacheModule.yaml_settings(str, YAML.TEST, "any.key")
         assert result == "mocked_value"
 
     def test_cache_property_access(self) -> None:
@@ -476,10 +525,11 @@ class TestBackwardCompatibility:
         assert hasattr(cache, "file_mod_times")
 
         # They should return the correct objects
-        if hasattr(cache, "_async_core"):
-            assert cache.cache is cache._async_core.cache
-            assert cache.settings_cache is cache._async_core.cache.settings_cache
-            assert cache.file_mod_times is cache._async_core.cache.file_mod_times
+        # Ensure initialized
+        core = cache._get_async_core()
+        assert cache.cache is core.cache
+        assert cache.settings_cache is core.cache.settings_cache
+        assert cache.file_mod_times is core.cache.file_mod_times
 
 
 class TestEdgeCases:
@@ -595,16 +645,16 @@ class TestEdgeCases:
         ]
 
         # Mock the async core to return test values
-        if hasattr(cache, "_async_core"):
+        # Ensure initialized using async method
+        core = await cache._ensure_async_core_async()
 
-            async def mock_batch_get(reqs):
-                return ["value1", 42, True]
+        async def mock_batch_get(reqs):
+            return ["value1", 42, True]
 
-            cache._async_core.batch_get_settings = mock_batch_get
-
-        # This should work without issues
-        with patch.object(cache, "batch_get_settings", return_value=["value1", 42, True]):
-            results = cache.batch_get_settings(requests)
+        # Mock the method on the core instance
+        with patch.object(core, "batch_get_settings", side_effect=mock_batch_get):
+            # Use async method directly
+            results = await cache.batch_get_settings_async(requests)
             assert results == ["value1", 42, True]
 
     @pytest.mark.skip(reason="Multiprocessing test fails on Windows due to pickling issues")
@@ -640,8 +690,9 @@ class TestRegressionScenarios:
             instance = YamlSettingsCache.get_instance()
 
             # Use it
-            if hasattr(instance, "_async_core"):
-                instance._async_core.cache.settings_cache["temp"] = "data"
+            # Ensure initialized
+            core = instance._get_async_core()
+            core.cache.settings_cache["temp"] = "data"
 
             # Clear it (simulate fixture cleanup)
             YamlSettingsCache._instance = None
@@ -695,8 +746,8 @@ class TestRegressionScenarios:
         cache = clean_yaml_cache_singleton
 
         # Should have AsyncBridge
-        assert hasattr(cache, "_bridge")
-        assert cache._bridge is not None
+        # Ensure initialized
+        assert cache._get_bridge() is not None
 
         # Test async operation through bridge
         async def async_test_operation():

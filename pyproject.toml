@@ -23,7 +23,6 @@ dependencies = [
     "typed-argument-parser>=1.10.1",
     "packaging>=25.0",
     "aiofiles>=24.1.0",
-    "pytest>=8.4.0",
     "aiosqlite>=0.21.0",
     "pefile<2024.8.26",
     "pyside6>=6.8.0",

@@ -159,7 +159,26 @@ class FFIProfiler:
             max_call_history: Maximum number of calls to store in history
         """
         # Configuration
-        self.rust_module_patterns = rust_module_patterns or ["classic_core", "_rust", "rust_", "pyo3_", "maturin_"]
+        self.rust_module_patterns = rust_module_patterns or [
+            "classic_scanlog",
+            "classic_database",
+            "classic_file_io",
+            "classic_yaml",
+            "classic_path",
+            "classic_config",
+            "classic_perf",
+            "classic_registry",
+            "classic_resource",
+            "classic_settings",
+            "classic_update",
+            "classic_version",
+            "classic_web",
+            "classic_xse",
+            "_rust",
+            "rust_",
+            "pyo3_",
+            "maturin_",
+        ]
         self.memory_sampling_interval = memory_sampling_interval
         self.enable_gil_monitoring = enable_gil_monitoring
         self.max_call_history = max_call_history
@@ -194,7 +213,7 @@ class FFIProfiler:
         Determine if a frame represents a call to Rust code.
 
         This uses heuristics to identify Rust calls:
-        1. Module name patterns (classic_core, _rust, etc.)
+        1. Module name patterns (classic_scanlog, _rust, etc.)
         2. File path analysis
         3. Function name patterns
         """

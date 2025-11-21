@@ -100,6 +100,16 @@ def mock_scanlog_info():
             self.formid_plugins_always_scan = ["Fallout4.esm"]
             self.formid_plugins_all_scan = False
 
+            # Version info
+            self.game_version = "1.10.163"
+            self.game_version_vr = "1.2.72"
+            self.game_version_new = "1.10.984"
+
+            # Ignore lists
+            self.game_ignore_plugins = []
+            self.game_ignore_records = []
+            self.ignore_list = []
+
         def get(self, key, default=None):
             """Allow dict-like access."""
             return getattr(self, key, default)
@@ -221,8 +231,8 @@ class PerformanceTimer:
     """Helper class for performance timing in tests."""
 
     def __init__(self):
-        self.elapsed = 0
-        self.start_time = 0
+        self.elapsed = 0.0
+        self.start_time = 0.0
 
     def __enter__(self):
         self.start_time = time.perf_counter()

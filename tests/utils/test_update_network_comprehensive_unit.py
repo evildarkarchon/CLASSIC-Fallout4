@@ -726,7 +726,7 @@ class TestUpdateChecking:
         with (
             patch("ClassicLib.Update.yaml_settings") as mock_yaml_settings,
             patch("ClassicLib.Update.classic_settings") as mock_classic_settings,
-            patch("ClassicLib.Update.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game,
             patch("ClassicLib.Update.logger") as mock_logger,
         ):
             # Don't mock the message functions since MessageHandler is initialized
@@ -735,8 +735,7 @@ class TestUpdateChecking:
             yield {
                 "yaml_settings": mock_yaml_settings,
                 "classic_settings": mock_classic_settings,
-                "registry": mock_registry,
-                "msg_info": msg_info,
+                "get_game": mock_get_game,
                 "msg_warning": msg_warning,
                 "msg_success": msg_success,
                 "msg_error": msg_error,
@@ -795,7 +794,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning same version
         # We need to patch aiohttp.ClientSession to control the network calls
@@ -838,7 +837,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning newer version
         with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
@@ -870,7 +869,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning newer version
         with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
@@ -902,7 +901,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock both sources
         with (
@@ -938,7 +937,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock get_latest_and_top_release_details to return None (simulating network failure)
         with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
@@ -971,7 +970,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         result = await is_latest_version(quiet=False, gui_request=False)
 
@@ -996,7 +995,7 @@ class TestUpdateChecking:
         }.get(key, default)
 
         # Mock registry
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning a version
         with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
@@ -1025,12 +1024,13 @@ class TestUpdateCheckErrorHandling:
         with (
             patch("ClassicLib.Update.yaml_settings") as mock_yaml_settings,
             patch("ClassicLib.Update.classic_settings") as mock_classic_settings,
-            patch("ClassicLib.Update.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game,
         ):
             yield {
                 "yaml_settings": mock_yaml_settings,
                 "classic_settings": mock_classic_settings,
-                "registry": mock_registry,
+                "classic_settings": mock_classic_settings,
+                "get_game": mock_get_game,
             }
 
     @pytest.mark.asyncio
@@ -1049,7 +1049,7 @@ class TestUpdateCheckErrorHandling:
             "CLASSIC_Info.is_prerelease": False,
         }.get(key, default)
 
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub failure
         with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
@@ -1075,7 +1075,7 @@ class TestUpdateCheckErrorHandling:
             "CLASSIC_Info.is_prerelease": False,
         }.get(key, default)
 
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock Nexus failure
         with patch("ClassicLib.Update.get_nexus_version") as mock_nexus:
@@ -1101,7 +1101,7 @@ class TestUpdateCheckErrorHandling:
             "CLASSIC_Info.is_prerelease": False,
         }.get(key, default)
 
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock both sources failing
         with (
@@ -1131,7 +1131,7 @@ class TestUpdateCheckErrorHandling:
             "CLASSIC_Info.is_prerelease": False,
         }.get(key, default)
 
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock partial failure - GitHub succeeds, Nexus fails
         with (
@@ -1167,7 +1167,7 @@ class TestUpdateCheckErrorHandling:
             "CLASSIC_Info.is_prerelease": False,
         }.get(key, default)
 
-        mock_dependencies["registry"].get_game.return_value = "fallout4"
+        mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock unexpected exception
         with patch("ClassicLib.Update.aiohttp.ClientSession") as mock_session_class:

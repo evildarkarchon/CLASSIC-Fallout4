@@ -67,10 +67,10 @@ class RustPluginAnalyzer:
     def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
         """
         Initializes the analyzer by deciding whether to use the Rust implementation of the
-        PluginAnalyzer from the classic_core module or a fallback Python implementation.
+        PluginAnalyzer from the classic_scanlog module or a fallback Python implementation.
 
         This constructor tries to locate and utilize the Rust-based PluginAnalyzer if it is
-        available in the classic_core module. If the Rust implementation is successfully initialized,
+        available in the classic_scanlog module. If the Rust implementation is successfully initialized,
         it is preferred as it offers significant performance advantages. If unavailable, the
         Python implementation of PluginAnalyzer is initialized as a fallback.
 
@@ -93,7 +93,7 @@ class RustPluginAnalyzer:
                 # Extract required parameters from yamldata
                 game_ignore_plugins = getattr(yamldata, "game_ignore_plugins", [])
                 ignore_list = getattr(yamldata, "ignore_list", [])
-                crashgen_name = getattr(yamldata, "crashgen_name", "")
+                crashgen_name = str(getattr(yamldata, "crashgen_name", ""))
                 # Convert Version objects to strings for Rust compatibility
                 game_version = str(getattr(yamldata, "game_version", ""))
                 game_version_vr = str(getattr(yamldata, "game_version_vr", ""))

@@ -205,8 +205,15 @@ class TestRustFCXIntegration:
             python_messages = python_handler.get_fcx_messages()
 
             # Extract content
-            rust_content = rust_messages.fragment_content if rust_messages else ""
-            python_content = python_messages.fragment_content if python_messages else ""
+            if rust_messages:
+                rust_content = "\n".join(rust_messages.content) if isinstance(rust_messages.content, (list, tuple)) else str(rust_messages.content)
+            else:
+                rust_content = ""
+
+            if python_messages:
+                python_content = "\n".join(python_messages.content) if isinstance(python_messages.content, (list, tuple)) else str(python_messages.content)
+            else:
+                python_content = ""
 
             # Verify parity
             assert rust_content == python_content, (
@@ -240,8 +247,8 @@ class TestRustFCXIntegration:
         msg2 = handler.get_fcx_messages()
 
         # Messages should be consistent after reset
-        content1 = msg1.fragment_content if msg1 else ""
-        content2 = msg2.fragment_content if msg2 else ""
+        content1 = msg1.content if msg1 else ""
+        content2 = msg2.content if msg2 else ""
 
         assert content1 == content2, "Messages changed after reset - state management issue"
 
@@ -272,9 +279,9 @@ class TestRustFCXIntegration:
             results = [f.result() for f in concurrent.futures.as_completed(futures)]
 
         # Verify all results are consistent
-        first_content = results[0].fragment_content if results[0] else ""
+        first_content = results[0].content if results[0] else ""
         for result in results[1:]:
-            content = result.fragment_content if result else ""
+            content = result.content if result else ""
             assert content == first_content, "Thread safety violation - inconsistent results"
 
     async def test_rust_fcx_error_handling(self):

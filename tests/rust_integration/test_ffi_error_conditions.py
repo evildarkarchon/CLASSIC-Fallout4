@@ -76,9 +76,9 @@ class TestFFIErrorConditions:
 
     def test_invalid_utf8_handling(self):
         """Test handling of invalid UTF-8 sequences."""
-        from ClassicLib.integration.factory import get_file_io_core
+        from ClassicLib.integration.factory import get_file_io
 
-        io_core = get_file_io_core()
+        io_core = get_file_io()
 
         # Create synthetic invalid UTF-8 data
         invalid_utf8 = b"\xff\xfe\xfd\xfc"
@@ -174,9 +174,9 @@ class TestFFIErrorConditions:
 
     def test_resource_cleanup_on_error(self):
         """Test that resources are properly cleaned up on FFI errors."""
-        from ClassicLib.integration.factory import get_file_io_core
+        from ClassicLib.integration.factory import get_file_io
 
-        io_core = get_file_io_core()
+        io_core = get_file_io()
 
         # Track resource usage
         initial_threads = threading.active_count()
@@ -296,9 +296,9 @@ class TestFFIErrorConditions:
 
     def test_path_traversal_prevention(self):
         """Test that path traversal attempts are prevented."""
-        from ClassicLib.integration.factory import get_file_io_core
+        from ClassicLib.integration.factory import get_file_io
 
-        io_core = get_file_io_core()
+        io_core = get_file_io()
 
         # Dangerous path patterns
         dangerous_paths = [
@@ -356,8 +356,8 @@ class TestFFIErrorConditions:
         dangerous_names = [
             "../../evil.dll",
             "C:\\Windows\\System32\\kernel32.dll",
-            "classic_core'; DROP TABLE users; --",
-            "classic_core\x00.dll",
+            "classic_scanlog'; DROP TABLE users; --",
+            "classic_scanlog\x00.dll",
         ]
 
         for name in dangerous_names:

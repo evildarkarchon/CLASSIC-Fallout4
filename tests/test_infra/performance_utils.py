@@ -53,6 +53,11 @@ class PerformanceTimer:
         return self.end_time - self.start_time
 
     @property
+    def elapsed(self) -> float:
+        """Alias for duration for backward compatibility."""
+        return self.duration
+
+    @property
     def result(self) -> PerformanceResult:
         """Get the performance result."""
         return PerformanceResult(name=self.name, duration=self.duration, iterations=self.iterations)

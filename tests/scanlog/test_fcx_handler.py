@@ -13,6 +13,23 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+
+
+@pytest.fixture
+def sample_config_issues():
+    """Provide a list of sample ConfigIssue objects."""
+    return [
+        ConfigIssue(
+            file_path=Path("espexplorer.ini"),
+            section="Main",
+            setting="HotKey",
+            current_value="; F10",
+            recommended_value="0x79",
+            description="Hotkey commented out",
+            severity="warning",
+        )
+    ]
 
 
 @pytest.mark.unit
@@ -54,7 +71,7 @@ class TestFCXModeHandlerReadOnly:
             assert ini_path.read_text(encoding="utf-8") == initial_content, "File content changed"
 
     @pytest.mark.asyncio
-    async def test_fcx_detects_espexplorer_hotkey_issue(self, tmp_path: Path):
+    async def test_fcx_detects_espexplorer_hotkey_issue(self, tmp_path: Path, message_handler):
         """
         Verify ESPExplorer hotkey issue detection.
 
@@ -66,17 +83,20 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration
         espexplorer_ini = tmp_path / "espexplorer.ini"
-        espexplorer_ini.write_text("[Main]\nHotKey = ; F10\n", encoding="utf-8")
+        espexplorer_ini.write_text("[General]\nHotKey = ; F10\n", encoding="utf-8")
 
         # Create ConfigFileCache with test file
-        cache = ConfigFileCache()
-        cache._config_files = {"espexplorer.ini": espexplorer_ini}
+        # Mock yaml_settings to avoid async context error during ConfigFileCache init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
+             patch("ClassicLib.ScanGame.Config.msg_error"):
+            cache = ConfigFileCache()
+            cache._config_files = {"espexplorer.ini": espexplorer_ini}
 
-        # Detect issues
-        issues = await detect_all_ini_issues_async(cache)
+            # Detect issues
+            issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
-        hotkey_issues = [issue for issue in issues if issue.setting == "HotKey" and issue.section == "Main"]
+        hotkey_issues = [issue for issue in issues if issue.setting == "HotKey" and issue.section == "General"]
 
         assert len(hotkey_issues) == 1, "ESPExplorer hotkey issue not detected"
         issue = hotkey_issues[0]
@@ -85,7 +105,7 @@ class TestFCXModeHandlerReadOnly:
         assert "commented out" in issue.description.lower()
 
     @pytest.mark.asyncio
-    async def test_fcx_detects_epo_particle_count_issue(self, tmp_path: Path):
+    async def test_fcx_detects_epo_particle_count_issue(self, tmp_path: Path, message_handler):
         """
         Verify EPO particle count issue detection.
 
@@ -99,11 +119,14 @@ class TestFCXModeHandlerReadOnly:
         epo_ini = tmp_path / "epo.ini"
         epo_ini.write_text("[Particles]\niMaxDesired = 7500\n", encoding="utf-8")
 
-        cache = ConfigFileCache()
-        cache._config_files = {"epo.ini": epo_ini}
+        # Mock yaml_settings to avoid async context error during ConfigFileCache init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
+             patch("ClassicLib.ScanGame.Config.msg_error"):
+            cache = ConfigFileCache()
+            cache._config_files = {"epo.ini": epo_ini}
 
-        # Detect issues
-        issues = await detect_all_ini_issues_async(cache)
+            # Detect issues
+            issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
         particle_issues = [issue for issue in issues if issue.setting == "iMaxDesired" and issue.section == "Particles"]
@@ -115,7 +138,7 @@ class TestFCXModeHandlerReadOnly:
         assert "particle count" in issue.description.lower()
 
     @pytest.mark.asyncio
-    async def test_fcx_detects_f4ee_head_parts_issue(self, tmp_path: Path):
+    async def test_fcx_detects_f4ee_head_parts_issue(self, tmp_path: Path, message_handler):
         """
         Verify F4EE head parts unlock issue detection.
 
@@ -127,13 +150,16 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration with locked head parts
         f4ee_ini = tmp_path / "f4ee.ini"
-        f4ee_ini.write_text("[HeadParts]\nbUnlockHeadParts = 0\n", encoding="utf-8")
+        f4ee_ini.write_text("[CharGen]\nbUnlockHeadParts = 0\n", encoding="utf-8")
 
-        cache = ConfigFileCache()
-        cache._config_files = {"f4ee.ini": f4ee_ini}
+        # Mock yaml_settings to avoid async context error during ConfigFileCache init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
+             patch("ClassicLib.ScanGame.Config.msg_error"):
+            cache = ConfigFileCache()
+            cache._config_files = {"f4ee.ini": f4ee_ini}
 
-        # Detect issues
-        issues = await detect_all_ini_issues_async(cache)
+            # Detect issues
+            issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
         headparts_issues = [issue for issue in issues if issue.setting == "bUnlockHeadParts"]
@@ -145,7 +171,7 @@ class TestFCXModeHandlerReadOnly:
         assert "head parts" in issue.description.lower()
 
     @pytest.mark.asyncio
-    async def test_fcx_detects_f4ee_face_tints_issue(self, tmp_path: Path):
+    async def test_fcx_detects_f4ee_face_tints_issue(self, tmp_path: Path, message_handler):
         """
         Verify F4EE face tints unlock issue detection.
 
@@ -157,13 +183,16 @@ class TestFCXModeHandlerReadOnly:
 
         # Create test configuration with locked face tints
         f4ee_ini = tmp_path / "f4ee.ini"
-        f4ee_ini.write_text("[HeadParts]\nbUnlockTints = 0\n", encoding="utf-8")
+        f4ee_ini.write_text("[CharGen]\nbUnlockTints = 0\n", encoding="utf-8")
 
-        cache = ConfigFileCache()
-        cache._config_files = {"f4ee.ini": f4ee_ini}
+        # Mock yaml_settings to avoid async context error during ConfigFileCache init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
+             patch("ClassicLib.ScanGame.Config.msg_error"):
+            cache = ConfigFileCache()
+            cache._config_files = {"f4ee.ini": f4ee_ini}
 
-        # Detect issues
-        issues = await detect_all_ini_issues_async(cache)
+            # Detect issues
+            issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
         tints_issues = [issue for issue in issues if issue.setting == "bUnlockTints"]
@@ -175,7 +204,7 @@ class TestFCXModeHandlerReadOnly:
         assert "tint" in issue.description.lower()
 
     @pytest.mark.asyncio
-    async def test_fcx_detects_highfps_loading_fps_issue(self, tmp_path: Path):
+    async def test_fcx_detects_highfps_loading_fps_issue(self, tmp_path: Path, message_handler):
         """
         Verify High FPS Physics Fix loading screen FPS issue detection.
 
@@ -189,11 +218,14 @@ class TestFCXModeHandlerReadOnly:
         highfps_ini = tmp_path / "highfpsphysicsfix.ini"
         highfps_ini.write_text("[Limiter]\nLoadingScreenFPS = 60.0\n", encoding="utf-8")
 
-        cache = ConfigFileCache()
-        cache._config_files = {"highfpsphysicsfix.ini": highfps_ini}
+        # Mock yaml_settings to avoid async context error during ConfigFileCache init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
+             patch("ClassicLib.ScanGame.Config.msg_error"):
+            cache = ConfigFileCache()
+            cache._config_files = {"highfpsphysicsfix.ini": highfps_ini}
 
-        # Detect issues
-        issues = await detect_all_ini_issues_async(cache)
+            # Detect issues
+            issues = await detect_all_ini_issues_async(cache)
 
         # Verify issue was detected
         fps_issues = [issue for issue in issues if issue.setting == "LoadingScreenFPS"]
@@ -269,7 +301,7 @@ class TestFCXModeHandlerReadOnly:
         messages = handler.get_fcx_messages()
 
         # Verify prompt is shown
-        content = messages.fragment_content
+        content = "".join(messages.content)
         assert "FCX MODE IS DISABLED" in content
         assert "ENABLE IT TO DETECT PROBLEMS" in content
 
@@ -298,12 +330,12 @@ class TestFCXModeHandlerReadOnly:
             messages = handler.get_fcx_messages()
 
             # Verify notice is shown
-            content = messages.fragment_content
+            content = "".join(messages.content)
             assert "FCX MODE IS ENABLED" in content
             assert "CLASSIC MUST BE RUN BY THE ORIGINAL USER" in content
 
     @pytest.mark.asyncio
-    async def test_fcx_multiple_issues_detection(self, tmp_path: Path):
+    async def test_fcx_multiple_issues_detection(self, tmp_path: Path, message_handler):
         """
         Verify FCX mode can detect multiple issues in the same scan.
 
@@ -315,23 +347,26 @@ class TestFCXModeHandlerReadOnly:
 
         # Create multiple test configurations with issues
         espexplorer_ini = tmp_path / "espexplorer.ini"
-        espexplorer_ini.write_text("[Main]\nHotKey = ; F10\n", encoding="utf-8")
+        espexplorer_ini.write_text("[General]\nHotKey = ; F10\n", encoding="utf-8")
 
         epo_ini = tmp_path / "epo.ini"
         epo_ini.write_text("[Particles]\niMaxDesired = 7500\n", encoding="utf-8")
 
         f4ee_ini = tmp_path / "f4ee.ini"
-        f4ee_ini.write_text("[HeadParts]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n", encoding="utf-8")
+        f4ee_ini.write_text("[CharGen]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n", encoding="utf-8")
 
-        cache = ConfigFileCache()
-        cache._config_files = {
-            "espexplorer.ini": espexplorer_ini,
-            "epo.ini": epo_ini,
-            "f4ee.ini": f4ee_ini,
-        }
+        # Mock yaml_settings to avoid async context error during ConfigFileCache init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
+             patch("ClassicLib.ScanGame.Config.msg_error"):
+            cache = ConfigFileCache()
+            cache._config_files = {
+                "espexplorer.ini": espexplorer_ini,
+                "epo.ini": epo_ini,
+                "f4ee.ini": f4ee_ini,
+            }
 
-        # Detect all issues
-        issues = await detect_all_ini_issues_async(cache)
+            # Detect all issues
+            issues = await detect_all_ini_issues_async(cache)
 
         # Verify multiple issues were detected
         assert len(issues) >= 4, f"Expected at least 4 issues, got {len(issues)}"
@@ -365,7 +400,7 @@ class TestFCXModeHandlerReadOnly:
             handler.check_fcx_mode()
 
             messages = handler.get_fcx_messages()
-            content = messages.fragment_content
+            content = "".join(messages.content)
 
             # Verify base messages are present
             assert "FCX MODE IS ENABLED" in content

@@ -35,7 +35,7 @@ class TestAsyncINIScanning:
 
             # Mock the async helper functions
             with (
-                patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock),
+                patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=MagicMock),
                 patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync,
                 patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect,
                 patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"),
@@ -58,7 +58,7 @@ class TestAsyncINIScanning:
             MockConfigCache.return_value = mock_cache
 
             with (
-                patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=AsyncMock),
+                patch("ClassicLib.ScanGame.ScanModInis.check_starting_console_command_async", new_callable=MagicMock),
                 patch("ClassicLib.ScanGame.ScanModInis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync,
                 patch("ClassicLib.ScanGame.ScanModInis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect,
                 patch("ClassicLib.ScanGame.ScanModInis.check_duplicate_files"),
@@ -98,16 +98,21 @@ class TestAsyncINIScanning:
     def test_scan_mod_inis_sync_wrapper(self):
         """Test synchronous wrapper calls async version correctly."""
         # Import and patch at the module level where it's used
-        with patch("ClassicLib.AsyncBridge.AsyncBridge") as MockBridge:
-            mock_bridge = MagicMock()
-            MockBridge.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.return_value = "Test Result"
+        with patch("ClassicLib.AsyncBridge.AsyncBridge") as MockBridge, \
+             patch("ClassicLib.ScanGame.ScanModInis.scan_mod_inis_async", new_callable=MagicMock) as mock_scan_async:
+            
+            mock_bridge_instance = MagicMock()
+            MockBridge.get_instance.return_value = mock_bridge_instance
+            mock_bridge_instance.run_async.return_value = "Test Result"
+            
+            # Mock return value of async function (coroutine object if not awaited, but here just passed)
+            mock_scan_async.return_value = "coroutine_obj"
 
             result = scan_mod_inis()
 
             # Verify AsyncBridge was used
             MockBridge.get_instance.assert_called_once()
-            assert mock_bridge.run_async.called
+            mock_bridge_instance.run_async.assert_called_with("coroutine_obj")
             assert result == "Test Result"
 
 
@@ -118,7 +123,9 @@ class TestConfigFileCacheAsync:
     @pytest.mark.asyncio
     async def test_get_async_loads_config(self):
         """Test get_async loads configuration when not cached."""
-        cache = ConfigFileCache()
+        # Mock yaml_settings to avoid async context error during init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+            cache = ConfigFileCache()
         cache._config_files = {"test.ini": Path("test/test.ini")}
         cache._config_file_cache = {}
 
@@ -138,7 +145,9 @@ class TestConfigFileCacheAsync:
     @pytest.mark.asyncio
     async def test_get_async_uses_cached_config(self):
         """Test get_async uses cached configuration without reloading."""
-        cache = ConfigFileCache()
+        # Mock yaml_settings to avoid async context error during init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+            cache = ConfigFileCache()
         cache._config_files = {"test.ini": Path("test/test.ini")}
 
         # Pre-populate cache
@@ -160,7 +169,9 @@ class TestConfigFileCacheAsync:
     @pytest.mark.asyncio
     async def test_load_config_async_processes_file(self):
         """Test _load_config_async processes files asynchronously."""
-        cache = ConfigFileCache()
+        # Mock yaml_settings to avoid async context error during init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+            cache = ConfigFileCache()
         cache._config_files = {"test.ini": Path("test/test.ini")}
         cache._config_file_cache = {}
 
@@ -191,7 +202,9 @@ class TestConfigFileCacheAsync:
     @pytest.mark.asyncio
     async def test_hash_caching_prevents_recalculation(self):
         """Test that file hash caching prevents recalculation."""
-        cache = ConfigFileCache()
+        # Mock yaml_settings to avoid async context error during init
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+            cache = ConfigFileCache()
         cache._hash_cache = {}
 
         test_path = Path("test/file.ini")
@@ -256,7 +269,8 @@ class TestScanGameOptimizations:
                 return (101, 102)  # Odd width
             return (100, 100)  # Even dimensions
 
-        core._read_dds_header_mmap = mock_read_header
+        # We must mock the method on the dds_processor instance, not the core
+        core.dds_processor.read_dds_header_mmap = mock_read_header
 
         # Mock the executor
         with patch("asyncio.get_event_loop") as mock_get_loop:
@@ -264,7 +278,8 @@ class TestScanGameOptimizations:
             mock_get_loop.return_value = mock_loop
 
             # Mock executor to call our function directly
-            mock_loop.run_in_executor = AsyncMock(side_effect=lambda executor, func: func())
+            # Accept arbitrary arguments to handle executor, func, and args
+            mock_loop.run_in_executor = AsyncMock(side_effect=lambda executor, func, *args: func(*args))
 
             await core._check_dds_batch_async(dds_files[:10], issue_lists, issue_locks)
 

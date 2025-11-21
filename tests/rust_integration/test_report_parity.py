@@ -195,7 +195,7 @@ class TestReportParity:
 
                 # Create Python fragment
                 start_time = time.perf_counter()
-                python_fragment = ReportFragment(fragment_name)
+                python_fragment = ReportFragment(fragment_name, has_content=False)
                 python_fragment.fragment_content = content
                 python_fragment.fragment_type = fragment_type
                 python_fragment.priority = priority
@@ -449,11 +449,11 @@ class TestReportParity:
         """
         # Create test data for complete report assembly
         test_fragments = [
-            ReportFragment("Header Fragment"),
-            ReportFragment("Plugin Analysis"),
-            ReportFragment("FormID Analysis"),
-            ReportFragment("Statistics"),
-            ReportFragment("Errors and Warnings"),
+            ReportFragment("Header Fragment", has_content=True),
+            ReportFragment("Plugin Analysis", has_content=True),
+            ReportFragment("FormID Analysis", has_content=True),
+            ReportFragment("Statistics", has_content=True),
+            ReportFragment("Errors and Warnings", has_content=True),
         ]
 
         # Configure fragments with test content
@@ -584,7 +584,7 @@ class TestReportParity:
         large_fragment_set = []
 
         for i in range(100):
-            fragment = ReportFragment(f"Fragment {i}")
+            fragment = ReportFragment(f"Fragment {i}", has_content=True)
             fragment.fragment_content = f"## Section {i}\n\n" + "\n".join([
                 f"- Item {j}: Data point {j} for section {i}" for j in range(20)
             ])

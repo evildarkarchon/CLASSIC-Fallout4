@@ -20,6 +20,27 @@ from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 class TestConfigFileCacheReadOnly:
     """Test ConfigFileCache read-only operations."""
 
+    @pytest.fixture(autouse=True)
+    def init_message_handler(self):
+        """Initialize MessageHandler for tests."""
+        import importlib
+        handler_mod = importlib.import_module("ClassicLib.MessageHandler.handler")
+
+        handler_mod.init_message_handler(parent=None, is_gui_mode=False)
+        yield
+        handler_mod._message_handler = None
+
+    @pytest.fixture(autouse=True)
+    def mock_dependencies(self, tmp_path):
+        """Mock external dependencies."""
+        from unittest.mock import patch
+        
+        # Mock yaml_settings to avoid async context error and filesystem access
+        with patch("ClassicLib.ScanGame.Config.yaml_settings") as mock_settings:
+            # Return tmp_path as game root
+            mock_settings.return_value = tmp_path
+            yield mock_settings
+
     def test_no_set_method_exists(self):
         """
         Verify set() method has been removed from ConfigFileCache.
@@ -60,8 +81,14 @@ class TestConfigFileCacheReadOnly:
             return value == "bad_value"
 
         # Detect issue
-        issue = cache.detect_issue(
-            file_name_lower="test.ini", section="Main", setting="TestKey", expected_value="good_value", description="Test issue description"
+        issue = await cache.detect_issue(
+            str,
+            file_name_lower="test.ini",
+            section="Main",
+            setting="TestKey",
+            recommended_value="good_value",
+            description="Test issue description",
+            condition_check=condition,
         )
 
         # Verify return type

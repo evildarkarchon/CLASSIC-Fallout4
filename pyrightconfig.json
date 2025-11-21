@@ -2,6 +2,7 @@
   "include": [
     "ClassicLib/**/*.py",
     "tests/**/*.py",
+    "tools/**/*.py",
     "*.py"
   ],
   "extraPaths": [

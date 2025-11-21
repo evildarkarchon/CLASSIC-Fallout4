@@ -386,7 +386,7 @@ class ResultsViewerMixin:
 
         try:
             if not report_path.exists():
-                msg_error(f"Report file not found: {report_path.name}")
+                QTimer.singleShot(0, lambda: msg_error(f"Report file not found: {report_path.name}"))
                 logger.error(f"Report file not found: {report_path}")
                 return False
 
@@ -408,13 +408,17 @@ class ResultsViewerMixin:
             logger.debug(f"Loaded report: {report_path.name}")
 
         except Exception as e:  # noqa: BLE001
-            msg_error(f"Failed to load report: {e}")
+            error_message = f"Failed to load report: {e}"
+            QTimer.singleShot(0, lambda: msg_error(error_message))
             logger.error(f"Error loading report {report_path}: {e}", exc_info=True)
             # If markdown fails, try displaying as plain text
             try:
                 content = read_file_sync(report_path)
                 self.markdown_viewer.setPlainText(content)
-                msg_warning("Displayed report as plain text due to markdown error")
+                QTimer.singleShot(
+                    0, lambda: msg_warning("Displayed report as plain text due to markdown error")
+                )
+                return True  # Fallback succeeded
             except Exception as fallback_e:  # noqa: BLE001
                 logger.error(f"Fallback plain text also failed: {fallback_e}")
                 return False

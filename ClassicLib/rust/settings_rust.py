@@ -80,7 +80,7 @@ class RustAcceleratedSettingsValidator:
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
-            crashgen_str = {k: str(v) for k, v in crashgen.items()}
+            crashgen_str = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
             lines: list[str] = self._validator.scan_buffout_achievements_setting(xsemodules, crashgen_str)
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
@@ -118,7 +118,7 @@ class RustAcceleratedSettingsValidator:
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
-            crashgen_str = {k: str(v) for k, v in crashgen.items()}
+            crashgen_str = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
             lines: list[str] = self._validator.scan_buffout_memorymanagement_settings(
                 crashgen_str, has_xcell, has_old_xcell, has_baka_scrapheap
             )
@@ -150,7 +150,7 @@ class RustAcceleratedSettingsValidator:
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
-            crashgen_str = {k: str(v) for k, v in crashgen.items()}
+            crashgen_str = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
             lines: list[str] = self._validator.scan_archivelimit_setting(crashgen_str, crashgen_version)
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment
@@ -180,7 +180,7 @@ class RustAcceleratedSettingsValidator:
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
-            crashgen_str = {k: str(v) for k, v in crashgen.items()}
+            crashgen_str = {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
             lines: list[str] = self._validator.scan_buffout_looksmenu_setting(crashgen_str, xsemodules)
             return ReportFragment.from_lines(lines)
         # Python already returns ReportFragment

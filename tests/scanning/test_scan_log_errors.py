@@ -115,7 +115,7 @@ class TestCheckLogErrors:
 
         # Mock both possible file reading methods to raise OSError
         with (
-            patch("ClassicLib.ScanGame.ScanGameCore.open_file_with_encoding", side_effect=OSError("Permission denied")),
+            patch("ClassicLib.ScanGame.core.log_processor.open_file_with_encoding", side_effect=OSError("Permission denied")),
             patch("aiofiles.open", side_effect=OSError("Permission denied")) if "aiofiles" in str(sys.modules) else nullcontext(),
         ):
             core = ScanGameCore()

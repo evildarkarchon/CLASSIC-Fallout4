@@ -134,6 +134,11 @@ class TestComponentDataFlow:
         # Plugin limit configuration
         mock_yaml.plugin_limits = {"esp_limit": 255, "esl_limit": 2048}
 
+        # Initialize list attributes to empty lists
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+
         return mock_yaml
 
     def test_parser_to_formid_analyzer_flow(self, sample_crash_data, mock_yamldata):

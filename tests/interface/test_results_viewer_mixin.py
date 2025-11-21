@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from PySide6.QtCore import QObject
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QApplication, QWidget
 
 
 # Fixture to initialize MessageHandler for all tests
@@ -154,7 +154,7 @@ def test_load_report_uses_rust_file_io():
 
 
 @pytest.mark.unit
-def test_load_report_fallback_uses_rust_file_io():
+def test_load_report_fallback_uses_rust_file_io(qtbot):
     """Test that load_report fallback for plain text also uses read_file_sync."""
     from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 
@@ -176,8 +176,18 @@ def test_load_report_fallback_uses_rust_file_io():
     with patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync") as mock_read:
         mock_read.return_value = "# Test Report\n\nContent here"
 
-        with patch("ClassicLib.MessageHandler.msg_error"), patch("ClassicLib.MessageHandler.msg_warning"):
+        # Correctly patch where the function is USED, not where it's defined
+        with patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error, patch(
+            "ClassicLib.Interface.ResultsViewerMixin.msg_warning"
+        ) as mock_warning:
             result = viewer.load_report(mock_path)
+
+            # Process events to let singleShot timers fire
+            QApplication.processEvents()
+
+            # Verify UI calls were made (or at least attempted)
+            assert mock_error.called
+            assert mock_warning.called
 
         # Verify read_file_sync was called twice
         assert mock_read.call_count == 2, "Should call read_file_sync twice (markdown + fallback)"
@@ -204,7 +214,8 @@ def test_copy_report_uses_rust_file_io():
             mock_clipboard_instance = MagicMock()
             mock_clipboard.return_value = mock_clipboard_instance
 
-            with patch("ClassicLib.MessageHandler.msg_info"):
+            # Correctly patch where the function is USED
+            with patch("ClassicLib.Interface.ResultsViewerMixin.msg_info"):
                 viewer._copy_report()
 
         # Verify read_file_sync was called
@@ -219,7 +230,7 @@ def test_copy_report_uses_rust_file_io():
 
 
 @pytest.mark.unit
-def test_load_report_handles_missing_file():
+def test_load_report_handles_missing_file(qtbot):
     """Test that load_report handles missing files gracefully."""
     from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 
@@ -236,8 +247,12 @@ def test_load_report_handles_missing_file():
     mock_path.exists.return_value = False
     mock_path.name = "missing-report.md"
 
-    with patch("ClassicLib.MessageHandler.msg_error"):
+    # Correctly patch where the function is USED
+    with patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
         result = viewer.load_report(mock_path)
+
+        QApplication.processEvents()
+        assert mock_error.called
 
     assert result is False, "Should return False for missing file"
 
@@ -262,7 +277,7 @@ def test_copy_report_handles_no_report_loaded():
 
 
 @pytest.mark.unit
-def test_load_report_handles_read_errors():
+def test_load_report_handles_read_errors(qtbot):
     """Test that load_report handles read errors gracefully."""
     from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 
@@ -283,8 +298,12 @@ def test_load_report_handles_read_errors():
     with patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync") as mock_read:
         mock_read.side_effect = RuntimeError("Read error")
 
-        with patch("ClassicLib.MessageHandler.msg_error"):
+        # Correctly patch where the function is USED
+        with patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
             result = viewer.load_report(mock_path)
+
+            QApplication.processEvents()
+            assert mock_error.called
 
         # Should try twice (markdown + fallback) then fail
         assert mock_read.call_count == 2, "Should attempt fallback after initial failure"

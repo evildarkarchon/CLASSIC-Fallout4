@@ -136,8 +136,15 @@ class TestFcxHandlerParity:
                 python_time = time.perf_counter() - start_time
 
                 # Extract content
-                rust_content = rust_fragment.fragment_content if rust_fragment else ""
-                python_content = python_fragment.fragment_content if python_fragment else ""
+                if rust_fragment:
+                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                else:
+                    rust_content = ""
+
+                if python_fragment:
+                    python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                else:
+                    python_content = ""
 
                 # Validate parity
                 differences = []
@@ -253,13 +260,13 @@ class TestFcxHandlerParity:
         python_fragment2 = python_handler2.get_fcx_messages()
 
         # Validate consistency
-        assert rust_fragment1.fragment_content == rust_fragment2.fragment_content, "Rust handler state is inconsistent between instances"
+        assert rust_fragment1.content == rust_fragment2.content, "Rust handler state is inconsistent between instances"
 
-        assert python_fragment1.fragment_content == python_fragment2.fragment_content, (
+        assert python_fragment1.content == python_fragment2.content, (
             "Python handler state is inconsistent between instances"
         )
 
-        assert rust_fragment1.fragment_content == python_fragment1.fragment_content, (
+        assert rust_fragment1.content == python_fragment1.content, (
             "Rust and Python handlers produce different content for enabled mode"
         )
 
@@ -270,7 +277,7 @@ class TestFcxHandlerParity:
         rust_fragment3 = rust_handler3.get_fcx_messages()
         python_fragment3 = python_handler3.get_fcx_messages()
 
-        assert rust_fragment3.fragment_content == python_fragment3.fragment_content, (
+        assert rust_fragment3.content == python_fragment3.content, (
             "Rust and Python handlers produce different content for disabled mode"
         )
 
@@ -308,7 +315,7 @@ class TestFcxHandlerParity:
         rust_final = rust_handler.get_fcx_messages()
         python_final = python_handler.get_fcx_messages()
 
-        assert rust_final.fragment_content == python_final.fragment_content, "Results differ in performance test"
+        assert rust_final.content == python_final.content, "Results differ in performance test"
 
         # Validate performance improvement
         if python_time > 0 and rust_time > 0:

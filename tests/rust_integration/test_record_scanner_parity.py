@@ -256,14 +256,22 @@ class TestRecordScanner:
     def test_record_scanner_creation(self):
         """Test RecordScanner creation."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         assert scanner is not None
 
     def test_extract_records_basic(self):
         """Test basic record extraction."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         # Ensure proper 30-char offset: "[RSP+NN ] 0xADDRESS      "
         callstack = [
@@ -282,7 +290,11 @@ class TestRecordScanner:
     def test_extract_records_empty_callstack(self):
         """Test extraction with empty callstack."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         records = scanner.extract_records([])
 
@@ -291,7 +303,11 @@ class TestRecordScanner:
     def test_extract_records_no_matches(self):
         """Test extraction with no matching records."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         callstack = [
             "[RSP+8  ] 0x123             (void*)",
@@ -307,7 +323,11 @@ class TestRecordScanner:
     def test_extract_records_case_insensitive(self):
         """Test case-insensitive record extraction."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         callstack = [
             "[RSP+8  ] 0x123             (bsresource*)",
@@ -322,7 +342,11 @@ class TestRecordScanner:
     def test_extract_records_non_rsp_lines(self):
         """Test extraction of non-RSP formatted lines."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         callstack = [
             "BSResource::Archive loading",
@@ -341,7 +365,11 @@ class TestRecordScanner:
     def test_extract_records_mixed_format(self):
         """Test extraction with mixed RSP and non-RSP lines."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         callstack = [
             "[RSP+8  ] 0x123               (BSResource*)",
@@ -361,7 +389,11 @@ class TestRecordScanner:
     def test_clear_cache(self):
         """Test cache clearing."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         # Clear cache should not error (even if currently no-op)
         scanner.clear_cache()
@@ -369,7 +401,11 @@ class TestRecordScanner:
     def test_record_counting_and_sorting(self):
         """Test that duplicate records are counted correctly."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         callstack = [
             "[RSP+8  ] 0x123               (BSResource*)",
@@ -396,7 +432,11 @@ class TestRecordScanner:
     def test_realistic_crash_log_segment(self):
         """Test with realistic crash log segment."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(
+            yamldata.classic_records_list,
+            yamldata.game_ignore_records,
+            yamldata.crashgen_name
+        )
 
         # Real-world crash log segment from test data
         callstack = [

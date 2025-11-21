@@ -187,9 +187,9 @@ class TestRustFFIPropertyBased:
     @settings(max_examples=50)
     def test_file_io_with_mock_file_structures(self, file_structure: dict[str, int]):
         """Test Rust file I/O with mock file structures."""
-        from ClassicLib.integration.factory import get_file_io_core
+        from ClassicLib.integration.factory import get_file_io
 
-        io_core = get_file_io_core()
+        io_core = get_file_io()
 
         # Test with mock file paths
         for filename, size in file_structure.items():
@@ -215,9 +215,9 @@ class TestRustFFIPropertyBased:
     @settings(max_examples=100)
     def test_encoding_edge_cases(self, binary_data: bytes, encoding: str):
         """Test encoding edge cases with various binary data."""
-        from ClassicLib.integration.factory import get_file_io_core
+        from ClassicLib.integration.factory import get_file_io
 
-        io_core = get_file_io_core()
+        io_core = get_file_io()
 
         # Try to decode binary as text with different encodings
         try:

@@ -181,6 +181,12 @@ class TestPerformanceBenchmarks:
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
         mock_yaml.record_patterns = ["TESForm", "BGSKeyword"]  # Minimal for performance
+        
+        # Initialize list attributes
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+        
         return mock_yaml
 
     def test_parser_performance_scaling(self, performance_test_data, mock_yamldata):
