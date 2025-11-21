@@ -297,17 +297,33 @@ class AsyncBridge:
             # Run the event loop until shutdown() is called
             self._loop.run_forever()
         finally:
-            # Simplified cleanup - just close the loop
-            # Tasks should have been properly cancelled at the application level
+            # Cleanup pending tasks to ensure futures don't hang
             try:
                 pending = asyncio.all_tasks(self._loop)
                 if pending:
                     logger.warning(
                         f"AsyncBridge: {len(pending)} tasks still pending during shutdown for thread {self._thread_id}. "
-                        "This may indicate improper task cleanup at the application level."
+                        "Cancelling them to ensure cleanup."
                     )
+                    for task in pending:
+                        task.cancel()
+
+                    # Allow cancellation to propagate with timeout
+                    # This ensures that futures returned by run_coroutine_threadsafe are properly notified
+                    async def wait_for_cancellation() -> None:
+                        await asyncio.gather(*pending, return_exceptions=True)
+
+                    try:
+                        # Run loop briefly to process cancellations
+                        # 0.2s is enough to let CancelledError propagate to futures
+                        # We don't need to wait for full task cleanup if it's stuck
+                        self._loop.run_until_complete(asyncio.wait_for(wait_for_cancellation(), timeout=0.2))
+                    except asyncio.TimeoutError:
+                        logger.warning(f"AsyncBridge: Timeout (0.2s) waiting for tasks to cancel for thread {self._thread_id}")
+                    except Exception as e:
+                        logger.error(f"AsyncBridge: Error during task cancellation: {e}")
             except (RuntimeError, AttributeError) as e:
-                logger.debug(f"AsyncBridge: Error checking pending tasks for thread {self._thread_id}: {e}")
+                logger.debug(f"AsyncBridge: Error handling pending tasks for thread {self._thread_id}: {e}")
 
             # Close the loop
             try:

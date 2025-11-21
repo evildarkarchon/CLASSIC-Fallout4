@@ -17,7 +17,7 @@ import pytest
 from ClassicLib.AsyncBridge import AsyncBridge
 
 # Mark all tests in this module
-pytestmark = [pytest.mark.asyncio, pytest.mark.unit]
+pytestmark = [pytest.mark.unit]
 
 
 class TestAsyncBridgeFailureModes:
