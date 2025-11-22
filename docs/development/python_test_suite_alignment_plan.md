@@ -55,4 +55,6 @@
 - **Tasks:**
     - Review skipped tests and decide on removal or reimplementation.
     - Check `tests/stress` folder.
-    - Run full suite and ensure stability.
+- **Fix ScanGameCore Async/Mocking Issues**:
+        - Refactored `ScanGameCore` methods to use `await yaml_settings_async`.
+        - Updated `tests/scanning/test_scan_game_wrappers.py` to correctly mock `ScanGameCore` and its methods.
