@@ -393,7 +393,7 @@ class RustAsyncDatabasePool:
         Returns:
             int: The number of entries removed from the cache.
         """
-        return self._rust_pool.clear_cache(expired_only)
+        return await self._rust_pool.clear_cache(expired_only)
 
     async def set_cache_ttl(self, seconds: int) -> None:
         """
@@ -405,7 +405,7 @@ class RustAsyncDatabasePool:
         Args:
             seconds (int): The duration in seconds for the cache TTL.
         """
-        self._rust_pool.set_cache_ttl(seconds)
+        await self._rust_pool.set_cache_ttl(seconds)
 
     async def get_stats(self) -> dict[str, Any]:
         """
@@ -419,7 +419,20 @@ class RustAsyncDatabasePool:
             dict[str, Any]: A dictionary containing various statistics and metrics
             related to the rust pool's performance and state.
         """
-        return self._rust_pool.get_stats()
+        return await self._rust_pool.get_stats()
+
+    async def optimize(self) -> None:
+        """
+        Asynchronously optimizes the underlying database.
+
+        This method triggers an optimization routine in the Rust database pool,
+        such as running `VACUUM` or `ANALYZE` commands, to improve query performance
+        and reduce database file size.
+
+        Raises:
+            RustDatabaseError: If the optimization operation fails in the Rust backend.
+        """
+        await self._rust_pool.optimize()
 
     def set_game_table(self, table: str) -> None:
         """
