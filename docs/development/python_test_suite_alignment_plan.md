@@ -90,6 +90,10 @@
             - Fixed `ParityResult` initialization in `ParityTestRunner`.
             - Renamed `TestReportFragment` to `ReportTestFragmentData`.
             - Corrected static method access.
-        - `test_ffi_error_conditions.py`: `Failed: DID NOT RAISE`
+        - **Fixed `test_ffi_error_conditions.py`**:
+            - Fixed FormID analyzer initialization mock.
+            - Corrected plugin analyzer mocking for corrupted data.
+            - Updated async file I/O tests to correctly `await` calls and handle Rust exceptions.
+            - Expanded DLL injection prevention assertion to include `ValueError`.
         - `test_formid_parity.py`: `AssertionError: FormID extraction parity too low`
     - Run full suite and ensure stability.
