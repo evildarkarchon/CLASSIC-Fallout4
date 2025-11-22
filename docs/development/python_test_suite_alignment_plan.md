@@ -55,6 +55,20 @@
 - **Tasks:**
     - Review skipped tests and decide on removal or reimplementation.
     - Check `tests/stress` folder.
-- **Fix ScanGameCore Async/Mocking Issues**:
+    - **Fix ScanGameCore Async/Mocking Issues**:
         - Refactored `ScanGameCore` methods to use `await yaml_settings_async`.
         - Updated `tests/scanning/test_scan_game_wrappers.py` to correctly mock `ScanGameCore` and its methods.
+    - **Address Remaining Failures:**
+        - `test_async_yaml_caching.py`: `AssertionError: assert 'test' == 'modified'`
+        - `test_dds_analyzer.py`: `AssertionError: assert 4 == 1`
+        - `test_scan_mods_archived.py`: `AssertionError: BA2 FORMAT ERRORS FOUND`
+        - `test_initial_setup.py`: `TypeError: XSE log file path must be a string`
+        - `test_scan_mods_unpacked.py`: `AssertionError: F4SE FILES FOUND`
+        - `test_async_utilities_unit.py`: `AssertionError: test_applies_backoff`
+        - `test_string_utils.py`: `AssertionError: test_append_or_extend_single_values`
+        - `test_rust_backend_performance.py`: `ZeroDivisionError`
+        - `test_rust_database_pool.py`: `RustDatabaseIOError`
+        - `test_report_parity.py`: `TypeError: Can't instantiate abstract class`
+        - `test_ffi_error_conditions.py`: `Failed: DID NOT RAISE`
+        - `test_formid_parity.py`: `AssertionError: FormID extraction parity too low`
+    - Run full suite and ensure stability.
