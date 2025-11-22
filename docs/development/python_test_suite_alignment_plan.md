@@ -66,7 +66,8 @@
         - **Fixed `test_scan_mods_archived.py`**:
             - Updated assertion to match actual error message format.
             - Corrected patching target for `msg_error`.
-        - `test_initial_setup.py`: `TypeError: XSE log file path must be a string`
+        - **Fixed `test_initial_setup.py`**:
+            - Corrected mock target to `yaml_cache` instance and used async `side_effect`.
         - `test_scan_mods_unpacked.py`: `AssertionError: F4SE FILES FOUND`
         - `test_async_utilities_unit.py`: `AssertionError: test_applies_backoff`
         - `test_string_utils.py`: `AssertionError: test_append_or_extend_single_values`
