@@ -13,7 +13,7 @@ use std::collections::HashMap;
 /// Precompiled FormID regex pattern matching Python's format
 /// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})"
 static FORMID_EXTRACTION_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap());
+    Lazy::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
 
 /// Generic FormID parsing pattern (for parse_formid method)
 static FORMID_PARSE_PATTERN: Lazy<Regex> =
@@ -58,7 +58,9 @@ impl RustFormIDAnalyzer {
         }
 
         for line in segment_callstack {
+            println!("DEBUG: Checking line: '{}'", line);
             if let Some(captures) = FORMID_EXTRACTION_PATTERN.captures(line) {
+                println!("DEBUG: Match found!");
                 if let Some(formid_hex) = captures.get(1) {
                     let formid_id = formid_hex.as_str().to_uppercase();
 
@@ -68,6 +70,8 @@ impl RustFormIDAnalyzer {
                         formids_matches.push(format!("Form ID: {}", formid_id));
                     }
                 }
+            } else {
+                println!("DEBUG: No match for line");
             }
         }
 

@@ -10,7 +10,7 @@ import pytest
 
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 
 

@@ -115,7 +115,7 @@ class PathValidator:
             # Use the existing utility function to check if path is valid
             # (returns False for restricted paths)
             return not is_valid_custom_scan_path(path_str)
-        except (ValueError, OSError, TypeError):
+        except Exception:
             # If there's any error checking, consider it restricted
             return True
 

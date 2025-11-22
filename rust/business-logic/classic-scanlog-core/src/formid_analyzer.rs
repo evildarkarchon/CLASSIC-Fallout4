@@ -14,9 +14,9 @@ use std::collections::{HashMap, HashSet};
 use std::sync::Arc;
 
 /// Precompiled FormID pattern - exact match to Python's pattern
-/// Pattern: r"^\s*Form ID:\s*0x([0-9A-F]{8})" with case-insensitive flag
+/// Pattern: r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})" with case-insensitive flag
 static FORMID_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)^\s*Form ID:\s*0x([0-9A-F]{8})").unwrap());
+    Lazy::new(|| Regex::new(r"(?i)Form\s*ID:?\s*0x([0-9A-F]{8})\b").unwrap());
 
 /// Core FormID analyzer - pure Rust implementation (NO PyO3)
 pub struct FormIDAnalyzerCore {

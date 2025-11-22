@@ -257,17 +257,23 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
             # to complete before forcefully terminating threads
             for thread in async_bridge_threads:
                 if thread.is_alive():
-                    # Match AsyncBridge's internal 2-second shutdown timeout
-                    # On slower systems or under high test load, threads may need
-                    # additional time to complete cleanup operations
-                    thread.join(timeout=2.0)
+                    # Use short timeout for final cleanup attempt
+                    # Daemon threads will be killed at process exit anyway
+                    thread.join(timeout=0.1)
 
                     # Log if thread is still alive after timeout (diagnostic info)
                     if thread.is_alive():
-                        logger.debug(
-                            f"AsyncBridge thread {thread.name} still alive after 2s timeout. "
-                            "This may indicate a deadlock or slow cleanup."
-                        )
+                        import sys
+                        import traceback
+                        
+                        # Only log stack trace for debugging, don't block
+                        frames = sys._current_frames()
+                        if thread.ident in frames:
+                            # stack = "".join(traceback.format_stack(frames[thread.ident]))
+                            # logger.debug(f"AsyncBridge thread {thread.name} lingering. Stack:\n{stack}")
+                            logger.debug(f"AsyncBridge thread {thread.name} lingering after cleanup.")
+                        else:
+                            logger.debug(f"AsyncBridge thread {thread.name} lingering after cleanup.")
 
     except (ImportError, AttributeError):
         # Module not imported or doesn't exist - nothing to clean

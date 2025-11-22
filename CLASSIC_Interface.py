@@ -229,7 +229,14 @@ class MainWindow(
         QDesktopServices.openUrl(QUrl(url))
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """
+    Main entry point for the CLASSIC GUI application.
+
+    Initializes the Qt application, runs the setup coordinator to prepare
+    the environment, creates the main window, and starts the event loop.
+    Handles top-level exceptions and keyboard interrupts.
+    """
     app: QApplication = QApplication(sys.argv)
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
@@ -249,6 +256,10 @@ if __name__ == "__main__":
             # noinspection PyTypeChecker
             QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
 
     # Backup operations methods are now inherited from BackupOperationsMixin
 

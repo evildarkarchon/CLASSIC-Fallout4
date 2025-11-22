@@ -93,7 +93,7 @@ class FormIDAnalyzerCore:
         pattern_key = "formid_pattern"
         if pattern_key not in _PATTERN_CACHE:
             _PATTERN_CACHE[pattern_key] = re.compile(
-                r"^\s*Form ID:\s*0x([0-9A-F]{8})",
+                r"Form\s*ID:?\s*0x([0-9A-F]{8})\b",
                 re.IGNORECASE,
             )
         self.formid_pattern = _PATTERN_CACHE[pattern_key]

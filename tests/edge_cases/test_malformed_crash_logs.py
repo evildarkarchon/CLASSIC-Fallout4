@@ -244,8 +244,8 @@ class TestMalformedCrashLogHandling:
             extracted = analyzer.extract_formids(callstack)
             # Should only extract valid FormIDs (8 hex characters)
             for formid in extracted:
-                assert len(formid) == 8 or len(formid) == 10  # May have 0x prefix
-                clean_id = formid.replace("0x", "").replace("0X", "")
+                # Remove potential "Form ID: " prefix
+                clean_id = formid.replace("Form ID: ", "").replace("0x", "").replace("0X", "")
                 assert len(clean_id) == 8
                 assert all(c in "0123456789ABCDEFabcdef" for c in clean_id)
         except (ValueError, TypeError):
@@ -572,17 +572,19 @@ class TestConcurrencyEdgeCases:
 
         # Create test log
         test_log = """Fallout 4 v1.10.163
+Buffout 4 v1.28.6
 PLUGINS:
     [00] Fallout4.esm
     [01] DLCRobot.esm
 FormID: 00000014
 FormID: FE000800
 """
+        crash_lines = test_log.splitlines()
 
         # Parse same log 50 times concurrently
         tasks = []
         for _ in range(50):
-            tasks.append(asyncio.to_thread(parser.parse, test_log))
+            tasks.append(asyncio.to_thread(parser.find_segments, crash_lines, "Buffout 4", "F4SE", "Fallout 4"))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -591,8 +593,8 @@ FormID: FE000800
         assert len(successful) >= 45  # At least 90% should succeed
 
         # All successful parses should produce same result structure
-        if successful and isinstance(successful[0], dict):
-            first_keys = set(successful[0].keys())
+        if successful:
+            # find_segments returns tuple (game_ver, crashgen_ver, error, segments)
+            first_len = len(successful[0])
             for result in successful[1:]:
-                if isinstance(result, dict):
-                    assert set(result.keys()) == first_keys
+                assert len(result) == first_len

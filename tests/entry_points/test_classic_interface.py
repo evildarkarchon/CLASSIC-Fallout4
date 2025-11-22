@@ -39,25 +39,23 @@ class TestClassicInterface:
         mock_setup_coordinator.return_value = mock_coordinator_instance
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow") as mock_window_class:
+        with patch("CLASSIC_Interface.MainWindow") as mock_window_class, patch.object(sys, "exit") as mock_exit:
             mock_window = MagicMock()
             mock_window_class.return_value = mock_window
             mock_app_instance.exec.return_value = 0
 
-            # Simulate running __main__ block
-            with patch.object(sys, "argv", ["test"]), patch("CLASSIC_Interface.__name__", "__main__"):
-                # Import and execute the module
-                import importlib
-
+            # Simulate running main function
+            with patch.object(sys, "argv", ["test"]):
                 import CLASSIC_Interface
 
-                importlib.reload(CLASSIC_Interface)
+                CLASSIC_Interface.main()
 
         # Assert
         mock_setup_coordinator.assert_called_once()
         mock_coordinator_instance.initialize_application.assert_called_once_with(is_gui=True)
         mock_window_class.assert_called_once()
         mock_window.show.assert_called_once()
+        mock_exit.assert_called_once_with(0)
 
     @patch("CLASSIC_Interface.GlobalRegistry")
     @patch("CLASSIC_Interface.init_message_handler")
@@ -232,12 +230,9 @@ class TestClassicInterface:
 
         # Act & Assert
         with patch("CLASSIC_Interface.MainWindow"), patch.object(sys, "exit"), patch.object(sys, "argv", ["test"]):
-            with patch("CLASSIC_Interface.__name__", "__main__"):
-                import importlib
+            import CLASSIC_Interface
 
-                import CLASSIC_Interface
-
-                importlib.reload(CLASSIC_Interface)
+            CLASSIC_Interface.main()
 
         # Should exit with code 1 on KeyboardInterrupt
         mock_app_instance.exit.assert_called_once_with(1)
@@ -257,18 +252,16 @@ class TestClassicInterface:
         test_exception = Exception("Test startup error")
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow", side_effect=test_exception), patch.object(sys, "argv", ["test"]):
-            with patch("CLASSIC_Interface.__name__", "__main__"):
-                import importlib
+        with patch("CLASSIC_Interface.MainWindow", side_effect=test_exception), patch.object(sys, "argv", ["test"]), patch.object(sys, "exit") as mock_exit:
+            import CLASSIC_Interface
 
-                import CLASSIC_Interface
-
-                importlib.reload(CLASSIC_Interface)
+            CLASSIC_Interface.main()
 
         # Assert
         mock_msg_error.assert_called_once()
         assert "Unhandled exception during application startup" in str(mock_msg_error.call_args)
         mock_msgbox.critical.assert_called_once()
+        mock_exit.assert_called_once_with(1)
 
     @patch("CLASSIC_Interface.GlobalRegistry")
     @patch("CLASSIC_Interface.classic_settings")
