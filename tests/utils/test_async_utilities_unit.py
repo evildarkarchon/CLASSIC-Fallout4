@@ -155,7 +155,7 @@ class TestAsyncRetry:
         delays = []
         last_time = time.time()
 
-        @async_retry(max_attempts=3, delay=0.01, backoff=2.0)
+        @async_retry(max_attempts=3, delay=0.05, backoff=2.0)
         async def measure_delays():
             nonlocal last_time
             current_time = time.time()
