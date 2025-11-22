@@ -153,7 +153,7 @@ class TestScanModsArchived:
         core = ScanGameCore()
         result = await core.scan_mods_archived()
 
-        assert "BA2 FORMAT ERRORS FOUND" in result
+        assert "BA2 ARCHIVES HAVE INCORRECT FORMAT" in result
         assert "invalid.ba2" in result
 
     @pytest.mark.asyncio
@@ -219,7 +219,7 @@ class TestScanModsArchived:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("ClassicLib.ScanGame.ScanGameCore.msg_error") as mock_error,
+            patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
         ):
             core = ScanGameCore()
             _result = await core.scan_mods_archived()
