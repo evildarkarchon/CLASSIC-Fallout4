@@ -63,7 +63,9 @@
             - Implemented `YamlFileOperations.clear_cache()` and updated `AsyncYamlSettingsCore.clear_cache()` to ensure underlying file caches are cleared.
         - **Fixed `test_dds_analyzer.py`**:
             - Updated assertions to reflect enhanced validation (4 issues detected instead of 1).
-        - `test_scan_mods_archived.py`: `AssertionError: BA2 FORMAT ERRORS FOUND`
+        - **Fixed `test_scan_mods_archived.py`**:
+            - Updated assertion to match actual error message format.
+            - Corrected patching target for `msg_error`.
         - `test_initial_setup.py`: `TypeError: XSE log file path must be a string`
         - `test_scan_mods_unpacked.py`: `AssertionError: F4SE FILES FOUND`
         - `test_async_utilities_unit.py`: `AssertionError: test_applies_backoff`
