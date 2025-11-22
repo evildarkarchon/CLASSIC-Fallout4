@@ -1,6 +1,7 @@
 """Tests for SetupCoordinator initial setup sequence."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913
 
+import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -26,7 +27,8 @@ class TestInitialSetup:
 
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.BackupManager.BackupManager.run_backup")
+    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch("ClassicLib.SetupCoordinator.msg_success")
     @patch("ClassicLib.SetupCoordinator.docs_path_find")
@@ -47,18 +49,22 @@ class TestInitialSetup:
         mock_docs_find: MagicMock,
         mock_msg_success: MagicMock,
         mock_msg_info: MagicMock,
-        mock_batch_get: MagicMock,
+        mock_yaml_cache: MagicMock,
+        mock_run_backup: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure_logging: MagicMock,
-        coordinator: SetupCoordinator,
     ) -> None:
         """Test initial setup when no game path is configured."""
-        # Mock batch_get_settings to return values for initial setup
-        mock_batch_get.return_value = [
-            "7.31.0",  # classic_ver
-            "Fallout4",  # game_name
-            None,  # game_path (not configured)
-        ]
+        coordinator = SetupCoordinator()
+        
+        # Configure mock to return an awaitable coroutine
+        async def async_return(*args, **kwargs):
+            return [
+                "7.31.0",  # classic_ver
+                "Fallout4",  # game_name
+                None,  # game_path (not configured)
+            ]
+        mock_yaml_cache.batch_get_settings_async.side_effect = async_return
 
         # Run initial setup
         coordinator.run_initial_setup()
@@ -67,8 +73,8 @@ class TestInitialSetup:
         mock_configure_logging.assert_called_once()
         mock_file_gen.assert_called_once()
 
-        # Verify batch_get_settings was called with correct requests
-        mock_batch_get.assert_called_once()
+        # Verify batch_get_settings_async was called
+        mock_yaml_cache.batch_get_settings_async.assert_called_once()
 
         # Verify path generation was called (no existing path)
         mock_docs_find.assert_called_once()
