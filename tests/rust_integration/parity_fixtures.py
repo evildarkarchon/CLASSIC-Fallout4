@@ -150,7 +150,7 @@ class ParityValidator(ABC):
         """
         if test_case.validation_function:
             try:
-                is_valid = test_case.validation_function(rust_result, python_result)
+                is_valid = test_case.validation_function(rust_result, python_result, test_case.inputs)
                 return is_valid, [] if is_valid else ["Custom validation failed"]
             except Exception as e:
                 return False, [f"Validation function error: {e}"]
@@ -272,19 +272,35 @@ class ParityValidator(ABC):
         """
         differences = []
 
-        # Compare fragment attributes that should be identical
-        fragment_attrs = ["fragment_name", "fragment_content", "fragment_type", "priority", "markdown_content", "raw_data"]
+        # Ensure both are ReportFragment instances or can be treated as such
+        # Python fragment will be a ReportFragment. Rust fragment might be dict or ReportFragment
+        if not hasattr(python_fragment, "content") or not hasattr(python_fragment, "has_content"):
+            differences.append("Python fragment missing expected attributes (content, has_content)")
+            return False, differences
 
-        for attr in fragment_attrs:
-            rust_val = getattr(rust_fragment, attr, None)
-            python_val = getattr(python_fragment, attr, None)
+        # Access attributes carefully for Rust side (could be dict or object)
+        rust_content = getattr(rust_fragment, "content", rust_fragment.get("content"))
+        python_content = python_fragment.content
 
-            attr_identical, attr_diffs = self._default_output_comparison(rust_val, python_val)
-            if not attr_identical:
-                differences.append(f"ReportFragment.{attr} differs:")
-                differences.extend(f"  {diff}" for diff in attr_diffs)
+        # Convert content (tuple of strings) to normalized string for comparison
+        rust_content_normalized = normalize_markdown_content("\n".join(rust_content or []))
+        python_content_normalized = normalize_markdown_content("\n".join(python_content or []))
 
-        return len(differences) == 0, differences
+        if rust_content_normalized != python_content_normalized:
+            differences.append("ReportFragment.content differs (normalized markdown comparison)")
+            is_identical = False
+        else:
+            is_identical = True
+
+        rust_has_content = getattr(rust_fragment, "has_content", rust_fragment.get("has_content"))
+        python_has_content = python_fragment.has_content
+
+        if rust_has_content != python_has_content:
+            differences.append(f"ReportFragment.has_content differs: Rust={rust_has_content}, Python={python_has_content}")
+            is_identical = False
+
+
+        return is_identical, differences
 
 
 class CrashLogParityGenerator:
@@ -579,6 +595,7 @@ class ParityTestRunner:
             method_name=test_case.name,
             test_case=test_case.description,
             rust_available=RUST_AVAILABLE.get(validator.component_name.lower(), False),
+            passed=False, # Initialize with False, will be updated later
         )
 
         try:
