@@ -203,6 +203,9 @@ pub struct ClassicConfig {
     /// Automatically switch to Results tab after scan completion
     pub auto_switch_to_results: bool,
 
+    /// Auto-refresh interval for file watcher in milliseconds
+    pub auto_refresh_interval_ms: u64,
+
     /// Path configuration
     pub paths: PathConfig,
 }
@@ -266,6 +269,7 @@ impl Default for ClassicConfig {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true, // Enable by default for better UX
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig::default(),
         }
     }
@@ -316,6 +320,7 @@ impl ClassicConfig {
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
         let vr_mode = yaml["vr_mode"].as_bool().unwrap_or(false);
         let auto_switch_to_results = yaml["auto_switch_to_results"].as_bool().unwrap_or(true);
+        let auto_refresh_interval_ms = yaml["auto_refresh_interval_ms"].as_i64().unwrap_or(5000) as u64;
 
         let paths_yaml = &yaml["paths"];
         let paths = PathConfig {
@@ -338,6 +343,7 @@ impl ClassicConfig {
             update_check,
             vr_mode,
             auto_switch_to_results,
+            auto_refresh_interval_ms, // Add this
             paths,
         })
     }
@@ -377,6 +383,10 @@ impl ClassicConfig {
         root.insert(
             Yaml::String("auto_switch_to_results".to_string()),
             Yaml::Boolean(self.auto_switch_to_results),
+        );
+        root.insert(
+            Yaml::String("auto_refresh_interval_ms".to_string()),
+            Yaml::Integer(self.auto_refresh_interval_ms as i64),
         );
 
         // Build paths hash

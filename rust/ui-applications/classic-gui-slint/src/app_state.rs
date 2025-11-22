@@ -9,6 +9,8 @@ use parking_lot::RwLock;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::handlers::file_watcher::FileWatcher;
+
 /// Global application state shared across all GUI components
 ///
 /// This struct holds all configuration and runtime state needed by the GUI:
@@ -31,19 +33,26 @@ use std::sync::Arc;
 /// let game_path = state.read().game_root().clone();
 /// let game = state.read().game_name();
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct AppState {
     /// Game selection (e.g., "Fallout4", "Skyrim")
-    game: String,
+    pub game: String,
 
     /// Loaded configuration from YAML files
-    config: ClassicConfig,
+    pub config: ClassicConfig,
 
     /// Mods folder path (from UI or config)
-    mods_folder: Option<PathBuf>,
+    pub mods_folder: Option<PathBuf>,
 
     /// Custom scan folder path (from UI or config)
-    scan_folder: Option<PathBuf>,
+    pub scan_folder: Option<PathBuf>,
+
+    /// File watcher auto-refresh interval in milliseconds (e.g., 5000 for 5 seconds)
+    pub auto_refresh_interval_ms: u64,
+
+    /// File watcher instance for monitoring report directories. Marked as skip because it holds runtime resources
+    /// that cannot be serialized.
+    file_watcher: FileWatcher,
 }
 
 impl AppState {
@@ -83,12 +92,15 @@ impl AppState {
             config.paths.game_root.display()
         );
 
-        let state = Self {
-            game,
-            config,
-            mods_folder: None,
-            scan_folder: None,
-        };
+        // Initialize AppState with default FileWatcher
+        let mut state = Self::default(); // Start with default to get file_watcher initialized
+        state.game = game;
+        state.config = config.clone(); // Clone here because config will be moved
+
+        // Populate initial mods_folder and scan_folder from config
+        state.mods_folder = config.paths.mods_folder;
+        state.scan_folder = config.paths.scan_custom;
+        state.auto_refresh_interval_ms = config.auto_refresh_interval_ms;
 
         Ok(Arc::new(RwLock::new(state)))
     }
@@ -267,6 +279,21 @@ impl AppState {
         self.config.auto_switch_to_results
     }
 
+    /// Get auto-refresh interval in milliseconds
+    pub fn auto_refresh_interval_ms(&self) -> u64 {
+        self.auto_refresh_interval_ms
+    }
+
+    /// Set auto-refresh interval in milliseconds
+    pub fn set_auto_refresh_interval_ms(&mut self, val: u64) {
+        self.auto_refresh_interval_ms = val;
+    }
+
+    /// Get a reference to the file watcher
+    pub fn file_watcher(&self) -> &FileWatcher {
+        &self.file_watcher
+    }
+
     /// Validate that all required paths exist
     ///
     /// # Returns
@@ -334,6 +361,8 @@ impl Default for AppState {
             config: ClassicConfig::default(),
             mods_folder: None,
             scan_folder: None,
+            auto_refresh_interval_ms: 5000, // Default to 5 seconds
+            file_watcher: FileWatcher::new(),
         }
     }
 }

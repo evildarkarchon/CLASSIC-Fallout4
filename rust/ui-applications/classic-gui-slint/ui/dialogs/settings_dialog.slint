@@ -17,6 +17,7 @@ export component SettingsDialog inherits Rectangle {
     in-out property<bool> update-check: true;
     in-out property<bool> vr-mode: false;
     in-out property<bool> auto-switch-to-results: true;
+    in-out property<int> auto-refresh-interval-s: 5; // New setting for file watcher (seconds)
 
     // Advanced settings
     in-out property<bool> move-unsolved-logs: false;
@@ -141,7 +142,7 @@ export component SettingsDialog inherits Rectangle {
 
                     // Tab bar
                     tab-bar := FluentTabBar {
-                        tabs: ["General", "Paths", "Advanced"];
+                        tabs: ["General", "Scanning", "Paths", "Updates"];
                         current-tab: 0;
                     }
 
@@ -154,25 +155,15 @@ export component SettingsDialog inherits Rectangle {
                             padding: FluentDark.spacing-lg;
                             spacing: FluentDark.spacing-md;
 
-                            // GENERAL TAB
+                            // GENERAL TAB (new index 0)
                             if tab-bar.current-tab == 0: VerticalLayout {
                                 spacing: FluentDark.spacing-md;
 
                                 Text {
-                                    text: "Scan Options";
+                                    text: "General Options";
                                     color: FluentDark.text-primary;
                                     font-size: FluentDark.font-size-lg;
                                     font-weight: FluentDark.font-weight-semibold;
-                                }
-
-                                FluentCheckbox {
-                                    text: "FCX Mode - Enhanced FormID Analysis";
-                                    checked <=> root.fcx-mode;
-                                }
-
-                                FluentCheckbox {
-                                    text: "Show FormID Values in Reports";
-                                    checked <=> root.show-formid-values;
                                 }
 
                                 FluentCheckbox {
@@ -190,24 +181,55 @@ export component SettingsDialog inherits Rectangle {
                                     checked <=> root.auto-switch-to-results;
                                 }
 
-                                Rectangle {
-                                    height: FluentDark.spacing-sm;
-                                    background: transparent;
+                                // Info text
+                                Text {
+                                    text: "General application settings. Configure how CLASSIC behaves during regular operation and user interface interactions.";
+                                    color: FluentDark.text-tertiary;
+                                    font-size: FluentDark.font-size-sm;
+                                    wrap: word-wrap;
                                 }
+                            }
+
+                            // SCANNING TAB (new index 1)
+                            if tab-bar.current-tab == 1: VerticalLayout {
+                                spacing: FluentDark.spacing-md;
 
                                 Text {
-                                    text: "Updates & Notifications";
+                                    text: "Scan Settings";
                                     color: FluentDark.text-primary;
                                     font-size: FluentDark.font-size-lg;
                                     font-weight: FluentDark.font-weight-semibold;
                                 }
 
                                 FluentCheckbox {
-                                    text: "Check for Updates at Startup";
-                                    checked <=> root.update-check;
+                                    text: "FCX Mode - Enhanced FormID Analysis";
+                                    checked <=> root.fcx-mode;
                                 }
 
-                                // Info text
+                                FluentCheckbox {
+                                    text: "Show FormID Values in Reports";
+                                    checked <=> root.show-formid-values;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Move Unsolved Logs to Subfolder";
+                                    checked <=> root.move-unsolved-logs;
+                                }
+
+                                FluentCheckbox {
+                                    text: "Simplify Logs (May Remove Important Info)";
+                                    checked <=> root.simplify-logs;
+                                }
+
+                                // Warning text for simplify logs
+                                Text {
+                                    text: "⚠ Warning: Simplifying logs may remove details needed for troubleshooting. Only enable if you understand the implications.";
+                                    color: FluentDark.warning;
+                                    font-size: FluentDark.font-size-sm;
+                                    wrap: word-wrap;
+                                }
+
+                                // Info text for FCX mode
                                 Text {
                                     text: "FCX Mode provides deeper FormID analysis and more detailed crash reports. Enable this for advanced troubleshooting.";
                                     color: FluentDark.text-tertiary;
@@ -216,8 +238,8 @@ export component SettingsDialog inherits Rectangle {
                                 }
                             }
 
-                            // PATHS TAB
-                            if tab-bar.current-tab == 1: VerticalLayout {
+                            // PATHS TAB (new index 2) - Content remains largely the same
+                            if tab-bar.current-tab == 2: VerticalLayout {
                                 spacing: FluentDark.spacing-md;
 
                                 Text {
@@ -335,56 +357,64 @@ export component SettingsDialog inherits Rectangle {
                                 }
                             }
 
-                            // ADVANCED TAB
-                            if tab-bar.current-tab == 2: VerticalLayout {
+                            // UPDATES TAB (new index 3)
+                            if tab-bar.current-tab == 3: VerticalLayout {
                                 spacing: FluentDark.spacing-md;
 
                                 Text {
-                                    text: "Advanced Options";
+                                    text: "Update Settings";
                                     color: FluentDark.text-primary;
                                     font-size: FluentDark.font-size-lg;
                                     font-weight: FluentDark.font-weight-semibold;
                                 }
 
                                 FluentCheckbox {
-                                    text: "Move Unsolved Logs to Subfolder";
-                                    checked <=> root.move-unsolved-logs;
+                                    text: "Check for Updates at Startup";
+                                    checked <=> root.update-check;
                                 }
 
-                                FluentCheckbox {
-                                    text: "Simplify Logs (May Remove Important Info)";
-                                    checked <=> root.simplify-logs;
-                                }
+                                HorizontalLayout {
+                                    spacing: FluentDark.spacing-sm;
 
-                                // Warning text
+                                    FluentTextInput {
+                                        label: "Auto-Refresh Interval (s)";
+                                        text: root.auto-refresh-interval-s;
+                                        placeholder: "e.g., 5 for 5 seconds";
+                                        horizontal-stretch: 1;
+                                    }
+
+                                    // Add a browse button (or maybe a reset button)
+                                    FluentButton {
+                                        text: "Reset";
+                                        primary: false;
+                                        clicked => {
+                                            root.auto-refresh-interval-s = 5; // Reset to default
+                                        }
+                                    }
+                                }
+                                
                                 Text {
-                                    text: "⚠ Warning: Simplifying logs may remove details needed for troubleshooting. Only enable if you understand the implications.";
-                                    color: FluentDark.warning;
+                                    text: "Update Source (Coming Soon)";
+                                    color: FluentDark.text-tertiary;
                                     font-size: FluentDark.font-size-sm;
                                     wrap: word-wrap;
                                 }
-
-                                Rectangle {
-                                    height: FluentDark.spacing-sm;
-                                    background: transparent;
-                                }
-
                                 Text {
-                                    text: "About Advanced Options";
-                                    color: FluentDark.text-primary;
-                                    font-size: FluentDark.font-size-lg;
-                                    font-weight: FluentDark.font-weight-semibold;
+                                    text: "Check Now Button (Coming Soon)";
+                                    color: FluentDark.text-tertiary;
+                                    font-size: FluentDark.font-size-sm;
+                                    wrap: word-wrap;
                                 }
-
+                                // Info text
                                 Text {
-                                    text: "• Move Unsolved Logs: Automatically organizes logs that couldn't be fully analyzed into a separate folder.\n\n• Simplify Logs: Reduces log verbosity, but may make debugging more difficult.";
+                                    text: "Configure how CLASSIC checks for and notifies you about new updates.";
                                     color: FluentDark.text-tertiary;
                                     font-size: FluentDark.font-size-sm;
                                     wrap: word-wrap;
                                 }
                             }
-                        }
-                    }
+                        } // Close VerticalLayout (padding) for Flickable content
+                    } // Close Flickable
 
                     // Bottom button bar
                     Rectangle {
@@ -412,10 +442,10 @@ export component SettingsDialog inherits Rectangle {
                                 }
                             }
                         }
-                    }
-                }
-            }
-        }  // End HorizontalLayout (center)
-    }  // End VerticalLayout (center)
-    }  // End FocusScope
-}
+                    } // Close Rectangle (button bar)
+                } // Close VerticalLayout (content)
+                } // Close Rectangle (card)
+            } // Close HorizontalLayout (center)
+        } // Close VerticalLayout (center)
+    } // Close FocusScope
+} // Close SettingsDialog

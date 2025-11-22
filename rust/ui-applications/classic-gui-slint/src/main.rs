@@ -5,6 +5,7 @@
 
 // Suppress documentation warnings for generated Slint code
 #![allow(missing_docs)]
+#![allow(unsafe_code)] // Allow unsafe for ThreadSafeTimer
 
 slint::include_modules!();
 
@@ -17,8 +18,21 @@ use anyhow::Result;
 use app_state::AppState;
 use classic_shared_core::AsyncBridge;
 use geometry::WindowGeometry;
-use slint::{PhysicalPosition, PhysicalSize};
+use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::time::Duration;
+use notify::RecursiveMode;
+
+use slint::{PhysicalPosition, PhysicalSize, Timer, TimerMode};
+
+use parking_lot::Mutex; // New import for parking_lot::Mutex
+
+/// Wrapper for slint::Timer to allow it to be passed between threads (needed for AsyncBridge)
+/// This is safe because we only access the timer on the UI thread.
+struct ThreadSafeTimer(slint::Timer);
+unsafe impl Send for ThreadSafeTimer {}
+unsafe impl Sync for ThreadSafeTimer {}
 
 /// Pending action awaiting user confirmation
 ///
@@ -53,8 +67,9 @@ fn main() -> Result<(), slint::PlatformError> {
     let pending_confirmation = Arc::new(parking_lot::Mutex::new(PendingConfirmation::None));
 
     // Load saved window geometry
-    let geometry = WindowGeometry::load();
-    tracing::debug!("Loaded window geometry: {:?}", geometry);
+    let geometry = Arc::new(parking_lot::Mutex::new(WindowGeometry::load()));
+    let initial_geometry = geometry.lock().clone();
+    tracing::debug!("Loaded window geometry: {:?}", initial_geometry);
 
     // Create the main window
     let main_window = MainWindow::new()?;
@@ -62,17 +77,59 @@ fn main() -> Result<(), slint::PlatformError> {
     // Set version dynamically from CARGO_PKG_VERSION
     main_window.set_app_version(VERSION.into());
 
+    // Flag to ensure file watcher is initialized only once
+    let file_watcher_initialized = Arc::new(AtomicBool::new(false));
+    // Store debounce timer instance to stop on exit
+    let main_slint_timer: Arc<parking_lot::Mutex<Option<ThreadSafeTimer>>> = Arc::new(parking_lot::Mutex::new(None));
+
     // Apply saved geometry
     let window = main_window.window();
     window.set_size(PhysicalSize::new(
-        geometry.width as u32,
-        geometry.height as u32,
+        initial_geometry.width as u32,
+        initial_geometry.height as u32,
     ));
 
     // Set position if not default (-1 means center)
-    if geometry.x >= 0 && geometry.y >= 0 {
-        window.set_position(PhysicalPosition::new(geometry.x, geometry.y));
+    if initial_geometry.x >= 0 && initial_geometry.y >= 0 {
+        window.set_position(PhysicalPosition::new(initial_geometry.x, initial_geometry.y));
     }
+
+    // Track last tab index for geometry saving
+    let last_tab_index = Arc::new(parking_lot::Mutex::new(0));
+
+    // Handle tab changes for per-tab geometry
+    main_window.on_tab_changed({
+        let window_weak = main_window.as_weak();
+        let geometry = geometry.clone();
+        let last_tab_index = last_tab_index.clone();
+        move |new_tab_index| {
+            if let Some(window) = window_weak.upgrade() {
+                let slint_window = window.window();
+                let size = slint_window.size();
+
+                let mut geo = geometry.lock();
+                let mut last_idx = last_tab_index.lock();
+
+                // Save size for previous tab
+                geo.set_tab_size(*last_idx, size.width as i32, size.height as i32);
+
+                // Update current tab index
+                *last_idx = new_tab_index;
+
+                // Apply size for new tab
+                if let Some((w, h)) = geo.get_tab_size(new_tab_index) {
+                    slint_window.set_size(PhysicalSize::new(w as u32, h as u32));
+                } else {
+                    // Default defaults
+                    if new_tab_index == 3 { // Results tab
+                        slint_window.set_size(PhysicalSize::new(1000, 600));
+                    } else {
+                        slint_window.set_size(PhysicalSize::new(650, 350));
+                    }
+                }
+            }
+        }
+    });
 
     // Load application configuration asynchronously using AsyncBridge
     {
@@ -81,41 +138,144 @@ fn main() -> Result<(), slint::PlatformError> {
 
         tracing::info!("Loading application configuration...");
 
-        AsyncBridge::run_with_ui_update(AppState::load(), move |result| {
-            match result {
-                Ok(loaded_state) => {
-                    // Replace the default state with loaded state
-                    *state.write() = loaded_state.read().clone();
+        let main_slint_timer_arc_clone = main_slint_timer.clone(); // Clone BEFORE moving into closure
 
-                    let state_guard = state.read();
+        AsyncBridge::run_with_ui_update(AppState::load(), move |result| {
+            // ... existing AppState loading and UI update logic ...
+            let main_slint_timer_arc_clone_inner = main_slint_timer_arc_clone.clone(); // Clone for inner closure if needed (or just use the captured one)
+            match result {
+                Ok(loaded_state_arc) => {
+                    let loaded_app_state_read_guard = loaded_state_arc.read(); // Get a read guard for the source AppState
+                    let mut current_app_state_write_guard = state.write(); // Get a write guard for the shared AppState
+
+                    // Manually update the fields of the AppState that is already in `state`
+                    current_app_state_write_guard.game = loaded_app_state_read_guard.game.clone();
+                    current_app_state_write_guard.config = loaded_app_state_read_guard.config.clone();
+                    current_app_state_write_guard.mods_folder = loaded_app_state_read_guard.mods_folder.clone();
+                    current_app_state_write_guard.scan_folder = loaded_app_state_read_guard.scan_folder.clone();
+                    current_app_state_write_guard.auto_refresh_interval_ms = loaded_app_state_read_guard.auto_refresh_interval_ms;
+                    
+                    // Drop guards immediately after use
+                    drop(loaded_app_state_read_guard);
+                    drop(current_app_state_write_guard);
+
+                    let state_guard = state.read(); // Acquire read guard for state after it's been updated, for broader scope
+                    
                     tracing::info!(
                         "Configuration loaded successfully - Game: {}, Root: {}",
                         state_guard.game_name(),
                         state_guard.game_root().display()
                     );
 
+                    // Extract FileWatcher and debounce duration early
+                    // We must clone FileWatcher to own it, and get the u64 duration
+                    // Then we drop the guard to release the borrow on 'state'
+                    let file_watcher_instance = state_guard.file_watcher().clone();
+                    let debounce_duration_ms = state_guard.auto_refresh_interval_ms();
+                    let docs_root = state_guard.docs_root().cloned();
+                    let scan_folder = state_guard.scan_folder().cloned();
+                    drop(state_guard); // CRITICAL: Drop guard here
+
                     // Update UI with loaded paths
                     if let Some(w) = window_weak.upgrade() {
+                        // Re-acquire guard strictly for UI updates if needed, or just use values if we extracted them (we didn't extract paths)
+                        // Actually, we already updated UI above using state_guard. Wait, the previous code updated UI *inside* the guard scope.
+                        // Let's re-acquire for UI path setting if we moved it.
+                        // Ah, I see I need to move the UI update logic too or re-acquire.
+                        // Let's re-acquire for UI updates to be safe and simple.
+                        let state_guard = state.read();
                         if let Some(mods_folder) = state_guard.mods_folder() {
-                            w.set_mods_folder_path(
-                                mods_folder.to_string_lossy().to_string().into(),
-                            );
-                            tracing::debug!(
-                                "Loaded mods folder from config: {}",
-                                mods_folder.display()
-                            );
+                            w.set_mods_folder_path(mods_folder.to_string_lossy().to_string().into());
+                            tracing::debug!("Loaded mods folder from config: {}", mods_folder.display());
                         }
                         if let Some(scan_folder) = state_guard.scan_folder() {
-                            w.set_scan_folder_path(
-                                scan_folder.to_string_lossy().to_string().into(),
-                            );
-                            tracing::debug!(
-                                "Loaded scan folder from config: {}",
-                                scan_folder.display()
-                            );
+                            w.set_scan_folder_path(scan_folder.to_string_lossy().to_string().into());
+                            tracing::debug!("Loaded scan folder from config: {}", scan_folder.display());
+                        }
+                        drop(state_guard); // Drop again
+
+                        // Initialize file watcher if not already initialized
+                        if !file_watcher_initialized.load(Ordering::SeqCst) {
+                            let window_for_refresh = w.as_weak();
+
+                            // Initialize background watcher and get receiver for events
+                            let event_receiver = match file_watcher_instance.init() {
+                                Ok(rx) => rx,
+                                Err(e) => {
+                                    tracing::error!("Failed to initialize file watcher: {}", e);
+                                    return;
+                                }
+                            };
+
+                            // Create Slint timer on the UI thread to process events and debounce
+                            let timer_storage_arc = main_slint_timer_arc_clone_inner.clone();
+                            let file_watcher_for_timer = file_watcher_instance.clone();
+
+                            let timer = slint::Timer::default();
+                            timer.start(slint::TimerMode::Repeated, Duration::from_millis(debounce_duration_ms), move || {
+                                // Only process events if watcher is not paused
+                                if !file_watcher_for_timer.is_paused() {
+                                    // Process all pending events from the channel
+                                    while let Ok(event_result) = event_receiver.try_recv() {
+                                        match event_result {
+                                            Ok(event) => {
+                                                tracing::trace!("File system event: {:?}", event);
+                                                // Trigger UI refresh
+                                                if let Some(ui) = window_for_refresh.upgrade() {
+                                                    ui.invoke_refresh_reports();
+                                                }
+                                                // Only process one event per debounce interval to avoid excessive refreshes
+                                                break;
+                                            }
+                                            Err(e) => {
+                                                tracing::error!("File watcher channel error: {:?}", e);
+                                            }
+                                        }
+                                    }
+                                }
+                            });
+                            *timer_storage_arc.lock() = Some(ThreadSafeTimer(timer)); // Store the timer
+
+                            // Add watch paths
+                            // 1. Crash Logs folder
+                            if let Some(ref docs) = docs_root {
+                                let crash_logs = docs.join("Crash Logs");
+                                if crash_logs.exists() {
+                                    if let Err(e) = file_watcher_instance.add_path(&crash_logs, RecursiveMode::NonRecursive) {
+                                        tracing::error!("Failed to watch Crash Logs: {}", e);
+                                    }
+                                }
+                                
+                                // 3. Unsolved Logs folder
+                                let unsolved = docs.join("CLASSIC Backup").join("Unsolved Logs");
+                                if unsolved.exists() {
+                                    if let Err(e) = file_watcher_instance.add_path(&unsolved, RecursiveMode::NonRecursive) {
+                                        tracing::error!("Failed to watch Unsolved Logs: {}", e);
+                                    }
+                                }
+                            } else {
+                                // Fallback to current directory "Crash Logs" if docs_root not set
+                                let crash_logs = PathBuf::from("Crash Logs");
+                                if crash_logs.exists() {
+                                    if let Err(e) = file_watcher_instance.add_path(&crash_logs, RecursiveMode::NonRecursive) {
+                                        tracing::error!("Failed to watch Crash Logs (fallback): {}", e);
+                                    }
+                                }
+                            }
+
+                            // 2. Custom scan folder
+                            if let Some(ref custom) = scan_folder {
+                                if custom.exists() {
+                                    if let Err(e) = file_watcher_instance.add_path(custom, RecursiveMode::NonRecursive) {
+                                        tracing::error!("Failed to watch Custom folder: {}", e);
+                                    }
+                                }
+                            }
+                            file_watcher_initialized.store(true, Ordering::SeqCst);
                         }
 
                         // Check for updates if enabled in settings
+                        let state_guard = state.read(); 
                         if state_guard.update_check() {
                             tracing::info!("Automatic update check enabled");
                             let window_for_update = w.as_weak();
@@ -193,6 +353,10 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // Setup window lifecycle callbacks
     let window_weak = main_window.as_weak();
+    let geometry_clone = geometry.clone();
+    let last_tab_index_clone = last_tab_index.clone();
+    let app_state_clone_for_close = app_state.clone();
+    let main_slint_timer_for_close = main_slint_timer.clone(); // Clone for capturing in closure
     main_window.on_window_closed(move || {
         tracing::info!("Window closed by user");
 
@@ -202,16 +366,27 @@ fn main() -> Result<(), slint::PlatformError> {
             let size = window.size();
             let position = window.position();
 
-            let geometry = WindowGeometry {
-                width: size.width as i32,
-                height: size.height as i32,
-                x: position.x,
-                y: position.y,
-            };
+            let mut geo = geometry_clone.lock();
+            geo.width = size.width as i32;
+            geo.height = size.height as i32;
+            geo.x = position.x;
+            geo.y = position.y;
 
-            if let Err(e) = geometry.save() {
+            // Save size for current tab
+            let current_tab = *last_tab_index_clone.lock();
+            geo.set_tab_size(current_tab, size.width as i32, size.height as i32);
+
+            if let Err(e) = geo.save() {
                 tracing::error!("Failed to save window geometry: {}", e);
             }
+
+            // Stop the slint timer
+            *main_slint_timer_for_close.lock() = None; // Drop the timer
+
+            // Stop the file watcher gracefully
+            let state_guard = app_state_clone_for_close.read();
+            state_guard.file_watcher().stop();
+            tracing::info!("File watcher stopped on application exit.");
         }
     });
 
@@ -307,10 +482,10 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                     // Show success dialog
                                     w.set_success_title("Crash Logs Scan Complete".into());
-                                    let message = format!(
+                                    let message = std::format!(
                                         "{}\n\n{}",
                                         scan_result.message,
-                                        scan_result.details.join("\n")
+                                        scan_result.summary_details.join("\n")
                                     );
                                     w.set_success_message(message.into());
                                     w.set_show_success_dialog(true);
@@ -318,10 +493,10 @@ fn main() -> Result<(), slint::PlatformError> {
                                 } else {
                                     // Show error dialog (no logs found or partial failure)
                                     w.set_error_title("Crash Logs Scan Issue".into());
-                                    let message = format!(
+                                    let message = std::format!(
                                         "{}\n\n{}",
                                         scan_result.message,
-                                        scan_result.details.join("\n")
+                                        scan_result.summary_details.join("\n")
                                     );
                                     w.set_error_message(message.into());
                                     w.set_show_error_dialog(true);
@@ -337,7 +512,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                 w.set_error_title("Crash Logs Scan Error".into());
                                 w.set_error_message(
-                                    format!("Failed to scan crash logs:\n\n{}", e).into(),
+                                    std::format!("Failed to scan crash logs:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -396,21 +571,26 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                     // Show success dialog
                                     w.set_success_title("Game Files Scan Complete".into());
-                                    let message = format!(
-                                        "{}\n\n{}",
-                                        scan_result.message,
-                                        scan_result.details.join("\n")
-                                    );
+                                    let mut message_parts = vec![scan_result.message.clone()];
+
+                                    if !scan_result.summary_details.is_empty() {
+                                        message_parts.push(scan_result.summary_details.join("\n"));
+                                    }
+                                    if !scan_result.fcx_issues_report.is_empty() {
+                                        message_parts.push(std::format!("\nDetailed FCX issues can be found in the report. Please check the Results tab.").to_string());
+                                    }
+
+                                    let message = message_parts.join("\n\n");
                                     w.set_success_message(message.into());
                                     w.set_show_success_dialog(true);
                                     tracing::info!("Game files scan succeeded");
                                 } else {
                                     // Show error dialog
                                     w.set_error_title("Game Files Scan Issue".into());
-                                    let message = format!(
+                                    let message = std::format!(
                                         "{}\n\n{}",
                                         scan_result.message,
-                                        scan_result.details.join("\n")
+                                        scan_result.summary_details.join("\n")
                                     );
                                     w.set_error_message(message.into());
                                     w.set_show_error_dialog(true);
@@ -426,7 +606,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                 w.set_error_title("Game Files Scan Error".into());
                                 w.set_error_message(
-                                    format!("Failed to scan game files:\n\n{}", e).into(),
+                                    std::format!("Failed to scan game files:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -470,6 +650,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 w.set_settings_update_check(settings.update_check);
                 w.set_settings_vr_mode(settings.vr_mode);
                 w.set_settings_auto_switch_to_results(settings.auto_switch_to_results);
+                w.set_settings_auto_refresh_interval_s(settings.auto_refresh_interval_s as i32);
                 w.set_settings_move_unsolved_logs(settings.move_unsolved_logs);
                 w.set_settings_simplify_logs(settings.simplify_logs);
                 w.set_settings_game_root(settings.game_root.into());
@@ -549,7 +730,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                 w.set_success_title("No Updates Available".into());
                                 w.set_success_message(
-                                    format!(
+                                    std::format!(
                                         "You are using the latest version ({})",
                                         current_version_for_callback
                                     )
@@ -563,7 +744,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                 w.set_update_available(false);
                                 w.set_update_error_message(
-                                    format!("Failed to check for updates:\n\n{}", e).into(),
+                                    std::format!("Failed to check for updates:\n\n{}", e).into(),
                                 );
 
                                 // Show error in update dialog for context
@@ -612,7 +793,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 tracing::error!("Failed to toggle Papyrus monitoring: {}", e);
                                 w.set_error_title("Papyrus Monitoring Error".into());
                                 w.set_error_message(
-                                    format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into(),
+                                    std::format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -656,7 +837,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
                                         if result.success {
                                             // Show success dialog
-                                            w.set_success_title(format!("{} {}", $operation.verb(), $category.display_name()).into());
+                                            w.set_success_title(std::format!("{} {}", $operation.verb(), $category.display_name()).into());
                                             w.set_success_message(result.message.into());
                                             w.set_show_success_dialog(true);
 
@@ -682,7 +863,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                             }
                                         } else {
                                             // Show error dialog
-                                            w.set_error_title(format!("{} {} Failed", $operation.verb(), $category.display_name()).into());
+                                            w.set_error_title(std::format!("{} {} Failed", $operation.verb(), $category.display_name()).into());
                                             w.set_error_message(result.message.into());
                                             w.set_show_error_dialog(true);
                                         }
@@ -692,8 +873,8 @@ fn main() -> Result<(), slint::PlatformError> {
                                     tracing::error!("{} {} failed: {}", $operation.verb(), $category.display_name(), e);
                                     if let Some(w) = window.upgrade() {
                                         w.set_operation_in_progress(false);
-                                        w.set_error_title(format!("{} {} Error", $operation.verb(), $category.display_name()).into());
-                                        w.set_error_message(format!("Failed:\n\n{}", e).into());
+                                        w.set_error_title(std::format!("{} {} Error", $operation.verb(), $category.display_name()).into());
+                                        w.set_error_message(std::format!("Failed:\n\n{}", e).into());
                                         w.set_show_error_dialog(true);
                                     }
                                 }
@@ -865,7 +1046,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 if let Some(w) = main_window_weak.upgrade() {
                     w.set_error_title("Failed to Open URL".into());
                     w.set_error_message(
-                        format!("Could not open URL '{}':\n\n{}", url_str, e).into(),
+                        std::format!("Could not open URL '{}':\n\n{}", url_str, e).into(),
                     );
                     w.set_show_error_dialog(true);
                 }
@@ -931,7 +1112,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 tracing::error!("Failed to scan reports: {}", e);
                                 w.set_error_title("Report Scan Error".into());
                                 w.set_error_message(
-                                    format!("Failed to scan reports:\n\n{}", e).into(),
+                                    std::format!("Failed to scan reports:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -978,13 +1159,13 @@ fn main() -> Result<(), slint::PlatformError> {
 
                         // Show success message
                         w.set_success_title("Report Deleted".into());
-                        w.set_success_message(format!("Successfully deleted: {}", filename).into());
+                        w.set_success_message(std::format!("Successfully deleted: {}", filename).into());
                         w.set_show_success_dialog(true);
                     }
                     Err(e) => {
                         tracing::error!("Failed to delete report: {}", e);
                         w.set_error_title("Delete Failed".into());
-                        w.set_error_message(format!("Failed to delete report:\n\n{}", e).into());
+                        w.set_error_message(std::format!("Failed to delete report:\n\n{}", e).into());
                         w.set_show_error_dialog(true);
                     }
                 }
@@ -1003,7 +1184,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 tracing::error!("Failed to open reports folder: {}", e);
                 if let Some(w) = window_weak.upgrade() {
                     w.set_error_title("Open Folder Failed".into());
-                    w.set_error_message(format!("Failed to open folder:\n\n{}", e).into());
+                    w.set_error_message(std::format!("Failed to open folder:\n\n{}", e).into());
                     w.set_show_error_dialog(true);
                 }
             }
@@ -1050,7 +1231,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 tracing::error!("Failed to load markdown: {}", e);
                                 w.set_error_title("Failed to Load Report".into());
                                 w.set_error_message(
-                                    format!("Could not load markdown file:\n\n{}", e).into(),
+                                    std::format!("Could not load markdown file:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -1118,7 +1299,7 @@ fn main() -> Result<(), slint::PlatformError> {
                         // Show success feedback
                         w.set_success_title("Copied to Clipboard".into());
                         w.set_success_message(
-                            format!(
+                            std::format!(
                                 "Report copied to clipboard ({} characters)",
                                 content_str.len()
                             )
@@ -1132,7 +1313,7 @@ fn main() -> Result<(), slint::PlatformError> {
                         // Show error feedback
                         w.set_error_title("Copy Failed".into());
                         w.set_error_message(
-                            format!("Failed to copy to clipboard:\n\n{}", e).into(),
+                            std::format!("Failed to copy to clipboard:\n\n{}", e).into(),
                         );
                         w.set_show_error_dialog(true);
                     }
@@ -1171,9 +1352,9 @@ fn main() -> Result<(), slint::PlatformError> {
 
                 // Format: Title\n\nMessage\n\nDetails:\n\nTraceback
                 let formatted = if !details.is_empty() {
-                    format!("{}\n\n{}\n\nDetails:\n\n{}", title, message, details)
+                    std::format!("{}\n\n{}\n\nDetails:\n\n{}", title, message, details)
                 } else {
-                    format!("{}\n\n{}", title, message)
+                    std::format!("{}\n\n{}", title, message)
                 };
 
                 // Copy to clipboard
@@ -1215,8 +1396,10 @@ fn main() -> Result<(), slint::PlatformError> {
                     update_check: w.get_settings_update_check(),
                     vr_mode: w.get_settings_vr_mode(),
                     auto_switch_to_results: w.get_settings_auto_switch_to_results(),
+                    auto_refresh_interval_s: w.get_settings_auto_refresh_interval_s() as u64,
                     move_unsolved_logs: w.get_settings_move_unsolved_logs(),
                     simplify_logs: w.get_settings_simplify_logs(),
+                    update_source: "".to_string(), // Initialize the new field
                     game_root: w.get_settings_game_root().to_string(),
                     docs_root: w.get_settings_docs_root().to_string(),
                     ini_folder: w.get_settings_ini_folder().to_string(),
@@ -1257,7 +1440,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 tracing::error!("Failed to save/validate settings: {}", e);
                                 w.set_error_title("Settings Error".into());
                                 w.set_error_message(
-                                    format!("Failed to save settings:\n\n{}", e).into(),
+                                    std::format!("Failed to save settings:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -1320,7 +1503,7 @@ fn main() -> Result<(), slint::PlatformError> {
                     Err(e) => {
                         tracing::error!("Failed to browse for {}: {}", path_type_str, e);
                         w.set_error_title("Path Selection Error".into());
-                        w.set_error_message(format!("Failed to open file picker:\n\n{}", e).into());
+                        w.set_error_message(std::format!("Failed to open file picker:\n\n{}", e).into());
                         w.set_show_error_dialog(true);
                     }
                 }
@@ -1469,7 +1652,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 tracing::error!("Failed to start Papyrus monitoring: {}", e);
                                 w.set_error_title("Monitoring Error".into());
                                 w.set_error_message(
-                                    format!("Failed to start monitoring:\n\n{}", e).into(),
+                                    std::format!("Failed to start monitoring:\n\n{}", e).into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -1783,7 +1966,7 @@ fn main() -> Result<(), slint::PlatformError> {
 
                     // Generate filename with timestamp
                     let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
-                    let filename = format!("crash-{}.log", timestamp);
+                    let filename = std::format!("crash-{}.log", timestamp);
                     let file_path = crashlogs_dir.join(&filename);
 
                     // Write content to crash log file
@@ -1805,7 +1988,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 // Show success message and offer to scan
                                 w.set_success_title("Crash Log Downloaded".into());
                                 w.set_success_message(
-                                    format!(
+                                    std::format!(
                                         "Successfully downloaded crash log from Pastebin.\n\nFile: {}\nSize: {} bytes\n\nThe crash log has been saved to the Crash Logs folder.\nYou can now scan it using the 'Scan Crash Logs' button.",
                                         filename,
                                         size
@@ -1821,7 +2004,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                 // Show error dialog
                                 w.set_error_title("Pastebin Error".into());
                                 w.set_error_message(
-                                    format!("Failed to download crash log from Pastebin:\n\n{}", e).into()
+                                    std::format!("Failed to download crash log from Pastebin:\n\n{}", e).into()
                                 );
                                 w.set_show_error_dialog(true);
                             }
