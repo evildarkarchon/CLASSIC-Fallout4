@@ -73,7 +73,8 @@
             - Updated test mocks for async compatibility and adjusted assertions.
         - **Fixed `test_async_utilities_unit.py`**:
             - Increased base delay to reduce flakiness in backoff test.
-        - `test_string_utils.py`: `AssertionError: test_append_or_extend_single_values`
+        - **Fixed `test_string_utils.py`**:
+            - Corrected assertion to handle full floating-point string representation of `math.pi`.
         - `test_rust_backend_performance.py`: `ZeroDivisionError`
         - `test_rust_database_pool.py`: `RustDatabaseIOError`
         - `test_report_parity.py`: `TypeError: Can't instantiate abstract class`
