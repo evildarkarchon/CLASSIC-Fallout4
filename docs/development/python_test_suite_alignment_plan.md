@@ -59,7 +59,8 @@
         - Refactored `ScanGameCore` methods to use `await yaml_settings_async`.
         - Updated `tests/scanning/test_scan_game_wrappers.py` to correctly mock `ScanGameCore` and its methods.
     - **Address Remaining Failures:**
-        - `test_async_yaml_caching.py`: `AssertionError: assert 'test' == 'modified'`
+        - **Fixed `test_async_yaml_caching.py`**: 
+            - Implemented `YamlFileOperations.clear_cache()` and updated `AsyncYamlSettingsCore.clear_cache()` to ensure underlying file caches are cleared.
         - `test_dds_analyzer.py`: `AssertionError: assert 4 == 1`
         - `test_scan_mods_archived.py`: `AssertionError: BA2 FORMAT ERRORS FOUND`
         - `test_initial_setup.py`: `TypeError: XSE log file path must be a string`
