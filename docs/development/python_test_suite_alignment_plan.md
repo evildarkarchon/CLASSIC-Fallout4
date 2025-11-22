@@ -71,7 +71,8 @@
         - **Fixed `test_scan_mods_unpacked.py`**:
             - Improved path matching logic in `unpacked_scanner.py`.
             - Updated test mocks for async compatibility and adjusted assertions.
-        - `test_async_utilities_unit.py`: `AssertionError: test_applies_backoff`
+        - **Fixed `test_async_utilities_unit.py`**:
+            - Increased base delay to reduce flakiness in backoff test.
         - `test_string_utils.py`: `AssertionError: test_append_or_extend_single_values`
         - `test_rust_backend_performance.py`: `ZeroDivisionError`
         - `test_rust_database_pool.py`: `RustDatabaseIOError`
