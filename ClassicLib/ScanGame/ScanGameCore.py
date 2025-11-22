@@ -27,7 +27,7 @@ from ClassicLib.ScanGame.core import (
     UnpackedModsScanner,
     get_optimal_limits,
 )
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettingsCache import yaml_settings, yaml_settings_async
 
 
 class ScanGameCore:
@@ -37,7 +37,7 @@ class ScanGameCore:
     only one instance exists and centralizes management of scan and validation
     operations for efficiency.
 
-    The primary use of this class is to provide an interface for assessing mods'
+    The primary use of this class is to provide an interface for assessing mods' 
     files, validating their structure and content, and offering error reporting
     or issue lists derived from the scans.
 
@@ -130,20 +130,11 @@ class ScanGameCore:
             loop.run_in_executor(None, self.walk_executor.shutdown, True),
         )
 
-    def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
+    async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
         """
-        Retrieves settings required for a scanning process.
-
-        This method returns a tuple containing three items: a string, a dictionary where
-        both keys and values are strings, and an optional Path object. These settings
-        are essential for configuring and executing a scan.
-
-        Returns:
-            tuple[str, dict[str, str], Path | None]: A tuple containing the scan settings,
-            where the first element is a string, the second is a dictionary with string
-            keys and values, and the third is an optional Path object.
+        Retrieves settings required for a scanning process asynchronously.
         """
-        return self.validators.get_scan_settings()
+        return await self.validators.get_scan_settings()
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
         """
@@ -203,10 +194,10 @@ class ScanGameCore:
             FileNotFoundError: If the specified mod folder path does not exist.
         """
         # Get settings
-        xse_acronym, xse_scriptfiles, mod_path = self.get_scan_settings()
+        xse_acronym, xse_scriptfiles, mod_path = await self.get_scan_settings()
 
         if not mod_path:
-            return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
+            return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
 
         # Delegate scanning to unpacked_scanner
         try:
@@ -280,13 +271,13 @@ class ScanGameCore:
         }
 
         # Get settings
-        xse_acronym, xse_scriptfiles, mod_path = self.get_scan_settings()
+        xse_acronym, xse_scriptfiles, mod_path = await self.get_scan_settings()
 
         # Setup paths
         bsarch_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Data/BSArch.exe"
 
         # Validate requirements
-        validation_error = self._validate_archived_scan_requirements(mod_path, bsarch_path)
+        validation_error = await self._validate_archived_scan_requirements(mod_path, bsarch_path)
         if validation_error:
             return validation_error
 
@@ -295,7 +286,7 @@ class ScanGameCore:
         return issue_lists, xse_acronym, xse_scriptfiles, mod_path, bsarch_path
 
     @staticmethod
-    def _validate_archived_scan_requirements(mod_path: Path | None, bsarch_path: Path) -> str | None:
+    async def _validate_archived_scan_requirements(mod_path: Path | None, bsarch_path: Path) -> str | None:
         """
         Validate all requirements for archived scan.
 
@@ -303,11 +294,11 @@ class ScanGameCore:
             Error message if validation fails, None if all requirements are satisfied.
         """
         if not mod_path:
-            return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
+            return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
         if not mod_path.exists():
-            return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
+            return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
         if not bsarch_path.exists():
-            return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
+            return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
         return None
 
     # Helper methods for internal operations

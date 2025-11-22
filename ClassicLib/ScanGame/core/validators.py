@@ -11,7 +11,7 @@ from pathlib import Path
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettingsCache import classic_settings_async, yaml_settings_async
 
 
 class ScanValidators:
@@ -28,7 +28,7 @@ class ScanValidators:
         self._scan_settings_cache: tuple[str, dict[str, str], Path | None] | None = None
         self._issue_messages_cache: dict[tuple[str, str], dict[str, list[str]]] = {}
 
-    def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
+    async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
         """
         Retrieves and caches scanning settings required for the application.
 
@@ -48,15 +48,15 @@ class ScanValidators:
             return self._scan_settings_cache
 
         # Get XSE settings - YamlSettingsCache already caches these
-        xse_acronym_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        xse_scriptfiles_setting: dict[str, str] | None = yaml_settings(
+        xse_acronym_setting: str | None = await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
+        xse_scriptfiles_setting: dict[str, str] | None = await yaml_settings_async(
             dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
         )
         xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
         xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
 
         # Get mods path
-        mod_path: Path | None = classic_settings(Path, "MODS Folder Path")
+        mod_path: Path | None = await classic_settings_async(Path, "MODS Folder Path")
 
         # Cache the result
         self._scan_settings_cache = (xse_acronym, xse_scriptfiles, mod_path)
