@@ -546,12 +546,12 @@ def get_yamldata() -> Any:
 
             # Get YAML directories from ResourceLoader
             data_dir = ResourceLoader.get_data_directory()
-            # Rust YamlData expects 3 directories: [main, game, ignore]
-            # Main and Game YAMLs are in databases/, Ignore YAML is in project root
+            # Rust YamlData now accepts [root, data] as a cleaner API
+            # root: contains CLASSIC Ignore.yaml
+            # data: contains databases/CLASSIC Main.yaml and databases/CLASSIC Fallout4.yaml
             yaml_dirs = [
-                str(data_dir / "databases"),  # Main YAML: CLASSIC Data/databases/CLASSIC Main.yaml
-                str(data_dir / "databases"),  # Game YAML: CLASSIC Data/databases/CLASSIC Fallout4.yaml
-                str(data_dir.parent),  # Ignore YAML: (project root)/CLASSIC Ignore.yaml
+                str(data_dir.parent), # Root directory
+                str(data_dir),        # CLASSIC Data directory
             ]
 
             # Get game and VR mode from GlobalRegistry

@@ -393,11 +393,21 @@ pub fn create_yamldata(
     PyYamlData::new(yaml_dirs, game, vr_mode)
 }
 
+/// Clear the global YAML cache
+///
+/// This function clears all cached YAML data. It's primarily useful for
+/// testing to ensure clean state between test runs.
+#[pyfunction]
+pub fn clear_yaml_cache() {
+    classic_config_core::clear_global_yaml_cache();
+}
+
 /// Initialize the classic_config Python module
 #[pymodule]
 fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+    m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     // Register custom exception types
@@ -416,6 +426,7 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
 pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyYamlData>()?;
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
+    m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
 
     // Register custom exception types
     m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;

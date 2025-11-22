@@ -1114,7 +1114,16 @@ impl YamlOperations {
         let mut current = data;
 
         for key in keys {
-            current = &current[key];
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return default.to_string(),
+                    };
+                }
+                _ => return default.to_string(),
+            }
         }
 
         current.as_str().unwrap_or(default).to_string()
@@ -1159,7 +1168,16 @@ impl YamlOperations {
         let mut current = data;
 
         for key in keys {
-            current = &current[key];
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return Vec::new(),
+                    };
+                }
+                _ => return Vec::new(),
+            }
         }
 
         match current {
@@ -1209,7 +1227,16 @@ impl YamlOperations {
         let mut current = data;
 
         for key in keys {
-            current = &current[key];
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return HashMap::new(),
+                    };
+                }
+                _ => return HashMap::new(),
+            }
         }
 
         match current {
@@ -1231,6 +1258,22 @@ impl Default for YamlOperations {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Clear the global YAML cache
+///
+/// This function clears all cached YAML data. It's primarily useful for
+/// testing to ensure clean state between test runs.
+///
+/// # Example
+/// ```rust,no_run
+/// use classic_yaml_core::clear_global_yaml_cache;
+///
+/// // Clear all cached YAML files
+/// clear_global_yaml_cache();
+/// ```
+pub fn clear_global_yaml_cache() {
+    YAML_CACHE.clear();
 }
 
 #[cfg(test)]
