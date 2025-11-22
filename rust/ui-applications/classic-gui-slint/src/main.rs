@@ -199,7 +199,8 @@ fn main() -> Result<(), slint::PlatformError> {
                             let window_for_refresh = w.as_weak();
 
                             // Initialize background watcher and get receiver for events
-                            let event_receiver = match file_watcher_instance.init() {
+                            // Now passing the debounce duration to the watcher init
+                            let event_receiver = match file_watcher_instance.init(Duration::from_millis(debounce_duration_ms)) {
                                 Ok(rx) => rx,
                                 Err(e) => {
                                     tracing::error!("Failed to initialize file watcher: {}", e);
@@ -207,29 +208,30 @@ fn main() -> Result<(), slint::PlatformError> {
                                 }
                             };
 
-                            // Create Slint timer on the UI thread to process events and debounce
+                            // Create Slint timer on the UI thread to process events
                             let timer_storage_arc = main_slint_timer_arc_clone_inner.clone();
                             let file_watcher_for_timer = file_watcher_instance.clone();
 
                             let timer = slint::Timer::default();
-                            timer.start(slint::TimerMode::Repeated, Duration::from_millis(debounce_duration_ms), move || {
+                            // Poll frequently (100ms) since debouncing is handled in the background thread
+                            timer.start(slint::TimerMode::Repeated, Duration::from_millis(100), move || {
                                 // Only process events if watcher is not paused
                                 if !file_watcher_for_timer.is_paused() {
-                                    // Process all pending events from the channel
-                                    while let Ok(event_result) = event_receiver.try_recv() {
-                                        match event_result {
-                                            Ok(event) => {
-                                                tracing::trace!("File system event: {:?}", event);
-                                                // Trigger UI refresh
-                                                if let Some(ui) = window_for_refresh.upgrade() {
-                                                    ui.invoke_refresh_reports();
-                                                }
-                                                // Only process one event per debounce interval to avoid excessive refreshes
-                                                break;
-                                            }
-                                            Err(e) => {
-                                                tracing::error!("File watcher channel error: {:?}", e);
-                                            }
+                                    // Check if we have any debounced events waiting
+                                    // We use try_recv() to avoid blocking the UI thread
+                                    let mut refresh_needed = false;
+                                    
+                                    while let Ok(changed_paths) = event_receiver.try_recv() {
+                                        if !changed_paths.is_empty() {
+                                            tracing::debug!("Received {} file changes from watcher", changed_paths.len());
+                                            refresh_needed = true;
+                                        }
+                                    }
+
+                                    if refresh_needed {
+                                        if let Some(ui) = window_for_refresh.upgrade() {
+                                            tracing::info!("Triggering reports refresh due to file changes");
+                                            ui.invoke_refresh_reports();
                                         }
                                     }
                                 }
