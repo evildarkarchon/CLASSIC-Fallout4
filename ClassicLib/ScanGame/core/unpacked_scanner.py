@@ -388,7 +388,7 @@ class UnpackedModsScanner:
             not has_xse_files
             and any(filename_lower == key.lower() for key in xse_scriptfiles)
             and "workshop framework" not in str(root).lower()
-            and f"Scripts\\{filename}" in str(file_path)
+            and file_path.parent.name.lower() == "scripts"
         ):
             has_xse_files = True
             async with issue_locks["xse_file"]:
