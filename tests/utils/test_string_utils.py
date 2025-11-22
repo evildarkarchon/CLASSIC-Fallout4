@@ -130,7 +130,8 @@ class TestStringUtilities:
         append_or_extend(42, destination)
         append_or_extend(math.pi, destination)
 
-        assert destination == ["string", "42", "3.14"]
+        expected_pi_str = str(math.pi)
+        assert destination == ["string", "42", expected_pi_str]
 
     def test_append_or_extend_collections(self) -> None:
         """Test append_or_extend with collections."""
