@@ -3,11 +3,11 @@
 **Goal:** Align the Python test suite with the v8.0.0+ architecture (Post-Rust Migration) by systematically fixing failures across 5 phases.
 
 **Status:**
-- [x] Phase 1: Core Infrastructure & Mocking Foundation (Complete)
-- [x] Phase 2: Async/Sync Alignment (Complete)
-- [x] Phase 3: Module API & Type Coercion (Complete)
-- [x] Phase 4: Rust Integration & Parity (Core checks passing, advanced property tests skipped/pending)
-- [ ] Phase 5: Coverage Expansion & Cleanup (Future work)
+- [x] Phase 1: Core Infrastructure & Mocking Foundation (DONE)
+- [x] Phase 2: Async/Sync Alignment (DONE)
+- [x] Phase 3: Module API & Type Coercion (DONE)
+- [x] Phase 4: Rust Integration & Parity (DONE)
+- [ ] Phase 5: Coverage Expansion & Cleanup (IN PROGRESS)
 
 ## Phase 1: Core Infrastructure & Mocking Foundation (DONE)
 - **Goal:** Fix core import errors, fixture scopes, and basic mocking issues.
@@ -48,9 +48,9 @@
     - **Created `tests/rust_integration/test_config_parity.py`**: Added comprehensive parity tests for `classic_config.YamlData`, which now pass (with one expected skip for unimplemented Skyrim support). *Complete*
     - Improve coverage of rust-integrated modules with new tests for all rust modules. *Complete*
     - Review and reimplement tests that were skipped. *Complete* (for `test_config_parity.py`, `test_different_game_instance` is now explicitly skipped due to unimplemented feature)
-    - Clean up tests in `tests/rust_integration` that are no longer relevant. *Pending*
+    - Clean up tests in `tests/rust_integration` that are no longer relevant. *Complete*
 
-## Phase 5: Coverage Expansion & Cleanup (TODO)
+## Phase 5: Coverage Expansion & Cleanup (IN PROGRESS)
 - **Goal:** Improve coverage and remove obsolete tests.
 - **Tasks:**
     - Review skipped tests and decide on removal or reimplementation.
