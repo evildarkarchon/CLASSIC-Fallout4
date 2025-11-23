@@ -4,8 +4,9 @@ This module tests all error conditions at the Rust-Python FFI boundary
 using only synthetic/mock data, ensuring proper error handling and
 graceful degradation without using any copyrighted game files.
 """
+# ruff: noqa: ANN201, ANN001, ARG001, PLR6301, ANN202
 
-import classic_file_io
+import contextlib
 import gc
 import sys
 import tempfile
@@ -14,6 +15,7 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import classic_file_io
 import pytest
 
 # Mark all tests in this module
@@ -72,10 +74,11 @@ class TestFFIErrorConditions:
             parser.find_segments(None, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Test with empty values
-        game_ver, crashgen_ver, error, segments = parser.find_segments([], "Buffout 4", "F4SE", "Fallout4.exe")
+        _, _, _, segments = parser.find_segments([], "Buffout 4", "F4SE", "Fallout4.exe")
         assert segments is not None  # Should return empty result, not crash
 
-    def test_invalid_utf8_handling(self):
+    @pytest.mark.asyncio
+    async def test_invalid_utf8_handling(self):
         """Test handling of invalid UTF-8 sequences."""
         from ClassicLib.integration.factory import get_file_io
 
@@ -88,16 +91,20 @@ class TestFFIErrorConditions:
             temp_file.write(invalid_utf8)
             temp_path = temp_file.name
 
+        error = None
         try:
             # Should handle invalid UTF-8 gracefully
-            result = io_core.read_file(temp_path)
+            result = await io_core.read_file(temp_path)
             # Should either return decoded text or error, not crash
-            assert result is not None or result == ""
+            assert result is not None or not result
         except (UnicodeDecodeError, RuntimeError) as e:
             # These exceptions are acceptable
-            assert "UTF-8" in str(e) or "decode" in str(e).lower()
+            error = e
         finally:
             Path(temp_path).unlink(missing_ok=True)
+
+        if error:
+            assert "UTF-8" in str(error) or "decode" in str(error).lower()
 
     def test_memory_overflow_prevention(self):
         """Test prevention of memory overflow with large synthetic data."""
@@ -109,21 +116,24 @@ class TestFFIErrorConditions:
         large_content = "ERROR: Synthetic error line\n" * 350000  # ~10MB
 
         # Should handle large input gracefully
+        error = None
         try:
             lines = large_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Should either parse or raise memory error
             assert segments is not None
         except (MemoryError, RuntimeError, ValueError) as e:
             # Should raise appropriate error for oversized input
-            assert "memory" in str(e).lower() or "size" in str(e).lower() or "large" in str(e).lower()
+            error = e
+
+        if error:
+            assert "memory" in str(error).lower() or "size" in str(error).lower() or "large" in str(error).lower()
 
     def test_type_mismatch_errors(self):
         """Test type mismatches at FFI boundary."""
         from ClassicLib.integration.factory import get_formid_analyzer
-        from ClassicLib.rust.formid_rust import FormIDAnalyzer as RustFormIDAnalyzer
 
-        mock_yamldata = MagicMock() # Will still be passed, but the constructor will be mocked
+        mock_yamldata = MagicMock()  # Will still be passed, but the constructor will be mocked
 
         # Mock the Rust FormIDAnalyzer to control its extract_formids behavior
         # so it raises type errors for wrong inputs.
@@ -131,7 +141,7 @@ class TestFFIErrorConditions:
         mock_rust_analyzer.extract_formids.side_effect = TypeError("Mocked type error")
 
         with patch("ClassicLib.rust.formid_rust.FormIDAnalyzer", return_value=mock_rust_analyzer):
-            analyzer = get_formid_analyzer(mock_yamldata, True, False) # This now returns the mock_rust_analyzer
+            analyzer = get_formid_analyzer(mock_yamldata, True, False)  # This now returns the mock_rust_analyzer
 
             # Test with wrong types
             wrong_list_inputs = [
@@ -157,9 +167,9 @@ class TestFFIErrorConditions:
                 # Each worker processes different synthetic data
                 content = f"Worker {worker_id} log line\n" * 100
                 lines = content.splitlines()
-                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+                _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 results.append((worker_id, segments))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 errors.append((worker_id, e))
 
         # Launch multiple threads
@@ -178,7 +188,8 @@ class TestFFIErrorConditions:
         # At least some should succeed
         assert len(results) > 0
 
-    def test_resource_cleanup_on_error(self):
+    @pytest.mark.asyncio
+    async def test_resource_cleanup_on_error(self):
         """Test that resources are properly cleaned up on FFI errors."""
         from ClassicLib.integration.factory import get_file_io
 
@@ -189,11 +200,9 @@ class TestFFIErrorConditions:
 
         # Cause multiple errors
         for _ in range(10):
-            try:
+            with contextlib.suppress(FileNotFoundError, OSError, RuntimeError, classic_file_io.RustFileIOError):
                 # Try to read non-existent file
-                io_core.read_file("/completely/synthetic/path/that/does/not/exist.txt")
-            except (FileNotFoundError, OSError, RuntimeError):
-                pass  # Expected
+                await io_core.read_file("/completely/synthetic/path/that/does/not/exist.txt")
 
         # Force garbage collection
         gc.collect()
@@ -223,7 +232,7 @@ class TestFFIErrorConditions:
         for test_str in test_strings:
             try:
                 lines = test_str.splitlines() if test_str else []
-                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+                _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 # Should handle all string types
                 assert segments is not None
             except (ValueError, UnicodeDecodeError):
@@ -277,6 +286,7 @@ class TestFFIErrorConditions:
     def test_ffi_with_corrupted_data_structures(self):
         """Test FFI with corrupted/malformed data structures."""
         from ClassicLib.integration.factory import get_plugin_analyzer
+
         mock_yamldata = MagicMock()
         analyzer = get_plugin_analyzer(mock_yamldata)
 
@@ -292,9 +302,11 @@ class TestFFIErrorConditions:
 
         for corrupt_data in corrupted_structures:
             # Mock loadorder_scan_log which is called internally by analyze_all
-            mock_loadorder_scan_log_return = (corrupt_data, False, False) # Expected tuple return
-            with patch("ClassicLib.python.plugin_py.PythonPluginAnalyzer.loadorder_scan_log", return_value=mock_loadorder_scan_log_return), \
-                 patch("ClassicLib.rust.plugin_rust.RustPluginAnalyzer.loadorder_scan_log", return_value=mock_loadorder_scan_log_return):
+            mock_loadorder_scan_log_return = (corrupt_data, False, False)  # Expected tuple return
+            with (
+                patch("ClassicLib.python.plugin_py.PythonPluginAnalyzer.loadorder_scan_log", return_value=mock_loadorder_scan_log_return),
+                patch("ClassicLib.rust.plugin_rust.RustPluginAnalyzer.loadorder_scan_log", return_value=mock_loadorder_scan_log_return),
+            ):
                 try:
                     result = analyzer.analyze_all()
                     # Should handle gracefully
@@ -352,7 +364,7 @@ class TestFFIErrorConditions:
 
             # Parser should still work after interruption
             lines = ["test"]
-            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             assert segments is not None
 
     def test_dll_injection_prevention(self):
@@ -369,11 +381,9 @@ class TestFFIErrorConditions:
             with patch("importlib.import_module") as mock_import:
                 mock_import.side_effect = ImportError(f"No module named '{name}'")
 
-                try:
+                with contextlib.suppress(ImportError, ValueError):
                     # Attempt to import with dangerous name
                     __import__(name)
-                except (ImportError, ValueError):
-                    pass  # Expected either ImportError or ValueError
 
     def test_stack_overflow_prevention(self):
         """Test prevention of stack overflow via recursive structures."""
@@ -388,11 +398,15 @@ class TestFFIErrorConditions:
             nested_content += "  " * min(i, 100) + f"Level {i}\n"
         nested_content += "END\n"
 
+        error = None
         try:
             lines = nested_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Should handle deep nesting without stack overflow
             assert segments is not None
         except (RecursionError, RuntimeError, ValueError) as e:
             # Should raise appropriate error for deep nesting
-            assert "recursion" in str(e).lower() or "depth" in str(e).lower() or "stack" in str(e).lower()
+            error = e
+
+        if error:
+            assert "recursion" in str(error).lower() or "depth" in str(error).lower() or "stack" in str(error).lower()

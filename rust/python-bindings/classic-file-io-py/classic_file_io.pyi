@@ -38,9 +38,19 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Any, Coroutine
+from collections.abc import Coroutine
+from typing import Any
 
 __version__: str
+
+class RustFileIOError(Exception):
+    """Base for File I/O Rust errors."""
+
+class RustFileIOIOError(RustFileIOError):
+    """File I/O errors."""
+
+class RustFileIOParseError(RustFileIOError):
+    """File parsing errors (DDS, encoding)."""
 
 class FileIOCore:
     """High-performance async file I/O core with caching and encoding detection.
@@ -61,13 +71,7 @@ class FileIOCore:
         Utility methods (file_exists, get_file_size, etc.) are synchronous.
     """
 
-    def __init__(
-        self,
-        encoding: str = "utf-8",
-        errors: str = "ignore",
-        cache_size: int = 100,
-        max_concurrent_io: int = 50
-    ) -> None:
+    def __init__(self, encoding: str = "utf-8", errors: str = "ignore", cache_size: int = 100, max_concurrent_io: int = 50) -> None:
         """Create a new file I/O core with specified configuration.
 
         Initializes internal caching structures and async runtime for improved
@@ -295,6 +299,48 @@ class FileIOCore:
             >>> print(f"Size: {size / 1024 / 1024:.2f} MB")
         """
 
+    def get_file_info(self, path: str) -> dict[str, Any]:
+        """Get file information (size, timestamps) (synchronous).
+
+        Returns a dictionary containing file metadata.
+
+        Args:
+            path: File path to check (string or pathlib.Path converted to str)
+
+        Returns:
+            Dictionary with keys 'size', 'created', 'modified', or 'error'
+
+        Example:
+            >>> io_core = FileIOCore()
+            >>> info = io_core.get_file_info("file.txt")
+            >>> print(f"Size: {info.get('size')}")
+        """
+
+    def read_file_mmap(self, path: str) -> Coroutine[Any, Any, str]:
+        """Read a file using memory mapping (optimized for large files).
+
+        This method is asynchronous and must be awaited.
+
+        Args:
+            path: File path to read
+
+        Returns:
+            Coroutine that resolves to file contents as string
+        """
+
+    def read_file_with_encoding(self, path: str, encoding: str) -> Coroutine[Any, Any, str]:
+        """Read a file with a specific encoding.
+
+        This method is asynchronous and must be awaited.
+
+        Args:
+            path: File path to read
+            encoding: Encoding to use (e.g., 'utf-8', 'cp1252')
+
+        Returns:
+            Coroutine that resolves to file contents as string
+        """
+
     def read_dds_header(self, path: str) -> tuple[int, int] | None:
         """Parse DDS texture file header (synchronous, 40x speedup).
 
@@ -351,12 +397,7 @@ class FileIOCore:
             >>> io_core.clear_cache()  # Free cached content
         """
 
-    def py_walk_directory(
-        self,
-        path: str,
-        pattern: str | None = None,
-        max_depth: int | None = None
-    ) -> list[str]:
+    def py_walk_directory(self, path: str, pattern: str | None = None, max_depth: int | None = None) -> list[str]:
         r"""Walk directory tree and collect file paths (synchronous).
 
         Traverses a directory tree and collects file paths matching an
@@ -381,10 +422,7 @@ class FileIOCore:
             >>> all_files = io_core.py_walk_directory("data", max_depth=2)
         """
 
-    def py_read_multiple_files(
-        self,
-        paths: list[str]
-    ) -> Coroutine[Any, Any, dict[str, str]]:
+    def py_read_multiple_files(self, paths: list[str]) -> Coroutine[Any, Any, dict[str, str]]:
         """Read multiple files in parallel (asynchronous).
 
         Reads multiple text files in parallel for improved performance.
@@ -407,10 +445,7 @@ class FileIOCore:
             ...     print(f"{path}: {len(content)} chars")
         """
 
-    def py_write_multiple_files(
-        self,
-        files: dict[str, str]
-    ) -> Coroutine[Any, Any, None]:
+    def py_write_multiple_files(self, files: dict[str, str]) -> Coroutine[Any, Any, None]:
         """Write multiple files in parallel (asynchronous).
 
         Writes multiple files in parallel for improved performance.
@@ -571,11 +606,11 @@ class EncodingDetector:
     def __init__(self) -> None:
         """Create a new encoding detector instance."""
 
-    def detect_encoding(self, bytes: bytes) -> str:
+    def detect_encoding(self, data: bytes) -> str:
         """Detect encoding from bytes.
 
         Args:
-            bytes: Raw bytes to analyze for encoding detection
+            data: Raw bytes to analyze for encoding detection
 
         Returns:
             Detected encoding name (e.g., 'utf-8', 'windows-1252')
@@ -728,12 +763,7 @@ class PyLogCollector:
         >>> asyncio.run(main())
     """
 
-    def __init__(
-        self,
-        base_folder: str,
-        xse_folder: str | None = None,
-        custom_folder: str | None = None
-    ) -> None:
+    def __init__(self, base_folder: str, xse_folder: str | None = None, custom_folder: str | None = None) -> None:
         """Create a new LogCollector.
 
         Args:
@@ -845,12 +875,7 @@ class FileGeneratorConfig:
     game_name: str
     """Game name for local YAML path (e.g., 'Fallout4', 'Skyrim')."""
 
-    def __init__(
-        self,
-        ignore_file_content: str,
-        local_yaml_content: str,
-        game_name: str
-    ) -> None:
+    def __init__(self, ignore_file_content: str, local_yaml_content: str, game_name: str) -> None:
         """Create a new file generator configuration.
 
         Args:
