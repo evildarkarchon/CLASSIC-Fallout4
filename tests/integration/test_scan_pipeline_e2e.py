@@ -4,8 +4,10 @@ This module tests the complete workflow from crash log input through
 parsing, analysis, and report generation using synthetic data based
 on real crash log patterns.
 """
+# ruff: noqa: ANN201, ANN001, PLR6301, ARG002, ASYNC240, FURB113
 
 import asyncio
+import contextlib
 import tempfile
 import time
 from pathlib import Path
@@ -41,17 +43,19 @@ class SyntheticCrashLogGenerator:
         lines = []
 
         # Header similar to real crash logs
-        lines.append("Fallout 4 v1.10.163")
-        lines.append("Buffout 4 v1.28.6")
-        lines.append("")
-        lines.append('Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512')
-        lines.append("")
-        lines.append("SYSTEM SPECS:")
-        lines.append("\tOS: Microsoft Windows 10 Home v10.0.19045")
-        lines.append("\tCPU: GenuineIntel Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz")
-        lines.append("\tGPU: NVIDIA GeForce RTX 2070")
-        lines.append("\tMEMORY: 16.00 GB")
-        lines.append("")
+        lines.extend([
+            "Fallout 4 v1.10.163",
+            "Buffout 4 v1.28.6",
+            "",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512 Fallout4.exe+0733512',
+            "",
+            "SYSTEM SPECS:",
+            "\tOS: Microsoft Windows 10 Home v10.0.19045",
+            "\tCPU: GenuineIntel Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz",
+            "\tGPU: NVIDIA GeForce RTX 2070",
+            "\tMEMORY: 16.00 GB",
+            "",
+        ])
 
         if include_plugins:
             lines.append("PROBABLE CALL STACK:")
@@ -94,8 +98,7 @@ class SyntheticCrashLogGenerator:
             lines.append("\t[0E] PACE.esp")
 
             # Add more light plugins to be realistic
-            for i in range(5, 20):
-                lines.append(f"\t[FE:{i:03X}] SyntheticPlugin_{i}.esp")
+            lines.extend(f"\t[FE:{i:03X}] SyntheticPlugin_{i}.esp" for i in range(5, 20))
 
             lines.append("")
 
@@ -111,8 +114,7 @@ class SyntheticCrashLogGenerator:
                 "[6] 0x7FF95B0E7614 KERNEL32.DLL+0017614",
                 "[7] 0x7FF95C8E26A1 ntdll.dll+00526A1",
             ]
-            for entry in stack_entries:
-                lines.append(f"\t{entry}")
+            lines.extend(f"\t{entry}" for entry in stack_entries)
             lines.append("")
 
         if include_memory_dump:
@@ -135,11 +137,8 @@ class SyntheticCrashLogGenerator:
                 "R14 0x1                (size_t)",
                 'R15 0x22FCA037A78      (char*) "WCLINS_PRP_Patch - Main.ba2"',
             ]
-            for reg in registers:
-                lines.append(f"\t{reg}")
-            lines.append("")
-
-            lines.append("STACK:")
+            lines.extend(f"\t{reg}" for reg in registers)
+            lines.extend(["", "STACK:"])
             stack_memory = [
                 "[RSP+8  ] 0x80ECFDFA90      (void*)",
                 "[RSP+10 ] 0x1AC             (size_t)",
@@ -150,15 +149,16 @@ class SyntheticCrashLogGenerator:
                 "[RSP+38 ] 0x7FF6EF4B2DC8    (void* -> Fallout4.exe+0712DC8)",
                 "[RSP+40 ] 0x7FF6F1E52E60    (BSResource::Archive2**)",
             ]
-            for mem in stack_memory:
-                lines.append(f"\t{mem}")
+            lines.extend(f"\t{mem}" for mem in stack_memory)
             lines.append("")
 
         # Add some FormID references
-        lines.append("FormID: 00000014 from Fallout4.esm")
-        lines.append("FormID: FE000803 from [FE:003] PRP.esp")
-        lines.append("FormID: 0A001234 from [0A] SS2.esm")
-        lines.append("")
+        lines.extend([
+            "FormID: 00000014 from Fallout4.esm",
+            "FormID: FE000803 from [FE:003] PRP.esp",
+            "FormID: 0A001234 from [0A] SS2.esm",
+            "",
+        ])
 
         # Add padding to reach target size
         current_size = len("\n".join(lines))
@@ -180,21 +180,18 @@ class TestScanPipelineE2E:
     @pytest.fixture
     async def setup_pipeline(self):
         """Setup the complete pipeline with all components."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-
         from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
         # Clear AsyncBridge singleton instances properly
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
         # Note: GlobalRegistry is module-level now, no cleanup needed
         with AsyncBridge._lock:
             for instance in AsyncBridge._instances.values():
-                try:
+                with contextlib.suppress(Exception):
                     instance.shutdown()
-                except Exception:
-                    pass
             AsyncBridge._instances.clear()
 
         # Initialize components
@@ -211,13 +208,8 @@ class TestScanPipelineE2E:
         mock_yamldata.game_version_new = "1.10.980"
         mock_yamldata.crashgen_latest_og = "1.28.6"
         mock_yamldata.crashgen_latest_vr = "1.28.6"
-        
-        orchestrator = OrchestratorCore(
-            yamldata=mock_yamldata,
-            fcx_mode=False,
-            show_formid_values=False,
-            formid_db_exists=False
-        )
+
+        orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=False, formid_db_exists=False)
         io_core = FileIOCore()
         msg_handler = MessageHandler()
         bridge = AsyncBridge.get_instance()
@@ -263,7 +255,7 @@ class TestScanPipelineE2E:
             # Parse the log (should use Rust if available for 10x speedup)
             # Use find_segments which is the actual API
             crash_lines = crash_log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
             parse_time = time.time() - start_time
 
             # Validate parsing - check that segments were found
@@ -271,7 +263,7 @@ class TestScanPipelineE2E:
             # Segments is a tuple of lists in the new API
             assert isinstance(segments, (tuple, list))
             assert len(segments) >= 6
-            
+
             segment_plugins = segments[5]
             segment_stack = segments[2]
 
@@ -293,15 +285,15 @@ class TestScanPipelineE2E:
 
             # Phase 3: Generate report - Use OrchestratorCore which knows how to compose reports
             # ReportGeneratorFragments doesn't have a single 'generate' method
-            
+
             # Since we're testing the pipeline, we can simulate what OrchestratorCore does
             # or just verify we have the data to generate a report
-            
+
             assert segment_plugins is not None
             assert segment_stack is not None
             assert analysis_results is not None
-            
-            report_time = 0.1 # Placeholder since we skip full generation here
+
+            report_time = 0.1  # Placeholder since we skip full generation here
 
             # Validate complete pipeline
             # assert report is not None # Skipped
@@ -354,7 +346,7 @@ class TestScanPipelineE2E:
 
             start_time = time.time()
             crash_lines = crash_log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
             parse_time = time.time() - start_time
 
             # Should handle 2MB log efficiently
@@ -385,14 +377,14 @@ class TestScanPipelineE2E:
         from ClassicLib.integration.factory import get_parser
 
         parser = get_parser()
-        
+
         # Should handle missing plugin list gracefully
         crash_lines = crash_log_content.splitlines()
-        game_ver, crashgen_ver, error, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
+        _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
         assert segments is not None
-        
+
         segment_plugins = segments[5]
-        assert not segment_plugins # Should be empty
+        assert not segment_plugins  # Should be empty
 
     @pytest.mark.asyncio
     async def test_pipeline_error_recovery(self, setup_pipeline):
@@ -410,11 +402,11 @@ class TestScanPipelineE2E:
 
         parser = get_parser()
 
-        for _i, malformed_log in enumerate(malformed_logs):
+        for malformed_log in malformed_logs:
             try:
                 # Use find_segments which is the actual API
                 lines = malformed_log.splitlines() if isinstance(malformed_log, str) else [malformed_log]
-                game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+                _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
                 # Should either parse or return safe error
                 assert segments is None or isinstance(segments, (dict, tuple, list))
             except (ValueError, RuntimeError, UnicodeDecodeError, AttributeError):
@@ -439,7 +431,7 @@ class TestScanPipelineE2E:
             """Scan a single log asynchronously."""
             await asyncio.sleep(0)  # Yield to event loop
             lines = log_content.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             return {"id": log_id, "result": segments}
 
         # Run concurrent scans
@@ -475,7 +467,7 @@ class TestScanPipelineE2E:
         for i in range(10):
             log = generator.generate_complete_crash_log(size_mb=1.5)
             lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+            _, _, _, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
 
             # Explicitly delete to test cleanup
             del log
@@ -500,8 +492,9 @@ class TestScanPipelineE2E:
     @pytest.mark.skip(reason="GameScanner module has been removed/refactored. Need to update test to use GameIntegrityOrchestrator.")
     async def test_game_scan_to_integrity_check_pipeline(self, setup_pipeline):
         """Test game scanning to integrity check pipeline."""
+        from ClassicLib.ScanGame.GameScanner import GameScanner  # type: ignore
+
         from ClassicLib.GameIntegrity import GameIntegrityChecker
-        from ClassicLib.ScanGame.GameScanner import GameScanner
 
         # Create synthetic game structure
         with tempfile.TemporaryDirectory(prefix="synthetic_game_") as game_dir:
@@ -564,11 +557,11 @@ class TestScanPipelineE2E:
         # Just ensure we can get the analyzer
         analyzer = get_plugin_analyzer(setup_pipeline["orchestrator"].yamldata)
         assert analyzer is not None
-        
+
         # Simulate conflict detection logic which would happen in orchestrator or dedicated logic
         # Since we don't have the exact logic isolated here, we just verify analyzer instantiation
         # and mocking structure
-        
+
         conflicts = []
         # Manual conflict check logic simulation
         for plugin_name, data in plugin_data.items():

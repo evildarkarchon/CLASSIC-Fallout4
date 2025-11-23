@@ -8,7 +8,7 @@ replacing the mutable list pattern with immutable fragment composition.
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:
@@ -26,17 +26,17 @@ class ReportGeneratorFragments:
     relevant details in autoscan reports.
 
     Attributes:
-        yamldata (ClassicScanLogsInfo): Configuration data for generating the report.
+        yamldata (ClassicScanLogsInfo | None): Configuration data for generating the report.
     """
 
-    def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
+    def __init__(self, yamldata: "ClassicScanLogsInfo | None") -> None:
         """
         Initializes the instance with the given ClassicScanLogsInfo data.
 
         Args:
-            yamldata: Instance of ClassicScanLogsInfo containing YAML data.
+            yamldata: Instance of ClassicScanLogsInfo containing YAML data or None.
         """
-        self.yamldata: ClassicScanLogsInfo = yamldata
+        self.yamldata: ClassicScanLogsInfo | None = yamldata
 
     def generate_header(self, crashlog_filename: str) -> ReportFragment:
         """

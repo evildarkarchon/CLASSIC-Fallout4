@@ -64,6 +64,7 @@ fn bench_yaml_serialization(c: &mut Criterion) {
                 update_check: true,
                 vr_mode: false,
                 auto_switch_to_results: true,
+                auto_refresh_interval_ms: 5000,
                 paths: PathConfig {
                     ini_folder: Some(PathBuf::from("C:\\Test\\INI")),
                     scan_custom: Some(PathBuf::from("C:\\Test\\Logs")),

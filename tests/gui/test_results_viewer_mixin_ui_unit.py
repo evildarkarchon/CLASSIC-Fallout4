@@ -3,6 +3,7 @@
 Tests the UI interactions, context menus, and user operations
 in isolation with mocked Qt components.
 """
+# ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002, F811
 
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -55,6 +56,9 @@ def viewer_mixin(mock_qt_components, init_message_handler_fixture):
             self.report_loaded.emit = MagicMock()
             self.reports_refreshed = MagicMock(spec=Signal)
             self.reports_refreshed.emit = MagicMock()
+            
+            self._file_watching_paused = False
+            self._refresh_pending = False
 
     viewer = TestViewer()
     viewer.file_watcher = mock_qt_components["watcher"]

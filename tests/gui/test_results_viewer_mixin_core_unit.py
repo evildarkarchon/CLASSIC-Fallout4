@@ -4,6 +4,8 @@ Tests the core report scanning, loading, and management functionality
 in isolation with mocked Qt components.
 """
 
+# ruff: noqa: ANN001, ANN201, ANN204, ARG001, ARG002, F811, PLR6301
+
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -120,20 +122,17 @@ class TestReportScanning:
             assert len(reports) == 1
             assert "custom-AUTOSCAN.md" in str(reports[0])
 
-    def test_scan_for_reports_sorts_by_modification_time(self, viewer_mixin, tmp_path, gui_message_handler):
-        """Should sort reports by modification time, newest first."""
-        import time
-
+    def test_scan_for_reports_sorts_by_name(self, viewer_mixin, tmp_path, gui_message_handler):
+        """Should sort reports by name, descending (Z-A)."""
         crash_logs_dir = tmp_path / "Crash Logs"
         crash_logs_dir.mkdir()
 
-        # Create reports with different modification times
-        old_report = crash_logs_dir / "old-AUTOSCAN.md"
-        old_report.write_text("Old")
-        time.sleep(0.01)
-
-        new_report = crash_logs_dir / "new-AUTOSCAN.md"
-        new_report.write_text("New")
+        # Create reports
+        a_report = crash_logs_dir / "a-AUTOSCAN.md"
+        a_report.write_text("A")
+        
+        z_report = crash_logs_dir / "z-AUTOSCAN.md"
+        z_report.write_text("Z")
 
         with (
             patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
@@ -144,9 +143,9 @@ class TestReportScanning:
 
             reports = viewer_mixin.scan_for_reports()
 
-            # Newest should be first
-            assert "new-AUTOSCAN.md" in str(reports[0])
-            assert "old-AUTOSCAN.md" in str(reports[1])
+            # Z should be first (descending)
+            assert "z-AUTOSCAN.md" in str(reports[0])
+            assert "a-AUTOSCAN.md" in str(reports[1])
 
     def test_scan_includes_backup_location(self, viewer_mixin, tmp_path, gui_message_handler):
         """Should scan backup location for unsolved logs."""
@@ -157,7 +156,10 @@ class TestReportScanning:
         backup_report = backup_dir / "unsolved-AUTOSCAN.md"
         backup_report.write_text("Unsolved report")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             reports = viewer_mixin.scan_for_reports()
@@ -192,11 +194,22 @@ class TestReportLoading:
         """Should handle missing report file gracefully."""
         missing_path = Path("/nonexistent/report.md")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer_class
+        ):
             result = viewer_mixin.load_report(missing_path)
 
             assert result is False
             assert viewer_mixin.current_report_path is None
+            
+            # msg_error is called inside QTimer.singleShot lambda, so verify singleShot called
+            mock_timer_class.singleShot.assert_called_once()
+            # Execute the lambda to verify it calls msg_error
+            args = mock_timer_class.singleShot.call_args[0]
+            # args[0] is delay (0), args[1] is callback
+            callback = args[1]
+            callback()
             mock_error.assert_called_once()
 
     def test_load_report_handles_encoding_errors(self, viewer_mixin, tmp_path, gui_message_handler):
@@ -217,12 +230,21 @@ class TestReportLoading:
         report_path.write_text("Content")
 
         with (
-            patch.object(Path, "read_text", side_effect=Exception("Unexpected error")),
+            patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync", side_effect=Exception("Unexpected error")),
             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer_class,
         ):
             result = viewer_mixin.load_report(report_path)
 
             assert result is False
+            
+            # Verify error reported
+            mock_timer_class.singleShot.assert_called()
+            # Execute the lambda to verify it calls msg_error
+            args = mock_timer_class.singleShot.call_args[0]
+            # args[0] is delay, args[1] is callback
+            callback = args[1]
+            callback()
             mock_error.assert_called_once()
 
 
@@ -241,7 +263,10 @@ class TestReportListRefresh:
         report1.write_text("Report 1")
         report2.write_text("Report 2")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             viewer_mixin.refresh_reports_list()
@@ -255,7 +280,10 @@ class TestReportListRefresh:
 
     def test_refresh_reports_list_no_reports(self, viewer_mixin, tmp_path, gui_message_handler):
         """Should show message when no reports found."""
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             viewer_mixin.refresh_reports_list()
@@ -309,7 +337,10 @@ class TestFileWatcher:
         # Directory already in watcher
         viewer_mixin.file_watcher.directories.return_value = [crash_logs_dir.as_posix()]
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             viewer_mixin.scan_for_reports()

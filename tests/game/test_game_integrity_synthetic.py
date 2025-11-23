@@ -5,10 +5,10 @@ data structures that simulate game files without using any actual
 copyrighted game content.
 """
 
-import hashlib
 import random
 import shutil
 import tempfile
+from collections.abc import Generator
 from pathlib import Path
 
 import pytest
@@ -71,7 +71,7 @@ class SyntheticGameFileGenerator:
         return header + formid_section + padding
 
     @staticmethod
-    def create_mock_archive(name: str, num_files: int = 10) -> bytes:
+    def create_mock_archive(_name: str, num_files: int = 10) -> bytes:
         """Create mock archive file content."""
         # Synthetic archive header
         header = b"SYNTH_ARCHIVE_V1"
@@ -123,7 +123,7 @@ class TestGameIntegritySynthetic:
     """Test GameIntegrity with synthetic data."""
 
     @pytest.fixture
-    def synthetic_game_dir(self):
+    def synthetic_game_dir(self) -> Generator[Path, None, None]:  # noqa: PLR6301
         """Create a temporary directory with synthetic game structure."""
         temp_dir = tempfile.mkdtemp(prefix="synthetic_game_")
 
@@ -140,7 +140,7 @@ class TestGameIntegritySynthetic:
         shutil.rmtree(temp_dir, ignore_errors=True)
 
     @pytest.fixture
-    def mock_game_files(self, synthetic_game_dir):
+    def mock_game_files(self, synthetic_game_dir: Path) -> Path:  # noqa: PLR6301
         """Create mock game files in the synthetic directory."""
         generator = SyntheticGameFileGenerator()
 
@@ -194,30 +194,30 @@ class TestGameIntegritySynthetic:
         return synthetic_game_dir
 
     @pytest.mark.asyncio
-    async def test_game_directory_validation(self, mock_game_files):
+    async def test_game_directory_validation(self, mock_game_files: Path) -> None:  # noqa: PLR6301
         """Test validation of game directory structure."""
+        from unittest.mock import AsyncMock, patch
+
         from ClassicLib.GameIntegrity import GameIntegrityChecker
-        from ClassicLib.GlobalRegistry import get_vr
-        from ClassicLib.YamlSettingsCache import yaml_settings_async, YAML
-        from unittest.mock import patch, AsyncMock
 
         # Mock dependencies for load_configuration_async
-        with patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as mock_get_vr, \
-             patch("ClassicLib.YamlSettingsCache.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async, \
-             patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"): # Mock file hash calc
-
+        with (
+            patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
+            patch("ClassicLib.YamlSettingsCache.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
+            patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
+        ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
             mock_yaml_settings_async.side_effect = [
-                "some/steam/ini/path", # steam_ini_path
-                "some_old_hash",       # exe_hash_old
-                "some_new_hash",       # exe_hash_new
-                str(mock_game_files / "Fallout4.exe"), # game_exe_path
-                "Fallout4",            # root_name
-                "Some warning message",# root_warn
+                "some/steam/ini/path",  # steam_ini_path
+                "some_old_hash",  # exe_hash_old
+                "some_new_hash",  # exe_hash_new
+                str(mock_game_files / "Fallout4.exe"),  # game_exe_path
+                "Fallout4",  # root_name
+                "Some warning message",  # root_warn
             ]
 
             checker = GameIntegrityChecker()
-            await checker.load_configuration_async() # Load config internally
+            await checker.load_configuration_async()  # Load config internally
 
             # Should detect the synthetic game structure
             result = await checker.run_full_check_async()
@@ -225,41 +225,40 @@ class TestGameIntegritySynthetic:
             assert "You have the latest version of Fallout4!" in result
 
     @pytest.mark.asyncio
-    async def test_missing_master_file_detection(self, synthetic_game_dir):
+    async def test_missing_master_file_detection(self, synthetic_game_dir: Path) -> None:  # noqa: PLR6301
         """Test detection of missing master files."""
+        from unittest.mock import AsyncMock, patch
+
         from ClassicLib.GameIntegrity import GameIntegrityChecker
-        from ClassicLib.GlobalRegistry import get_vr
-        from ClassicLib.YamlSettingsCache import yaml_settings_async, YAML
-        from unittest.mock import patch, AsyncMock
 
         # Create directory with missing masters - now this means the mocked config will point to non-existent files
         (synthetic_game_dir / "Data").mkdir(exist_ok=True)
 
         # Mock dependencies for load_configuration_async
-        with patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as mock_get_vr, \
-             patch("ClassicLib.YamlSettingsCache.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async, \
-             patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"): # Mock file hash calc
-
+        with (
+            patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
+            patch("ClassicLib.YamlSettingsCache.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
+            patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
+        ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
             mock_yaml_settings_async.side_effect = [
-                "some/nonexistent/steam/ini/path", # steam_ini_path (non-existent to trigger out-of-date)
-                "some_old_hash",                   # exe_hash_old
-                "some_new_hash",                   # exe_hash_new
-                str(synthetic_game_dir / "nonexistent_game.exe"), # game_exe_path (non-existent)
-                "Fallout4",                        # root_name
-                "Some warning message",            # root_warn
+                "some/nonexistent/steam/ini/path",  # steam_ini_path (non-existent to trigger out-of-date)
+                "some_old_hash",  # exe_hash_old
+                "some_new_hash",  # exe_hash_new
+                str(synthetic_game_dir / "nonexistent_game.exe"),  # game_exe_path (non-existent)
+                "Fallout4",  # root_name
+                "Some warning message",  # root_warn
             ]
 
             checker = GameIntegrityChecker()
-            await checker.load_configuration_async() # Load config internally
+            await checker.load_configuration_async()  # Load config internally
 
             # Should detect missing masters (reported as "Game executable not found" or "out of date")
             result = await checker.run_full_check_async()
             assert "Game executable not found" in result or "OUT OF DATE" in result
 
-
     @pytest.mark.skip("validate_load_order functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_plugin_load_order_validation(self, mock_game_files):
+    def test_plugin_load_order_validation(self, mock_game_files: Path) -> None:
         """Test plugin load order validation with synthetic plugins."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -281,9 +280,8 @@ class TestGameIntegritySynthetic:
         # # Masters should come before regular plugins
         # assert len(issues) == 0 or all("order" in issue.lower() for issue in issues)
 
-
     @pytest.mark.skip("detect_formid_conflicts functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_formid_conflict_detection(self, mock_game_files):
+    def test_formid_conflict_detection(self, mock_game_files: Path) -> None:
         """Test FormID conflict detection with proper hex FormIDs."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -321,7 +319,7 @@ class TestGameIntegritySynthetic:
         # assert any("00000014" in str(conflict) for conflict in conflicts)
 
     @pytest.mark.skip("scan_for_corrupted_files functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_corrupt_file_detection(self, mock_game_files):
+    def test_corrupt_file_detection(self, mock_game_files: Path) -> None:
         """Test detection of corrupted files using synthetic data."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -337,7 +335,7 @@ class TestGameIntegritySynthetic:
         # assert any("SyntheticMod_0.esp" in str(f) for f in corrupted)
 
     @pytest.mark.skip("verify_file_hashes functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_file_hash_verification(self, mock_game_files):
+    def test_file_hash_verification(self, mock_game_files: Path) -> None:
         """Test file hash verification with synthetic files."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -356,7 +354,7 @@ class TestGameIntegritySynthetic:
         # assert all(result["valid"] for result in verification_results.values())
 
     @pytest.mark.skip("analyze_dependencies functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_dependency_chain_analysis(self, mock_game_files):
+    def test_dependency_chain_analysis(self, mock_game_files: Path) -> None:
         """Test plugin dependency chain analysis with synthetic data."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -379,7 +377,7 @@ class TestGameIntegritySynthetic:
         # assert not any("circular" in str(issue).lower() for issue in issues)
 
     @pytest.mark.skip("validate_light_plugins functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_light_plugin_validation(self, mock_game_files):
+    def test_light_plugin_validation(self, mock_game_files: Path) -> None:
         """Test light plugin (ESL) validation with proper FormID ranges."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -404,7 +402,7 @@ class TestGameIntegritySynthetic:
         # assert any("range" in str(issue).lower() or "invalid" in str(issue).lower() for issue in issues)
 
     @pytest.mark.skip("detect_mod_conflicts functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_mod_conflict_detection_with_hex_formids(self, mock_game_files):
+    def test_mod_conflict_detection_with_hex_formids(self, mock_game_files: Path) -> None:
         """Test mod conflict detection with proper hex FormIDs."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -427,7 +425,7 @@ class TestGameIntegritySynthetic:
         # # Should detect mod-to-mod conflict
         # assert any("03001000" in str(conflict) for conflict in conflicts)
 
-    def test_formid_parsing_validation(self):
+    def test_formid_parsing_validation(self) -> None:  # noqa: PLR6301
         """Test that FormIDs are properly validated as hex values."""
         generator = SyntheticGameFileGenerator()
 
@@ -456,7 +454,7 @@ class TestGameIntegritySynthetic:
             assert 0 <= value <= 0xFFFFFFFF
 
     @pytest.mark.skip("check_archive_integrity functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_archive_integrity_check(self, mock_game_files):
+    def test_archive_integrity_check(self, mock_game_files: Path) -> None:
         """Test archive file integrity checking."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 
@@ -470,7 +468,7 @@ class TestGameIntegritySynthetic:
         # assert all(result["valid"] or result["reason"] == "synthetic" for result in archive_results.values())
 
     @pytest.mark.skip("analyze_plugin_formids functionality moved or removed from GameIntegrityChecker. Revisit in later phase.")
-    def test_performance_with_many_formids(self, synthetic_game_dir):
+    def test_performance_with_many_formids(self, synthetic_game_dir: Path) -> None:
         """Test performance with many synthetic FormIDs."""
         # from ClassicLib.GameIntegrity import GameIntegrityChecker
 

@@ -389,6 +389,7 @@ class YamlFileOperations:
         """
         if hasattr(self, "_file_cache"):
             self._file_cache.clear()
+
     async def regenerate_settings_file(self, yaml_store: YAML) -> dict[str, Any]:
         """
         Regenerates a YAML settings file and reloads it.

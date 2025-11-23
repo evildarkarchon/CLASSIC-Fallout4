@@ -24,6 +24,7 @@ class TestConfigFileCacheReadOnly:
     def init_message_handler(self):
         """Initialize MessageHandler for tests."""
         import importlib
+
         handler_mod = importlib.import_module("ClassicLib.MessageHandler.handler")
 
         handler_mod.init_message_handler(parent=None, is_gui_mode=False)
@@ -34,7 +35,7 @@ class TestConfigFileCacheReadOnly:
     def mock_dependencies(self, tmp_path):
         """Mock external dependencies."""
         from unittest.mock import patch
-        
+
         # Mock yaml_settings to avoid async context error and filesystem access
         with patch("ClassicLib.ScanGame.Config.yaml_settings") as mock_settings:
             # Return tmp_path as game root

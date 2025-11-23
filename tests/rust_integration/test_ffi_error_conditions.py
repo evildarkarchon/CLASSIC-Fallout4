@@ -6,12 +6,12 @@ graceful degradation without using any copyrighted game files.
 """
 # ruff: noqa: ANN201, ANN001, ARG001, PLR6301, ANN202
 
+import asyncio
 import contextlib
 import gc
 import sys
 import tempfile
 import threading
-import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -101,7 +101,7 @@ class TestFFIErrorConditions:
             # These exceptions are acceptable
             error = e
         finally:
-            Path(temp_path).unlink(missing_ok=True)
+            Path(temp_path).unlink(missing_ok=True)  # noqa: ASYNC240
 
         if error:
             assert "UTF-8" in str(error) or "decode" in str(error).lower()
@@ -200,13 +200,13 @@ class TestFFIErrorConditions:
 
         # Cause multiple errors
         for _ in range(10):
-            with contextlib.suppress(FileNotFoundError, OSError, RuntimeError, classic_file_io.RustFileIOError):
+            with contextlib.suppress(FileNotFoundError, OSError, RuntimeError, classic_file_io.RustFileIOError): # pyright: ignore[reportAttributeAccessIssue]
                 # Try to read non-existent file
                 await io_core.read_file("/completely/synthetic/path/that/does/not/exist.txt")
 
         # Force garbage collection
         gc.collect()
-        time.sleep(0.1)  # Allow cleanup
+        await asyncio.sleep(0.1)  # Allow cleanup
 
         # Thread count should not have grown significantly
         final_threads = threading.active_count()
@@ -333,7 +333,7 @@ class TestFFIErrorConditions:
         ]
 
         for path in dangerous_paths:
-            with pytest.raises((OSError, ValueError, RuntimeError, FileNotFoundError, classic_file_io.RustFileIOIOError)):
+            with pytest.raises((OSError, ValueError, RuntimeError, FileNotFoundError, classic_file_io.RustFileIOIOError)): # pyright: ignore[reportAttributeAccessIssue]
                 await io_core.read_file(path)
 
     def test_signal_handling_during_ffi_call(self):

@@ -19,12 +19,13 @@ The tests ensure that Rust plugin analysis maintains 100% functional compatibili
 with the Python implementation while providing significant performance improvements
 (typically 30x faster for load order processing and plugin matching operations).
 """
+# ruff: noqa: ANN201, ANN001, ANN204, PLR6301, ARG002, ANN003, BLE001
 
 from __future__ import annotations
 
 import logging
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import pytest
@@ -33,10 +34,13 @@ from ClassicLib.integration.factory import get_plugin_analyzer
 from ClassicLib.integration.status import (
     is_rust_accelerated,
 )
-
-RUST_AVAILABLE = {"plugin_analyzer": is_rust_accelerated("plugin_analyzer")}
 from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
 from tests.rust_integration.parity_fixtures import ParityResult, ParityValidator, skip_if_rust_unavailable, validate_plugin_dictionaries
+
+if TYPE_CHECKING:
+    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+
+RUST_AVAILABLE = {"plugin_analyzer": is_rust_accelerated("plugin_analyzer")}
 
 logger = logging.getLogger(__name__)
 
@@ -54,19 +58,25 @@ class PluginParityValidator(ParityValidator):
         """Initialize plugin parity validator."""
         super().__init__("plugin_analyzer")
 
-    def create_rust_implementation(self, yamldata=None, **kwargs) -> Any | None:
+    def create_rust_implementation(self, yamldata: ClassicScanLogsInfo | None = None, **kwargs) -> Any | None:
         """Create Rust plugin analyzer implementation using factory."""
         if not RUST_AVAILABLE.get("plugin_analyzer"):
             return None
 
+        if yamldata is None:
+            raise ValueError("yamldata (ClassicScanLogsInfo) is required")
+
         # Use factory function to get the best implementation
         return get_plugin_analyzer(yamldata)
 
-    def create_python_implementation(self, yamldata=None, **kwargs) -> PluginAnalyzer:
+    def create_python_implementation(self, yamldata: ClassicScanLogsInfo | None = None, **kwargs) -> PluginAnalyzer:
         """Create Python plugin analyzer implementation."""
+        if yamldata is None:
+            raise ValueError("yamldata (ClassicScanLogsInfo) is required")
+
         return PluginAnalyzer(yamldata)
 
-    def generate_test_cases(self) -> list[dict[str, Any]]:
+    def generate_test_cases(self) -> list[dict[str, Any]]:  # type: ignore[override]
         """Generate comprehensive plugin analysis test cases."""
         return [
             # Basic Fallout 4 load order
@@ -103,8 +113,7 @@ class PluginParityValidator(ParityValidator):
             # Plugin limit scenario (255 ESP/ESM + ESLs)
             {
                 "name": "plugin_limit_scenario",
-                "plugins_segment": [f"[{i:02X}] Plugin{i}.esp" for i in range(255)]
-                + [f"[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)],
+                "plugins_segment": [f"[{i:02X}] Plugin{i}.esp" for i in range(255)] + [f"[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)],
                 "expected_count": 355,
                 "expected_limit_triggered": True,
             },
@@ -198,12 +207,11 @@ class TestPluginParity:
     detection, and edge cases.
     """
 
-    async def test_load_order_parsing_parity(self, mock_scanlog_info):
+    async def test_load_order_parsing_parity(self, mock_scanlog_info):  # noqa: PLR0912
         """
         Test that Rust and Python plugin analyzers produce identical load order
         parsing results across various plugin segment formats.
         """
-        logger = logging.getLogger(__name__)
         validator = PluginParityValidator()
         test_cases = validator.generate_test_cases()
         results = []
@@ -238,17 +246,15 @@ class TestPluginParity:
                 is_identical, differences = validate_plugin_dictionaries(rust_plugins, python_plugins)
 
                 # Additional validation for tuple elements
-                if len(rust_result) >= 2 and len(python_result) >= 2:
+                if len(rust_result) >= 2 and len(python_result) >= 2 and rust_result[1] != python_result[1]:
                     # Compare plugin limit triggered flag
-                    if rust_result[1] != python_result[1]:
-                        differences.append(f"Plugin limit triggered differs: Rust={rust_result[1]}, Python={python_result[1]}")
-                        is_identical = False
+                    differences.append(f"Plugin limit triggered differs: Rust={rust_result[1]}, Python={python_result[1]}")
+                    is_identical = False
 
-                if len(rust_result) >= 3 and len(python_result) >= 3:
+                if len(rust_result) >= 3 and len(python_result) >= 3 and rust_result[2] != python_result[2]:
                     # Compare limit check disabled flag
-                    if rust_result[2] != python_result[2]:
-                        differences.append(f"Limit check disabled differs: Rust={rust_result[2]}, Python={python_result[2]}")
-                        is_identical = False
+                    differences.append(f"Limit check disabled differs: Rust={rust_result[2]}, Python={python_result[2]}")
+                    is_identical = False
 
                 # Validate expected counts if specified
                 if expected_count > 0:
@@ -365,7 +371,6 @@ class TestPluginParity:
         Test that Rust and Python plugin analyzers produce identical results
         for plugin limit detection across different scenarios.
         """
-        logger = logging.getLogger(__name__)
         # Test cases for plugin limit detection
         limit_test_cases = [
             # Below limit
@@ -389,8 +394,7 @@ class TestPluginParity:
             # ESLs don't count toward ESP limit
             {
                 "name": "esls_dont_count_toward_limit",
-                "plugins_segment": [f"[{i:02X}] Plugin{i}.esp" for i in range(254)]
-                + [f"[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)],
+                "plugins_segment": [f"[{i:02X}] Plugin{i}.esp" for i in range(254)] + [f"[FE:{i:03X}] ESLMod{i}.esl" for i in range(100)],
                 "game_version": "1.10.163",
                 "version_current": "1.10.163",
                 "expected_limit_triggered": False,
@@ -400,8 +404,8 @@ class TestPluginParity:
             {
                 "name": "old_version_limit_check_disabled",
                 "plugins_segment": [f"[{i:02X}] Plugin{i}.esp" for i in range(200)] + ["[FF] LimitBreaker.esp"],
-                "game_version": "1.10.984", # Next Gen game version
-                "version_current": "1.34.0", # Crashgen version in the affected range
+                "game_version": "1.10.984",  # Next Gen game version
+                "version_current": "1.34.0",  # Crashgen version in the affected range
                 "expected_limit_triggered": False,
                 "expected_limit_disabled": True,
             },
@@ -532,7 +536,6 @@ class TestPluginParity:
         Test that Rust and Python plugin analyzers produce identical results
         for problematic plugin identification and matching.
         """
-        logger = logging.getLogger(__name__)
         # Configure mock YAML data with problematic plugin patterns
         mock_yaml_dict = {
             "problematic_plugins": {
@@ -580,33 +583,29 @@ class TestPluginParity:
             test_plugins_set = {p.strip() for p in test_plugins}
 
             # Test problematic plugin matching
-            start_time = time.perf_counter()
             rust_analyzer.plugin_match(test_plugins, test_plugins_set)
-            rust_time = time.perf_counter() - start_time
 
             # Reset mock for Python test
             # Note: Python implementation might modify the report directly or return a fragment
             # We need to check how plugin_match is implemented in Python
             # Python: plugin_match(self, segment_callstack_lower, crashlog_plugins_lower) -> ReportFragment
-            
-            start_time = time.perf_counter()
-            python_result = python_analyzer.plugin_match(test_plugins, test_plugins_set)
-            python_time = time.perf_counter() - start_time
+
+            python_analyzer.plugin_match(test_plugins, test_plugins_set)
 
             # Since both return ReportFragment (or similar), we check content
             # Rust wrapper returns ReportFragment
-            
+
             # Verify results manually since we can't easily mock the internal calls made by Rust
             # Rust returns a ReportFragment, Python returns a ReportFragment
-            
+
             # Check if problematic plugins are in the report
             rust_content = "\n".join(rust_analyzer.plugin_match(test_plugins, test_plugins_set).content)
-            
+
             expected_problematic = ["ScrapEverything.esp", "PlaceEverywhere.esp", "Arbitration.esp", "CompanionsGoneWild.esp"]
             for plugin in expected_problematic:
                 if plugin.lower() not in rust_content.lower():
-                     # It might be in a different format in the report
-                     pass
+                    # It might be in a different format in the report
+                    pass
 
             # For now, just ensure it runs without error and returns something
             assert rust_analyzer.plugin_match(test_plugins, test_plugins_set) is not None
@@ -621,7 +620,6 @@ class TestPluginParity:
         Test that Rust plugin analysis provides expected performance improvements
         while maintaining complete functional parity.
         """
-        logger = logging.getLogger(__name__)
         # Create large plugin list for performance measurement
         large_plugin_list = (
             [
@@ -666,7 +664,9 @@ class TestPluginParity:
         if python_time > 0 and rust_time > 0:
             performance_gain = python_time / rust_time
             logging.getLogger(__name__).info(f"Plugin analysis performance: Rust {performance_gain:.1f}x faster than Python")
-            logging.getLogger(__name__).info(f"Processing {len(large_plugin_list)} plugins: Rust={rust_time:.3f}s, Python={python_time:.3f}s")
+            logging.getLogger(__name__).info(
+                f"Processing {len(large_plugin_list)} plugins: Rust={rust_time:.3f}s, Python={python_time:.3f}s"
+            )
 
             # Expect significant performance improvement
             # Adjusted expectation for CI/test environments
@@ -687,7 +687,6 @@ class TestPluginParity:
         if rust_esp_count != expected_esp_count:
             # logging.getLogger(__name__).warning(f"Rust keys sample: {list(rust_plugins.keys())[:10]}")
             logging.getLogger(__name__).warning(f"Rust values sample: {list(rust_plugins.values())[:10]}")
-            pass
 
         sum(1 for v in python_plugins.values() if not v.startswith("FE"))
         sum(1 for v in python_plugins.values() if v.startswith("FE"))

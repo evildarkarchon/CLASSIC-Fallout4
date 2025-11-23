@@ -240,9 +240,7 @@ class DDSProcessor:
 
         return ["Unable to read DDS header"]
 
-    async def _process_single_dds_file(
-        self, dds_file: Path, mod_dir: Path
-    ) -> list[str]:
+    async def _process_single_dds_file(self, dds_file: Path, mod_dir: Path) -> list[str]:
         """
         Process a single DDS file and return any validation issues.
 

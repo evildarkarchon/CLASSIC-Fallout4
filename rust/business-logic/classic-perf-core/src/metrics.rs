@@ -215,6 +215,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_concurrent_access() {
         use std::thread;
 

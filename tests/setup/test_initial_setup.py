@@ -1,7 +1,6 @@
 """Tests for SetupCoordinator initial setup sequence."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913
 
-import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -56,7 +55,7 @@ class TestInitialSetup:
     ) -> None:
         """Test initial setup when no game path is configured."""
         coordinator = SetupCoordinator()
-        
+
         # Configure mock to return an awaitable coroutine
         async def async_return(*args, **kwargs):
             return [
@@ -64,6 +63,7 @@ class TestInitialSetup:
                 "Fallout4",  # game_name
                 None,  # game_path (not configured)
             ]
+
         mock_yaml_cache.batch_get_settings_async.side_effect = async_return
 
         # Run initial setup
@@ -92,7 +92,7 @@ class TestInitialSetup:
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
     @patch("ClassicLib.BackupManager.BackupManager.run_backup")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch("ClassicLib.SetupCoordinator.msg_success")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -101,19 +101,22 @@ class TestInitialSetup:
         mock_get_vr: MagicMock,
         mock_msg_success: MagicMock,
         mock_msg_info: MagicMock,
-        mock_batch_get: MagicMock,
+        mock_yaml_cache: MagicMock,
         mock_backup: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure_logging: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test initial setup when game path is already configured."""
-        # Mock batch_get_settings to return values with game path configured
-        mock_batch_get.return_value = [
-            "7.31.0",  # classic_ver
-            "Fallout4",  # game_name
-            "C:/Games/Fallout4",  # game_path (configured)
-        ]
+        # Mock batch_get_settings_async to return values with game path configured
+        async def async_return(*args, **kwargs):
+            return [
+                "7.31.0",  # classic_ver
+                "Fallout4",  # game_name
+                "C:/Games/Fallout4",  # game_path (configured)
+            ]
+
+        mock_yaml_cache.batch_get_settings_async.side_effect = async_return
 
         # Run initial setup
         coordinator.run_initial_setup()
@@ -130,14 +133,14 @@ class TestInitialSetup:
 
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_version(
         self,
         mock_get_vr: MagicMock,
         mock_msg_info: MagicMock,
-        mock_batch_get: MagicMock,
+        mock_yaml_cache: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure: MagicMock,
         coordinator: SetupCoordinator,
@@ -145,12 +148,15 @@ class TestInitialSetup:
         """Test that TypeError is raised when classic_ver is not a string."""
         mock_file_gen.return_value = None
 
-        # Mock batch_get_settings to return non-string for version
-        mock_batch_get.return_value = [
-            123,  # classic_ver (not a string)
-            "Fallout4",  # game_name
-            None,  # game_path
-        ]
+        # Mock batch_get_settings_async to return non-string for version
+        async def async_return(*args, **kwargs):
+            return [
+                123,  # classic_ver (not a string)
+                "Fallout4",  # game_name
+                None,  # game_path
+            ]
+
+        mock_yaml_cache.batch_get_settings_async.side_effect = async_return
 
         # Should raise TypeError
         with pytest.raises(TypeError):
@@ -158,14 +164,14 @@ class TestInitialSetup:
 
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_game_name(
         self,
         mock_get_vr: MagicMock,
         mock_msg_info: MagicMock,
-        mock_batch_get: MagicMock,
+        mock_yaml_cache: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure: MagicMock,
         coordinator: SetupCoordinator,
@@ -173,12 +179,15 @@ class TestInitialSetup:
         """Test that TypeError is raised when game_name is not a string."""
         mock_file_gen.return_value = None
 
-        # Mock batch_get_settings to return non-string for game name
-        mock_batch_get.return_value = [
-            "7.31.0",  # classic_ver
-            None,  # game_name (not a string)
-            None,  # game_path
-        ]
+        # Mock batch_get_settings_async to return non-string for game name
+        async def async_return(*args, **kwargs):
+            return [
+                "7.31.0",  # classic_ver
+                None,  # game_name (not a string)
+                None,  # game_path
+            ]
+
+        mock_yaml_cache.batch_get_settings_async.side_effect = async_return
 
         # Should raise TypeError
         with pytest.raises(TypeError):

@@ -266,13 +266,19 @@ class TestSuspectScannerParity:
 
                 # Validate fragment content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
                 if python_fragment:
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
                 else:
@@ -402,13 +408,19 @@ class TestSuspectScannerParity:
 
                 # Validate fragment content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
                 if python_fragment:
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
                 else:
@@ -451,13 +463,13 @@ class TestSuspectScannerParity:
                     ParityResult(
                         component_name="suspect_scanner",
                         method_name="suspect_scan_stack",
-                        test_case=test_case['name'],
+                        test_case=test_case["name"],
                         rust_available=True,
                         passed=False,
                         error_messages=[str(e)],
                     )
                 )
-        
+
         # Log detailed results for failed tests
         for result in results:
             if not result.passed:
@@ -529,14 +541,14 @@ class TestSuspectScannerParity:
                 rust_fragment, rust_found = rust_result if isinstance(rust_result, tuple) else (rust_result, False)
                 # Python check_dll_crash returns ReportFragment only, not tuple
                 python_fragment = python_result
-                python_found = False # DLL crash check doesn't return found bool in Python? Let's check wrapper.
-                
+                python_found = False  # DLL crash check doesn't return found bool in Python? Let's check wrapper.
+
                 # Wrapper check_dll_crash returns ReportFragment.
                 # RustSuspectScanner.check_dll_crash returns list[str]. wrapper converts to ReportFragment.
                 # So result is ReportFragment.
                 rust_fragment = rust_result
-                rust_found = False # Not returned by check_dll_crash
-                
+                rust_found = False  # Not returned by check_dll_crash
+
                 # Wait, the test expects (ReportFragment, bool).
                 # Let's look at generate_test_cases. It expects "expected_suspect_found": True.
                 # This implies check_dll_crash returns a tuple?
@@ -544,20 +556,26 @@ class TestSuspectScannerParity:
                 # So it returns only ReportFragment.
                 # The test code: rust_fragment, rust_found = rust_result
                 # This will fail if it returns only ReportFragment.
-                
+
                 # I should adjust the test to handle ReportFragment return type.
                 rust_fragment = rust_result
                 python_fragment = python_result
-                
+
                 # Extract content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
                 if python_fragment:
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
                 else:
@@ -567,7 +585,7 @@ class TestSuspectScannerParity:
                     # Normalize content for comparison
                     rust_lines = sorted([l.strip() for l in rust_content.splitlines() if l.strip()])
                     python_lines = sorted([l.strip() for l in python_content.splitlines() if l.strip()])
-                    
+
                     if rust_lines != python_lines:
                         differences.append("Fragment content differs")
                         differences.append(f"  Rust lines: {len(rust_lines)}")
@@ -669,7 +687,7 @@ class TestSuspectScannerParity:
         rust_content = rust_fragment.content if rust_fragment else []
         if isinstance(rust_content, (list, tuple)):
             rust_content = "\n".join(rust_content)
-            
+
         python_content = ""
         if python_fragment:
             if hasattr(python_fragment, "content"):
@@ -682,7 +700,7 @@ class TestSuspectScannerParity:
         # Sort lines for comparison to handle hash map ordering differences
         rust_lines = sorted([l.strip() for l in rust_content.splitlines() if l.strip()])
         python_lines = sorted([l.strip() for l in python_content.splitlines() if l.strip()])
-        
+
         assert rust_lines == python_lines, "Suspect fragment content differs in performance test (ignoring order)"
         assert rust_found == python_found, "Suspect found flag differs in performance test"
 

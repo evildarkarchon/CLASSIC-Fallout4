@@ -399,6 +399,7 @@ mod tests {
             config,
             mods_folder: None,
             scan_folder: None,
+            ..Default::default()
         };
 
         assert_eq!(state.game_name(), "TestGame");
@@ -414,6 +415,7 @@ mod tests {
             config,
             mods_folder: None,
             scan_folder: None,
+            ..Default::default()
         };
 
         // Set override paths

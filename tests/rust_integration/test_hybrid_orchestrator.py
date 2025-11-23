@@ -4,6 +4,7 @@ Integration tests for HybridOrchestrator (Rust + Python).
 Tests the hybrid orchestration strategy that uses Python for single-log
 processing and Rust for batch parallelism.
 """
+# ruff: noqa: PLR6301
 
 from collections import Counter
 from pathlib import Path
@@ -171,7 +172,7 @@ PLUGINS:
                 result = await orch.process_crash_log(corrupt_log)
                 # If it succeeds, verify it's a valid result
                 assert isinstance(result, tuple)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 # If it fails, it should be a known error type
                 assert e is not None
                 print(f"✅ Handled corrupt log gracefully: {type(e).__name__}")

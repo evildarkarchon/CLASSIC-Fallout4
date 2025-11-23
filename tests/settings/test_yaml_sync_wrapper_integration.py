@@ -6,17 +6,17 @@ This file contains integration tests that test interactions between components.
 
 import pytest
 import ruamel.yaml
-import asyncio
-from unittest.mock import MagicMock, patch
 
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache
 
 pytestmark = pytest.mark.integration
 
+
 # Helper for async return values
 async def async_return(result):
     return result
+
 
 class TestModuleLevelFunctions:
     """Test module-level convenience functions."""
@@ -38,10 +38,10 @@ class TestModuleLevelFunctions:
             return tmp_path / "nonexistent.yaml"
 
         # Ensure initialized
-        yaml_cache._get_async_core()
-        monkeypatch.setattr(yaml_cache._async_core.file_ops, "get_path_for_store", mock_get_path)
+        core = yaml_cache._get_async_core()
+        monkeypatch.setattr(core.file_ops, "get_path_for_store", mock_get_path)
         monkeypatch.chdir(tmp_path)
-        
+
         # Mock load_yaml_file to avoid I/O issues in test environment
         async def mock_load(path, use_cache=True):
             if path == main_file:
@@ -54,16 +54,16 @@ class TestModuleLevelFunctions:
                 # 1. yaml_settings(Main) -> gets default
                 # 2. write_file_sync(settings_path, default)
                 # 3. yaml_settings(Settings) -> reads file
-                
+
                 # We can check if file exists on disk (real write)
                 if settings_file.exists():
                     # Parse what was written or return expected
                     return {"CLASSIC_Settings": {"Default": True}}
                 return {}
             return {}
-            
+
         monkeypatch.setattr(yaml_cache._async_core.file_ops, "load_yaml_file", mock_load)
-        
+
         value = classic_settings(bool, "Default")
         assert settings_file.exists()
         assert value is True
@@ -77,7 +77,7 @@ class TestBatchOperations:
         cache = YamlSettingsCache.get_instance()
         files = {}
         data_map = {}
-        
+
         for store in [YAML.Settings, YAML.Ignore]:
             yaml_file = tmp_path / f"{store.name}.yaml"
             data = {f"{store.name}_data": {"key": f"value_{store.name}"}}
@@ -93,13 +93,13 @@ class TestBatchOperations:
         # Ensure initialized
         cache._get_async_core()
         monkeypatch.setattr(cache._async_core.file_ops, "get_path_for_store", mock_get_path)
-        
+
         # Mock load_yaml_file
         async def mock_load(path, use_cache=True):
             return data_map.get(path, {})
-            
+
         monkeypatch.setattr(cache._async_core.file_ops, "load_yaml_file", mock_load)
-        
+
         requests = [(dict, YAML.Settings, "Settings_data"), (dict, YAML.Ignore, "Ignore_data")]
         results = cache.batch_get_settings(requests)
         assert len(results) == 2

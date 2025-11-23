@@ -4,12 +4,12 @@ Integration tests for scan error dialog flow.
 Tests the complete flow from worker error to dialog display, including
 signal connections and error dialog presentation.
 """
+# ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002, ANN202, ANN002, ANN003, ANN205
 
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QButtonGroup, QMainWindow, QMessageBox
+from PySide6.QtWidgets import QButtonGroup, QMainWindow
 
 from ClassicLib.Interface.Dialogs import CustomErrorDialog
 from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
@@ -67,8 +67,8 @@ class TestScanErrorDialogIntegration:
     @pytest.fixture(autouse=True)
     def cleanup_singletons(self):
         """Clean up singleton instances before and after each test to prevent pollution."""
+        from ClassicLib import GlobalRegistry
         from ClassicLib.AsyncBridge import AsyncBridge
-        import ClassicLib.GlobalRegistry as GlobalRegistry
 
         # Clean up before test
         self._cleanup_async_bridge_thoroughly(AsyncBridge)
@@ -92,6 +92,7 @@ class TestScanErrorDialogIntegration:
         This method forcefully shuts down all `AsyncBridge` instances and their threads
         by calling the internal `_cleanup_all` method and clearing all singleton state.
         """
+        import contextlib
         import threading
 
         # Use the internal, more powerful cleanup method. This is the key to fixing the deadlock.
@@ -104,11 +105,9 @@ class TestScanErrorDialogIntegration:
 
         for thread in async_bridge_threads:
             if thread.is_alive():
-                try:
+                with contextlib.suppress(RuntimeError):
                     # Don't wait forever, but give it a moment to die
                     thread.join(timeout=0.5)
-                except RuntimeError:
-                    pass  # Can happen if thread is already shutting down
 
     @pytest.fixture
     def main_window(self, qtbot):
@@ -130,10 +129,12 @@ class TestScanErrorDialogIntegration:
     def mock_classic_settings_globally(self):
         """Mock classic_settings globally to prevent YAML operations."""
         # Mock classic_settings at all import locations
-        with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
-            with patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=True):
-                with patch("ClassicLib.Interface.Audio.classic_settings", return_value=True):
-                    yield
+        with (
+            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
+            patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=True),
+            patch("ClassicLib.Interface.Audio.classic_settings", return_value=True),
+        ):
+            yield
 
     @pytest.fixture
     def mock_settings(self):
@@ -147,8 +148,10 @@ class TestScanErrorDialogIntegration:
         worker execution, which avoids patching issues when the module is cached from earlier tests.
         """
         # Setup mocks
-        with patch("ClassicLib.Interface.ScanOperations.CustomErrorDialog") as mock_dialog_class, \
-             patch("ClassicLib.Interface.Dialogs.QMessageBox.information"):
+        with (
+            patch("ClassicLib.Interface.ScanOperations.CustomErrorDialog") as mock_dialog_class,
+            patch("ClassicLib.Interface.Dialogs.QMessageBox.information"),
+        ):
             mock_dialog = MagicMock(spec=CustomErrorDialog)
             mock_dialog_class.return_value = mock_dialog
 
@@ -231,7 +234,7 @@ class TestScanErrorDialogIntegration:
 
             # Directly emit error signal
             worker.error_occurred.emit("Test Error", "Test message", "Test details")
-            #qtbot.wait(500)
+            # qtbot.wait(500)
 
             # Verify parent was set
             call_kwargs = mock_dialog_class.call_args[1]
@@ -258,7 +261,7 @@ class TestScanErrorDialogIntegration:
 
             # Directly call the worker's error handler to test signal emissions
             worker._handle_scan_error(RuntimeError("Simulated scan failure"))
-            #qtbot.wait(100)
+            # qtbot.wait(100)
 
             assert audio_emitted, "Audio signal should be emitted"
             assert dialog_shown, "Dialog signal should be emitted"
@@ -273,7 +276,7 @@ class TestScanErrorDialogIntegration:
         with patch.object(CustomErrorDialog, "exec"):
             # Directly emit error signal
             worker.error_occurred.emit("Test Error", "Test message", "Test details with traceback")
-            #qtbot.wait(500)
+            # qtbot.wait(500)
 
             # Verify dialog data was captured by the MainWindowFixture
             assert main_window.last_error_dialog is not None
@@ -292,13 +295,13 @@ class TestScanErrorDialogIntegration:
         worker1 = CrashLogsScanWorker()
         worker1.error_occurred.connect(count_dialogs)
         worker1.error_occurred.emit("Error 1", "Message 1", "Details 1")
-        #qtbot.wait(100)
+        # qtbot.wait(100)
 
         # Create and emit from second worker
         worker2 = CrashLogsScanWorker()
         worker2.error_occurred.connect(count_dialogs)
         worker2.error_occurred.emit("Error 2", "Message 2", "Details 2")
-        #qtbot.wait(100)
+        # qtbot.wait(100)
 
         assert dialog_count == 2, "Should show dialog for each error"
 
@@ -314,7 +317,7 @@ class TestScanErrorDialogIntegration:
         worker.error_occurred.connect(dialog_callback)
 
         # Don't emit any error signal - simulating successful scan
-        #qtbot.wait(100)
+        # qtbot.wait(100)
 
         assert not dialog_shown, "Dialog should not be shown when no error occurs"
 
@@ -332,7 +335,7 @@ class TestScanErrorDialogIntegration:
         # Directly emit error signal with traceback details
         traceback_text = "Traceback (most recent call last):\\n  File test.py, line 42, in test_function\\n    ValueError: Test error from specific location"
         worker.error_occurred.emit("Test Error", "Test message", traceback_text)
-        #qtbot.wait(100)
+        # qtbot.wait(100)
 
         # Verify traceback details were passed through
         assert captured_details is not None

@@ -623,6 +623,7 @@ mod tests {
             update_check: false,
             vr_mode: true,
             auto_switch_to_results: false,
+            auto_refresh_interval_ms: 1000,
             paths: PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Ini")),
                 scan_custom: Some(PathBuf::from("D:\\Logs")),
@@ -645,6 +646,10 @@ mod tests {
         assert_eq!(
             restored.auto_switch_to_results,
             config.auto_switch_to_results
+        );
+        assert_eq!(
+            restored.auto_refresh_interval_ms,
+            config.auto_refresh_interval_ms
         );
         assert_eq!(restored.paths.ini_folder, config.paths.ini_folder);
         assert_eq!(restored.paths.scan_custom, config.paths.scan_custom);
@@ -680,6 +685,7 @@ mod tests {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,

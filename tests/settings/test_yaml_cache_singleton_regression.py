@@ -29,8 +29,6 @@ from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import (
     YamlSettingsCache,
-    yaml_cache,
-    yaml_settings,
 )
 
 # Mark all tests in this file appropriately
@@ -137,11 +135,11 @@ class TestSingletonBehavior:
         # Import the module to ensure yaml_cache is initialized
         import importlib
         import sys
-        
+
         # Force reload to ensure we get the module? No, that might break singletons.
         # Just try to get it.
         YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
-        
+
         print(f"DEBUG: YamlSettingsCacheModule type: {type(YamlSettingsCacheModule)}")
         print(f"DEBUG: sys.modules['ClassicLib.YamlSettingsCache']: {sys.modules.get('ClassicLib.YamlSettingsCache')}")
 
@@ -151,10 +149,10 @@ class TestSingletonBehavior:
         # Get the module-level cache
         # Handle case where it might resolve to class (though it shouldn't)
         if isinstance(YamlSettingsCacheModule, type):
-             # If it's the class, we can't get the module variable from it easily unless we look at sys.modules
-             # But wait, if sys.modules has the class, we are in trouble.
-             pytest.fail(f"ClassicLib.YamlSettingsCache resolved to a class: {YamlSettingsCacheModule}")
-             
+            # If it's the class, we can't get the module variable from it easily unless we look at sys.modules
+            # But wait, if sys.modules has the class, we are in trouble.
+            pytest.fail(f"ClassicLib.YamlSettingsCache resolved to a class: {YamlSettingsCacheModule}")
+
         module_cache = getattr(YamlSettingsCacheModule, "yaml_cache", None)
         assert module_cache is not None, "yaml_cache not found in module"
 
@@ -278,7 +276,7 @@ class TestThreadSafetyParallel:
                 # Perform some operations
                 # Ensure initialized
                 core = instance._get_async_core()
-                
+
                 # Simulate cache operations
                 cache_key = f"worker_{worker_id}_key"
                 core.cache.settings_cache[cache_key] = f"value_{worker_id}"
@@ -442,8 +440,9 @@ class TestBackwardCompatibility:
         # Patch the module-level yaml_cache
         # Use importlib to ensure we target the module
         import importlib
+
         YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
-        
+
         # We need to patch _get_yaml_cache because yaml_settings calls it directly
         # Patching 'yaml_cache' variable won't work for internal calls
         with patch.object(YamlSettingsCacheModule, "_get_yaml_cache", return_value=mock_cache):
@@ -463,6 +462,7 @@ class TestBackwardCompatibility:
         """
         # Import should trigger registration
         import importlib
+
         YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
 
         # Manually ensure registration if cleared (since module load only happens once)
@@ -474,15 +474,15 @@ class TestBackwardCompatibility:
         registered_cache = GlobalRegistry.get(GlobalRegistry.Keys.YAML_CACHE)
 
         # Should be the same as singleton and module-level instances
-        # Note: module.yaml_cache is a proxy in the new implementation, 
+        # Note: module.yaml_cache is a proxy in the new implementation,
         # but get_instance() returns the real instance.
         # The proxy returns the real instance when called or accessed.
         # GlobalRegistry might store the proxy or the real instance depending on implementation.
         # _get_yaml_cache() registers the real instance.
-        
+
         # Force resolution
         real_cache = YamlSettingsCache.get_instance()
-        
+
         # The registered object should be the real cache OR the proxy
         # Based on _get_yaml_cache implementation, it registers the real instance
         assert registered_cache is real_cache
@@ -504,8 +504,9 @@ class TestBackwardCompatibility:
         # The mock_yaml_settings fixture patches the module function
         # We need to ensure we call the function from the module to see the patch
         import importlib
+
         YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
-        
+
         result = YamlSettingsCacheModule.yaml_settings(str, YAML.TEST, "any.key")
         assert result == "mocked_value"
 

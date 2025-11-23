@@ -5,16 +5,20 @@ This module contains comprehensive integration tests for the Rust-accelerated
 FCX mode implementation, verifying read-only behavior and data passing between
 Rust and Python.
 """
+# ruff: noqa: ANN201, PLR6301, ANN202
 
 from __future__ import annotations
 
 import time
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from ClassicLib.integration.status import is_rust_accelerated
 from tests.rust_integration.parity_fixtures import skip_if_rust_unavailable
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 # Check Rust availability
 RUST_AVAILABLE = is_rust_accelerated("fcx_handler")
@@ -206,12 +210,18 @@ class TestRustFCXIntegration:
 
             # Extract content
             if rust_messages:
-                rust_content = "\n".join(rust_messages.content) if isinstance(rust_messages.content, (list, tuple)) else str(rust_messages.content)
+                rust_content = (
+                    "\n".join(rust_messages.content) if isinstance(rust_messages.content, (list, tuple)) else str(rust_messages.content)
+                )
             else:
                 rust_content = ""
 
             if python_messages:
-                python_content = "\n".join(python_messages.content) if isinstance(python_messages.content, (list, tuple)) else str(python_messages.content)
+                python_content = (
+                    "\n".join(python_messages.content)
+                    if isinstance(python_messages.content, (list, tuple))
+                    else str(python_messages.content)
+                )
             else:
                 python_content = ""
 
@@ -302,7 +312,7 @@ class TestRustFCXIntegration:
             messages = handler.get_fcx_messages()
             # Should handle gracefully
             assert messages is not None
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             pytest.fail(f"Rust FCX handler failed to handle None mode: {e}")
 
         # Test reset on fresh handler
@@ -310,7 +320,7 @@ class TestRustFCXIntegration:
         try:
             handler.reset_fcx_checks()
             # Should not crash
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             pytest.fail(f"Rust FCX handler failed to reset: {e}")
 
     async def test_rust_fcx_no_side_effects(self, tmp_path: Path):

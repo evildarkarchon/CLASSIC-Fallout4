@@ -32,12 +32,12 @@ def get_runtime_stats() -> dict[str, Any] | None:
 
         # Check if diagnostics functions are available
         if hasattr(classic_shared, "get_runtime_stats"):
-            stats = classic_shared.get_runtime_stats() # pyright: ignore[reportAttributeAccessIssue]
+            stats = classic_shared.get_runtime_stats()  # pyright: ignore[reportAttributeAccessIssue]
             return {
-            "worker_threads": stats.worker_threads,
-            "is_healthy": stats.is_healthy,
-            "has_diagnostics": True,
-        }
+                "worker_threads": stats.worker_threads,
+                "is_healthy": stats.is_healthy,
+                "has_diagnostics": True,
+            }
     except ImportError:
         # classic_shared not available at all
         return None
@@ -60,7 +60,7 @@ def is_runtime_healthy() -> bool:
             # Assume healthy if classic_shared exists but lacks diagnostics
             return True
 
-        return classic_shared.is_runtime_healthy() # pyright: ignore[reportAttributeAccessIssue]
+        return classic_shared.is_runtime_healthy()  # pyright: ignore[reportAttributeAccessIssue]
     except ImportError:
         # Assume healthy if Rust not available (Python fallbacks work)
         return True

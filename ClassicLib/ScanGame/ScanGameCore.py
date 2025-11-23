@@ -27,7 +27,7 @@ from ClassicLib.ScanGame.core import (
     UnpackedModsScanner,
     get_optimal_limits,
 )
-from ClassicLib.YamlSettingsCache import yaml_settings, yaml_settings_async
+from ClassicLib.YamlSettingsCache import yaml_settings_async
 
 
 class ScanGameCore:
@@ -37,7 +37,7 @@ class ScanGameCore:
     only one instance exists and centralizes management of scan and validation
     operations for efficiency.
 
-    The primary use of this class is to provide an interface for assessing mods' 
+    The primary use of this class is to provide an interface for assessing mods'
     files, validating their structure and content, and offering error reporting
     or issue lists derived from the scans.
 
@@ -295,9 +295,9 @@ class ScanGameCore:
         """
         if not mod_path:
             return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
-        if not mod_path.exists():
+        if not mod_path.exists():  # noqa: ASYNC240
             return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_Path_Invalid"))
-        if not bsarch_path.exists():
+        if not bsarch_path.exists():  # noqa: ASYNC240
             return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_BSArch_Missing"))
         return None
 

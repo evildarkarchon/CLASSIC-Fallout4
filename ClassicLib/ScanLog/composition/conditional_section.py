@@ -7,7 +7,7 @@ headers that only appear when content exists.
 
 from collections.abc import Callable
 
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 
 

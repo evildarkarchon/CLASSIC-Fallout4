@@ -21,9 +21,12 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a high-performance
 - `rust/`: Root directory for all Rust code.
 - `tests/`: Python test suite.
 - `pyproject.toml`: Python project configuration (dependencies, tools).
-- `build_all.ps1` / `rebuild_rust.ps1`: PowerShell scripts for building the project and Rust extensions.
+- `build_all.ps1`: Powershell script for building the PyInstaller executables.
+- `rebuild_rust.ps1`: Powershell script for cleaning, rebuilding and reinstalling all of the Rust extensions.
 
 ### Rust Structure (`rust/`)
+**Workspace Root:** `rust/` (This is where the workspace `Cargo.toml` resides. Always run cargo commands from here or use `--manifest-path rust/Cargo.toml`).
+
 The Rust codebase follows a strict modular layered architecture:
 
 1.  **Foundation Layer (`rust/foundation/`)**:
@@ -86,15 +89,32 @@ uv run pytest -n auto -m "integration"
 uv run pytest tests/rust_integration/ -v
 ```
 
-### Building Rust Extensions
-If you modify Rust code, you must rebuild the bindings:
+### Building & Distribution
 
+**Python Applications (PyInstaller):**
+`build_all.ps1` is used to create the final distribution builds for the Python-based applications (Classic GUI/CLI) and bundles the Rust extensions.
+```powershell
+# Build Python distribution
+./build_all.ps1
+```
+
+**Rust Applications (Standalone):**
+To build the standalone pure Rust applications (like `classic-gui` or `classic-tui`), use Cargo from the `rust/` directory.
+```bash
+cd rust
+cargo build --release --workspace
+```
+
+### Rebuilding Rust Bindings (Development)
+If you modify Rust code for the Python apps, you must rebuild the bindings:
+
+For all modules:
 ```powershell
 # Rebuild all Rust modules (Windows)
 ./rebuild_rust.ps1
 ```
 
-Or for a specific module:
+For a specific module:
 ```bash
 cd rust/python-bindings/classic-yaml-py
 maturin build --release --out dist
@@ -139,3 +159,25 @@ uv pip install dist/classic_yaml_py-*.whl --force-reinstall
 -   **PyO3 Stubs:** When modifying Rust bindings (`-py` crates), **YOU MUST** update or create the corresponding `.pyi` file in the same directory to ensure Python type checking works.
 -   **Deprecation:** Do not remove deprecated APIs immediately. Mark them as deprecated in Python but ensure tests use the *new* API.
 -   **Quirk:** For reasons unknown, my virtal environment can not run pytest directly or via `uv run pytest`. Always use `uv run python -m pytest ...` or to execute tests.
+
+## Rust Development Guides
+
+### Core Guides
+- **[Rust Workspace Architecture](docs/development/rust_workspace_architecture.md)** - Crate structure and dependency hierarchy
+- **[Rust 2024 Edition Guide](docs/development/rust_2024_edition_guide.md)** - Modern Rust features and best practices
+- **[Async Development Guide](docs/development/async_development_guide.md)** - Async patterns for Python and Rust
+- **[PyO3 Integration Patterns](docs/development/pyo3_integration_patterns.md)** - PyO3 module registration and troubleshooting
+- **[Rust Acceleration Guide](docs/development/rust_acceleration_guide.md)** - Performance monitoring and debugging
+- **[Slint GUI Development](docs/development/slint_gui_development.md)** - Slint GUI patterns and AsyncBridge usage
+
+### Reference Documentation
+- **[Rust Documentation Index](docs/RUST_DOCUMENTATION_INDEX.md)** - Complete guide to all Rust docs
+- **[Rust Usage Guide](docs/rust/rust_usage_guide.md)** - User guide for Rust features
+- **[Performance Monitoring](docs/performance/performance_monitoring.md)** - Monitor Rust performance
+- **[Troubleshooting Guide](docs/rust/troubleshooting_rust.md)** - Debug Rust issues
+- **[Development Guide](docs/rust/development_with_rust.md)** - Develop with Rust components
+
+### PyO3 0.26.0 Documentation
+- **[PyO3 0.26.0 Migration Guide](docs/rust/pyo3_0.26_migration_guide.md)** - Migration from 0.22 to 0.26.0
+- **[PyO3 Quick Reference](docs/rust/pyo3_quick_reference.md)** - Quick reference for common patterns
+- **[Official PyO3 Docs](https://pyo3.rs/v0.26.0/)** - Official PyO3 documentation

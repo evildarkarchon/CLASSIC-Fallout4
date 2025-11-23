@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 
 
 @pytest.fixture
@@ -87,8 +87,7 @@ class TestFCXModeHandlerReadOnly:
 
         # Create ConfigFileCache with test file
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
-             patch("ClassicLib.ScanGame.Config.msg_error"):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
             cache = ConfigFileCache()
             cache._config_files = {"espexplorer.ini": espexplorer_ini}
 
@@ -120,8 +119,7 @@ class TestFCXModeHandlerReadOnly:
         epo_ini.write_text("[Particles]\niMaxDesired = 7500\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
-             patch("ClassicLib.ScanGame.Config.msg_error"):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
             cache = ConfigFileCache()
             cache._config_files = {"epo.ini": epo_ini}
 
@@ -153,8 +151,7 @@ class TestFCXModeHandlerReadOnly:
         f4ee_ini.write_text("[CharGen]\nbUnlockHeadParts = 0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
-             patch("ClassicLib.ScanGame.Config.msg_error"):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
             cache = ConfigFileCache()
             cache._config_files = {"f4ee.ini": f4ee_ini}
 
@@ -186,8 +183,7 @@ class TestFCXModeHandlerReadOnly:
         f4ee_ini.write_text("[CharGen]\nbUnlockTints = 0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
-             patch("ClassicLib.ScanGame.Config.msg_error"):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
             cache = ConfigFileCache()
             cache._config_files = {"f4ee.ini": f4ee_ini}
 
@@ -219,8 +215,7 @@ class TestFCXModeHandlerReadOnly:
         highfps_ini.write_text("[Limiter]\nLoadingScreenFPS = 60.0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
-             patch("ClassicLib.ScanGame.Config.msg_error"):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
             cache = ConfigFileCache()
             cache._config_files = {"highfpsphysicsfix.ini": highfps_ini}
 
@@ -356,8 +351,7 @@ class TestFCXModeHandlerReadOnly:
         f4ee_ini.write_text("[CharGen]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")), \
-             patch("ClassicLib.ScanGame.Config.msg_error"):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
             cache = ConfigFileCache()
             cache._config_files = {
                 "espexplorer.ini": espexplorer_ini,

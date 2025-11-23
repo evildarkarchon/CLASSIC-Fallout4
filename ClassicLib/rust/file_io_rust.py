@@ -278,6 +278,46 @@ class FileIOCore:
         path = self._ensure_path(path)
         return path.read_bytes()
 
+    async def read_file_mmap(self, path: Path | str) -> str:
+        """
+        Reads a file using memory mapping for large files (optimized).
+
+        Args:
+            path (Path | str): Path to the file to read.
+
+        Returns:
+            str: File content.
+        """
+        if self._rust_core:
+            try:
+                return await self._rust_core.read_file_mmap(str(path))
+            except (RustIOError, RustError) as e:
+                logger.debug(f"Rust error in read_file_mmap, falling back: {e}")
+
+        # Fallback to regular read
+        return await self.read_file(path)
+
+    async def read_file_with_encoding(self, path: Path | str, encoding: str) -> str:
+        """
+        Reads a file with a specific encoding.
+
+        Args:
+            path (Path | str): Path to the file.
+            encoding (str): Encoding to use.
+
+        Returns:
+            str: File content.
+        """
+        if self._rust_core:
+            try:
+                return await self._rust_core.read_file_with_encoding(str(path), encoding)
+            except (RustIOError, RustError) as e:
+                logger.debug(f"Rust error in read_file_with_encoding, falling back: {e}")
+
+        # Fallback
+        path = self._ensure_path(path)
+        return path.read_text(encoding=encoding, errors=self.default_errors)
+
     # ==========================================
     # Core Write Operations
     # ==========================================
@@ -672,6 +712,26 @@ class FileIOCore:
             return path.stat().st_size
         except (OSError, FileNotFoundError):
             return -1
+
+    def get_file_info(self, path: Path | str) -> dict[str, Any]:
+        """
+        Get detailed file information (size, timestamps).
+
+        Args:
+            path (Path | str): Path to the file.
+
+        Returns:
+            dict[str, Any]: Dictionary with keys 'size', 'created', 'modified', or 'error'.
+        """
+        if self._rust_core:
+            return self._rust_core.get_file_info(str(path))
+
+        path = self._ensure_path(path)
+        try:
+            stat = path.stat()
+            return {"size": stat.st_size, "created": stat.st_ctime, "modified": stat.st_mtime}
+        except Exception as e:
+            return {"error": str(e)}
 
     async def read_crash_log(self, path: Path | str) -> list[str]:
         """

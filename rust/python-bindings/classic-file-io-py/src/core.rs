@@ -223,6 +223,41 @@ impl PyFileIOCore {
         self.inner.file_exists(&path_buf)
     }
 
+    /// Get file information (size, timestamps)
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    /// Returns a dict with 'size', 'created', 'modified', or 'error'.
+    pub fn get_file_info(&self, py: Python<'_>, path: PathLike) -> PyResult<Py<PyDict>> {
+        let path_buf: PathBuf = path.into();
+        let dict = PyDict::new(py);
+        
+        // Use cached metadata if available (implied by inner cache access if we had it exposed)
+        // Since we don't have direct access to inner cache via pub API, we just use std::fs::metadata
+        // But we should check cache through inner methods if possible.
+        // inner.get_file_size uses cache.
+        
+        match std::fs::metadata(&path_buf) {
+            Ok(metadata) => {
+                dict.set_item("size", metadata.len())?;
+                if let Ok(created) = metadata.created() {
+                    if let Ok(duration) = created.duration_since(std::time::UNIX_EPOCH) {
+                        dict.set_item("created", duration.as_secs_f64())?;
+                    }
+                }
+                if let Ok(modified) = metadata.modified() {
+                    if let Ok(duration) = modified.duration_since(std::time::UNIX_EPOCH) {
+                        dict.set_item("modified", duration.as_secs_f64())?;
+                    }
+                }
+            },
+            Err(e) => {
+                dict.set_item("error", e.to_string())?;
+            }
+        }
+        
+        Ok(dict.unbind())
+    }
+
     /// Get file size in bytes
     ///
     /// Accepts both string paths and pathlib.Path objects.
@@ -232,6 +267,44 @@ impl PyFileIOCore {
             .get_file_size(&path_buf)
             .map(|s| s as i64)
             .unwrap_or(-1)
+    }
+
+    /// Read a file using memory mapping (optimized for large files)
+    #[pyo3(name = "read_file_mmap")]
+    pub fn py_read_file_mmap<'py>(
+        &self,
+        py: Python<'py>,
+        path: PathLike,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+        let path_buf: PathBuf = path.into();
+
+        future_into_py(py, async move {
+            inner.read_file_mmap(&path_buf).await.map_err(to_pyerr)
+        })
+    }
+
+    /// Read a file with a specific encoding
+    #[pyo3(name = "read_file_with_encoding")]
+    pub fn py_read_file_with_encoding<'py>(
+        &self,
+        py: Python<'py>,
+        path: PathLike,
+        encoding: String,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+        let path_buf: PathBuf = path.into();
+
+        future_into_py(py, async move {
+            let bytes = inner.read_bytes(&path_buf).await.map_err(to_pyerr)?;
+            
+            // Use Python's decoder for compatibility
+            Python::attach(|py| {
+                let py_bytes = pyo3::types::PyBytes::new(py, &bytes);
+                let decoded = py_bytes.call_method1("decode", (encoding, "ignore"))?;
+                decoded.extract::<String>()
+            })
+        })
     }
 
     /// Parse DDS header with zero-copy operations

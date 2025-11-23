@@ -3,8 +3,10 @@
 This module tests interactions between different components of the system,
 ensuring they work together correctly across GUI and CLI interfaces.
 """
+# ruff: noqa: ANN201, ANN001, PLR6301, ANN202, RUF059, ASYNC240, ASYNC230
 
 import asyncio
+import contextlib
 import tempfile
 import time
 from pathlib import Path
@@ -65,19 +67,16 @@ class TestGUIToRustIntegration:
     @pytest.mark.asyncio
     async def test_gui_scan_with_rust_parser(self):
         """Test GUI initiating scan that uses Rust parser."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-
         from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.integration.factory import get_parser
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         # Clear AsyncBridge singleton instances properly
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
         with AsyncBridge._lock:
             for instance in AsyncBridge._instances.values():
-                try:
+                with contextlib.suppress(Exception):
                     instance.shutdown()
-                except Exception:
-                    pass
             AsyncBridge._instances.clear()
 
         bridge = AsyncBridge.get_instance()
@@ -87,14 +86,13 @@ class TestGUIToRustIntegration:
         # Create synthetic crash log
         crash_log = IntegrationTestHelpers.create_synthetic_crash_log()
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
+        with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".log", delete=False) as f:
             f.write(crash_log)
             log_path = Path(f.name)
 
         try:
             # Mock GUI components
             with patch("ClassicLib.Interface.MainWindow.MainWindow"):
-
                 # Simulate GUI triggering scan
                 async def gui_scan_operation():
                     # GUI would call parser through AsyncBridge
@@ -110,10 +108,8 @@ class TestGUIToRustIntegration:
 
                 # Validate result
                 assert result is not None
-                if isinstance(result, dict):
-                    # Should have parsed plugin list
-                    if "plugins" in result:
-                        assert len(result["plugins"]) >= 2
+                if isinstance(result, dict) and "plugins" in result:
+                    assert len(result["plugins"]) >= 2
 
         finally:
             log_path.unlink(missing_ok=True)
@@ -146,8 +142,7 @@ class TestGUIToRustIntegration:
                 "formids": ["00000014", "FE000800"],
             }
 
-            report = await asyncio.to_thread(report_gen.generate, report_data)
-            return report
+            return await asyncio.to_thread(report_gen.generate, report_data)
 
         # Execute through bridge
         report = bridge.run_async(complete_gui_flow())
@@ -168,7 +163,7 @@ class TestGUIToRustIntegration:
         # Simulate GUI launching multiple scans
         async def concurrent_scans():
             tasks = []
-            for _i, log in enumerate(logs):
+            for log in logs:
                 lines = log.splitlines()
                 task = asyncio.create_task(asyncio.to_thread(parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"))
                 tasks.append(task)
@@ -201,16 +196,14 @@ class TestTUIAsyncIntegration:
         io_core = FileIOCore()
         bridge = AsyncBridge.get_instance()
 
-        # Create test file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as f:
             f.write("Test log content\nLine 2\nLine 3")
             test_path = Path(f.name)
 
         try:
             # Simulate TUI reading file asynchronously
             async def tui_read_operation():
-                content = await io_core.read_file(str(test_path))
-                return content
+                return await io_core.read_file(str(test_path))
 
             # TUI would use AsyncBridge in sync context
             content = bridge.run_async(tui_read_operation())
@@ -229,7 +222,7 @@ class TestTUIAsyncIntegration:
 
         FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as f:
             f.write("Initial content\n")
             log_path = Path(f.name)
 
@@ -254,11 +247,11 @@ class TestTUIAsyncIntegration:
 
             # Simulate log updates
             await asyncio.sleep(0.1)
-            with Path(log_path).open("a") as f:
+            with Path(log_path).open("a", encoding="utf-8") as f:
                 f.write("New line 1\n")
 
             await asyncio.sleep(0.1)
-            with Path(log_path).open("a") as f:
+            with Path(log_path).open("a", encoding="utf-8") as f:
                 f.write("New line 2\n")
 
             await monitor_task
@@ -426,33 +419,32 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_message_passing_between_components(self):
         """Test message passing between GUI, backend, and report components."""
+        from ClassicLib import GlobalRegistry
         from ClassicLib.MessageHandler.handler import MessageHandler
-
-        from ClassicLib.GlobalRegistry import GlobalRegistry
 
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
         # Note: GlobalRegistry is module-level now, no cleanup needed
 
         msg_handler = MessageHandler()
-        registry = GlobalRegistry()
+        # registry = GlobalRegistry() removed
 
         messages_log = []
 
         # Mock components
         class MockGUIComponent:
             def send_message(self, msg: str):
-                msg_handler.msg_info(f"GUI: {msg}")
+                msg_handler.info(f"GUI: {msg}")
                 messages_log.append(("GUI", msg))
 
         class MockBackendComponent:
             def process(self, data: str):
-                msg_handler.msg_info(f"Backend: Processing {data}")
+                msg_handler.info(f"Backend: Processing {data}")
                 messages_log.append(("Backend", f"Processing {data}"))
                 return f"Processed: {data}"
 
         class MockReportComponent:
             def generate(self, processed_data: str):
-                msg_handler.msg_info(f"Report: Generating from {processed_data}")
+                msg_handler.info(f"Report: Generating from {processed_data}")
                 messages_log.append(("Report", f"Generating from {processed_data}"))
                 return "Report complete"
 
@@ -461,9 +453,9 @@ class TestComponentCommunication:
         backend = MockBackendComponent()
         report = MockReportComponent()
 
-        registry.register("gui", gui)
-        registry.register("backend", backend)
-        registry.register("report", report)
+        GlobalRegistry.register("gui", gui)
+        GlobalRegistry.register("backend", backend)
+        GlobalRegistry.register("report", report)
 
         # Simulate component interaction
         gui.send_message("Starting scan")
@@ -479,9 +471,8 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_error_propagation_across_components(self):
         """Test error propagation from backend to UI components."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-
         from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.MessageHandler.handler import MessageHandler
 
         bridge = AsyncBridge.get_instance()
 
@@ -493,10 +484,11 @@ class TestComponentCommunication:
         # Mock error handler
         def handle_error(error: str):
             error_messages.append(error)
-            msg_handler.msg_error(error)
+            msg_handler.error(error)
 
         # Simulate backend error
         async def backend_operation_with_error():
+            await asyncio.sleep(0)
             raise ValueError("Synthetic backend error")
 
         # UI component catching error
@@ -541,11 +533,10 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_shared_state_consistency(self):
         """Test shared state consistency across components."""
-        from ClassicLib.GlobalRegistry import GlobalRegistry
 
         # Note: GlobalRegistry is module-level now, no cleanup needed
 
-        GlobalRegistry()
+        # GlobalRegistry() removed
 
         # Shared state
         shared_state = {"scan_count": 0, "errors": [], "last_scan": None}
@@ -579,7 +570,7 @@ class TestComponentCommunication:
 
         # Verify state consistency
         assert shared_state["scan_count"] == 5
-        assert shared_state["last_scan"] in ["component1", "component2"]
+        assert shared_state["last_scan"] in {"component1", "component2"}
 
 
 class TestResourceManagement:
@@ -651,11 +642,9 @@ class TestResourceManagement:
     @pytest.mark.asyncio
     async def test_concurrent_resource_access(self):
         """Test concurrent access to shared resources."""
-        from ClassicLib.GlobalRegistry import GlobalRegistry
-
         # Note: GlobalRegistry is module-level now, no cleanup needed
 
-        GlobalRegistry()
+        # GlobalRegistry() removed
 
         # Shared resource
         resource_lock = asyncio.Lock()

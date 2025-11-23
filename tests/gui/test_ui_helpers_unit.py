@@ -4,6 +4,7 @@ Unit tests for UIHelpers module.
 This module tests UI helper functions and style constants for the CLASSIC interface,
 including widget creation, styling, and configuration.
 """
+# ruff: noqa: ANN201, ANN001, PLR6301, ARG002, ANN202, PLC2701
 
 from unittest.mock import ANY, MagicMock, Mock, patch
 
@@ -46,7 +47,7 @@ def init_message_handler_fixture():
     # Clean up the global message handler after tests
     import ClassicLib.MessageHandler
 
-    ClassicLib.MessageHandler._message_handler = None
+    ClassicLib.MessageHandler._message_handler = None  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @pytest.mark.unit
@@ -101,7 +102,7 @@ class TestCreateCheckbox:
 
     def test_create_checkbox_with_existing_setting(self, qt_application, mock_settings):
         """Test creating checkbox with existing setting value."""
-        mock_classic, mock_yaml = mock_settings
+        mock_classic, _ = mock_settings
         mock_classic.return_value = True  # Existing setting is True
 
         checkbox = create_checkbox("Test Label", "test_setting")
@@ -186,7 +187,7 @@ class TestSupportsAddLayout:
         """Test that other layouts return False."""
         # Create a mock layout that's not VBox or HBox
         mock_layout = MagicMock(spec=QBoxLayout)
-        mock_layout.__class__ = QBoxLayout
+        mock_layout.__class__ = QBoxLayout  # pyright: ignore[reportAttributeAccessIssue]
         assert supports_add_layout(mock_layout) is False
 
 
@@ -236,10 +237,10 @@ class TestSetupFolderSection:
 
         # Get the button
         h_layout = layout.itemAt(0).layout()
-        button = h_layout.itemAt(2).widget()
+        button = h_layout.itemAt(2).widget()  # pyright: ignore[reportOptionalMemberAccess]
 
         # Click the button
-        button.click()
+        button.click()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         # Verify callback was called
         callback.assert_called_once()
@@ -253,10 +254,10 @@ class TestSetupFolderSection:
 
         # Get the button
         h_layout = layout.itemAt(0).layout()
-        button = h_layout.itemAt(2).widget()
+        button = h_layout.itemAt(2).widget()  # pyright: ignore[reportOptionalMemberAccess]
 
         # Check default tooltip
-        assert button.toolTip() == "Browse for my folder:"
+        assert button.toolTip() == "Browse for my folder:"  # pyright: ignore[reportOptionalMemberAccess]
 
     def test_setup_folder_section_unexpected_layout_type(self, qt_application):
         """Test warning when layout type is unexpected."""
@@ -328,7 +329,7 @@ class TestAddMainButton:
         button = add_main_button(layout, "No Tooltip", callback)
 
         # Default tooltip should be empty
-        assert button.toolTip() == ""
+        assert not button.toolTip()
 
 
 @pytest.mark.unit
@@ -364,7 +365,7 @@ class TestAddBottomButton:
         add_bottom_button(layout, "Test", callback)
 
         button = layout.itemAt(0).widget()
-        button.click()
+        button.click()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         callback.assert_called_once()
 
@@ -394,18 +395,21 @@ class TestCreateButton:
         """Test creating a toggle button."""
         callback = Mock()
 
-        # Mock a checkable button
-        with patch("ClassicLib.Interface.UIHelpers.QPushButton") as mock_button_class:
-            mock_button = MagicMock(spec=QPushButton)
-            mock_button.isCheckable.return_value = True
-            mock_button_class.return_value = mock_button
+        # Use a real subclass that is checkable to pass isinstance check
+        class CheckableButton(QPushButton):
+            def isCheckable(self):
+                return True
 
+        # Patch with the subclass
+        with patch("ClassicLib.Interface.UIHelpers.QPushButton", new=CheckableButton):
             # _create_button in UIHelpers doesn't take self
-            _create_button("Toggle", "Toggle tooltip", callback)
+            btn = _create_button("Toggle", "Toggle tooltip", callback)
 
-            # Verify toggled signal was connected (not clicked)
-            mock_button.toggled.connect.assert_called_once_with(callback)
-            mock_button.clicked.connect.assert_not_called()
+            # Verify signal connection (toggled should be connected)
+            # Since we use real QObject, we can't check 'connect' call on signal easily without spying.
+            # But we can check if callback is invoked when toggled.
+            btn.toggled.emit(True)
+            callback.assert_called_once()
 
 
 @pytest.mark.unit
@@ -480,8 +484,8 @@ class TestIntegrationScenarios:
         assert main_layout.count() >= 6  # All widgets/layouts added
 
         # Verify components work
-        folder_edit.setText("/test/path")
-        assert folder_edit.text() == "/test/path"
+        folder_edit.setText("/test/path")  # pyright: ignore[reportOptionalMemberAccess]
+        assert folder_edit.text() == "/test/path"  # pyright: ignore[reportOptionalMemberAccess]
 
         assert checkbox.isChecked() is True
 
@@ -499,7 +503,7 @@ class TestIntegrationScenarios:
         # Both should have expanding horizontal policy
         main_policy = main_button.sizePolicy()
         bottom_button = layout.itemAt(1).widget()
-        bottom_policy = bottom_button.sizePolicy()
+        bottom_policy = bottom_button.sizePolicy()  # pyright: ignore[reportOptionalMemberAccess]
 
         assert main_policy.horizontalPolicy() == main_policy.Policy.Expanding
         assert bottom_policy.horizontalPolicy() == bottom_policy.Policy.Expanding

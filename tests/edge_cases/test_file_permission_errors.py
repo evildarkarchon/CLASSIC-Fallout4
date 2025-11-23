@@ -4,12 +4,14 @@ This module tests the application's ability to handle various file
 permission errors, access violations, and filesystem restrictions.
 """
 
+# ruff: noqa: ANN001, ANN003, ANN201, ANN202, PLR6301, ASYNC240, PT017, TRY300, TRY301, ARG001, PT011
+
 import asyncio
 import stat
 import sys
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 import pytest
 
@@ -77,7 +79,7 @@ class TestReadPermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
             f.write("Read-only content")
             temp_path = Path(f.name)
 
@@ -100,7 +102,7 @@ class TestReadPermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
             f.write("Write-only content")
             temp_path = Path(f.name)
 
@@ -122,7 +124,7 @@ class TestReadPermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
             f.write("No access content")
             temp_path = Path(f.name)
 
@@ -134,7 +136,7 @@ class TestReadPermissionErrors:
             try:
                 content = await io_core.read_file(str(temp_path))
                 # If it succeeds (some systems), content should be None or empty
-                assert content in [None, "", "No access content"]
+                assert content in {None, "", "No access content"}
             except (PermissionError, OSError) as e:
                 # Expected error
                 assert "permission" in str(e).lower() or "access" in str(e).lower()
@@ -157,7 +159,7 @@ class TestWritePermissionErrors:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
             f.write("Original content")
             temp_path = Path(f.name)
 
@@ -171,7 +173,7 @@ class TestWritePermissionErrors:
 
             # Original content should remain
             simulator.restore_permissions(temp_path)
-            content = temp_path.read_text()
+            content = temp_path.read_text(encoding="utf-8")
             assert content == "Original content"
         finally:
             simulator.restore_permissions(temp_path)
@@ -196,10 +198,10 @@ class TestWritePermissionErrors:
                     # Mock aiofiles if available, else Path.write_text
                     with (
                         patch("aiofiles.open", side_effect=PermissionError("Access denied")),
-                        patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied"))
+                        patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied")),
+                        pytest.raises(PermissionError),
                     ):
-                        with pytest.raises(PermissionError):
-                            await io_core.write_file(str(file_path), "content")
+                        await io_core.write_file(str(file_path), "content")
                 else:
                     # Unix: Remove write permission from directory
                     temp_path.chmod(0o555)
@@ -213,7 +215,6 @@ class TestWritePermissionErrors:
     @pytest.mark.skip("Atomic write functionality not exposed/implemented in FileIOCore")
     async def test_atomic_write_permission_error(self):
         """Test atomic write operation with permission errors."""
-        pass
 
 
 class TestDirectoryPermissionErrors:
@@ -230,8 +231,8 @@ class TestDirectoryPermissionErrors:
             temp_path = Path(temp_dir)
 
             # Create some files
-            (temp_path / "file1.log").write_text("content1")
-            (temp_path / "file2.log").write_text("content2")
+            (temp_path / "file1.log").write_text("content1", encoding="utf-8")
+            (temp_path / "file2.log").write_text("content2", encoding="utf-8")
 
             try:
                 if sys.platform != "win32":
@@ -243,9 +244,11 @@ class TestDirectoryPermissionErrors:
                         list(temp_path.iterdir())
                 else:
                     # Windows: Mock the error
-                    with patch("pathlib.Path.iterdir", side_effect=PermissionError("Access denied")):
-                        with pytest.raises(PermissionError):
-                            list(temp_path.iterdir())
+                    with (
+                        patch("pathlib.Path.iterdir", side_effect=PermissionError("Access denied")),
+                        pytest.raises(PermissionError),
+                    ):
+                        list(temp_path.iterdir())
             finally:
                 temp_path.chmod(0o755)
 
@@ -295,7 +298,7 @@ class TestFileLockingScenarios:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
             f.write("Locked content")
             temp_path = Path(f.name)
 
@@ -306,10 +309,10 @@ class TestFileLockingScenarios:
                 # Patch both aiofiles.open and builtins.open (fallback)
                 with (
                     patch("aiofiles.open", side_effect=PermissionError("File is being used")),
-                    patch("builtins.open", side_effect=PermissionError("File is being used"))
+                    patch("builtins.open", side_effect=PermissionError("File is being used")),
+                    pytest.raises(PermissionError),
                 ):
-                    with pytest.raises(PermissionError):
-                        await io_core.read_file(str(temp_path))
+                    await io_core.read_file(str(temp_path))
             else:
                 # Unix: Files can usually be read even when locked
                 content = await io_core.read_file(str(temp_path))
@@ -324,7 +327,7 @@ class TestFileLockingScenarios:
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
+        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
             temp_path = Path(f.name)
 
         try:
@@ -351,8 +354,8 @@ class TestFileLockingScenarios:
             assert len(successes) >= 1
 
             # Final content should be from one of the writers
-            final_content = temp_path.read_text()
-            assert final_content in ["Writer 1", "Writer 2", "Writer 3"]
+            final_content = temp_path.read_text(encoding="utf-8")
+            assert final_content in {"Writer 1", "Writer 2", "Writer 3"}
         finally:
             temp_path.unlink(missing_ok=True)
 
@@ -370,7 +373,7 @@ class TestQuotaAndSpaceErrors:
         # Mock disk full error - patch both aiofiles and Path.write_text
         with (
             patch("aiofiles.open", side_effect=OSError(28, "No space left on device")),
-            patch("pathlib.Path.write_text", side_effect=OSError(28, "No space left on device"))
+            patch("pathlib.Path.write_text", side_effect=OSError(28, "No space left on device")),
         ):
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 temp_path = Path(f.name)
@@ -395,7 +398,7 @@ class TestQuotaAndSpaceErrors:
         # Mock quota exceeded error
         with (
             patch("aiofiles.open", side_effect=OSError(122, "Disk quota exceeded")),
-            patch("pathlib.Path.write_text", side_effect=OSError(122, "Disk quota exceeded"))
+            patch("pathlib.Path.write_text", side_effect=OSError(122, "Disk quota exceeded")),
         ):
             with tempfile.NamedTemporaryFile(delete=False) as f:
                 temp_path = Path(f.name)
@@ -448,7 +451,7 @@ class TestSymbolicLinkPermissions:
 
             # Create target file with no permissions
             target_path = temp_path / "target.log"
-            target_path.write_text("Target content")
+            target_path.write_text("Target content", encoding="utf-8")
             simulator.make_no_access(target_path)
 
             # Create symlink to restricted file
@@ -506,6 +509,7 @@ class TestPermissionRecoveryStrategies:
 
         async def write_with_elevation(path: Path, content: str) -> bool:
             """Simulate retry with elevated permissions."""
+            await asyncio.sleep(0)
             nonlocal attempt_count
             attempt_count += 1
 

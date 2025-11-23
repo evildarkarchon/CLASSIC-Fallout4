@@ -137,6 +137,7 @@ mod tests {
         let mut config = CliConfig {
             fcx_mode: true,
             show_formid_values: true,
+            auto_refresh_interval_ms: 5000,
             ..Default::default()
         };
         config.paths.ini_folder = Some(PathBuf::from("C:\\Test"));
@@ -182,6 +183,7 @@ mod tests {
         let saved_config = CliConfig {
             fcx_mode: true,
             stat_logging: true,
+            auto_refresh_interval_ms: 5000,
             ..Default::default()
         };
         saved_config.save_to_yaml(&config_path).await.unwrap();
@@ -216,6 +218,7 @@ mod tests {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig::default(),
         };
 

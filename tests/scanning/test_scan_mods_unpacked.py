@@ -23,6 +23,7 @@ from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 @pytest.fixture
 def mock_settings():
     """Mock YAML settings for tests."""
+
     # Patch async settings
     async def async_return(*args, **kwargs):
         settings_map = {
@@ -67,7 +68,7 @@ def mock_scan_settings(mock_paths):
         {"f4se_loader.pex": "hash123"},
         mock_paths["mods"],
     )
-    
+
     # Patch async method on ScanGameCore
     async def async_get_settings():
         return return_val

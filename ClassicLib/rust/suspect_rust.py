@@ -58,7 +58,7 @@ class RustAcceleratedSuspectScanner:
             # Extract suspects lists from yamldata for Rust constructor
             suspects_error_list = getattr(yamldata, "suspects_error_list", {})
             raw_stack_list = getattr(yamldata, "suspects_stack_list", {})
-            
+
             # Rust expects Dict[String, List[String]], but we have Dict[String, List[Dict]]
             # Convert inner dictionaries to JSON strings if they are dicts (for legacy compat)
             # If they are already strings (as required by Python impl), keep them.

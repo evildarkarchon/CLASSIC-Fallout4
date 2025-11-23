@@ -8,6 +8,7 @@ Tests the high-performance file I/O operations including:
 - Parallel directory traversal
 - Caching behavior
 """
+# ruff: noqa: ANN201, ANN001, PLR6301
 
 import asyncio
 from pathlib import Path
@@ -231,8 +232,8 @@ class TestRustFileIOCore:
         await io.write_multiple_files(files)
 
         for path, expected_content in files.items():
-            assert Path(path).exists()
-            assert Path(path).read_text() == expected_content
+            assert Path(path).exists()  # noqa: ASYNC240
+            assert Path(path).read_text(encoding="utf-8") == expected_content  # noqa: ASYNC240
 
     @pytest.mark.asyncio
     async def test_crash_log_operations(self, temp_dir):
@@ -362,16 +363,16 @@ class TestRustFileIOCore:
         io = get_file_io()
 
         # Walk all files
-        all_files = await io.walk_directory(temp_dir)
+        all_files = io.walk_directory(temp_dir)
         assert len(all_files) > 5  # Should find all created files
 
         # Walk with pattern (only .txt files)
-        txt_files = await io.walk_directory(temp_dir, pattern=r"\.txt$")
+        txt_files = io.walk_directory(temp_dir, pattern=r"\.txt$")
         for file in txt_files:
             assert file.endswith(".txt")
 
         # Walk with max depth
-        shallow_files = await io.walk_directory(temp_dir, max_depth=1)
+        shallow_files = io.walk_directory(temp_dir, max_depth=1)
         # Should not include deep.txt
         deep_paths = [f for f in shallow_files if "deep.txt" in f]
         assert len(deep_paths) == 0
@@ -389,7 +390,7 @@ class TestRustFileIOCore:
 
         start = time.perf_counter()
         asyncio.run(io.read_file(temp_dir / "test.txt"))
-        time.perf_counter() - start
+        _ = time.perf_counter() - start
 
         # Second read (should be cached and faster)
         start = time.perf_counter()

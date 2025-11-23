@@ -22,6 +22,7 @@ Usage:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -42,7 +43,7 @@ class YamlData:
     cached and shared across instances for performance.
     """
 
-    def __init__(self, yaml_dirs: list[str | Path], game: str, vr_mode: bool) -> None:
+    def __init__(self, yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -> None:
         """Create a new YamlData instance by loading all YAML configuration files.
 
         Args:
@@ -251,7 +252,19 @@ class YamlData:
             List of hint strings
         """
 
-def create_yamldata(yaml_dirs: list[str | Path], game: str, vr_mode: bool) -> YamlData:
+def clear_yaml_cache() -> None:
+    """Clear the global YAML configuration cache.
+    
+    Forces the next YamlData initialization to reload from disk.
+    """
+
+class RustConfigIOError(Exception):
+    """Error raised when YAML files cannot be read."""
+
+class RustConfigParseError(Exception):
+    """Error raised when YAML content is invalid."""
+
+def create_yamldata(yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -> YamlData:
     """Factory function to create a YamlData instance.
 
     This is a convenience function that creates and returns a new YamlData instance.
@@ -267,8 +280,8 @@ def create_yamldata(yaml_dirs: list[str | Path], game: str, vr_mode: bool) -> Ya
         Configured YamlData instance with all YAML data loaded
 
     Raises:
-        FileNotFoundError: If required YAML files are missing
-        ValueError: If YAML data is malformed or invalid
+        RustConfigIOError: If required YAML files are missing
+        RustConfigParseError: If YAML data is malformed or invalid
 
     Example:
         >>> from classic_config import create_yamldata

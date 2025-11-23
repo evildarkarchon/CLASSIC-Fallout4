@@ -7,11 +7,13 @@ the ClassicLib test suite.
 """
 
 import time
+
 import pytest
 
 # Try to import classic_perf; if it fails, set a flag to skip tests
 try:
     import classic_perf
+
     _classic_perf_available = True
 except ImportError:
     _classic_perf_available = False

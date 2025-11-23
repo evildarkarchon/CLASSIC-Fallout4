@@ -944,7 +944,7 @@ impl FileIOCore {
     /// 2. The file won't be modified during the mapping lifetime
     /// 3. The mapping is dropped after reading
     #[allow(unsafe_code)]
-    async fn read_file_mmap(&self, path: &Path) -> Result<String, FileIOError> {
+    pub async fn read_file_mmap(&self, path: &Path) -> Result<String, FileIOError> {
         // Optimization 1.7: Check file size to determine read strategy
         const MMAP_THRESHOLD: u64 = 1_024 * 1_024; // 1MB threshold
 

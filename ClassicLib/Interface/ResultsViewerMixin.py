@@ -360,12 +360,19 @@ class ResultsViewerMixin:
                 "# No Reports Found\n\nNo scan reports are available. Run a crash log scan to generate reports."
             )
         else:
-            # Reports found - clear any error state and show instructions
-            self.markdown_viewer.clear()
-            self.markdown_viewer.setMarkdown("# Reports Available\n\nSelect a report from the list to view its contents.")
-            # Auto-select the first report for better UX
-            if self.results_list.count() > 0:
-                self.results_list.setCurrentRow(0)
+            # Check if current report is still available
+            current_still_exists = self.current_report_path and self.current_report_path in reports
+            
+            if not current_still_exists:
+                # Reports found but current one is gone or none loaded - clear and show instructions
+                self.markdown_viewer.clear()
+                self.markdown_viewer.setMarkdown("# Reports Available\n\nSelect a report from the list to view its contents.")
+                self.current_report_path = None
+                
+                # Auto-select the first report for better UX
+                if self.results_list.count() > 0:
+                    self.results_list.setCurrentRow(0)
+            # Else: Keep showing current report (do nothing to viewer)
 
         logger.info(f"Refreshed reports list: {len(reports)} reports found")
 
@@ -415,9 +422,7 @@ class ResultsViewerMixin:
             try:
                 content = read_file_sync(report_path)
                 self.markdown_viewer.setPlainText(content)
-                QTimer.singleShot(
-                    0, lambda: msg_warning("Displayed report as plain text due to markdown error")
-                )
+                QTimer.singleShot(0, lambda: msg_warning("Displayed report as plain text due to markdown error"))
                 return True  # Fallback succeeded
             except Exception as fallback_e:  # noqa: BLE001
                 logger.error(f"Fallback plain text also failed: {fallback_e}")

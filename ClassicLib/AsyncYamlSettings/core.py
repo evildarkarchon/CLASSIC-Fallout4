@@ -225,16 +225,16 @@ class AsyncYamlSettingsCore:
             keys_to_remove = [k for k in self.cache.settings_cache if k[1] == yaml_store]
             for key in keys_to_remove:
                 del self.cache.settings_cache[key]
-            
+
             # Also clear file ops cache for specific file if possible
-            # Note: This assumes file_ops exposes a way to clear specific files, 
+            # Note: This assumes file_ops exposes a way to clear specific files,
             # or we rely on full clear. For now, we only have global clear for file_ops.
         else:
             # Clear all caches
             self.cache.cache.clear()
             self.cache.settings_cache.clear()
             self.cache.path_cache.clear()
-            
+
             # Clear file operations cache if it exists
             if hasattr(self.file_ops, "cache") and hasattr(self.file_ops.cache, "clear"):
                 self.file_ops.cache.clear()

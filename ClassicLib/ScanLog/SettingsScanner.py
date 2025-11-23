@@ -104,7 +104,12 @@ class SettingsScannerFragments:
 
     @staticmethod
     def _validate_memory_config(
-        mem_enabled: bool, has_xcell: bool, has_baka: bool, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
+        mem_enabled: bool,
+        has_xcell: bool,
+        has_baka: bool,
+        crashgen_name: str,
+        add_success: Callable[[str], None],
+        add_warning: Callable[[str, str], None],
     ) -> None:
         """Validate memory manager configuration based on installed mods."""
         # Create configuration tuple for cleaner logic
@@ -142,7 +147,9 @@ class SettingsScannerFragments:
             handler()
 
     @staticmethod
-    def _validate_xcell_settings(crashgen: dict, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]) -> None:
+    def _validate_xcell_settings(
+        crashgen: dict, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
+    ) -> None:
         """Validate X-Cell specific memory settings."""
         memory_settings = {
             "HavokMemorySystem": "Havok Memory System",

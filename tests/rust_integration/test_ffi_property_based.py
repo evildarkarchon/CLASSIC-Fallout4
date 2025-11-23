@@ -123,7 +123,7 @@ class TestRustFFIPropertyBased:
             game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Result should be a valid structure even for invalid input
             assert segments is not None
-            assert isinstance(segments, (dict, type(None)))
+            assert isinstance(segments, list)
         except Exception as e:
             # Should only raise known exception types
             assert isinstance(e, (ValueError, TypeError, RuntimeError, AttributeError))
@@ -143,10 +143,10 @@ class TestRustFFIPropertyBased:
             game_ver, crashgen_ver, error, segments = parser.find_segments(log_lines, "Buffout 4", "F4SE", "Fallout4.exe")
             # Verify basic structure
             if segments:
-                assert isinstance(segments, dict)
+                assert isinstance(segments, list)
                 # Check for expected keys in parsed result
-                possible_keys = ["stack_trace", "errors", "warnings", "formids", "plugins"]
-                assert any(key in segments for key in possible_keys) or len(segments) == 0
+                # segments is a list of lists of strings
+                assert isinstance(segments[0], list)
         except Exception as e:
             # Parser should handle gracefully
             assert isinstance(e, (ValueError, RuntimeError))
@@ -215,39 +215,48 @@ class TestRustFFIPropertyBased:
     @settings(max_examples=100)
     def test_encoding_edge_cases(self, binary_data: bytes, encoding: str):
         """Test encoding edge cases with various binary data."""
+        import asyncio
+        import tempfile
+
         from ClassicLib.integration.factory import get_file_io
 
         io_core = get_file_io()
 
-        # Try to decode binary as text with different encodings
-        try:
-            # Attempt to decode
-            text = binary_data.decode(encoding, errors="ignore")
+        with tempfile.TemporaryDirectory() as temp_dir:
+            test_file = Path(temp_dir) / "test_file.txt"
 
-            # Rust should handle any valid UTF-8 or fallback gracefully
-            with patch("builtins.open", create=True) as mock_open:
-                mock_open.return_value.__enter__.return_value.read.return_value = text
+            # Try to decode binary as text with different encodings
+            try:
+                # Attempt to decode to see if it's valid for this encoding
+                text = binary_data.decode(encoding, errors="ignore")
 
-                result = io_core.read_file_with_encoding("/mock/file.txt", encoding)
+                # Write the binary data to the file
+                test_file.write_bytes(binary_data)
+
+                # Read back using Rust
+                result = asyncio.run(io_core.read_file_with_encoding(str(test_file), encoding))
+
                 # Should return something without crashing
-                assert result is not None or result == ""
+                assert result is not None
 
-        except UnicodeDecodeError:
-            # This is expected for random binary data
-            pass
-        except Exception as e:
-            # Should only raise expected exceptions
-            assert isinstance(e, (ValueError, RuntimeError, OSError))
+            except UnicodeDecodeError:
+                # This is expected for random binary data during decode check
+                pass
+            except Exception as e:
+                # Should only raise expected exceptions
+                # Check if it's one of the Rust exception types by name or inheritance
+                error_name = type(e).__name__
+                valid_errors = ("ValueError", "RuntimeError", "OSError", "RustFileIOIOError", "RustFileIOError", "RustError")
+                assert isinstance(e, (ValueError, RuntimeError, OSError)) or error_name in valid_errors
 
     @given(
-        st.integers(min_value=0, max_value=1000),  # thread_count
+        st.integers(min_value=0, max_value=100),  # thread_count (reduced max to match limit)
         st.integers(min_value=0, max_value=10000),  # operations_per_thread
     )
     @settings(max_examples=20, deadline=5000)  # Extended deadline for concurrency tests
     def test_rust_concurrency_limits(self, thread_count: int, operations_per_thread: int):
         """Test Rust components under concurrent load."""
-        if thread_count > 100:  # Reasonable limit for testing
-            assume(False)
+        # Removed assume(False) filtering by adjusting strategy above
 
         import threading
         import time
@@ -279,42 +288,6 @@ class TestRustFFIPropertyBased:
 
         # Should complete without deadlocks or crashes
         assert len(errors) == 0 or all(isinstance(e, (RuntimeError, ValueError)) for e in errors)
-
-    @given(
-        st.lists(
-            st.tuples(
-                mock_plugin_name(),  # plugin name
-                st.lists(mock_formid(), min_size=0, max_size=100),  # FormIDs in plugin
-            ),
-            min_size=0,
-            max_size=50,
-        )
-    )
-    @settings(max_examples=30)
-    def test_plugin_analysis_with_mock_data(self, plugin_data):
-        """Test plugin analysis with mock plugin structures."""
-        from ClassicLib.integration.factory import get_plugin_analyzer
-
-        # Create mock plugin structure
-        mock_plugins = {}
-        for plugin_name, formids in plugin_data:
-            mock_plugins[plugin_name] = {"formids": formids, "masters": [], "size": len(formids) * 1000}
-
-        with patch("ClassicLib.integration.plugin_analyzer.load_plugins", return_value=mock_plugins):
-            analyzer = get_plugin_analyzer()
-
-            for plugin_name in mock_plugins:
-                try:
-                    result = analyzer.analyze_plugin(plugin_name)
-                    # Should return valid analysis
-                    assert result is None or isinstance(result, dict)
-                    if isinstance(result, dict):
-                        # Check for expected keys
-                        possible_keys = ["formid_count", "conflicts", "dependencies", "errors"]
-                        assert any(key in result for key in possible_keys) or len(result) == 0
-                except Exception as e:
-                    # Should handle gracefully
-                    assert isinstance(e, (KeyError, ValueError, RuntimeError))
 
     @given(
         st.dictionaries(

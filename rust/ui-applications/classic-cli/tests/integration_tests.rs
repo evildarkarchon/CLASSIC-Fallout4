@@ -48,6 +48,7 @@ mod config_integration {
         // Save initial config with fcx_mode = false
         let initial_config = CliConfig {
             fcx_mode: false,
+            auto_refresh_interval_ms: 5000,
             ..Default::default()
         };
         initial_config.save_to_yaml(&config_path).await.unwrap();
@@ -79,6 +80,7 @@ mod config_integration {
         // First save
         let config1 = CliConfig {
             fcx_mode: true,
+            auto_refresh_interval_ms: 5000,
             ..Default::default()
         };
         config1.save_to_yaml(&config_path).await.unwrap();
@@ -87,6 +89,7 @@ mod config_integration {
         let config2 = CliConfig {
             fcx_mode: false,
             stat_logging: true,
+            auto_refresh_interval_ms: 5000,
             ..Default::default()
         };
         config2.save_to_yaml(&config_path).await.unwrap();
@@ -147,6 +150,7 @@ mod yaml_round_trip_integration {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: classic_cli::PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Users\\Test & User\\Documents")),
                 scan_custom: Some(PathBuf::from("D:\\Logs (2024)")),
@@ -189,6 +193,7 @@ mod yaml_round_trip_integration {
                 update_check: update,
                 vr_mode: false,
                 auto_switch_to_results: true,
+                auto_refresh_interval_ms: 5000,
                 paths: PathConfig::default(),
             };
 
@@ -219,6 +224,7 @@ mod yaml_round_trip_integration {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,

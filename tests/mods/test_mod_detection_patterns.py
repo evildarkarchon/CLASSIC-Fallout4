@@ -3,12 +3,14 @@
 This module tests mod detection logic using synthetic data based on
 real crash log patterns observed in actual Fallout 4 logs.
 """
+# ruff: noqa: ANN201, ANN001, ANN204, PLR6301, ARG002, ANN202
 
 import random
-import re # Add import re
-from unittest.mock import patch, MagicMock # Add import patch, MagicMock
+from unittest.mock import MagicMock, patch  # Add import patch, MagicMock
 
 import pytest
+
+from ClassicLib.AsyncYamlSettings import AsyncYamlSettingsCore
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
@@ -25,12 +27,8 @@ class SyntheticModGenerator:
         [FE:104] [SS2 Addon] BloodMoonRaiders.esp
         [FE:105] [SS2] BBVault 88.esp
         """
-        if is_light:
-            # Light plugin format [FE:XXX]
-            hex_index = f"FE:{index:03X}"
-        else:
-            # Regular plugin [XX]
-            hex_index = f"{index:02X}"
+        # Light plugin format [FE:XXX] or Regular plugin [XX]
+        hex_index = f"FE:{index:03X}" if is_light else f"{index:02X}"
 
         # Generate realistic mod names based on patterns seen
         prefixes = ["SS2", "SS2 Addon", "SS2-", "PRP", "ELFX", "NAC", "PACE", "PANPC"]
@@ -40,10 +38,7 @@ class SyntheticModGenerator:
         name = random.choice(names)
         suffix = random.choice(["", "_v2", "_Final", "_Tweaks", "_Compatibility"])
 
-        if prefix:
-            plugin_name = f"[{prefix}] {name}{suffix}.esp"
-        else:
-            plugin_name = f"{name}{suffix}.esp"
+        plugin_name = f"[{prefix}] {name}{suffix}.esp" if prefix else f"{name}{suffix}.esp"
 
         return f"[{hex_index}] {plugin_name}"
 
@@ -90,37 +85,30 @@ class TestModDetectionPatterns:
     @pytest.fixture(autouse=True)
     def setup_registry(self, setup_global_registry):
         """Ensure GlobalRegistry is initialized for all tests."""
-        pass
 
     def test_plugin_list_parsing(self):
         """Test parsing of plugin list from crash log."""
         from ClassicLib.integration.factory import get_plugin_analyzer
         from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
-        generator = SyntheticModGenerator()
-
         # Generate synthetic plugin list like in real logs
         plugin_lines = []
 
         # Add base game plugins
-        plugin_lines.append("[00] Fallout4.esm")
-        plugin_lines.append("[01] DLCRobot.esm")
-        plugin_lines.append("[02] DLCworkshop01.esm")
+        plugin_lines.extend(["[00] Fallout4.esm", "[01] DLCRobot.esm", "[02] DLCworkshop01.esm"])
 
         # Add regular plugins
-        for i in range(3, 50):
-            plugin_lines.append(f"[{i:02X}] SyntheticMod_{i}.esp")
+        plugin_lines.extend(f"[{i:02X}] SyntheticMod_{i}.esp" for i in range(3, 50))
 
         # Add light plugins (FE format)
-        for i in range(0x050):
-            # Use unique names to avoid deduplication
-            plugin_lines.append(f"[FE:{i:03X}] SyntheticLight_{i}.esp")
+        # Use unique names to avoid deduplication
+        plugin_lines.extend(f"[FE:{i:03X}] SyntheticLight_{i}.esp" for i in range(0x050))
 
         # Parse the list using PluginAnalyzer
         # Pass dummy yamldata
         yamldata = ClassicScanLogsInfo()
         analyzer = get_plugin_analyzer(yamldata)
-        
+
         plugins, _, _ = analyzer.loadorder_scan_log(plugin_lines)
 
         # Verify parsing
@@ -137,32 +125,31 @@ class TestModDetectionPatterns:
         from ClassicLib.integration.factory import get_mod_detector
         from ClassicLib.YamlSettingsCache import yaml_cache
 
-        config_data = {
-            "MODS": {
-                "CONFLICTING_MODS": { 
-                    "ModA.esp | ModB.esp": "Conflict Warning: ModA and ModB are incompatible"
-                }
-            }
-        }
+        config_data = {"MODS": {"CONFLICTING_MODS": {"ModA.esp | ModB.esp": "Conflict Warning: ModA and ModB are incompatible"}}}
 
         # Mock YamlSettingsCache._async_core.load_yaml_file_async to provide a dummy config
-        class MockYamlCoreConflict:
+        class MockYamlCoreConflict(AsyncYamlSettingsCore):
             def __init__(self, data):
+                super().__init__()
                 self.config_data = data
+                # Ensure file_ops is present and mocked if accessed
+                self.file_ops = MagicMock()
+                self.file_ops.load_yaml_file = self.load_yaml_file_async
+
             async def load_yaml_file_async(self, path):
                 return self.config_data
-            
-            def batch_get_settings(self, requests):
+
+            async def batch_get_settings(self, requests):
                 results = []
-                for type_hint, yaml_store, key_path in requests:
+                for _, _, key_path in requests:
                     if key_path == "MODS.CONFLICTING_MODS":
                         results.append(self.config_data["MODS"]["CONFLICTING_MODS"])
                     else:
                         results.append(None)
                 return results
 
-        original_yaml_core = yaml_cache._async_core
-        yaml_cache._async_core = MockYamlCoreConflict(config_data)
+        original_yaml_core = yaml_cache()._async_core
+        yaml_cache()._async_core = MockYamlCoreConflict(config_data)
 
         # Create synthetic crash scenario with conflicting mods
         log_data = {
@@ -182,16 +169,13 @@ class TestModDetectionPatterns:
         crashlog_plugins_lower = {p["name"].lower(): p["name"] for p in log_data["plugins"]}
 
         mod_detector = get_mod_detector()
-        detect_mods_double = mod_detector["detect_mods_double"] 
+        detect_mods_double = mod_detector["detect_mods_double"]
 
         # Call detect_mods_double
-        fragments = detect_mods_double(
-            config_data["MODS"]["CONFLICTING_MODS"],
-            crashlog_plugins_lower
-        )
-        
+        fragments = detect_mods_double(config_data["MODS"]["CONFLICTING_MODS"], crashlog_plugins_lower)
+
         # Revert the patch
-        yaml_cache._async_core = original_yaml_core
+        yaml_cache()._async_core = original_yaml_core
 
         # Check if conflict was detected in the fragment content
         content = "".join(fragments.content)
@@ -227,13 +211,12 @@ class TestModDetectionPatterns:
                         version_strings.append(".".join(map(str, v)))
                     else:
                         version_strings.append(str(v))
-                
+
                 assert expected_version in version_strings
 
     def test_ss2_mod_family_detection(self):
         """Test detection of Sim Settlements 2 mod family."""
         from ClassicLib.integration.factory import get_mod_detector
-        from unittest.mock import patch, MagicMock
 
         # Plugin list with SS2 mods like in real logs
         plugins = [
@@ -258,10 +241,10 @@ class TestModDetectionPatterns:
             mock_yamldata_instance = MagicMock()
             # Properly structured dictionary for single mod detection
             mock_yamldata_instance.game_mods_conf = {
-                'SS2_MODS': {
+                "SS2_MODS": {
                     "SS2.esm": "Sim Settlements 2 Warning",
                     "SS2_XPAC_Chapter2.esm": "SS2 Chapter 2 Warning",
-                    "SS2_RobotMod.esp": "SS2 Robot Mod Warning"
+                    "SS2_RobotMod.esp": "SS2 Robot Mod Warning",
                 }
             }
             mock_get_yamldata.return_value = mock_yamldata_instance
@@ -272,41 +255,45 @@ class TestModDetectionPatterns:
         # Now, check the results. This will require parsing the fragments.
         content = "".join(detected_fragments.content)
         found_ss2 = "SS2" in content or "Sim Settlements 2" in content
-        
+
         assert found_ss2, "SS2 mod family was not detected"
 
     def test_prp_compatibility_detection(self):
         """Test detection of PRP (Previsibines Repair Pack) compatibility."""
         from ClassicLib.integration.factory import get_mod_detector
-        from unittest.mock import patch, MagicMock
         from ClassicLib.YamlSettingsCache import yaml_cache
 
         # Mock YamlSettingsCache._async_core.load_yaml_file_async to provide a dummy config
-        class MockYamlCorePRP:
+        class MockYamlCorePRP(AsyncYamlSettingsCore):
             def __init__(self):
+                super().__init__()
                 self.config_data = {
                     "MODS": {
                         "PRP_COMPATIBILITY": {
                             "PRP.esp": "PRP Main Plugin",
                             "PRP-Compat-JSRS-Regions.esp": "PRP Patch",
-                            "PRP-Compat-VNW-CR.esp": "PRP Patch"
+                            "PRP-Compat-VNW-CR.esp": "PRP Patch",
                         }
                     }
                 }
+                # Ensure file_ops is present and mocked if accessed
+                self.file_ops = MagicMock()
+                self.file_ops.load_yaml_file = self.load_yaml_file_async
+
             async def load_yaml_file_async(self, path):
                 return self.config_data
-            
-            def batch_get_settings(self, requests):
+
+            async def batch_get_settings(self, requests):
                 results = []
-                for type_hint, yaml_store, key_path in requests:
+                for _, _, key_path in requests:
                     if key_path == "MODS.PRP_COMPATIBILITY":
                         results.append(self.config_data["MODS"]["PRP_COMPATIBILITY"])
                     else:
-                        results.append(None) # Or appropriate default
+                        results.append(None)  # Or appropriate default
                 return results
 
-        original_yaml_core = yaml_cache._async_core
-        yaml_cache._async_core = MockYamlCorePRP()
+        original_yaml_core = yaml_cache()._async_core
+        yaml_cache()._async_core = MockYamlCorePRP()
 
         # Plugins with PRP patches like in real logs
         plugins = [
@@ -328,23 +315,20 @@ class TestModDetectionPatterns:
         with patch("ClassicLib.integration.factory.get_yamldata") as mock_get_yamldata:
             mock_yamldata_instance = MagicMock()
             mock_yamldata_instance.game_mods_conf = {
-                'PRP_COMPATIBILITY': {
-                    "PRP.esp": "PRP Main Plugin",
-                    "PRP-Compat-JSRS-Regions.esp": "PRP Patch"
-                }
+                "PRP_COMPATIBILITY": {"PRP.esp": "PRP Main Plugin", "PRP-Compat-JSRS-Regions.esp": "PRP Patch"}
             }
             mock_get_yamldata.return_value = mock_yamldata_instance
 
             # Call detect_mods_single with the appropriate data
             detected_fragments = detect_mods_single(mock_yamldata_instance.game_mods_conf["PRP_COMPATIBILITY"], crashlog_plugins_lower)
-        
+
         # Revert the patch
-        yaml_cache._async_core = original_yaml_core
+        yaml_cache()._async_core = original_yaml_core
 
         # Now, check the results. This will require parsing the fragments.
         content = "".join(detected_fragments.content)
         found_prp_info = "PRP" in content or "Prp-Compat-" in content.lower() or "PRP Main Plugin" in content
-        
+
         assert found_prp_info, "PRP compatibility info was not detected"
 
         # The ClassicLib.ScanLog.MemoryAnalyzer module has been removed.
@@ -420,8 +404,7 @@ class TestModDetectionPatterns:
         assert game_version == "Fallout 4 v1.10.163"
         assert crashgen_version == "Buffout 4 v1.28.6"
         assert "EXCEPTION_ACCESS_VIOLATION" in main_error
-        assert "0x7FF6EF4C3512" in main_error # Crash address included in main_error
-
+        assert "0x7FF6EF4C3512" in main_error  # Crash address included in main_error
 
         # The ClassicLib.ScanLog.DependencyAnalyzer module has been removed.
         # Its functionality for building mod dependency chains is likely now

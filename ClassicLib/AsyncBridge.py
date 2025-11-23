@@ -260,7 +260,7 @@ class AsyncBridge:
             target=self._run_loop,
             args=(ready_event,),  # Pass ready_event as argument
             daemon=True,
-            name=thread_name
+            name=thread_name,
         )
         self._thread.start()
         logger.debug(f"AsyncBridge: Started background thread {thread_name}")
@@ -318,7 +318,7 @@ class AsyncBridge:
                         # 0.2s is enough to let CancelledError propagate to futures
                         # We don't need to wait for full task cleanup if it's stuck
                         self._loop.run_until_complete(asyncio.wait_for(wait_for_cancellation(), timeout=0.2))
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         logger.warning(f"AsyncBridge: Timeout (0.2s) waiting for tasks to cancel for thread {self._thread_id}")
                     except Exception as e:
                         logger.error(f"AsyncBridge: Error during task cancellation: {e}")

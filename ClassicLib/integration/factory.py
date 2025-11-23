@@ -550,8 +550,8 @@ def get_yamldata() -> Any:
             # root: contains CLASSIC Ignore.yaml
             # data: contains databases/CLASSIC Main.yaml and databases/CLASSIC Fallout4.yaml
             yaml_dirs = [
-                str(data_dir.parent), # Root directory
-                str(data_dir),        # CLASSIC Data directory
+                str(data_dir.parent),  # Root directory
+                str(data_dir),  # CLASSIC Data directory
             ]
 
             # Get game and VR mode from GlobalRegistry

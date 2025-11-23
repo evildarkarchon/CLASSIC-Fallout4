@@ -19,37 +19,46 @@ The tests ensure that Rust report generation maintains 100% functional compatibi
 with the Python implementation while providing significant performance improvements
 (typically 75x faster for report composition and formatting operations).
 """
+# ruff: noqa: ANN201, ANN001, ANN204, PLR6301, ARG002, ANN003, BLE001
 
 from __future__ import annotations
 
 import logging
+import operator
 import tempfile
 import time
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from dataclasses import dataclass
 
 import pytest
 
 from ClassicLib.integration.detector import get_available_components
 
 RUST_AVAILABLE = get_available_components()["components"]
-from ClassicLib.ScanLog.fragments import ReportFragment
-from tests.rust_integration.parity_fixtures import ParityResult, ParityTestRunner, ParityTestCase, ParityValidator, normalize_markdown_content, skip_if_rust_unavailable
+from ClassicLib.ScanLog.fragments import ReportFragment  # noqa: E402
+from tests.rust_integration.parity_fixtures import (  # noqa: E402
+    ParityResult,
+    ParityTestCase,
+    ParityValidator,
+    normalize_markdown_content,
+    skip_if_rust_unavailable,
+)
 
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ReportTestFragmentData:
     name: str
-    content: str # Raw string content
+    content: str  # Raw string content
     priority: int
-    fragment_type: str = "info" # Not used by _assemble_report_python, but for metadata
-
+    fragment_type: str = "info"  # Not used by _assemble_report_python, but for metadata
 
 
 class MockReportGenerator:
     """Mock ReportGenerator class to simulate Rust behavior for testing."""
+
     def create_fragment(self, name: str, content: str, fragment_type: str, priority: int) -> dict[str, Any]:
         return {
             "fragment_name": name,
@@ -60,14 +69,13 @@ class MockReportGenerator:
 
     def assemble_report(self, fragments: list[dict[str, Any]]) -> str:
         # Sort fragments by priority
-        sorted_fragments = sorted(fragments, key=lambda f: f["priority"])
-        
+        sorted_fragments = sorted(fragments, key=operator.itemgetter("priority"))
+
         # Assemble content
         lines = []
         for fragment in sorted_fragments:
             if fragment["content"]:
-                lines.append(fragment["content"])
-                lines.append("") # Add spacing
+                lines.extend((fragment["content"], ""))  # Add spacing
         return "\n".join(lines)
 
     def save_report(self, content: str, file_path: str) -> None:
@@ -96,23 +104,22 @@ class ReportParityValidator(ParityValidator):
         if not RUST_AVAILABLE.get("report_generation", False):
             # If Rust not available, return a mock with has_attr checks
             mock_rust = MockReportGenerator()
-            del mock_rust.create_fragment # Simulate missing methods
+            del mock_rust.create_fragment  # Simulate missing methods
             del mock_rust.assemble_report
             del mock_rust.save_report
             del mock_rust.render_template
             return mock_rust
 
-
         try:
             # Try to import Rust report generation components
             import classic_scanlog as rust_scanlog
-
-            if hasattr(rust_scanlog, "ReportGenerator"):
-                return rust_scanlog.ReportGenerator()
-            if hasattr(rust_scanlog, "report"):
-                return rust_scanlog.report
-            return None
         except ImportError:
+            return None
+        else:
+            if hasattr(rust_scanlog, "ReportGenerator"):
+                return rust_scanlog.ReportGenerator()  # type: ignore
+            if hasattr(rust_scanlog, "report"):
+                return rust_scanlog.report  # type: ignore
             return None
 
     def create_python_implementation(self, **kwargs):
@@ -120,7 +127,6 @@ class ReportParityValidator(ParityValidator):
         # Python report generation is typically done through ReportFragment
         # and various report generation utilities
         return {"fragment_class": ReportFragment, "markdown_utils": self._get_python_markdown_utils()}
-
 
     def _get_python_markdown_utils(self) -> dict[str, Any]:
         """Get Python markdown utilities for comparison."""
@@ -198,7 +204,7 @@ class ReportParityValidator(ParityValidator):
                     "has_content": True,
                 },
                 expected_output_type=ReportFragment,
-                validation_function=lambda rust, python, inputs: self._compare_report_fragments(
+                validation_function=lambda rust, _, inputs: self._compare_report_fragments(
                     rust, ReportFragment.from_lines(inputs["content"].splitlines(), check_content=inputs["has_content"])
                 )[0],
             ),
@@ -211,7 +217,7 @@ class ReportParityValidator(ParityValidator):
                 },
                 expected_output_type=ReportFragment,
                 metadata={"fragment_name": "Markdown Fragment", "fragment_type": "analysis", "priority": 2},
-                validation_function=lambda rust, python, inputs: self._compare_report_fragments(
+                validation_function=lambda rust, _, inputs: self._compare_report_fragments(
                     rust, ReportFragment.from_lines(inputs["content"], check_content=inputs["has_content"])
                 )[0],
             ),
@@ -224,7 +230,7 @@ class ReportParityValidator(ParityValidator):
                 },
                 expected_output_type=ReportFragment,
                 metadata={"fragment_name": "Error Fragment", "fragment_type": "error", "priority": 5},
-                validation_function=lambda rust, python, inputs: self._compare_report_fragments(
+                validation_function=lambda rust, _, inputs: self._compare_report_fragments(
                     rust, ReportFragment.from_lines(inputs["content"], check_content=inputs["has_content"])
                 )[0],
             ),
@@ -234,7 +240,7 @@ class ReportParityValidator(ParityValidator):
                 inputs={"content": "", "has_content": False},
                 expected_output_type=ReportFragment,
                 metadata={"fragment_name": "Empty Fragment", "fragment_type": "info", "priority": 0},
-                validation_function=lambda rust, python, inputs: self._compare_report_fragments(
+                validation_function=lambda rust, _, inputs: self._compare_report_fragments(
                     rust, ReportFragment.from_lines(inputs["content"], check_content=inputs["has_content"])
                 )[0],
             ),
@@ -247,7 +253,7 @@ class ReportParityValidator(ParityValidator):
                 },
                 expected_output_type=ReportFragment,
                 metadata={"fragment_name": "Unicode Fragment", "fragment_type": "info", "priority": 1},
-                validation_function=lambda rust, python, inputs: self._compare_report_fragments(
+                validation_function=lambda rust, _, inputs: self._compare_report_fragments(
                     rust, ReportFragment.from_lines(inputs["content"], check_content=inputs["has_content"])
                 )[0],
             ),
@@ -316,10 +322,10 @@ class TestReportParity:
         fragment structures and content formatting.
         """
         validator = ReportParityValidator()
-        
+
         # Get fragment creation test cases from the validator
         all_test_cases = validator.generate_test_cases()
-        fragment_test_cases = [tc for tc in all_test_cases if tc.expected_output_type == ReportFragment]
+        fragment_test_cases = [tc for tc in all_test_cases if tc.expected_output_type is ReportFragment]
 
         results = []
         for test_case in fragment_test_cases:
@@ -336,20 +342,20 @@ class TestReportParity:
                 # Try to create Rust fragment
                 rust_impl = validator.create_rust_implementation()
                 rust_fragment = None
-                
+
                 if rust_impl and hasattr(rust_impl, "create_fragment"):
                     rust_available_for_case = True
-                    rust_fragment = rust_impl.create_fragment(
+                    rust_fragment = rust_impl.create_fragment(  # type: ignore
                         test_case.metadata["fragment_name"],
                         test_case.inputs["content"],
                         test_case.metadata["fragment_type"],
-                        test_case.metadata["priority"]
+                        test_case.metadata["priority"],
                     )
-                
+
                 if rust_available_for_case:
                     is_identical, differences = validator._compare_report_fragments(rust_fragment, python_fragment)
                 else:
-                    is_identical = True # If Rust not available, Python result is considered baseline
+                    is_identical = True  # If Rust not available, Python result is considered baseline
 
                 results.append(
                     ParityResult(
@@ -394,7 +400,28 @@ class TestReportParity:
                 if not r.passed:
                     logger.warning(f"Fragment creation parity failed: {r.test_case} - {r.differences[:3]}")
 
-    async def test_markdown_formatting_parity(self, mock_scanlog_info):
+    def _compare_markdown_results(self, rust_result: Any, python_result: Any) -> tuple[bool, list[str]]:
+        """Compare Rust and Python markdown results."""
+        rust_normalized = normalize_markdown_content(str(rust_result))
+        python_normalized = normalize_markdown_content(str(python_result))
+
+        if rust_normalized == python_normalized:
+            return True, []
+
+        differences = ["Markdown formatting differs between implementations"]
+        rust_lines = rust_normalized.split("\n")
+        python_lines = python_normalized.split("\n")
+
+        for i, (rust_line, python_line) in enumerate(zip(rust_lines, python_lines, strict=False)):
+            if rust_line != python_line:
+                differences.append(f"Line {i + 1}: Rust='{rust_line}', Python='{python_line}'")
+
+        if len(rust_lines) != len(python_lines):
+            differences.append(f"Line count differs: Rust={len(rust_lines)}, Python={len(python_lines)}")
+
+        return False, differences
+
+    async def test_markdown_formatting_parity(self, mock_scanlog_info):  # noqa: PLR0912
         """
         Test that Rust and Python markdown formatting produces identical
         output for various content types and formatting scenarios.
@@ -403,7 +430,7 @@ class TestReportParity:
 
         # Get markdown formatting test cases from the validator
         all_test_cases = validator.generate_test_cases()
-        formatting_test_cases = [tc for tc in all_test_cases if tc.expected_output_type == str]
+        formatting_test_cases = [tc for tc in all_test_cases if tc.expected_output_type is str]
 
         results = []
         for test_case in formatting_test_cases:
@@ -415,9 +442,9 @@ class TestReportParity:
                 inputs = test_case.inputs
                 formatter_name = inputs["formatter"]
                 data = inputs["data"]
-                
+
                 # Get Python implementation and format
-                python_impl_data = validator.create_python_implementation() # This will return the dict
+                python_impl_data = validator.create_python_implementation()  # This will return the dict
                 python_formatter = python_impl_data["markdown_utils"][formatter_name]
 
                 start_time = time.perf_counter()
@@ -443,30 +470,12 @@ class TestReportParity:
                     rust_time = time.perf_counter() - start_time
                 else:
                     # If Rust not available, Python result is considered baseline, so mark as identical
-                    rust_result = python_result # Use Python result as baseline if Rust not available
+                    rust_result = python_result  # Use Python result as baseline if Rust not available
                     is_identical = True
 
                 if rust_available_for_case:
                     # Compare results if Rust was available
-                    rust_normalized = normalize_markdown_content(str(rust_result))
-                    python_normalized = normalize_markdown_content(str(python_result))
-
-                    if rust_normalized != python_normalized:
-                        differences.append("Markdown formatting differs between implementations")
-                        is_identical = False
-
-                        # Generate detailed diff for debugging
-                        rust_lines = rust_normalized.split("\n")
-                        python_lines = python_normalized.split("\n")
-
-                        for i, (rust_line, python_line) in enumerate(zip(rust_lines, python_lines)):
-                            if rust_line != python_line:
-                                differences.append(f"Line {i + 1}: Rust='{rust_line}', Python='{python_line}'")
-
-                        if len(rust_lines) != len(python_lines):
-                            differences.append(f"Line count differs: Rust={len(rust_lines)}, Python={len(python_lines)}")
-                    else:
-                        is_identical = True
+                    is_identical, differences = self._compare_markdown_results(rust_result, python_result)
 
                 results.append(
                     ParityResult(
@@ -513,7 +522,6 @@ class TestReportParity:
                 if not r.passed:
                     logger.warning(f"Markdown formatting parity failed: {r.test_case} - {r.differences[:3]}")
 
-
     async def test_complete_report_assembly_parity(self, mock_scanlog_info):
         """
         Test that complete report assembly produces identical results
@@ -544,14 +552,12 @@ class TestReportParity:
             if rust_impl and hasattr(rust_impl, "assemble_report"):
                 start_time = time.perf_counter()
                 # Convert fragments to Rust-compatible format
-                rust_fragments = []
-                for fragment in test_fragments:
-                    rust_fragments.append({
-                        "name": fragment.name,
-                        "content": fragment.content,
-                        "priority": fragment.priority,
-                    })
-                rust_assembled = rust_impl.assemble_report(rust_fragments)
+                rust_fragments = [{
+                    "name": fragment.name,
+                    "content": fragment.content,
+                    "priority": fragment.priority,
+                } for fragment in test_fragments]
+                rust_assembled = rust_impl.assemble_report(rust_fragments)  # type: ignore
                 rust_time = time.perf_counter() - start_time
             else:
                 # If Rust not available, skip this test
@@ -575,7 +581,7 @@ class TestReportParity:
                     differences.append(f"Report length differs: Rust={len(rust_lines)} lines, Python={len(python_lines)} lines")
 
                 # Sample line differences for debugging
-                for i, (rust_line, python_line) in enumerate(zip(rust_lines[:20], python_lines[:20])):
+                for i, (rust_line, python_line) in enumerate(zip(rust_lines[:20], python_lines[:20], strict=False)):
                     if rust_line != python_line:
                         differences.append(f"Line {i + 1} differs: '{rust_line[:50]}...' vs '{python_line[:50]}...'")
 
@@ -621,8 +627,7 @@ class TestReportParity:
         lines = []
         for fragment in sorted_fragments:
             if fragment.content:
-                lines.append(fragment.content)
-                lines.append("")  # Add spacing between sections
+                lines.extend((fragment.content, ""))  # Add spacing between sections
 
         # Remove trailing empty lines
         while lines and not lines[-1].strip():
@@ -661,10 +666,8 @@ class TestReportParity:
                 pytest.skip("Rust report assembly not available for performance testing")
 
             start_time = time.perf_counter()
-            rust_fragments = []
-            for fragment in large_fragment_set:
-                rust_fragments.append({"name": fragment.name, "content": fragment.content, "priority": fragment.priority})
-            rust_result = rust_impl.assemble_report(rust_fragments)
+            rust_fragments = [{"name": fragment.name, "content": fragment.content, "priority": fragment.priority} for fragment in large_fragment_set]
+            rust_result = rust_impl.assemble_report(rust_fragments)  # type: ignore
             rust_time = time.perf_counter() - start_time
 
             # Validate parity
@@ -754,7 +757,7 @@ ScrapEverything.esp may cause stability issues.
                 if rust_impl and hasattr(rust_impl, "save_report"):
                     rust_file = temp_path / "rust_report.md"
                     start_time = time.perf_counter()
-                    rust_impl.save_report(test_content, str(rust_file))
+                    rust_impl.save_report(test_content, str(rust_file))  # type: ignore
                     rust_time = time.perf_counter() - start_time
 
                     # Compare file contents
@@ -844,7 +847,7 @@ class TestReportGenerationRegression:
 
             # Rust template rendering (if available)
             if hasattr(rust_impl, "render_template"):
-                rust_result = rust_impl.render_template(template, data)
+                rust_result = rust_impl.render_template(template, data)  # type: ignore
 
                 # Compare results
                 python_normalized = normalize_markdown_content(python_result)

@@ -11,6 +11,7 @@ identical results to Python implementation. Tests cover:
 The tests ensure that Rust implementation maintains 100% functional compatibility
 with Python while providing performance improvements.
 """
+# ruff: noqa: ANN201, ANN204, PLR6301, ARG002, ANN003, BLE001
 
 from __future__ import annotations
 

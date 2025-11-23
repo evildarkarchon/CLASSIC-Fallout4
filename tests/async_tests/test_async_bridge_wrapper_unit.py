@@ -4,13 +4,16 @@ Unit tests for async/sync bridging using AsyncBridge - wrapper patterns and char
 This module contains unit tests for AsyncBridge wrapper patterns and behavioral
 characteristics like event loop reuse, concurrency handling, and singleton pattern.
 """
-# ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
+# ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR6301, BLE001
 
 import asyncio
+import logging
 
 import pytest
 
 from ClassicLib.AsyncBridge import AsyncBridge
+
+logger = logging.getLogger(__name__)
 
 pytestmark = pytest.mark.unit
 
@@ -65,7 +68,8 @@ class TestAsyncBridgeWrapper:
             await asyncio.sleep(0.001)
             return text.upper()
 
-        sync_upper = lambda text: async_bridge.run_async(async_upper(text))
+        def sync_upper(text):
+            return async_bridge.run_async(async_upper(text))
 
         assert sync_upper("hello") == "HELLO"
         assert sync_upper("world") == "WORLD"
@@ -112,6 +116,7 @@ class TestAsyncBridgeBehavior:
         """
 
         async def get_loop_id():
+            await asyncio.sleep(0)
             return id(asyncio.get_running_loop())
 
         # Multiple calls should use the same loop
@@ -168,9 +173,10 @@ class TestAsyncBridgeBehavior:
         Note: We don't use the async_bridge fixture here because we need to test
         the per-thread instance behavior, not a shared instance.
         """
-        from ClassicLib.AsyncBridge import AsyncBridge
-        import threading
         import asyncio
+        import threading
+
+        from ClassicLib.AsyncBridge import AsyncBridge
 
         results = []
         errors = []
@@ -267,6 +273,7 @@ class TestAsyncBridgeBehavior:
 
         # Bridge should still work after error
         async def async_ok():
+            await asyncio.sleep(0)
             return "ok"
 
         assert async_bridge.run_async(async_ok()) == "ok"

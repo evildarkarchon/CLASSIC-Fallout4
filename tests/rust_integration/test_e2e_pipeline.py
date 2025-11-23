@@ -13,9 +13,11 @@ Key Features Tested:
 - Error handling and fallback mechanisms
 - Integration between all pipeline components
 """
+# ruff: noqa: ANN201, ANN001, PLR6301, ARG002, BLE001
 
 import asyncio
 import logging
+from contextlib import AsyncExitStack
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -40,6 +42,8 @@ from ClassicLib.integration.status import (
     is_rust_accelerated,
 )
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.rust
@@ -104,6 +108,9 @@ class TestE2EPipeline:
         mock_yaml.crashgen_name = "Buffout 4"
         mock_yaml.xse_acronym = "F4SE"
         mock_yaml.game_root_name = "Fallout 4"
+        mock_yaml.crashgen_latest_og = "1.28.6"
+        mock_yaml.crashgen_latest_vr = "1.28.6"
+        mock_yaml.classic_version = "7.31.0"
 
         # Mock problematic plugins list
         mock_yaml.problematic_plugins = {"test_plugin.esp": "Test problematic plugin", "broken_mod.esp": "Known broken mod"}
@@ -119,7 +126,9 @@ class TestE2EPipeline:
         mock_yaml.game_ignore_plugins = []
         mock_yaml.game_ignore_records = []
         mock_yaml.ignore_list = []
-        
+        mock_yaml.classic_records_list = []
+        mock_yaml.plugins_mods_to_check = {}
+
         # Initialize dict attributes
         mock_yaml.game_mods_core = {}
         mock_yaml.game_mods_conf = {}
@@ -147,9 +156,7 @@ class TestE2EPipeline:
         AsyncBridge.get_instance()
 
         # Create orchestrator with test configuration
-        orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
-
-        return orchestrator
+        return OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
 
     def _create_synthetic_crash_log(self) -> str:
         """
@@ -230,20 +237,20 @@ PLUGINS:
         if not any(is_rust_accelerated(component) for component in ["parser", "formid_analyzer", "plugin_analyzer", "record_scanner"]):
             pytest.skip("No Rust components available for end-to-end testing")
 
-        # Test with each available crash log sample
-        for sample_name, log_path in crash_log_samples.items():
-            with PerformanceTimer(f"E2E Pipeline - {sample_name}") as timer:
-                # Read the crash log
-                crash_data = self._read_crash_log(log_path)
-                assert len(crash_data) > 0, f"Empty crash log: {sample_name}"
+        async with orchestrator:
+            # Test with each available crash log sample
+            for sample_name, log_path in crash_log_samples.items():
+                with PerformanceTimer(f"E2E Pipeline - {sample_name}") as timer:
+                    # Read the crash log
+                    crash_data = self._read_crash_log(log_path)
+                    assert len(crash_data) > 0, f"Empty crash log: {sample_name}"
 
-                # Process through the complete pipeline
-                report_fragments = await orchestrator.process_crash_log_async(
-                    crash_data=crash_data,
-                    crashgen_name=mock_yamldata.crashgen_name,
-                    xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name,
-                )
+                    # Process through the complete pipeline
+                    result = await orchestrator.process_crash_log(
+                        crashlog_file=log_path
+                    )
+                    # Unpack result (path, report, failed, stats)
+                    _, report_fragments, _, _ = result
 
                 # Validate the pipeline produced meaningful output
                 assert report_fragments is not None, f"No output from pipeline: {sample_name}"
@@ -251,7 +258,7 @@ PLUGINS:
                 # Validate report structure contains expected sections
 
                 # Log performance for analysis
-                logging.info(f"Pipeline processing time for {sample_name}: {timer.elapsed:.3f}s")
+                logger.info(f"Pipeline processing time for {sample_name}: {timer.elapsed:.3f}s")
 
     @pytest.mark.asyncio
     async def test_rust_python_output_consistency(self, crash_log_samples, mock_yamldata):
@@ -268,7 +275,7 @@ PLUGINS:
             pytest.skip("Rust parser not available for consistency testing")
 
         # Test with first available sample
-        sample_name, log_path = next(iter(crash_log_samples.items()))
+        _, log_path = next(iter(crash_log_samples.items()))
         crash_data = self._read_crash_log(log_path)
 
         # Test Rust LogParser
@@ -307,7 +314,7 @@ PLUGINS:
             pytest.skip("Rust FormID analyzer not available")
 
         # Use first available sample
-        sample_name, log_path = next(iter(crash_log_samples.items()))
+        _, log_path = next(iter(crash_log_samples.items()))
         crash_data = self._read_crash_log(log_path)
 
         # Parse the crash log to get segments
@@ -353,7 +360,7 @@ PLUGINS:
             pytest.skip("Rust plugin analyzer not available")
 
         # Use first available sample
-        sample_name, log_path = next(iter(crash_log_samples.items()))
+        _, log_path = next(iter(crash_log_samples.items()))
         crash_data = self._read_crash_log(log_path)
 
         # Parse to get plugin segment
@@ -400,7 +407,7 @@ PLUGINS:
             pytest.skip("Rust record scanner not available")
 
         # Use first available sample
-        sample_name, log_path = next(iter(crash_log_samples.items()))
+        _, log_path = next(iter(crash_log_samples.items()))
         crash_data = self._read_crash_log(log_path)
 
         # Parse to get call stack segment for record scanning
@@ -423,7 +430,9 @@ PLUGINS:
             # Validate record scanning results
             # Fragment can be None if no records found
             if fragment is not None:
-                assert hasattr(fragment, "__dict__") or isinstance(fragment, dict), "Fragment should be an object or dict"
+                # Fragment can be a list of strings (if Rust) or an object/dict (if Python)
+                is_valid_type = isinstance(fragment, list) or hasattr(fragment, "__dict__") or isinstance(fragment, dict)
+                assert is_valid_type, f"Fragment should be a list, object or dict, got {type(fragment)}"
 
             assert isinstance(matches, list), "Matches should be returned as a list"
 
@@ -432,7 +441,7 @@ PLUGINS:
                 assert isinstance(match, str), f"Match should be string: {match}"
 
     @pytest.mark.asyncio
-    async def test_error_handling_and_fallbacks(self, crash_log_samples, mock_yamldata):
+    async def test_error_handling_and_fallbacks(self, crash_log_samples, mock_yamldata, tmp_path):
         """
         Test error handling and fallback mechanisms in the pipeline.
 
@@ -440,26 +449,28 @@ PLUGINS:
         and falls back to Python implementations when Rust components fail.
         """
         # Use first available sample
-        sample_name, log_path = next(iter(crash_log_samples.items()))
+        _, log_path = next(iter(crash_log_samples.items()))
         crash_data = self._read_crash_log(log_path)
 
         # Test with corrupted data to trigger error handling
         corrupted_data = crash_data[:10] + ["CORRUPTED LINE"] * 5 + crash_data[10:]
+
+        # Write to temp file
+        corrupted_file = tmp_path / "corrupted_crash.log"
+        corrupted_file.write_text("\n".join(corrupted_data), encoding="utf-8")
 
         # Create orchestrator
         orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
 
         # Process should not crash even with corrupted data
         try:
-            report_fragments = await orchestrator.process_crash_log_async(
-                crash_data=corrupted_data,
-                crashgen_name=mock_yamldata.crashgen_name,
-                xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name,
-            )
+            async with orchestrator:
+                result = await orchestrator.process_crash_log(
+                    crashlog_file=corrupted_file
+                )
 
             # Should still produce some output even with corrupted data
-            assert report_fragments is not None, "Pipeline should handle corrupted data gracefully"
+            assert result is not None, "Pipeline should handle corrupted data gracefully"
 
         except Exception as e:
             pytest.fail(f"Pipeline should not crash on corrupted data: {e}")
@@ -479,27 +490,25 @@ PLUGINS:
         orchestrators = []
         crash_data_sets = []
 
-        for sample_name, log_path in list(crash_log_samples.items())[:3]:  # Limit to 3 for performance
-            orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
-            crash_data = self._read_crash_log(log_path)
+        async with AsyncExitStack() as stack:
+            for _, log_path in list(crash_log_samples.items())[:3]:  # Limit to 3 for performance
+                orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
+                await stack.enter_async_context(orchestrator)
 
-            orchestrators.append(orchestrator)
-            crash_data_sets.append((crash_data, sample_name))
+                orchestrators.append(orchestrator)
+                crash_data_sets.append(log_path)
 
-        # Process all crash logs concurrently
-        tasks = []
-        for orchestrator, (crash_data, sample_name) in zip(orchestrators, crash_data_sets):
-            task = orchestrator.process_crash_log_async(
-                crash_data=crash_data,
-                crashgen_name=mock_yamldata.crashgen_name,
-                xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name,
-            )
-            tasks.append(task)
+            # Process all crash logs concurrently
+            tasks = []
+            for orchestrator, log_path in zip(orchestrators, crash_data_sets, strict=True):
+                task = orchestrator.process_crash_log(
+                    crashlog_file=log_path
+                )
+                tasks.append(task)
 
-        # Wait for all tasks to complete
-        with PerformanceTimer("Concurrent Processing") as timer:
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            # Wait for all tasks to complete
+            with PerformanceTimer("Concurrent Processing") as timer:
+                results = await asyncio.gather(*tasks, return_exceptions=True)
 
         # Validate all results
         for i, result in enumerate(results):
@@ -508,7 +517,7 @@ PLUGINS:
 
             assert result is not None, f"No result from concurrent processing: sample {i}"
 
-        logging.info(f"Concurrent processing of {len(tasks)} logs: {timer.elapsed:.3f}s")
+        logger.info(f"Concurrent processing of {len(tasks)} logs: {timer.elapsed:.3f}s")
 
     def test_rust_component_status_reporting(self):
         """
@@ -575,27 +584,25 @@ class TestE2EPerformance:
 
         # Use largest available crash log for performance testing
         largest_sample = max(crash_log_samples.items(), key=lambda x: x[1].stat().st_size if x[1].exists() else 0)
-        sample_name, log_path = largest_sample
+        _, log_path = largest_sample
 
-        crash_data = self._read_crash_log(log_path)
+        self._read_crash_log(log_path)
 
         # Measure Rust performance
         orchestrator = OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True)
 
         rust_times = []
-        for _ in range(3):  # Run multiple times for average
-            with PerformanceTimer() as timer:
-                await orchestrator.process_crash_log_async(
-                    crash_data=crash_data,
-                    crashgen_name=mock_yamldata.crashgen_name,
-                    xse_acronym=mock_yamldata.xse_acronym,
-                    game_root_name=mock_yamldata.game_root_name,
-                )
-            rust_times.append(timer.elapsed)
+        async with orchestrator:
+            for _ in range(3):  # Run multiple times for average
+                with PerformanceTimer() as timer:
+                    await orchestrator.process_crash_log(
+                        crashlog_file=log_path
+                    )
+                rust_times.append(timer.elapsed)
 
         avg_rust_time = sum(rust_times) / len(rust_times)
 
-        logging.info(f"Average Rust pipeline time: {avg_rust_time:.3f}s")
+        logger.info(f"Average Rust pipeline time: {avg_rust_time:.3f}s")
 
         # Performance should be reasonable (< 2 seconds for typical logs)
         assert avg_rust_time < 2.0, f"Rust pipeline too slow: {avg_rust_time:.3f}s"

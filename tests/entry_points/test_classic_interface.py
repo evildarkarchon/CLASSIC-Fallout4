@@ -4,6 +4,8 @@ This module tests the GUI application initialization, window setup,
 and component integration for the main CLASSIC interface.
 """
 
+# ruff: noqa: PLR6301, ARG002
+
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
@@ -70,18 +72,21 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        QApplication.instance() or QApplication([])
+        _ = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False  # Disable update check
         mock_global_registry.get_local_dir.return_value = Path()
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
         # Assert
         assert window.windowTitle() == "Crash Log Auto Scanner & Setup Integrity Checker | 1.0.0"
@@ -134,19 +139,22 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        QApplication.instance() or QApplication([])
+        _ = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = True  # Enable update check
         mock_global_registry.get_local_dir.return_value = Path()
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            with patch.object(QTimer, "singleShot") as mock_timer:
-                                window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+            patch.object(QTimer, "singleShot") as mock_timer,
+        ):
+            window = MainWindow()
 
         # Assert
         assert hasattr(window, "update_check_timer")
@@ -167,27 +175,30 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        QApplication.instance() or QApplication([])
+        _ = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
-        mock_global_registry.get_local_dir.return_value = Path()
-
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
         # Setup mock event
         mock_event = MagicMock()
         window.papyrus_monitor_worker = MagicMock()
 
         # Act
-        with patch.object(window, "save_current_tab_geometry") as mock_save:
-            with patch.object(window, "stop_papyrus_monitoring") as mock_stop_papyrus:
-                with patch.object(window.thread_manager, "stop_all_threads") as mock_stop_threads:
-                    window.closeEvent(mock_event)
+        with (
+            patch.object(window, "save_current_tab_geometry") as mock_save,
+            patch.object(window, "stop_papyrus_monitoring") as mock_stop_papyrus,
+            patch.object(window.thread_manager, "stop_all_threads") as mock_stop_threads,
+        ):
+            window.closeEvent(mock_event)
 
         # Assert
         mock_logger.info.assert_any_call("Application closing - cleaning up resources...")
@@ -206,7 +217,7 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        QApplication.instance() or QApplication([])
+        _ = QApplication.instance() or QApplication([])
         test_url = "https://example.com"
 
         # Act
@@ -252,7 +263,11 @@ class TestClassicInterface:
         test_exception = Exception("Test startup error")
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow", side_effect=test_exception), patch.object(sys, "argv", ["test"]), patch.object(sys, "exit") as mock_exit:
+        with (
+            patch("CLASSIC_Interface.MainWindow", side_effect=test_exception),
+            patch.object(sys, "argv", ["test"]),
+            patch.object(sys, "exit") as mock_exit,
+        ):
             import CLASSIC_Interface
 
             CLASSIC_Interface.main()
@@ -273,18 +288,21 @@ class TestClassicInterface:
         from CLASSIC_Interface import MainWindow
 
         # Arrange
-        QApplication.instance() or QApplication([])
+        _ = QApplication.instance() or QApplication([])
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
         mock_global_registry.get_local_dir.return_value = Path()
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
         # Assert
         assert hasattr(window, "thread_manager")

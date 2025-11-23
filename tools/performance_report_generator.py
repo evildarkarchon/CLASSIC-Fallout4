@@ -27,7 +27,7 @@ import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 # Add project root to path
 project_root = Path(__file__).parent.parent
@@ -45,7 +45,7 @@ class PerformanceReportGenerator:
     4. Creating deployment-ready documentation
     """
 
-    def __init__(self, output_dir: Optional[Path] = None, verbose: bool = False):
+    def __init__(self, output_dir: Path | None = None, verbose: bool = False):
         self.project_root = project_root
         self.output_dir = output_dir or (self.project_root / "reports")
         self.verbose = verbose

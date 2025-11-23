@@ -8,7 +8,9 @@ This test module verifies that:
 4. Error handling works properly
 5. Clipboard operations work correctly
 """
+# ruff: noqa: ANN201, ANN001, ARG001, ANN204
 
+import contextlib
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -26,9 +28,9 @@ def init_message_handler():
     init_message_handler(parent=None, is_gui_mode=True)
     yield
     # Cleanup after test
-    from ClassicLib.MessageHandler.handler import _message_handler
+    from ClassicLib.MessageHandler.handler import _message_handler  # noqa: PLC2701
 
-    _message_handler._instance = None
+    _message_handler._instance = None # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
 
 # Note: No need to patch CLI/TUI mode check since we mock read_file_sync directly in tests
@@ -91,32 +93,32 @@ def test_rust_status_logging_on_setup():
     viewer = TestViewer()
 
     # Mock all dependencies to avoid actual widget creation
-    with patch("ClassicLib.Interface.ResultsViewerMixin.ReportListWidget") as mock_list:
-        with patch("ClassicLib.Interface.ResultsViewerMixin.MarkdownViewer") as mock_viewer:
-            with patch("ClassicLib.Interface.ResultsViewerMixin.ReportMetadataWidget") as mock_metadata:
-                # Setup mocks
-                mock_list.return_value = MagicMock()
-                mock_viewer.return_value = MagicMock()
-                mock_metadata.return_value = MagicMock()
+    with (
+        patch("ClassicLib.Interface.ResultsViewerMixin.ReportListWidget") as mock_list,
+        patch("ClassicLib.Interface.ResultsViewerMixin.MarkdownViewer") as mock_viewer,
+        patch("ClassicLib.Interface.ResultsViewerMixin.ReportMetadataWidget") as mock_metadata,
+        patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check,
+        patch.object(logger, "info") as mock_log_info,
+        patch.object(logger, "debug"),
+        patch.object(viewer, "scan_for_reports", return_value=[]),
+        patch.object(viewer, "refresh_reports_list"),
+    ):
+        # Setup mocks
+        mock_list.return_value = MagicMock()
+        mock_viewer.return_value = MagicMock()
+        mock_metadata.return_value = MagicMock()
 
-                with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
-                    with patch.object(logger, "info") as mock_log_info:
-                        with patch.object(logger, "debug"):
-                            with patch.object(viewer, "scan_for_reports", return_value=[]):
-                                with patch.object(viewer, "refresh_reports_list"):
-                                    # Test with Rust available
-                                    mock_rust_check.return_value = True
+        # Test with Rust available
+        mock_rust_check.return_value = True
 
-                                    try:
-                                        viewer.setup_results_tab()
-                                    except Exception:
-                                        pass
+        with contextlib.suppress(Exception):
+            viewer.setup_results_tab()
 
-                                    # Check if Rust acceleration was logged
-                                    info_calls = [str(call) for call in mock_log_info.call_args_list]
-                                    rust_logged = any("Rust-accelerated" in str(call) or "10x faster" in str(call) for call in info_calls)
+        # Check if Rust acceleration was logged
+        info_calls = [str(call) for call in mock_log_info.call_args_list]
+        rust_logged = any("Rust-accelerated" in str(call) or "10x faster" in str(call) for call in info_calls)
 
-                                    assert rust_logged, "Should log Rust acceleration status when available"
+        assert rust_logged, "Should log Rust acceleration status when available"
 
 
 # Test file I/O operations
@@ -177,9 +179,10 @@ def test_load_report_fallback_uses_rust_file_io(qtbot):
         mock_read.return_value = "# Test Report\n\nContent here"
 
         # Correctly patch where the function is USED, not where it's defined
-        with patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error, patch(
-            "ClassicLib.Interface.ResultsViewerMixin.msg_warning"
-        ) as mock_warning:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_warning") as mock_warning,
+        ):
             result = viewer.load_report(mock_path)
 
             # Process events to let singleShot timers fire
@@ -333,7 +336,7 @@ def test_report_loaded_signal_emission():
 
     # Track signal emissions
     signal_emitted = []
-    viewer.report_loaded.connect(lambda p: signal_emitted.append(p))
+    viewer.report_loaded.connect(signal_emitted.append)
 
     with patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync") as mock_read:
         mock_read.return_value = "# Test Report"
@@ -358,12 +361,13 @@ def test_reports_refreshed_signal_emission():
             self.results_list.count.return_value = 2
             self.markdown_viewer = MagicMock()
             self.metadata_widget = MagicMock()
+            self.current_report_path = None
 
     viewer = TestViewer()
 
     # Track signal emissions
     signal_emitted = []
-    viewer.reports_refreshed.connect(lambda n: signal_emitted.append(n))
+    viewer.reports_refreshed.connect(signal_emitted.append)
 
     with patch.object(viewer, "scan_for_reports", return_value=[Path("report1.md"), Path("report2.md")]):
         viewer.refresh_reports_list()

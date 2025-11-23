@@ -98,13 +98,14 @@ class TestAsyncINIScanning:
     def test_scan_mod_inis_sync_wrapper(self):
         """Test synchronous wrapper calls async version correctly."""
         # Import and patch at the module level where it's used
-        with patch("ClassicLib.AsyncBridge.AsyncBridge") as MockBridge, \
-             patch("ClassicLib.ScanGame.ScanModInis.scan_mod_inis_async", new_callable=MagicMock) as mock_scan_async:
-            
+        with (
+            patch("ClassicLib.AsyncBridge.AsyncBridge") as MockBridge,
+            patch("ClassicLib.ScanGame.ScanModInis.scan_mod_inis_async", new_callable=MagicMock) as mock_scan_async,
+        ):
             mock_bridge_instance = MagicMock()
             MockBridge.get_instance.return_value = mock_bridge_instance
             mock_bridge_instance.run_async.return_value = "Test Result"
-            
+
             # Mock return value of async function (coroutine object if not awaited, but here just passed)
             mock_scan_async.return_value = "coroutine_obj"
 
@@ -124,7 +125,7 @@ class TestConfigFileCacheAsync:
     async def test_get_async_loads_config(self):
         """Test get_async loads configuration when not cached."""
         # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()):
             cache = ConfigFileCache()
         cache._config_files = {"test.ini": Path("test/test.ini")}
         cache._config_file_cache = {}
@@ -146,7 +147,7 @@ class TestConfigFileCacheAsync:
     async def test_get_async_uses_cached_config(self):
         """Test get_async uses cached configuration without reloading."""
         # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()):
             cache = ConfigFileCache()
         cache._config_files = {"test.ini": Path("test/test.ini")}
 
@@ -170,7 +171,7 @@ class TestConfigFileCacheAsync:
     async def test_load_config_async_processes_file(self):
         """Test _load_config_async processes files asynchronously."""
         # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()):
             cache = ConfigFileCache()
         cache._config_files = {"test.ini": Path("test/test.ini")}
         cache._config_file_cache = {}
@@ -203,7 +204,7 @@ class TestConfigFileCacheAsync:
     async def test_hash_caching_prevents_recalculation(self):
         """Test that file hash caching prevents recalculation."""
         # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path(".")):
+        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()):
             cache = ConfigFileCache()
         cache._hash_cache = {}
 

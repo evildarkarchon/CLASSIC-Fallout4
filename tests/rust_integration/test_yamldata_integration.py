@@ -280,9 +280,11 @@ class TestYamlDataIntegration:
         with pytest.raises(Exception) as exc_info:
             YamlData(yaml_dirs, "Fallout4", False)
 
-                # Verify error message is meaningful
+            # Verify error message is meaningful
         error_msg = str(exc_info.value)
-        assert "Failed" in error_msg or "not found" in error_msg.lower() or "No such file" in error_msg or "Invalid input" in error_msg, f"Got error: {error_msg}"
+        assert "Failed" in error_msg or "not found" in error_msg.lower() or "No such file" in error_msg or "Invalid input" in error_msg, (
+            f"Got error: {error_msg}"
+        )
 
     def test_yamldata_suspects_error_list_content(self):
         """Test suspects_error_list contains expected patterns."""

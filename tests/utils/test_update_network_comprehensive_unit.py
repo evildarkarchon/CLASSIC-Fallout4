@@ -730,7 +730,7 @@ class TestUpdateChecking:
             patch("ClassicLib.Update.logger") as mock_logger,
         ):
             # Don't mock the message functions since MessageHandler is initialized
-            from ClassicLib import msg_error, msg_info, msg_success, msg_warning
+            from ClassicLib import msg_error, msg_success, msg_warning
 
             yield {
                 "yaml_settings": mock_yaml_settings,

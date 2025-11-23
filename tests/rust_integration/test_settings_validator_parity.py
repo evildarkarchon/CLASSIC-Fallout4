@@ -12,10 +12,12 @@ identical results to Python implementation. Tests cover:
 The tests ensure that Rust implementation maintains 100% functional compatibility
 with Python while providing performance improvements.
 """
+# ruff: noqa: ANN201, ANN001, ANN204, PLR6301, ARG002, ANN003
 
 from __future__ import annotations
 
 import logging
+import pathlib
 import time
 from typing import Any
 
@@ -217,7 +219,9 @@ class TestSettingsValidatorParity:
 
                 # Extract content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
@@ -226,7 +230,11 @@ class TestSettingsValidatorParity:
                     # Python implementation might still use fragment_content if it hasn't been updated
                     # Or it might match Rust structure. Let's check both.
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
 
@@ -238,12 +246,12 @@ class TestSettingsValidatorParity:
                     # Normalize content for comparison
                     rust_lines = sorted([l.strip() for l in rust_content.splitlines() if l.strip()])
                     python_lines = sorted([l.strip() for l in python_content.splitlines() if l.strip()])
-                    
+
                     if rust_lines != python_lines:
                         differences.append("Fragment content differs")
                         if rust_lines and python_lines:
-                             differences.append(f"  First diff Rust: {next((r for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
-                             differences.append(f"  First diff Py:   {next((p for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
+                            differences.append(f"  First diff Rust: {next((r for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
+                            differences.append(f"  First diff Py:   {next((p for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
                         is_identical = False
                     else:
                         is_identical = True
@@ -281,12 +289,11 @@ class TestSettingsValidatorParity:
                 )
 
         # Write differences to file for debugging
-        with open("parity_diffs.log", "a", encoding="utf-8") as f:
+        with pathlib.Path("parity_diffs.log").open("a", encoding="utf-8") as f:
             for r in results:
                 if not r.passed:
                     f.write(f"\n=== TEST FAILED: {r.test_case} ===\n")
-                    for diff in r.differences:
-                        f.write(f"{diff}\n")
+                    f.writelines(f"{diff}\n" for diff in r.differences)
                     f.write("--- Rust Content ---\n")
                     f.write(repr(r.rust_result) + "\n")
                     f.write("--- Python Content ---\n")
@@ -359,13 +366,19 @@ class TestSettingsValidatorParity:
 
                 # Extract content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
                 if python_fragment:
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
                 else:
@@ -379,12 +392,12 @@ class TestSettingsValidatorParity:
                     # Normalize content for comparison
                     rust_lines = sorted([l.strip() for l in rust_content.splitlines() if l.strip()])
                     python_lines = sorted([l.strip() for l in python_content.splitlines() if l.strip()])
-                    
+
                     if rust_lines != python_lines:
                         differences.append("Fragment content differs")
                         if rust_lines and python_lines:
-                             differences.append(f"  First diff Rust: {next((r for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
-                             differences.append(f"  First diff Py:   {next((p for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
+                            differences.append(f"  First diff Rust: {next((r for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
+                            differences.append(f"  First diff Py:   {next((p for r, p in zip(rust_lines, python_lines) if r != p), 'End')}")
                         is_identical = False
                     else:
                         is_identical = True
@@ -435,12 +448,11 @@ class TestSettingsValidatorParity:
                 )
 
         # Write differences to file for debugging
-        with open("parity_diffs.log", "a", encoding="utf-8") as f:
+        with pathlib.Path("parity_diffs.log").open("a", encoding="utf-8") as f:
             for r in results:
                 if not r.passed:
                     f.write(f"\n=== TEST FAILED: {r.test_case} ===\n")
-                    for diff in r.differences:
-                        f.write(f"{diff}\n")
+                    f.writelines(f"{diff}\n" for diff in r.differences)
                     f.write("--- Rust Content ---\n")
                     f.write(repr(r.rust_result) + "\n")
                     f.write("--- Python Content ---\n")
@@ -468,7 +480,9 @@ class TestSettingsValidatorParity:
         # Log detailed results for failed tests
         for result in results:
             if not result.passed:
-                logging.getLogger(__name__).warning(f"Memory management validation parity failed for {result.test_case}: {result.differences}")
+                logging.getLogger(__name__).warning(
+                    f"Memory management validation parity failed for {result.test_case}: {result.differences}"
+                )
 
     async def test_archive_limit_validation_parity(self, mock_scanlog_info):
         """
@@ -498,9 +512,10 @@ class TestSettingsValidatorParity:
                 crashgen = test_case["crashgen"]
                 # Create version arguments
                 from packaging.version import Version
+
                 v_tuple = test_case["crashgen_version"]
                 py_version = Version(f"{v_tuple[0]}.{v_tuple[1]}.{v_tuple[2]}")
-                rust_version = v_tuple # Rust wrapper/binding expects tuple (u32, u32, u32)
+                rust_version = v_tuple  # Rust wrapper/binding expects tuple (u32, u32, u32)
 
                 # Time Rust validation
                 start_time = time.perf_counter()
@@ -518,13 +533,19 @@ class TestSettingsValidatorParity:
 
                 # Extract content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
                 if python_fragment:
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
                 else:
@@ -538,7 +559,7 @@ class TestSettingsValidatorParity:
                     # Normalize content for comparison
                     rust_lines = sorted([l.strip() for l in rust_content.splitlines() if l.strip()])
                     python_lines = sorted([l.strip() for l in python_content.splitlines() if l.strip()])
-                    
+
                     if rust_lines != python_lines:
                         differences.append("Fragment content differs")
                         is_identical = False
@@ -585,12 +606,11 @@ class TestSettingsValidatorParity:
                 )
 
         # Write differences to file for debugging
-        with open("parity_diffs.log", "a", encoding="utf-8") as f:
+        with pathlib.Path("parity_diffs.log").open("a", encoding="utf-8") as f:
             for r in results:
                 if not r.passed:
                     f.write(f"\n=== TEST FAILED: {r.test_case} ===\n")
-                    for diff in r.differences:
-                        f.write(f"{diff}\n")
+                    f.writelines(f"{diff}\n" for diff in r.differences)
                     f.write("--- Rust Content ---\n")
                     f.write(repr(r.rust_result) + "\n")
                     f.write("--- Python Content ---\n")
@@ -640,13 +660,19 @@ class TestSettingsValidatorParity:
 
                 # Extract content
                 if rust_fragment:
-                    rust_content = "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    rust_content = (
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)
+                    )
                 else:
                     rust_content = ""
 
                 if python_fragment:
                     if hasattr(python_fragment, "content"):
-                        python_content = "\n".join(python_fragment.content) if isinstance(python_fragment.content, (list, tuple)) else str(python_fragment.content)
+                        python_content = (
+                            "\n".join(python_fragment.content)
+                            if isinstance(python_fragment.content, (list, tuple))
+                            else str(python_fragment.content)
+                        )
                     else:
                         python_content = getattr(python_fragment, "fragment_content", "")
                 else:
@@ -660,7 +686,7 @@ class TestSettingsValidatorParity:
                     # Normalize content for comparison
                     rust_lines = sorted([l.strip() for l in rust_content.splitlines() if l.strip()])
                     python_lines = sorted([l.strip() for l in python_content.splitlines() if l.strip()])
-                    
+
                     if rust_lines != python_lines:
                         differences.append("Fragment content differs")
                         is_identical = False
@@ -703,12 +729,11 @@ class TestSettingsValidatorParity:
                 )
 
         # Write differences to file for debugging
-        with open("parity_diffs.log", "a", encoding="utf-8") as f:
+        with pathlib.Path("parity_diffs.log").open("a", encoding="utf-8") as f:
             for r in results:
                 if not r.passed:
                     f.write(f"\n=== TEST FAILED: {r.test_case} ===\n")
-                    for diff in r.differences:
-                        f.write(f"{diff}\n")
+                    f.writelines(f"{diff}\n" for diff in r.differences)
                     f.write("--- Rust Content ---\n")
                     f.write(repr(r.rust_result) + "\n")
                     f.write("--- Python Content ---\n")
@@ -767,7 +792,7 @@ class TestSettingsValidatorParity:
         rust_content = rust_final.content if rust_final else []
         if isinstance(rust_content, (list, tuple)):
             rust_content = "\n".join(rust_content)
-            
+
         python_content = ""
         if python_final:
             if hasattr(python_final, "content"):

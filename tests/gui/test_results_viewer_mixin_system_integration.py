@@ -3,6 +3,7 @@
 Tests file watching, settings integration, error handling, and
 multi-directory scanning with real file operations.
 """
+# ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002
 
 import shutil
 import time
@@ -40,9 +41,14 @@ def integrated_viewer(tmp_path, init_message_handler_fixture, qt_application):
             self.markdown_viewer = MagicMock()
             self.metadata_widget = MagicMock()
 
-            # Mock signals
+            # Signals
             self.report_loaded = MagicMock()
+            self.report_loaded.emit = MagicMock()
             self.reports_refreshed = MagicMock()
+            self.reports_refreshed.emit = MagicMock()
+            
+            self._file_watching_paused = False
+            self._refresh_pending = False
 
             # Real file watcher (but we'll mock its methods)
             self.file_watcher = MagicMock(spec=QFileSystemWatcher)
@@ -59,8 +65,7 @@ def integrated_viewer(tmp_path, init_message_handler_fixture, qt_application):
             self.backup_dir = test_dir / "CLASSIC Backup" / "Unsolved Logs"
             self.backup_dir.mkdir(parents=True)
 
-    viewer = IntegratedViewer(tmp_path)
-    return viewer
+    return IntegratedViewer(tmp_path)
 
 
 @pytest.mark.integration
@@ -90,11 +95,11 @@ class TestReportScanningIntegration:
             # Should find all reports
             assert len(reports) == 3
 
-            # Should be sorted by modification time (newest first)
+            # Should be sorted by name (descending: Z-A)
             report_names = [r.name for r in reports]
-            assert report_names[0] == "backup-AUTOSCAN.md"
-            assert report_names[1] == "crash2-AUTOSCAN.md"
-            assert report_names[2] == "crash1-AUTOSCAN.md"
+            assert report_names[0] == "crash2-AUTOSCAN.md"
+            assert report_names[1] == "crash1-AUTOSCAN.md"
+            assert report_names[2] == "backup-AUTOSCAN.md"
 
     def test_scan_with_custom_path(self, integrated_viewer, tmp_path, gui_message_handler):
         """Should include custom scan path in results."""
@@ -214,7 +219,10 @@ class TestErrorHandlingIntegration:
         report_path.write_text("Protected")
 
         # Simulate permission error
-        with patch.object(Path, "read_text", side_effect=PermissionError("Access denied")):
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync", side_effect=PermissionError("Access denied")),
+            patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as _,
+        ):
             loaded = integrated_viewer.load_report(report_path)
             assert loaded is False
 
@@ -305,7 +313,7 @@ class TestContextMenuIntegration:
                 mock_action = MagicMock()
                 mock_action.triggered = MagicMock()
                 mock_actions[action_name] = mock_action
-                mock_action_class.side_effect = lambda text, parent: mock_actions.get(text, MagicMock())
+                mock_action_class.side_effect = lambda text, _: mock_actions.get(text, MagicMock())
 
             integrated_viewer._show_context_menu(MagicMock())
 

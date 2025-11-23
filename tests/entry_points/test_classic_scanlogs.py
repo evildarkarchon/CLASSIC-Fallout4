@@ -5,10 +5,12 @@ and configuration creation.
 """
 
 import argparse
-from pathlib import Path
+import asyncio
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# ruff: noqa: PLR6301, ARG002, ANN001, ANN202
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
@@ -36,7 +38,7 @@ class TestClassicScanLogs:
 
         # Mock defaults - Return True so False argument triggers change
         mock_classic.return_value = True
-        
+
         # Create dummy args
         args = argparse.Namespace(
             fcx_mode=True,
@@ -46,7 +48,7 @@ class TestClassicScanLogs:
             simplify_logs=True,
             ini_path=None,
             scan_path=None,
-            mods_folder_path=None
+            mods_folder_path=None,
         )
 
         config = create_config_from_args(args)
@@ -55,24 +57,24 @@ class TestClassicScanLogs:
         # Since we mocked classic_settings to True, passing True for fcx_mode/show_fid/simplify means no change?
         # Wait, the logic is: if arg != setting: update setting AND config.
         # If arg == setting: config uses default?
-        
-        # Let's check logic again. 
+
+        # Let's check logic again.
         # if isinstance(args.fcx_mode, bool) and args.fcx_mode != classic_settings(...):
         #    config.fcx_mode = args.fcx_mode
-        
+
         # If mock_classic returns True.
         # args.fcx_mode = True. True != True is False. Block skipped.
         # So config.fcx_mode remains default (False?).
-        
+
         # args.move_unsolved = False. False != True is True. Block executed.
         # config.move_unsolved_logs = False.
-        
+
         # So move_unsolved_logs should be False.
         # But config.fcx_mode will be default.
-        
+
         # I should check ScanConfig defaults.
         # ScanConfig defaults are likely False/None.
-        
+
         # Let's just check what we expect.
         assert config.move_unsolved_logs is False
         # config.fcx_mode might be None or False depending on ScanConfig.
@@ -83,7 +85,7 @@ class TestClassicScanLogs:
     @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
     @patch("CLASSIC_ScanLogs.parse_arguments")
     @patch("CLASSIC_ScanLogs.create_config_from_args")
-    @patch("sys.platform", "linux") # Avoid Windows-specific stdout/stderr replacement
+    @patch("sys.platform", "linux")  # Avoid Windows-specific stdout/stderr replacement
     @pytest.mark.asyncio
     async def test_main_execution_flow(self, mock_create_config, mock_parse_args, mock_executor_cls, mock_setup_cls, mock_msg_info) -> None:
         """Test main execution flow."""
@@ -92,9 +94,12 @@ class TestClassicScanLogs:
         # Setup mocks
         mock_executor = MagicMock()
         mock_executor.execute_scan = MagicMock()
+
         # Mock execute_scan to return a coroutine that returns a result
         async def mock_execute_scan():
+            await asyncio.sleep(0)
             return MagicMock()
+
         mock_executor.execute_scan.side_effect = mock_execute_scan
         mock_executor.generate_summary.return_value = "Summary"
         mock_executor_cls.return_value = mock_executor

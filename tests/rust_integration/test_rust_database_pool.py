@@ -4,6 +4,7 @@ Integration tests for the Rust database pool implementation.
 These tests verify that the Rust database module correctly implements
 Phase 4 features including TTL caching, batch operations, and performance.
 """
+# ruff: noqa: ANN201, ANN001, ANN204, PLR6301, ARG002, ANN202, ANN002, ANN003
 
 import asyncio
 import sqlite3
@@ -44,7 +45,7 @@ def create_test_database(db_path: Path, table_name: str = "Fallout4") -> None:
     """Create a test SQLite database with sample FormID data."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
-    
+
     # Ensure simple journaling to avoid locking issues
     cursor.execute("PRAGMA journal_mode=DELETE")
 
@@ -95,7 +96,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         stats = pool.get_stats()
@@ -107,7 +108,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         # Test successful lookup
@@ -131,7 +132,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         # Batch lookup
@@ -158,7 +159,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 1, "fallout4")  # 1 second cache TTL  # 1 second TTL
+        pool = RustDatabasePool(10, 1, "fallout4")  # pyright: ignore[reportOptionalCall] # 1 second cache TTL  # 1 second TTL
         pool.initialize([str(db_path)])
 
         # Populate cache
@@ -187,7 +188,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 1, "fallout4")  # 1 second cache TTL
+        pool = RustDatabasePool(10, 1, "fallout4")  # pyright: ignore[reportOptionalCall] # 1 second cache TTL
         pool.initialize([str(db_path)])
 
         # Set new TTL
@@ -230,7 +231,7 @@ class TestRustDatabasePool:
         conn.commit()
         conn.close()
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db1_path), str(db2_path)])
 
         # Test lookup from first database
@@ -249,7 +250,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         # Should not raise an error
@@ -262,7 +263,7 @@ class TestRustDatabasePool:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         results = []
@@ -295,15 +296,16 @@ class TestRustDatabasePool:
 
 class MockRustPool:
     """Mock Rust pool implementation for testing."""
+
     def __init__(self, *args, **kwargs):
         self.stats = {
-            "total_queries": 0, 
-            "cache_hits": 0, 
+            "total_queries": 0,
+            "cache_hits": 0,
             "cache_misses": 0,
             "cache_size": 0,
             "total_connections": 1,
             "active_connections": 0,
-            "cache_hit_rate": 0.0
+            "cache_hit_rate": 0.0,
         }
 
     async def initialize(self, paths):
@@ -340,11 +342,11 @@ class MockRustPool:
         results = {}
         for formid, plugin in pairs:
             if formid == "00012345" and plugin == "Fallout4.esm":
-                results[(formid, plugin)] = "Power Armor Frame"
+                results[formid, plugin] = "Power Armor Frame"
             elif formid == "00034567" and plugin == "DLCNukaWorld.esm":
-                results[(formid, plugin)] = "Nuka Cola Quantum"
+                results[formid, plugin] = "Nuka Cola Quantum"
             elif formid == "00045678" and plugin == "TestMod.esp":
-                results[(formid, plugin)] = "Custom Weapon"
+                results[formid, plugin] = "Custom Weapon"
         return results
 
     async def clear_cache(self, expired_only=False):
@@ -367,9 +369,10 @@ class TestRustAsyncDatabasePool:
 
     async def test_async_initialization(self, tmp_path):
         """Test async database pool initialization."""
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
             # Use factory to get the pool
             pool = get_database_pool(max_connections=10, cache_ttl_seconds=300)
 
@@ -383,9 +386,10 @@ class TestRustAsyncDatabasePool:
 
     async def test_async_context_manager(self, tmp_path):
         """Test using the pool as an async context manager."""
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
             pool = get_database_pool()
 
             # Initialize the pool
@@ -406,9 +410,10 @@ class TestRustAsyncDatabasePool:
 
     async def test_async_single_lookup(self, tmp_path):
         """Test async single entry lookup."""
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
             pool = get_database_pool()
             if hasattr(pool, "initialize"):
                 await pool.initialize()
@@ -426,10 +431,11 @@ class TestRustAsyncDatabasePool:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
-            pool = RustAsyncDatabasePool()
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
+            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             pairs = [
@@ -448,10 +454,11 @@ class TestRustAsyncDatabasePool:
 
     async def test_async_cache_management(self, tmp_path):
         """Test async cache management."""
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
-            pool = RustAsyncDatabasePool(cache_ttl_seconds=60)
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
+            pool = RustAsyncDatabasePool(cache_ttl_seconds=60) # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             # Clear cache
@@ -472,10 +479,11 @@ class TestRustAsyncDatabasePool:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
-            pool = RustAsyncDatabasePool()
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
+            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             # Should not raise an error
@@ -483,11 +491,12 @@ class TestRustAsyncDatabasePool:
 
     async def test_pool_manager_singleton(self, tmp_path):
         """Test DatabasePoolManager singleton behavior."""
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
-            manager1 = DatabasePoolManager()
-            manager2 = DatabasePoolManager()
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
+            manager1 = DatabasePoolManager() # pyright: ignore[reportOptionalCall]
+            manager2 = DatabasePoolManager() # pyright: ignore[reportOptionalCall]
 
             # Should be the same instance
             assert manager1 is manager2
@@ -506,10 +515,11 @@ class TestRustAsyncDatabasePool:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool), \
-             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]):
-            
-            pool = RustAsyncDatabasePool()
+        with (
+            patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
+        ):
+            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             async def worker(worker_id):
@@ -545,7 +555,7 @@ class TestDatabasePoolPerformance:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         # Warm up cache
@@ -562,7 +572,7 @@ class TestDatabasePoolPerformance:
         db_path = tmp_path / "test.db"
         create_test_database(db_path)
 
-        pool = RustDatabasePool(10, 300, "fallout4")  # Default values
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall] # Default values
         pool.initialize([str(db_path)])
 
         pairs = [(f"{i:08}", "TestMod.esp") for i in range(100)]
@@ -583,7 +593,7 @@ class TestDatabasePoolPerformance:
             pytest.skip("RustAsyncDatabasePool not available")
 
         with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
-            pool = RustAsyncDatabasePool()
+            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):

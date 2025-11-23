@@ -21,57 +21,6 @@ __version__: str
 # =============================================================================
 
 class FormIDAnalyzer:
-    """Simple FormID extraction (50x speedup).
-
-    Provides basic FormID extraction without configuration dependencies.
-    Use FormIDAnalyzerCore for advanced features like caching and reporting.
-    """
-
-    def __init__(self) -> None:
-        """Create simple FormID analyzer."""
-
-    def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """Extract FormIDs from callstack segment.
-
-        Args:
-            segment_callstack: List of callstack lines to search
-
-        Returns:
-            List of FormID strings in hex format
-        """
-
-    def parse_formid(self, formid: str) -> int | None:
-        """Parse and validate a FormID string.
-
-        Args:
-            formid: FormID string (hex format)
-
-        Returns:
-            Parsed FormID as integer or None if invalid
-        """
-
-    def analyze_batch(self, formids: list[str], plugins: dict[str, str]) -> list[tuple[str, str | None]]:
-        """Batch analyze FormIDs with plugin resolution.
-
-        Args:
-            formids: List of FormID strings to analyze
-            plugins: Dictionary mapping plugin names to details
-
-        Returns:
-            List of (formid, resolved_plugin_name) tuples
-        """
-
-    def clear_cache(self) -> None:
-        """Clear all caches."""
-
-    def cache_stats(self) -> tuple[int, int]:
-        """Get cache statistics.
-
-        Returns:
-            Tuple of (cache_entries, cache_size_bytes)
-        """
-
-class FormIDAnalyzer:
     """Pure Rust FormID analyzer implementation.
 
     This is a direct Rust implementation without Python fallback,
@@ -994,23 +943,25 @@ def validate_formids_batch(formids: list[str]) -> list[bool]:
         List of validation results (True for valid, False for invalid)
     """
 
-def scan_records_batch(texts: list[str], record_list: list[str]) -> list[list[str]]:
+def scan_records_batch(texts: list[list[str]], record_list: list[str], ignore_records: list[str]) -> list[list[str]]:
     """Scan for records in multiple texts.
 
     Args:
         texts: List of texts to scan
         record_list: List of record names to find
+        ignore_records: List of record names to ignore
 
     Returns:
         List of found records for each text
     """
 
-def contains_record(text: str, record: str) -> bool:
+def contains_record(text: str, target_records: list[str], ignore_records: list[str]) -> bool:
     """Check if text contains a specific record.
 
     Args:
         text: Text to search
-        record: Record name to find
+        target_records: List of record names to find
+        ignore_records: List of record names to ignore
 
     Returns:
         True if record found in text

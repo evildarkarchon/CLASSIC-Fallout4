@@ -6,6 +6,7 @@ for crash log analysis, ensuring 10-150x speedups over Python implementation.
 
 Phase 3 Integration - Performance Validation
 """
+# ruff: noqa: ANN201, ANN001, PLR6301
 
 import statistics
 import time
@@ -247,9 +248,9 @@ class TestParallelismEfficiency:
         )
 
         # Parallel should be faster
-        parallel_time = max(parallel_result.total_time_ms, 0.001) # Avoid division by zero
+        parallel_time = max(parallel_result.total_time_ms, 0.001)  # Avoid division by zero
         speedup = sequential_result.total_time_ms / parallel_time
-        
+
         # Note: With small datasets, parallel overhead might result in speedup < 1
         assert speedup > 1.5, (
             f"Insufficient speedup from parallelism: {speedup:.2f}x "

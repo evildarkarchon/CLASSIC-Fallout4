@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+# ruff: noqa: PLR6301, PT011
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
 
@@ -49,7 +50,7 @@ class TestClassicScanGame:
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = expected_result
-        
+
         # Simulate GUI mode to force AsyncBridge usage
         mock_registry_get.return_value = True
 
@@ -119,7 +120,7 @@ class TestClassicScanGame:
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = expected_result
-        
+
         # Simulate GUI mode to force AsyncBridge usage
         mock_registry_get.return_value = True
 
@@ -174,7 +175,7 @@ class TestClassicScanGame:
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = expected_result
-        
+
         # Simulate GUI mode to force AsyncBridge usage
         mock_registry_get.return_value = True
 
@@ -213,7 +214,7 @@ class TestClassicScanGame:
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = "result"
-        
+
         # Simulate GUI mode to force AsyncBridge usage
         mock_registry_get.return_value = True
 
