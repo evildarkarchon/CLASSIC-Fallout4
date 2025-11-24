@@ -45,7 +45,7 @@ class SettingsScannerFragments:
 
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
             lines.extend([
-                "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n",
+                "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n\n",
                 f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n\n-----\n",
             ])
         else:
@@ -81,7 +81,7 @@ class SettingsScannerFragments:
 
         def add_warning(warning: str, fix: str) -> None:
             """Add a warning with fix instructions."""
-            lines.extend([f"# ❌ CAUTION : {warning} # \n", f" FIX: {fix}{separator}"])
+            lines.extend([f"# ❌ CAUTION : {warning} # \n\n", f" FIX: {fix}{separator}"])
 
         # Check for old X-Cell version first
         if has_old_xcell:
