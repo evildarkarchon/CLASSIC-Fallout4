@@ -157,7 +157,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
             # Remaining lines are indented with double newlines for Qt compatibility
             for line in warning_lines[1:]:
                 if line.strip():  # Only add content lines
-                    lines.append(f"    {line}\n\n")
+                    lines.append(f"{line}\n\n")
                 else:
                     lines.append("\n")  # Preserve empty lines as single newlines
         else:

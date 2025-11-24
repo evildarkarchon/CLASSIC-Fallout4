@@ -150,7 +150,7 @@ pub fn detect_mods_single(
             // Remaining lines are indented with double newlines for Qt compatibility
             for line in &warning_lines[1..] {
                 if !line.trim().is_empty() {
-                    lines.push(format!("    {}\n\n", line));
+                    lines.push(format!("{}\n\n", line));
                 } else {
                     lines.push("\n".to_string());
                 }
@@ -538,7 +538,7 @@ pub fn detect_mods_batch(
 
                         for line in &warning_lines[1..] {
                             if !line.trim().is_empty() {
-                                lines.push(format!("    {}\n\n", line));
+                                lines.push(format!("{}\n\n", line));
                             } else {
                                 lines.push("\n".to_string());
                             }
