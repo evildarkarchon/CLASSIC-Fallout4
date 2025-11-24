@@ -61,6 +61,7 @@ dev = [
     "pytest-cov>=5.0.0",
     "pytest-asyncio>=0.24.0",
     "anyio>=4.6.2.post1",
+    "pyinstaller>=6.16.0",
     "pyinstaller-hooks-contrib>=2025.0",
     "pytest-qt>=4.4.0",
     "psutil>=7.0.0",

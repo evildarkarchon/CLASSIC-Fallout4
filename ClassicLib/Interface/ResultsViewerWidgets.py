@@ -465,7 +465,7 @@ class MarkdownViewer(QTextBrowser):
         <head>
             <style>
                 body {{
-                    font-family: 'Segoe UI Variable', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                    font-family: 'Segoe UI Variable', Roboto, Helvetica, Arial, sans-serif;
                     font-size: {scaled_size}px;
                     line-height: 1.6;
                     color: #e0e0e0;
