@@ -9,13 +9,13 @@ extracting metadata such as timestamps and statuses from report files.
 
 from __future__ import annotations
 
-import re
 import html
-import markdown2
+import re
 import textwrap
 from datetime import datetime
 from pathlib import Path  # noqa: TC003
 
+import markdown2
 from PySide6.QtCore import QDateTime, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QTextCursor
 from PySide6.QtWidgets import (
@@ -394,7 +394,7 @@ class MarkdownViewer(QTextBrowser):
         # Scroll to top
         self.moveCursor(QTextCursor.MoveOperation.Start)
 
-    def _preprocess_markdown(self, text: str) -> str:
+    def _preprocess_markdown(self, text: str) -> str:  # noqa: PLR6301
         """
         Pre-processes the raw markdown text to identify and wrap specific 
         CLASSIC report structures (Suspects, Found Mods, Errors) in HTML.
@@ -448,9 +448,8 @@ class MarkdownViewer(QTextBrowser):
         text = re.sub(r"(✅.*)", lambda m: f'<div class="success-text">{html.escape(m.group(1))}</div>', text)
 
         # 4. Bold conversion (backup)
-        text = re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
+        return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
 
-        return text
 
     def _wrap_in_html_template(self, content: str) -> str:
         """
@@ -627,7 +626,6 @@ class MarkdownViewer(QTextBrowser):
         # However, QTextBrowser has a zoomIn/zoomOut method natively, 
         # but we implemented custom CSS font sizing.
         # Ideally we should store the last markdown content.
-        pass 
         
         # Actually, standard zoom might work if we just rely on it. 
         # But our CSS uses fixed pixels. 
