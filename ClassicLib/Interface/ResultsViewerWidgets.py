@@ -456,7 +456,7 @@ class MarkdownViewer(QTextBrowser):
         Wraps the HTML content in a full document structure with embedded CSS.
         """
         # Base font size scaled by zoom level
-        base_size = 14
+        base_size = 16
         scaled_size = int(base_size * (self._zoom_level / 100.0))
         
         return f"""

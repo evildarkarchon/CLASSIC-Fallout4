@@ -154,12 +154,12 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
             mod_name = warning_lines[0].strip()
             lines.append(f"**[!] FOUND : {plugin_list} {mod_name}**\n\n")
 
-            # Remaining lines are indented with double newlines for Qt compatibility
+            # Remaining lines are joined with hard line breaks for single paragraph rendering
             for line in warning_lines[1:]:
                 if line.strip():  # Only add content lines
-                    lines.append(f"{line}\n\n")
+                    lines.append(f"{line}  \n")
                 else:
-                    lines.append("\n")  # Preserve empty lines as single newlines
+                    lines.append("  \n")  # Preserve empty lines as hard line breaks
         else:
             # Fallback if no warning content
             lines.append(f"**[!] FOUND : {plugin_list}**\n\n")
