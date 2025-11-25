@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     # For type checking, always import the functions/modules
     import aiofiles
 
-    from ClassicLib.AsyncUtil import (
+    from ClassicLib.FileIO.Async import (
         read_file_with_encoding_async,
     )
 
@@ -34,7 +34,7 @@ from ClassicLib.Logger import logger
 
 # Import async utilities if available
 try:
-    from ClassicLib.AsyncUtil import (
+    from ClassicLib.FileIO.Async import (
         read_file_with_encoding_async,
     )
 

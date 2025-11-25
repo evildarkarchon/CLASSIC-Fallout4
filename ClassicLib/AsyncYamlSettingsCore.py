@@ -1,8 +1,9 @@
 """AsyncYamlSettingsCore - Backwards compatibility wrapper.
 
-This file maintains backwards compatibility by re-exporting the refactored
-AsyncYamlSettings module components.
+DEPRECATED: Use ClassicLib.AsyncYamlSettings instead.
 """
+
+import warnings
 
 # Re-export everything from the refactored module for backwards compatibility
 from ClassicLib.AsyncYamlSettings import (
@@ -21,6 +22,12 @@ from ClassicLib.AsyncYamlSettings import (
     validate_setting_value,
     validate_settings_structure,
     yaml_settings_async,
+)
+
+warnings.warn(
+    "ClassicLib.AsyncYamlSettingsCore is deprecated. Use ClassicLib.AsyncYamlSettings instead.",
+    DeprecationWarning,
+    stacklevel=2,
 )
 
 __all__ = [

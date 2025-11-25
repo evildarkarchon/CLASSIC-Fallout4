@@ -10,7 +10,7 @@ from typing import Any
 
 import pytest
 
-from ClassicLib.AsyncUtilities import (
+from ClassicLib.Utils.Async import (
     AsyncLazyLoader,
     AsyncTimer,
     async_filter,
@@ -215,7 +215,7 @@ class TestStressConditions:
     @pytest.mark.asyncio
     async def test_throttle_under_burst_load(self):
         """Test throttle behavior under burst load."""
-        from ClassicLib.AsyncUtilities import _throttler_registry, reset_throttlers
+        from ClassicLib.Utils.Async import _throttler_registry, reset_throttlers
 
         # Reset state before test
         reset_throttlers()

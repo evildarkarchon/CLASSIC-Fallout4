@@ -45,7 +45,7 @@ hiddenimports = [
     "ClassicLib.rust_loader",
     "ClassicLib.MessageHandler",
     "ClassicLib.GlobalRegistry",
-    "ClassicLib.FileIOCore",
+    "ClassicLib.FileIO",
     "ClassicLib.YamlSettingsCache",
     "ClassicLib.AsyncBridge",
 

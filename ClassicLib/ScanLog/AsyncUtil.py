@@ -376,7 +376,7 @@ async def read_file_async(file_path: Path) -> list[str]:
     try:
         # Try to use async encoding detection if available
         try:
-            from ClassicLib.AsyncUtil import read_lines_with_encoding_async
+            from ClassicLib.FileIO.Async import read_lines_with_encoding_async
 
             return await read_lines_with_encoding_async(file_path)
         except ImportError:

@@ -17,7 +17,7 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager, write_file_async
+from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
@@ -861,6 +861,7 @@ class OrchestratorCore:
                 - A list of strings representing the autoscan report content.
                 - A boolean indicating whether a scan failure occurred.
         """
+        io_core = get_file_io()
         write_tasks = []
 
         for crashlog_file, autoscan_report, _trigger_scan_failed in reports:
@@ -868,7 +869,7 @@ class OrchestratorCore:
             autoscan_output: str = "".join(autoscan_report)
 
             # Create write task
-            write_tasks.append(write_file_async(autoscan_path, autoscan_output))
+            write_tasks.append(io_core.write_file(autoscan_path, autoscan_output))
 
         # Execute all writes concurrently
         await asyncio.gather(*write_tasks, return_exceptions=True)

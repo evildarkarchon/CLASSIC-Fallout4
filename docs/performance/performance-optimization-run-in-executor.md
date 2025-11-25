@@ -125,7 +125,7 @@ await ensure_dir_exists(path) # 1ms (direct call)
 ### Using Smart Executor
 
 ```python
-from ClassicLib.AsyncUtilities_Enhanced import smart_run_in_executor
+from ClassicLib.Utils.Async import smart_run_in_executor
 
 # Auto-detection - fast operations run directly
 exists = await smart_run_in_executor(path.exists)  # No executor overhead
@@ -146,7 +146,7 @@ stat = await smart_run_in_executor(
 ### Using Enhanced Async Map
 
 ```python
-from ClassicLib.AsyncUtilities_Enhanced import async_map_smart
+from ClassicLib.Utils.Async import async_map_smart
 
 # Process with auto-detection
 results = await async_map_smart(process_item, items)

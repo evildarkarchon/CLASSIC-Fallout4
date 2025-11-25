@@ -43,7 +43,7 @@ from ClassicLib.Constants import (
     YAML,
     GameID,
 )
-from ClassicLib.FileIOCore import FileIOCore, read_file_sync, write_file_sync
+from ClassicLib.FileIO import FileIOCore, read_file_sync, write_file_sync
 from ClassicLib.GlobalRegistry import (
     Keys,
     get,

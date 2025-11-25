@@ -9,7 +9,7 @@ import tracemalloc
 
 import pytest
 
-from ClassicLib.AsyncUtilities import (
+from ClassicLib.Utils.Async import (
     AsyncLazyLoader,
     AsyncTimer,
     async_filter,
@@ -399,7 +399,7 @@ class TestThrottle:
     async def test_limits_rate(self):
         """Should limit operations to specified rate."""
         # Reset global state before test
-        from ClassicLib.AsyncUtilities import _throttler_registry, reset_throttlers
+        from ClassicLib.Utils.Async import _throttler_registry, reset_throttlers
 
         reset_throttlers()
 
@@ -429,7 +429,7 @@ class TestThrottler:
     @pytest.mark.asyncio
     async def test_throttler_context_manager(self):
         """Should work as a context manager."""
-        from ClassicLib.AsyncUtilities import Throttler
+        from ClassicLib.Utils.Async import Throttler
 
         throttler = Throttler(2, 0.1)
         operations = []
@@ -448,7 +448,7 @@ class TestThrottler:
     @pytest.mark.asyncio
     async def test_throttler_cleanup(self):
         """Should properly clean up background tasks."""
-        from ClassicLib.AsyncUtilities import Throttler
+        from ClassicLib.Utils.Async import Throttler
 
         throttler = Throttler(1, 0.5)
 
@@ -468,7 +468,7 @@ class TestThrottler:
     @pytest.mark.asyncio
     async def test_throttler_isolation(self):
         """Multiple throttlers should be independent."""
-        from ClassicLib.AsyncUtilities import Throttler
+        from ClassicLib.Utils.Async import Throttler
 
         throttler1 = Throttler(1, 0.1)
         throttler2 = Throttler(2, 0.1)
@@ -491,7 +491,7 @@ class TestThrottler:
         """Verify that using cleanup prevents task leakage between tests."""
         import gc
 
-        from ClassicLib.AsyncUtilities import Throttler
+        from ClassicLib.Utils.Async import Throttler
 
         # Get initial task count
         initial_tasks = len(asyncio.all_tasks())

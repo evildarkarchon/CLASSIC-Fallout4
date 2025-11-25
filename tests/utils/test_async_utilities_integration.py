@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from ClassicLib.AsyncUtilities import (
+from ClassicLib.Utils.Async import (
     AsyncLazyLoader,
     AsyncTimer,
     async_filter,

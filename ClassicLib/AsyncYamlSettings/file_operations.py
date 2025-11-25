@@ -14,7 +14,7 @@ import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 from ClassicLib.Logger import logger
 from ClassicLib.ResourceLoader import ResourceLoader
 

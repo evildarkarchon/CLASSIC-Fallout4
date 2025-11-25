@@ -18,7 +18,7 @@ import classic_scanlog
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.YamlSettingsCache import yaml_cache
 

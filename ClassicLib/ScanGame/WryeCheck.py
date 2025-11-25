@@ -13,7 +13,7 @@ from bs4 import BeautifulSoup, PageElement
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import read_file_sync
+from ClassicLib.FileIO import read_file_sync
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 

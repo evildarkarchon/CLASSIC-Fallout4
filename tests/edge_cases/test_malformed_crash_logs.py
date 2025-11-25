@@ -322,7 +322,7 @@ class TestEdgeCaseFileOperations:
     @pytest.mark.asyncio
     async def test_zero_byte_file(self):
         """Test handling of empty/zero-byte files."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -339,7 +339,7 @@ class TestEdgeCaseFileOperations:
     @pytest.mark.asyncio
     async def test_massive_single_line(self):
         """Test handling of file with single massive line."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -359,7 +359,7 @@ class TestEdgeCaseFileOperations:
     @pytest.mark.asyncio
     async def test_rapid_file_deletion(self):
         """Test handling when file is deleted during read."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -459,7 +459,7 @@ class TestPathEdgeCases:
     @pytest.mark.asyncio
     async def test_extremely_long_path(self):
         """Test handling of extremely long file paths."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -479,7 +479,7 @@ class TestPathEdgeCases:
     @pytest.mark.asyncio
     async def test_special_characters_in_path(self):
         """Test handling of special characters in file paths."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -512,7 +512,7 @@ class TestPathEdgeCases:
         if sys.platform == "win32":
             pytest.skip("Symlink test requires admin privileges on Windows")
 
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -538,7 +538,7 @@ class TestConcurrencyEdgeCases:
     @pytest.mark.asyncio
     async def test_simultaneous_same_file_access(self):
         """Test multiple simultaneous reads of the same file."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 

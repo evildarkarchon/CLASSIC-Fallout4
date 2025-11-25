@@ -257,7 +257,7 @@ class TestDownloadResilience:
     @pytest.mark.asyncio
     async def test_download_resume_capability(self):
         """Test ability to resume interrupted downloads."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         FileIOCore()
 

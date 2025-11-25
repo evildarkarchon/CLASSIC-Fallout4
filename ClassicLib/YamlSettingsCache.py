@@ -617,7 +617,7 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
             raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
 
         # Use FileIOCore for consistency
-        from ClassicLib.FileIOCore import write_file_sync
+        from ClassicLib.FileIO import write_file_sync
 
         write_file_sync(settings_path, default_settings)
 

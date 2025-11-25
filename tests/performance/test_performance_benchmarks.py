@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 
 
 class TestFileIOPerformance:

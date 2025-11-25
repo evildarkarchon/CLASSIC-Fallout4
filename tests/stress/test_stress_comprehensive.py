@@ -200,7 +200,7 @@ class TestConcurrentOperationsStress:
     @pytest.mark.timeout(30)
     async def test_mixed_operations_stress(self, metrics, generator, mock_yamldata_python_only):
         """Stress test with mixed operation types."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
         from ClassicLib.integration.factory import get_formid_analyzer, get_parser
 
         parser = get_parser()
@@ -370,7 +370,7 @@ class TestMemoryLeakDetection:
     async def test_async_operations_memory_leak(self):
         """Test for memory leaks in async operations."""
         from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
         AsyncBridge.get_instance()
@@ -594,7 +594,7 @@ class TestResourceExhaustion:
     @pytest.mark.timeout(30)
     async def test_file_handle_exhaustion(self):
         """Test behavior when file handles are exhausted."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
         open_files = []

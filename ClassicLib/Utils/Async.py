@@ -1,0 +1,671 @@
+"""
+Unified Async Utilities for CLASSIC.
+
+This module consolidates general-purpose async utilities, including:
+- Concurrency control (gather_with_concurrency, Throttler)
+- Smart executor management (smart_run_in_executor)
+- Async patterns (retry, timeout, lazy loading)
+- Batch processing helpers
+
+This replaces the legacy ClassicLib.AsyncUtilities and ClassicLib.AsyncUtilities_Enhanced modules.
+"""
+
+import asyncio
+import contextlib
+import time
+from collections.abc import Awaitable, Callable, Iterable
+from concurrent.futures import Executor
+from functools import partial, wraps
+from types import TracebackType
+from typing import Any, ParamSpec, TypeVar
+
+# -----------------------------------------------------------------------------
+# Type Definitions
+# -----------------------------------------------------------------------------
+P = ParamSpec("P")
+R = TypeVar("R")
+T = TypeVar("T")
+
+# -----------------------------------------------------------------------------
+# Constants & Configuration
+# -----------------------------------------------------------------------------
+
+# Operations that are fast enough to run directly without executor overhead
+# These have been profiled to complete in < 1ms on average
+FAST_PATH_OPERATIONS = {
+    # Path operations (filesystem metadata)
+    "exists",
+    "is_file",
+    "is_dir",
+    "is_symlink",
+    "is_mount",
+    "is_absolute",
+    "is_relative_to",
+    "stat",
+    "lstat",
+    "resolve",
+    "absolute",
+    "expanduser",
+    "cwd",
+    "home",
+    "samefile",
+    "parent",
+    "name",
+    "suffix",
+    "stem",
+    # String operations (all are CPU-bound but very fast)
+    "split",
+    "rsplit",
+    "join",
+    "strip",
+    "lstrip",
+    "rstrip",
+    "upper",
+    "lower",
+    "capitalize",
+    "title",
+    "swapcase",
+    "replace",
+    "find",
+    "rfind",
+    "index",
+    "rindex",
+    "startswith",
+    "endswith",
+    "isalpha",
+    "isdigit",
+    "isalnum",
+    "isspace",
+    "isupper",
+    "islower",
+    # Fast built-ins
+    "len",
+    "bool",
+    "int",
+    "float",
+    "str",
+    "repr",
+    "hash",
+    "id",
+    "type",
+    "isinstance",
+    "issubclass",
+    "hasattr",
+    "getattr",
+    "setattr",
+    "delattr",
+    # Fast collections operations
+    "append",
+    "extend",
+    "insert",
+    "remove",
+    "pop",
+    "clear",
+    "count",
+    "reverse",
+    "sort",
+    "get",
+    "keys",
+    "values",
+    "items",
+    "update",
+    # Fast Path operations that don't involve actual I/O
+    "mkdir",  # Creating directories is near-instant on modern filesystems
+    "joinpath",
+    "with_name",
+    "with_suffix",
+    "with_stem",
+    "parts",
+    "parents",
+    "anchor",
+    "drive",
+    "root",
+}
+
+# Operations that should use executor based on size/complexity
+SIZE_DEPENDENT_OPERATIONS = {
+    "read_text",
+    "read_bytes",
+    "write_text",
+    "write_bytes",
+    "open",
+    "unlink",
+    "rename",
+    "replace",
+    "chmod",
+    "rmdir",
+    "touch",
+    "symlink_to",
+    "hardlink_to",
+}
+
+
+# -----------------------------------------------------------------------------
+# Base Async Utilities
+# -----------------------------------------------------------------------------
+
+
+async def gather_with_concurrency(max_concurrent: int, *coros: Awaitable[T]) -> list[T]:
+    """
+    Executes multiple asynchronous coroutine tasks concurrently, limiting the number of tasks allowed
+    to run at the same time to the specified maximum concurrency.
+
+    Args:
+        max_concurrent (int): The maximum number of concurrent tasks allowed to run simultaneously.
+        *coros (Awaitable[T]): One or more coroutine tasks to be executed concurrently.
+
+    Returns:
+        list[T]: A list of all results returned by the provided coroutine tasks, in the order in
+            which they were passed to the function.
+    """
+    semaphore = asyncio.Semaphore(max_concurrent)
+
+    async def bounded_coro(coro: Awaitable[T]) -> T:
+        async with semaphore:
+            return await coro
+
+    return await asyncio.gather(*[bounded_coro(c) for c in coros])
+
+
+async def run_in_executor(func: Callable[..., R], *args: Any, executor: Executor | None = None, **kwargs: Any) -> R:
+    """
+    Executes a given function in a separate thread or process pool using an executor.
+
+    Args:
+        func (Callable[..., R]): The function to be executed.
+        *args (Any): Positional arguments to pass to the function.
+        executor (Executor | None): Optional executor to use. If None, the default executor is used.
+        **kwargs (Any): Keyword arguments to pass to the function.
+
+    Returns:
+        R: The result of the executed function.
+    """
+    loop = asyncio.get_event_loop()
+    if kwargs:
+        func = partial(func, **kwargs)
+    return await loop.run_in_executor(executor, func, *args)
+
+
+# -----------------------------------------------------------------------------
+# Smart Executor Logic
+# -----------------------------------------------------------------------------
+
+
+class ExecutorDecisionMaker:
+    """Helper class to encapsulate executor decision logic."""
+
+    def __init__(self, func: Callable, args: tuple, kwargs: dict, threshold_bytes: int) -> None:
+        """Initialize the executor decision maker.
+
+        Args:
+            func: The function to be executed
+            args: Positional arguments to pass to the function
+            kwargs: Keyword arguments to pass to the function
+            threshold_bytes: Size threshold in bytes for determining executor usage
+                           for I/O operations (files smaller than this run directly)
+        """
+        self.func = func
+        self.args = args
+        self.kwargs = kwargs
+        self.threshold_bytes = threshold_bytes
+        self.func_name = getattr(func, "__name__", "")
+
+    async def _run_with_executor(self) -> Any:
+        """Run the function using the thread pool executor."""
+        loop = asyncio.get_event_loop()
+        if self.kwargs:
+            from functools import partial
+
+            func = partial(self.func, **self.kwargs)
+            return await loop.run_in_executor(None, func, *self.args)
+        return await loop.run_in_executor(None, self.func, *self.args)
+
+    def _run_directly(self) -> Any:
+        """Run the function directly without executor."""
+        return self.func(*self.args, **self.kwargs)
+
+    def _should_use_executor_for_io(self) -> bool:
+        """Determine if I/O operation should use executor based on size."""
+        if not self.args:
+            return True
+
+        from pathlib import Path
+
+        first_arg = self.args[0]
+
+        if not isinstance(first_arg, (Path, str)):
+            return True
+
+        try:
+            path = Path(first_arg) if isinstance(first_arg, str) else first_arg
+
+            # Check read operations
+            if self.func_name in {"read_text", "read_bytes"}:
+                if path.exists():
+                    return path.stat().st_size >= self.threshold_bytes
+
+            # Check write operations
+            elif self.func_name in {"write_text", "write_bytes"} and len(self.args) > 1:
+                content = self.args[1]
+                if isinstance(content, (str, bytes)):
+                    return len(content) >= self.threshold_bytes
+
+        except (OSError, AttributeError, IndexError):
+            return True  # Default to executor on error
+        else:
+            return True  # Default to executor if no specific condition matched
+
+    async def execute(self, force_executor: bool | None) -> Any:
+        """Execute the function with the appropriate strategy."""
+        # Handle explicit override
+        if force_executor is True:
+            return await self._run_with_executor()
+        if force_executor is False:
+            return self._run_directly()
+
+        # Auto-detection: Fast path operations
+        if self.func_name in FAST_PATH_OPERATIONS:
+            return self._run_directly()
+
+        # Auto-detection: Size-dependent operations
+        if self.func_name in SIZE_DEPENDENT_OPERATIONS and not self._should_use_executor_for_io():
+            return self._run_directly()
+
+        # Default: use executor
+        return await self._run_with_executor()
+
+
+async def smart_run_in_executor(
+    func: Callable[..., R],
+    *args: Any,
+    threshold_bytes: int = 1024,  # 1KB threshold for I/O operations
+    force_executor: bool | None = None,
+    **kwargs: Any,
+) -> R:
+    """
+    Performance-aware executor that only uses thread pool for operations that benefit from it.
+
+    Decision Logic:
+    1. If force_executor is True/False, honor that explicitly
+    2. Fast path operations (filesystem metadata, string ops) run directly
+    3. I/O operations check file size - small files run directly
+    4. Unknown operations default to executor for safety
+    """
+    decision_maker = ExecutorDecisionMaker(func, args, kwargs, threshold_bytes)
+    return await decision_maker.execute(force_executor)
+
+
+# -----------------------------------------------------------------------------
+# Batch Processing & Mapping
+# -----------------------------------------------------------------------------
+
+
+async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent: int | None = None) -> list[Any]:
+    """Async version of map with concurrency control."""
+    if max_concurrent:
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def bounded_func(item: T) -> Any:
+            async with semaphore:
+                if asyncio.iscoroutinefunction(func):
+                    return await func(item)
+                loop = asyncio.get_event_loop()
+                return await loop.run_in_executor(None, func, item)
+
+    else:
+
+        async def bounded_func(item: T) -> Any:
+            if asyncio.iscoroutinefunction(func):
+                return await func(item)
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, func, item)
+
+    tasks = [bounded_func(item) for item in items]
+    return await asyncio.gather(*tasks)
+
+
+async def async_map_smart(
+    func: Callable[[T], Any], items: list[T], max_concurrent: int | None = None, use_executor: bool | str = "auto"
+) -> list[Any]:
+    """
+    Enhanced async map with intelligent executor usage.
+
+    Args:
+        func: Function to apply to each item
+        items: Items to process
+        max_concurrent: Maximum concurrent operations (None for unlimited)
+        use_executor: Executor usage strategy ("auto", "always", "never", "profile")
+    """
+    if use_executor == "profile" and items:
+        # Profile mode - run a sample to determine best strategy
+        sample_item = items[0]
+
+        # Time with executor
+        start = time.perf_counter()
+        if asyncio.iscoroutinefunction(func):
+            await func(sample_item)
+        else:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(None, func, sample_item)
+        with_executor_time = time.perf_counter() - start
+
+        # Time without executor (if not async)
+        without_executor_time = float("inf")
+        if not asyncio.iscoroutinefunction(func):
+            start = time.perf_counter()
+            func(sample_item)
+            without_executor_time = time.perf_counter() - start
+
+        # Choose strategy based on profiling
+        # If direct execution is > 2x faster, avoid executor
+        use_executor = "never" if without_executor_time * 2 < with_executor_time else "always"
+
+        # Log the decision for debugging
+        from ClassicLib.Logger import logger
+
+        logger.debug(
+            f"Profiled {func.__name__ if hasattr(func, '__name__') else 'function'}: "
+            f"executor={with_executor_time:.4f}s, direct={without_executor_time:.4f}s, "
+            f"strategy={use_executor}"
+        )
+
+    # Build the execution strategy
+    if max_concurrent:
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def bounded_func(item: T) -> Any:
+            async with semaphore:
+                if asyncio.iscoroutinefunction(func):
+                    return await func(item)
+                if use_executor == "never":
+                    # Direct execution for fast operations
+                    return func(item)
+                if use_executor == "auto":
+                    # Smart detection
+                    return await smart_run_in_executor(func, item)
+                # "always"
+                loop = asyncio.get_event_loop()
+                return await loop.run_in_executor(None, func, item)
+
+    else:
+
+        async def bounded_func(item: T) -> Any:
+            if asyncio.iscoroutinefunction(func):
+                return await func(item)
+            if use_executor == "never":
+                return func(item)
+            if use_executor == "auto":
+                return await smart_run_in_executor(func, item)
+            # "always"
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, func, item)
+
+    tasks = [bounded_func(item) for item in items]
+    return await asyncio.gather(*tasks)
+
+
+async def batch_process(items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5) -> list[Any]:
+    """Process items in batches with concurrency control."""
+    results = []
+
+    for i in range(0, len(items), batch_size):
+        batch = items[i : i + batch_size]
+
+        if asyncio.iscoroutinefunction(processor):
+            batch_coros = [processor(item) for item in batch]
+        else:
+            # If processor is not async, run it in executor
+            loop = asyncio.get_event_loop()
+            batch_coros = [loop.run_in_executor(None, processor, item) for item in batch]
+
+        batch_results = await gather_with_concurrency(max_concurrent, *batch_coros)
+        results.extend(batch_results)
+
+    return results
+
+
+async def batch_process_smart(
+    items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5, use_executor: bool | str = "auto"
+) -> list[Any]:
+    """
+    Enhanced batch processing with intelligent executor usage.
+
+    Args:
+        items: Items to process
+        processor: Function to process each item
+        batch_size: Size of each batch
+        max_concurrent: Max concurrent operations within each batch
+        use_executor: Executor usage strategy (see async_map_smart for options)
+    """
+    results = []
+
+    for i in range(0, len(items), batch_size):
+        batch = items[i : i + batch_size]
+
+        if asyncio.iscoroutinefunction(processor):
+            batch_coros = [processor(item) for item in batch]
+        elif use_executor == "never":
+            # Fast path - run directly without executor
+            batch_results_sync = [processor(item) for item in batch]
+            results.extend(batch_results_sync)
+            continue
+        elif use_executor == "auto":
+            # Smart detection per item
+            batch_coros = [smart_run_in_executor(processor, item) for item in batch]
+        else:  # "always" or True
+            # Legacy behavior
+            loop = asyncio.get_event_loop()
+            batch_coros = [loop.run_in_executor(None, processor, item) for item in batch]
+
+        batch_results = await gather_with_concurrency(max_concurrent, *batch_coros)
+        results.extend(batch_results)
+
+    return results
+
+
+async def async_filter(predicate: Callable[[T], bool], items: Iterable[T], max_concurrent: int | None = None) -> list[T]:
+    """Async version of filter with concurrency control."""
+    items_list = list(items)
+
+    if max_concurrent:
+        semaphore = asyncio.Semaphore(max_concurrent)
+
+        async def check_item(item: T) -> bool:
+            async with semaphore:
+                if asyncio.iscoroutinefunction(predicate):
+                    return await predicate(item)
+                loop = asyncio.get_event_loop()
+                return await loop.run_in_executor(None, predicate, item)
+
+    else:
+
+        async def check_item(item: T) -> bool:
+            if asyncio.iscoroutinefunction(predicate):
+                return await predicate(item)
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, predicate, item)
+
+    results = await asyncio.gather(*[check_item(item) for item in items_list])
+    return [item for item, keep in zip(items_list, results, strict=False) if keep]
+
+
+# -----------------------------------------------------------------------------
+# Decorators & Context Managers
+# -----------------------------------------------------------------------------
+
+
+def async_retry(
+    max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0, exceptions: tuple[type[Exception], ...] = (Exception,)
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
+    """Decorator to retry an async function with exponential backoff."""
+
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+        @wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            last_error = None
+            current_delay = delay
+
+            for attempt in range(max_attempts):
+                try:
+                    return await func(*args, **kwargs)
+                except exceptions as e:
+                    last_error = e
+                    if attempt < max_attempts - 1:
+                        await asyncio.sleep(current_delay)
+                        current_delay *= backoff
+
+            if last_error is None:
+                last_error = RuntimeError(f"Function {func.__name__} failed after {max_attempts} attempts with no captured exception")
+
+            raise last_error
+
+        return wrapper
+
+    return decorator
+
+
+def async_timeout(seconds: float) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
+    """Decorator to apply a timeout to an asynchronous function call."""
+
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+        @wraps(func)
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            try:
+                return await asyncio.wait_for(func(*args, **kwargs), timeout=seconds)
+            except TimeoutError as err:
+                raise TimeoutError(f"{func.__name__} timed out after {seconds} seconds") from err
+
+        return wrapper
+
+    return decorator
+
+
+async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
+    """Internal helper to run an awaitable without timeout handling."""
+    if callable(coro) and not hasattr(coro, "__await__"):
+        awaitable = coro()
+        return await awaitable
+    return await coro  # type: ignore
+
+
+def run_with_timeout(
+    coro: Awaitable[T] | Callable[[], Awaitable[T]], timeout_seconds: float, default: T | None = None
+) -> Callable[[], Awaitable[T | None]]:
+    """Create a coroutine that runs with timeout, returning default on timeout."""
+
+    async def _timeout_wrapper() -> T | None:
+        try:
+            async with asyncio.timeout(timeout_seconds):
+                return await _run_awaitable(coro)
+        except TimeoutError:
+            return default
+
+    return _timeout_wrapper
+
+
+class AsyncTimer:
+    """Context manager for timing async operations."""
+
+    def __init__(self) -> None:
+        self.start_time: float | None = None
+        self.end_time: float | None = None
+
+    async def __aenter__(self) -> "AsyncTimer":
+        self.start_time = time.perf_counter()
+        return self
+
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+        self.end_time = time.perf_counter()
+
+    @property
+    def elapsed(self) -> float:
+        if self.start_time is None:
+            return 0.0
+        if self.end_time is None:
+            return time.perf_counter() - self.start_time
+        return self.end_time - self.start_time
+
+
+class Throttler:
+    """A testable throttling context manager for rate limiting."""
+
+    def __init__(self, rate_limit: int, time_window: float = 1.0) -> None:
+        self.rate_limit = rate_limit
+        self.time_window = time_window
+        self.semaphore = asyncio.Semaphore(rate_limit)
+        self.tasks: set[asyncio.Task] = set()
+
+    async def __aenter__(self) -> "Throttler":
+        await self.semaphore.acquire()
+        return self
+
+    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+        task = asyncio.create_task(self.release_after_delay())
+        self.tasks.add(task)
+        task.add_done_callback(self.tasks.discard)
+
+    async def release_after_delay(self) -> None:
+        await asyncio.sleep(self.time_window)
+        self.semaphore.release()
+
+    async def cleanup(self) -> None:
+        for task in list(self.tasks):
+            if not task.done():
+                task.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+        self.tasks.clear()
+
+
+# Global throttler registry for backward compatibility
+_throttler_registry: dict[tuple[int, float], Throttler] = {}
+
+
+async def throttle(rate_limit: int, time_window: float = 1.0) -> None:
+    """Throttle async operations to a specific rate (Legacy helper)."""
+    key = (rate_limit, time_window)
+    if key not in _throttler_registry:
+        _throttler_registry[key] = Throttler(rate_limit, time_window)
+
+    throttler = _throttler_registry[key]
+    await throttler.semaphore.acquire()
+
+    task = asyncio.create_task(throttler.release_after_delay())
+    throttler.tasks.add(task)
+    task.add_done_callback(throttler.tasks.discard)
+
+
+def reset_throttlers() -> None:
+    """Reset all throttler state."""
+    _throttler_registry.clear()
+
+
+class AsyncLazyLoader:
+    """Lazy loader for async resources."""
+
+    def __init__(self, loader_func: Callable[[], Any] | Callable[[], Awaitable[Any]]) -> None:
+        self._loader_func = loader_func
+        self._data = None
+        self._loaded = False
+        self._lock = asyncio.Lock()
+
+    async def get(self) -> Any:
+        if self._loaded:
+            return self._data
+        async with self._lock:
+            if self._loaded:
+                return self._data
+            self._data = await self._load_data()
+            self._loaded = True
+            return self._data
+
+    async def _load_data(self) -> Any:
+        if asyncio.iscoroutinefunction(self._loader_func):
+            return await self._loader_func()
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self._loader_func)
+
+    def reset(self) -> None:
+        """Reset the loader to reload data on next access."""
+        self._loaded = False
+        self._data = None

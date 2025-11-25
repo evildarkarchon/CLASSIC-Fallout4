@@ -181,7 +181,7 @@ class TestScanPipelineE2E:
     async def setup_pipeline(self):
         """Setup the complete pipeline with all components."""
         from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
         from ClassicLib.MessageHandler.handler import MessageHandler
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 

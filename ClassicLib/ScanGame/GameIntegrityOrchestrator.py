@@ -12,7 +12,7 @@ from pathlib import Path
 from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
