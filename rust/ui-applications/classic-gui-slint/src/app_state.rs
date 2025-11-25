@@ -93,16 +93,14 @@ impl AppState {
         );
 
         // Initialize AppState with default FileWatcher
-        let mut state = Self::default(); // Start with default to get file_watcher initialized
-        state.game = game;
-        state.config = config.clone(); // Clone here because config will be moved
-
-        // Populate initial mods_folder and scan_folder from config
-        state.mods_folder = config.paths.mods_folder;
-        state.scan_folder = config.paths.scan_custom;
-        state.auto_refresh_interval_ms = config.auto_refresh_interval_ms;
-
-        Ok(Arc::new(RwLock::new(state)))
+        Ok(Arc::new(RwLock::new(Self {
+            game,
+            mods_folder: config.paths.mods_folder.clone(),
+            scan_folder: config.paths.scan_custom.clone(),
+            auto_refresh_interval_ms: config.auto_refresh_interval_ms,
+            config,            // config is moved here
+            ..Self::default()  // Populate remaining fields from default (specifically file_watcher)
+        })))
     }
 
     /// Get the current game name (e.g., "Fallout4", "Skyrim")

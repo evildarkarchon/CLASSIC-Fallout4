@@ -161,10 +161,12 @@ impl YamlDataCore {
             // Correct API: [root_dir, data_dir]
             let root_dir = &yaml_dirs[0];
             let data_dir = &yaml_dirs[1];
-            
+
             (
                 data_dir.join("databases").join("CLASSIC Main.yaml"),
-                data_dir.join("databases").join(format!("CLASSIC {}.yaml", game)),
+                data_dir
+                    .join("databases")
+                    .join(format!("CLASSIC {}.yaml", game)),
                 root_dir.join("CLASSIC Ignore.yaml"),
             )
         } else if yaml_dirs.len() == 3 {

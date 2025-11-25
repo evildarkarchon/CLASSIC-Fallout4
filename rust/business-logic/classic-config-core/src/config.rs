@@ -320,7 +320,8 @@ impl ClassicConfig {
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
         let vr_mode = yaml["vr_mode"].as_bool().unwrap_or(false);
         let auto_switch_to_results = yaml["auto_switch_to_results"].as_bool().unwrap_or(true);
-        let auto_refresh_interval_ms = yaml["auto_refresh_interval_ms"].as_i64().unwrap_or(5000) as u64;
+        let auto_refresh_interval_ms =
+            yaml["auto_refresh_interval_ms"].as_i64().unwrap_or(5000) as u64;
 
         let paths_yaml = &yaml["paths"];
         let paths = PathConfig {

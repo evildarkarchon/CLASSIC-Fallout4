@@ -21,10 +21,7 @@ use tokio::runtime::Runtime;
 /// Benchmark config creation
 fn bench_config_creation(c: &mut Criterion) {
     c.bench_function("config_default_creation", |b| {
-        b.iter(|| {
-            
-            black_box(CliConfig::default())
-        })
+        b.iter(|| black_box(CliConfig::default()))
     });
 }
 
@@ -83,10 +80,7 @@ fn bench_yaml_serialization(c: &mut Criterion) {
 /// Benchmark output formatter operations
 fn bench_output_formatter(c: &mut Criterion) {
     c.bench_function("output_formatter_creation", |b| {
-        b.iter(|| {
-            
-            black_box(OutputFormatter::new())
-        })
+        b.iter(|| black_box(OutputFormatter::new()))
     });
 
     c.bench_function("output_formatter_stats_display", |b| {
@@ -162,18 +156,12 @@ fn bench_path_validation(c: &mut Criterion) {
     let valid_path = temp_dir.path().to_path_buf();
 
     c.bench_function("path_exists_check_valid", |b| {
-        b.iter(|| {
-            
-            black_box(valid_path.exists())
-        })
+        b.iter(|| black_box(valid_path.exists()))
     });
 
     c.bench_function("path_exists_check_invalid", |b| {
         let invalid = PathBuf::from("C:\\NonExistent\\Path\\12345");
-        b.iter(|| {
-            
-            black_box(invalid.exists())
-        })
+        b.iter(|| black_box(invalid.exists()))
     });
 }
 
@@ -194,10 +182,7 @@ fn bench_memory_patterns(c: &mut Criterion) {
     });
 
     c.bench_function("pathbuf_creation", |b| {
-        b.iter(|| {
-            
-            black_box(PathBuf::from("C:\\Test\\Long\\Path\\To\\File.txt"))
-        })
+        b.iter(|| black_box(PathBuf::from("C:\\Test\\Long\\Path\\To\\File.txt")))
     });
 }
 

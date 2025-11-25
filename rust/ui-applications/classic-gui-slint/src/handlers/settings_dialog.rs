@@ -18,7 +18,7 @@ pub struct SettingsData {
     pub vr_mode: bool,
     pub auto_switch_to_results: bool,
     pub auto_refresh_interval_s: u64, // New setting for file watcher (seconds)
-    pub update_source: String, // Placeholder for update source (Nexus/GitHub/Both)
+    pub update_source: String,        // Placeholder for update source (Nexus/GitHub/Both)
 
     // Advanced settings
     pub move_unsolved_logs: bool,
@@ -114,7 +114,10 @@ impl SettingsData {
             tracing::debug!("  Auto-Switch to Results: {}", self.auto_switch_to_results);
             state_guard.set_auto_switch_to_results(self.auto_switch_to_results);
 
-            tracing::debug!("  Auto-Refresh Interval (s): {}", self.auto_refresh_interval_s);
+            tracing::debug!(
+                "  Auto-Refresh Interval (s): {}",
+                self.auto_refresh_interval_s
+            );
             state_guard.set_auto_refresh_interval_ms(self.auto_refresh_interval_s * 1000);
 
             tracing::debug!("  Move Unsolved Logs: {}", self.move_unsolved_logs);

@@ -230,12 +230,12 @@ impl PyFileIOCore {
     pub fn get_file_info(&self, py: Python<'_>, path: PathLike) -> PyResult<Py<PyDict>> {
         let path_buf: PathBuf = path.into();
         let dict = PyDict::new(py);
-        
+
         // Use cached metadata if available (implied by inner cache access if we had it exposed)
         // Since we don't have direct access to inner cache via pub API, we just use std::fs::metadata
         // But we should check cache through inner methods if possible.
         // inner.get_file_size uses cache.
-        
+
         match std::fs::metadata(&path_buf) {
             Ok(metadata) => {
                 dict.set_item("size", metadata.len())?;
@@ -249,12 +249,12 @@ impl PyFileIOCore {
                         dict.set_item("modified", duration.as_secs_f64())?;
                     }
                 }
-            },
+            }
             Err(e) => {
                 dict.set_item("error", e.to_string())?;
             }
         }
-        
+
         Ok(dict.unbind())
     }
 
@@ -297,7 +297,7 @@ impl PyFileIOCore {
 
         future_into_py(py, async move {
             let bytes = inner.read_bytes(&path_buf).await.map_err(to_pyerr)?;
-            
+
             // Use Python's decoder for compatibility
             Python::attach(|py| {
                 let py_bytes = pyo3::types::PyBytes::new(py, &bytes);

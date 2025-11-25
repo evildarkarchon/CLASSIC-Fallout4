@@ -15,8 +15,8 @@ use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watche
 use parking_lot::Mutex;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
-use std::sync::mpsc::{channel, Receiver, RecvTimeoutError, Sender};
 use std::sync::Arc;
+use std::sync::mpsc::{Receiver, RecvTimeoutError, Sender, channel};
 use std::thread;
 use std::time::{Duration, Instant};
 use tracing::{error, info, instrument, warn};
@@ -63,14 +63,17 @@ impl FileWatcher {
     /// The Receiver for debounced events (list of changed paths).
     #[instrument(skip(self))]
     pub fn init(&self, debounce_duration: Duration) -> Result<Receiver<Vec<PathBuf>>> {
-        tracing::debug!("Initializing file watcher with debounce: {:?}", debounce_duration);
+        tracing::debug!(
+            "Initializing file watcher with debounce: {:?}",
+            debounce_duration
+        );
 
         // Channel for the final debounced events sent to UI
         let (ui_tx, ui_rx) = channel();
-        
+
         // Clone tx for the thread BEFORE locking and moving into self
         let ui_tx_thread = ui_tx.clone();
-        
+
         *self.event_sender.lock() = Some(ui_tx);
 
         // Channel for raw events from notify
@@ -94,7 +97,7 @@ impl FileWatcher {
         // Spawn the debouncing thread
         thread::spawn(move || {
             tracing::info!("File watcher debounce thread started.");
-            
+
             loop {
                 // 1. Block until the first event arrives
                 let first_event_result = match raw_rx.recv() {
@@ -112,7 +115,7 @@ impl FileWatcher {
 
                 // 2. Start accumulation phase
                 let mut changed_paths = HashSet::new();
-                
+
                 // Process the first event
                 match first_event_result {
                     Ok(event) => {
@@ -129,7 +132,7 @@ impl FileWatcher {
                     if now >= deadline {
                         break; // Timeout reached, flush events
                     }
-                    
+
                     let remaining = deadline - now;
 
                     match raw_rx.recv_timeout(remaining) {
@@ -164,10 +167,10 @@ impl FileWatcher {
                 if !changed_paths.is_empty() {
                     let paths_vec: Vec<PathBuf> = changed_paths.into_iter().collect();
                     info!("Sending {} file updates to UI.", paths_vec.len());
-                    
+
                     if let Err(e) = ui_tx_thread.send(paths_vec) {
-                         warn!("Failed to send updates to UI (receiver dropped): {:?}", e);
-                         break; // UI is gone, stop thread
+                        warn!("Failed to send updates to UI (receiver dropped): {:?}", e);
+                        break; // UI is gone, stop thread
                     }
                 }
             }

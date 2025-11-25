@@ -3,9 +3,9 @@
 use anyhow::{Context, Result};
 use classic_config_core::YamlSource;
 use classic_file_io_core::LogCollector;
-use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use classic_scangame_core::ini::{ConfigIssue as IniConfigIssue, IniValidator, IssueSeverity};
 use classic_scangame_core::toml::{CrashgenChecker, TomlConfigIssue};
+use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -60,7 +60,7 @@ pub struct ScanResult {
     pub summary_details: Vec<String>,
     pub fcx_issues_report: Vec<String>,
     #[allow(dead_code)]
-    pub processing_time_ms: u64
+    pub processing_time_ms: u64,
 }
 
 /// Handles the crash logs scan operation
@@ -97,7 +97,9 @@ pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult>
             return Ok(ScanResult {
                 success: false,
                 message: "No crash logs found".to_string(),
-                summary_details: vec!["No crash log files were found in the game directory.".to_string()],
+                summary_details: vec![
+                    "No crash log files were found in the game directory.".to_string(),
+                ],
                 fcx_issues_report: Vec::new(),
                 processing_time_ms: start_time.elapsed().as_millis() as u64,
             });
@@ -145,7 +147,8 @@ pub async fn handle_scan_crash_logs(state: SharedAppState) -> Result<ScanResult>
             fcx_issues_report: Vec::new(),
             processing_time_ms,
         })
-    }.await;
+    }
+    .await;
 
     // Resume file watcher
     {
@@ -252,7 +255,7 @@ pub async fn handle_scan_game_files(state: SharedAppState) -> Result<ScanResult>
                 let mut crashgen_checker = CrashgenChecker::new(&plugins_path, &crashgen_name);
 
                 let (crashgen_report_str, toml_issues) = crashgen_checker.check()?;
-                
+
                 if !crashgen_report_str.is_empty() {
                     fcx_issues_report.push("\n--- CRASHGEN CONFIGURATION REPORT ---\n".to_string());
                     fcx_issues_report.push(crashgen_report_str);

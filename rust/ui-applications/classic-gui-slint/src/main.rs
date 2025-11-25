@@ -18,18 +18,17 @@ use anyhow::Result;
 use app_state::AppState;
 use classic_shared_core::AsyncBridge;
 use geometry::WindowGeometry;
+use notify::RecursiveMode;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
-use notify::RecursiveMode;
 
-use slint::{PhysicalPosition, PhysicalSize, Timer, TimerMode};
-
-use parking_lot::Mutex; // New import for parking_lot::Mutex
+use slint::{PhysicalPosition, PhysicalSize};
 
 /// Wrapper for slint::Timer to allow it to be passed between threads (needed for AsyncBridge)
 /// This is safe because we only access the timer on the UI thread.
+#[allow(dead_code)] // The field 0 is conceptually used even if not directly accessed
 struct ThreadSafeTimer(slint::Timer);
 unsafe impl Send for ThreadSafeTimer {}
 unsafe impl Sync for ThreadSafeTimer {}
@@ -80,7 +79,8 @@ fn main() -> Result<(), slint::PlatformError> {
     // Flag to ensure file watcher is initialized only once
     let file_watcher_initialized = Arc::new(AtomicBool::new(false));
     // Store debounce timer instance to stop on exit
-    let main_slint_timer: Arc<parking_lot::Mutex<Option<ThreadSafeTimer>>> = Arc::new(parking_lot::Mutex::new(None));
+    let main_slint_timer: Arc<parking_lot::Mutex<Option<ThreadSafeTimer>>> =
+        Arc::new(parking_lot::Mutex::new(None));
 
     // Apply saved geometry
     let window = main_window.window();
@@ -91,7 +91,10 @@ fn main() -> Result<(), slint::PlatformError> {
 
     // Set position if not default (-1 means center)
     if initial_geometry.x >= 0 && initial_geometry.y >= 0 {
-        window.set_position(PhysicalPosition::new(initial_geometry.x, initial_geometry.y));
+        window.set_position(PhysicalPosition::new(
+            initial_geometry.x,
+            initial_geometry.y,
+        ));
     }
 
     // Track last tab index for geometry saving
@@ -121,7 +124,8 @@ fn main() -> Result<(), slint::PlatformError> {
                     slint_window.set_size(PhysicalSize::new(w as u32, h as u32));
                 } else {
                     // Default defaults
-                    if new_tab_index == 3 { // Results tab
+                    if new_tab_index == 3 {
+                        // Results tab
                         slint_window.set_size(PhysicalSize::new(1000, 600));
                     } else {
                         slint_window.set_size(PhysicalSize::new(650, 350));
@@ -150,17 +154,21 @@ fn main() -> Result<(), slint::PlatformError> {
 
                     // Manually update the fields of the AppState that is already in `state`
                     current_app_state_write_guard.game = loaded_app_state_read_guard.game.clone();
-                    current_app_state_write_guard.config = loaded_app_state_read_guard.config.clone();
-                    current_app_state_write_guard.mods_folder = loaded_app_state_read_guard.mods_folder.clone();
-                    current_app_state_write_guard.scan_folder = loaded_app_state_read_guard.scan_folder.clone();
-                    current_app_state_write_guard.auto_refresh_interval_ms = loaded_app_state_read_guard.auto_refresh_interval_ms;
-                    
+                    current_app_state_write_guard.config =
+                        loaded_app_state_read_guard.config.clone();
+                    current_app_state_write_guard.mods_folder =
+                        loaded_app_state_read_guard.mods_folder.clone();
+                    current_app_state_write_guard.scan_folder =
+                        loaded_app_state_read_guard.scan_folder.clone();
+                    current_app_state_write_guard.auto_refresh_interval_ms =
+                        loaded_app_state_read_guard.auto_refresh_interval_ms;
+
                     // Drop guards immediately after use
                     drop(loaded_app_state_read_guard);
                     drop(current_app_state_write_guard);
 
                     let state_guard = state.read(); // Acquire read guard for state after it's been updated, for broader scope
-                    
+
                     tracing::info!(
                         "Configuration loaded successfully - Game: {}, Root: {}",
                         state_guard.game_name(),
@@ -185,12 +193,22 @@ fn main() -> Result<(), slint::PlatformError> {
                         // Let's re-acquire for UI updates to be safe and simple.
                         let state_guard = state.read();
                         if let Some(mods_folder) = state_guard.mods_folder() {
-                            w.set_mods_folder_path(mods_folder.to_string_lossy().to_string().into());
-                            tracing::debug!("Loaded mods folder from config: {}", mods_folder.display());
+                            w.set_mods_folder_path(
+                                mods_folder.to_string_lossy().to_string().into(),
+                            );
+                            tracing::debug!(
+                                "Loaded mods folder from config: {}",
+                                mods_folder.display()
+                            );
                         }
                         if let Some(scan_folder) = state_guard.scan_folder() {
-                            w.set_scan_folder_path(scan_folder.to_string_lossy().to_string().into());
-                            tracing::debug!("Loaded scan folder from config: {}", scan_folder.display());
+                            w.set_scan_folder_path(
+                                scan_folder.to_string_lossy().to_string().into(),
+                            );
+                            tracing::debug!(
+                                "Loaded scan folder from config: {}",
+                                scan_folder.display()
+                            );
                         }
                         drop(state_guard); // Drop again
 
@@ -200,7 +218,9 @@ fn main() -> Result<(), slint::PlatformError> {
 
                             // Initialize background watcher and get receiver for events
                             // Now passing the debounce duration to the watcher init
-                            let event_receiver = match file_watcher_instance.init(Duration::from_millis(debounce_duration_ms)) {
+                            let event_receiver = match file_watcher_instance
+                                .init(Duration::from_millis(debounce_duration_ms))
+                            {
                                 Ok(rx) => rx,
                                 Err(e) => {
                                     tracing::error!("Failed to initialize file watcher: {}", e);
@@ -214,70 +234,81 @@ fn main() -> Result<(), slint::PlatformError> {
 
                             let timer = slint::Timer::default();
                             // Poll frequently (100ms) since debouncing is handled in the background thread
-                            timer.start(slint::TimerMode::Repeated, Duration::from_millis(100), move || {
-                                // Only process events if watcher is not paused
-                                if !file_watcher_for_timer.is_paused() {
-                                    // Check if we have any debounced events waiting
-                                    // We use try_recv() to avoid blocking the UI thread
-                                    let mut refresh_needed = false;
-                                    
-                                    while let Ok(changed_paths) = event_receiver.try_recv() {
-                                        if !changed_paths.is_empty() {
-                                            tracing::debug!("Received {} file changes from watcher", changed_paths.len());
-                                            refresh_needed = true;
-                                        }
-                                    }
+                            timer.start(
+                                slint::TimerMode::Repeated,
+                                Duration::from_millis(100),
+                                move || {
+                                    // Only process events if watcher is not paused
+                                    if !file_watcher_for_timer.is_paused() {
+                                        // Check if we have any debounced events waiting
+                                        // We use try_recv() to avoid blocking the UI thread
+                                        let mut refresh_needed = false;
 
-                                    if refresh_needed {
-                                        if let Some(ui) = window_for_refresh.upgrade() {
-                                            tracing::info!("Triggering reports refresh due to file changes");
+                                        while let Ok(changed_paths) = event_receiver.try_recv() {
+                                            if !changed_paths.is_empty() {
+                                                tracing::debug!(
+                                                    "Received {} file changes from watcher",
+                                                    changed_paths.len()
+                                                );
+                                                refresh_needed = true;
+                                            }
+                                        }
+
+                                        if refresh_needed
+                                            && let Some(ui) = window_for_refresh.upgrade()
+                                        {
+                                            tracing::info!(
+                                                "Triggering reports refresh due to file changes"
+                                            );
                                             ui.invoke_refresh_reports();
                                         }
                                     }
-                                }
-                            });
+                                },
+                            );
                             *timer_storage_arc.lock() = Some(ThreadSafeTimer(timer)); // Store the timer
 
                             // Add watch paths
                             // 1. Crash Logs folder
                             if let Some(ref docs) = docs_root {
                                 let crash_logs = docs.join("Crash Logs");
-                                if crash_logs.exists() {
-                                    if let Err(e) = file_watcher_instance.add_path(&crash_logs, RecursiveMode::NonRecursive) {
-                                        tracing::error!("Failed to watch Crash Logs: {}", e);
-                                    }
+                                if crash_logs.exists()
+                                    && let Err(e) = file_watcher_instance
+                                        .add_path(&crash_logs, RecursiveMode::NonRecursive)
+                                {
+                                    tracing::error!("Failed to watch Crash Logs: {}", e);
                                 }
-                                
                                 // 3. Unsolved Logs folder
                                 let unsolved = docs.join("CLASSIC Backup").join("Unsolved Logs");
-                                if unsolved.exists() {
-                                    if let Err(e) = file_watcher_instance.add_path(&unsolved, RecursiveMode::NonRecursive) {
-                                        tracing::error!("Failed to watch Unsolved Logs: {}", e);
-                                    }
+                                if unsolved.exists()
+                                    && let Err(e) = file_watcher_instance
+                                        .add_path(&unsolved, RecursiveMode::NonRecursive)
+                                {
+                                    tracing::error!("Failed to watch Unsolved Logs: {}", e);
                                 }
                             } else {
                                 // Fallback to current directory "Crash Logs" if docs_root not set
                                 let crash_logs = PathBuf::from("Crash Logs");
-                                if crash_logs.exists() {
-                                    if let Err(e) = file_watcher_instance.add_path(&crash_logs, RecursiveMode::NonRecursive) {
-                                        tracing::error!("Failed to watch Crash Logs (fallback): {}", e);
-                                    }
+                                if crash_logs.exists()
+                                    && let Err(e) = file_watcher_instance
+                                        .add_path(&crash_logs, RecursiveMode::NonRecursive)
+                                {
+                                    tracing::error!("Failed to watch Crash Logs (fallback): {}", e);
                                 }
                             }
 
                             // 2. Custom scan folder
-                            if let Some(ref custom) = scan_folder {
-                                if custom.exists() {
-                                    if let Err(e) = file_watcher_instance.add_path(custom, RecursiveMode::NonRecursive) {
-                                        tracing::error!("Failed to watch Custom folder: {}", e);
-                                    }
-                                }
+                            if let Some(ref custom) = scan_folder
+                                && custom.exists()
+                                && let Err(e) = file_watcher_instance
+                                    .add_path(custom, RecursiveMode::NonRecursive)
+                            {
+                                tracing::error!("Failed to watch Custom folder: {}", e);
                             }
                             file_watcher_initialized.store(true, Ordering::SeqCst);
                         }
 
                         // Check for updates if enabled in settings
-                        let state_guard = state.read(); 
+                        let state_guard = state.read();
                         if state_guard.update_check() {
                             tracing::info!("Automatic update check enabled");
                             let window_for_update = w.as_weak();
@@ -579,7 +610,7 @@ fn main() -> Result<(), slint::PlatformError> {
                                         message_parts.push(scan_result.summary_details.join("\n"));
                                     }
                                     if !scan_result.fcx_issues_report.is_empty() {
-                                        message_parts.push(std::format!("\nDetailed FCX issues can be found in the report. Please check the Results tab.").to_string());
+                                        message_parts.push("\nDetailed FCX issues can be found in the report. Please check the Results tab.".to_string());
                                     }
 
                                     let message = message_parts.join("\n\n");
@@ -795,7 +826,8 @@ fn main() -> Result<(), slint::PlatformError> {
                                 tracing::error!("Failed to toggle Papyrus monitoring: {}", e);
                                 w.set_error_title("Papyrus Monitoring Error".into());
                                 w.set_error_message(
-                                    std::format!("Failed to toggle Papyrus monitoring:\n\n{}", e).into(),
+                                    std::format!("Failed to toggle Papyrus monitoring:\n\n{}", e)
+                                        .into(),
                                 );
                                 w.set_show_error_dialog(true);
                             }
@@ -1161,13 +1193,17 @@ fn main() -> Result<(), slint::PlatformError> {
 
                         // Show success message
                         w.set_success_title("Report Deleted".into());
-                        w.set_success_message(std::format!("Successfully deleted: {}", filename).into());
+                        w.set_success_message(
+                            std::format!("Successfully deleted: {}", filename).into(),
+                        );
                         w.set_show_success_dialog(true);
                     }
                     Err(e) => {
                         tracing::error!("Failed to delete report: {}", e);
                         w.set_error_title("Delete Failed".into());
-                        w.set_error_message(std::format!("Failed to delete report:\n\n{}", e).into());
+                        w.set_error_message(
+                            std::format!("Failed to delete report:\n\n{}", e).into(),
+                        );
                         w.set_show_error_dialog(true);
                     }
                 }
@@ -1505,7 +1541,9 @@ fn main() -> Result<(), slint::PlatformError> {
                     Err(e) => {
                         tracing::error!("Failed to browse for {}: {}", path_type_str, e);
                         w.set_error_title("Path Selection Error".into());
-                        w.set_error_message(std::format!("Failed to open file picker:\n\n{}", e).into());
+                        w.set_error_message(
+                            std::format!("Failed to open file picker:\n\n{}", e).into(),
+                        );
                         w.set_show_error_dialog(true);
                     }
                 }

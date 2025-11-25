@@ -301,10 +301,8 @@ impl LogProcessor {
         let mut report = String::new();
 
         for entry in results.iter().flatten() {
-            report
-                .push_str("[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n");
-            report
-                .push_str("[ Errors do not necessarily mean that the mod is not working. ]\n");
+            report.push_str("[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n");
+            report.push_str("[ Errors do not necessarily mean that the mod is not working. ]\n");
             report.push_str(&format!("\nLOG PATH > {}\n", entry.file_path.display()));
 
             // Show truncation notice if errors were limited

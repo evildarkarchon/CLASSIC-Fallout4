@@ -61,13 +61,13 @@ mod tests {
             Some("Error details here"),
         );
         assert!(result.is_ok());
-        
+
         // Verify error report content
         let error_text = get_clipboard_text().expect("Failed to read clipboard");
         assert!(error_text.contains("Test Error"));
         assert!(error_text.contains("This is a test error"));
         assert!(error_text.contains("Error details here"));
-        
+
         // Cleanup
         let _ = clear_clipboard();
     }
