@@ -4,8 +4,9 @@ Tests the Rust-accelerated resource management module, including resource type
 detection, enumeration, validation, and resource information handling.
 """
 
-import classic_resource
 import pytest
+
+classic_resource = pytest.importorskip("classic_resource", reason="Rust classic_resource module not available")
 
 
 @pytest.mark.rust

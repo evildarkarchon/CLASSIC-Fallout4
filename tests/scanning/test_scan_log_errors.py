@@ -30,11 +30,13 @@ from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
 @pytest.fixture
 def mock_settings():
-    """Mock YAML settings for tests."""
-    with (
-        patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache,
-        patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core,
-    ):
+    """Mock YAML settings for tests.
+
+    Note: ScanGameCore doesn't have a yaml_settings attribute - it uses
+    validators.get_scan_settings() async method. We mock the YamlSettingsCache
+    module-level function instead.
+    """
+    with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache:
 
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
@@ -45,7 +47,6 @@ def mock_settings():
             return settings_map.get(setting_path, default)
 
         mock_yaml_cache.side_effect = yaml_side_effect
-        mock_yaml_core.side_effect = yaml_side_effect
         yield mock_yaml_cache
 
 

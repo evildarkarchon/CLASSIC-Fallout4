@@ -4,8 +4,9 @@ Tests the Rust-accelerated web utilities module, including URL validation,
 building, parsing, user agent generation, and mod site enumeration.
 """
 
-import classic_web
 import pytest
+
+classic_web = pytest.importorskip("classic_web", reason="Rust classic_web module not available")
 
 
 @pytest.mark.rust

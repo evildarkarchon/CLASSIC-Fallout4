@@ -7,8 +7,9 @@ including version detection, installation checking, and type enumeration.
 import tempfile
 from pathlib import Path
 
-import classic_xse
 import pytest
+
+classic_xse = pytest.importorskip("classic_xse", reason="Rust classic_xse module not available")
 
 
 @pytest.mark.rust

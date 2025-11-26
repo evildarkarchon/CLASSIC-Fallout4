@@ -13,8 +13,9 @@ import sys
 import threading
 from unittest.mock import MagicMock, patch
 
-import classic_file_io
 import pytest
+
+classic_file_io = pytest.importorskip("classic_file_io", reason="Rust classic_file_io module not available")
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.rust]

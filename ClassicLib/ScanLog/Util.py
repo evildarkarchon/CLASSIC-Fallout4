@@ -200,10 +200,18 @@ def get_path_from_setting(setting_value: str | None) -> Path | None:
     return Path(setting_value) if isinstance(setting_value, str) else None
 
 
-def is_valid_custom_scan_path(path: Path | str) -> bool:
+def is_valid_custom_scan_path(path: Path | str | None) -> bool:
     """
     Check if the given path is valid as a custom scan directory.
-    Prevents users from setting hard-coded directories as custom scan paths.
+
+    Prevents users from setting restricted directories as custom scan paths.
+    This includes:
+    - CLASSIC-specific directories (Crash Logs, Pastebin, XSE folder)
+    - Windows system directories (System32, Program Files, ProgramData, etc.)
+
+    These directories are restricted because they receive special treatment
+    by Windows (antivirus scrutiny, elevated permissions) which can interfere
+    with the operation of the program or the game.
 
     Args:
         path: The path to validate
@@ -211,7 +219,15 @@ def is_valid_custom_scan_path(path: Path | str) -> bool:
     Returns:
         bool: True if the path is valid, False if it's a restricted directory
     """
+    import os
+    import platform
+
+    # Handle None and empty strings
+    if path is None:
+        return False
     if isinstance(path, str):
+        if not path.strip():
+            return False
         path = Path(path)
 
     # Resolve to absolute path for comparison
@@ -219,28 +235,53 @@ def is_valid_custom_scan_path(path: Path | str) -> bool:
         abs_path = path.resolve()
     except (OSError, RuntimeError):
         return False
-    else:
-        # Define restricted paths (hard-coded directories)
-        cwd: Path = Path(GlobalRegistry.get_local_dir()).resolve()
-        restricted_paths = [
-            cwd / "Crash Logs",
-            cwd / "Crash Logs" / "Pastebin",
-            yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"),
+
+    # Define CLASSIC-specific restricted paths
+    cwd: Path = Path(GlobalRegistry.get_local_dir()).resolve()
+    restricted_paths: list[Path | None] = [
+        cwd / "Crash Logs",
+        cwd / "Crash Logs" / "Pastebin",
+        yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_Folder_XSE"),
+    ]
+
+    # Add Windows system directories if on Windows
+    if platform.system() == "Windows":
+        # Get environment variables for system paths
+        system_root = os.environ.get("SystemRoot", r"C:\Windows")
+        program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
+        program_data = os.environ.get("ProgramData", r"C:\ProgramData")
+        system_drive = os.environ.get("SystemDrive", "C:")
+
+        # Add Windows restricted directories
+        windows_restricted: list[Path | None] = [
+            Path(system_root),  # C:\Windows (includes System32, SysWOW64, etc.)
+            Path(program_files),  # C:\Program Files
+            Path(program_files_x86) if program_files_x86 else None,  # C:\Program Files (x86)
+            Path(program_data),  # C:\ProgramData
+            Path(system_drive) / "Recovery",  # Recovery partition
+            Path(system_drive) / "$Recycle.Bin",  # Recycle bin
         ]
+        restricted_paths.extend(windows_restricted)
 
-        # Check if the path matches any restricted path
-        for restricted in restricted_paths:
-            if restricted is None:
-                continue
-            try:
-                if abs_path == restricted or abs_path in restricted.parents:
-                    logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")
-                    return False
-            except ValueError:
-                # Can happen if paths are on different drives on Windows
-                pass
+    # Check if the path matches any restricted path or is a subdirectory of one
+    abs_path_str = str(abs_path).lower()
+    for restricted in restricted_paths:
+        if restricted is None:
+            continue
+        try:
+            restricted_resolved = restricted.resolve()
+            restricted_str = str(restricted_resolved).lower()
 
-        return True
+            # Check exact match or if abs_path is inside restricted directory
+            if abs_path_str == restricted_str or abs_path_str.startswith(restricted_str + os.sep):
+                logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")
+                return False
+        except (ValueError, OSError):
+            # Can happen if paths are on different drives on Windows or path doesn't exist
+            pass
+
+    return True
 
 
 def _crashlogs_get_files_python() -> list[Path]:

@@ -170,24 +170,26 @@ class TestDialogInitialization:
         dialog.deleteLater()
 
     def test_initial_stats_setup(self, mock_parent_widget, qt_application):
-        """Test that dialog initializes with default stats."""
-        with patch.object(PapyrusMonitorDialog, "update_stats") as mock_update_stats:
-            # Create the dialog normally
-            dialog = PapyrusMonitorDialog(mock_parent_widget)
+        """Test that dialog initializes with default stats.
 
-            # Verify update_stats was called with default values
-            mock_update_stats.assert_called_once()
-            call_args = mock_update_stats.call_args[0][0]
-            assert isinstance(call_args, PapyrusStats)
-            assert call_args.dumps == 0
-            assert call_args.stacks == 0
-            assert call_args.warnings == 0
-            assert call_args.errors == 0
-            assert call_args.ratio == 0.0
+        Note: We verify state directly instead of using patch.object on the class,
+        as patching QDialog subclasses with Signals before instantiation causes
+        segfaults in PySide6 6.10+ when clicked.connect() is used in __init__.
+        """
+        # Create the dialog - update_stats is called internally with defaults
+        dialog = PapyrusMonitorDialog(mock_parent_widget)
 
-            # Clean up
-            dialog.close()
-            dialog.deleteLater()
+        # Verify the UI reflects the default stats (all zeros)
+        # This confirms update_stats was called with the correct initial values
+        assert dialog.stat_value_labels["dumps"].text() == "0"
+        assert dialog.stat_value_labels["stacks"].text() == "0"
+        assert dialog.stat_value_labels["dumps_stacks_ratio"].text() == "0.000"
+        assert dialog.stat_value_labels["warnings"].text() == "0"
+        assert dialog.stat_value_labels["errors"].text() == "0"
+
+        # Clean up
+        dialog.close()
+        dialog.deleteLater()
 
 
 @pytest.mark.unit

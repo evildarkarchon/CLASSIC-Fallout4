@@ -4,8 +4,9 @@ Tests Rust implementation parity with Python version handling, including
 parsing, comparison, extraction, and validation of semantic versions.
 """
 
-import classic_version
 import pytest
+
+classic_version = pytest.importorskip("classic_version", reason="Rust classic_version module not available")
 
 
 @pytest.mark.rust

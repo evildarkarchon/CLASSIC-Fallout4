@@ -82,22 +82,32 @@ class PathValidator:
             return False
 
     @staticmethod
-    def is_restricted_path(path: str | Path) -> bool:
+    def is_restricted_path(path: str | Path | None) -> bool:
         """
         Checks whether the provided path is a restricted path.
 
         This method verifies if a given path is restricted or valid by utilizing an
-        existing utility function. If any exception occurs during the validation
-        process, it will consider the path as restricted.
+        existing utility function. Restricted paths include:
+        - None or empty strings (fail-safe)
+        - CLASSIC-specific directories (Crash Logs, Pastebin, XSE folder)
+        - Windows system directories (System32, Program Files, ProgramData, etc.)
+
+        These directories are restricted because they receive special treatment
+        by Windows (antivirus scrutiny, elevated permissions) which can interfere
+        with the operation of the program or the game.
 
         **Performance**: Uses Rust acceleration when available for 10-50x speedup.
 
         Args:
-            path (str | Path): The path to be checked for restriction.
+            path (str | Path | None): The path to be checked for restriction.
 
         Returns:
             bool: True if the path is restricted, False otherwise.
         """
+        # Handle None and empty strings as restricted (fail-safe)
+        if path is None or (isinstance(path, str) and not path.strip()):
+            return True
+
         # Use Rust acceleration when available
         if _HAS_RUST_PATH and classic_path is not None:
             assert classic_path is not None  # Type narrowing for type checker
@@ -111,10 +121,9 @@ class PathValidator:
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
         try:
-            path_str = str(path)
             # Use the existing utility function to check if path is valid
             # (returns False for restricted paths)
-            return not is_valid_custom_scan_path(path_str)
+            return not is_valid_custom_scan_path(path)
         except Exception:
             # If there's any error checking, consider it restricted
             return True
