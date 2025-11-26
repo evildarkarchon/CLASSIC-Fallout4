@@ -398,7 +398,7 @@ class ClassicBackend(QObject):
                         })
 
         # Sort by date desc
-        reports.sort(key=itemgetter("date"), reverse=True)
+        reports.sort(key=itemgetter("name"), reverse=True)
         return reports
     
     @Slot(str, result=str)
