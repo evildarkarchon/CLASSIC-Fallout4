@@ -15,6 +15,8 @@ from unittest.mock import patch
 
 import pytest
 
+# Note: tempfile is still needed for tempfile.gettempdir() in test_fallback_to_temp_directory
+
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.filesystem]
 
@@ -73,15 +75,14 @@ class TestReadPermissionErrors:
         return PermissionErrorSimulator()
 
     @pytest.mark.asyncio
-    async def test_read_readonly_file(self, simulator):
+    async def test_read_readonly_file(self, simulator, tmp_path):
         """Test reading a read-only file (should succeed)."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
-            f.write("Read-only content")
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "readonly_test.log"
+        temp_path.write_text("Read-only content", encoding="utf-8")
 
         try:
             # Make file read-only
@@ -92,19 +93,17 @@ class TestReadPermissionErrors:
             assert content == "Read-only content"
         finally:
             simulator.restore_permissions(temp_path)
-            temp_path.unlink(missing_ok=True)
 
     @pytest.mark.asyncio
     @pytest.mark.skipif(sys.platform == "win32", reason="Write-only not supported on Windows")
-    async def test_read_writeonly_file(self, simulator):
+    async def test_read_writeonly_file(self, simulator, tmp_path):
         """Test reading a write-only file (should fail)."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
-            f.write("Write-only content")
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "writeonly_test.log"
+        temp_path.write_text("Write-only content", encoding="utf-8")
 
         try:
             # Make file write-only
@@ -115,18 +114,16 @@ class TestReadPermissionErrors:
                 await io_core.read_file(str(temp_path))
         finally:
             simulator.restore_permissions(temp_path)
-            temp_path.unlink(missing_ok=True)
 
     @pytest.mark.asyncio
-    async def test_read_no_access_file(self, simulator):
+    async def test_read_no_access_file(self, simulator, tmp_path):
         """Test reading a file with no permissions."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
-            f.write("No access content")
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "noaccess_test.log"
+        temp_path.write_text("No access content", encoding="utf-8")
 
         try:
             # Remove all permissions
@@ -142,7 +139,6 @@ class TestReadPermissionErrors:
                 assert "permission" in str(e).lower() or "access" in str(e).lower()
         finally:
             simulator.restore_permissions(temp_path)
-            temp_path.unlink(missing_ok=True)
 
 
 class TestWritePermissionErrors:
@@ -153,15 +149,14 @@ class TestWritePermissionErrors:
         return PermissionErrorSimulator()
 
     @pytest.mark.asyncio
-    async def test_write_to_readonly_file(self, simulator):
+    async def test_write_to_readonly_file(self, simulator, tmp_path):
         """Test writing to a read-only file."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
-            f.write("Original content")
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "readonly_write_test.log"
+        temp_path.write_text("Original content", encoding="utf-8")
 
         try:
             # Make file read-only
@@ -177,39 +172,38 @@ class TestWritePermissionErrors:
             assert content == "Original content"
         finally:
             simulator.restore_permissions(temp_path)
-            temp_path.unlink(missing_ok=True)
 
     @pytest.mark.asyncio
-    async def test_write_to_readonly_directory(self):
+    async def test_write_to_readonly_directory(self, tmp_path):
         """Test creating a file in a read-only directory."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            file_path = temp_path / "new_file.log"
+        readonly_dir = tmp_path / "readonly_dir"
+        readonly_dir.mkdir()
+        file_path = readonly_dir / "new_file.log"
 
-            try:
-                # Make directory read-only
-                if sys.platform == "win32":
-                    # Windows: Harder to make directory truly read-only
-                    # Mock the permission error instead
-                    # Mock aiofiles if available, else Path.write_text
-                    with (
-                        patch("aiofiles.open", side_effect=PermissionError("Access denied")),
-                        patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied")),
-                        pytest.raises(PermissionError),
-                    ):
-                        await io_core.write_file(str(file_path), "content")
-                else:
-                    # Unix: Remove write permission from directory
-                    temp_path.chmod(0o555)
-                    with pytest.raises((PermissionError, OSError)):
-                        await io_core.write_file(str(file_path), "content")
-            finally:
-                # Restore permissions
-                temp_path.chmod(0o755)
+        try:
+            # Make directory read-only
+            if sys.platform == "win32":
+                # Windows: Harder to make directory truly read-only
+                # Mock the permission error instead
+                # Mock aiofiles if available, else Path.write_text
+                with (
+                    patch("aiofiles.open", side_effect=PermissionError("Access denied")),
+                    patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied")),
+                    pytest.raises(PermissionError),
+                ):
+                    await io_core.write_file(str(file_path), "content")
+            else:
+                # Unix: Remove write permission from directory
+                readonly_dir.chmod(0o555)
+                with pytest.raises((PermissionError, OSError)):
+                    await io_core.write_file(str(file_path), "content")
+        finally:
+            # Restore permissions
+            readonly_dir.chmod(0o755)
 
     @pytest.mark.asyncio
     @pytest.mark.skip("Atomic write functionality not exposed/implemented in FileIOCore")
@@ -221,36 +215,36 @@ class TestDirectoryPermissionErrors:
     """Test handling of directory permission errors."""
 
     @pytest.mark.asyncio
-    async def test_list_directory_no_permissions(self):
+    async def test_list_directory_no_permissions(self, tmp_path):
         """Test listing a directory without read permissions."""
         from ClassicLib.FileIO import FileIOCore
 
         FileIOCore()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        test_dir = tmp_path / "noread_dir"
+        test_dir.mkdir()
 
-            # Create some files
-            (temp_path / "file1.log").write_text("content1", encoding="utf-8")
-            (temp_path / "file2.log").write_text("content2", encoding="utf-8")
+        # Create some files
+        (test_dir / "file1.log").write_text("content1", encoding="utf-8")
+        (test_dir / "file2.log").write_text("content2", encoding="utf-8")
 
-            try:
-                if sys.platform != "win32":
-                    # Unix: Remove read permission
-                    temp_path.chmod(0o333)  # Write and execute only
+        try:
+            if sys.platform != "win32":
+                # Unix: Remove read permission
+                test_dir.chmod(0o333)  # Write and execute only
 
-                    # Should fail to list directory
-                    with pytest.raises((PermissionError, OSError)):
-                        list(temp_path.iterdir())
-                else:
-                    # Windows: Mock the error
-                    with (
-                        patch("pathlib.Path.iterdir", side_effect=PermissionError("Access denied")),
-                        pytest.raises(PermissionError),
-                    ):
-                        list(temp_path.iterdir())
-            finally:
-                temp_path.chmod(0o755)
+                # Should fail to list directory
+                with pytest.raises((PermissionError, OSError)):
+                    list(test_dir.iterdir())
+            else:
+                # Windows: Mock the error
+                with (
+                    patch("pathlib.Path.iterdir", side_effect=PermissionError("Access denied")),
+                    pytest.raises(PermissionError),
+                ):
+                    list(test_dir.iterdir())
+        finally:
+            test_dir.chmod(0o755)
 
     @pytest.mark.asyncio
     async def test_create_directory_in_protected_location(self):
@@ -292,126 +286,108 @@ class TestFileLockingScenarios:
     """Test file locking and concurrent access scenarios."""
 
     @pytest.mark.asyncio
-    async def test_read_locked_file(self):
+    async def test_read_locked_file(self, tmp_path):
         """Test reading a file that's locked by another process."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
-            f.write("Locked content")
-            temp_path = Path(f.name)
+        temp_file = tmp_path / "locked_test.log"
+        temp_file.write_text("Locked content", encoding="utf-8")
 
-        try:
-            # Simulate file being locked
-            if sys.platform == "win32":
-                # Windows file locking
-                # Patch both aiofiles.open and builtins.open (fallback)
-                with (
-                    patch("aiofiles.open", side_effect=PermissionError("File is being used")),
-                    patch("builtins.open", side_effect=PermissionError("File is being used")),
-                    pytest.raises(PermissionError),
-                ):
-                    await io_core.read_file(str(temp_path))
-            else:
-                # Unix: Files can usually be read even when locked
-                content = await io_core.read_file(str(temp_path))
-                assert content == "Locked content"
-        finally:
-            temp_path.unlink(missing_ok=True)
+        # Simulate file being locked
+        if sys.platform == "win32":
+            # Windows file locking
+            # Patch both aiofiles.open and builtins.open (fallback)
+            with (
+                patch("aiofiles.open", side_effect=PermissionError("File is being used")),
+                patch("builtins.open", side_effect=PermissionError("File is being used")),
+                pytest.raises(PermissionError),
+            ):
+                await io_core.read_file(str(temp_file))
+        else:
+            # Unix: Files can usually be read even when locked
+            content = await io_core.read_file(str(temp_file))
+            assert content == "Locked content"
 
     @pytest.mark.asyncio
-    async def test_concurrent_write_attempts(self):
+    async def test_concurrent_write_attempts(self, tmp_path):
         """Test handling concurrent write attempts to the same file."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log", encoding="utf-8") as f:
-            temp_path = Path(f.name)
+        temp_file = tmp_path / "concurrent_write_test.log"
 
-        try:
-            # Simulate concurrent writes
-            async def write_content(content: str, delay: float = 0):
-                await asyncio.sleep(delay)
-                try:
-                    await io_core.write_file(str(temp_path), content)
-                    return True
-                except (PermissionError, OSError):
-                    return False
+        # Simulate concurrent writes
+        async def write_content(content: str, delay: float = 0):
+            await asyncio.sleep(delay)
+            try:
+                await io_core.write_file(str(temp_file), content)
+                return True
+            except (PermissionError, OSError):
+                return False
 
-            # Launch concurrent writes
-            tasks = [
-                write_content("Writer 1", 0),
-                write_content("Writer 2", 0.001),
-                write_content("Writer 3", 0.002),
-            ]
+        # Launch concurrent writes
+        tasks = [
+            write_content("Writer 1", 0),
+            write_content("Writer 2", 0.001),
+            write_content("Writer 3", 0.002),
+        ]
 
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-            # At least one should succeed
-            successes = [r for r in results if r is True]
-            assert len(successes) >= 1
+        # At least one should succeed
+        successes = [r for r in results if r is True]
+        assert len(successes) >= 1
 
-            # Final content should be from one of the writers
-            final_content = temp_path.read_text(encoding="utf-8")
-            assert final_content in {"Writer 1", "Writer 2", "Writer 3"}
-        finally:
-            temp_path.unlink(missing_ok=True)
+        # Final content should be from one of the writers
+        final_content = temp_file.read_text(encoding="utf-8")
+        assert final_content in {"Writer 1", "Writer 2", "Writer 3"}
 
 
 class TestQuotaAndSpaceErrors:
     """Test handling of disk quota and space errors."""
 
     @pytest.mark.asyncio
-    async def test_disk_full_error(self):
+    async def test_disk_full_error(self, tmp_path):
         """Test handling of disk full errors."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
+        temp_file = tmp_path / "disk_full_test.log"
 
         # Mock disk full error - patch both aiofiles and Path.write_text
         with (
             patch("aiofiles.open", side_effect=OSError(28, "No space left on device")),
             patch("pathlib.Path.write_text", side_effect=OSError(28, "No space left on device")),
         ):
-            with tempfile.NamedTemporaryFile(delete=False) as f:
-                temp_path = Path(f.name)
+            # Should handle disk full error gracefully
+            with pytest.raises(OSError) as exc_info:
+                await io_core.write_file(str(temp_file), "x" * 1000000)
 
-            try:
-                # Should handle disk full error gracefully
-                with pytest.raises(OSError) as exc_info:
-                    await io_core.write_file(str(temp_path), "x" * 1000000)
-
-                # Should be identifiable as space error
-                assert exc_info.value.errno == 28 or "space" in str(exc_info.value).lower()
-            finally:
-                temp_path.unlink(missing_ok=True)
+            # Should be identifiable as space error
+            assert exc_info.value.errno == 28 or "space" in str(exc_info.value).lower()
 
     @pytest.mark.asyncio
-    async def test_quota_exceeded_error(self):
+    async def test_quota_exceeded_error(self, tmp_path):
         """Test handling of quota exceeded errors."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
+        temp_file = tmp_path / "quota_test.log"
 
         # Mock quota exceeded error
         with (
             patch("aiofiles.open", side_effect=OSError(122, "Disk quota exceeded")),
             patch("pathlib.Path.write_text", side_effect=OSError(122, "Disk quota exceeded")),
         ):
-            with tempfile.NamedTemporaryFile(delete=False) as f:
-                temp_path = Path(f.name)
+            # Should handle quota error gracefully
+            with pytest.raises(OSError) as exc_info:
+                await io_core.write_file(str(temp_file), "content")
 
-            try:
-                # Should handle quota error gracefully
-                with pytest.raises(OSError) as exc_info:
-                    await io_core.write_file(str(temp_path), "content")
-
-                # Should be identifiable as quota error
-                assert "quota" in str(exc_info.value).lower()
-            finally:
-                temp_path.unlink(missing_ok=True)
+            # Should be identifiable as quota error
+            assert "quota" in str(exc_info.value).lower()
 
 
 class TestSymbolicLinkPermissions:
@@ -419,51 +395,45 @@ class TestSymbolicLinkPermissions:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Symlinks require admin on Windows")
     @pytest.mark.asyncio
-    async def test_broken_symlink_handling(self):
+    async def test_broken_symlink_handling(self, tmp_path):
         """Test handling of broken symbolic links."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        # Create a symlink to non-existent file
+        link_path = tmp_path / "broken_link.log"
+        target_path = tmp_path / "non_existent.log"
+        link_path.symlink_to(target_path)
 
-            # Create a symlink to non-existent file
-            link_path = temp_path / "broken_link.log"
-            target_path = temp_path / "non_existent.log"
-            link_path.symlink_to(target_path)
-
-            # Should handle broken symlink gracefully
-            with pytest.raises((FileNotFoundError, OSError)):
-                await io_core.read_file(str(link_path))
+        # Should handle broken symlink gracefully
+        with pytest.raises((FileNotFoundError, OSError)):
+            await io_core.read_file(str(link_path))
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Symlinks require admin on Windows")
     @pytest.mark.asyncio
-    async def test_symlink_permission_traversal(self):
+    async def test_symlink_permission_traversal(self, tmp_path):
         """Test permission issues when following symlinks."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
         simulator = PermissionErrorSimulator()
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        # Create target file with no permissions
+        target_path = tmp_path / "target.log"
+        target_path.write_text("Target content", encoding="utf-8")
+        simulator.make_no_access(target_path)
 
-            # Create target file with no permissions
-            target_path = temp_path / "target.log"
-            target_path.write_text("Target content", encoding="utf-8")
-            simulator.make_no_access(target_path)
+        # Create symlink to restricted file
+        link_path = tmp_path / "link.log"
+        link_path.symlink_to(target_path)
 
-            # Create symlink to restricted file
-            link_path = temp_path / "link.log"
-            link_path.symlink_to(target_path)
-
-            try:
-                # Should fail when following symlink to restricted file
-                with pytest.raises((PermissionError, OSError)):
-                    await io_core.read_file(str(link_path))
-            finally:
-                simulator.restore_permissions(target_path)
+        try:
+            # Should fail when following symlink to restricted file
+            with pytest.raises((PermissionError, OSError)):
+                await io_core.read_file(str(link_path))
+        finally:
+            simulator.restore_permissions(target_path)
 
 
 class TestPermissionRecoveryStrategies:

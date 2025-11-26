@@ -5,7 +5,6 @@ These tests only run when classic_scangame is installed.
 """
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -23,10 +22,9 @@ pytestmark = [
 
 
 @pytest.fixture
-def temp_dir():
+def temp_dir(tmp_path):
     """Provide a temporary directory for test files."""
-    with TemporaryDirectory() as tmpdir:
-        yield Path(tmpdir)
+    return tmp_path
 
 
 class TestRustBA2Scanner:

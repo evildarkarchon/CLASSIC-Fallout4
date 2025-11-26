@@ -80,7 +80,6 @@ class TestAsyncFileIO:
     @pytest.mark.asyncio
     async def test_concurrent_file_operations(self, sample_crash_logs: list[Path]) -> None:
         """Test that concurrent file operations work correctly."""
-        import asyncio
 
         reports: list[tuple[Path, list[str], bool]] = [
             (log_file, [f"Concurrent report {i}\n"], False) for i, log_file in enumerate(sample_crash_logs)

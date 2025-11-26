@@ -115,32 +115,37 @@ T = TypeVar("T")
 
 # noinspection PyTypeChecker
 class AsyncBridge:
-    """
-    High-performance bridge between sync and async code using persistent thread-local event loops.
+    """High-performance bridge between sync and async code using persistent event loops.
 
     This class maintains a single event loop per thread, avoiding the expensive overhead
     of creating and destroying event loops for each sync-to-async call.
 
-    Testing Note:
-    -------------
-    When testing code that uses AsyncBridge, mock the bridge's run_async method,
-    NOT the underlying async functions. This avoids RuntimeWarning about unawaited coroutines.
+    Attributes:
+        _instances: Class-level dict mapping thread IDs to AsyncBridge instances.
+        _lock: Class-level lock for thread-safe instance creation.
+        _cleanup_registered: Whether atexit cleanup has been registered.
+        _metrics_callback: Optional callback for performance metrics.
+        _thread_local: Thread-local storage for fast instance access.
 
-    Example for testing:
-    ```python
-    from unittest.mock import MagicMock, patch
+    Example:
+        Basic usage in a sync context (e.g., Qt GUI worker):
 
-    with patch("module.AsyncBridge") as mock_bridge_class:
-        mock_bridge = MagicMock()
-        mock_bridge_class.get_instance.return_value = mock_bridge
-        mock_bridge.run_async.return_value = "expected_result"
+        >>> from ClassicLib.AsyncBridge import AsyncBridge
+        >>> bridge = AsyncBridge.get_instance()
+        >>> result = bridge.run_async(some_async_function())
 
-        # Now test your sync wrapper that uses AsyncBridge
-        result = your_sync_function()
-        assert result == "expected_result"
-    ```
+        Using the convenience wrapper:
 
-    For comprehensive testing guidance, see: docs/testing_async_bridge.md
+        >>> from ClassicLib.AsyncBridge import run_async
+        >>> result = run_async(fetch_data_async())
+
+    Note:
+        When testing code that uses AsyncBridge, mock the bridge's run_async
+        method, NOT the underlying async functions. This avoids RuntimeWarning
+        about unawaited coroutines.
+
+    See Also:
+        docs/testing/testing_async_bridge.md for comprehensive testing guidance.
     """
 
     # Class-level storage for thread-local instances

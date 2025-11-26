@@ -12,11 +12,11 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_progress_context
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.integration.factory import get_file_io
 
 # ThreadSafeLogCache and load_crash_logs_async removed - using direct file I/O for better performance
 

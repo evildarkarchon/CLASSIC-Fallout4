@@ -54,19 +54,58 @@ Note:
 """
 
 from ClassicLib.AsyncBridge import create_sync_wrapper
-from ClassicLib.FileIO.core import FileIOCore
+from ClassicLib.integration.factory import get_file_io
 
-# Create a shared FileIOCore instance for sync adapters
-_io_core = FileIOCore()
 
-# Phase 2 Context-Aware Sync Adapters
-# These error in CLI/TUI mode, work in GUI mode
-read_file_sync = create_sync_wrapper(_io_core.read_file)
-read_lines_sync = create_sync_wrapper(_io_core.read_lines)
-read_bytes_sync = create_sync_wrapper(_io_core.read_bytes)
-write_file_sync = create_sync_wrapper(_io_core.write_file)
-write_lines_sync = create_sync_wrapper(_io_core.write_lines)
-write_bytes_sync = create_sync_wrapper(_io_core.write_bytes)
-read_crash_log_sync = create_sync_wrapper(_io_core.read_crash_log)
-write_crash_report_sync = create_sync_wrapper(_io_core.write_crash_report)
-append_file_sync = create_sync_wrapper(_io_core.append_file)
+# Helper to get core lazily
+def _core():
+    return get_file_io()
+
+
+# Define async delegates
+async def _read_file(path):
+    return await _core().read_file(path)
+
+
+async def _read_lines(path):
+    return await _core().read_lines(path)
+
+
+async def _read_bytes(path):
+    return await _core().read_bytes(path)
+
+
+async def _write_file(path, content):
+    return await _core().write_file(path, content)
+
+
+async def _write_lines(path, lines):
+    return await _core().write_lines(path, lines)
+
+
+async def _write_bytes(path, content):
+    return await _core().write_bytes(path, content)
+
+
+async def _read_crash_log(path):
+    return await _core().read_crash_log(path)
+
+
+async def _write_crash_report(path, lines):
+    return await _core().write_crash_report(path, lines)
+
+
+async def _append_file(path, content):
+    return await _core().append_file(path, content)
+
+
+# Create wrappers
+read_file_sync = create_sync_wrapper(_read_file)
+read_lines_sync = create_sync_wrapper(_read_lines)
+read_bytes_sync = create_sync_wrapper(_read_bytes)
+write_file_sync = create_sync_wrapper(_write_file)
+write_lines_sync = create_sync_wrapper(_write_lines)
+write_bytes_sync = create_sync_wrapper(_write_bytes)
+read_crash_log_sync = create_sync_wrapper(_read_crash_log)
+write_crash_report_sync = create_sync_wrapper(_write_crash_report)
+append_file_sync = create_sync_wrapper(_append_file)

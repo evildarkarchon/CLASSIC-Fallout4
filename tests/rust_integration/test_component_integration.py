@@ -306,9 +306,7 @@ class TestComponentDataFlow:
             # Plugin analysis (last segment)
             if segments:
                 plugins_segment = segments[-1]
-                results["plugins"], _, _ = plugin_analyzer.loadorder_scan_log(
-                    plugins_segment
-                )
+                results["plugins"], _, _ = plugin_analyzer.loadorder_scan_log(plugins_segment)
 
         # Validate complete chain results
         assert "formids" in results, "FormID analysis should complete"

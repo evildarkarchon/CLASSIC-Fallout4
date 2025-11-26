@@ -61,21 +61,28 @@ def qt_application(qt_application_session):
         # Clean up AsyncBridge singleton to prevent state pollution between tests
         try:
             # Get the current thread's AsyncBridge instance if it exists
+            import sys
             import threading
 
-            from ClassicLib.AsyncBridge import AsyncBridge
+            # Only try to import if it might have been used
+            if "ClassicLib.AsyncBridge" in sys.modules:
+                from ClassicLib.AsyncBridge import AsyncBridge
 
-            thread_id = threading.get_ident()
-            with AsyncBridge._lock:
-                if thread_id in AsyncBridge._instances:
-                    instance = AsyncBridge._instances[thread_id]
-                    try:
-                        instance.shutdown()
-                    except:
-                        pass  # Ignore shutdown errors
-                    del AsyncBridge._instances[thread_id]
+                thread_id = threading.get_ident()
+                # We need to be careful about accessing the lock if it might be held
+                if AsyncBridge._instances:
+                    # Use a copy of keys to avoid modification during iteration
+                    for tid, instance in list(AsyncBridge._instances.items()):
+                        try:
+                            instance.shutdown()
+                        except:
+                            pass  # Ignore shutdown errors
+
+                    # Clear instances
+                    with AsyncBridge._lock:
+                        AsyncBridge._instances.clear()
         except:
-            pass  # Ignore if AsyncBridge not yet imported
+            pass  # Ignore if AsyncBridge not yet imported or other errors
 
 
 @pytest.fixture(scope="function")

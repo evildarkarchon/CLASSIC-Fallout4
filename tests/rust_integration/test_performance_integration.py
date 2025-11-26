@@ -49,6 +49,7 @@ from tests.test_infra.performance_utils import PerformanceTimer
 
 logger = logging.getLogger(__name__)
 
+
 @contextmanager
 def memory_monitor():
     """
@@ -516,7 +517,7 @@ class TestMemoryPerformance:
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
         mock_yaml.record_patterns = ["TESForm"]
-        
+
         # Initialize list attributes
         mock_yaml.game_ignore_plugins = []
         mock_yaml.game_ignore_records = []
@@ -526,7 +527,7 @@ class TestMemoryPerformance:
         mock_yaml.classic_version = "7.31.0"
         mock_yaml.crashgen_latest_og = "1.28.6"
         mock_yaml.crashgen_latest_vr = "1.28.6"
-        
+
         return mock_yaml
 
     def test_memory_usage_stability(self, large_test_data, mock_yamldata):
@@ -734,7 +735,7 @@ class TestConcurrentPerformance:
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
         mock_yaml.record_patterns = ["TESForm"]
-        
+
         # Initialize list attributes
         mock_yaml.game_ignore_plugins = []
         mock_yaml.game_ignore_records = []
@@ -744,7 +745,7 @@ class TestConcurrentPerformance:
         mock_yaml.classic_version = "7.31.0"
         mock_yaml.crashgen_latest_og = "1.28.6"
         mock_yaml.crashgen_latest_vr = "1.28.6"
-        
+
         return mock_yaml
 
     def test_concurrent_parser_performance(self, concurrent_test_data, mock_yamldata):

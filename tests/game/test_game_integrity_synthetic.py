@@ -6,8 +6,6 @@ copyrighted game content.
 """
 
 import random
-import shutil
-import tempfile
 from collections.abc import Generator
 from pathlib import Path
 
@@ -123,21 +121,20 @@ class TestGameIntegritySynthetic:
     """Test GameIntegrity with synthetic data."""
 
     @pytest.fixture
-    def synthetic_game_dir(self) -> Generator[Path, None, None]:  # noqa: PLR6301
+    def synthetic_game_dir(self, tmp_path) -> Generator[Path, None, None]:  # noqa: PLR6301
         """Create a temporary directory with synthetic game structure."""
-        temp_dir = tempfile.mkdtemp(prefix="synthetic_game_")
+        game_dir = tmp_path / "synthetic_game"
+        game_dir.mkdir()
 
         # Create directory structure
-        (Path(temp_dir) / "Data").mkdir()
-        (Path(temp_dir) / "Data" / "Scripts").mkdir()
-        (Path(temp_dir) / "Data" / "Meshes").mkdir()
-        (Path(temp_dir) / "Data" / "Textures").mkdir()
-        (Path(temp_dir) / "F4SE" / "Plugins").mkdir(parents=True)
+        (game_dir / "Data").mkdir()
+        (game_dir / "Data" / "Scripts").mkdir()
+        (game_dir / "Data" / "Meshes").mkdir()
+        (game_dir / "Data" / "Textures").mkdir()
+        (game_dir / "F4SE" / "Plugins").mkdir(parents=True)
 
-        yield Path(temp_dir)
-
-        # Cleanup
-        shutil.rmtree(temp_dir, ignore_errors=True)
+        return game_dir
+        # Cleanup handled by tmp_path fixture
 
     @pytest.fixture
     def mock_game_files(self, synthetic_game_dir: Path) -> Path:  # noqa: PLR6301

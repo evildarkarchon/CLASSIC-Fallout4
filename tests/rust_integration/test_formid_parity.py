@@ -92,10 +92,10 @@ class FormIDParityValidator(ParityValidator):
         show_formid_values = kwargs.get("show_formid_values", True)
         formid_db_exists = kwargs.get("formid_db_exists", False)
         db_pool = kwargs.get("db_pool")
-        
+
         if yamldata is None:
-             yamldata = MagicMock(spec=ClassicScanLogsInfo)
-             yamldata.crashgen_name = "CLASSIC"
+            yamldata = MagicMock(spec=ClassicScanLogsInfo)
+            yamldata.crashgen_name = "CLASSIC"
 
         return FormIDAnalyzerCore(yamldata, show_formid_values, formid_db_exists, db_pool)
 
@@ -186,18 +186,15 @@ class FormIDParityValidator(ParityValidator):
                 "expected_formids": ["Form ID: 00000014", "Form ID: 01002A34"],
             },
         ]
-        
+
         # Convert to ParityTestCase objects
         return [
             ParityTestCase(
                 name=case["name"],
                 description=f"Test {case['name']}",
-                inputs={
-                    "callstack": case["callstack"],
-                    "expected_formids": case.get("expected_formids")
-                },
+                inputs={"callstack": case["callstack"], "expected_formids": case.get("expected_formids")},
                 expected_output_type=list,
-                metadata={"raw_case": case}
+                metadata={"raw_case": case},
             )
             for case in raw_cases
         ]
@@ -267,7 +264,7 @@ class TestFormIDParity:
                     test_case=test_case.name,
                     rust_available=False,
                     passed=False,
-                    error_messages=["Rust analyzer not available"]
+                    error_messages=["Rust analyzer not available"],
                 )
 
             callstack = test_case.inputs["callstack"]
@@ -383,7 +380,7 @@ class TestFormIDParity:
         ]
 
         results = []
-        
+
         # Initialize variable to avoid unbound warning
         rust_is_valid_formid = None
         rust_available = False
@@ -427,7 +424,7 @@ class TestFormIDParity:
             try:
                 if not rust_is_valid_formid:
                     raise RuntimeError("Rust validation function not initialized")  # noqa: TRY301
-                    
+
                 # Time Rust validation
                 start_time = time.perf_counter()
                 rust_result = rust_is_valid_formid(formid)
@@ -496,7 +493,7 @@ class TestFormIDParity:
                 logger.warning(f"FormID validation parity failed: {result.test_case} - {result.differences}")
 
     @pytest.mark.asyncio
-    async def test_formid_batch_processing_parity(self, mock_scanlog_info): # noqa: PLR0912
+    async def test_formid_batch_processing_parity(self, mock_scanlog_info):  # noqa: PLR0912
         """
         Test that Rust batch FormID processing produces identical results
         to Python sequential processing.
@@ -543,7 +540,7 @@ class TestFormIDParity:
         try:
             if not rust_extract_batch:
                 raise RuntimeError("Rust batch extraction function not initialized")  # noqa: TRY301
-                
+
             # Time Rust batch processing
             start_time = time.perf_counter()
             rust_batch_results = rust_extract_batch(test_callstacks)
@@ -655,24 +652,26 @@ class TestFormIDParity:
             # Rust implementation should also return ReportFragment (or equivalent) and likely async or sync wrapper
             # If it is sync, we might need to wrap it, but usually PyO3 async functions are awaitable
             start_time = time.perf_counter()
-            
+
             if asyncio.iscoroutinefunction(rust_analyzer.formid_match):
                 rust_report = await rust_analyzer.formid_match(test_formids, plugins)
             else:
                 # Handle sync implementation if necessary
                 rust_report = rust_analyzer.formid_match(test_formids, plugins)
-                
+
             rust_time = time.perf_counter() - start_time
 
             # Both should process FormIDs successfully
             logger.info(f"FormID matching: Rust={rust_time:.3f}s, Python={python_time:.3f}s")
-            
+
             # Compare results
             # We need to check if reports have similar content
-            is_identical, differences = validator.validate_outputs(rust_report, python_report, ParityTestCase(
-                name="formid_lookup", description="db lookup", inputs={}, expected_output_type=object
-            ))
-            
+            is_identical, differences = validator.validate_outputs(
+                rust_report,
+                python_report,
+                ParityTestCase(name="formid_lookup", description="db lookup", inputs={}, expected_output_type=object),
+            )
+
             assert is_identical, f"FormID matching results differ: {differences}"
 
         except Exception as e:

@@ -6,9 +6,13 @@ with correct parameters when errors occur during scanning operations.
 """
 # ruff: noqa: ANN201, ANN001, ARG001, PLR6301, ARG002, ANN202
 
+import os
 from unittest.mock import patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
 
 from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
 

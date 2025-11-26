@@ -231,18 +231,12 @@ class PathValidator:
 
     @staticmethod
     def validate_game_root_path() -> None:
-        """
-        Validates the game root path settings and ensures the required files exist.
+        """Validate the game root path settings and ensure required files exist.
 
-        This method retrieves the game root path from the settings, determines the
-        expected executable file based on the game's name, and validates that the
-        path is correctly configured in the settings. If the path exists, it also
-        checks whether the required executable file is present.
-
-        Raises:
-            ValueError: If the specified path does not exist or is invalid.
-            FileNotFoundError: If the required game executable is missing.
-
+        Retrieves the game root path from the settings, determines the expected
+        executable file based on the game's name, and validates that the path is
+        correctly configured. If the path is invalid or the required executable
+        is missing, the setting is cleared and a warning is logged.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -267,15 +261,12 @@ class PathValidator:
 
     @staticmethod
     def validate_documents_path() -> None:
-        """
-        Validates the documents path specified in the YAML settings cache. Ensures the existence
-        and proper directory structure of the documents folder for the application. This method
-        checks the validity of the path configuration and ensures compliance without enforcing
-        specific files within the directory.
+        """Validate the documents path specified in settings.
 
-        Raises:
-            ValidationError: If the documents path is invalid or does not meet the specified
-                requirements.
+        Ensures the existence and proper directory structure of the documents
+        folder for the application. If the path is invalid, the setting is
+        cleared and a warning is logged. INI files are not required to exist
+        as the game may not have been run yet.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -323,16 +314,12 @@ class PathValidator:
 
     @staticmethod
     def validate_ini_folder_path() -> None:
-        """
-        Validates the INI folder path retrieved from the application settings.
+        """Validate the INI folder path from application settings.
 
-        This static method fetches the INI folder path from application settings and verifies
-        if the given path adheres to expected criteria. The validation includes checking the
-        existence and validity of the path. The folder may not yet contain INI files, so the
-        validation skips checking for required files.
-
-        Raises:
-            ValueError: If the path is invalid or does not meet the expected criteria.
+        Fetches the INI folder path from settings and verifies it exists and
+        is a valid directory. If the path is invalid, the setting is cleared
+        and a warning is logged. INI files are not required to exist as they
+        may not have been created yet.
         """
         from ClassicLib.YamlSettingsCache import classic_settings
 

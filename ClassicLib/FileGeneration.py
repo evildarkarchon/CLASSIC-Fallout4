@@ -83,6 +83,7 @@ class FileGenerator:
         """
         from ClassicLib.AsyncYamlSettings import yaml_settings_async
         from ClassicLib.FileIO import FileIOCore
+
         ignore_path = Path("CLASSIC Ignore.yaml")
         io_core = FileIOCore()
 
@@ -108,6 +109,7 @@ class FileGenerator:
         """
         from ClassicLib.AsyncYamlSettings import yaml_settings_async
         from ClassicLib.FileIO import FileIOCore
+
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
         io_core = FileIOCore()
 

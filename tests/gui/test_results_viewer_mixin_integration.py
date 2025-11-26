@@ -2,12 +2,18 @@
 
 Tests ResultsViewerMixin with real file operations and partial Qt mocking.
 """
+
 # ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002
+import os
 import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QFileSystemWatcher, QTimer
 from PySide6.QtWidgets import QMessageBox
 
@@ -19,7 +25,6 @@ from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
 # - message_handler: For non-GUI tests
 # - gui_message_handler: For GUI tests (from qt_fixtures.py)
 # - Automatic cleanup via ensure_message_handler_cleanup
-
 
 
 @pytest.fixture
@@ -50,7 +55,7 @@ def integrated_viewer(tmp_path, init_message_handler_fixture, qt_application):
             self.report_loaded.emit = MagicMock()
             self.reports_refreshed = MagicMock()
             self.reports_refreshed.emit = MagicMock()
-            
+
             self._file_watching_paused = False
             self._refresh_pending = False
 

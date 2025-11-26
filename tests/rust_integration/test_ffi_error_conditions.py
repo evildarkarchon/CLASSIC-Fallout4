@@ -10,9 +10,7 @@ import asyncio
 import contextlib
 import gc
 import sys
-import tempfile
 import threading
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import classic_file_io
@@ -78,7 +76,7 @@ class TestFFIErrorConditions:
         assert segments is not None  # Should return empty result, not crash
 
     @pytest.mark.asyncio
-    async def test_invalid_utf8_handling(self):
+    async def test_invalid_utf8_handling(self, tmp_path):
         """Test handling of invalid UTF-8 sequences."""
         from ClassicLib.integration.factory import get_file_io
 
@@ -87,21 +85,18 @@ class TestFFIErrorConditions:
         # Create synthetic invalid UTF-8 data
         invalid_utf8 = b"\xff\xfe\xfd\xfc"
 
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file.write(invalid_utf8)
-            temp_path = temp_file.name
+        temp_file = tmp_path / "invalid_utf8.bin"
+        temp_file.write_bytes(invalid_utf8)
 
         error = None
         try:
             # Should handle invalid UTF-8 gracefully
-            result = await io_core.read_file(temp_path)
+            result = await io_core.read_file(str(temp_file))
             # Should either return decoded text or error, not crash
             assert result is not None or not result
         except (UnicodeDecodeError, RuntimeError) as e:
             # These exceptions are acceptable
             error = e
-        finally:
-            Path(temp_path).unlink(missing_ok=True)  # noqa: ASYNC240
 
         if error:
             assert "UTF-8" in str(error) or "decode" in str(error).lower()
@@ -200,7 +195,7 @@ class TestFFIErrorConditions:
 
         # Cause multiple errors
         for _ in range(10):
-            with contextlib.suppress(FileNotFoundError, OSError, RuntimeError, classic_file_io.RustFileIOError): # pyright: ignore[reportAttributeAccessIssue]
+            with contextlib.suppress(FileNotFoundError, OSError, RuntimeError, classic_file_io.RustFileIOError):  # pyright: ignore[reportAttributeAccessIssue]
                 # Try to read non-existent file
                 await io_core.read_file("/completely/synthetic/path/that/does/not/exist.txt")
 
@@ -333,7 +328,7 @@ class TestFFIErrorConditions:
         ]
 
         for path in dangerous_paths:
-            with pytest.raises((OSError, ValueError, RuntimeError, FileNotFoundError, classic_file_io.RustFileIOIOError)): # pyright: ignore[reportAttributeAccessIssue]
+            with pytest.raises((OSError, ValueError, RuntimeError, FileNotFoundError, classic_file_io.RustFileIOIOError)):  # pyright: ignore[reportAttributeAccessIssue]
                 await io_core.read_file(path)
 
     def test_signal_handling_during_ffi_call(self):

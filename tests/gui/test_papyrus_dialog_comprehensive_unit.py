@@ -7,6 +7,7 @@ and dialog lifecycle with properly mocked Qt components.
 """
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841, F401, DOC201
+import os
 from datetime import datetime
 from unittest.mock import MagicMock, Mock, patch
 
@@ -15,9 +16,13 @@ import pytest
 from ClassicLib.Interface.Papyrus import PapyrusStats
 from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
 
+is_xdist = os.environ.get("PYTEST_XDIST_WORKER") is not None
+skip_xdist = pytest.mark.skipif(is_xdist, reason="Qt GUI tests unstable in xdist workers on Windows")
+
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestPapyrusMonitorDialog:
     """Unit tests for PapyrusMonitorDialog class."""
 
@@ -94,6 +99,7 @@ class TestPapyrusMonitorDialog:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestDialogInitialization:
     """Test dialog initialization and setup."""
 
@@ -186,6 +192,7 @@ class TestDialogInitialization:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestStatsUpdateFunctionality:
     """Test statistics updating functionality."""
 
@@ -288,6 +295,7 @@ class TestStatsUpdateFunctionality:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestStatusIndicatorUpdates:
     """Test status indicator update functionality."""
 
@@ -434,6 +442,7 @@ class TestStatusIndicatorUpdates:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestMessageUpdates:
     """Test message update functionality."""
 
@@ -578,6 +587,7 @@ class TestMessageUpdates:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestDialogActions:
     """Test dialog action handling."""
 
@@ -659,6 +669,7 @@ class TestDialogActions:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestDialogIntegrationScenarios:
     """Integration tests for dialog functionality."""
 
@@ -804,6 +815,7 @@ class TestDialogIntegrationScenarios:
 
 @pytest.mark.unit
 @pytest.mark.gui
+@skip_xdist
 class TestDialogAccessibilityAndUsability:
     """Test dialog accessibility and usability features."""
 

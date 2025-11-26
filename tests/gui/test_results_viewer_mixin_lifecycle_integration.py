@@ -4,10 +4,15 @@ Tests complete report workflows including creation, loading, modification,
 and deletion with real file operations.
 """
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QFileSystemWatcher, QTimer
 from PySide6.QtWidgets import QMessageBox
 

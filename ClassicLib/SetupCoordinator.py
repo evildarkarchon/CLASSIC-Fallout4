@@ -31,16 +31,21 @@ if TYPE_CHECKING:
 
 
 class SetupCoordinator:
-    """Coordinates application setup and initialization."""
+    """Coordinates application setup and initialization.
+
+    Manages the complete initialization workflow including file generation,
+    game path detection, integrity checking, and settings loading.
+
+    Attributes:
+        file_generator: FileGenerator instance for creating config files.
+        integrity_checker: GameIntegrityChecker for verifying game files.
+        backup_manager: BackupManager for XSE/ENB backup operations.
+        docs_checker: DocumentsChecker for validating documents folder.
+        path_validator: PathValidator for validating configured paths.
+    """
 
     def __init__(self) -> None:
-        """
-        Initializes the primary components required for the system's functionality.
-
-        The constructor sets up instances of the necessary helper classes for
-        file generation, integrity checking, backup management, document validation,
-        and path validation.
-        """
+        """Initialize all helper components for the setup workflow."""
         self.file_generator = FileGenerator()
         self.integrity_checker = GameIntegrityChecker()
         self.backup_manager = BackupManager()

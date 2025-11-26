@@ -57,6 +57,7 @@ from ClassicLib.GlobalRegistry import (
     is_registered,
     register,
 )
+from ClassicLib.integration.detector import detect_component
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import (
     Message,
@@ -108,45 +109,12 @@ from ClassicLib.YamlSettingsCache import (
 
 # Rust-Accelerated Phase 1 Components (with automatic fallback)
 # These modules provide significant performance improvements when available
-try:
-    import classic_registry  # 15-25x speedup for registry operations
 
-    RUST_REGISTRY_AVAILABLE = True
-except ImportError:
-    classic_registry = None  # type: ignore
-    RUST_REGISTRY_AVAILABLE = False
-
-try:
-    import classic_perf  # Real-time performance monitoring with Rust
-
-    RUST_PERF_AVAILABLE = True
-except ImportError:
-    classic_perf = None  # type: ignore
-    RUST_PERF_AVAILABLE = False
-
-try:
-    import classic_pybridge  # Native async/sync bridge (no PyO3-asyncio dependency)
-
-    RUST_PYBRIDGE_AVAILABLE = True
-except ImportError:
-    classic_pybridge = None  # type: ignore
-    RUST_PYBRIDGE_AVAILABLE = False
-
-try:
-    import classic_settings as rust_settings  # 15-30x faster YAML loading, lock-free cache
-
-    RUST_SETTINGS_AVAILABLE = True
-except ImportError:
-    rust_settings = None  # type: ignore
-    RUST_SETTINGS_AVAILABLE = False
-
-try:
-    import classic_message  # Type-safe message routing with emoji stripping
-
-    RUST_MESSAGE_AVAILABLE = True
-except ImportError:
-    classic_message = None  # type: ignore
-    RUST_MESSAGE_AVAILABLE = False
+RUST_REGISTRY_AVAILABLE, classic_registry = detect_component("classic_registry")
+RUST_PERF_AVAILABLE, classic_perf = detect_component("classic_perf")
+RUST_PYBRIDGE_AVAILABLE, classic_pybridge = detect_component("classic_pybridge")
+RUST_SETTINGS_AVAILABLE, rust_settings = detect_component("classic_settings")
+RUST_MESSAGE_AVAILABLE, classic_message = detect_component("classic_message")
 
 __all__ = [
     # AsyncBridge

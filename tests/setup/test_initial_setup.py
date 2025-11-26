@@ -108,6 +108,7 @@ class TestInitialSetup:
         coordinator: SetupCoordinator,
     ) -> None:
         """Test initial setup when game path is already configured."""
+
         # Mock batch_get_settings_async to return values with game path configured
         async def async_return(*args, **kwargs):
             return [

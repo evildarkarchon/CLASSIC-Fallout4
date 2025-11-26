@@ -22,20 +22,21 @@ if TYPE_CHECKING:
 
 
 class ScanOperationsMixin:
-    """
-    Mixin class providing scan operation methods for the MainWindow.
+    """Mixin class providing scan operation methods for the MainWindow.
 
-    This class requires the following attributes to be present in the class it's mixed into:
-    - _scan_mutex: QMutex for thread safety
-    - _running_scans: Set tracking running scan operations
-    - thread_manager: ThreadManager instance
-    - audio_player: AudioPlayer instance
-    - scan_button_group: QButtonGroup containing scan buttons
-    - papyrus_button: QPushButton for Papyrus monitoring
-    - crash_logs_thread: QThread for crash logs scanning
-    - crash_logs_worker: CrashLogsScanWorker instance
-    - game_files_thread: QThread for game files scanning
-    - game_files_worker: GameFilesScanWorker instance
+    This mixin requires the mixing class to provide the attributes listed below.
+
+    Attributes:
+        _scan_mutex: QMutex for thread safety during scan operations.
+        _running_scans: Set tracking currently running scan operation names.
+        thread_manager: ThreadManager instance for thread lifecycle management.
+        audio_player: AudioPlayer instance for completion sounds.
+        scan_button_group: QButtonGroup containing scan action buttons.
+        papyrus_button: QPushButton for Papyrus monitoring toggle.
+        crash_logs_thread: QThread for crash logs scanning (or None).
+        crash_logs_worker: CrashLogsScanWorker instance (or None).
+        game_files_thread: QThread for game files scanning (or None).
+        game_files_worker: GameFilesScanWorker instance (or None).
     """
 
     # Type stubs for attributes that must be provided by the mixing class

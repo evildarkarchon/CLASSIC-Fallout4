@@ -4,16 +4,10 @@ from pathlib import Path
 
 import pytest
 from PySide6.QtCore import QObject, QThread, Signal, Slot
-from PySide6.QtWidgets import QApplication
 
-
-@pytest.fixture
-def app() -> QApplication:
-    """Create QApplication for tests."""
-    app = QApplication.instance()
-    if app is None:
-        app = QApplication([])
-    return app
+# Note: Use qt_application_session from tests/fixtures/qt_fixtures.py instead
+# of creating a local app fixture. The session-scoped fixture is automatically
+# available via conftest imports.
 
 
 class ThreadTestWorker(QObject):

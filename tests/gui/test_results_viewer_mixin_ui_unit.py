@@ -5,10 +5,15 @@ in isolation with mocked Qt components.
 """
 # ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002, F811
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QFileSystemWatcher, QTimer, Signal
 from PySide6.QtWidgets import QMessageBox, QWidget
 
@@ -56,7 +61,7 @@ def viewer_mixin(mock_qt_components, init_message_handler_fixture):
             self.report_loaded.emit = MagicMock()
             self.reports_refreshed = MagicMock(spec=Signal)
             self.reports_refreshed.emit = MagicMock()
-            
+
             self._file_watching_paused = False
             self._refresh_pending = False
 
@@ -215,7 +220,7 @@ class TestReportOperations:
         viewer_mixin.current_report_path = report_path
 
         with (
-            patch.object(Path, "read_text", side_effect=OSError("Read error")),
+            patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync", side_effect=OSError("Read error")),
             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
         ):
             viewer_mixin._copy_report()

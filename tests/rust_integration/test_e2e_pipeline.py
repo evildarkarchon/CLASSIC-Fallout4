@@ -246,9 +246,7 @@ PLUGINS:
                     assert len(crash_data) > 0, f"Empty crash log: {sample_name}"
 
                     # Process through the complete pipeline
-                    result = await orchestrator.process_crash_log(
-                        crashlog_file=log_path
-                    )
+                    result = await orchestrator.process_crash_log(crashlog_file=log_path)
                     # Unpack result (path, report, failed, stats)
                     _, report_fragments, _, _ = result
 
@@ -465,9 +463,7 @@ PLUGINS:
         # Process should not crash even with corrupted data
         try:
             async with orchestrator:
-                result = await orchestrator.process_crash_log(
-                    crashlog_file=corrupted_file
-                )
+                result = await orchestrator.process_crash_log(crashlog_file=corrupted_file)
 
             # Should still produce some output even with corrupted data
             assert result is not None, "Pipeline should handle corrupted data gracefully"
@@ -501,9 +497,7 @@ PLUGINS:
             # Process all crash logs concurrently
             tasks = []
             for orchestrator, log_path in zip(orchestrators, crash_data_sets, strict=True):
-                task = orchestrator.process_crash_log(
-                    crashlog_file=log_path
-                )
+                task = orchestrator.process_crash_log(crashlog_file=log_path)
                 tasks.append(task)
 
             # Wait for all tasks to complete
@@ -595,9 +589,7 @@ class TestE2EPerformance:
         async with orchestrator:
             for _ in range(3):  # Run multiple times for average
                 with PerformanceTimer() as timer:
-                    await orchestrator.process_crash_log(
-                        crashlog_file=log_path
-                    )
+                    await orchestrator.process_crash_log(crashlog_file=log_path)
                 rust_times.append(timer.elapsed)
 
         avg_rust_time = sum(rust_times) / len(rust_times)

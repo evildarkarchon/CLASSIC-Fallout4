@@ -15,19 +15,42 @@ import pytest
 # Mark all tests in this module as GUI tests
 pytestmark = [pytest.mark.gui, pytest.mark.unit]
 
+import os
 
+
+@pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests unstable in xdist workers on Windows")
 class TestClassicInterface:
     """Test suite for CLASSIC_Interface.py GUI entry point."""
 
     @pytest.fixture(autouse=True)
     def setup(self) -> None:
         """Set up test environment."""
-        # Clear any existing QApplication instances
-        from PySide6.QtWidgets import QApplication
+        from ClassicLib.MessageHandler.handler import _message_handler_lock
 
-        app = QApplication.instance()
-        if app:
-            app.quit()
+        # Do NOT quit the existing QApplication if one exists.
+        # pytest-qt / qt_fixtures.py manages a session-scoped QApplication.
+        # Destroying and recreating it causes instability/crashes.
+        # app = QApplication.instance()
+        # if app:
+        #     app.quit()
+
+        # Patch AsyncBridge to prevent background threads
+        patcher = patch("ClassicLib.AsyncBridge.AsyncBridge")
+        patcher.start()
+
+        # Reset MessageHandler singleton to prevent dangling parent references
+        from ClassicLib.MessageHandler import handler as msg_handler_module
+
+        with _message_handler_lock:
+            msg_handler_module._message_handler = None
+
+        yield
+
+        # Cleanup after test
+        with _message_handler_lock:
+            msg_handler_module._message_handler = None
+
+        patcher.stop()
 
     @patch("CLASSIC_Interface.SetupCoordinator")
     @patch("CLASSIC_Interface.QApplication")

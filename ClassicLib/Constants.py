@@ -102,7 +102,16 @@ def get_db_paths() -> tuple[Path, Path]:
 
 # For backward compatibility, create a property-like object
 class _DBPaths:
-    """Backward compatible DB_PATHS that lazily gets the paths."""
+    """Backward compatible DB_PATHS that lazily evaluates database paths.
+
+    This class provides a lazy-loading wrapper around get_db_paths() to
+    maintain backward compatibility with code that accesses DB_PATHS as
+    an indexable/iterable collection.
+
+    Note:
+        This class has no instance attributes. It delegates all access
+        to get_db_paths() which returns paths based on GlobalRegistry state.
+    """
 
     def __getitem__(self, index: int) -> Path:
         return get_db_paths()[index]

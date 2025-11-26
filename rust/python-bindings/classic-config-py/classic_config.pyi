@@ -254,7 +254,7 @@ class YamlData:
 
 def clear_yaml_cache() -> None:
     """Clear the global YAML configuration cache.
-    
+
     Forces the next YamlData initialization to reload from disk.
     """
 

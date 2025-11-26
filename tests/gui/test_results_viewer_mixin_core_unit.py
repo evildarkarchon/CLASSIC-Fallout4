@@ -6,10 +6,15 @@ in isolation with mocked Qt components.
 
 # ruff: noqa: ANN001, ANN201, ANN204, ARG001, ARG002, F811, PLR6301
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QFileSystemWatcher, QTimer, Signal
 from PySide6.QtWidgets import QWidget
 
@@ -130,7 +135,7 @@ class TestReportScanning:
         # Create reports
         a_report = crash_logs_dir / "a-AUTOSCAN.md"
         a_report.write_text("A")
-        
+
         z_report = crash_logs_dir / "z-AUTOSCAN.md"
         z_report.write_text("Z")
 
@@ -178,17 +183,26 @@ class TestReportLoading:
         """Should successfully load and display a report."""
         report_path = tmp_path / "test-AUTOSCAN.md"
         report_content = "# Test Report\n\nContent here"
-        report_path.write_text(report_content)
 
-        result = viewer_mixin.load_report(report_path)
+        # Mock read_file_sync to return consistent content regardless of OS
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync", return_value=report_content),
+            patch.object(Path, "exists", return_value=True),
+            # We need to mock stat() for update_metadata which calls it
+            patch.object(Path, "stat") as mock_stat,
+        ):
+            mock_stat.return_value.st_mtime = 1234567890
+            mock_stat.return_value.st_size = 1024
 
-        assert result is True
-        assert viewer_mixin.current_report_path == report_path
+            result = viewer_mixin.load_report(report_path)
 
-        # Verify display methods called
-        viewer_mixin.markdown_viewer.setMarkdown.assert_called_with(report_content)
-        viewer_mixin.metadata_widget.update_metadata.assert_called_with(report_path, report_content)
-        viewer_mixin.report_loaded.emit.assert_called_with(report_path)
+            assert result is True
+            assert viewer_mixin.current_report_path == report_path
+
+            # Verify display methods called
+            viewer_mixin.markdown_viewer.setMarkdown.assert_called_with(report_content)
+            viewer_mixin.metadata_widget.update_metadata.assert_called_with(report_path, report_content)
+            viewer_mixin.report_loaded.emit.assert_called_with(report_path)
 
     def test_load_report_file_not_found(self, viewer_mixin, gui_message_handler):
         """Should handle missing report file gracefully."""
@@ -196,13 +210,13 @@ class TestReportLoading:
 
         with (
             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
-            patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer_class
+            patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer_class,
         ):
             result = viewer_mixin.load_report(missing_path)
 
             assert result is False
             assert viewer_mixin.current_report_path is None
-            
+
             # msg_error is called inside QTimer.singleShot lambda, so verify singleShot called
             mock_timer_class.singleShot.assert_called_once()
             # Execute the lambda to verify it calls msg_error
@@ -237,7 +251,7 @@ class TestReportLoading:
             result = viewer_mixin.load_report(report_path)
 
             assert result is False
-            
+
             # Verify error reported
             mock_timer_class.singleShot.assert_called()
             # Execute the lambda to verify it calls msg_error

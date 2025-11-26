@@ -552,11 +552,14 @@ class TestReportParity:
             if rust_impl and hasattr(rust_impl, "assemble_report"):
                 start_time = time.perf_counter()
                 # Convert fragments to Rust-compatible format
-                rust_fragments = [{
-                    "name": fragment.name,
-                    "content": fragment.content,
-                    "priority": fragment.priority,
-                } for fragment in test_fragments]
+                rust_fragments = [
+                    {
+                        "name": fragment.name,
+                        "content": fragment.content,
+                        "priority": fragment.priority,
+                    }
+                    for fragment in test_fragments
+                ]
                 rust_assembled = rust_impl.assemble_report(rust_fragments)  # type: ignore
                 rust_time = time.perf_counter() - start_time
             else:
@@ -666,7 +669,9 @@ class TestReportParity:
                 pytest.skip("Rust report assembly not available for performance testing")
 
             start_time = time.perf_counter()
-            rust_fragments = [{"name": fragment.name, "content": fragment.content, "priority": fragment.priority} for fragment in large_fragment_set]
+            rust_fragments = [
+                {"name": fragment.name, "content": fragment.content, "priority": fragment.priority} for fragment in large_fragment_set
+            ]
             rust_result = rust_impl.assemble_report(rust_fragments)  # type: ignore
             rust_time = time.perf_counter() - start_time
 

@@ -4,13 +4,20 @@ Unit tests for dialog_behavior - unit logic testing.
 This file contains unit tests that test individual functions with mocked dependencies.
 """
 
+import os
+
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers"),
+]
+
 from PySide6.QtWidgets import QDialog
 
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
-
-pytestmark = pytest.mark.unit
 
 
 class TestDialogAcceptReject:

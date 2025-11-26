@@ -380,10 +380,7 @@ class MarkdownViewer(QTextBrowser):
         # "tables" for table support
         # "break-on-newline" to respect line breaks in the log
         # "fenced-code-blocks" for standard code blocks
-        html_content = markdown2.markdown(
-            processed_text, 
-            extras=["tables", "break-on-newline", "fenced-code-blocks"]
-        )
+        html_content = markdown2.markdown(processed_text, extras=["tables", "break-on-newline", "fenced-code-blocks"])
 
         # 3. Construct full HTML document with CSS
         full_doc = self._wrap_in_html_template(html_content)
@@ -396,26 +393,22 @@ class MarkdownViewer(QTextBrowser):
 
     def _preprocess_markdown(self, text: str) -> str:  # noqa: PLR6301
         """
-        Pre-processes the raw markdown text to identify and wrap specific 
+        Pre-processes the raw markdown text to identify and wrap specific
         CLASSIC report structures (Suspects, Found Mods, Errors) in HTML.
         """
+
         # 1. Suspect Found Box
         def suspect_replacer(match: re.Match) -> str:
             full_line = match.group(0)
             # Remove ** and - markers
             clean_line = full_line.replace("**", "").replace("- ", "").strip()
-            
+
             if "SUSPECT FOUND!" in clean_line:
                 parts = clean_line.split("SUSPECT FOUND!")
                 title = html.escape(parts[0].strip(" ."))
                 info = html.escape("SUSPECT FOUND!" + parts[1])
-                
-                return (
-                    f'<div class="suspect-box">'
-                    f'<div class="suspect-title">{title}</div>'
-                    f'<div class="suspect-info">{info}</div>'
-                    f'</div>'
-                )
+
+                return f'<div class="suspect-box"><div class="suspect-title">{title}</div><div class="suspect-info">{info}</div></div>'
             return full_line
 
         text = re.sub(r"-\s*\*\*Checking for.*SUSPECT FOUND!.*?\*\*", suspect_replacer, text)
@@ -424,10 +417,10 @@ class MarkdownViewer(QTextBrowser):
         # Regex: Match Header, then content until separator -----
         def found_replacer(match: re.Match) -> str:
             header = match.group(1).strip()
-            content = match.group(2) # Keep raw content with whitespace for dedent
+            content = match.group(2)  # Keep raw content with whitespace for dedent
 
             clean_header = html.escape(header.replace("**", "").strip())
-            
+
             # Dedent content so markdown2 doesn't treat it as a code block
             # But first ensure we don't lose the structure if it's a list
             dedented_content = textwrap.dedent(content)
@@ -435,8 +428,8 @@ class MarkdownViewer(QTextBrowser):
             return (
                 f'<div class="found-box">'
                 f'<div class="found-header">{clean_header}</div>'
-                f'{dedented_content}' # markdown2 will parse this
-                f'</div>'
+                f"{dedented_content}"  # markdown2 will parse this
+                f"</div>"
             )
 
         pattern = r"(\*\*\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*\*\*)([\s\S]*?)(?=\n[ \t]*-{5,})"
@@ -450,7 +443,6 @@ class MarkdownViewer(QTextBrowser):
         # 4. Bold conversion (backup)
         return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
 
-
     def _wrap_in_html_template(self, content: str) -> str:
         """
         Wraps the HTML content in a full document structure with embedded CSS.
@@ -458,7 +450,7 @@ class MarkdownViewer(QTextBrowser):
         # Base font size scaled by zoom level
         base_size = 16
         scaled_size = int(base_size * (self._zoom_level / 100.0))
-        
+
         return f"""
         <!DOCTYPE html>
         <html>
@@ -623,25 +615,24 @@ class MarkdownViewer(QTextBrowser):
         This forces the CSS to re-evaluate with the new font size.
         """
         # We can't easily re-process the original markdown here without storing it.
-        # However, QTextBrowser has a zoomIn/zoomOut method natively, 
+        # However, QTextBrowser has a zoomIn/zoomOut method natively,
         # but we implemented custom CSS font sizing.
         # Ideally we should store the last markdown content.
-        
-        # Actually, standard zoom might work if we just rely on it. 
-        # But our CSS uses fixed pixels. 
+
+        # Actually, standard zoom might work if we just rely on it.
+        # But our CSS uses fixed pixels.
         # Let's use the native `zoomIn` / `zoomOut` from QTextEdit instead?
         # No, the previous implementation used custom font scaling.
-        
+
         # To support this properly, we should store the `_last_html_content` (without the template)
         # and re-wrap it.
-    
+
     # Correcting the above thought:
     # We need to store the processed HTML content to allow efficient re-rendering on zoom.
     # Let's update `setMarkdown` to store `self._last_processed_html`.
 
     def get_zoom_level(self) -> int:
         return self._zoom_level
-
 
 
 class ReportMetadataWidget(QGroupBox):

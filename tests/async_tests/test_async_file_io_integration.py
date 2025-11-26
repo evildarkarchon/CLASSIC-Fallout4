@@ -23,7 +23,7 @@ class TestAsyncFileIO:
         large_file = tmp_path / "large.log"
         large_content = "Large file test line\n" * 50000
         large_file.write_text(large_content)
-        
+
         # Only test write since load is deprecated/removed
         reports = [(large_file, [large_content], False)]
         await write_reports_batch(reports)

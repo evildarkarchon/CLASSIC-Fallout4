@@ -5,12 +5,17 @@ multi-directory scanning with real file operations.
 """
 # ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002
 
+import os
 import shutil
 import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QFileSystemWatcher, QTimer
 
 from ClassicLib import GlobalRegistry
@@ -46,7 +51,7 @@ def integrated_viewer(tmp_path, init_message_handler_fixture, qt_application):
             self.report_loaded.emit = MagicMock()
             self.reports_refreshed = MagicMock()
             self.reports_refreshed.emit = MagicMock()
-            
+
             self._file_watching_paused = False
             self._refresh_pending = False
 

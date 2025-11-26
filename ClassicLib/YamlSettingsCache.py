@@ -62,12 +62,31 @@ T = TypeVar("T")
 
 
 class YamlSettingsCache:
-    """
-    Handles settings stored in YAML files with caching, singleton support, and both synchronous and asynchronous methods.
+    """Handles settings stored in YAML files with caching and singleton support.
 
-    This class provides functionalities to manage YAML-based configurations efficiently. It offers methods to load YAML
-    files, fetch or set specific settings, batch operations, and cache prefetching for performance optimization. The class
-    is implemented as a singleton to ensure only a single instance manages the YAML settings and maintains thread safety.
+    This class provides functionality to manage YAML-based configurations efficiently.
+    It offers methods to load YAML files, fetch or set specific settings, batch
+    operations, and cache prefetching for performance optimization. Implemented as
+    a singleton to ensure only one instance manages YAML settings.
+
+    Attributes:
+        _instance: Class-level singleton instance (or None if not yet created).
+        _lock: Class-level lock for thread-safe singleton creation.
+        _bridge: AsyncBridge instance for sync-to-async bridging (lazily created).
+        _async_core: AsyncYamlSettingsCore for actual YAML operations (lazily created).
+        _init_lock: Instance-level lock for lazy initialization of _bridge and _async_core.
+
+    Example:
+        Using the singleton instance:
+
+        >>> from ClassicLib.YamlSettingsCache import yaml_cache
+        >>> cache = yaml_cache()
+        >>> value = cache.get(str, "CLASSIC_Settings.VR Mode")
+
+        Using convenience functions:
+
+        >>> from ClassicLib.YamlSettingsCache import classic_settings
+        >>> vr_mode = classic_settings(bool, "VR Mode")
     """
 
     # Class-level storage for singleton instance

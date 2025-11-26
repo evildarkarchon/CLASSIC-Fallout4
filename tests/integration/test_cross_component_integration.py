@@ -7,7 +7,6 @@ ensuring they work together correctly across GUI and CLI interfaces.
 
 import asyncio
 import contextlib
-import tempfile
 import time
 from pathlib import Path
 from unittest.mock import patch
@@ -86,34 +85,26 @@ class TestGUIToRustIntegration:
         # Create synthetic crash log
         crash_log = IntegrationTestHelpers.create_synthetic_crash_log()
 
-        with tempfile.NamedTemporaryFile(encoding="utf-8", mode="w", suffix=".log", delete=False) as f:
-            f.write(crash_log)
-            log_path = Path(f.name)
+        # Mock GUI components
+        with patch("CLASSIC_Interface.MainWindow"):
+            # Simulate GUI triggering scan
+            async def gui_scan_operation():
+                # GUI would call parser through AsyncBridge
+                # Use find_segments which is the actual API
+                lines = crash_log.splitlines()
+                game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
+                    parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                )
+                return segments
 
-        try:
-            # Mock GUI components
-            with patch("CLASSIC_Interface.MainWindow"):
-                # Simulate GUI triggering scan
-                async def gui_scan_operation():
-                    # GUI would call parser through AsyncBridge
-                    # Use find_segments which is the actual API
-                    lines = crash_log.splitlines()
-                    game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
-                        parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                    )
-                    return segments
+            # Run through bridge (as GUI would)
+            # result = bridge.run_async(gui_scan_operation())
+            result = await gui_scan_operation()
 
-                # Run through bridge (as GUI would)
-                # result = bridge.run_async(gui_scan_operation())
-                result = await gui_scan_operation()
-
-                # Validate result
-                assert result is not None
-                if isinstance(result, dict) and "plugins" in result:
-                    assert len(result["plugins"]) >= 2
-
-        finally:
-            log_path.unlink(missing_ok=True)
+            # Validate result
+            assert result is not None
+            if isinstance(result, dict) and "plugins" in result:
+                assert len(result["plugins"]) >= 2
 
     @pytest.mark.skip(reason="API changed: ReportGenerator no longer has generate method")
     @pytest.mark.asyncio
@@ -191,80 +182,70 @@ class TestTUIAsyncIntegration:
     """
 
     @pytest.mark.asyncio
-    async def test_tui_async_file_operations(self):
+    async def test_tui_async_file_operations(self, tmp_path):
         """Test TUI performing async file operations (without launching interactive UI)."""
         from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
-        bridge = AsyncBridge.get_instance()
+        AsyncBridge.get_instance()
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as f:
-            f.write("Test log content\nLine 2\nLine 3")
-            test_path = Path(f.name)
+        test_file = tmp_path / "test_log.log"
+        test_file.write_text("Test log content\nLine 2\nLine 3", encoding="utf-8")
 
-        try:
-            # Simulate TUI reading file asynchronously
-            async def tui_read_operation():
-                return await io_core.read_file(str(test_path))
+        # Simulate TUI reading file asynchronously
+        async def tui_read_operation():
+            return await io_core.read_file(str(test_file))
 
-            # TUI would use AsyncBridge in sync context
-            # content = bridge.run_async(tui_read_operation())
-            content = await tui_read_operation()
+        # TUI would use AsyncBridge in sync context
+        # content = bridge.run_async(tui_read_operation())
+        content = await tui_read_operation()
 
-            assert content is not None
-            assert "Test log content" in content
-            assert content.count("\n") >= 2
-
-        finally:
-            test_path.unlink(missing_ok=True)
+        assert content is not None
+        assert "Test log content" in content
+        assert content.count("\n") >= 2
 
     @pytest.mark.asyncio
-    async def test_tui_live_log_monitoring(self):
+    async def test_tui_live_log_monitoring(self, tmp_path):
         """Test TUI monitoring log file for changes."""
         from ClassicLib.FileIO import FileIOCore
 
         FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as f:
-            f.write("Initial content\n")
-            log_path = Path(f.name)
+        log_path = tmp_path / "monitor_test.log"
+        log_path.write_text("Initial content\n", encoding="utf-8")
 
-        try:
-            # Simulate TUI monitoring file
-            changes_detected = []
+        # Simulate TUI monitoring file
+        changes_detected = []
 
-            async def monitor_file(path: Path, duration: float = 0.5):
-                """Monitor file for changes."""
-                start_time = time.time()
-                last_size = path.stat().st_size
+        async def monitor_file(path: Path, duration: float = 0.5):
+            """Monitor file for changes."""
+            start_time = time.time()
+            last_size = path.stat().st_size
 
-                while time.time() - start_time < duration:
-                    await asyncio.sleep(0.1)
-                    current_size = path.stat().st_size
-                    if current_size != last_size:
-                        changes_detected.append(current_size)
-                        last_size = current_size
+            while time.time() - start_time < duration:
+                await asyncio.sleep(0.1)
+                current_size = path.stat().st_size
+                if current_size != last_size:
+                    changes_detected.append(current_size)
+                    last_size = current_size
 
-            # Start monitoring
-            monitor_task = asyncio.create_task(monitor_file(log_path))
+        # Start monitoring
+        monitor_task = asyncio.create_task(monitor_file(log_path))
 
-            # Simulate log updates
-            await asyncio.sleep(0.1)
-            with Path(log_path).open("a", encoding="utf-8") as f:
-                f.write("New line 1\n")
+        # Simulate log updates
+        await asyncio.sleep(0.1)
+        with Path(log_path).open("a", encoding="utf-8") as f:
+            f.write("New line 1\n")
 
-            await asyncio.sleep(0.1)
-            with Path(log_path).open("a", encoding="utf-8") as f:
-                f.write("New line 2\n")
+        await asyncio.sleep(0.1)
+        with Path(log_path).open("a", encoding="utf-8") as f:
+            f.write("New line 2\n")
 
-            await monitor_task
+        await monitor_task
 
-            # Should detect changes
-            assert len(changes_detected) >= 1
-
-        finally:
-            log_path.unlink(missing_ok=True)
+        # Should detect changes
+        assert len(changes_detected) >= 1
 
     @pytest.mark.asyncio
     async def test_tui_async_ui_updates(self):
@@ -309,46 +290,43 @@ class TestCLIBatchProcessing:
     """Test CLI batch processing and output format handling."""
 
     @pytest.mark.asyncio
-    async def test_cli_batch_log_processing(self):
+    async def test_cli_batch_log_processing(self, tmp_path):
         """Test CLI processing multiple logs in batch."""
         from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.integration.factory import get_parser
 
-        bridge = AsyncBridge.get_instance()
+        AsyncBridge.get_instance()
         parser = get_parser()
 
         # Create multiple synthetic logs
         num_logs = 5
         log_files = []
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        # Create log files
+        for i in range(num_logs):
+            log_path = tmp_path / f"crash_{i}.log"
+            log_path.write_text(IntegrationTestHelpers.create_synthetic_crash_log())
+            log_files.append(log_path)
 
-            # Create log files
-            for i in range(num_logs):
-                log_path = temp_path / f"crash_{i}.log"
-                log_path.write_text(IntegrationTestHelpers.create_synthetic_crash_log())
-                log_files.append(log_path)
+        # Simulate CLI batch processing
+        async def batch_process():
+            results = []
+            for log_path in log_files:
+                content = log_path.read_text()
+                lines = content.splitlines()
+                game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
+                    parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
+                )
+                results.append({"file": log_path.name, "result": segments})
+            return results
 
-            # Simulate CLI batch processing
-            async def batch_process():
-                results = []
-                for log_path in log_files:
-                    content = log_path.read_text()
-                    lines = content.splitlines()
-                    game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
-                        parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
-                    )
-                    results.append({"file": log_path.name, "result": segments})
-                return results
+        # Process batch
+        # batch_results = bridge.run_async(batch_process())
+        batch_results = await batch_process()
 
-            # Process batch
-            # batch_results = bridge.run_async(batch_process())
-            batch_results = await batch_process()
-
-            # Verify all logs processed
-            assert len(batch_results) == num_logs
-            assert all(r["result"] is not None for r in batch_results)
+        # Verify all logs processed
+        assert len(batch_results) == num_logs
+        assert all(r["result"] is not None for r in batch_results)
 
     @pytest.mark.skip(reason="API changed: ReportGenerator no longer has generate method")
     @pytest.mark.asyncio
@@ -585,7 +563,7 @@ class TestResourceManagement:
     """Test resource management across components."""
 
     @pytest.mark.asyncio
-    async def test_file_handle_cleanup(self):
+    async def test_file_handle_cleanup(self, tmp_path):
         """Test proper file handle cleanup across operations."""
         from ClassicLib.FileIO import FileIOCore
 
@@ -594,23 +572,20 @@ class TestResourceManagement:
         # Track open files
         open_files = []
 
-        with tempfile.TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
+        # Create test files
+        for i in range(5):
+            file_path = tmp_path / f"test_{i}.log"
+            file_path.write_text(f"Test content {i}")
+            open_files.append(file_path)
 
-            # Create test files
-            for i in range(5):
-                file_path = temp_path / f"test_{i}.log"
-                file_path.write_text(f"Test content {i}")
-                open_files.append(file_path)
+        # Read files and ensure cleanup
+        for file_path in open_files:
+            content = await io_core.read_file(str(file_path))
+            assert content is not None
 
-            # Read files and ensure cleanup
-            for file_path in open_files:
-                content = await io_core.read_file(str(file_path))
-                assert content is not None
-
-                # File should be readable again (not locked)
-                content2 = await io_core.read_file(str(file_path))
-                assert content == content2
+            # File should be readable again (not locked)
+            content2 = await io_core.read_file(str(file_path))
+            assert content == content2
 
     @pytest.mark.asyncio
     async def test_memory_cleanup_on_large_operations(self):

@@ -435,7 +435,7 @@ class TestRustAsyncDatabasePool:
             patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
         ):
-            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
+            pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             pairs = [
@@ -458,7 +458,7 @@ class TestRustAsyncDatabasePool:
             patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
         ):
-            pool = RustAsyncDatabasePool(cache_ttl_seconds=60) # pyright: ignore[reportOptionalCall]
+            pool = RustAsyncDatabasePool(cache_ttl_seconds=60)  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             # Clear cache
@@ -483,7 +483,7 @@ class TestRustAsyncDatabasePool:
             patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
         ):
-            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
+            pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             # Should not raise an error
@@ -495,8 +495,8 @@ class TestRustAsyncDatabasePool:
             patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
         ):
-            manager1 = DatabasePoolManager() # pyright: ignore[reportOptionalCall]
-            manager2 = DatabasePoolManager() # pyright: ignore[reportOptionalCall]
+            manager1 = DatabasePoolManager()  # pyright: ignore[reportOptionalCall]
+            manager2 = DatabasePoolManager()  # pyright: ignore[reportOptionalCall]
 
             # Should be the same instance
             assert manager1 is manager2
@@ -519,7 +519,7 @@ class TestRustAsyncDatabasePool:
             patch("ClassicLib.rust.database_rust.DatabasePool", side_effect=MockRustPool),
             patch("ClassicLib.rust.database_rust.DB_PATHS", [tmp_path / "dummy.db"]),
         ):
-            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
+            pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             async def worker(worker_id):
@@ -593,7 +593,7 @@ class TestDatabasePoolPerformance:
             pytest.skip("RustAsyncDatabasePool not available")
 
         with patch("ClassicLib.rust.database_rust.DB_PATHS", (db_path,)):
-            pool = RustAsyncDatabasePool() # pyright: ignore[reportOptionalCall]
+            pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
             with patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"):

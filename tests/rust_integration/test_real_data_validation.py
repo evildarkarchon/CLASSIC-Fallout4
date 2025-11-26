@@ -41,7 +41,6 @@ from tests.test_infra.performance_utils import PerformanceTimer
 logger = logging.getLogger(__name__)
 
 
-
 def read_crash_log(log_path: Path) -> list[str]:
     """Read a crash log file and return it as a list of lines."""
     try:
@@ -276,7 +275,7 @@ class TestRealCrashLogValidation:
                     logger.warning(f"No valid FormIDs extracted from {log_category} despite having stack")
                     # Skip instead of fail if this specific log is problematic
                     continue
-                
+
                 assert valid_formids > 0, f"No valid FormIDs extracted from {log_category}"
 
                 # At least 70% of extracted FormIDs should be valid
@@ -316,7 +315,7 @@ class TestRealCrashLogValidation:
 
                     # Hex ID should be valid
                     try:
-                        if ":" in hex_id: # Handle light plugins FE:XXX
+                        if ":" in hex_id:  # Handle light plugins FE:XXX
                             parts = hex_id.split(":")
                             for part in parts:
                                 int(part, 16)
@@ -346,7 +345,7 @@ class TestRealCrashLogValidation:
                     if hex_id != "FE" and ":" not in hex_id and not hex_id.endswith((".esp", ".esm", ".esl")):
                         with contextlib.suppress(ValueError):
                             hex_ids.append(int(hex_id, 16))
-                
+
                 if hex_ids:
                     # Should start from 00 (or close to it)
                     min_id = min(hex_ids)

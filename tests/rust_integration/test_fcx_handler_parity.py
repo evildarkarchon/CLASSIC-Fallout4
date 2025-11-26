@@ -287,7 +287,7 @@ class TestFcxHandlerParity:
         rust_handler2 = validator.create_rust_implementation(fcx_mode=True)
         python_handler2 = validator.create_python_implementation(fcx_mode=True)
 
-        rust_fragment2 = rust_handler2.get_fcx_messages() # pyright: ignore[reportOptionalMemberAccess]
+        rust_fragment2 = rust_handler2.get_fcx_messages()  # pyright: ignore[reportOptionalMemberAccess]
         python_fragment2 = python_handler2.get_fcx_messages()
 
         # Validate consistency
@@ -301,7 +301,7 @@ class TestFcxHandlerParity:
         rust_handler3 = validator.create_rust_implementation(fcx_mode=False)
         python_handler3 = validator.create_python_implementation(fcx_mode=False)
 
-        rust_fragment3 = rust_handler3.get_fcx_messages() # pyright: ignore[reportOptionalMemberAccess]
+        rust_fragment3 = rust_handler3.get_fcx_messages()  # pyright: ignore[reportOptionalMemberAccess]
         python_fragment3 = python_handler3.get_fcx_messages()
 
         assert rust_fragment3.content == python_fragment3.content, "Rust and Python handlers produce different content for disabled mode"

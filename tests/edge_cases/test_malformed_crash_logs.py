@@ -320,24 +320,20 @@ class TestEdgeCaseFileOperations:
     """Test edge cases in file operations."""
 
     @pytest.mark.asyncio
-    async def test_zero_byte_file(self):
+    async def test_zero_byte_file(self, tmp_path):
         """Test handling of empty/zero-byte files."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-            # Write nothing - zero byte file
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "zero_byte.log"
+        temp_path.touch()  # Create empty file
 
-        try:
-            content = await io_core.read_file(str(temp_path))
-            assert content == "" or content is None
-        finally:
-            temp_path.unlink(missing_ok=True)
+        content = await io_core.read_file(str(temp_path))
+        assert content == "" or content is None
 
     @pytest.mark.asyncio
-    async def test_massive_single_line(self):
+    async def test_massive_single_line(self, tmp_path):
         """Test handling of file with single massive line."""
         from ClassicLib.FileIO import FileIOCore
 
@@ -346,29 +342,28 @@ class TestEdgeCaseFileOperations:
         # Create 10MB single line
         massive_line = "x" * (10 * 1024 * 1024)
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-            f.write(massive_line)
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "massive_line.log"
+        temp_path.write_text(massive_line)
 
-        try:
-            content = await io_core.read_file(str(temp_path))
-            assert len(content) == len(massive_line)
-        finally:
-            temp_path.unlink(missing_ok=True)
+        content = await io_core.read_file(str(temp_path))
+        assert len(content) == len(massive_line)
 
     @pytest.mark.asyncio
-    async def test_rapid_file_deletion(self):
+    async def test_rapid_file_deletion(self, tmp_path):
         """Test handling when file is deleted during read."""
         from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        temp_path = Path(tempfile.mktemp(suffix=".log"))
+        temp_path = tmp_path / "test_rapid_deletion.log"
         temp_path.write_text("Test content")
 
         async def delete_file_soon():
             await asyncio.sleep(0.001)
-            temp_path.unlink(missing_ok=True)
+            try:
+                temp_path.unlink(missing_ok=True)
+            except PermissionError:
+                pass
 
         # Start deletion task
         delete_task = asyncio.create_task(delete_file_soon())

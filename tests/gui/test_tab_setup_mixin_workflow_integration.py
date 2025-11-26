@@ -4,9 +4,14 @@ Tests end-to-end workflows and complex interactions between components
 in the TabSetupMixin implementation.
 """
 
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtWidgets import QWidget
 
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin

@@ -4,13 +4,11 @@ This module tests the complete workflow from crash log input through
 parsing, analysis, and report generation using synthetic data based
 on real crash log patterns.
 """
-# ruff: noqa: ANN201, ANN001, PLR6301, ARG002, ASYNC240, FURB113
+# ruff: noqa: ANN201, ANN001, PLR6301, ARG002, FURB113
 
 import asyncio
 import contextlib
-import tempfile
 import time
-from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -239,86 +237,76 @@ class TestScanPipelineE2E:
             include_memory_dump=True,
         )
 
-        # Create temporary log file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as temp_log:
-            temp_log.write(crash_log_content)
-            log_path = Path(temp_log.name)
+        start_time = time.time()
 
-        try:
-            start_time = time.time()
+        # Phase 1: Parse crash log
+        from ClassicLib.integration.factory import get_parser
 
-            # Phase 1: Parse crash log
-            from ClassicLib.integration.factory import get_parser
+        parser = get_parser()
 
-            parser = get_parser()
+        # Parse the log (should use Rust if available for 10x speedup)
+        # Use find_segments which is the actual API
+        crash_lines = crash_log_content.splitlines()
+        _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
+        parse_time = time.time() - start_time
 
-            # Parse the log (should use Rust if available for 10x speedup)
-            # Use find_segments which is the actual API
-            crash_lines = crash_log_content.splitlines()
-            _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
-            parse_time = time.time() - start_time
+        # Validate parsing - check that segments were found
+        assert segments is not None
+        # Segments is a tuple of lists in the new API
+        assert isinstance(segments, (tuple, list))
+        assert len(segments) >= 6
 
-            # Validate parsing - check that segments were found
-            assert segments is not None
-            # Segments is a tuple of lists in the new API
-            assert isinstance(segments, (tuple, list))
-            assert len(segments) >= 6
+        segment_plugins = segments[5]
+        segment_stack = segments[2]
 
-            segment_plugins = segments[5]
-            segment_stack = segments[2]
+        # Phase 2: Analyze FormIDs
+        from ClassicLib.integration.factory import get_formid_analyzer
 
-            # Phase 2: Analyze FormIDs
-            from ClassicLib.integration.factory import get_formid_analyzer
+        mock_yamldata = MagicMock()
+        mock_yamldata.formid_keywords = ["crash", "error", "exception"]
 
-            mock_yamldata = MagicMock()
-            mock_yamldata.formid_keywords = ["crash", "error", "exception"]
+        analyzer = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=False)
 
-            analyzer = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=False)
+        # Extract and analyze FormIDs using the correct API
+        formids = ["00000014", "FE000803", "0A001234"]  # From synthetic log
 
-            # Extract and analyze FormIDs using the correct API
-            formids = ["00000014", "FE000803", "0A001234"]  # From synthetic log
+        analyze_start = time.time()
+        # Use extract_formids which is the actual API
+        analysis_results = analyzer.extract_formids(formids)
+        analyze_time = time.time() - analyze_start
 
-            analyze_start = time.time()
-            # Use extract_formids which is the actual API
-            analysis_results = analyzer.extract_formids(formids)
-            analyze_time = time.time() - analyze_start
+        # Phase 3: Generate report - Use OrchestratorCore which knows how to compose reports
+        # ReportGeneratorFragments doesn't have a single 'generate' method
 
-            # Phase 3: Generate report - Use OrchestratorCore which knows how to compose reports
-            # ReportGeneratorFragments doesn't have a single 'generate' method
+        # Since we're testing the pipeline, we can simulate what OrchestratorCore does
+        # or just verify we have the data to generate a report
 
-            # Since we're testing the pipeline, we can simulate what OrchestratorCore does
-            # or just verify we have the data to generate a report
+        assert segment_plugins is not None
+        assert segment_stack is not None
+        assert analysis_results is not None
 
-            assert segment_plugins is not None
-            assert segment_stack is not None
-            assert analysis_results is not None
+        report_time = 0.1  # Placeholder since we skip full generation here
 
-            report_time = 0.1  # Placeholder since we skip full generation here
+        # Validate complete pipeline
+        # assert report is not None # Skipped
 
-            # Validate complete pipeline
-            # assert report is not None # Skipped
+        # Performance validation (with Rust acceleration targets)
+        total_time = time.time() - start_time
 
-            # Performance validation (with Rust acceleration targets)
-            total_time = time.time() - start_time
+        # Expected times with Rust acceleration
+        if "RustLogParser" in str(type(parser)):
+            assert parse_time < 0.5, f"Parsing too slow: {parse_time}s (expected <0.5s with Rust)"
+            assert analyze_time < 0.05, f"Analysis too slow: {analyze_time}s (expected <0.05s with Rust)"
 
-            # Expected times with Rust acceleration
-            if "RustLogParser" in str(type(parser)):
-                assert parse_time < 0.5, f"Parsing too slow: {parse_time}s (expected <0.5s with Rust)"
-                assert analyze_time < 0.05, f"Analysis too slow: {analyze_time}s (expected <0.05s with Rust)"
+        # Total pipeline should complete quickly
+        assert total_time < 3.0, f"Pipeline too slow: {total_time}s (expected <3s)"
 
-            # Total pipeline should complete quickly
-            assert total_time < 3.0, f"Pipeline too slow: {total_time}s (expected <3s)"
-
-            # Log performance metrics
-            print("\nPipeline Performance (1MB log):")
-            print(f"  Parse time: {parse_time:.3f}s")
-            print(f"  Analyze time: {analyze_time:.3f}s")
-            print(f"  Report time: {report_time:.3f}s")
-            print(f"  Total time: {total_time:.3f}s")
-
-        finally:
-            # Cleanup
-            log_path.unlink(missing_ok=True)
+        # Log performance metrics
+        print("\nPipeline Performance (1MB log):")
+        print(f"  Parse time: {parse_time:.3f}s")
+        print(f"  Analyze time: {analyze_time:.3f}s")
+        print(f"  Report time: {report_time:.3f}s")
+        print(f"  Total time: {total_time:.3f}s")
 
     @pytest.mark.asyncio
     async def test_complete_scan_pipeline_2mb_log(self, setup_pipeline):
@@ -334,32 +322,24 @@ class TestScanPipelineE2E:
             include_memory_dump=True,
         )
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".log", delete=False, encoding="utf-8") as temp_log:
-            temp_log.write(crash_log_content)
-            log_path = Path(temp_log.name)
+        # Process through complete pipeline
+        from ClassicLib.integration.factory import get_parser
 
-        try:
-            # Process through complete pipeline
-            from ClassicLib.integration.factory import get_parser
+        parser = get_parser()
 
-            parser = get_parser()
+        start_time = time.time()
+        crash_lines = crash_log_content.splitlines()
+        _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
+        parse_time = time.time() - start_time
 
-            start_time = time.time()
-            crash_lines = crash_log_content.splitlines()
-            _, _, _, segments = parser.find_segments(crash_lines, "Buffout 4", "F4SE", "Fallout4.exe")
-            parse_time = time.time() - start_time
+        # Should handle 2MB log efficiently
+        assert segments is not None
 
-            # Should handle 2MB log efficiently
-            assert segments is not None
+        # With Rust acceleration, even 2MB should parse quickly
+        if "RustLogParser" in str(type(parser)):
+            assert parse_time < 1.0, f"2MB parsing too slow: {parse_time}s (expected <1s with Rust)"
 
-            # With Rust acceleration, even 2MB should parse quickly
-            if "RustLogParser" in str(type(parser)):
-                assert parse_time < 1.0, f"2MB parsing too slow: {parse_time}s (expected <1s with Rust)"
-
-            print(f"\n2MB Log Parse Time: {parse_time:.3f}s")
-
-        finally:
-            log_path.unlink(missing_ok=True)
+        print(f"\n2MB Log Parse Time: {parse_time:.3f}s")
 
     @pytest.mark.asyncio
     async def test_pipeline_with_missing_plugin_list(self, setup_pipeline):
@@ -490,48 +470,48 @@ class TestScanPipelineE2E:
 
     @pytest.mark.asyncio
     @pytest.mark.skip(reason="GameScanner module has been removed/refactored. Need to update test to use GameIntegrityOrchestrator.")
-    async def test_game_scan_to_integrity_check_pipeline(self, setup_pipeline):
+    async def test_game_scan_to_integrity_check_pipeline(self, setup_pipeline, tmp_path):
         """Test game scanning to integrity check pipeline."""
         from ClassicLib.ScanGame.GameScanner import GameScanner  # type: ignore
 
         from ClassicLib.GameIntegrity import GameIntegrityChecker
 
         # Create synthetic game structure
-        with tempfile.TemporaryDirectory(prefix="synthetic_game_") as game_dir:
-            game_path = Path(game_dir)
+        game_path = tmp_path / "synthetic_game"
+        game_path.mkdir()
 
-            # Create synthetic game files
-            (game_path / "Data").mkdir()
-            (game_path / "Data" / "Fallout4.esm").write_bytes(b"SYNTH_MASTER")
-            (game_path / "Data" / "DLCRobot.esm").write_bytes(b"SYNTH_DLC")
-            (game_path / "Data" / "SyntheticMod.esp").write_bytes(b"SYNTH_MOD")
+        # Create synthetic game files
+        (game_path / "Data").mkdir()
+        (game_path / "Data" / "Fallout4.esm").write_bytes(b"SYNTH_MASTER")
+        (game_path / "Data" / "DLCRobot.esm").write_bytes(b"SYNTH_DLC")
+        (game_path / "Data" / "SyntheticMod.esp").write_bytes(b"SYNTH_MOD")
 
-            # Mock scanner and checker
-            with patch("ClassicLib.ScanGame.GameScanner.GameScanner") as MockScanner:
-                scanner_instance = MockScanner.return_value
-                scanner_instance.scan_game_directory = AsyncMock(
-                    return_value={
-                        "masters": ["Fallout4.esm", "DLCRobot.esm"],
-                        "plugins": ["SyntheticMod.esp"],
-                        "archives": [],
-                        "issues": [],
-                    }
-                )
+        # Mock scanner and checker
+        with patch("ClassicLib.ScanGame.GameScanner.GameScanner") as MockScanner:
+            scanner_instance = MockScanner.return_value
+            scanner_instance.scan_game_directory = AsyncMock(
+                return_value={
+                    "masters": ["Fallout4.esm", "DLCRobot.esm"],
+                    "plugins": ["SyntheticMod.esp"],
+                    "archives": [],
+                    "issues": [],
+                }
+            )
 
-                # Run game scan pipeline
-                GameScanner(str(game_path))
-                scan_result = await scanner_instance.scan_game_directory()
+            # Run game scan pipeline
+            GameScanner(str(game_path))
+            scan_result = await scanner_instance.scan_game_directory()
 
-                # Validate scan results
-                assert "masters" in scan_result
-                assert len(scan_result["masters"]) == 2
-                assert "Fallout4.esm" in scan_result["masters"]
+            # Validate scan results
+            assert "masters" in scan_result
+            assert len(scan_result["masters"]) == 2
+            assert "Fallout4.esm" in scan_result["masters"]
 
-                # Run integrity check
-                checker = GameIntegrityChecker()
-                with patch.object(checker, "check_executable_version", return_value=(True, "")):
-                    # Just verify we can instantiate and mock check
-                    pass
+            # Run integrity check
+            checker = GameIntegrityChecker()
+            with patch.object(checker, "check_executable_version", return_value=(True, "")):
+                # Just verify we can instantiate and mock check
+                pass
 
     @pytest.mark.asyncio
     async def test_mod_detection_to_conflict_resolution_pipeline(self, setup_pipeline):

@@ -3,10 +3,14 @@
 Tests tab setup functionality in isolation with mocked Qt components.
 """
 
+import os
 from unittest import mock
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
 
 from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
 from tests.fixtures.registry_fixtures import init_message_handler_fixture  # noqa: F401

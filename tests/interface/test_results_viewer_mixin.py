@@ -11,10 +11,15 @@ This test module verifies that:
 # ruff: noqa: ANN201, ANN001, ARG001, ANN204
 
 import contextlib
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QObject
 from PySide6.QtWidgets import QApplication, QWidget
 
@@ -30,7 +35,7 @@ def init_message_handler():
     # Cleanup after test
     from ClassicLib.MessageHandler.handler import _message_handler  # noqa: PLC2701
 
-    _message_handler._instance = None # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+    _message_handler._instance = None  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
 
 # Note: No need to patch CLI/TUI mode check since we mock read_file_sync directly in tests

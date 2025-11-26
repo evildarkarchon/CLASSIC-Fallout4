@@ -53,8 +53,26 @@ class AsyncResourceTracker:
         self.leaked_resources.clear()
 
 
-# Global tracker instance
+# Global tracker instance - used by track_async_resources decorator
+# Note: Each test decorated with @track_async_resources gets a clean tracker
+# state because the decorator clears it at start and end. For tests needing
+# explicit tracker instances, use the resource_tracker fixture instead.
 _resource_tracker = AsyncResourceTracker()
+
+
+@pytest.fixture
+def resource_tracker():
+    """Provide a fresh AsyncResourceTracker instance per test.
+
+    Use this fixture instead of the global _resource_tracker when you need
+    explicit control over the tracker instance or better test isolation.
+
+    Yields:
+        AsyncResourceTracker: Fresh tracker instance for the test.
+    """
+    tracker = AsyncResourceTracker()
+    yield tracker
+    tracker.clear()
 
 
 def track_async_resources(func: Callable[..., Awaitable[T]]) -> Callable[..., Awaitable[T]]:

@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import subprocess
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
@@ -17,19 +17,19 @@ from PySide6.QtWidgets import QFileDialog, QLineEdit, QMessageBox
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
+
+# Try to import Rust path validator for faster path operations
+from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
-# Try to import Rust path validator for faster path operations
-_RUST_PATH_AVAILABLE = False
-classic_path: Any = None  # Will be the module if import succeeds, None otherwise
-try:
-    import classic_path
+classic_path = get_path_operations()
+_RUST_PATH_AVAILABLE = classic_path is not None
 
-    _RUST_PATH_AVAILABLE = True
+if _RUST_PATH_AVAILABLE:
     logger.debug("FolderManagement: Using Rust PathValidator for path operations (10-20x faster)")
-except ImportError:
+else:
     logger.debug("FolderManagement: Using Python pathlib for path operations")
 
 
@@ -66,10 +66,12 @@ def _is_valid_directory(path: str | Path) -> bool:
     Args:
         path: Path to check
 
-    Returns:
-        bool: True if path exists and is a directory
     """
     path_str = str(path)
+
+    # Handle empty string explicitly (invalid)
+    if not path_str:
+        return False
 
     if _RUST_PATH_AVAILABLE:
         try:

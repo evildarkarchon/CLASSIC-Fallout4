@@ -362,13 +362,13 @@ class ResultsViewerMixin:
         else:
             # Check if current report is still available
             current_still_exists = self.current_report_path and self.current_report_path in reports
-            
+
             if not current_still_exists:
                 # Reports found but current one is gone or none loaded - clear and show instructions
                 self.markdown_viewer.clear()
                 self.markdown_viewer.setMarkdown("# Reports Available\n\nSelect a report from the list to view its contents.")
                 self.current_report_path = None
-                
+
                 # Auto-select the first report for better UX
                 if self.results_list.count() > 0:
                     self.results_list.setCurrentRow(0)

@@ -13,7 +13,7 @@ import tempfile
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import psutil
 import pytest
@@ -23,12 +23,18 @@ pytestmark = [pytest.mark.integration, pytest.mark.performance]
 
 
 class PerformanceMetrics:
-    """Track and analyze performance metrics."""
+    """Track and analyze performance metrics.
+
+    Thread-safe implementation for parallel test execution.
+    """
 
     def __init__(self):
+        import threading
+
         self.measurements: dict[str, list[float]] = {}
         self.baselines: dict[str, float] = {}
         self.rust_status: dict[str, bool] = {}
+        self._lock = threading.Lock()
 
     def measure(self, name: str, func, *args, **kwargs) -> tuple[Any, float]:
         """Measure execution time of a function."""
@@ -37,9 +43,10 @@ class PerformanceMetrics:
         result = func(*args, **kwargs)
         elapsed = time.perf_counter() - start
 
-        if name not in self.measurements:
-            self.measurements[name] = []
-        self.measurements[name].append(elapsed)
+        with self._lock:
+            if name not in self.measurements:
+                self.measurements[name] = []
+            self.measurements[name].append(elapsed)
 
         return result, elapsed
 
@@ -50,18 +57,21 @@ class PerformanceMetrics:
         result = await coro
         elapsed = time.perf_counter() - start
 
-        if name not in self.measurements:
-            self.measurements[name] = []
-        self.measurements[name].append(elapsed)
+        with self._lock:
+            if name not in self.measurements:
+                self.measurements[name] = []
+            self.measurements[name].append(elapsed)
 
         return result, elapsed
 
     def get_statistics(self, name: str) -> dict[str, float]:
         """Get statistics for a measurement."""
-        if name not in self.measurements or not self.measurements[name]:
-            return {}
+        with self._lock:
+            if name not in self.measurements or not self.measurements[name]:
+                return {}
 
-        values = self.measurements[name]
+            values = self.measurements[name].copy()  # Copy to release lock quickly
+
         return {
             "min": min(values),
             "max": max(values),
@@ -73,15 +83,17 @@ class PerformanceMetrics:
 
     def check_regression(self, name: str, threshold: float = 1.5) -> bool:
         """Check if performance has regressed beyond threshold."""
-        if name not in self.baselines:
-            return False
+        with self._lock:
+            if name not in self.baselines:
+                return False
+            baseline = self.baselines[name]
 
         stats = self.get_statistics(name)
         if not stats:
             return False
 
         # Check if median time is worse than baseline * threshold
-        return stats["median"] > self.baselines[name] * threshold
+        return stats["median"] > baseline * threshold
 
 
 class SyntheticDataGenerator:
@@ -491,7 +503,6 @@ class TestPluginAnalysisPerformance:
 
     def test_plugin_conflict_detection(self, metrics, generator):
         """Test plugin conflict detection performance."""
-        from ClassicLib.integration.factory import get_plugin_analyzer
 
         # Generate synthetic plugin data
         plugin_data = generator.generate_plugin_data(num_plugins=100, formids_per_plugin=100)
@@ -501,24 +512,24 @@ class TestPluginAnalysisPerformance:
 
         # Check for FormID conflicts between all plugin pairs
         conflicts = []
-            plugin_list = list(plugin_data.items())
-            for i in range(len(plugin_list)):
-                for j in range(i + 1, len(plugin_list)):
-                    plugin1_name, plugin1_data = plugin_list[i]
-                    plugin2_name, plugin2_data = plugin_list[j]
+        plugin_list = list(plugin_data.items())
+        for i in range(len(plugin_list)):
+            for j in range(i + 1, len(plugin_list)):
+                plugin1_name, plugin1_data = plugin_list[i]
+                plugin2_name, plugin2_data = plugin_list[j]
 
-                    # Find common FormIDs
-                    common = set(plugin1_data["formids"]) & set(plugin2_data["formids"])
-                    if common:
-                        conflicts.append((plugin1_name, plugin2_name, list(common)))
+                # Find common FormIDs
+                common = set(plugin1_data["formids"]) & set(plugin2_data["formids"])
+                if common:
+                    conflicts.append((plugin1_name, plugin2_name, list(common)))
 
-            elapsed = time.perf_counter() - start
+        elapsed = time.perf_counter() - start
 
-            print(f"\nPlugin conflict detection (100 plugins): {elapsed:.3f}s")
-            print(f"Conflicts found: {len(conflicts)}")
+        print(f"\nPlugin conflict detection (100 plugins): {elapsed:.3f}s")
+        print(f"Conflicts found: {len(conflicts)}")
 
-            # Should detect conflicts quickly even with 100 plugins
-            assert elapsed < 2.0, f"Conflict detection too slow: {elapsed:.3f}s"
+        # Should detect conflicts quickly even with 100 plugins
+        assert elapsed < 2.0, f"Conflict detection too slow: {elapsed:.3f}s"
 
     def test_dependency_chain_analysis(self, metrics, generator):
         """Test plugin dependency chain analysis performance."""

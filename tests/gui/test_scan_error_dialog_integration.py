@@ -6,9 +6,14 @@ signal connections and error dialog presentation.
 """
 # ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002, ANN202, ANN002, ANN003, ANN205
 
+import os
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtWidgets import QButtonGroup, QMainWindow
 
 from ClassicLib.Interface.Dialogs import CustomErrorDialog

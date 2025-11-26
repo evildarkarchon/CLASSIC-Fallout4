@@ -5,10 +5,15 @@ This module tests the PapyrusMonitorDialog functionality with fully mocked Qt
 components, including UI updates, statistics handling, and dialog operations.
 """
 
+import os
 from datetime import datetime
 from unittest.mock import Mock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
