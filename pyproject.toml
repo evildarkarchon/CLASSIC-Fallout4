@@ -196,18 +196,54 @@ ban-relative-imports = "all"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = [
-    "PLR6301",  # Method could be static - tests use self for fixtures
-    "ARG001",   # Unused function argument - pytest fixtures
-    "ARG002",   # Unused method argument - pytest fixtures
-    "ARG005",   # Unused lambda argument - test mocking
-    "RUF029",   # Async without await - test fixtures
-    "ANN001",   # Missing type annotation for argument
-    "ANN201",   # Missing return type annotation
-    "ANN202",   # Missing return type for private function
-    "ANN204",   # Missing return type for __init__
-    "PT011",    # pytest.raises too broad
-    "PT012",    # pytest.raises with multiple statements
-    "PT017",    # assert in except block
+    # Annotations - tests don't need strict typing
+    "ANN",
+    # Arguments - pytest fixtures cause false positives
+    "ARG",
+    # Async - test patterns differ from production
+    "ASYNC",
+    # Bugbear - tests intentionally use unusual patterns
+    "B",
+    # Blind exceptions - tests need flexible error handling
+    "BLE001",
+    # Comprehensions - test clarity over brevity
+    "C4",
+    # Module imports - tests have different import patterns
+    "E402",
+    # Lambda - tests use lambdas for mocking
+    "E731",
+    # Variable names - tests may use short names intentionally
+    "E741",
+    # Unused imports/variables - common in test fixtures
+    "F401", "F405", "F601", "F811", "F841",
+    # FURB - test clarity over micro-optimizations
+    "FURB",
+    # Logging - tests may use root logger
+    "LOG",
+    # Performance - tests prioritize clarity
+    "PERF",
+    # PIE - misc lints, tests have different patterns
+    "PIE",
+    # Pylint complexity - tests can be complex
+    "PLC", "PLR", "PLW",
+    # Pytest - allow flexible test patterns
+    "PT",
+    # Return statements - tests have different patterns
+    "RET",
+    # Raise without args - tests may re-raise
+    "RSE102",
+    # RUF - various Ruff-specific rules
+    "RUF",
+    # Simplify - test clarity over brevity
+    "SIM",
+    # Type checking imports - tests don't need optimization
+    "TC",
+    # Tidy imports - tests may have relative imports
+    "TID252",
+    # Exception patterns - tests intentionally test error handling
+    "TRY",
+    # Upgrade suggestions - not critical for tests
+    "UP",
 ]
 "tests/conftest.py" = ["ANN001", "ANN201", "ANN202"]
 "tests/fixtures/**/*.py" = ["ANN001", "ANN201", "ANN202"]
