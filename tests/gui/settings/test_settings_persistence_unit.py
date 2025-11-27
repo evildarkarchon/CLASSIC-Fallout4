@@ -17,18 +17,17 @@ class TestSettingsLoading:
 
     def test_load_settings(self, settings_dialog, reset_settings):
         """Test that settings are loaded correctly from YAML."""
-        yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications", True)
+        yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", True)
         yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "GitHub")
         settings_dialog.load_settings()
-        assert settings_dialog.audio_checkbox.isChecked()
+        assert settings_dialog.vr_checkbox.isChecked()
         assert not settings_dialog.fcx_checkbox.isChecked()
         assert settings_dialog.update_source_combo.currentText() == "GitHub"
 
     def test_load_all_settings(self, settings_dialog, reset_settings):
         """Test that all settings are loaded correctly."""
         test_values = {
-            "CLASSIC_Settings.Audio Notifications": False,
             "CLASSIC_Settings.VR Mode": True,
             "CLASSIC_Settings.FCX Mode": True,
             "CLASSIC_Settings.Simplify Logs": True,
@@ -40,7 +39,6 @@ class TestSettingsLoading:
             yaml_settings(bool, YAML.TEST, key, value)
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "Nexus")
         settings_dialog.load_settings()
-        assert not settings_dialog.audio_checkbox.isChecked()
         assert settings_dialog.vr_checkbox.isChecked()
         assert settings_dialog.fcx_checkbox.isChecked()
         assert settings_dialog.simplify_checkbox.isChecked()
@@ -55,17 +53,16 @@ class TestSettingsSaving:
 
     def test_save_settings(self, settings_dialog, reset_settings):
         """Test that settings are saved correctly to YAML."""
-        settings_dialog.audio_checkbox.setChecked(False)
+        settings_dialog.vr_checkbox.setChecked(False)
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("Nexus")
         settings_dialog.save_settings()
-        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
+        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "Nexus"
 
     def test_save_all_settings(self, settings_dialog, reset_settings):
         """Test that all settings are saved correctly."""
-        settings_dialog.audio_checkbox.setChecked(False)
         settings_dialog.vr_checkbox.setChecked(True)
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.simplify_checkbox.setChecked(True)
@@ -74,7 +71,6 @@ class TestSettingsSaving:
         settings_dialog.update_check_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("GitHub")
         settings_dialog.save_settings()
-        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")

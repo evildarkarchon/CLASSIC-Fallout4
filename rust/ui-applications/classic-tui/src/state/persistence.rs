@@ -46,6 +46,7 @@ pub struct SessionState {
 
 /// Serializable version of UiState
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[allow(clippy::enum_variant_names)]
 pub enum UiStateData {
     MainScreen,
     HelpScreen,

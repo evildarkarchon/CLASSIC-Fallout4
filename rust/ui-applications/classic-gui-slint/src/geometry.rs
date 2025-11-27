@@ -7,6 +7,7 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -29,6 +30,9 @@ pub struct WindowGeometry {
     pub x: i32,
     /// Window Y position in screen coordinates, or -1 to center vertically
     pub y: i32,
+    /// Per-tab window sizes (tab_index -> (width, height))
+    #[serde(default)]
+    pub tab_sizes: HashMap<i32, (i32, i32)>,
 }
 
 impl Default for WindowGeometry {
@@ -38,6 +42,7 @@ impl Default for WindowGeometry {
             height: 350,
             x: -1, // -1 means center on screen
             y: -1,
+            tab_sizes: HashMap::new(),
         }
     }
 }
@@ -80,5 +85,15 @@ impl WindowGeometry {
 
         tracing::debug!("Saved window geometry: {:?}", self);
         Ok(())
+    }
+
+    /// Get saved size for a specific tab
+    pub fn get_tab_size(&self, tab_index: i32) -> Option<(i32, i32)> {
+        self.tab_sizes.get(&tab_index).copied()
+    }
+
+    /// Set size for a specific tab
+    pub fn set_tab_size(&mut self, tab_index: i32, width: i32, height: i32) {
+        self.tab_sizes.insert(tab_index, (width, height));
     }
 }

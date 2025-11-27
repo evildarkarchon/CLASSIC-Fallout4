@@ -9,7 +9,6 @@
 use classic_yaml_core::YamlOperations;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use tokio::task::JoinSet;
 use yaml_rust2::YamlLoader;
 
 /// The `YamlDataCore` structure represents the core data configuration for YAML-based game settings and diagnostics.
@@ -157,17 +156,31 @@ impl YamlDataCore {
         game: String,
         vr_mode: bool,
     ) -> Result<Self, ConfigError> {
-        // Validate input
-        if yaml_dirs.len() < 3 {
-            return Err(ConfigError::InvalidInput(
-                "yaml_dirs must contain at least 3 directories (main, game, ignore)".to_string(),
-            ));
-        }
+        // Resolve paths based on input size
+        let (main_yaml, game_yaml, ignore_yaml) = if yaml_dirs.len() == 2 {
+            // Correct API: [root_dir, data_dir]
+            let root_dir = &yaml_dirs[0];
+            let data_dir = &yaml_dirs[1];
 
-        // Construct file paths
-        let main_yaml = yaml_dirs[0].join("CLASSIC Main.yaml");
-        let game_yaml = yaml_dirs[1].join(format!("CLASSIC {}.yaml", game));
-        let ignore_yaml = yaml_dirs[2].join("CLASSIC Ignore.yaml");
+            (
+                data_dir.join("databases").join("CLASSIC Main.yaml"),
+                data_dir
+                    .join("databases")
+                    .join(format!("CLASSIC {}.yaml", game)),
+                root_dir.join("CLASSIC Ignore.yaml"),
+            )
+        } else if yaml_dirs.len() == 3 {
+            // Legacy/Hack API: [main_dir, game_dir, ignore_dir]
+            (
+                yaml_dirs[0].join("CLASSIC Main.yaml"),
+                yaml_dirs[1].join(format!("CLASSIC {}.yaml", game)),
+                yaml_dirs[2].join("CLASSIC Ignore.yaml"),
+            )
+        } else {
+            return Err(ConfigError::InvalidInput(
+                "yaml_dirs must contain either 2 directories (root, data) or 3 directories (main, game, ignore)".to_string(),
+            ));
+        };
 
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {
@@ -180,53 +193,19 @@ impl YamlDataCore {
         }
 
         // Load all YAML files in parallel using Tokio
-        let (main_content, game_content, ignore_content) = {
-            let mut set = JoinSet::new();
+        // Use tokio::join! to preserve order (unlike JoinSet which returns in completion order)
+        let (main_result, game_result, ignore_result) = tokio::join!(
+            tokio::fs::read_to_string(&main_yaml),
+            tokio::fs::read_to_string(&game_yaml),
+            tokio::fs::read_to_string(&ignore_yaml)
+        );
 
-            // Spawn parallel tasks to load each YAML file
-            let main_path = main_yaml.clone();
-            set.spawn(async move {
-                tokio::fs::read_to_string(&main_path)
-                    .await
-                    .map_err(|e| format!("Failed to read main YAML: {}", e))
-            });
-
-            let game_path = game_yaml.clone();
-            set.spawn(async move {
-                tokio::fs::read_to_string(&game_path)
-                    .await
-                    .map_err(|e| format!("Failed to read game YAML: {}", e))
-            });
-
-            let ignore_path = ignore_yaml.clone();
-            set.spawn(async move {
-                tokio::fs::read_to_string(&ignore_path)
-                    .await
-                    .map_err(|e| format!("Failed to read ignore YAML: {}", e))
-            });
-
-            // Wait for all three files to load
-            let r1 = set
-                .join_next()
-                .await
-                .ok_or_else(|| ConfigError::RuntimeError("Task join failed".to_string()))?
-                .map_err(|e| ConfigError::RuntimeError(format!("Join error: {}", e)))?
-                .map_err(ConfigError::IOError)?;
-            let r2 = set
-                .join_next()
-                .await
-                .ok_or_else(|| ConfigError::RuntimeError("Task join failed".to_string()))?
-                .map_err(|e| ConfigError::RuntimeError(format!("Join error: {}", e)))?
-                .map_err(ConfigError::IOError)?;
-            let r3 = set
-                .join_next()
-                .await
-                .ok_or_else(|| ConfigError::RuntimeError("Task join failed".to_string()))?
-                .map_err(|e| ConfigError::RuntimeError(format!("Join error: {}", e)))?
-                .map_err(ConfigError::IOError)?;
-
-            (r1, r2, r3)
-        };
+        let main_content = main_result
+            .map_err(|e| ConfigError::IOError(format!("Failed to read main YAML: {}", e)))?;
+        let game_content = game_result
+            .map_err(|e| ConfigError::IOError(format!("Failed to read game YAML: {}", e)))?;
+        let ignore_content = ignore_result
+            .map_err(|e| ConfigError::IOError(format!("Failed to read ignore YAML: {}", e)))?;
 
         // Parse YAML contents using yaml-rust2
         let main_docs = YamlLoader::load_from_str(&main_content)

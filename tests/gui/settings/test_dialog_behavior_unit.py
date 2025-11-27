@@ -4,13 +4,20 @@ Unit tests for dialog_behavior - unit logic testing.
 This file contains unit tests that test individual functions with mocked dependencies.
 """
 
+import os
+
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers"),
+]
+
 from PySide6.QtWidgets import QDialog
 
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettingsCache import yaml_settings
-
-pytestmark = pytest.mark.unit
 
 
 class TestDialogAcceptReject:
@@ -38,12 +45,10 @@ class TestDialogAcceptReject:
 
     def test_accept_multiple_changes(self, settings_dialog, reset_settings):
         """Test accepting dialog with multiple setting changes."""
-        settings_dialog.audio_checkbox.setChecked(False)
         settings_dialog.vr_checkbox.setChecked(True)
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("GitHub")
         settings_dialog.accept()
-        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "GitHub"

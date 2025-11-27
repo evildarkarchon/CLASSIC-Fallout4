@@ -12,9 +12,9 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_progress_context
-from ClassicLib.ScanLog.AsyncFileIO import write_reports_batch
 from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
@@ -22,6 +22,28 @@ from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
 if TYPE_CHECKING:
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+
+
+async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
+    """
+    Writes batch reports to their respective files asynchronously.
+
+    Args:
+        reports (list[tuple[Path, list[str], bool]]): A list of tuples, where each
+            tuple contains:
+            - A Path object pointing to the crash log file.
+            - A list of strings representing the autoscan report content.
+            - A boolean indicating whether a scan failure occurred.
+    """
+    io_core = get_file_io()
+    tasks = []
+    for crashlog_file, autoscan_report, _ in reports:
+        report_path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
+        content = "".join(autoscan_report)
+        tasks.append(io_core.write_file(report_path, content))
+
+    await asyncio.gather(*tasks, return_exceptions=True)
+    logger.debug(f"Wrote {len(reports)} reports using batch I/O")
 
 
 class AsyncCrashLogPipeline:

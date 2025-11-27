@@ -10,6 +10,12 @@ pub struct PyStringPool {
     inner: StringPool,
 }
 
+impl Default for PyStringPool {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyStringPool {
     /// Create a new string pool for string interning
@@ -114,6 +120,12 @@ pub struct PyReportComposer {
     inner: ReportComposer,
 }
 
+impl Default for PyReportComposer {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyReportComposer {
     /// Create a new report composer for assembling report fragments
@@ -167,6 +179,12 @@ pub struct PyReportGenerator {
     inner: ReportGenerator,
 }
 
+impl Default for PyReportGenerator {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyReportGenerator {
     /// Create a new report generator for creating standardized report sections
@@ -215,6 +233,12 @@ impl PyReportGenerator {
 /// Python wrapper for ParallelReportProcessor
 #[pyclass(name = "ParallelReportProcessor")]
 pub struct PyParallelReportProcessor;
+
+impl Default for PyParallelReportProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 #[pymethods]
 impl PyParallelReportProcessor {

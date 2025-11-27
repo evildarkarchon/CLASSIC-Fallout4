@@ -4,6 +4,8 @@ This module tests the GUI application initialization, window setup,
 and component integration for the main CLASSIC interface.
 """
 
+# ruff: noqa: PLR6301, ARG002
+
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, Mock, patch
@@ -13,19 +15,62 @@ import pytest
 # Mark all tests in this module as GUI tests
 pytestmark = [pytest.mark.gui, pytest.mark.unit]
 
+import os
 
+
+@pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests unstable in xdist workers on Windows")
 class TestClassicInterface:
     """Test suite for CLASSIC_Interface.py GUI entry point."""
 
     @pytest.fixture(autouse=True)
-    def setup(self) -> None:
-        """Set up test environment."""
-        # Clear any existing QApplication instances
-        from PySide6.QtWidgets import QApplication
+    def setup(self, qt_application) -> None:
+        """Set up test environment.
 
-        app = QApplication.instance()
-        if app:
-            app.quit()
+        Args:
+            qt_application: Session-scoped QApplication from qt_fixtures.py.
+                Using this fixture ensures proper Qt lifecycle management and
+                AsyncBridge cleanup between tests.
+        """
+        from ClassicLib.MessageHandler.handler import _message_handler_lock
+
+        # Shutdown any existing AsyncBridge instances BEFORE patching.
+        # This is critical because patching the class doesn't stop already-running
+        # background threads, which can cause access violations on Windows.
+        try:
+            import sys
+
+            if "ClassicLib.AsyncBridge" in sys.modules:
+                from ClassicLib.AsyncBridge import AsyncBridge
+
+                # Shutdown all existing instances
+                if hasattr(AsyncBridge, "_instances") and AsyncBridge._instances:
+                    for instance in list(AsyncBridge._instances.values()):
+                        try:
+                            instance.shutdown()
+                        except Exception:
+                            pass  # Ignore shutdown errors
+                    with AsyncBridge._lock:
+                        AsyncBridge._instances.clear()
+        except Exception:
+            pass  # Ignore if AsyncBridge not available
+
+        # Patch AsyncBridge to prevent new background threads from starting
+        patcher = patch("ClassicLib.AsyncBridge.AsyncBridge")
+        patcher.start()
+
+        # Reset MessageHandler singleton to prevent dangling parent references
+        from ClassicLib.MessageHandler import handler as msg_handler_module
+
+        with _message_handler_lock:
+            msg_handler_module._message_handler = None
+
+        yield
+
+        # Cleanup after test
+        with _message_handler_lock:
+            msg_handler_module._message_handler = None
+
+        patcher.stop()
 
     @patch("CLASSIC_Interface.SetupCoordinator")
     @patch("CLASSIC_Interface.QApplication")
@@ -39,51 +84,61 @@ class TestClassicInterface:
         mock_setup_coordinator.return_value = mock_coordinator_instance
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow") as mock_window_class:
+        with patch("CLASSIC_Interface.MainWindow") as mock_window_class, patch.object(sys, "exit") as mock_exit:
             mock_window = MagicMock()
             mock_window_class.return_value = mock_window
             mock_app_instance.exec.return_value = 0
 
-            # Simulate running __main__ block
-            with patch.object(sys, "argv", ["test"]), patch("CLASSIC_Interface.__name__", "__main__"):
-                # Import and execute the module
-                import importlib
-
+            # Simulate running main function
+            with patch.object(sys, "argv", ["test"]):
                 import CLASSIC_Interface
 
-                importlib.reload(CLASSIC_Interface)
+                CLASSIC_Interface.main()
 
         # Assert
         mock_setup_coordinator.assert_called_once()
         mock_coordinator_instance.initialize_application.assert_called_once_with(is_gui=True)
         mock_window_class.assert_called_once()
         mock_window.show.assert_called_once()
+        mock_exit.assert_called_once_with(0)
 
+    @patch("CLASSIC_Interface.QTimer")
     @patch("CLASSIC_Interface.GlobalRegistry")
     @patch("CLASSIC_Interface.init_message_handler")
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.classic_settings")
+    @patch("CLASSIC_Interface.get_thread_manager")
     def test_main_window_initialization(
-        self, mock_classic_settings: Mock, mock_yaml_settings: Mock, mock_init_msg_handler: Mock, mock_global_registry: Mock
+        self,
+        mock_get_thread_manager: Mock,
+        mock_classic_settings: Mock,
+        mock_yaml_settings: Mock,
+        mock_init_msg_handler: Mock,
+        mock_global_registry: Mock,
+        mock_qtimer: Mock,
     ) -> None:
         """Test MainWindow initialization and component setup."""
-        from PySide6.QtWidgets import QApplication
-
         from CLASSIC_Interface import MainWindow
 
-        # Arrange
-        QApplication.instance() or QApplication([])
+        # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False  # Disable update check
         mock_global_registry.get_local_dir.return_value = Path()
+        mock_get_thread_manager.return_value = MagicMock()
+        # Mock QTimer to prevent access violations on Windows offscreen platform
+        mock_timer_instance = MagicMock()
+        mock_qtimer.return_value = mock_timer_instance
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
         # Assert
         assert window.windowTitle() == "Crash Log Auto Scanner & Setup Integrity Checker | 1.0.0"
@@ -123,73 +178,97 @@ class TestClassicInterface:
         assert issubclass(MainWindow, HelpAndAboutMixin)
         assert issubclass(MainWindow, WindowGeometryMixin)
 
+    @patch("CLASSIC_Interface.QTimer")
     @patch("CLASSIC_Interface.classic_settings")
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.GlobalRegistry")
+    @patch("CLASSIC_Interface.get_thread_manager")
     def test_main_window_update_check_timer(
-        self, mock_global_registry: Mock, mock_yaml_settings: Mock, mock_classic_settings: Mock
+        self,
+        mock_get_thread_manager: Mock,
+        mock_global_registry: Mock,
+        mock_yaml_settings: Mock,
+        mock_classic_settings: Mock,
+        mock_qtimer: Mock,
     ) -> None:
         """Test update check timer initialization."""
-        from PySide6.QtCore import QTimer
-        from PySide6.QtWidgets import QApplication
-
         from CLASSIC_Interface import MainWindow
 
-        # Arrange
-        QApplication.instance() or QApplication([])
+        # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = True  # Enable update check
         mock_global_registry.get_local_dir.return_value = Path()
+        mock_get_thread_manager.return_value = MagicMock()
+        # Mock QTimer to prevent access violations on Windows offscreen platform
+        mock_timer_instance = MagicMock()
+        mock_qtimer.return_value = mock_timer_instance
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            with patch.object(QTimer, "singleShot") as mock_timer:
-                                window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
         # Assert
         assert hasattr(window, "update_check_timer")
-        assert window.update_check_timer is not None
+        assert window.update_check_timer is mock_timer_instance
         assert not window.is_update_check_running
-        mock_timer.assert_called_once_with(0, window.update_popup)
+        # QTimer.singleShot was called because classic_settings returned True
+        mock_qtimer.singleShot.assert_called_once_with(0, window.update_popup)
 
+    @patch("CLASSIC_Interface.QTimer")
     @patch("CLASSIC_Interface.logger")
     @patch("CLASSIC_Interface.classic_settings")
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.GlobalRegistry")
+    @patch("CLASSIC_Interface.get_thread_manager")
     def test_main_window_close_event(
-        self, mock_global_registry: Mock, mock_yaml_settings: Mock, mock_classic_settings: Mock, mock_logger: Mock
+        self,
+        mock_get_thread_manager: Mock,
+        mock_global_registry: Mock,
+        mock_yaml_settings: Mock,
+        mock_classic_settings: Mock,
+        mock_logger: Mock,
+        mock_qtimer: Mock,
     ) -> None:
         """Test proper cleanup during window close."""
-        from PySide6.QtWidgets import QApplication
-
         from CLASSIC_Interface import MainWindow
 
-        # Arrange
-        QApplication.instance() or QApplication([])
+        # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
         mock_global_registry.get_local_dir.return_value = Path()
-
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            window = MainWindow()
+        mock_thread_manager = MagicMock()
+        mock_get_thread_manager.return_value = mock_thread_manager
+        # Mock QTimer to prevent access violations on Windows offscreen platform
+        mock_timer_instance = MagicMock()
+        mock_qtimer.return_value = mock_timer_instance
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
         # Setup mock event
         mock_event = MagicMock()
         window.papyrus_monitor_worker = MagicMock()
 
         # Act
-        with patch.object(window, "save_current_tab_geometry") as mock_save:
-            with patch.object(window, "stop_papyrus_monitoring") as mock_stop_papyrus:
-                with patch.object(window.thread_manager, "stop_all_threads") as mock_stop_threads:
-                    window.closeEvent(mock_event)
+        with (
+            patch.object(window, "save_current_tab_geometry") as mock_save,
+            patch.object(window, "stop_papyrus_monitoring") as mock_stop_papyrus,
+            patch.object(window.thread_manager, "stop_all_threads") as mock_stop_threads,
+        ):
+            window.closeEvent(mock_event)
 
         # Assert
         mock_logger.info.assert_any_call("Application closing - cleaning up resources...")
@@ -203,12 +282,10 @@ class TestClassicInterface:
         """Test the open_url static method."""
         from PySide6.QtCore import QUrl
         from PySide6.QtGui import QDesktopServices
-        from PySide6.QtWidgets import QApplication
 
         from CLASSIC_Interface import MainWindow
 
-        # Arrange
-        QApplication.instance() or QApplication([])
+        # Arrange - QApplication is managed by qt_application fixture via setup
         test_url = "https://example.com"
 
         # Act
@@ -232,12 +309,9 @@ class TestClassicInterface:
 
         # Act & Assert
         with patch("CLASSIC_Interface.MainWindow"), patch.object(sys, "exit"), patch.object(sys, "argv", ["test"]):
-            with patch("CLASSIC_Interface.__name__", "__main__"):
-                import importlib
+            import CLASSIC_Interface
 
-                import CLASSIC_Interface
-
-                importlib.reload(CLASSIC_Interface)
+            CLASSIC_Interface.main()
 
         # Should exit with code 1 on KeyboardInterrupt
         mock_app_instance.exit.assert_called_once_with(1)
@@ -257,47 +331,62 @@ class TestClassicInterface:
         test_exception = Exception("Test startup error")
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow", side_effect=test_exception), patch.object(sys, "argv", ["test"]):
-            with patch("CLASSIC_Interface.__name__", "__main__"):
-                import importlib
+        with (
+            patch("CLASSIC_Interface.MainWindow", side_effect=test_exception),
+            patch.object(sys, "argv", ["test"]),
+            patch.object(sys, "exit") as mock_exit,
+        ):
+            import CLASSIC_Interface
 
-                import CLASSIC_Interface
-
-                importlib.reload(CLASSIC_Interface)
+            CLASSIC_Interface.main()
 
         # Assert
         mock_msg_error.assert_called_once()
         assert "Unhandled exception during application startup" in str(mock_msg_error.call_args)
         mock_msgbox.critical.assert_called_once()
+        mock_exit.assert_called_once_with(1)
 
+    @patch("CLASSIC_Interface.QTimer")
     @patch("CLASSIC_Interface.GlobalRegistry")
     @patch("CLASSIC_Interface.classic_settings")
     @patch("CLASSIC_Interface.yaml_settings")
-    def test_thread_manager_initialization(self, mock_yaml_settings: Mock, mock_classic_settings: Mock, mock_global_registry: Mock) -> None:
+    @patch("CLASSIC_Interface.get_thread_manager")
+    def test_thread_manager_initialization(
+        self,
+        mock_get_thread_manager: Mock,
+        mock_yaml_settings: Mock,
+        mock_classic_settings: Mock,
+        mock_global_registry: Mock,
+        mock_qtimer: Mock,
+    ) -> None:
         """Test that thread manager is properly initialized."""
-        from PySide6.QtWidgets import QApplication
-
         from CLASSIC_Interface import MainWindow
 
-        # Arrange
-        QApplication.instance() or QApplication([])
+        # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
         mock_classic_settings.return_value = False
         mock_global_registry.get_local_dir.return_value = Path()
+        mock_thread_manager = MagicMock()
+        mock_get_thread_manager.return_value = mock_thread_manager
+        # Mock QTimer to prevent access violations on Windows offscreen platform
+        mock_timer_instance = MagicMock()
+        mock_qtimer.return_value = mock_timer_instance
 
         # Act
-        with patch.object(MainWindow, "setup_main_tab"), patch.object(MainWindow, "setup_backups_tab"):
-            with patch.object(MainWindow, "setup_articles_tab"):
-                with patch.object(MainWindow, "setup_results_tab"):
-                    with patch.object(MainWindow, "setup_window_geometry"):
-                        with patch.object(MainWindow, "initialize_folder_paths"):
-                            window = MainWindow()
+        with (
+            patch.object(MainWindow, "setup_main_tab"),
+            patch.object(MainWindow, "setup_backups_tab"),
+            patch.object(MainWindow, "setup_articles_tab"),
+            patch.object(MainWindow, "setup_results_tab"),
+            patch.object(MainWindow, "setup_window_geometry"),
+            patch.object(MainWindow, "initialize_folder_paths"),
+        ):
+            window = MainWindow()
 
-        # Assert
+        # Assert - thread_manager comes from the mock
         assert hasattr(window, "thread_manager")
-        assert window.thread_manager is not None
-        assert hasattr(window, "audio_player")
-        assert window.audio_player is not None
+        assert window.thread_manager is mock_thread_manager
+        mock_get_thread_manager.assert_called_once()
         assert hasattr(window, "_scan_mutex")
         assert window._scan_mutex is not None
         assert hasattr(window, "_running_scans")

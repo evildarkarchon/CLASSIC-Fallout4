@@ -2,11 +2,17 @@
 
 Tests the results viewer functionality in isolation with mocked Qt components.
 """
+# ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002, ANN202, ANN002, ANN003, RUF001
 
+import os
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QFileSystemWatcher, QTimer, Signal
 from PySide6.QtWidgets import QMessageBox, QWidget
 
@@ -45,7 +51,7 @@ def mock_qt_components():
 
 
 @pytest.fixture
-def viewer_mixin(mock_qt_components, init_message_handler_fixture):
+def viewer_mixin(mock_qt_components, init_message_handler_fixture):  # noqa: F811
     """Create a ResultsViewerMixin instance with mocked dependencies."""
 
     class TestViewer(ResultsViewerMixin):
@@ -82,6 +88,9 @@ def viewer_mixin(mock_qt_components, init_message_handler_fixture):
             self.report_loaded.emit = MagicMock()
             self.reports_refreshed = MagicMock(spec=Signal)
             self.reports_refreshed.emit = MagicMock()
+
+            self._file_watching_paused = False
+            self._refresh_pending = False
 
     viewer = TestViewer()
     viewer.file_watcher = mock_qt_components["watcher"]
@@ -210,20 +219,17 @@ class TestReportScanning:
             assert len(reports) == 1
             assert "custom-AUTOSCAN.md" in str(reports[0])
 
-    def test_scan_for_reports_sorts_by_modification_time(self, viewer_mixin, tmp_path, gui_message_handler):
-        """Should sort reports by modification time, newest first."""
-        import time
-
+    def test_scan_for_reports_sorts_by_name(self, viewer_mixin, tmp_path, gui_message_handler):
+        """Should sort reports by name, descending (Z-A)."""
         crash_logs_dir = tmp_path / "Crash Logs"
         crash_logs_dir.mkdir()
 
-        # Create reports with different modification times
-        old_report = crash_logs_dir / "old-AUTOSCAN.md"
-        old_report.write_text("Old")
-        time.sleep(0.01)
+        # Create reports
+        a_report = crash_logs_dir / "a-AUTOSCAN.md"
+        a_report.write_text("A")
 
-        new_report = crash_logs_dir / "new-AUTOSCAN.md"
-        new_report.write_text("New")
+        z_report = crash_logs_dir / "z-AUTOSCAN.md"
+        z_report.write_text("Z")
 
         with (
             patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
@@ -234,9 +240,9 @@ class TestReportScanning:
 
             reports = viewer_mixin.scan_for_reports()
 
-            # Newest should be first
-            assert "new-AUTOSCAN.md" in str(reports[0])
-            assert "old-AUTOSCAN.md" in str(reports[1])
+            # Z should be first (descending)
+            assert "z-AUTOSCAN.md" in str(reports[0])
+            assert "a-AUTOSCAN.md" in str(reports[1])
 
 
 @pytest.mark.unit
@@ -248,27 +254,42 @@ class TestReportLoading:
         """Should successfully load and display a report."""
         report_path = tmp_path / "test-AUTOSCAN.md"
         report_content = "# Test Report\n\nContent here"
-        report_path.write_text(report_content)
 
-        result = viewer_mixin.load_report(report_path)
+        # Mock read_file_sync to return consistent content regardless of OS
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync", return_value=report_content),
+            patch.object(Path, "exists", return_value=True),
+            patch.object(Path, "stat") as mock_stat,
+        ):
+            mock_stat.return_value.st_mtime = 1234567890
+            mock_stat.return_value.st_size = 1024
 
-        assert result is True
-        assert viewer_mixin.current_report_path == report_path
+            result = viewer_mixin.load_report(report_path)
 
-        # Verify display methods called
-        viewer_mixin.markdown_viewer.setMarkdown.assert_called_with(report_content)
-        viewer_mixin.metadata_widget.update_metadata.assert_called_with(report_path, report_content)
-        viewer_mixin.report_loaded.emit.assert_called_with(report_path)
+            assert result is True
+            assert viewer_mixin.current_report_path == report_path
+
+            # Verify display methods called
+            viewer_mixin.markdown_viewer.setMarkdown.assert_called_with(report_content)
+            viewer_mixin.metadata_widget.update_metadata.assert_called_with(report_path, report_content)
+            viewer_mixin.report_loaded.emit.assert_called_with(report_path)
 
     def test_load_report_file_not_found(self, viewer_mixin, gui_message_handler):
         """Should handle missing report file gracefully."""
         missing_path = Path("/nonexistent/report.md")
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
+            patch("ClassicLib.Interface.ResultsViewerMixin.QTimer") as mock_timer_class,
+        ):
             result = viewer_mixin.load_report(missing_path)
 
             assert result is False
             assert viewer_mixin.current_report_path is None
+
+            # Execute callback
+            args = mock_timer_class.singleShot.call_args[0]
+            args[1]()
             mock_error.assert_called_once()
 
     def test_load_report_handles_encoding_errors(self, viewer_mixin, tmp_path, gui_message_handler):
@@ -378,7 +399,7 @@ class TestReportManagement:
         viewer_mixin.current_report_path = report_path
 
         with (
-            patch.object(Path, "read_text", side_effect=OSError("Read error")),
+            patch("ClassicLib.Interface.ResultsViewerMixin.read_file_sync", side_effect=OSError("Read error")),
             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
         ):
             viewer_mixin._copy_report()
@@ -436,7 +457,7 @@ class TestReportManagement:
             patch("ClassicLib.Interface.ResultsViewerMixin.msg_error") as mock_error,
         ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
-            mock_desktop.openUrl.side_effect = Exception("Failed to open")
+            mock_desktop.openUrl.side_effect = RuntimeError("Failed to open")
 
             viewer_mixin._open_reports_folder()
 
@@ -623,7 +644,10 @@ class TestFileWatcher:
         # Directory already in watcher
         viewer_mixin.file_watcher.directories.return_value = [crash_logs_dir.as_posix()]
 
-        with patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry:
+        with (
+            patch("ClassicLib.Interface.ResultsViewerMixin.GlobalRegistry") as mock_registry,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             mock_registry.get_local_dir.return_value = str(tmp_path)
 
             viewer_mixin.scan_for_reports()
@@ -652,7 +676,7 @@ class TestZoomControls:
             viewer_mixin._create_viewer_panel()
 
             # Find zoom buttons
-            zoom_buttons = [b for t, b in buttons if t in ["−", "100%", "+"]]
+            zoom_buttons = [b for t, b in buttons if t in {"−", "100%", "+"}]
             assert len(zoom_buttons) == 3
 
             # Verify connections (these are set in _create_viewer_panel)

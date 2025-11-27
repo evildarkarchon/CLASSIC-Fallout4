@@ -22,9 +22,7 @@ zero functional regression while providing significant performance improvements.
 
 from __future__ import annotations
 
-import json
 import logging
-import tempfile
 import time
 from typing import Any
 
@@ -313,10 +311,8 @@ class TestOutputParity:
         if overall_results:
             parity_report = self._generate_parity_report(overall_results)
 
-            # Save detailed report for analysis
-            with tempfile.NamedTemporaryFile(mode="w", suffix="_parity_report.json", delete=False) as f:
-                json.dump(parity_report, f, indent=2)
-                logger.info(f"Detailed parity report saved to: {f.name}")
+            # Log parity report summary (detailed report generated in memory)
+            logger.info(f"Parity report generated with {len(overall_results)} results")
 
         # Overall parity validation
         total_passed = sum(1 for r in overall_results if r.passed)

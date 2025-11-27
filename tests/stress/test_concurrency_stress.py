@@ -23,7 +23,7 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 # Import components to test
 from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 from ClassicLib.MessageHandler import MessageHandler
 from ClassicLib.YamlSettingsCache import yaml_cache
 

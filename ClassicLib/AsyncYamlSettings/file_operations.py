@@ -14,7 +14,7 @@ import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 from ClassicLib.Logger import logger
 from ClassicLib.ResourceLoader import ResourceLoader
 
@@ -133,7 +133,7 @@ class YamlFileOperations:
 
         match yaml_store:
             case YAML.Settings:
-                return base_path / "CLASSIC Settings.yaml"
+                return base_path.parent / "CLASSIC Settings.yaml"
             case YAML.Main:
                 return base_path / "databases" / "CLASSIC Main.yaml"
             case YAML.Ignore:
@@ -382,6 +382,13 @@ class YamlFileOperations:
             logger.warning(f"Cannot backup non-existent file: {file_path}")
 
         return backup_path
+
+    def clear_cache(self) -> None:
+        """
+        Clears the internal file cache.
+        """
+        if hasattr(self, "_file_cache"):
+            self._file_cache.clear()
 
     async def regenerate_settings_file(self, yaml_store: YAML) -> dict[str, Any]:
         """

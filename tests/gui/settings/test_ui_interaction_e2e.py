@@ -4,11 +4,18 @@ E2E tests for ui_interaction - e2e logic testing.
 This file contains e2e tests that test complete workflows from entry to output.
 """
 
+import os
+
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers"),
+]
+
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
-
-pytestmark = pytest.mark.e2e
 
 
 class TestTabNavigation:
@@ -44,10 +51,10 @@ class TestCheckboxInteraction:
 
     def test_checkbox_interaction(self, settings_dialog, app):
         """Test that checkboxes can be toggled."""
-        settings_dialog.audio_checkbox.setChecked(False)
-        assert not settings_dialog.audio_checkbox.isChecked()
-        settings_dialog.audio_checkbox.click()
-        assert settings_dialog.audio_checkbox.isChecked()
+        settings_dialog.vr_checkbox.setChecked(False)
+        assert not settings_dialog.vr_checkbox.isChecked()
+        settings_dialog.vr_checkbox.click()
+        assert settings_dialog.vr_checkbox.isChecked()
         settings_dialog.fcx_checkbox.setChecked(True)
         assert settings_dialog.fcx_checkbox.isChecked()
         settings_dialog.fcx_checkbox.click()
@@ -56,7 +63,6 @@ class TestCheckboxInteraction:
     def test_all_checkboxes_toggle(self, settings_dialog):
         """Test that all checkboxes can be toggled."""
         checkboxes = [
-            settings_dialog.audio_checkbox,
             settings_dialog.vr_checkbox,
             settings_dialog.fcx_checkbox,
             settings_dialog.simplify_checkbox,
@@ -111,7 +117,7 @@ class TestWidgetFocus:
 
         # Test that setFocus() calls work without errors
         # We don't verify hasFocus() because it requires a visible, active window
-        settings_dialog.audio_checkbox.setFocus()
+        settings_dialog.vr_checkbox.setFocus()
         QApplication.processEvents()
 
         settings_dialog.update_source_combo.setFocus()
@@ -133,7 +139,7 @@ class TestWidgetFocus:
         from PySide6.QtWidgets import QApplication
 
         # Test that tab key simulation works without errors
-        settings_dialog.audio_checkbox.setFocus()
+        settings_dialog.vr_checkbox.setFocus()
         QApplication.processEvents()
 
         for _ in range(3):

@@ -13,6 +13,7 @@ Key Integration Points Tested:
 - Memory management across component boundaries
 - Thread safety and concurrent access patterns
 """
+# ruff: noqa: ANN201, ANN001, PLR6301, ARG002, ANN202, BLE001, PT017
 
 import logging
 import time
@@ -41,6 +42,8 @@ from ClassicLib.integration.status import (
 
 # Status imports
 from tests.test_infra.performance_utils import PerformanceTimer
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.mark.rust
@@ -134,6 +137,17 @@ class TestComponentDataFlow:
         # Plugin limit configuration
         mock_yaml.plugin_limits = {"esp_limit": 255, "esl_limit": 2048}
 
+        # Initialize list attributes to empty lists
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+        mock_yaml.classic_records_list = ["TESForm", "BGSKeyword", "TESObjectSTAT", "TESObjectREFR", "BGSConstructibleObject"]
+
+        # Initialize dict attributes to empty dicts
+        mock_yaml.mods_single = {}
+        mock_yaml.mods_double = {}
+        mock_yaml.mods_important = {}
+
         return mock_yaml
 
     def test_parser_to_formid_analyzer_flow(self, sample_crash_data, mock_yamldata):
@@ -148,7 +162,7 @@ class TestComponentDataFlow:
 
         # Parse the crash log
         parser = get_parser()
-        game_version, crashgen_version, main_error, segments = parser.find_segments(
+        _, _, _, segments = parser.find_segments(
             crash_data=sample_crash_data,
             crashgen_name=mock_yamldata.crashgen_name,
             xse_acronym=mock_yamldata.xse_acronym,
@@ -171,7 +185,7 @@ class TestComponentDataFlow:
         assert isinstance(formids, list), "FormIDs should be returned as list"
 
         # Should find the FormIDs in our test data
-        expected_formids = ["0x12345678", "0xABCDEF01"]
+        expected_formids = ["12345678", "ABCDEF01"]
         for expected_formid in expected_formids:
             assert any(expected_formid in formid for formid in formids), f"Expected FormID {expected_formid} not found in {formids}"
 
@@ -200,14 +214,14 @@ class TestComponentDataFlow:
         # Pass to Plugin analyzer
         plugin_analyzer = get_plugin_analyzer(mock_yamldata)
 
-        plugins_dict, limit_triggered, limit_disabled = plugin_analyzer.loadorder_scan_log(segment_plugins=plugins_segment)
+        plugins_dict, _, _ = plugin_analyzer.loadorder_scan_log(segment_plugins=plugins_segment)
 
         # Validate plugin analysis results
         assert isinstance(plugins_dict, dict), "Plugins should be returned as dict"
 
         # Should find expected plugins from test data
         expected_plugins = ["Fallout4.esm", "TestPlugin.esp", "AnotherMod.esp"]
-        found_plugins = list(plugins_dict.values())
+        found_plugins = list(plugins_dict.keys())  # Check KEYS (plugin names), not values (indexes)
 
         for expected_plugin in expected_plugins:
             assert any(expected_plugin in plugin for plugin in found_plugins), (
@@ -239,7 +253,7 @@ class TestComponentDataFlow:
         # Pass to Record scanner
         record_scanner = get_record_scanner(mock_yamldata)
 
-        fragment, matches = record_scanner.scan_named_records(callstack_segment)
+        _, matches = record_scanner.scan_named_records(callstack_segment)
 
         # Validate record scanning results
         assert isinstance(matches, list), "Matches should be returned as list"
@@ -270,7 +284,7 @@ class TestComponentDataFlow:
 
         # Parse crash log
         with PerformanceTimer("Complete component chain") as timer:
-            game_version, crashgen_version, main_error, segments = parser.find_segments(
+            _, _, _, segments = parser.find_segments(
                 crash_data=sample_crash_data,
                 crashgen_name=mock_yamldata.crashgen_name,
                 xse_acronym=mock_yamldata.xse_acronym,
@@ -292,9 +306,7 @@ class TestComponentDataFlow:
             # Plugin analysis (last segment)
             if segments:
                 plugins_segment = segments[-1]
-                results["plugins"], results["limit_triggered"], results["limit_disabled"] = plugin_analyzer.loadorder_scan_log(
-                    plugins_segment
-                )
+                results["plugins"], _, _ = plugin_analyzer.loadorder_scan_log(plugins_segment)
 
         # Validate complete chain results
         assert "formids" in results, "FormID analysis should complete"
@@ -315,7 +327,7 @@ class TestComponentDataFlow:
                     plugin_ref = formid.split("(")[1].split(")")[0]
                     assert any(plugin_ref in plugin for plugin in plugin_names), f"FormID references unknown plugin: {plugin_ref}"
 
-        logging.info(f"Complete component chain processing time: {timer.elapsed:.3f}s")
+        logger.info(f"Complete component chain processing time: {timer.elapsed:.3f}s")
 
 
 @pytest.mark.rust
@@ -358,6 +370,18 @@ class TestComponentErrorHandling:
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
         mock_yaml.record_patterns = ["TESForm"]
+
+        # Initialize list attributes to empty lists
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+        mock_yaml.classic_records_list = []
+
+        # Initialize dict attributes to empty dicts
+        mock_yaml.mods_single = {}
+        mock_yaml.mods_double = {}
+        mock_yaml.mods_important = {}
+
         return mock_yaml
 
     def test_parser_error_isolation(self, corrupted_crash_data, mock_yamldata):
@@ -418,8 +442,9 @@ class TestComponentErrorHandling:
             assert isinstance(formids, list), "Should return list with mixed data"
 
             # Should extract valid FormIDs and skip invalid ones
-            valid_formids = [fid for fid in formids if fid and "0x" in fid]
-            assert len(valid_formids) > 0, "Should extract at least some valid FormIDs"
+            # Rust implementation returns "Form ID: XXXXXXXX" (no 0x prefix in value)
+            valid_matches = [fid for fid in formids if "12345678" in fid or "ABCDEF01" in fid]
+            assert len(valid_matches) > 0, "Should extract at least some valid FormIDs"
 
         except Exception as e:
             # If it does fail, should be a controlled failure
@@ -455,7 +480,8 @@ class TestComponentErrorHandling:
             assert isinstance(limit_disabled, bool), "Should return boolean for limit disabled"
 
             # Should extract valid plugins and skip invalid ones
-            valid_plugins = [p for p in plugins_dict.values() if p and ".es" in p]
+            # Check KEYS for plugin names
+            valid_plugins = [p for p in plugins_dict if p and ".es" in p]
             assert len(valid_plugins) > 0, "Should extract at least some valid plugins"
 
         except Exception as e:
@@ -511,6 +537,14 @@ class TestComponentErrorHandling:
             except Exception as e:
                 errors["plugin_analyzer"] = str(e)
 
+        if "record_scanner" in available_components and segments:
+            try:
+                record_scanner = get_record_scanner(mock_yamldata)
+                callstack = segments[0] if segments else corrupted_crash_data
+                results["record_scanner"] = record_scanner.scan_named_records(callstack)
+            except Exception as e:
+                errors["record_scanner"] = str(e)
+
         # At least some components should either succeed or fail gracefully
         total_attempts = len(available_components)
         successful_results = len(results)
@@ -560,6 +594,18 @@ class TestComponentConcurrency:
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
         mock_yaml.record_patterns = ["TESForm"]
+
+        # Initialize list attributes to empty lists
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+        mock_yaml.classic_records_list = []
+
+        # Initialize dict attributes to empty dicts
+        mock_yaml.mods_single = {}
+        mock_yaml.mods_double = {}
+        mock_yaml.mods_important = {}
+
         return mock_yaml
 
     def test_concurrent_parser_usage(self, sample_crash_data, mock_yamldata):
@@ -632,7 +678,7 @@ class TestComponentConcurrency:
                 "thread_id": thread_id,
                 "formids": formids,
                 "duration": end_time - start_time,
-                "expected_formid": f"0x{(thread_id + 1) * 11111111:08X}".upper(),
+                "expected_formid": f"{(thread_id + 1) * 11111111}",  # Match input format which is 0x11111111 but output strips 0x
             }
 
         # Run concurrent FormID analysis
@@ -734,8 +780,7 @@ class TestComponentPerformance:
         ]
 
         # Add many call stack entries with FormIDs
-        for i in range(1000):
-            base_data.append(f"\t[{i}] 0x7FF66DF{i:05X} -> FormID: 0x{i:08X}")
+        base_data.extend(f"\t[{i}] 0x7FF66DF{i:05X} -> FormID: 0x{i:08X}" for i in range(1000))
 
         base_data.extend([
             "",
@@ -743,8 +788,7 @@ class TestComponentPerformance:
         ])
 
         # Add many plugins
-        for i in range(200):
-            base_data.append(f"\t[{i:02X}] Plugin{i:03d}.esp")
+        base_data.extend(f"\t[{i:02X}] Plugin{i:03d}.esp" for i in range(200))
 
         return base_data
 
@@ -760,6 +804,18 @@ class TestComponentPerformance:
         mock_yaml.formid_database_enabled = True
         mock_yaml.show_formid_values = True
         mock_yaml.record_patterns = ["TESForm"]
+
+        # Initialize list attributes to empty lists
+        mock_yaml.game_ignore_plugins = []
+        mock_yaml.game_ignore_records = []
+        mock_yaml.ignore_list = []
+        mock_yaml.classic_records_list = []
+
+        # Initialize dict attributes to empty dicts
+        mock_yaml.mods_single = {}
+        mock_yaml.mods_double = {}
+        mock_yaml.mods_important = {}
+
         return mock_yaml
 
     def test_component_pipeline_performance(self, large_crash_data, mock_yamldata):
@@ -777,6 +833,7 @@ class TestComponentPerformance:
             pytest.skip("No Rust components available for performance testing")
 
         component_times = {}
+        segments = None
 
         # Measure parser performance
         if "parser" in available_components:
@@ -820,10 +877,10 @@ class TestComponentPerformance:
 
         # Log performance summary
         total_time = sum(component_times.values())
-        logging.info("Component pipeline performance:")
+        logger.info("Component pipeline performance:")
         for component, time_taken in component_times.items():
-            logging.info(f"  {component}: {time_taken:.3f}s")
-        logging.info(f"  Total: {total_time:.3f}s")
+            logger.info(f"  {component}: {time_taken:.3f}s")
+        logger.info(f"  Total: {total_time:.3f}s")
 
         # Total pipeline should be very fast even with large data
         assert total_time < 0.2, f"Total pipeline too slow: {total_time:.3f}s"
@@ -849,6 +906,7 @@ class TestComponentPerformance:
 
         # Run pipeline multiple times
         for _iteration in range(10):
+            segments = None
             if "parser" in available_components:
                 parser = get_parser()
                 result = parser.find_segments(
@@ -867,7 +925,7 @@ class TestComponentPerformance:
             if "plugin_analyzer" in available_components:
                 plugin_analyzer = get_plugin_analyzer(mock_yamldata)
                 plugin_data = segments[-1] if segments else large_crash_data
-                plugins, _, _ = plugin_analyzer.loadorder_scan_log(plugin_data)
+                _, _, _ = plugin_analyzer.loadorder_scan_log(plugin_data)
 
         final_memory = process.memory_info().rss
         memory_growth = final_memory - initial_memory

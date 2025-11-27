@@ -13,29 +13,23 @@ from bs4 import BeautifulSoup, PageElement
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import read_file_sync
+from ClassicLib.FileIO import read_file_sync
 from ClassicLib.YamlSettingsCache import yaml_settings
 
 
 def scan_wryecheck() -> str:
-    """
-    Scans the Wrye Bash plugin checker report for detected problems and generates
-    a detailed analysis message. The function reads specific settings for the check
-    from a YAML configuration file and validates the presence of a plugin check
-    HTML report. If the report exists, it is parsed and a summary message is
-    constructed with detailed resources and guidance links. If the report is
-    missing, an optional warning message is returned instead.
+    """Scan the Wrye Bash plugin checker report for detected problems.
 
-    Parameters: None
+    Reads settings from YAML configuration and validates the presence of a
+    plugin check HTML report. If the report exists, it is parsed and a summary
+    message is constructed with detailed resources and guidance links.
 
     Returns:
-        str: The generated analysis message detailing the contents of the plugin
-             checker report or an optional warning message if the report is
-             missing.
+        The generated analysis message detailing the contents of the plugin
+        checker report, or a warning message if the report is missing.
 
     Raises:
-        ValueError: If the required warnings setting related to the Wrye Bash report
-                    is not found in the YAML configuration file.
+        ValueError: If the required warnings setting is not found in YAML config.
     """
     # Constants for formatting and links
     # noinspection PyPep8Naming

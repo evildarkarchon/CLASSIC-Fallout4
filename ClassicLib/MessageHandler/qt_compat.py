@@ -1,4 +1,11 @@
-"""Qt compatibility layer for environments without PySide6."""
+"""Qt compatibility layer for environments without PySide6.
+
+This module provides Qt type stubs and the HAS_QT flag to allow code
+to work in environments without PySide6 installed.
+
+Note: This module is kept for backward compatibility. The GUIBackend
+and QtProgressHandler now handle Qt integration directly.
+"""
 
 from typing import Any
 
@@ -11,51 +18,53 @@ try:
 except ImportError:
     HAS_QT = False
 
-    # Define dummy classes for type checking when Qt is not available
+    # Define stub classes for type checking when Qt is not available
     class QObject:
-        pass
+        """Stub for QObject when PySide6 is not available."""
 
     class QWidget:
-        pass
+        """Stub for QWidget when PySide6 is not available."""
 
     class QThread:
-        # noinspection PyPep8Naming
+        """Stub for QThread when PySide6 is not available."""
+
         @staticmethod
         def currentThread() -> "QThread":  # pyright: ignore[reportReturnType]
-            pass
+            """Return the current thread (stub)."""
 
-    # noinspection PyUnusedLocal,PyPep8Naming
     class QMessageBox:
+        """Stub for QMessageBox when PySide6 is not available."""
+
         class Icon:
+            """Message box icon types."""
+
             Information = 0
             Warning = 1
             Critical = 2
 
         def __init__(
-            self, icon: Any = None, title: str = "", text: str = "", parent: QWidget | None = None, *args: Any, **kwargs: Any
+            self,
+            icon: Any = None,
+            title: str = "",
+            text: str = "",
+            parent: QWidget | None = None,
+            *args: Any,
+            **kwargs: Any,
         ) -> None:
-            pass
+            """Initialize stub message box."""
 
         def setDetailedText(self, text: str) -> None:
-            pass
+            """Set detailed text (stub)."""
 
         def setWindowTitle(self, title: str) -> None:
-            pass
+            """Set window title (stub)."""
 
-        # noinspection PyMethodMayBeStatic
         def exec(self) -> int:  # noqa: PLR6301
+            """Execute dialog (stub)."""
             return 0
 
-    # noinspection PyPep8Naming,PyUnusedLocal
     class QProgressDialog:
-        """Provides a dialog that displays the progress of an ongoing operation.
-
-        The QProgressDialog class represents a modal or non-modal dialog that can be
-        used to show the progress of a lengthy operation. It includes a progress bar,
-        a descriptive label, and an optional cancel button. The progress dialog can be
-        configured with custom ranges, text, and behavior properties, making it
-        suitable for varied user interface requirements.
-        """
+        """Stub for QProgressDialog when PySide6 is not available."""
 
         def __init__(
             self,
@@ -67,57 +76,47 @@ except ImportError:
             *args: Any,
             **kwargs: Any,
         ) -> None:
-            """
-            Initializes an instance of the class with the given parameters.
-
-            This constructor sets up the class with default or specified values for its
-            configuration. The provided parameters enable customization of the instance's
-            behavior and appearance. All optional arguments have appropriate default
-            values.
-
-            Args:
-                labelText: A string to specify the initial text label to display.
-                cancelButtonText: A string to set the text of the cancel button.
-                minimum: An integer value for the minimum allowable value in the range.
-                maximum: An integer value for the maximum allowable value in the range.
-                parent: A QWidget or None, indicating the parent of this widget.
-                *args: Additional positional arguments for further customization.
-                **kwargs: Additional keyword arguments for further customization.
-            """
+            """Initialize stub progress dialog."""
 
         def setWindowTitle(self, title: str) -> None:
-            pass
+            """Set window title (stub)."""
 
         def setAutoClose(self, close: bool) -> None:
-            pass
+            """Set auto close (stub)."""
 
         def setAutoReset(self, reset: bool) -> None:
-            pass
+            """Set auto reset (stub)."""
 
         def setRange(self, minimum: int, maximum: int) -> None:
-            pass
+            """Set range (stub)."""
 
         def show(self) -> None:
-            pass
+            """Show dialog (stub)."""
 
         def hide(self) -> None:
-            pass
+            """Hide dialog (stub)."""
 
         def setValue(self, value: int) -> None:
-            pass
+            """Set value (stub)."""
 
         def setLabelText(self, text: str) -> None:
-            pass
+            """Set label text (stub)."""
+
+        def wasCanceled(self) -> bool:  # noqa: PLR6301
+            """Check if canceled (stub)."""
+            return False
 
     class Signal:
+        """Stub for Signal when PySide6 is not available."""
+
         def __init__(self, *args: Any, **kwargs: Any) -> None:
-            pass
+            """Initialize stub signal."""
 
         def emit(self, *args: Any) -> None:
-            pass
+            """Emit signal (stub)."""
 
         def connect(self, func: Any) -> None:
-            pass
+            """Connect signal (stub)."""
 
 
 __all__ = [

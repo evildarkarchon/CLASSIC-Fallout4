@@ -200,7 +200,7 @@ class TestConcurrentOperationsStress:
     @pytest.mark.timeout(30)
     async def test_mixed_operations_stress(self, metrics, generator, mock_yamldata_python_only):
         """Stress test with mixed operation types."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
         from ClassicLib.integration.factory import get_formid_analyzer, get_parser
 
         parser = get_parser()
@@ -370,7 +370,7 @@ class TestMemoryLeakDetection:
     async def test_async_operations_memory_leak(self):
         """Test for memory leaks in async operations."""
         from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
         AsyncBridge.get_instance()
@@ -543,38 +543,48 @@ class TestThreadSafetyValidation:
 
         AsyncBridge.get_instance()
 
-        # Track concurrent executions
-        concurrent_count = 0
-        max_concurrent = 0
-        lock = asyncio.Lock()
+        try:
+            # Track concurrent executions
+            concurrent_count = 0
+            max_concurrent = 0
+            lock = asyncio.Lock()
 
-        async def track_concurrency():
-            """Track concurrent execution count."""
-            nonlocal concurrent_count, max_concurrent
-            async with lock:
-                concurrent_count += 1
-                max_concurrent = max(max_concurrent, concurrent_count)
+            async def track_concurrency():
+                """Track concurrent execution count."""
+                nonlocal concurrent_count, max_concurrent
+                async with lock:
+                    concurrent_count += 1
+                    max_concurrent = max(max_concurrent, concurrent_count)
 
-            await asyncio.sleep(0.1)  # Simulate work
+                await asyncio.sleep(0.1)  # Simulate work
 
-            async with lock:
-                concurrent_count -= 1
+                async with lock:
+                    concurrent_count -= 1
 
-        # Try to launch many concurrent operations
-        tasks = []
-        for _ in range(50):
-            # Use bridge to run async function
-            try:
-                task = asyncio.create_task(track_concurrency())
-                tasks.append(task)
-            except RuntimeError:
-                # May hit concurrency limit
-                pass
+            # Try to launch many concurrent operations
+            tasks = []
+            for _ in range(50):
+                # Use bridge to run async function
+                try:
+                    task = asyncio.create_task(track_concurrency())
+                    tasks.append(task)
+                except RuntimeError:
+                    # May hit concurrency limit
+                    pass
 
-        await asyncio.gather(*tasks, return_exceptions=True)
+            await asyncio.gather(*tasks, return_exceptions=True)
 
-        print(f"\nMax Concurrent Executions: {max_concurrent}")
-        # Should respect concurrency limits
+            print(f"\nMax Concurrent Executions: {max_concurrent}")
+            # Should respect concurrency limits
+        finally:
+            # Cleanup
+            with AsyncBridge._lock:
+                for instance in AsyncBridge._instances.values():
+                    try:
+                        instance.shutdown()
+                    except Exception:
+                        pass
+                AsyncBridge._instances.clear()
 
 
 class TestResourceExhaustion:
@@ -584,7 +594,7 @@ class TestResourceExhaustion:
     @pytest.mark.timeout(30)
     async def test_file_handle_exhaustion(self):
         """Test behavior when file handles are exhausted."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
         open_files = []

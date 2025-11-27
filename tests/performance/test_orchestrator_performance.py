@@ -122,6 +122,10 @@ class TestOrchestratorPerformance:
         class MockAsyncDatabasePool:
             """Mock database pool that tracks initialization."""
 
+            def __init__(self, max_connections: int = 50) -> None:
+                """Track creation with parameters."""
+                self.max_connections = max_connections
+
             async def initialize(self):
                 """Track initialization calls."""
                 nonlocal init_count
@@ -130,9 +134,16 @@ class TestOrchestratorPerformance:
             async def close(self):
                 """Mock close method."""
 
-        with patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool", MockAsyncDatabasePool):
-            # Clear any existing pool
+        # Also mock the Rust acceleration check to force use of Python fallback
+        # This ensures we test the Python AsyncDatabasePool path
+        # Note: is_rust_accelerated is imported locally, so patch at source
+        with (
+            patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool", MockAsyncDatabasePool),
+            patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False),
+        ):
+            # Clear any existing pool and reset using_rust flag
             manager1._pool = None
+            manager1._using_rust = False
 
             # Get pool multiple times
             pool1 = await manager1.get_pool()
@@ -164,11 +175,16 @@ class TestOrchestratorPerformance:
 
             # Mock orchestrator with async file reading
             mock_yamldata = MagicMock()
-            mock_crashlogs = MagicMock()
+            mock_yamldata.game_ignore_plugins = []
+            mock_yamldata.game_ignore_records = []
+            mock_yamldata.crashgen_name = "Buffout"
+            mock_yamldata.xse_acronym = "F4SE"
+            mock_yamldata.crashgen_latest_og = "1.10.163"
+            mock_yamldata.crashgen_latest_vr = "1.2.72"
 
+            # Create orchestrator (removed crashlogs parameter - no longer in API)
             OrchestratorCore(
                 yamldata=mock_yamldata,
-                crashlogs=mock_crashlogs,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
@@ -232,14 +248,12 @@ class TestOrchestratorPerformance:
         mock_yamldata.xse_acronym = "F4SE"
         mock_yamldata.crashgen_latest_og = "1.10.163"
         mock_yamldata.crashgen_latest_vr = "1.2.72"
+        mock_yamldata.game_ignore_plugins = []
+        mock_yamldata.game_ignore_records = []
 
-        mock_crashlogs = MagicMock()
-        mock_crashlogs.read_log = MagicMock(return_value=["Test log line"] * 100)
-
-        # Create orchestrator
+        # Create orchestrator (removed crashlogs parameter - no longer in API)
         orchestrator = OrchestratorCore(
             yamldata=mock_yamldata,
-            crashlogs=mock_crashlogs,
             fcx_mode=False,
             show_formid_values=False,
             formid_db_exists=False,
@@ -249,7 +263,8 @@ class TestOrchestratorPerformance:
         test_logs = [Path(f"test_log_{i}.txt") for i in range(3)]
 
         # Mock the slow operations to measure optimization impact
-        with patch("ClassicLib.ScanLog.OrchestratorCore.find_segments") as mock_find:
+        # Note: find_segments is in ClassicLib.ScanLog.Parser, not OrchestratorCore
+        with patch("ClassicLib.ScanLog.Parser.find_segments") as mock_find:
             mock_find.return_value = (
                 "1.10.163",  # gameversion
                 "1.28.6",  # crashgen version

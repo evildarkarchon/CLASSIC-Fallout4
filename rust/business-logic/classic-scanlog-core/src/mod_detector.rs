@@ -147,12 +147,12 @@ pub fn detect_mods_single(
                 plugin_list, mod_name_display
             ));
 
-            // Remaining lines are indented with double newlines for Qt compatibility
+            // Remaining lines are joined with hard line breaks for single paragraph rendering
             for line in &warning_lines[1..] {
                 if !line.trim().is_empty() {
-                    lines.push(format!("    {}\n\n", line));
+                    lines.push(format!("{}  \n", line));
                 } else {
-                    lines.push("\n".to_string());
+                    lines.push("  \n".to_string());
                 }
             }
         } else {
@@ -538,9 +538,9 @@ pub fn detect_mods_batch(
 
                         for line in &warning_lines[1..] {
                             if !line.trim().is_empty() {
-                                lines.push(format!("    {}\n\n", line));
+                                lines.push(format!("{}  \n", line));
                             } else {
-                                lines.push("\n".to_string());
+                                lines.push("  \n".to_string());
                             }
                         }
                     } else {

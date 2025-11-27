@@ -311,4 +311,3 @@ class RustRecordScanner:
             bool: True if Rust acceleration is enabled, False otherwise.
         """
         return self._use_rust
-

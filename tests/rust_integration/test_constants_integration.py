@@ -4,8 +4,9 @@ Tests the Rust-accelerated constants module, including version constants,
 YAML file enumeration, game identifiers, and settings validation.
 """
 
-import classic_constants
 import pytest
+
+classic_constants = pytest.importorskip("classic_constants", reason="Rust classic_constants module not available")
 
 
 @pytest.mark.rust

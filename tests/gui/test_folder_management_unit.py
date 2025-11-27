@@ -5,11 +5,16 @@ This module tests the folder selection, validation, and path management
 functionality with properly mocked Qt dialogs and file operations.
 """
 
+import os
 import subprocess
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QMessageBox
 

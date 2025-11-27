@@ -87,9 +87,10 @@ class PythonDatabasePool:
         Creates and returns a connection to the SQLite database.
 
         This method attempts to establish a connection to the SQLite database using
-        the provided database path. If the connection is successful, it enables
-        column access by name using `sqlite3.Row`. If the connection cannot be
-        established, it logs an error and returns `None`.
+        the provided database path. If the connection is successful, it configures
+        WAL mode, read-only mode, and performance PRAGMAs to match Rust implementation,
+        then enables column access by name using `sqlite3.Row`. If the connection
+        cannot be established, it logs an error and returns `None`.
 
         Returns:
             sqlite3.Connection | None: A connection object to interact with the SQLite
@@ -101,6 +102,19 @@ class PythonDatabasePool:
             logger.error(f"Failed to create database connection: {e}")
             return None
         else:
+            # Configure WAL mode, read-only, and optimizations to match Rust implementation
+            try:
+                cursor = conn.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.execute("PRAGMA synchronous=NORMAL")
+                cursor.execute("PRAGMA query_only=ON")
+                cursor.execute("PRAGMA cache_size=10000")
+                cursor.execute("PRAGMA temp_store=MEMORY")
+                cursor.execute("PRAGMA mmap_size=30000000")
+            except sqlite3.Error as e:
+                logger.warning(f"Failed to set PRAGMA optimizations: {e}")
+                # Continue anyway - PRAGMAs are optimizations, not requirements
+
             conn.row_factory = sqlite3.Row  # Enable column access by name
             return conn
 

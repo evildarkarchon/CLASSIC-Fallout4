@@ -15,13 +15,9 @@ if TYPE_CHECKING:
     from ClassicLib.ScanGame.core.dds_analyzer import DDSInfo, EnhancedDDSAnalyzer
 
 # Try to import Rust DDS parser (10-50x faster) - runtime import
-try:
-    from classic_file_io import DDSHeader as _RuntimeRustDDSHeader
+from ClassicLib.integration.detector import detect_component
 
-    HAS_RUST_DDS = True
-except ImportError:
-    HAS_RUST_DDS = False
-    _RuntimeRustDDSHeader = None
+HAS_RUST_DDS, _RuntimeRustDDSHeader = detect_component("classic_file_io", "DDSHeader")
 
 # Try to import enhanced analyzer for advanced features (runtime import)
 try:
@@ -240,9 +236,7 @@ class DDSProcessor:
 
         return ["Unable to read DDS header"]
 
-    async def _process_single_dds_file(
-        self, dds_file: Path, mod_dir: Path
-    ) -> list[str]:
+    async def _process_single_dds_file(self, dds_file: Path, mod_dir: Path) -> list[str]:
         """
         Process a single DDS file and return any validation issues.
 

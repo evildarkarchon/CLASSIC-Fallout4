@@ -1,11 +1,10 @@
 """Shared fixtures for file I/O tests."""
 
-import tempfile
 from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 
 
 @pytest.fixture
@@ -15,34 +14,28 @@ def io_core() -> FileIOCore:
 
 
 @pytest.fixture
-def temp_file() -> Path:
+def temp_file(tmp_path: Path) -> Path:
     """Create a temporary file for testing."""
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".txt") as f:
-        test_path = Path(f.name)
-        f.write("Test content\nLine 2\nLine 3")
-    yield test_path
-    test_path.unlink(missing_ok=True)
+    test_path = tmp_path / "test_file.txt"
+    test_path.write_text("Test content\nLine 2\nLine 3")
+    return test_path
 
 
 @pytest.fixture
-def temp_binary_file() -> Path:
+def temp_binary_file(tmp_path: Path) -> Path:
     """Create a temporary binary file for testing."""
+    test_path = tmp_path / "test_binary.bin"
     test_bytes = b"Binary content \x00\x01\x02\x03"
-    with tempfile.NamedTemporaryFile(mode="wb", delete=False) as f:
-        test_path = Path(f.name)
-        f.write(test_bytes)
-    yield test_path
-    test_path.unlink(missing_ok=True)
+    test_path.write_bytes(test_bytes)
+    return test_path
 
 
 @pytest.fixture
-def temp_crash_log() -> Path:
+def temp_crash_log(tmp_path: Path) -> Path:
     """Create a temporary crash log file for testing."""
-    with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-        test_path = Path(f.name)
-        f.write("Crash log line 1\nCrash log line 2\n\n\n")
-    yield test_path
-    test_path.unlink(missing_ok=True)
+    test_path = tmp_path / "test_crash.log"
+    test_path.write_text("Crash log line 1\nCrash log line 2\n\n\n")
+    return test_path
 
 
 @pytest.fixture

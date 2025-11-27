@@ -1,91 +1,71 @@
 """Tests for file writing and atomic write operations."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
-import tempfile
 from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIOCore import FileIOCore, write_bytes_sync, write_crash_report_sync, write_file_sync, write_lines_sync
+from ClassicLib.FileIO import FileIOCore, write_bytes_sync, write_crash_report_sync, write_file_sync, write_lines_sync
 
 
 class TestAsyncFileWriting:
     """Test cases for async file writing operations."""
 
     @pytest.mark.asyncio
-    async def test_write_file(self, io_core: FileIOCore):
+    async def test_write_file(self, io_core: FileIOCore, tmp_path: Path):
         """Test writing text files."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "test_write.txt"
 
-        try:
-            # Write content
-            new_content = "New content\nNew line 2"
-            await io_core.write_file(test_path, new_content)
+        # Write content
+        new_content = "New content\nNew line 2"
+        await io_core.write_file(test_path, new_content)
 
-            # Verify write
-            content = await io_core.read_file(test_path)
-            assert content == new_content
-        finally:
-            test_path.unlink()
+        # Verify write
+        content = await io_core.read_file(test_path)
+        assert content == new_content
 
     @pytest.mark.asyncio
-    async def test_write_lines(self, io_core: FileIOCore):
+    async def test_write_lines(self, io_core: FileIOCore, tmp_path: Path):
         """Test writing file lines."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "test_lines.txt"
 
-        try:
-            # Write lines
-            new_lines = ["New line 1", "New line 2", "New line 3"]
-            await io_core.write_lines(test_path, new_lines)
+        # Write lines
+        new_lines = ["New line 1", "New line 2", "New line 3"]
+        await io_core.write_lines(test_path, new_lines)
 
-            # Verify write
-            lines = await io_core.read_lines(test_path)
-            assert len(lines) == 3
-            assert lines == new_lines
-        finally:
-            test_path.unlink()
+        # Verify write
+        lines = await io_core.read_lines(test_path)
+        assert len(lines) == 3
+        assert lines == new_lines
 
     @pytest.mark.asyncio
-    async def test_write_bytes(self, io_core: FileIOCore):
+    async def test_write_bytes(self, io_core: FileIOCore, tmp_path: Path):
         """Test writing binary files."""
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "test_bytes.bin"
 
-        try:
-            # Write bytes
-            new_bytes = b"New binary \xff\xfe\xfd"
-            await io_core.write_bytes(test_path, new_bytes)
+        # Write bytes
+        new_bytes = b"New binary \xff\xfe\xfd"
+        await io_core.write_bytes(test_path, new_bytes)
 
-            # Verify write
-            content = await io_core.read_bytes(test_path)
-            assert content == new_bytes
-        finally:
-            test_path.unlink()
+        # Verify write
+        content = await io_core.read_bytes(test_path)
+        assert content == new_bytes
 
     @pytest.mark.asyncio
-    async def test_write_crash_report(self, io_core: FileIOCore):
+    async def test_write_crash_report(self, io_core: FileIOCore, tmp_path: Path):
         """Test writing crash reports."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".log") as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "test_crash.log"
 
-        try:
-            # Write crash report
-            report_lines = ["# Crash Report\n", "## Analysis\n", "Error found\n"]
-            await io_core.write_crash_report(test_path, report_lines)
+        # Write crash report
+        report_lines = ["# Crash Report\n", "## Analysis\n", "Error found\n"]
+        await io_core.write_crash_report(test_path, report_lines)
 
-            # Verify report was written
-            report_path = test_path.with_suffix(".md")
-            assert report_path.exists()
-            content = await io_core.read_file(report_path)
-            assert "# Crash Report" in content
-            assert "Error found" in content
-
-            # Clean up report file
-            report_path.unlink()
-        finally:
-            test_path.unlink(missing_ok=True)
+        # Verify report was written
+        report_path = test_path.with_suffix(".md")
+        assert report_path.exists()
+        content = await io_core.read_file(report_path)
+        assert "# Crash Report" in content
+        assert "Error found" in content
 
     @pytest.mark.asyncio
     async def test_write_multiple_files(self, io_core: FileIOCore, tmp_path: Path):
@@ -110,61 +90,39 @@ class TestAsyncFileWriting:
 class TestSyncFileWriting:
     """Test cases for sync adapter file writing functions."""
 
-    def test_write_file_sync(self):
+    def test_write_file_sync(self, tmp_path: Path):
         """Test sync adapter for writing files."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "sync_write.txt"
+        write_file_sync(test_path, "Sync write test")
+        content = test_path.read_text()
+        assert content == "Sync write test"
 
-        try:
-            write_file_sync(test_path, "Sync write test")
-            content = test_path.read_text()
-            assert content == "Sync write test"
-        finally:
-            test_path.unlink()
-
-    def test_write_lines_sync(self):
+    def test_write_lines_sync(self, tmp_path: Path):
         """Test sync adapter for writing lines."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "sync_lines.txt"
+        lines = ["Line A", "Line B", "Line C"]
+        write_lines_sync(test_path, lines)
+        content = test_path.read_text()
+        assert content == "Line A\nLine B\nLine C\n"
 
-        try:
-            lines = ["Line A", "Line B", "Line C"]
-            write_lines_sync(test_path, lines)
-            content = test_path.read_text()
-            assert content == "Line A\nLine B\nLine C\n"
-        finally:
-            test_path.unlink()
-
-    def test_write_bytes_sync(self):
+    def test_write_bytes_sync(self, tmp_path: Path):
         """Test sync adapter for writing bytes."""
-        with tempfile.NamedTemporaryFile(delete=False) as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "sync_bytes.bin"
+        test_bytes = b"Binary sync \xff\xfe"
+        write_bytes_sync(test_path, test_bytes)
+        content = test_path.read_bytes()
+        assert content == test_bytes
 
-        try:
-            test_bytes = b"Binary sync \xff\xfe"
-            write_bytes_sync(test_path, test_bytes)
-            content = test_path.read_bytes()
-            assert content == test_bytes
-        finally:
-            test_path.unlink()
-
-    def test_write_crash_report_sync(self):
+    def test_write_crash_report_sync(self, tmp_path: Path):
         """Test sync adapter for writing crash reports."""
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".log") as f:
-            test_path = Path(f.name)
+        test_path = tmp_path / "sync_crash.log"
+        report_lines = ["# Report\n", "Error\n"]
+        write_crash_report_sync(test_path, report_lines)
 
-        try:
-            report_lines = ["# Report\n", "Error\n"]
-            write_crash_report_sync(test_path, report_lines)
-
-            report_path = test_path.with_suffix(".md")
-            assert report_path.exists()
-            content = report_path.read_text()
-            assert "# Report" in content
-
-            report_path.unlink()
-        finally:
-            test_path.unlink(missing_ok=True)
+        report_path = test_path.with_suffix(".md")
+        assert report_path.exists()
+        content = report_path.read_text()
+        assert "# Report" in content
 
 
 if __name__ == "__main__":

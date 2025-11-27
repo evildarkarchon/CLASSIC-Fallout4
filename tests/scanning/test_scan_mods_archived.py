@@ -23,11 +23,13 @@ from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
 
 @pytest.fixture
 def mock_settings():
-    """Mock YAML settings for tests."""
-    with (
-        patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache,
-        patch("ClassicLib.ScanGame.ScanGameCore.yaml_settings") as mock_yaml_core,
-    ):
+    """Mock YAML settings for tests.
+
+    Note: ScanGameCore doesn't have a yaml_settings attribute - it uses
+    validators.get_scan_settings() async method. We mock the YamlSettingsCache
+    module-level function instead.
+    """
+    with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache:
 
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
@@ -41,7 +43,6 @@ def mock_settings():
             return settings_map.get(setting_path, default)
 
         mock_yaml_cache.side_effect = yaml_side_effect
-        mock_yaml_core.side_effect = yaml_side_effect
         yield mock_yaml_cache
 
 
@@ -153,7 +154,7 @@ class TestScanModsArchived:
         core = ScanGameCore()
         result = await core.scan_mods_archived()
 
-        assert "BA2 FORMAT ERRORS FOUND" in result
+        assert "BA2 ARCHIVES HAVE INCORRECT FORMAT" in result
         assert "invalid.ba2" in result
 
     @pytest.mark.asyncio
@@ -219,7 +220,7 @@ class TestScanModsArchived:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("ClassicLib.ScanGame.ScanGameCore.msg_error") as mock_error,
+            patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
         ):
             core = ScanGameCore()
             _result = await core.scan_mods_archived()

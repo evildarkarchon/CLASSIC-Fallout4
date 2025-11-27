@@ -134,9 +134,12 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let config_path = temp_dir.path().join("test_config.yaml");
 
-        let mut config = CliConfig::default();
-        config.fcx_mode = true;
-        config.show_formid_values = true;
+        let mut config = CliConfig {
+            fcx_mode: true,
+            show_formid_values: true,
+            auto_refresh_interval_ms: 5000,
+            ..Default::default()
+        };
         config.paths.ini_folder = Some(PathBuf::from("C:\\Test"));
 
         // Save config
@@ -177,9 +180,12 @@ mod tests {
         let config_path = temp_dir.path().join("existing_config.yaml");
 
         // Create a config and save it
-        let mut saved_config = CliConfig::default();
-        saved_config.fcx_mode = true;
-        saved_config.stat_logging = true;
+        let saved_config = CliConfig {
+            fcx_mode: true,
+            stat_logging: true,
+            auto_refresh_interval_ms: 5000,
+            ..Default::default()
+        };
         saved_config.save_to_yaml(&config_path).await.unwrap();
 
         // Load with different CLI args
@@ -212,6 +218,7 @@ mod tests {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig::default(),
         };
 

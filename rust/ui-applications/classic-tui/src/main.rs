@@ -130,18 +130,16 @@ async fn main() -> Result<()> {
     }
 
     // Main event loop
-    let result = run_app(
-        &mut terminal,
-        &mut app,
-        &mut scan_rx,
-        &mut papyrus_rx,
-        &scan_handler,
-        &scan_tx,
-        &papyrus_tx,
+    let mut ctx = AppContext {
+        scan_rx: &mut scan_rx,
+        papyrus_rx: &mut papyrus_rx,
+        scan_handler: &scan_handler,
+        scan_tx: &scan_tx,
+        papyrus_tx: &papyrus_tx,
         papyrus_handler,
-        &mut backup_handler,
-    )
-    .await;
+        backup_handler: &mut backup_handler,
+    };
+    let result = run_app(&mut terminal, &mut app, &mut ctx).await;
 
     // Capture and save session state before quitting
     session_manager.capture_from_app(&app);
@@ -157,17 +155,22 @@ async fn main() -> Result<()> {
     result
 }
 
+/// Context containing handlers and message channels for the application
+struct AppContext<'a> {
+    scan_rx: &'a mut mpsc::Receiver<ScanMessage>,
+    papyrus_rx: &'a mut mpsc::Receiver<PapyrusMessage>,
+    scan_handler: &'a ScanHandler,
+    scan_tx: &'a mpsc::Sender<ScanMessage>,
+    papyrus_tx: &'a mpsc::Sender<PapyrusMessage>,
+    papyrus_handler: Option<PapyrusHandler>,
+    backup_handler: &'a mut BackupHandler,
+}
+
 /// Main application loop
 async fn run_app(
     terminal: &mut Terminal<CrosstermBackend<io::Stdout>>,
     app: &mut App,
-    scan_rx: &mut mpsc::Receiver<ScanMessage>,
-    papyrus_rx: &mut mpsc::Receiver<PapyrusMessage>,
-    scan_handler: &ScanHandler,
-    scan_tx: &mpsc::Sender<ScanMessage>,
-    papyrus_tx: &mpsc::Sender<PapyrusMessage>,
-    mut papyrus_handler: Option<PapyrusHandler>,
-    backup_handler: &mut BackupHandler,
+    ctx: &mut AppContext<'_>,
 ) -> Result<()> {
     loop {
         // Update terminal height for scroll calculations
@@ -209,11 +212,11 @@ async fn run_app(
             handle_ui_message(
                 app,
                 msg,
-                scan_handler,
-                scan_tx,
-                papyrus_tx,
-                &mut papyrus_handler,
-                backup_handler,
+                ctx.scan_handler,
+                ctx.scan_tx,
+                ctx.papyrus_tx,
+                &mut ctx.papyrus_handler,
+                ctx.backup_handler,
             )
             .await?;
             // Request redraw after handling user input
@@ -221,7 +224,7 @@ async fn run_app(
         }
 
         // Process scan messages
-        while let Ok(msg) = scan_rx.try_recv() {
+        while let Ok(msg) = ctx.scan_rx.try_recv() {
             let should_refresh_results =
                 matches!(msg, ScanMessage::Completed(_) | ScanMessage::Error(_));
             handle_scan_message(app, msg);
@@ -238,7 +241,7 @@ async fn run_app(
         }
 
         // Process Papyrus messages
-        while let Ok(msg) = papyrus_rx.try_recv() {
+        while let Ok(msg) = ctx.papyrus_rx.try_recv() {
             handle_papyrus_message(app, msg);
             // Request redraw after processing Papyrus message
             app.needs_redraw = true;

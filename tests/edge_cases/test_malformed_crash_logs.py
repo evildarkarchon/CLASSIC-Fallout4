@@ -244,8 +244,8 @@ class TestMalformedCrashLogHandling:
             extracted = analyzer.extract_formids(callstack)
             # Should only extract valid FormIDs (8 hex characters)
             for formid in extracted:
-                assert len(formid) == 8 or len(formid) == 10  # May have 0x prefix
-                clean_id = formid.replace("0x", "").replace("0X", "")
+                # Remove potential "Form ID: " prefix
+                clean_id = formid.replace("Form ID: ", "").replace("0x", "").replace("0X", "")
                 assert len(clean_id) == 8
                 assert all(c in "0123456789ABCDEFabcdef" for c in clean_id)
         except (ValueError, TypeError):
@@ -320,55 +320,50 @@ class TestEdgeCaseFileOperations:
     """Test edge cases in file operations."""
 
     @pytest.mark.asyncio
-    async def test_zero_byte_file(self):
+    async def test_zero_byte_file(self, tmp_path):
         """Test handling of empty/zero-byte files."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-            # Write nothing - zero byte file
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "zero_byte.log"
+        temp_path.touch()  # Create empty file
 
-        try:
-            content = await io_core.read_file(str(temp_path))
-            assert content == "" or content is None
-        finally:
-            temp_path.unlink(missing_ok=True)
+        content = await io_core.read_file(str(temp_path))
+        assert content == "" or content is None
 
     @pytest.mark.asyncio
-    async def test_massive_single_line(self):
+    async def test_massive_single_line(self, tmp_path):
         """Test handling of file with single massive line."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
         # Create 10MB single line
         massive_line = "x" * (10 * 1024 * 1024)
 
-        with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".log") as f:
-            f.write(massive_line)
-            temp_path = Path(f.name)
+        temp_path = tmp_path / "massive_line.log"
+        temp_path.write_text(massive_line)
 
-        try:
-            content = await io_core.read_file(str(temp_path))
-            assert len(content) == len(massive_line)
-        finally:
-            temp_path.unlink(missing_ok=True)
+        content = await io_core.read_file(str(temp_path))
+        assert len(content) == len(massive_line)
 
     @pytest.mark.asyncio
-    async def test_rapid_file_deletion(self):
+    async def test_rapid_file_deletion(self, tmp_path):
         """Test handling when file is deleted during read."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
-        temp_path = Path(tempfile.mktemp(suffix=".log"))
+        temp_path = tmp_path / "test_rapid_deletion.log"
         temp_path.write_text("Test content")
 
         async def delete_file_soon():
             await asyncio.sleep(0.001)
-            temp_path.unlink(missing_ok=True)
+            try:
+                temp_path.unlink(missing_ok=True)
+            except PermissionError:
+                pass
 
         # Start deletion task
         delete_task = asyncio.create_task(delete_file_soon())
@@ -459,7 +454,7 @@ class TestPathEdgeCases:
     @pytest.mark.asyncio
     async def test_extremely_long_path(self):
         """Test handling of extremely long file paths."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -479,7 +474,7 @@ class TestPathEdgeCases:
     @pytest.mark.asyncio
     async def test_special_characters_in_path(self):
         """Test handling of special characters in file paths."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -512,7 +507,7 @@ class TestPathEdgeCases:
         if sys.platform == "win32":
             pytest.skip("Symlink test requires admin privileges on Windows")
 
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -538,7 +533,7 @@ class TestConcurrencyEdgeCases:
     @pytest.mark.asyncio
     async def test_simultaneous_same_file_access(self):
         """Test multiple simultaneous reads of the same file."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         io_core = FileIOCore()
 
@@ -572,17 +567,19 @@ class TestConcurrencyEdgeCases:
 
         # Create test log
         test_log = """Fallout 4 v1.10.163
+Buffout 4 v1.28.6
 PLUGINS:
     [00] Fallout4.esm
     [01] DLCRobot.esm
 FormID: 00000014
 FormID: FE000800
 """
+        crash_lines = test_log.splitlines()
 
         # Parse same log 50 times concurrently
         tasks = []
         for _ in range(50):
-            tasks.append(asyncio.to_thread(parser.parse, test_log))
+            tasks.append(asyncio.to_thread(parser.find_segments, crash_lines, "Buffout 4", "F4SE", "Fallout 4"))
 
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
@@ -591,8 +588,8 @@ FormID: FE000800
         assert len(successful) >= 45  # At least 90% should succeed
 
         # All successful parses should produce same result structure
-        if successful and isinstance(successful[0], dict):
-            first_keys = set(successful[0].keys())
+        if successful:
+            # find_segments returns tuple (game_ver, crashgen_ver, error, segments)
+            first_len = len(successful[0])
             for result in successful[1:]:
-                if isinstance(result, dict):
-                    assert set(result.keys()) == first_keys
+                assert len(result) == first_len

@@ -4,10 +4,11 @@ Shared fixtures for Rust integration tests.
 This module provides common fixtures used across rust integration tests
 to ensure consistent test environments and reduce duplication.
 """
+# ruff: noqa: ANN201, ANN001, ANN204, ANN202, ANN002
 
 import asyncio
 import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -100,6 +101,25 @@ def mock_scanlog_info():
             self.formid_plugins_always_scan = ["Fallout4.esm"]
             self.formid_plugins_all_scan = False
 
+            # Version info
+            self.game_version = "1.10.163"
+            self.game_version_vr = "1.2.72"
+            self.game_version_new = "1.10.984"
+            self.classic_version = "7.31.0"
+            self.crashgen_latest_og = "1.28.6"
+            self.crashgen_latest_vr = "1.28.6"
+
+            # Suspects
+            self.suspects_error_list = {}
+            self.suspects_stack_list = {}
+
+            # Ignore lists
+            self.game_ignore_plugins = []
+            self.game_ignore_records = []
+            self.ignore_list = []
+            self.classic_records_list = []
+            self.plugins_mods_to_check = {}
+
         def get(self, key, default=None):
             """Allow dict-like access."""
             return getattr(self, key, default)
@@ -108,9 +128,9 @@ def mock_scanlog_info():
 
 
 @pytest.fixture
-def mock_yamldata():
+def mock_yamldata(mock_scanlog_info):
     """Alias for mock_scanlog_info for compatibility."""
-    return mock_scanlog_info()
+    return mock_scanlog_info
 
 
 @pytest.fixture
@@ -187,19 +207,10 @@ async def initialized_database_pool(tmp_path):
             await pool.initialize([str(db_path)])
         else:
             # Python version uses global DB_PATHS
-            from ClassicLib.Constants import DB_PATHS
-
-            # Temporarily add our test database to DB_PATHS
-            original_paths = DB_PATHS.copy()
-            DB_PATHS.clear()
-            DB_PATHS.append(db_path)
-
-            try:
+            # Use patch to temporarily redirect DB_PATHS to our test database
+            # DB_PATHS is a proxy that calls get_db_paths(), so patching get_db_paths works
+            with patch("ClassicLib.Constants.get_db_paths", return_value=(db_path,)):
                 await pool.initialize()
-            finally:
-                # Restore original paths
-                DB_PATHS.clear()
-                DB_PATHS.extend(original_paths)
 
     yield pool
 
@@ -221,8 +232,8 @@ class PerformanceTimer:
     """Helper class for performance timing in tests."""
 
     def __init__(self):
-        self.elapsed = 0
-        self.start_time = 0
+        self.elapsed = 0.0
+        self.start_time = 0.0
 
     def __enter__(self):
         self.start_time = time.perf_counter()

@@ -5,30 +5,35 @@ This module provides common utilities, data generators, and comparison framework
 for ensuring Rust components produce identical results to Python implementations
 across all Phase 6 validation requirements.
 """
+# ruff: noqa: ANN201, ANN001, ANN204, PLR6301, ANN003, BLE001
 
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import json
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from difflib import unified_diff
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import Mock
 
 import pytest
 
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.integration.status import get_rust_component_status
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+from tests.rust_integration.fixtures.crash_log_factory import CrashLogFactory, CrashLogType
 
 # Get Rust availability status
 _status = get_rust_component_status()
 RUST_AVAILABLE = _status.get("available", {})
-from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
-from tests.rust_integration.fixtures.crash_log_factory import CrashLogFactory, CrashLogType
+
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
 
 logger = logging.getLogger(__name__)
 
@@ -99,7 +104,7 @@ class ParityTestCase:
     expected_output_type: type
     setup_function: Callable[[], Any] | None = None
     teardown_function: Callable[[], Any] | None = None
-    validation_function: Callable[[Any, Any], bool] | None = None
+    validation_function: Callable[[Any, Any, dict[str, Any]], bool] | None = None
     skip_if_rust_unavailable: bool = True
     timeout_seconds: float = 30.0
     metadata: dict[str, Any] = field(default_factory=dict)
@@ -150,10 +155,11 @@ class ParityValidator(ABC):
         """
         if test_case.validation_function:
             try:
-                is_valid = test_case.validation_function(rust_result, python_result)
-                return is_valid, [] if is_valid else ["Custom validation failed"]
+                is_valid = test_case.validation_function(rust_result, python_result, test_case.inputs)
             except Exception as e:
                 return False, [f"Validation function error: {e}"]
+            else:
+                return is_valid, [] if is_valid else ["Custom validation failed"]
 
         return self._default_output_comparison(rust_result, python_result)
 
@@ -229,7 +235,7 @@ class ParityValidator(ABC):
             differences.append(f"Length mismatch: Rust={len(rust_seq)}, Python={len(python_seq)}")
             return False, differences
 
-        for i, (rust_item, python_item) in enumerate(zip(rust_seq, python_seq)):
+        for i, (rust_item, python_item) in enumerate(zip(rust_seq, python_seq, strict=False)):
             item_identical, item_diffs = self._default_output_comparison(rust_item, python_item)
             if not item_identical:
                 differences.append(f"Element {i} differs:")
@@ -272,19 +278,34 @@ class ParityValidator(ABC):
         """
         differences = []
 
-        # Compare fragment attributes that should be identical
-        fragment_attrs = ["fragment_name", "fragment_content", "fragment_type", "priority", "markdown_content", "raw_data"]
+        # Ensure both are ReportFragment instances or can be treated as such
+        # Python fragment will be a ReportFragment. Rust fragment might be dict or ReportFragment
+        if not hasattr(python_fragment, "content") or not hasattr(python_fragment, "has_content"):
+            differences.append("Python fragment missing expected attributes (content, has_content)")
+            return False, differences
 
-        for attr in fragment_attrs:
-            rust_val = getattr(rust_fragment, attr, None)
-            python_val = getattr(python_fragment, attr, None)
+        # Access attributes carefully for Rust side (could be dict or object)
+        rust_content = getattr(rust_fragment, "content", rust_fragment.get("content"))
+        python_content = python_fragment.content
 
-            attr_identical, attr_diffs = self._default_output_comparison(rust_val, python_val)
-            if not attr_identical:
-                differences.append(f"ReportFragment.{attr} differs:")
-                differences.extend(f"  {diff}" for diff in attr_diffs)
+        # Convert content (tuple of strings) to normalized string for comparison
+        rust_content_normalized = normalize_markdown_content("\n".join(rust_content or []))
+        python_content_normalized = normalize_markdown_content("\n".join(python_content or []))
 
-        return len(differences) == 0, differences
+        if rust_content_normalized != python_content_normalized:
+            differences.append("ReportFragment.content differs (normalized markdown comparison)")
+            is_identical = False
+        else:
+            is_identical = True
+
+        rust_has_content = getattr(rust_fragment, "has_content", rust_fragment.get("has_content"))
+        python_has_content = python_fragment.has_content
+
+        if rust_has_content != python_has_content:
+            differences.append(f"ReportFragment.has_content differs: Rust={rust_has_content}, Python={python_has_content}")
+            is_identical = False
+
+        return is_identical, differences
 
 
 class CrashLogParityGenerator:
@@ -458,10 +479,8 @@ class MockYamlSettingsCache:
                 value = self._settings.get(key, None)
                 # Apply type conversion if specified
                 if len(request) >= 1 and request[0] and value is not None:
-                    try:
+                    with contextlib.suppress(ValueError, TypeError):
                         value = request[0](value)
-                    except (ValueError, TypeError):
-                        pass
                 results.append(value)
             else:
                 results.append(None)
@@ -579,6 +598,7 @@ class ParityTestRunner:
             method_name=test_case.name,
             test_case=test_case.description,
             rust_available=RUST_AVAILABLE.get(validator.component_name.lower(), False),
+            passed=False,  # Initialize with False, will be updated later
         )
 
         try:
@@ -631,12 +651,12 @@ class ParityTestRunner:
         self.results.append(result)
         return result
 
-    async def _execute_with_timeout(self, impl: Any, inputs: dict[str, Any], timeout: float) -> Any:
+    async def _execute_with_timeout(self, impl: Any, inputs: dict[str, Any], timeout_duration: float) -> Any:
         """Execute implementation with timeout protection."""
         # This is a placeholder - actual implementation would depend on
         # the specific interface of each component
         if asyncio.iscoroutinefunction(getattr(impl, "execute", None)):
-            return await asyncio.wait_for(impl.execute(**inputs), timeout=timeout)
+            return await asyncio.wait_for(impl.execute(**inputs), timeout=timeout_duration)
         if hasattr(impl, "execute"):
             return impl.execute(**inputs)
         return impl  # If impl is the result itself
@@ -766,9 +786,11 @@ def validate_plugin_dictionaries(rust_plugins: dict[str, str], python_plugins: d
 
     # Compare values for common keys
     common_keys = rust_keys & python_keys
-    for key in common_keys:
-        if rust_plugins[key] != python_plugins[key]:
-            differences.append(f"Plugin mismatch at index {key}: Rust='{rust_plugins[key]}', Python='{python_plugins[key]}'")
+    differences.extend(
+        f"Plugin mismatch at index {key}: Rust='{rust_plugins[key]}', Python='{python_plugins[key]}'"
+        for key in common_keys
+        if rust_plugins[key] != python_plugins[key]
+    )
 
     return len(differences) == 0, differences
 
@@ -790,7 +812,8 @@ def normalize_markdown_content(content: str) -> str:
     content = content.replace("\r\n", "\n").replace("\r", "\n")
 
     # Remove trailing whitespace from lines
-    lines = [line.rstrip() for line in content.split("\n")]
+    lines = []
+    lines.extend(line.rstrip() for line in content.split("\n"))
 
     # Remove empty lines at the end
     while lines and not lines[-1]:

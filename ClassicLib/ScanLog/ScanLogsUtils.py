@@ -175,13 +175,13 @@ def complete_scan_with_summary(result: ScanResult, yamldata: ClassicScanLogsInfo
 
         # Show random hint
         if hasattr(yamldata, "classic_game_hints") and yamldata.classic_game_hints:
-            msg_info(f"{random.choice(yamldata.classic_game_hints)}", target=MessageTarget.CLI_ONLY)
+            msg_info(f"{random.choice(yamldata.classic_game_hints)}", target=MessageTarget.CONSOLE)
 
         # Show game-specific information
         if GlobalRegistry.get_game() == "Fallout4":
-            msg_info("\n-----\n", target=MessageTarget.CLI_ONLY)
+            msg_info("\n-----\n", target=MessageTarget.CONSOLE)
             if hasattr(yamldata, "autoscan_text"):
-                msg_info(yamldata.autoscan_text, target=MessageTarget.CLI_ONLY)
+                msg_info(yamldata.autoscan_text, target=MessageTarget.CONSOLE)
 
 
 async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:

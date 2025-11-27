@@ -13,11 +13,11 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from ClassicLib.ResourceLoader import ResourceLoader
-from ClassicLib.rust_loader import is_rust_available
+from ClassicLib.ResourceLoader import ResourceLoader  # noqa: E402
+from ClassicLib.rust_loader import is_rust_available  # noqa: E402
 
 
-def main():
+def main() -> None:
     """Demonstrate Rust extension loading and usage."""
     print("=" * 60)
     print("CLASSIC-Fallout4 Rust Extension Demo")
@@ -55,13 +55,17 @@ def main():
     if is_rust_available():
         try:
             # Import Rust-accelerated modules
-            from classic_core import RUST_AVAILABLE, FileIOCore, FormIDAnalyzer, LogParser, PatternMatcher
+            from ClassicLib.integration.detector import get_available_components
+
+            components = get_available_components().get("components", {})
 
             print("Available Rust-Accelerated Components:")
-            print("  ✓ FileIOCore - High-speed file I/O operations")
-            print("  ✓ FormIDAnalyzer - Fast FormID analysis")
-            print("  ✓ LogParser - Optimized crash log parsing")
-            print("  ✓ PatternMatcher - Efficient pattern matching")
+            if components.get("file_io_core"):
+                print("  ✓ FileIOCore - High-speed file I/O operations")
+            if components.get("formid_analyzer"):
+                print("  ✓ FormIDAnalyzer - Fast FormID analysis")
+            if components.get("parser"):
+                print("  ✓ LogParser - Optimized crash log parsing")
             print()
 
             # Example: Using the Rust-accelerated FileIOCore
@@ -69,7 +73,9 @@ def main():
 
             # This would use the Rust implementation if available,
             # or fall back to Python if not
-            io_core = FileIOCore()
+            from ClassicLib.integration.factory import get_file_io
+
+            io_core = get_file_io()
             print(f"  FileIOCore initialized: {io_core.__class__.__module__}")
 
         except ImportError as e:

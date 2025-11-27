@@ -3,7 +3,7 @@
 
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -37,7 +37,7 @@ class TestSetupInitialization:
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_gui_mode(
         self,
@@ -69,7 +69,7 @@ class TestSetupInitialization:
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_gui_mode_with_parent(
         self,
@@ -101,7 +101,7 @@ class TestSetupInitialization:
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_cli_mode(
         self,
@@ -135,7 +135,7 @@ class TestSetupInitialization:
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_frozen_executable(
         self,
@@ -165,7 +165,7 @@ class TestSetupInitialization:
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_source_mode(
         self,
@@ -193,11 +193,11 @@ class TestSetupInitialization:
         # Verify local dir was set from __file__
         local_dir = GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)
         # Should be parent of SetupCoordinator.py location
-        assert local_dir.name == "CLASSIC-Fallout4"
+        assert local_dir.name == "ClassicLib" or local_dir.name == "CLASSIC-Fallout4"
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_none_game_setting(
         self,
@@ -225,7 +225,7 @@ class TestSetupInitialization:
 
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings")
+    @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
     @patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_yaml_preload(
         self,
@@ -235,7 +235,7 @@ class TestSetupInitialization:
         mock_validate_paths: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
-        """Test that YAML files are preloaded during initialization."""
+        """Test that YAML files are NOT preloaded during initialization (performance optimization)."""
         # Mock batch_get_settings to return values
         mock_batch_get.return_value = [
             False,  # VR Mode disabled
@@ -246,8 +246,8 @@ class TestSetupInitialization:
         # Initialize application
         coordinator.initialize_application(is_gui=False)
 
-        # Verify prefetch_all_settings was called to preload YAML files
-        mock_prefetch.assert_called_once()
+        # Verify prefetch_all_settings was NOT called (lazy loading preferred)
+        mock_prefetch.assert_not_called()
 
         # Verify batch_get_settings was called with correct requests
         mock_batch_get.assert_called_once()

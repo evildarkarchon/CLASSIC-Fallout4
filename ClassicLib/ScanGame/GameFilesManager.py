@@ -14,7 +14,7 @@ from typing import Literal, cast
 from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import FileIOCore
+from ClassicLib.FileIO import FileIOCore
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import yaml_settings
 

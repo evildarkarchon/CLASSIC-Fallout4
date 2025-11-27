@@ -61,21 +61,28 @@ def qt_application(qt_application_session):
         # Clean up AsyncBridge singleton to prevent state pollution between tests
         try:
             # Get the current thread's AsyncBridge instance if it exists
+            import sys
             import threading
 
-            from ClassicLib.AsyncBridge import AsyncBridge
+            # Only try to import if it might have been used
+            if "ClassicLib.AsyncBridge" in sys.modules:
+                from ClassicLib.AsyncBridge import AsyncBridge
 
-            thread_id = threading.get_ident()
-            with AsyncBridge._lock:
-                if thread_id in AsyncBridge._instances:
-                    instance = AsyncBridge._instances[thread_id]
-                    try:
-                        instance.shutdown()
-                    except:
-                        pass  # Ignore shutdown errors
-                    del AsyncBridge._instances[thread_id]
+                thread_id = threading.get_ident()
+                # We need to be careful about accessing the lock if it might be held
+                if AsyncBridge._instances:
+                    # Use a copy of keys to avoid modification during iteration
+                    for tid, instance in list(AsyncBridge._instances.items()):
+                        try:
+                            instance.shutdown()
+                        except:
+                            pass  # Ignore shutdown errors
+
+                    # Clear instances
+                    with AsyncBridge._lock:
+                        AsyncBridge._instances.clear()
         except:
-            pass  # Ignore if AsyncBridge not yet imported
+            pass  # Ignore if AsyncBridge not yet imported or other errors
 
 
 @pytest.fixture(scope="function")
@@ -119,9 +126,10 @@ def gui_message_handler(qt_parent_widget):
         # Initialize in GUI mode with parent widget
         handler = init_message_handler(parent=qt_parent_widget, is_gui_mode=True)
 
-        # Mock the message signal to prevent actual dialog creation
-        # This prevents blocking dialogs during tests
-        handler.message_signal = MagicMock()
+        # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
+        # The _gui_backend.show() method emits a signal that triggers _handle_message()
+        # which calls msg_box.exec() - a blocking modal dialog
+        handler._gui_backend.show = MagicMock()
 
         yield handler
     finally:

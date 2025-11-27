@@ -293,7 +293,7 @@ mod tests {
         let config = CliConfig::default();
         let yaml_data = create_test_yaml_data();
         let _executor = ScanExecutor::new(config, yaml_data);
-        assert!(true); // Just verify creation works
+        // Verify creation works - no panic means success
     }
 
     #[test]

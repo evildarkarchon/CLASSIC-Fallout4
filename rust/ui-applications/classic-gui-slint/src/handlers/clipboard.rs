@@ -34,39 +34,41 @@ mod tests {
     };
 
     #[test]
-    fn test_clipboard_operations() {
+    fn test_clipboard_full_workflow() {
         // These tests may fail in CI environments without clipboard access
         if !is_clipboard_available() {
             eprintln!("Skipping clipboard tests: clipboard not available");
             return;
         }
 
-        // Test basic copy
+        // 1. Test basic copy
         let test_text = "Test clipboard content";
         assert!(copy_to_clipboard(test_text).is_ok());
 
-        // Test round-trip
+        // 2. Test round-trip
         let read_text = get_clipboard_text().expect("Failed to read clipboard");
         assert_eq!(read_text, test_text);
 
-        // Test clear
+        // 3. Test clear
         assert!(clear_clipboard().is_ok());
         let cleared_text = get_clipboard_text().expect("Failed to read clipboard");
         assert_eq!(cleared_text, "");
-    }
 
-    #[test]
-    fn test_copy_error_to_clipboard() {
-        if !is_clipboard_available() {
-            eprintln!("Skipping clipboard tests: clipboard not available");
-            return;
-        }
-
+        // 4. Test error report copying (sequential execution prevents race)
         let result = copy_error_to_clipboard(
             "Test Error",
             "This is a test error",
             Some("Error details here"),
         );
         assert!(result.is_ok());
+
+        // Verify error report content
+        let error_text = get_clipboard_text().expect("Failed to read clipboard");
+        assert!(error_text.contains("Test Error"));
+        assert!(error_text.contains("This is a test error"));
+        assert!(error_text.contains("Error details here"));
+
+        // Cleanup
+        let _ = clear_clipboard();
     }
 }

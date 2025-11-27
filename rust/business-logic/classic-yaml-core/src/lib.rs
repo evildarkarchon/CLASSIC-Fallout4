@@ -337,25 +337,25 @@ impl Default for YamlFormatConfig {
 /// # Fields
 ///
 /// - `data`:
-///     A thread-safe, shared reference-counted pointer (`Arc`) to the parsed YAML data.
-///     This allows safe shared usage of the YAML data across threads.
+///   A thread-safe, shared reference-counted pointer (`Arc`) to the parsed YAML data.
+///   This allows safe shared usage of the YAML data across threads.
 ///
 /// - `modified`:
-///     A `SystemTime` instance representing the last time the YAML resource
-///     was modified. This can be used to determine whether the cached data
-///     is up-to-date with the source.
+///   A `SystemTime` instance representing the last time the YAML resource
+///   was modified. This can be used to determine whether the cached data
+///   is up-to-date with the source.
 ///
 /// - `raw_content`:
-///     An optional `String` containing the raw content of the YAML file.
-///     This is only present if the raw text representation is required in addition
-///     to the parsed YAML data.
+///   An optional `String` containing the raw content of the YAML file.
+///   This is only present if the raw text representation is required in addition
+///   to the parsed YAML data.
 ///
 /// # Derives
 ///
 /// - `Clone`:
-///     The `Clone` trait allows creating a duplicate `CachedYaml` instance efficiently.
-///     This is made possible due to the usage of `Arc` for the `data` field, which ensures
-///     that the cloned instance shares the same underlying data rather than duplicating it.
+///   The `Clone` trait allows creating a duplicate `CachedYaml` instance efficiently.
+///   This is made possible due to the usage of `Arc` for the `data` field, which ensures
+///   that the cloned instance shares the same underlying data rather than duplicating it.
 ///
 /// # Usage
 ///
@@ -1114,7 +1114,16 @@ impl YamlOperations {
         let mut current = data;
 
         for key in keys {
-            current = &current[key];
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return default.to_string(),
+                    };
+                }
+                _ => return default.to_string(),
+            }
         }
 
         current.as_str().unwrap_or(default).to_string()
@@ -1159,7 +1168,16 @@ impl YamlOperations {
         let mut current = data;
 
         for key in keys {
-            current = &current[key];
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return Vec::new(),
+                    };
+                }
+                _ => return Vec::new(),
+            }
         }
 
         match current {
@@ -1209,7 +1227,16 @@ impl YamlOperations {
         let mut current = data;
 
         for key in keys {
-            current = &current[key];
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return HashMap::new(),
+                    };
+                }
+                _ => return HashMap::new(),
+            }
         }
 
         match current {
@@ -1231,6 +1258,22 @@ impl Default for YamlOperations {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Clear the global YAML cache
+///
+/// This function clears all cached YAML data. It's primarily useful for
+/// testing to ensure clean state between test runs.
+///
+/// # Example
+/// ```rust,no_run
+/// use classic_yaml_core::clear_global_yaml_cache;
+///
+/// // Clear all cached YAML files
+/// clear_global_yaml_cache();
+/// ```
+pub fn clear_global_yaml_cache() {
+    YAML_CACHE.clear();
 }
 
 #[cfg(test)]

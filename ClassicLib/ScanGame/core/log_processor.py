@@ -13,7 +13,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.core.utils import ASYNC_ENCODING_AVAILABLE, read_lines_with_encoding_async
 from ClassicLib.Util import normalize_list, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import yaml_settings  # pyright: ignore[reportAttributeAccessIssue]
+from ClassicLib.YamlSettingsCache import yaml_settings_async  # pyright: ignore[reportAttributeAccessIssue]
 
 
 class LogProcessor:
@@ -96,9 +96,9 @@ class LogProcessor:
             folder_path = Path(folder_path)
 
         # Get YAML settings and convert to sets for faster lookups
-        catch_errors_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "catch_log_errors") or []))
-        ignore_files_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_files") or []))
-        ignore_errors_set: set[str] = set(normalize_list(yaml_settings(list[str], YAML.Main, "exclude_log_errors") or []))
+        catch_errors_set: set[str] = set(normalize_list(await yaml_settings_async(list[str], YAML.Main, "catch_log_errors") or []))
+        ignore_files_set: set[str] = set(normalize_list(await yaml_settings_async(list[str], YAML.Main, "exclude_log_files") or []))
+        ignore_errors_set: set[str] = set(normalize_list(await yaml_settings_async(list[str], YAML.Main, "exclude_log_errors") or []))
 
         # Find valid log files (excluding crash logs)
         valid_log_files: list[Path] = [

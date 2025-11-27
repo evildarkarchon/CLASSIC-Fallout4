@@ -53,6 +53,12 @@ pub struct PyGpuInfo {
     inner: GpuInfo,
 }
 
+impl Default for PyGpuInfo {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyGpuInfo {
     /// Create a new empty GpuInfo instance
@@ -111,6 +117,12 @@ pub struct PyGpuDetector {
     /// Inner Rust GpuDetector instance (currently unused as methods are static)
     #[allow(dead_code)]
     inner: GpuDetector,
+}
+
+impl Default for PyGpuDetector {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 #[pymethods]

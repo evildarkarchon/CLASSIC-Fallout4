@@ -119,7 +119,7 @@ pub mod suspect_scanner;
 
 // Re-export all public types
 pub use fcx_handler::{PyConfigIssue, PyFcxModeHandler};
-pub use formid::{PyFormIDAnalyzer, PyRustFormIDAnalyzer};
+pub use formid::PyRustFormIDAnalyzer;
 pub use formid_analyzer::{
     PyFormIDAnalyzerCore, extract_formids_batch, is_valid_formid, validate_formids_batch,
 };
@@ -169,7 +169,6 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLogParser>()?;
 
     // FormID analysis
-    m.add_class::<PyFormIDAnalyzer>()?;
     m.add_class::<PyRustFormIDAnalyzer>()?;
     m.add_class::<PyFormIDAnalyzerCore>()?;
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;
@@ -236,7 +235,6 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyLogParser>()?;
 
     // FormID analysis
-    m.add_class::<PyFormIDAnalyzer>()?;
     m.add_class::<PyRustFormIDAnalyzer>()?;
     m.add_class::<PyFormIDAnalyzerCore>()?;
     m.add_function(wrap_pyfunction!(extract_formids_batch, m)?)?;

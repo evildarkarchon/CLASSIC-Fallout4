@@ -51,11 +51,11 @@ def test_rust_yaml_available():
     try:
         import classic_yaml
 
-        assert hasattr(classic_yaml, "RustYamlOperations"), "RustYamlOperations class should be available"
+        assert hasattr(classic_yaml, "YamlOperations"), "YamlOperations class should be available"
 
         # Verify we can instantiate it
-        ops = classic_yaml.RustYamlOperations()
-        assert ops is not None, "Should be able to create RustYamlOperations instance"
+        ops = classic_yaml.YamlOperations()
+        assert ops is not None, "Should be able to create YamlOperations instance"
     except ImportError:
         pytest.skip("Rust YAML module not available - expected if not built")
 
@@ -66,7 +66,7 @@ def test_yaml_operations_detects_rust(yaml_file_ops):
     """Test that YamlFileOperations detects Rust availability."""
     # Rust should be available in our test environment
     assert yaml_file_ops.rust_yaml is not None, "Rust YAML should be detected"
-    assert type(yaml_file_ops.rust_yaml).__name__ == "RustYamlOperations", "Should be RustYamlOperations instance"
+    assert type(yaml_file_ops.rust_yaml).__name__ == "YamlOperations", "Should be YamlOperations instance"
 
 
 # Test static file detection
@@ -209,16 +209,17 @@ def test_operations_without_rust():
         # Restore original
         ops.rust_yaml = original_rust
 
+    # Test YamlSettingsCache integration
 
-# Test YamlSettingsCache integration
+    @pytest.mark.unit
+    def test_yaml_settings_cache_has_async_core(yaml_cache):
+        """Test that YamlSettingsCache has async core initialized."""
+        # Trigger lazy initialization
+        yaml_cache._get_async_core()
 
-
-@pytest.mark.unit
-def test_yaml_settings_cache_has_async_core(yaml_cache):
-    """Test that YamlSettingsCache has async core initialized."""
-    assert hasattr(yaml_cache, "_async_core"), "Should have async core"
-    assert hasattr(yaml_cache, "_bridge"), "Should have AsyncBridge"
-    assert yaml_cache._async_core is not None, "Async core should be initialized"
+        assert hasattr(yaml_cache, "_async_core"), "Should have async core"
+        assert hasattr(yaml_cache, "_bridge"), "Should have AsyncBridge"
+        assert yaml_cache._async_core is not None, "Async core should be initialized"
 
 
 @pytest.mark.unit
@@ -231,19 +232,21 @@ def test_yaml_settings_cache_singleton():
 
     assert instance1 is instance2, "Should return same instance"
 
+    @pytest.mark.unit
+    @pytest.mark.rust
+    def test_yaml_cache_file_ops_has_rust():
+        """Test that YamlSettingsCache's file operations have Rust available."""
+        from ClassicLib.YamlSettingsCache import yaml_cache
 
-@pytest.mark.unit
-@pytest.mark.rust
-def test_yaml_cache_file_ops_has_rust():
-    """Test that YamlSettingsCache's file operations have Rust available."""
-    from ClassicLib.YamlSettingsCache import yaml_cache
+        cache = yaml_cache()
+        # Trigger lazy initialization
+        cache._get_async_core()
 
-    cache = yaml_cache()
-    assert hasattr(cache, "_async_core"), "Should have async core"
-    assert hasattr(cache._async_core, "file_ops"), "Should have file operations"
+        assert hasattr(cache, "_async_core"), "Should have async core"
+        assert hasattr(cache._async_core, "file_ops"), "Should have file operations"
 
-    file_ops = cache._async_core.file_ops
-    assert file_ops.rust_yaml is not None, "File ops should have Rust available"
+        file_ops = cache._async_core.file_ops
+        assert file_ops.rust_yaml is not None, "File ops should have Rust available"
 
 
 # Test performance (basic check)

@@ -21,20 +21,20 @@
 // clean shutdown paths where monitoring is explicitly stopped before process exit.
 
 use crate::app_state::SharedAppState;
-use anyhow::Result;
 #[cfg(not(test))]
 use anyhow::Context;
-use classic_scanlog_core::papyrus::PapyrusStats;
+use anyhow::Result;
 #[cfg(not(test))]
 use classic_scanlog_core::papyrus::PapyrusAnalyzer;
+use classic_scanlog_core::papyrus::PapyrusStats;
 #[cfg(not(test))]
 use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
+use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(test))]
 use std::sync::mpsc::channel;
-use std::sync::Arc;
 
 /// Monitoring state container
 ///
@@ -50,17 +50,17 @@ struct MonitoringState {
     watcher: Mutex<Option<RecommendedWatcher>>,
     #[cfg(test)]
     #[allow(dead_code)]
-    watcher: Mutex<Option<()>>,  // Dummy type in tests
+    watcher: Mutex<Option<()>>, // Dummy type in tests
     #[cfg(not(test))]
     analyzer: Mutex<Option<PapyrusAnalyzer>>,
     #[cfg(test)]
     #[allow(dead_code)]
-    analyzer: Mutex<Option<()>>,  // Dummy type in tests
+    analyzer: Mutex<Option<()>>, // Dummy type in tests
     #[cfg(not(test))]
     shutdown_signal: Mutex<Option<tokio::sync::mpsc::UnboundedSender<()>>>,
     #[cfg(test)]
     #[allow(dead_code)]
-    shutdown_signal: Mutex<Option<()>>,  // Dummy type in tests
+    shutdown_signal: Mutex<Option<()>>, // Dummy type in tests
 }
 
 impl MonitoringState {
@@ -114,7 +114,8 @@ impl MonitoringState {
 /// heap corruption during multi-threaded test cleanup on Windows. In test builds, we
 /// avoid initializing the watcher by not actually starting monitoring, which prevents
 /// the problematic destructor from ever running.
-static MONITORING_STATE: Lazy<Arc<MonitoringState>> = Lazy::new(|| Arc::new(MonitoringState::new()));
+static MONITORING_STATE: Lazy<Arc<MonitoringState>> =
+    Lazy::new(|| Arc::new(MonitoringState::new()));
 
 /// Toggles Papyrus log monitoring on/off
 ///
@@ -149,7 +150,7 @@ pub async fn start_monitoring(_state: SharedAppState) -> Result<()> {
     #[cfg(test)]
     {
         tracing::debug!("Skipping Papyrus monitoring in test mode");
-        return Ok(());
+        Ok(())
     }
 
     #[cfg(not(test))]
@@ -170,131 +171,135 @@ pub async fn start_monitoring(_state: SharedAppState) -> Result<()> {
             anyhow::anyhow!("Documents directory not configured. Please check your game settings.")
         })?;
 
-    // Papyrus logs are typically in Documents/My Games/{Game}/Logs/Script/
-    let papyrus_log_path = docs.join("Logs/Script/Papyrus.0.log");
+        // Papyrus logs are typically in Documents/My Games/{Game}/Logs/Script/
+        let papyrus_log_path = docs.join("Logs/Script/Papyrus.0.log");
 
-    tracing::info!("Monitoring Papyrus log at: {}", papyrus_log_path.display());
+        tracing::info!("Monitoring Papyrus log at: {}", papyrus_log_path.display());
 
-    // Check if log file exists
-    if !papyrus_log_path.exists() {
-        anyhow::bail!(
-            "Papyrus log file not found at: {}\n\n\
+        // Check if log file exists
+        if !papyrus_log_path.exists() {
+            anyhow::bail!(
+                "Papyrus log file not found at: {}\n\n\
              The log file will be created when the game starts.\n\
              Please ensure:\n\
              - Papyrus logging is enabled in your game INI files\n\
              - The game has been run at least once",
-            papyrus_log_path.display()
-        );
-    }
+                papyrus_log_path.display()
+            );
+        }
 
-    // Create analyzer from core library
-    let mut analyzer = PapyrusAnalyzer::new(papyrus_log_path.clone());
+        // Create analyzer from core library
+        let mut analyzer = PapyrusAnalyzer::new(papyrus_log_path.clone());
 
-    // Start monitoring from END of file (ignore history)
-    analyzer
-        .start_monitoring()
-        .context("Failed to initialize Papyrus analyzer")?;
+        // Start monitoring from END of file (ignore history)
+        analyzer
+            .start_monitoring()
+            .context("Failed to initialize Papyrus analyzer")?;
 
-    tracing::info!("Analyzer initialized with tail -f behavior");
+        tracing::info!("Analyzer initialized with tail -f behavior");
 
-    // Store analyzer in state
-    *MONITORING_STATE.analyzer.lock() = Some(analyzer);
+        // Store analyzer in state
+        *MONITORING_STATE.analyzer.lock() = Some(analyzer);
 
-    // Create file watcher
-    let (tx, rx) = channel();
-    let mut watcher = notify::recommended_watcher(tx).context("Failed to create file watcher")?;
+        // Create file watcher
+        let (tx, rx) = channel();
+        let mut watcher =
+            notify::recommended_watcher(tx).context("Failed to create file watcher")?;
 
-    // Watch the log file directory (watching the file directly doesn't work reliably)
-    let log_dir = papyrus_log_path
-        .parent()
-        .ok_or_else(|| anyhow::anyhow!("Failed to get log directory path"))?;
+        // Watch the log file directory (watching the file directly doesn't work reliably)
+        let log_dir = papyrus_log_path
+            .parent()
+            .ok_or_else(|| anyhow::anyhow!("Failed to get log directory path"))?;
 
-    watcher
-        .watch(log_dir, RecursiveMode::NonRecursive)
-        .context("Failed to start watching log directory")?;
+        watcher
+            .watch(log_dir, RecursiveMode::NonRecursive)
+            .context("Failed to start watching log directory")?;
 
-    // Store watcher in state so it stays alive
-    *MONITORING_STATE.watcher.lock() = Some(watcher);
+        // Store watcher in state so it stays alive
+        *MONITORING_STATE.watcher.lock() = Some(watcher);
 
-    // Create shutdown signal channel
-    let (shutdown_tx, mut shutdown_rx) = tokio::sync::mpsc::unbounded_channel();
-    *MONITORING_STATE.shutdown_signal.lock() = Some(shutdown_tx);
+        // Create shutdown signal channel
+        let (shutdown_tx, mut shutdown_rx) = tokio::sync::mpsc::unbounded_channel();
+        *MONITORING_STATE.shutdown_signal.lock() = Some(shutdown_tx);
 
-    // Clone Arc for background thread
-    let state = Arc::clone(&MONITORING_STATE);
+        // Clone Arc for background thread
+        let state = Arc::clone(&MONITORING_STATE);
 
-    // Spawn background thread to handle file events
-    std::thread::spawn(move || {
-        tracing::info!("File watcher thread started");
+        // Spawn background thread to handle file events
+        std::thread::spawn(move || {
+            tracing::info!("File watcher thread started");
 
-        loop {
-            // Check shutdown signal first (non-blocking)
-            if shutdown_rx.try_recv().is_ok() {
-                tracing::info!("Received shutdown signal, exiting watcher thread");
-                break;
-            }
+            loop {
+                // Check shutdown signal first (non-blocking)
+                if shutdown_rx.try_recv().is_ok() {
+                    tracing::info!("Received shutdown signal, exiting watcher thread");
+                    break;
+                }
 
-            // Check active flag
-            if !state.active.load(Ordering::SeqCst) {
-                tracing::info!("Monitoring stopped, exiting watcher thread");
-                break;
-            }
+                // Check active flag
+                if !state.active.load(Ordering::SeqCst) {
+                    tracing::info!("Monitoring stopped, exiting watcher thread");
+                    break;
+                }
 
-            // Use recv_timeout to allow periodic shutdown checks
-            match rx.recv_timeout(std::time::Duration::from_millis(100)) {
-                Ok(event_result) => {
-                    match event_result {
-                        Ok(event) => {
-                            // Only process modify events for the Papyrus log
-                            if matches!(event.kind, EventKind::Modify(_))
-                                && event
-                                    .paths
-                                    .iter()
-                                    .any(|p| p.file_name() == papyrus_log_path.file_name())
-                            {
-                                tracing::debug!("Papyrus log modified");
+                // Use recv_timeout to allow periodic shutdown checks
+                match rx.recv_timeout(std::time::Duration::from_millis(100)) {
+                    Ok(event_result) => {
+                        match event_result {
+                            Ok(event) => {
+                                // Only process modify events for the Papyrus log
+                                if matches!(event.kind, EventKind::Modify(_))
+                                    && event
+                                        .paths
+                                        .iter()
+                                        .any(|p| p.file_name() == papyrus_log_path.file_name())
+                                {
+                                    tracing::debug!("Papyrus log modified");
 
-                                // Check for updates using core analyzer
-                                let mut analyzer_guard = state.analyzer.lock();
-                                if let Some(analyzer) = analyzer_guard.as_mut() {
-                                    match analyzer.check_for_updates() {
-                                        Ok(Some((new_lines, stats))) => {
-                                            tracing::debug!(
-                                                "Processed {} new lines. Stats: E={} W={} D={} S={}",
-                                                new_lines.len(),
-                                                stats.errors,
-                                                stats.warnings,
-                                                stats.dumps,
-                                                stats.stacks
-                                            );
-                                        }
-                                        Ok(None) => {
-                                            // No updates
-                                        }
-                                        Err(e) => {
-                                            tracing::error!("Failed to check for updates: {}", e);
+                                    // Check for updates using core analyzer
+                                    let mut analyzer_guard = state.analyzer.lock();
+                                    if let Some(analyzer) = analyzer_guard.as_mut() {
+                                        match analyzer.check_for_updates() {
+                                            Ok(Some((new_lines, stats))) => {
+                                                tracing::debug!(
+                                                    "Processed {} new lines. Stats: E={} W={} D={} S={}",
+                                                    new_lines.len(),
+                                                    stats.errors,
+                                                    stats.warnings,
+                                                    stats.dumps,
+                                                    stats.stacks
+                                                );
+                                            }
+                                            Ok(None) => {
+                                                // No updates
+                                            }
+                                            Err(e) => {
+                                                tracing::error!(
+                                                    "Failed to check for updates: {}",
+                                                    e
+                                                );
+                                            }
                                         }
                                     }
                                 }
                             }
-                        }
-                        Err(e) => {
-                            tracing::error!("File watcher error: {}", e);
+                            Err(e) => {
+                                tracing::error!("File watcher error: {}", e);
+                            }
                         }
                     }
-                }
-                Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-                    // Timeout is expected, continue loop for shutdown checks
-                }
-                Err(e) => {
-                    tracing::error!("Channel error: {}", e);
-                    break;
+                    Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                        // Timeout is expected, continue loop for shutdown checks
+                    }
+                    Err(e) => {
+                        tracing::error!("Channel error: {}", e);
+                        break;
+                    }
                 }
             }
-        }
 
-        tracing::info!("File watcher thread exiting cleanly");
-    });
+            tracing::info!("File watcher thread exiting cleanly");
+        });
 
         Ok(())
     } // end #[cfg(not(test))]

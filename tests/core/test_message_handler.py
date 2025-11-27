@@ -10,7 +10,6 @@ import pytest
 
 from ClassicLib.MessageHandler import (
     CLIProgressBar,
-    Message,
     MessageHandler,
     MessageTarget,
     MessageType,
@@ -30,7 +29,7 @@ class TestMessageHandler:
     @pytest.mark.unit
     def test_init_cli_mode(self) -> None:
         """Test initialization in CLI mode."""
-        handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=False)
+        handler: MessageHandler = MessageHandler(is_gui_mode=False)
         assert handler.is_gui_mode is False
         assert handler.parent_widget is None
 
@@ -41,7 +40,7 @@ class TestMessageHandler:
         """Test initialization in GUI mode."""
         mock_parent: MagicMock = MagicMock()
         # For GUI mode, the MessageHandler should accept a parent but it might not be stored exactly as expected
-        handler: MessageHandler = MessageHandler(parent=mock_parent, is_gui_mode=True)
+        handler: MessageHandler = MessageHandler(is_gui_mode=True)
         assert handler.is_gui_mode is True
         # In the actual Qt implementation, the parent might be handled differently
         # Let's just verify the handler was created successfully in GUI mode
@@ -49,23 +48,23 @@ class TestMessageHandler:
     def test_should_display_logic(self) -> None:
         """Test message display logic based on target and mode."""
         # CLI mode handler
-        cli_handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=False)
-        assert cli_handler._should_display(MessageTarget.ALL) is True
-        assert cli_handler._should_display(MessageTarget.CLI_ONLY) is True
-        assert cli_handler._should_display(MessageTarget.GUI_ONLY) is False
-        assert cli_handler._should_display(MessageTarget.LOG_ONLY) is False
+        cli_handler: MessageHandler = MessageHandler(is_gui_mode=False)
+        assert cli_handler._router.should_display(MessageTarget.ALL) is True
+        assert cli_handler._router.should_display(MessageTarget.CLI_ONLY) is True
+        assert cli_handler._router.should_display(MessageTarget.GUI_ONLY) is False
+        assert cli_handler._router.should_display(MessageTarget.LOG_ONLY) is False
 
         # GUI mode handler (mocked)
         with patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True):
-            gui_handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=True)
-            assert gui_handler._should_display(MessageTarget.ALL) is True
-            assert gui_handler._should_display(MessageTarget.CLI_ONLY) is False
-            assert gui_handler._should_display(MessageTarget.GUI_ONLY) is True
-            assert gui_handler._should_display(MessageTarget.LOG_ONLY) is False
+            gui_handler: MessageHandler = MessageHandler(is_gui_mode=True)
+            assert gui_handler._router.should_display(MessageTarget.ALL) is True
+            assert gui_handler._router.should_display(MessageTarget.CLI_ONLY) is False
+            assert gui_handler._router.should_display(MessageTarget.GUI_ONLY) is True
+            assert gui_handler._router.should_display(MessageTarget.LOG_ONLY) is False
 
     def test_cli_message_output(self) -> None:
         """Test CLI message output formatting."""
-        handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=False)
+        handler: MessageHandler = MessageHandler(is_gui_mode=False)
 
         # Test that messages can be sent without errors
         # The actual output goes to logging system, not direct stdout/stderr
@@ -80,7 +79,7 @@ class TestMessageHandler:
 
     def test_message_with_details(self) -> None:
         """Test messages with details."""
-        handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=False)
+        handler: MessageHandler = MessageHandler(is_gui_mode=False)
 
         old_stdout: TextIO | Any = sys.stdout
         try:
@@ -93,7 +92,7 @@ class TestMessageHandler:
 
     def test_message_targets(self) -> None:
         """Test message targeting."""
-        handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=False)
+        handler: MessageHandler = MessageHandler(is_gui_mode=False)
 
         old_stdout: TextIO | Any = sys.stdout
         try:
@@ -133,7 +132,7 @@ class TestCLIProgressBar:
             output: str = sys.stdout.getvalue()
 
             assert "Testing" in output
-            assert "50%" in output
+            assert "50.0%" in output
             assert "█" in output  # Progress bar character
 
             progress.close()
@@ -152,7 +151,7 @@ class TestCLIProgressBar:
             output: str = sys.stdout.getvalue()
 
             assert "Processing" in output
-            assert "5 items processed" in output
+            assert "5 items" in output
 
             progress.close()
 
@@ -233,20 +232,25 @@ class TestThreadSafety:
     @patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True)
     def test_gui_signal_emission(self) -> None:
         """Test that GUI mode uses signals for thread safety."""
-        with patch("ClassicLib.MessageHandler.qt_compat.QMessageBox") as mock_msgbox:  # noqa: F841
-            handler: MessageHandler = MessageHandler(parent=None, is_gui_mode=True)
+        from ClassicLib.MessageHandler.qt_handler import QtMessageHandler
 
-            # Mock the signal
-            handler.message_signal = MagicMock()
+        with patch("ClassicLib.MessageHandler.qt_compat.QMessageBox") as mock_msgbox:  # noqa: F841
+            # Create handler without mocking QObject init
+            # This requires PySide6 to be working in the environment
+            handler = QtMessageHandler()
+
+            # Mock the backend signal
+            handler._gui_backend.message_signal = MagicMock()
 
             # Send a message
             handler.info("Test message")
 
             # Check signal was emitted
-            handler.message_signal.emit.assert_called_once()
-            args: tuple[Any, ...] = handler.message_signal.emit.call_args[0]
-            message: Message = args[0]
-            assert isinstance(message, Message)
+            handler._gui_backend.message_signal.emit.assert_called_once()
+
+            # Verify args
+            args = handler._gui_backend.message_signal.emit.call_args[0]
+            message = args[0]
             assert message.content == "Test message"
             assert message.msg_type == MessageType.INFO
 

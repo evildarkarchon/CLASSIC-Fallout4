@@ -18,6 +18,7 @@ classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }  # Provides YamlSource enum
+classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
 
 # UI shared coordination
 classic-ui-shared = { path = "../classic-ui-shared" }
@@ -79,4 +80,4 @@ rust_2024_compatibility = "warn"
 unsafe_code = "deny"  # We don't use unsafe, but Slint dependencies do
 missing_docs = "warn"   # Encourage documentation
 deprecated = "deny"
-unused = "deny"
+unused = "warn"

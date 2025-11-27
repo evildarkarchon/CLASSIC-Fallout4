@@ -1,7 +1,13 @@
 """Tests for ThreadManager class functionality."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
+import os
+
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication
 
@@ -17,7 +23,7 @@ class TestThreadManager:
         """Create a fresh ThreadManager instance."""
         return ThreadManager()
 
-    def test_register_thread(self, thread_manager: ThreadManager, app: QApplication) -> None:
+    def test_register_thread(self, thread_manager: ThreadManager, qt_application: QApplication) -> None:
         """Test thread registration."""
         thread = QThread()
         worker = ThreadTestWorker()
@@ -33,7 +39,7 @@ class TestThreadManager:
         thread.quit()
         thread.wait()
 
-    def test_start_thread(self, thread_manager: ThreadManager, app: QApplication) -> None:
+    def test_start_thread(self, thread_manager: ThreadManager, qt_application: QApplication) -> None:
         """Test thread starting."""
         thread = QThread()
         worker = ThreadTestWorker()
@@ -54,7 +60,7 @@ class TestThreadManager:
         # Wait for completion
         thread.wait(1000)
 
-    def test_stop_thread(self, thread_manager: ThreadManager, app: QApplication, test_worker_long: ThreadTestWorker) -> None:
+    def test_stop_thread(self, thread_manager: ThreadManager, qt_application: QApplication, test_worker_long: ThreadTestWorker) -> None:
         """Test thread stopping."""
         thread = QThread()
         worker = test_worker_long
@@ -77,7 +83,7 @@ class TestThreadManager:
         # Thread should not be running
         assert not thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN)
 
-    def test_get_running_threads(self, thread_manager: ThreadManager, app: QApplication) -> None:
+    def test_get_running_threads(self, thread_manager: ThreadManager, qt_application: QApplication) -> None:
         """Test getting running threads."""
         # No threads initially
         assert len(thread_manager.get_running_threads()) == 0
@@ -112,7 +118,7 @@ class TestThreadManager:
             thread.quit()
             thread.wait(1000)
 
-    def test_stop_all_threads(self, thread_manager: ThreadManager, app: QApplication) -> None:
+    def test_stop_all_threads(self, thread_manager: ThreadManager, qt_application: QApplication) -> None:
         """Test stopping all threads."""
         # Start multiple threads
         thread_types = [ThreadType.UPDATE_CHECK, ThreadType.PAPYRUS_MONITOR, ThreadType.PASTEBIN_FETCH]

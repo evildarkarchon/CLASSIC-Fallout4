@@ -8,6 +8,7 @@ Tests the high-performance file I/O operations including:
 - Parallel directory traversal
 - Caching behavior
 """
+# ruff: noqa: ANN201, ANN001, PLR6301
 
 import asyncio
 from pathlib import Path
@@ -231,8 +232,8 @@ class TestRustFileIOCore:
         await io.write_multiple_files(files)
 
         for path, expected_content in files.items():
-            assert Path(path).exists()
-            assert Path(path).read_text() == expected_content
+            assert Path(path).exists()  # noqa: ASYNC240
+            assert Path(path).read_text(encoding="utf-8") == expected_content  # noqa: ASYNC240
 
     @pytest.mark.asyncio
     async def test_crash_log_operations(self, temp_dir):
@@ -269,9 +270,7 @@ class TestRustFileIOCore:
     @pytest.mark.asyncio
     async def test_memory_mapped_reading(self, temp_dir):
         """Test memory-mapped file reading for large files."""
-        from ClassicLib.rust.file_io_rust import RustFileIOCore
-
-        io = RustFileIOCore()
+        io = get_file_io()
 
         # Read large file (should use mmap)
         content = await io.read_file_mmap(temp_dir / "large.txt")
@@ -291,9 +290,7 @@ class TestRustFileIOCore:
         Mock DDS files created with minimal headers do not pass full validation.
         Real DDS files from the game would be needed for proper testing.
         """
-        from ClassicLib.rust.file_io_rust import RustFileIOCore
-
-        io = RustFileIOCore()
+        io = get_file_io()
 
         # Read valid DDS header
         dimensions = await io.read_dds_header(mock_dds_file)
@@ -311,9 +308,7 @@ class TestRustFileIOCore:
         Note: This test is skipped because the Rust DDS parser uses the ddsfile crate
         which performs full DDS format validation. Mock files don't pass validation.
         """
-        from ClassicLib.rust.file_io_rust import RustFileIOCore
-
-        io = RustFileIOCore()
+        io = get_file_io()
 
         # Read DDS with odd dimensions
         dimensions = await io.read_dds_header(mock_invalid_dds_file)
@@ -331,8 +326,6 @@ class TestRustFileIOCore:
         Note: This test is skipped because the Rust DDS parser uses the ddsfile crate
         which performs full DDS format validation. Mock files don't pass validation.
         """
-        from ClassicLib.rust.file_io_rust import RustFileIOCore
-
         # Create multiple DDS files
         dds_files = []
         for i in range(5):
@@ -345,7 +338,7 @@ class TestRustFileIOCore:
             dds_path.write_bytes(bytes(header))
             dds_files.append(dds_path)
 
-        io = RustFileIOCore()
+        io = get_file_io()
         results = await io.read_dds_headers_batch(dds_files)
 
         assert len(results) == 5
@@ -358,8 +351,6 @@ class TestRustFileIOCore:
     @pytest.mark.asyncio
     async def test_directory_traversal(self, temp_dir):
         """Test parallel directory traversal."""
-        from ClassicLib.rust.file_io_rust import RustFileIOCore
-
         # Create more files and directories
         (temp_dir / "dir1").mkdir()
         (temp_dir / "dir1" / "file1.txt").write_text("content")
@@ -369,19 +360,19 @@ class TestRustFileIOCore:
         (temp_dir / "dir2" / "subdir").mkdir()
         (temp_dir / "dir2" / "subdir" / "deep.txt").write_text("deep content")
 
-        io = RustFileIOCore()
+        io = get_file_io()
 
         # Walk all files
-        all_files = await io.walk_directory(temp_dir)
+        all_files = io.walk_directory(temp_dir)
         assert len(all_files) > 5  # Should find all created files
 
         # Walk with pattern (only .txt files)
-        txt_files = await io.walk_directory(temp_dir, pattern=r"\.txt$")
+        txt_files = io.walk_directory(temp_dir, pattern=r"\.txt$")
         for file in txt_files:
             assert file.endswith(".txt")
 
         # Walk with max depth
-        shallow_files = await io.walk_directory(temp_dir, max_depth=1)
+        shallow_files = io.walk_directory(temp_dir, max_depth=1)
         # Should not include deep.txt
         deep_paths = [f for f in shallow_files if "deep.txt" in f]
         assert len(deep_paths) == 0
@@ -389,9 +380,7 @@ class TestRustFileIOCore:
     @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     def test_caching_behavior(self, temp_dir):
         """Test that caching improves performance."""
-        from ClassicLib.rust.file_io_rust import RustFileIOCore
-
-        io = RustFileIOCore()
+        io = get_file_io()
 
         # Clear cache first
         io.clear_cache()
@@ -401,7 +390,7 @@ class TestRustFileIOCore:
 
         start = time.perf_counter()
         asyncio.run(io.read_file(temp_dir / "test.txt"))
-        time.perf_counter() - start
+        _ = time.perf_counter() - start
 
         # Second read (should be cached and faster)
         start = time.perf_counter()

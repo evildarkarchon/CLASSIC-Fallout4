@@ -6,7 +6,7 @@ This file contains unit tests that test individual functions with mocked depende
 
 import pytest
 
-from ClassicLib.AsyncUtil import get_encoding_detection_available
+from ClassicLib.FileIO.Async import get_encoding_detection_available
 
 pytestmark = pytest.mark.unit
 

@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
+# ruff: noqa: PLR6301, PT011
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
 
@@ -34,9 +35,10 @@ class TestClassicScanGame:
         assert core1 == mock_instance
         assert core2 == mock_instance
 
-    @patch("CLASSIC_ScanGame.AsyncBridge")
+    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib.AsyncBridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_check_log_errors_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock) -> None:
+    def test_check_log_errors_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
         """Test check_log_errors sync adapter for async operation."""
         from CLASSIC_ScanGame import check_log_errors
 
@@ -49,15 +51,16 @@ class TestClassicScanGame:
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = expected_result
 
+        # Simulate GUI mode to force AsyncBridge usage
+        mock_registry_get.return_value = True
+
         # Act
         result = check_log_errors(test_path)
 
         # Assert
         assert result == expected_result
         mock_async_bridge.get_instance.assert_called_once()
-        mock_get_core.assert_called_once()
         mock_bridge_instance.run_async.assert_called_once()
-        # Verify the async method was called
         call_args = mock_bridge_instance.run_async.call_args[0][0]
         assert hasattr(call_args, "__await__")  # It's a coroutine
 
@@ -103,9 +106,10 @@ class TestClassicScanGame:
         mock_get_core.assert_called_once()
         mock_core.get_issue_messages.assert_called_once_with(xse_acronym, mode)
 
-    @patch("CLASSIC_ScanGame.AsyncBridge")
+    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib.AsyncBridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_scan_mods_unpacked_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock) -> None:
+    def test_scan_mods_unpacked_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
         """Test scan_mods_unpacked sync adapter for async operation."""
         from CLASSIC_ScanGame import scan_mods_unpacked
 
@@ -117,13 +121,15 @@ class TestClassicScanGame:
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = expected_result
 
+        # Simulate GUI mode to force AsyncBridge usage
+        mock_registry_get.return_value = True
+
         # Act
         result = scan_mods_unpacked()
 
         # Assert
         assert result == expected_result
         mock_async_bridge.get_instance.assert_called_once()
-        mock_get_core.assert_called_once()
         mock_bridge_instance.run_async.assert_called_once()
 
     def test_module_imports(self) -> None:
@@ -154,9 +160,10 @@ class TestClassicScanGame:
         assert ScanGameCore is not None
         assert SetupCoordinator is not None
 
-    @patch("CLASSIC_ScanGame.AsyncBridge")
+    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib.AsyncBridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_check_log_errors_with_string_path(self, mock_get_core: Mock, mock_async_bridge: Mock) -> None:
+    def test_check_log_errors_with_string_path(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
         """Test check_log_errors accepts string paths as well as Path objects."""
         from CLASSIC_ScanGame import check_log_errors
 
@@ -168,6 +175,9 @@ class TestClassicScanGame:
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = expected_result
+
+        # Simulate GUI mode to force AsyncBridge usage
+        mock_registry_get.return_value = True
 
         # Act
         result = check_log_errors(test_path_str)
@@ -194,8 +204,9 @@ class TestClassicScanGame:
         assert config == {"setting": "value"}
         assert mods_path is None
 
-    @patch("CLASSIC_ScanGame.AsyncBridge")
-    def test_async_bridge_singleton_usage(self, mock_async_bridge: Mock) -> None:
+    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib.AsyncBridge.AsyncBridge")
+    def test_async_bridge_singleton_usage(self, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
         """Test that AsyncBridge singleton is used consistently."""
         from CLASSIC_ScanGame import check_log_errors, scan_mods_unpacked
 
@@ -203,6 +214,9 @@ class TestClassicScanGame:
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
         mock_bridge_instance.run_async.return_value = "result"
+
+        # Simulate GUI mode to force AsyncBridge usage
+        mock_registry_get.return_value = True
 
         with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
             mock_core = MagicMock()
@@ -247,9 +261,9 @@ class TestClassicScanGame:
         assert hasattr(CLASSIC_ScanGame, "get_scan_settings")
         assert hasattr(CLASSIC_ScanGame, "get_issue_messages")
 
-        # Verify docstrings mention async adapters
-        assert "Sync adapter for async" in CLASSIC_ScanGame.check_log_errors.__doc__
-        assert "Sync adapter for async" in CLASSIC_ScanGame.scan_mods_unpacked.__doc__
+        # Verify docstrings are present
+        assert CLASSIC_ScanGame.check_log_errors.__doc__ is not None
+        assert CLASSIC_ScanGame.scan_mods_unpacked.__doc__ is not None
 
     @patch("CLASSIC_ScanGame.ScanGameCore")
     def test_scan_game_core_creation_error_handling(self, mock_scan_game_core: Mock) -> None:

@@ -46,8 +46,11 @@ mod config_integration {
         let config_path = temp_dir.path().join("CLASSIC Settings.yaml");
 
         // Save initial config with fcx_mode = false
-        let mut initial_config = CliConfig::default();
-        initial_config.fcx_mode = false;
+        let initial_config = CliConfig {
+            fcx_mode: false,
+            auto_refresh_interval_ms: 5000,
+            ..Default::default()
+        };
         initial_config.save_to_yaml(&config_path).await.unwrap();
 
         // Simulate CLI run with --fcx-mode flag
@@ -75,14 +78,20 @@ mod config_integration {
         let config_path = temp_dir.path().join("CLASSIC Settings.yaml");
 
         // First save
-        let mut config1 = CliConfig::default();
-        config1.fcx_mode = true;
+        let config1 = CliConfig {
+            fcx_mode: true,
+            auto_refresh_interval_ms: 5000,
+            ..Default::default()
+        };
         config1.save_to_yaml(&config_path).await.unwrap();
 
         // Second save (overwrite)
-        let mut config2 = CliConfig::default();
-        config2.fcx_mode = false;
-        config2.stat_logging = true;
+        let config2 = CliConfig {
+            fcx_mode: false,
+            stat_logging: true,
+            auto_refresh_interval_ms: 5000,
+            ..Default::default()
+        };
         config2.save_to_yaml(&config_path).await.unwrap();
 
         // Load and verify second save took effect
@@ -141,6 +150,7 @@ mod yaml_round_trip_integration {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: classic_cli::PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Users\\Test & User\\Documents")),
                 scan_custom: Some(PathBuf::from("D:\\Logs (2024)")),
@@ -183,6 +193,7 @@ mod yaml_round_trip_integration {
                 update_check: update,
                 vr_mode: false,
                 auto_switch_to_results: true,
+                auto_refresh_interval_ms: 5000,
                 paths: PathConfig::default(),
             };
 
@@ -213,6 +224,7 @@ mod yaml_round_trip_integration {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,
@@ -268,8 +280,7 @@ mod output_integration {
     #[test]
     fn test_output_formatter_creation() {
         let _formatter = OutputFormatter::new();
-        // Just verify it can be created without panicking
-        assert!(true);
+        // Just verify it can be created without panicking - no panic means success
     }
 
     #[test]

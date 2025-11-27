@@ -97,7 +97,11 @@ mod tests {
 
     #[test]
     fn test_version_constant() {
-        assert!(!VERSION.is_empty());
+        // VERSION is a const str, so it's always non-empty at compile time
+        #[allow(clippy::len_zero)]
+        {
+            assert!(VERSION.len() > 0);
+        }
         assert!(VERSION.contains('.'));
     }
 }

@@ -39,13 +39,16 @@ import threading
 import time
 import traceback
 from collections import defaultdict, deque
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import wraps
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING
 
 import psutil
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
+    from typing import Any
 
 # Try to import memory profiler for advanced memory tracking
 try:
@@ -148,7 +151,7 @@ class FFIProfiler:
         memory_sampling_interval: float = 0.01,
         enable_gil_monitoring: bool = True,
         max_call_history: int = 10000,
-    ):
+    ) -> None:
         """
         Initialize the FFI profiler.
 
@@ -159,7 +162,26 @@ class FFIProfiler:
             max_call_history: Maximum number of calls to store in history
         """
         # Configuration
-        self.rust_module_patterns = rust_module_patterns or ["classic_core", "_rust", "rust_", "pyo3_", "maturin_"]
+        self.rust_module_patterns = rust_module_patterns or [
+            "classic_scanlog",
+            "classic_database",
+            "classic_file_io",
+            "classic_yaml",
+            "classic_path",
+            "classic_config",
+            "classic_perf",
+            "classic_registry",
+            "classic_resource",
+            "classic_settings",
+            "classic_update",
+            "classic_version",
+            "classic_web",
+            "classic_xse",
+            "_rust",
+            "rust_",
+            "pyo3_",
+            "maturin_",
+        ]
         self.memory_sampling_interval = memory_sampling_interval
         self.enable_gil_monitoring = enable_gil_monitoring
         self.max_call_history = max_call_history
@@ -189,12 +211,12 @@ class FFIProfiler:
         self._baseline_memory: float | None = None
         self._process = psutil.Process()
 
-    def _is_rust_call(self, frame) -> bool:
+    def _is_rust_call(self, frame: Any) -> bool:
         """
         Determine if a frame represents a call to Rust code.
 
         This uses heuristics to identify Rust calls:
-        1. Module name patterns (classic_core, _rust, etc.)
+        1. Module name patterns (classic_scanlog, _rust, etc.)
         2. File path analysis
         3. Function name patterns
         """
@@ -212,10 +234,7 @@ class FFIProfiler:
 
             # Check for PyO3/maturin indicators in function names
             func_name = frame.f_code.co_name
-            if any(indicator in func_name.lower() for indicator in ["rust_", "pyo3_", "_rust"]):
-                return True
-
-            return False
+            return any(indicator in func_name.lower() for indicator in ["rust_", "pyo3_", "_rust"])
         except (AttributeError, KeyError):
             return False
 
@@ -240,12 +259,13 @@ class FFIProfiler:
                 # String marshaling has specific overhead
                 size += len(obj.encode("utf-8", errors="ignore"))
 
-            return size
+            return size  # noqa: TRY300
         except (RecursionError, MemoryError):
             # Fallback for complex objects
             return sys.getsizeof(obj)
 
-    def _get_data_type(self, obj: Any) -> str:
+    @staticmethod
+    def _get_data_type(obj: Any) -> str:
         """Get a descriptive type string for data transfer analysis."""
         obj_type = type(obj).__name__
 
@@ -257,14 +277,12 @@ class FFIProfiler:
         elif isinstance(obj, str):
             obj_type += f"({len(obj)}chars)"
         elif hasattr(obj, "__len__"):
-            try:
+            with contextlib.suppress(Exception):
                 obj_type += f"[{len(obj)}]"
-            except:
-                pass
 
         return obj_type
 
-    def _memory_monitor(self):
+    def _memory_monitor(self) -> None:
         """Background thread to monitor memory usage during profiling."""
         try:
             while not self._stop_monitoring.wait(self.memory_sampling_interval):
@@ -282,18 +300,18 @@ class FFIProfiler:
 
                 except (psutil.NoSuchProcess, psutil.AccessDenied):
                     break
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.debug(f"Memory monitoring error: {e}")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"Memory monitor thread failed: {e}")
 
-    def _gil_monitor(self):
+    def _gil_monitor(self) -> None:
         """Background thread to monitor GIL contention."""
         if not self.enable_gil_monitoring:
             return
 
-        try:
+        try:  # noqa: PLR1702
             while not self._stop_monitoring.wait(0.001):  # High frequency sampling
                 try:
                     # Measure time to acquire a lock (proxy for GIL contention)
@@ -312,13 +330,13 @@ class FFIProfiler:
                             if len(self.gil_contention_events) > 1000:
                                 self.gil_contention_events = self.gil_contention_events[-500:]
 
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001
                     logger.debug(f"GIL monitoring error: {e}")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.error(f"GIL monitor thread failed: {e}")
 
-    def _trace_calls(self, frame, event, arg):
+    def _trace_calls(self, frame: Any, event: str, arg: Any) -> Any:  # noqa: PLR0912
         """
         Trace function calls to identify and profile FFI calls.
 
@@ -328,7 +346,7 @@ class FFIProfiler:
         if not self.is_profiling:
             return None
 
-        try:
+        try:  # noqa: PLR1702
             if event == "call" and self._is_rust_call(frame):
                 # Start of a Rust call
                 call_start = time.perf_counter()
@@ -435,13 +453,15 @@ class FFIProfiler:
                 # Clean up frame data
                 delattr(frame, "ffi_profile_data")
 
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             # Don't let profiling errors break the application
             logger.debug(f"FFI profiling error: {e}")
 
         # Continue with original trace function if any
         if self._original_trace_func:
             return self._original_trace_func(frame, event, arg)
+
+        return None
 
     def start_profiling(self) -> None:
         """Start FFI profiling with comprehensive monitoring."""
@@ -511,7 +531,7 @@ class FFIProfiler:
         logger.info(f"FFI profiling stopped. Collected {len(self.ffi_calls)} FFI calls")
 
     @contextlib.contextmanager
-    def profile_ffi_calls(self):
+    def profile_ffi_calls(self) -> Any:
         """Context manager for FFI profiling."""
         self.start_profiling()
         try:
@@ -607,7 +627,7 @@ class FFIProfiler:
                     inefficient_transfers.append(func)
 
         # Get unique functions
-        unique_functions = len(set(f"{call.module_name}.{call.function_name}" for call in self.ffi_calls))
+        unique_functions = len({f"{call.module_name}.{call.function_name}" for call in self.ffi_calls})
 
         return FFIProfileStats(
             total_calls=total_calls,
@@ -633,7 +653,7 @@ class FFIProfiler:
             inefficient_transfers=inefficient_transfers,
         )
 
-    def print_report(self, detailed: bool = True) -> None:
+    def print_report(self, detailed: bool = True) -> None:  # noqa: PLR0912
         """
         Print a comprehensive FFI profiling report.
 
@@ -729,7 +749,7 @@ class FFIProfiler:
             elif ffi_overhead_pct < 5:
                 print("  ✅ Good: FFI overhead is minimal")
             else:
-                print("  ℹ️ Moderate FFI overhead - optimization may help")
+                print("  ℹ️ Moderate FFI overhead - optimization may help")  # noqa: RUF001
 
         if stats.total_gil_wait_time > 0 and stats.total_wall_time > 0:
             gil_overhead_pct = (stats.total_gil_wait_time / stats.total_wall_time) * 100
@@ -801,7 +821,7 @@ def profile_ffi_function(func: Callable) -> Callable:
     """
 
     @wraps(func)
-    def wrapper(*args, **kwargs):
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
         profiler = FFIProfiler()
         with profiler.profile_ffi_calls():
             result = func(*args, **kwargs)
@@ -813,7 +833,7 @@ def profile_ffi_function(func: Callable) -> Callable:
     return wrapper
 
 
-def quick_profile_context():
+def quick_profile_context() -> Any:
     """
     Quick context manager for FFI profiling.
 
@@ -826,7 +846,7 @@ def quick_profile_context():
     profiler = FFIProfiler()
 
     @contextlib.contextmanager
-    def profile_context():
+    def profile_context() -> Any:
         with profiler.profile_ffi_calls():
             yield profiler
         profiler.print_report(detailed=False)

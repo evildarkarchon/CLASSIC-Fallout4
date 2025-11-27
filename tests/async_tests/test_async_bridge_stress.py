@@ -32,24 +32,41 @@ class TestAsyncBridgeStress:
     def cleanup_bridge(self):
         """Ensure bridge is cleaned up after each test."""
         yield
-        # Clean up singleton after test
-        AsyncBridge._instance = None
-        AsyncBridge._lock = threading.Lock()
+        # Properly shutdown all instances
+        AsyncBridge._cleanup_all()
+
+        # Clear the instances dict
+        with AsyncBridge._lock:
+            AsyncBridge._instances.clear()
+
+        # Reset thread local storage
+        if hasattr(AsyncBridge._thread_local, "instance"):
+            del AsyncBridge._thread_local.instance
 
     def test_concurrent_bridge_initialization(self):
         """Test that concurrent initialization of AsyncBridge is thread-safe."""
-        bridges = []
+        bridge_map = {}
+        lock = threading.Lock()
         errors = []
 
         def get_bridge():
-            """Get bridge instance and store it."""
+            """Get bridge instance and store it with thread ID."""
             try:
+                thread_id = threading.get_ident()
                 bridge = AsyncBridge.get_instance()
-                bridges.append(bridge)
+                # Verify we get the same instance if we call it again
+                bridge2 = AsyncBridge.get_instance()
+                if bridge is not bridge2:
+                    errors.append(f"Bridge instance not stable for thread {thread_id}")
+
+                with lock:
+                    bridge_map[thread_id] = bridge
             except Exception as e:
-                errors.append(e)
+                with lock:
+                    errors.append(str(e))
 
         # Try to initialize bridge from multiple threads simultaneously
+        # Use fewer iterations to reduce noise, but enough to ensure concurrency
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(get_bridge) for _ in range(50)]
             for future in as_completed(futures):
@@ -58,13 +75,16 @@ class TestAsyncBridgeStress:
         # Verify no errors occurred
         assert len(errors) == 0, f"Errors during initialization: {errors}"
 
-        # Verify all threads got the same singleton instance
-        assert len(set(id(b) for b in bridges)) == 1, "Multiple bridge instances created!"
-        assert len(bridges) == 50
+        # Verify thread-local singleton behavior:
+        # 1. Number of unique bridge instances should equal number of unique threads
+        unique_bridges = set(id(b) for b in bridge_map.values())
+        assert len(unique_bridges) == len(bridge_map), "Different threads sharing bridge instances!"
+
+        # 2. Should have created at least a few threads (pool size is 10)
+        assert len(bridge_map) > 1, "ThreadPool didn't use multiple threads!"
 
     def test_heavy_concurrent_async_operations(self):
         """Test AsyncBridge with many concurrent async operations."""
-        bridge = AsyncBridge.get_instance()
         num_operations = 100
         results = []
 
@@ -75,6 +95,8 @@ class TestAsyncBridgeStress:
 
         def run_task(task_id):
             """Run async task through bridge."""
+            # Use thread-local bridge instance
+            bridge = AsyncBridge.get_instance()
             return bridge.run_async(async_operation(task_id))
 
         # Run many concurrent operations
@@ -94,7 +116,6 @@ class TestAsyncBridgeStress:
 
     def test_error_propagation_under_stress(self):
         """Test that errors are properly propagated even under heavy load."""
-        bridge = AsyncBridge.get_instance()
         errors_caught = []
         successes = []
 
@@ -107,17 +128,23 @@ class TestAsyncBridgeStress:
 
         def run_task_with_error_handling(task_id):
             """Run task and handle errors."""
+            # Use thread-local bridge instance
+            bridge = AsyncBridge.get_instance()
             try:
                 result = bridge.run_async(maybe_failing_task(task_id))
-                successes.append(result)
+                return (True, result)
             except ValueError as e:
-                errors_caught.append(str(e))
+                return (False, str(e))
 
         # Run tasks with mixed success/failure
         with ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(run_task_with_error_handling, i) for i in range(50)]
             for future in as_completed(futures):
-                future.result()
+                success, value = future.result()
+                if success:
+                    successes.append(value)
+                else:
+                    errors_caught.append(value)
 
         # Verify correct number of errors and successes
         expected_errors = 10  # task_id 0, 5, 10, 15, 20, 25, 30, 35, 40, 45
@@ -132,7 +159,6 @@ class TestAsyncBridgeStress:
 
     def test_nested_async_operations(self):
         """Test AsyncBridge with nested async operations."""
-        bridge = AsyncBridge.get_instance()
 
         async def inner_task(value):
             """Inner async task."""
@@ -150,6 +176,8 @@ class TestAsyncBridgeStress:
 
         # Run nested operations from multiple threads
         def run_nested(task_id):
+            # Use thread-local bridge instance
+            bridge = AsyncBridge.get_instance()
             return bridge.run_async(outer_task(task_id))
 
         with ThreadPoolExecutor(max_workers=5) as executor:
@@ -348,8 +376,16 @@ class TestAsyncBridgeEdgeCases:
     def cleanup_bridge(self):
         """Ensure bridge is cleaned up after each test."""
         yield
-        AsyncBridge._instance = None
-        AsyncBridge._lock = threading.Lock()
+        # Properly shutdown all instances
+        AsyncBridge._cleanup_all()
+
+        # Clear the instances dict
+        with AsyncBridge._lock:
+            AsyncBridge._instances.clear()
+
+        # Reset thread local storage
+        if hasattr(AsyncBridge._thread_local, "instance"):
+            del AsyncBridge._thread_local.instance
 
     def test_empty_coroutine(self):
         """Test handling of empty/minimal coroutines."""

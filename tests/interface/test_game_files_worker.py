@@ -9,9 +9,14 @@ This test module verifies that:
 5. AsyncBridge cleanup happens automatically
 """
 
+import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization
@@ -36,10 +41,7 @@ def test_worker_signals():
 
     # Verify signals exist
     assert hasattr(worker, "scan_finished"), "Should have scan_finished signal"
-    assert hasattr(worker, "play_success_sound"), "Should have success sound signal"
-    assert hasattr(worker, "play_error_sound"), "Should have error sound signal"
     assert hasattr(worker, "error_occurred"), "Should have error occurred signal"
-    assert hasattr(worker, "play_custom_sound"), "Should have custom sound signal"
 
 
 # Test AsyncBridge integration
@@ -157,17 +159,15 @@ def test_rust_status_logging():
 
 @pytest.mark.unit
 def test_success_signal_emission():
-    """Test that success signals are emitted on successful scan."""
+    """Test that finished signal is emitted on successful scan."""
     from ClassicLib.Interface.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
     # Track signal emissions
     finished_emitted = []
-    success_emitted = []
 
     worker.scan_finished.connect(lambda: finished_emitted.append(True))
-    worker.play_success_sound.connect(lambda: success_emitted.append(True))
 
     # Mock successful scan
     with patch.object(worker, "_process_game_results_scan"):
@@ -175,7 +175,6 @@ def test_success_signal_emission():
 
     # Verify signals
     assert len(finished_emitted) == 1, "Should emit finished signal"
-    assert len(success_emitted) == 1, "Should emit success sound signal"
 
 
 @pytest.mark.unit
@@ -188,21 +187,17 @@ def test_error_signal_emission():
     # Track signal emissions
     finished_emitted = []
     error_emitted = []
-    error_sound_emitted = []
 
     worker.scan_finished.connect(lambda: finished_emitted.append(True))
     worker.error_occurred.connect(lambda title, msg, details: error_emitted.append((title, msg, details)))
-    worker.play_error_sound.connect(lambda: error_sound_emitted.append(True))
 
-    # Mock scan failure with audio notifications enabled
+    # Mock scan failure
     with patch.object(worker, "_process_game_results_scan", side_effect=RuntimeError("Test error")):
-        with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
-            worker.run()
+        worker.run()
 
     # Verify signals
     assert len(finished_emitted) == 1, "Should emit finished signal even on error"
     assert len(error_emitted) == 1, "Should emit error occurred signal"
-    assert len(error_sound_emitted) == 1, "Should emit error sound signal when audio enabled"
 
     # Verify error details
     title, msg, details = error_emitted[0]
@@ -211,20 +206,6 @@ def test_error_signal_emission():
 
 
 # Test error handling
-
-
-@pytest.mark.unit
-def test_error_handling_with_audio_disabled():
-    """Test that errors are re-raised when audio notifications are disabled."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
-
-    worker = GameFilesScanWorker()
-
-    # Mock scan failure with audio notifications disabled
-    with patch.object(worker, "_process_game_results_scan", side_effect=RuntimeError("Test error")):
-        with patch("ClassicLib.Interface.Workers.classic_settings", return_value=False):
-            with pytest.raises(RuntimeError, match="Test error"):
-                worker.run()
 
 
 @pytest.mark.unit
@@ -243,11 +224,10 @@ def test_finished_signal_always_emitted():
 
     assert len(finished_emitted) == 1, "Should emit finished on success"
 
-    # Test with error (audio enabled to avoid re-raise)
+    # Test with error
     finished_emitted.clear()
     with patch.object(worker, "_process_game_results_scan", side_effect=RuntimeError("Error")):
-        with patch("ClassicLib.Interface.Workers.classic_settings", return_value=True):
-            worker.run()
+        worker.run()
 
     assert len(finished_emitted) == 1, "Should emit finished on error too"
 

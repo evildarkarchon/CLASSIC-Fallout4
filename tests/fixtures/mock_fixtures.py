@@ -69,9 +69,6 @@ CLASSIC_Settings:
 # crash logs from that Scrip Extender folder and where the CLASSIC.exe is located will be scanned.
   SCAN Custom Path:
 
-# Toggle audio notifications for when CLASSIC finishes scanning your crash logs and mod files.
-  Audio Notifications: true
-
 # Set the source where CLASSIC will check for updates. (Nexus | GitHub)
   Update Source: Both
 

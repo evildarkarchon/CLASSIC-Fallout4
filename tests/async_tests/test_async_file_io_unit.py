@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized, write_reports_batch
+from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import write_reports_batch
 
 pytestmark = pytest.mark.unit
 
@@ -25,31 +25,6 @@ pytestmark = pytest.mark.unit
 @pytest.mark.asyncio
 class TestAsyncFileIO:
     """Integration tests for async file I/O operations."""
-
-    async def test_load_crash_logs_async_optimized(self, sample_crash_logs: list[Path]) -> None:
-        """Test optimized async crash log loading."""
-        result: dict[str, bytes] = await load_crash_logs_async_optimized(sample_crash_logs)
-        assert isinstance(result, dict)
-        assert len(result) == 5
-        for log_file in sample_crash_logs:
-            assert log_file.name in result
-            assert isinstance(result[log_file.name], bytes)
-            assert b"Fallout 4" in result[log_file.name]
-            assert b"EXCEPTION_ACCESS_VIOLATION" in result[log_file.name]
-
-    @pytest.mark.asyncio
-    async def test_load_crash_logs_with_empty_list(self) -> None:
-        """Test loading with empty file list."""
-        result: dict[str, bytes] = await load_crash_logs_async_optimized([])
-        assert isinstance(result, dict)
-        assert len(result) == 0
-
-    @pytest.mark.asyncio
-    async def test_load_crash_logs_with_nonexistent_files(self, tmp_path: Path) -> None:
-        """Test handling of non-existent files."""
-        nonexistent_files = [tmp_path / "nonexistent1.log", tmp_path / "nonexistent2.log"]
-        result: dict[str, bytes] = await load_crash_logs_async_optimized(nonexistent_files)
-        assert isinstance(result, dict)
 
     @pytest.mark.asyncio
     async def test_write_reports_batch(self, sample_crash_logs: list[Path]) -> None:
@@ -105,15 +80,12 @@ class TestAsyncFileIO:
     @pytest.mark.asyncio
     async def test_concurrent_file_operations(self, sample_crash_logs: list[Path]) -> None:
         """Test that concurrent file operations work correctly."""
-        import asyncio
 
-        load_task = load_crash_logs_async_optimized(sample_crash_logs)
         reports: list[tuple[Path, list[str], bool]] = [
             (log_file, [f"Concurrent report {i}\n"], False) for i, log_file in enumerate(sample_crash_logs)
         ]
-        write_task = write_reports_batch(reports)
-        load_result, _ = await asyncio.gather(load_task, write_task)
-        assert len(load_result) == 5
+        # Only test write since load is deprecated/removed
+        await write_reports_batch(reports)
         for log_file in sample_crash_logs:
             report_file: Path = log_file.with_name(f"{log_file.stem}-AUTOSCAN.md")
             assert report_file.exists()

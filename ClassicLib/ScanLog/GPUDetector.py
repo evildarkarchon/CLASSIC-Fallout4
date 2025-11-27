@@ -9,35 +9,22 @@ This module detects GPU information from system specs including:
 
 
 def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
-    """
-    Extracts and processes GPU information from a given system specification.
+    """Extract and process GPU information from system specification.
 
-    This function takes a list of system specification data typically in string
-    format and identifies GPU-related details such as the primary GPU name,
-    secondary GPU name, GPU manufacturer, and the rival manufacturer. It uses
-    pattern matching to extract GPU details based on keywords present in the
-    system information. Default values are used when the required information
-    is not present or cannot be determined.
+    Identifies GPU-related details such as primary GPU name, secondary GPU
+    name, GPU manufacturer, and the rival manufacturer using pattern matching
+    on system specification data.
 
-    Parameters:
-    segment_system: list[str]
-        A list of strings containing system specification information. Each
-        string represents a line of system description that may or may not
-        include GPU-related details.
+    Args:
+        segment_system: A list of strings containing system specification
+            information. Each string is a line that may contain GPU details.
 
     Returns:
-    dict[str, str]
-        A dictionary containing GPU information with the following keys:
-            - primary: str
-                The name of the primary GPU. If not found, defaults to "Unknown".
-            - secondary: str
-                The name of the secondary GPU. If not found, defaults to None.
-            - manufacturer: str
-                The name of the GPU manufacturer (e.g., "AMD", "Nvidia"). If not
-                found, defaults to "Unknown".
-            - rival: str
-                The name of the rival GPU manufacturer. If not found, defaults to
-                None.
+        A dictionary containing GPU information with keys:
+        - primary: Primary GPU name (defaults to "Unknown")
+        - secondary: Secondary GPU name (defaults to None)
+        - manufacturer: GPU manufacturer e.g., "AMD", "Nvidia" (defaults to "Unknown")
+        - rival: Rival GPU manufacturer (defaults to None)
     """
     gpu_info: dict[str, str | None] = {
         "primary": "Unknown",

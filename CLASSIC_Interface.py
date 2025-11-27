@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.Interface.Audio import AudioPlayer
 from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
 from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
 from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
@@ -116,7 +115,6 @@ class MainWindow(
         """
         super().__init__()
         self.thread_manager = get_thread_manager()
-        self.audio_player = AudioPlayer()
         self.scan_button_group = QButtonGroup()
         self.papyrus_monitor_thread: QThread | None = None
         self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None
@@ -229,13 +227,20 @@ class MainWindow(
         QDesktopServices.openUrl(QUrl(url))
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """
+    Main entry point for the CLASSIC GUI application.
+
+    Initializes the Qt application, runs the setup coordinator to prepare
+    the environment, creates the main window, and starts the event loop.
+    Handles top-level exceptions and keyboard interrupts.
+    """
     app: QApplication = QApplication(sys.argv)
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=True)
-    manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
-    game_path_gui: Any = GlobalRegistry.get_game_path_gui()
+    _manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
+    _game_path_gui: Any = GlobalRegistry.get_game_path_gui()
     window: MainWindow | None = None  # Initialize window to ensure it's defined
     try:
         window = MainWindow()
@@ -249,6 +254,10 @@ if __name__ == "__main__":
             # noinspection PyTypeChecker
             QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
 
     # Backup operations methods are now inherited from BackupOperationsMixin
 

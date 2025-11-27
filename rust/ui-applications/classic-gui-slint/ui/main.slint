@@ -68,6 +68,7 @@ export component MainWindow inherits Window {
     in-out property <bool> settings-auto-switch-to-results: true;
     in-out property <bool> settings-move-unsolved-logs: false;
     in-out property <bool> settings-simplify-logs: false;
+    in-out property <int> settings-auto-refresh-interval-s: 5; // New setting for file watcher (seconds)
     in-out property <string> settings-game-root: "";
     in-out property <string> settings-docs-root: "";
     in-out property <string> settings-ini-folder: "";
@@ -129,6 +130,7 @@ export component MainWindow inherits Window {
 
     // Callbacks for window lifecycle
     callback window-closed();
+    callback tab-changed(int);
 
     // Main tab callbacks (forwarded to Rust)
     callback browse-mods-folder();
@@ -228,6 +230,7 @@ export component MainWindow inherits Window {
         tab-bar := FluentTabBar {
             tabs: ["MAIN OPTIONS", "FILE BACKUP", "ARTICLES", "RESULTS"];
             current-tab <=> root.current-tab;
+            tab-selected(index) => { root.tab-changed(index); }
         }
 
         // Tab content area
@@ -317,8 +320,9 @@ export component MainWindow inherits Window {
         show-formid-values <=> root.settings-show-formid-values;
         stat-logging <=> root.settings-stat-logging;
         update-check <=> root.settings-update-check;
-        vr-mode <=> root.settings-vr-mode;
+        vr_mode <=> root.settings-vr-mode;
         auto-switch-to-results <=> root.settings-auto-switch-to-results;
+        auto-refresh-interval-s <=> root.settings-auto-refresh-interval-s;
         move-unsolved-logs <=> root.settings-move-unsolved-logs;
         simplify-logs <=> root.settings-simplify-logs;
         game-root <=> root.settings-game-root;

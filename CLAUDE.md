@@ -13,9 +13,6 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a high-performance
 ### Installation & Distribution
 - **DO NOT use `pip install`** for normal use (not published to PyPI)
 - **Exception**: `uv pip install -e . --force-reinstall` for Rust development only
-- **Supported methods**:
-  1. PyInstaller executables for end users
-  2. `uvx --from github:evildarkarchon/CLASSIC-Fallout4 classic` for developers
 
 ### Development Setup
 ```bash
@@ -30,8 +27,8 @@ uv run python CLASSIC_ScanLogs.py   # CLI
 
 # Testing (use terminal, not VS Code test tool)
 uv run pytest -n auto               # All tests, parallel
-uv run pytest -n 4 -m "unit and not slow"  # Quick unit tests
-uv run pytest -n 4 -m "integration"        # Integration tests
+uv run pytest -n auto -m "unit and not slow"  # Quick unit tests
+uv run pytest -n auto -m "integration"        # Integration tests
 uv run pytest tests/rust_integration/ -v   # Rust integration tests
 
 # Linting
@@ -534,3 +531,5 @@ All maintain backward compatibility through re-exports.
 - **AsyncBridge usage patterns** (2025-11-02): AsyncBridge and `create_sync_wrapper()` are ONLY for GUI workers (Qt threads) and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point (see CLASSIC_ScanLogs.py). The `asyncio.run()` fallback in `create_sync_wrapper()` is intentional for testing but creates new event loops (inefficient for production). Shared components should provide separate sync (GUI) and async (CLI) interfaces. YamlSettingsCache now uses lazy AsyncBridge initialization - only creates bridge when needed in GUI contexts.
 - **PyO3 type stubs requirement** (2025-11-04): ALL Python binding crates (`-py` crates) MUST have corresponding `.pyi` stub files for type hints and IDE support. When creating a new Python binding crate or modifying APIs (functions, classes, signatures), the `.pyi` file MUST be created or updated. Stub files are placed in the same directory as the crate (e.g., `rust/python-bindings/classic-yaml-py/classic_yaml.pyi`).
 - **Custom Rust exceptions** (2025-11-06): All Rust Python bindings now use custom exception hierarchies that map to Python `ClassicLib.integration.exceptions`. Each `-py` crate defines module-specific exceptions (e.g., `RustYamlError`, `RustYamlIOError`, `RustYamlParseError`) using PyO3's `create_exception!` macro. Error conversion functions (`to_pyerr`) map Rust error variants to appropriate Python exception types for better error handling and debugging. Implemented in: `classic-yaml-py`, `classic-scanlog-py`, `classic-file-io-py`, `classic-database-py`, `classic-config-py`.
+- **YAML helper methods fix** (2025-11-21): Fixed `get_string_value`, `get_vec_value`, and `get_hashmap_value` in `classic-yaml-core` to properly navigate YAML hash structures instead of using index notation which returns `BadValue` for missing keys. These methods now match the behavior of `get_setting` by checking if current node is a Hash, creating Yaml::String keys, and using `.get()` to safely retrieve values.
+- **Parallel YAML loading order fix** (2025-11-21): Fixed critical bug in `classic-config-core/yamldata.rs` where parallel YAML file loading used `JoinSet::join_next()` which returns tasks in completion order, not spawn order. This caused file contents to be assigned to wrong variables (e.g., game YAML content assigned to main). Replaced with `tokio::join!` macro which preserves the order of results (main, game, ignore) ensuring correct file-to-variable mapping.

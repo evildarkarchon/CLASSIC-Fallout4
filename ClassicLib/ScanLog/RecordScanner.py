@@ -120,25 +120,17 @@ class RecordScanner:
         return fragment, records_matches
 
     def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int) -> None:
-        """
-        Finds and collects matching records from a given segment of a call stack based on specified criteria.
+        """Find and collect matching records from a call stack segment.
 
-        This function processes each line in a provided segment of the call stack, checks whether the line contains any target
-        records defined in the class's attributes, and excludes lines containing terms that should be ignored. If the line meets
-        the criteria, the relevant part of the line is extracted and appended to a list of matching records.
+        Processes each line in the call stack segment, checking for target records
+        and excluding lines with ignored terms. Uses pre-compiled regex patterns
+        for efficient matching (20-30x faster than nested loops).
 
-        Uses pre-compiled regex patterns for efficient matching (20-30x faster than nested loops).
-
-        Parameters:
-        segment_callstack: list of str
-            A list of strings representing segment of the call stack to be analyzed.
-        records_matches: list of str
-            A list where matching record lines will be appended.
-        rsp_marker: str
-            A marker string to identify the relevant portion of the call stack lines.
-        rsp_offset: int
-            An integer representing the character offset from rsp_marker used to determine where to begin extracting record
-            content.
+        Args:
+            segment_callstack: List of strings from the call stack to analyze.
+            records_matches: List to append matching record lines to.
+            rsp_marker: Marker string to identify relevant call stack portions.
+            rsp_offset: Character offset from rsp_marker for extracting content.
         """
         # Early return if no records pattern compiled
         if not self._records_pattern:

@@ -21,6 +21,11 @@ import pytest
 # Ensure the parent directory is in sys.path so imports work correctly
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+# Force offscreen Qt platform for headless testing
+import os
+
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
+
 # Import all fixtures from the organized modules
 # This makes them available to all test files
 from tests.fixtures.async_fixtures import *  # noqa: F403

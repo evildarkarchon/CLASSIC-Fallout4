@@ -250,28 +250,21 @@ class AsyncDatabasePool:
             logger.error(f"Error closing database connection: {e}")
 
     async def get_entry(self, formid: str, plugin: str) -> str | None:
-        """
-        Fetch a specific entry from the database based on the given form ID and plugin name.
-        The method first checks if the requested data is available in the cache. If not,
-        it queries the connected databases sequentially until the entry is found or all
-        databases are exhausted. The result is cached for future requests.
+        """Fetch a specific entry from the database.
 
-        Parameters:
-        formid: str
-            The unique form ID used to identify the entry in the database.
-        plugin: str
-            The plugin name associated with the form ID.
+        Checks the cache first, then queries connected databases sequentially
+        until the entry is found. Results are cached for future requests.
+
+        Args:
+            formid: The unique form ID to look up.
+            plugin: The plugin name associated with the form ID.
 
         Returns:
-        str | None
-            The entry corresponding to the specified form ID and plugin. Returns None
-            if the entry is not found in the cache or any of the connected databases.
+            The database entry for the form ID and plugin, or None if not found.
 
         Raises:
-        aiosqlite.Error
-            Raised if a SQLite error occurs during database operations.
-        OSError
-            Raised if an operating system-related error occurs during database operations.
+            aiosqlite.Error: If a SQLite error occurs during database operations.
+            OSError: If an operating system error occurs.
         """
         # Check cache first
         cache_key = (formid, plugin)
@@ -376,7 +369,7 @@ async def read_file_async(file_path: Path) -> list[str]:
     try:
         # Try to use async encoding detection if available
         try:
-            from ClassicLib.AsyncUtil import read_lines_with_encoding_async
+            from ClassicLib.FileIO.Async import read_lines_with_encoding_async
 
             return await read_lines_with_encoding_async(file_path)
         except ImportError:
@@ -413,19 +406,16 @@ async def write_file_async(file_path: Path, content: str) -> None:
 
 
 async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str]]:
-    """
-    Loads crash logs asynchronously and returns a dictionary mapping log file names
-    to their respective content. Each log file is read concurrently to improve the
-    performance when handling multiple files.
+    """Load crash logs asynchronously and return a dictionary of contents.
 
-    Parameters:
-    crashlog_list: list[Path]
-        A list of Path objects representing the paths to log files to be loaded.
+    Each log file is read concurrently for improved performance when
+    handling multiple files.
+
+    Args:
+        crashlog_list: List of Path objects to log files to be loaded.
 
     Returns:
-    dict[str, list[str]]
-        A dictionary where the keys are file names and the values are lists of
-        strings representing the content of each log file.
+        Dictionary mapping file names to lists of content lines.
     """
     cache: dict[str, list[str]] = {}
 

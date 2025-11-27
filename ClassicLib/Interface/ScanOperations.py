@@ -9,8 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QThread, QTimer, Slot
-from PySide6.QtWidgets import QMessageBox
+from PySide6 import QtCore, QtWidgets
 
 from ClassicLib.Interface.Dialogs import CustomErrorDialog
 from ClassicLib.Interface.ThreadManager import ThreadType
@@ -18,43 +17,38 @@ from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorke
 from ClassicLib.Logger import logger
 
 if TYPE_CHECKING:
-    from PySide6.QtCore import QMutex
-    from PySide6.QtWidgets import QButtonGroup, QPushButton, QTabWidget
-
-    from ClassicLib.Interface.Audio import AudioPlayer
     from ClassicLib.Interface.ThreadManager import ThreadManager
 
 
 class ScanOperationsMixin:
-    """
-    Mixin class providing scan operation methods for the MainWindow.
+    """Mixin class providing scan operation methods for the MainWindow.
 
-    This class requires the following attributes to be present in the class it's mixed into:
-    - _scan_mutex: QMutex for thread safety
-    - _running_scans: Set tracking running scan operations
-    - thread_manager: ThreadManager instance
-    - audio_player: AudioPlayer instance
-    - scan_button_group: QButtonGroup containing scan buttons
-    - papyrus_button: QPushButton for Papyrus monitoring
-    - crash_logs_thread: QThread for crash logs scanning
-    - crash_logs_worker: CrashLogsScanWorker instance
-    - game_files_thread: QThread for game files scanning
-    - game_files_worker: GameFilesScanWorker instance
+    This mixin requires the mixing class to provide the attributes listed below.
+
+    Attributes:
+        _scan_mutex: QMutex for thread safety during scan operations.
+        _running_scans: Set tracking currently running scan operation names.
+        thread_manager: ThreadManager instance for thread lifecycle management.
+        scan_button_group: QButtonGroup containing scan action buttons.
+        papyrus_button: QPushButton for Papyrus monitoring toggle.
+        crash_logs_thread: QThread for crash logs scanning (or None).
+        crash_logs_worker: CrashLogsScanWorker instance (or None).
+        game_files_thread: QThread for game files scanning (or None).
+        game_files_worker: GameFilesScanWorker instance (or None).
     """
 
     # Type stubs for attributes that must be provided by the mixing class
     if TYPE_CHECKING:
-        _scan_mutex: QMutex
+        _scan_mutex: QtCore.QMutex
         _running_scans: set[str]
         thread_manager: ThreadManager
-        audio_player: AudioPlayer
-        scan_button_group: QButtonGroup
-        papyrus_button: QPushButton | None
-        crash_logs_thread: QThread | None
+        scan_button_group: QtWidgets.QButtonGroup
+        papyrus_button: QtWidgets.QPushButton | None
+        crash_logs_thread: QtCore.QThread | None
         crash_logs_worker: CrashLogsScanWorker | None
-        game_files_thread: QThread | None
+        game_files_thread: QtCore.QThread | None
         game_files_worker: GameFilesScanWorker | None
-        tab_widget: QTabWidget | None  # For switching to Results tab
+        tab_widget: QtWidgets.QTabWidget | None  # For switching to Results tab
         results_tab: object | None  # Results tab widget
 
         # Required methods that must be implemented by the mixing class
@@ -78,14 +72,14 @@ class ScanOperationsMixin:
         self._scan_mutex.lock()
         try:
             if "crash_logs" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN):
-                QMessageBox.warning(self, "Scan in Progress", "A crash logs scan is already in progress.")
+                QtWidgets.QMessageBox.warning(self, "Scan in Progress", "A crash logs scan is already in progress.")
                 return
             self._running_scans.add("crash_logs")
         finally:
             self._scan_mutex.unlock()
 
         # Create thread and worker
-        self.crash_logs_thread = QThread()
+        self.crash_logs_thread = QtCore.QThread()
         self.crash_logs_worker = CrashLogsScanWorker()
         self.crash_logs_worker.moveToThread(self.crash_logs_thread)
 
@@ -98,8 +92,6 @@ class ScanOperationsMixin:
             return
 
         # Connect signals
-        self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
-        self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
         self.crash_logs_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
 
         self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
@@ -133,14 +125,14 @@ class ScanOperationsMixin:
         self._scan_mutex.lock()
         try:
             if "game_files" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN):
-                QMessageBox.warning(self, "Scan in Progress", "A game files scan is already in progress.")
+                QtWidgets.QMessageBox.warning(self, "Scan in Progress", "A game files scan is already in progress.")
                 return
             self._running_scans.add("game_files")
         finally:
             self._scan_mutex.unlock()
 
         # Create thread and worker
-        self.game_files_thread = QThread()
+        self.game_files_thread = QtCore.QThread()
         self.game_files_worker = GameFilesScanWorker()
         self.game_files_worker.moveToThread(self.game_files_thread)
 
@@ -153,7 +145,6 @@ class ScanOperationsMixin:
             return
 
         # Connect signals
-        self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
         self.game_files_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
 
         self.game_files_thread.started.connect(self.game_files_worker.run)
@@ -305,7 +296,7 @@ class ScanOperationsMixin:
             # Don't let tab switching errors break the scan completion
             logger.debug(f"Could not switch to Results tab: {e}")
 
-    @Slot(str, str, str)
+    @QtCore.Slot(str, str, str)
     def _show_scan_error_dialog(self, title: str, message: str, details: str) -> None:
         """
         Display an error dialog with scan failure details and copy-to-clipboard functionality.
@@ -322,15 +313,13 @@ class ScanOperationsMixin:
         """
         logger.debug(f"Showing error dialog: {title}")
 
-        # Ensure dialog is created and shown on the main GUI thread
-        # Use QTimer.singleShot to defer execution to the main event loop
-        def show_dialog() -> None:
-            error_dialog = CustomErrorDialog(
-                title=title,
-                message=message,
-                details=details,
-                parent=self,  # type: ignore[arg-type]
-            )
-            error_dialog.exec()
-
-        QTimer.singleShot(0, show_dialog)
+        # The signal is emitted from a worker thread, and the receiver (main window)
+        # lives in the main thread. Qt's signal-slot mechanism automatically
+        # queues the call on the main event loop, so QTimer.singleShot is not needed.
+        error_dialog = CustomErrorDialog(
+            title=title,
+            message=message,
+            details=details,
+            parent=self,  # type: ignore[arg-type]
+        )
+        error_dialog.exec()

@@ -16,7 +16,7 @@ from pathlib import Path
 import aiofiles
 
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import classic_settings
+from ClassicLib.YamlSettingsCache import classic_settings_async
 
 
 async def reformat_single_log_async(file_path: Path, remove_list: tuple[str], simplify_logs: bool) -> None:
@@ -100,7 +100,7 @@ async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple
             should be removed from the logs.
     """
     logger.debug("- - - INITIATED ASYNC CRASH LOG FILE REFORMAT")
-    simplify_logs: bool = bool(classic_settings(bool, "Simplify Logs"))
+    simplify_logs: bool = bool(await classic_settings_async(bool, "Simplify Logs"))
 
     # Process in batches to avoid overwhelming the file system
     batch_size = 20

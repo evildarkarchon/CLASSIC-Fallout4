@@ -20,7 +20,7 @@ from iniparse import configparser
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIOCore import append_file_sync, read_lines_sync, write_file_sync
+from ClassicLib.FileIO import append_file_sync, read_lines_sync, write_file_sync
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations

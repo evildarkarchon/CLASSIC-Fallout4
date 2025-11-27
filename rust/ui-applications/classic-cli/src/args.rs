@@ -55,7 +55,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_parsing() {
-        let args = CliArgs::parse_from(&[
+        let args = CliArgs::parse_from([
             "classic-cli",
             "--fcx-mode",
             "--show-fid-values",
@@ -70,7 +70,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_all_options() {
-        let args = CliArgs::parse_from(&[
+        let args = CliArgs::parse_from([
             "classic-cli",
             "--fcx-mode",
             "--show-fid-values",
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_no_options() {
-        let args = CliArgs::parse_from(&["classic-cli"]);
+        let args = CliArgs::parse_from(["classic-cli"]);
 
         assert!(!args.fcx_mode);
         assert!(!args.show_fid_values);
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_boolean_flags() {
-        let args = CliArgs::parse_from(&[
+        let args = CliArgs::parse_from([
             "classic-cli",
             "--fcx-mode",
             "--show-fid-values",
@@ -130,7 +130,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_path_options() {
-        let args = CliArgs::parse_from(&[
+        let args = CliArgs::parse_from([
             "classic-cli",
             "--ini-path",
             "C:\\Test\\Ini",
@@ -147,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_windows_paths_with_spaces() {
-        let args = CliArgs::parse_from(&[
+        let args = CliArgs::parse_from([
             "classic-cli",
             "--ini-path",
             "C:\\Program Files\\Test Folder",
@@ -161,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_cli_args_mixed_options() {
-        let args = CliArgs::parse_from(&[
+        let args = CliArgs::parse_from([
             "classic-cli",
             "--fcx-mode",
             "--scan-path",

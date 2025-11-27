@@ -16,7 +16,7 @@ from ClassicLib import GlobalRegistry, MessageTarget, msg_info, msg_progress_con
 from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler.progress_context import ProgressContext
+from ClassicLib.MessageHandler.progress.context import ProgressContext
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -25,28 +25,32 @@ from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
 class ScanLogsExecutor:
-    """
-    Orchestrates crash log scanning operations for CLI usage.
+    """Orchestrates crash log scanning operations for CLI usage.
 
-    This class provides the main business logic for scanning crash logs,
-    separated from CLI-specific code for better testability and modularity.
+    Provides the main business logic for scanning crash logs, separated
+    from CLI-specific code for better testability and modularity.
+
+    Attributes:
+        config: ScanConfig object containing scan parameters and settings.
+        crashlog_list: List of Path objects to crash log files to scan.
+        yamldata: ClassicScanLogsInfo with loaded YAML data (lazily loaded).
+        statistics: ScanStatistics tracking scan progress and results.
+
+    Example:
+        >>> executor = ScanLogsExecutor()
+        >>> result = executor.scan_sync()
+        >>> print(f"Scanned {result.statistics.processed} files")
     """
 
     def __init__(self, config: ScanConfig | None = None, eager_load: bool = False) -> None:
-        """
-        Initializes the crash log scan process by setting up configuration, retrieving crash log files,
-        and applying settings for crash log reformatting. It also initializes database availability
-        and statistics tracking.
+        """Initialize the crash log scanner.
 
         Args:
-            config (ScanConfig | None): Optional ScanConfig object containing scan-specific settings.
-                If not provided, the configuration will be loaded from default settings.
-            eager_load (bool): If True, eagerly loads YAML data and warms up database pool.
-                This eliminates the freeze on first scan but increases initialization time.
-                Default False for backward compatibility.
-
-        Raises:
-            None
+            config: Optional ScanConfig with scan-specific settings.
+                If not provided, configuration is loaded from defaults.
+            eager_load: If True, eagerly loads YAML data and warms up
+                the database pool. Increases initialization time but
+                eliminates freeze on first scan. Default is False.
         """
         self.config = config or self._load_config_from_settings()
 
@@ -155,7 +159,7 @@ class ScanLogsExecutor:
         # Create result object
         result = ScanResult(stats=self.statistics)
 
-        msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
+        msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CONSOLE)
 
         # Ensure yamldata is initialized
         if self.yamldata is None:

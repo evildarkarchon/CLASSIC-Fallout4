@@ -6,7 +6,6 @@ various network failures, timeouts, and connection issues.
 
 import asyncio
 import socket
-import tempfile
 import time
 from pathlib import Path
 from typing import Any
@@ -255,9 +254,9 @@ class TestDownloadResilience:
     """Test file download resilience and recovery."""
 
     @pytest.mark.asyncio
-    async def test_download_resume_capability(self):
+    async def test_download_resume_capability(self, tmp_path):
         """Test ability to resume interrupted downloads."""
-        from ClassicLib.FileIOCore import FileIOCore
+        from ClassicLib.FileIO import FileIOCore
 
         FileIOCore()
 
@@ -265,27 +264,23 @@ class TestDownloadResilience:
         partial_content = b"First part of file content"
         full_content = partial_content + b" Second part of file content"
 
-        with tempfile.NamedTemporaryFile(delete=False, mode="wb") as f:
-            f.write(partial_content)
-            temp_path = Path(f.name)
+        temp_file = tmp_path / "partial_download.bin"
+        temp_file.write_bytes(partial_content)
 
-        try:
-            # Mock resume download
-            with patch("aiohttp.ClientSession.get") as mock_get:
-                mock_response = AsyncMock()
-                mock_response.content.read = AsyncMock(return_value=b" Second part of file content")
-                mock_response.headers = {"Content-Range": f"bytes {len(partial_content)}-{len(full_content)}"}
-                mock_get.return_value.__aenter__.return_value = mock_response
+        # Mock resume download
+        with patch("aiohttp.ClientSession.get") as mock_get:
+            mock_response = AsyncMock()
+            mock_response.content.read = AsyncMock(return_value=b" Second part of file content")
+            mock_response.headers = {"Content-Range": f"bytes {len(partial_content)}-{len(full_content)}"}
+            mock_get.return_value.__aenter__.return_value = mock_response
 
-                # Should be able to append to partial file
-                with Path(temp_path).open("ab") as f:
-                    f.write(b" Second part of file content")
+            # Should be able to append to partial file
+            with Path(temp_file).open("ab") as f:
+                f.write(b" Second part of file content")
 
-                # Verify complete file
-                final_content = temp_path.read_bytes()
-                assert final_content == full_content
-        finally:
-            temp_path.unlink(missing_ok=True)
+            # Verify complete file
+            final_content = temp_file.read_bytes()
+            assert final_content == full_content
 
     @pytest.mark.asyncio
     async def test_download_integrity_check(self):

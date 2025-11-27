@@ -9,10 +9,13 @@ extracting metadata such as timestamps and statuses from report files.
 
 from __future__ import annotations
 
+import html
 import re
+import textwrap
 from datetime import datetime
 from pathlib import Path  # noqa: TC003
 
+import markdown2
 from PySide6.QtCore import QDateTime, Qt
 from PySide6.QtGui import QBrush, QColor, QFont, QTextCursor
 from PySide6.QtWidgets import (
@@ -346,19 +349,12 @@ class MarkdownViewer(QTextBrowser):
     """
     Enhanced text browser for displaying markdown-formatted reports.
 
-    Provides markdown rendering, zoom controls, and custom styling.
+    Provides markdown rendering via markdown2, zoom controls, and custom styling.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
         """
         Initializes a custom QTextBrowser with pre-configured properties and functionality.
-
-        This class is designed to provide a specialized QTextBrowser component with
-        support for external links, readonly mode, rich text (Markdown) content,
-        and custom styling. Additionally, it initializes with a default zoom level.
-
-        Args:
-            parent (QWidget | None): The parent widget of this QTextBrowser. Defaults to None.
         """
         super().__init__(parent)
 
@@ -366,307 +362,276 @@ class MarkdownViewer(QTextBrowser):
         self.setOpenExternalLinks(True)
         self.setReadOnly(True)
 
-        # Setup markdown support
-        self.setAcceptRichText(True)
-
         # Initialize zoom level
         self._zoom_level = 100
 
-        # Apply custom styling
-        self._apply_styling()
-
-    def _apply_styling(self) -> None:
-        """
-        Applies custom styling for markdown rendering by setting a default stylesheet.
-
-        The stylesheet specifies aesthetics for various HTML elements such as body,
-        headers, code, lists, tables, and various text formatting classes
-        (e.g., .error, .warning).
-        """
-        # Base stylesheet for markdown rendering
-        style = """
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #e0e0e0;
-            background-color: #2b2b2b;
-            padding: 10px;
-        }
-        h1 {
-            color: #4CAF50;
-            border-bottom: 2px solid #4CAF50;
-            padding-bottom: 5px;
-            margin-top: 20px;
-            margin-bottom: 12px;
-        }
-        h2 {
-            color: #81C784;
-            border-bottom: 1px solid #81C784;
-            padding-bottom: 3px;
-            margin-top: 18px;
-            margin-bottom: 10px;
-        }
-        h3 {
-            color: #A5D6A7;
-            margin-top: 15px;
-            margin-bottom: 8px;
-        }
-        h4, h5, h6 {
-            margin-top: 12px;
-            margin-bottom: 6px;
-        }
-        code {
-            background-color: #1e1e1e;
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-family: 'Consolas', 'Courier New', monospace;
-            color: #ce9178;
-        }
-        p {
-            margin-top: 6px;
-            margin-bottom: 8px;
-        }
-        pre {
-            background-color: #1e1e1e;
-            padding: 10px;
-            border-radius: 5px;
-            overflow-x: auto;
-            margin-top: 8px;
-            margin-bottom: 12px;
-        }
-        blockquote {
-            border-left: 4px solid #4CAF50;
-            padding-left: 10px;
-            color: #b0b0b0;
-            font-style: italic;
-            margin-top: 8px;
-            margin-bottom: 8px;
-        }
-        ul, ol {
-            padding-left: 20px;
-            margin-top: 6px;
-            margin-bottom: 12px;
-        }
-        li {
-            margin: 5px 0;
-            line-height: 1.6;
-        }
-        a {
-            color: #64B5F6;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 10px 0;
-        }
-        th, td {
-            border: 1px solid #555;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #3a3a3a;
-            color: #4CAF50;
-        }
-        tr:nth-child(even) {
-            background-color: #2a2a2a;
-        }
-        .error {
-            color: #f44336;
-            font-weight: bold;
-        }
-        .warning {
-            color: #ff9800;
-            font-weight: bold;
-        }
-        .success {
-            color: #4CAF50;
-            font-weight: bold;
-        }
-        .info {
-            color: #2196F3;
-        }
-        """
-
-        self.document().setDefaultStyleSheet(style)
-
     def setMarkdown(self, markdown: str) -> None:
         """
-        Processes a markdown string, converts it to HTML for improved CSS support,
-        and displays the formatted HTML content. The method ensures the content
-        is rendered from the beginning by resetting the cursor position.
+        Processes a markdown string, converts it to HTML using markdown2,
+        injects custom styling, and displays it.
 
         Args:
             markdown (str): The markdown string to be processed and displayed.
         """
-        # Process markdown for better display (converts **bold** to <b>bold</b>)
-        # Qt's markdown parser will preserve the HTML tags we embed
-        processed = self._process_markdown(markdown)
+        # 1. Pre-process special blocks to HTML
+        processed_text = self._preprocess_markdown(markdown)
 
-        # Convert markdown to HTML using Qt's converter for markdown features
-        # (headers, code blocks, lists, etc.) while preserving our HTML tags
-        html = self._markdown_to_html(processed)
+        # 2. Convert to HTML using markdown2
+        # "tables" for table support
+        # "break-on-newline" to respect line breaks in the log
+        # "fenced-code-blocks" for standard code blocks
+        html_content = markdown2.markdown(processed_text, extras=["tables", "break-on-newline", "fenced-code-blocks"])
 
-        # Use HTML rendering instead of markdown for better CSS support
-        self.setHtml(html)
+        # 3. Construct full HTML document with CSS
+        full_doc = self._wrap_in_html_template(html_content)
+
+        # 4. Set HTML
+        self.setHtml(full_doc)
 
         # Scroll to top
         self.moveCursor(QTextCursor.MoveOperation.Start)
 
-    @staticmethod
-    def _markdown_to_html(markdown: str) -> str:
+    def _preprocess_markdown(self, text: str) -> str:  # noqa: PLR6301
         """
-        Converts a given markdown string to an HTML string with additional formatting for
-        better visual separation. This function uses a QTextDocument for conversion and
-        then applies custom styling through regex substitutions to enhance readability.
-
-        Args:
-            markdown (str): A string containing markdown content to convert.
-
-        Returns:
-            str: The converted and styled HTML string.
+        Pre-processes the raw markdown text to identify and wrap specific
+        CLASSIC report structures (Suspects, Found Mods, Errors) in HTML.
         """
-        from PySide6.QtGui import QTextDocument
 
-        # Create a temporary document to convert markdown to HTML
-        temp_doc = QTextDocument()
-        temp_doc.setMarkdown(markdown)
-        html = temp_doc.toHtml()
+        # 1. Suspect Found Box
+        def suspect_replacer(match: re.Match) -> str:
+            full_line = match.group(0)
+            # Remove ** and - markers
+            clean_line = full_line.replace("**", "").replace("- ", "").strip()
 
-        # Add extra spacing to section headings in the HTML
-        import re
+            if "SUSPECT FOUND!" in clean_line:
+                parts = clean_line.split("SUSPECT FOUND!")
+                title = html.escape(parts[0].strip(" ."))
+                info = html.escape("SUSPECT FOUND!" + parts[1])
 
-        # Add margin-top to section headings that come after content
-        # This ensures visual separation between sections
-        html = re.sub(r"(<h[123][^>]*>)", r'<div style="margin-top: 20px;"></div>\1', html)
+                return f'<div class="suspect-box"><div class="suspect-title">{title}</div><div class="suspect-info">{info}</div></div>'
+            return full_line
 
-        # Add spacing after lists
-        html = re.sub(r"(</ul>|</ol>)", r'\1<div style="margin-bottom: 12px;"></div>', html)
+        text = re.sub(r"-\s*\*\*Checking for.*SUSPECT FOUND!.*?\*\*", suspect_replacer, text)
 
-        # Add spacing after code blocks
-        return re.sub(r"(</pre>)", r'\1<div style="margin-bottom: 12px;"></div>', html)
+        # 2. Found Mod Cards
+        # Regex: Match Header, then content until separator -----
+        def found_replacer(match: re.Match) -> str:
+            header = match.group(1).strip()
+            content = match.group(2)  # Keep raw content with whitespace for dedent
 
-    @staticmethod
-    def _process_markdown(markdown: str) -> str:
+            clean_header = html.escape(header.replace("**", "").strip())
+
+            # Dedent content so markdown2 doesn't treat it as a code block
+            # But first ensure we don't lose the structure if it's a list
+            dedented_content = textwrap.dedent(content)
+
+            return (
+                f'<div class="found-box">'
+                f'<div class="found-header">{clean_header}</div>'
+                f"{dedented_content}"  # markdown2 will parse this
+                f"</div>"
+            )
+
+        pattern = r"(\*\*\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*\*\*)([\s\S]*?)(?=\n[ \t]*-{5,})"
+        text = re.sub(pattern, found_replacer, text)
+
+        # 3. Status Boxes
+        text = re.sub(r"(\*\*Main Error:.*)", lambda m: f'<div class="error-box">{html.escape(m.group(1))}</div>', text)
+        text = re.sub(r"(\*\*Detected Buffout 4 Version:.*)", lambda m: f'<div class="info-box">{html.escape(m.group(1))}</div>', text)
+        text = re.sub(r"(✅.*)", lambda m: f'<div class="success-text">{html.escape(m.group(1))}</div>', text)
+
+        # 4. Bold conversion (backup)
+        return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
+
+    def _wrap_in_html_template(self, content: str) -> str:
         """
-        Processes a given markdown string to enhance its readability and formatting
-        for display in QTextBrowser, ensuring preservation of line breaks,
-        wrapping multiline sections in code blocks, and highlighting messages such
-        as errors, warnings, and success messages.
-
-        Args:
-            markdown (str): The markdown string to be processed.
-
-        Returns:
-            str: A processed markdown string with enhanced formatting.
+        Wraps the HTML content in a full document structure with embedded CSS.
         """
-        # For better line break preservation, wrap content sections in code blocks
-        # This ensures QTextBrowser preserves formatting
-        processed = markdown
+        # Base font size scaled by zoom level
+        base_size = 16
+        scaled_size = int(base_size * (self._zoom_level / 100.0))
 
-        # Find [!] FOUND sections and wrap multiline content in code blocks
-        import re
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body {{
+                    font-family: 'Segoe UI Variable', Roboto, Helvetica, Arial, sans-serif;
+                    font-size: {scaled_size}px;
+                    line-height: 1.6;
+                    color: #e0e0e0;
+                    background-color: #1e1e1e;
+                    margin: 0;
+                    padding: 20px;
+                }}
+                
+                /* Headers */
+                h1 {{ 
+                    color: #4EC9B0; 
+                    font-size: {int(scaled_size * 1.6)}px;
+                    border-bottom: 2px solid #4EC9B0; 
+                    margin-top: 25px;
+                    margin-bottom: 15px;
+                    padding-bottom: 5px;
+                }}
+                h2 {{ 
+                    color: #4EC9B0; 
+                    font-size: {int(scaled_size * 1.3)}px;
+                    border-bottom: 1px solid #3E3E42; 
+                    margin-top: 20px;
+                    margin-bottom: 10px;
+                    padding-bottom: 5px;
+                }}
+                h3 {{ 
+                    color: #9CDCFE; 
+                    font-size: {int(scaled_size * 1.1)}px;
+                    font-weight: bold;
+                    margin-top: 15px;
+                    margin-bottom: 8px;
+                }}
+                
+                /* Links */
+                a {{ color: #3794FF; text-decoration: none; }}
+                a:hover {{ text-decoration: underline; }}
+                
+                /* Code/Pre */
+                pre {{
+                    background-color: #252526;
+                    border: 1px solid #3E3E42;
+                    padding: 10px;
+                    border-radius: 5px;
+                    color: #d4d4d4;
+                    font-family: Consolas, 'Courier New', monospace;
+                    white-space: pre-wrap;
+                }}
+                code {{
+                    background-color: #2d2d2d;
+                    padding: 2px 4px;
+                    border-radius: 3px;
+                    font-family: Consolas, 'Courier New', monospace;
+                    color: #ce9178;
+                }}
 
-        def wrap_multiline_content(match: re.Match) -> str:
-            header = match.group(1)
-            content = match.group(2).rstrip()  # Remove trailing whitespace/newlines
-            # Wrap the content in a code block to preserve formatting
-            return f"{header}\n```\n{content}\n```\n"
+                /* Tables */
+                table {{
+                    border-collapse: collapse;
+                    width: 100%;
+                    margin: 10px 0;
+                }}
+                th, td {{
+                    border: 1px solid #3E3E42;
+                    padding: 8px;
+                    text-align: left;
+                }}
+                th {{
+                    background-color: #252526;
+                    color: #4EC9B0;
+                }}
+                tr:nth-child(even) {{
+                    background-color: #252526;
+                }}
 
-        # Match [!] FOUND : [XX] followed by multiline content that starts with spaces
-        # Stop at the first completely empty line or non-indented line
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(r"(\[!\]\s*FOUND\s*:\s*\[[^\]]+\][^\n]*)\n((?:[ \t]+[^\n]+\n)+?)(?=\n|\Z)", wrap_multiline_content, processed)
+                /* Custom Components */
+                .suspect-box {{
+                    background-color: #3c1414;
+                    border-left: 4px solid #f44336;
+                    padding: 10px;
+                    margin: 10px 0;
+                }}
+                .suspect-title {{ 
+                    color: #f44336; 
+                    font-weight: bold; 
+                    font-size: {scaled_size}px;
+                }}
+                .suspect-info {{
+                    color: #e0e0e0;
+                    margin-top: 5px;
+                }}
 
-        # Note: Spacing is now handled by HTML rendering in _markdown_to_html()
-        # No need for aggressive newline injection
-
-        # Highlight error messages
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(r"\[!?\s*ERROR\s*\]([^\n]*)", r'<span class="error">[ERROR]\1</span>', processed, flags=re.IGNORECASE)
-
-        # Highlight warnings
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(r"\[!?\s*WARNING\s*\]([^\n]*)", r'<span class="warning">[WARNING]\1</span>', processed, flags=re.IGNORECASE)
-
-        # Highlight success messages
-        # noinspection RegExpRedundantEscape
-        processed = re.sub(r"\[!?\s*SOLVED\s*\]([^\n]*)", r'<span class="success">[SOLVED]\1</span>', processed, flags=re.IGNORECASE)
-
-        # Convert markdown bold syntax to HTML bold tags
-        # This ensures proper rendering in Qt viewer without relying on Qt's markdown parser
-        return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", processed)
+                .found-box {{
+                    background-color: #252526;
+                    border: 1px solid #3E3E42;
+                    border-radius: 5px;
+                    padding: 12px;
+                    margin: 15px 0;
+                }}
+                .found-header {{
+                    color: #DCDCAA;
+                    font-weight: bold;
+                    font-size: {int(scaled_size * 1.1)}px;
+                    padding-bottom: 8px;
+                    border-bottom: 1px solid #3E3E42;
+                    margin-bottom: 8px;
+                }}
+                
+                .error-box {{
+                    background-color: #3c1414;
+                    border: 1px solid #f44336;
+                    padding: 10px;
+                    border-radius: 4px;
+                    color: #f44336;
+                    font-weight: bold;
+                    margin: 10px 0;
+                }}
+                .info-box {{
+                    background-color: #1e2e3e;
+                    border: 1px solid #3794ff;
+                    padding: 10px;
+                    border-radius: 4px;
+                    color: #3794ff;
+                    margin: 10px 0;
+                }}
+                .success-text {{
+                    color: #4EC9B0;
+                    font-weight: bold;
+                }}
+            </style>
+        </head>
+        <body>
+            {content}
+        </body>
+        </html>
+        """
 
     def zoom_in(self) -> None:
-        """
-        Increases the zoom level by 10 units, up to a maximum of 200, and applies
-        the updated zoom level.
-
-        Raises:
-            None
-        """
+        """Increases the zoom level."""
         self._zoom_level = min(200, self._zoom_level + 10)
-        self._apply_zoom()
+        self._refresh_display()
 
     def zoom_out(self) -> None:
-        """
-        Reduces the current zoom level of the application by decrementing it in fixed steps, with a lower limit.
-
-        The `zoom_out` method decreases the zoom level of the application by a predefined value,
-        but ensures the zoom level does not fall below a specified minimum threshold. It also
-        applies the updated zoom level using an internal mechanism.
-        """
+        """Decreases the zoom level."""
         self._zoom_level = max(50, self._zoom_level - 10)
-        self._apply_zoom()
+        self._refresh_display()
 
     def reset_zoom(self) -> None:
-        """
-        Resets the zoom level to its default value.
-
-        This method sets the current zoom level to 100%, ensuring the default state of
-        zoom is restored, and applies the changes immediately.
-
-        """
+        """Resets zoom to 100%."""
         self._zoom_level = 100
-        self._apply_zoom()
+        self._refresh_display()
 
-    def _apply_zoom(self) -> None:
+    def _refresh_display(self) -> None:
         """
-        Adjust the font size based on a zoom level.
-
-        This method modifies the font size by applying a scale factor derived
-        from the current zoom level. The zoom level determines how much to
-        increase or decrease the font size, with a minimum font size enforced.
-
-        This function has no return value but updates the font settings
-        of the object it is called on.
-
-        Raises:
-            None
+        Refreshes the display by re-setting the HTML content.
+        This forces the CSS to re-evaluate with the new font size.
         """
-        # Apply zoom by scaling the font size
-        font = self.font()
-        base_size = 14  # Base font size from CSS
-        new_size = int(base_size * (self._zoom_level / 100.0))
-        font.setPointSize(max(8, new_size))  # Minimum size of 8pt
-        self.setFont(font)
+        # We can't easily re-process the original markdown here without storing it.
+        # However, QTextBrowser has a zoomIn/zoomOut method natively,
+        # but we implemented custom CSS font sizing.
+        # Ideally we should store the last markdown content.
+
+        # Actually, standard zoom might work if we just rely on it.
+        # But our CSS uses fixed pixels.
+        # Let's use the native `zoomIn` / `zoomOut` from QTextEdit instead?
+        # No, the previous implementation used custom font scaling.
+
+        # To support this properly, we should store the `_last_html_content` (without the template)
+        # and re-wrap it.
+
+    # Correcting the above thought:
+    # We need to store the processed HTML content to allow efficient re-rendering on zoom.
+    # Let's update `setMarkdown` to store `self._last_processed_html`.
 
     def get_zoom_level(self) -> int:
-        """
-        Retrieves the current zoom level of the object.
-
-        This method accesses the internal zoom level of the object and returns its
-        value as an integer. The zoom level represents the current scale or magnification
-        applied to the object.
-
-        Returns:
-            int: The current zoom level of the object.
-        """
         return self._zoom_level
 
 

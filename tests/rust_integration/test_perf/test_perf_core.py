@@ -8,9 +8,19 @@ the ClassicLib test suite.
 
 import time
 
-# Import the Rust module
-import classic_perf
 import pytest
+
+# Try to import classic_perf; if it fails, set a flag to skip tests
+try:
+    import classic_perf
+
+    _classic_perf_available = True
+except ImportError:
+    _classic_perf_available = False
+
+not_classic_perf_available = not _classic_perf_available
+
+pytestmark = pytest.mark.skipif(not_classic_perf_available, reason="classic_perf Rust module not available")
 
 
 class TestPerfImport:

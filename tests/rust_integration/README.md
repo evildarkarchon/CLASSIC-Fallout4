@@ -155,7 +155,7 @@ The tests use the following pytest markers:
 ### Skipping Tests
 
 Tests automatically skip when:
-- Rust components are not available (`pytest.importorskip("classic_core")`)
+- Rust components are not available (`pytest.importorskip("classic_scanlog")`)
 - Specific Rust components are not accelerated (`is_rust_accelerated()` checks)
 - Real crash log data is not available (falls back to synthetic data)
 

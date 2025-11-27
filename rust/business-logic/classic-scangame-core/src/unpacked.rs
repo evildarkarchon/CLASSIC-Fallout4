@@ -335,7 +335,7 @@ mod tests {
         let scanner = UnpackedScanner::new();
         let issues = scanner.scan_directory(mod_path, &[]).unwrap();
 
-        assert!(issues.tex_frmt.len() > 0);
+        assert!(!issues.tex_frmt.is_empty());
     }
 
     #[test]
@@ -350,7 +350,7 @@ mod tests {
         let scanner = UnpackedScanner::new();
         let issues = scanner.scan_directory(mod_path, &[]).unwrap();
 
-        assert!(issues.snd_frmt.len() > 0);
+        assert!(!issues.snd_frmt.is_empty());
     }
 
     #[test]

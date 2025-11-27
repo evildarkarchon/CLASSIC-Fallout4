@@ -238,11 +238,11 @@ fn get_config_path() -> Result<PathBuf> {
 ///
 /// ## Parameters
 /// - `config: &CliConfig`: A configuration object for CLI interaction (though it is
-/// currently unused in the function).
+///   currently unused in the function).
 ///
 /// ## Errors
 /// - Returns an error using `anyhow::bail!` if neither the executable's directory
-/// nor the current directory contains a valid `CLASSIC Data/databases` folder.
+///   nor the current directory contains a valid `CLASSIC Data/databases` folder.
 ///
 /// ## Examples
 /// ```rust

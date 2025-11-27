@@ -249,9 +249,14 @@ class TestIntegration:
 
         await processor.check_dds_batch_async(dds_files, issue_lists, issue_locks)
 
-        # Should find issue with odd dimensions
-        assert len(issue_lists["tex_dims"]) == 1
-        assert "odd.dds" in issue_lists["tex_dims"][0]
+        # Should find multiple issues:
+        # 1. valid.dds: No mipmaps
+        # 2. odd.dds: Non-power-of-2
+        # 3. odd.dds: Invalid BC dimensions
+        # 4. odd.dds: No mipmaps
+        assert len(issue_lists["tex_dims"]) == 4
+        assert any("odd.dds" in issue for issue in issue_lists["tex_dims"])
+        assert any("valid.dds" in issue for issue in issue_lists["tex_dims"])
 
     def test_get_analyzer_factory(self):
         """Test analyzer factory function."""

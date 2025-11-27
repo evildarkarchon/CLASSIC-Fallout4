@@ -176,7 +176,7 @@ impl IniValidator {
     /// # Returns
     ///
     /// Ok(()) if successful, error otherwise
-    fn load_ini(&mut self, file_path: &Path) -> Result<()> {
+    pub fn load_ini(&mut self, file_path: &Path) -> Result<()> {
         let file_name_lower = file_path
             .file_name()
             .and_then(|n| n.to_str())
@@ -482,7 +482,7 @@ impl IniValidator {
     /// # Returns
     ///
     /// Map of lowercase file name to file path
-    fn scan_config_files(&self, game_root: &Path) -> Result<HashMap<String, PathBuf>> {
+    pub fn scan_config_files(&self, game_root: &Path) -> Result<HashMap<String, PathBuf>> {
         let mut config_files = HashMap::new();
 
         // Walk the game root directory

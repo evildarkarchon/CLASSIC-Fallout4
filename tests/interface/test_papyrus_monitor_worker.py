@@ -10,11 +10,16 @@ This test module verifies that:
 6. Rust acceleration detection and logging work
 """
 
+import os
 from datetime import datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+
 from PySide6.QtCore import QObject, QThread
 
 # Test worker initialization

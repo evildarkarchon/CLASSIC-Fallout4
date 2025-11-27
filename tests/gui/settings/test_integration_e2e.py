@@ -61,16 +61,16 @@ class TestMultipleDialogs:
         """Test that dialog instances maintain independent states."""
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.audio_checkbox.setChecked(True)
+        dialog1.vr_checkbox.setChecked(True)
         dialog1.fcx_checkbox.setChecked(True)
-        dialog2.audio_checkbox.setChecked(False)
-        dialog2.vr_checkbox.setChecked(True)
-        assert dialog1.audio_checkbox.isChecked()
+        dialog2.vr_checkbox.setChecked(False)
+        dialog2.simplify_checkbox.setChecked(True)
+        assert dialog1.vr_checkbox.isChecked()
         assert dialog1.fcx_checkbox.isChecked()
-        assert not dialog1.vr_checkbox.isChecked()
-        assert not dialog2.audio_checkbox.isChecked()
+        assert not dialog1.simplify_checkbox.isChecked()
+        assert not dialog2.vr_checkbox.isChecked()
         assert not dialog2.fcx_checkbox.isChecked()
-        assert dialog2.vr_checkbox.isChecked()
+        assert dialog2.simplify_checkbox.isChecked()
         dialog1.close()
         dialog2.close()
 
@@ -87,13 +87,13 @@ class TestSettingsImpact:
         assert simplify_enabled is True
         dialog.close()
 
-    def test_audio_notification_impact(self, app, reset_settings, gui_message_handler, async_bridge):
-        """Test that audio notification setting has expected impact."""
+    def test_vr_mode_impact(self, app, reset_settings, gui_message_handler, async_bridge):
+        """Test that VR mode setting has expected impact."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        original = dialog.audio_checkbox.isChecked()
-        dialog.audio_checkbox.setChecked(not original)
+        original = dialog.vr_checkbox.isChecked()
+        dialog.vr_checkbox.setChecked(not original)
         dialog.save_settings()
-        new_value = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
+        new_value = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert new_value != original
         dialog.close()
 

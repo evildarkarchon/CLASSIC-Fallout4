@@ -115,32 +115,37 @@ T = TypeVar("T")
 
 # noinspection PyTypeChecker
 class AsyncBridge:
-    """
-    High-performance bridge between sync and async code using persistent thread-local event loops.
+    """High-performance bridge between sync and async code using persistent event loops.
 
     This class maintains a single event loop per thread, avoiding the expensive overhead
     of creating and destroying event loops for each sync-to-async call.
 
-    Testing Note:
-    -------------
-    When testing code that uses AsyncBridge, mock the bridge's run_async method,
-    NOT the underlying async functions. This avoids RuntimeWarning about unawaited coroutines.
+    Attributes:
+        _instances: Class-level dict mapping thread IDs to AsyncBridge instances.
+        _lock: Class-level lock for thread-safe instance creation.
+        _cleanup_registered: Whether atexit cleanup has been registered.
+        _metrics_callback: Optional callback for performance metrics.
+        _thread_local: Thread-local storage for fast instance access.
 
-    Example for testing:
-    ```python
-    from unittest.mock import MagicMock, patch
+    Example:
+        Basic usage in a sync context (e.g., Qt GUI worker):
 
-    with patch("module.AsyncBridge") as mock_bridge_class:
-        mock_bridge = MagicMock()
-        mock_bridge_class.get_instance.return_value = mock_bridge
-        mock_bridge.run_async.return_value = "expected_result"
+        >>> from ClassicLib.AsyncBridge import AsyncBridge
+        >>> bridge = AsyncBridge.get_instance()
+        >>> result = bridge.run_async(some_async_function())
 
-        # Now test your sync wrapper that uses AsyncBridge
-        result = your_sync_function()
-        assert result == "expected_result"
-    ```
+        Using the convenience wrapper:
 
-    For comprehensive testing guidance, see: docs/testing_async_bridge.md
+        >>> from ClassicLib.AsyncBridge import run_async
+        >>> result = run_async(fetch_data_async())
+
+    Note:
+        When testing code that uses AsyncBridge, mock the bridge's run_async
+        method, NOT the underlying async functions. This avoids RuntimeWarning
+        about unawaited coroutines.
+
+    See Also:
+        docs/testing/testing_async_bridge.md for comprehensive testing guidance.
     """
 
     # Class-level storage for thread-local instances
@@ -247,55 +252,83 @@ class AsyncBridge:
             self._loop = None
             self._thread = None
 
-        # Create new event loop with error handling
-        try:
-            self._loop = asyncio.new_event_loop()
-            logger.debug(f"AsyncBridge: Created new event loop for thread {self._thread_id}")
-        except Exception as e:
-            raise RuntimeError(f"Failed to create event loop for AsyncBridge in thread {self._thread_id}: {e}") from e
+        # Create new event loop for background thread
+        self._loop = asyncio.new_event_loop()
 
-        # Create a reusable event for waiting
+        # Create event for thread synchronization
         ready_event = threading.Event()
 
-        def mark_ready() -> None:
-            """Mark the loop as ready after it starts."""
-            ready_event.set()
-            logger.debug(f"AsyncBridge: Loop marked ready for thread {self._thread_id}")
-
-        # Schedule a callback to mark when loop is running
-        self._loop.call_soon(mark_ready)
-
-        # Start the loop in a background thread with timestamp for uniqueness
+        # Start background thread FIRST (before any operations on the loop)
+        # Pass ready_event so thread can signal when it's ready
         thread_name = f"AsyncBridge-{self._thread_id}-{self._creation_time:.0f}"
-        self._thread = threading.Thread(target=self._run_loop, daemon=True, name=thread_name)
+        self._thread = threading.Thread(
+            target=self._run_loop,
+            args=(ready_event,),  # Pass ready_event as argument
+            daemon=True,
+            name=thread_name,
+        )
         self._thread.start()
         logger.debug(f"AsyncBridge: Started background thread {thread_name}")
 
-        # Wait with timeout for loop to be ready
+        # Wait with timeout for thread to signal it's ready
+        # Thread signals AFTER set_event_loop() but BEFORE run_forever()
         if not ready_event.wait(timeout=5.0):
             logger.error(f"AsyncBridge: Loop failed to start within 5 seconds for thread {self._thread_id}")
             raise RuntimeError(f"AsyncBridge event loop failed to start within 5 seconds for thread {self._thread_id}")
 
-    def _run_loop(self) -> None:
-        """Run the event loop in the background thread."""
+        logger.debug(f"AsyncBridge: Loop confirmed running for thread {self._thread_id}")
+
+    def _run_loop(self, ready_event: threading.Event) -> None:
+        """Run the event loop in the background thread.
+
+        This method runs in a dedicated background thread and manages the event loop lifecycle.
+        It signals when the loop is ready to accept work, then runs until shutdown.
+
+        Args:
+            ready_event: Threading event to signal when loop is ready for operations
+        """
         if self._loop is None:
             return  # Should never happen, but satisfies type checker
 
+        # Set this loop as the event loop for this thread
         asyncio.set_event_loop(self._loop)
+
+        # Signal that we're ready AFTER set_event_loop() but BEFORE run_forever()
+        # This ensures the loop is properly initialized before any operations are scheduled
+        ready_event.set()
+        logger.debug(f"AsyncBridge: Event loop ready for thread {self._thread_id}")
+
         try:
+            # Run the event loop until shutdown() is called
             self._loop.run_forever()
         finally:
-            # Simplified cleanup - just close the loop
-            # Tasks should have been properly cancelled at the application level
+            # Cleanup pending tasks to ensure futures don't hang
             try:
                 pending = asyncio.all_tasks(self._loop)
                 if pending:
                     logger.warning(
                         f"AsyncBridge: {len(pending)} tasks still pending during shutdown for thread {self._thread_id}. "
-                        "This may indicate improper task cleanup at the application level."
+                        "Cancelling them to ensure cleanup."
                     )
+                    for task in pending:
+                        task.cancel()
+
+                    # Allow cancellation to propagate with timeout
+                    # This ensures that futures returned by run_coroutine_threadsafe are properly notified
+                    async def wait_for_cancellation() -> None:
+                        await asyncio.gather(*pending, return_exceptions=True)
+
+                    try:
+                        # Run loop briefly to process cancellations
+                        # 0.2s is enough to let CancelledError propagate to futures
+                        # We don't need to wait for full task cleanup if it's stuck
+                        self._loop.run_until_complete(asyncio.wait_for(wait_for_cancellation(), timeout=0.2))
+                    except TimeoutError:
+                        logger.warning(f"AsyncBridge: Timeout (0.2s) waiting for tasks to cancel for thread {self._thread_id}")
+                    except Exception as e:  # noqa: BLE001
+                        logger.error(f"AsyncBridge: Error during task cancellation: {e}")
             except (RuntimeError, AttributeError) as e:
-                logger.debug(f"AsyncBridge: Error checking pending tasks for thread {self._thread_id}: {e}")
+                logger.debug(f"AsyncBridge: Error handling pending tasks for thread {self._thread_id}: {e}")
 
             # Close the loop
             try:

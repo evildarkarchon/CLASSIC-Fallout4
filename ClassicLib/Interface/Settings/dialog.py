@@ -50,7 +50,6 @@ class SettingsDialog(QDialog):
 
     # Mapping between widget keys and YAML setting names
     SETTINGS_MAP: ClassVar[dict[str, str]] = {
-        "audio_notifications": "Audio Notifications",
         "vr_mode": "VR Mode",
         "fcx_mode": "FCX Mode",
         "simplify_logs": "Simplify Logs",
@@ -132,7 +131,6 @@ class SettingsDialog(QDialog):
         self.tab_widget.addTab(general_widget, "General")
 
         # Store widget references for backwards compatibility
-        self.audio_checkbox = general_widgets.get("audio_notifications")
         self.vr_checkbox = general_widgets.get("vr_mode")
 
         # Scanning tab
@@ -234,7 +232,6 @@ class SettingsDialog(QDialog):
 
             # Update checkboxes
             for key in [
-                "audio_notifications",
                 "vr_mode",
                 "fcx_mode",
                 "simplify_logs",
@@ -303,7 +300,6 @@ class SettingsDialog(QDialog):
         try:
             # Save checkboxes
             for key in [
-                "audio_notifications",
                 "vr_mode",
                 "fcx_mode",
                 "simplify_logs",

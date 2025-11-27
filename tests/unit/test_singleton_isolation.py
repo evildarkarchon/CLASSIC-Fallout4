@@ -11,6 +11,7 @@ from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
 
+@pytest.mark.xdist_group("singleton_isolation")
 class TestSingletonIsolation:
     """Test suite to verify singleton and cache isolation."""
 

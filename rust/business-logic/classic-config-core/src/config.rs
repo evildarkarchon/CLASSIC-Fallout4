@@ -203,6 +203,9 @@ pub struct ClassicConfig {
     /// Automatically switch to Results tab after scan completion
     pub auto_switch_to_results: bool,
 
+    /// Auto-refresh interval for file watcher in milliseconds
+    pub auto_refresh_interval_ms: u64,
+
     /// Path configuration
     pub paths: PathConfig,
 }
@@ -266,6 +269,7 @@ impl Default for ClassicConfig {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true, // Enable by default for better UX
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig::default(),
         }
     }
@@ -316,6 +320,8 @@ impl ClassicConfig {
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
         let vr_mode = yaml["vr_mode"].as_bool().unwrap_or(false);
         let auto_switch_to_results = yaml["auto_switch_to_results"].as_bool().unwrap_or(true);
+        let auto_refresh_interval_ms =
+            yaml["auto_refresh_interval_ms"].as_i64().unwrap_or(5000) as u64;
 
         let paths_yaml = &yaml["paths"];
         let paths = PathConfig {
@@ -338,6 +344,7 @@ impl ClassicConfig {
             update_check,
             vr_mode,
             auto_switch_to_results,
+            auto_refresh_interval_ms, // Add this
             paths,
         })
     }
@@ -377,6 +384,10 @@ impl ClassicConfig {
         root.insert(
             Yaml::String("auto_switch_to_results".to_string()),
             Yaml::Boolean(self.auto_switch_to_results),
+        );
+        root.insert(
+            Yaml::String("auto_refresh_interval_ms".to_string()),
+            Yaml::Integer(self.auto_refresh_interval_ms as i64),
         );
 
         // Build paths hash
@@ -584,9 +595,11 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let config_path = temp_dir.path().join("test_config.yaml");
 
-        let mut config = ClassicConfig::default();
-        config.fcx_mode = true;
-        config.show_formid_values = true;
+        let mut config = ClassicConfig {
+            fcx_mode: true,
+            show_formid_values: true,
+            ..Default::default()
+        };
         config.paths.ini_folder = Some(PathBuf::from("C:\\Test"));
 
         // Save config
@@ -611,6 +624,7 @@ mod tests {
             update_check: false,
             vr_mode: true,
             auto_switch_to_results: false,
+            auto_refresh_interval_ms: 1000,
             paths: PathConfig {
                 ini_folder: Some(PathBuf::from("C:\\Ini")),
                 scan_custom: Some(PathBuf::from("D:\\Logs")),
@@ -633,6 +647,10 @@ mod tests {
         assert_eq!(
             restored.auto_switch_to_results,
             config.auto_switch_to_results
+        );
+        assert_eq!(
+            restored.auto_refresh_interval_ms,
+            config.auto_refresh_interval_ms
         );
         assert_eq!(restored.paths.ini_folder, config.paths.ini_folder);
         assert_eq!(restored.paths.scan_custom, config.paths.scan_custom);
@@ -668,6 +686,7 @@ mod tests {
             update_check: true,
             vr_mode: false,
             auto_switch_to_results: true,
+            auto_refresh_interval_ms: 5000,
             paths: PathConfig {
                 ini_folder: None,
                 scan_custom: None,

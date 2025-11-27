@@ -13,17 +13,24 @@ Tests cover:
 - Edge cases and error handling
 - Performance characteristics (40x speedup target)
 """
+# ruff: noqa: ANN201, PLR6301
 
 from types import SimpleNamespace
 
 import pytest
+
+# Initialize to None to satisfy static analysis (possibly unbound variables)
+RecordScanner = None
+contains_record = None
+scan_records_batch = None
+RUST_AVAILABLE = False
 
 try:
     from classic_scanlog import RecordScanner, contains_record, scan_records_batch
 
     RUST_AVAILABLE = True
 except ImportError:
-    RUST_AVAILABLE = False
+    pass
 
 
 # ============================================================================
@@ -67,13 +74,13 @@ class TestContainsRecord:
         ignore_records = ["void*"]
 
         # Should match - contains target and no ignored terms
-        assert contains_record("0x7FF6F1E52E60    (BSResource::Archive2**)", target_records, ignore_records)
+        assert contains_record("0x7FF6F1E52E60    (BSResource::Archive2**)", target_records, ignore_records)  # pyright: ignore[reportOptionalCall, reportCallIssue]
 
         # Should not match - contains ignored term
-        assert not contains_record("0x7FF6EF4B2DC8    (void* -> Fallout4.exe+0712DC8)", target_records, ignore_records)
+        assert not contains_record("0x7FF6EF4B2DC8    (void* -> Fallout4.exe+0712DC8)", target_records, ignore_records)  # type: ignore
 
         # Should not match - doesn't contain target
-        assert not contains_record("0x1AC             (size_t)", target_records, ignore_records)
+        assert not contains_record("0x1AC             (size_t)", target_records, ignore_records)  # type: ignore
 
     def test_contains_record_case_insensitive(self):
         """Test case-insensitive record detection."""
@@ -81,9 +88,9 @@ class TestContainsRecord:
         ignore_records = []
 
         # Should match regardless of case
-        assert contains_record("0x123 (BSResource::Archive)", target_records, ignore_records)
-        assert contains_record("0x123 (bsresource::archive)", target_records, ignore_records)
-        assert contains_record("0x123 (BSRESOURCE::ARCHIVE)", target_records, ignore_records)
+        assert contains_record("0x123 (BSResource::Archive)", target_records, ignore_records)  # type: ignore
+        assert contains_record("0x123 (bsresource::archive)", target_records, ignore_records)  # type: ignore
+        assert contains_record("0x123 (BSRESOURCE::ARCHIVE)", target_records, ignore_records)  # type: ignore
 
     def test_contains_record_multiple_targets(self):
         """Test matching against multiple target records."""
@@ -95,9 +102,9 @@ class TestContainsRecord:
         ignore_records = []
 
         # Should match any target
-        assert contains_record("0x123 (BSResource*)", target_records, ignore_records)
-        assert contains_record("0x456 (TESObjectREFR*)", target_records, ignore_records)
-        assert contains_record("0x789 (Actor*)", target_records, ignore_records)
+        assert contains_record("0x123 (BSResource*)", target_records, ignore_records)  # type: ignore
+        assert contains_record("0x456 (TESObjectREFR*)", target_records, ignore_records)  # type: ignore
+        assert contains_record("0x789 (Actor*)", target_records, ignore_records)  # type: ignore
 
     def test_contains_record_multiple_ignores(self):
         """Test filtering with multiple ignore terms."""
@@ -109,21 +116,21 @@ class TestContainsRecord:
         ]
 
         # Should not match if any ignore term is present
-        assert not contains_record("test (void*)", target_records, ignore_records)
-        assert not contains_record("test (NULL)", target_records, ignore_records)
-        assert not contains_record('test (char*) "string"', target_records, ignore_records)
+        assert not contains_record("test (void*)", target_records, ignore_records)  # type: ignore
+        assert not contains_record("test (NULL)", target_records, ignore_records)  # type: ignore
+        assert not contains_record('test (char*) "string"', target_records, ignore_records)  # type: ignore
 
         # Should match if no ignore terms present
-        assert contains_record("test (int)", target_records, ignore_records)
+        assert contains_record("test (int)", target_records, ignore_records)  # type: ignore
 
     def test_contains_record_empty_lists(self):
         """Test with empty target or ignore lists."""
         # Empty targets - should never match
-        assert not contains_record("0x123 (BSResource*)", [], [])
+        assert not contains_record("0x123 (BSResource*)", [], [])  # type: ignore
 
         # Empty ignores - should match if target present
         targets = ["BSResource"]
-        assert contains_record("0x123 (BSResource*)", targets, [])
+        assert contains_record("0x123 (BSResource*)", targets, [])  # type: ignore
 
 
 # ============================================================================
@@ -152,7 +159,7 @@ class TestScanRecordsBatch:
         target_records = ["BSResource", "BSGeometrySegmentData"]
         ignore_records = ["void*", "char*"]
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 1
         assert len(results[0]) == 2
@@ -179,7 +186,7 @@ class TestScanRecordsBatch:
         target_records = ["BSResource", "TESObjectREFR"]
         ignore_records = ["void*"]
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 3
         assert len(results[0]) == 1  # Only BSResource (void* ignored)
@@ -200,7 +207,7 @@ class TestScanRecordsBatch:
         target_records = ["BSResource"]
         ignore_records = []
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 1
         assert len(results[0]) == 2
@@ -213,12 +220,12 @@ class TestScanRecordsBatch:
     def test_scan_records_batch_empty(self):
         """Test with empty inputs."""
         # Empty segments
-        results = scan_records_batch([], ["test"], [])
+        results = scan_records_batch([], ["test"], [])  # type: ignore
         assert len(results) == 0
 
         # Segments with no matches
         segments = [["no match"]]
-        results = scan_records_batch(segments, ["target"], [])
+        results = scan_records_batch(segments, ["target"], [])  # type: ignore
         assert len(results) == 1
         assert len(results[0]) == 0
 
@@ -235,7 +242,7 @@ class TestScanRecordsBatch:
         target_records = ["BSResource", "short"]
         ignore_records = []
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 1
         # Short line should be skipped (len <= offset check)
@@ -256,14 +263,14 @@ class TestRecordScanner:
     def test_record_scanner_creation(self):
         """Test RecordScanner creation."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         assert scanner is not None
 
     def test_extract_records_basic(self):
         """Test basic record extraction."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         # Ensure proper 30-char offset: "[RSP+NN ] 0xADDRESS      "
         callstack = [
@@ -282,7 +289,7 @@ class TestRecordScanner:
     def test_extract_records_empty_callstack(self):
         """Test extraction with empty callstack."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         records = scanner.extract_records([])
 
@@ -291,7 +298,7 @@ class TestRecordScanner:
     def test_extract_records_no_matches(self):
         """Test extraction with no matching records."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         callstack = [
             "[RSP+8  ] 0x123             (void*)",
@@ -307,7 +314,7 @@ class TestRecordScanner:
     def test_extract_records_case_insensitive(self):
         """Test case-insensitive record extraction."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         callstack = [
             "[RSP+8  ] 0x123             (bsresource*)",
@@ -322,7 +329,7 @@ class TestRecordScanner:
     def test_extract_records_non_rsp_lines(self):
         """Test extraction of non-RSP formatted lines."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         callstack = [
             "BSResource::Archive loading",
@@ -341,7 +348,7 @@ class TestRecordScanner:
     def test_extract_records_mixed_format(self):
         """Test extraction with mixed RSP and non-RSP lines."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         callstack = [
             "[RSP+8  ] 0x123               (BSResource*)",
@@ -361,7 +368,7 @@ class TestRecordScanner:
     def test_clear_cache(self):
         """Test cache clearing."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         # Clear cache should not error (even if currently no-op)
         scanner.clear_cache()
@@ -369,7 +376,7 @@ class TestRecordScanner:
     def test_record_counting_and_sorting(self):
         """Test that duplicate records are counted correctly."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         callstack = [
             "[RSP+8  ] 0x123               (BSResource*)",
@@ -396,7 +403,7 @@ class TestRecordScanner:
     def test_realistic_crash_log_segment(self):
         """Test with realistic crash log segment."""
         yamldata = create_mock_yamldata()
-        scanner = RecordScanner(yamldata)
+        scanner = RecordScanner(yamldata.classic_records_list, yamldata.game_ignore_records, yamldata.crashgen_name)  # type: ignore
 
         # Real-world crash log segment from test data
         callstack = [
@@ -441,7 +448,7 @@ class TestEdgeCases:
         target_records = ["BSResource", "TESForm"]
         ignore_records = []
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 1
         assert len(results[0]) == 2
@@ -457,7 +464,7 @@ class TestEdgeCases:
         target_records = ["Record"]
         ignore_records = []
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 1
         assert len(results[0]) == 1
@@ -474,7 +481,7 @@ class TestEdgeCases:
         target_records = ["BSResource"]
         ignore_records = []
 
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
 
         assert len(results) == 1
         assert len(results[0]) == 1
@@ -486,8 +493,8 @@ class TestEdgeCases:
         ignore_records = []
 
         # Should match partial substring
-        assert contains_record("BSResource", target_records, ignore_records)
-        assert contains_record("ABSTRACT", target_records, ignore_records)
+        assert contains_record("BSResource", target_records, ignore_records)  # type: ignore
+        assert contains_record("ABSTRACT", target_records, ignore_records)  # type: ignore
 
     def test_contains_record_exact_boundary(self):
         """Test when target and ignore both match."""
@@ -495,7 +502,7 @@ class TestEdgeCases:
         ignore_records = ["test"]
 
         # Target and ignore both match - ignore should win
-        assert not contains_record("test", target_records, ignore_records)
+        assert not contains_record("test", target_records, ignore_records)  # type: ignore
 
 
 # ============================================================================
@@ -533,7 +540,7 @@ class TestPerformance:
         ignore_records = ["void*", "char*"]
 
         start = time.perf_counter()
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
         elapsed = time.perf_counter() - start
 
         assert len(results) == 1000
@@ -558,7 +565,7 @@ class TestPerformance:
         ignore_records = []
 
         start = time.perf_counter()
-        results = scan_records_batch(segments, target_records, ignore_records)
+        results = scan_records_batch(segments, target_records, ignore_records)  # type: ignore
         elapsed = time.perf_counter() - start
 
         # Verify results

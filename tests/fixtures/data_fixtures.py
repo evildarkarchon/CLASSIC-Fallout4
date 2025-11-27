@@ -11,7 +11,22 @@ _test_file_cache = {}
 
 @pytest.fixture(scope="session")
 def cached_test_files(tmp_path_factory) -> dict[str, Path]:
-    """Generate and cache common test files to avoid repeated I/O operations."""
+    """Generate and cache common test files to avoid repeated I/O operations.
+
+    IMPORTANT: These files are cached across the entire test session and shared
+    between parallel test workers. Tests MUST treat these files as READ-ONLY.
+
+    Do NOT modify, write to, or delete these cached files during tests.
+    If a test needs to modify files, use the tmp_path fixture instead to get
+    a unique temporary directory for that specific test.
+
+    Returns:
+        dict[str, Path]: Dictionary containing paths to cached test files:
+            - crash_log: Path to a sample crash log file
+            - crash_log_dir: Directory containing crash logs
+            - yaml_settings: Path to a sample YAML settings file
+            - yaml_dir: Directory containing YAML files
+    """
     global _test_file_cache
 
     if not _test_file_cache:

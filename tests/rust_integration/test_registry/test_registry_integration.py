@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-# Import the Rust registry module
+# Import the Rust registry module (module name is classic_registry, not registry)
 try:
-    from registry import (
+    from classic_registry import (
         Keys,
         clear_all,
         get,

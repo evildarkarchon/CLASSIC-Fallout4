@@ -43,8 +43,8 @@ class TabCreator:
 
         The method initializes a QWidget containing a layout for general settings
         and populates it with checkboxes for user-configurable settings such as
-        audio notifications and VR mode. The created widgets are arranged into
-        a group box with appropriate spacing and tooltips.
+        VR mode. The created widgets are arranged into a group box with appropriate
+        spacing and tooltips.
 
         Args:
             parent (QWidget | None): Parent widget to which the general settings
@@ -66,12 +66,6 @@ class TabCreator:
         general_group = QGroupBox("General Settings")
         general_layout = QVBoxLayout(general_group)
         general_layout.setSpacing(10)
-
-        # Audio Notifications checkbox
-        audio_checkbox = QCheckBox("Audio Notifications")
-        audio_checkbox.setToolTip("Play sound effects when scans complete or errors occur")
-        general_layout.addWidget(audio_checkbox)
-        settings_widgets["audio_notifications"] = audio_checkbox
 
         # VR Mode checkbox
         vr_checkbox = QCheckBox("VR Mode")

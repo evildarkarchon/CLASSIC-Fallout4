@@ -5,12 +5,12 @@ This test suite ensures that the migration from mutable list-based report genera
 to fragment-based composition maintains identical markdown output.
 """
 
-# ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
+# ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR6301
 import pytest
 
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
-from ClassicLib.ScanLog.fragments import ReportFragment
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 
 
@@ -144,7 +144,7 @@ class TestFragmentMigration:
         assert output.endswith("\n\n")  # Should have double newline at end
 
     @pytest.mark.parametrize(
-        "check_type,expected_header",
+        ("check_type", "expected_header"),
         [
             ("FREQUENTLY CRASH", "### Checking For Mods That FREQUENTLY CRASH\n\n"),
             ("CONFLICT (TOGETHER)", "### Checking For Mods That CONFLICT (TOGETHER)\n\n"),

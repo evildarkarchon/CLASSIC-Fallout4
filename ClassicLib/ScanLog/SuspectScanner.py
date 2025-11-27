@@ -131,6 +131,10 @@ class SuspectScanner:
         Returns:
             True if processing should stop (NOT condition met)
         """
+        # Debug signal type if not string
+        if not isinstance(signal, str):
+            print(f"DEBUG: _process_signal received non-string signal: {type(signal)} - {signal}")
+
         # Constants for signal modifiers
         main_error_required = "ME-REQ"
         main_error_optional = "ME-OPT"

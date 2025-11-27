@@ -19,7 +19,15 @@ def install_requirements(include_gui: bool = False, include_cli: bool = False, i
     requirements: list[Any] = []
     current_section: str = "core"
 
-    with req_file.open() as f:
+    sections_to_include = {"core"}
+    if include_gui:
+        sections_to_include.add("gui")
+    if include_cli:
+        sections_to_include.add("cli")
+    if include_dev:
+        sections_to_include.add("dev")
+
+    with req_file.open(encoding="utf-8") as f:
         for line in f:
             line: str = line.strip()
 
@@ -32,12 +40,7 @@ def install_requirements(include_gui: bool = False, include_cli: bool = False, i
                     current_section = "dev"
                 continue
 
-            if (
-                current_section == "core"
-                or (current_section == "gui" and include_gui)
-                or (current_section == "cli" and include_cli)
-                or (current_section == "dev" and include_dev)
-            ):
+            if current_section in sections_to_include:
                 requirements.append(line)
 
     if not requirements:

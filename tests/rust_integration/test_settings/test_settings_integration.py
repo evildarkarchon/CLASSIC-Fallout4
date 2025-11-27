@@ -5,7 +5,6 @@ Tests verify thread safety, cache operations, and Rust acceleration.
 """
 
 import asyncio
-import tempfile
 from pathlib import Path
 
 import pytest
@@ -36,41 +35,32 @@ def clear_cache():
 
 
 @pytest.fixture
-def test_yaml():
+def test_yaml(tmp_path):
     """Create a temporary test YAML file."""
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-        f.write("game: Fallout4\n")
-        f.write("version: 1.0\n")
-        f.write("settings:\n")
-        f.write("  resolution:\n")
-        f.write("    width: 1920\n")
-        f.write("    height: 1080\n")
-        f.write("  graphics:\n")
-        f.write("    quality: ultra\n")
-        f.write("    vsync: true\n")
-        temp_path = f.name
-
-    yield temp_path
-
-    # Cleanup
-    Path(temp_path).unlink(missing_ok=True)
+    temp_file = tmp_path / "test_settings.yaml"
+    content = """game: Fallout4
+version: 1.0
+settings:
+  resolution:
+    width: 1920
+    height: 1080
+  graphics:
+    quality: ultra
+    vsync: true
+"""
+    temp_file.write_text(content)
+    return str(temp_file)
 
 
 @pytest.fixture
-def multi_yaml():
+def multi_yaml(tmp_path):
     """Create multiple temporary YAML files."""
     files = []
     for i in range(3):
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write(f"config: config_{i}\n")
-            f.write(f"value: {i * 10}\n")
-            files.append(f.name)
-
-    yield files
-
-    # Cleanup
-    for path in files:
-        Path(path).unlink(missing_ok=True)
+        file_path = tmp_path / f"config_{i}.yaml"
+        file_path.write_text(f"config: config_{i}\nvalue: {i * 10}\n")
+        files.append(str(file_path))
+    return files
 
 
 class TestSyncLoading:
@@ -117,17 +107,13 @@ class TestSyncLoading:
         with pytest.raises(OSError):
             classic_settings.load_settings_sync("bad_key", "nonexistent.yaml")
 
-    def test_load_settings_sync_invalid_yaml(self):
+    def test_load_settings_sync_invalid_yaml(self, tmp_path):
         """Test error handling for invalid YAML."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write("invalid:\n\t- yaml\n")  # Tabs are invalid in YAML
-            temp_path = f.name
+        temp_file = tmp_path / "invalid.yaml"
+        temp_file.write_text("invalid:\n\t- yaml\n")  # Tabs are invalid in YAML
 
-        try:
-            with pytest.raises(OSError):  # Parse errors are OSError
-                classic_settings.load_settings_sync("invalid", temp_path)
-        finally:
-            Path(temp_path).unlink(missing_ok=True)
+        with pytest.raises(OSError):  # Parse errors are OSError
+            classic_settings.load_settings_sync("invalid", str(temp_file))
 
 
 class TestAsyncLoading:
@@ -293,43 +279,29 @@ class TestYamlParsing:
         assert isinstance(doc["settings"]["graphics"]["quality"], str)
         assert doc["settings"]["graphics"]["quality"] == "ultra"
 
-    def test_parse_lists(self):
+    def test_parse_lists(self, tmp_path):
         """Test parsing lists."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write("items:\n")
-            f.write("  - item1\n")
-            f.write("  - item2\n")
-            f.write("  - item3\n")
-            temp_path = f.name
+        temp_file = tmp_path / "list_test.yaml"
+        temp_file.write_text("items:\n  - item1\n  - item2\n  - item3\n")
 
-        try:
-            docs = classic_settings.load_settings_sync("list_test", temp_path)
-            doc = docs[0]
+        docs = classic_settings.load_settings_sync("list_test", str(temp_file))
+        doc = docs[0]
 
-            assert "items" in doc
-            assert isinstance(doc["items"], list)
-            assert len(doc["items"]) == 3
-            assert doc["items"][0] == "item1"
-        finally:
-            Path(temp_path).unlink(missing_ok=True)
+        assert "items" in doc
+        assert isinstance(doc["items"], list)
+        assert len(doc["items"]) == 3
+        assert doc["items"][0] == "item1"
 
-    def test_parse_multi_document_yaml(self):
+    def test_parse_multi_document_yaml(self, tmp_path):
         """Test parsing YAML with multiple documents."""
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
-            f.write("---\n")
-            f.write("doc: 1\n")
-            f.write("---\n")
-            f.write("doc: 2\n")
-            temp_path = f.name
+        temp_file = tmp_path / "multi_doc.yaml"
+        temp_file.write_text("---\ndoc: 1\n---\ndoc: 2\n")
 
-        try:
-            docs = classic_settings.load_settings_sync("multi_doc", temp_path)
+        docs = classic_settings.load_settings_sync("multi_doc", str(temp_file))
 
-            assert len(docs) == 2
-            assert docs[0]["doc"] == 1
-            assert docs[1]["doc"] == 2
-        finally:
-            Path(temp_path).unlink(missing_ok=True)
+        assert len(docs) == 2
+        assert docs[0]["doc"] == 1
+        assert docs[1]["doc"] == 2
 
 
 class TestThreadSafety:

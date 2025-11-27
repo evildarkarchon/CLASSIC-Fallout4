@@ -70,6 +70,9 @@ export component FluentTabBar inherits Rectangle {
     in-out property<int> current-tab: 0;
     in property<[string]> tabs: [];
 
+    // Callbacks
+    callback tab-selected(int);
+
     // Styling
     background: FluentDark.layer1;
     height: FluentDark.tab-height;
@@ -83,6 +86,7 @@ export component FluentTabBar inherits Rectangle {
             selected: index == root.current-tab;
             clicked => {
                 root.current-tab = index;
+                root.tab-selected(index);
             }
         }
     }

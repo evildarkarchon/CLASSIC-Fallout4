@@ -35,18 +35,17 @@ class ThreadType(Enum):
 
 
 class ManagedThread:
-    """
-    Manages a thread and its associated worker with specific threading types.
+    """Manages a thread and its associated worker with specific threading types.
 
-    This class serves as a manager to handle operations involving a
-    thread, a worker, and their associated configurations. It provides
-    functionalities to check the running status of the thread and other
-    related threading operations.
+    This class serves as a manager to handle operations involving a thread,
+    a worker, and their associated configurations. It provides functionality
+    to check the running status of the thread and other related operations.
 
     Attributes:
-        thread (QThread): The thread object being managed.
-        worker (QObject): The worker object assigned to handle tasks.
-        thread_type (ThreadType): The specific type of threading being utilized.
+        thread: The QThread object being managed.
+        worker: The QObject worker assigned to handle tasks.
+        thread_type: The ThreadType indicating the purpose of this thread.
+        start_time: Timestamp when the thread started, or None if not started.
     """
 
     def __init__(self, thread: QThread, worker: QObject, thread_type: ThreadType) -> None:
@@ -78,19 +77,34 @@ class ManagedThread:
 
 
 class ThreadManager(QObject):
-    """
-    Manages threads and their lifecycle in a concurrent application.
+    """Manages threads and their lifecycle in a concurrent application.
 
-    The ThreadManager class is responsible for registering, starting, stopping, and
-    cleaning up threads. It provides mechanisms to manage thread safety and ensures
-    proper handling of threads, including graceful shutdown procedures. It also emits
-    signals to notify about thread-related events.
+    The ThreadManager class is responsible for registering, starting, stopping,
+    and cleaning up threads. It provides mechanisms to manage thread safety and
+    ensures proper handling of threads, including graceful shutdown procedures.
+    It also emits signals to notify about thread-related events.
 
     Attributes:
-        threadStarted (Signal): Signal emitted when a thread starts, containing the thread type.
-        threadFinished (Signal): Signal emitted when a thread stops, containing the thread type.
-        threadError (Signal): Signal emitted when a thread error occurs, containing the thread
-            type and the error message.
+        threadStarted: Signal emitted when a thread starts (contains thread type).
+        threadFinished: Signal emitted when a thread stops (contains thread type).
+        threadError: Signal emitted on thread error (contains type and message).
+
+    Example:
+        >>> from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType
+        >>> manager = ThreadManager()
+        >>>
+        >>> # Create thread and worker
+        >>> thread = QThread()
+        >>> worker = SomeWorker()
+        >>> worker.moveToThread(thread)
+        >>>
+        >>> # Register and start
+        >>> if manager.register_thread(ThreadType.CRASH_LOGS_SCAN, thread, worker):
+        ...     thread.started.connect(worker.run)
+        ...     thread.start()
+        >>>
+        >>> # Later, stop the thread
+        >>> manager.stop_thread(ThreadType.CRASH_LOGS_SCAN)
     """
 
     # Signals

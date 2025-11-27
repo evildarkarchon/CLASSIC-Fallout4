@@ -354,7 +354,7 @@ mod tests {
     #[test]
     fn test_folder_picker_creation() {
         let state = FolderPickerState::new(None);
-        assert!(state.current_dir.is_absolute() || state.current_dir == PathBuf::from("/"));
+        assert!(state.current_dir.is_absolute() || state.current_dir.as_path() == Path::new("/"));
         assert!(!state.is_active);
     }
 

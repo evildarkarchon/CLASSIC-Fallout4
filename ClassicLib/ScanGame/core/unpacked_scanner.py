@@ -102,7 +102,7 @@ class UnpackedModsScanner:
         if not TEST_MODE:
             backup_path.mkdir(parents=True, exist_ok=True)  # noqa: ASYNC240
 
-        msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING ASYNC MOD FILES SCAN...", target=MessageTarget.CLI_ONLY)
+        msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING ASYNC MOD FILES SCAN...", target=MessageTarget.CONSOLE)
 
         # Filter names for cleanup
         filter_names: tuple = ("readme", "changes", "changelog", "change log")
@@ -388,7 +388,7 @@ class UnpackedModsScanner:
             not has_xse_files
             and any(filename_lower == key.lower() for key in xse_scriptfiles)
             and "workshop framework" not in str(root).lower()
-            and f"Scripts\\{filename}" in str(file_path)
+            and file_path.parent.name.lower() == "scripts"
         ):
             has_xse_files = True
             async with issue_locks["xse_file"]:

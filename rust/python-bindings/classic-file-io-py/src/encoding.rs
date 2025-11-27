@@ -9,10 +9,15 @@ pub struct PyEncodingDetector {
     inner: EncodingDetector,
 }
 
+impl Default for PyEncodingDetector {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyEncodingDetector {
     /// Create a new instance
-
     #[new]
     pub fn new() -> Self {
         Self {

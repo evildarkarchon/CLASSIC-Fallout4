@@ -14,10 +14,29 @@ import pytest
 
 @pytest.fixture
 def mock_yamldata() -> MagicMock:
-    """Create mock YAML data for testing."""
+    """Create mock YAML data for testing.
+
+    Provides string values for Rust FFI compatibility.
+    The RustPluginAnalyzer requires proper string values for crashgen_name
+    and version fields, as MagicMock objects cannot be converted to PyString.
+    """
     mock = MagicMock()
     mock.scan_groups = {}
     mock.rules = []
+
+    # Rust FFI compatibility - provide real string values
+    mock.crashgen_name = "Buffout 4"
+    mock.game_version = "1.10.163.0"
+    mock.game_version_vr = "1.2.72.0"
+    mock.game_version_new = "1.10.980.0"
+    mock.game_ignore_plugins = []
+    mock.ignore_list = []
+
+    # Additional common attributes
+    mock.formid_analyzer_enabled = False
+    mock.record_scanner_enabled = False
+    mock.plugin_analyzer_enabled = True
+
     return mock
 
 

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncFileIO import load_crash_logs_async_optimized, write_reports_batch
+from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import write_reports_batch
 
 pytestmark = pytest.mark.integration
 
@@ -23,9 +23,8 @@ class TestAsyncFileIO:
         large_file = tmp_path / "large.log"
         large_content = "Large file test line\n" * 50000
         large_file.write_text(large_content)
-        result = await load_crash_logs_async_optimized([large_file])
-        assert large_file.name in result
-        assert len(result[large_file.name]) > 1000000
+
+        # Only test write since load is deprecated/removed
         reports = [(large_file, [large_content], False)]
         await write_reports_batch(reports)
         report_file = large_file.with_name(f"{large_file.stem}-AUTOSCAN.md")

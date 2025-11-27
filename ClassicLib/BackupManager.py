@@ -18,28 +18,22 @@ from ClassicLib.Util import normalize_list, open_file_with_encoding
 
 
 class BackupManager:
-    """
-    Manages the process of creating backups for specified files.
+    """Manages the process of creating backups for specified files.
 
-    This class provides methods to load backup configurations, extract information from
-    logs, create versioned backup directories, and backup specified files. The aim is to
-    facilitate easy and organized backup management for game files or any other workflows
-    that require systematic data backups.
+    This class provides methods to load backup configurations, extract information
+    from logs, create versioned backup directories, and backup specified files.
+    It facilitates organized backup management for game files.
 
     Attributes:
-        None
+        _backup_config: Dictionary containing backup configuration with keys:
+            - backup_list: List of files to backup
+            - game_path: Path to the game installation
+            - xse_log_file: Path to the XSE log file
+            - xse_ver_latest: Latest known XSE version string
     """
 
     def __init__(self) -> None:
-        """
-        Represents a class initializing configuration for backups.
-
-        This class is used to handle and store the configuration for backup processes.
-        It initializes an internal storage for backup-related settings.
-
-        Attributes:
-            None
-        """
+        """Initialize the BackupManager with an empty configuration."""
         self._backup_config: dict[str, str | list[str] | None] = {}
 
     def load_backup_configuration(self) -> None:

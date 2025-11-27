@@ -14,6 +14,12 @@ pub struct PyStringProcessor {
     inner: CoreStringProcessor,
 }
 
+impl Default for PyStringProcessor {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[pymethods]
 impl PyStringProcessor {
     /// Creates a new `StringProcessor`.

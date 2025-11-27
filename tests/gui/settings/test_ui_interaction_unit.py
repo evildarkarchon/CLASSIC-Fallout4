@@ -4,10 +4,17 @@ Unit tests for ui_interaction - unit logic testing.
 This file contains unit tests that test individual functions with mocked dependencies.
 """
 
-import pytest
-from PySide6.QtCore import Qt
+import os
 
-pytestmark = pytest.mark.unit
+import pytest
+
+# Skip all tests in this module when running in xdist worker (parallel execution)
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers"),
+]
+
+from PySide6.QtCore import Qt
 
 
 class TestTabNavigation:
@@ -27,7 +34,7 @@ class TestCheckboxInteraction:
 
     def test_checkbox_triple_state(self, settings_dialog):
         """Test that checkboxes are not tri-state."""
-        checkboxes = [settings_dialog.audio_checkbox, settings_dialog.vr_checkbox, settings_dialog.fcx_checkbox]
+        checkboxes = [settings_dialog.vr_checkbox, settings_dialog.fcx_checkbox]
         for checkbox in checkboxes:
             assert not checkbox.isTristate()
             assert checkbox.checkState() in [Qt.CheckState.Checked, Qt.CheckState.Unchecked]

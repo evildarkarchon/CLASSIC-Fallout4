@@ -133,22 +133,22 @@ fn test_lru_favors_frequently_used() {
 
     // Access first 3 paths multiple times (high hit count)
     for _ in 0..10 {
-        for i in 0..3 {
-            handler.normalize_path(&paths[i]).ok();
+        for path in paths.iter().take(3) {
+            handler.normalize_path(path).ok();
         }
     }
 
     // Access paths 3-4 once (low hit count)
-    for i in 3..5 {
-        handler.normalize_path(&paths[i]).ok();
+    for path in paths.iter().take(5).skip(3) {
+        handler.normalize_path(path).ok();
     }
 
     let (cache_size_before, _) = handler.cache_stats();
     assert_eq!(cache_size_before, 5, "Cache should be at capacity");
 
     // Access paths 5-9 (should trigger eviction of least-used entries)
-    for i in 5..10 {
-        handler.normalize_path(&paths[i]).ok();
+    for path in paths.iter().take(10).skip(5) {
+        handler.normalize_path(path).ok();
     }
 
     // First 3 paths (high hit count) should still be cached

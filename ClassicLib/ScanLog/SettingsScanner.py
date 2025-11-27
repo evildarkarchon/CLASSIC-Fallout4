@@ -45,7 +45,7 @@ class SettingsScannerFragments:
 
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
             lines.extend([
-                "**❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE** \n",
+                "# ❌ CAUTION : The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE # \n\n",
                 f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {self.yamldata.crashgen_name}.\n\n-----\n",
             ])
         else:
@@ -81,7 +81,7 @@ class SettingsScannerFragments:
 
         def add_warning(warning: str, fix: str) -> None:
             """Add a warning with fix instructions."""
-            lines.extend([f"**❌ CAUTION : {warning}** \n", f" FIX: {fix}{separator}"])
+            lines.extend([f"# ❌ CAUTION : {warning} # \n\n", f" FIX: {fix}{separator}"])
 
         # Check for old X-Cell version first
         if has_old_xcell:
@@ -104,7 +104,12 @@ class SettingsScannerFragments:
 
     @staticmethod
     def _validate_memory_config(
-        mem_enabled: bool, has_xcell: bool, has_baka: bool, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
+        mem_enabled: bool,
+        has_xcell: bool,
+        has_baka: bool,
+        crashgen_name: str,
+        add_success: Callable[[str], None],
+        add_warning: Callable[[str, str], None],
     ) -> None:
         """Validate memory manager configuration based on installed mods."""
         # Create configuration tuple for cleaner logic
@@ -142,7 +147,9 @@ class SettingsScannerFragments:
             handler()
 
     @staticmethod
-    def _validate_xcell_settings(crashgen: dict, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]) -> None:
+    def _validate_xcell_settings(
+        crashgen: dict, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
+    ) -> None:
         """Validate X-Cell specific memory settings."""
         memory_settings = {
             "HavokMemorySystem": "Havok Memory System",
@@ -183,7 +190,7 @@ class SettingsScannerFragments:
 
         if crashgen_archivelimit:
             lines.extend([
-                "**❌ CAUTION : ArchiveLimit is set to TRUE, this setting is known to cause instability.** \n",
+                "# ❌ CAUTION : ArchiveLimit is set to TRUE, this setting is known to cause instability. # \n",
                 f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change ArchiveLimit to FALSE.\n\n-----\n",
             ])
         else:
@@ -208,7 +215,7 @@ class SettingsScannerFragments:
         if crashgen_f4ee is not None:
             if not crashgen_f4ee and "f4ee.dll" in xsemodules:
                 lines.extend([
-                    "**❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE** \n",
+                    "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n",
                     f" FIX: Open {self.yamldata.crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n\n-----\n",
                 ])
             else:

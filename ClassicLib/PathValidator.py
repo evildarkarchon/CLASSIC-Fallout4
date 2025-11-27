@@ -82,22 +82,32 @@ class PathValidator:
             return False
 
     @staticmethod
-    def is_restricted_path(path: str | Path) -> bool:
+    def is_restricted_path(path: str | Path | None) -> bool:
         """
         Checks whether the provided path is a restricted path.
 
         This method verifies if a given path is restricted or valid by utilizing an
-        existing utility function. If any exception occurs during the validation
-        process, it will consider the path as restricted.
+        existing utility function. Restricted paths include:
+        - None or empty strings (fail-safe)
+        - CLASSIC-specific directories (Crash Logs, Pastebin, XSE folder)
+        - Windows system directories (System32, Program Files, ProgramData, etc.)
+
+        These directories are restricted because they receive special treatment
+        by Windows (antivirus scrutiny, elevated permissions) which can interfere
+        with the operation of the program or the game.
 
         **Performance**: Uses Rust acceleration when available for 10-50x speedup.
 
         Args:
-            path (str | Path): The path to be checked for restriction.
+            path (str | Path | None): The path to be checked for restriction.
 
         Returns:
             bool: True if the path is restricted, False otherwise.
         """
+        # Handle None and empty strings as restricted (fail-safe)
+        if path is None or (isinstance(path, str) and not path.strip()):
+            return True
+
         # Use Rust acceleration when available
         if _HAS_RUST_PATH and classic_path is not None:
             assert classic_path is not None  # Type narrowing for type checker
@@ -111,11 +121,10 @@ class PathValidator:
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
         try:
-            path_str = str(path)
             # Use the existing utility function to check if path is valid
             # (returns False for restricted paths)
-            return not is_valid_custom_scan_path(path_str)
-        except (ValueError, OSError, TypeError):
+            return not is_valid_custom_scan_path(path)
+        except Exception:  # noqa: BLE001
             # If there's any error checking, consider it restricted
             return True
 
@@ -231,18 +240,12 @@ class PathValidator:
 
     @staticmethod
     def validate_game_root_path() -> None:
-        """
-        Validates the game root path settings and ensures the required files exist.
+        """Validate the game root path settings and ensure required files exist.
 
-        This method retrieves the game root path from the settings, determines the
-        expected executable file based on the game's name, and validates that the
-        path is correctly configured in the settings. If the path exists, it also
-        checks whether the required executable file is present.
-
-        Raises:
-            ValueError: If the specified path does not exist or is invalid.
-            FileNotFoundError: If the required game executable is missing.
-
+        Retrieves the game root path from the settings, determines the expected
+        executable file based on the game's name, and validates that the path is
+        correctly configured. If the path is invalid or the required executable
+        is missing, the setting is cleared and a warning is logged.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -267,15 +270,12 @@ class PathValidator:
 
     @staticmethod
     def validate_documents_path() -> None:
-        """
-        Validates the documents path specified in the YAML settings cache. Ensures the existence
-        and proper directory structure of the documents folder for the application. This method
-        checks the validity of the path configuration and ensures compliance without enforcing
-        specific files within the directory.
+        """Validate the documents path specified in settings.
 
-        Raises:
-            ValidationError: If the documents path is invalid or does not meet the specified
-                requirements.
+        Ensures the existence and proper directory structure of the documents
+        folder for the application. If the path is invalid, the setting is
+        cleared and a warning is logged. INI files are not required to exist
+        as the game may not have been run yet.
         """
         from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -323,16 +323,12 @@ class PathValidator:
 
     @staticmethod
     def validate_ini_folder_path() -> None:
-        """
-        Validates the INI folder path retrieved from the application settings.
+        """Validate the INI folder path from application settings.
 
-        This static method fetches the INI folder path from application settings and verifies
-        if the given path adheres to expected criteria. The validation includes checking the
-        existence and validity of the path. The folder may not yet contain INI files, so the
-        validation skips checking for required files.
-
-        Raises:
-            ValueError: If the path is invalid or does not meet the expected criteria.
+        Fetches the INI folder path from settings and verifies it exists and
+        is a valid directory. If the path is invalid, the setting is cleared
+        and a warning is logged. INI files are not required to exist as they
+        may not have been created yet.
         """
         from ClassicLib.YamlSettingsCache import classic_settings
 

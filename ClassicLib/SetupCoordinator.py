@@ -31,16 +31,21 @@ if TYPE_CHECKING:
 
 
 class SetupCoordinator:
-    """Coordinates application setup and initialization."""
+    """Coordinates application setup and initialization.
+
+    Manages the complete initialization workflow including file generation,
+    game path detection, integrity checking, and settings loading.
+
+    Attributes:
+        file_generator: FileGenerator instance for creating config files.
+        integrity_checker: GameIntegrityChecker for verifying game files.
+        backup_manager: BackupManager for XSE/ENB backup operations.
+        docs_checker: DocumentsChecker for validating documents folder.
+        path_validator: PathValidator for validating configured paths.
+    """
 
     def __init__(self) -> None:
-        """
-        Initializes the primary components required for the system's functionality.
-
-        The constructor sets up instances of the necessary helper classes for
-        file generation, integrity checking, backup management, document validation,
-        and path validation.
-        """
+        """Initialize all helper components for the setup workflow."""
         self.file_generator = FileGenerator()
         self.integrity_checker = GameIntegrityChecker()
         self.backup_manager = BackupManager()
@@ -88,10 +93,10 @@ class SetupCoordinator:
 
         # Display welcome messages
         msg_info(
-            f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}", target=MessageTarget.CLI_ONLY
+            f"Hello World! | Crash Log Auto Scanner & Setup Integrity Checker | {classic_ver} | {game_name}", target=MessageTarget.CONSOLE
         )
-        msg_info("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION", target=MessageTarget.CLI_ONLY)
-        msg_info("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...", target=MessageTarget.CLI_ONLY)
+        msg_info("REMINDER: COMPATIBLE CRASH LOGS MUST START WITH 'crash-' AND MUST HAVE .log EXTENSION", target=MessageTarget.CONSOLE)
+        msg_info("❓ PLEASE WAIT WHILE CLASSIC CHECKS YOUR SETTINGS AND GAME SETUP...", target=MessageTarget.CONSOLE)
         logger.debug(f"> > > STARTED {classic_ver}")
 
         if not game_path:
@@ -104,8 +109,8 @@ class SetupCoordinator:
             # Backup files if paths are configured
             self.backup_manager.run_backup()
 
-        msg_success("ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!", target=MessageTarget.CLI_ONLY)
-        msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES", target=MessageTarget.CLI_ONLY)
+        msg_success("ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!", target=MessageTarget.CONSOLE)
+        msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES", target=MessageTarget.CONSOLE)
 
     def generate_combined_results(self) -> str:
         """
