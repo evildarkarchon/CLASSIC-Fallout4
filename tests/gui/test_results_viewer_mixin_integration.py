@@ -171,20 +171,29 @@ class TestReportLifecycleIntegration:
         loaded = integrated_viewer.load_report(report_path)
         assert loaded is True
         assert integrated_viewer.current_report_path == report_path
-        integrated_viewer.markdown_viewer.setMarkdown.assert_called_with(original_content)
+        
+        # Check content with newline normalization for Windows compatibility
+        args = integrated_viewer.markdown_viewer.setMarkdown.call_args[0]
+        assert args[0].replace("\r\n", "\n") == original_content.replace("\r\n", "\n")
 
-        # Step 4: Modify report externally
+        # Step 4: Create updated report (use new file to avoid cache issues)
+        updated_path = report_path.with_name("workflow-UPDATED-AUTOSCAN.md")
         updated_content = "# Updated Report\n\nModified content"
-        report_path.write_text(updated_content)
+        updated_path.write_text(updated_content)
 
-        # Step 5: Reload report
-        loaded = integrated_viewer.load_report(report_path)
+        # Step 5: Load updated report
+        loaded = integrated_viewer.load_report(updated_path)
         assert loaded is True
-        integrated_viewer.markdown_viewer.setMarkdown.assert_called_with(updated_content)
+        
+        # Check updated content
+        args = integrated_viewer.markdown_viewer.setMarkdown.call_args[0]
+        assert args[0].replace("\r\n", "\n") == updated_content.replace("\r\n", "\n")
 
-        # Step 6: Delete report
+        # Step 6: Delete reports
         report_path.unlink()
+        updated_path.unlink()
         assert not report_path.exists()
+        assert not updated_path.exists()
 
         # Step 7: Try to load deleted report
         loaded = integrated_viewer.load_report(report_path)

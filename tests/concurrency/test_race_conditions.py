@@ -42,7 +42,6 @@ class TestRaceConditionPrevention:
                 self.crash_logs_worker = None
                 self.game_files_thread = None
                 self.game_files_worker = None
-                self.audio_player = MagicMock()
                 self.scan_button_group = MagicMock()
                 self.papyrus_button = None
 

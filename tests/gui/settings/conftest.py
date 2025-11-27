@@ -40,9 +40,10 @@ def settings_dialog(app):
     # Initialize message handler for GUI mode
     handler = init_message_handler(parent=None, is_gui_mode=True)
 
-    # Mock the message signal to prevent actual dialog creation
-    # This prevents blocking dialogs during tests
-    handler.message_signal = MagicMock()
+    # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
+    # The _gui_backend.show() method emits a signal that triggers _handle_message()
+    # which calls msg_box.exec() - a blocking modal dialog
+    handler._gui_backend.show = MagicMock()
 
     # Create dialog as NON-MODAL to prevent freezing in tests
     dialog = SettingsDialog(yaml_store=YAML.TEST, modal=False)
@@ -57,7 +58,6 @@ def reset_settings():
     """Reset settings to default values after test."""
     yield
     # Reset to defaults after test
-    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications", True)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", False)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs", False)

@@ -12,7 +12,6 @@ from PySide6.QtCore import QObject, Signal, Slot
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.Update import UpdateCheckError, is_latest_version
-from ClassicLib.YamlSettingsCache import classic_settings
 
 
 class CrashLogsScanWorker(QObject):
@@ -20,39 +19,30 @@ class CrashLogsScanWorker(QObject):
     Handles crash log scanning tasks with asynchronous mechanisms and emits relevant signals
     for feedback.
 
-    This class is responsible for executing crash log scans, managing related notifications, and
-    handling errors. It utilizes PyQt's signal-slot system to communicate the success or failure
+    This class is responsible for executing crash log scans and handling errors.
+    It utilizes PyQt's signal-slot system to communicate the success or failure
     of the scanning process and ensures signals are emitted appropriately for user or application
     response. The scanning is performed asynchronously to avoid blocking the main thread.
 
     Attributes:
         finished (Signal): Signal emitted when the scan process finishes, irrespective of its success
             or failure.
-        notify_sound_signal (Signal): Signal emitted to notify that a success notification sound
-            should be played.
-        error_sound_signal (Signal): Signal emitted to notify that an error notification sound
-            should be played.
         error_occurred (Signal): Signal emitted when an error occurs in the scanning process. It
             includes title, message, and details as arguments.
-        custom_sound_signal (Signal): Signal emitted when a custom notification sound needs
-            to be played.
     """
 
     finished: Signal = Signal()
-    notify_sound_signal: Signal = Signal()
-    error_sound_signal: Signal = Signal()
     error_occurred: Signal = Signal(str, str, str)  # (title, message, details)
-    custom_sound_signal: Signal = Signal(str)  # In case a custom sound needs to be played
 
     # noinspection PyBroadException
 
     @Slot()
     def run(self) -> None:
         """
-        Executes the main logic of the function, performing a scan for crash logs
-        and playing a success notification upon completion. In case of an error
-        during the scan, the error is handled appropriately. Once the process
-        is complete, emits a signal to indicate the operation is finished.
+        Executes the main logic of the function, performing a scan for crash logs.
+
+        In case of an error during the scan, the error is handled appropriately.
+        Once the process is complete, emits a signal to indicate the operation is finished.
 
         Raises:
             Exception: Propagates any unexpected exception encountered during
@@ -61,7 +51,6 @@ class CrashLogsScanWorker(QObject):
         # noinspection PyShadowingNames
         try:
             self._perform_crash_logs_scan()
-            self._play_success_notification()
         except Exception as e:  # noqa: BLE001
             self._handle_scan_error(e)
         finally:
@@ -153,32 +142,17 @@ class CrashLogsScanWorker(QObject):
             f"Scan completed - perf_counter: {perf_elapsed:.2f}s, wall_clock: {wall_elapsed:.2f}s, datetime: {datetime_elapsed:.2f}s"
         )
 
-    def _play_success_notification(self) -> None:
-        """
-        Plays the success notification sound by emitting the notify_sound_signal.
-
-        This function is used to trigger a success notification sound in the
-        application by emitting the associated signal.
-
-        Raises:
-            No exceptions are explicitly raised by this method.
-        """
-        self.notify_sound_signal.emit()  # type: ignore
-
     def _handle_scan_error(self, error: Exception) -> None:
         """
-        Handles errors that occur during the crash log scanning process. This includes
-        logging the error, preparing detailed error information, and managing user
-        notifications such as dialog messages or audio signals.
+        Handles errors that occur during the crash log scanning process.
+
+        This includes logging the error, preparing detailed error information,
+        and emitting signals for dialog display.
 
         Args:
             error (Exception): The exception instance that triggered the error
-                during the scan. This will be used to log the error message, prepare
-                dialog details, and re-raise the exception if necessary.
-
-        Raises:
-            Exception: Re-raises the original error if audio notifications are
-                disabled in user settings.
+                during the scan. This will be used to log the error message and
+                prepare dialog details.
         """
         logger.error(f"Crash logs scan failed: {error!s}")
 
@@ -190,51 +164,32 @@ class CrashLogsScanWorker(QObject):
         # Always emit error details for dialog display
         self.error_occurred.emit(title, message, details)  # type: ignore
 
-        # Handle audio notification based on user settings
-        audio_notifications_enabled: bool | None = classic_settings(bool, "Audio Notifications")
-        if audio_notifications_enabled:
-            self.error_sound_signal.emit()  # type: ignore
-        else:
-            raise error
-
 
 # noinspection PyBroadException
 class GameFilesScanWorker(QObject):
     """
-    Worker class responsible for scanning game files and providing notifications.
+    Worker class responsible for scanning game files.
 
-    This class handles the game files scanning process, processes the results,
-    and triggers appropriate signals for status updates and audio notifications.
-    Its primary purpose is to manage the workflow for scanning game files,
-    notifying success or errors, and emitting associated signals for user
-    interfaces or other subscribers.
+    This class handles the game files scanning process and error handling.
+    Its primary purpose is to manage the workflow for scanning game files
+    and emitting associated signals for user interfaces or other subscribers.
 
     Attributes:
         scan_finished (Signal): Signal emitted when the scanning process is
             completed, regardless of success or failure.
-        play_success_sound (Signal): Signal emitted to play a success notification
-            sound.
-        play_error_sound (Signal): Signal emitted to play an error notification
-            sound.
         error_occurred (Signal): Signal emitted when an error occurs, providing
             error details (title, message, and traceback details).
-        play_custom_sound (Signal): Signal emitted to play a custom sound, where
-            the string parameter specifies the sound file or identifier.
     """
 
     scan_finished: Signal = Signal()
-    play_success_sound: Signal = Signal()
-    play_error_sound: Signal = Signal()
     error_occurred: Signal = Signal(str, str, str)  # (title, message, details)
-    play_custom_sound: Signal = Signal(str)
 
     @Slot()
     def run(self) -> None:
         """
-        Executes the main process for running and finalizing game result processing.
+        Executes the main process for running game file scanning.
 
-        Executes the processing of game results and notifies about the success upon
-        completion. Handles any exceptions that occur during the execution, ensuring
+        Handles any exceptions that occur during the execution, ensuring
         that errors are properly managed. Always emits a signal indicating the scan
         has finished, regardless of success or error.
 
@@ -244,7 +199,6 @@ class GameFilesScanWorker(QObject):
         """
         try:
             self._process_game_results_scan()
-            self._notify_success()
         except Exception as e:  # noqa: BLE001
             self._handle_error(e)
         finally:
@@ -302,26 +256,12 @@ class GameFilesScanWorker(QObject):
             f"datetime: {datetime_elapsed:.2f}s"
         )
 
-    def _notify_success(self) -> None:
-        """
-        Notifies success by emitting a signal to play a success sound.
-
-        This method is used to indicate the successful completion of an
-        operation by emitting the `play_success_sound` signal.
-
-        Raises:
-            TypeError: If signal type is incompatible during runtime.
-        """
-        self.play_success_sound.emit()  # type: ignore
-
     def _handle_error(self, error: Exception) -> None:
         """
         Handles errors that occur during the game files scanning process.
 
         This method logs the error details, prepares them for display in a dialog,
-        emits the error information, and optionally handles audio notifications
-        based on user settings. In the absence of audio notifications, the
-        error is raised.
+        and emits the error information.
 
         Args:
             error (Exception): The exception that occurred during the game files
@@ -336,12 +276,6 @@ class GameFilesScanWorker(QObject):
 
         # Always emit error details for dialog display
         self.error_occurred.emit(title, message, details)  # type: ignore
-
-        # Handle audio notification based on user settings
-        if classic_settings(bool, "Audio Notifications"):
-            self.play_error_sound.emit()  # type: ignore
-        else:
-            raise error
 
 
 class UpdateCheckWorker(QObject):

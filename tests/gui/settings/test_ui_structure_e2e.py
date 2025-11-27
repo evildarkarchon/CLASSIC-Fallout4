@@ -26,10 +26,10 @@ class TestEdgeCases:
         """Test that multiple dialog instances don't interfere."""
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.audio_checkbox.setChecked(True)
-        dialog2.audio_checkbox.setChecked(False)
-        assert dialog1.audio_checkbox.isChecked()
-        assert not dialog2.audio_checkbox.isChecked()
+        dialog1.vr_checkbox.setChecked(True)
+        dialog2.vr_checkbox.setChecked(False)
+        assert dialog1.vr_checkbox.isChecked()
+        assert not dialog2.vr_checkbox.isChecked()
         dialog1.close()
         dialog2.close()
 

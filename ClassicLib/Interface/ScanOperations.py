@@ -17,7 +17,6 @@ from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorke
 from ClassicLib.Logger import logger
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.Audio import AudioPlayer
     from ClassicLib.Interface.ThreadManager import ThreadManager
 
 
@@ -30,7 +29,6 @@ class ScanOperationsMixin:
         _scan_mutex: QMutex for thread safety during scan operations.
         _running_scans: Set tracking currently running scan operation names.
         thread_manager: ThreadManager instance for thread lifecycle management.
-        audio_player: AudioPlayer instance for completion sounds.
         scan_button_group: QButtonGroup containing scan action buttons.
         papyrus_button: QPushButton for Papyrus monitoring toggle.
         crash_logs_thread: QThread for crash logs scanning (or None).
@@ -44,7 +42,6 @@ class ScanOperationsMixin:
         _scan_mutex: QtCore.QMutex
         _running_scans: set[str]
         thread_manager: ThreadManager
-        audio_player: AudioPlayer
         scan_button_group: QtWidgets.QButtonGroup
         papyrus_button: QtWidgets.QPushButton | None
         crash_logs_thread: QtCore.QThread | None
@@ -95,8 +92,6 @@ class ScanOperationsMixin:
             return
 
         # Connect signals
-        self.crash_logs_worker.notify_sound_signal.connect(self.audio_player.play_notify_signal.emit)  # type: ignore
-        self.crash_logs_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
         self.crash_logs_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
 
         self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
@@ -150,7 +145,6 @@ class ScanOperationsMixin:
             return
 
         # Connect signals
-        self.game_files_worker.error_sound_signal.connect(self.audio_player.play_error_signal.emit)  # type: ignore
         self.game_files_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
 
         self.game_files_thread.started.connect(self.game_files_worker.run)

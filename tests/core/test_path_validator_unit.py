@@ -66,7 +66,8 @@ class TestPathValidator:
         mock_is_valid.return_value = True
         test_path = Path("C:/Users/Test/Documents")
         assert PathValidator.is_restricted_path(test_path) is False
-        mock_is_valid.assert_called_once_with(str(test_path))
+        # The implementation passes the Path object directly
+        mock_is_valid.assert_called_once_with(test_path)
 
     @patch.object(PathValidator, "validate_custom_scan_path")
     @patch("ClassicLib.PathValidator.logger")

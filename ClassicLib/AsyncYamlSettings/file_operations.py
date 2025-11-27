@@ -133,7 +133,7 @@ class YamlFileOperations:
 
         match yaml_store:
             case YAML.Settings:
-                return base_path / "CLASSIC Settings.yaml"
+                return base_path.parent / "CLASSIC Settings.yaml"
             case YAML.Main:
                 return base_path / "databases" / "CLASSIC Main.yaml"
             case YAML.Ignore:

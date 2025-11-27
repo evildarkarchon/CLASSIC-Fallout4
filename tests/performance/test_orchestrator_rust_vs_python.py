@@ -8,6 +8,7 @@ when using Rust acceleration.
 
 import asyncio
 import time
+import tracemalloc
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -152,6 +153,7 @@ PLUGINS:
     @pytest.mark.performance
     @pytest.mark.rust
     @pytest.mark.asyncio
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Tracemalloc overhead affects performance measurements")
     async def test_single_log_processing_performance(
         self,
         python_orchestrator: OrchestratorCore,

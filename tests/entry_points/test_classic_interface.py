@@ -387,8 +387,6 @@ class TestClassicInterface:
         assert hasattr(window, "thread_manager")
         assert window.thread_manager is mock_thread_manager
         mock_get_thread_manager.assert_called_once()
-        assert hasattr(window, "audio_player")
-        assert window.audio_player is not None
         assert hasattr(window, "_scan_mutex")
         assert window._scan_mutex is not None
         assert hasattr(window, "_running_scans")

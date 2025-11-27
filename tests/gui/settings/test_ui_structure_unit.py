@@ -44,8 +44,6 @@ class TestDialogStructure:
 
     def test_general_tab_widgets(self, settings_dialog):
         """Test that General tab has correct widgets."""
-        assert hasattr(settings_dialog, "audio_checkbox")
-        assert settings_dialog.audio_checkbox.text() == "Audio Notifications"
         assert hasattr(settings_dialog, "vr_checkbox")
         assert settings_dialog.vr_checkbox.text() == "VR Mode"
 
@@ -81,9 +79,8 @@ class TestDialogStructure:
 
     def test_settings_widgets_dictionary(self, settings_dialog):
         """Test that settings_widgets dictionary is properly populated."""
-        assert len(settings_dialog.settings_widgets) == 9
+        assert len(settings_dialog.settings_widgets) == 8
         expected_keys = [
-            "audio_notifications",
             "vr_mode",
             "fcx_mode",
             "simplify_logs",
@@ -102,7 +99,6 @@ class TestTooltips:
 
     def test_tooltips_present(self, settings_dialog):
         """Test that all widgets have tooltips."""
-        assert settings_dialog.audio_checkbox.toolTip() != ""
         assert settings_dialog.vr_checkbox.toolTip() != ""
         assert settings_dialog.fcx_checkbox.toolTip() != ""
         assert settings_dialog.simplify_checkbox.toolTip() != ""
@@ -114,5 +110,5 @@ class TestTooltips:
 
     def test_tooltip_content_meaningful(self, settings_dialog):
         """Test that tooltips contain meaningful descriptions."""
-        assert len(settings_dialog.audio_checkbox.toolTip()) > len(settings_dialog.audio_checkbox.text())
+        assert len(settings_dialog.vr_checkbox.toolTip()) > len(settings_dialog.vr_checkbox.text())
         assert len(settings_dialog.fcx_checkbox.toolTip()) > len(settings_dialog.fcx_checkbox.text())

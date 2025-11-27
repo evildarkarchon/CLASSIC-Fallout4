@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import platform
 import sys
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -135,6 +136,7 @@ class TestPathValidatorRustIntegration:
         assert isinstance(PathValidator.is_valid_path(tmp_path), bool)
 
     @pytest.mark.performance
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Tracemalloc overhead affects performance measurements")
     def test_rust_acceleration_performance(self, tmp_path: Path):
         """Test Rust acceleration performance.
 

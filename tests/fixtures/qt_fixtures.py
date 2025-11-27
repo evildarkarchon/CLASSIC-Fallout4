@@ -126,9 +126,10 @@ def gui_message_handler(qt_parent_widget):
         # Initialize in GUI mode with parent widget
         handler = init_message_handler(parent=qt_parent_widget, is_gui_mode=True)
 
-        # Mock the message signal to prevent actual dialog creation
-        # This prevents blocking dialogs during tests
-        handler.message_signal = MagicMock()
+        # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
+        # The _gui_backend.show() method emits a signal that triggers _handle_message()
+        # which calls msg_box.exec() - a blocking modal dialog
+        handler._gui_backend.show = MagicMock()
 
         yield handler
     finally:

@@ -45,12 +45,10 @@ class TestDialogAcceptReject:
 
     def test_accept_multiple_changes(self, settings_dialog, reset_settings):
         """Test accepting dialog with multiple setting changes."""
-        settings_dialog.audio_checkbox.setChecked(False)
         settings_dialog.vr_checkbox.setChecked(True)
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("GitHub")
         settings_dialog.accept()
-        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Audio Notifications")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "GitHub"

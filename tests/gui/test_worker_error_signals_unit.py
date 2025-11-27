@@ -39,10 +39,7 @@ class TestCrashLogsScanWorkerErrorSignals:
 
         # Mock the scan to raise an exception
         test_error = RuntimeError("Test scan failure")
-        with (
-            patch.object(worker, "_perform_crash_logs_scan", side_effect=test_error),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
-        ):
+        with patch.object(worker, "_perform_crash_logs_scan", side_effect=test_error):
             # Run the worker
             worker.run()
 
@@ -70,10 +67,7 @@ class TestCrashLogsScanWorkerErrorSignals:
         worker.error_occurred.connect(capture_details)
 
         # Mock scan with exception
-        with (
-            patch.object(worker, "_perform_crash_logs_scan", side_effect=ValueError("Bad value")),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
-        ):
+        with patch.object(worker, "_perform_crash_logs_scan", side_effect=ValueError("Bad value")):
             worker.run()
             # qtbot.wait(100)
 
@@ -82,58 +76,6 @@ class TestCrashLogsScanWorkerErrorSignals:
         assert "Traceback" in error_details
         assert "ValueError: Bad value" in error_details
         assert "_perform_crash_logs_scan" in error_details  # Function name in traceback
-
-    def test_audio_signal_still_emitted_with_error_occurred(self, worker, qtbot):
-        """Test that error_sound_signal is still emitted alongside error_occurred."""
-        audio_emitted = False
-        error_emitted = False
-
-        def capture_audio():
-            nonlocal audio_emitted
-            audio_emitted = True
-
-        def capture_error(title, message, details):
-            nonlocal error_emitted
-            error_emitted = True
-
-        worker.error_sound_signal.connect(capture_audio)
-        worker.error_occurred.connect(capture_error)
-
-        # Mock scan with exception and audio enabled
-        with (
-            patch.object(worker, "_perform_crash_logs_scan", side_effect=RuntimeError("Error")),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
-        ):
-            worker.run()
-            # qtbot.wait(100)
-
-        # Both signals should be emitted
-        assert audio_emitted, "Audio signal should be emitted when audio is enabled"
-        assert error_emitted, "Error dialog signal should always be emitted"
-
-    def test_error_occurred_emitted_even_when_audio_disabled(self, worker, qtbot):
-        """Test that error_occurred is emitted even when audio notifications are disabled."""
-        error_emitted = False
-
-        def capture_error(title, message, details):
-            nonlocal error_emitted
-            error_emitted = True
-
-        worker.error_occurred.connect(capture_error)
-
-        # Mock scan with exception and audio disabled
-        with (  # noqa: SIM117
-            patch.object(worker, "_perform_crash_logs_scan", side_effect=RuntimeError("Error")),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=False),
-        ):
-            # Should raise the error since audio is disabled
-            with pytest.raises(RuntimeError):
-                worker.run()
-
-            # qtbot.wait(100)
-
-        # Error dialog signal should still be emitted before re-raise
-        assert error_emitted, "Error dialog signal should be emitted even when audio disabled"
 
 
 @pytest.mark.unit
@@ -157,10 +99,7 @@ class TestGameFilesScanWorkerErrorSignals:
 
         # Mock the scan to raise an exception
         test_error = OSError("Failed to read game files")
-        with (
-            patch.object(worker, "_process_game_results_scan", side_effect=test_error),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
-        ):
+        with patch.object(worker, "_process_game_results_scan", side_effect=test_error):
             worker.run()
             # qtbot.wait(100)
 
@@ -185,10 +124,7 @@ class TestGameFilesScanWorkerErrorSignals:
 
         # Mock scan with specific error
         error_msg = "Permission denied"
-        with (
-            patch.object(worker, "_process_game_results_scan", side_effect=PermissionError(error_msg)),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
-        ):
+        with patch.object(worker, "_process_game_results_scan", side_effect=PermissionError(error_msg)):
             worker.run()
             # qtbot.wait(100)
 
@@ -214,10 +150,7 @@ class TestGameFilesScanWorkerErrorSignals:
         worker.error_occurred.connect(capture_error)
 
         # Mock scan with exception
-        with (
-            patch.object(worker, "_process_game_results_scan", side_effect=RuntimeError("Error")),
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
-        ):
+        with patch.object(worker, "_process_game_results_scan", side_effect=RuntimeError("Error")):
             worker.run()
             # qtbot.wait(100)
 

@@ -29,13 +29,11 @@ class MainWindowFixture(ScanOperationsMixin, QMainWindow):
         super().__init__()
         from PySide6.QtCore import QMutex
 
-        from ClassicLib.Interface.Audio import AudioPlayer
         from ClassicLib.Interface.ThreadManager import ThreadManager
 
         self._scan_mutex = QMutex()
         self._running_scans = set()
         self.thread_manager = ThreadManager()
-        self.audio_player = AudioPlayer()
         self.scan_button_group = QButtonGroup()
         self.papyrus_button = None
         self.crash_logs_thread = None
@@ -135,16 +133,9 @@ class TestScanErrorDialogIntegration:
         """Mock classic_settings globally to prevent YAML operations."""
         # Mock classic_settings at all import locations
         with (
-            patch("ClassicLib.Interface.Workers.classic_settings", return_value=True),
             patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=True),
-            patch("ClassicLib.Interface.Audio.classic_settings", return_value=True),
         ):
             yield
-
-    @pytest.fixture
-    def mock_settings(self):
-        """Mock classic_settings to return True for audio notifications."""
-        return Mock(return_value=True)
 
     def test_crash_logs_worker_error_triggers_dialog(self, main_window, qtbot, mock_scan_failure):
         """Test that error dialog is shown when error_occurred signal is emitted.
@@ -245,32 +236,6 @@ class TestScanErrorDialogIntegration:
             call_kwargs = mock_dialog_class.call_args[1]
             assert call_kwargs["parent"] == main_window
 
-    def test_both_audio_and_dialog_signals_work(self, main_window, qtbot, mock_settings):
-        """Test that both audio signal and error dialog signal are emitted by worker error handler."""
-        audio_emitted = False
-        dialog_shown = False
-
-        def audio_callback():
-            nonlocal audio_emitted
-            audio_emitted = True
-
-        def dialog_callback(title, message, details):
-            nonlocal dialog_shown
-            dialog_shown = True
-
-        with patch("ClassicLib.Interface.Workers.classic_settings", mock_settings):
-            worker = CrashLogsScanWorker()
-
-            worker.error_sound_signal.connect(audio_callback)
-            worker.error_occurred.connect(dialog_callback)
-
-            # Directly call the worker's error handler to test signal emissions
-            worker._handle_scan_error(RuntimeError("Simulated scan failure"))
-            # qtbot.wait(100)
-
-            assert audio_emitted, "Audio signal should be emitted"
-            assert dialog_shown, "Dialog signal should be emitted"
-
     def test_error_dialog_receives_details_for_copy_button(self, main_window, qtbot):
         """Test that error dialog receives details (enabling copy button).
 
@@ -297,7 +262,7 @@ class TestScanErrorDialogIntegration:
         assert len(dialog_data["details"]) > 0
         assert "traceback" in dialog_data["details"]
 
-    def test_multiple_errors_show_multiple_dialogs(self, main_window, qtbot, mock_scan_failure, mock_settings):
+    def test_multiple_errors_show_multiple_dialogs(self, main_window, qtbot, mock_scan_failure):
         """Test that multiple errors result in multiple dialog displays."""
         dialog_count = 0
 

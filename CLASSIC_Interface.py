@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.Interface.Audio import AudioPlayer
 from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
 from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
 from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
@@ -116,7 +115,6 @@ class MainWindow(
         """
         super().__init__()
         self.thread_manager = get_thread_manager()
-        self.audio_player = AudioPlayer()
         self.scan_button_group = QButtonGroup()
         self.papyrus_monitor_thread: QThread | None = None
         self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None

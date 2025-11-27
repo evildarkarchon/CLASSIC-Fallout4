@@ -174,6 +174,7 @@ def async_bridge() -> Generator[Any, None, None]:
 
 def _cleanup_lingering_threads() -> None:
     """Cleanup any lingering AsyncBridge threads."""
+    import time
 
     from ClassicLib.AsyncBridge import AsyncBridge
 
@@ -187,17 +188,30 @@ def _cleanup_lingering_threads() -> None:
         AsyncBridge._instances.clear()
 
     # Collect AsyncBridge threads that need cleanup
+    # Try to join threads with a bit more patience
+    for _ in range(3):
+        async_bridge_threads = [
+            t
+            for t in threading.enumerate()
+            if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
+        ]
 
-    async_bridge_threads = [
-        t for t in threading.enumerate() if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
+        if not async_bridge_threads:
+            break
+
+        for thread in async_bridge_threads:
+            if thread.is_alive():
+                thread.join(timeout=0.5)
+
+    # Final check for lingering threads
+    final_threads = [
+        t
+        for t in threading.enumerate()
+        if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
     ]
 
-    for thread in async_bridge_threads:
-        if thread.is_alive():
-            thread.join(timeout=0.1)
-
-            if thread.is_alive():
-                logger.debug(f"AsyncBridge thread {thread.name} lingering after cleanup.")
+    for thread in final_threads:
+        logger.debug(f"AsyncBridge thread {thread.name} lingering after cleanup.")
 
 
 @pytest.fixture(autouse=True)
