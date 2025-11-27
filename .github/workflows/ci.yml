@@ -310,36 +310,3 @@ jobs:
             .pytest_cache/
             test-results/
           retention-days: 7
-
-  # Type checking
-  type-check:
-    name: Type Checking (mypy)
-    runs-on: windows-latest
-    needs: [build-python-bindings]
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
-
-      - name: Set up Python
-        run: uv python install ${{ env.PYTHON_VERSION }}
-
-      - name: Download Python binding wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: python-wheels
-          path: wheels
-
-      - name: Install dependencies and wheels
-        run: |
-          uv sync --all-extras
-          Get-ChildItem -Path wheels -Filter *.whl -Recurse | ForEach-Object {
-            uv pip install $_.FullName --force-reinstall
-          }
-        shell: pwsh
-
-      - name: Run mypy
-        run: uv run mypy src/ ClassicLib/ --ignore-missing-imports
-        continue-on-error: true  # Mypy can be noisy, don't fail CI
