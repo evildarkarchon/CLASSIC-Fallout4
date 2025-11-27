@@ -325,7 +325,7 @@ class AsyncBridge:
                         self._loop.run_until_complete(asyncio.wait_for(wait_for_cancellation(), timeout=0.2))
                     except TimeoutError:
                         logger.warning(f"AsyncBridge: Timeout (0.2s) waiting for tasks to cancel for thread {self._thread_id}")
-                    except Exception as e:
+                    except Exception as e:  # noqa: BLE001
                         logger.error(f"AsyncBridge: Error during task cancellation: {e}")
             except (RuntimeError, AttributeError) as e:
                 logger.debug(f"AsyncBridge: Error handling pending tasks for thread {self._thread_id}: {e}")

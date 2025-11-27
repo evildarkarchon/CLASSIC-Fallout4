@@ -34,11 +34,11 @@ class TestAsyncBridgeStress:
         yield
         # Properly shutdown all instances
         AsyncBridge._cleanup_all()
-        
+
         # Clear the instances dict
         with AsyncBridge._lock:
             AsyncBridge._instances.clear()
-            
+
         # Reset thread local storage
         if hasattr(AsyncBridge._thread_local, "instance"):
             del AsyncBridge._thread_local.instance
@@ -58,7 +58,7 @@ class TestAsyncBridgeStress:
                 bridge2 = AsyncBridge.get_instance()
                 if bridge is not bridge2:
                     errors.append(f"Bridge instance not stable for thread {thread_id}")
-                
+
                 with lock:
                     bridge_map[thread_id] = bridge
             except Exception as e:
@@ -79,10 +79,9 @@ class TestAsyncBridgeStress:
         # 1. Number of unique bridge instances should equal number of unique threads
         unique_bridges = set(id(b) for b in bridge_map.values())
         assert len(unique_bridges) == len(bridge_map), "Different threads sharing bridge instances!"
-        
+
         # 2. Should have created at least a few threads (pool size is 10)
         assert len(bridge_map) > 1, "ThreadPool didn't use multiple threads!"
-
 
     def test_heavy_concurrent_async_operations(self):
         """Test AsyncBridge with many concurrent async operations."""
@@ -379,11 +378,11 @@ class TestAsyncBridgeEdgeCases:
         yield
         # Properly shutdown all instances
         AsyncBridge._cleanup_all()
-        
+
         # Clear the instances dict
         with AsyncBridge._lock:
             AsyncBridge._instances.clear()
-            
+
         # Reset thread local storage
         if hasattr(AsyncBridge._thread_local, "instance"):
             del AsyncBridge._thread_local.instance

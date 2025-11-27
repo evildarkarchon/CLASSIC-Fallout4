@@ -97,10 +97,10 @@ class TestFormIDAnalyzerCore:
         assert "Form ID: 00ABCDEF" in formids
         assert "Form ID: FE000001" in formids
         assert "Form ID: FF000001" not in formids  # FF prefix is filtered (exceeds plugin limit)
-        
+
         # Pattern is permissive and handles "FormID:" without space
         assert len([f for f in formids if "12345678" in f]) == 1
-        
+
         # NULL FormID (0x00000000) is intentionally extracted as it indicates an error/invalid reference
         # that users need to investigate in their load order
         assert "Form ID: 00000000" in formids

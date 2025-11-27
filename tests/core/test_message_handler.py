@@ -10,7 +10,6 @@ import pytest
 
 from ClassicLib.MessageHandler import (
     CLIProgressBar,
-    Message,
     MessageHandler,
     MessageTarget,
     MessageType,
@@ -239,7 +238,7 @@ class TestThreadSafety:
             # Create handler without mocking QObject init
             # This requires PySide6 to be working in the environment
             handler = QtMessageHandler()
-            
+
             # Mock the backend signal
             handler._gui_backend.message_signal = MagicMock()
 
@@ -248,7 +247,7 @@ class TestThreadSafety:
 
             # Check signal was emitted
             handler._gui_backend.message_signal.emit.assert_called_once()
-            
+
             # Verify args
             args = handler._gui_backend.message_signal.emit.call_args[0]
             message = args[0]

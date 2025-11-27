@@ -174,7 +174,6 @@ def async_bridge() -> Generator[Any, None, None]:
 
 def _cleanup_lingering_threads() -> None:
     """Cleanup any lingering AsyncBridge threads."""
-    import time
 
     from ClassicLib.AsyncBridge import AsyncBridge
 
@@ -191,9 +190,7 @@ def _cleanup_lingering_threads() -> None:
     # Try to join threads with a bit more patience
     for _ in range(3):
         async_bridge_threads = [
-            t
-            for t in threading.enumerate()
-            if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
+            t for t in threading.enumerate() if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
         ]
 
         if not async_bridge_threads:
@@ -205,9 +202,7 @@ def _cleanup_lingering_threads() -> None:
 
     # Final check for lingering threads
     final_threads = [
-        t
-        for t in threading.enumerate()
-        if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
+        t for t in threading.enumerate() if (t.name.startswith("AsyncBridge-") or t.name.startswith("asyncio_")) and t.is_alive()
     ]
 
     for thread in final_threads:

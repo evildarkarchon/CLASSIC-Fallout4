@@ -53,49 +53,52 @@ Note:
     with FileIOCore for optimal performance.
 """
 
+from pathlib import Path
+from typing import Any
+
 from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.integration.factory import get_file_io
 
 
 # Helper to get core lazily
-def _core():
+def _core() -> Any:
     return get_file_io()
 
 
 # Define async delegates
-async def _read_file(path):
+async def _read_file(path: Path | str) -> str:
     return await _core().read_file(path)
 
 
-async def _read_lines(path):
+async def _read_lines(path: Path | str) -> list[str]:
     return await _core().read_lines(path)
 
 
-async def _read_bytes(path):
+async def _read_bytes(path: Path | str) -> bytes:
     return await _core().read_bytes(path)
 
 
-async def _write_file(path, content):
+async def _write_file(path: Path | str, content: str) -> None:
     return await _core().write_file(path, content)
 
 
-async def _write_lines(path, lines):
+async def _write_lines(path: Path | str, lines: list[str]) -> None:
     return await _core().write_lines(path, lines)
 
 
-async def _write_bytes(path, content):
+async def _write_bytes(path: Path | str, content: bytes) -> None:
     return await _core().write_bytes(path, content)
 
 
-async def _read_crash_log(path):
+async def _read_crash_log(path: Path | str) -> list[str]:
     return await _core().read_crash_log(path)
 
 
-async def _write_crash_report(path, lines):
+async def _write_crash_report(path: Path | str, lines: list[str]) -> None:
     return await _core().write_crash_report(path, lines)
 
 
-async def _append_file(path, content):
+async def _append_file(path: Path | str, content: str) -> None:
     return await _core().append_file(path, content)
 
 

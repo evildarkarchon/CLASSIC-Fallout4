@@ -423,10 +423,11 @@ class ResultsViewerMixin:
                 content = read_file_sync(report_path)
                 self.markdown_viewer.setPlainText(content)
                 QTimer.singleShot(0, lambda: msg_warning("Displayed report as plain text due to markdown error"))
-                return True  # Fallback succeeded
             except Exception as fallback_e:  # noqa: BLE001
                 logger.error(f"Fallback plain text also failed: {fallback_e}")
                 return False
+            else:
+                return True  # Fallback succeeded
         else:
             logger.debug(f"Successfully loaded report: {report_path.name}")
             return True

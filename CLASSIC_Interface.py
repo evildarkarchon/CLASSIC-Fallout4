@@ -239,8 +239,8 @@ def main() -> None:
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=True)
-    manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
-    game_path_gui: Any = GlobalRegistry.get_game_path_gui()
+    _manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
+    _game_path_gui: Any = GlobalRegistry.get_game_path_gui()
     window: MainWindow | None = None  # Initialize window to ensure it's defined
     try:
         window = MainWindow()

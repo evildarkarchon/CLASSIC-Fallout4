@@ -5,7 +5,6 @@ and deletion with real file operations.
 """
 
 import os
-import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -88,7 +87,7 @@ class TestReportLifecycleIntegration:
         loaded = integrated_viewer.load_report(report_path)
         assert loaded is True
         assert integrated_viewer.current_report_path == report_path
-        
+
         # Check content with newline normalization for Windows compatibility
         args = integrated_viewer.markdown_viewer.setMarkdown.call_args[0]
         assert args[0].replace("\r\n", "\n") == original_content.replace("\r\n", "\n")
@@ -101,7 +100,7 @@ class TestReportLifecycleIntegration:
         # Step 5: Load updated report
         loaded = integrated_viewer.load_report(updated_path)
         assert loaded is True
-        
+
         # Check updated content
         args = integrated_viewer.markdown_viewer.setMarkdown.call_args[0]
         assert args[0].replace("\r\n", "\n") == updated_content.replace("\r\n", "\n")

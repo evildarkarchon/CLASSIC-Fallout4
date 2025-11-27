@@ -13,11 +13,11 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from ClassicLib.ResourceLoader import ResourceLoader
-from ClassicLib.rust_loader import is_rust_available
+from ClassicLib.ResourceLoader import ResourceLoader  # noqa: E402
+from ClassicLib.rust_loader import is_rust_available  # noqa: E402
 
 
-def main():
+def main() -> None:
     """Demonstrate Rust extension loading and usage."""
     print("=" * 60)
     print("CLASSIC-Fallout4 Rust Extension Demo")

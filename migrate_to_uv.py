@@ -329,7 +329,7 @@ def main() -> int:
     except KeyboardInterrupt:
         print_error("\nMigration interrupted by user.")
         return 1
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         print_error(f"Unexpected error: {e}")
         return 1
     else:

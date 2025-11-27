@@ -729,9 +729,10 @@ class FileIOCore:
         path = self._ensure_path(path)
         try:
             stat = path.stat()
-            return {"size": stat.st_size, "created": stat.st_ctime, "modified": stat.st_mtime}
-        except Exception as e:
+        except OSError as e:
             return {"error": str(e)}
+        else:
+            return {"size": stat.st_size, "created": stat.st_ctime, "modified": stat.st_mtime}
 
     async def read_crash_log(self, path: Path | str) -> list[str]:
         """

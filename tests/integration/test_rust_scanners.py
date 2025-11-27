@@ -47,7 +47,7 @@ class TestRustBA2Scanner:
     def test_ba2_scanner_batch_with_multiple_files(self, temp_dir):
         """Test batch scanning with multiple archives."""
         scanner = scangame_factory.get_ba2_scanner()
-        
+
         # Create fake archives
         archives = []
         for i in range(3):

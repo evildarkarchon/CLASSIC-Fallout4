@@ -193,6 +193,55 @@ extend-select = [
 [tool.ruff.lint.flake8-tidy-imports]
 # Disallow all relative imports.
 ban-relative-imports = "all"
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = [
+    "PLR6301",  # Method could be static - tests use self for fixtures
+    "ARG001",   # Unused function argument - pytest fixtures
+    "ARG002",   # Unused method argument - pytest fixtures
+    "ARG005",   # Unused lambda argument - test mocking
+    "RUF029",   # Async without await - test fixtures
+    "ANN001",   # Missing type annotation for argument
+    "ANN201",   # Missing return type annotation
+    "ANN202",   # Missing return type for private function
+    "ANN204",   # Missing return type for __init__
+    "PT011",    # pytest.raises too broad
+    "PT012",    # pytest.raises with multiple statements
+    "PT017",    # assert in except block
+]
+"tests/conftest.py" = ["ANN001", "ANN201", "ANN202"]
+"tests/fixtures/**/*.py" = ["ANN001", "ANN201", "ANN202"]
+"install_requirements.py" = ["PLR0912"]  # Utility script with many branches
+"tools/**/*.py" = [
+    "PLR6301",  # Method could be static - dev tools
+    "ANN001",   # Missing type annotation for argument
+    "ANN002",   # Missing type annotation for *args
+    "ANN003",   # Missing type annotation for **kwargs
+    "ANN201",   # Missing return type annotation
+    "ANN202",   # Missing return type for private function
+    "ANN204",   # Missing return type for special method
+    "PLR1702",  # Too many nested blocks - complex analysis tools
+    "PLR0912",  # Too many branches - complex analysis tools
+    "PLR1714",  # Merge multiple comparisons
+    "PLR6201",  # Use set literal for membership - dev tools
+    "PERF401",  # Use list comprehension - dev tools, clarity over perf
+    "BLE001",   # Blind exception - dev tools need robust error handling
+    "B905",     # zip without strict - dev tools
+    "SIM105",   # contextlib.suppress - dev tools
+    "SIM108",   # Ternary operator - dev tools, clarity over brevity
+    "TC003",    # Type checking imports
+    "RUF013",   # Implicit Optional
+    "RET504",   # Unnecessary assignment
+    "RUF059",   # Unused variable
+    "RUF100",   # Unused noqa
+    "F401",     # Unused import - conditional imports in dev tools
+    "ARG002",   # Unused argument - dev tool APIs
+    "TRY300",   # Return in try block - dev tools
+    "PLW1514",  # Missing encoding - dev tools
+    "FURB171",  # Single-item membership test - dev tools
+    "FURB122",  # f.write in loop - dev tools
+]
+
 [tool.coverage.run]
 source = ["."]
 omit = [

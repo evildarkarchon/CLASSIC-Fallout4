@@ -124,7 +124,7 @@ class PathValidator:
             # Use the existing utility function to check if path is valid
             # (returns False for restricted paths)
             return not is_valid_custom_scan_path(path)
-        except Exception:
+        except Exception:  # noqa: BLE001
             # If there's any error checking, consider it restricted
             return True
 

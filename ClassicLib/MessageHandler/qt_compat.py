@@ -22,10 +22,8 @@ except ImportError:
     class QObject:
         """Stub for QObject when PySide6 is not available."""
 
-
     class QWidget:
         """Stub for QWidget when PySide6 is not available."""
-
 
     class QThread:
         """Stub for QThread when PySide6 is not available."""

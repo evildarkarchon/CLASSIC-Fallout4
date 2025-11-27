@@ -7,7 +7,7 @@ signal connections and error dialog presentation.
 # ruff: noqa: ANN201, ANN001, ARG001, ANN204, PLR6301, ARG002, ANN202, ANN002, ANN003, ANN205
 
 import os
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 

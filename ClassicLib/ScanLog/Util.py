@@ -247,11 +247,11 @@ def is_valid_custom_scan_path(path: Path | str | None) -> bool:
     # Add Windows system directories if on Windows
     if platform.system() == "Windows":
         # Get environment variables for system paths
-        system_root = os.environ.get("SystemRoot", r"C:\Windows")
-        program_files = os.environ.get("ProgramFiles", r"C:\Program Files")
-        program_files_x86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")
-        program_data = os.environ.get("ProgramData", r"C:\ProgramData")
-        system_drive = os.environ.get("SystemDrive", "C:")
+        system_root = os.environ.get("SystemRoot", r"C:\Windows")  # noqa: SIM112
+        program_files = os.environ.get("ProgramFiles", r"C:\Program Files")  # noqa: SIM112
+        program_files_x86 = os.environ.get("ProgramFiles(x86)", r"C:\Program Files (x86)")  # noqa: SIM112
+        program_data = os.environ.get("ProgramData", r"C:\ProgramData")  # noqa: SIM112
+        system_drive = os.environ.get("SystemDrive", "C:")  # noqa: SIM112
 
         # Add Windows restricted directories
         windows_restricted: list[Path | None] = [

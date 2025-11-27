@@ -145,7 +145,7 @@ SIZE_DEPENDENT_OPERATIONS = {
 # -----------------------------------------------------------------------------
 
 
-async def gather_with_concurrency(max_concurrent: int, *coros: Awaitable[T]) -> list[T]:
+async def gather_with_concurrency[T](max_concurrent: int, *coros: Awaitable[T]) -> list[T]:
     """
     Executes multiple asynchronous coroutine tasks concurrently, limiting the number of tasks allowed
     to run at the same time to the specified maximum concurrency.
@@ -167,7 +167,7 @@ async def gather_with_concurrency(max_concurrent: int, *coros: Awaitable[T]) -> 
     return await asyncio.gather(*[bounded_coro(c) for c in coros])
 
 
-async def run_in_executor(func: Callable[..., R], *args: Any, executor: Executor | None = None, **kwargs: Any) -> R:
+async def run_in_executor[R](func: Callable[..., R], *args: Any, executor: Executor | None = None, **kwargs: Any) -> R:
     """
     Executes a given function in a separate thread or process pool using an executor.
 
@@ -275,7 +275,7 @@ class ExecutorDecisionMaker:
         return await self._run_with_executor()
 
 
-async def smart_run_in_executor(
+async def smart_run_in_executor[R](
     func: Callable[..., R],
     *args: Any,
     threshold_bytes: int = 1024,  # 1KB threshold for I/O operations

@@ -30,7 +30,8 @@ class RustExtensionLoader:
         self.load_path = None
         self.search_paths = []
 
-    def is_loaded(self) -> bool:
+    @staticmethod
+    def is_loaded() -> bool:
         """Check if any Rust components are available."""
         components = detect_rust_components()
         return any(components.values())
