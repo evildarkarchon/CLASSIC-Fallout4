@@ -16,7 +16,7 @@ from ClassicLib import GlobalRegistry, MessageTarget, msg_info, msg_progress_con
 from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler.progress_context import ProgressContext
+from ClassicLib.MessageHandler.progress.context import ProgressContext
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -159,7 +159,7 @@ class ScanLogsExecutor:
         # Create result object
         result = ScanResult(stats=self.statistics)
 
-        msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CLI_ONLY)
+        msg_info("SCANNING CRASH LOGS, PLEASE WAIT...", target=MessageTarget.CONSOLE)
 
         # Ensure yamldata is initialized
         if self.yamldata is None:

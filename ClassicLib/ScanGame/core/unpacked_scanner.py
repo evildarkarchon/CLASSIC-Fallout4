@@ -102,7 +102,7 @@ class UnpackedModsScanner:
         if not TEST_MODE:
             backup_path.mkdir(parents=True, exist_ok=True)  # noqa: ASYNC240
 
-        msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING ASYNC MOD FILES SCAN...", target=MessageTarget.CLI_ONLY)
+        msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING ASYNC MOD FILES SCAN...", target=MessageTarget.CONSOLE)
 
         # Filter names for cleanup
         filter_names: tuple = ("readme", "changes", "changelog", "change log")
