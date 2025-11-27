@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from operator import itemgetter
 from pathlib import Path
@@ -57,18 +58,21 @@ class ScanWorker(QObject):
         Runs the appropriate scan based on the configured scan_type.
         Emits the finished signal on success or the error signal on failure.
         This method is intended to be called from a QThread.
+
+        Note:
+            Uses asyncio.run() directly since we're in a QThread worker.
+            AsyncBridge is designed for the main Qt thread and creates
+            threading conflicts when used from QThread workers (it spawns
+            a plain Python thread which can't use Qt timers).
         """
         try:
             if self.scan_type == "crashlogs":
                 executor = ScanLogsExecutor()
-                executor.scan_sync()
+                # Use asyncio.run() directly - we're in a QThread worker
+                asyncio.run(executor.execute_scan())
             elif self.scan_type == "gamefiles":
-                # Create a wrapper for the async function
-                async def run_game_scan() -> None:
-                    await write_combined_results_async()
-
-                bridge = AsyncBridge.get_instance()
-                bridge.run_async(run_game_scan())
+                # Use asyncio.run() directly - we're in a QThread worker
+                asyncio.run(write_combined_results_async())
 
             self.finished.emit()
         except Exception as e:  # noqa: BLE001

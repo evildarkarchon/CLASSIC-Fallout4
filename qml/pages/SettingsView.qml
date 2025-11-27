@@ -32,11 +32,6 @@ Item {
                 ColumnLayout {
                     anchors.fill: parent
                     ToggleSwitch {
-                        text: "Audio Notifications"
-                        checked: backend.audioNotifications
-                        onToggled: backend.audioNotifications = checked
-                    }
-                    ToggleSwitch {
                         text: "VR Mode"
                         checked: backend.vrMode
                         onToggled: backend.vrMode = checked

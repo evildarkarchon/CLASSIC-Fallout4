@@ -88,12 +88,17 @@ class QtMessageHandler(MessageHandler, QObject):
         return self._gui_backend
 
     def create_progress_handler(self) -> ProgressHandler:
-        """Create a Qt progress handler.
+        """Get the Qt progress handler.
+
+        Returns the pre-created QtProgressHandler to ensure thread safety.
+        Creating a new handler from a worker thread would cause the QObject
+        to be associated with that thread, breaking cross-thread signal
+        delivery and causing Qt widgets to be created on the wrong thread.
 
         Returns:
             QtProgressHandler for Qt progress dialogs.
         """
-        return QtProgressHandler(self._parent_widget)
+        return self._qt_progress
 
     def show(self, message: Message) -> None:
         """Display a message with GUI support.
