@@ -307,11 +307,11 @@ jobs:
           # Install wheels using pip directly for compatibility with uv managed mode
           # The venv is at .venv by default with uv
           Get-ChildItem -Path wheels -Filter *.whl -Recurse | ForEach-Object {
-            .venv\Scripts\pip.exe install $_.FullName --force-reinstall --no-deps
+            & .\.venv\Scripts\pip.exe install $_.FullName --force-reinstall --no-deps
           }
           # Verify installation
           Write-Host "Installed packages (classic*):"
-          .venv\Scripts\pip.exe list | Select-String "classic"
+          & .\.venv\Scripts\pip.exe list | Select-String "classic"
         shell: pwsh
 
       - name: Verify Rust acceleration
