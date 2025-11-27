@@ -219,7 +219,27 @@ jobs:
       - name: Build all Python bindings
         run: |
           $ErrorActionPreference = "Stop"
-          $bindings = @(
+
+          # Map binding names to their directory paths
+          # Most are in python-bindings/, but classic-shared-py is in foundation/
+          $bindingPaths = @{
+            "classic-shared-py" = "rust/foundation/classic-shared-py"
+            "classic-yaml-py" = "rust/python-bindings/classic-yaml-py"
+            "classic-database-py" = "rust/python-bindings/classic-database-py"
+            "classic-file-io-py" = "rust/python-bindings/classic-file-io-py"
+            "classic-scanlog-py" = "rust/python-bindings/classic-scanlog-py"
+            "classic-config-py" = "rust/python-bindings/classic-config-py"
+            "classic-registry-py" = "rust/python-bindings/classic-registry-py"
+            "classic-perf-py" = "rust/python-bindings/classic-perf-py"
+            "classic-pybridge-py" = "rust/python-bindings/classic-pybridge-py"
+            "classic-settings-py" = "rust/python-bindings/classic-settings-py"
+            "classic-message-py" = "rust/python-bindings/classic-message-py"
+            "classic-path-py" = "rust/python-bindings/classic-path-py"
+          }
+
+          # Build in dependency order (classic-shared-py first)
+          $buildOrder = @(
+            "classic-shared-py",
             "classic-yaml-py",
             "classic-database-py",
             "classic-file-io-py",
@@ -230,18 +250,18 @@ jobs:
             "classic-pybridge-py",
             "classic-settings-py",
             "classic-message-py",
-            "classic-path-py",
-            "classic-shared-py"
+            "classic-path-py"
           )
 
-          foreach ($binding in $bindings) {
-            Write-Host "Building $binding..."
-            Set-Location "rust/python-bindings/$binding"
+          foreach ($binding in $buildOrder) {
+            $path = $bindingPaths[$binding]
+            Write-Host "Building $binding from $path..."
+            Set-Location $path
             maturin build --release --out dist
             if ($LASTEXITCODE -ne 0) {
               throw "Failed to build $binding"
             }
-            Set-Location ../../..
+            Set-Location $env:GITHUB_WORKSPACE
           }
         shell: pwsh
 
@@ -249,7 +269,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: python-wheels
-          path: rust/python-bindings/*/dist/*.whl
+          path: |
+            rust/python-bindings/*/dist/*.whl
+            rust/foundation/*/dist/*.whl
           retention-days: 1
 
   # Run Python tests
