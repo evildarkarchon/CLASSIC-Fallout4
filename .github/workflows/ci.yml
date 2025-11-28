@@ -294,6 +294,8 @@ jobs:
     runs-on: windows-latest
     needs: [build-python-bindings]
     timeout-minutes: 30  # Kill job if tests hang for 30 minutes
+    env:
+      PYTHONTRACEMALLOC: "10"  # Enable tracemalloc with 10 frame depth for better error reporting
     steps:
       - uses: actions/checkout@v4
 
@@ -340,15 +342,15 @@ jobs:
           uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 
       - name: Run pytest (unit tests)
-        run: uv run pytest -m "unit and not slow" --maxfail=5 --tb=short --timeout=300 --timeout-method=thread
+        run: uv run pytest -m "unit and not slow" --maxfail=5 --tb=short --timeout=300 --timeout-method=thread --tracemalloc=10
         timeout-minutes: 10
 
       - name: Run pytest (integration tests)
-        run: uv run pytest -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread
+        run: uv run pytest -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread --tracemalloc=10
         timeout-minutes: 15
 
       - name: Run pytest (Rust integration tests)
-        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread
+        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread --tracemalloc=10
         timeout-minutes: 10
 
       - name: Upload test results
