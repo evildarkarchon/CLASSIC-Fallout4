@@ -235,6 +235,13 @@ jobs:
             "classic-settings-py" = "rust/python-bindings/classic-settings-py"
             "classic-message-py" = "rust/python-bindings/classic-message-py"
             "classic-path-py" = "rust/python-bindings/classic-path-py"
+            "classic-constants-py" = "rust/python-bindings/classic-constants-py"
+            "classic-version-py" = "rust/python-bindings/classic-version-py"
+            "classic-resource-py" = "rust/python-bindings/classic-resource-py"
+            "classic-xse-py" = "rust/python-bindings/classic-xse-py"
+            "classic-web-py" = "rust/python-bindings/classic-web-py"
+            "classic-scangame-py" = "rust/python-bindings/classic-scangame-py"
+            "classic-update-py" = "rust/python-bindings/classic-update-py"
           }
 
           # Build in dependency order (classic-shared-py first)
@@ -250,7 +257,14 @@ jobs:
             "classic-pybridge-py",
             "classic-settings-py",
             "classic-message-py",
-            "classic-path-py"
+            "classic-path-py",
+            "classic-constants-py",
+            "classic-version-py",
+            "classic-resource-py",
+            "classic-xse-py",
+            "classic-web-py",
+            "classic-scangame-py",
+            "classic-update-py"
           )
 
           foreach ($binding in $buildOrder) {
