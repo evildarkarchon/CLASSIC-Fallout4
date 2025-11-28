@@ -71,7 +71,9 @@ class TestPathValidator:
 
     @patch.object(PathValidator, "validate_custom_scan_path")
     @patch("ClassicLib.PathValidator.logger")
-    def test_validate_all_settings_paths(self, mock_logger: MagicMock, mock_validate_custom: MagicMock) -> None:
+    def test_validate_all_settings_paths(
+        self, mock_logger: MagicMock, mock_validate_custom: MagicMock, init_message_handler_fixture: MagicMock
+    ) -> None:
         """Test validate_all_settings_paths calls all validation methods."""
         PathValidator.validate_all_settings_paths()
         mock_validate_custom.assert_called_once()
@@ -80,7 +82,9 @@ class TestPathValidator:
 
     @patch.object(PathValidator, "validate_custom_scan_path", side_effect=Exception("Validation failed"))
     @patch("ClassicLib.PathValidator.logger")
-    def test_validate_all_settings_paths_exception(self, mock_logger: MagicMock, mock_validate_custom: MagicMock) -> None:
+    def test_validate_all_settings_paths_exception(
+        self, mock_logger: MagicMock, mock_validate_custom: MagicMock, init_message_handler_fixture: MagicMock
+    ) -> None:
         """Test that exceptions in validate_all_settings_paths are propagated."""
         with pytest.raises(Exception, match="Validation failed"):
             PathValidator.validate_all_settings_paths()
