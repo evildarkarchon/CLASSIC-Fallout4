@@ -468,14 +468,14 @@ class TestPermissionRecoveryStrategies:
             check_path = Path(path)
             if check_path == protected_path:
                 raise PermissionError(f"Simulated permission error for {path}")
-            
+
             # Call original for other paths (fallback)
             await original_write_file(path, content)
 
         with patch.object(io_core, "write_file", side_effect=side_effect):
             # Should fallback to temp
             actual_path = await write_with_fallback(protected_path, "test content")
-            
+
         assert actual_path != protected_path
         assert actual_path.parent == Path(tempfile.gettempdir())
 
