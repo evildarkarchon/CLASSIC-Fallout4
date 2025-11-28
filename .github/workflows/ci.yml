@@ -301,12 +301,17 @@ jobs:
       - name: Install Python dependencies and wheels
         run: |
           uv sync --all-extras
+          # Debug: Show workflow version
+          Write-Host "CI workflow version: 2024-11-27-v4"
           # List downloaded wheels for debugging
           Write-Host "Downloaded wheels:"
-          Get-ChildItem -Path wheels -Filter *.whl -Recurse | ForEach-Object { Write-Host "  $($_.FullName)" }
-          # Install wheels using the same Python that uv run uses
-          Get-ChildItem -Path wheels -Filter *.whl -Recurse | ForEach-Object {
-            uv run python -m pip install $_.FullName --force-reinstall --no-deps
+          $wheels = Get-ChildItem -Path wheels -Filter *.whl -Recurse
+          $wheels | ForEach-Object { Write-Host "  $($_.FullName)" }
+          Write-Host "Total wheels found: $($wheels.Count)"
+          # Install each wheel using uv run python -m pip
+          foreach ($wheel in $wheels) {
+            Write-Host "Installing: $($wheel.Name)"
+            uv run python -m pip install $wheel.FullName --force-reinstall --no-deps
           }
           # Verify installation
           Write-Host "Installed packages (classic*):"
