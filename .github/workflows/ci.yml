@@ -302,20 +302,22 @@ jobs:
         run: |
           uv sync --all-extras
           # Debug: Show workflow version
-          Write-Host "CI workflow version: 2024-11-27-v5"
+          Write-Host "CI workflow version: 2024-11-27-v6"
+          # Install pip into the venv so we can use it directly
+          uv pip install pip
           # List downloaded wheels for debugging
           Write-Host "Downloaded wheels:"
           $wheels = Get-ChildItem -Path wheels -Filter *.whl -Recurse
           $wheels | ForEach-Object { Write-Host "  $($_.FullName)" }
           Write-Host "Total wheels found: $($wheels.Count)"
-          # Install each wheel using uv pip (doesn't require pip in venv)
+          # Install each wheel using pip directly (bypasses uv lockfile)
           foreach ($wheel in $wheels) {
             Write-Host "Installing: $($wheel.Name)"
-            uv pip install $wheel.FullName --reinstall
+            uv run python -m pip install $wheel.FullName --force-reinstall --no-deps
           }
           # Verify installation
           Write-Host "Installed packages (classic*):"
-          uv pip list | Select-String "classic"
+          uv run python -m pip list | Select-String "classic"
         shell: pwsh
 
       - name: Verify Rust acceleration
