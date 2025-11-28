@@ -302,20 +302,20 @@ jobs:
         run: |
           uv sync --all-extras
           # Debug: Show workflow version
-          Write-Host "CI workflow version: 2024-11-27-v4"
+          Write-Host "CI workflow version: 2024-11-27-v5"
           # List downloaded wheels for debugging
           Write-Host "Downloaded wheels:"
           $wheels = Get-ChildItem -Path wheels -Filter *.whl -Recurse
           $wheels | ForEach-Object { Write-Host "  $($_.FullName)" }
           Write-Host "Total wheels found: $($wheels.Count)"
-          # Install each wheel using uv run python -m pip
+          # Install each wheel using uv pip (doesn't require pip in venv)
           foreach ($wheel in $wheels) {
             Write-Host "Installing: $($wheel.Name)"
-            uv run python -m pip install $wheel.FullName --force-reinstall --no-deps
+            uv pip install $wheel.FullName --reinstall
           }
           # Verify installation
           Write-Host "Installed packages (classic*):"
-          uv run python -m pip list | Select-String "classic"
+          uv pip list | Select-String "classic"
         shell: pwsh
 
       - name: Verify Rust acceleration
