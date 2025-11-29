@@ -171,6 +171,7 @@ class TestGitHubStableVersionEndpoint:
         # Mock successful response
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.raise_for_status = Mock()  # Ensure this is sync
         mock_response.json = AsyncMock(
             side_effect=create_async_json_mock({"name": "CLASSIC v7.30.1", "prerelease": False, "tag_name": "v7.30.1"})
         )
@@ -188,6 +189,7 @@ class TestGitHubStableVersionEndpoint:
         # Mock response with prerelease flag
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.raise_for_status = Mock()  # Ensure this is sync
         mock_response.json = AsyncMock(
             side_effect=create_async_json_mock({"name": "CLASSIC v7.31.0-beta", "prerelease": True, "tag_name": "v7.31.0-beta"})
         )
@@ -225,7 +227,7 @@ class TestGitHubStableVersionEndpoint:
         # Mock HTTP error response
         mock_response = AsyncMock()
         mock_response.status = 500
-        mock_response.raise_for_status.side_effect = aiohttp.ClientResponseError(request_info=Mock(), history=Mock(), status=500)
+        mock_response.raise_for_status = Mock(side_effect=aiohttp.ClientResponseError(request_info=Mock(), history=Mock(), status=500))
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
         result = await get_github_latest_stable_version_from_endpoint(mock_session, "evildarkarchon", "CLASSIC-Fallout4")
@@ -238,6 +240,7 @@ class TestGitHubStableVersionEndpoint:
         # Mock response with invalid JSON structure
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(side_effect=create_async_json_mock("not a dict"))
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
@@ -251,6 +254,7 @@ class TestGitHubStableVersionEndpoint:
         # Mock response without name field
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(side_effect=create_async_json_mock({"prerelease": False, "tag_name": "v7.30.1"}))
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
@@ -264,6 +268,7 @@ class TestGitHubStableVersionEndpoint:
         # Mock response with unparseable version
         mock_response = AsyncMock()
         mock_response.status = 200
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(
             side_effect=create_async_json_mock({"name": "Invalid Version Name", "prerelease": False, "tag_name": "invalid"})
         )
@@ -288,6 +293,7 @@ class TestGitHubPrereleaseVersionList:
         """Test successful retrieval of prerelease version."""
         # Mock successful response with prerelease
         mock_response = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(
             side_effect=create_async_json_mock([
                 {"name": "CLASSIC v7.30.1", "prerelease": False, "tag_name": "v7.30.1"},
@@ -307,6 +313,7 @@ class TestGitHubPrereleaseVersionList:
         """Test when no prereleases are found."""
         # Mock response with only stable releases
         mock_response = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(
             side_effect=create_async_json_mock([
                 {"name": "CLASSIC v7.30.1", "prerelease": False, "tag_name": "v7.30.1"},
@@ -334,6 +341,7 @@ class TestGitHubPrereleaseVersionList:
         """Test handling of invalid JSON structure."""
         # Mock response with non-list JSON
         mock_response = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(side_effect=create_async_json_mock({"not": "a list"}))
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
@@ -346,6 +354,7 @@ class TestGitHubPrereleaseVersionList:
         """Test handling of empty releases list."""
         # Mock empty response
         mock_response = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(side_effect=create_async_json_mock([]))
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
@@ -358,6 +367,7 @@ class TestGitHubPrereleaseVersionList:
         """Test handling of unparseable prerelease versions."""
         # Mock response with unparseable prereleases
         mock_response = AsyncMock()
+        mock_response.raise_for_status = Mock()
         mock_response.json = AsyncMock(
             side_effect=create_async_json_mock([
                 {"name": "Invalid Prerelease Name", "prerelease": True, "tag_name": "invalid"},
@@ -386,6 +396,7 @@ class TestGitHubReleaseDetails:
         # Mock both endpoints returning data
         latest_response = AsyncMock()
         latest_response.status = 200
+        latest_response.raise_for_status = Mock()
         latest_response.json = AsyncMock(
             side_effect=create_async_json_mock({
                 "id": 123,
@@ -397,6 +408,7 @@ class TestGitHubReleaseDetails:
         )
 
         list_response = AsyncMock()
+        list_response.raise_for_status = Mock()
         list_response.json = AsyncMock(
             side_effect=create_async_json_mock([
                 {"id": 123, "name": "CLASSIC v7.30.1", "tag_name": "v7.30.1", "prerelease": False, "published_at": "2024-01-01T00:00:00Z"}
@@ -427,6 +439,7 @@ class TestGitHubReleaseDetails:
         # Mock different releases
         latest_response = AsyncMock()
         latest_response.status = 200
+        latest_response.raise_for_status = Mock()
         latest_response.json = AsyncMock(
             side_effect=create_async_json_mock({
                 "id": 123,
@@ -438,6 +451,7 @@ class TestGitHubReleaseDetails:
         )
 
         list_response = AsyncMock()
+        list_response.raise_for_status = Mock()
         list_response.json = AsyncMock(
             side_effect=create_async_json_mock([
                 {
@@ -473,8 +487,10 @@ class TestGitHubReleaseDetails:
         # Mock 404 for latest endpoint
         latest_response = AsyncMock()
         latest_response.status = 404
+        # No raise_for_status needed for 404 in this test path logic
 
         list_response = AsyncMock()
+        list_response.raise_for_status = Mock()
         list_response.json = AsyncMock(
             side_effect=create_async_json_mock([
                 {"id": 456, "name": "CLASSIC v7.30.1", "tag_name": "v7.30.1", "prerelease": False, "published_at": "2024-01-01T00:00:00Z"}
@@ -513,6 +529,7 @@ class TestGitHubReleaseDetails:
         """Test when releases list is empty."""
         latest_response = AsyncMock()
         latest_response.status = 200
+        latest_response.raise_for_status = Mock()
         latest_response.json = AsyncMock(
             side_effect=create_async_json_mock({
                 "id": 123,
@@ -524,6 +541,7 @@ class TestGitHubReleaseDetails:
         )
 
         list_response = AsyncMock()
+        list_response.raise_for_status = Mock()
         list_response.json = AsyncMock(side_effect=create_async_json_mock([]))
 
         def mock_get_side_effect(url):

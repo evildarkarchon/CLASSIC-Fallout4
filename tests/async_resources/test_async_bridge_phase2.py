@@ -6,6 +6,7 @@ only in GUI mode, and allows native async in CLI/TUI modes.
 """
 
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -192,18 +193,22 @@ class TestSmartAwait:
         async def async_function():
             return "result"
 
+        coro = async_function()
         with pytest.raises(RuntimeError, match="Cannot use smart_await.*CLI/TUI mode"):
-            smart_await(async_function())
+            smart_await(coro)
+        coro.close()
 
     def test_smart_await_error_message_suggests_await(self):
-        """Test error message suggests using native await."""
+        """Test error message suggests using native 'await'."""
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
 
         async def async_function():
             return "result"
 
+        coro = async_function()
         with pytest.raises(RuntimeError, match="Use native 'await' instead"):
-            smart_await(async_function())
+            smart_await(coro)
+        coro.close()
 
 
 @pytest.mark.integration
@@ -249,8 +254,10 @@ class TestRealWorldScenarios:
         assert result == "processed: test"
 
         # Sync wrapper should error
-        with pytest.raises(RuntimeError):
-            processor.process_data_sync("test")
+        # Patch asyncio.run to catch the coroutine and close it
+        with patch("asyncio.run", side_effect=lambda coro: (coro.close(), (_ for _ in ()).throw(RuntimeError("Mocked error")))[1]):
+            with pytest.raises(RuntimeError):
+                processor.process_data_sync("test")
 
     def test_migration_pattern_before_after(self):
         """Test migration from Phase 1 to Phase 2 pattern."""

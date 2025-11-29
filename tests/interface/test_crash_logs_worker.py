@@ -88,6 +88,7 @@ def test_worker_uses_async_bridge():
                         def capture_run_async(coro):
                             run_async_calls.append(coro)
                             # Simulate successful execution
+                            coro.close()
 
                         mock_bridge.run_async.side_effect = capture_run_async
 
@@ -118,7 +119,10 @@ def test_no_manual_event_loop_creation():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    with patch("ClassicLib.AsyncBridge.AsyncBridge"):
+                    with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+                        # Configure mock to close coroutines to avoid warnings
+                        mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+
                         with patch("asyncio.new_event_loop") as mock_new_loop:
                             try:
                                 worker._perform_crash_logs_scan()
@@ -161,7 +165,10 @@ def test_rust_status_logging():
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.ScanLog import FCXModeHandler
 
-            with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge"):
+            with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+                # Configure mock to close coroutines
+                mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+
                 with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
                     with patch.object(logger, "info") as mock_log_info:
                         with patch.object(logger, "debug"):
@@ -276,7 +283,10 @@ def test_performance_metrics_logged():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    with patch("ClassicLib.AsyncBridge.AsyncBridge"):
+                    with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+                        # Configure mock to close coroutines
+                        mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+
                         with patch.object(logger, "info") as mock_log_info:
                             with patch.object(logger, "debug") as mock_log_debug:
                                 try:

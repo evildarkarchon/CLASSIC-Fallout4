@@ -76,7 +76,12 @@ class TestAsyncBridgeFailureModes:
 
         async def outer_async():
             # This should raise an error - can't use run_async from async context
-            return bridge.run_async(inner_async())
+            coro = inner_async()
+            try:
+                return bridge.run_async(coro)
+            except Exception:
+                coro.close()
+                raise
 
         with pytest.raises(RuntimeError) as exc_info:
             bridge.run_async(outer_async())

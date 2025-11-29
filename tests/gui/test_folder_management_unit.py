@@ -406,6 +406,7 @@ class TestFolderManagementMixin:
             # Verify it was opened
             mock_open_url.assert_called_once()
 
+    @pytest.mark.skipif(os.environ.get("CI") is not None, reason="Notepad++ not available in CI environment")
     def test_open_file_with_notepadpp_exists(self, tmp_path, monkeypatch):
         """Test opening file with Notepad++ when it exists."""
         test_file = tmp_path / "test.txt"

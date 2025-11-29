@@ -72,6 +72,7 @@ def test_worker_uses_async_bridge():
                 def capture_run_async(coro):
                     run_async_calls.append(coro)
                     # Simulate successful execution
+                    coro.close()
 
                 mock_bridge.run_async.side_effect = capture_run_async
 
@@ -98,7 +99,10 @@ def test_no_manual_event_loop_creation():
     # Mock everything to prevent actual execution
     with patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.write_combined_results_async", AsyncMock()):
         with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-            with patch("ClassicLib.AsyncBridge.AsyncBridge"):
+            with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+                # Configure mock to close coroutines
+                mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+
                 with patch("asyncio.new_event_loop") as mock_new_loop:
                     try:
                         worker._process_game_results_scan()
@@ -135,7 +139,10 @@ def test_rust_status_logging():
 
     # Mock dependencies
     with patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.write_combined_results_async", AsyncMock()):
-        with patch("ClassicLib.AsyncBridge.AsyncBridge"):
+        with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+            # Configure mock to close coroutines
+            mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+
             with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
                 with patch.object(logger, "info") as mock_log_info:
                     with patch.object(logger, "debug"):
@@ -246,7 +253,10 @@ def test_performance_metrics_logged():
     # Mock dependencies
     with patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.write_combined_results_async", AsyncMock()):
         with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-            with patch("ClassicLib.AsyncBridge.AsyncBridge"):
+            with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+                # Configure mock to close coroutines
+                mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+
                 with patch.object(logger, "info") as mock_log_info:
                     with patch.object(logger, "debug") as mock_log_debug:
                         try:

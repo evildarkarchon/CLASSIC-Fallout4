@@ -165,11 +165,11 @@ class TestConfigIssueDataModel:
         assert report.endswith("\n\n")
 
 
-@pytest.mark.asyncio
 class TestGenerateGameCombinedResultTuple:
     """Test suite for Phase 5: tuple return signature from generate_game_combined_result()."""
 
     @pytest.mark.unit
+    @pytest.mark.asyncio
     async def test_async_function_returns_tuple(self) -> None:
         """Test that generate_game_combined_result_async returns tuple[str, list[ConfigIssue]]."""
         from unittest.mock import patch
