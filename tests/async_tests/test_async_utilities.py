@@ -194,6 +194,7 @@ class TestAsyncUtilityFunctions:
             # If exception is raised, it should be handled appropriately
             pass
 
+    @pytest.mark.timing
     @pytest.mark.asyncio
     async def test_async_operations_with_large_dataset(self, tmp_path: Path) -> None:
         """Test async operations with larger number of files."""

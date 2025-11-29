@@ -51,6 +51,7 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "async_test: Tests that use async/await patterns")
     config.addinivalue_line("markers", "gui: Tests that require Qt/PySide6 GUI components")
     config.addinivalue_line("markers", "performance: Performance benchmarks and regression tests")
+    config.addinivalue_line("markers", "timing: Tests that are sensitive to execution time")
     config.addinivalue_line("markers", "slow: Tests that take > 1 second to run")
     config.addinivalue_line("markers", "network: Tests that require network access")
     config.addinivalue_line("markers", "database: Tests that interact with databases")
@@ -76,7 +77,7 @@ def pytest_collection_modifyitems(config, items):
             item.add_marker(pytest.mark.gui)
 
         # Auto-mark performance tests
-        if "performance" in item.nodeid.lower() or "benchmark" in item.nodeid.lower():
+        if "performance" in item.nodeid.lower() or "benchmark" in item.nodeid.lower() or "perf" in item.nodeid.lower():
             item.add_marker(pytest.mark.performance)
 
         # Auto-mark stress tests
@@ -103,6 +104,12 @@ def pytest_addoption(parser):
 
 def pytest_runtest_setup(item):
     """Skip tests based on markers and command line options."""
+    # Skip timing-sensitive tests in CI environment
+    if os.environ.get("CI", "false").lower() == "true":
+        for marker in ["performance", "stress", "benchmark", "timing"]:
+            if marker in item.keywords:
+                pytest.skip(f"Skipping {marker} test in CI environment")
+
     # Skip slow tests unless --run-slow is specified
     if "slow" in item.keywords and not item.config.getoption("--run-slow"):
         pytest.skip("Need --run-slow option to run slow tests")

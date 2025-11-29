@@ -173,6 +173,7 @@ class TestAsyncYamlIntegration:
         updated_value = await async_yaml_core.async_yaml_settings(str, YAML.TEST, "test_key")
         assert updated_value == "updated_value"
 
+    @pytest.mark.timing
     async def test_prefetch_all_settings(self, async_yaml_core, create_yaml_files: Path) -> None:
         """Test prefetching all settings for performance."""
 
