@@ -222,6 +222,7 @@ class TestScanPipelineE2E:
         # Cleanup
         await asyncio.sleep(0.1)  # Allow async cleanup
 
+    @pytest.mark.timing
     @pytest.mark.asyncio
     async def test_complete_scan_pipeline_1mb_log(self, setup_pipeline):
         """Test complete pipeline with typical 1MB crash log."""
@@ -308,6 +309,7 @@ class TestScanPipelineE2E:
         print(f"  Report time: {report_time:.3f}s")
         print(f"  Total time: {total_time:.3f}s")
 
+    @pytest.mark.timing
     @pytest.mark.asyncio
     async def test_complete_scan_pipeline_2mb_log(self, setup_pipeline):
         """Test complete pipeline with large 2MB crash log."""
@@ -556,6 +558,7 @@ class TestScanPipelineE2E:
         assert len(conflicts) > 0
         assert any(c["conflicting_formids"] == ["0A001001"] for c in conflicts)
 
+    @pytest.mark.timing
     @pytest.mark.asyncio
     async def test_performance_baseline_measurement(self, setup_pipeline):
         """Establish performance baselines for regression testing."""
