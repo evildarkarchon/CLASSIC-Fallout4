@@ -12,6 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from tests.rust_integration.parity_fixtures import parity_crash_generator
+
 
 @pytest.fixture
 def crash_log_samples(tmp_path):

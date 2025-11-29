@@ -131,9 +131,11 @@ class TestE2EPipeline:
 
         # Initialize dict attributes
         mock_yaml.game_mods_core = {}
+        mock_yaml.game_mods_core_folon = {}
         mock_yaml.game_mods_conf = {}
         mock_yaml.game_mods_freq = {}
         mock_yaml.game_mods_solu = {}
+        mock_yaml.game_mods_opc2 = {}
         mock_yaml.suspects_error_list = {}
         mock_yaml.suspects_stack_list = {}
 
@@ -384,7 +386,7 @@ PLUGINS:
             assert isinstance(limit_disabled, bool), "Limit disabled flag should be boolean"
 
             # If plugins were found, validate their structure
-            for hex_id, plugin_name in plugins_dict.items():
+            for plugin_name, hex_id in plugins_dict.items():
                 assert isinstance(hex_id, str), f"Plugin ID should be string: {hex_id}"
                 assert isinstance(plugin_name, str), f"Plugin name should be string: {plugin_name}"
                 # Hex IDs should be valid hexadecimal

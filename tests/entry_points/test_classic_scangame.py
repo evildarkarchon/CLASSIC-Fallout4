@@ -49,12 +49,12 @@ class TestClassicScanGame:
         mock_get_core.return_value = mock_core
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
-        
+
         # Configure side effect to close coroutine
         def run_async_side_effect(coro):
             coro.close()
             return expected_result
-            
+
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
@@ -125,12 +125,12 @@ class TestClassicScanGame:
         mock_get_core.return_value = mock_core
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
-        
+
         # Configure side effect to close coroutine
         def run_async_side_effect(coro):
             coro.close()
             return expected_result
-            
+
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
@@ -186,12 +186,12 @@ class TestClassicScanGame:
         mock_get_core.return_value = mock_core
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
-        
+
         # Configure side effect to close coroutine
         def run_async_side_effect(coro):
             coro.close()
             return expected_result
-            
+
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
@@ -231,12 +231,12 @@ class TestClassicScanGame:
         # Arrange
         mock_bridge_instance = MagicMock()
         mock_async_bridge.get_instance.return_value = mock_bridge_instance
-        
+
         # Configure side effect to close coroutine
         def run_async_side_effect(coro):
             coro.close()
             return "result"
-            
+
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
