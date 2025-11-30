@@ -9,10 +9,11 @@ processing and Rust for batch parallelism.
 from collections import Counter
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
-from ClassicLib.integration.factory import get_orchestrator, get_yamldata
+from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.HybridOrchestrator import HybridOrchestrator
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
@@ -23,6 +24,17 @@ from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 @pytest.mark.asyncio
 class TestHybridOrchestratorIntegration:
     """Integration tests for HybridOrchestrator."""
+
+    @pytest.fixture(autouse=True)
+    def mock_settings(self):
+        """Mock async settings calls."""
+        with (
+            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+        ):
+            mock_yaml.return_value = None
+            mock_classic.return_value = None
+            yield
 
     @pytest.fixture
     def sample_logs(self, tmp_path: Path) -> list[Path]:
@@ -61,8 +73,46 @@ PLUGINS:
 
     @pytest.fixture
     def yamldata(self) -> Any:
-        """Load YAML configuration."""
-        return get_yamldata()
+        """Load mocked YAML configuration."""
+        from unittest.mock import MagicMock
+
+        from ClassicLib.Constants import NULL_VERSION
+
+        mock_data = MagicMock()
+
+        # Populate basic attributes
+        mock_data.crashgen_name = "Buffout 4"
+        mock_data.xse_acronym = "F4SE"
+        mock_data.crashgen_latest_og = "1.0.0"
+        mock_data.crashgen_latest_vr = "1.0.0"
+        mock_data.game_version = NULL_VERSION
+        mock_data.game_version_new = NULL_VERSION
+        mock_data.game_version_vr = NULL_VERSION
+
+        # Populate dictionaries
+        mock_data.game_mods_conf = {}
+        mock_data.game_mods_freq = {}
+        mock_data.game_mods_solu = {}
+        mock_data.game_mods_core = {}
+        mock_data.game_mods_core_folon = {}
+        mock_data.game_mods_opc2 = {}
+        mock_data.suspects_error_list = {}
+        mock_data.suspects_stack_list = {}
+
+        # Populate lists/sets
+        mock_data.classic_game_hints = []
+        mock_data.classic_records_list = []
+        mock_data.ignore_list = []
+        mock_data.crashgen_ignore = set()
+        mock_data.game_ignore_plugins = []
+        mock_data.game_ignore_records = []
+
+        # Populate strings
+        mock_data.warn_noplugins = "Warning: No plugins"
+        mock_data.warn_outdated = "Warning: Outdated"
+        mock_data.autoscan_text = "Autoscan report"
+
+        return mock_data
 
     @pytest.fixture
     async def hybrid_orch(self, yamldata: Any) -> HybridOrchestrator:
@@ -261,10 +311,59 @@ PLUGINS:
 class TestFactoryPattern:
     """Test the factory pattern for orchestrator creation."""
 
+    @pytest.fixture(autouse=True)
+    def mock_settings(self):
+        """Mock async settings calls."""
+        with (
+            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+        ):
+            mock_yaml.return_value = None
+            mock_classic.return_value = None
+            yield
+
     @pytest.fixture
     def yamldata(self) -> Any:
-        """Load YAML configuration."""
-        return get_yamldata()
+        """Load mocked YAML configuration."""
+        from unittest.mock import MagicMock
+
+        from ClassicLib.Constants import NULL_VERSION
+
+        mock_data = MagicMock()
+
+        # Populate basic attributes
+        mock_data.crashgen_name = "Buffout 4"
+        mock_data.xse_acronym = "F4SE"
+        mock_data.crashgen_latest_og = "1.0.0"
+        mock_data.crashgen_latest_vr = "1.0.0"
+        mock_data.game_version = NULL_VERSION
+        mock_data.game_version_new = NULL_VERSION
+        mock_data.game_version_vr = NULL_VERSION
+
+        # Populate dictionaries
+        mock_data.game_mods_conf = {}
+        mock_data.game_mods_freq = {}
+        mock_data.game_mods_solu = {}
+        mock_data.game_mods_core = {}
+        mock_data.game_mods_core_folon = {}
+        mock_data.game_mods_opc2 = {}
+        mock_data.suspects_error_list = {}
+        mock_data.suspects_stack_list = {}
+
+        # Populate lists/sets
+        mock_data.classic_game_hints = []
+        mock_data.classic_records_list = []
+        mock_data.ignore_list = []
+        mock_data.crashgen_ignore = set()
+        mock_data.game_ignore_plugins = []
+        mock_data.game_ignore_records = []
+
+        # Populate strings
+        mock_data.warn_noplugins = "Warning: No plugins"
+        mock_data.warn_outdated = "Warning: Outdated"
+        mock_data.autoscan_text = "Autoscan report"
+
+        return mock_data
 
     async def test_factory_returns_hybrid_when_rust_available(self, yamldata: Any) -> None:
         """Test factory returns HybridOrchestrator when Rust is available."""
@@ -344,10 +443,59 @@ class TestFactoryPattern:
 class TestRustConversion:
     """Test Rust result conversion to Python format."""
 
+    @pytest.fixture(autouse=True)
+    def mock_settings(self):
+        """Mock async settings calls."""
+        with (
+            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+        ):
+            mock_yaml.return_value = None
+            mock_classic.return_value = None
+            yield
+
     @pytest.fixture
     def yamldata(self) -> Any:
-        """Load YAML configuration."""
-        return get_yamldata()
+        """Load mocked YAML configuration."""
+        from unittest.mock import MagicMock
+
+        from ClassicLib.Constants import NULL_VERSION
+
+        mock_data = MagicMock()
+
+        # Populate basic attributes
+        mock_data.crashgen_name = "Buffout 4"
+        mock_data.xse_acronym = "F4SE"
+        mock_data.crashgen_latest_og = "1.0.0"
+        mock_data.crashgen_latest_vr = "1.0.0"
+        mock_data.game_version = NULL_VERSION
+        mock_data.game_version_new = NULL_VERSION
+        mock_data.game_version_vr = NULL_VERSION
+
+        # Populate dictionaries
+        mock_data.game_mods_conf = {}
+        mock_data.game_mods_freq = {}
+        mock_data.game_mods_solu = {}
+        mock_data.game_mods_core = {}
+        mock_data.game_mods_core_folon = {}
+        mock_data.game_mods_opc2 = {}
+        mock_data.suspects_error_list = {}
+        mock_data.suspects_stack_list = {}
+
+        # Populate lists/sets
+        mock_data.classic_game_hints = []
+        mock_data.classic_records_list = []
+        mock_data.ignore_list = []
+        mock_data.crashgen_ignore = set()
+        mock_data.game_ignore_plugins = []
+        mock_data.game_ignore_records = []
+
+        # Populate strings
+        mock_data.warn_noplugins = "Warning: No plugins"
+        mock_data.warn_outdated = "Warning: Outdated"
+        mock_data.autoscan_text = "Autoscan report"
+
+        return mock_data
 
     async def test_result_conversion_format(self, yamldata: Any, tmp_path: Path) -> None:
         """Test Rust results are correctly converted to Python tuple format."""
