@@ -66,7 +66,7 @@ MODULE_CONFIGS = {
     "classic_path": {
         "base_component": "path",
         "components": {
-            "RustPathOperations": "path_operations",
+            "PathValidator": "path_operations",
         },
     },
     "classic_config": {

@@ -8,11 +8,106 @@ to ensure consistent test environments and reduce duplication.
 
 import asyncio
 import time
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from tests.rust_integration.parity_fixtures import parity_crash_generator
+
+# Minimal YAML content for Rust YamlData initialization
+MINIMAL_MAIN_YAML = """
+CLASSIC_Info:
+  version: "7.31.0"
+  version_date: "2024-01-01"
+catch_log_records: []
+CLASSIC_Interface:
+  autoscan_text_Fallout4: "Autoscan report"
+"""
+
+MINIMAL_GAME_YAML = """
+Game_Hints: []
+Game_Info:
+  CRASHGEN_LogName: "Buffout 4"
+  CRASHGEN_LatestVer: "1.28.6"
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+  GameVersionNEW: "1.10.984"
+GameVR_Info:
+  CRASHGEN_LogName: "Buffout 4 VR"
+  CRASHGEN_LatestVer: "1.28.6"
+  GameVersion: "1.2.72"
+  CRASHGEN_Ignore: []
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins warning"
+  Warn_Outdated: "Outdated warning"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check: {}
+Crashlog_Stack_Check: {}
+Mods_CONF: {}
+Mods_CORE: {}
+Mods_CORE_FOLON: {}
+Mods_FREQ: {}
+Mods_OPC2: {}
+Mods_SOLU: {}
+"""
+
+MINIMAL_IGNORE_YAML = """
+CLASSIC_Ignore_Fallout4: []
+"""
+
+
+@pytest.fixture
+def rust_yaml_files(tmp_path):
+    """
+    Create minimal YAML files needed for Rust YamlData initialization.
+
+    This fixture creates the directory structure and YAML files that the
+    Rust classic_config::YamlData requires to initialize successfully.
+
+    Returns:
+        dict: Contains 'root_dir' and 'data_dir' paths for use with patches.
+    """
+    # Create directory structure
+    root_dir = tmp_path / "classic_root"
+    data_dir = root_dir / "CLASSIC Data"
+    databases_dir = data_dir / "databases"
+    databases_dir.mkdir(parents=True)
+
+    # Create YAML files
+    (databases_dir / "CLASSIC Main.yaml").write_text(MINIMAL_MAIN_YAML, encoding="utf-8")
+    (databases_dir / "CLASSIC Fallout4.yaml").write_text(MINIMAL_GAME_YAML, encoding="utf-8")
+    (root_dir / "CLASSIC Ignore.yaml").write_text(MINIMAL_IGNORE_YAML, encoding="utf-8")
+
+    return {
+        "root_dir": root_dir,
+        "data_dir": data_dir,
+        "tmp_path": tmp_path,
+    }
+
+
+@pytest.fixture
+def mock_rust_yaml_environment(rust_yaml_files):
+    """
+    Mock the environment for Rust YamlData initialization.
+
+    This fixture patches ResourceLoader.get_data_directory() and GlobalRegistry
+    to use the test YAML files, allowing Rust orchestrator to initialize in CI.
+
+    Usage:
+        def test_something(mock_rust_yaml_environment):
+            # Rust orchestrator will now find the test YAML files
+            orch = ClassicOrchestrator()
+    """
+    data_dir = rust_yaml_files["data_dir"]
+
+    with (
+        patch("ClassicLib.ResourceLoader.ResourceLoader.get_data_directory", return_value=data_dir),
+        patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"),
+        patch("ClassicLib.GlobalRegistry.get_vr", return_value=""),
+    ):
+        yield rust_yaml_files
 
 
 @pytest.fixture
