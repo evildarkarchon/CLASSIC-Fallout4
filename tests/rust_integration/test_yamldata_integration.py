@@ -29,22 +29,18 @@ except ImportError:
 class TestYamlDataIntegration:
     """Integration tests for YamlData."""
 
-    def test_yamldata_instantiation(self):
-        """Test YamlData can be instantiated with real YAML files."""
-        # Get paths to real YAML files
-        # Rust YamlData expects 3 directories: [main, game, ignore]
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
+    def test_yamldata_instantiation(self, rust_yaml_files):
+        """Test YamlData can be instantiated with YAML files."""
+        # Use test fixture that provides properly structured YAML files
+        yaml_files = rust_yaml_files
+        root_dir = yaml_files["root_dir"]
+        data_dir = yaml_files["data_dir"]
 
-        # Ensure files exist
-        main_file = Path(yaml_dirs[0]) / "CLASSIC Main.yaml"
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        # Use 2-directory API: [root_dir, data_dir]
+        yaml_dirs = [
+            str(root_dir),  # Root dir (contains CLASSIC Ignore.yaml)
+            str(data_dir),  # Data dir (contains databases/)
+        ]
 
         # Create YamlData
         yamldata = YamlData(yaml_dirs, "Fallout4", False)

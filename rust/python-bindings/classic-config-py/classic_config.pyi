@@ -66,6 +66,49 @@ class YamlData:
             >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", False)
         """
 
+    @staticmethod
+    def from_yaml_content(
+        main_content: str,
+        game_content: str,
+        ignore_content: str,
+        game: str,
+        vr_mode: bool,
+    ) -> YamlData:
+        """Create YamlData from YAML content strings (for testing without file I/O).
+
+        This constructor is useful for unit tests and integration tests where you want
+        to test YamlData parsing without needing actual YAML files on disk.
+
+        Args:
+            main_content: Content of the main YAML configuration file
+            game_content: Content of the game-specific YAML configuration file
+            ignore_content: Content of the ignore list YAML configuration file
+            game: Game identifier (e.g., "Fallout4", "Skyrim")
+            vr_mode: Whether to load VR-specific configuration
+
+        Returns:
+            YamlData instance with parsed configuration
+
+        Raises:
+            RustConfigParseError: If any YAML content fails to parse
+
+        Example:
+            >>> main_yaml = '''
+            ... CLASSIC_Info:
+            ...   version: "7.31.0"
+            ... '''
+            >>> game_yaml = '''
+            ... Game_Info:
+            ...   XSE_Acronym: "F4SE"
+            ... '''
+            >>> ignore_yaml = '''
+            ... CLASSIC_Ignore_Fallout4: []
+            ... '''
+            >>> config = YamlData.from_yaml_content(
+            ...     main_yaml, game_yaml, ignore_yaml, "Fallout4", False
+            ... )
+        """
+
     # CLASSIC version information
     @property
     def classic_version(self) -> str:

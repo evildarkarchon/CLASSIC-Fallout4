@@ -131,6 +131,44 @@ impl PyYamlData {
         Ok(Self { inner: core })
     }
 
+    /// Create YamlData from YAML content strings (for testing without file I/O).
+    ///
+    /// This constructor is useful for unit tests and integration tests where you want
+    /// to test YamlData parsing without needing actual YAML files on disk.
+    ///
+    /// Args:
+    ///     main_content: Content of the main YAML configuration file
+    ///     game_content: Content of the game-specific YAML configuration file
+    ///     ignore_content: Content of the ignore list YAML configuration file
+    ///     game: Game identifier (e.g., "Fallout4", "Skyrim")
+    ///     vr_mode: Whether to load VR-specific configuration
+    ///
+    /// Returns:
+    ///     YamlData instance with parsed configuration
+    ///
+    /// Raises:
+    ///     RustConfigParseError: If any YAML content fails to parse
+    #[staticmethod]
+    #[pyo3(name = "from_yaml_content")]
+    fn py_from_yaml_content(
+        main_content: String,
+        game_content: String,
+        ignore_content: String,
+        game: String,
+        vr_mode: bool,
+    ) -> PyResult<Self> {
+        let inner = YamlDataCore::from_yaml_content(
+            &main_content,
+            &game_content,
+            &ignore_content,
+            game,
+            vr_mode,
+        )
+        .map_err(to_pyerr)?;
+
+        Ok(Self { inner })
+    }
+
     // ========================================================================
     // Game Configuration Properties
     // ========================================================================

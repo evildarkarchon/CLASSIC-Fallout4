@@ -594,16 +594,16 @@ impl LogParser {
         start_marker: &str,
         end_marker: &str,
     ) -> Option<Vec<String>> {
-        // Find start position using SIMD search
+        // Find start position using prefix matching (matches Python's startswith semantics)
         let start_pos = lines
             .par_iter()
-            .position_any(|line| self.fast_contains(line, start_marker))
+            .position_any(|line| self.fast_starts_with(line, start_marker))
             .map(|pos| pos + 1)?; // Skip the marker line
 
-        // Find end position
+        // Find end position using prefix matching
         let end_pos = lines[start_pos..]
             .par_iter()
-            .position_any(|line| self.fast_contains(line, end_marker))
+            .position_any(|line| self.fast_starts_with(line, end_marker))
             .map(|pos| start_pos + pos)
             .unwrap_or(lines.len());
 
@@ -1074,6 +1074,35 @@ impl LogParser {
 
         // Fall back to standard contains for larger patterns
         haystack.contains(needle)
+    }
+
+    /// Optimized prefix matching for segment boundary detection.
+    ///
+    /// Uses direct byte slice comparison which is highly optimized by LLVM.
+    /// This matches Python's `str.startswith()` semantics exactly.
+    ///
+    /// # Arguments
+    ///
+    /// * `haystack` - The string to check
+    /// * `needle` - The prefix to match
+    ///
+    /// # Returns
+    ///
+    /// `true` if `haystack` starts with `needle`, `false` otherwise.
+    fn fast_starts_with(&self, haystack: &str, needle: &str) -> bool {
+        // Early exit for empty needle (always matches)
+        if needle.is_empty() {
+            return true;
+        }
+
+        // Early exit if haystack is shorter than needle
+        if haystack.len() < needle.len() {
+            return false;
+        }
+
+        // Direct byte slice comparison (LLVM optimizes this well)
+        let haystack_prefix = &haystack.as_bytes()[..needle.len()];
+        haystack_prefix == needle.as_bytes()
     }
 
     /// Calculate hash for cache key

@@ -217,6 +217,14 @@ def mock_scanlog_info():
             self.classic_records_list = []
             self.plugins_mods_to_check = {}
 
+            # Problematic plugins that are known to cause issues
+            self.problematic_plugins = {
+                "MoreSpawns.esp": "Causes CTD due to spawning conflicts",
+                "Arbitration.esp": "Combat overhaul with script conflicts",
+                "ChildrenofAtom.esp": "Known faction conflicts",
+                "CompanionsGoneWild.esp": "Companion script issues",
+            }
+
         def get(self, key, default=None):
             """Allow dict-like access."""
             return getattr(self, key, default)

@@ -298,6 +298,151 @@ impl YamlDataCore {
             ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
         })
     }
+
+    /// Create YamlData from YAML content strings (for testing without file I/O).
+    ///
+    /// This constructor is useful for unit tests and integration tests where you want
+    /// to test YamlData parsing without needing actual YAML files on disk.
+    ///
+    /// # Arguments
+    ///
+    /// * `main_content` - Content of the main YAML configuration file
+    /// * `game_content` - Content of the game-specific YAML configuration file
+    /// * `ignore_content` - Content of the ignore list YAML configuration file
+    /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
+    /// * `vr_mode` - Whether to load VR-specific configuration
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(YamlDataCore)` - Successfully parsed configuration
+    /// * `Err(ConfigError)` - Failed to parse configuration content
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_config_core::YamlDataCore;
+    ///
+    /// let main_yaml = r#"
+    /// CLASSIC_Info:
+    ///   version: "7.31.0"
+    ///   version_date: "2024-01-01"
+    /// "#;
+    ///
+    /// let game_yaml = r#"
+    /// Game_Info:
+    ///   XSE_Acronym: "F4SE"
+    /// "#;
+    ///
+    /// let ignore_yaml = r#"
+    /// CLASSIC_Ignore_Fallout4: []
+    /// "#;
+    ///
+    /// let config = YamlDataCore::from_yaml_content(
+    ///     main_yaml,
+    ///     game_yaml,
+    ///     ignore_yaml,
+    ///     "Fallout4".to_string(),
+    ///     false,
+    /// ).unwrap();
+    /// ```
+    pub fn from_yaml_content(
+        main_content: &str,
+        game_content: &str,
+        ignore_content: &str,
+        game: String,
+        vr_mode: bool,
+    ) -> Result<Self, ConfigError> {
+        // Parse YAML contents using yaml-rust2
+        let main_docs = YamlLoader::load_from_str(main_content)
+            .map_err(|e| ConfigError::ParseError(format!("Failed to parse main YAML: {}", e)))?;
+        let game_docs = YamlLoader::load_from_str(game_content)
+            .map_err(|e| ConfigError::ParseError(format!("Failed to parse game YAML: {}", e)))?;
+        let ignore_docs = YamlLoader::load_from_str(ignore_content)
+            .map_err(|e| ConfigError::ParseError(format!("Failed to parse ignore YAML: {}", e)))?;
+
+        // Get first document from each file
+        let main_data = main_docs
+            .first()
+            .ok_or_else(|| ConfigError::ParseError("Main YAML is empty".to_string()))?;
+        let game_data = game_docs
+            .first()
+            .ok_or_else(|| ConfigError::ParseError("Game YAML is empty".to_string()))?;
+        let ignore_data = ignore_docs
+            .first()
+            .ok_or_else(|| ConfigError::ParseError("Ignore YAML is empty".to_string()))?;
+
+        // Create YamlOperations instance for using helper methods
+        let yaml_ops = YamlOperations::new();
+
+        // Extract values using helper functions from YamlOperations
+        let vr_suffix = if vr_mode { "VR" } else { "" };
+
+        // Build the configuration struct
+        Ok(Self {
+            // Main YAML values
+            classic_version: yaml_ops.get_string_value(main_data, "CLASSIC_Info.version", ""),
+            classic_version_date: yaml_ops.get_string_value(
+                main_data,
+                "CLASSIC_Info.version_date",
+                "",
+            ),
+            classic_records_list: yaml_ops.get_vec_value(main_data, "catch_log_records"),
+            autoscan_text: yaml_ops.get_string_value(
+                main_data,
+                &format!("CLASSIC_Interface.autoscan_text_{}", game),
+                "",
+            ),
+
+            // Game YAML values
+            classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
+            crashgen_name: yaml_ops.get_string_value(
+                game_data,
+                &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
+                "",
+            ),
+            crashgen_latest_og: yaml_ops.get_string_value(
+                game_data,
+                "Game_Info.CRASHGEN_LatestVer",
+                "",
+            ),
+            crashgen_latest_vr: yaml_ops.get_string_value(
+                game_data,
+                "GameVR_Info.CRASHGEN_LatestVer",
+                "",
+            ),
+            crashgen_ignore: yaml_ops.get_vec_value(
+                game_data,
+                &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
+            ),
+            warn_noplugins: yaml_ops.get_string_value(
+                game_data,
+                "Warnings_CRASHGEN.Warn_NOPlugins",
+                "",
+            ),
+            warn_outdated: yaml_ops.get_string_value(
+                game_data,
+                "Warnings_CRASHGEN.Warn_Outdated",
+                "",
+            ),
+            xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
+            game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
+            game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
+            suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
+            suspects_stack_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Stack_Check"),
+            game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
+            game_mods_core: yaml_ops.get_hashmap_value(game_data, "Mods_CORE"),
+            game_mods_core_folon: yaml_ops.get_hashmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_freq: yaml_ops.get_hashmap_value(game_data, "Mods_FREQ"),
+            game_mods_opc2: yaml_ops.get_hashmap_value(game_data, "Mods_OPC2"),
+            game_mods_solu: yaml_ops.get_hashmap_value(game_data, "Mods_SOLU"),
+            game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
+            game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
+            game_version_vr: yaml_ops.get_string_value(game_data, "GameVR_Info.GameVersion", ""),
+
+            // Ignore YAML values
+            ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
+        })
+    }
 }
 
 /// Configuration error types
