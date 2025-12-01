@@ -43,6 +43,7 @@ class TestPathValidator:
         assert PathValidator.is_valid_path(None) is False
 
     @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path")
+    @patch("ClassicLib.PathValidator._HAS_RUST_PATH", False)
     def test_is_restricted_path_unrestricted(self, mock_is_valid: MagicMock) -> None:
         """Test is_restricted_path with unrestricted path."""
         mock_is_valid.return_value = True
@@ -50,17 +51,20 @@ class TestPathValidator:
         mock_is_valid.assert_called_once_with("C:/Users/Test/Documents")
 
     @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path")
+    @patch("ClassicLib.PathValidator._HAS_RUST_PATH", False)
     def test_is_restricted_path_restricted(self, mock_is_valid: MagicMock) -> None:
         """Test is_restricted_path with restricted path."""
         mock_is_valid.return_value = False
         assert PathValidator.is_restricted_path("C:/Windows/System32") is True
 
     @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path", side_effect=Exception("Check failed"))
+    @patch("ClassicLib.PathValidator._HAS_RUST_PATH", False)
     def test_is_restricted_path_exception(self, mock_is_valid: MagicMock) -> None:
         """Test is_restricted_path when exception occurs."""
         assert PathValidator.is_restricted_path("C:/SomePath") is True
 
     @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path")
+    @patch("ClassicLib.PathValidator._HAS_RUST_PATH", False)
     def test_is_restricted_path_with_pathobj(self, mock_is_valid: MagicMock) -> None:
         """Test is_restricted_path with Path object."""
         mock_is_valid.return_value = True
