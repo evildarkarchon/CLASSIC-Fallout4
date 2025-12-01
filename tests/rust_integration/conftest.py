@@ -26,7 +26,8 @@ CLASSIC_Interface:
 """
 
 MINIMAL_GAME_YAML = """
-Game_Hints: []
+Game_Hints:
+  - "Hint 1"
 Game_Info:
   CRASHGEN_LogName: "Buffout 4"
   CRASHGEN_LatestVer: "1.28.6"
@@ -43,12 +44,15 @@ Warnings_CRASHGEN:
   Warn_Outdated: "Outdated warning"
 Crashlog_Plugins_Exclude: []
 Crashlog_Records_Exclude: []
-Crashlog_Error_Check: {}
+Crashlog_Error_Check:
+  "Error Pattern": "Error Description"
 Crashlog_Stack_Check: {}
-Mods_CONF: {}
+Mods_CONF:
+  "ConflictingMod.esp": "Reason"
 Mods_CORE: {}
 Mods_CORE_FOLON: {}
-Mods_FREQ: {}
+Mods_FREQ:
+  "FrequentMod.esp": "Reason"
 Mods_OPC2: {}
 Mods_SOLU: {}
 """

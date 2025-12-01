@@ -49,19 +49,14 @@ class TestYamlDataIntegration:
         assert yamldata is not None
         assert isinstance(yamldata, YamlData)
 
-    def test_yamldata_required_fields(self):
+    def test_yamldata_required_fields(self, rust_yaml_files):
         """Test all required fields are present."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
         yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
+            str(root_dir),
+            str(data_dir),
         ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -99,19 +94,11 @@ class TestYamlDataIntegration:
         assert hasattr(yamldata, "game_version_new")
         assert hasattr(yamldata, "game_version_vr")
 
-    def test_yamldata_field_types(self):
+    def test_yamldata_field_types(self, rust_yaml_files):
         """Test fields have correct Python types."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -136,19 +123,11 @@ class TestYamlDataIntegration:
         assert isinstance(yamldata.game_mods_freq, dict)
         assert isinstance(yamldata.game_mods_solu, dict)
 
-    def test_yamldata_non_empty_data(self):
+    def test_yamldata_non_empty_data(self, rust_yaml_files):
         """Test that data is actually loaded (not empty)."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -163,19 +142,11 @@ class TestYamlDataIntegration:
         assert yamldata.crashgen_name != "", "crashgen_name should not be empty"
         assert yamldata.xse_acronym != "", "xse_acronym should not be empty"
 
-    def test_yamldata_game_specific_loading(self):
+    def test_yamldata_game_specific_loading(self, rust_yaml_files):
         """Test game-specific YAML loading."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         # Load for Fallout 4
         yamldata_fo4 = YamlData(yaml_dirs, "Fallout4", False)
@@ -184,19 +155,11 @@ class TestYamlDataIntegration:
         assert yamldata_fo4.xse_acronym == "F4SE", "Should load F4SE for Fallout 4"
         assert yamldata_fo4.crashgen_name != "", "Should load crash gen name"
 
-    def test_yamldata_vr_mode(self):
+    def test_yamldata_vr_mode(self, rust_yaml_files):
         """Test VR mode loading."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         # Load with VR mode
         yamldata_vr = YamlData(yaml_dirs, "Fallout4", True)
@@ -207,19 +170,11 @@ class TestYamlDataIntegration:
         assert yamldata_vr.crashgen_latest_vr != "", "Should have VR crash gen version"
 
     @pytest.mark.performance
-    def test_yamldata_performance(self):
+    def test_yamldata_performance(self, rust_yaml_files):
         """Test YamlData loading performance."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         # Time the load
         start_time = time.perf_counter()
@@ -241,19 +196,11 @@ class TestYamlDataIntegration:
         # Hard limit: must be faster than 500ms
         assert load_time_ms < 500, f"YamlData load took {load_time_ms:.2f}ms (max: 500ms)"
 
-    def test_yamldata_multiple_instantiation(self):
+    def test_yamldata_multiple_instantiation(self, rust_yaml_files):
         """Test multiple YamlData instances don't interfere."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         # Create multiple instances
         yamldata1 = YamlData(yaml_dirs, "Fallout4", False)
@@ -282,19 +229,11 @@ class TestYamlDataIntegration:
             f"Got error: {error_msg}"
         )
 
-    def test_yamldata_suspects_error_list_content(self):
+    def test_yamldata_suspects_error_list_content(self, rust_yaml_files):
         """Test suspects_error_list contains expected patterns."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -304,19 +243,11 @@ class TestYamlDataIntegration:
             assert isinstance(key, str), f"Key should be string, got {type(key)}"
             assert isinstance(value, str), f"Value should be string, got {type(value)}"
 
-    def test_yamldata_suspects_stack_list_content(self):
+    def test_yamldata_suspects_stack_list_content(self, rust_yaml_files):
         """Test suspects_stack_list contains expected patterns."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -328,19 +259,11 @@ class TestYamlDataIntegration:
             assert isinstance(key, str)
             assert isinstance(value, str)
 
-    def test_yamldata_ignore_lists_content(self):
+    def test_yamldata_ignore_lists_content(self, rust_yaml_files):
         """Test ignore lists contain expected data."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
@@ -354,19 +277,11 @@ class TestYamlDataIntegration:
         for item in yamldata.ignore_list:
             assert isinstance(item, str), f"Ignore item should be string, got {type(item)}"
 
-    def test_yamldata_mod_databases_structure(self):
+    def test_yamldata_mod_databases_structure(self, rust_yaml_files):
         """Test mod databases have correct structure."""
-        data_dir = Path("CLASSIC Data").resolve()
-        root_dir = Path().resolve()
-        yaml_dirs = [
-            str(data_dir / "databases"),  # Main YAML
-            str(data_dir / "databases"),  # Game YAML
-            str(root_dir),  # Ignore YAML (project root)
-        ]
-        main_file = data_dir / "databases" / "CLASSIC Main.yaml"
-
-        if not main_file.exists():
-            pytest.skip(f"{main_file} not found")
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
 
         yamldata = YamlData(yaml_dirs, "Fallout4", False)
 
