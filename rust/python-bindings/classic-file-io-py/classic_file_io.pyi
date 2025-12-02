@@ -36,9 +36,7 @@ Usage:
     asyncio.run(main())
 """
 
-from __future__ import annotations
-
-from collections.abc import Coroutine
+from collections.abc import Coroutine, AsyncIterator, Iterator
 from typing import Any
 
 __version__: str
@@ -51,6 +49,25 @@ class RustFileIOIOError(RustFileIOError):
 
 class RustFileIOParseError(RustFileIOError):
     """File parsing errors (DDS, encoding)."""
+
+class PyLineStreamer:
+    """Python iterator for streaming lines from a file asynchronously.
+
+    This struct wraps a Tokio Lines stream and exposes it as an async iterator
+    in Python. This allows for memory-efficient line-by-line processing of large files.
+    """
+    def __aiter__(self) -> PyLineStreamer: ...
+    def __anext__(self) -> Coroutine[Any, Any, str]: ...
+
+class PySyncLineStreamer:
+    """Python iterator for streaming lines from a file synchronously.
+
+    This struct wraps a std::io::Lines stream and exposes it as a standard iterator
+    in Python. This allows for memory-efficient line-by-line processing of large files
+    in synchronous code.
+    """
+    def __iter__(self) -> PySyncLineStreamer: ...
+    def __next__(self) -> str: ...
 
 class FileIOCore:
     """High-performance async file I/O core with caching and encoding detection.
@@ -80,7 +97,7 @@ class FileIOCore:
         Args:
             encoding: Default text encoding for file operations (default: "utf-8").
             errors: Error handling strategy for encoding issues (default: "ignore").
-                   Possible values: "ignore", "strict", "replace".
+                   Possible values: "ignore", "strict", and "replace".
             cache_size: Maximum number of cached file contents (default: 100).
             max_concurrent_io: Maximum concurrent I/O operations (default: 50).
 
@@ -139,6 +156,30 @@ class FileIOCore:
             >>> lines = await io_core.read_lines("log.txt")
             >>> for line in lines:
             ...     print(line)
+        """
+
+    def stream_lines(self, path: str) -> Coroutine[Any, Any, PyLineStreamer]:
+        """Stream lines from a file asynchronously.
+
+        Accepts both string paths and pathlib.Path objects.
+        Returns a Python coroutine that resolves to an async iterator.
+
+        Usage:
+            stream = await io.stream_lines(path)
+            async for line in stream:
+                print(line)
+        """ 
+
+    def stream_lines_sync(self, path: str) -> PySyncLineStreamer:
+        """Stream lines from a file synchronously.
+
+        Accepts both string paths and pathlib.Path objects.
+        Returns a standard Python iterator.
+
+        Usage:
+            stream = io.stream_lines_sync(path)
+            for line in stream:
+                print(line)
         """
 
     def read_bytes(self, path: str) -> Coroutine[Any, Any, bytes]:

@@ -79,80 +79,73 @@ def test_rust_acceleration_detection():
     assert isinstance(rust_available, bool), "Should return a boolean"
 
 
-@pytest.mark.unit
-def test_rust_status_logging():
-    """Test that Rust acceleration status is logged."""
-    from ClassicLib.Logger import logger
-    from ClassicLib.PapyrusLog import papyrus_logging
+    @pytest.mark.unit
+    def test_rust_status_logging():
+        """Test that Streaming I/O status is logged."""
+        from ClassicLib.Logger import logger
+        from ClassicLib.PapyrusLog import papyrus_logging
 
-    # Mock dependencies
-    with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings, patch("ClassicLib.PapyrusLog.read_lines_sync") as mock_read:
-        with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
-            with patch.object(logger, "debug") as mock_log_debug:
-                # Setup mocks
-                mock_path = MagicMock(spec=Path)
-                mock_path.exists.return_value = True
-                mock_settings.return_value = mock_path
-                mock_read.return_value = []
+        # Mock dependencies
+        with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings, patch("ClassicLib.PapyrusLog.stream_lines_sync") as mock_stream:
+            mock_settings.return_value = Path("test.log")
+            mock_stream.return_value = iter(["line1", "line2"])
 
-                # Clear the logged flag if it exists
-                if hasattr(papyrus_logging, "_logged_rust_status"):
-                    delattr(papyrus_logging, "_logged_rust_status")
+            # Ensure status hasn't been logged yet
+            if hasattr(papyrus_logging, "_logged_status"):
+                delattr(papyrus_logging, "_logged_status")
 
-                # Test with Rust available
-                mock_rust_check.return_value = True
-
+            # Spy on logger
+            with patch.object(logger, "debug") as mock_debug:
                 papyrus_logging()
 
-                # Check if Rust acceleration was logged
-                debug_calls = [str(call) for call in mock_log_debug.call_args_list]
-                rust_logged = any("Rust-accelerated" in str(call) or "10x faster" in str(call) for call in debug_calls)
+                # Verify it logged the status
+                mock_debug.assert_any_call("Papyrus log reading using Streaming I/O (Memory Efficient)")
 
-                assert rust_logged, "Should log Rust acceleration status"
+            # Verify it sets the flag
+            assert getattr(papyrus_logging, "_logged_status") is True
 
 
 # Test papyrus_logging function with Rust file I/O
 
 
-@pytest.mark.unit
-def test_papyrus_logging_uses_rust_file_io():
-    """Test that papyrus_logging uses read_lines_sync for Rust acceleration."""
-    from ClassicLib.PapyrusLog import papyrus_logging
+    @pytest.mark.unit
+    def test_papyrus_logging_uses_streaming_io():
+        """Test that papyrus_logging uses stream_lines_sync for memory efficiency."""
+        from ClassicLib.PapyrusLog import papyrus_logging
 
-    mock_path = MagicMock(spec=Path)
-    mock_path.exists.return_value = True
+        mock_path = MagicMock(spec=Path)
+        mock_path.exists.return_value = True
 
-    # Mock log data
-    mock_log_data = [
-        "Dumping Stacks\n",
-        "Dumping Stack\n",
-        "Dumping Stack\n",
-        " warning: Something\n",
-        " error: Something else\n",
-    ]
+        # Mock log data
+        mock_log_data = [
+            "Dumping Stacks\n",
+            "Dumping Stack\n",
+            "Dumping Stack\n",
+            " warning: Something\n",
+            " error: Something else\n",
+        ]
 
-    # Mock dependencies
-    with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings, patch("ClassicLib.PapyrusLog.read_lines_sync") as mock_read:
-        mock_settings.return_value = mock_path
-        mock_read.return_value = mock_log_data
+        # Mock dependencies
+        with patch("ClassicLib.PapyrusLog.yaml_settings") as mock_settings, patch("ClassicLib.PapyrusLog.stream_lines_sync") as mock_stream:
+            mock_settings.return_value = mock_path
+            # stream_lines_sync returns an iterator
+            mock_stream.return_value = iter(mock_log_data)
 
-        # Clear the logged flag if it exists
-        if hasattr(papyrus_logging, "_logged_rust_status"):
-            delattr(papyrus_logging, "_logged_rust_status")
+            # Reset logging flag
+            if hasattr(papyrus_logging, "_logged_status"):
+                delattr(papyrus_logging, "_logged_status")
 
-        message, count = papyrus_logging()
+            message, count = papyrus_logging()
 
-        # Verify read_lines_sync was called
-        assert mock_read.called, "Should call read_lines_sync"
-        mock_read.assert_called_once_with(mock_path)
+            # Verify stream_lines_sync was called
+            mock_stream.assert_called_once_with(mock_path)
 
-        # Verify stats were parsed correctly
-        assert count == 1, "Should count 1 dump"
-        assert "NUMBER OF DUMPS    : 1" in message
-        assert "NUMBER OF STACKS   : 2" in message
-        assert "NUMBER OF WARNINGS : 1" in message
-        assert "NUMBER OF ERRORS   : 1" in message
-
+            # Verify logic
+            assert count == 1  # 1 "Dumping Stacks"
+            assert "NUMBER OF DUMPS    : 1" in message
+            assert "NUMBER OF STACKS   : 2" in message
+            assert "NUMBER OF WARNINGS : 1" in message
+            assert "NUMBER OF ERRORS   : 1" in message
 
 @pytest.mark.unit
 def test_papyrus_logging_handles_missing_file():
@@ -166,8 +159,8 @@ def test_papyrus_logging_handles_missing_file():
         mock_settings.return_value = mock_path
 
         # Clear the logged flag if it exists
-        if hasattr(papyrus_logging, "_logged_rust_status"):
-            delattr(papyrus_logging, "_logged_rust_status")
+        if hasattr(papyrus_logging, "_logged_status"):
+            delattr(papyrus_logging, "_logged_status")
 
         message, count = papyrus_logging()
 
@@ -185,8 +178,8 @@ def test_papyrus_logging_handles_none_path():
         mock_settings.return_value = None
 
         # Clear the logged flag if it exists
-        if hasattr(papyrus_logging, "_logged_rust_status"):
-            delattr(papyrus_logging, "_logged_rust_status")
+        if hasattr(papyrus_logging, "_logged_status"):
+            delattr(papyrus_logging, "_logged_status")
 
         message, count = papyrus_logging()
 

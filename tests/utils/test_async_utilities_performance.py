@@ -40,7 +40,7 @@ class TestPerformanceCharacteristics:
             return n * 2
 
         items = list(range(100))
-        [work_unit(i) for i in items]
+        # [work_unit(i) for i in items]  # Removed unawaited coroutine creation
 
         # Test different concurrency levels
         timings = {}

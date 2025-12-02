@@ -176,7 +176,14 @@ local_paths:
         # Mock the bridge to handle the async call
         mock_bridge = MagicMock()
         mock_bridge_get_instance.return_value = mock_bridge
-        mock_bridge.run_async.return_value = None  # Simulate successful completion
+        
+        # We need to close the coroutine returned by mock_generate_async 
+        # because our mock run_async won't actually run it
+        def run_async_side_effect(coro):
+            coro.close()
+            return None
+            
+        mock_bridge.run_async.side_effect = run_async_side_effect
 
         FileGenerator.generate_all_files()
 

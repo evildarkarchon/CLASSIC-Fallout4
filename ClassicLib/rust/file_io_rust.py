@@ -66,6 +66,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
 from typing import Any
 
@@ -249,6 +250,64 @@ class FileIOCore:
 
         content = await self.read_file(path)
         return content.splitlines()
+
+    async def stream_lines(self, path: Path | str) -> AsyncIterator[str]:
+        """
+        Stream lines from a file asynchronously.
+
+        Args:
+            path (Path | str): The path to the file.
+
+        Yields:
+            str: Lines from the file.
+        """
+        if self._rust_core:
+            try:
+                # This returns an async iterator (PyLineStreamer)
+                streamer = await self._rust_core.stream_lines(str(path))
+                async for line in streamer:
+                    yield line
+                return
+            except (RustIOError, RustError) as e:
+                logger.debug(f"Rust error in stream_lines, falling back: {e}")
+
+        # Python fallback
+        if self._python_core:
+            async for line in self._python_core.stream_lines(path):
+                yield line
+            return
+
+        # Manual fallback
+        lines = await self.read_lines(path)
+        for line in lines:
+            yield line
+
+    def stream_lines_sync(self, path: Path | str) -> Iterator[str]:
+        """
+        Stream lines from a file synchronously.
+
+        Args:
+            path (Path | str): The path to the file.
+
+        Yields:
+            str: Lines from the file.
+        """
+        if self._rust_core:
+            try:
+                # This returns a standard iterator (PySyncLineStreamer)
+                # The Rust method call is synchronous (blocks I/O)
+                yield from self._rust_core.stream_lines_sync(str(path))
+                return
+            except (RustIOError, RustError) as e:
+                logger.debug(f"Rust error in stream_lines_sync, falling back: {e}")
+
+        # Manual fallback using open_file_with_encoding
+        from ClassicLib.Utils.file_utils import open_file_with_encoding
+
+        path = self._ensure_path(path)
+        with open_file_with_encoding(path) as f:
+            for line in f:
+                yield line.rstrip("\n")
 
     async def read_bytes(self, path: Path | str) -> bytes:
         """

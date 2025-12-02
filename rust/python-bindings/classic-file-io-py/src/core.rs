@@ -14,6 +14,7 @@ use std::path::PathBuf;
 
 // Use the error conversion function from lib.rs
 use crate::to_pyerr;
+use crate::stream::{PyLineStreamer, PySyncLineStreamer};
 
 /// Python wrapper for FileIOCore - THIN ADAPTER ONLY
 #[pyclass(name = "FileIOCore")]
@@ -120,6 +121,50 @@ impl PyFileIOCore {
         future_into_py(py, async move {
             inner.read_lines(&path_buf).await.map_err(to_pyerr)
         })
+    }
+
+    /// Stream lines from a file asynchronously
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    /// Returns a Python coroutine that resolves to an async iterator.
+    ///
+    /// Usage:
+    ///     stream = await io.stream_lines(path)
+    ///     async for line in stream:
+    ///         print(line)
+    #[pyo3(name = "stream_lines")]
+    pub fn py_stream_lines<'py>(
+        &self,
+        py: Python<'py>,
+        path: PathLike,
+    ) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+        let path_buf: PathBuf = path.into();
+
+        future_into_py(py, async move {
+            match inner.stream_lines(&path_buf).await {
+                Ok(lines) => Ok(PyLineStreamer::new(lines)),
+                Err(e) => Err(to_pyerr(e)),
+            }
+        })
+    }
+
+    /// Stream lines from a file synchronously
+    ///
+    /// Accepts both string paths and pathlib.Path objects.
+    /// Returns a standard Python iterator.
+    ///
+    /// Usage:
+    ///     stream = io.stream_lines_sync(path)
+    ///     for line in stream:
+    ///         print(line)
+    #[pyo3(name = "stream_lines_sync")]
+    pub fn py_stream_lines_sync(&self, path: PathLike) -> PyResult<PySyncLineStreamer> {
+        let path_buf: PathBuf = path.into();
+        match self.inner.stream_lines_sync(&path_buf) {
+            Ok(lines) => Ok(PySyncLineStreamer::new(lines)),
+            Err(e) => Err(to_pyerr(e)),
+        }
     }
 
     /// Read file as bytes

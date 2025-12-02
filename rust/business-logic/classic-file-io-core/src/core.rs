@@ -19,7 +19,7 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
-use tokio::io::AsyncWriteExt;
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{RwLock, Semaphore};
 use walkdir::WalkDir;
 
@@ -343,6 +343,64 @@ impl FileIOCore {
     pub async fn read_lines(&self, path: &Path) -> Result<Vec<String>, FileIOError> {
         let content = self.read_file(path).await?;
         Ok(content.lines().map(|s| s.to_string()).collect())
+    }
+
+    /// Asynchronously opens a file and returns a stream of lines.
+    ///
+    /// This function opens the file and wraps it in a `BufReader` to provide
+    /// an async stream of lines. This is useful for processing large files
+    /// line-by-line without loading the entire file into memory.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - A reference to a `Path` representing the location of the file.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing:
+    /// - `Ok(Lines<BufReader<File>>)`: An async stream of lines.
+    /// - `Err(FileIOError)`: An error if the file could not be opened.
+    pub async fn stream_lines(
+        &self,
+        path: &Path,
+    ) -> Result<tokio::io::Lines<BufReader<tokio::fs::File>>, FileIOError> {
+        // Cache metadata
+        if let Ok(metadata) = FileMetadata::from_path(path) {
+            self.metadata_cache.insert(path.to_path_buf(), metadata);
+        }
+
+        let file = tokio::fs::File::open(path).await?;
+        let reader = BufReader::new(file);
+        Ok(reader.lines())
+    }
+
+    /// Synchronously opens a file and returns a stream of lines.
+    ///
+    /// This function opens the file and wraps it in a `std::io::BufReader` to provide
+    /// a synchronous stream of lines. This is useful for processing large files
+    /// line-by-line without loading the entire file into memory in synchronous contexts.
+    ///
+    /// # Arguments
+    ///
+    /// * `path` - A reference to a `Path` representing the location of the file.
+    ///
+    /// # Returns
+    ///
+    /// Returns a `Result` containing:
+    /// - `Ok(std::io::Lines<std::io::BufReader<std::fs::File>>)`: A sync stream of lines.
+    /// - `Err(FileIOError)`: An error if the file could not be opened.
+    pub fn stream_lines_sync(
+        &self,
+        path: &Path,
+    ) -> Result<std::io::Lines<std::io::BufReader<std::fs::File>>, FileIOError> {
+        // Cache metadata
+        if let Ok(metadata) = FileMetadata::from_path(path) {
+            self.metadata_cache.insert(path.to_path_buf(), metadata);
+        }
+
+        let file = std::fs::File::open(path)?;
+        let reader = std::io::BufReader::new(file);
+        Ok(std::io::BufRead::lines(reader))
     }
 
     /// Asynchronously reads a file and returns its raw bytes without encoding conversion.

@@ -180,7 +180,7 @@ async def run_in_executor[R](func: Callable[..., R], *args: Any, executor: Execu
     Returns:
         R: The result of the executed function.
     """
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     if kwargs:
         func = partial(func, **kwargs)
     return await loop.run_in_executor(executor, func, *args)
@@ -212,7 +212,7 @@ class ExecutorDecisionMaker:
 
     async def _run_with_executor(self) -> Any:
         """Run the function using the thread pool executor."""
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         if self.kwargs:
             from functools import partial
 
@@ -309,7 +309,7 @@ async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent
             async with semaphore:
                 if asyncio.iscoroutinefunction(func):
                     return await func(item)
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 return await loop.run_in_executor(None, func, item)
 
     else:
@@ -317,7 +317,7 @@ async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent
         async def bounded_func(item: T) -> Any:
             if asyncio.iscoroutinefunction(func):
                 return await func(item)
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, func, item)
 
     tasks = [bounded_func(item) for item in items]
@@ -345,7 +345,7 @@ async def async_map_smart(
         if asyncio.iscoroutinefunction(func):
             await func(sample_item)
         else:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, func, sample_item)
         with_executor_time = time.perf_counter() - start
 
@@ -384,7 +384,7 @@ async def async_map_smart(
                     # Smart detection
                     return await smart_run_in_executor(func, item)
                 # "always"
-                loop = asyncio.get_event_loop()
+                loop = asyncio.get_running_loop()
                 return await loop.run_in_executor(None, func, item)
 
     else:
@@ -397,7 +397,7 @@ async def async_map_smart(
             if use_executor == "auto":
                 return await smart_run_in_executor(func, item)
             # "always"
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, func, item)
 
     tasks = [bounded_func(item) for item in items]
@@ -415,7 +415,7 @@ async def batch_process(items: list[T], processor: Callable[[T], Any], batch_siz
             batch_coros = [processor(item) for item in batch]
         else:
             # If processor is not async, run it in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             batch_coros = [loop.run_in_executor(None, processor, item) for item in batch]
 
         batch_results = await gather_with_concurrency(max_concurrent, *batch_coros)
@@ -454,7 +454,7 @@ async def batch_process_smart(
             batch_coros = [smart_run_in_executor(processor, item) for item in batch]
         else:  # "always" or True
             # Legacy behavior
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             batch_coros = [loop.run_in_executor(None, processor, item) for item in batch]
 
         batch_results = await gather_with_concurrency(max_concurrent, *batch_coros)
@@ -463,8 +463,18 @@ async def batch_process_smart(
     return results
 
 
-async def async_filter(predicate: Callable[[T], bool], items: Iterable[T], max_concurrent: int | None = None) -> list[T]:
-    """Async version of filter with concurrency control."""
+async def async_filter_smart(
+    predicate: Callable[[T], bool], items: Iterable[T], max_concurrent: int | None = None, use_executor: bool | str = "auto"
+) -> list[T]:
+    """
+    Async version of filter with concurrency control and smart executor usage.
+
+    Args:
+        predicate: Boolean function to apply to each item
+        items: Items to process
+        max_concurrent: Maximum concurrent operations (None for unlimited)
+        use_executor: Executor usage strategy ("auto", "always", "never")
+    """
     items_list = list(items)
 
     if max_concurrent:
@@ -474,7 +484,12 @@ async def async_filter(predicate: Callable[[T], bool], items: Iterable[T], max_c
             async with semaphore:
                 if asyncio.iscoroutinefunction(predicate):
                     return await predicate(item)
-                loop = asyncio.get_event_loop()
+                if use_executor == "never":
+                    return predicate(item)
+                if use_executor == "auto":
+                    return await smart_run_in_executor(predicate, item)
+                # "always"
+                loop = asyncio.get_running_loop()
                 return await loop.run_in_executor(None, predicate, item)
 
     else:
@@ -482,11 +497,21 @@ async def async_filter(predicate: Callable[[T], bool], items: Iterable[T], max_c
         async def check_item(item: T) -> bool:
             if asyncio.iscoroutinefunction(predicate):
                 return await predicate(item)
-            loop = asyncio.get_event_loop()
+            if use_executor == "never":
+                return predicate(item)
+            if use_executor == "auto":
+                return await smart_run_in_executor(predicate, item)
+            # "always"
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, predicate, item)
 
     results = await asyncio.gather(*[check_item(item) for item in items_list])
     return [item for item, keep in zip(items_list, results, strict=False) if keep]
+
+
+async def async_filter(predicate: Callable[[T], bool], items: Iterable[T], max_concurrent: int | None = None) -> list[T]:
+    """Async version of filter with concurrency control (legacy wrapper)."""
+    return await async_filter_smart(predicate, items, max_concurrent, use_executor="always")
 
 
 # -----------------------------------------------------------------------------

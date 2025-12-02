@@ -128,7 +128,7 @@ class FormIDAnalyzer:
             RuntimeError: If called in CLI/TUI mode (use FormIDAnalyzerCore instead)
         """
         # Use Phase 2 wrapper - errors in CLI/TUI, works in GUI
-        wrapper = create_sync_wrapper(self._core.formid_match)
+        wrapper = create_sync_wrapper(self._core.formid_match, strict=True)
         return wrapper(formids_matches, crashlog_plugins)
 
     def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
@@ -153,5 +153,5 @@ class FormIDAnalyzer:
             RuntimeError: If called in CLI/TUI mode (use FormIDAnalyzerCore instead)
         """
         # Use Phase 2 wrapper - errors in CLI/TUI, works in GUI
-        wrapper = create_sync_wrapper(self._core.lookup_formid_value)
+        wrapper = create_sync_wrapper(self._core.lookup_formid_value, strict=True)
         return wrapper(formid, plugin)

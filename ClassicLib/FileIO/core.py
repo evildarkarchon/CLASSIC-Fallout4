@@ -27,6 +27,7 @@ except ImportError:
     aiofiles = None  # type: ignore[assignment]
     AIOFILES_AVAILABLE = False
 
+from collections.abc import AsyncIterator, Iterator
 from itertools import starmap
 
 from ClassicLib.FileIO.path_utils import ensure_path
@@ -35,6 +36,7 @@ from ClassicLib.Logger import logger
 # Import async utilities if available
 try:
     from ClassicLib.FileIO.Async import (
+        open_file_with_encoding_async,
         read_file_with_encoding_async,
     )
 
@@ -151,6 +153,59 @@ class FileIOCore:
             loop = asyncio.get_event_loop()
             content = await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
             return content.splitlines()
+
+    async def stream_lines(self, path: Path | str) -> AsyncIterator[str]:
+        """
+        Asynchronously streams the contents of a file line by line.
+
+        This method yields lines from the file one by one, which is memory-efficient
+        for large files. It utilizes automatic encoding detection if available.
+        Lines are stripped of trailing newline characters for consistency with read_lines().
+
+        Args:
+            path (Path | str): The path to the file to be read.
+
+        Yields:
+            str: A single line from the file.
+        """
+        path = FileIOCore._ensure_path(path)
+
+        # Use encoding detection if available
+        if ASYNC_ENCODING_AVAILABLE:
+            async with open_file_with_encoding_async(path) as f:
+                async for line in f:
+                    yield line.rstrip("\n")
+        elif AIOFILES_AVAILABLE:
+            assert aiofiles is not None
+            async with aiofiles.open(path, encoding=self.default_encoding, errors=self.default_errors) as f:
+                async for line in f:
+                    yield line.rstrip("\n")
+        else:
+            # Fallback: Read all lines and yield them (loses streaming benefit but maintains API)
+            lines = await self.read_lines(path)
+            for line in lines:
+                yield line
+
+    def stream_lines_sync(self, path: Path | str) -> Iterator[str]:
+        """
+        Synchronously streams the contents of a file line by line.
+
+        This method yields lines from the file one by one, using automatic encoding
+        detection. It is memory-efficient for large files.
+        Lines are stripped of trailing newline characters.
+
+        Args:
+            path (Path | str): The path to the file to be read.
+
+        Yields:
+            str: A single line from the file.
+        """
+        from ClassicLib.Utils.file_utils import open_file_with_encoding
+
+        path = FileIOCore._ensure_path(path)
+        with open_file_with_encoding(path) as f:
+            for line in f:
+                yield line.rstrip("\n")
 
     @staticmethod
     async def read_bytes(path: Path | str) -> bytes:

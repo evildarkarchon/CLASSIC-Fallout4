@@ -729,7 +729,7 @@ def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
     )
 
 
-def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T]:
+def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]], strict: bool = False) -> Callable[..., T]:
     """
     Create a sync wrapper for an async function with context-aware execution.
 
@@ -737,54 +737,17 @@ def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]]) ->
     - GUI mode: Uses AsyncBridge (Qt event loop integration)
     - CLI/TUI mode: Uses asyncio.run() (creates new event loop per call)
 
-    IMPORTANT - Appropriate Usage:
-    ✅ GUI workers (Qt threads, PySide6 slots)
-    ✅ Testing and benchmarking isolated async functions
-    ✅ One-off operations in sync contexts (initialization, cleanup)
-
-    ❌ DO NOT USE in production CLI main flow
-    ❌ DO NOT USE when already in async context
-    ❌ DO NOT USE for repeated operations in CLI (inefficient)
-
-    Best Practices:
-    - Production CLI code should be async-first (use asyncio.run() once at entry point)
-    - See CLASSIC_ScanLogs.py for reference async-first CLI pattern
-    - In CLI, call async methods directly with await instead of using wrappers
-    - Sync wrappers are primarily for GUI thread safety and testing purposes
-
-    Usage:
-        # Example 1: GUI worker (CORRECT)
-        class CrashLogsScanWorker(QThread):
-            def _perform_scan(self):
-                sync_scan = create_sync_wrapper(async_scan_function)
-                result = sync_scan()  # Uses AsyncBridge in GUI mode
-
-        # Example 2: Testing (CORRECT)
-        def test_async_function():
-            sync_wrapper = create_sync_wrapper(async_function)
-            result = sync_wrapper()  # Uses asyncio.run() in CLI mode
-
-        # Example 3: CLI production (INCORRECT - don't do this)
-        def main():
-            sync_wrapper = create_sync_wrapper(async_function)
-            result = sync_wrapper()  # Creates new event loop per call!
-
-        # Example 4: CLI production (CORRECT - do this instead)
-        async def main():
-            result = await async_function()  # Direct async, one event loop
-
-        if __name__ == "__main__":
-            asyncio.run(main())  # Single event loop at entry point
-
     Args:
         async_func: The async function to wrap
+        strict: If True, raises RuntimeError in CLI/TUI mode instead of falling back
+               to asyncio.run(). Use this for functions that must only be called
+               in GUI contexts to prevent performance "footguns".
 
     Returns:
-        A sync wrapper that works in both GUI and CLI modes
+        A sync wrapper that works in both GUI and CLI modes (unless strict=True)
 
-    Note:
-        The CLI/TUI mode asyncio.run() fallback is intentional for testing
-        and benchmarking. Production CLI code should not rely on this pattern.
+    Raises:
+        RuntimeError: If strict=True and called in CLI/TUI mode.
     """
     import asyncio
 
@@ -796,6 +759,15 @@ def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]]) ->
             # GUI mode: Use AsyncBridge for Qt event loop integration
             bridge = AsyncBridge.get_instance()
             return bridge.run_async(coro)
+        
+        # Strict mode check - prevent inefficient usage in CLI
+        if strict:
+            raise RuntimeError(
+                f"Strict mode: Cannot use sync wrapper for '{async_func.__name__}' in CLI/TUI mode.\n"
+                "This function creates a new event loop for every call, which is inefficient.\n"
+                "Use 'await' and call the async function directly instead."
+            )
+
         # CLI/TUI mode: Use standard asyncio.run()
         return asyncio.run(coro)
 

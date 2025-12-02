@@ -13,8 +13,7 @@ from pathlib import Path
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIO import read_lines_sync
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.FileIO import stream_lines_sync
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import yaml_settings
 
@@ -23,16 +22,16 @@ def papyrus_logging() -> tuple[str, int]:
     """
     Analyzes Papyrus log files, extracting various statistics and compiling a summary.
 
-    This function reads a Papyrus log file using Rust-accelerated file I/O if available,
+    This function reads a Papyrus log file using streaming file I/O to minimize memory usage,
     and computes key data such as the total number of dumps, stacks, warnings, and errors
     present in the log. It also calculates the ratio of dumps to stacks. If the log file
     is not found, the function provides user guidance on enabling and locating Papyrus
     logging.
 
-    Rust Acceleration:
-        - Uses read_lines_sync for 10x faster file I/O
-        - Automatic encoding detection (no chardet needed)
-        - Better error handling for malformed files
+    Optimization:
+        - Uses stream_lines_sync for memory-efficient line-by-line processing
+        - Automatic encoding detection
+        - Handles multi-gigabyte logs without OOM errors
 
     Returns:
         tuple[str, int]: A tuple containing a formatted string with log analysis
@@ -44,20 +43,15 @@ def papyrus_logging() -> tuple[str, int]:
     message_list: list[str] = []
     papyrus_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_PapyrusLog")
 
-    # Log Rust acceleration status (only once at module level)
-    if not hasattr(papyrus_logging, "_logged_rust_status"):
-        if is_rust_accelerated("file_io"):
-            logger.debug("Papyrus log reading using Rust-accelerated file I/O (10x faster)")
-        else:
-            logger.debug("Papyrus log reading using Python file I/O implementation")
-        papyrus_logging._logged_rust_status = True  # type: ignore
+    # Log optimization status (only once at module level)
+    if not hasattr(papyrus_logging, "_logged_status"):
+        logger.debug("Papyrus log reading using Streaming I/O (Memory Efficient)")
+        papyrus_logging._logged_status = True  # type: ignore
 
     count_dumps = count_stacks = count_warnings = count_errors = 0
     if papyrus_path and papyrus_path.exists():
-        # Use Rust-accelerated read_lines_sync (automatic encoding detection, 10x faster)
-        papyrus_data: list[str] = read_lines_sync(papyrus_path)
-
-        for line in papyrus_data:
+        # Use streaming I/O (automatic encoding detection, memory efficient)
+        for line in stream_lines_sync(papyrus_path):
             if "Dumping Stacks" in line:
                 count_dumps += 1
             elif "Dumping Stack" in line:

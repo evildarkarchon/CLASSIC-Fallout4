@@ -10,6 +10,7 @@ Phase 3 Integration - Performance Validation
 
 import statistics
 import time
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,8 @@ import pytest
 # Skip all tests if Rust not available
 pytest.importorskip("classic_scanlog")
 pytest.importorskip("classic_config")
+# Skip if pytest-benchmark is not installed
+pytest.importorskip("pytest_benchmark")
 
 from ClassicLib.rust.orchestrator_api import ClassicOrchestrator
 
@@ -50,6 +53,7 @@ def single_crash_log(sample_crash_logs: list[Path]) -> Path:
 
 @pytest.mark.performance
 @pytest.mark.rust
+@pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
 class TestSingleLogPerformance:
     """Performance benchmarks for single log processing"""
 
@@ -97,6 +101,7 @@ class TestSingleLogPerformance:
 
 @pytest.mark.performance
 @pytest.mark.rust
+@pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
 class TestBatchPerformance:
     """Performance benchmarks for batch processing"""
 
@@ -177,6 +182,7 @@ class TestBatchPerformance:
 
 @pytest.mark.performance
 @pytest.mark.rust
+@pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
 class TestParallelismEfficiency:
     """Test parallelism and concurrency efficiency"""
 
@@ -261,6 +267,7 @@ class TestParallelismEfficiency:
 
 @pytest.mark.performance
 @pytest.mark.rust
+@pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
 class TestMemoryEfficiency:
     """Test memory usage and efficiency"""
 
@@ -391,6 +398,7 @@ class TestMemoryEfficiency:
 
 @pytest.mark.performance
 @pytest.mark.rust
+@pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
 class TestPerformanceTargets:
     """Validate that performance targets are met"""
 

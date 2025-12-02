@@ -16,6 +16,7 @@ from ClassicLib.FileIO.sync_adapters import (
     read_crash_log_sync,
     read_file_sync,
     read_lines_sync,
+    stream_lines_sync,
     write_bytes_sync,
     write_crash_report_sync,
     write_file_sync,
@@ -31,6 +32,7 @@ __all__ = [
     # Sync adapters
     "read_file_sync",
     "read_lines_sync",
+    "stream_lines_sync",
     "read_bytes_sync",
     "write_file_sync",
     "write_lines_sync",

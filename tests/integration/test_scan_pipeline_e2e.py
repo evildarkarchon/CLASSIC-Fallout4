@@ -9,6 +9,7 @@ on real crash log patterns.
 import asyncio
 import contextlib
 import time
+import tracemalloc
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -224,6 +225,7 @@ class TestScanPipelineE2E:
 
     @pytest.mark.timing
     @pytest.mark.asyncio
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
     async def test_complete_scan_pipeline_1mb_log(self, setup_pipeline):
         """Test complete pipeline with typical 1MB crash log."""
         setup_pipeline["orchestrator"]
@@ -311,6 +313,7 @@ class TestScanPipelineE2E:
 
     @pytest.mark.timing
     @pytest.mark.asyncio
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
     async def test_complete_scan_pipeline_2mb_log(self, setup_pipeline):
         """Test complete pipeline with large 2MB crash log."""
         setup_pipeline["orchestrator"]
@@ -560,6 +563,7 @@ class TestScanPipelineE2E:
 
     @pytest.mark.timing
     @pytest.mark.asyncio
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
     async def test_performance_baseline_measurement(self, setup_pipeline):
         """Establish performance baselines for regression testing."""
         generator = SyntheticCrashLogGenerator()

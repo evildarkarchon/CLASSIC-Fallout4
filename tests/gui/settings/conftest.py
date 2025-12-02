@@ -1,10 +1,7 @@
 """
 Shared fixtures for settings dialog tests.
 
-Note: These tests use YAML.TEST to avoid modifying production settings.
-Due to concurrent file access on the test YAML file, these tests should be run:
-- Without parallelization: pytest tests/gui/settings/
-- Or with --dist=loadfile when using pytest-xdist to keep all tests on same worker
+Note: These tests use a mocked settings cache to avoid file I/O and ensure speed.
 """
 
 from unittest.mock import MagicMock
@@ -17,12 +14,47 @@ from ClassicLib.Interface.Settings.dialog import SettingsDialog
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.YamlSettingsCache import yaml_settings
 
-# Note: MessageHandler initialization is now handled by standardized
-# fixtures in tests/fixtures/registry_fixtures.py which provide:
-# - message_handler: For non-GUI tests
-# - gui_message_handler: For GUI tests (from qt_fixtures.py)
-# - Automatic cleanup via ensure_message_handler_cleanup
+# Mock Cache Implementation
+class MockSettingsCache:
+    def __init__(self):
+        self.store = {}  # (yaml_store, key_path) -> value
 
+    def async_yaml_settings(self, _type, yaml_store, key_path, new_value=None):
+        key = (yaml_store, key_path)
+        if new_value is not None:
+            self.store[key] = new_value
+            return new_value
+        return self.store.get(key)
+
+    def batch_get_settings(self, requests):
+        # requests: list of (type, yaml_store, key_path)
+        return [self.store.get((req[1], req[2])) for req in requests]
+
+@pytest.fixture
+def mock_settings_cache(monkeypatch):
+    """Patches YamlSettingsCache to use in-memory storage."""
+    mock_cache = MockSettingsCache()
+    
+    # Import the class to patch
+    from ClassicLib.YamlSettingsCache import YamlSettingsCache
+    import sys
+    
+    # Ensure module is loaded
+    import ClassicLib.YamlSettingsCache
+
+    # Mock the get_instance class method
+    monkeypatch.setattr(
+        YamlSettingsCache,
+        "get_instance",
+        lambda: mock_cache
+    )
+    
+    # Reset the singleton in the module to force usage of our mock
+    # Use sys.modules to ensure we get the module object, not the class if shadowed
+    module = sys.modules["ClassicLib.YamlSettingsCache"]
+    monkeypatch.setattr(module, "_yaml_cache", None)
+    
+    return mock_cache
 
 @pytest.fixture
 def app(qapp):
@@ -31,7 +63,7 @@ def app(qapp):
 
 
 @pytest.fixture
-def settings_dialog(app):
+def settings_dialog(app, mock_settings_cache):
     """Create a SettingsDialog instance for testing.
 
     The dialog is created as non-modal to prevent freezing when shown during tests.
@@ -41,23 +73,20 @@ def settings_dialog(app):
     handler = init_message_handler(parent=None, is_gui_mode=True)
 
     # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
-    # The _gui_backend.show() method emits a signal that triggers _handle_message()
-    # which calls msg_box.exec() - a blocking modal dialog
     handler._gui_backend.show = MagicMock()
 
     # Create dialog as NON-MODAL to prevent freezing in tests
+    # mock_settings_cache is active (autouse via dependency or singleton patch), so it will use memory
     dialog = SettingsDialog(yaml_store=YAML.TEST, modal=False)
     yield dialog
     dialog.close()
 
-    # Clean up message handler
-
 
 @pytest.fixture
-def reset_settings():
+def reset_settings(mock_settings_cache):
     """Reset settings to default values after test."""
     yield
-    # Reset to defaults after test
+    # Reset to defaults after test (updates the mock)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", False)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs", False)

@@ -7,7 +7,7 @@ BSArch subprocess handling, and concurrent archive processing.
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiofiles
 import pytest
@@ -216,6 +216,8 @@ class TestScanModsArchived:
 
         # Mock subprocess that times out
         mock_proc = AsyncMock()
+        # Ensure kill is a standard Mock (sync), not AsyncMock, because asyncio.subprocess.Process.kill() is sync
+        mock_proc.kill = MagicMock()
         mock_proc.communicate = AsyncMock(side_effect=TimeoutError())
 
         with (
@@ -227,6 +229,8 @@ class TestScanModsArchived:
 
             # Verify timeout was handled
             mock_error.assert_called_with("BSArch command timed out processing timeout.ba2")
+            # Verify kill was called
+            mock_proc.kill.assert_called()
 
 
 if __name__ == "__main__":

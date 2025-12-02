@@ -11,6 +11,7 @@ The clean_version_caches fixture ensures version cache is cleared between tests.
 
 import asyncio
 import time
+import tracemalloc
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -65,6 +66,7 @@ class TestOrchestratorPerformance:
         assert performance_ratio >= 3.0, f"Batch queries should be at least 3x faster, got {performance_ratio:.2f}x"
 
     @pytest.mark.performance
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
     def test_version_string_caching(self):
         """Verify version string parsing is cached effectively.
 

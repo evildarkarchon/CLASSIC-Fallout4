@@ -121,6 +121,7 @@ mod encoding;
 mod generation;
 mod hash;
 mod log_collector;
+mod stream;
 
 pub use core::PyFileIOCore;
 pub use dds::PyDDSHeader;
@@ -130,6 +131,7 @@ pub use generation::{
 };
 pub use hash::PyFileHasher;
 pub use log_collector::PyLogCollector;
+pub use stream::{PyLineStreamer, PySyncLineStreamer};
 
 /// Python module for file I/O operations
 #[pymodule]
@@ -189,6 +191,8 @@ pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyEncodingDetector>()?;
     m.add_class::<PyFileHasher>()?;
     m.add_class::<PyLogCollector>()?; // This MUST add PyLogCollector to the module
+    m.add_class::<PyLineStreamer>()?;
+    m.add_class::<PySyncLineStreamer>()?;
 
     // Phase 5 - File generation
     generation::register(m)?;

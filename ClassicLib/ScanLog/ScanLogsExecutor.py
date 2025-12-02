@@ -407,7 +407,7 @@ class ScanLogsExecutor:
             RuntimeError: If called in CLI/TUI mode (use async methods)
         """
         # Create wrapper per call for proper instance method binding
-        wrapper = create_sync_wrapper(self.execute_scan)
+        wrapper = create_sync_wrapper(self.execute_scan, strict=True)
         return wrapper()
 
 

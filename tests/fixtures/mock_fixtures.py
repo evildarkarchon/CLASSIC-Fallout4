@@ -155,3 +155,22 @@ def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
         mock_query.side_effect = query_side_effect
 
         yield mock_entries
+
+
+@pytest.fixture(autouse=True)
+def disable_rust_acceleration(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Force tests to use Python implementations by disabling Rust acceleration.
+
+    This prevents tests from hitting the real system via Rust extensions when
+    they expect to be using mocked Python logic (e.g., for registry checks).
+    """
+    # Patch for GamePath
+    monkeypatch.setattr("ClassicLib.GamePath._HAS_RUST_PATH", False)
+    monkeypatch.setattr("ClassicLib.GamePath.classic_path", None)
+
+    # Patch for DocsPath
+    monkeypatch.setattr("ClassicLib.DocsPath._HAS_RUST_PATH", False)
+    monkeypatch.setattr("ClassicLib.DocsPath.classic_path", None)
+
+    # Patch for factory if needed (to be safe)
+    monkeypatch.setattr("ClassicLib.integration.factory.get_path_operations", lambda: None)
