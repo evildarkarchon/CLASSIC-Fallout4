@@ -171,10 +171,10 @@ class ConfigFileCache:
             # TODO: Check if this needs to raise or return an error message instead. (See also: TODO in scan_mod_inis)  # noqa: FIX002
             raise FileNotFoundError
 
-        for path, _dirs, files in self._game_root_path.walk():  # pyrefly: ignore
+        for path, dirs, files in self._game_root_path.walk():  # pyrefly: ignore
             for file in files:
                 # Skip if _dirs do not intersect with the whitelist or no match in file name
-                if not (set(self._duplicate_whitelist) & set(_dirs)) and not any(
+                if not (set(self._duplicate_whitelist) & set(dirs)) and not any(
                     whitelist in file for whitelist in self._duplicate_whitelist
                 ):
                     continue

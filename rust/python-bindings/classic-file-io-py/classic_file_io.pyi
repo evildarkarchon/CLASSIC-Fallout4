@@ -36,7 +36,7 @@ Usage:
     asyncio.run(main())
 """
 
-from collections.abc import Coroutine, AsyncIterator, Iterator
+from collections.abc import Coroutine
 from typing import Any
 
 __version__: str

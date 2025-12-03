@@ -186,7 +186,8 @@ class FileIOCore:
             for line in lines:
                 yield line
 
-    def stream_lines_sync(self, path: Path | str) -> Iterator[str]:
+    @staticmethod
+    def stream_lines_sync(path: Path | str) -> Iterator[str]:
         """
         Synchronously streams the contents of a file line by line.
 

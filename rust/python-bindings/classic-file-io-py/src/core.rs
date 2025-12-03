@@ -13,8 +13,8 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 // Use the error conversion function from lib.rs
-use crate::to_pyerr;
 use crate::stream::{PyLineStreamer, PySyncLineStreamer};
+use crate::to_pyerr;
 
 /// Python wrapper for FileIOCore - THIN ADAPTER ONLY
 #[pyclass(name = "FileIOCore")]

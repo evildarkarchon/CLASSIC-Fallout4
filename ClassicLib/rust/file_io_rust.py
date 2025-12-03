@@ -66,9 +66,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from collections.abc import AsyncIterator, Iterator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncIterator, Iterator
 
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.integration.detector import detect_component
@@ -267,9 +269,10 @@ class FileIOCore:
                 streamer = await self._rust_core.stream_lines(str(path))
                 async for line in streamer:
                     yield line
-                return
             except (RustIOError, RustError) as e:
                 logger.debug(f"Rust error in stream_lines, falling back: {e}")
+            else:
+                return
 
         # Python fallback
         if self._python_core:
@@ -297,9 +300,10 @@ class FileIOCore:
                 # This returns a standard iterator (PySyncLineStreamer)
                 # The Rust method call is synchronous (blocks I/O)
                 yield from self._rust_core.stream_lines_sync(str(path))
-                return
             except (RustIOError, RustError) as e:
                 logger.debug(f"Rust error in stream_lines_sync, falling back: {e}")
+            else:
+                return
 
         # Manual fallback using open_file_with_encoding
         from ClassicLib.Utils.file_utils import open_file_with_encoding

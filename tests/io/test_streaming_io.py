@@ -61,7 +61,7 @@ class TestSyncFileStreaming:
         """Test streaming a larger file to ensure iterator behavior."""
         large_file = tmp_path / "large_stream.txt"
         # Write 1000 lines
-        with open(large_file, "w", encoding="utf-8") as f:
+        with Path(large_file).open("w", encoding="utf-8") as f:
             for i in range(1000):
                 f.write(f"Line {i}\n")
         
