@@ -106,15 +106,22 @@ cargo build --release --workspace
 ```
 
 ### Rebuilding Rust Bindings (Development)
-If you modify Rust code for the Python apps, you must rebuild the bindings:
+If you modify Rust code for the Python apps, you must rebuild the bindings.
 
-For all modules:
+**Using the unified script (Recommended):**
 ```powershell
-# Rebuild all Rust modules (Windows)
+# Rebuild ALL modules (incremental, fast)
 ./rebuild_rust.ps1
+
+# Rebuild specific module(s) by name
+./rebuild_rust.ps1 yaml
+./rebuild_rust.ps1 scanlog config
+
+# Force a clean rebuild (slower, fixes stale artifacts)
+./rebuild_rust.ps1 -Clean
 ```
 
-For a specific module:
+**Manual Method (Specific Module):**
 ```bash
 cd rust/python-bindings/classic-yaml-py
 maturin build --release --out dist
