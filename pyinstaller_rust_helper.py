@@ -13,135 +13,69 @@ Rust Crate Structure → Python Modules:
 - classic-shared (foundation) → classic_shared.pyd
 - classic-yaml-py (bindings) → classic_yaml.pyd
   - Depends on: classic-yaml-core (business logic)
-- classic-database-py (bindings) → classic_database.pyd
-  - Depends on: classic-database-core (business logic)
-- classic-file-io-py (bindings) → classic_file_io.pyd
-  - Depends on: classic-file-io-core (business logic)
-- classic-scanlog-py (bindings) → classic_scanlog.pyd
-  - Depends on: classic-scanlog-core (business logic)
-- classic-config-py (bindings) → classic_config.pyd
-  - Depends on: classic-config-core (business logic)
+...and so on.
 
 Note: Only the *-py crates produce .pyd files. The *-core crates are rlib only
 and provide pure Rust business logic that can be used by CLI/TUI applications.
 Python imports these modules directly (e.g., import classic_yaml) for transparent
 Rust acceleration.
 
-Performance: These Rust extensions provide 10-150x speedups for:
-- Log parsing (10x), FormID analysis (25x), Pattern matching (20x)
-- File I/O (10x), DDS processing (40x), Record scanning (40x)
+Performance: These Rust extensions provide 10-150x speedups.
 """
 
 import site
 from pathlib import Path
+from glob import glob
+import os
 
-# All Rust Python modules to bundle (.pyd files from *-py crates)
-# These are the standalone Python extension modules that PyInstaller needs to include
-RUST_MODULES = [
-    # Foundation Layer
-    "classic_shared",  # Foundation layer (runtime, errors, utilities)
-    # Business Logic - Core Operations
-    "classic_config",  # Configuration (from classic-config-py)
-    "classic_database",  # SQLite operations (from classic-database-py)
-    "classic_file_io",  # File I/O operations (from classic-file-io-py)
-    "classic_message",  # Message handling (from classic-message-py)
-    "classic_path",  # Path management (from classic-path-py) - NEW: 10-20x speedup
-    "classic_perf",  # Performance monitoring (from classic-perf-py)
-    "classic_pybridge",  # Async Python bridge (from classic-pybridge-py)
-    "classic_registry",  # Windows registry (from classic-registry-py)
-    "classic_scangame",  # Game scanning (from classic-scangame-py)
-    "classic_scanlog",  # Log parsing (from classic-scanlog-py)
-    "classic_settings",  # Settings cache (from classic-settings-py)
-    "classic_yaml",  # YAML operations (from classic-yaml-py)
-    # Phase 4 - Constants and Utilities
-    "classic_constants",  # Game constants (from classic-constants-py)
-    "classic_version",  # Version parsing (from classic-version-py)
-    "classic_resource",  # Resource detection (from classic-resource-py)
-    "classic_xse",  # Script Extender (from classic-xse-py)
-    "classic_web",  # Web utilities (from classic-web-py)
-    # Phase 5 - Application Coordination
-    "classic_update",  # Auto-update system (from classic-update-py)
-]
-
-
-def _process_local_module(
-    module_name: str,
-    local_rust_dir: Path,
+def _process_module_file(
+    pyd_path: Path,
     binaries: list,
     datas: list,
-) -> bool:
+) -> str:
     """
-    Process a single module from the local rust_extensions directory.
+    Process a single .pyd file and its associated artifacts.
 
     Args:
-        module_name: Name of the Rust module to process
-        local_rust_dir: Path to the rust_extensions directory
+        pyd_path: Path to the .pyd file
         binaries: List to append binary tuples to
         datas: List to append data file tuples to
 
     Returns:
-        True if module was found and processed, False otherwise
+        Module name (import name)
     """
-    pyd_file = local_rust_dir / f"{module_name}.pyd"
-    if not pyd_file.exists():
-        return False
+    module_name = pyd_path.stem
+    # Handle case where filename might have extra bits (e.g. from wheel)
+    # But typically for pyd in rust_extensions it is just name.pyd
+    
+    binaries.append((str(pyd_path), module_name))
+    print(f"  - {module_name}: {pyd_path.name}")
 
-    binaries.append((str(pyd_file), module_name))
-    print(f"  - {module_name}: {pyd_file.name}")
-
-    # Check for corresponding __init__.py (stored as {module_name}__init__.py)
-    init_file = local_rust_dir / f"{module_name}__init__.py"
-    if init_file.exists():
-        datas.append((str(init_file), module_name))
-
+    # Check for corresponding __init__.py (stored as {module_name}__init__.py in flattened dir)
+    # or inside the module directory if checking site-packages
+    
+    # Logic depends on whether we are in flattened local dir or site-packages
+    # But since we are just given a path, we check parent dir. 
+    
+    parent = pyd_path.parent
+    
+    # Check for {module_name}__init__.py (flattened local convention)
+    flat_init = parent / f"{module_name}__init__.py"
+    if flat_init.exists():
+        datas.append((str(flat_init), module_name))
+        
+    # Check for __init__.py (site-packages convention)
+    # In site-packages, pyd is usually inside a dir named after the package, or top level.
+    # If top level, __init__ matches package name? No, usually it's a package dir.
+    # If pyd is top level (e.g. classic_shared.pyd), it might not have __init__.
+    
     # Check for .pyi stub files
-    pyi_file = local_rust_dir / f"{module_name}.pyi"
-    if pyi_file.exists():
-        datas.append((str(pyi_file), module_name))
+    # Flattened convention: {module_name}.pyi
+    flat_pyi = parent / f"{module_name}.pyi"
+    if flat_pyi.exists():
+        datas.append((str(flat_pyi), module_name))
 
-    return True
-
-
-def _process_sitepackages_module(
-    module_name: str,
-    site_packages: Path,
-    binaries: list,
-    datas: list,
-) -> bool:
-    """
-    Process a single module from site-packages.
-
-    Args:
-        module_name: Name of the Rust module to process
-        site_packages: Path to the site-packages directory
-        binaries: List to append binary tuples to
-        datas: List to append data file tuples to
-
-    Returns:
-        True if module was found and processed, False otherwise
-    """
-    module_dir = site_packages / module_name
-    if not module_dir.exists():
-        return False
-
-    # Add all .pyd files
-    pyd_files = list(module_dir.glob("*.pyd"))
-    if not pyd_files:
-        return False
-
-    for pyd_file in pyd_files:
-        binaries.append((str(pyd_file), module_name))
-        print(f"  - {module_name}: {pyd_file.name}")
-
-    # Add __init__.py if it exists
-    init_file = module_dir / "__init__.py"
-    if init_file.exists():
-        datas.append((str(init_file), module_name))
-
-    # Add .pyi stub files if they exist
-    datas.extend((str(pyi_file), module_name) for pyi_file in module_dir.glob("*.pyi"))
-
-    return True
+    return module_name
 
 
 def _try_local_rust_dir(
@@ -151,6 +85,7 @@ def _try_local_rust_dir(
 ) -> list[str]:
     """
     Try to find Rust extensions in the local rust_extensions directory.
+    Scans for ANY .pyd file in the directory.
 
     Args:
         project_root: Path to the project root directory
@@ -165,8 +100,13 @@ def _try_local_rust_dir(
         return []
 
     print(f"✓ Found Rust extensions in local build directory (flattened): {local_rust_dir}")
-
-    modules_found = [module_name for module_name in RUST_MODULES if _process_local_module(module_name, local_rust_dir, binaries, datas)]
+    
+    modules_found = []
+    pyd_files = list(local_rust_dir.glob("*.pyd"))
+    
+    for pyd_file in pyd_files:
+        module_name = _process_module_file(pyd_file, binaries, datas)
+        modules_found.append(module_name)
 
     # Add MANIFEST.txt if it exists
     manifest_file = local_rust_dir / "MANIFEST.txt"
@@ -174,7 +114,7 @@ def _try_local_rust_dir(
         datas.append((str(manifest_file), "."))
 
     if modules_found:
-        print(f"  Total modules bundled: {len(modules_found)}/{len(RUST_MODULES)}")
+        print(f"  Total modules bundled: {len(modules_found)}")
 
     return modules_found
 
@@ -185,6 +125,7 @@ def _try_site_packages(
 ) -> list[str]:
     """
     Try to find Rust extensions in site-packages.
+    Scans for classic_*.pyd files.
 
     Args:
         binaries: List to append binary tuples to
@@ -196,12 +137,41 @@ def _try_site_packages(
     site_packages = Path(site.getsitepackages()[0])
     print(f"✓ Checking site-packages: {site_packages}")
 
-    modules_found = [
-        module_name for module_name in RUST_MODULES if _process_sitepackages_module(module_name, site_packages, binaries, datas)
-    ]
+    modules_found = []
+    
+    # Strategy 1: Look for classic_*.pyd directly in site-packages (top-level modules)
+    pyd_files = list(site_packages.glob("classic_*.pyd"))
+    
+    # Strategy 2: Look for classic_* directories containing .pyd files
+    # (This catches packages that are directories)
+    for pkg_dir in site_packages.glob("classic_*"):
+        if pkg_dir.is_dir():
+            # If it's a directory, look for .pyd files inside, but usually 
+            # PyO3 modules are either single .pyd or .pyd inside a package.
+            # If the package name matches the module name, we might find it.
+            # But for now, let's stick to top-level .pyd or standard package structure.
+            
+            # If it is a python package, it might have an __init__.py
+            # and maybe a .pyd file with the same name or _classic_something.
+            pass
+
+    # Process found .pyd files
+    for pyd_file in pyd_files:
+        # Exclude classic_ tools if they aren't the extension modules
+        # But usually classic_* pyd files ARE the extensions.
+        
+        module_name = pyd_file.stem
+        binaries.append((str(pyd_file), module_name))
+        print(f"  - {module_name}: {pyd_file.name}")
+        modules_found.append(module_name)
+        
+        # Check for .pyi in site-packages (usually next to .pyd)
+        pyi_file = pyd_file.with_suffix(".pyi")
+        if pyi_file.exists():
+            datas.append((str(pyi_file), module_name))
 
     if modules_found:
-        print(f"  Total modules bundled from site-packages: {len(modules_found)}/{len(RUST_MODULES)}")
+        print(f"  Total modules bundled from site-packages: {len(modules_found)}")
         print("  Note: Using installed versions. Run build_all.ps1 to use local builds.")
 
     return modules_found
@@ -218,48 +188,44 @@ def _print_not_found_warning(project_root: Path) -> None:
     print(f"    - Site-packages: {site_packages}")
     print("  The executable will work but without Rust performance optimizations.")
     print("  To build Rust extensions, run:")
-    print("    .\\build_all.ps1")
+    print("    .\build_all.ps1")
     print("  Or for development:")
-    print("    .\\rebuild_rust.ps1")
+    print("    .\rebuild_rust.ps1")
 
 
-def find_rust_extensions(project_root: Path) -> tuple[list, list, bool]:
+def find_rust_extensions(project_root: Path) -> tuple[list, list, list, bool]:
     """
     Find Rust extensions for bundling in PyInstaller.
 
     Checks in order:
     1. Local rust_extensions/ directory (created by build_all.ps1/bat - flattened structure)
-       - All .pyd files extracted directly to rust_extensions/ (no subdirectories)
-       - Wheels are built to project_root/dist-rust/ before extraction
-    2. Site-packages (installed via pip/uv)
+       - All .pyd files extracted directly to rust_extensions/
+    2. Site-packages (installed via pip/uv) - looks for classic_*.pyd
 
     Args:
         project_root: Path to the project root directory (from SPECPATH)
 
     Returns:
-        Tuple of (binaries, datas, found):
+        Tuple of (binaries, datas, hidden_imports, found):
         - binaries: List of (source, dest) tuples for .pyd files
         - datas: List of (source, dest) tuples for __init__.py and other data
+        - hidden_imports: List of module names to be added to hiddenimports
         - found: Boolean indicating if Rust extensions were found
-
-    Note:
-        build_all.ps1 and build_all.bat now output all wheels to a single
-        dist-rust/ directory in the project root (not rust/python-bindings/dist-rust/
-        or rust/foundation/dist-rust/) to ensure all modules are discovered.
     """
     binaries = []
     datas = []
+    hidden_imports = []
 
     # Try local directory first
     modules_found = _try_local_rust_dir(project_root, binaries, datas)
     if modules_found:
-        return binaries, datas, True
+        return binaries, datas, modules_found, True
 
     # Fall back to site-packages
     modules_found = _try_site_packages(binaries, datas)
     if modules_found:
-        return binaries, datas, True
+        return binaries, datas, modules_found, True
 
     # No Rust extensions found
     _print_not_found_warning(project_root)
-    return binaries, datas, False
+    return binaries, datas, [], False

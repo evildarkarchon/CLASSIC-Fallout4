@@ -25,7 +25,7 @@ hiddenimports = []
 # Bundle Rust extensions - checks local build directory first, then site-packages
 from pyinstaller_rust_helper import find_rust_extensions
 
-rust_binaries, rust_datas, rust_found = find_rust_extensions(PROJECT_ROOT)
+rust_binaries, rust_datas, rust_hidden_imports, rust_found = find_rust_extensions(PROJECT_ROOT)
 binaries.extend(rust_binaries)
 datas.extend(rust_datas)
 
@@ -37,32 +37,10 @@ hiddenimports.extend([
     "ClassicLib.integration.config",
     "ClassicLib.integration.status",
     "ClassicLib.integration.detector",
-    # All Rust Python modules (.pyd files from separated architecture)
-    # Architecture: *-core crates (pure Rust business logic) + *-py crates (PyO3 bindings)
-    # Foundation Layer
-    "classic_shared",      # Foundation (runtime, errors, utilities)
-    # Business Logic - Core Operations
-    "classic_config",      # YamlData configuration
-    "classic_database",    # SQLite operations
-    "classic_file_io",     # File I/O + DDS parsing
-    "classic_message",     # Message handling
-    "classic_path",        # Path management (10-20x speedup)
-    "classic_perf",        # Performance monitoring
-    "classic_pybridge",    # Async Python bridge
-    "classic_registry",    # Windows registry operations
-    "classic_scangame",    # Game scanning + validation
-    "classic_scanlog",     # Log parsing + analysis
-    "classic_settings",    # Settings cache management
-    "classic_yaml",        # YAML operations (yaml-rust2)
-    # Phase 4 - Constants and Utilities
-    "classic_constants",   # Game constants and enumerations
-    "classic_version",     # Version parsing and comparison
-    "classic_resource",    # Resource file detection
-    "classic_xse",         # Script Extender (XSE) utilities
-    "classic_web",         # Web utilities and URL validation
-    # Phase 5 - Application Coordination
-    "classic_update",      # Auto-update system (GitHub + Nexus)
 ])
+
+# Add found Rust modules to hidden imports
+hiddenimports.extend(rust_hidden_imports)
 
 # Add textual for TUI support (CLI may use some TUI components)
 textual_datas, textual_binaries, textual_hiddenimports = collect_all('textual')

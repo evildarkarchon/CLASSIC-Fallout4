@@ -28,7 +28,7 @@ print("INFO: CLASSIC Data will NOT be bundled (provided in distribution zip)")
 # Bundle Rust extensions - checks local build directory first, then site-packages
 from pyinstaller_rust_helper import find_rust_extensions
 
-binaries, datas, rust_found = find_rust_extensions(PROJECT_ROOT)
+binaries, datas, rust_hidden_imports, rust_found = find_rust_extensions(PROJECT_ROOT)
 
 # Collect all PySide6 components (required for GUI)
 pyside6_datas, pyside6_binaries, pyside6_hiddenimports = collect_all("PySide6")
@@ -51,31 +51,6 @@ hiddenimports = [
     "ClassicLib.integration.config",
     "ClassicLib.integration.status",
     "ClassicLib.integration.detector",
-    # All Rust Python modules (.pyd files from separated architecture)
-    # Architecture: *-core crates (pure Rust business logic) + *-py crates (PyO3 bindings)
-    # Foundation Layer
-    "classic_shared",      # Foundation (runtime, errors, utilities)
-    # Business Logic - Core Operations
-    "classic_config",      # YamlData configuration
-    "classic_database",    # SQLite operations
-    "classic_file_io",     # File I/O + DDS parsing
-    "classic_message",     # Message handling
-    "classic_path",        # Path management (10-20x speedup)
-    "classic_perf",        # Performance monitoring
-    "classic_pybridge",    # Async Python bridge
-    "classic_registry",    # Windows registry operations
-    "classic_scangame",    # Game scanning + validation
-    "classic_scanlog",     # Log parsing + analysis
-    "classic_settings",    # Settings cache management
-    "classic_yaml",        # YAML operations (yaml-rust2)
-    # Phase 4 - Constants and Utilities
-    "classic_constants",   # Game constants and enumerations
-    "classic_version",     # Version parsing and comparison
-    "classic_resource",    # Resource file detection
-    "classic_xse",         # Script Extender (XSE) utilities
-    "classic_web",         # Web utilities and URL validation
-    # Phase 5 - Application Coordination
-    "classic_update",      # Auto-update system (GitHub + Nexus)
 
     # GUI specific
     "PySide6.QtCore",
@@ -113,7 +88,7 @@ hiddenimports = [
     "win32con",
     "win32gui",
     "pywintypes",
-] + pyside6_hiddenimports
+] + pyside6_hiddenimports + rust_hidden_imports
 
 # Data files to bundle (combine with already created datas list)
 datas += pyside6_datas

@@ -129,6 +129,38 @@ else {
     Write-Host "Install uv from: https://github.com/astral-sh/uv" -ForegroundColor Yellow
 }
 
+# Function to parse Cargo.toml
+function Get-RustModuleInfo {
+    param ($CargoPath)
+
+    $content = Get-Content $CargoPath -Raw
+    
+    # Extract package name
+    $packageName = $null
+    if ($content -match '\[package\][\s\S]*?name\s*=\s*"(?<name>[^"]+)"') {
+        $packageName = $Matches.name
+    }
+
+    # Extract lib name (import name)
+    $libName = $null
+    if ($content -match '\[lib\][\s\S]*?name\s*=\s*"(?<name>[^"]+)"') {
+        $libName = $Matches.name
+    }
+
+    # Check for PyO3 dependency or cdylib crate-type
+    $isPyO3 = $content -match 'pyo3\s*=' -or $content -match 'crate-type\s*=\s*\[.*"cdylib".*\]'
+
+    if ($packageName -and $libName -and $isPyO3) {
+        return @{
+            WheelName = $packageName.Replace('-', '_')
+            ModuleName = $libName
+            Dir = $CargoPath | Split-Path -Parent
+            Description = "Rust Extension: $packageName"
+        }
+    }
+    return $null
+}
+
 # Build Rust workspace (if source available)
 #
 # Architecture Overview (as of 2025-10-08):
@@ -143,39 +175,43 @@ else {
 #   3. 10-150x performance improvements for all operations
 # Python imports individual modules directly (e.g., import classic_yaml)
 #
-if (Test-Path "rust/python-bindings/classic-yaml-py") {
+if (Test-Path "rust/python-bindings") {
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "Building Rust workspace (separated architecture)..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "Building: *-core crates (business logic) + *-py crates (bindings)" -ForegroundColor Yellow
 
-    # Define all Rust Python modules (.pyd files from *-py crates) in dependency order
-    # Note: Only *-py crates produce .pyd files; *-core crates are pure Rust (rlib)
-    # WheelName: Package name in Cargo.toml (with _py suffix for wheel files)
-    # ModuleName: Python import name (without _py suffix)
-    $RustModules = @(
-        @{WheelName = "classic_shared_py"; ModuleName = "classic_shared"; Dir = "rust/foundation/classic-shared-py"; Description = "Foundation (runtime, errors, utilities)"},
-        @{WheelName = "classic_config_py"; ModuleName = "classic_config"; Dir = "rust/python-bindings/classic-config-py"; Description = "YamlData configuration (bindings)"},
-        @{WheelName = "classic_database_py"; ModuleName = "classic_database"; Dir = "rust/python-bindings/classic-database-py"; Description = "SQLite operations (bindings)"},
-        @{WheelName = "classic_file_io_py"; ModuleName = "classic_file_io"; Dir = "rust/python-bindings/classic-file-io-py"; Description = "File I/O + DDS parsing (bindings)"},
-        @{WheelName = "classic_message_py"; ModuleName = "classic_message"; Dir = "rust/python-bindings/classic-message-py"; Description = "Message handling (bindings)"},
-        @{WheelName = "classic_path_py"; ModuleName = "classic_path"; Dir = "rust/python-bindings/classic-path-py"; Description = "Path management (bindings)"},
-        @{WheelName = "classic_perf_py"; ModuleName = "classic_perf"; Dir = "rust/python-bindings/classic-perf-py"; Description = "Performance monitoring (bindings)"},
-        @{WheelName = "classic_pybridge_py"; ModuleName = "classic_pybridge"; Dir = "rust/python-bindings/classic-pybridge-py"; Description = "Async Python bridge utilities (bindings)"},
-        @{WheelName = "classic_registry_py"; ModuleName = "classic_registry"; Dir = "rust/python-bindings/classic-registry-py"; Description = "Windows registry operations (bindings)"},
-        @{WheelName = "classic_scangame_py"; ModuleName = "classic_scangame"; Dir = "rust/python-bindings/classic-scangame-py"; Description = "Game scanning + validation (bindings)"},
-        @{WheelName = "classic_scanlog_py"; ModuleName = "classic_scanlog"; Dir = "rust/python-bindings/classic-scanlog-py"; Description = "Log parsing + analysis (bindings)"},
-        @{WheelName = "classic_settings_py"; ModuleName = "classic_settings"; Dir = "rust/python-bindings/classic-settings-py"; Description = "Settings cache management (bindings)"},
-        @{WheelName = "classic_yaml_py"; ModuleName = "classic_yaml"; Dir = "rust/python-bindings/classic-yaml-py"; Description = "YAML operations (bindings for yaml-rust2)"},
-        # Phase 4 - Constants and Utilities
-        @{WheelName = "classic_constants_py"; ModuleName = "classic_constants"; Dir = "rust/python-bindings/classic-constants-py"; Description = "Game constants and enumerations (bindings)"},
-        @{WheelName = "classic_version_py"; ModuleName = "classic_version"; Dir = "rust/python-bindings/classic-version-py"; Description = "Version parsing and comparison (bindings)"},
-        @{WheelName = "classic_resource_py"; ModuleName = "classic_resource"; Dir = "rust/python-bindings/classic-resource-py"; Description = "Resource file detection (bindings)"},
-        @{WheelName = "classic_xse_py"; ModuleName = "classic_xse"; Dir = "rust/python-bindings/classic-xse-py"; Description = "Script Extender (XSE) utilities (bindings)"},
-        @{WheelName = "classic_web_py"; ModuleName = "classic_web"; Dir = "rust/python-bindings/classic-web-py"; Description = "Web utilities and URL validation (bindings)"},
-        # Phase 5 - Application Coordination
-        @{WheelName = "classic_update_py"; ModuleName = "classic_update"; Dir = "rust/python-bindings/classic-update-py"; Description = "Auto-update system (GitHub + Nexus) (bindings)"}
-    )
+    # Discover Rust Python modules dynamically
+    Write-Host "🔍 Discovering Rust Python modules..." -ForegroundColor Cyan
+    $RustModules = @()
+
+    # Search directories
+    $searchPaths = @("rust/foundation", "rust/python-bindings")
+    foreach ($path in $searchPaths) {
+        if (Test-Path $path) {
+            $cargoFiles = Get-ChildItem -Path $path -Filter "Cargo.toml" -Recurse
+            foreach ($file in $cargoFiles) {
+                $info = Get-RustModuleInfo -CargoPath $file.FullName
+                if ($info) {
+                    # Make path relative to project root
+                    $relPath = $info.Dir.Substring($PWD.Path.Length + 1).Replace('\', '/')
+                    $info.Dir = $relPath
+                    $RustModules += $info
+                }
+            }
+        }
+    }
+
+    # Sort modules (foundation first, then alphabetical)
+    $RustModules = $RustModules | Sort-Object { 
+        if ($_.Dir -match "foundation") { "0_" + $_.WheelName } else { "1_" + $_.WheelName } 
+    }
+
+    Write-Host "Found $($RustModules.Count) modules to build:" -ForegroundColor Cyan
+    foreach ($m in $RustModules) {
+        Write-Host " - $($m.ModuleName) ($($m.Dir))" -ForegroundColor Gray
+    }
+    Write-Host ""
 
     # Build all Rust modules to a single dist-rust directory in project root
     Write-Host "Building Rust modules with maturin..." -ForegroundColor Yellow
