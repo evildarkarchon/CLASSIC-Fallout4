@@ -386,6 +386,8 @@ function Build-Spec {
 # Build all versions (TUI is now pure Rust, built separately)
 Build-Spec "CLASSIC.spec" "GUI version - Folder Distribution (CLASSIC.exe)"
 Build-Spec "CLASSIC-GUI-OneFile.spec" "GUI version - Single File (CLASSIC-GUI-OneFile.exe)"
+Build-Spec "CLASSIC-QML.spec" "GUI version - Single File (QML/CLASSIC-QML.exe)"
+Build-Spec "CLASSIC-QML-Dir.spec" "GUI version - Folder Distribution (QML/CLASSIC-QML/CLASSIC-QML.exe)"
 Build-Spec "CLASSIC-CLI.spec" "CLI version (CLASSIC-CLI.exe)"
 
 # Optional test build
@@ -415,7 +417,9 @@ Write-Host ""
 $executables = @(
     @{Path = "dist\CLASSIC\CLASSIC.exe"; Type = "GUI (Folder)" },
     @{Path = "dist\CLASSIC-GUI-OneFile.exe"; Type = "GUI (Single File)" },
-    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" }
+    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" },
+    @{Path = "dist\CLASSIC-QML.exe"; Type = "QML (Single File)" },
+    @{Path = "dist\CLASSIC-QML\CLASSIC-QML.exe"; Type = "QML (Folder)" }
 )
 
 if ($BuildTest) {

@@ -45,35 +45,23 @@ def _process_module_file(
         Module name (import name)
     """
     module_name = pyd_path.stem
-    # Handle case where filename might have extra bits (e.g. from wheel)
-    # But typically for pyd in rust_extensions it is just name.pyd
-    
-    binaries.append((str(pyd_path), module_name))
-    print(f"  - {module_name}: {pyd_path.name}")
+    # The destination path is relative to the bundle root. By specifying the
+    # filename, we place the .pyd file in the root, making it importable.
+    binaries.append((str(pyd_path), pyd_path.name))
+    print(f"  - {module_name}: {pyd_path.name} -> ./{pyd_path.name}")
 
-    # Check for corresponding __init__.py (stored as {module_name}__init__.py in flattened dir)
-    # or inside the module directory if checking site-packages
-    
-    # Logic depends on whether we are in flattened local dir or site-packages
-    # But since we are just given a path, we check parent dir. 
-    
     parent = pyd_path.parent
-    
-    # Check for {module_name}__init__.py (flattened local convention)
-    flat_init = parent / f"{module_name}__init__.py"
-    if flat_init.exists():
-        datas.append((str(flat_init), module_name))
-        
-    # Check for __init__.py (site-packages convention)
-    # In site-packages, pyd is usually inside a dir named after the package, or top level.
-    # If top level, __init__ matches package name? No, usually it's a package dir.
-    # If pyd is top level (e.g. classic_shared.pyd), it might not have __init__.
-    
-    # Check for .pyi stub files
-    # Flattened convention: {module_name}.pyi
-    flat_pyi = parent / f"{module_name}.pyi"
-    if flat_pyi.exists():
-        datas.append((str(flat_pyi), module_name))
+
+    # NOTE: The logic for handling __init__.py files has been removed.
+    # The original implementation created a directory with the same name as the
+    # binary, causing a file/directory conflict during the PyInstaller build.
+    # The .pyd files are self-contained modules and should not require this.
+
+    # Check for .pyi stub files and bundle them in the root alongside the .pyd
+    pyi_file = parent / f"{module_name}.pyi"
+    if pyi_file.exists():
+        datas.append((str(pyi_file), pyi_file.name))
+        print(f"    (stub): {pyi_file.name} -> ./{pyi_file.name}")
 
     return module_name
 
