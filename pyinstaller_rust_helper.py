@@ -25,8 +25,7 @@ Performance: These Rust extensions provide 10-150x speedups.
 
 import site
 from pathlib import Path
-from glob import glob
-import os
+
 
 def _process_module_file(
     pyd_path: Path,
@@ -88,10 +87,10 @@ def _try_local_rust_dir(
         return []
 
     print(f"✓ Found Rust extensions in local build directory (flattened): {local_rust_dir}")
-    
+
     modules_found = []
     pyd_files = list(local_rust_dir.glob("*.pyd"))
-    
+
     for pyd_file in pyd_files:
         module_name = _process_module_file(pyd_file, binaries, datas)
         modules_found.append(module_name)
@@ -126,19 +125,19 @@ def _try_site_packages(
     print(f"✓ Checking site-packages: {site_packages}")
 
     modules_found = []
-    
+
     # Strategy 1: Look for classic_*.pyd directly in site-packages (top-level modules)
     pyd_files = list(site_packages.glob("classic_*.pyd"))
-    
+
     # Strategy 2: Look for classic_* directories containing .pyd files
     # (This catches packages that are directories)
     for pkg_dir in site_packages.glob("classic_*"):
         if pkg_dir.is_dir():
-            # If it's a directory, look for .pyd files inside, but usually 
+            # If it's a directory, look for .pyd files inside, but usually
             # PyO3 modules are either single .pyd or .pyd inside a package.
             # If the package name matches the module name, we might find it.
             # But for now, let's stick to top-level .pyd or standard package structure.
-            
+
             # If it is a python package, it might have an __init__.py
             # and maybe a .pyd file with the same name or _classic_something.
             pass
@@ -147,12 +146,12 @@ def _try_site_packages(
     for pyd_file in pyd_files:
         # Exclude classic_ tools if they aren't the extension modules
         # But usually classic_* pyd files ARE the extensions.
-        
+
         module_name = pyd_file.stem
         binaries.append((str(pyd_file), module_name))
         print(f"  - {module_name}: {pyd_file.name}")
         modules_found.append(module_name)
-        
+
         # Check for .pyi in site-packages (usually next to .pyd)
         pyi_file = pyd_file.with_suffix(".pyi")
         if pyi_file.exists():
@@ -200,9 +199,8 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, list, bool]:
         - hidden_imports: List of module names to be added to hiddenimports
         - found: Boolean indicating if Rust extensions were found
     """
-    binaries = []
-    datas = []
-    hidden_imports = []
+    binaries: list[tuple[str, str]] = []
+    datas: list[tuple[str, str]] = []
 
     # Try local directory first
     modules_found = _try_local_rust_dir(project_root, binaries, datas)
