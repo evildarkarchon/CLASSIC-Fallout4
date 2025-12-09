@@ -48,10 +48,10 @@ class TestSyncWrapperCompatibility:
         async def mock_load(*args, **kwargs):
             return {"test_settings": {"string_value": "test"}}
 
-        with patch.object(cache._async_core.file_ops, "load_yaml_file", side_effect=mock_load): # pyright: ignore[reportOptionalMemberAccess]
+        with patch.object(cache._async_core.file_ops, "load_yaml_file", side_effect=mock_load):  # pyright: ignore[reportOptionalMemberAccess]
             bridge = AsyncBridge.get_instance()
             # We need to run the coroutine returned by load_yaml_file
-            data = bridge.run_async(cache._async_core.file_ops.load_yaml_file(temp_yaml_file)) # pyright: ignore[reportOptionalMemberAccess]
+            data = bridge.run_async(cache._async_core.file_ops.load_yaml_file(temp_yaml_file))  # pyright: ignore[reportOptionalMemberAccess]
             assert data["test_settings"]["string_value"] == "test"
 
     def test_cache_property_forwarding(self, message_handler, async_bridge):
@@ -61,9 +61,9 @@ class TestSyncWrapperCompatibility:
         cache._get_async_core()
 
         assert hasattr(cache._async_core, "cache")
-        assert hasattr(cache._async_core.cache, "cache") # pyright: ignore[reportOptionalMemberAccess]
-        assert hasattr(cache._async_core.cache, "settings_cache") # pyright: ignore[reportOptionalMemberAccess]
-        assert hasattr(cache._async_core.cache, "path_cache") # pyright: ignore[reportOptionalMemberAccess]
+        assert hasattr(cache._async_core.cache, "cache")  # pyright: ignore[reportOptionalMemberAccess]
+        assert hasattr(cache._async_core.cache, "settings_cache")  # pyright: ignore[reportOptionalMemberAccess]
+        assert hasattr(cache._async_core.cache, "path_cache")  # pyright: ignore[reportOptionalMemberAccess]
 
 
 class TestModuleLevelFunctions:
@@ -134,13 +134,13 @@ class TestModuleLevelFunctions:
 
         # Ensure initialized
         yaml_cache()._get_async_core()
-        monkeypatch.setattr(yaml_cache()._async_core.file_ops, "get_path_for_store", mock_get_path) # pyright: ignore[reportOptionalMemberAccess]
+        monkeypatch.setattr(yaml_cache()._async_core.file_ops, "get_path_for_store", mock_get_path)  # pyright: ignore[reportOptionalMemberAccess]
 
         # Mock load_yaml_file
         async def mock_load(*args, **kwargs):
             return data
 
-        monkeypatch.setattr(yaml_cache()._async_core.file_ops, "load_yaml_file", mock_load) # pyright: ignore[reportOptionalMemberAccess]
+        monkeypatch.setattr(yaml_cache()._async_core.file_ops, "load_yaml_file", mock_load)  # pyright: ignore[reportOptionalMemberAccess]
 
         value = classic_settings(str, "Test Setting")
         assert value == "test value"
@@ -160,7 +160,7 @@ class TestBatchOperations:
 
         # Ensure initialized
         cache._get_async_core()
-        monkeypatch.setattr(cache._async_core.file_ops, "get_path_for_store", mock_get_path) # pyright: ignore[reportOptionalMemberAccess]
+        monkeypatch.setattr(cache._async_core.file_ops, "get_path_for_store", mock_get_path)  # pyright: ignore[reportOptionalMemberAccess]
 
         # Mock load_yaml_file
         mock_data = {"test_settings": {"string_value": "test", "bool_value": True, "int_value": 42}}
@@ -168,7 +168,7 @@ class TestBatchOperations:
         async def mock_load(*args, **kwargs):
             return mock_data
 
-        monkeypatch.setattr(cache._async_core.file_ops, "load_yaml_file", mock_load) # pyright: ignore[reportOptionalMemberAccess]
+        monkeypatch.setattr(cache._async_core.file_ops, "load_yaml_file", mock_load)  # pyright: ignore[reportOptionalMemberAccess]
 
         requests = [
             (str, YAML.TEST, "test_settings.string_value"),

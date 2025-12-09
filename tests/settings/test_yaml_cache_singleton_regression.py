@@ -211,7 +211,7 @@ class TestFixtureIsolation:
         # Add some test data to verify cleanup
         # Ensure initialized before access
         core = clean_yaml_cache_singleton._get_async_core()
-        core.cache.settings_cache["test_key"] = "test_value" # pyright: ignore[reportArgumentType]
+        core.cache.settings_cache["test_key"] = "test_value"  # pyright: ignore[reportArgumentType]
 
     def test_fixture_nested_usage(self, clean_yaml_cache_singleton) -> None:
         """
@@ -279,10 +279,10 @@ class TestThreadSafetyParallel:
 
                 # Simulate cache operations
                 cache_key = f"worker_{worker_id}_key"
-                core.cache.settings_cache[cache_key] = f"value_{worker_id}" # pyright: ignore[reportArgumentType]
+                core.cache.settings_cache[cache_key] = f"value_{worker_id}"  # pyright: ignore[reportArgumentType]
 
                 # Verify write was successful
-                assert core.cache.settings_cache[cache_key] == f"value_{worker_id}" # pyright: ignore[reportArgumentType]
+                assert core.cache.settings_cache[cache_key] == f"value_{worker_id}"  # pyright: ignore[reportArgumentType]
 
                 results[worker_id] = id(instance)
             except Exception as e:
@@ -328,15 +328,15 @@ class TestThreadSafetyParallel:
                     # Ensure initialized
                     # We access _get_async_core here which is thread-safe
                     core = cache._get_async_core()
-                    core.cache.settings_cache[key] = value # pyright: ignore[reportArgumentType]
+                    core.cache.settings_cache[key] = value  # pyright: ignore[reportArgumentType]
 
                     # Read operation - verify our write
-                    read_value = core.cache.settings_cache.get(key) # pyright: ignore[reportArgumentType]
+                    read_value = core.cache.settings_cache.get(key)  # pyright: ignore[reportArgumentType]
                     assert read_value == value, f"Data corruption: expected {value}, got {read_value}"
 
                     # Read other thread's data (if exists)
                     other_key = f"thread_{(thread_id + 1) % 5}_item_{i}"
-                    _ = core.cache.settings_cache.get(other_key) # pyright: ignore[reportArgumentType]
+                    _ = core.cache.settings_cache.get(other_key)  # pyright: ignore[reportArgumentType]
 
             except Exception as e:
                 errors.append((thread_id, e))
@@ -361,7 +361,7 @@ class TestThreadSafetyParallel:
             for i in range(iterations):
                 key = f"thread_{thread_id}_item_{i}"
                 expected_value = f"value_{thread_id}_{i}"
-                actual_value = core.cache.settings_cache.get(key) # pyright: ignore[reportArgumentType]
+                actual_value = core.cache.settings_cache.get(key)  # pyright: ignore[reportArgumentType]
                 assert actual_value == expected_value
 
     def test_async_bridge_interaction(self) -> None:
@@ -701,7 +701,7 @@ class TestRegressionScenarios:
             # Use it
             # Ensure initialized
             core = instance._get_async_core()
-            core.cache.settings_cache["temp"] = "data" # pyright: ignore[reportArgumentType]
+            core.cache.settings_cache["temp"] = "data"  # pyright: ignore[reportArgumentType]
 
             # Clear it (simulate fixture cleanup)
             YamlSettingsCache._instance = None

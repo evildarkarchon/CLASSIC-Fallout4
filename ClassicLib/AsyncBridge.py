@@ -759,7 +759,7 @@ def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]], st
             # GUI mode: Use AsyncBridge for Qt event loop integration
             bridge = AsyncBridge.get_instance()
             return bridge.run_async(coro)
-        
+
         # Strict mode check - prevent inefficient usage in CLI
         if strict:
             raise RuntimeError(

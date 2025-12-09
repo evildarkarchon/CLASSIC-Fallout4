@@ -168,7 +168,7 @@ class FileIOCore:
             stream = await io.stream_lines(path)
             async for line in stream:
                 print(line)
-        """ 
+        """
 
     def stream_lines_sync(self, path: str) -> PySyncLineStreamer:
         """Stream lines from a file synchronously.

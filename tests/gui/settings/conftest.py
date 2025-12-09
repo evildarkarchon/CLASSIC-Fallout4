@@ -77,7 +77,7 @@ def settings_dialog(app, mock_settings_cache):
     handler = init_message_handler(parent=None, is_gui_mode=True)
 
     # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
-    handler._gui_backend.show = MagicMock() # pyright: ignore[reportAttributeAccessIssue]
+    handler._gui_backend.show = MagicMock()  # pyright: ignore[reportAttributeAccessIssue]
 
     # Create dialog as NON-MODAL to prevent freezing in tests
     # mock_settings_cache is active (autouse via dependency or singleton patch), so it will use memory

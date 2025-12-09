@@ -78,7 +78,6 @@ def test_rust_acceleration_detection():
     # Verify it returns a boolean
     assert isinstance(rust_available, bool), "Should return a boolean"
 
-
     @pytest.mark.unit
     def test_rust_status_logging():
         """Test that Streaming I/O status is logged."""
@@ -104,9 +103,7 @@ def test_rust_acceleration_detection():
             # Verify it sets the flag
             assert getattr(papyrus_logging, "_logged_status") is True
 
-
-# Test papyrus_logging function with Rust file I/O
-
+    # Test papyrus_logging function with Rust file I/O
 
     @pytest.mark.unit
     def test_papyrus_logging_uses_streaming_io():
@@ -146,6 +143,7 @@ def test_rust_acceleration_detection():
             assert "NUMBER OF STACKS   : 2" in message
             assert "NUMBER OF WARNINGS : 1" in message
             assert "NUMBER OF ERRORS   : 1" in message
+
 
 @pytest.mark.unit
 def test_papyrus_logging_handles_missing_file():

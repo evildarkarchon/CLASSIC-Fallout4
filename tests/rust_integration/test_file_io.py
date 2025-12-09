@@ -411,22 +411,22 @@ class TestRustFileIOCore:
         """Test streaming lines asynchronously."""
         io = get_file_io()
         file_path = temp_dir / "test.txt"
-        
+
         lines = []
         async for line in io.stream_lines(file_path):
             lines.append(line)
-            
+
         assert len(lines) == 1
         assert lines[0] == "Hello, World!"
-        
+
         # Test with multi-line file
         multi_path = temp_dir / "multi_stream.txt"
         multi_path.write_text("Line 1\nLine 2\nLine 3", encoding="utf-8")
-        
+
         lines = []
         async for line in io.stream_lines(multi_path):
             lines.append(line)
-            
+
         assert len(lines) == 3
         assert lines[0] == "Line 1"
         assert lines[1] == "Line 2"
@@ -437,15 +437,15 @@ class TestRustFileIOCore:
         """Test streaming lines synchronously."""
         io = get_file_io()
         file_path = temp_dir / "test.txt"
-        
+
         # Even though it's a sync method, we can call it here
         # Just need to convert iterator to list
         def run_sync():
             return list(io.stream_lines_sync(file_path))
-            
+
         loop = asyncio.get_running_loop()
         lines = await loop.run_in_executor(None, run_sync)
-        
+
         assert len(lines) == 1
         assert lines[0] == "Hello, World!"
 

@@ -219,7 +219,7 @@ class TestAsyncYamlConvenienceFunctions:
                 return create_yaml_files / "CLASSIC Settings.yaml"
             return create_yaml_files / "nonexistent.yaml"
 
-        core.file_ops.get_path_for_store = mock_get_path # pyright: ignore[reportAttributeAccessIssue]
+        core.file_ops.get_path_for_store = mock_get_path  # pyright: ignore[reportAttributeAccessIssue]
 
         # Note: yaml_settings_async doesn't exist in the current API
         # We'll test the async_yaml_settings method directly

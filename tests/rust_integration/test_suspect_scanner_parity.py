@@ -52,13 +52,13 @@ class SuspectScannerParityValidator(ParityValidator):
             return None
 
         # Use factory function to get the best implementation
-        return get_suspect_scanner(yamldata) # pyright: ignore[reportArgumentType]
+        return get_suspect_scanner(yamldata)  # pyright: ignore[reportArgumentType]
 
     def create_python_implementation(self, yamldata=None, **kwargs) -> SuspectScanner:
         """Create Python suspect scanner implementation."""
-        return SuspectScanner(yamldata) # pyright: ignore[reportArgumentType]
+        return SuspectScanner(yamldata)  # pyright: ignore[reportArgumentType]
 
-    def generate_test_cases(self) -> list[dict[str, Any]]: # pyright: ignore[reportIncompatibleMethodOverride]
+    def generate_test_cases(self) -> list[dict[str, Any]]:  # pyright: ignore[reportIncompatibleMethodOverride]
         """Generate comprehensive suspect scanner test cases."""
         return [
             # Basic main error scanning
@@ -565,7 +565,7 @@ class TestSuspectScannerParity:
                 # Extract content
                 if rust_fragment:
                     rust_content = (
-                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content) # pyright: ignore[reportAttributeAccessIssue]
+                        "\n".join(rust_fragment.content) if isinstance(rust_fragment.content, (list, tuple)) else str(rust_fragment.content)  # pyright: ignore[reportAttributeAccessIssue]
                     )
                 else:
                     rust_content = ""

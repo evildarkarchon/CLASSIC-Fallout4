@@ -39,11 +39,11 @@ class TestGatherWithConcurrencyEdgeCases:
         # Use a task instead of raw coroutine to avoid "coroutine never awaited" warning
         # when the operation times out and the coroutine is never started
         task = asyncio.create_task(simple_coro(1))
-        
+
         # This would deadlock, so we set a timeout
         with pytest.raises(asyncio.TimeoutError):
             await asyncio.wait_for(gather_with_concurrency(0, task), timeout=0.1)
-            
+
         # Clean up the task
         task.cancel()
         try:
@@ -60,7 +60,7 @@ class TestGatherWithConcurrencyEdgeCases:
 
         # Create coroutine but ensure it's cleaned up if not awaited
         coro = simple_coro(1)
-        
+
         try:
             # Negative values create invalid semaphore
             with pytest.raises(ValueError):
