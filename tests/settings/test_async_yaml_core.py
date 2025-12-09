@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 import ruamel.yaml
 
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
+from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:

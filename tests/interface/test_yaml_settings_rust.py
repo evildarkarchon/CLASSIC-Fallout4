@@ -20,7 +20,7 @@ import pytest
 @pytest.fixture
 def yaml_file_ops():
     """Create YamlFileOperations instance for testing."""
-    from ClassicLib.AsyncYamlSettings.file_operations import YamlFileOperations
+    from ClassicLib.YamlSettings.async_ import YamlFileOperations
 
     return YamlFileOperations()
 
@@ -128,9 +128,9 @@ async def test_python_yaml_parsing_preserves_comments(yaml_file_ops, temp_yaml_f
     assert result.get("test_key") == "test_value", "Should parse key correctly"
 
     # Check that result uses CommentedMap (ruamel.yaml type that preserves comments)
-    import ruamel.yaml
+    from ruamel.yaml.comments import CommentedMap
 
-    assert isinstance(result, (dict, ruamel.yaml.comments.CommentedMap)), "Should be dict-like"
+    assert isinstance(result, (dict, CommentedMap)), "Should be dict-like"
 
 
 @pytest.mark.unit
@@ -184,7 +184,7 @@ async def test_python_works_without_rust(yaml_file_ops, temp_yaml_file):
 @pytest.mark.unit
 def test_operations_without_rust():
     """Test that operations work when Rust is not available."""
-    from ClassicLib.AsyncYamlSettings.file_operations import YamlFileOperations
+    from ClassicLib.YamlSettings.async_ import YamlFileOperations
 
     # Create instance and then patch rust_yaml to None
     ops = YamlFileOperations()
@@ -245,7 +245,7 @@ def test_yaml_settings_cache_singleton():
         assert hasattr(cache, "_async_core"), "Should have async core"
         assert hasattr(cache._async_core, "file_ops"), "Should have file operations"
 
-        file_ops = cache._async_core.file_ops
+        file_ops = cache._async_core.file_ops  # pyright: ignore[reportOptionalMemberAccess]
         assert file_ops.rust_yaml is not None, "File ops should have Rust available"
 
 

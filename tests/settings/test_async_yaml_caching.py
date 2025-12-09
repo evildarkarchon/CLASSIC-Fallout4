@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import ruamel.yaml
 
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
+from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
 
 
 @pytest.fixture

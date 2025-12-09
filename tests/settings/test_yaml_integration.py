@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
+from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
 
 
 @pytest.fixture
@@ -219,7 +219,7 @@ class TestAsyncYamlConvenienceFunctions:
                 return create_yaml_files / "CLASSIC Settings.yaml"
             return create_yaml_files / "nonexistent.yaml"
 
-        core.file_ops.get_path_for_store = mock_get_path
+        core.file_ops.get_path_for_store = mock_get_path # pyright: ignore[reportAttributeAccessIssue]
 
         # Note: yaml_settings_async doesn't exist in the current API
         # We'll test the async_yaml_settings method directly

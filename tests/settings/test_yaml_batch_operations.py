@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.AsyncYamlSettings.core import AsyncYamlSettingsCore
 from ClassicLib.Constants import YAML
+from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
 from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
 # Mark all tests in this module
@@ -44,12 +44,12 @@ class TestYamlBatchOperations:
         self.mock_file_ops.save_yaml_file.side_effect = lambda *args, **kwargs: async_return(None)
 
         # Patch the get_async_yaml_core function used by YamlSettingsCache
-        # Note: YamlSettingsCache imports it as 'get_async_yaml_core'
+        # Note: sync/cache.py imports it from ClassicLib.YamlSettings.async_.core
         # We need side_effect to return a NEW coroutine each time it's called
         async def get_core():
             return self.real_core
 
-        self.patcher = patch("ClassicLib.YamlSettingsCache.get_async_yaml_core", side_effect=get_core)
+        self.patcher = patch("ClassicLib.YamlSettings.sync.cache.get_async_yaml_core", side_effect=get_core)
         self.patcher.start()
 
     def teardown(self):
@@ -81,7 +81,7 @@ class TestYamlBatchOperations:
         for i in range(1, 6):
             # Use async_yaml_settings (sync wrapper) instead of get_setting
             self.cache.async_yaml_settings(str, YAML.TEST, f"section{(i - 1) // 3 + 1}.key{i}")
-        time.time() - individual_start
+        individual_time = time.time() - individual_start
 
         # Clear cache for fair comparison
         # AsyncYamlSettingsCore has cache in self.real_core.cache
@@ -98,9 +98,11 @@ class TestYamlBatchOperations:
             (str, YAML.TEST, "section2.key5"),
         ]
         self.cache.batch_get_settings(keys)
-        time.time() - batch_start
+        batch_time = time.time() - batch_start
 
         # Batch should be called fewer times than individual
+        # Note: Times are captured but not asserted as this tests functionality, not strict performance
+        _ = (individual_time, batch_time)  # Acknowledge variables are intentionally captured
 
     def test_batch_loading_under_heavy_load(self):
         """Test batch loading with hundreds of keys."""

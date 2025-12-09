@@ -1,13 +1,32 @@
-"""AsyncYamlSettingsCore - Backwards compatibility wrapper.
+"""Backward compatibility module for AsyncYamlSettingsCore.
 
-DEPRECATED: Use ClassicLib.AsyncYamlSettings instead.
+DEPRECATED: Use ClassicLib.YamlSettings.async_ instead.
+
+This module re-exports all async YAML settings functionality from the new
+ClassicLib.YamlSettings module structure for full backward compatibility.
+
+Migration Guide:
+    Old:
+        from ClassicLib.AsyncYamlSettingsCore import AsyncYamlSettingsCore
+
+    New:
+        from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
+        # or
+        from ClassicLib.YamlSettings import AsyncYamlSettingsCore
+
+Example:
+    >>> from ClassicLib.YamlSettings.async_ import get_async_yaml_core
+    >>> core = await get_async_yaml_core()
+    >>> value = await core.async_yaml_settings(str, YAML.Main, "key")
 """
 
 import warnings
 
-# Re-export everything from the refactored module for backwards compatibility
-from ClassicLib.AsyncYamlSettings import (
+# Re-export everything from the new module structure for backward compatibility
+from ClassicLib.YamlSettings import (
+    # Core classes
     AsyncYamlSettingsCore,
+    # Types
     T,
     YamlCache,
     YamlFileOperations,
@@ -16,7 +35,9 @@ from ClassicLib.AsyncYamlSettings import (
     YAMLSequence,
     YAMLValue,
     YAMLValueOptional,
+    # Convenience functions
     classic_settings_async,
+    # Validators
     coerce_setting_value,
     get_async_yaml_core,
     validate_setting_value,
@@ -25,7 +46,7 @@ from ClassicLib.AsyncYamlSettings import (
 )
 
 warnings.warn(
-    "ClassicLib.AsyncYamlSettingsCore is deprecated. Use ClassicLib.AsyncYamlSettings instead.",
+    "ClassicLib.AsyncYamlSettingsCore is deprecated. Use ClassicLib.YamlSettings.async_ instead.",
     DeprecationWarning,
     stacklevel=2,
 )
@@ -36,9 +57,9 @@ __all__ = [
     "YamlCache",
     "YamlFileOperations",
     # Convenience functions
+    "classic_settings_async",
     "get_async_yaml_core",
     "yaml_settings_async",
-    "classic_settings_async",
     # Types
     "T",
     "YAMLLiteral",
@@ -47,7 +68,7 @@ __all__ = [
     "YAMLValue",
     "YAMLValueOptional",
     # Validators
-    "validate_settings_structure",
-    "validate_setting_value",
     "coerce_setting_value",
+    "validate_setting_value",
+    "validate_settings_structure",
 ]
