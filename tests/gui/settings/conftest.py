@@ -31,31 +31,34 @@ class MockSettingsCache:
         # requests: list of (type, yaml_store, key_path)
         return [self.store.get((req[1], req[2])) for req in requests]
 
+
 @pytest.fixture
 def mock_settings_cache(monkeypatch):
-    """Patches YamlSettingsCache to use in-memory storage."""
-    mock_cache = MockSettingsCache()
-    
-    # Import the class to patch
-    import sys
+    """Patches YamlSettingsCache to use in-memory storage.
 
-    # Ensure module is loaded
-    import ClassicLib.YamlSettingsCache
+    This fixture properly handles the module structure where YamlSettingsCache
+    is a class with a class-level _instance attribute (singleton pattern),
+    and yaml_cache is a proxy object in the convenience module.
+    """
+    mock_cache = MockSettingsCache()
+
+    # Import the class to patch
     from ClassicLib.YamlSettingsCache import YamlSettingsCache
 
-    # Mock the get_instance class method
-    monkeypatch.setattr(
-        YamlSettingsCache,
-        "get_instance",
-        lambda: mock_cache
-    )
-    
-    # Reset the singleton in the module to force usage of our mock
-    # Use sys.modules to ensure we get the module object, not the class if shadowed
-    module = sys.modules["ClassicLib.YamlSettingsCache"]
-    monkeypatch.setattr(module, "_yaml_cache", None)
-    
-    return mock_cache
+    # Save original instance for cleanup
+    original_instance = YamlSettingsCache._instance
+
+    # Reset the singleton instance to None so get_instance will use our mock
+    YamlSettingsCache._instance = None
+
+    # Mock the get_instance class method to return our mock cache
+    monkeypatch.setattr(YamlSettingsCache, "get_instance", lambda: mock_cache)
+
+    yield mock_cache
+
+    # Restore original instance after test (cleanup)
+    YamlSettingsCache._instance = original_instance
+
 
 @pytest.fixture
 def app(qapp):
@@ -74,7 +77,7 @@ def settings_dialog(app, mock_settings_cache):
     handler = init_message_handler(parent=None, is_gui_mode=True)
 
     # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
-    handler._gui_backend.show = MagicMock()
+    handler._gui_backend.show = MagicMock() # pyright: ignore[reportAttributeAccessIssue]
 
     # Create dialog as NON-MODAL to prevent freezing in tests
     # mock_settings_cache is active (autouse via dependency or singleton patch), so it will use memory
