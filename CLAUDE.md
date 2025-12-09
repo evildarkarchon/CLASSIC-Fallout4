@@ -30,6 +30,7 @@ uv run pytest -n auto               # All tests, parallel
 uv run pytest -n auto -m "unit and not slow"  # Quick unit tests
 uv run pytest -n auto -m "integration"        # Integration tests
 uv run pytest tests/rust_integration/ -v   # Rust integration tests
+uv run pytest tests/path/to/test_file.py::test_function -v  # Single test
 
 # Linting
 uv run ruff check .
@@ -83,45 +84,27 @@ uv run python -c "from ClassicLib.integration.status import print_rust_status; p
 
 ### Rust Directory Structure
 
-**IMPORTANT**: All Rust crates are organized in the `rust/` directory with subdirectories by layer:
+**IMPORTANT**: All Rust crates are organized in the `rust/` directory with subdirectories by layer. The authoritative list is in `rust/Cargo.toml`.
 
 ```
 rust/
-├── Cargo.toml                        # Workspace manifest (all crate coordination)
+├── Cargo.toml                        # Workspace manifest (authoritative crate list)
 ├── Cargo.lock                        # Dependency lock file
 ├── foundation/                       # Foundation Layer
 │   ├── classic-shared-core/         # Core runtime, errors, utilities
 │   └── classic-shared-py/           # PyO3 bindings for shared components
 ├── business-logic/                   # Business Logic Layer (Pure Rust - NO PyO3)
-│   ├── classic-yaml-core/           # YAML operations
-│   ├── classic-database-core/       # Database operations
-│   ├── classic-file-io-core/        # File I/O operations
-│   ├── classic-scanlog-core/        # Log parsing
-│   ├── classic-config-core/         # Configuration
-│   ├── classic-registry-core/       # Registry management
-│   ├── classic-perf-core/           # Performance monitoring
-│   ├── classic-pybridge-core/       # Python bridge
-│   ├── classic-settings-core/       # Settings management
-│   ├── classic-message-core/        # Message handling
-│   └── classic-path-core/           # Path management
+│   └── classic-*-core/              # All business logic crates (yaml, database, scanlog, config, etc.)
 ├── python-bindings/                  # Python Bindings Layer (PyO3 adapters)
-│   ├── classic-yaml-py/             # Python bindings for YAML
-│   ├── classic-database-py/         # Python bindings for database
-│   ├── classic-file-io-py/          # Python bindings for file I/O
-│   ├── classic-scanlog-py/          # Python bindings for log parsing
-│   ├── classic-config-py/           # Python bindings for config
-│   ├── classic-registry-py/         # Python bindings for registry
-│   ├── classic-perf-py/             # Python bindings for perf
-│   ├── classic-pybridge-py/         # Python bindings for bridge
-│   ├── classic-settings-py/         # Python bindings for settings
-│   ├── classic-message-py/          # Python bindings for messages
-│   └── classic-path-py/             # Python bindings for paths
+│   └── classic-*-py/                # All Python binding crates (one per -core crate)
 └── ui-applications/                  # UI Applications
     ├── classic-cli/                 # Command-line interface
     ├── classic-tui/                 # Terminal UI (Ratatui)
     ├── classic-gui-slint/           # Slint GUI
     └── classic-ui-shared/           # Shared UI components
 ```
+
+**Current crates** (see `rust/Cargo.toml` for full list): yaml, database, file-io, scanlog, config, scangame, registry, perf, pybridge, settings, message, path, constants, version, resource, xse, web, update
 
 **Creating New Crates**:
 1. **Business Logic** (`-core` crate): Create in `rust/business-logic/`
@@ -200,15 +183,15 @@ main_window.on_scan_crash_logs({
 ### Test Organization
 - **Structure**: Domain-driven directories in `tests/`
 - **File Naming**: `test_<component>_<type>.py` (unit/integration/e2e)
-- **Markers**: Required - `@pytest.mark.unit`, `.integration`, `.asyncio`, `.slow`, `.gui`, `.performance`, `.rust`
+- **Markers**: Required - `@pytest.mark.unit`, `.integration`, `.asyncio`, `.slow`, `.gui`, `.performance`
+- **Rust tests**: Place in `tests/rust_integration/` directory (no special marker needed)
 
 ### Critical Rules
 1. **NEVER modify production YAML** in tests (use `YAML.TEST` or mocks)
 2. **NEVER add backward compatibility** to fix tests (update tests to match new API)
 3. **Always clear singletons** between tests (GlobalRegistry, MessageHandler)
 4. **Use proper async mocking** to avoid unawaited coroutine warnings
-5. **Test Rust integration** with `@pytest.mark.rust` for components that use acceleration
-6. **Tests are exempt from API stability** - Always use current APIs, never deprecated ones
+5. **Tests are exempt from API stability** - Always use current APIs, never deprecated ones
 
 ### Testing Guides
 See `docs/` for detailed guides:
