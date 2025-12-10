@@ -3,6 +3,7 @@
 
 import asyncio
 import time
+import tracemalloc
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,7 @@ class TestPerformance:
 
     @pytest.mark.asyncio
     @pytest.mark.performance
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Performance test should not run under memory tracing")
     async def test_concurrent_load_performance(self, async_yaml_core, tmp_path):
         """Test performance of concurrent YAML loading."""
         # Create 50 test files - using sync I/O for setup is okay
@@ -70,6 +72,7 @@ class TestPerformance:
 
     @pytest.mark.asyncio
     @pytest.mark.performance
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Performance test should not run under memory tracing")
     async def test_batch_operation_performance(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test performance advantage of batch operations."""
 

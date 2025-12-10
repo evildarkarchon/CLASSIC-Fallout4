@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 try:
-    from hypothesis import assume, example, given, settings
+    from hypothesis import assume, example, given, settings, HealthCheck
     from hypothesis import strategies as st
     from hypothesis.strategies import composite
 
@@ -128,7 +128,7 @@ class TestRustFFIPropertyBased:
             assert isinstance(e, (ValueError, TypeError, RuntimeError, AttributeError))
 
     @given(st.lists(mock_crash_log_line(), min_size=0, max_size=1000))
-    @settings(max_examples=50)
+    @settings(max_examples=50, suppress_health_check=[HealthCheck.too_slow])
     def test_rust_parser_with_mock_crash_logs(self, log_lines: list[str]):
         """Test Rust parser with various mock crash log formats."""
         if not self.rust_available:

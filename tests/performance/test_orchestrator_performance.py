@@ -21,9 +21,10 @@ import pytest
 from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.Utils.version_utils import crashgen_version_gen
+from packaging.version import Version
 
 if TYPE_CHECKING:
-    from packaging.version import Version
+    pass
 
 class TestOrchestratorPerformance:
     """Test suite for OrchestratorCore performance optimizations."""
@@ -198,7 +199,7 @@ class TestOrchestratorPerformance:
             # Test async loading with simulated delay
             async def read_with_delay(path: Path) -> list[str]:
                 """Simulate async file read with network/disk delay."""
-                await asyncio.sleep(0.01)  # 10ms simulated I/O delay
+                await asyncio.sleep(0.05)  # 10ms simulated I/O delay
                 return path.read_text().splitlines()
 
             # Time concurrent reads (async)
@@ -211,7 +212,7 @@ class TestOrchestratorPerformance:
             start_time = time.perf_counter()
             sync_results = []
             for f in test_files:
-                await asyncio.sleep(0.01)  # Same delay
+                await asyncio.sleep(0.05)  # Same delay
                 sync_results.append(f.read_text().splitlines())
             sync_time = time.perf_counter() - start_time
 

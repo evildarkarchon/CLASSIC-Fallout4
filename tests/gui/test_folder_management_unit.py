@@ -29,15 +29,14 @@ class TestFolderManagementMixin:
     @pytest.fixture(autouse=True)
     def init_message_handler(self):
         """Initialize MessageHandler for tests that use msg_error."""
+        from ClassicLib.MessageHandler import handler as handler_module
         from ClassicLib.MessageHandler import init_message_handler
 
         # Initialize message handler for non-GUI mode
         init_message_handler(parent=None, is_gui_mode=False)
         yield
-        # Clean up the handler after test
-        import ClassicLib.MessageHandler.handler
-
-        ClassicLib.MessageHandler.handler._message_handler = None
+        # Clean up the handler after test by resetting the module-level global
+        handler_module._message_handler = None
 
     @pytest.fixture
     def mock_widget(self, qt_application):
