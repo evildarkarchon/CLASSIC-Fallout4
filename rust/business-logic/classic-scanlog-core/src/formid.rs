@@ -17,7 +17,7 @@ static FORMID_EXTRACTION_PATTERN: Lazy<Regex> =
 
 /// Generic FormID parsing pattern (for parse_formid method)
 static FORMID_PARSE_PATTERN: Lazy<Regex> =
-    Lazy::new(|| Regex::new(r"(?i)(?:0x)?([0-9a-f]{1,8})").unwrap());
+    Lazy::new(|| Regex::new(r"(?i)^(?:0x)?([0-9a-f]{1,8})$").unwrap());
 
 /// High-performance FormID analyzer
 ///

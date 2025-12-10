@@ -265,6 +265,15 @@ class TestRustLogProcessor:
 
     def test_segment_parsing(self, processor):
         """Test parsing log into segments."""
+        # Use custom boundaries for this test
+        custom_boundaries = [
+            ("=== HEADER ===", "=== MODULES ==="),
+            ("=== MODULES ===", "=== STACK TRACE ==="),
+            ("=== STACK TRACE ===", "EOF"),
+        ]
+        # Create a new parser with custom boundaries
+        custom_parser = LogProcessor(custom_boundaries)
+
         lines = [
             "=== HEADER ===",
             "Version: 1.0",
@@ -279,7 +288,7 @@ class TestRustLogProcessor:
             "Frame 2: function_b()",
         ]
 
-        segments = processor.parse_segments(lines)
+        segments = custom_parser.parse_segments(lines)
         assert len(segments) >= 2
 
     def test_pattern_matching_with_pattern_matcher(self):

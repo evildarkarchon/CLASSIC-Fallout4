@@ -788,7 +788,7 @@ class ParallelReportProcessor:
         if self._use_rust and self._processor is not None:
             from classic_scanlog import ParallelReportProcessor
 
-            return ParallelReportProcessor.process_batch(reports, processor_fn=None)
+            return ParallelReportProcessor.process_batch(reports, None)
 
         # Python fallback - sequential processing
         results = []

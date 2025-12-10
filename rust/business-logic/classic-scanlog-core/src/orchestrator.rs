@@ -742,10 +742,14 @@ impl OrchestratorCore {
         // Expected impact: 3-4x faster for multiple logs (CPU core count dependent)
         use futures::stream::{self, StreamExt};
 
+        if log_paths.is_empty() {
+            return Vec::new();
+        }
+
         // Adaptive concurrency: start with CPU count, scale based on batch size
         let num_cpus = num_cpus::get();
         let max_concurrent = if log_paths.len() < num_cpus {
-            log_paths.len() // Small batch: process all concurrently
+            log_paths.len().max(1) // Small batch: process all concurrently, min 1
         } else {
             num_cpus.max(4) // Large batch: use CPU count (min 4 for good throughput)
         };

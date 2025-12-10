@@ -11,7 +11,7 @@
 
 use dashmap::DashMap;
 use log::{debug, error, info, warn};
-use sqlx::sqlite::{SqliteConnectOptions, SqliteJournalMode, SqlitePoolOptions, SqliteSynchronous};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions, SqliteSynchronous};
 use sqlx::{Row, SqlitePool};
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -152,7 +152,6 @@ impl DatabasePool {
             // Configure SQLite with WAL mode and optimizations
             let opts = SqliteConnectOptions::from_str(&format!("sqlite://{}", path.display()))
                 .map_err(|e| DatabaseError::OpenError(format!("{:?}: {}", path, e)))?
-                .journal_mode(SqliteJournalMode::Wal) // Enable WAL mode for concurrent reads
                 .synchronous(SqliteSynchronous::Normal) // Good durability/performance trade-off
                 .read_only(true)
                 .pragma("cache_size", "10000")
@@ -177,8 +176,8 @@ impl DatabasePool {
             );
 
             if let Ok(mut s) = self.stats.write() {
-                s.total_connections += max_conn as u64;
-                s.active_connections += max_conn as u64;
+                s.total_connections += 1;
+                s.active_connections += 1;
             }
         }
 

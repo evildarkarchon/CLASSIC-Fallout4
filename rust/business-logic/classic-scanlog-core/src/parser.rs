@@ -42,7 +42,7 @@ static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
     );
     patterns.insert(
         "plugin",
-        Regex::new(r"(?i)\[([0-9a-f]{2})\]\s+(.+\.es[lmp])").unwrap(),
+        Regex::new(r"(?i)\[([0-9a-f]{2,})\]\s+(.+\.es[lmp])").unwrap(),
     );
     patterns.insert("address", Regex::new(r"0x[0-9A-Fa-f]{8,16}").unwrap());
     patterns.insert("module", Regex::new(r"(\w+\.dll)\s+v?([0-9.]+)?").unwrap());
@@ -888,24 +888,11 @@ impl LogParser {
             .collect()
     }
 
-    /// Extracts all plugin references from the log with their load order indices.
-    ///
-    /// This function searches for Bethesda game plugin references (ESM, ESP, ESL files)
-    /// throughout the crash log and extracts both the load order index and the plugin
-    /// filename. Common patterns matched include:
-    /// - `[00] Fallout4.esm`
-    /// - `[FE] ModPlugin.esp`
-    /// - `[A3] DLC.esm`
-    ///
-    /// # Arguments
-    ///
-    /// * `lines` - A slice of strings representing the lines of the crash log.
-    ///
-    /// # Returns
+    /// Returns
     ///
     /// A vector of tuples where each tuple contains:
-    /// - Load order index as a hexadecimal string (e.g., "00", "FE", "A3")
     /// - Plugin filename (e.g., "Fallout4.esm", "MyMod.esp")
+    /// - Load order index as a hexadecimal string (e.g., "00", "FE", "A3")
     ///
     /// # Example
     ///
@@ -922,7 +909,7 @@ impl LogParser {
     ///
     /// let plugins = parser.extract_plugins(&log_lines);
     /// println!("Found {} plugins:", plugins.len());
-    /// for (index, name) in plugins {
+    /// for (name, index) in plugins {
     ///     println!("  [{}] {}", index, name);
     /// }
     /// ```
@@ -940,7 +927,7 @@ impl LogParser {
                     .captures_iter(line)
                     .filter_map(|cap| {
                         if cap.len() >= 3 {
-                            Some((cap[1].to_string(), cap[2].to_string()))
+                            Some((cap[2].to_string(), cap[1].to_string()))
                         } else {
                             None
                         }

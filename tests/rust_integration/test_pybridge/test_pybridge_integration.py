@@ -472,7 +472,7 @@ class TestRustAcceleration:
         # The module structure is: classic_pybridge (package) -> classic_pybridge.pyd (extension)
         if hasattr(classic_pybridge, "classic_pybridge"):
             # Accessing the inner extension module
-            rust_module = classic_pybridge
+            rust_module = classic_pybridge.classic_pybridge
             module_file = rust_module.__file__
         else:
             # For packages, check the directory for .pyd/.so/.dylib files
