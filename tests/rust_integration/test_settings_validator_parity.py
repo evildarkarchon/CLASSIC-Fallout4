@@ -25,6 +25,7 @@ import pytest
 
 from ClassicLib.integration.factory import get_settings_validator
 from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from tests.rust_integration.parity_fixtures import (
     ParityResult,
@@ -49,19 +50,48 @@ class SettingsValidatorParityValidator(ParityValidator):
         """Initialize settings validator parity validator."""
         super().__init__("settings_validator")
 
-    def create_rust_implementation(self, yamldata=None, **kwargs) -> Any | None:
-        """Create Rust settings validator implementation using factory."""
+    def create_rust_implementation(self, yamldata: ClassicScanLogsInfo | None = None, **kwargs) -> Any | None:
+        """Create Rust settings validator implementation using factory.
+
+        Args:
+            yamldata: The ClassicScanLogsInfo instance containing YAML configuration data.
+                Must not be None when Rust is available.
+            **kwargs: Additional keyword arguments (unused).
+
+        Returns:
+            The Rust settings validator instance, or None if Rust is unavailable.
+
+        Raises:
+            ValueError: If yamldata is None when Rust settings validator is available.
+        """
         if not RUST_AVAILABLE.get("settings_validator"):
             return None
+
+        if yamldata is None:
+            raise ValueError("yamldata is required for Rust settings validator")
 
         # Use factory function to get the best implementation
         return get_settings_validator(yamldata)
 
-    def create_python_implementation(self, yamldata=None, **kwargs) -> SettingsScannerFragments:
-        """Create Python settings validator implementation."""
+    def create_python_implementation(self, yamldata: ClassicScanLogsInfo | None = None, **kwargs) -> SettingsScannerFragments:
+        """Create Python settings validator implementation.
+
+        Args:
+            yamldata: The ClassicScanLogsInfo instance containing YAML configuration data.
+                Must not be None.
+            **kwargs: Additional keyword arguments (unused).
+
+        Returns:
+            The Python SettingsScannerFragments instance.
+
+        Raises:
+            ValueError: If yamldata is None.
+        """
+        if yamldata is None:
+            raise ValueError("yamldata is required for Python settings validator")
         return SettingsScannerFragments(yamldata)
 
-    def generate_test_cases(self) -> list[dict[str, Any]]:
+    def generate_test_cases(self) -> list[dict[str, Any]]:  # type: ignore[override]
         """Generate comprehensive settings validator test cases."""
         return [
             # Achievements setting validation
@@ -766,8 +796,8 @@ class TestSettingsValidatorParity:
             pytest.skip("Rust settings validator not available")
 
         # Test data - simplified to ensure consistent behavior
-        xsemodules = {"achievements.dll"}
-        crashgen = {"Achievements": True, "MemoryManager": True}
+        xsemodules: set[str] = {"achievements.dll"}
+        crashgen: dict[str, bool | int | str] = {"Achievements": True, "MemoryManager": True}
 
         # Measure performance over multiple iterations
         iterations = 100

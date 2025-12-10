@@ -350,7 +350,7 @@ class TestAsyncBridgeFailureModes:
 
         async def outer():
             # Intentionally not awaiting
-            inner()  # This creates a coroutine
+            inner()  # pyright: ignore[reportUnusedCoroutine] # This creates a coroutine
             return "completed"
 
         async def inner():

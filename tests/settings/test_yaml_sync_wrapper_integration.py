@@ -62,7 +62,7 @@ class TestModuleLevelFunctions:
                 return {}
             return {}
 
-        monkeypatch.setattr(yaml_cache._async_core.file_ops, "load_yaml_file", mock_load)
+        monkeypatch.setattr(core.file_ops, "load_yaml_file", mock_load)
 
         value = classic_settings(bool, "Default")
         assert settings_file.exists()
@@ -90,15 +90,15 @@ class TestBatchOperations:
         def mock_get_path(store):
             return files.get(store, tmp_path / "nonexistent.yaml")
 
-        # Ensure initialized
-        cache._get_async_core()
-        monkeypatch.setattr(cache._async_core.file_ops, "get_path_for_store", mock_get_path)
+        # Ensure initialized and capture the core reference
+        core = cache._get_async_core()
+        monkeypatch.setattr(core.file_ops, "get_path_for_store", mock_get_path)
 
         # Mock load_yaml_file
         async def mock_load(path, use_cache=True):
             return data_map.get(path, {})
 
-        monkeypatch.setattr(cache._async_core.file_ops, "load_yaml_file", mock_load)
+        monkeypatch.setattr(core.file_ops, "load_yaml_file", mock_load)
 
         requests = [(dict, YAML.Settings, "Settings_data"), (dict, YAML.Ignore, "Ignore_data")]
         results = cache.batch_get_settings(requests)

@@ -86,7 +86,7 @@ class PapyrusManagerMixin:
             return
 
         # Create the dialog
-        self.papyrus_monitor_dialog = PapyrusMonitorDialog(self)
+        self.papyrus_monitor_dialog = PapyrusMonitorDialog(self) # pyright: ignore[reportArgumentType]
 
         # Connect signals
         self.papyrus_monitor_thread.started.connect(self.papyrus_monitor_worker.run)

@@ -124,7 +124,7 @@ class PastebinMixin:
         # Create thread and worker
         # Check if a fetch is already in progress
         if self.thread_manager.is_thread_running(ThreadType.PASTEBIN_FETCH):
-            QMessageBox.warning(self, "Fetch in Progress", "A Pastebin fetch is already in progress. Please wait for it to complete.")
+            QMessageBox.warning(self, "Fetch in Progress", "A Pastebin fetch is already in progress. Please wait for it to complete.") # pyright: ignore[reportArgumentType]
             return
 
         # Create new thread and worker for each fetch operation to prevent thread reuse
@@ -148,8 +148,8 @@ class PastebinMixin:
         self.pastebin_thread.finished.connect(lambda: setattr(self, "pastebin_worker", None))
 
         # Use lambdas or functools.partial if arguments need to be passed to slots
-        self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}"))
-        self.pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}"))
+        self.pastebin_worker.success.connect(lambda pb_source: QMessageBox.information(self, "Success", f"Log fetched from: {pb_source}")) # pyright: ignore[reportArgumentType]
+        self.pastebin_worker.error.connect(lambda err: QMessageBox.warning(self, "Error", f"Failed to fetch log: {err}")) # pyright: ignore[reportArgumentType]
 
         # Start through thread manager
         self.thread_manager.start_thread(ThreadType.PASTEBIN_FETCH)

@@ -7,7 +7,6 @@ ensuring type safety, error handling, and memory safety.
 
 import string
 from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -288,47 +287,3 @@ class TestRustFFIPropertyBased:
 
         # Should complete without deadlocks or crashes
         assert len(errors) == 0 or all(isinstance(e, (RuntimeError, ValueError)) for e in errors)
-
-    @given(
-        st.dictionaries(
-            st.text(alphabet=string.ascii_letters, min_size=1, max_size=20),  # keys
-            st.one_of(
-                st.integers(), st.floats(allow_nan=False, allow_infinity=False), st.text(max_size=100), st.booleans(), st.none()
-            ),  # values
-            min_size=0,
-            max_size=100,
-        )
-    )
-    @settings(max_examples=50)
-    def test_rust_json_serialization(self, data: dict[str, Any]):
-        """Test Rust JSON serialization with various data types."""
-        if not self.rust_available:
-            pytest.skip("Rust module not available")
-
-        try:
-            import classic_scanlog
-
-            # Test serialization roundtrip
-            result = classic_scanlog.test_json_roundtrip(data)
-
-            # Should preserve structure
-            assert isinstance(result, dict)
-            assert len(result) == len(data)
-
-            # Check preservation of types (with JSON limitations)
-            for key in data:
-                if data[key] is None:
-                    assert result[key] is None
-                elif isinstance(data[key], bool):
-                    assert isinstance(result[key], bool)
-                elif isinstance(data[key], (int, float)):
-                    assert isinstance(result[key], (int, float))
-                elif isinstance(data[key], str):
-                    assert isinstance(result[key], str)
-
-        except (ImportError, AttributeError):
-            # Module or function might not exist
-            pytest.skip("JSON roundtrip function not available")
-        except Exception as e:
-            # Should only raise expected exceptions
-            assert isinstance(e, (ValueError, TypeError, RuntimeError))

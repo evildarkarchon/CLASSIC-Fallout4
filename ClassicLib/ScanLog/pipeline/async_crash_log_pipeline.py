@@ -92,7 +92,7 @@ class AsyncCrashLogPipeline:
         self.performance_stats: dict[str, float] = {}
 
     async def process_crash_logs_async(
-        self, crashlog_list: list[Path], remove_list: tuple[str]
+        self, crashlog_list: list[Path], remove_list: tuple[str, ...]
     ) -> tuple[list[tuple[Path, list[str], bool, Counter[str]]], dict[str, float]]:
         """
         Processes a list of crash log files asynchronously, performing reformatting, loading,
@@ -102,7 +102,7 @@ class AsyncCrashLogPipeline:
 
         Args:
             crashlog_list (list[Path]): List of crash log file paths to be processed.
-            remove_list (tuple[str]): Tuple of strings specifying patterns to be removed
+            remove_list (tuple[str, ...]): Tuple of strings specifying patterns to be removed
                 during reformatting.
 
         Returns:
@@ -203,7 +203,7 @@ class AsyncCrashLogPipeline:
 
 async def run_async_crash_log_scan(
     crashlog_list: list[Path],
-    remove_list: tuple[str],
+    remove_list: tuple[str, ...],
     yamldata: "ClassicScanLogsInfo",
     fcx_mode: bool | None,
     show_formid_values: bool | None,
@@ -218,7 +218,7 @@ async def run_async_crash_log_scan(
 
     Args:
         crashlog_list (list[Path]): A list of paths pointing to the crash log files.
-        remove_list (tuple[str]): A tuple containing identifiers or patterns that need to be filtered out
+        remove_list (tuple[str, ...]): A tuple containing identifiers or patterns that need to be filtered out
             while processing the logs.
         yamldata (ClassicScanLogsInfo): An object containing configuration data and parsing rules for the log
             scanning process.

@@ -3,13 +3,17 @@
 This module tests the message routing and formatting with Rust acceleration.
 """
 
+from typing import Any
+
 import pytest
 
+classic_message: Any
 try:
     import classic_message
 
     RUST_AVAILABLE = True
 except ImportError:
+    classic_message = None
     RUST_AVAILABLE = False
 
 pytestmark = [

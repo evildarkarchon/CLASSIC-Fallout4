@@ -11,6 +11,7 @@ import threading
 import time
 import traceback
 import tracemalloc
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 from unittest.mock import Mock
@@ -52,6 +53,10 @@ class MemoryTracker:
         """
         if not self._tracking_enabled:
             return {}
+
+        # Assert that _initial_memory was set by start_tracking()
+        # This narrows the type from float | None to float for the type checker
+        assert self._initial_memory is not None, "start_tracking() must be called before stop_tracking()"
 
         final_memory = self._get_current_memory()
         tracemalloc.stop()
@@ -107,7 +112,7 @@ class ConcurrencyTestHelper:
         self._error_collector = []
 
     def create_contention_scenario(
-        self, target_func: callable, num_threads: int = 20, iterations_per_thread: int = 100, shared_data: Any = None
+        self, target_func: Callable[..., Any], num_threads: int = 20, iterations_per_thread: int = 100, shared_data: Any = None
     ) -> dict[str, Any]:
         """
         Create a high-contention scenario to test thread safety.
@@ -157,7 +162,7 @@ class ConcurrencyTestHelper:
             "error_rate": len(self._error_collector) / max(len(results), 1),
         }
 
-    def detect_race_conditions(self, operations: list[callable], num_iterations: int = 1000) -> dict[str, Any]:
+    def detect_race_conditions(self, operations: list[Callable[..., Any]], num_iterations: int = 1000) -> dict[str, Any]:
         """
         Detect potential race conditions by running operations many times.
 
@@ -550,12 +555,25 @@ def cleanup_after_test():
     gc.collect()
 
     # Clear any module-level caches if they exist
-    try:
-        # Clear Rust caches if available
-        import classic_scanlog
+    # Note: classic_scanlog uses instance-level clear_cache() methods on
+    # PyLogParser, PyRustFormIDAnalyzer, etc. - no global cache clearing function.
+    # Instances are garbage collected above.
 
-        if hasattr(classic_scanlog, "clear_all_caches"):
-            classic_scanlog.clear_all_caches()
+    # Clear config/yaml caches if available
+    try:
+        import classic_config
+
+        if hasattr(classic_config, "clear_yaml_cache"):
+            classic_config.clear_yaml_cache()
+    except ImportError:
+        pass
+
+    # Clear registry caches if available
+    try:
+        import classic_registry
+
+        if hasattr(classic_registry, "clear_all"):
+            classic_registry.clear_all()
     except ImportError:
         pass
 

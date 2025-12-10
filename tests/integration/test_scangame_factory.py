@@ -231,7 +231,7 @@ class TestFactoryRustAcceleration:
         """Test that factory returns actual Rust types when available."""
         scanner = scangame_factory.get_ba2_scanner()
 
-        rust_scanner_type = type(scangame_factory._classic_scangame.BA2Scanner())
+        rust_scanner_type = type(scangame_factory._classic_scangame.BA2Scanner())  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert isinstance(scanner, rust_scanner_type)
 
     def test_rust_status_shows_version(self):
@@ -248,23 +248,23 @@ class TestFactoryRustAcceleration:
         plugins_path.mkdir()
 
         ba2 = scangame_factory.get_ba2_scanner()
-        assert isinstance(ba2, type(scangame_factory._classic_scangame.BA2Scanner()))
+        assert isinstance(ba2, type(scangame_factory._classic_scangame.BA2Scanner()))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         config = scangame_factory.get_config_duplicate_detector()
-        assert isinstance(config, type(scangame_factory._classic_scangame.ConfigDuplicateDetector()))
+        assert isinstance(config, type(scangame_factory._classic_scangame.ConfigDuplicateDetector()))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         unpacked = scangame_factory.get_unpacked_scanner()
-        assert isinstance(unpacked, type(scangame_factory._classic_scangame.UnpackedScanner()))
+        assert isinstance(unpacked, type(scangame_factory._classic_scangame.UnpackedScanner()))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         log_proc = scangame_factory.get_log_processor([], [], [])
-        assert isinstance(log_proc, type(scangame_factory._classic_scangame.LogProcessor([], [], [])))
+        assert isinstance(log_proc, type(scangame_factory._classic_scangame.LogProcessor([], [], [])))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         ini_val = scangame_factory.get_ini_validator("Fallout4")
-        assert isinstance(ini_val, type(scangame_factory._classic_scangame.IniValidator("Fallout4")))
+        assert isinstance(ini_val, type(scangame_factory._classic_scangame.IniValidator("Fallout4")))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         crashgen = scangame_factory.get_crashgen_checker(plugins_path, "Buffout4")
-        assert isinstance(crashgen, type(scangame_factory._classic_scangame.CrashgenChecker(plugins_path, "Buffout4")))
+        assert isinstance(crashgen, type(scangame_factory._classic_scangame.CrashgenChecker(plugins_path, "Buffout4")))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         xse = scangame_factory.get_xse_checker(plugins_path)
-        game_version = scangame_factory._classic_scangame.GameVersion.Original
-        assert isinstance(xse, type(scangame_factory._classic_scangame.XseChecker(plugins_path, False, game_version)))
+        game_version = scangame_factory._classic_scangame.GameVersion.Original  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert isinstance(xse, type(scangame_factory._classic_scangame.XseChecker(plugins_path, False, game_version)))  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]

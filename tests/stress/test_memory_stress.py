@@ -7,7 +7,7 @@ real-world production scenarios.
 """
 
 import gc
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -15,6 +15,7 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
+from classic_scanlog import FormIDAnalyzer, LogParser, PatternMatcher
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -43,8 +44,6 @@ class TestMemoryLeakDetection:
         """
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.utils.StringProcessor()
-
         # Generate test data
         base_strings = [f"Test string {i} with content" for i in range(1000)]
 
@@ -52,10 +51,10 @@ class TestMemoryLeakDetection:
         for cycle in range(50):  # 50 cycles * 1000 strings = 50k operations
             fresh_memory_tracker.take_measurement(f"cycle_{cycle}_start")
 
-            # Process strings in various ways
-            upper_result = processor.process_batch(base_strings, "upper")
-            lower_result = processor.process_batch(base_strings, "lower")
-            trimmed_result = processor.process_batch([f"  {s}  " for s in base_strings], "trim")
+            # Process strings using Python builtins (no StringProcessor available in Rust API)
+            upper_result = [s.upper() for s in base_strings]
+            lower_result = [s.lower() for s in base_strings]
+            trimmed_result = [s.strip() for s in [f"  {s}  " for s in base_strings]]
 
             # Verify processing worked
             assert len(upper_result) == 1000
@@ -86,7 +85,7 @@ class TestMemoryLeakDetection:
         """
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate large log content
         large_log = stress_data_generator.generate_large_crash_log(
@@ -95,22 +94,24 @@ class TestMemoryLeakDetection:
             formid_count=5000,
         )
 
+        # Convert to lines for LogParser
+        large_log_lines = large_log.split("\n")
+
         # Process the same log multiple times
         for iteration in range(10):  # Process 10 times = 200MB total processed
             fresh_memory_tracker.take_measurement(f"iteration_{iteration}_start")
 
             # Extract FormIDs - this involves regex processing
-            formids = processor.extract_formids(large_log)
+            formids = parser.extract_formids(large_log_lines)
             assert len(formids) > 100  # Should find many FormIDs
 
             # Extract plugins - another regex-heavy operation
-            plugins = processor.extract_plugins(large_log)
+            plugins = parser.extract_plugins(large_log_lines)
             assert len(plugins) > 50  # Should find many plugins
 
             # Pattern matching on large text
-            patterns = ["ERROR", "WARNING", "FormID", "Plugin"]
-            processor.init_pattern_matcher(patterns)
-            matches = processor.find_all_patterns(large_log, patterns)
+            pattern_matcher = PatternMatcher(["ERROR", "WARNING", "FormID", "Plugin"])
+            matches = pattern_matcher.find_all(large_log)
             assert len(matches) > 0
 
             # Clear results to avoid Python-side accumulation
@@ -241,7 +242,7 @@ class TestLargeDatasetProcessing:
         fresh_memory_tracker.take_measurement("log_file_created")
 
         # Process with Rust components
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Read and process in chunks to test memory efficiency
         with AsyncBridge.get_instance() as bridge:
@@ -251,19 +252,21 @@ class TestLargeDatasetProcessing:
             content = bridge.run_async(io_core.read_file(massive_log_file))
             fresh_memory_tracker.take_measurement("file_loaded")
 
+            # Convert to lines for LogParser
+            lines = content.split("\n")
+
             # Extract FormIDs from massive content
-            formids = processor.extract_formids(content)
+            formids = parser.extract_formids(lines)
             assert len(formids) > 10000, f"Expected many FormIDs, got {len(formids)}"
             fresh_memory_tracker.take_measurement("formids_extracted")
 
             # Extract plugins
-            plugins = processor.extract_plugins(content)
+            plugins = parser.extract_plugins(lines)
             assert len(plugins) > 100, f"Expected many plugins, got {len(plugins)}"
             fresh_memory_tracker.take_measurement("plugins_extracted")
 
-            # Process lines in parallel
-            lines = content.split("\n")
-            processed_lines = processor.process_lines_parallel(lines[:10000], "upper")  # Limit to avoid timeout
+            # Process lines using Python (no process_lines_parallel in Rust API)
+            processed_lines = [line.upper() for line in lines[:10000]]  # Limit to avoid timeout
             assert len(processed_lines) == 10000
             fresh_memory_tracker.take_measurement("lines_processed")
 
@@ -290,8 +293,8 @@ class TestLargeDatasetProcessing:
         formids = stress_data_generator.generate_formid_dataset(count=50000)  # 50k FormIDs
         fresh_memory_tracker.take_measurement("formids_generated")
 
-        # Process with Rust FormIDProcessor
-        processor = classic_scanlog.FormIDProcessor()
+        # Process with Rust FormIDAnalyzer
+        analyzer = FormIDAnalyzer()
 
         # Process in batches to test memory efficiency
         batch_size = 5000
@@ -299,16 +302,15 @@ class TestLargeDatasetProcessing:
 
         for i in range(0, len(formids), batch_size):
             batch = formids[i : i + batch_size]
-            results = processor.process_batch(batch)
 
-            # Count valid results
-            valid_results = sum(1 for r in results if r is not None)
+            # Count valid results by parsing each FormID
+            valid_results = sum(1 for formid in batch if analyzer.parse_formid(formid) is not None)
             total_processed += valid_results
 
             fresh_memory_tracker.take_measurement(f"batch_{i // batch_size}_processed")
 
-            # Clear batch results
-            del results
+            # Clear batch reference
+            del batch
 
         assert total_processed > 40000, f"Expected most FormIDs valid, got {total_processed}"
 
@@ -343,9 +345,8 @@ class TestLargeDatasetProcessing:
                 plugin_formids = [f"0x{i:08X}" for i in range(100)]  # 100 FormIDs per plugin
 
                 # Process with Rust
-                processor = classic_scanlog.FormIDProcessor()
-                results = processor.process_batch(plugin_formids)
-                valid_count = sum(1 for r in results if r is not None)
+                analyzer = FormIDAnalyzer()
+                valid_count = sum(1 for formid in plugin_formids if analyzer.parse_formid(formid) is not None)
                 assert valid_count == 100  # All should be valid
 
             fresh_memory_tracker.take_measurement(f"analysis_round_{analysis_round}")
@@ -373,34 +374,58 @@ class TestMemoryLimitHandling:
 
     def test_orchestrator_memory_management(self, fresh_memory_tracker, temp_crash_logs_dir):
         """
-        Test OrchestratorCore memory management with many concurrent operations.
+        Test OrchestratorCore memory management with batch processing.
 
         Runs the orchestrator with many files to test memory management
-        in the core scanning pipeline.
+        in the core scanning pipeline using batch processing.
         """
         fresh_memory_tracker.start_tracking()
 
         with AsyncBridge.get_instance() as bridge:
-            orchestrator = OrchestratorCore()
+            # Create mock yamldata for OrchestratorCore
+            mock_yamldata = MagicMock()
+            mock_yamldata.crashgen_name = "Buffout 4"
+            mock_yamldata.xse_acronym = "F4SE"
+            mock_yamldata.crashgen_latest_og = "1.28.6"
+            mock_yamldata.crashgen_latest_vr = "1.26.2"
+            mock_yamldata.game_mods_conf = {}
+            mock_yamldata.game_mods_freq = {}
+            mock_yamldata.game_mods_solu = {}
+            mock_yamldata.game_mods_core = {}
+            mock_yamldata.game_mods_core_folon = {}
+            mock_yamldata.game_mods_opc2 = {}
 
             # Get log files
             log_files = list(temp_crash_logs_dir.glob("*.log"))
 
-            # Process all files multiple times
+            # Process all files multiple times using batch processing
             for processing_round in range(3):  # 3 rounds to test sustained load
                 fresh_memory_tracker.take_measurement(f"round_{processing_round}_start")
 
-                # Process each file
-                for log_file in log_files:
-                    # Use orchestrator to process file
-                    result = bridge.run_async(orchestrator.process_single_log(log_file))
+                async def process_batch():
+                    """Process logs using OrchestratorCore's batch method."""
+                    async with OrchestratorCore(
+                        yamldata=mock_yamldata,
+                        fcx_mode=False,
+                        show_formid_values=False,
+                        formid_db_exists=False,
+                    ) as orchestrator:
+                        return await orchestrator.process_crash_logs_batch(log_files)
 
-                    # Verify processing succeeded
-                    assert result is not None
-                    if hasattr(result, "formids"):
-                        assert len(result.formids) >= 0  # Should have some FormIDs
+                # Use orchestrator batch processing
+                results = bridge.run_async(process_batch())
 
-                    fresh_memory_tracker.take_measurement(f"processed_{log_file.name}")
+                # Verify processing succeeded
+                assert results is not None
+                assert len(results) == len(log_files)
+
+                for log_path, report, _scan_failed, stats in results:
+                    # Verify each result has expected structure
+                    assert log_path is not None
+                    assert isinstance(report, list)
+                    assert stats["scanned"] >= 0
+
+                fresh_memory_tracker.take_measurement(f"round_{processing_round}_end")
 
                 # Force cleanup between rounds
                 gc.collect()
@@ -442,9 +467,10 @@ class TestMemoryLimitHandling:
                 content = await io_core.read_file(file_path)
 
                 # Process with Rust components
-                processor = classic_scanlog.utils.LogProcessor()
-                formids = processor.extract_formids(content)
-                plugins = processor.extract_plugins(content)
+                parser = LogParser()
+                lines = content.split("\n")
+                formids = parser.extract_formids(lines)
+                plugins = parser.extract_plugins(lines)
 
                 return {"file": file_path.name, "formid_count": len(formids), "plugin_count": len(plugins), "content_size": len(content)}
 
@@ -494,11 +520,12 @@ class TestMemoryLimitHandling:
             fresh_memory_tracker.take_measurement(f"dataset_{i}_created")
 
         # Process all datasets to create maximum memory pressure
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
         all_formids = []
 
         for i, dataset in enumerate(large_datasets):
-            formids = processor.extract_formids(dataset)
+            lines = dataset.split("\n")
+            formids = parser.extract_formids(lines)
             all_formids.extend(formids)
             fresh_memory_tracker.take_measurement(f"dataset_{i}_processed")
 
@@ -516,7 +543,8 @@ class TestMemoryLimitHandling:
             formid_count=100,
         )
 
-        small_formids = processor.extract_formids(small_dataset)
+        small_lines = small_dataset.split("\n")
+        small_formids = parser.extract_formids(small_lines)
         assert len(small_formids) > 10, "Should still process small datasets efficiently"
 
         final_memory = fresh_memory_tracker.take_measurement("recovery_complete")

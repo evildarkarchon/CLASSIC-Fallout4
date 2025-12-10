@@ -18,7 +18,7 @@ from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.fragments import ReportFragment
+    from ClassicLib.rust.report_rust import ReportFragment
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 # Module-level regex pattern cache to avoid recompilation
@@ -144,7 +144,7 @@ class FormIDAnalyzerCore:
         Returns:
             ReportFragment containing the FormID analysis results
         """
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.rust.report_rust import ReportFragment
 
         if not formids_matches:
             return ReportFragment.from_lines(["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n"])

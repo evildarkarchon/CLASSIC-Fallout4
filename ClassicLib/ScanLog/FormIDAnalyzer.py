@@ -37,7 +37,7 @@ from ClassicLib.AsyncBridge import create_sync_wrapper
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.fragments import ReportFragment
+    from ClassicLib.rust.report_rust import ReportFragment
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 

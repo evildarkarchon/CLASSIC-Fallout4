@@ -46,7 +46,7 @@ class TestAsyncFileReading:
     async def test_read_multiple_files(self, io_core: FileIOCore, temp_files_set: list[Path]):
         """Test reading multiple files concurrently."""
         # Read all files
-        contents = await io_core.read_multiple_files(temp_files_set)
+        contents = await io_core.read_multiple_files(temp_files_set)  # pyright: ignore[reportArgumentType, reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         # Verify contents
         assert len(contents) == 3

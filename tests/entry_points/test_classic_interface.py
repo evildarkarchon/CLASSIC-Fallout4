@@ -6,8 +6,10 @@ and component integration for the main CLASSIC interface.
 
 # ruff: noqa: PLR6301, ARG002
 
+import os
 import sys
 from pathlib import Path
+from typing import Generator
 from unittest.mock import MagicMock, Mock, patch
 
 import pytest
@@ -15,15 +17,13 @@ import pytest
 # Mark all tests in this module as GUI tests
 pytestmark = [pytest.mark.gui, pytest.mark.unit]
 
-import os
-
 
 @pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests unstable in xdist workers on Windows")
 class TestClassicInterface:
     """Test suite for CLASSIC_Interface.py GUI entry point."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, qt_application) -> None:
+    def setup(self, qt_application) -> Generator[None, None, None]:
         """Set up test environment.
 
         Args:
@@ -37,8 +37,6 @@ class TestClassicInterface:
         # This is critical because patching the class doesn't stop already-running
         # background threads, which can cause access violations on Windows.
         try:
-            import sys
-
             if "ClassicLib.AsyncBridge" in sys.modules:
                 from ClassicLib.AsyncBridge import AsyncBridge
 

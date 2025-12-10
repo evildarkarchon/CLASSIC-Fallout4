@@ -167,7 +167,7 @@ class TestRealWorldCrashLogProcessing:
             mock_orchestrator_class.return_value.__aexit__.return_value = None
 
             # Run the pipeline (provide empty remove_list)
-            results, stats = await pipeline.process_crash_logs_async(crash_log_files, [])
+            results, stats = await pipeline.process_crash_logs_async(crash_log_files, ())
 
         full_test_time: float = time.perf_counter() - full_test_start
         async_stats = stats

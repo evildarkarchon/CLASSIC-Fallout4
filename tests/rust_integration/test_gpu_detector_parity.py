@@ -26,6 +26,7 @@ from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from tests.rust_integration.parity_fixtures import (
     ParityResult,
+    ParityTestCase,
     ParityValidator,
     skip_if_rust_unavailable,
 )
@@ -68,9 +69,9 @@ class GpuDetectorParityValidator(ParityValidator):
 
         return GpuDetectorWrapper()
 
-    def generate_test_cases(self) -> list[dict[str, Any]]:
+    def generate_test_cases(self) -> list[ParityTestCase]:
         """Generate comprehensive GPU detector test cases."""
-        return [
+        raw_cases = [
             # AMD GPU primary
             {
                 "name": "amd_primary_gpu",
@@ -242,6 +243,17 @@ class GpuDetectorParityValidator(ParityValidator):
             },
         ]
 
+        return [
+            ParityTestCase(
+                name=case["name"],
+                description=f"GPU detection parity: {case['name']}",
+                inputs={"segment_system": case["segment_system"]},
+                expected_output_type=dict,
+                metadata={"expected": case["expected"]},
+            )
+            for case in raw_cases
+        ]
+
 
 @pytest.mark.integration
 @pytest.mark.asyncio
@@ -273,8 +285,8 @@ class TestGpuDetectorParity:
                 if not rust_detector:
                     pytest.skip("Rust GPU detector not available")
 
-                segment_system = test_case["segment_system"]
-                expected_result = test_case["expected"]
+                segment_system = test_case.inputs["segment_system"]
+                expected_result = test_case.metadata["expected"]
 
                 # Time Rust detection
                 start_time = time.perf_counter()
@@ -312,7 +324,7 @@ class TestGpuDetectorParity:
                 result = ParityResult(
                     component_name="gpu_detector",
                     method_name="get_gpu_info",
-                    test_case=test_case["name"],
+                    test_case=test_case.name,
                     rust_available=True,
                     passed=is_identical,
                     rust_result=rust_result,
@@ -329,12 +341,12 @@ class TestGpuDetectorParity:
                 results.append(result)
 
             except Exception as e:
-                logger.error(f"GPU detection test failed for {test_case['name']}: {e}")
+                logger.error(f"GPU detection test failed for {test_case.name}: {e}")
                 results.append(
                     ParityResult(
                         component_name="gpu_detector",
                         method_name="get_gpu_info",
-                        test_case=test_case["name"],
+                        test_case=test_case.name,
                         rust_available=True,
                         passed=False,
                         error_messages=[str(e)],

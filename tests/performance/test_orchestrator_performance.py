@@ -13,6 +13,7 @@ import asyncio
 import time
 import tracemalloc
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,6 +22,8 @@ from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
+if TYPE_CHECKING:
+    from packaging.version import Version
 
 class TestOrchestratorPerformance:
     """Test suite for OrchestratorCore performance optimizations."""
@@ -77,7 +80,7 @@ class TestOrchestratorPerformance:
 
         # Clear the cache first (also done by fixture, but being explicit here)
         crashgen_version_gen.cache_clear()
-
+        result1 = result2 = Version("0.0.0.0")
         # First call - should parse
         start_time = time.perf_counter()
         for _ in range(100):

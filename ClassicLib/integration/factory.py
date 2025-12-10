@@ -912,7 +912,7 @@ def get_orchestrator(
     fcx_mode: bool,
     show_formid_values: bool,
     formid_db_exists: bool,
-    remove_list: tuple[str] | None = None,
+    remove_list: tuple[str, ...] | None = None,
 ) -> Any:
     """
     Returns an orchestrator instance for crash log processing and analysis.

@@ -20,6 +20,7 @@ Mock fixtures are used to avoid actual database operations in unit tests.
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 import tempfile
 from pathlib import Path
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -81,7 +82,7 @@ class TestAsyncDatabasePool:
                 assert db_path in pool.connections
 
                 # Store the mock connection for verification
-                mock_conn = pool.connections[db_path]
+                mock_conn = cast(AsyncMock, pool.connections[db_path])
 
                 # Test cleanup
                 await pool.close()
@@ -176,18 +177,18 @@ class TestAsyncDatabasePool:
                 await pool.initialize()
 
                 # First query - should hit database
-                result1 = await pool.get_entry(db_path, "12345678")
+                result1 = await pool.get_entry("12345678", "Fallout4.esm")
                 assert result1 == "Test Result"
                 assert execute_call_count == 1
 
                 # Second query with same FormID - should use cache
-                result2 = await pool.get_entry(db_path, "12345678")
+                result2 = await pool.get_entry("12345678", "Fallout4.esm")
                 assert result2 == "Test Result"
                 # Execute should still have been called only once (cached)
                 assert execute_call_count == 1
 
                 # Query with different FormID - should hit database again
-                result3 = await pool.get_entry(db_path, "87654321")
+                result3 = await pool.get_entry("87654321", "Fallout4.esm")
                 assert result3 == "Test Result"
                 assert execute_call_count == 2
 
@@ -263,7 +264,7 @@ class TestAsyncDatabasePool:
 
                 # Execute multiple queries concurrently
                 formids = [f"{i:08X}" for i in range(10)]
-                tasks = [pool.get_entry(db_path, formid) for formid in formids]
+                tasks = [pool.get_entry(formid, "Fallout4.esm") for formid in formids]
                 results = await asyncio.gather(*tasks)
 
                 # Verify all queries completed
@@ -283,7 +284,7 @@ class TestAsyncDatabasePool:
             assert len(pool.connections) == 0
 
             # Getting entry with no databases should return None or handle gracefully
-            result = await pool.get_entry(Path("nonexistent.db"), "12345678")
+            result = await pool.get_entry("12345678", "Fallout4.esm")
             assert result is None or result == ""
 
             await pool.close()

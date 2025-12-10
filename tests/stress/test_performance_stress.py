@@ -9,7 +9,8 @@ detection under production-level stress conditions.
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from statistics import mean, stdev
-from unittest.mock import patch
+from typing import cast
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -17,6 +18,7 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
+from classic_scanlog import LogParser, PatternMatcher
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -45,8 +47,6 @@ class TestSustainedLoadPerformance:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.utils.StringProcessor()
-
         # Test parameters
         duration_seconds = 30  # 30-second sustained load test
         batch_size = 1000
@@ -62,9 +62,9 @@ class TestSustainedLoadPerformance:
             # Generate test strings for this batch
             test_strings = [f"SustainedLoad_String_{operations_completed}_{i}" for i in range(batch_size)]
 
-            # Process batch
-            upper_result = processor.process_batch(test_strings, "upper")
-            lower_result = processor.process_batch(test_strings, "lower")
+            # Process batch using Python builtins (no StringProcessor in Rust API)
+            upper_result = [s.upper() for s in test_strings]
+            lower_result = [s.lower() for s in test_strings]
 
             # Verify results
             assert len(upper_result) == batch_size
@@ -120,7 +120,7 @@ class TestSustainedLoadPerformance:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate test log content
         log_content = stress_data_generator.generate_large_crash_log(
@@ -128,6 +128,9 @@ class TestSustainedLoadPerformance:
             plugin_count=100,
             formid_count=2000,
         )
+
+        # Convert to lines for LogParser
+        log_lines = log_content.split("\n")
 
         # Test parameters
         duration_seconds = 45  # 45-second sustained test
@@ -141,13 +144,12 @@ class TestSustainedLoadPerformance:
             iteration_start = time.time()
 
             # Process the log content
-            formids = processor.extract_formids(log_content)
-            plugins = processor.extract_plugins(log_content)
+            formids = parser.extract_formids(log_lines)
+            plugins = parser.extract_plugins(log_lines)
 
             # Pattern matching
-            patterns = ["ERROR", "WARNING", "FormID", "Plugin"]
-            processor.init_pattern_matcher(patterns)
-            processor.find_all_patterns(log_content, patterns)
+            pattern_matcher = PatternMatcher(["ERROR", "WARNING", "FormID", "Plugin"])
+            pattern_matcher.find_all(log_content)
 
             iteration_end = time.time()
             processing_time = iteration_end - iteration_start
@@ -339,7 +341,7 @@ class TestConcurrentPerformance:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Test data
         test_content = (
@@ -351,6 +353,9 @@ class TestConcurrentPerformance:
             * 1000
         )  # Substantial content
 
+        # Convert to lines for LogParser - cast to avoid LiteralString variance issues
+        test_lines = cast(list[str], test_content.split("\n"))
+
         concurrency_levels = [1, 5, 10, 20, 30]  # Different concurrency levels
         results_by_concurrency = {}
 
@@ -361,8 +366,8 @@ class TestConcurrentPerformance:
                 start = time.time()
 
                 # Extract FormIDs and plugins
-                formids = processor.extract_formids(test_content)
-                plugins = processor.extract_plugins(test_content)
+                formids = parser.extract_formids(test_lines)
+                plugins = parser.extract_plugins(test_lines)
 
                 duration = time.time() - start
                 return {"duration": duration, "formid_count": len(formids), "plugin_count": len(plugins)}
@@ -409,8 +414,7 @@ class TestConcurrentPerformance:
 
         with AsyncBridge.get_instance() as bridge:
             io_core = FileIOCore()
-            log_processor = classic_scanlog.utils.LogProcessor()
-            string_processor = classic_scanlog.utils.StringProcessor()
+            log_parser = LogParser()
 
             # Prepare test data
             log_files = []
@@ -430,20 +434,21 @@ class TestConcurrentPerformance:
                 return time.time() - start
 
             def cpu_heavy_task():
-                """CPU intensive task."""
+                """CPU intensive task - use Python builtins."""
                 start = time.time()
                 for _ in range(5):
-                    string_processor.process_batch(test_strings, "upper")
-                    string_processor.process_batch(test_strings, "lower")
+                    [s.upper() for s in test_strings]
+                    [s.lower() for s in test_strings]
                 return time.time() - start
 
             def log_processing_task():
                 """Log processing task."""
                 start = time.time()
                 content = log_files[0].read_text()
+                lines = content.split("\n")
                 for _ in range(3):
-                    log_processor.extract_formids(content)
-                    log_processor.extract_plugins(content)
+                    log_parser.extract_formids(lines)
+                    log_parser.extract_plugins(lines)
                 return time.time() - start
 
             # Run mixed workload
@@ -494,8 +499,7 @@ class TestConcurrentPerformance:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.utils.LogProcessor()
-        string_processor = classic_scanlog.utils.StringProcessor()
+        parser = LogParser()
 
         # Generate substantial workload
         large_content = (
@@ -507,6 +511,8 @@ class TestConcurrentPerformance:
             * 2000
         )  # Large content block
 
+        # Cast to avoid LiteralString variance issues
+        large_lines = cast(list[str], large_content.split("\n"))
         large_strings = [f"Resource_test_string_{i}_with_content" for i in range(5000)]
 
         def resource_intensive_operation(operation_id: int):
@@ -515,19 +521,18 @@ class TestConcurrentPerformance:
 
             # Mix of operations
             if operation_id % 3 == 0:
-                # String processing
-                upper = string_processor.process_batch(large_strings, "upper")
+                # String processing using Python builtins
+                upper = [s.upper() for s in large_strings]
                 result_size = len(upper)
             elif operation_id % 3 == 1:
                 # Log processing
-                formids = processor.extract_formids(large_content)
-                plugins = processor.extract_plugins(large_content)
+                formids = parser.extract_formids(large_lines)
+                plugins = parser.extract_plugins(large_lines)
                 result_size = len(formids) + len(plugins)
             else:
                 # Pattern matching
-                patterns = ["ERROR", "WARNING", "INFO", "FormID"]
-                processor.init_pattern_matcher(patterns)
-                matches = processor.find_all_patterns(large_content, patterns)
+                pattern_matcher = PatternMatcher(["ERROR", "WARNING", "INFO", "FormID"])
+                matches = pattern_matcher.find_all(large_content)
                 result_size = len(matches)
 
             duration = time.time() - start_time
@@ -587,7 +592,7 @@ class TestPerformanceDegradation:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate test content
         log_content = stress_data_generator.generate_large_crash_log(
@@ -595,6 +600,9 @@ class TestPerformanceDegradation:
             plugin_count=200,
             formid_count=3000,
         )
+
+        # Convert to lines for LogParser
+        log_lines = log_content.split("\n")
 
         # Long-running test parameters
         total_duration = 60  # 1 minute continuous operation
@@ -609,13 +617,12 @@ class TestPerformanceDegradation:
             operation_start = time.time()
 
             # Perform standard operations
-            formids = processor.extract_formids(log_content)
-            plugins = processor.extract_plugins(log_content)
+            formids = parser.extract_formids(log_lines)
+            plugins = parser.extract_plugins(log_lines)
 
             # Pattern matching
-            patterns = ["ERROR", "WARNING", "FormID"]
-            processor.init_pattern_matcher(patterns)
-            processor.find_all_patterns(log_content, patterns)
+            pattern_matcher = PatternMatcher(["ERROR", "WARNING", "FormID"])
+            pattern_matcher.find_all(log_content)
 
             operation_end = time.time()
             operation_duration = operation_end - operation_start
@@ -733,8 +740,26 @@ class TestPerformanceDegradation:
         """
         performance_profiler.start_profiling()
 
+        # Create mock yamldata for OrchestratorCore
+        mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.xse_acronym = "F4SE"
+        mock_yamldata.crashgen_latest_og = "1.28.6"
+        mock_yamldata.crashgen_latest_vr = "1.26.2"
+        mock_yamldata.game_mods_conf = {}
+        mock_yamldata.game_mods_freq = {}
+        mock_yamldata.game_mods_solu = {}
+        mock_yamldata.game_mods_core = {}
+        mock_yamldata.game_mods_core_folon = {}
+        mock_yamldata.game_mods_opc2 = {}
+
         with AsyncBridge.get_instance() as bridge:
-            orchestrator = OrchestratorCore()
+            orchestrator = OrchestratorCore(
+                yamldata=mock_yamldata,
+                fcx_mode=False,
+                show_formid_values=False,
+                formid_db_exists=False,
+            )
 
             # Create test files with increasing batch sizes
             batch_sizes = [1, 5, 10, 20]  # Different workload sizes
@@ -758,7 +783,7 @@ class TestPerformanceDegradation:
                 results = []
 
                 for file_path in batch_files:
-                    result = bridge.run_async(orchestrator.process_single_log(file_path))
+                    result = bridge.run_async(orchestrator.process_crash_log(file_path))
                     results.append(result)
 
                 batch_end = time.time()

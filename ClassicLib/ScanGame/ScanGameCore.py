@@ -128,6 +128,7 @@ class ScanGameCore:
         await asyncio.gather(
             loop.run_in_executor(None, self.header_executor.shutdown, True),
             loop.run_in_executor(None, self.walk_executor.shutdown, True),
+            return_exceptions=False,
         )
 
     async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:

@@ -26,10 +26,10 @@ class TestEdgeCases:
         """Test that multiple dialog instances don't interfere."""
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.vr_checkbox.setChecked(True)
-        dialog2.vr_checkbox.setChecked(False)
-        assert dialog1.vr_checkbox.isChecked()
-        assert not dialog2.vr_checkbox.isChecked()
+        dialog1.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        dialog2.vr_checkbox.setChecked(False)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert dialog1.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert not dialog2.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.close()
         dialog2.close()
 
@@ -39,5 +39,5 @@ class TestEdgeCases:
 
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", None)
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog.update_source_combo.currentText() == "Both"
+        assert dialog.update_source_combo.currentText() == "Both"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.close()

@@ -13,6 +13,7 @@ This file contains e2e tests that test complete workflows from entry to output.
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
 import asyncio
+from typing import Awaitable, Callable
 
 import pytest
 
@@ -74,7 +75,7 @@ class TestAsyncProcessingPattern:
             def __init__(self):
                 self.progress = 0
                 self.total = 0
-                self.progress_callback = None
+                self.progress_callback: Callable[[int, int], Awaitable[None]] | None = None
 
             async def process_item(self, item):
                 await asyncio.sleep(0.01)

@@ -11,7 +11,7 @@ import time
 import tracemalloc
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncGenerator
 
 import pytest
 
@@ -113,7 +113,7 @@ PLUGINS:
         return await ClassicScanLogsInfo.create_async()
 
     @pytest.fixture
-    async def python_orchestrator(self, yamldata: ClassicScanLogsInfo) -> OrchestratorCore:
+    async def python_orchestrator(self, yamldata: ClassicScanLogsInfo) -> AsyncGenerator[OrchestratorCore, None]:
         """
         Create pure Python orchestrator instance.
 
@@ -132,7 +132,7 @@ PLUGINS:
             yield orch
 
     @pytest.fixture
-    async def hybrid_orchestrator(self, yamldata: ClassicScanLogsInfo) -> Any:
+    async def hybrid_orchestrator(self, yamldata: ClassicScanLogsInfo) -> AsyncGenerator[Any, None]:
         """
         Create hybrid orchestrator instance (Rust + Python).
 

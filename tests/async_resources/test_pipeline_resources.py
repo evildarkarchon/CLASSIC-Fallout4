@@ -37,7 +37,7 @@ class TestAsyncPipelineResourceManagement:
 
             # Processing should fail
             with pytest.raises(Exception, match="Simulated error"):
-                await pipeline.process_crash_logs_async([], ())
+                await pipeline.process_crash_logs_async([], ("test_pattern",))
 
             # Pipeline should still be in a valid state for cleanup
             assert isinstance(pipeline.performance_stats, dict)

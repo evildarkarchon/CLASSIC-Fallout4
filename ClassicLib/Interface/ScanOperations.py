@@ -72,7 +72,7 @@ class ScanOperationsMixin:
         self._scan_mutex.lock()
         try:
             if "crash_logs" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN):
-                QtWidgets.QMessageBox.warning(self, "Scan in Progress", "A crash logs scan is already in progress.")
+                QtWidgets.QMessageBox.warning(self, "Scan in Progress", "A crash logs scan is already in progress.") # pyright: ignore[reportArgumentType]
                 return
             self._running_scans.add("crash_logs")
         finally:
@@ -106,7 +106,7 @@ class ScanOperationsMixin:
         # Pause file watching during scan to prevent 60+ refreshes reading ALL reports
         # This prevents the massive I/O bottleneck discovered via cProfile
         if hasattr(self, "file_watcher") and hasattr(self, "_pause_file_watching"):
-            self._pause_file_watching()
+            self._pause_file_watching() # pyright: ignore[reportAttributeAccessIssue]
             logger.debug("Paused file watching during scan to avoid I/O bottleneck")
 
         # Start through thread manager
@@ -125,7 +125,7 @@ class ScanOperationsMixin:
         self._scan_mutex.lock()
         try:
             if "game_files" in self._running_scans or self.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN):
-                QtWidgets.QMessageBox.warning(self, "Scan in Progress", "A game files scan is already in progress.")
+                QtWidgets.QMessageBox.warning(self, "Scan in Progress", "A game files scan is already in progress.") # pyright: ignore[reportArgumentType]
                 return
             self._running_scans.add("game_files")
         finally:
@@ -219,7 +219,7 @@ class ScanOperationsMixin:
 
         # Resume file watching and do final refresh
         if hasattr(self, "file_watcher") and hasattr(self, "_resume_file_watching"):
-            self._resume_file_watching()
+            self._resume_file_watching() # pyright: ignore[reportAttributeAccessIssue]
             logger.debug("Resumed file watching after scan completion")
 
             # Do a single final refresh to show all new reports

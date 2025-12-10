@@ -206,12 +206,9 @@ class TestArticlesTabIntegration:
             mock_partial.side_effect = capture_partial
 
             def create_vbox(*args, **kwargs):
-                m = MagicMock()
-                m.__class__ = QVBoxLayout
-                return m
+                return MagicMock(spec=QVBoxLayout)
 
             mock_vbox.side_effect = create_vbox
-            mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
             # Create mocks for grid and label
             mock_grid = MagicMock()
@@ -268,12 +265,9 @@ class TestArticlesTabIntegration:
             mock_button_class.return_value = MagicMock(spec=QPushButton)
 
             def create_vbox(*args, **kwargs):
-                m = MagicMock()
-                m.__class__ = QVBoxLayout
-                return m
+                return MagicMock(spec=QVBoxLayout)
 
             mock_vbox.side_effect = create_vbox
-            mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
             integrated_tab_setup.setup_articles_tab()
 
@@ -309,19 +303,13 @@ class TestBackupsTabIntegration:
             mock_button_class.side_effect = lambda text: buttons_created.append(text) or MagicMock()
 
             def create_vbox(*args, **kwargs):
-                m = MagicMock()
-                m.__class__ = QVBoxLayout
-                return m
+                return MagicMock(spec=QVBoxLayout)
 
             def create_hbox(*args, **kwargs):
-                m = MagicMock()
-                m.__class__ = QHBoxLayout
-                return m
+                return MagicMock(spec=QHBoxLayout)
 
             mock_vbox.side_effect = create_vbox
             mock_hbox.side_effect = create_hbox
-            mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
-            mock_hbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
             integrated_tab_setup.setup_backups_tab()
 
@@ -437,12 +425,9 @@ class TestURLHandlingIntegration:
             mock_partial.side_effect = create_partial
 
             def create_vbox(*args, **kwargs):
-                m = MagicMock()
-                m.__class__ = QVBoxLayout
-                return m
+                return MagicMock(spec=QVBoxLayout)
 
             mock_vbox.side_effect = create_vbox
-            mock_vbox.__or__ = lambda self, other: (QVBoxLayout, QHBoxLayout)
 
             # Create mocks for grid and label
             mock_grid = MagicMock()

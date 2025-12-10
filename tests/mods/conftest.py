@@ -8,7 +8,7 @@ from ClassicLib.ScanLog.fragments import ReportFragment
 @pytest.fixture
 def empty_fragment() -> ReportFragment:
     """Create an empty ReportFragment for testing."""
-    return ReportFragment()
+    return ReportFragment.empty()
 
 
 @pytest.fixture

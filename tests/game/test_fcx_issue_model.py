@@ -60,7 +60,7 @@ class TestConfigIssueDataModel:
     def test_config_issue_converts_string_path_to_path_object(self) -> None:
         """Verify ConfigIssue converts string file_path to Path object."""
         issue = ConfigIssue(
-            file_path="C:\\test\\file.ini",  # String, not Path
+            file_path=Path("C:\\test\\file.ini"),  # String, not Path
             section="Test",
             setting="key",
             current_value="1",

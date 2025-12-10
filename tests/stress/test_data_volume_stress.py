@@ -10,6 +10,7 @@ large-scale batch processing operations.
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from statistics import mean
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -17,6 +18,7 @@ import pytest
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
+from classic_scanlog import FormIDAnalyzer, LogParser, PatternMatcher
 
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -47,7 +49,7 @@ class TestMassiveFormIDProcessing:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.FormIDProcessor()
+        analyzer = FormIDAnalyzer()
 
         # Generate massive FormID dataset
         massive_formid_count = 100000
@@ -66,8 +68,11 @@ class TestMassiveFormIDProcessing:
             chunk_start = time.time()
             chunk = formids[i : i + chunk_size]
 
-            # Process chunk
-            results = processor.process_batch(chunk)
+            # Process chunk - validate each FormID
+            results = []
+            for formid in chunk:
+                parsed = analyzer.parse_formid(formid)
+                results.append(parsed)
 
             chunk_end = time.time()
             chunk_duration = chunk_end - chunk_start
@@ -119,7 +124,7 @@ class TestMassiveFormIDProcessing:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.FormIDProcessor()
+        analyzer = FormIDAnalyzer()
 
         # Generate dataset with many duplicates
         base_formids = stress_data_generator.generate_formid_dataset(count=5000)  # 5k unique
@@ -144,13 +149,11 @@ class TestMassiveFormIDProcessing:
             batch_start = time.time()
             batch = massive_formid_list[i : i + batch_size]
 
-            # Process batch
-            results = processor.process_batch(batch)
-
-            # Track unique FormIDs found
-            for _j, result in enumerate(results):
-                if result is not None:
-                    unique_formids_found.add(result)
+            # Process batch - validate each FormID
+            for formid in batch:
+                parsed = analyzer.parse_formid(formid)
+                if parsed is not None:
+                    unique_formids_found.add(formid)
 
             batch_time = time.time() - batch_start
             processing_times.append(batch_time)
@@ -189,7 +192,7 @@ class TestMassiveFormIDProcessing:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.FormIDProcessor()
+        analyzer = FormIDAnalyzer()
 
         # Generate massive plugin list and FormIDs
         plugin_list = stress_data_generator.generate_plugin_load_order(count=500)
@@ -213,12 +216,11 @@ class TestMassiveFormIDProcessing:
 
             # Extract FormIDs and process
             batch_formids = [item["formid"] for item in batch]
-            processed_formids = processor.process_batch(batch_formids)
 
-            # Simulate cross-referencing logic
+            # Simulate cross-referencing logic - validate each FormID
             valid_cross_refs = 0
-            for _j, processed in enumerate(processed_formids):
-                if processed is not None:
+            for formid in batch_formids:
+                if analyzer.parse_formid(formid) is not None:
                     valid_cross_refs += 1
 
             batch_time = time.time() - batch_start
@@ -278,7 +280,7 @@ class TestMassivePluginLoadOrders:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate massive plugin load order
         massive_plugin_count = 1000
@@ -306,29 +308,28 @@ class TestMassivePluginLoadOrders:
         # Process the massive plugin load order
         start_time = time.time()
 
-        # Extract plugins
-        extracted_plugins = processor.extract_plugins(massive_log_content)
+        # Extract plugins using LogParser (needs lines, not string)
+        extracted_plugins = parser.extract_plugins(log_lines)
 
         plugin_extraction_time = time.time() - start_time
         fresh_memory_tracker.take_measurement("plugins_extracted")
 
         # Extract FormIDs
         formid_start = time.time()
-        extracted_formids = processor.extract_formids(massive_log_content)
+        extracted_formids = parser.extract_formids(log_lines)
         formid_extraction_time = time.time() - formid_start
 
         fresh_memory_tracker.take_measurement("formids_extracted")
 
         # Pattern matching on massive content
         pattern_start = time.time()
-        patterns = ["ERROR", "WARNING", "FormID", "Plugin"]
-        processor.init_pattern_matcher(patterns)
-        processor.find_all_patterns(massive_log_content, patterns)
+        pattern_matcher = PatternMatcher(["ERROR", "WARNING", "FormID", "Plugin"])
+        pattern_matcher.find_all(massive_log_content)
         pattern_matching_time = time.time() - pattern_start
 
         fresh_memory_tracker.take_measurement("patterns_matched")
 
-        time.time() - start_time
+        _ = time.time() - start_time
 
         performance_profiler.record_operation("massive_plugin_extraction", plugin_extraction_time)
         performance_profiler.record_operation("massive_formid_extraction", formid_extraction_time)
@@ -475,7 +476,7 @@ class TestMassivePluginLoadOrders:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate massive plugin list with potential conflicts
         plugin_count = 400
@@ -517,15 +518,14 @@ class TestMassivePluginLoadOrders:
         start_time = time.time()
 
         # Extract all FormIDs from conflict log
-        detected_formids = processor.extract_formids(massive_conflict_log)
+        detected_formids = parser.extract_formids(log_lines)
 
         # Extract all plugins mentioned
-        detected_plugins = processor.extract_plugins(massive_conflict_log)
+        detected_plugins = parser.extract_plugins(log_lines)
 
         # Pattern matching for conflict indicators
-        conflict_patterns = ["conflict", "Modified by", "FormID"]
-        processor.init_pattern_matcher(conflict_patterns)
-        conflict_matches = processor.find_all_patterns(massive_conflict_log, conflict_patterns)
+        pattern_matcher = PatternMatcher(["conflict", "Modified by", "FormID"])
+        conflict_matches = pattern_matcher.find_all(massive_conflict_log)
 
         total_time = time.time() - start_time
 
@@ -539,7 +539,7 @@ class TestMassivePluginLoadOrders:
         assert len(detected_plugins) >= 200, f"Too few plugins detected in conflicts: {len(detected_plugins)}"
 
         # Should find conflict pattern matches
-        conflict_pattern_count = sum(len(matches) for pattern, matches in conflict_matches)
+        conflict_pattern_count = len(conflict_matches)
         assert conflict_pattern_count >= 1000, f"Too few conflict patterns detected: {conflict_pattern_count}"
 
         # Performance should be reasonable for massive conflict analysis
@@ -572,7 +572,7 @@ class TestMassiveCallStackProcessing:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate extremely deep call stack
         stack_depth = 10000
@@ -618,30 +618,32 @@ class TestMassiveCallStackProcessing:
         read_time = time.time() - start_time
         fresh_memory_tracker.take_measurement("file_read")
 
+        # Convert to lines for LogParser
+        content_lines = content.split("\n")
+
         # Extract FormIDs from deep stack
         formid_start = time.time()
-        extracted_formids = processor.extract_formids(content)
+        extracted_formids = parser.extract_formids(content_lines)
         formid_time = time.time() - formid_start
 
         fresh_memory_tracker.take_measurement("formids_extracted")
 
         # Extract plugins
         plugin_start = time.time()
-        extracted_plugins = processor.extract_plugins(content)
+        extracted_plugins = parser.extract_plugins(content_lines)
         plugin_time = time.time() - plugin_start
 
         fresh_memory_tracker.take_measurement("plugins_extracted")
 
         # Pattern matching for stack analysis
         pattern_start = time.time()
-        stack_patterns = ["STACK TRACE", "FormID", "Function", "RECURSION"]
-        processor.init_pattern_matcher(stack_patterns)
-        stack_matches = processor.find_all_patterns(content, stack_patterns)
+        pattern_matcher = PatternMatcher(["STACK TRACE", "FormID", "Function", "RECURSION"])
+        stack_matches = pattern_matcher.find_all(content)
         pattern_time = time.time() - pattern_start
 
         fresh_memory_tracker.take_measurement("patterns_processed")
 
-        time.time() - start_time
+        _ = time.time() - start_time
 
         performance_profiler.record_operation("deep_stack_file_read", read_time)
         performance_profiler.record_operation("deep_stack_formid_extraction", formid_time)
@@ -666,8 +668,8 @@ class TestMassiveCallStackProcessing:
         memory_per_frame = memory_stats["peak_mb"] * 1024 / stack_depth  # KB per stack frame
         assert memory_per_frame < 1.0, f"Excessive memory per stack frame: {memory_per_frame:.2f}KB"
 
-        # Should detect recursion patterns
-        recursion_matches = sum(len(matches) for pattern, matches in stack_matches if "RECURSION" in pattern)
+        # Should detect recursion patterns - count by filtering matches containing RECURSION
+        recursion_matches = sum(1 for pos, text in stack_matches if "RECURSION" in text)
         expected_recursion = stack_depth // 500  # One recursion marker every 500 frames
         assert recursion_matches >= expected_recursion * 0.8, (
             f"Too few recursion patterns detected: {recursion_matches}/{expected_recursion}"
@@ -683,7 +685,7 @@ class TestMassiveCallStackProcessing:
         performance_profiler.start_profiling()
         fresh_memory_tracker.start_tracking()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Generate massive memory dump data
         memory_region_count = 5000
@@ -727,29 +729,28 @@ class TestMassiveCallStackProcessing:
 
         # Extract FormIDs from memory dump
         formid_start = time.time()
-        extracted_formids = processor.extract_formids(massive_memory_dump)
+        extracted_formids = parser.extract_formids(log_sections)
         formid_time = time.time() - formid_start
 
         fresh_memory_tracker.take_measurement("formids_extracted")
 
         # Pattern matching for memory analysis
         pattern_start = time.time()
-        memory_patterns = ["MEMORY REGIONS", "Base Address", "FormID Reference", "HEAP ALLOCATIONS"]
-        processor.init_pattern_matcher(memory_patterns)
-        memory_matches = processor.find_all_patterns(massive_memory_dump, memory_patterns)
+        pattern_matcher = PatternMatcher(["MEMORY REGIONS", "Base Address", "FormID Reference", "HEAP ALLOCATIONS"])
+        memory_matches = pattern_matcher.find_all(massive_memory_dump)
         pattern_time = time.time() - pattern_start
 
         fresh_memory_tracker.take_measurement("patterns_matched")
 
-        # Process lines for memory statistics
+        # Process lines for memory statistics - use Python string operations
         lines_start = time.time()
         lines = massive_memory_dump.split("\n")
-        processor.process_lines_parallel(lines[:10000], "trim")  # Process subset
+        processed_lines = [line.strip() for line in lines[:10000]]  # Process subset
         lines_time = time.time() - lines_start
 
         fresh_memory_tracker.take_measurement("lines_processed")
 
-        time.time() - start_time
+        _ = time.time() - start_time
 
         performance_profiler.record_operation("memory_dump_formid_extraction", formid_time)
         performance_profiler.record_operation("memory_dump_pattern_matching", pattern_time)
@@ -764,7 +765,7 @@ class TestMassiveCallStackProcessing:
         )
 
         # Should find memory-related patterns
-        total_memory_matches = sum(len(matches) for pattern, matches in memory_matches)
+        total_memory_matches = len(memory_matches)
         assert total_memory_matches >= memory_region_count, f"Too few memory patterns found: {total_memory_matches}"
 
         # Performance should be reasonable for massive memory dump
@@ -817,9 +818,27 @@ class TestBatchProcessingAtScale:
 
         fresh_memory_tracker.take_measurement("batch_files_created")
 
+        # Create mock yamldata for OrchestratorCore
+        mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.xse_acronym = "F4SE"
+        mock_yamldata.crashgen_latest_og = "1.28.6"
+        mock_yamldata.crashgen_latest_vr = "1.26.2"
+        mock_yamldata.game_mods_conf = {}
+        mock_yamldata.game_mods_freq = {}
+        mock_yamldata.game_mods_solu = {}
+        mock_yamldata.game_mods_core = {}
+        mock_yamldata.game_mods_core_folon = {}
+        mock_yamldata.game_mods_opc2 = {}
+
         with AsyncBridge.get_instance() as bridge:
             FileIOCore()
-            orchestrator = OrchestratorCore()
+            orchestrator = OrchestratorCore(
+                yamldata=mock_yamldata,
+                fcx_mode=False,
+                show_formid_values=False,
+                formid_db_exists=False,
+            )
 
             # Process batch sequentially (simulating single-threaded batch processing)
             sequential_start = time.time()
@@ -829,7 +848,7 @@ class TestBatchProcessingAtScale:
                 file_start = time.time()
 
                 # Process single log through orchestrator
-                result = bridge.run_async(orchestrator.process_single_log(log_file))
+                result = bridge.run_async(orchestrator.process_crash_log(log_file))
 
                 file_time = time.time() - file_start
 
@@ -857,7 +876,7 @@ class TestBatchProcessingAtScale:
                 """Process a single file and return timing information."""
                 start = time.time()
                 try:
-                    result = bridge.run_async(orchestrator.process_single_log(file_path))
+                    result = bridge.run_async(orchestrator.process_crash_log(file_path))
                     return {
                         "filename": file_path.name,
                         "processing_time": time.time() - start,
@@ -922,7 +941,7 @@ class TestBatchProcessingAtScale:
         """
         performance_profiler.start_profiling()
 
-        processor = classic_scanlog.utils.LogProcessor()
+        parser = LogParser()
 
         # Create many medium-sized files for streaming processing
         file_count = 200
@@ -959,16 +978,17 @@ class TestBatchProcessingAtScale:
             for file_path in batch_files:
                 # Read and process file
                 content = file_path.read_text(encoding="utf-8")
+                lines = content.split("\n")
 
                 # Extract data
-                formids = processor.extract_formids(content)
-                plugins = processor.extract_plugins(content)
+                formids = parser.extract_formids(lines)
+                plugins = parser.extract_plugins(lines)
 
                 batch_formids += len(formids)
                 batch_plugins += len(plugins)
 
                 # Clear content to simulate streaming
-                del content, formids, plugins
+                del content, lines, formids, plugins
 
             batch_time = time.time() - batch_start
             processing_times.append(batch_time)

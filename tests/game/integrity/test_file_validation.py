@@ -20,7 +20,7 @@ class TestInstallationLocation:
         exe_path.write_text("fake exe")
 
         mock_config["game_exe_path"] = str(exe_path)
-        checker._config = mock_config
+        checker._config = mock_config # pyright: ignore[reportAttributeAccessIssue]
 
         # Check location
         is_valid, message = checker.check_installation_location()
@@ -34,7 +34,7 @@ class TestInstallationLocation:
         """Test checking installation when IN Program Files."""
         # Set exe path in Program Files
         mock_config["game_exe_path"] = "C:/Program Files/Steam/Fallout4/Fallout4.exe"
-        checker._config = mock_config
+        checker._config = mock_config # pyright: ignore[reportAttributeAccessIssue]
 
         # Mock file existence check
         with patch("pathlib.Path.is_file", return_value=True):
@@ -48,7 +48,7 @@ class TestInstallationLocation:
     def test_check_installation_location_no_exe(self, checker: GameIntegrityChecker, mock_config: dict[str, str]) -> None:
         """Test checking installation when exe doesn't exist."""
         mock_config["game_exe_path"] = "/nonexistent/Fallout4.exe"
-        checker._config = mock_config
+        checker._config = mock_config # pyright: ignore[reportAttributeAccessIssue]
 
         # Check location
         is_valid, message = checker.check_installation_location()
@@ -60,8 +60,8 @@ class TestInstallationLocation:
     def test_check_installation_location_no_warning_configured(self, checker: GameIntegrityChecker, mock_config: dict[str, str]) -> None:
         """Test checking installation with no warning message configured."""
         mock_config["game_exe_path"] = "C:/Program Files/Fallout4/Fallout4.exe"
-        mock_config["root_warn"] = None
-        checker._config = mock_config
+        mock_config["root_warn"] = ""
+        checker._config = mock_config # pyright: ignore[reportAttributeAccessIssue]
 
         with patch("pathlib.Path.is_file", return_value=True):
             is_valid, message = checker.check_installation_location()
@@ -77,7 +77,7 @@ class TestExecutableVersion:
         """Test checking executable when exe file doesn't exist."""
         # Set non-existent exe path
         mock_config["game_exe_path"] = "/nonexistent/Fallout4.exe"
-        checker._config = mock_config
+        checker._config = mock_config # pyright: ignore[reportAttributeAccessIssue]
 
         # Check version
         is_valid, message = checker.check_executable_version()

@@ -9,7 +9,7 @@ import asyncio
 import threading
 from typing import ClassVar
 
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 
 
 class FCXModeHandlerFragments:

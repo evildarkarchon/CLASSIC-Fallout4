@@ -5,7 +5,12 @@ This module tests the `GithubClient` and `NexusClient` classes from `classic_upd
 verifying their async methods, error handling, and data structure correctness.
 """
 
+from typing import TYPE_CHECKING
+
 import pytest
+
+if TYPE_CHECKING:
+    import classic_update
 
 try:
     import classic_update

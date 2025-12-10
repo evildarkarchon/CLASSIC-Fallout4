@@ -1,6 +1,8 @@
 """Tests for basic GlobalRegistry operations."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
+import pytest
+
 from ClassicLib import GlobalRegistry
 
 
@@ -88,15 +90,33 @@ class TestBasicRegistryOperations:
         assert retrieved.get_value() == 42
 
     def test_key_validation(self) -> None:
-        """Test that keys can be any hashable type."""
-        # Test with string key
+        """Test that string keys are handled correctly."""
+        # Test with standard string key
         GlobalRegistry.register("string_key", "value")
         assert GlobalRegistry.get("string_key") == "value"
 
-        # Test with integer key
-        GlobalRegistry.register(42, "int_value")
-        assert GlobalRegistry.get(42) == "int_value"
+        # Test with numeric string key
+        GlobalRegistry.register("42", "int_value")
+        assert GlobalRegistry.get("42") == "int_value"
 
+    def test_non_string_key_raises_type_error(self) -> None:
+        """Test that non-string keys raise TypeError."""
         # Test with tuple key
-        GlobalRegistry.register(("tuple", "key"), "tuple_value")
-        assert GlobalRegistry.get(("tuple", "key")) == "tuple_value"
+        with pytest.raises(TypeError, match="Registry key must be a string"):
+            GlobalRegistry.register(("tuple", "key"), "value")  # type: ignore[arg-type]
+
+        # Test with integer key
+        with pytest.raises(TypeError, match="Registry key must be a string"):
+            GlobalRegistry.register(42, "value")  # type: ignore[arg-type]
+
+        # Test with list key
+        with pytest.raises(TypeError, match="Registry key must be a string"):
+            GlobalRegistry.register(["list", "key"], "value")  # type: ignore[arg-type]
+
+        # Test get with non-string key
+        with pytest.raises(TypeError, match="Registry key must be a string"):
+            GlobalRegistry.get(("tuple", "key"))  # type: ignore[arg-type]
+
+        # Test is_registered with non-string key
+        with pytest.raises(TypeError, match="Registry key must be a string"):
+            GlobalRegistry.is_registered(123)  # type: ignore[arg-type]

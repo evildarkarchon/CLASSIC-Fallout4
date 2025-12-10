@@ -19,7 +19,7 @@ from ClassicLib.Logger import logger
 from ClassicLib.YamlSettingsCache import classic_settings_async
 
 
-async def reformat_single_log_async(file_path: Path, remove_list: tuple[str], simplify_logs: bool) -> None:
+async def reformat_single_log_async(file_path: Path, remove_list: tuple[str, ...], simplify_logs: bool) -> None:
     """
     Reformats a single log file asynchronously with specified adjustments.
 
@@ -31,7 +31,7 @@ async def reformat_single_log_async(file_path: Path, remove_list: tuple[str], si
 
     Args:
         file_path (Path): Path to the log file to be reformatted.
-        remove_list (tuple[str]): Tuple of strings; lines containing any of these
+        remove_list (tuple[str, ...]): Tuple of strings; lines containing any of these
             strings will be removed if `simplify_logs` is enabled.
         simplify_logs (bool): Whether to simplify logs by removing matching lines
             from the `remove_list`.
@@ -86,7 +86,7 @@ async def reformat_single_log_async(file_path: Path, remove_list: tuple[str], si
         logger.error(f"Error reformatting {file_path}: {e}")
 
 
-async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple[str]) -> None:
+async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple[str, ...]) -> None:
     """
     Reformats crash log files asynchronously by processing them in manageable batches
     to prevent overwhelming the file system. Each log file is reformatted with specific
@@ -96,7 +96,7 @@ async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple
     Args:
         crashlog_list (list[Path]): A list containing file paths of crash log files
             to be reformatted.
-        remove_list (tuple[str]): A tuple containing substrings or patterns that
+        remove_list (tuple[str, ...]): A tuple containing substrings or patterns that
             should be removed from the logs.
     """
     logger.debug("- - - INITIATED ASYNC CRASH LOG FILE REFORMAT")

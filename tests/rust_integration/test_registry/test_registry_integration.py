@@ -5,6 +5,7 @@ provides full API compatibility with the Python GlobalRegistry.
 """
 
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -25,9 +26,23 @@ try:
     )
 
     REGISTRY_AVAILABLE = True
+    IMPORT_ERROR = ""
 except ImportError as e:
     REGISTRY_AVAILABLE = False
     IMPORT_ERROR = str(e)
+    # Define placeholders with Any type for type checker when import fails
+    # These will never be called at runtime due to skipif markers
+    Keys: Any = None
+    clear_all: Any = None
+    get: Any = None
+    get_game: Any = None
+    get_local_dir: Any = None
+    get_vr: Any = None
+    get_yaml_cache: Any = None
+    is_gui_mode: Any = None
+    is_registered: Any = None
+    register: Any = None
+    set_game: Any = None
 
 
 pytestmark = [

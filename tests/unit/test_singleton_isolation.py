@@ -29,12 +29,12 @@ class TestSingletonIsolation:
     async def test_database_pool_manager_isolation_between_tests_1(self):
         """First test to verify singleton isolation - creates pool."""
         manager = DatabasePoolManager()
-        # Mark this instance for identification
-        manager._test_marker = "test_1"
+        # Mark this instance for identification using setattr for dynamic attribute
+        setattr(manager, "_test_marker", "test_1")
 
         # Note: We don't actually create a pool here to avoid database dependencies
         # Just verify the singleton works
-        assert manager._test_marker == "test_1"
+        assert getattr(manager, "_test_marker") == "test_1"
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -45,9 +45,9 @@ class TestSingletonIsolation:
         # Should not have the marker from previous test
         assert not hasattr(manager, "_test_marker"), "Singleton not properly isolated between tests"
 
-        # Set a different marker
-        manager._test_marker = "test_2"
-        assert manager._test_marker == "test_2"
+        # Set a different marker using setattr for dynamic attribute
+        setattr(manager, "_test_marker", "test_2")
+        assert getattr(manager, "_test_marker") == "test_2"
 
     @pytest.mark.unit
     def test_version_cache_starts_empty(self, verify_version_cache_empty):
@@ -150,11 +150,11 @@ class TestParallelIsolation:
         # Each parallel execution should get a clean singleton
         manager = DatabasePoolManager()
 
-        # Set a unique marker
-        manager._parallel_marker = f"parallel_{iteration}"
+        # Set a unique marker using setattr for dynamic attribute
+        setattr(manager, "_parallel_marker", f"parallel_{iteration}")
 
         # Verify it's set correctly
-        assert manager._parallel_marker == f"parallel_{iteration}"
+        assert getattr(manager, "_parallel_marker") == f"parallel_{iteration}"
 
         # In next iteration, should not see previous markers
         # (This is ensured by the fixture, but let's verify)

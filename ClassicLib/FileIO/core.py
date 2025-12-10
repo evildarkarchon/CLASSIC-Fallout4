@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     import aiofiles
 
     from ClassicLib.FileIO.Async import (
+        open_file_with_encoding_async,
         read_file_with_encoding_async,
     )
 
@@ -42,6 +43,8 @@ try:
 
     ASYNC_ENCODING_AVAILABLE = True
 except ImportError:
+    open_file_with_encoding_async = None  # type: ignore[assignment]
+    read_file_with_encoding_async = None  # type: ignore[assignment]
     ASYNC_ENCODING_AVAILABLE = False
 
 
@@ -113,6 +116,7 @@ class FileIOCore:
 
         # Use encoding detection if available
         if ASYNC_ENCODING_AVAILABLE:
+            assert read_file_with_encoding_async is not None
             return await read_file_with_encoding_async(path)
         if AIOFILES_AVAILABLE:
             assert aiofiles is not None  # for type checker
@@ -141,6 +145,7 @@ class FileIOCore:
 
         # Use encoding detection if available
         if ASYNC_ENCODING_AVAILABLE:
+            assert read_file_with_encoding_async is not None
             content = await read_file_with_encoding_async(path)
             return content.splitlines()
         if AIOFILES_AVAILABLE:
@@ -172,6 +177,7 @@ class FileIOCore:
 
         # Use encoding detection if available
         if ASYNC_ENCODING_AVAILABLE:
+            assert open_file_with_encoding_async is not None
             async with open_file_with_encoding_async(path) as f:
                 async for line in f:
                     yield line.rstrip("\n")
@@ -416,7 +422,7 @@ class FileIOCore:
                 return path.name, content
 
         tasks = [read_single(path) for path in paths]
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=False)
         return dict(results)
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
@@ -451,7 +457,7 @@ class FileIOCore:
                 logger.error(f"Error writing {path}: {e}")
 
         tasks = list(starmap(write_single, files.items()))
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=False)
 
     # ==========================================
     # Utility Operations

@@ -116,7 +116,7 @@ class TestQtCompatibility:
         assert msgbox is not None
 
         # Test creation with all parameters
-        msgbox_full = QMessageBox(icon=QMessageBox.Icon.Information, title="Test Title", text="Test Message", parent=None)
+        msgbox_full = QMessageBox(icon=QMessageBox.Icon.Information, title="Test Title", text="Test Message", parent=None)  # pyright: ignore[reportCallIssue]
         assert msgbox_full is not None
 
         # Test method calls don't raise errors
@@ -140,7 +140,7 @@ class TestQtCompatibility:
         assert progress is not None
 
         # Test creation with all parameters
-        progress_full = QProgressDialog(labelText="Processing...", cancelButtonText="Cancel", minimum=0, maximum=100, parent=None)
+        progress_full = QProgressDialog(labelText="Processing...", cancelButtonText="Cancel", minimum=0, maximum=100, parent=None)  # pyright: ignore[reportCallIssue]
         assert progress_full is not None
 
         # Test all method calls don't raise errors
@@ -175,13 +175,13 @@ class TestQtCompatibility:
             # connect/emit methods, so we skip testing those for real Qt
         else:
             # Dummy Signal accepts anything
-            signal_with_args = Signal(int, str, custom_arg=True)
+            signal_with_args = Signal(int, str, custom_arg=True)  # pyright: ignore[reportCallIssue]
             assert signal_with_args is not None
 
             # Test method calls don't raise errors (only for dummy implementation)
             mock_func = Mock()
-            signal.connect(mock_func)
-            signal.emit("test", "args")
+            signal.connect(mock_func)  # pyright: ignore[reportAttributeAccessIssue]
+            signal.emit("test", "args")  # pyright: ignore[reportAttributeAccessIssue]
 
             # Dummy implementation should not call the connected function
             mock_func.assert_not_called()
@@ -237,13 +237,13 @@ class TestQtCompatibility:
             assert signal is not None
         else:
             # Dummy classes accept arbitrary arguments
-            msgbox = QMessageBox("extra", "args", unexpected_kwarg="value", another_arg=123)
+            msgbox = QMessageBox("extra", "args", unexpected_kwarg="value", another_arg=123)  # pyright: ignore[reportCallIssue]
             assert msgbox is not None
 
-            progress = QProgressDialog("label", "cancel", 0, 100, None, "extra", "args", unexpected_kwarg="value")
+            progress = QProgressDialog("label", "cancel", 0, 100, None, "extra", "args", unexpected_kwarg="value")  # pyright: ignore[reportCallIssue]
             assert progress is not None
 
-            signal = Signal("arg1", "arg2", custom_signal=True, signal_type="custom")
+            signal = Signal("arg1", "arg2", custom_signal=True, signal_type="custom")  # pyright: ignore[reportCallIssue]
             assert signal is not None
 
     def test_compatibility_layer_isolation(self):
@@ -360,8 +360,8 @@ class TestQtCompatibility:
             # Create many instances to test memory efficiency
             instances = []
             for i in range(100):
-                msgbox = QMessageBox(f"Title {i}", f"Text {i}")
-                progress = QProgressDialog(f"Label {i}")
+                msgbox = QMessageBox(f"Title {i}", f"Text {i}")  # pyright: ignore[reportCallIssue, reportArgumentType]
+                progress = QProgressDialog(f"Label {i}")  # pyright: ignore[reportCallIssue, reportArgumentType]
                 instances.extend([msgbox, progress])
 
             # All instances should be created successfully

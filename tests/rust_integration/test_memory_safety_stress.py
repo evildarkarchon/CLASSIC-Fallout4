@@ -360,7 +360,8 @@ class TestMemorySafetyStress:
         monitor = MemoryMonitor()
         monitor.start()
 
-        analyzer = get_plugin_analyzer()
+        mock_yamldata = MagicMock()
+        analyzer = get_plugin_analyzer(mock_yamldata)
         generator = SyntheticDataGenerator()
 
         # Create structures with potential circular references

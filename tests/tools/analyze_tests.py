@@ -75,8 +75,16 @@ class TestCategorizer(ast.NodeVisitor):
         self.generic_visit(node)
         self.current_class = None
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
-        """Analyze test functions."""
+    def _analyze_test_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        """Analyze test functions (both sync and async).
+
+        This helper method processes both synchronous and asynchronous test
+        functions, extracting fixtures, analyzing the function body, and
+        categorizing the test.
+
+        Args:
+            node: The AST node representing either a sync or async function definition.
+        """
         if node.name.startswith("test_"):
             test_name = f"{self.current_class}.{node.name}" if self.current_class else node.name
 
@@ -103,9 +111,21 @@ class TestCategorizer(ast.NodeVisitor):
 
             self.tests.append(test_info)
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        """Analyze synchronous test functions.
+
+        Args:
+            node: The AST node representing a synchronous function definition.
+        """
+        self._analyze_test_function(node)
+
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Any:
-        """Handle async test functions."""
-        self.visit_FunctionDef(node)
+        """Analyze asynchronous test functions.
+
+        Args:
+            node: The AST node representing an asynchronous function definition.
+        """
+        self._analyze_test_function(node)
 
     def _check_performance_test(self, analyzer: "TestBodyAnalyzer", reasons: list[str]) -> bool:
         """Check if this is a performance test."""

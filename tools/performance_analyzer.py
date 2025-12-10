@@ -170,10 +170,12 @@ class StatisticalAnalyzer:
         std_error = std_dev / math.sqrt(n)
 
         # Use t-distribution for small samples
-        if SCIPY_AVAILABLE:
+        if SCIPY_AVAILABLE and stats is not None:
             # Degrees of freedom
             df = n - 1
-            t_value = stats.t.ppf((1 + confidence) / 2, df)
+            t_value_result = stats.t.ppf((1 + confidence) / 2, df)
+            # ppf can return ndarray or float; convert to float
+            t_value = float(t_value_result)
         # Approximate with normal distribution for large samples
         # or use t-table approximation for small samples
         elif n >= 30:
@@ -185,7 +187,9 @@ class StatisticalAnalyzer:
 
         margin_of_error = t_value * std_error
 
-        return mean, mean - margin_of_error, mean + margin_of_error
+        lower_bound = mean - margin_of_error
+        upper_bound = mean + margin_of_error
+        return mean, lower_bound, upper_bound
 
     @staticmethod
     def welch_t_test(sample1: list[float], sample2: list[float], alpha: float = 0.05) -> tuple[bool, float]:
@@ -198,9 +202,10 @@ class StatisticalAnalyzer:
         if not sample1 or not sample2:
             return False, 1.0
 
-        if SCIPY_AVAILABLE:
+        if SCIPY_AVAILABLE and stats is not None:
             # Use scipy for proper Welch's t-test
-            statistic, p_value = stats.ttest_ind(sample1, sample2, equal_var=False)
+            result = stats.ttest_ind(sample1, sample2, equal_var=False)
+            p_value = float(result.pvalue) # pyright: ignore[reportAttributeAccessIssue]
             return p_value < alpha, p_value
         # Manual implementation of Welch's t-test
         n1, n2 = len(sample1), len(sample2)
@@ -216,7 +221,9 @@ class StatisticalAnalyzer:
         t_stat = (mean1 - mean2) / math.sqrt(var1 / n1 + var2 / n2)
 
         # Approximate degrees of freedom (Welch-Satterthwaite equation)
-        (var1 / n1 + var2 / n2) ** 2 / (var1**2 / (n1**2 * (n1 - 1)) + var2**2 / (n2**2 * (n2 - 1)))
+        # Note: df is calculated but not used in the simplified p-value approximation below
+        df = (var1 / n1 + var2 / n2) ** 2 / (var1**2 / (n1**2 * (n1 - 1)) + var2**2 / (n2**2 * (n2 - 1)))
+        del df  # Unused in simplified approximation
 
         # Rough p-value approximation (conservative)
         # This is a simplified approximation
@@ -320,8 +327,9 @@ class PerformanceBenchmark:
         logger.debug(f"Running {self.measurement_runs} measurement runs for {test_name}")
 
         for run_idx in range(self.measurement_runs):
-            # Memory before run
-            self._process.memory_info().rss / 1024 / 1024
+            # Memory before run (captured for potential detailed analysis)
+            memory_before = self._process.memory_info().rss / 1024 / 1024
+            del memory_before  # Currently unused, but available for future detailed memory tracking
 
             # Timing measurement
             wall_start = time.perf_counter()
@@ -387,7 +395,8 @@ class PerformanceBenchmark:
         total_cpu_time = sum(cpu_times)
 
         # Get system CPU times for more detailed analysis
-        self._process.cpu_percent()
+        # Note: First call initializes the counter, result intentionally discarded
+        _ = self._process.cpu_percent()
 
         # Peak memory (approximate)
         peak_memory = max(memory_readings) if memory_readings else initial_memory
@@ -624,7 +633,7 @@ class PerformanceAnalyzer:
         # Analyze scaling characteristics
         scale_factors_sorted = sorted(scale_factors)
         times = [scaling_results[sf]["metrics"].wall_time for sf in scale_factors_sorted]
-        [scaling_results[sf]["metrics"].items_processed for sf in scale_factors_sorted]
+        # items_processed is available in scaling_results if needed for future analysis
 
         # Calculate complexity (rough estimate)
         complexity_estimate = "Unknown"

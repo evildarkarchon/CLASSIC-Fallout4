@@ -201,59 +201,70 @@ class LogParser:
     main error, callstack, plugins, system info, and more.
     """
 
-    def __init__(self) -> None:
-        """Create a new LogParser instance."""
-
-    def find_segments(self, crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str) -> dict[str, Any]:
-        """Find and parse all log segments.
+    def __init__(self, custom_boundaries: list[tuple[str, str]] | None = None) -> None:
+        """Create a new LogParser instance.
 
         Args:
-            crash_data: Raw crash log lines
-            crashgen_name: Crash generator name (e.g., "Buffout 4")
-            xse_acronym: XSE acronym (e.g., "F4SE")
-            game_root_name: Game root folder name
-
-        Returns:
-            Dictionary containing all parsed segments:
-                - main_error: Main error message
-                - callstack: Stack trace lines
-                - plugins: Plugin list
-                - system_info: System information
-                - probable_callstack: Most relevant stack section
-                - etc.
+            custom_boundaries: Optional list of (start_marker, end_marker) tuples defining
+                custom log segment boundaries.
         """
 
-    def extract_section(self, crash_data: list[str], start_marker: str, end_marker: str) -> list[str] | None:
-        """Extract a section between markers.
+    def add_pattern(self, name: str, pattern: str) -> None:
+        """Add a custom regex pattern for matching."""
 
-        Args:
-            crash_data: Raw crash log lines
-            start_marker: Start marker string
-            end_marker: End marker string
+    def clear_caches(self) -> None:
+        """Clear all caches to free memory."""
 
-        Returns:
-            Extracted section lines or None if not found
-        """
+    def parse_segments(self, lines: list[str]) -> list[list[str]]:
+        """Parse log into segments using SIMD-optimized boundary detection."""
 
-    def parse_plugins(self, plugin_section: list[str]) -> list[str]:
-        """Parse plugin list from crash log section.
+    def parse_segments_parallel(self, lines: list[str], chunk_size: int | None = None) -> list[list[str]]:
+        """Parse segments in parallel for large logs."""
 
-        Args:
-            plugin_section: Plugin section lines
+    def find_patterns(self, lines: list[str]) -> list[tuple[int, str, str]]:
+        """Find all pattern matches in parallel with caching."""
 
-        Returns:
-            List of plugin names
-        """
+    def find_patterns_chunked(self, lines: list[str], chunk_size: int | None = None) -> list[tuple[int, str, str]]:
+        """Find patterns in parallel chunks for better performance."""
 
-    def extract_game_version(self, crash_data: list[str]) -> str | None:
-        """Extract game version from crash log.
+    def extract_section(self, lines: list[str], start_marker: str, end_marker: str) -> list[str] | None:
+        """Extract section from log."""
 
-        Args:
-            crash_data: Raw crash log lines
+    def extract_sections_batch(self, lines: list[str], markers: list[tuple[str, str]]) -> list[list[str] | None]:
+        """Extract multiple sections batch."""
 
-        Returns:
-            Game version string or None if not found
-        """
+    def parse_crash_header(self, lines: list[str]) -> dict[str, str]:
+        """Parse crash header information."""
+
+    def get_section(self, lines: list[str], section_name: str) -> list[str] | None:
+        """Get specific section by name."""
+
+    def parse_all_sections(self, lines: list[str]) -> dict[str, list[str]]:
+        """Parse and extract all important sections at once."""
+
+    def parse_complete(self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str) -> tuple[str, str, str, list[list[str]]]:
+        """Optimized batch operation: complete log analysis in single FFI call."""
+
+    def get_segment_sizes(self, lines: list[str]) -> dict[str, int]:
+        """Count lines in each segment for analysis."""
+
+    def get_stats(self) -> dict[str, int]:
+        """Get performance statistics."""
+
+    def extract_formids(self, lines: list[str]) -> list[str]:
+        """Find all FormIDs in the log."""
+
+    def extract_plugins(self, lines: list[str]) -> list[tuple[str, str]]:
+        """Find all plugins mentioned in the log."""
+
+    def extract_addresses(self, lines: list[str]) -> list[str]:
+        """Find all memory addresses in the log."""
+
+    def find_errors(self, lines: list[str]) -> list[tuple[int, str]]:
+        """Find error and exception patterns."""
+
+    def benchmark(self, lines: list[str], iterations: int) -> dict[str, float]:
+        """Benchmark parsing performance on given data."""
 
 # =============================================================================
 # Pattern Matching

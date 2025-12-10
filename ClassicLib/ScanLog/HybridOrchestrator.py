@@ -55,7 +55,7 @@ class HybridOrchestrator:
         fcx_mode: bool,
         show_formid_values: bool,
         formid_db_exists: bool,
-        remove_list: tuple[str] | None = None,
+        remove_list: tuple[str, ...] | None = None,
     ) -> None:
         """
         Initialize the hybrid orchestrator with Python and optional Rust backends.

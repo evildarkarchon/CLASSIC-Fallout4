@@ -327,12 +327,15 @@ def clean_global_registry() -> Generator[None, None, None]:
     This ensures complete isolation of GlobalRegistry state between tests,
     preventing test pollution from registry modifications. This is critical
     for parallel test execution with pytest-xdist.
+
+    Uses the public GlobalRegistry.clear() API which is designed for testing
+    and includes safety checks to prevent accidental use in production.
     """
-    # Clear before test
-    GlobalRegistry._registry.clear()
+    # Clear before test using the public API
+    GlobalRegistry.clear()
     yield
-    # Clear after test
-    GlobalRegistry._registry.clear()
+    # Clear after test using the public API
+    GlobalRegistry.clear()
 
 
 @pytest.fixture
@@ -342,18 +345,21 @@ def global_registry() -> Generator[ModuleType, None, None]:
     This fixture ensures the registry is clean before use and properly
     cleaned up after the test completes.
 
+    Uses the public GlobalRegistry.clear() API which is designed for testing
+    and includes safety checks to prevent accidental use in production.
+
     Usage:
         def test_registry(global_registry):
             global_registry.register("key", "value")
             assert global_registry.get("key") == "value"
     """
-    # Clear registry before test
-    GlobalRegistry._registry.clear()
+    # Clear registry before test using the public API
+    GlobalRegistry.clear()
 
     yield GlobalRegistry
 
-    # Clear registry after test
-    GlobalRegistry._registry.clear()
+    # Clear registry after test using the public API
+    GlobalRegistry.clear()
 
 
 @pytest.fixture(scope="session")
@@ -391,13 +397,18 @@ def setup_global_registry_session() -> Generator[None, None, None]:
     components try to access registry values.
 
     This fixture is automatically used by tests that need GlobalRegistry.
+
+    Note: This fixture uses direct _registry access for session-scoped operations
+    where copy() semantics are needed. The public clear() API is preferred for
+    function-scoped fixtures.
     """
     # Store original registry state for restoration
+    # Use direct access for copy semantics (needed for restoration)
     original_registry = dict(GlobalRegistry._registry)
 
     try:
-        # Clear registry to start fresh
-        GlobalRegistry._registry.clear()
+        # Clear registry to start fresh using the public API
+        GlobalRegistry.clear()
 
         # Initialize YAML cache (many components depend on this)
         # Check if yaml_cache already exists in the module to avoid re-initialization issues
@@ -434,6 +445,7 @@ def setup_global_registry_session() -> Generator[None, None, None]:
 
     finally:
         # Restore original registry state
+        # Use direct access for update semantics (needed for restoration)
         GlobalRegistry._registry.clear()
         GlobalRegistry._registry.update(original_registry)
 

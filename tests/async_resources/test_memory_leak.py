@@ -133,12 +133,12 @@ class TestMemoryLeakDetection:
         """Test cleanup of circular references in async contexts."""
 
         class Node:
-            def __init__(self, value):
+            def __init__(self, value: int) -> None:
                 self.value = value
-                self.next = None
-                self.task = None
+                self.next: "Node | None" = None
+                self.task: asyncio.Task | None = None
 
-            async def process(self):
+            async def process(self) -> int:
                 await asyncio.sleep(0)
                 return self.value
 
@@ -156,12 +156,12 @@ class TestMemoryLeakDetection:
         node1.task = asyncio.create_task(node1.process())
         node2.task = asyncio.create_task(node2.process())
 
+        assert node1.task is not None
         await node1.task
+        assert node2.task is not None
         await node2.task
 
-        # Break circular reference
-        node1.next = None
-        node2.next = None
+        # Remove local references (circular reference remains between nodes)
         del node1
         del node2
 

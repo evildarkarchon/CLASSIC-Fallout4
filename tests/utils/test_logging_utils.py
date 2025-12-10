@@ -79,8 +79,11 @@ class TestLoggingUtilities:
         assert file_handler is not None
         assert file_handler.level == logging.DEBUG
         # Check formatter includes expected components
-        assert "%(asctime)s" in file_handler.formatter._fmt
-        assert "%(levelname)s" in file_handler.formatter._fmt
+        assert file_handler.formatter is not None
+        fmt = file_handler.formatter._fmt
+        assert fmt is not None
+        assert "%(asctime)s" in fmt
+        assert "%(levelname)s" in fmt
 
     @patch("ClassicLib.GlobalRegistry.get_local_dir")
     def test_configure_logging_console_handler_level(self, mock_get_local_dir: MagicMock) -> None:
@@ -129,13 +132,15 @@ class TestLoggingUtilities:
         # Check both handlers have formatters
         for handler in test_logger.handlers:
             assert handler.formatter is not None
+            fmt = handler.formatter._fmt
+            assert fmt is not None
             if isinstance(handler, logging.FileHandler):
                 # File handler should have detailed format
-                assert "%(asctime)s" in handler.formatter._fmt  # type: ignore
-                assert "%(name)s" in handler.formatter._fmt  # type: ignore
+                assert "%(asctime)s" in fmt
+                assert "%(name)s" in fmt
             else:
                 # Console handler should have simple format
-                assert "%(levelname)s" in handler.formatter._fmt  # type: ignore
+                assert "%(levelname)s" in fmt
 
     def test_configure_logging_multiple_calls(self) -> None:
         """Test multiple calls to configure_logging."""

@@ -440,7 +440,7 @@ class TestTabGeometryRestoring:
             patch("ClassicLib.Interface.WindowGeometryMixin.logger") as mock_logger,
         ):
             # Mock returning None for all saved settings
-            mock_yaml.side_effect = lambda *args: None if len(args) > 3 else args[3]
+            mock_yaml.side_effect = lambda *args: args[3] if len(args) > 3 else None
 
             mock_qt_window.restore_tab_geometry(0)
 

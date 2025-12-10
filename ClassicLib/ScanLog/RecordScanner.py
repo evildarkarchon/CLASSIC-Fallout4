@@ -13,7 +13,7 @@ from collections import Counter
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:

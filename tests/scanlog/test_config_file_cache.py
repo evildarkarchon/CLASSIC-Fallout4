@@ -29,7 +29,7 @@ class TestConfigFileCacheReadOnly:
 
         handler_mod.init_message_handler(parent=None, is_gui_mode=False)
         yield
-        handler_mod._message_handler = None
+        setattr(handler_mod, "_message_handler", None)
 
     @pytest.fixture(autouse=True)
     def mock_dependencies(self, tmp_path):

@@ -37,7 +37,7 @@ class HelpAndAboutMixin:
         Args:
             self: The instance of the class.
         """
-        dialog: CustomAboutDialog = CustomAboutDialog(self)
+        dialog: CustomAboutDialog = CustomAboutDialog(self) # pyright: ignore[reportArgumentType]
         dialog.exec()
 
     def help_popup_main(self) -> None:
@@ -52,4 +52,4 @@ class HelpAndAboutMixin:
             self: Reference to the current instance of the class.
         """
         help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
-        QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok)
+        QMessageBox.information(self, "NEED HELP?", help_popup_text, QMessageBox.StandardButton.Ok) # pyright: ignore[reportArgumentType]

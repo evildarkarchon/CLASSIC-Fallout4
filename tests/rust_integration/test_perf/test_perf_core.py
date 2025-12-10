@@ -7,8 +7,12 @@ the ClassicLib test suite.
 """
 
 import time
+from typing import Any
 
 import pytest
+
+# Pre-declare as Any to satisfy type checker; tests are skipped if unavailable
+classic_perf: Any
 
 # Try to import classic_perf; if it fails, set a flag to skip tests
 try:
@@ -16,6 +20,7 @@ try:
 
     _classic_perf_available = True
 except ImportError:
+    classic_perf = None
     _classic_perf_available = False
 
 not_classic_perf_available = not _classic_perf_available

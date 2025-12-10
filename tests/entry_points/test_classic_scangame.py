@@ -71,7 +71,7 @@ class TestClassicScanGame:
         assert hasattr(call_args, "__await__")  # It's a coroutine
 
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_get_scan_settings(self, mock_get_core: Mock) -> None:
+    async def test_get_scan_settings(self, mock_get_core: Mock) -> None:
         """Test get_scan_settings returns proper tuple."""
         from CLASSIC_ScanGame import get_scan_settings
 
@@ -81,10 +81,14 @@ class TestClassicScanGame:
         expected_path = Path("/mods/folder")
         mock_core = MagicMock()
         mock_get_core.return_value = mock_core
-        mock_core.get_scan_settings.return_value = (expected_xse, expected_config, expected_path)
+
+        async def async_get_settings():
+            return (expected_xse, expected_config, expected_path)
+
+        mock_core.get_scan_settings.side_effect = async_get_settings
 
         # Act
-        result = get_scan_settings()
+        result = await get_scan_settings()
 
         # Assert
         assert result == (expected_xse, expected_config, expected_path)
@@ -205,17 +209,21 @@ class TestClassicScanGame:
         mock_bridge_instance.run_async.assert_called_once()
 
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_get_scan_settings_with_none_mods_path(self, mock_get_core: Mock) -> None:
+    async def test_get_scan_settings_with_none_mods_path(self, mock_get_core: Mock) -> None:
         """Test get_scan_settings when mods path is None."""
         from CLASSIC_ScanGame import get_scan_settings
 
         # Arrange
         mock_core = MagicMock()
         mock_get_core.return_value = mock_core
-        mock_core.get_scan_settings.return_value = ("SKSE", {"setting": "value"}, None)
+
+        async def async_get_settings():
+            return ("SKSE", {"setting": "value"}, None)
+
+        mock_core.get_scan_settings.side_effect = async_get_settings
 
         # Act
-        xse, config, mods_path = get_scan_settings()
+        xse, config, mods_path = await get_scan_settings()
 
         # Assert
         assert xse == "SKSE"

@@ -23,7 +23,7 @@ from ClassicLib.MessageHandler import msg_error, msg_info, msg_success, msg_warn
 from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
 
 
-def try_parse_version(version_str: str) -> Version | None:
+def try_parse_version(version_str: str | None) -> Version | None:
     """
     Attempts to parse a version string into a `Version` object. This function is
     designed to handle common formats of version strings, such as those commonly
@@ -31,12 +31,12 @@ def try_parse_version(version_str: str) -> Version | None:
 
     Args:
         version_str: The version string to be parsed. This could represent a
-            version number directly or be a part of a larger name.
+            version number directly or be a part of a larger name. Can be None.
 
     Returns:
         Version: A `Version` object representing the parsed version, if parsing
             was successful.
-        None: Returns None if the parsing was not successful.
+        None: Returns None if the input is None, empty, or parsing was not successful.
     """
     if not version_str:
         return None

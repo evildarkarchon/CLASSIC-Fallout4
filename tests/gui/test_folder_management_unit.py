@@ -35,9 +35,9 @@ class TestFolderManagementMixin:
         init_message_handler(parent=None, is_gui_mode=False)
         yield
         # Clean up the handler after test
-        import ClassicLib.MessageHandler
+        import ClassicLib.MessageHandler.handler
 
-        ClassicLib.MessageHandler._message_handler = None
+        ClassicLib.MessageHandler.handler._message_handler = None
 
     @pytest.fixture
     def mock_widget(self, qt_application):

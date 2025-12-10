@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.DetectMods import detect_mods_double
-from ClassicLib.ScanLog.fragments import ReportFragment
 
 
 class TestConflictDetection:

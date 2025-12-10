@@ -88,10 +88,10 @@ class YamlOperations:
             'value'
         """
 
-    def parse_yaml(self, content: str) -> dict[str, Any]:
+    def parse_yaml(self, content: str) -> Any:
         r"""Parse YAML content from a string.
 
-        Parses YAML text and returns the parsed data as a Python dictionary.
+        Parses YAML text and returns the parsed data as a Python object.
         Supports all YAML 1.2 features including anchors, aliases, and
         complex data structures.
 
@@ -99,7 +99,14 @@ class YamlOperations:
             content: YAML content as string
 
         Returns:
-            Parsed YAML as dictionary with insertion order preserved
+            Parsed YAML as Python object. Can be:
+            - None (for YAML null)
+            - bool (for YAML true/false)
+            - int (for YAML integers)
+            - float (for YAML floats)
+            - str (for YAML strings)
+            - list (for YAML sequences)
+            - dict[str, Any] (for YAML mappings, with insertion order preserved)
 
         Raises:
             ValueError: If YAML is malformed or invalid
@@ -111,14 +118,21 @@ class YamlOperations:
             ['item1', 'item2']
         """
 
-    def dump_yaml(self, data: dict[str, Any]) -> str:
-        """Convert Python dictionary to YAML string.
+    def dump_yaml(self, data: Any) -> str:
+        """Convert Python object to YAML string.
 
-        Serializes a Python dictionary to YAML format with proper indentation
+        Serializes a Python object to YAML format with proper indentation
         and formatting. Preserves order and handles nested structures.
 
         Args:
-            data: Python dictionary to serialize
+            data: Python object to serialize. Supported types:
+                - None (becomes YAML null)
+                - bool (becomes YAML true/false)
+                - int (becomes YAML integer)
+                - float (becomes YAML float)
+                - str (becomes YAML string)
+                - list (becomes YAML sequence)
+                - dict (becomes YAML mapping)
 
         Returns:
             YAML formatted string

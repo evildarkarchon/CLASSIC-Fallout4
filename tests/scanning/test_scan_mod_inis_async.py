@@ -139,7 +139,18 @@ class TestConfigFileCacheAsync:
         mock_config.has_option.return_value = True
         mock_config.get.return_value = "test_value"
 
-        with patch.object(cache, "_config_file_cache", {"test.ini": {"settings": mock_config}}):
+        with patch.object(
+            cache,
+            "_config_file_cache",
+            {
+                "test.ini": {
+                    "encoding": "utf-8",
+                    "path": Path("test/test.ini"),
+                    "settings": mock_config,
+                    "text": "[section]\nkey=test_value",
+                }
+            },
+        ):
             result = await cache.get_async(str, "test.ini", "section", "key")
             assert result == "test_value"
 
@@ -156,7 +167,14 @@ class TestConfigFileCacheAsync:
         mock_config.has_section.return_value = True
         mock_config.has_option.return_value = True
         mock_config.get.return_value = "cached_value"
-        cache._config_file_cache = {"test.ini": {"settings": mock_config}}
+        cache._config_file_cache = {
+            "test.ini": {
+                "encoding": "utf-8",
+                "path": Path("test/test.ini"),
+                "settings": mock_config,
+                "text": "[section]\nkey=cached_value",
+            }
+        }
 
         # Mock _load_config_async - should not be called
         cache._load_config_async = AsyncMock()

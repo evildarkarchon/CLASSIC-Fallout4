@@ -7,7 +7,7 @@ The test suite verifies:
 1. process_batch() is called as static method (not instance method)
 2. combine_fragments() is called as static method (not instance method)
 3. Proper return type handling for both methods
-4. Integration with RustAcceleratedParallelProcessor wrapper
+4. Integration with ParallelReportProcessor wrapper
 
 Bugs fixed:
 - report_rust.py:615 - process_batch() is static, not instance method
@@ -144,15 +144,15 @@ def test_parallel_processor_not_instance_methods() -> None:
 @pytest.mark.rust
 @pytest.mark.integration
 def test_report_processor_wrapper_integration() -> None:
-    """Test RustAcceleratedParallelProcessor wrapper integration.
+    """Test ParallelReportProcessor wrapper integration.
 
-    This test uses the actual wrapper class (RustAcceleratedParallelProcessor)
+    This test uses the actual wrapper class (ParallelReportProcessor)
     to ensure the fixes work in the real usage context. The wrapper should
     correctly call the static methods internally.
 
     The test confirms:
     - Wrapper can be instantiated
-    - process_reports_parallel() works (uses process_batch internally)
+    - process_reports() works (uses process_batch internally)
     - combine_fragments_parallel() works (uses combine_fragments internally)
     - No AttributeError is raised
 
@@ -161,18 +161,18 @@ def test_report_processor_wrapper_integration() -> None:
     """
     try:
         from ClassicLib.rust.report_rust import (
-            RustAcceleratedParallelProcessor,
+            ParallelReportProcessor,
             RustAcceleratedReportFragment,
         )
 
         # Create wrapper instance
-        processor = RustAcceleratedParallelProcessor()
+        processor = ParallelReportProcessor()
 
-        # Test process_reports_parallel (uses process_batch internally at line 615)
+        # Test process_reports (uses process_batch internally at line 615)
         reports = [["line1", "line2"], ["line3", "line4"]]
-        result = processor.process_reports_parallel(reports)
+        result = processor.process_reports(reports)
 
-        assert isinstance(result, list), "process_reports_parallel should return list"
+        assert isinstance(result, list), "process_reports should return list"
         assert len(result) == len(reports), f"Expected {len(reports)} results, got {len(result)}"
 
         # Test combine_fragments_parallel (uses combine_fragments internally at line 640)
@@ -350,9 +350,9 @@ def test_wrapper_process_reports_realistic() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.rust.report_rust import RustAcceleratedParallelProcessor
+        from ClassicLib.rust.report_rust import ParallelReportProcessor
 
-        processor = RustAcceleratedParallelProcessor()
+        processor = ParallelReportProcessor()
 
         # Realistic crash log reports
         reports = [
@@ -368,7 +368,7 @@ def test_wrapper_process_reports_realistic() -> None:
             ],
         ]
 
-        result = processor.process_reports_parallel(reports)
+        result = processor.process_reports(reports)
 
         assert isinstance(result, list), "Should return list"
         assert len(result) == len(reports), "Should process all reports"
@@ -399,11 +399,11 @@ def test_wrapper_combine_fragments_realistic() -> None:
     """
     try:
         from ClassicLib.rust.report_rust import (
-            RustAcceleratedParallelProcessor,
+            ParallelReportProcessor,
             RustAcceleratedReportFragment,
         )
 
-        processor = RustAcceleratedParallelProcessor()
+        processor = ParallelReportProcessor()
 
         # Realistic crash log fragments
         frag1 = RustAcceleratedReportFragment.from_lines(["Crash Report", "Date: 2025-11-04"])

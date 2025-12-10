@@ -56,7 +56,7 @@ class FolderManagementMixin:
         """
         while True:
             # noinspection PyTypeChecker
-            folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")
+            folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder") # pyright: ignore[reportArgumentType]
             if not folder:  # User clicked cancel
                 break
 
@@ -69,7 +69,7 @@ class FolderManagementMixin:
             # Invalid path, show warning and continue loop
             # noinspection PyTypeChecker
             QMessageBox.warning(
-                self,
+                self, # pyright: ignore[reportArgumentType]
                 "Invalid Custom Scan Path",
                 "The selected directory cannot be used as a custom scan path.\n\n"
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
@@ -102,7 +102,7 @@ class FolderManagementMixin:
         if not path_obj.exists() or not path_obj.is_dir():
             # noinspection PyTypeChecker
             QMessageBox.warning(
-                self,
+                self, # pyright: ignore[reportArgumentType]
                 "Invalid Path",
                 f"The path '{folder_text}' does not exist or is not a directory.\n\nThe custom scan path has been cleared.",
             )
@@ -114,7 +114,7 @@ class FolderManagementMixin:
         if not is_valid_custom_scan_path(folder_text):
             # noinspection PyTypeChecker
             QMessageBox.warning(
-                self,
+                self, # pyright: ignore[reportArgumentType]
                 "Invalid Custom Scan Path",
                 "The entered directory cannot be used as a custom scan path.\n\n"
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
@@ -139,7 +139,7 @@ class FolderManagementMixin:
             OSError: If there is an issue accessing the selected directory.
         """
         # noinspection PyTypeChecker
-        folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")
+        folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder") # pyright: ignore[reportArgumentType]
         if folder:
             if self.mods_folder_edit is not None:
                 self.mods_folder_edit.setText(folder)
@@ -179,7 +179,7 @@ class FolderManagementMixin:
         from ClassicLib.Interface.Settings.dialog import SettingsDialog
 
         # noinspection PyTypeChecker
-        dialog = SettingsDialog(self)
+        dialog = SettingsDialog(self) # pyright: ignore[reportArgumentType]
         if dialog.exec() == QDialog.DialogCode.Accepted:
             # Apply any settings that need immediate effect
             self.apply_settings_changes()
@@ -215,7 +215,7 @@ class FolderManagementMixin:
         else:
             # noinspection PyTypeChecker
             QMessageBox.critical(
-                self,
+                self, # pyright: ignore[reportArgumentType]
                 "Error",
                 "Backup folder is missing or not registered. Please restart the program.",
                 QMessageBox.StandardButton.Ok,
@@ -243,7 +243,7 @@ class FolderManagementMixin:
         else:
             # noinspection PyTypeChecker
             QMessageBox.critical(
-                self,
+                self, # pyright: ignore[reportArgumentType]
                 "Error",
                 "Local directory is missing or not registered. Please restart the program.",
                 QMessageBox.StandardButton.Ok,

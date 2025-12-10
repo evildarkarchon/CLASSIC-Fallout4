@@ -409,7 +409,8 @@ class TestUpdateIntegrationScenarios:
         assert stable_version == Version("2.1.0")
         assert prerelease_version == Version("2.2.0b1")
 
-        # Test version comparison
+        # Test version comparison (explicit None checks for type narrowing)
+        assert stable_version is not None and prerelease_version is not None
         assert prerelease_version > stable_version
         assert stable_version < prerelease_version
 

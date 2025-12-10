@@ -111,7 +111,7 @@ class TestFormIDAnalyzerCore:
         Uses AsyncMock correctly to simulate async database operations.
         The FormIDAnalyzerCore uses batch queries for performance.
         """
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.rust.report_rust import ReportFragment
 
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         # FormIDAnalyzerCore uses batch queries for performance
@@ -140,7 +140,7 @@ class TestFormIDAnalyzerCore:
 
     async def test_formid_matching_without_database(self, mock_yamldata: MagicMock) -> None:
         """Test FormID matching when database doesn't exist."""
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.rust.report_rust import ReportFragment
 
         analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(
             yamldata=mock_yamldata,
@@ -164,7 +164,7 @@ class TestFormIDAnalyzerCore:
 
         Uses AsyncMock correctly to simulate async database operations.
         """
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.rust.report_rust import ReportFragment
 
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         # FormIDAnalyzerCore uses batch queries for performance
@@ -191,7 +191,7 @@ class TestFormIDAnalyzerCore:
 
     async def test_empty_formid_list(self, mock_yamldata: MagicMock) -> None:
         """Test handling of empty FormID list."""
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.rust.report_rust import ReportFragment
 
         mock_pool: AsyncMock = AsyncMock(spec=AsyncDatabasePool)
         analyzer: FormIDAnalyzerCore = FormIDAnalyzerCore(mock_yamldata, True, True, mock_pool)

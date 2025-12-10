@@ -203,7 +203,7 @@ class AsyncYamlSettingsCore:
             >>> version, vr_mode, build = results
         """
         tasks = list(starmap(self.async_yaml_settings, requests))
-        return await asyncio.gather(*tasks)
+        return await asyncio.gather(*tasks, return_exceptions=False)
 
     async def batch_set_settings(self, updates: list[tuple[type, YAML, str, Any]]) -> list[Any]:
         """Execute batch asynchronous update of settings.
@@ -227,7 +227,7 @@ class AsyncYamlSettingsCore:
             ... ])
         """
         tasks = list(starmap(self.async_yaml_settings, updates))
-        return await asyncio.gather(*tasks)
+        return await asyncio.gather(*tasks, return_exceptions=False)
 
     async def clear_cache(self, yaml_store: YAML | None = None) -> None:
         """Clear cached settings and data.

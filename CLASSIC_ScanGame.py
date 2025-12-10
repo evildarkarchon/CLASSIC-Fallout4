@@ -63,7 +63,7 @@ _scan_game_core = get_scan_game_core()
 check_log_errors = create_sync_wrapper(_scan_game_core.check_log_errors)
 
 
-def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
+async def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
     """Gets common settings used by mod scanning functions.
 
     Returns:
@@ -73,7 +73,7 @@ def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
             - Path | None: Optional path to the mods folder, or None if not configured
     """
     core: ScanGameCore = get_scan_game_core()
-    return core.get_scan_settings()
+    return await core.get_scan_settings()
 
 
 def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:

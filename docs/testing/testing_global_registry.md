@@ -34,7 +34,7 @@ def test_parallel_two():
 
 ## Correct Testing Patterns
 
-### ✅ Pattern 1: Clear Registry in Fixtures
+### ✅ Pattern 1: Clear Registry in Fixtures (Recommended)
 
 ```python
 import pytest
@@ -42,15 +42,23 @@ from ClassicLib import GlobalRegistry
 
 @pytest.fixture(autouse=True)
 def clean_global_registry():
-    """Clear GlobalRegistry before and after each test."""
-    # Clear before test
-    GlobalRegistry._registry.clear()
+    """Clear GlobalRegistry before and after each test.
+    
+    Uses the public clear() API which is designed for testing
+    and includes safety checks to prevent accidental use in production.
+    """
+    # Clear before test using the public API
+    GlobalRegistry.clear()
 
     yield
 
-    # Clear after test
-    GlobalRegistry._registry.clear()
+    # Clear after test using the public API
+    GlobalRegistry.clear()
 ```
+
+**Note**: The `GlobalRegistry.clear()` function will only work when running under
+pytest (it detects the `PYTEST_CURRENT_TEST` environment variable). This prevents
+accidental clearing in production code.
 
 ### ✅ Pattern 2: Mock the Registry Entirely
 
@@ -75,22 +83,27 @@ def test_with_mocked_registry():
 ```python
 @pytest.fixture
 def scoped_registry():
-    """Create a scoped registry that doesn't affect global state."""
+    """Create a scoped registry that doesn't affect global state.
+    
+    Uses direct _registry access for copy/restore semantics where
+    needed, and the public clear() API where appropriate.
+    """
     from ClassicLib import GlobalRegistry
 
-    # Save original registry
+    # Save original registry (requires direct access for copy semantics)
     original_registry = GlobalRegistry._registry.copy()
 
-    # Clear for this test
-    GlobalRegistry._registry.clear()
+    # Clear for this test using the public API
+    GlobalRegistry.clear()
 
     yield GlobalRegistry
 
-    # Restore original
-    GlobalRegistry._registry = original_registry
+    # Restore original (requires direct access for update semantics)
+    GlobalRegistry._registry.clear()
+    GlobalRegistry._registry.update(original_registry)
 ```
 
-### ✅ Pattern 4: Test-Specific Keys
+### ✅ Pattern 4: Test-Specific Keys with Cleanup
 
 ```python
 import uuid
@@ -102,8 +115,24 @@ def test_with_unique_keys():
     GlobalRegistry.register(test_key, "test_value")
     assert GlobalRegistry.get(test_key) == "test_value"
 
-    # Clean up
-    GlobalRegistry._registry.pop(test_key, None)
+    # Clean up using the public unregister() API
+    GlobalRegistry.unregister(test_key)
+```
+
+### ✅ Pattern 5: Using the Unregister Function
+
+```python
+def test_with_targeted_cleanup():
+    """Use unregister() for specific key removal in production-safe code."""
+    test_key = "my_component"
+    
+    try:
+        GlobalRegistry.register(test_key, create_my_component())
+        # test code
+    finally:
+        # unregister() returns True if key was found and removed
+        removed = GlobalRegistry.unregister(test_key)
+        assert removed  # Verify cleanup happened
 ```
 
 ## Testing Singleton Classes
@@ -259,13 +288,13 @@ def test_bad():
     GlobalRegistry.register("key", "value")
     # This pollutes other tests!
 
-# ✅ GOOD: Always clean up
+# ✅ GOOD: Always clean up using unregister()
 def test_good():
     try:
         GlobalRegistry.register("key", "value")
         # test code
     finally:
-        GlobalRegistry._registry.pop("key", None)
+        GlobalRegistry.unregister("key")  # Safe, returns False if key doesn't exist
 ```
 
 ### Pitfall 2: Assuming Empty Registry
@@ -298,24 +327,48 @@ def test_something():
     # Now properly isolated
 ```
 
+## API Reference
+
+### `GlobalRegistry.clear()`
+
+Clears all entries from the registry. **Test-only function** that raises
+`RuntimeError` if called outside of pytest context.
+
+```python
+# Only works when running under pytest
+GlobalRegistry.clear()  # Clears all registry entries
+```
+
+### `GlobalRegistry.unregister(key: str) -> bool`
+
+Removes a specific key from the registry. **Production-safe** function that
+can be used for targeted cleanup.
+
+```python
+# Safe for both production and test code
+removed = GlobalRegistry.unregister("my_key")  # Returns True if key existed
+```
+
 ## Best Practices Summary
 
-1. **Always clean up**: Use fixtures to ensure registry is cleaned before and after tests
-2. **Use unique keys**: When possible, use unique keys (UUIDs, test names) to avoid conflicts
-3. **Mock when appropriate**: Mock the entire registry for unit tests that don't need real instances
-4. **Isolate workers**: In parallel tests, ensure each worker has isolated state
-5. **Test in functions**: Avoid module-level registry access in test files
-6. **Document dependencies**: If a test requires specific registry state, document it clearly
+1. **Use `clear()` in fixtures**: Clean registry before and after tests using the public API
+2. **Use `unregister()` for targeted cleanup**: Prefer `unregister()` over direct `_registry` access
+3. **Use unique keys**: When possible, use unique keys (UUIDs, test names) to avoid conflicts
+4. **Mock when appropriate**: Mock the entire registry for unit tests that don't need real instances
+5. **Isolate workers**: In parallel tests, ensure each worker has isolated state
+6. **Test in functions**: Avoid module-level registry access in test files
+7. **Document dependencies**: If a test requires specific registry state, document it clearly
 
 ## Quick Reference
 
-| Scenario | Solution | Example |
-|----------|----------|---------|
-| Unit test | Mock GlobalRegistry | `patch("ClassicLib.GlobalRegistry")` |
-| Integration test | Clear and restore | `clean_global_registry` fixture |
-| Parallel tests | Worker-specific keys | `f"{key}_{worker_id}"` |
-| Singleton testing | Reset instance | Clear registry key before test |
-| Test isolation | Scoped fixture | Save/restore registry state |
+| Scenario           | Solution             | Example                                    |
+| ------------------ | -------------------- | ------------------------------------------ |
+| Unit test          | Mock GlobalRegistry  | `patch("ClassicLib.GlobalRegistry")`       |
+| Integration test   | Clear and restore    | `GlobalRegistry.clear()` in fixture        |
+| Single key cleanup | Use unregister()     | `GlobalRegistry.unregister(key)`           |
+| Parallel tests     | Worker-specific keys | `f"{key}_{worker_id}"`                     |
+| Singleton testing  | Reset instance       | `GlobalRegistry.unregister(SINGLETON_KEY)` |
+| Test isolation     | Scoped fixture       | Save/restore registry state                |
 
 ## Related Documentation
 

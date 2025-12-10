@@ -50,11 +50,12 @@ class TestExtractor(ast.NodeVisitor):
                 name=node.name,
                 bases=node.bases,
                 keywords=node.keywords,
-                decorator_list=node.decorator_list,
                 body=[],
-                lineno=node.lineno,
-                col_offset=node.col_offset,
+                decorator_list=node.decorator_list,
+                type_params=node.type_params,  # Required in Python 3.12+ (PEP 695)
             )
+            # Copy location information from original node
+            ast.copy_location(new_class, node)
 
             # Extract only the methods we want
             for child in node.body:
@@ -75,8 +76,8 @@ class TestExtractor(ast.NodeVisitor):
 
         self.current_class = old_class
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
-        """Handle standalone test functions."""
+    def _handle_function(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        """Handle standalone test functions (sync or async)."""
         if node.name.startswith("test_"):
             test_name = node.name
             if test_name in self.test_names_to_extract:
@@ -85,9 +86,13 @@ class TestExtractor(ast.NodeVisitor):
             # Potential helper function
             self.helper_functions.append(node)
 
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        """Handle standalone sync test functions."""
+        self._handle_function(node)
+
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Any:
         """Handle async test functions."""
-        self.visit_FunctionDef(node)
+        self._handle_function(node)
 
 
 def extract_imports_and_constants(file_content: str) -> tuple[list[str], list[str]]:

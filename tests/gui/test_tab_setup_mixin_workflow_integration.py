@@ -47,7 +47,7 @@ def full_tab_setup(init_message_handler_fixture, qt_application):
             def track_call(method_name):
                 def wrapper(*args, **kwargs):
                     self.method_calls.append(method_name)
-                    return MagicMock()
+                    return None
 
                 return wrapper
 

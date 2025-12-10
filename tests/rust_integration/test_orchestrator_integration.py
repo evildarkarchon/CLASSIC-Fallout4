@@ -8,26 +8,31 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-# Check if classic_scanlog is available
+# Type-only imports for static analysis
+if TYPE_CHECKING:
+    from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
+
+# Check if classic_scanlog is available at runtime
 try:
-    from classic_scanlog import AnalysisConfig, AnalysisResult, RustOrchestrator
+    from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
 
     RUST_AVAILABLE = True
 except ImportError:
     RUST_AVAILABLE = False
-    RustOrchestrator = None
-    AnalysisConfig = None
-    AnalysisResult = None
+    AnalysisConfig = None  # type: ignore[misc,assignment]
+    AnalysisResult = None  # type: ignore[misc,assignment]
+    Orchestrator = None  # type: ignore[misc,assignment]
 
 
 @pytest.mark.rust
 @pytest.mark.integration
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="classic_scanlog not available")
 class TestRustOrchestratorIntegration:
-    """Test RustOrchestrator integration with real log files."""
+    """Test Orchestrator integration with real log files."""
 
     @pytest.fixture
     def sample_log_dir(self) -> Path:
@@ -38,28 +43,32 @@ class TestRustOrchestratorIntegration:
         return log_dir
 
     @pytest.fixture
-    def orchestrator(self) -> RustOrchestrator:
-        """Create a RustOrchestrator instance."""
-        return RustOrchestrator()
+    def orchestrator(self):
+        """Create an Orchestrator instance."""
+        assert AnalysisConfig is not None  # Type narrowing for Pylance
+        assert Orchestrator is not None  # Type narrowing for Pylance
+        config = AnalysisConfig("Fallout4")
+        return Orchestrator(config)
 
     def test_orchestrator_instantiation(self, orchestrator):
-        """Test RustOrchestrator can be instantiated."""
+        """Test Orchestrator can be instantiated."""
+        assert Orchestrator is not None  # Type narrowing for Pylance
         assert orchestrator is not None
-        assert isinstance(orchestrator, RustOrchestrator)
+        assert isinstance(orchestrator, Orchestrator)
 
     def test_analysis_config_creation(self):
         """Test AnalysisConfig can be created with various options."""
+        assert AnalysisConfig is not None  # Type narrowing for Pylance
         # Default config
-        config = AnalysisConfig()
+        config = AnalysisConfig("Fallout4")
         assert config is not None
+        assert config.game == "Fallout4"
 
         # Config with specific options
-        config = AnalysisConfig(
-            max_concurrent=5,
-            enable_formid_analysis=True,
-            enable_plugin_analysis=False,
-        )
+        config = AnalysisConfig("SkyrimVR", vr_mode=True)
         assert config is not None
+        assert config.game == "SkyrimVR"
+        assert config.vr_mode is True
 
     def test_analysis_result_structure(self):
         """Test AnalysisResult has expected structure."""
@@ -69,6 +78,7 @@ class TestRustOrchestratorIntegration:
 
     def test_process_single_log(self, orchestrator, sample_log_dir):
         """Test processing a single log file."""
+        assert AnalysisResult is not None  # Type narrowing for Pylance
         log_files = list(sample_log_dir.glob("*.log"))
         if not log_files:
             pytest.skip("No log files found in sample directory")
@@ -82,6 +92,7 @@ class TestRustOrchestratorIntegration:
 
     def test_process_logs_parallel(self, orchestrator, sample_log_dir):
         """Test parallel processing of multiple log files."""
+        assert AnalysisResult is not None  # Type narrowing for Pylance
         log_files = [str(f) for f in sample_log_dir.glob("*.log")]
         if len(log_files) < 2:
             pytest.skip("Need at least 2 log files for parallel processing test")
@@ -210,18 +221,20 @@ class TestAnalysisConfigUnit:
 
     def test_default_config(self):
         """Test default configuration values."""
-        config = AnalysisConfig()
+        assert AnalysisConfig is not None  # Type narrowing for Pylance
+        config = AnalysisConfig("Fallout4")
         assert config is not None
+        assert config.game == "Fallout4"
+        assert config.vr_mode is False
 
     def test_custom_config_values(self):
         """Test setting custom configuration values."""
-        config = AnalysisConfig(
-            max_concurrent=8,
-            enable_formid_analysis=True,
-            enable_plugin_analysis=True,
-            enable_record_scanning=False,
-        )
+        assert AnalysisConfig is not None  # Type narrowing for Pylance
+        config = AnalysisConfig("Fallout4")
+        config.show_formid_values = True
+
         assert config is not None
+        assert config.show_formid_values is True
 
 
 @pytest.mark.rust
@@ -239,12 +252,15 @@ class TestAnalysisResultUnit:
 @pytest.mark.integration
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="classic_scanlog not available")
 class TestOrchestratorStressTests:
-    """Stress tests for RustOrchestrator."""
+    """Stress tests for Orchestrator."""
 
     @pytest.fixture
-    def orchestrator(self) -> RustOrchestrator:
-        """Create a RustOrchestrator instance."""
-        return RustOrchestrator()
+    def orchestrator(self):
+        """Create an Orchestrator instance."""
+        assert AnalysisConfig is not None  # Type narrowing for Pylance
+        assert Orchestrator is not None  # Type narrowing for Pylance
+        config = AnalysisConfig("Fallout4")
+        return Orchestrator(config)
 
     @pytest.mark.slow
     def test_high_concurrency(self, orchestrator, sample_log_dir):

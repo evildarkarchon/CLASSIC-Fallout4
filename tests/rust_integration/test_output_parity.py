@@ -550,9 +550,10 @@ class TestOutputParity:
                     python_fragment = python_result[0]
 
                     # Both should have similar structure (ReportFragment or similar)
-                    if hasattr(rust_fragment, "fragment_content") and hasattr(python_fragment, "fragment_content"):
-                        rust_content = normalize_markdown_content(rust_fragment.fragment_content)
-                        python_content = normalize_markdown_content(python_fragment.fragment_content)
+                    # Use to_list() method which is available on both Rust and Python ReportFragment
+                    if hasattr(rust_fragment, "to_list") and hasattr(python_fragment, "to_list"):
+                        rust_content = normalize_markdown_content("\n".join(rust_fragment.to_list()))
+                        python_content = normalize_markdown_content("\n".join(python_fragment.to_list()))
 
                         if rust_content != python_content:
                             differences.append("Record scanner fragment content differs")

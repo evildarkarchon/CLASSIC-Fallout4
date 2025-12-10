@@ -136,7 +136,7 @@ class GameIntegrityOrchestratorCore:
 
             # Get mod path to verify it exists before running scans
             core = ScanGameCore()
-            _, _, mod_path = core.get_scan_settings()
+            _, _, mod_path = core.get_scan_settings() # pyright: ignore[reportGeneralTypeIssues]
 
             if not mod_path:
                 return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))

@@ -181,13 +181,14 @@ class TestManualPathInput:
                                             exe_path_mock2 = MagicMock()
                                             exe_path_mock2.is_file.return_value = True  # Second path has exe
 
+                                            joinpath_call_count = 0
+
                                             def joinpath_side_effect(filename):
+                                                nonlocal joinpath_call_count
                                                 if filename == "Fallout4.exe":
                                                     # Return different mock for each call
-                                                    if not hasattr(joinpath_side_effect, "call_count"):
-                                                        joinpath_side_effect.call_count = 0
-                                                    joinpath_side_effect.call_count += 1
-                                                    if joinpath_side_effect.call_count == 1:
+                                                    joinpath_call_count += 1
+                                                    if joinpath_call_count == 1:
                                                         return exe_path_mock1
                                                     return exe_path_mock2
                                                 return MagicMock()

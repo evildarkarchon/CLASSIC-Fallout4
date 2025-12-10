@@ -90,7 +90,7 @@ class TestFragmentMigration:
 
         # Add header
         header = ReportGeneratorFragments(None).generate_header("test.log")
-        composer.add(header)
+        composer.add(header) # pyright: ignore[reportArgumentType]
 
         # Add conditional sections
         composer.add_conditional(lambda: detect_mods_single(sample_yaml_single, sample_plugins), "FREQUENTLY CRASH")

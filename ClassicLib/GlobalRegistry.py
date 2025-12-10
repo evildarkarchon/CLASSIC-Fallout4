@@ -1,9 +1,11 @@
 """
 Global registry for sharing objects across modules without circular imports.
+
 This module serves as a central storage location for objects that need to be accessed
 from multiple modules throughout the application.
 """
 
+import os
 import threading
 from pathlib import Path
 from typing import Any
@@ -11,6 +13,9 @@ from typing import Any
 # Central storage for all globally accessible objects
 _registry: dict[str, Any] = {}
 _registry_lock = threading.RLock()
+
+# Environment variable to enable test-only functionality
+_TESTING_MODE_ENV_VAR = "PYTEST_CURRENT_TEST"
 
 
 # Define keys for consistent access
@@ -53,9 +58,14 @@ def register(key: str, obj: Any) -> None:
     Register an object in the global registry.
 
     Args:
-        key: Unique identifier for the object
+        key: Unique identifier for the object (must be a string)
         obj: The object to register
+
+    Raises:
+        TypeError: If key is not a string
     """
+    if not isinstance(key, str):
+        raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         _registry[key] = obj
 
@@ -65,11 +75,16 @@ def get(key: str) -> Any:
     Retrieve an object from the global registry.
 
     Args:
-        key: The unique identifier of the object
+        key: The unique identifier of the object (must be a string)
 
     Returns:
         The registered object or None if not found
+
+    Raises:
+        TypeError: If key is not a string
     """
+    if not isinstance(key, str):
+        raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         return _registry.get(key)
 
@@ -79,11 +94,16 @@ def is_registered(key: str) -> bool:
     Check if a key is registered.
 
     Args:
-        key: The unique identifier to check
+        key: The unique identifier to check (must be a string)
 
     Returns:
         True if the key exists in the registry, False otherwise
+
+    Raises:
+        TypeError: If key is not a string
     """
+    if not isinstance(key, str):
+        raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         return key in _registry
 
@@ -243,3 +263,82 @@ def get_local_dir(as_string: bool = False) -> Path | str:
     if as_string:
         return str(get(Keys.LOCAL_DIR))
     return get(Keys.LOCAL_DIR)
+
+
+def clear() -> None:
+    """Clear all entries from the global registry.
+
+    This function is intended for use in testing scenarios ONLY to reset
+    singleton state between test runs. It clears all registered objects
+    from the registry to prevent test pollution.
+
+    **WARNING**: This function will only execute when running under pytest
+    (detected via the PYTEST_CURRENT_TEST environment variable). Calling
+    this function in production code will raise a RuntimeError.
+
+    This operation is thread-safe and will acquire the registry lock before
+    clearing.
+
+    Raises:
+        RuntimeError: If called outside of a pytest testing context.
+
+    Example:
+        In test fixtures::
+
+            import pytest
+            from ClassicLib import GlobalRegistry
+
+            @pytest.fixture(autouse=True)
+            def clean_registry():
+                GlobalRegistry.clear()
+                yield
+                GlobalRegistry.clear()
+
+    Note:
+        For production code that needs to remove specific entries, use
+        targeted removal via direct registry access or implement a
+        specific ``unregister()`` function for individual keys.
+    """
+    # Safety check: only allow clearing in test environments
+    if not os.environ.get(_TESTING_MODE_ENV_VAR):
+        raise RuntimeError(
+            "GlobalRegistry.clear() is only allowed in testing contexts. "
+            "The PYTEST_CURRENT_TEST environment variable is not set. "
+            "If you need to clear the registry in production, reconsider "
+            "your architecture or implement targeted removal methods."
+        )
+
+    with _registry_lock:
+        _registry.clear()
+
+
+def unregister(key: str) -> bool:
+    """Remove a specific key from the global registry.
+
+    This function removes a single entry from the registry. Unlike clear(),
+    this can be used in production code for legitimate cleanup scenarios.
+
+    Args:
+        key: The unique identifier of the object to remove (must be a string).
+
+    Returns:
+        True if the key was found and removed, False if the key was not present.
+
+    Raises:
+        TypeError: If key is not a string.
+
+    Example:
+        >>> from ClassicLib import GlobalRegistry
+        >>> GlobalRegistry.register("temp_key", "temp_value")
+        >>> GlobalRegistry.unregister("temp_key")
+        True
+        >>> GlobalRegistry.unregister("nonexistent")
+        False
+    """
+    if not isinstance(key, str):
+        raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
+    with _registry_lock:
+        if key in _registry:
+            del _registry[key]
+            return True
+        return False

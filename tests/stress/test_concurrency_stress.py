@@ -10,7 +10,6 @@ import asyncio
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from queue import Queue
 from threading import Barrier, Lock
 from unittest.mock import Mock, patch
 
@@ -21,6 +20,9 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 
 # Import components to test
+# Import Rust components directly
+import classic_scanlog
+
 from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIO import FileIOCore
@@ -40,27 +42,28 @@ class TestThreadSafetyValidation:
     and ensure thread safety guarantees are maintained.
     """
 
-    def test_rust_string_processor_thread_safety(self, concurrency_helper):
+    def test_rust_string_pool_thread_safety(self, concurrency_helper):
         """
-        Test Rust StringProcessor thread safety under concurrent access.
+        Test Rust StringPool thread safety under concurrent access.
 
-        Multiple threads simultaneously use the same StringProcessor
+        Multiple threads simultaneously use the same StringPool
         instance to ensure thread-safe operations and consistent results.
         """
-        from classic_scanlog.utils import StringProcessor
-
-        processor = StringProcessor()
+        string_pool = classic_scanlog.StringPool()
 
         def concurrent_string_operation(thread_id: int, iteration: int, shared_data: list):
             """Worker function for concurrent string processing."""
             test_strings = [f"Thread_{thread_id}_String_{iteration}_{i}" for i in range(10)]
 
             # Intern strings (tests internal cache thread safety)
-            interned = [processor.intern(s) for s in test_strings]
+            interned = [string_pool.intern(s) for s in test_strings]
 
-            # Batch process strings
-            upper_result = processor.process_batch(test_strings, "upper")
-            lower_result = processor.process_batch(test_strings, "lower")
+            # Batch intern strings (uses parallel processing internally)
+            batch_interned = string_pool.intern_batch(test_strings)
+
+            # Process strings using Python (we're testing StringPool thread safety)
+            upper_result = [s.upper() for s in test_strings]
+            lower_result = [s.lower() for s in test_strings]
 
             # Store results in shared data for validation
             shared_data.append({
@@ -69,6 +72,7 @@ class TestThreadSafetyValidation:
                 "upper_count": len(upper_result),
                 "lower_count": len(lower_result),
                 "interned_count": len(interned),
+                "batch_interned_count": len(batch_interned),
             })
 
             return len(upper_result)  # Return processed count
@@ -92,45 +96,42 @@ class TestThreadSafetyValidation:
             assert result["upper_count"] == 10  # Should process all 10 strings
             assert result["lower_count"] == 10
             assert result["interned_count"] == 10
+            assert result["batch_interned_count"] == 10
 
-    def test_rust_log_processor_concurrent_pattern_matching(self, concurrency_helper, tmp_path):
+    def test_rust_log_parser_concurrent_pattern_matching(self, concurrency_helper, tmp_path):
         """
-        Test LogProcessor pattern matching thread safety.
+        Test LogParser and PatternMatcher thread safety.
 
         Multiple threads perform pattern matching operations on the same
-        processor to ensure internal state management is thread-safe.
+        parser/matcher to ensure internal state management is thread-safe.
         """
-        from classic_scanlog.utils import LogProcessor
-
-        processor = LogProcessor()
+        parser = classic_scanlog.LogParser()
         patterns = ["ERROR", "WARNING", "INFO", "FormID", "Plugin"]
+        pattern_matcher = classic_scanlog.PatternMatcher(patterns)
 
-        # Initialize pattern matcher once
-        processor.init_pattern_matcher(patterns)
+        # Create test log content as list of lines (LogParser API expects list[str])
+        test_log_lines = [
+            "ERROR: System failure at 0x12345678",
+            "WARNING: Low memory condition",
+            "INFO: Processing started",
+            "FormID: 0xABCDEF01 found in plugin",
+            "Plugin: TestMod.esp loaded successfully",
+            "ERROR: Another error occurred",
+        ] * 20  # Multiply to create substantial content
 
-        # Create test log content
-        test_log = (
-            """
-        ERROR: System failure at 0x12345678
-        WARNING: Low memory condition
-        INFO: Processing started
-        FormID: 0xABCDEF01 found in plugin
-        Plugin: TestMod.esp loaded successfully
-        ERROR: Another error occurred
-        """
-            * 20
-        )  # Multiply to create substantial content
+        # Also create as single string for pattern matcher
+        test_log_text = "\n".join(test_log_lines)
 
         def concurrent_pattern_matching(thread_id: int, iteration: int, shared_data: dict):
             """Worker function for concurrent pattern matching."""
-            # Find all patterns in the log
-            matches = processor.find_all_patterns(test_log, patterns)
+            # Find all patterns in the log using PatternMatcher
+            matches = pattern_matcher.find_all(test_log_text)
 
-            # Extract FormIDs
-            formids = processor.extract_formids(test_log)
+            # Extract FormIDs using LogParser
+            formids = parser.extract_formids(test_log_lines)
 
-            # Extract plugins
-            plugins = processor.extract_plugins(test_log)
+            # Extract plugins using LogParser
+            plugins = parser.extract_plugins(test_log_lines)
 
             # Track results
             with threading.Lock():
@@ -317,14 +318,13 @@ class TestRaceConditionDetection:
         """
         # Create fresh message handler
         handler = MessageHandler()
-        Queue()
 
         def concurrent_logging_operation(thread_id: int, iteration: int, shared_data: list):
             """Worker function for concurrent message logging."""
             messages = [f"INFO: Thread {thread_id} iteration {iteration} message {i}" for i in range(5)]
 
             for message in messages:
-                handler.msg_info(message)
+                handler.info(message)
                 shared_data.append(message)
 
             return len(messages)
@@ -516,9 +516,9 @@ class TestHighContentionScenarios:
         Creates maximum concurrent load on Rust components to test
         stability and performance under extreme stress conditions.
         """
-        from classic_scanlog.utils import LogProcessor
-
-        processor = LogProcessor()
+        parser = classic_scanlog.LogParser()
+        patterns = ["ERROR", "WARNING", "FormID"]
+        pattern_matcher = classic_scanlog.PatternMatcher(patterns)
 
         # Generate challenging test data
         large_log_content = stress_data_generator.generate_large_crash_log(
@@ -526,6 +526,9 @@ class TestHighContentionScenarios:
             plugin_count=100,
             formid_count=1000,
         )
+
+        # Convert to list of lines for LogParser API
+        large_log_lines = large_log_content.split("\n") if isinstance(large_log_content, str) else large_log_content
 
         results_lock = Lock()
         processing_results = {"formid_counts": [], "plugin_counts": [], "processing_times": [], "errors": []}
@@ -535,13 +538,13 @@ class TestHighContentionScenarios:
             start_time = time.time()
 
             try:
-                # Perform multiple operations per thread
-                formids = processor.extract_formids(large_log_content)
-                plugins = processor.extract_plugins(large_log_content)
+                # Perform multiple operations per thread using LogParser
+                formids = parser.extract_formids(large_log_lines)
+                plugins = parser.extract_plugins(large_log_lines)
 
-                # Pattern matching
-                patterns = ["ERROR", "WARNING", "FormID"]
-                processor.find_all_patterns(large_log_content, patterns)
+                # Pattern matching using PatternMatcher
+                large_log_text = "\n".join(large_log_lines) if isinstance(large_log_lines, list) else large_log_lines
+                pattern_matcher.find_all(large_log_text)
 
                 processing_time = time.time() - start_time
 
@@ -603,17 +606,20 @@ class TestHighContentionScenarios:
                 large_strings = [f"Thread_{thread_id}_String_{iteration}_{i}" * 1000 for i in range(100)]  # ~100KB per thread
 
                 # Process with Rust components (internal memory allocation)
-                from classic_scanlog.utils import StringProcessor
+                string_pool = classic_scanlog.StringPool()
+                interned = string_pool.intern_batch(large_strings)
 
-                processor = StringProcessor()
-                processed = processor.process_batch(large_strings, "upper")
+                # Also test LogParser memory handling
+                parser = classic_scanlog.LogParser()
+                # Parse the strings as if they were log lines
+                parser.parse_segments(large_strings[:10])  # Use first 10 as sample
 
                 # Track allocation success
                 with allocation_lock:
                     allocation_stats["successful_allocations"] += 1
 
                 # Clean up
-                del large_strings, processed
+                del large_strings, interned, string_pool, parser
 
                 return 1
 

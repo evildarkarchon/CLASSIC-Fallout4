@@ -8,7 +8,7 @@ processing and Rust for batch parallelism.
 
 from collections import Counter
 from pathlib import Path
-from typing import Any
+from typing import Any, AsyncGenerator
 from unittest.mock import patch
 
 import pytest
@@ -115,7 +115,7 @@ PLUGINS:
         return mock_data
 
     @pytest.fixture
-    async def hybrid_orch(self, yamldata: Any, mock_rust_yaml_environment: Any) -> HybridOrchestrator:
+    async def hybrid_orch(self, yamldata: Any, mock_rust_yaml_environment: Any) -> AsyncGenerator[HybridOrchestrator, None]:
         """Create HybridOrchestrator instance with Rust YAML files available."""
         async with get_orchestrator(
             yamldata=yamldata,

@@ -60,6 +60,7 @@ class TestParseYaml:
 
         # Float
         result = yaml_ops.parse_yaml("3.14")
+        assert isinstance(result, float)
         assert abs(result - math.pi) < 0.002
 
         # String

@@ -14,6 +14,10 @@ Tests cover:
 - PyO3 integration and error handling
 """
 
+from __future__ import annotations
+
+from typing import Any
+
 import pytest
 
 try:
@@ -21,6 +25,7 @@ try:
 
     RUST_AVAILABLE = True
 except ImportError:
+    PatternMatcher: Any = None
     RUST_AVAILABLE = False
 
 
@@ -492,15 +497,15 @@ class TestPythonIntegration:
         matcher1 = PatternMatcher(["test"])
         assert matcher1.has_match("test")
 
-        # Tuple
-        matcher2 = PatternMatcher(("test",))
+        # Tuple (PyO3 accepts sequences, not just lists)
+        matcher2 = PatternMatcher(("test",))  # type: ignore[arg-type]
         assert matcher2.has_match("test")
 
     def test_error_handling_invalid_patterns(self):
         """Test error handling with invalid pattern types."""
         # Non-string pattern should raise error
         with pytest.raises((TypeError, ValueError)):
-            PatternMatcher([123, 456])
+            PatternMatcher([123, 456])  # type: ignore[list-item]
 
     def test_string_return_types(self):
         """Test that return values are proper Python strings."""

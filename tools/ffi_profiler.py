@@ -52,12 +52,11 @@ if TYPE_CHECKING:
 
 # Try to import memory profiler for advanced memory tracking
 try:
-    from memory_profiler import memory_usage
+    import memory_profiler  # noqa: F401
 
     MEMORY_PROFILER_AVAILABLE = True
 except ImportError:
     MEMORY_PROFILER_AVAILABLE = False
-    memory_usage = None
 
 logger = logging.getLogger(__name__)
 
@@ -371,7 +370,7 @@ class FFIProfiler:
                         if not name.startswith("_"):  # Skip private variables
                             input_size += self._get_data_size(value)
                             input_types.append(self._get_data_type(value))
-                except:
+                except Exception:  # noqa: BLE001
                     pass
 
                 # Store call start info in frame for retrieval on return

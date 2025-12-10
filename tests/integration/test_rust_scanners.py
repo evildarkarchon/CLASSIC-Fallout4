@@ -343,7 +343,7 @@ class TestRustXseChecker:
 
     def test_xse_checker_with_game_version(self, temp_dir):
         """Test XseChecker with explicit game version."""
-        game_version = scangame_factory._classic_scangame.GameVersion.NextGen
+        game_version = scangame_factory._classic_scangame.GameVersion.NextGen # pyright: ignore[reportOptionalMemberAccess]
 
         checker = scangame_factory.get_xse_checker(
             plugins_path=temp_dir,

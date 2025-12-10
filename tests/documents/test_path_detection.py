@@ -17,9 +17,10 @@ def init_message_handler_fixture():
     init_message_handler(parent=None, is_gui_mode=False)
     yield
     # Clean up the global message handler after tests
-    import ClassicLib.MessageHandler
+    # Import the handler submodule where _message_handler is defined
+    from ClassicLib.MessageHandler import handler as message_handler_module
 
-    ClassicLib.MessageHandler._message_handler = None
+    message_handler_module._message_handler = None
 
 
 class TestPathDetection:

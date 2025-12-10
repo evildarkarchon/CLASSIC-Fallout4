@@ -342,14 +342,14 @@ class PythonFileIO:
             path = self._ensure_path(path)
             try:
                 content = await self.read_file(path)
-            except OSError as e:
+            except (OSError, ValueError, UnicodeDecodeError) as e:
                 logger.error(f"Error reading {path}: {e}")
                 return path.name, ""
             else:
                 return path.name, content
 
         tasks = [read_single(path) for path in paths]
-        results = await asyncio.gather(*tasks)
+        results = await asyncio.gather(*tasks, return_exceptions=False)
         return dict(results)
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
@@ -376,11 +376,11 @@ class PythonFileIO:
             """
             try:
                 await self.write_file(path, content)
-            except OSError as e:
+            except (OSError, ValueError) as e:
                 logger.error(f"Error writing {path}: {e}")
 
         tasks = list(starmap(write_single, files.items()))
-        await asyncio.gather(*tasks)
+        await asyncio.gather(*tasks, return_exceptions=False)
 
     def file_exists(self, path: Path | str) -> bool:
         """

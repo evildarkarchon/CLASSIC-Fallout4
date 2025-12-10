@@ -290,3 +290,9 @@ class DatabasePool:
             >>> print(f"Cache hit rate: {stats['cache_hit_rate']}%")
             >>> print(f"Active connections: {stats['active_connections']}")
         """
+
+    async def optimize(self) -> None:
+        """Optimize database connections (VACUUM and ANALYZE).
+
+        Triggers database optimization routines to improve query performance.
+        """

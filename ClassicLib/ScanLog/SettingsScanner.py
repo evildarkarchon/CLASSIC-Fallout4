@@ -8,7 +8,7 @@ replacing the mutable list pattern with immutable fragment composition.
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:

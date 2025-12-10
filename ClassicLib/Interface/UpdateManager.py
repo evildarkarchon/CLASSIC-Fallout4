@@ -145,7 +145,7 @@ class UpdateManagerMixin:
 
         # Check if update check is already running
         if self.thread_manager.is_thread_running(ThreadType.UPDATE_CHECK):
-            QMessageBox.information(self, "Update Check", "An update check is already in progress.")
+            QMessageBox.information(self, "Update Check", "An update check is already in progress.") # pyright: ignore[reportArgumentType]
             return
 
         # Create new thread and worker for explicit check
@@ -195,11 +195,11 @@ class UpdateManagerMixin:
             is_up_to_date: A boolean value indicating whether the current version is up to date.
         """
         if is_up_to_date:
-            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)
+            QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok) # pyright: ignore[reportArgumentType]
         else:
             update_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
-                self,
+                self, # pyright: ignore[reportArgumentType]
                 "CLASSIC UPDATE",
                 update_popup_text,
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -221,7 +221,7 @@ class UpdateManagerMixin:
                 dialog.
         """
         QMessageBox.warning(
-            self,
+            self, # pyright: ignore[reportArgumentType]
             "Update Check Failed",
             f"Failed to check for updates: {error_message}",
             QMessageBox.StandardButton.NoButton,

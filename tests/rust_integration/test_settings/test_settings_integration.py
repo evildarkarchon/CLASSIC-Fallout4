@@ -6,11 +6,14 @@ Tests verify thread safety, cache operations, and Rust acceleration.
 
 import asyncio
 from pathlib import Path
+from typing import Any
 
 import pytest
 
+# Declare with Any type to satisfy static analysis while allowing dynamic import
+classic_settings: Any = None
 try:
-    import classic_settings
+    import classic_settings  # type: ignore[no-redef]
 
     RUST_AVAILABLE = True
 except ImportError:

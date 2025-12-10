@@ -71,7 +71,7 @@ class MessageType(IntEnum):
     Debug = 5
     Critical = 6
 
-    def name(self) -> str:
+    def name(self) -> str: # pyright: ignore[reportIncompatibleMethodOverride]
         """Gets the human-readable name of the message type.
 
         Returns:

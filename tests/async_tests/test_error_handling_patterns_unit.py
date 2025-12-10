@@ -52,7 +52,7 @@ class TestStandardErrorHandling:
             def register_callback(self, callback):
                 self.callbacks.append(callback)
 
-            async def handle_error(self, error: Exception, context: dict = None):
+            async def handle_error(self, error: Exception, context: dict | None = None):
                 for callback in self.callbacks:
                     if asyncio.iscoroutinefunction(callback):
                         await callback(error, context)
@@ -98,7 +98,7 @@ class TestRetryPatterns:
                         current_delay *= backoff
                     else:
                         raise
-            raise last_error
+            raise last_error # pyright: ignore[reportGeneralTypeIssues]
 
         attempt_count = 0
 
@@ -130,7 +130,7 @@ class TestRetryPatterns:
                             last_error = e
                             if attempt < max_attempts - 1:
                                 await asyncio.sleep(delay)
-                    raise last_error
+                    raise last_error # pyright: ignore[reportGeneralTypeIssues]
 
                 return wrapper
 

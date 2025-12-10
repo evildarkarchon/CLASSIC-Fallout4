@@ -123,7 +123,7 @@ class TestAsyncPerformancePipeline:
                 mock_orch.return_value.__aexit__.return_value = None
 
                 start = time.perf_counter()
-                _, stats = await pipeline.process_crash_logs_async(test_files)
+                _, stats = await pipeline.process_crash_logs_async(test_files, ())
                 total_time = time.perf_counter() - start
 
                 results.append({

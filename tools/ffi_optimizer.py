@@ -334,8 +334,9 @@ class BatchProcessor:
             self._batch_futures[operation_key].clear()
 
             # Cancel the timer
-            if self._batch_timers.get(operation_key):
-                self._batch_timers[operation_key].cancel()
+            timer = self._batch_timers.get(operation_key)
+            if timer is not None:
+                timer.cancel()
                 self._batch_timers[operation_key] = None
 
         if not items:
@@ -405,8 +406,8 @@ class BatchProcessor:
 
         def decorator(batch_func: Callable[[list[T]], list[R]]) -> Callable[[T], asyncio.Future[R]]:
             nonlocal operation_key
-            if operation_key is None:
-                operation_key = f"{batch_func.__module__}.{batch_func.__name__}"
+            # Ensure operation_key is always a string
+            resolved_key: str = operation_key if operation_key is not None else f"{batch_func.__module__}.{batch_func.__name__}"
 
             # Override batch processor settings if specified
             if batch_size is not None:
@@ -416,11 +417,11 @@ class BatchProcessor:
 
             @functools.wraps(batch_func)
             def wrapper(item: T) -> asyncio.Future[R]:
-                return self.batch_call(operation_key, batch_func, item)
+                return self.batch_call(resolved_key, batch_func, item)
 
             # Add batch processing method
-            wrapper.process_batch = batch_func
-            wrapper.flush_pending = lambda: self._flush_batch(operation_key, batch_func)
+            wrapper.process_batch = batch_func  # type: ignore[attr-defined]
+            wrapper.flush_pending = lambda: self._flush_batch(resolved_key, batch_func)  # type: ignore[attr-defined]
 
             return wrapper
 
@@ -541,7 +542,7 @@ class DataOptimizer:
                 data = list(data)
             elif opt == "string_to_bytes":
                 encoding = metadata.get("encoding", "utf-8")
-                data = data.decode(encoding)
+                data = data.decode(encoding) # pyright: ignore[reportAttributeAccessIssue]
             elif opt == "dict_to_arrays":
                 if isinstance(data, dict) and data.get("__optimized_dict__"):
                     keys = data["keys"]
@@ -553,7 +554,8 @@ class DataOptimizer:
                 import zlib
 
                 encoding = metadata.get("encoding", "utf-8")
-                data = zlib.decompress(data).decode(encoding)
+                if isinstance(data, (bytes, bytearray)):
+                    data = zlib.decompress(data).decode(encoding)
 
         return data
 
@@ -674,7 +676,7 @@ class FFIOptimizer:
         return baseline_profiler, optimized_profiler
 
     def optimize_function(
-        self, func: Callable, cache_ttl: float | None = None, batch_key: str | None = None, enable_data_opt: bool = None
+        self, func: Callable, cache_ttl: float | None = None, batch_key: str | None = None, enable_data_opt: bool | None = None
     ) -> Callable:
         """
         Apply all available optimizations to a function.
@@ -695,6 +697,8 @@ class FFIOptimizer:
 
         # Apply data optimization wrapper
         if enable_data_opt and self.data_optimizer:
+            # Capture data_optimizer in closure to avoid None checks inside function
+            data_opt = self.data_optimizer
 
             def data_optimized_func(*args, **kwargs):
                 # Optimize input arguments
@@ -702,7 +706,7 @@ class FFIOptimizer:
                 arg_metadata = []
 
                 for arg in args:
-                    opt_arg, metadata = self.data_optimizer.optimize_for_rust_transfer(arg)
+                    opt_arg, metadata = data_opt.optimize_for_rust_transfer(arg)
                     optimized_args.append(opt_arg)
                     arg_metadata.append(metadata)
 
@@ -721,18 +725,19 @@ class FFIOptimizer:
 
         # Apply batching wrapper (for async operations)
         if self.enable_batching and self.batch_processor:
-            if batch_key is None:
-                batch_key = f"{func.__module__}.{func.__name__}"
+            # Capture batch_processor in closure to avoid None checks inside lambda
+            batch_proc = self.batch_processor
+            resolved_batch_key = batch_key if batch_key is not None else f"{func.__module__}.{func.__name__}"
 
             # This creates a batched version - caller needs to handle async results
-            def create_batch_func(items):
+            def create_batch_func(items: list) -> list:
                 return [optimized_func(item) for item in items]
 
-            batched_func = self.batch_processor.batch_operation(batch_key)(create_batch_func)
+            batched_func = batch_proc.batch_operation(resolved_batch_key)(create_batch_func)
 
             # Provide both sync and async versions
-            optimized_func.batch_async = batched_func
-            optimized_func.flush_batches = lambda: self.batch_processor._flush_batch(batch_key, create_batch_func)
+            optimized_func.batch_async = batched_func  # type: ignore[attr-defined]
+            optimized_func.flush_batches = lambda: batch_proc._flush_batch(resolved_batch_key, create_batch_func)  # type: ignore[attr-defined]
 
         return optimized_func
 

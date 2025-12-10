@@ -22,7 +22,7 @@ from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names
 from ClassicLib.ScanLog.RecordScanner import RecordScanner
@@ -209,7 +209,7 @@ class OrchestratorCore:
         composer = ReportComposer()
 
         # Generate report header
-        composer.add(self.report_generator.generate_header(crashlog_file.name))
+        composer.add(self.report_generator.generate_header(crashlog_file.name))  # pyright: ignore[reportArgumentType]
 
         # Parse crash log segments using Rust acceleration if available
         parser = get_parser()
@@ -250,7 +250,7 @@ class OrchestratorCore:
         composer.add(section_fragments)
 
         # Generate footer
-        composer.add(self.report_generator.generate_footer())
+        composer.add(self.report_generator.generate_footer())  # pyright: ignore[reportArgumentType]
 
         # Convert final composed fragment to list
         autoscan_report = composer.to_list()
@@ -309,7 +309,7 @@ class OrchestratorCore:
         composer.add(
             self.report_generator.generate_error_section(
                 crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr
-            )
+            )  # pyright: ignore[reportArgumentType]
         )
 
         # Extract module names
@@ -406,19 +406,19 @@ class OrchestratorCore:
             conflict_fragment = ConditionalSection.with_header(
                 lambda: detect_mods_double(self.yamldata.game_mods_conf, crashlog_plugins_lower), "CONFLICT (TOGETHER)"
             )
-            composer.add(conflict_fragment)
+            composer.add(conflict_fragment)  # pyright: ignore[reportArgumentType]
 
             # Check for frequently problematic mods with conditional header
             freq_fragment = ConditionalSection.with_header(
                 lambda: detect_mods_single(self.yamldata.game_mods_freq, crashlog_plugins_lower), "FREQUENTLY CRASH"
             )
-            composer.add(freq_fragment)
+            composer.add(freq_fragment)  # pyright: ignore[reportArgumentType]
 
             # Check for mods with known solutions with conditional header
             solution_fragment = ConditionalSection.with_header(
                 lambda: detect_mods_single(self.yamldata.game_mods_solu, crashlog_plugins_lower), "HAVE SOLUTIONS"
             )
-            composer.add(solution_fragment)
+            composer.add(solution_fragment)  # pyright: ignore[reportArgumentType]
 
             # Check FOLON-specific mods if Fallout: London is loaded
             is_folon_loaded = any("londonworldspace.esm" in plugin_name for plugin_name in crashlog_plugins_lower)
@@ -438,7 +438,7 @@ class OrchestratorCore:
                 lambda: detect_mods_single(self.yamldata.game_mods_opc2, crashlog_plugins_lower),
                 "ARE OUTDATED, REDUNDANT, OR HAVE COMMUNITY PATCHES",
             )
-            composer.add(opc2_fragment)
+            composer.add(opc2_fragment)  # pyright: ignore[reportArgumentType]
 
         # Plugin suspect scanning (plugins found in crash stack)
         if trigger_plugins_loaded and crashlog_plugins_lower:
@@ -453,12 +453,12 @@ class OrchestratorCore:
                 header_text=None,  # plugin_match has its own header logic
                 header_generator=self.report_generator.generate_plugin_suspect_header,
             )
-            composer.add(plugin_fragment)
+            composer.add(plugin_fragment)  # pyright: ignore[reportArgumentType]
 
         # Use async FormID analyzer if available
         if self._async_formid_analyzer and self._last_formids:
             # Add FormID section header and results
-            composer.add(self.report_generator.generate_formid_section_header())
+            composer.add(self.report_generator.generate_formid_section_header())  # pyright: ignore[reportArgumentType]
             formid_fragment = await self._async_formid_analyzer.formid_match(self._last_formids, crashlog_plugins)
             composer.add(formid_fragment)
 
@@ -486,7 +486,7 @@ class OrchestratorCore:
         composer = ReportComposer()
 
         # Add suspect section header
-        composer.add(self.report_generator.generate_suspect_section_header())
+        composer.add(self.report_generator.generate_suspect_section_header())  # pyright: ignore[reportArgumentType]
 
         # Scan main error for suspects
         main_error_fragment, found_main_suspect = self.suspect_scanner.suspect_scan_mainerror(crashlog_mainerror, 50)
@@ -503,7 +503,7 @@ class OrchestratorCore:
 
         # Add suspect footer based on whether any suspects were found
         found_suspect = found_main_suspect or found_stack_suspect
-        composer.add(self.report_generator.generate_suspect_found_footer(found_suspect))
+        composer.add(self.report_generator.generate_suspect_found_footer(found_suspect))  # pyright: ignore[reportArgumentType]
 
         return composer.build()
 
@@ -534,7 +534,7 @@ class OrchestratorCore:
         composer.add(self.fcx_handler.get_fcx_messages())
 
         # Add settings section header
-        composer.add(self.report_generator.generate_settings_section_header())
+        composer.add(self.report_generator.generate_settings_section_header())  # pyright: ignore[reportArgumentType]
 
         # Scan settings with required mod detection
         # Check for X-Cell and Baka ScrapHeap mods for memory management settings
@@ -567,7 +567,7 @@ class OrchestratorCore:
         composer = ReportComposer()
 
         # Add section header
-        composer.add(self.report_generator.generate_record_section_header())
+        composer.add(self.report_generator.generate_record_section_header())  # pyright: ignore[reportArgumentType]
 
         # Scan for named records
         record_fragment, _ = self.record_scanner.scan_named_records(segment_callstack)

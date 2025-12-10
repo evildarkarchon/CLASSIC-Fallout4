@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any
 import regex as re
 from packaging.version import Version
 
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:

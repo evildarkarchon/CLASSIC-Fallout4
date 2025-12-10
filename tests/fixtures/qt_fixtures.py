@@ -1,8 +1,14 @@
 """Qt/PySide6 fixtures for GUI testing."""
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock
 
 import pytest
+
+if TYPE_CHECKING:
+    from ClassicLib.MessageHandler.qt_handler import QtMessageHandler
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -116,29 +122,33 @@ def gui_message_handler(qt_parent_widget):
     which affects how messages are displayed (dialogs vs console).
     Messages are mocked to prevent blocking dialogs during tests.
     """
-    import ClassicLib.MessageHandler
+    from ClassicLib.MessageHandler import handler as _handler_module
     from ClassicLib.MessageHandler import init_message_handler
 
-    # Store any existing handler
-    old_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+    # Store any existing handler from the actual module where it's defined
+    old_handler = getattr(_handler_module, "_message_handler", None)
 
     try:
         # Initialize in GUI mode with parent widget
+        # Note: init_message_handler returns QtMessageHandler when is_gui_mode=True
         handler = init_message_handler(parent=qt_parent_widget, is_gui_mode=True)
 
         # Mock the GUI backend's show method to prevent blocking QMessageBox.exec()
         # The _gui_backend.show() method emits a signal that triggers _handle_message()
         # which calls msg_box.exec() - a blocking modal dialog
-        handler._gui_backend.show = MagicMock()
+        # Use hasattr check since base MessageHandler doesn't have _gui_backend
+        if hasattr(handler, "_gui_backend"):
+            qt_handler: QtMessageHandler = handler  # type: ignore[assignment]
+            qt_handler._gui_backend.show = MagicMock()
 
         yield handler
     finally:
         # Restore previous state or clean up
-        ClassicLib.MessageHandler._message_handler = old_handler
+        _handler_module._message_handler = old_handler
 
         # Clear any cached references
-        if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
-            delattr(ClassicLib.MessageHandler, "_cached_handler")
+        if hasattr(_handler_module, "_cached_handler"):
+            delattr(_handler_module, "_cached_handler")
 
 
 @pytest.fixture(scope="function")
@@ -155,10 +165,10 @@ def mock_qt_dialogs(monkeypatch):
 
     # Mock QMessageBox methods
     mock_msgbox = MagicMock()
-    mock_msgbox.information = MagicMock(return_value=QMessageBox.Ok)
-    mock_msgbox.warning = MagicMock(return_value=QMessageBox.Ok)
-    mock_msgbox.critical = MagicMock(return_value=QMessageBox.Ok)
-    mock_msgbox.question = MagicMock(return_value=QMessageBox.Yes)
+    mock_msgbox.information = MagicMock(return_value=QMessageBox.Ok) # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.warning = MagicMock(return_value=QMessageBox.Ok) # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.critical = MagicMock(return_value=QMessageBox.Ok) # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.question = MagicMock(return_value=QMessageBox.Yes) # pyright: ignore[reportAttributeAccessIssue]
 
     monkeypatch.setattr(QMessageBox, "information", mock_msgbox.information)
     monkeypatch.setattr(QMessageBox, "warning", mock_msgbox.warning)

@@ -237,4 +237,13 @@ impl PyDatabasePool {
 
         Ok(result)
     }
+
+    /// Optimize database connections (VACUUM/ANALYZE)
+    ///
+    /// Returns a Python coroutine - use with await in Python.
+    #[pyo3(name = "optimize")]
+    pub fn py_optimize<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+        future_into_py(py, async move { inner.optimize().await.map_err(to_pyerr) })
+    }
 }

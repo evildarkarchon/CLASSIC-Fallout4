@@ -17,7 +17,7 @@ def normalize_list(items: list[str]) -> list[str]:
     return [item.lower() for item in items]
 
 
-def append_or_extend(value: str | int | float | list | tuple | set, destination: list[str]) -> None:
+def append_or_extend(value: str | int | float | list | tuple | set | None, destination: list[str]) -> None:
     """
     Appends or extends a destination list with the string representation of a given value.
 

@@ -25,7 +25,7 @@ class TestSettingsApplication:
     def test_vr_mode_setting_propagation(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test that VR mode setting can be accessed by other components."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        dialog.vr_checkbox.setChecked(True)
+        dialog.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
         dialog.close()
         vr_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
@@ -34,8 +34,8 @@ class TestSettingsApplication:
     def test_update_settings_propagation(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test that update settings propagate correctly."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        dialog.update_check_checkbox.setChecked(True)
-        dialog.update_source_combo.setCurrentText("GitHub")
+        dialog.update_check_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        dialog.update_source_combo.setCurrentText("GitHub")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
         dialog.close()
         update_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Update Check")
@@ -50,27 +50,27 @@ class TestMultipleDialogs:
     def test_sequential_dialogs(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test opening dialogs sequentially."""
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.fcx_checkbox.setChecked(True)
+        dialog1.fcx_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.accept()
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog2.fcx_checkbox.isChecked()
+        assert dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog2.close()
 
     def test_independent_dialog_states(self, app, gui_message_handler):
         """Test that dialog instances maintain independent states."""
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.vr_checkbox.setChecked(True)
-        dialog1.fcx_checkbox.setChecked(True)
-        dialog2.vr_checkbox.setChecked(False)
-        dialog2.simplify_checkbox.setChecked(True)
-        assert dialog1.vr_checkbox.isChecked()
-        assert dialog1.fcx_checkbox.isChecked()
-        assert not dialog1.simplify_checkbox.isChecked()
-        assert not dialog2.vr_checkbox.isChecked()
-        assert not dialog2.fcx_checkbox.isChecked()
-        assert dialog2.simplify_checkbox.isChecked()
+        dialog1.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        dialog1.fcx_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        dialog2.vr_checkbox.setChecked(False)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        dialog2.simplify_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert dialog1.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert dialog1.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert not dialog1.simplify_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert not dialog2.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert not dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert dialog2.simplify_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.close()
         dialog2.close()
 
@@ -81,7 +81,7 @@ class TestSettingsImpact:
     def test_simplify_logs_impact(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test that simplify logs setting has expected impact."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        dialog.simplify_checkbox.setChecked(True)
+        dialog.simplify_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
         simplify_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")
         assert simplify_enabled is True
@@ -90,8 +90,8 @@ class TestSettingsImpact:
     def test_vr_mode_impact(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test that VR mode setting has expected impact."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        original = dialog.vr_checkbox.isChecked()
-        dialog.vr_checkbox.setChecked(not original)
+        original = dialog.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        dialog.vr_checkbox.setChecked(not original)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
         new_value = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
         assert new_value != original
@@ -103,6 +103,6 @@ class TestErrorHandling:
 
     def test_invalid_yaml_store(self, app, gui_message_handler):
         """Test dialog handles invalid YAML store gracefully."""
-        dialog = SettingsDialog(yaml_store=None)
+        dialog = SettingsDialog(yaml_store=None)  # pyright: ignore[reportArgumentType]
         assert dialog is not None
         dialog.close()

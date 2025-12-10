@@ -129,7 +129,7 @@ class TestBatchProcessEdgeCases:
         items = [1, 2, 3]
 
         with pytest.raises((TypeError, AttributeError)):
-            await batch_process(items, None, batch_size=2)
+            await batch_process(items, None, batch_size=2)  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_with_zero_batch_size(self):
@@ -335,7 +335,7 @@ class TestRunWithTimeoutEdgeCases:
         """Should handle None as coroutine."""
         with pytest.raises((TypeError, AttributeError)):
             # run_with_timeout doesn't take 'timeout' kwarg, it's positional
-            wrapper = run_with_timeout(None, 1.0)
+            wrapper = run_with_timeout(None, 1.0)  # type: ignore[arg-type]
             await wrapper()
 
     @pytest.mark.asyncio
@@ -347,7 +347,7 @@ class TestRunWithTimeoutEdgeCases:
 
         # Should raise or handle gracefully
         with pytest.raises((TypeError, RuntimeError)):
-            wrapper = run_with_timeout(sync_func, 1.0)
+            wrapper = run_with_timeout(sync_func, 1.0)  # type: ignore[arg-type]
             await wrapper()
 
     @pytest.mark.asyncio
@@ -409,7 +409,7 @@ class TestAsyncMapEdgeCases:
     async def test_with_none_function(self):
         """Should handle None as function."""
         with pytest.raises((TypeError, AttributeError)):
-            await async_map(None, [1, 2, 3])
+            await async_map(None, [1, 2, 3])  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_with_generator_items(self):
@@ -456,14 +456,14 @@ class TestAsyncFilterEdgeCases:
         async def predicate(x):
             return True
 
-        results = await async_filter(predicate, [])
+        results = await async_filter(predicate, [])  # type: ignore[arg-type]
         assert results == []
 
     @pytest.mark.asyncio
     async def test_with_none_predicate(self):
         """Should handle None as predicate."""
         with pytest.raises((TypeError, AttributeError)):
-            await async_filter(None, [1, 2, 3])
+            await async_filter(None, [1, 2, 3])  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_predicate_returns_non_boolean(self):
@@ -473,7 +473,7 @@ class TestAsyncFilterEdgeCases:
             # Return truthy/falsy values instead of bool
             return x if x % 2 == 0 else 0
 
-        results = await async_filter(truthy_predicate, [1, 2, 3, 4, 5])
+        results = await async_filter(truthy_predicate, [1, 2, 3, 4, 5])  # type: ignore[arg-type]
         # 2 and 4 return truthy values
         assert results == [2, 4]
 
@@ -487,7 +487,7 @@ class TestAsyncFilterEdgeCases:
             return x % 2 == 0
 
         with pytest.raises(ValueError, match="Cannot check 3"):
-            await async_filter(failing_predicate, [1, 2, 3, 4])
+            await async_filter(failing_predicate, [1, 2, 3, 4])  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_with_set_input(self):
@@ -497,7 +497,7 @@ class TestAsyncFilterEdgeCases:
             return x % 2 == 0
 
         items_set = {1, 2, 3, 4, 5}
-        results = await async_filter(is_even, items_set)
+        results = await async_filter(is_even, items_set)  # type: ignore[arg-type]
         assert set(results) == {2, 4}
 
 
@@ -619,7 +619,7 @@ class TestRunInExecutorEdgeCases:
     async def test_with_none_function(self):
         """Should handle None as function."""
         with pytest.raises((TypeError, AttributeError)):
-            await run_in_executor(None, 1, 2)
+            await run_in_executor(None, 1, 2)  # type: ignore[arg-type]
 
     @pytest.mark.asyncio
     async def test_with_exception_in_function(self):
@@ -671,7 +671,7 @@ class TestAsyncLazyLoaderEdgeCases:
     @pytest.mark.asyncio
     async def test_with_none_loader(self):
         """Should handle None as loader function."""
-        loader = AsyncLazyLoader(None)
+        loader = AsyncLazyLoader(None)  # type: ignore[arg-type]
 
         with pytest.raises((TypeError, AttributeError)):
             await loader.get()

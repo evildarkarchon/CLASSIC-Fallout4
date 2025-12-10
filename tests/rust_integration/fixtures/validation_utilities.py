@@ -357,17 +357,19 @@ class ValidationUtilities:
                         comparison["differences"].append(f"{key}: similarity {similarity:.2f} < threshold {1.0 - tolerance:.2f}")
                         comparison["overall_match"] = False
                 else:
+                    similarity = 1.0
                     matches += 1  # Both empty
 
                 comparison["statistics"][key] = {
                     "rust_count": len(rust_value),
                     "python_count": len(python_value),
                     "common_items": len(intersection),
-                    "similarity": similarity if union else 1.0,
+                    "similarity": similarity,
                 }
 
             elif isinstance(rust_value, (int, float)) and isinstance(python_value, (int, float)):
                 # Compare numbers
+                relative_diff = 0.0
                 if rust_value == 0 and python_value == 0:
                     matches += 1
                 elif rust_value != 0:
@@ -381,12 +383,13 @@ class ValidationUtilities:
                     # rust_value is 0 but python_value is not
                     comparison["differences"].append(f"{key}: rust=0, python={python_value}")
                     comparison["overall_match"] = False
+                    relative_diff = float("inf")
 
                 comparison["statistics"][key] = {
                     "rust_value": rust_value,
                     "python_value": python_value,
                     "absolute_diff": abs(rust_value - python_value),
-                    "relative_diff": relative_diff if rust_value != 0 else float("inf"),
+                    "relative_diff": relative_diff,
                 }
 
             # Direct comparison
@@ -403,7 +406,9 @@ class ValidationUtilities:
 
     @staticmethod
     def validate_performance_results(
-        benchmark_results: dict[str, Any], expected_targets: dict[str, float], performance_multipliers: dict[str, str] = None
+        benchmark_results: dict[str, Any],
+        expected_targets: dict[str, float],
+        performance_multipliers: dict[str, str] | None = None,
     ) -> dict[str, Any]:
         """
         Validate performance benchmark results against expected targets.

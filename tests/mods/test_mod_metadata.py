@@ -5,8 +5,8 @@ from typing import Any
 
 import pytest
 
+from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.DetectMods import detect_mods_important
-from ClassicLib.ScanLog.fragments import ReportFragment
 
 
 class TestImportantModDetection:
@@ -79,7 +79,7 @@ class TestImportantModDetection:
         yaml_dict: dict[str, str] = {"mod1 | Important Mod": "This is an important mod"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
 
-        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None, set())
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None, set())  # pyright: ignore[reportAssignmentType]
 
         assert result.has_content
         # The actual output contains newlines and formatting, so check the entire output

@@ -78,7 +78,7 @@ class TestAsyncFileWriting:
         }
 
         # Write all files
-        await io_core.write_multiple_files(files_to_write)
+        await io_core.write_multiple_files(files_to_write)  # pyright: ignore[reportArgumentType, reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         # Verify all files were written
         for path, expected_content in files_to_write.items():

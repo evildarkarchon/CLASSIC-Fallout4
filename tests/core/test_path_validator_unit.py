@@ -40,7 +40,7 @@ class TestPathValidator:
 
     def test_is_valid_path_none(self) -> None:
         """Test is_valid_path with None value."""
-        assert PathValidator.is_valid_path(None) is False
+        assert PathValidator.is_valid_path(None) is False # pyright: ignore[reportArgumentType]
 
     @patch("ClassicLib.ScanLog.Util.is_valid_custom_scan_path")
     @patch("ClassicLib.PathValidator._HAS_RUST_PATH", False)

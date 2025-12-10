@@ -71,6 +71,8 @@ dev = [
     "pyright>=1.1.405",
     "hypothesis>=6.140.2",
     "pytest-benchmark>=5.2.3",
+    "python-memory-profiler>=0.4.4",
+    "scipy>=1.16.3",
 ]
 
 [tool.uv]

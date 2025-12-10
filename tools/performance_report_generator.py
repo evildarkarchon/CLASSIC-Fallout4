@@ -125,7 +125,7 @@ class PerformanceReportGenerator:
 
             try:
                 # Run benchmark script and capture output
-                result_file = self.output_dir / f"{script_name.stem}_results.json"
+                result_file = self.output_dir / f"{script_path.stem}_results.json"
                 cmd = [sys.executable, str(script_path), "--output", str(result_file)]
 
                 subprocess.run(cmd, cwd=str(self.project_root), check=True)
@@ -134,18 +134,18 @@ class PerformanceReportGenerator:
                 if result_file.exists():
                     with Path(result_file).open() as f:
                         script_results = json.load(f)
-                    results[script_name.stem] = script_results
+                    results[script_path.stem] = script_results
                     self.log(f"✅ {description} completed successfully")
                 else:
                     self.log(f"⚠️ No results file generated for {script_name}", "WARNING")
-                    results[script_name.stem] = {"error": "No results file generated"}
+                    results[script_path.stem] = {"error": "No results file generated"}
 
             except subprocess.CalledProcessError as e:
                 self.log(f"❌ {description} failed: {e}", "ERROR")
-                results[script_name.stem] = {"error": f"Script execution failed: {e}"}
+                results[script_path.stem] = {"error": f"Script execution failed: {e}"}
             except Exception as e:
                 self.log(f"❌ Unexpected error running {description}: {e}", "ERROR")
-                results[script_name.stem] = {"error": f"Unexpected error: {e}"}
+                results[script_path.stem] = {"error": f"Unexpected error: {e}"}
 
         self.log(f"Benchmark suite completed: {len(results)} scripts executed")
         return results
