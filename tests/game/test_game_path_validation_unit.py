@@ -37,7 +37,7 @@ class TestXSELogParsing:
                 with patch("ClassicLib.GamePath._game_path_find_registry", return_value=None):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=False):
                         with patch("builtins.input", return_value="C:/Games/Fallout4"):
-                            with patch("ClassicLib.Util.validate_path", return_value=(True, "")):
+                            with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(True, "")):
                                 with patch("pathlib.Path.is_dir", return_value=True):
                                     with patch("pathlib.Path.is_file", return_value=True):
                                         with patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache"):
@@ -62,7 +62,7 @@ class TestXSELogParsing:
                 with patch("ClassicLib.GamePath._game_path_find_registry", return_value=None):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=False):
                         with patch("builtins.input", return_value="C:/Games/Fallout4"):
-                            with patch("ClassicLib.Util.validate_path", return_value=(True, "")):
+                            with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(True, "")):
                                 with patch("pathlib.Path.is_dir", return_value=True):
                                     with patch("pathlib.Path.is_file", return_value=True):
                                         with patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache"):

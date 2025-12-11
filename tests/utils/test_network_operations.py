@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import requests
 
-from ClassicLib.Util import pastebin_fetch
+from ClassicLib.Utils.web_utils import pastebin_fetch
 
 # Message handler fixture is imported via conftest automatically
 

@@ -39,7 +39,7 @@ class TestBackupDirectoryCreation:
 class TestBackupFilesOperation:
     """Tests for backup file operations."""
 
-    @patch("ClassicLib.Util.validate_path")
+    @patch("ClassicLib.Utils.path_utils.validate_path")
     @patch("shutil.copy2")
     def test_backup_files_success(
         self, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, test_game_dir: Path, monkeypatch
@@ -51,7 +51,7 @@ class TestBackupFilesOperation:
         manager.backup_files(str(test_game_dir), backup_list, "0.6.23")
         assert mock_copy.call_count == 3
 
-    @patch("ClassicLib.Util.validate_path")
+    @patch("ClassicLib.Utils.path_utils.validate_path")
     @patch("ClassicLib.BackupManager.logger")
     def test_backup_files_invalid_source(self, mock_logger: MagicMock, mock_validate: MagicMock, manager: BackupManager) -> None:
         """Test backup when source directory is invalid."""

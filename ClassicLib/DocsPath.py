@@ -25,7 +25,7 @@ from ClassicLib.FileIO import append_file_sync, read_lines_sync, write_file_sync
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Logger import logger
-from ClassicLib.Util import remove_readonly
+from ClassicLib.Utils.path_utils import remove_readonly
 from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 # Get Rust module if available, None otherwise
@@ -131,7 +131,7 @@ class DocumentsPathManager:
         logger.debug("- - - INITIATED DOCS PATH CHECK")
 
         from ClassicLib.ResourceLoader import ResourceLoader
-        from ClassicLib.Util import validate_path
+        from ClassicLib.Utils.path_utils import validate_path
 
         # First, check if we have a cached docs path (for uvx compatibility)
         cached_path = ResourceLoader.get_cached_docs_path()

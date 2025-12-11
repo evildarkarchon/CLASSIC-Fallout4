@@ -14,7 +14,8 @@ from pathlib import Path
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
-from ClassicLib.Util import normalize_list, open_file_with_encoding
+from ClassicLib.Utils.file_utils import open_file_with_encoding
+from ClassicLib.Utils.string_utils import normalize_list
 
 
 class BackupManager:
@@ -146,7 +147,7 @@ class BackupManager:
         backup_path = self.create_backup_directory(version)
 
         # Validate source directory
-        from ClassicLib.Util import validate_path
+        from ClassicLib.Utils.path_utils import validate_path
 
         is_valid, error_msg = validate_path(source_dir, check_write=False, check_read=True)
         if not is_valid:

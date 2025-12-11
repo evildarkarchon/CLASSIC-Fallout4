@@ -40,7 +40,7 @@ class TestPathDetection:
             mock_resource_loader.get_cached_docs_path.return_value = None  # No cached path
             mock_resource_loader.save_path_to_cache.return_value = None
 
-            with patch("ClassicLib.Util.validate_path", return_value=(True, "")):  # noqa: SIM117
+            with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(True, "")):  # noqa: SIM117
                 with patch("pathlib.Path.is_dir", return_value=True):
                     with patch.object(manager, "_update_game_setting") as mock_update:
                         manager.find_docs_path()

@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Util import validate_path
+from ClassicLib.Utils.path_utils import validate_path
 
 
 class TestPathUtilities:

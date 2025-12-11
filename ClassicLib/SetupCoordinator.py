@@ -23,7 +23,7 @@ from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Logger import logger
 from ClassicLib.PathValidator import PathValidator
 from ClassicLib.ResourceLoader import ResourceLoader
-from ClassicLib.Util import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 
 if TYPE_CHECKING:

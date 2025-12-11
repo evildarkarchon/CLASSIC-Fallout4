@@ -8,7 +8,7 @@ duplicate detection that matches the Rust interface.
 from collections import defaultdict
 from pathlib import Path
 
-from ClassicLib.Util import calculate_file_hash
+from ClassicLib.Utils.file_utils import calculate_file_hash
 
 
 class DuplicateGroup:

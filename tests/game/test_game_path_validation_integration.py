@@ -34,7 +34,7 @@ class TestXSELogParsing:
                 "Game_Info.Docs_File_XSE": str(xse_log),
                 "Game_VR_Info.Docs_File_XSE": str(xse_log),
             }.get(key)
-            with patch("ClassicLib.Util.validate_path", return_value=(True, "")):
+            with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(True, "")):
                 with patch("pathlib.Path.is_dir", return_value=True):
                     with patch("pathlib.Path.is_file", return_value=True):
                         game_path_find()
@@ -76,7 +76,7 @@ class TestManualPathInput:
                 with patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache"):
                     with patch("ClassicLib.GamePath._game_path_find_registry", return_value=None):
                         with patch.object(GlobalRegistry, "is_gui_mode", return_value=False):
-                            with patch("ClassicLib.Util.validate_path", side_effect=[(True, ""), (True, "")]):
+                            with patch("ClassicLib.Utils.path_utils.validate_path", side_effect=[(True, ""), (True, "")]):
                                 with patch("pathlib.Path.is_dir", return_value=True):
                                     with patch("pathlib.Path.is_file", side_effect=[True, False, True]):
                                         with patch("ClassicLib.GamePath.open_file_with_encoding") as mock_open:
@@ -122,7 +122,8 @@ class TestManualPathInput:
                     with patch("ClassicLib.GamePath._game_path_find_registry", return_value=None):
                         with patch.object(GlobalRegistry, "is_gui_mode", return_value=False):
                             with patch(
-                                "ClassicLib.Util.validate_path", side_effect=[(True, ""), (False, "Path does not exist"), (True, "")]
+                                "ClassicLib.Utils.path_utils.validate_path",
+                                side_effect=[(True, ""), (False, "Path does not exist"), (True, "")],
                             ):
                                 with patch("pathlib.Path.is_dir", side_effect=[True, False, True]):
                                     with patch("pathlib.Path.is_file", side_effect=[True, False, True]):
@@ -170,7 +171,7 @@ class TestManualPathInput:
                 with patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache"):
                     with patch("ClassicLib.GamePath._game_path_find_registry", return_value=None):
                         with patch.object(GlobalRegistry, "is_gui_mode", return_value=False):
-                            with patch("ClassicLib.Util.validate_path", side_effect=[(True, ""), (True, ""), (True, "")]):
+                            with patch("ClassicLib.Utils.path_utils.validate_path", side_effect=[(True, ""), (True, ""), (True, "")]):
                                 with patch("pathlib.Path.is_dir", return_value=True):
                                     # First: XSE file exists, then check exe (doesn't exist), then check exe again (exists)
                                     with patch("pathlib.Path.is_file", side_effect=[True, False, True]):

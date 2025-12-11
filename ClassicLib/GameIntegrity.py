@@ -9,7 +9,7 @@ from pathlib import Path
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
-from ClassicLib.Util import calculate_file_hash
+from ClassicLib.Utils.file_utils import calculate_file_hash
 
 
 class GameIntegrityChecker:

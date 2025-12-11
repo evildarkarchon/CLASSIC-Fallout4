@@ -83,6 +83,7 @@ class TestGameVersionDetection:
 
         version = get_game_version(test_exe)
         assert version == expected_version
+        mock_pe_header.assert_called_once_with(test_exe)
 
     def test_get_game_version_empty_file(self, tmp_path: Path) -> None:
         """Test get_game_version with empty executable file."""

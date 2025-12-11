@@ -426,7 +426,7 @@ class ClassicBackend(QObject):
         Note:
             Emits scanFinished on success or scanError on failure.
         """
-        from ClassicLib.Util import pastebin_fetch_async
+        from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 
         async def do_fetch() -> None:
             await pastebin_fetch_async(url_or_id)

@@ -75,7 +75,7 @@ class PastebinFetchWorker(QObject):
 
             import aiohttp
 
-            from ClassicLib.Util import pastebin_fetch_async
+            from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 
             # Create and run async event loop
             loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()

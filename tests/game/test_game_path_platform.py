@@ -39,7 +39,7 @@ class TestMultiPlatformSupport:
         }
         with patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path", return_value=None):
             with patch("ClassicLib.GamePath.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
-                with patch("ClassicLib.Util.validate_path", return_value=(False, "Missing file")):
+                with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file")):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
                         with patch("ClassicLib.Interface.PathDialogMixin.show_game_path_dialog_static", return_value=Path("/fake/path")):
                             game_path_find()
@@ -68,7 +68,7 @@ class TestMultiPlatformSupport:
         }
         with patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path", return_value=None):
             with patch("ClassicLib.GamePath.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
-                with patch("ClassicLib.Util.validate_path", return_value=(False, "Missing file")):
+                with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file")):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
                         with patch("ClassicLib.Interface.PathDialogMixin.show_game_path_dialog_static", return_value=Path("/fake/path")):
                             game_path_find()

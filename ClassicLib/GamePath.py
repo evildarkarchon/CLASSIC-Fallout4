@@ -28,7 +28,8 @@ from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERS
 from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Interface.PathDialogMixin import show_game_path_dialog_static
 from ClassicLib.Logger import logger
-from ClassicLib.Util import get_game_version, open_file_with_encoding
+from ClassicLib.Utils.file_utils import open_file_with_encoding
+from ClassicLib.Utils.version_utils import get_game_version
 from ClassicLib.YamlSettings import yaml_settings
 
 # Get Rust module if available, None otherwise
@@ -202,7 +203,7 @@ class GamePathFinder:
         Returns:
             bool: True if XSE file exists and is accessible, False otherwise.
         """
-        from ClassicLib.Util import validate_path
+        from ClassicLib.Utils.path_utils import validate_path
 
         if not self.xse_file:
             xse_acronym_lower = self.xse_acronym.lower() if self.xse_acronym else "xse"
@@ -287,7 +288,7 @@ class GamePathFinder:
         Returns:
             bool: True if the game path is valid and meets all required conditions, False otherwise.
         """
-        from ClassicLib.Util import validate_path
+        from ClassicLib.Utils.path_utils import validate_path
 
         is_valid, error_msg = validate_path(game_path, check_write=False, check_read=True)
 
@@ -367,7 +368,7 @@ class GamePathFinder:
         Returns:
             Path: The validated directory path provided by the user.
         """
-        from ClassicLib.Util import validate_path
+        from ClassicLib.Utils.path_utils import validate_path
 
         while True:
             msg_info(f"> > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {self.game_name} IS LOCATED < <")

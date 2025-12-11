@@ -29,7 +29,7 @@ from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
-from ClassicLib.Util import crashgen_version_gen
+from ClassicLib.Utils.version_utils import crashgen_version_gen
 from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
 
 if TYPE_CHECKING:

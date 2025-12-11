@@ -17,7 +17,7 @@ pytestmark = pytest.mark.integration
 class TestBackupFilesOperation:
     """Tests for backup file operations."""
 
-    @patch("ClassicLib.Util.validate_path")
+    @patch("ClassicLib.Utils.path_utils.validate_path")
     @patch("shutil.copy2")
     @patch("ClassicLib.BackupManager.logger")
     def test_backup_files_skip_existing(

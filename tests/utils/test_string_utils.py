@@ -16,12 +16,9 @@ import pytest
 from packaging.version import Version
 
 from ClassicLib import Constants
-from ClassicLib.Util import (
-    append_or_extend,
-    calculate_similarity,
-    crashgen_version_gen,
-    normalize_list,
-)
+from ClassicLib.Utils.file_utils import calculate_similarity
+from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
+from ClassicLib.Utils.version_utils import crashgen_version_gen
 
 
 class TestStringUtilities:

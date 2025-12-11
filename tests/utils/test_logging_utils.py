@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Util import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging
 
 
 class TestLoggingUtilities:

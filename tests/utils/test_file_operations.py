@@ -11,11 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.Util import (
-    calculate_file_hash,
-    open_file_with_encoding,
-    remove_readonly,
-)
+from ClassicLib.Utils.file_utils import calculate_file_hash, open_file_with_encoding
+from ClassicLib.Utils.path_utils import remove_readonly
 
 
 class TestEncodingOperations:

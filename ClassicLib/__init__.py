@@ -86,19 +86,13 @@ from ClassicLib.PerformanceMonitor import TimedBlock, async_timed_operation, tim
 #     is_latest_version,
 #     try_parse_version,
 # )
-from ClassicLib.Util import (
-    append_or_extend,
-    calculate_file_hash,
-    calculate_similarity,
-    configure_logging,
-    crashgen_version_gen,
-    get_game_version,
-    normalize_list,
-    open_file_with_encoding,
-    pastebin_fetch,
-    pastebin_fetch_async,
-    remove_readonly,
-)
+from ClassicLib.Utils.file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
+from ClassicLib.Utils.logging_utils import configure_logging
+from ClassicLib.Utils.path_utils import remove_readonly
+from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
+from ClassicLib.Utils.version_utils import crashgen_version_gen, get_game_version
+from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
+from ClassicLib.Utils.web_utils import pastebin_fetch
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 from ClassicLib.YamlSettings import (
     YamlSettingsCache,

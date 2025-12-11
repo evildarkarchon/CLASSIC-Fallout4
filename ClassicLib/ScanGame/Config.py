@@ -25,7 +25,7 @@ from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssueSeverity
-from ClassicLib.Util import calculate_file_hash, calculate_similarity
+from ClassicLib.Utils.file_utils import calculate_file_hash, calculate_similarity
 from ClassicLib.YamlSettings import yaml_settings
 
 TEST_MODE = False
