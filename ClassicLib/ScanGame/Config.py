@@ -26,7 +26,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssueSeverity
 from ClassicLib.Util import calculate_file_hash, calculate_similarity
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 TEST_MODE = False
 

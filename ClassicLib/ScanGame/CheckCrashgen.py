@@ -15,7 +15,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.Config import mod_toml_config
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 class CrashgenChecker:

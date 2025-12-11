@@ -15,7 +15,7 @@ from pathlib import Path
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import DB_PATHS, YAML
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 # Constants for file patterns
 CRASH_LOG_PATTERN = "crash-*.log"

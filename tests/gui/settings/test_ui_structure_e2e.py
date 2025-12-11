@@ -35,7 +35,7 @@ class TestEdgeCases:
 
     def test_default_values_created(self, app):
         """Test that default values are created for missing settings."""
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", None)
         dialog = SettingsDialog(yaml_store=YAML.TEST)

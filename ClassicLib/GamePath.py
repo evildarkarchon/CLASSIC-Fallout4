@@ -29,7 +29,7 @@ from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Interface.PathDialogMixin import show_game_path_dialog_static
 from ClassicLib.Logger import logger
 from ClassicLib.Util import get_game_version, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 # Get Rust module if available, None otherwise
 classic_path = get_path_operations()
@@ -179,7 +179,7 @@ class GamePathFinder:
             >>> finder = await GamePathFinder.create_async()
             >>> finder.find_game_path()
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings_async
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         # Create instance without calling __init__
         instance = cls.__new__(cls)
@@ -400,7 +400,7 @@ class GamePathFinder:
         """
         # First, check if we have a cached path (for uvx compatibility)
         from ClassicLib.ResourceLoader import ResourceLoader
-        from ClassicLib.YamlSettingsCache import yaml_settings_async
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         cached_path = await ResourceLoader.get_cached_game_path_async()
         if cached_path and cached_path.joinpath(self.exe_name).is_file():
@@ -596,7 +596,7 @@ async def game_generate_paths_async() -> None:
     Example:
         >>> await game_generate_paths_async()
     """
-    from ClassicLib.YamlSettingsCache import yaml_settings_async
+    from ClassicLib.YamlSettings import yaml_settings_async
 
     logger.debug("- - - INITIATED GAME PATH GENERATION (ASYNC)")
 

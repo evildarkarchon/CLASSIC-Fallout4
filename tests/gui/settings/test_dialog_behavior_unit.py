@@ -11,7 +11,7 @@ pytestmark = pytest.mark.unit
 from PySide6.QtWidgets import QDialog
 
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 class TestDialogAcceptReject:

@@ -133,7 +133,7 @@ class TestScanErrorDialogIntegration:
         """Mock classic_settings globally to prevent YAML operations."""
         # Mock classic_settings at all import locations
         with (
-            patch("ClassicLib.YamlSettingsCache.classic_settings", return_value=True),
+            patch("ClassicLib.YamlSettings.classic_settings", return_value=True),
         ):
             yield
 

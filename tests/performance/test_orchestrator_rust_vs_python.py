@@ -20,7 +20,7 @@ from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.ScanLog.scanloginfo.classic_scan_logs_info import ClassicScanLogsInfo
-from ClassicLib.YamlSettingsCache import YamlSettingsCache
+from ClassicLib.YamlSettings import YamlSettingsCache
 
 
 class TestOrchestratorPerformance:

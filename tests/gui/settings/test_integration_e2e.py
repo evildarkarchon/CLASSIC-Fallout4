@@ -8,7 +8,7 @@ import pytest
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:

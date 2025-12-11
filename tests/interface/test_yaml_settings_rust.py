@@ -28,7 +28,7 @@ def yaml_file_ops():
 @pytest.fixture
 def yaml_cache():
     """Create YamlSettingsCache instance for testing."""
-    from ClassicLib.YamlSettingsCache import YamlSettingsCache
+    from ClassicLib.YamlSettings import YamlSettingsCache
 
     return YamlSettingsCache()
 
@@ -225,7 +225,7 @@ def test_operations_without_rust():
 @pytest.mark.unit
 def test_yaml_settings_cache_singleton():
     """Test that YamlSettingsCache follows singleton pattern."""
-    from ClassicLib.YamlSettingsCache import YamlSettingsCache
+    from ClassicLib.YamlSettings import YamlSettingsCache
 
     instance1 = YamlSettingsCache.get_instance()
     instance2 = YamlSettingsCache.get_instance()
@@ -236,7 +236,7 @@ def test_yaml_settings_cache_singleton():
     @pytest.mark.rust
     def test_yaml_cache_file_ops_has_rust():
         """Test that YamlSettingsCache's file operations have Rust available."""
-        from ClassicLib.YamlSettingsCache import yaml_cache
+        from ClassicLib.YamlSettings import yaml_cache
 
         cache = yaml_cache()
         # Trigger lazy initialization

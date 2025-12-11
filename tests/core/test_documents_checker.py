@@ -23,7 +23,7 @@ class TestDocumentsChecker:
         """Create a DocumentsChecker instance for testing."""
         return DocumentsChecker()
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_check_folder_configuration_no_onedrive(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
@@ -41,7 +41,7 @@ class TestDocumentsChecker:
         # Verify yaml_settings was called correctly
         mock_yaml_settings.assert_called_once_with(str, YAML.Game, "Game_Info.Main_Docs_Name")
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch("ClassicLib.DocumentsChecker.logger")
     def test_check_folder_configuration_with_onedrive(
@@ -65,7 +65,7 @@ class TestDocumentsChecker:
             "OneDrive detected in documents path: C:/Users/TestUser/OneDrive/Documents/My Games/Fallout4"
         )
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_check_folder_configuration_vr_mode(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
@@ -80,7 +80,7 @@ class TestDocumentsChecker:
         # Verify VR suffix was used
         mock_yaml_settings.assert_called_once_with(str, YAML.Game, "GameVR_Info.Main_Docs_Name")
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_check_folder_configuration_docs_name_type_error(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
@@ -93,7 +93,7 @@ class TestDocumentsChecker:
         with pytest.raises(TypeError, match="Document name must be a string"):
             checker.check_folder_configuration()
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_check_folder_configuration_docs_warn_type_error(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
@@ -109,7 +109,7 @@ class TestDocumentsChecker:
         with pytest.raises(TypeError, match="Document warning must be a string"):
             checker.check_folder_configuration()
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_check_folder_configuration_case_insensitive(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
@@ -248,7 +248,7 @@ class TestDocumentsChecker:
         with pytest.raises(Exception, match="Folder check failed"):
             checker.run_all_checks()
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_check_folder_configuration_onedrive_in_middle(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
@@ -266,7 +266,7 @@ class TestDocumentsChecker:
         # Should detect OneDrive
         assert result == "OneDrive warning"
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_check_folder_configuration_multiple_onedrive(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker

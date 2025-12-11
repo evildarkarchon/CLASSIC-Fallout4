@@ -36,7 +36,7 @@ def mock_settings():
     validators.get_scan_settings() async method. We mock the YamlSettingsCache
     module-level function instead.
     """
-    with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml_cache:
+    with patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml_cache:
 
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {

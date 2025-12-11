@@ -20,7 +20,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult
 from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
 from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
     import argparse

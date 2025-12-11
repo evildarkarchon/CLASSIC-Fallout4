@@ -18,7 +18,7 @@ import pytest
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import MessageHandler, init_message_handler
-from ClassicLib.YamlSettingsCache import YamlSettingsCache
+from ClassicLib.YamlSettings import YamlSettingsCache
 
 # Thread-local storage for singleton state tracking
 _handler_lock = threading.Lock()
@@ -413,7 +413,7 @@ def setup_global_registry_session() -> Generator[None, None, None]:
         # Initialize YAML cache (many components depend on this)
         # Check if yaml_cache already exists in the module to avoid re-initialization issues
         try:
-            from ClassicLib.YamlSettingsCache import yaml_cache
+            from ClassicLib.YamlSettings import yaml_cache
 
             # Re-register the existing instance
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
@@ -462,7 +462,7 @@ def setup_global_registry() -> None:
     # This is critical for parallel test execution where each worker needs initialization
     if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
         try:
-            from ClassicLib.YamlSettingsCache import yaml_cache
+            from ClassicLib.YamlSettings import yaml_cache
 
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
         except (ImportError, TypeError):
@@ -501,13 +501,13 @@ def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
 
     Usage:
         def test_yaml_operations(clean_yaml_cache_singleton):
-            from ClassicLib.YamlSettingsCache import yaml_settings
+            from ClassicLib.YamlSettings import yaml_settings
             result = yaml_settings(str, YAML.TEST, "test.key")
     """
     import importlib
 
-    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
-    from ClassicLib.YamlSettingsCache import YamlSettingsCache
+    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+    from ClassicLib.YamlSettings import YamlSettingsCache
 
     with _yaml_cache_lock:
         # Store the original singleton instance if it exists
@@ -575,13 +575,13 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
     Usage:
         def test_something(yaml_cache_fixture):
             # YAML cache is automatically initialized and cleaned up
-            from ClassicLib.YamlSettingsCache import yaml_settings
+            from ClassicLib.YamlSettings import yaml_settings
             result = yaml_settings(str, YAML.TEST, "test.key")
     """
     import importlib
     from unittest.mock import MagicMock, patch
 
-    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
+    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
 
     # Save the original yaml_cache if it exists
     original_cache = getattr(YamlSettingsCacheModule, "yaml_cache", None)
@@ -593,7 +593,7 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
     mock_async_core.cache.file_mod_times = {}
 
     # Create a mock YamlSettingsCache that doesn't initialize AsyncBridge
-    with patch("ClassicLib.YamlSettingsCache.AsyncBridge") as mock_bridge_class:
+    with patch("ClassicLib.YamlSettings.AsyncBridge") as mock_bridge_class:
         mock_bridge = MagicMock()
         mock_bridge_class.get_instance.return_value = mock_bridge
 
@@ -608,7 +608,7 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
         mock_bridge.run_async.side_effect = run_async_side_effect
 
         # Create a new cache instance
-        from ClassicLib.YamlSettingsCache import YamlSettingsCache
+        from ClassicLib.YamlSettings import YamlSettingsCache
 
         test_cache = YamlSettingsCache()
         test_cache._async_core = mock_async_core
@@ -683,7 +683,7 @@ def mock_yaml_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Any, None, 
     # Use importlib to ensure we get the module, not the class (if shadowed)
     import importlib
 
-    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
+    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
 
     with monkeypatch.context() as m:
         m.setattr(YamlSettingsCacheModule, "yaml_settings", mock)
@@ -703,8 +703,8 @@ def ensure_yaml_cache_cleanup() -> Generator[None, None, None]:
     try:
         import importlib
 
-        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettingsCache")
-        from ClassicLib.YamlSettingsCache import YamlSettingsCache
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+        from ClassicLib.YamlSettings import YamlSettingsCache
 
         # Clear caches BEFORE clearing singleton reference
         # This ensures we access cache data while the instance is still valid

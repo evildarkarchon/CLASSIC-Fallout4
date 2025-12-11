@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import msg_warning
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 # Style constants
 ENABLED_BUTTON_STYLE = """

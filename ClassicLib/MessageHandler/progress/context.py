@@ -77,7 +77,7 @@ class ProgressContext:
             True if CLI progress should be disabled.
         """
         try:
-            from ClassicLib.YamlSettingsCache import classic_settings
+            from ClassicLib.YamlSettings import classic_settings
 
             return classic_settings(bool, "Disable CLI Progress") or False
         except (ImportError, FileNotFoundError, KeyError, TypeError, RuntimeError):

@@ -12,7 +12,7 @@ from ClassicLib.Constants import YAML
 @pytest.fixture
 def mock_yaml_settings() -> Generator[MagicMock, None, None]:
     """Mock YAML settings for testing."""
-    with patch("ClassicLib.YamlSettingsCache.yaml_settings") as mock_yaml:
+    with patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml:
 
         def side_effect(_type_arg: Any, yaml_store: Any, key_path: str, new_value: Any = None) -> Any:  # noqa: ARG001
             if key_path == "catch_log_records":

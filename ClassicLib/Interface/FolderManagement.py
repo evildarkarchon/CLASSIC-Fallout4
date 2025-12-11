@@ -22,7 +22,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 classic_path = get_path_operations()
 _RUST_PATH_AVAILABLE = classic_path is not None

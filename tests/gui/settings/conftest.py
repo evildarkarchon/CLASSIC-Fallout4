@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QWidget
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
 from ClassicLib.MessageHandler import init_message_handler
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 # Mock Cache Implementation
@@ -43,7 +43,7 @@ def mock_settings_cache(monkeypatch):
     mock_cache = MockSettingsCache()
 
     # Import the class to patch
-    from ClassicLib.YamlSettingsCache import YamlSettingsCache
+    from ClassicLib.YamlSettings import YamlSettingsCache
 
     # Save original instance for cleanup
     original_instance = YamlSettingsCache._instance

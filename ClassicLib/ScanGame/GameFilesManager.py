@@ -16,7 +16,7 @@ from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
 from ClassicLib.FileIO import FileIOCore
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 class GameFilesManagerCore:

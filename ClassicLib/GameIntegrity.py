@@ -49,7 +49,7 @@ class GameIntegrityChecker:
             TypeError: If any of the settings loaded from the configuration
                 files is not of the expected type.
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         vr_suffix: str = GlobalRegistry.get_vr()
 
@@ -80,7 +80,7 @@ class GameIntegrityChecker:
         Raises:
             TypeError: If any of the loaded settings are not strings.
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings_async
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         vr_suffix: str = GlobalRegistry.get_vr()
 

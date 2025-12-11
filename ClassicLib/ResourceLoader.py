@@ -499,7 +499,7 @@ class ResourceLoader:
         # Strategy 2: Check persistent cache.yaml
         try:
             from ClassicLib.Constants import YAML
-            from ClassicLib.YamlSettingsCache import yaml_settings
+            from ClassicLib.YamlSettings import yaml_settings
 
             cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.GamePath")
             if cached_path:
@@ -513,7 +513,7 @@ class ResourceLoader:
         # Strategy 3: Check traditional Local.yaml
         try:
             from ClassicLib.Constants import YAML
-            from ClassicLib.YamlSettingsCache import yaml_settings
+            from ClassicLib.YamlSettings import yaml_settings
 
             local_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
             if local_path:
@@ -543,7 +543,7 @@ class ResourceLoader:
             Path | None: The cached game path if found, otherwise None.
         """
         from ClassicLib.Constants import YAML
-        from ClassicLib.YamlSettingsCache import yaml_settings_async
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         if game_name is None:
             game_name = GlobalRegistry.get_game()
@@ -632,7 +632,7 @@ class ResourceLoader:
             # Strategy 2: Check persistent cache.yaml
             try:
                 from ClassicLib.Constants import YAML
-                from ClassicLib.YamlSettingsCache import yaml_settings
+                from ClassicLib.YamlSettings import yaml_settings
 
                 cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.DocsPath")
                 if cached_path:
@@ -646,7 +646,7 @@ class ResourceLoader:
             # Strategy 3: Check traditional Local.yaml
             try:
                 from ClassicLib.Constants import YAML
-                from ClassicLib.YamlSettingsCache import yaml_settings
+                from ClassicLib.YamlSettings import yaml_settings
 
                 local_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs")
                 if local_path:
@@ -679,7 +679,7 @@ class ResourceLoader:
             vr_suffix = GlobalRegistry.get_vr()
 
         from ClassicLib.Constants import YAML
-        from ClassicLib.YamlSettingsCache import yaml_settings_async
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         # Save to persistent cache.yaml
         try:
@@ -734,7 +734,7 @@ class ResourceLoader:
             vr_suffix = GlobalRegistry.get_vr()
 
         from ClassicLib.Constants import YAML
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         # Save to persistent cache.yaml
         try:

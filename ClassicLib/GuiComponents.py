@@ -15,7 +15,7 @@ from PySide6.QtCore import QObject, Signal
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 class ManualDocsPath(QObject):

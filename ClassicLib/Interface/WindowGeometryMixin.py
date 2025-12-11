@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 try:
     from PySide6.QtCore import Qt

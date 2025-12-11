@@ -27,7 +27,7 @@ from ClassicLib.ScanGame.core import (
     UnpackedModsScanner,
     get_optimal_limits,
 )
-from ClassicLib.YamlSettingsCache import yaml_settings_async
+from ClassicLib.YamlSettings import yaml_settings_async
 
 
 class ScanGameCore:

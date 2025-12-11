@@ -15,7 +15,7 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.FileIO import stream_lines_sync
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 def papyrus_logging() -> tuple[str, int]:

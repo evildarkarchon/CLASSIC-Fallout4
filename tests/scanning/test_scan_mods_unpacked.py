@@ -40,7 +40,7 @@ def mock_settings():
             return settings_map.get(args[2], args[3] if len(args) > 3 else None)
         return None
 
-    with patch("ClassicLib.YamlSettingsCache.yaml_settings_async", side_effect=async_return) as mock_yaml:
+    with patch("ClassicLib.YamlSettings.yaml_settings_async", side_effect=async_return) as mock_yaml:
         yield mock_yaml
 
 

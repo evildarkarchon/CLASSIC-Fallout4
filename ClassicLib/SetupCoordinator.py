@@ -27,7 +27,7 @@ from ClassicLib.Util import configure_logging
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 
 if TYPE_CHECKING:
-    from ClassicLib.YamlSettingsCache import YamlSettingsCache  # noqa: F401
+    from ClassicLib.YamlSettings import YamlSettingsCache  # noqa: F401
 
 
 class SetupCoordinator:
@@ -67,7 +67,7 @@ class SetupCoordinator:
             TypeError: If the classic version or game name settings are not of type str.
         """
         from ClassicLib.PerformanceMonitor import TimedBlock
-        from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings  # noqa: F401
+        from ClassicLib.YamlSettings import yaml_cache, yaml_settings  # noqa: F401
 
         # Configure logging
         configure_logging(logger)
@@ -148,7 +148,7 @@ class SetupCoordinator:
             parent: Optional parent widget for GUI mode. This is passed to the
                 message handler to ensure proper dialog parenting in GUI applications.
         """
-        from ClassicLib.YamlSettingsCache import yaml_cache
+        from ClassicLib.YamlSettings import yaml_cache
 
         # Configure logging first - required for both CLI and GUI modes
         configure_logging(logger)
@@ -212,7 +212,7 @@ class SetupCoordinator:
         Logger calls always execute for diagnostics.
         MessageHandler calls only execute when Debug Messages setting is enabled.
         """
-        from ClassicLib.YamlSettingsCache import classic_settings
+        from ClassicLib.YamlSettings import classic_settings
 
         debug_enabled = bool(classic_settings(bool, "Debug Messages"))
         is_gui = GlobalRegistry.is_gui_mode()

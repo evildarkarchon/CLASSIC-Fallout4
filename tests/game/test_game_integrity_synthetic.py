@@ -200,7 +200,7 @@ class TestGameIntegritySynthetic:
         # Mock dependencies for load_configuration_async
         with (
             patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
-            patch("ClassicLib.YamlSettingsCache.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
+            patch("ClassicLib.YamlSettings.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
             patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
         ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
@@ -234,7 +234,7 @@ class TestGameIntegritySynthetic:
         # Mock dependencies for load_configuration_async
         with (
             patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
-            patch("ClassicLib.YamlSettingsCache.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
+            patch("ClassicLib.YamlSettings.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
             patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
         ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async

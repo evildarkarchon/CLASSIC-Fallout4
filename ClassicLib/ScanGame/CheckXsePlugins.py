@@ -13,7 +13,7 @@ from typing import TypedDict
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import NG_VERSION, NULL_VERSION, OG_VERSION, VR_VERSION, YAML, Version
 from ClassicLib.Util import get_game_version
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 class AddressLibVersionInfo(TypedDict):

@@ -13,7 +13,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.core.utils import ASYNC_ENCODING_AVAILABLE, read_lines_with_encoding_async
 from ClassicLib.Util import normalize_list, open_file_with_encoding
-from ClassicLib.YamlSettingsCache import yaml_settings_async  # pyright: ignore[reportAttributeAccessIssue]
+from ClassicLib.YamlSettings import yaml_settings_async  # pyright: ignore[reportAttributeAccessIssue]
 
 
 class LogProcessor:

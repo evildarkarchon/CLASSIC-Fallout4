@@ -8,7 +8,7 @@ import pytest
 import ruamel.yaml
 
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache
+from ClassicLib.YamlSettings import YamlSettingsCache, classic_settings, yaml_cache
 
 pytestmark = pytest.mark.integration
 

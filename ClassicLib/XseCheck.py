@@ -23,7 +23,7 @@ from ClassicLib.FileIO import read_bytes_sync, read_lines_sync
 from ClassicLib.GlobalRegistry import get_game, get_vr
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_warning
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 class Tokens:

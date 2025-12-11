@@ -274,7 +274,7 @@ class ScanOperationsMixin:
 
             # Check if auto-switch is enabled (default to True for better UX)
             from ClassicLib.Constants import YAML
-            from ClassicLib.YamlSettingsCache import yaml_settings
+            from ClassicLib.YamlSettings import yaml_settings
 
             auto_switch = yaml_settings(bool, YAML.Settings, "ResultsViewer.AutoSwitchAfterScan", True)
 

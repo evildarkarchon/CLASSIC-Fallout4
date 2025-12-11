@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QDialog, QWidget
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 pytestmark = pytest.mark.unit
 

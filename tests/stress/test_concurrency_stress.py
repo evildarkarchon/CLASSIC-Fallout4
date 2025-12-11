@@ -27,7 +27,7 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIO import FileIOCore
 from ClassicLib.MessageHandler import MessageHandler
-from ClassicLib.YamlSettingsCache import yaml_cache
+from ClassicLib.YamlSettings import yaml_cache
 
 
 @pytest.mark.stress

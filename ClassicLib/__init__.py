@@ -100,7 +100,7 @@ from ClassicLib.Util import (
     remove_readonly,
 )
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
-from ClassicLib.YamlSettingsCache import (
+from ClassicLib.YamlSettings import (
     YamlSettingsCache,
     classic_settings,
     yaml_cache,
@@ -184,7 +184,7 @@ __all__ = [
     # XseCheck
     "xse_check_hashes",
     "xse_check_integrity",
-    # YamlSettingsCache
+    # YamlSettings
     "YamlSettingsCache",
     "classic_settings",
     "yaml_cache",

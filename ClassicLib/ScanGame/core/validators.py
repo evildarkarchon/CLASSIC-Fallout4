@@ -11,7 +11,7 @@ from pathlib import Path
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettingsCache import classic_settings_async, yaml_settings_async
+from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
 
 
 class ScanValidators:

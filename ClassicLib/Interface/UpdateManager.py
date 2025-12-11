@@ -16,7 +16,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.Interface.ThreadManager import ThreadType
 from ClassicLib.Interface.Workers import UpdateCheckWorker
 from ClassicLib.Logger import logger
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 if TYPE_CHECKING:
     from PySide6.QtCore import QTimer

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 class FolderManagementMixin:

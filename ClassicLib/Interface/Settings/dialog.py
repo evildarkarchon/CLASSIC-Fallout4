@@ -29,7 +29,7 @@ from ClassicLib.Interface.Settings.path_manager import PathManager
 from ClassicLib.Interface.Settings.tab_creators import TabCreator
 from ClassicLib.Interface.StyleSheets import DARK_MODE
 from ClassicLib.MessageHandler import msg_error, msg_success
-from ClassicLib.YamlSettingsCache import yaml_cache, yaml_settings
+from ClassicLib.YamlSettings import yaml_cache, yaml_settings
 
 
 class SettingsDialog(QDialog):

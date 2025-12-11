@@ -19,7 +19,7 @@ from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 from ClassicLib.ScanGame.ScanModInis import scan_mod_inis_async
 from ClassicLib.ScanGame.WryeCheck import scan_wryecheck
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 # noinspection PyUnresolvedReferences,PyTypeChecker

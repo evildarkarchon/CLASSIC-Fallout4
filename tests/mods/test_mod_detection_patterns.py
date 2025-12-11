@@ -123,7 +123,7 @@ class TestModDetectionPatterns:
     def test_mod_conflict_detection_from_log(self):
         """Test detecting mod conflicts from crash log data."""
         from ClassicLib.integration.factory import get_mod_detector
-        from ClassicLib.YamlSettingsCache import yaml_cache
+        from ClassicLib.YamlSettings import yaml_cache
 
         config_data = {"MODS": {"CONFLICTING_MODS": {"ModA.esp | ModB.esp": "Conflict Warning: ModA and ModB are incompatible"}}}
 
@@ -261,7 +261,7 @@ class TestModDetectionPatterns:
     def test_prp_compatibility_detection(self):
         """Test detection of PRP (Previsibines Repair Pack) compatibility."""
         from ClassicLib.integration.factory import get_mod_detector
-        from ClassicLib.YamlSettingsCache import yaml_cache
+        from ClassicLib.YamlSettings import yaml_cache
 
         # Mock YamlSettingsCache._async_core.load_yaml_file_async to provide a dummy config
         class MockYamlCorePRP(AsyncYamlSettingsCore):

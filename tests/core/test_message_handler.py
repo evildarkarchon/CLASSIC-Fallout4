@@ -208,7 +208,7 @@ class TestGlobalFunctions:
         init_message_handler(parent=None, is_gui_mode=False)
 
         # Mock the classic_settings to ensure CLI progress is not disabled
-        with patch("ClassicLib.YamlSettingsCache.classic_settings") as mock_settings:
+        with patch("ClassicLib.YamlSettings.classic_settings") as mock_settings:
             mock_settings.return_value = False  # Disable CLI Progress = False
 
             old_stdout: TextIO | Any = sys.stdout

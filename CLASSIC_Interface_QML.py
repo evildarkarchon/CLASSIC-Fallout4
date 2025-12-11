@@ -20,7 +20,7 @@ from ClassicLib.PapyrusLog import papyrus_logging
 from ClassicLib.ScanGame import manage_game_files, write_combined_results_async
 from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
 from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 class ScanWorker(QObject):

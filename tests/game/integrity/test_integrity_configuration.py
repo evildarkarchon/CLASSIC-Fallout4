@@ -13,7 +13,7 @@ from ClassicLib.GameIntegrity import GameIntegrityChecker
 class TestConfigurationLoading:
     """Tests for configuration loading and validation."""
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_configuration_success(self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: GameIntegrityChecker) -> None:
         """Test successful loading of configuration."""
@@ -41,7 +41,7 @@ class TestConfigurationLoading:
         # Verify yaml_settings was called correctly
         assert mock_yaml_settings.call_count == 6
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_load_configuration_vr_mode(self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: GameIntegrityChecker) -> None:
         """Test loading configuration in VR mode."""
@@ -64,7 +64,7 @@ class TestConfigurationLoading:
         assert calls[3][0] == (str, YAML.Game_Local, "GameVR_Info.Game_File_EXE")
         assert calls[4][0] == (str, YAML.Game, "GameVR_Info.Main_Root_Name")
 
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_configuration_type_error(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: GameIntegrityChecker
@@ -85,7 +85,7 @@ class TestConfigurationLoading:
             checker.load_configuration()
 
     @patch("ClassicLib.GameIntegrity.logger")
-    @patch("ClassicLib.YamlSettingsCache.yaml_settings")
+    @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_configuration_with_logging(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, mock_logger: MagicMock, checker: GameIntegrityChecker

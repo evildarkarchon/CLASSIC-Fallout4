@@ -108,7 +108,7 @@ class ClassicScanLogsInfo:
             raise TypeError("YAML Cache is not initialized.")
 
         from ClassicLib.PerformanceMonitor import TimedBlock
-        from ClassicLib.YamlSettingsCache import yaml_cache
+        from ClassicLib.YamlSettings import yaml_cache
 
         # Batch load all settings in a single operation
         with TimedBlock("ScanLogInfo Settings Load", log_level="debug"):
@@ -212,7 +212,7 @@ class ClassicScanLogsInfo:
             raise TypeError("YAML Cache is not initialized.")
 
         from ClassicLib.PerformanceMonitor import TimedBlock
-        from ClassicLib.YamlSettingsCache import yaml_cache
+        from ClassicLib.YamlSettings import yaml_cache
 
         # Create instance without loading (skip __post_init__ logic)
         instance = cls.__new__(cls)

@@ -20,7 +20,7 @@ from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.GlobalRegistry import get_game  # Import just the function we need
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_success, msg_warning
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 def try_parse_version(version_str: str | None) -> Version | None:

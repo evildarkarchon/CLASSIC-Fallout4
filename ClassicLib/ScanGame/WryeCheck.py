@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup, PageElement
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.FileIO import read_file_sync
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 def scan_wryecheck() -> str:

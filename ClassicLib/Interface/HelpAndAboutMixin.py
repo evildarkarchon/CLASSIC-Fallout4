@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QMessageBox
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Dialogs import CustomAboutDialog
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 
 class HelpAndAboutMixin:

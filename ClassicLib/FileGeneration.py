@@ -32,7 +32,7 @@ class FileGenerator:
             TypeError: If the default content retrieved for the ignore file
                 is not of type str.
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         ignore_path = Path("CLASSIC Ignore.yaml")
         if not ignore_path.exists():
@@ -55,7 +55,7 @@ class FileGenerator:
             TypeError: If the default content retrieved for the local YAML file
                 is not of type str.
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
         if not local_path.exists():

@@ -11,7 +11,7 @@ import pytest
 import ruamel.yaml
 
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettingsCache import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
+from ClassicLib.YamlSettings import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
 
 pytestmark = pytest.mark.unit
 
@@ -106,16 +106,16 @@ class TestModuleLevelFunctions:
         # We need to patch the async_yaml_settings method on the SINGLETON instance
         # or patch the class method
 
-        with patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.async_yaml_settings", return_value="/some/path"):
+        with patch("ClassicLib.YamlSettings.YamlSettingsCache.async_yaml_settings", return_value="/some/path"):
             path_value = yaml_settings(Path, YAML.TEST, "some.path")
             assert isinstance(path_value, Path)
             assert path_value == Path("/some/path")
 
-        with patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.async_yaml_settings", return_value=None):
+        with patch("ClassicLib.YamlSettings.YamlSettingsCache.async_yaml_settings", return_value=None):
             path_value = yaml_settings(Path, YAML.TEST, "nonexistent.path")
             assert path_value is None
 
-        with patch("ClassicLib.YamlSettingsCache.YamlSettingsCache.async_yaml_settings", return_value=123):
+        with patch("ClassicLib.YamlSettings.YamlSettingsCache.async_yaml_settings", return_value=123):
             path_value = yaml_settings(Path, YAML.TEST, "numeric.value")
             assert path_value is None
 

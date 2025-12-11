@@ -37,7 +37,7 @@ from ClassicLib.Interface.ResultsViewerWidgets import (
 )
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 class ResultsViewerMixin:

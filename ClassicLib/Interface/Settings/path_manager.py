@@ -16,7 +16,7 @@ from PySide6.QtWidgets import QFileDialog, QLineEdit
 
 from ClassicLib.Constants import YAML
 from ClassicLib.MessageHandler import msg_error, msg_success, msg_warning
-from ClassicLib.YamlSettingsCache import yaml_settings
+from ClassicLib.YamlSettings import yaml_settings
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget

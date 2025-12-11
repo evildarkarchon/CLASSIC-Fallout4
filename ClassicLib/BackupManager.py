@@ -49,7 +49,7 @@ class BackupManager:
         Raises:
             TypeError: If any of the settings have invalid types.
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         game_vr: str = GlobalRegistry.get_vr()
 

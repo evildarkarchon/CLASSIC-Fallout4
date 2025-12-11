@@ -27,7 +27,7 @@ class TestInitialSetup:
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
     @patch("ClassicLib.BackupManager.BackupManager.run_backup")
-    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
+    @patch("ClassicLib.YamlSettings.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch("ClassicLib.SetupCoordinator.msg_success")
     @patch("ClassicLib.SetupCoordinator.docs_path_find")
@@ -92,7 +92,7 @@ class TestInitialSetup:
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
     @patch("ClassicLib.BackupManager.BackupManager.run_backup")
-    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
+    @patch("ClassicLib.YamlSettings.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch("ClassicLib.SetupCoordinator.msg_success")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -134,7 +134,7 @@ class TestInitialSetup:
 
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
+    @patch("ClassicLib.YamlSettings.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_version(
@@ -165,7 +165,7 @@ class TestInitialSetup:
 
     @patch("ClassicLib.SetupCoordinator.configure_logging")
     @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettingsCache.yaml_cache")
+    @patch("ClassicLib.YamlSettings.yaml_cache")
     @patch("ClassicLib.SetupCoordinator.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_game_name(

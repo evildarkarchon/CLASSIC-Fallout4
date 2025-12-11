@@ -41,7 +41,7 @@ from ClassicLib.Interface.WindowGeometryMixin import WindowGeometryMixin
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import init_message_handler, msg_error
 from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettingsCache import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
     from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats

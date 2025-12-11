@@ -26,7 +26,7 @@ class DocumentsChecker:
             str: A concatenated message list containing warnings or an empty string if
             no warnings are applicable.
         """
-        from ClassicLib.YamlSettingsCache import yaml_settings
+        from ClassicLib.YamlSettings import yaml_settings
 
         message_list: list[str] = []
         docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
