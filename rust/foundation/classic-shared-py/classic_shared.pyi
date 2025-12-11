@@ -4,7 +4,6 @@ This module provides Python bindings for the pure Rust utilities in classic-shar
 including path handling, string processing, and performance monitoring.
 """
 
-
 __version__: str
 
 class PathHandler:
@@ -183,7 +182,6 @@ class PathHandler:
             Returns PyList directly, reducing allocations by 30-40%.
         """
 
-
 class StringProcessor:
     """String processor with interning and parallel operations.
 
@@ -323,7 +321,6 @@ class StringProcessor:
             The normalized string
         """
 
-
 class RustPerformanceMonitor:
     """Performance monitor for Python.
 
@@ -346,9 +343,7 @@ class RustPerformanceMonitor:
             Dictionary with "operation" and "start_time" keys
         """
 
-    def stop_timer(
-        self, timer_info: dict[str, object], bytes_processed: int | None = None
-    ) -> None:
+    def stop_timer(self, timer_info: dict[str, object], bytes_processed: int | None = None) -> None:
         """Stop timing an operation and record metrics.
 
         Args:
@@ -390,7 +385,6 @@ class RustPerformanceMonitor:
             bytes_processed: Optional bytes processed
         """
 
-
 class RuntimeStats:
     """Runtime statistics from Tokio.
 
@@ -406,7 +400,6 @@ class RuntimeStats:
 
     def __repr__(self) -> str: ...
 
-
 def get_runtime_stats() -> RuntimeStats:
     """Get Tokio runtime statistics.
 
@@ -416,7 +409,6 @@ def get_runtime_stats() -> RuntimeStats:
     Returns:
         RuntimeStats object containing worker_threads and is_healthy
     """
-
 
 def is_runtime_healthy() -> bool:
     """Check if Tokio runtime is healthy.

@@ -48,7 +48,7 @@ def _normalize_path(path: str | Path) -> Path:
     if _RUST_PATH_AVAILABLE:
         try:
             # Use Rust for path validation (handles Windows quirks better)
-            if classic_path.PathValidator.is_valid_path(path_str): # pyright: ignore[reportOptionalMemberAccess]
+            if classic_path.PathValidator.is_valid_path(path_str):  # pyright: ignore[reportOptionalMemberAccess]
                 # Path is valid, use Python Path for normalization
                 # (Rust PathValidator focuses on validation, not normalization)
                 return Path(path_str).resolve()
@@ -77,7 +77,7 @@ def _is_valid_directory(path: str | Path) -> bool:
         try:
             # Use Rust for faster validation
             # is_valid_path checks existence and basic validity
-            if not classic_path.PathValidator.is_valid_path(path_str): # pyright: ignore[reportOptionalMemberAccess]
+            if not classic_path.PathValidator.is_valid_path(path_str):  # pyright: ignore[reportOptionalMemberAccess]
                 return False
             # Then check if it's a directory using Python (since PathValidator doesn't have is_directory)
             return Path(path_str).is_dir()
@@ -121,7 +121,7 @@ class FolderManagementMixin:
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
         while True:
-            folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder") # pyright: ignore[reportArgumentType]
+            folder: str = QFileDialog.getExistingDirectory(self, "Select Custom Scan Folder")  # pyright: ignore[reportArgumentType]
             if not folder:  # User clicked cancel
                 break
 
@@ -133,7 +133,7 @@ class FolderManagementMixin:
                 break
             # Invalid path, show warning and continue loop
             QMessageBox.warning(
-                self, # pyright: ignore[reportArgumentType]
+                self,  # pyright: ignore[reportArgumentType]
                 "Invalid Custom Scan Path",
                 "The selected directory cannot be used as a custom scan path.\n\n"
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
@@ -168,7 +168,7 @@ class FolderManagementMixin:
         # Check if path exists using Rust if available
         if not _is_valid_directory(folder_text):
             QMessageBox.warning(
-                self, # pyright: ignore[reportArgumentType]
+                self,  # pyright: ignore[reportArgumentType]
                 "Invalid Path",
                 f"The path '{folder_text}' does not exist or is not a directory.\n\nThe custom scan path has been cleared.",
             )
@@ -179,7 +179,7 @@ class FolderManagementMixin:
         # Check if path is restricted
         if not is_valid_custom_scan_path(folder_text):
             QMessageBox.warning(
-                self, # pyright: ignore[reportArgumentType]
+                self,  # pyright: ignore[reportArgumentType]
                 "Invalid Custom Scan Path",
                 "The entered directory cannot be used as a custom scan path.\n\n"
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
@@ -202,7 +202,7 @@ class FolderManagementMixin:
         folder's path and saves the folder path to the corresponding YAML settings
         key for future use.
         """
-        folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder") # pyright: ignore[reportArgumentType]
+        folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")  # pyright: ignore[reportArgumentType]
         if folder:
             if self.mods_folder_edit is not None:
                 self.mods_folder_edit.setText(folder)
@@ -235,10 +235,10 @@ class FolderManagementMixin:
         Raises:
             QMessageBox: Displays a message to confirm the update of the INI folder path.
         """
-        folder: str = QFileDialog.getExistingDirectory(self) # pyright: ignore[reportArgumentType]
+        folder: str = QFileDialog.getExistingDirectory(self)  # pyright: ignore[reportArgumentType]
         if folder:
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", folder)
-            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok) # pyright: ignore[reportArgumentType]
+            QMessageBox.information(self, "New INI Path Set", f"You have set the new path to: \n{folder}", QMessageBox.StandardButton.Ok)  # pyright: ignore[reportArgumentType]
 
     def open_settings(self) -> None:
         """
@@ -253,7 +253,7 @@ class FolderManagementMixin:
         settings_file: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Settings.yaml"
         if not settings_file.is_file():
             QMessageBox.critical(
-                self, # pyright: ignore[reportArgumentType]
+                self,  # pyright: ignore[reportArgumentType]
                 "Settings File Missing",
                 "Settings file is missing. Please restart the application and the issue will be resolved.",
                 QMessageBox.StandardButton.Ok,

@@ -65,7 +65,7 @@ class StressTestReporter:
     reports for Phase 6 Rust migration validation.
     """
 
-    def __init__(self, output_dir: Path = None): # pyright: ignore[reportArgumentType]
+    def __init__(self, output_dir: Path = None):  # pyright: ignore[reportArgumentType]
         """
         Initialize the stress test reporter.
 
@@ -123,7 +123,7 @@ class StressTestReporter:
 
         return SystemSpecs(
             cpu_model=cpu_info,
-            cpu_cores=psutil.cpu_count(), # pyright: ignore[reportArgumentType]
+            cpu_cores=psutil.cpu_count(),  # pyright: ignore[reportArgumentType]
             memory_gb=memory_gb,
             os_version=platform.platform(),
             python_version=sys.version.split()[0],

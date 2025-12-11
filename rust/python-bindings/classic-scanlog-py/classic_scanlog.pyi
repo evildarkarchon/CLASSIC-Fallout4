@@ -242,7 +242,9 @@ class LogParser:
     def parse_all_sections(self, lines: list[str]) -> dict[str, list[str]]:
         """Parse and extract all important sections at once."""
 
-    def parse_complete(self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str) -> tuple[str, str, str, list[list[str]]]:
+    def parse_complete(
+        self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str
+    ) -> tuple[str, str, str, list[list[str]]]:
         """Optimized batch operation: complete log analysis in single FFI call."""
 
     def get_segment_sizes(self, lines: list[str]) -> dict[str, int]:

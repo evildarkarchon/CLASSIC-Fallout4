@@ -590,6 +590,6 @@ FormID: FE000800
         # All successful parses should produce same result structure
         if successful:
             # find_segments returns tuple (game_ver, crashgen_ver, error, segments)
-            first_len = len(successful[0]) # pyright: ignore[reportArgumentType]
+            first_len = len(successful[0])  # pyright: ignore[reportArgumentType]
             for result in successful[1:]:
-                assert len(result) == first_len # pyright: ignore[reportArgumentType]
+                assert len(result) == first_len  # pyright: ignore[reportArgumentType]

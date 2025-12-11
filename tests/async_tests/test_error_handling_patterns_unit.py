@@ -98,7 +98,7 @@ class TestRetryPatterns:
                         current_delay *= backoff
                     else:
                         raise
-            raise last_error # pyright: ignore[reportGeneralTypeIssues]
+            raise last_error  # pyright: ignore[reportGeneralTypeIssues]
 
         attempt_count = 0
 
@@ -130,7 +130,7 @@ class TestRetryPatterns:
                             last_error = e
                             if attempt < max_attempts - 1:
                                 await asyncio.sleep(delay)
-                    raise last_error # pyright: ignore[reportGeneralTypeIssues]
+                    raise last_error  # pyright: ignore[reportGeneralTypeIssues]
 
                 return wrapper
 
