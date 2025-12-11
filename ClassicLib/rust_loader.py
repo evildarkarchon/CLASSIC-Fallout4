@@ -11,7 +11,6 @@ NO pip installation or site-packages required!
 """
 
 import logging
-import warnings
 from typing import Any
 
 from ClassicLib.integration.detector import detect_rust_components, get_available_components
@@ -68,19 +67,6 @@ def load_rust_extensions() -> bool:
     Now delegates to component detection.
     """
     return _rust_loader.is_loaded()
-
-
-def get_rust_module() -> Any | None:
-    """
-    Retrieves the loaded Rust module.
-    DEPRECATED: There is no single Rust module anymore.
-    """
-    warnings.warn(
-        "get_rust_module() is deprecated. Use specific modules (e.g., classic_scanlog) instead.",
-        DeprecationWarning,
-        stacklevel=2,
-    )
-    return None
 
 
 def is_rust_available() -> bool:

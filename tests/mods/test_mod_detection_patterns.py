@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch  # Add import patch, MagicMock
 
 import pytest
 
-from ClassicLib.AsyncYamlSettings import AsyncYamlSettingsCore
+from ClassicLib.YamlSettings import AsyncYamlSettingsCore
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]

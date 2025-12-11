@@ -50,16 +50,16 @@ class TestMessageHandler:
         # CLI mode handler
         cli_handler: MessageHandler = MessageHandler(is_gui_mode=False)
         assert cli_handler._router.should_display(MessageTarget.ALL) is True
-        assert cli_handler._router.should_display(MessageTarget.CLI_ONLY) is True
-        assert cli_handler._router.should_display(MessageTarget.GUI_ONLY) is False
+        assert cli_handler._router.should_display(MessageTarget.CONSOLE) is True
+        assert cli_handler._router.should_display(MessageTarget.GUI) is False
         assert cli_handler._router.should_display(MessageTarget.LOG_ONLY) is False
 
         # GUI mode handler (mocked)
         with patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True):
             gui_handler: MessageHandler = MessageHandler(is_gui_mode=True)
             assert gui_handler._router.should_display(MessageTarget.ALL) is True
-            assert gui_handler._router.should_display(MessageTarget.CLI_ONLY) is False
-            assert gui_handler._router.should_display(MessageTarget.GUI_ONLY) is True
+            assert gui_handler._router.should_display(MessageTarget.CONSOLE) is False
+            assert gui_handler._router.should_display(MessageTarget.GUI) is True
             assert gui_handler._router.should_display(MessageTarget.LOG_ONLY) is False
 
     def test_cli_message_output(self) -> None:
@@ -96,15 +96,15 @@ class TestMessageHandler:
 
         old_stdout: TextIO | Any = sys.stdout
         try:
-            # CLI_ONLY message should show in CLI mode
+            # CONSOLE message should show in CLI mode
             sys.stdout = StringIO()
-            handler.info("CLI only", target=MessageTarget.CLI_ONLY)
+            handler.info("CLI only", target=MessageTarget.CONSOLE)
             output: str = sys.stdout.getvalue()
             assert "CLI only" in output
 
-            # GUI_ONLY message should not show in CLI mode
+            # GUI message should not show in CLI mode
             sys.stdout = StringIO()
-            handler.info("GUI only", target=MessageTarget.GUI_ONLY)
+            handler.info("GUI only", target=MessageTarget.GUI)
             output = sys.stdout.getvalue()
             assert "GUI only" not in output
 
