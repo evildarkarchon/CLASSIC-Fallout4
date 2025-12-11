@@ -12,6 +12,7 @@
   - `rust_loader.get_rust_module()` → Import specific Rust modules directly (e.g., `classic_scanlog`)
   - `MessageTarget.GUI_ONLY` → Use `MessageTarget.GUI` instead
   - `MessageTarget.CLI_ONLY` → Use `MessageTarget.CONSOLE` instead
+  - `ClassicLib.YamlSettingsCache` → Use `ClassicLib.YamlSettings` instead
 - Window is now resizable and should scale to smaller screens and handle high scaling better.
 - Remove the text box and convert messages to either use dialog boxes or the CLI, depending on the mode it's launched in.
 - Add progress window (for GUI mode) or CLI progress bar (for CLI) to show scanning progress.
