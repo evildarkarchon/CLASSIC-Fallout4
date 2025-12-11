@@ -165,10 +165,10 @@ def mock_qt_dialogs(monkeypatch):
 
     # Mock QMessageBox methods
     mock_msgbox = MagicMock()
-    mock_msgbox.information = MagicMock(return_value=QMessageBox.Ok) # pyright: ignore[reportAttributeAccessIssue]
-    mock_msgbox.warning = MagicMock(return_value=QMessageBox.Ok) # pyright: ignore[reportAttributeAccessIssue]
-    mock_msgbox.critical = MagicMock(return_value=QMessageBox.Ok) # pyright: ignore[reportAttributeAccessIssue]
-    mock_msgbox.question = MagicMock(return_value=QMessageBox.Yes) # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.information = MagicMock(return_value=QMessageBox.Ok)  # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.warning = MagicMock(return_value=QMessageBox.Ok)  # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.critical = MagicMock(return_value=QMessageBox.Ok)  # pyright: ignore[reportAttributeAccessIssue]
+    mock_msgbox.question = MagicMock(return_value=QMessageBox.Yes)  # pyright: ignore[reportAttributeAccessIssue]
 
     monkeypatch.setattr(QMessageBox, "information", mock_msgbox.information)
     monkeypatch.setattr(QMessageBox, "warning", mock_msgbox.warning)

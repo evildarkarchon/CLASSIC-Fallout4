@@ -40,7 +40,9 @@ class PathDialogMixin:
         """
         # Create a dialog with appropriate title and descriptive label
         dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set INI Path", label=f"Select the location of your {GlobalRegistry.get_game()} INI files" # pyright: ignore[reportArgumentType]
+            parent=self,
+            title="Set INI Path",
+            label=f"Select the location of your {GlobalRegistry.get_game()} INI files",  # pyright: ignore[reportArgumentType]
         )
 
         # Process the dialog result
@@ -59,7 +61,9 @@ class PathDialogMixin:
         """
         # Create a dialog with appropriate title and descriptive label
         dialog: ManualPathDialog = ManualPathDialog(
-            parent=self, title="Set Game Installation Path", label=f"Select the installation directory for {GlobalRegistry.get_game()}" # pyright: ignore[reportArgumentType]
+            parent=self,
+            title="Set Game Installation Path",
+            label=f"Select the installation directory for {GlobalRegistry.get_game()}",  # pyright: ignore[reportArgumentType]
         )
 
         # Process the dialog result

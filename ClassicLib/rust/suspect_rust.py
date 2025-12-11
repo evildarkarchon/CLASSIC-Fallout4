@@ -150,7 +150,7 @@ class RustAcceleratedSuspectScanner:
         # Fallback to Python implementation
         from ClassicLib.ScanLog.SuspectScanner import SuspectScanner as PySuspectScanner
 
-        return PySuspectScanner.check_dll_crash(crashlog_mainerror) # pyright: ignore[reportReturnType]
+        return PySuspectScanner.check_dll_crash(crashlog_mainerror)  # pyright: ignore[reportReturnType]
 
 
 # Export both the wrapper and components for compatibility

@@ -24,7 +24,7 @@ class TestRaceConditionPrevention:
         app = QApplication.instance()
         if app is None:
             app = QApplication([])
-        return app # pyright: ignore[reportReturnType]
+        return app  # pyright: ignore[reportReturnType]
 
     def test_scan_mutex_protection(self, app: QApplication) -> None:
         """Test that scan operations are protected by mutex."""
@@ -68,7 +68,7 @@ class TestThreadReusePrevention:
         app = QApplication.instance()
         if app is None:
             app = QApplication([])
-        return app # pyright: ignore[reportReturnType]
+        return app  # pyright: ignore[reportReturnType]
 
     def test_pastebin_thread_not_reused(self, app: QApplication) -> None:
         """Test that Pastebin fetch creates new thread each time."""

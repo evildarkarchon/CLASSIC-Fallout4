@@ -350,7 +350,7 @@ class ResultsViewerMixin:
         self.results_list.populate_reports(reports)
 
         # Emit signal
-        self.reports_refreshed.emit(len(reports)) # pyright: ignore[reportAttributeAccessIssue]
+        self.reports_refreshed.emit(len(reports))  # pyright: ignore[reportAttributeAccessIssue]
 
         # Update status
         if not reports:
@@ -410,7 +410,7 @@ class ResultsViewerMixin:
             self.current_report_path = report_path
 
             # Emit signal
-            self.report_loaded.emit(report_path) # pyright: ignore[reportAttributeAccessIssue]
+            self.report_loaded.emit(report_path)  # pyright: ignore[reportAttributeAccessIssue]
 
             logger.debug(f"Loaded report: {report_path.name}")
 

@@ -11,7 +11,7 @@ import time
 
 if not hasattr(time, "clock"):
     # Monkey-patch time.clock for compatibility with old libraries
-    time.clock = time.perf_counter # pyright: ignore[reportAttributeAccessIssue]
+    time.clock = time.perf_counter  # pyright: ignore[reportAttributeAccessIssue]
 
 import sys
 from pathlib import Path

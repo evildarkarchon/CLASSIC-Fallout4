@@ -23,7 +23,7 @@ class PerformanceTestFixtures:
     """
 
     @staticmethod
-    def generate_scalable_crash_data(base_size: int = 100, scale_factors: list[int] = None) -> dict[str, list[str]]: # pyright: ignore[reportArgumentType]
+    def generate_scalable_crash_data(base_size: int = 100, scale_factors: list[int] = None) -> dict[str, list[str]]:  # pyright: ignore[reportArgumentType]
         """
         Generate crash log data at multiple scales for performance testing.
 
@@ -370,7 +370,9 @@ class PerformanceTestFixtures:
 
     @staticmethod
     def generate_concurrent_test_scenarios(
-        base_operation: Callable, thread_counts: list[int] = None, iterations_per_thread: int = 10 # pyright: ignore[reportArgumentType]
+        base_operation: Callable,
+        thread_counts: list[int] = None,
+        iterations_per_thread: int = 10,  # pyright: ignore[reportArgumentType]
     ) -> dict[str, Callable]:
         """
         Generate concurrent test scenarios for performance testing.

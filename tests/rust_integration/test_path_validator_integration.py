@@ -46,7 +46,7 @@ class TestPathValidatorRustIntegration:
 
     def test_is_valid_path_with_none(self):
         """Test is_valid_path with None."""
-        assert PathValidator.is_valid_path(None) is False # pyright: ignore[reportArgumentType]
+        assert PathValidator.is_valid_path(None) is False  # pyright: ignore[reportArgumentType]
 
     def test_is_valid_path_with_empty_string(self):
         """Test is_valid_path with empty string."""

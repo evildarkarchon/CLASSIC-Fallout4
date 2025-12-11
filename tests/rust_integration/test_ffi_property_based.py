@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 try:
-    from hypothesis import assume, example, given, settings, HealthCheck
+    from hypothesis import HealthCheck, assume, example, given, settings
     from hypothesis import strategies as st
     from hypothesis.strategies import composite
 

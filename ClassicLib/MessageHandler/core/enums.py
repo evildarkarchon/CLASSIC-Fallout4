@@ -10,7 +10,6 @@ Attributes:
 
 from __future__ import annotations
 
-import warnings
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
 
@@ -105,31 +104,22 @@ class MessageTarget(Enum):
 
     Attributes:
         ALL: Show in both GUI and CLI.
-        GUI: Show only in GUI mode (canonical name).
-        CONSOLE: Show only in CLI mode (canonical name).
+        GUI: Show only in GUI mode.
+        CONSOLE: Show only in CLI mode.
         LOG_ONLY: Only write to log file, no display.
-        GUI_ONLY: Deprecated, use GUI instead.
-        CLI_ONLY: Deprecated, use CONSOLE instead.
     """
 
     ALL = auto()
-    GUI = auto()  # Canonical name for GUI-only
-    CONSOLE = auto()  # Canonical name for CLI-only
+    GUI = auto()
+    CONSOLE = auto()
     LOG_ONLY = auto()
-    # Legacy aliases - kept for backward compatibility
-    GUI_ONLY = auto()
-    CLI_ONLY = auto()
 
     def normalize(self) -> MessageTarget:
-        """Normalize legacy enum values to canonical names.
+        """Return self (no normalization needed with canonical values only).
 
         Returns:
-            Canonical MessageTarget value.
+            The same MessageTarget value.
         """
-        if self == MessageTarget.GUI_ONLY:
-            return MessageTarget.GUI
-        if self == MessageTarget.CLI_ONLY:
-            return MessageTarget.CONSOLE
         return self
 
     def should_display_in_gui(self) -> bool:
@@ -198,9 +188,9 @@ class MessageTarget(Enum):
         # Use string representation for mapping
         name = str(rust_target).lower()
         # Map to canonical names
-        if "gui" in name and "only" not in name:
+        if "gui" in name:
             return cls.GUI
-        if "console" in name or ("cli" in name and "only" not in name):
+        if "console" in name or "cli" in name:
             return cls.CONSOLE
         if "all" in name:
             return cls.ALL
@@ -209,24 +199,3 @@ class MessageTarget(Enum):
 
         msg = f"Unknown Rust MessageTarget: {rust_target}"
         raise ValueError(msg)
-
-
-# Deprecated aliases with warnings
-def _deprecated_gui_only() -> MessageTarget:
-    """Get GUI_ONLY with deprecation warning."""
-    warnings.warn(
-        "MessageTarget.GUI_ONLY is deprecated, use MessageTarget.GUI instead",
-        DeprecationWarning,
-        stacklevel=3,
-    )
-    return MessageTarget.GUI_ONLY
-
-
-def _deprecated_cli_only() -> MessageTarget:
-    """Get CLI_ONLY with deprecation warning."""
-    warnings.warn(
-        "MessageTarget.CLI_ONLY is deprecated, use MessageTarget.CONSOLE instead",
-        DeprecationWarning,
-        stacklevel=3,
-    )
-    return MessageTarget.CLI_ONLY

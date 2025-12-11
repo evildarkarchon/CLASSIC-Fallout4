@@ -595,7 +595,7 @@ class TestFormIDParity:
             # Note: For small datasets, parallel overhead may make batch slower.
             # If absolute time is negligible (< 1ms), we ignore the ratio.
             assert rust_batch_time <= rust_sequential_time * 5.0 or rust_batch_time < 0.001, (
-                f"Batch processing significantly slower: {rust_batch_time*1000:.3f}ms vs {rust_sequential_time*1000:.3f}ms"
+                f"Batch processing significantly slower: {rust_batch_time * 1000:.3f}ms vs {rust_sequential_time * 1000:.3f}ms"
             )
 
         except Exception as e:

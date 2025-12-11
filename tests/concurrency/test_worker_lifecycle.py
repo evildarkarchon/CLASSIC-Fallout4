@@ -23,7 +23,7 @@ class TestPapyrusMonitorThreadSafety:
         app = QApplication.instance()
         if app is None:
             app = QApplication([])
-        return app # pyright: ignore[reportReturnType]
+        return app  # pyright: ignore[reportReturnType]
 
     def test_papyrus_monitor_stop(self) -> None:
         """Test thread-safe stop method."""
@@ -97,7 +97,7 @@ class TestGracefulShutdown:
         app = QApplication.instance()
         if app is None:
             app = QApplication([])
-        return app # pyright: ignore[reportReturnType]
+        return app  # pyright: ignore[reportReturnType]
 
     def test_close_event_cleanup(self, app: QApplication) -> None:
         """Test that closeEvent properly cleans up all threads."""

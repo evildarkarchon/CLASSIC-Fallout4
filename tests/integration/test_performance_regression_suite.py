@@ -549,7 +549,7 @@ class TestPluginAnalysisPerformance:
             dependencies[plugin_name] = deps
 
         # Measure dependency resolution
-        def resolve_dependencies(plugin: str, resolved: set = None) -> list[str]: # pyright: ignore[reportArgumentType]
+        def resolve_dependencies(plugin: str, resolved: set = None) -> list[str]:  # pyright: ignore[reportArgumentType]
             if resolved is None:
                 resolved = set()
 

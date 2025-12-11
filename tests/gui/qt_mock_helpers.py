@@ -38,7 +38,7 @@ def create_qt_widget_mock(spec_class=QWidget):
     mock = MagicMock(spec=spec_class)
     # Add required Qt meta-object attributes
     mock._qt_object = True
-    mock.__class__ = spec_class # pyright: ignore[reportAttributeAccessIssue]
+    mock.__class__ = spec_class  # pyright: ignore[reportAttributeAccessIssue]
     return mock
 
 
@@ -65,7 +65,7 @@ def create_mock_layout_with_union_support():
     """
     mock = MagicMock()
     # Make it pass isinstance checks by setting __class__
-    mock.__class__ = QVBoxLayout # pyright: ignore[reportAttributeAccessIssue]
+    mock.__class__ = QVBoxLayout  # pyright: ignore[reportAttributeAccessIssue]
     mock.addLayout = MagicMock()
     mock.addWidget = MagicMock()
     mock.addSpacing = MagicMock()

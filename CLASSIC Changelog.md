@@ -2,6 +2,16 @@
 
 ### 8.0.0 CHANGES
 
+- **For Developers**: Removed deprecated import shim modules that were providing backward compatibility during refactoring:
+  - `ClassicLib.FileIOCore` → Use `ClassicLib.FileIO` instead
+  - `ClassicLib.AsyncUtil` → Use `ClassicLib.FileIO.Async` instead
+  - `ClassicLib.AsyncYamlSettingsCore` → Use `ClassicLib.YamlSettings` instead
+  - `ClassicLib.AsyncYamlSettings` → Use `ClassicLib.YamlSettings` instead
+  - `ClassicLib.AsyncUtilities` → Use `ClassicLib.Utils.Async` instead
+  - `ClassicLib.AsyncUtilities_Enhanced` → Use `ClassicLib.Utils.Async` instead
+  - `rust_loader.get_rust_module()` → Import specific Rust modules directly (e.g., `classic_scanlog`)
+  - `MessageTarget.GUI_ONLY` → Use `MessageTarget.GUI` instead
+  - `MessageTarget.CLI_ONLY` → Use `MessageTarget.CONSOLE` instead
 - Window is now resizable and should scale to smaller screens and handle high scaling better.
 - Remove the text box and convert messages to either use dialog boxes or the CLI, depending on the mode it's launched in.
 - Add progress window (for GUI mode) or CLI progress bar (for CLI) to show scanning progress.

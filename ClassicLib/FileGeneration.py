@@ -81,8 +81,8 @@ class FileGenerator:
         Raises:
             TypeError: If the retrieved default ignore file content is not a string.
         """
-        from ClassicLib.AsyncYamlSettings import yaml_settings_async
         from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         ignore_path = Path("CLASSIC Ignore.yaml")
         io_core = FileIOCore()
@@ -107,8 +107,8 @@ class FileGenerator:
         Raises:
             TypeError: If the retrieved default YAML content is not a string.
         """
-        from ClassicLib.AsyncYamlSettings import yaml_settings_async
         from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.YamlSettings import yaml_settings_async
 
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
         io_core = FileIOCore()

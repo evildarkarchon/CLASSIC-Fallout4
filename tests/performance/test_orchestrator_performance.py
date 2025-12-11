@@ -17,14 +17,15 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from packaging.version import Version
 
 from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.Utils.version_utils import crashgen_version_gen
-from packaging.version import Version
 
 if TYPE_CHECKING:
     pass
+
 
 class TestOrchestratorPerformance:
     """Test suite for OrchestratorCore performance optimizations."""

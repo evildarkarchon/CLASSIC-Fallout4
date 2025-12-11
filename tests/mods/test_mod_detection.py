@@ -60,7 +60,7 @@ class TestSingleModDetection:
         """Test when no mods are found in the crash log plugins."""
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00", "another_plugin.esp": "01"}
 
-        result: ReportFragment = detect_mods_single(sample_yaml_dict, crashlog_plugins) # pyright: ignore[reportAssignmentType]
+        result: ReportFragment = detect_mods_single(sample_yaml_dict, crashlog_plugins)  # pyright: ignore[reportAssignmentType]
 
         assert not result.has_content
         assert len(result.content) == 0
@@ -70,7 +70,7 @@ class TestSingleModDetection:
         yaml_dict: dict[str, str] = {"mod1": "Warning for mod1", "mod2": "Warning for mod2"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "unrelated_plugin.esp": "01"}
 
-        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins) # pyright: ignore[reportAssignmentType]
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)  # pyright: ignore[reportAssignmentType]
 
         assert result.has_content
         result_text = "".join(result.to_list())
@@ -79,7 +79,7 @@ class TestSingleModDetection:
 
     def test_multiple_mods_found(self, sample_yaml_dict: dict[str, str], sample_crashlog_plugins: dict[str, str]) -> None:
         """Test when multiple mods are found in the crash log plugins."""
-        result: ReportFragment = detect_mods_single(sample_yaml_dict, sample_crashlog_plugins) # pyright: ignore[reportAssignmentType]
+        result: ReportFragment = detect_mods_single(sample_yaml_dict, sample_crashlog_plugins)  # pyright: ignore[reportAssignmentType]
 
         assert result.has_content
         result_text = "".join(result.to_list())
@@ -90,7 +90,7 @@ class TestSingleModDetection:
         yaml_dict: dict[str, str] = {"MOD1": "Warning for mod1", "mod2": "Warning for mod2"}
         crashlog_plugins: dict[str, str] = {"Mod1_Plugin.esp": "00", "unrelated_plugin.esp": "01"}
 
-        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins) # pyright: ignore[reportAssignmentType]
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)  # pyright: ignore[reportAssignmentType]
 
         assert result.has_content
         result_text = "".join(result.to_list())
@@ -102,14 +102,14 @@ class TestSingleModDetection:
         yaml_dict: dict[Any, Any] = {}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
 
-        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins) # pyright: ignore[reportAssignmentType]
+        result: ReportFragment = detect_mods_single(yaml_dict, crashlog_plugins)  # pyright: ignore[reportAssignmentType]
 
         assert not result.has_content
         assert len(result.content) == 0
 
     def test_empty_crashlog_plugins(self, sample_yaml_dict: dict[str, str], empty_crashlog_plugins: dict[str, str]) -> None:
         """Test with empty crashlog plugins."""
-        result: ReportFragment = detect_mods_single(sample_yaml_dict, empty_crashlog_plugins) # pyright: ignore[reportAssignmentType]
+        result: ReportFragment = detect_mods_single(sample_yaml_dict, empty_crashlog_plugins)  # pyright: ignore[reportAssignmentType]
 
         assert not result.has_content
         assert len(result.content) == 0

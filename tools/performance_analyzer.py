@@ -205,7 +205,7 @@ class StatisticalAnalyzer:
         if SCIPY_AVAILABLE and stats is not None:
             # Use scipy for proper Welch's t-test
             result = stats.ttest_ind(sample1, sample2, equal_var=False)
-            p_value = float(result.pvalue) # pyright: ignore[reportAttributeAccessIssue]
+            p_value = float(result.pvalue)  # pyright: ignore[reportAttributeAccessIssue]
             return p_value < alpha, p_value
         # Manual implementation of Welch's t-test
         n1, n2 = len(sample1), len(sample2)

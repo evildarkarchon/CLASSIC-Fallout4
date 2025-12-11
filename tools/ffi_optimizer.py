@@ -542,7 +542,7 @@ class DataOptimizer:
                 data = list(data)
             elif opt == "string_to_bytes":
                 encoding = metadata.get("encoding", "utf-8")
-                data = data.decode(encoding) # pyright: ignore[reportAttributeAccessIssue]
+                data = data.decode(encoding)  # pyright: ignore[reportAttributeAccessIssue]
             elif opt == "dict_to_arrays":
                 if isinstance(data, dict) and data.get("__optimized_dict__"):
                     keys = data["keys"]
