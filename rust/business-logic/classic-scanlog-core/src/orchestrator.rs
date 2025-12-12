@@ -689,7 +689,10 @@ impl OrchestratorCore {
         let processed_lines = self.reformat_crash_data_inline(&raw_lines);
 
         // Convert to Arc<str> for efficient memory sharing during parsing
-        let lines: Vec<Arc<str>> = processed_lines.iter().map(|s| Arc::from(s.as_str())).collect();
+        let lines: Vec<Arc<str>> = processed_lines
+            .iter()
+            .map(|s| Arc::from(s.as_str()))
+            .collect();
 
         // Parse log into segments
         let segments = self.parser.parse_segments(&lines);
