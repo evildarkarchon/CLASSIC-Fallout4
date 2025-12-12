@@ -1,4 +1,4 @@
-"""Documents folder and configuration checking module."""
+"""Document folder and configuration checking module."""
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
@@ -7,12 +7,11 @@ from ClassicLib.Logger import logger
 
 
 class DocumentsChecker:
-    """Validates game documents folder and configuration files."""
+    """Validate game documents folder and configuration files."""
 
     @staticmethod
     def check_folder_configuration() -> str:
-        """
-        Validates and checks the folder configuration for specific document paths.
+        """Validate and checks the folder configuration for specific document paths.
 
         This method evaluates the configuration of document paths based on the settings
         from the YAML configuration. It performs checks to ensure the validity of the
@@ -25,6 +24,7 @@ class DocumentsChecker:
         Returns:
             str: A concatenated message list containing warnings or an empty string if
             no warnings are applicable.
+
         """
         from ClassicLib.YamlSettings import yaml_settings
 
@@ -45,8 +45,7 @@ class DocumentsChecker:
 
     @staticmethod
     def validate_ini_file(ini_filename: str) -> str:
-        """
-        Validates if the provided INI filename refers to a valid INI file. This ensures that
+        """Validate if the provided INI filename refers to a valid INI file. This ensures that
         the given file adheres to the expected structure, syntax, and format of INI files.
 
         Args:
@@ -54,13 +53,13 @@ class DocumentsChecker:
 
         Returns:
             str: A string result indicating the outcome of the INI file validation.
+
         """
         logger.debug(f"Validating INI file: {ini_filename}")
         return docs_check_ini(ini_filename)
 
     def run_all_checks(self) -> list[str]:
-        """
-        Run all document-related checks.
+        """Run all document-related checks.
 
         This method performs:
         1. Folder configuration check (OneDrive detection)
@@ -69,6 +68,7 @@ class DocumentsChecker:
         Returns:
             A list of message strings from all checks. Each string may
             contain warnings or validation results.
+
         """
         game_name: str = GlobalRegistry.get_game()
 

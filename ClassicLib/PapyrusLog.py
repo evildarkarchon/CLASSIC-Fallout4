@@ -1,5 +1,4 @@
-"""
-This module processes and analyzes Papyrus log files to extract statistics and
+"""Papyrus log file processor and analyzer. to extract statistics and
 summarize relevant data such as the number of dumps, stacks, warnings, and errors.
 
 The module relies on external utility libraries to locate and process log files.
@@ -19,8 +18,7 @@ from ClassicLib.YamlSettings import yaml_settings
 
 
 def papyrus_logging() -> tuple[str, int]:
-    """
-    Analyzes Papyrus log files, extracting various statistics and compiling a summary.
+    """Analyze Papyrus log files, extracting various statistics and compiling a summary.
 
     This function reads a Papyrus log file using streaming file I/O to minimize memory usage,
     and computes key data such as the total number of dumps, stacks, warnings, and errors
@@ -39,6 +37,7 @@ def papyrus_logging() -> tuple[str, int]:
 
     Raises:
         ValueError: If file reading fails or path is invalid.
+
     """
     message_list: list[str] = []
     papyrus_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_PapyrusLog")

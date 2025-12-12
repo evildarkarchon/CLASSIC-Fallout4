@@ -1,5 +1,4 @@
-"""
-Pure Python fallback implementation of IniValidator.
+"""Pure Python fallback implementation of IniValidator.
 
 This module provides a Python-only implementation of INI file validation
 that matches the Rust interface.
@@ -12,7 +11,7 @@ from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 
 
 class IniValidator:
-    """Validates game INI configuration files.
+    """Validate game INI configuration files.
 
     This is a Python fallback implementation that matches the Rust interface.
     It checks INI files for known issues and configuration problems.
@@ -24,6 +23,7 @@ class IniValidator:
         >>> validator = IniValidator("Fallout4")
         >>> report = validator.validate_inis(Path("/game/root"))
         >>> print(report)
+
     """
 
     def __init__(self, game_name: str) -> None:
@@ -31,6 +31,7 @@ class IniValidator:
 
         Args:
             game_name: Name of the game to validate INIs for.
+
         """
         self.game_name = game_name
 
@@ -52,6 +53,7 @@ class IniValidator:
             >>> report = validator.validate_inis(Path("/game"))
             >>> if report:
             ...     print("Issues found:", report)
+
         """
         # Use existing Python implementation
         from ClassicLib.ScanGame.ScanModInis import scan_mod_inis
@@ -77,6 +79,7 @@ class IniValidator:
             >>> issues = validator.detect_all_issues(config_map)
             >>> for issue in issues:
             ...     print(f"{issue.setting}: {issue.description}")
+
         """
         # Create ConfigFileCache for issue detection
         config_cache = ConfigFileCache()

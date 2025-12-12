@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of database operations.
+"""Pure Python implementation of database operations.
 
 This module provides the fallback Python implementation for database
 connection pooling and operations when Rust acceleration is not available.
@@ -17,8 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 class PythonDatabasePool:
-    """
-    Pure Python implementation of an async database connection pool.
+    """Pure Python implementation of an async database connection pool.
 
     This class provides the fallback implementation for database operations,
     managing SQLite connections and providing async methods for FormID lookups.
@@ -29,15 +27,16 @@ class PythonDatabasePool:
         pool_size: Maximum number of connections in the pool.
         connections: List of available database connections.
         lock: Async lock for thread-safe connection management.
+
     """
 
     def __init__(self, db_path: Path | str, pool_size: int = 5) -> None:
-        """
-        Initialize the database pool with the specified configuration.
+        """Initialize the database pool with the specified configuration.
 
         Args:
             db_path: Path to the SQLite database file.
             pool_size: Maximum number of connections to maintain.
+
         """
         self.db_path = Path(db_path) if isinstance(db_path, str) else db_path
         self.pool_size = pool_size
@@ -46,8 +45,7 @@ class PythonDatabasePool:
         self._initialized = False
 
     async def initialize(self) -> None:
-        """
-        Initializes the database connection pool and verifies database accessibility.
+        """Initialize the database connection pool and verifies database accessibility.
 
         This method ensures that the database pool is initialized only once, even if
         called multiple times concurrently. It verifies the existence and accessibility
@@ -56,6 +54,7 @@ class PythonDatabasePool:
         Raises:
             FileNotFoundError: If the specified database file does not exist.
             sqlite3.Error: If a database error occurs during initialization.
+
         """
         if self._initialized:
             return
@@ -83,8 +82,7 @@ class PythonDatabasePool:
                 raise
 
     def _create_connection(self) -> sqlite3.Connection | None:
-        """
-        Creates and returns a connection to the SQLite database.
+        """Create and returns a connection to the SQLite database.
 
         This method attempts to establish a connection to the SQLite database using
         the provided database path. If the connection is successful, it configures
@@ -95,6 +93,7 @@ class PythonDatabasePool:
         Returns:
             sqlite3.Connection | None: A connection object to interact with the SQLite
             database if successful. Returns `None` if the connection fails.
+
         """
         try:
             conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
@@ -119,8 +118,7 @@ class PythonDatabasePool:
             return conn
 
     async def _get_connection(self) -> sqlite3.Connection:
-        """
-        Retrieves a database connection from the pool or creates a new one if the pool is empty.
+        """Retrieve a database connection from the pool or creates a new one if the pool is empty.
 
         This method manages a pool of database connections and ensures thread-safe access. If a connection
         is available in the pool, it is returned. If not, a new connection is created by invoking the
@@ -131,6 +129,7 @@ class PythonDatabasePool:
 
         Raises:
             RuntimeError: If a new database connection cannot be created.
+
         """
         async with self.lock:
             # Try to get existing connection
@@ -144,12 +143,12 @@ class PythonDatabasePool:
             raise RuntimeError("Failed to create database connection")
 
     async def _return_connection(self, conn: sqlite3.Connection) -> None:
-        """
-        Manages the return of a database connection to the connection pool. Ensures thread-safe
+        """Manage the return of a database connection to the connection pool. Ensures thread-safe
         handling of connections and avoids exceeding the pool size by closing excess connections.
 
         Args:
             conn (sqlite3.Connection): The database connection to return to the pool.
+
         """
         async with self.lock:
             if len(self.connections) < self.pool_size:
@@ -159,8 +158,7 @@ class PythonDatabasePool:
                 conn.close()
 
     async def get_entry(self, formid: str, plugin: str) -> str | None:
-        """
-        Fetches the description of a form entry by formid and plugin from the database.
+        """Fetch the description of a form entry by formid and plugin from the database.
 
         This asynchronous method retrieves a single entry's description from the database
         based on the provided formid and plugin. It ensures the connection is properly
@@ -172,6 +170,7 @@ class PythonDatabasePool:
 
         Returns:
             str | None: The description of the form entry if found, otherwise None.
+
         """
         if not self._initialized:
             await self.initialize()
@@ -186,8 +185,7 @@ class PythonDatabasePool:
             await self._return_connection(conn)
 
     async def get_entries_batch(self, formid_plugin_pairs: list[tuple[str, str]]) -> dict[tuple[str, str], str]:
-        """
-        Fetches entries for a batch of (formid, plugin) pairs from the database asynchronously.
+        """Fetch entries for a batch of (formid, plugin) pairs from the database asynchronously.
 
         This method retrieves descriptions corresponding to each provided (formid, plugin) pair
         from the database in a batch operation. It establishes a database connection,
@@ -205,6 +203,7 @@ class PythonDatabasePool:
 
         Raises:
             Any database-related exceptions encountered while executing the query will be raised.
+
         """
         if not self._initialized:
             await self.initialize()
@@ -236,8 +235,7 @@ class PythonDatabasePool:
 
     @staticmethod
     def _execute_query_single(conn: sqlite3.Connection, query: str, params: tuple) -> str | None:
-        """
-        Executes a single query on a SQLite database and retrieves the description of the
+        """Execute a single query on a SQLite database and retrieves the description of the
         first row if available.
 
         Args:
@@ -248,6 +246,7 @@ class PythonDatabasePool:
         Returns:
             str | None: The value of the "description" field from the first row, or None
             if no such row exists or an error occurs.
+
         """
         try:
             cursor = conn.cursor()
@@ -260,8 +259,7 @@ class PythonDatabasePool:
 
     @staticmethod
     def _execute_query_batch(conn: sqlite3.Connection, query: str, params: list) -> list[dict]:
-        """
-        Executes a batch SQL query on the given SQLite connection.
+        """Execute a batch SQL query on the given SQLite connection.
 
         This method executes a query with provided parameters against a SQLite database connection,
         fetches all results, and processes them into a list of dictionaries. If an error occurs
@@ -275,6 +273,7 @@ class PythonDatabasePool:
         Returns:
             list[dict]: A list of dictionaries representing the rows returned by the query. If
             an error occurs, an empty list is returned.
+
         """
         try:
             cursor = conn.cursor()
@@ -285,8 +284,7 @@ class PythonDatabasePool:
             return []
 
     async def close(self) -> None:
-        """
-        Closes all database connections in the connection pool.
+        """Close all database connections in the connection pool.
 
         This method ensures all connections in the pool are properly closed,
         the pool is emptied, and its status is updated to reflect that it is no
@@ -301,26 +299,26 @@ class PythonDatabasePool:
             logger.info("Database pool closed")
 
     async def __aenter__(self) -> Self:
-        """
-        Handles asynchronous context management for the class. Ensures proper initialization
+        """Handle asynchronous context management for the class. Ensures proper initialization
         of necessary resources before entering the context.
 
         Returns:
             self: The initialized instance of the class, ready for use within the
             asynchronous context.
+
         """
         await self.initialize()
         return self
 
     async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
-        """
-        Handles the asynchronous exit of an async context manager by performing necessary cleanup actions,
+        """Handle the asynchronous exit of an async context manager by performing necessary cleanup actions,
         such as closing connections or resources.
 
         Args:
             exc_type: The exception type if an exception was raised during the execution of the context.
             exc_val: The exception value if an exception was raised.
             exc_tb: The traceback object if an exception was raised.
+
         """
         await self.close()
 

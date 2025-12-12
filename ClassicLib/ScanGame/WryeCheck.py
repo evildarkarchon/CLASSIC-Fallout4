@@ -1,5 +1,4 @@
-"""
-Parses and identifies potential issues in Wrye Bash plugin checker reports and provides
+"""Parse and identifies potential issues in Wrye Bash plugin checker reports and provides
 detailed guidance and warnings based on parsed data and configuration settings.
 
 This module includes functions for scanning the Wrye Bash report, parsing the content,
@@ -30,6 +29,7 @@ def scan_wryecheck() -> str:
 
     Raises:
         ValueError: If the required warnings setting is not found in YAML config.
+
     """
     # Constants for formatting and links
     # noinspection PyPep8Naming
@@ -78,8 +78,7 @@ def scan_wryecheck() -> str:
 
 
 def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[str]:
-    """
-    Parses a Wrye Bash report in HTML format and extracts relevant messages and plugin details.
+    """Parse a Wrye Bash report in HTML format and extracts relevant messages and plugin details.
 
     This function reads a Wrye Bash plugin analysis report in the form of an HTML file,
     extracts and processes relevant data concerning plugins and warnings. The data is formatted
@@ -92,6 +91,7 @@ def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[
 
     Returns:
         list[str]: A list of formatted message strings containing details from the report and warnings.
+
     """
     message_parts: list[str] = []
 
@@ -127,8 +127,7 @@ def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[
 
 
 def extract_plugins_from_section(section: PageElement) -> list[str]:
-    """
-    Extracts a list of plugins from a specified section of a page element. A plugin is
+    """Extract a list of plugins from a specified section of a page element. A plugin is
     identified as text containing specific extensions (.esp, .esl, .esm). The function
     searches through paragraphs in the given section, parsing relevant text while
     ensuring it does not process content from other sections.
@@ -138,6 +137,7 @@ def extract_plugins_from_section(section: PageElement) -> list[str]:
 
     Returns:
         list[str]: A list of strings representing detected plugins.
+
     """
     plugins: list[str] = []
     for paragraph in section.find_next_siblings("p"):
@@ -154,8 +154,7 @@ def extract_plugins_from_section(section: PageElement) -> list[str]:
 
 
 def format_section_header(title: str) -> str:
-    """
-    Formats a section header with a title string, aligning it symmetrically with padding
+    """Format a section header with a title string, aligning it symmetrically with padding
     if the title's length is less than 32 characters. Adds an equal sign (`=`)
     padding around the title to create a visually distinct section.
 
@@ -164,6 +163,7 @@ def format_section_header(title: str) -> str:
 
     Returns:
         str: A formatted section header string.
+
     """
     if len(title) < 32:
         diff: int = 32 - len(title)

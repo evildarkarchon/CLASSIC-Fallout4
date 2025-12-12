@@ -1,5 +1,4 @@
-"""
-A module for monitoring and displaying real-time statistics from Papyrus log data.
+"""A module for monitoring and displaying real-time statistics from Papyrus log data.
 
 This module provides a dialog that visualizes Papyrus statistics, such as dump and
 stack counts, error and warning counts, and the dumps-to-stacks ratio, in a user-friendly
@@ -25,8 +24,7 @@ from ClassicLib.Interface.Papyrus import PapyrusStats
 
 
 class PapyrusMonitorDialog(QDialog):
-    """
-    A custom dialog that displays real-time statistics from Papyrus log monitoring.
+    """A custom dialog that displays real-time statistics from Papyrus log monitoring.
 
     This dialog presents Papyrus statistics in an organized layout, updating in real-time
     as new stats are received. It includes counters for dumps, stacks, warnings, and errors,
@@ -35,19 +33,20 @@ class PapyrusMonitorDialog(QDialog):
 
     Attributes:
         stop_monitoring (Signal): Signal emitted when monitoring should be stopped.
+
     """
 
     stop_monitoring = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """
-        Initialize the Papyrus Monitor Dialog.
+        """Initialize the Papyrus Monitor Dialog.
 
         Sets up the UI components including labels for statistics, a timestamp display,
         and a stop button.
 
         Args:
             parent: The parent widget for this dialog
+
         """
         super().__init__(parent)
         self.setWindowTitle("Papyrus Log Monitor")
@@ -120,14 +119,14 @@ class PapyrusMonitorDialog(QDialog):
         self.update_stats(PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0))
 
     def update_stats(self, stats: PapyrusStats) -> None:
-        """
-        Updates the UI with the latest statistics and modifies status indicators
+        """Update the UI with the latest statistics and modifies status indicators
         and messages based on the provided statistical data.
 
         Args:
             stats (PapyrusStats): An object containing statistical data, such as
                 timestamp, counts of dumps and stacks, their ratio, warning count,
                 and error count.
+
         """
         # Update timestamp
         self.timestamp_label.setText(f"Last Updated: {stats.timestamp.strftime('%H:%M:%S')}")  # Update stat values
@@ -145,8 +144,7 @@ class PapyrusMonitorDialog(QDialog):
         self._update_message(stats)
 
     def _update_status_indicators(self, stats: PapyrusStats) -> None:
-        """
-        Updates the status indicators based on the provided statistics, reflecting the
+        """Update the status indicators based on the provided statistics, reflecting the
         state of ratio, warnings, and errors using visual cues such as icons and text
         color. High ratios, non-zero warnings, and errors are flagged visually, while
         acceptable states are indicated differently to enhance readability and quick
@@ -156,6 +154,7 @@ class PapyrusMonitorDialog(QDialog):
             stats (PapyrusStats): An object containing statistics to evaluate and use
                 for status updates, including attributes such as ratio, warnings, and
                 errors.
+
         """  # A high ratio is bad
         if stats.ratio > 0.8:
             self.stat_status_labels["dumps_stacks_ratio"].setText("❌")
@@ -184,8 +183,7 @@ class PapyrusMonitorDialog(QDialog):
             self.stat_status_labels["errors"].setStyleSheet("color: green;")
 
     def _update_message(self, stats: PapyrusStats) -> None:
-        """
-        Updates the message label to reflect the state of the Papyrus log based on statistics.
+        """Update the message label to reflect the state of the Papyrus log based on statistics.
 
         This method examines the provided PapyrusStats object and updates the user interface
         by setting the appropriate text and style for the message label. The text and style
@@ -195,6 +193,7 @@ class PapyrusMonitorDialog(QDialog):
         Args:
             stats: PapyrusStats object containing the error count, warning count, and
                 dumps-to-stacks ratio used to determine the message to display.
+
         """
         if stats.errors > 0:
             self.message_label.setText(f"{stats.errors} errors detected in Papyrus log!")
@@ -213,19 +212,18 @@ class PapyrusMonitorDialog(QDialog):
             self.message_label.setStyleSheet("color: green;")
 
     def on_stop_clicked(self) -> None:
-        """
-        Handles the action triggered when the stop button is clicked. This method emits a
+        """Handle the action triggered when the stop button is clicked. This method emits a
         signal to stop monitoring and closes the associated dialog.
 
         Raises:
             None
+
         """
         self.stop_monitoring.emit()
         self.accept()
 
     def handle_error(self, error_msg: str) -> None:
-        """
-        Handles and displays an error message in a formatted style.
+        """Handle and displays an error message in a formatted style.
 
         This method updates the text and style of the `message_label` to indicate an
         error message to the user. Specifically, it sets the text to the provided error
@@ -233,13 +231,13 @@ class PapyrusMonitorDialog(QDialog):
 
         Args:
             error_msg (str): The error message to be displayed.
+
         """
         self.message_label.setText(f"Error: {error_msg}")
         self.message_label.setStyleSheet("color: red; font-weight: bold;")
 
     def closeEvent(self, event: QCloseEvent) -> None:
-        """
-        Handles the close event for the application window.
+        """Handle the close event for the application window.
 
         This method is triggered when the close event is emitted for the associated
         window. It stops monitoring processes by emitting the `stop_monitoring` signal
@@ -248,6 +246,7 @@ class PapyrusMonitorDialog(QDialog):
         Args:
             event: The close event object passed by the framework, providing context
                 and actions related to the close operation.
+
         """
         self.stop_monitoring.emit()
         event.accept()

@@ -1,5 +1,4 @@
-"""
-A module for validating and maintaining file path configurations.
+"""A module for validating and maintaining file path configurations.
 
 This module provides utilities for ensuring configurable paths, such as custom
 scan directories or game root folders, are valid and accessible. It also includes
@@ -30,8 +29,7 @@ _HAS_RUST_PATH = classic_path is not None
 
 
 class PathValidator:
-    """
-    Provides static methods for validating and managing file system paths.
+    """Provide static methods for validating and managing file system paths.
 
     This class provides utility methods to validate paths for existence, their appropriateness
     for specific purposes such as being part of restricted directories, and for cleaning
@@ -44,8 +42,7 @@ class PathValidator:
 
     @staticmethod
     def is_valid_path(path: str | Path) -> bool:
-        """
-        Checks if the supplied path is valid and exists in the file system.
+        """Check if the supplied path is valid and exists in the file system.
 
         This method determines the validity of a given path by verifying its type,
         checking if it is not empty or None, and confirming whether the path exists
@@ -60,6 +57,7 @@ class PathValidator:
 
         Returns:
             bool: True if the path is valid and exists in the file system, False otherwise.
+
         """
         # Handle None and empty strings
         if path is None or (isinstance(path, str) and not path.strip()):
@@ -83,8 +81,7 @@ class PathValidator:
 
     @staticmethod
     def is_restricted_path(path: str | Path | None) -> bool:
-        """
-        Checks whether the provided path is a restricted path.
+        """Check whether the provided path is a restricted path.
 
         This method verifies if a given path is restricted or valid by utilizing an
         existing utility function. Restricted paths include:
@@ -103,6 +100,7 @@ class PathValidator:
 
         Returns:
             bool: True if the path is restricted, False otherwise.
+
         """
         # Handle None and empty strings as restricted (fail-safe)
         if path is None or (isinstance(path, str) and not path.strip()):
@@ -130,8 +128,7 @@ class PathValidator:
 
     @staticmethod
     def validate_custom_scan_path() -> None:
-        """
-        Validates the custom scan path defined in the application settings.
+        """Validate the custom scan path defined in the application settings.
 
         This method checks whether the custom scan path specified in the application
         settings is valid or not. A path is considered invalid if it does not exist,
@@ -142,6 +139,7 @@ class PathValidator:
         Raises:
             None: No exceptions are raised by this method. It handles all invalid
             path scenarios internally.
+
         """
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
         from ClassicLib.YamlSettings import classic_settings, yaml_settings
@@ -174,8 +172,7 @@ class PathValidator:
         required_files: list[str] | None = None,
         path_description: str = "path",
     ) -> bool:
-        """
-        Validates the 'path' setting based on provided parameters.
+        """Validate the 'path' setting based on provided parameters.
 
         This static method ensures the specified 'path' meets certain validation
         criteria, such as existence, being a directory, and containing required files
@@ -197,6 +194,7 @@ class PathValidator:
         Returns:
             bool: Returns True if the path is valid and meets all criteria. Otherwise,
                 returns False.
+
         """
         from ClassicLib.YamlSettings import yaml_settings
 
@@ -298,8 +296,7 @@ class PathValidator:
 
     @staticmethod
     def validate_mods_folder_path() -> None:
-        """
-        Validates the path of the mods folder based on application settings.
+        """Validate the path of the mods folder based on application settings.
 
         Retrieves the path for the mods folder from configuration settings and checks
         its validity. If the path is specified, performs additional validation using
@@ -347,8 +344,7 @@ class PathValidator:
 
     @staticmethod
     def validate_all_settings_paths() -> None:
-        """
-        Validates all necessary settings paths to ensure proper application configuration.
+        """Validate all necessary settings paths to ensure proper application configuration.
 
         This static method performs a comprehensive validation of various critical paths
         required for the application to function correctly. These validations include paths

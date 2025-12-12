@@ -23,6 +23,7 @@ class RustError(Exception):
         ...     print(f"File error: {e}")
         ... except RustError as e:
         ...     print(f"Other Rust error: {e}")
+
     """
 
 
@@ -43,6 +44,7 @@ class RustIOError(RustError, IOError):
         ...     yaml_ops.load_yaml_file("/nonexistent.yaml")
         ... except RustIOError as e:
         ...     print(f"Cannot read file: {e}")
+
     """
 
 
@@ -63,6 +65,7 @@ class RustParseError(RustError, ValueError):
         ...     yaml_ops.parse_yaml("invalid: yaml: content")
         ... except RustParseError as e:
         ...     print(f"Parse failed: {e}")
+
     """
 
 
@@ -80,6 +83,7 @@ class RustConfigError(RustError, ValueError):
         ...     config_ops.load_config({"invalid_key": "value"})
         ... except RustConfigError as e:
         ...     print(f"Configuration error: {e}")
+
     """
 
 
@@ -97,6 +101,7 @@ class RustDatabaseError(RustError):
         ...     db_ops.query_formids(["invalid"])
         ... except RustDatabaseError as e:
         ...     print(f"Database error: {e}")
+
     """
 
 
@@ -115,6 +120,7 @@ class RustMemoryError(RustError, MemoryError):
         ...     file_ops.read_large_file("/huge/file.dat")
         ... except RustMemoryError as e:
         ...     print(f"Out of memory: {e}")
+
     """
 
 
@@ -132,6 +138,7 @@ class RustConcurrencyError(RustError):
         ...     async_ops.run_parallel_tasks(tasks)
         ... except RustConcurrencyError as e:
         ...     print(f"Concurrency error: {e}")
+
     """
 
 

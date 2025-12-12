@@ -1,5 +1,4 @@
-"""
-Report composer for functional fragment composition.
+"""Report composer for functional fragment composition.
 
 This module provides the ReportComposer class that handles
 composing multiple report fragments in a functional way.
@@ -16,8 +15,7 @@ if TYPE_CHECKING:
 
 
 class ReportComposer:
-    """
-    A utility class for composing and managing report fragments.
+    """A utility class for composing and managing report fragments.
 
     This class provides methods for composing multiple fragments into a single
     report fragment and creating conditional sections with dynamic headers.
@@ -29,8 +27,7 @@ class ReportComposer:
 
     @staticmethod
     def compose(*fragments: ReportFragment) -> ReportFragment:
-        """
-        Composes multiple ReportFragment objects into a single ReportFragment.
+        """Composes multiple ReportFragment objects into a single ReportFragment.
         The method takes a variable number of ReportFragment arguments
         and combines them using the addition operation.
 
@@ -41,6 +38,7 @@ class ReportComposer:
         Returns:
             ReportFragment: A single ReportFragment that represents
                 the combination of all input fragments.
+
         """
         result = ReportFragment.empty()
         for fragment in fragments:
@@ -52,7 +50,7 @@ class ReportComposer:
         generator_func: Callable[[], ReportFragment],
         header_func: Callable[[], list[str] | tuple[str, ...]],
     ) -> ReportFragment:
-        """Generates a conditional report fragment with an optional header.
+        """Generate a conditional report fragment with an optional header.
 
         This method executes a generator function to produce a report fragment. If the
         generated fragment contains content, it appends a header to the fragment using
@@ -68,6 +66,7 @@ class ReportComposer:
         Returns:
             ReportFragment: The resulting report fragment, potentially including a
             header if the fragment has content.
+
         """
         fragment = generator_func()
         if fragment.has_content:

@@ -1,5 +1,4 @@
-"""
-GameIntegrityChecker module provides tools to validate the integrity and proper installation
+"""GameIntegrityChecker module provides tools to validate the integrity and proper installation
 of a game. This includes ensuring that the executable files are up to date and verifying
 that the installation complies with recommended practices.
 """
@@ -13,8 +12,7 @@ from ClassicLib.Utils.file_utils import calculate_file_hash
 
 
 class GameIntegrityChecker:
-    """
-    GameIntegrityChecker is a utility class for validating the integrity and installation
+    """GameIntegrityChecker is a utility class for validating the integrity and installation
     configuration of a game.
 
     It ensures the game executable and its version are up-to-date and checks that the game
@@ -24,11 +22,11 @@ class GameIntegrityChecker:
     Attributes:
         _config (dict[str, str | None]): Stores configuration details such as paths to the
             game executable, expected hash values, and location information.
+
     """
 
     def __init__(self) -> None:
-        """
-        Represents the initialization method for the class.
+        """Represent the initialization method for the class.
 
         Initializes the class attributes to their default values. This method sets up
         internal configuration storage.
@@ -36,8 +34,7 @@ class GameIntegrityChecker:
         self._config: dict[str, str | None] = {}
 
     def load_configuration(self) -> None:
-        """
-        Load game configuration from YAML settings.
+        """Load game configuration from YAML settings.
 
         Loads settings including:
         - Steam INI path
@@ -48,6 +45,7 @@ class GameIntegrityChecker:
         Raises:
             TypeError: If any of the settings loaded from the configuration
                 files is not of the expected type.
+
         """
         from ClassicLib.YamlSettings import yaml_settings
 
@@ -71,14 +69,14 @@ class GameIntegrityChecker:
         logger.debug("Loaded game integrity configuration")
 
     async def load_configuration_async(self) -> None:
-        """
-        Asynchronously loads game-specific configuration settings from YAML files.
+        """Asynchronously loads game-specific configuration settings from YAML files.
 
         This is the async version that should be used from async contexts.
         It loads various settings needed for integrity checks asynchronously.
 
         Raises:
             TypeError: If any of the loaded settings are not strings.
+
         """
         from ClassicLib.YamlSettings import yaml_settings_async
 
@@ -102,12 +100,12 @@ class GameIntegrityChecker:
         logger.debug("Loaded game integrity configuration (async)")
 
     def check_executable_version(self) -> tuple[bool, str]:
-        """
-        Check if game executable is up to date.
+        """Check if game executable is up to date.
 
         Returns:
             Tuple of (is_valid, message) where is_valid indicates if the
             executable version is current and message provides details.
+
         """
         exe_path = Path(self._config["game_exe_path"]) if self._config["game_exe_path"] else None
 
@@ -132,8 +130,7 @@ class GameIntegrityChecker:
         return False, message
 
     def check_installation_location(self) -> tuple[bool, str]:
-        """
-        Verify game is installed in recommended location.
+        """Verify game is installed in recommended location.
 
         Checks if the game is installed outside of Program Files,
         which is recommended to avoid permission issues.
@@ -141,6 +138,7 @@ class GameIntegrityChecker:
         Returns:
             Tuple of (is_valid, message) where is_valid indicates if the
             installation location is recommended and message provides details.
+
         """
         exe_path = Path(self._config["game_exe_path"]) if self._config["game_exe_path"] else None
 
@@ -154,8 +152,7 @@ class GameIntegrityChecker:
         return False, message
 
     async def run_full_check_async(self) -> str:
-        """
-        Asynchronously run all integrity checks and return combined results.
+        """Asynchronously run all integrity checks and return combined results.
 
         This is the async version that should be used from async contexts.
         Performs the following checks:
@@ -165,6 +162,7 @@ class GameIntegrityChecker:
         Returns:
             A detailed message string indicating the integrity status
             of all game files and installation.
+
         """
         logger.debug("- - - INITIATED GAME INTEGRITY CHECK (ASYNC)")
 
@@ -187,8 +185,7 @@ class GameIntegrityChecker:
         return "".join(messages)
 
     def run_full_check(self) -> str:
-        """
-        Run all integrity checks and return combined results (sync version).
+        """Run all integrity checks and return combined results (sync version).
 
         Performs the following checks:
         1. Game executable version validation
@@ -199,6 +196,7 @@ class GameIntegrityChecker:
         Returns:
             A detailed message string indicating the integrity status
             of all game files and installation.
+
         """
         logger.debug("- - - INITIATED GAME INTEGRITY CHECK")
 

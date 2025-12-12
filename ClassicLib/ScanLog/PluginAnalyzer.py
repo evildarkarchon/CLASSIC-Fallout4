@@ -1,5 +1,4 @@
-"""
-Plugin analyzer module for CLASSIC.
+"""Plugin analyzer module for CLASSIC.
 
 This module handles all plugin-related operations including:
 - Loading plugins from loadorder.txt or crash logs
@@ -24,8 +23,7 @@ if TYPE_CHECKING:
 
 @lru_cache(maxsize=128)
 def _compile_plugin_pattern(plugins: frozenset[str]) -> re.Pattern[str]:
-    """
-    Compiles a regex pattern from a frozenset of plugin names with caching.
+    """Compiles a regex pattern from a frozenset of plugin names with caching.
 
     This function creates a single compiled regex pattern that matches any of the
     provided plugin names using word boundaries for accurate matching. Results
@@ -37,6 +35,7 @@ def _compile_plugin_pattern(plugins: frozenset[str]) -> re.Pattern[str]:
 
     Returns:
         A compiled regex pattern for matching plugin names.
+
     """
     if not plugins:
         # Return a pattern that never matches
@@ -49,8 +48,7 @@ def _compile_plugin_pattern(plugins: frozenset[str]) -> re.Pattern[str]:
 
 
 class PluginAnalyzer:
-    """
-    Analyzes plugins and manages their relationships with crash logs by processing plugin data,
+    """Analyze plugins and manages their relationships with crash logs by processing plugin data,
     scanning load orders, detecting issues, and filtering ignored plugins.
 
     The class specializes in handling plugin-related operations, including identifying plugin
@@ -66,11 +64,11 @@ class PluginAnalyzer:
             comparisons.
         ignore_plugins_list (set[str]): Set of plugins specifically excluded from analysis, derived
             from the provided configuration.
+
     """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
-        """
-        Initializes the object with provided YAML data and processes plugin-related
+        """Initialize the object with provided YAML data and processes plugin-related
         information.
 
         Args:
@@ -89,8 +87,7 @@ class PluginAnalyzer:
 
     @staticmethod
     def loadorder_scan_loadorder_txt() -> tuple[dict[str, str], bool, ReportFragment]:
-        """
-        Parses the `loadorder.txt` file in the main CLASSIC folder to detect and load plugin data.
+        """Parse the `loadorder.txt` file in the main CLASSIC folder to detect and load plugin data.
 
         This method attempts to read the `loadorder.txt` file and extract a list of plugins.
         Detected plugins are marked with their origin. If the file cannot be accessed, an error
@@ -103,6 +100,7 @@ class PluginAnalyzer:
                 - A dictionary mapping plugin names to their origin.
                 - A boolean indicating if any plugins were successfully loaded.
                 - A `ReportFragment` object containing logs of the operation.
+
         """
         lines = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt
@@ -138,8 +136,7 @@ class PluginAnalyzer:
     def check_plugin_limit(
         self, segment_plugins: list[str], game_version: Version | None = None, version_current: Version | None = None
     ) -> tuple[bool, bool]:
-        """
-        Checks if the plugin limit is triggered or if the limit check is disabled based on the provided
+        """Check if the plugin limit is triggered or if the limit check is disabled based on the provided
         segment_plugins and game version.
 
         This function evaluates specific conditions depending on the game version and version characteristics,
@@ -156,6 +153,7 @@ class PluginAnalyzer:
         Returns:
             tuple[bool, bool]: A tuple where the first boolean indicates whether the plugin limit is triggered
                 and the second boolean indicates whether the limit check is disabled.
+
         """
         if not game_version or not version_current:
             return False, False
@@ -194,8 +192,7 @@ class PluginAnalyzer:
     def loadorder_scan_log(
         self, segment_plugins: list[str], game_version: Version | None = None, version_current: Version | None = None
     ) -> tuple[dict[str, str], bool, bool]:
-        """
-        Scans and processes the plugin load order from the provided segment plugins.
+        """Scan and processes the plugin load order from the provided segment plugins.
 
         This function analyzes a list of segment plugins to extract their details and
         builds a mapping of plugin names to their identifiers or classification.
@@ -214,6 +211,7 @@ class PluginAnalyzer:
                 - A dictionary mapping plugin names to their hex indices or status.
                 - A boolean flag for plugin limit triggered (requires version params).
                 - A boolean flag for limit check disabled (requires version params).
+
         """
         # Early return for empty input
         if not segment_plugins:
@@ -258,8 +256,7 @@ class PluginAnalyzer:
         return plugin_map, plugin_limit_triggered, limit_check_disabled
 
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> ReportFragment:
-        """
-        Matches plugins to call stack lines and generates a report fragment.
+        """Match plugins to call stack lines and generates a report fragment.
 
         This function analyzes the provided call stack segment and identifies plugins
         present within the crash log. It optimizes the matching process by pre-filtering
@@ -276,6 +273,7 @@ class PluginAnalyzer:
         Returns:
             ReportFragment: A report fragment consolidating the matched plugins and
             their occurrences in the analyzed crash log segment.
+
         """
         from collections import Counter
 
@@ -321,8 +319,7 @@ class PluginAnalyzer:
         return ReportFragment.from_lines(lines)
 
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
-        """
-        Filters out plugins listed in the ignore list from the given crashlog plugins.
+        """Filter out plugins listed in the ignore list from the given crashlog plugins.
 
         This method takes a dictionary of crashlog plugins and removes any plugin whose name
         matches an entry in the ignore plugins list. Matching is case-insensitive.
@@ -333,6 +330,7 @@ class PluginAnalyzer:
 
         Returns:
             dict[str, str]: A dictionary of crashlog plugins with ignored plugins removed.
+
         """
         if not self.ignore_plugins_list:
             return crashlog_plugins

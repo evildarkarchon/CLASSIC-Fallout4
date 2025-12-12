@@ -26,6 +26,7 @@ class ProgressContext:
         description: Description of the operation.
         total: Total items to process, or None for indeterminate.
         current: Current progress count.
+
     """
 
     def __init__(
@@ -40,6 +41,7 @@ class ProgressContext:
             handler: MessageHandler instance managing this context.
             description: Description of the operation.
             total: Total items, or None for indeterminate progress.
+
         """
         self.handler = handler
         self.description = description
@@ -53,6 +55,7 @@ class ProgressContext:
 
         Returns:
             Self for use in with statement.
+
         """
         # Check if CLI progress is disabled
         if not self.handler.is_gui_mode and self._check_cli_progress_disabled():
@@ -75,6 +78,7 @@ class ProgressContext:
 
         Returns:
             True if CLI progress should be disabled.
+
         """
         try:
             from ClassicLib.YamlSettings import classic_settings
@@ -95,6 +99,7 @@ class ProgressContext:
             exc_type: Exception type if raised.
             exc_val: Exception value if raised.
             exc_tb: Exception traceback if raised.
+
         """
         if self._progress_handler is not None:
             self._progress_handler.close()
@@ -106,6 +111,7 @@ class ProgressContext:
         Args:
             n: Number of items completed since last update.
             description: Optional new description.
+
         """
         self.current += n
 
@@ -117,6 +123,7 @@ class ProgressContext:
 
         Returns:
             True if cancelled.
+
         """
         if self._progress_handler is not None:
             return self._progress_handler.was_cancelled()

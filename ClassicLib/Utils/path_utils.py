@@ -7,8 +7,7 @@ from pathlib import Path
 
 
 def _is_valid_executable_path(path: Path | None) -> bool:
-    """
-    Checks if the provided path points to a valid executable file.
+    """Check if the provided path points to a valid executable file.
 
     This function validates whether the given path exists, is a file, and has a
     recognized executable file extension (".exe", ".app", or no extension).
@@ -18,19 +17,20 @@ def _is_valid_executable_path(path: Path | None) -> bool:
 
     Returns:
         True if the path is a valid executable, otherwise False.
+
     """
     return path is not None and path.exists() and path.is_file() and path.suffix.lower() in {".exe", ".app", ""}
 
 
 def _check_drive_exists(path_obj: Path) -> tuple[bool, str]:
-    """
-    Check if the drive exists (Windows only).
+    """Check if the drive exists (Windows only).
 
     Args:
         path_obj: The path object to check.
 
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
+
     """
     if sys.platform == "win32" or platform.system() == "Windows":
         drive = path_obj.drive
@@ -40,14 +40,14 @@ def _check_drive_exists(path_obj: Path) -> tuple[bool, str]:
 
 
 def _check_read_permissions(path_obj: Path) -> tuple[bool, str]:
-    """
-    Check read permissions for a path.
+    """Check read permissions for a path.
 
     Args:
         path_obj: The path object to check.
 
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
+
     """
     try:
         # For directories, check if we can list contents
@@ -65,14 +65,14 @@ def _check_read_permissions(path_obj: Path) -> tuple[bool, str]:
 
 
 def _check_write_permissions(path_obj: Path) -> tuple[bool, str]:
-    """
-    Check write permissions for a path.
+    """Check write permissions for a path.
 
     Args:
         path_obj: The path object to check.
 
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
+
     """
     try:
         # For directories, check if we can create a temp file
@@ -94,8 +94,7 @@ def _check_write_permissions(path_obj: Path) -> tuple[bool, str]:
 
 
 def validate_path(path: Path | str, check_write: bool = False, check_read: bool = True) -> tuple[bool, str]:
-    """
-    Validate that a path exists and is accessible with appropriate permissions.
+    """Validate that a path exists and is accessible with appropriate permissions.
 
     Args:
         path: Path to validate
@@ -104,6 +103,7 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
     Returns:
         Tuple of (is_valid, error_message). If valid, error_message is empty string.
+
     """
     try:
         path_obj = Path(path) if not isinstance(path, Path) else path
@@ -136,8 +136,7 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
 
 def remove_readonly(file_path: Path) -> None:
-    """
-    Removes the read-only attribute from a file or directory at the given path. This operation is
+    """Remove the read-only attribute from a file or directory at the given path. This operation is
     specific to the Windows platform and will not perform any actions on other platforms. If any
     error occurs, such as an `OSError` or `PermissionError`, a warning will be logged instead of
     raising an exception.
@@ -149,6 +148,7 @@ def remove_readonly(file_path: Path) -> None:
     Raises:
         OSError: If the file operation encounters a general operating system error.
         PermissionError: If there is a permissions issue preventing the operation.
+
     """
     if sys.platform == "win32":
         try:

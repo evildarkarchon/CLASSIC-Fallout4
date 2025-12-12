@@ -6,6 +6,7 @@ Rust enums via the classic_message module.
 
 Attributes:
     RUST_ENUMS: Whether Rust enum integration is available.
+
 """
 
 from __future__ import annotations
@@ -42,6 +43,7 @@ class MessageType(Enum):
         PROGRESS: Message signaling progress of an ongoing operation.
         DEBUG: Message intended for debugging purposes.
         CRITICAL: Message indicating a critical issue requiring attention.
+
     """
 
     INFO = auto()
@@ -57,6 +59,7 @@ class MessageType(Enum):
 
         Returns:
             Rust MessageType enum value or None if Rust unavailable.
+
         """
         if not RUST_ENUMS or RustMessageType is None:
             return None
@@ -84,6 +87,7 @@ class MessageType(Enum):
 
         Raises:
             ValueError: If unknown Rust type.
+
         """
         if not RUST_ENUMS:
             msg = "Rust enums not available"
@@ -107,6 +111,7 @@ class MessageTarget(Enum):
         GUI: Show only in GUI mode.
         CONSOLE: Show only in CLI mode.
         LOG_ONLY: Only write to log file, no display.
+
     """
 
     ALL = auto()
@@ -119,6 +124,7 @@ class MessageTarget(Enum):
 
         Returns:
             The same MessageTarget value.
+
         """
         return self
 
@@ -127,6 +133,7 @@ class MessageTarget(Enum):
 
         Returns:
             True if should display in GUI.
+
         """
         normalized = self.normalize()
         return normalized in {MessageTarget.ALL, MessageTarget.GUI}
@@ -136,6 +143,7 @@ class MessageTarget(Enum):
 
         Returns:
             True if should display in CLI.
+
         """
         normalized = self.normalize()
         return normalized in {MessageTarget.ALL, MessageTarget.CONSOLE}
@@ -145,6 +153,7 @@ class MessageTarget(Enum):
 
         Returns:
             True if should display.
+
         """
         normalized = self.normalize()
         return normalized != MessageTarget.LOG_ONLY
@@ -154,6 +163,7 @@ class MessageTarget(Enum):
 
         Returns:
             Rust MessageTarget enum value or None if Rust unavailable.
+
         """
         if not RUST_ENUMS or RustMessageTarget is None:
             return None
@@ -180,6 +190,7 @@ class MessageTarget(Enum):
 
         Raises:
             ValueError: If unknown Rust target.
+
         """
         if not RUST_ENUMS:
             msg = "Rust enums not available"

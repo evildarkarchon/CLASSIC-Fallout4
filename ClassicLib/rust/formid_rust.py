@@ -1,5 +1,4 @@
-"""
-Rust-accelerated FormIDAnalyzer wrapper.
+"""Rust-accelerated FormIDAnalyzer wrapper.
 
 This module provides a drop-in replacement for the Python FormIDAnalyzer that uses
 the high-performance Rust implementation when available, providing 50x speedup
@@ -67,6 +66,7 @@ def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[
             - ParseError types (RustParseError and module-specific parse errors)
             - DatabaseError types (RustDatabaseError and module-specific DB errors)
             - Generic RustError types (RustError and module-specific scan log errors)
+
     """
     parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
     db_errors: tuple[type[BaseException], ...] = (RustDatabaseError,)
@@ -96,16 +96,14 @@ logger = logging.getLogger(__name__)
 
 
 class FormIDAnalyzer:
-    """
-    Wrapper for Rust FormIDAnalyzer that provides Python-compatible API.
+    """Wrapper for Rust FormIDAnalyzer that provides Python-compatible API.
 
     Provides high-performance FormID extraction and analysis when Rust is available.
     Achieves 50x performance improvement over pure Python implementation.
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo, show_formid_values: bool, formid_db_exists: bool) -> None:
-        """
-        Initializes a form ID analyzer with a preference for optimized Rust implementations and a fallback
+        """Initialize a form ID analyzer with a preference for optimized Rust implementations and a fallback
         to a Python implementation. This class attempts to utilize Rust-based analyzers if available,
         providing enhanced performance and optimizations.
 
@@ -113,6 +111,7 @@ class FormIDAnalyzer:
             yamldata: An instance of ClassicScanLogsInfo containing essential scan log data.
             show_formid_values: A boolean indicating whether form ID values should be displayed.
             formid_db_exists: A boolean specifying if the FormID database already exists.
+
         """
         self._rust_analyzer = None
         self._rust_core_analyzer = None
@@ -163,8 +162,7 @@ class FormIDAnalyzer:
             self._python_analyzer = FormIDAnalyzer(yamldata, show_formid_values, formid_db_exists)
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """
-        Extracts a list of Form IDs from the given segment call stack using multiple possible analyzers.
+        """Extract a list of Form IDs from the given segment call stack using multiple possible analyzers.
 
         The method attempts to use a Rust-based zero-copy extraction method if available. If that fails,
         or if Rust analyzers are not enabled, it falls back to a Python-based Form ID analyzer.
@@ -174,6 +172,7 @@ class FormIDAnalyzer:
 
         Returns:
             list[str]: A list of extracted Form IDs found within the provided call stack segment.
+
         """
         if self._use_rust_core and self._rust_core_analyzer:
             try:
@@ -218,8 +217,7 @@ class FormIDAnalyzer:
         return analyzer.extract_formids(segment_callstack)
 
     def formid_match(self, formids: list[str], plugins: dict[str, str], report: Any) -> None:
-        """
-        Matches form IDs with given plugins and generates a structured report, relying on either Rust
+        """Match form IDs with given plugins and generates a structured report, relying on either Rust
         or Python-based analyzers depending on the configuration.
 
         This method utilizes a Rust-based core for optimized processing when available, falling
@@ -281,8 +279,7 @@ class FormIDAnalyzer:
             report.add_fragment(fragment)
 
     def extract_formids_batch(self, segments: list[list[str]]) -> list[list[str]]:
-        """
-        Extracts form IDs in batches from the provided list of segments.
+        """Extract form IDs in batches from the provided list of segments.
 
         This method attempts to use a Rust-based implementation for batch extraction
         of form IDs if available. If the Rust module is unavailable or fails to process
@@ -295,6 +292,7 @@ class FormIDAnalyzer:
         Returns:
             list[list[str]]: A list of lists where each inner list contains extracted
                 form IDs corresponding to the input segments.
+
         """
         if self._use_rust:
             try:
@@ -315,13 +313,13 @@ class FormIDAnalyzer:
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """
-        Checks if Rust acceleration is enabled.
+        """Check if Rust acceleration is enabled.
 
         This property determines whether Rust acceleration is enabled based on the
         values of the underlying private attributes.
 
         Returns:
             bool: True if Rust acceleration is enabled, False otherwise.
+
         """
         return self._use_rust or self._use_rust_core

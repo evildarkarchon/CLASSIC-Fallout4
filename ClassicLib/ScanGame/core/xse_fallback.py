@@ -1,5 +1,4 @@
-"""
-Pure Python fallback implementation of XseChecker.
+"""Pure Python fallback implementation of XseChecker.
 
 This module provides a Python-only implementation of XSE plugin validation
 that matches the Rust interface.
@@ -17,6 +16,7 @@ class GameVersion(Enum):
         Original: Original game version.
         NextGen: Next-gen/updated game version.
         Vr: VR game version.
+
     """
 
     Null = "Null"
@@ -34,6 +34,7 @@ class ValidationResult(Enum):
         NotFound: XSE plugin not found.
         VersionNotDetected: Could not detect XSE plugin version.
         PluginsPathNotFound: F4SE/SKSE plugins directory not found.
+
     """
 
     CorrectVersion = "CorrectVersion"
@@ -51,6 +52,7 @@ class AddressLibInfo:
         filename: Filename of the Address Library file.
         description: Human-readable description.
         url: Nexus Mods URL for download.
+
     """
 
     def __init__(
@@ -67,6 +69,7 @@ class AddressLibInfo:
             filename: Filename of the Address Library file.
             description: Human-readable description.
             url: Nexus Mods URL for download.
+
         """
         self.version = version
         self.filename = filename
@@ -79,6 +82,7 @@ class AddressLibInfo:
 
         Returns:
             AddressLibInfo for VR version.
+
         """
         return AddressLibInfo(
             version=GameVersion.Vr,
@@ -93,6 +97,7 @@ class AddressLibInfo:
 
         Returns:
             AddressLibInfo for original version.
+
         """
         return AddressLibInfo(
             version=GameVersion.Original,
@@ -107,6 +112,7 @@ class AddressLibInfo:
 
         Returns:
             AddressLibInfo for next-gen version.
+
         """
         return AddressLibInfo(
             version=GameVersion.NextGen,
@@ -117,7 +123,7 @@ class AddressLibInfo:
 
 
 class XseChecker:
-    """Validates Address Library installation for F4SE/SKSE plugins.
+    """Validate Address Library installation for F4SE/SKSE plugins.
 
     This is a Python fallback implementation that matches the Rust interface.
 
@@ -132,6 +138,7 @@ class XseChecker:
         >>> result = checker.check()
         >>> message = checker.validate()
         >>> print(message)
+
     """
 
     def __init__(
@@ -146,6 +153,7 @@ class XseChecker:
             plugins_path: Path to F4SE/SKSE plugins directory.
             is_vr_mode: Whether game is in VR mode (default: False).
             game_version: Game version enum (default: Original).
+
         """
         self.plugins_path = plugins_path
         self.is_vr_mode = is_vr_mode
@@ -167,6 +175,7 @@ class XseChecker:
             >>> result = XseChecker.check()
             >>> if result == ValidationResult.CorrectVersion:
             ...     print("Address Library is correct")
+
         """
         # Use existing Python implementation
         from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
@@ -204,6 +213,7 @@ class XseChecker:
         Example:
             >>> message = XseChecker.validate()
             >>> print(message)
+
         """
         # Use existing Python implementation
         from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins

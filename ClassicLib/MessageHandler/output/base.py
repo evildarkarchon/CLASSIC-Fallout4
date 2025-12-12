@@ -25,6 +25,7 @@ class OutputBackend(Protocol):
 
         Args:
             message: The message to display.
+
         """
         ...
 
@@ -33,5 +34,6 @@ class OutputBackend(Protocol):
 
         Returns:
             True if the backend can be used.
+
         """
         ...

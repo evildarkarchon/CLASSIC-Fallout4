@@ -1,5 +1,4 @@
-"""
-Utility functions for retrieving and saving content from various pastebin services.
+"""Utility functions for retrieving and saving content from various pastebin services.
 
 This module provides synchronous and asynchronous functionality to download raw
 content from supported pastebin services and save it to local files. The URLs are
@@ -21,8 +20,7 @@ from ClassicLib import msg_error, msg_info
 
 
 def pastebin_fetch(url: str) -> None:
-    """
-    Fetches raw content from various pastebin services and saves it to a local file.
+    """Fetch raw content from various pastebin services and saves it to a local file.
 
     This function processes URLs from supported pastebin services (e.g., pastebin.com,
     paste.ee, hastebin.com, or haste.zneix.eu) and ensures that the raw format of the
@@ -37,6 +35,7 @@ def pastebin_fetch(url: str) -> None:
         requests.RequestException: If there is an error while making a request to fetch
             the content.
         Exception: For any unexpected errors encountered during the process.
+
     """
     from pathlib import Path
 
@@ -94,8 +93,7 @@ def pastebin_fetch(url: str) -> None:
 
 
 async def async_pastebin_fetch(url: str) -> str | None:
-    """
-    Asynchronously fetches and saves content from a pastebin URL.
+    """Asynchronously fetches and saves content from a pastebin URL.
 
     Downloads raw content from various pastebin services and saves it to a file.
     Handles URL conversion to raw format for supported services.
@@ -105,6 +103,7 @@ async def async_pastebin_fetch(url: str) -> str | None:
 
     Returns:
         Content string if successful, None if failed
+
     """
     from pathlib import Path
 

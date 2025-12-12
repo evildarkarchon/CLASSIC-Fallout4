@@ -1,5 +1,4 @@
-"""
-Record scanner module for CLASSIC.
+"""Record scanner module for CLASSIC.
 
 This module handles named record detection including:
 - Finding named records in crash logs
@@ -22,8 +21,7 @@ if TYPE_CHECKING:
 
 @lru_cache(maxsize=128)
 def _compile_records_pattern(records: frozenset[str]) -> re.Pattern[str] | None:
-    """
-    Compiles a regex pattern from a frozenset of record names with caching.
+    """Compiles a regex pattern from a frozenset of record names with caching.
 
     This function creates a single compiled regex pattern that matches any of the
     provided record names. Results are cached for performance when processing
@@ -34,6 +32,7 @@ def _compile_records_pattern(records: frozenset[str]) -> re.Pattern[str] | None:
 
     Returns:
         A compiled regex pattern with case-insensitive matching, or None if no records.
+
     """
     if not records:
         return None
@@ -44,8 +43,7 @@ def _compile_records_pattern(records: frozenset[str]) -> re.Pattern[str] | None:
 
 
 class RecordScanner:
-    """
-    Manages operations for scanning, extracting, and generating reports of named records
+    """Manage operations for scanning, extracting, and generating reports of named records
     from provided callstack segments.
 
     The `RecordScanner` class is designed to process callstack segments, identify specific
@@ -60,11 +58,11 @@ class RecordScanner:
         the callstack.
         lower_ignore (set[str]): A set of lowercase named records to be ignored during the
         scanning process.
+
     """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
-        """
-        Initializes the object with the provided YAML data and processes it.
+        """Initialize the object with the provided YAML data and processes it.
 
         This constructor takes a `ClassicScanLogsInfo` instance as input, processes
         its records by converting them to lowercase, and stores these results into
@@ -75,6 +73,7 @@ class RecordScanner:
         Args:
             yamldata: An instance of ClassicScanLogsInfo containing classic scan logs
                 data including lists of records and ignored records.
+
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
         self.lower_records: set[str] = {record.lower() for record in yamldata.classic_records_list} or set()
@@ -85,8 +84,7 @@ class RecordScanner:
         self._ignore_pattern = _compile_records_pattern(frozenset(self.lower_ignore))
 
     def scan_named_records(self, segment_callstack: list[str]) -> tuple[ReportFragment, list[str]]:
-        """
-        Scans the provided callstack for named records and returns a report fragment
+        """Scan the provided callstack for named records and returns a report fragment
         along with the list of matching records.
 
         This function analyzes a given callstack to identify specific records
@@ -101,6 +99,7 @@ class RecordScanner:
             tuple[ReportFragment, list[str]]: A tuple containing:
                 - A ReportFragment describing the results of the scan.
                 - A list of matching records found during the scan.
+
         """
         # Constants
         rsp_marker = "[RSP+"
@@ -131,6 +130,7 @@ class RecordScanner:
             records_matches: List to append matching record lines to.
             rsp_marker: Marker string to identify relevant call stack portions.
             rsp_offset: Character offset from rsp_marker for extracting content.
+
         """
         # Early return if no records pattern compiled
         if not self._records_pattern:
@@ -153,8 +153,7 @@ class RecordScanner:
                         records_matches.append(line.strip())
 
     def _generate_found_records_fragment(self, records_matches: list[str]) -> ReportFragment:
-        """
-        Generates a ReportFragment containing a summary of found records, including their count and
+        """Generate a ReportFragment containing a summary of found records, including their count and
         related explanatory notes. This function organizes the records, counts their occurrences, and
         provides a formatted output that aids in diagnosing crash logs.
 
@@ -165,6 +164,7 @@ class RecordScanner:
         Returns:
             ReportFragment: A ReportFragment object containing formatted lines with
                 counted records and supplementary explanatory notes.
+
         """
         lines = []
 
@@ -185,8 +185,7 @@ class RecordScanner:
         return ReportFragment.from_lines(lines)
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
-        """
-        Extract records from a segment callstack based on specific matching criteria.
+        """Extract records from a segment callstack based on specific matching criteria.
 
         This method processes a given segment callstack and identifies matching records
         based on predefined constants for marker and offset. Matching records are then
@@ -199,6 +198,7 @@ class RecordScanner:
         Returns:
             list[str]: A list of strings containing the matching records identified from
             the segment callstack.
+
         """
         records_matches: list[Any] = []
 

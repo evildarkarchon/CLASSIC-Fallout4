@@ -59,6 +59,7 @@ def load_settings_sync(key: str, path: str) -> list[dict[str, Any]]:
         >>> docs = load_settings_sync("config", "config.yaml")
         >>> print(docs[0]["key"])
         'value'
+
     """
 
 async def load_settings_async(key: str, path: str) -> list[dict[str, Any]]:
@@ -83,6 +84,7 @@ async def load_settings_async(key: str, path: str) -> list[dict[str, Any]]:
         >>> docs = await load_settings_async("config", "config.yaml")
         >>> print(docs[0]["key"])
         'value'
+
     """
 
 def load_batch_sync(paths: list[str]) -> int:
@@ -104,6 +106,7 @@ def load_batch_sync(paths: list[str]) -> int:
         >>> count = load_batch_sync(["config1.yaml", "config2.yaml"])
         >>> print(f"Loaded {count} files")
         Loaded 2 files
+
     """
 
 async def load_batch_async(paths: list[str]) -> int:
@@ -126,6 +129,7 @@ async def load_batch_async(paths: list[str]) -> int:
         >>> count = await load_batch_async(["config1.yaml", "config2.yaml"])
         >>> print(f"Loaded {count} files")
         Loaded 2 files
+
     """
 
 def get_cached(key: str) -> list[dict[str, Any]] | None:
@@ -144,6 +148,7 @@ def get_cached(key: str) -> list[dict[str, Any]] | None:
         >>> docs = get_cached("config")
         >>> print(docs is not None)
         True
+
     """
 
 def is_cached(key: str) -> bool:
@@ -161,6 +166,7 @@ def is_cached(key: str) -> bool:
         True
         >>> is_cached("nonexistent")
         False
+
     """
 
 def invalidate(key: str) -> bool:
@@ -180,6 +186,7 @@ def invalidate(key: str) -> bool:
         True
         >>> is_cached("config")
         False
+
     """
 
 def clear_cache() -> None:
@@ -193,6 +200,7 @@ def clear_cache() -> None:
         >>> clear_cache()
         >>> cache_size()
         0
+
     """
 
 def cache_size() -> int:
@@ -205,6 +213,7 @@ def cache_size() -> int:
         >>> load_settings_sync("config", "config.yaml")
         >>> cache_size()
         1
+
     """
 
 def cache_keys() -> list[str]:
@@ -219,4 +228,5 @@ def cache_keys() -> list[str]:
         >>> keys = cache_keys()
         >>> len(keys)
         2
+
     """

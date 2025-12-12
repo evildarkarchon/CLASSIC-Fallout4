@@ -1,5 +1,4 @@
-"""
-Provides utility functions for path conversion and caching.
+"""Provide utility functions for path conversion and caching.
 
 This module contains functions that handle the conversion of string
 representations of paths to `Path` objects. It includes an efficient
@@ -13,8 +12,7 @@ from pathlib import Path
 
 @lru_cache(maxsize=512)
 def cached_path_conversion(path_str: str) -> Path:
-    """
-    Converts a string representation of a file system path to a `Path` object and caches the result
+    """Convert a string representation of a file system path to a `Path` object and caches the result
     to improve performance for repeated path conversions. The caching mechanism allows up to 512 unique
     path conversions to be stored.
 
@@ -23,13 +21,13 @@ def cached_path_conversion(path_str: str) -> Path:
 
     Returns:
         A `Path` object corresponding to the provided `path_str`.
+
     """
     return Path(path_str)
 
 
 def ensure_path(path: Path | str) -> Path:
-    """
-    Ensures that the given input is converted to a Path object. If the input
+    """Ensure that the given input is converted to a Path object. If the input
     is already a Path object, it is returned as-is. Otherwise, the input is
     converted to a Path object through an appropriate conversion process.
 
@@ -39,6 +37,7 @@ def ensure_path(path: Path | str) -> Path:
 
     Returns:
         Path: The ensured Path object.
+
     """
     if isinstance(path, Path):
         return path

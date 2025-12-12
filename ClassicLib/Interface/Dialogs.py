@@ -1,5 +1,4 @@
-"""
-Provides custom dialog windows for displaying application information and errors.
+"""Provide custom dialog windows for displaying application information and errors.
 
 This module defines two custom dialog classes: `CustomAboutDialog` and
 `CustomErrorDialog`. `CustomAboutDialog` is used for showing an "About" window
@@ -27,8 +26,7 @@ from ClassicLib import GlobalRegistry
 
 
 class CustomAboutDialog(QDialog):
-    """
-    Displays an "About" dialog box for application-specific information.
+    """Display an "About" dialog box for application-specific information.
 
     This class is a custom QDialog implementation, designed to showcase
     information about the application, such as the application name, icon,
@@ -42,6 +40,7 @@ class CustomAboutDialog(QDialog):
         MIN_HEIGHT (int): Minimum height of the dialog.
         ICON_SIZE (int): Dimensions (width and height) for the icon in pixels.
         MARGIN (int): Margin size for the dialog layout.
+
     """
 
     TITLE = "About"
@@ -51,12 +50,13 @@ class CustomAboutDialog(QDialog):
     MARGIN = 15
 
     def __init__(self, parent: QMainWindow | QDialog | None = None) -> None:
-        """
-        Initializes a new instance of the class with specified attributes and settings the parent
-        window.
+        """Initialize a new instance of the class.
+
+        Sets up the specified attributes and parent window.
 
         Args:
             parent: The parent widget, which can be a QMainWindow, QDialog, or None.
+
         """
         super().__init__(parent)
         self.setWindowTitle(self.TITLE)
@@ -75,19 +75,18 @@ class CustomAboutDialog(QDialog):
         layout.setAlignment(close_button, Qt.AlignmentFlag.AlignRight)
 
     def _create_main_layout(self) -> QVBoxLayout:
-        """
-        Creates the main vertical box layout with specified margins.
+        """Create the main vertical box layout with specified margins.
 
         Returns:
             QVBoxLayout: A vertical box layout with applied margins.
+
         """
         layout: QVBoxLayout = QVBoxLayout(self)
         layout.setContentsMargins(self.MARGIN, self.MARGIN, self.MARGIN, self.MARGIN)
         return layout
 
     def _create_icon_text_layout(self) -> QHBoxLayout:
-        """
-        Creates a horizontal box layout containing an icon and text.
+        """Create a horizontal box layout containing an icon and text.
 
         This method creates a QHBoxLayout that includes a QLabel for displaying an
         icon and a QLabel for displaying a multi-line text message. The icon is
@@ -97,6 +96,7 @@ class CustomAboutDialog(QDialog):
         Returns:
             QHBoxLayout: A horizontal layout containing the icon and text QLabel
             widgets.
+
         """
         h_layout: QHBoxLayout = QHBoxLayout()
 
@@ -126,8 +126,7 @@ class CustomAboutDialog(QDialog):
         return h_layout
 
     def _create_close_button(self) -> QPushButton:
-        """
-        Create a "Close" button widget.
+        """Create a "Close" button widget.
 
         This method creates and configures a QPushButton labeled "Close" which is connected
         to the `accept` method of the dialog or parent widget. The button can be used
@@ -135,6 +134,7 @@ class CustomAboutDialog(QDialog):
 
         Returns:
             QPushButton: The configured "Close" button widget.
+
         """
         close_button: QPushButton = QPushButton("Close", self)
         close_button.clicked.connect(self.accept)
@@ -142,8 +142,7 @@ class CustomAboutDialog(QDialog):
 
 
 class CustomErrorDialog(QDialog):
-    """
-    CustomErrorDialog class.
+    """CustomErrorDialog class.
 
     A custom dialog for displaying error messages with optional detailed
     information. This dialog includes an icon, message text, and optional
@@ -157,6 +156,7 @@ class CustomErrorDialog(QDialog):
         MIN_HEIGHT (int): The minimum height of the dialog.
         DETAILS_HEIGHT (int): The maximum height of the details section.
         MARGIN (int): The margin size for dialog content.
+
     """
 
     MIN_WIDTH = 500
@@ -171,14 +171,14 @@ class CustomErrorDialog(QDialog):
         details: str | None = None,
         parent: QMainWindow | QDialog | None = None,
     ) -> None:
-        """
-        Initialize the error dialog.
+        """Initialize the error dialog.
 
         Args:
             title: The title of the error dialog
             message: The main error message to display
             details: Optional detailed error information (e.g., traceback)
             parent: Optional parent widget
+
         """
         super().__init__(parent)
         self.title = title
@@ -206,8 +206,7 @@ class CustomErrorDialog(QDialog):
         layout.addLayout(button_layout)
 
     def _create_message_section(self) -> QHBoxLayout:
-        """
-        Creates a message section with an error icon and a text message for display in a layout.
+        """Create a message section with an error icon and a text message for display in a layout.
 
         The method constructs a horizontal layout containing an error icon and a message label.
         The error icon visually indicates that an error has occurred, and the message label
@@ -235,8 +234,7 @@ class CustomErrorDialog(QDialog):
         return h_layout
 
     def _create_details_section(self) -> QTextEdit:
-        """
-        Creates and configures a read-only QTextEdit widget to display detailed information.
+        """Create and configures a read-only QTextEdit widget to display detailed information.
 
         The QTextEdit widget is initialized with specific settings for displaying a read-only
         text field with monospaced font. The text content is derived from the `details` attribute,
@@ -244,6 +242,7 @@ class CustomErrorDialog(QDialog):
 
         Returns:
             QTextEdit: A configured QTextEdit widget for displaying details.
+
         """
         details_edit = QTextEdit(self)
         details_edit.setPlainText(self.details or "")
@@ -253,8 +252,7 @@ class CustomErrorDialog(QDialog):
         return details_edit
 
     def _create_button_section(self) -> QHBoxLayout:
-        """
-        Creates a button section layout containing interactive buttons.
+        """Create a button section layout containing interactive buttons.
 
         This method generates a horizontal layout with buttons designed for specific
         user interactions. It includes an "OK" button for confirming actions and,
@@ -265,6 +263,7 @@ class CustomErrorDialog(QDialog):
 
         Raises:
             No exceptions are explicitly raised by this method.
+
         """
         button_layout = QHBoxLayout()
         button_layout.addStretch()
@@ -284,8 +283,7 @@ class CustomErrorDialog(QDialog):
         return button_layout
 
     def _copy_to_clipboard(self) -> None:
-        """
-        Copies the error details to the system clipboard and displays a confirmation message.
+        """Copy the error details to the system clipboard and displays a confirmation message.
 
         This method constructs a text representation of the error, including the title,
         message, and optional details. The constructed text is copied to the system
@@ -294,6 +292,7 @@ class CustomErrorDialog(QDialog):
 
         Raises:
             None: This method does not raise any exceptions.
+
         """
         clipboard = QApplication.clipboard()
         full_text = f"{self.title}\n\n{self.message}"

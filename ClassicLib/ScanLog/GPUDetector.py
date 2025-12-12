@@ -1,5 +1,4 @@
-"""
-GPU detector module for CLASSIC.
+"""GPU detector module for CLASSIC.
 
 This module detects GPU information from system specs including:
 - Parsing system specs for GPU information
@@ -25,6 +24,7 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
         - secondary: Secondary GPU name (defaults to None)
         - manufacturer: GPU manufacturer e.g., "AMD", "Nvidia" (defaults to "Unknown")
         - rival: Rival GPU manufacturer (defaults to None)
+
     """
     gpu_info: dict[str, str | None] = {
         "primary": "Unknown",

@@ -1,5 +1,4 @@
-"""
-Python API layer for Rust backend orchestrator.
+"""Python API layer for Rust backend orchestrator.
 
 This module provides a thin wrapper around classic_scanlog's Orchestrator,
 handling configuration and result processing. Configuration data is
@@ -81,8 +80,7 @@ from ClassicLib.integration.factory import get_yamldata
 
 @dataclass
 class BatchAnalysisResult:
-    """
-    Represents the results of a batch analysis with summarization and report-saving
+    """Represent the results of a batch analysis with summarization and report-saving
     capabilities.
 
     This class holds the detailed outcomes of an analysis conducted on a batch of
@@ -95,6 +93,7 @@ class BatchAnalysisResult:
             measured in milliseconds.
         parallelism_factor (float): Degree of parallelism used during the analysis
             process, indicating how many analyses were executed in parallel.
+
     """
 
     results: list[AnalysisResult]
@@ -102,8 +101,7 @@ class BatchAnalysisResult:
     parallelism_factor: float
 
     def successful_results(self) -> list[AnalysisResult]:
-        """
-        Filters and returns a list of successful analysis results.
+        """Filter and returns a list of successful analysis results.
 
         This method iterates over the `results` attribute and checks if
         each result meets the success condition. If the condition is met,
@@ -112,12 +110,12 @@ class BatchAnalysisResult:
 
         Returns:
             list[AnalysisResult]: A list containing only successful analysis results.
+
         """
         return [r for r in self.results if r.success]
 
     def failed_results(self) -> list[AnalysisResult]:
-        """
-        Gets a list of failed analysis results.
+        """Get a list of failed analysis results.
 
         This method iterates over the `results` attribute and filters out
         the analysis results that are marked as unsuccessful.
@@ -125,11 +123,12 @@ class BatchAnalysisResult:
         Returns:
             List[AnalysisResult]: A list of `AnalysisResult` objects where the
             `success` attribute is set to False.
+
         """
         return [r for r in self.results if not r.success]
 
     def save_all_reports(self, output_dir: Path) -> None:
-        """Save all reports to output directory"""
+        """Save all reports to output directory."""
         output_dir.mkdir(parents=True, exist_ok=True)
 
         for result in self.successful_results():
@@ -139,8 +138,7 @@ class BatchAnalysisResult:
 
 
 class ClassicOrchestrator:
-    """
-    Orchestrates analysis configuration and crash log processing.
+    """Orchestrates analysis configuration and crash log processing.
 
     ClassicOrchestrator serves as a bridge between Python and Rust components, managing
     the configuration and processing of crash logs. It can process logs individually or
@@ -150,11 +148,11 @@ class ClassicOrchestrator:
         yamldata (YamlData): Configuration data loaded from a YAML source.
         config (AnalysisConfig): Parsed analysis configuration created from the YAML data.
         orchestrator (Orchestrator): Rust-driven orchestrator for crash log processing.
+
     """
 
     def __init__(self) -> None:
-        """
-        Initializes the class and sets up the required components for configuration
+        """Initialize the class and sets up the required components for configuration
         and data orchestration.
 
         The constructor ensures the availability of Rust components and reliably
@@ -165,6 +163,7 @@ class ClassicOrchestrator:
         Raises:
             RuntimeError: If Rust components are unavailable or missing. Provides
             instructions to install required modules.
+
         """
         if not RUST_AVAILABLE:
             raise RuntimeError("Rust components not available. Install classic_scanlog and classic_config modules.")
@@ -182,8 +181,7 @@ class ClassicOrchestrator:
         self,
         log_path: Path,
     ) -> AnalysisResult:
-        """
-        Processes a single crash log and returns the analysis result.
+        """Process a single crash log and returns the analysis result.
 
         This method processes a crash log file located at the specified `log_path`
         and retrieves the corresponding analysis result. If no results are produced,
@@ -199,6 +197,7 @@ class ClassicOrchestrator:
 
         Raises:
             RuntimeError: If no results are returned for the provided `log_path`.
+
         """
         results = self.process_crash_logs_batch([log_path])
         if not results.results:
@@ -212,8 +211,7 @@ class ClassicOrchestrator:
         max_concurrent: int = 10,  # noqa: ARG002
         progress_callback: Callable[[str], None] | None = None,  # noqa: ARG002
     ) -> BatchAnalysisResult:
-        """
-        Processes a batch of crash log files in parallel and returns the analysis results.
+        """Process a batch of crash log files in parallel and returns the analysis results.
 
         This method processes logs in a parallel fashion using the Orchestrator tool,
         which allows for higher efficiency when handling multiple files. It also computes
@@ -234,6 +232,7 @@ class ClassicOrchestrator:
             The Rust Orchestrator currently handles parallelism internally based on available CPU cores.
             The max_concurrent and progress_callback parameters are reserved for future enhancements
             and are kept in the signature for API stability.
+
         """
         import time
 
@@ -260,8 +259,7 @@ class ClassicOrchestrator:
         )
 
     def process_single_log(self, log_path: Path) -> AnalysisResult:
-        """
-        Process a single crash log using Rust orchestrator directly.
+        """Process a single crash log using Rust orchestrator directly.
 
         This method is used by HybridOrchestrator when Rust is feature-complete.
         Unlike process_crash_log(), this calls the Rust orchestrator's process_log
@@ -276,12 +274,12 @@ class ClassicOrchestrator:
             - incomplete: 1 if log is incomplete, 0 otherwise
             - failed: 1 if log failed to scan, 0 otherwise
             - trigger_scan_failed: Whether scan triggered a failure condition
+
         """
         return self.orchestrator.process_log(str(log_path))
 
     def is_feature_complete(self) -> bool:
-        """
-        Check if the Rust orchestrator has full feature parity with Python.
+        """Check if the Rust orchestrator has full feature parity with Python.
 
         A feature-complete Rust orchestrator can be used for single-log processing
         in addition to batch processing, providing maximum performance benefits.
@@ -293,24 +291,24 @@ class ClassicOrchestrator:
 
         Returns:
             bool: True if Rust can handle all crash log analysis tasks.
+
         """
         return self.orchestrator.is_feature_complete()
 
     def has_database_pool(self) -> bool:
-        """
-        Check if the Rust orchestrator has a database pool for FormID lookups.
+        """Check if the Rust orchestrator has a database pool for FormID lookups.
 
         The database pool enables rich FormID resolution with descriptive names.
         Without it, only FormID hex values and plugin associations are shown.
 
         Returns:
             bool: True if database pool is attached and available.
+
         """
         return self.orchestrator.has_database_pool()
 
     def get_config(self) -> AnalysisConfig:
-        """
-        Retrieves the configuration for analysis.
+        """Retrieve the configuration for analysis.
 
         This method returns the current `AnalysisConfig` object assigned to the instance,
         which contains the necessary configuration details for analysis operations.
@@ -322,12 +320,12 @@ class ClassicOrchestrator:
         return self.config
 
     def __repr__(self) -> str:
-        """
-        Provides a string representation of the instance for debugging and logging purposes.
+        """Provide a string representation of the instance for debugging and logging purposes.
 
         Returns:
             str: A string that contains a readable summary of key attributes of the
             ClassicOrchestrator instance.
+
         """
         feature_status = "feature-complete" if self.is_feature_complete() else "batch-only"
         return f"ClassicOrchestrator(game='{self.config.game}', vr_mode={self.config.vr_mode}, rust={feature_status})"
@@ -335,8 +333,7 @@ class ClassicOrchestrator:
 
 # Convenience function for quick processing
 def process_crash_log(log_path: Path) -> AnalysisResult:
-    """
-    Processes a crash log and returns its analysis result.
+    """Process a crash log and returns its analysis result.
 
     This function utilizes a `ClassicOrchestrator` instance to perform
     the processing of a given crash log file. It extracts and analyzes
@@ -348,6 +345,7 @@ def process_crash_log(log_path: Path) -> AnalysisResult:
 
     Returns:
         AnalysisResult: The result of the processed crash log.
+
     """
     orchestrator = ClassicOrchestrator()
     return orchestrator.process_crash_log(log_path)
@@ -358,8 +356,7 @@ def process_crash_logs_batch(
     max_concurrent: int = 10,
     progress_callback: Callable[[str], None] | None = None,
 ) -> BatchAnalysisResult:
-    """
-    Processes a batch of crash logs concurrently and provides the analysis result.
+    """Process a batch of crash logs concurrently and provides the analysis result.
 
     This function uses a ClassicOrchestrator to process multiple crash logs
     simultaneously. It supports specifying the maximum number of concurrent tasks
@@ -376,6 +373,7 @@ def process_crash_logs_batch(
     Returns:
         BatchAnalysisResult: The result of the batch crash log analysis including
             details for each processed log.
+
     """
     orchestrator = ClassicOrchestrator()
     return orchestrator.process_crash_logs_batch(

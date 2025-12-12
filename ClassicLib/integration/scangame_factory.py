@@ -32,6 +32,7 @@ def is_rust_available() -> bool:
 
     Returns:
         True if classic_scangame Rust module is installed, False otherwise.
+
     """
     return _RUST_AVAILABLE
 
@@ -41,6 +42,7 @@ def get_ba2_scanner() -> Any:
 
     Returns:
         BA2Scanner instance (Rust if available, otherwise Python).
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -55,6 +57,7 @@ def get_config_duplicate_detector() -> Any:
 
     Returns:
         ConfigDuplicateDetector instance (Rust if available, otherwise Python).
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -69,6 +72,7 @@ def get_unpacked_scanner() -> Any:
 
     Returns:
         UnpackedScanner instance (Rust if available, otherwise Python).
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -88,6 +92,7 @@ def get_log_processor(catch_errors: list[str], ignore_files: list[str], ignore_e
 
     Returns:
         LogProcessor instance (Rust if available, otherwise Python).
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -105,6 +110,7 @@ def get_ini_validator(game_name: str) -> Any:
 
     Returns:
         IniValidator instance (Rust if available, otherwise Python).
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -127,6 +133,7 @@ def get_crashgen_checker(plugins_path: Path, crashgen_name: str) -> Any:
     Note:
         The Python fallback retrieves plugins_path and crashgen_name from
         settings internally, so these arguments are only used for Rust.
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -147,6 +154,7 @@ def get_xse_checker(plugins_path: Path, is_vr_mode: bool = False, game_version: 
 
     Returns:
         XseChecker instance (Rust if available, otherwise Python).
+
     """
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
@@ -168,6 +176,7 @@ def get_rust_status() -> dict[str, Any]:
         - available: bool - Whether Rust is available
         - version: str or None - classic_scangame version
         - components: list[str] - Available Rust components
+
     """
     if not _RUST_AVAILABLE:
         return {"available": False, "version": None, "components": []}

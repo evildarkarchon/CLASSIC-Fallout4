@@ -37,6 +37,7 @@ class MessageHandler:
     Attributes:
         is_gui_mode: Whether operating in GUI mode.
         parent_widget: Parent widget reference (always None for base class).
+
     """
 
     def __init__(self, is_gui_mode: bool = False) -> None:
@@ -44,6 +45,7 @@ class MessageHandler:
 
         Args:
             is_gui_mode: Whether operating in GUI mode.
+
         """
         self._is_gui_mode = is_gui_mode
         self._router = MessageRouter(is_gui_mode)
@@ -73,6 +75,7 @@ class MessageHandler:
 
         Returns:
             threading.Thread for CLI mode, QThread for Qt mode.
+
         """
         return self._main_thread
 
@@ -83,6 +86,7 @@ class MessageHandler:
 
         Returns:
             The output backend to use.
+
         """
         return self._cli_backend
 
@@ -93,6 +97,7 @@ class MessageHandler:
 
         Returns:
             A progress handler implementing the ProgressHandler protocol.
+
         """
         return CLIProgressHandler()
 
@@ -103,6 +108,7 @@ class MessageHandler:
 
         Args:
             message: The message to display.
+
         """
         # Always log the message
         self._log_backend.show(message)
@@ -120,6 +126,7 @@ class MessageHandler:
         Args:
             content: Message content.
             **kwargs: Additional message attributes (target, title, details, parent).
+
         """
         message = Message(content, MessageType.INFO, **kwargs)
         self.show(message)
@@ -130,6 +137,7 @@ class MessageHandler:
         Args:
             content: Message content.
             **kwargs: Additional message attributes.
+
         """
         message = Message(content, MessageType.WARNING, **kwargs)
         self.show(message)
@@ -140,6 +148,7 @@ class MessageHandler:
         Args:
             content: Message content.
             **kwargs: Additional message attributes.
+
         """
         message = Message(content, MessageType.ERROR, **kwargs)
         self.show(message)
@@ -150,6 +159,7 @@ class MessageHandler:
         Args:
             content: Message content.
             **kwargs: Additional message attributes.
+
         """
         message = Message(content, MessageType.SUCCESS, **kwargs)
         self.show(message)
@@ -160,6 +170,7 @@ class MessageHandler:
         Args:
             content: Message content.
             **kwargs: Additional message attributes.
+
         """
         message = Message(content, MessageType.DEBUG, **kwargs)
         self.show(message)
@@ -170,6 +181,7 @@ class MessageHandler:
         Args:
             content: Message content.
             **kwargs: Additional message attributes.
+
         """
         message = Message(content, MessageType.CRITICAL, **kwargs)
         self.show(message)
@@ -187,6 +199,7 @@ class MessageHandler:
 
         Returns:
             ProgressContext for use in with statement.
+
         """
         return ProgressContext(self, description, total)
 
@@ -195,6 +208,7 @@ class MessageHandler:
 
         Returns:
             True if cancelled.
+
         """
         return self._cancelled
 
@@ -203,6 +217,7 @@ class MessageHandler:
 
         Args:
             cancelled: Whether cancelled.
+
         """
         self._cancelled = cancelled
 
@@ -228,6 +243,7 @@ def init_message_handler(
 
     Returns:
         The initialized message handler.
+
     """
     global _message_handler  # noqa: PLW0603
 
@@ -251,6 +267,7 @@ def get_message_handler() -> MessageHandler:
 
     Raises:
         RuntimeError: If handler not initialized.
+
     """
     with _message_handler_lock:
         if _message_handler is None:
@@ -266,6 +283,7 @@ def msg_info(content: str, **kwargs: Any) -> None:
     Args:
         content: Message content.
         **kwargs: Additional message attributes.
+
     """
     get_message_handler().info(content, **kwargs)
 
@@ -276,6 +294,7 @@ def msg_warning(content: str, **kwargs: Any) -> None:
     Args:
         content: Message content.
         **kwargs: Additional message attributes.
+
     """
     get_message_handler().warning(content, **kwargs)
 
@@ -286,6 +305,7 @@ def msg_error(content: str, **kwargs: Any) -> None:
     Args:
         content: Message content.
         **kwargs: Additional message attributes.
+
     """
     get_message_handler().error(content, **kwargs)
 
@@ -296,6 +316,7 @@ def msg_success(content: str, **kwargs: Any) -> None:
     Args:
         content: Message content.
         **kwargs: Additional message attributes.
+
     """
     get_message_handler().success(content, **kwargs)
 
@@ -306,6 +327,7 @@ def msg_debug(content: str, **kwargs: Any) -> None:
     Args:
         content: Message content.
         **kwargs: Additional message attributes.
+
     """
     get_message_handler().debug(content, **kwargs)
 
@@ -316,6 +338,7 @@ def msg_critical(content: str, **kwargs: Any) -> None:
     Args:
         content: Message content.
         **kwargs: Additional message attributes.
+
     """
     get_message_handler().critical(content, **kwargs)
 
@@ -333,6 +356,7 @@ def msg_progress_context(
 
     Yields:
         ProgressContext for tracking progress.
+
     """
     handler = get_message_handler()
     with handler.progress_context(description, total) as progress:

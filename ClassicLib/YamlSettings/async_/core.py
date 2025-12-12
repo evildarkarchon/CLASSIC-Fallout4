@@ -16,6 +16,7 @@ Example:
     >>> from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
     >>> core = await get_async_yaml_core()
     >>> value = await core.async_yaml_settings(str, YAML.Main, "key.path")
+
 """
 
 import asyncio
@@ -58,6 +59,7 @@ class AsyncYamlSettingsCore:
         ...     (str, YAML.Main, "key1"),
         ...     (int, YAML.Main, "key2"),
         ... ])
+
     """
 
     def __init__(self, settings_dir: Path | None = None) -> None:
@@ -70,6 +72,7 @@ class AsyncYamlSettingsCore:
         Example:
             >>> core = AsyncYamlSettingsCore()
             >>> core = AsyncYamlSettingsCore(Path("/custom/settings"))
+
         """
         self.settings_dir = Path(settings_dir) if settings_dir else Path("CLASSIC Data")
         self.cache = YamlCache()
@@ -88,6 +91,7 @@ class AsyncYamlSettingsCore:
 
         Returns:
             An asyncio lock instance associated with the specified file path.
+
         """
         if file_path not in self._file_locks:
             self._file_locks[file_path] = asyncio.Lock()
@@ -128,6 +132,7 @@ class AsyncYamlSettingsCore:
             >>> version = await core.async_yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
             >>> # Write a boolean setting
             >>> await core.async_yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.VR Mode", True)
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -201,6 +206,7 @@ class AsyncYamlSettingsCore:
             ...     (int, YAML.Main, "CLASSIC_Info.build"),
             ... ])
             >>> version, vr_mode, build = results
+
         """
         tasks = list(starmap(self.async_yaml_settings, requests))
         return await asyncio.gather(*tasks, return_exceptions=False)
@@ -225,6 +231,7 @@ class AsyncYamlSettingsCore:
             ...     (bool, YAML.Settings, "CLASSIC_Settings.VR Mode", True),
             ...     (str, YAML.Settings, "CLASSIC_Settings.Theme", "dark"),
             ... ])
+
         """
         tasks = list(starmap(self.async_yaml_settings, updates))
         return await asyncio.gather(*tasks, return_exceptions=False)
@@ -242,6 +249,7 @@ class AsyncYamlSettingsCore:
         Example:
             >>> await core.clear_cache(YAML.Settings)  # Clear specific store
             >>> await core.clear_cache()  # Clear all caches
+
         """
         if yaml_store:
             # Clear entries for specific store from settings cache
@@ -276,6 +284,7 @@ class AsyncYamlSettingsCore:
         Example:
             >>> data = await core.reload_settings(YAML.Settings)
             >>> print(data.get("CLASSIC_Settings", {}).get("VR Mode"))
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -299,6 +308,7 @@ class AsyncYamlSettingsCore:
 
         Example:
             >>> await core.ensure_file_exists(YAML.Settings)
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -321,6 +331,7 @@ class AsyncYamlSettingsCore:
         Example:
             >>> backup_path = await core.backup_file(YAML.Settings)
             >>> print(f"Backup created at: {backup_path}")
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -342,6 +353,7 @@ class AsyncYamlSettingsCore:
         Example:
             >>> if await core.validate_file(YAML.Settings):
             ...     print("Settings file is valid")
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -368,6 +380,7 @@ class AsyncYamlSettingsCore:
         Example:
             >>> all_settings = await core.get_all_settings(YAML.Settings)
             >>> print(all_settings.keys())
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -391,6 +404,7 @@ class AsyncYamlSettingsCore:
             ...     "CLASSIC_Settings.VR Mode": True,
             ...     "CLASSIC_Settings.Theme": "dark",
             ... })
+
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
@@ -438,6 +452,7 @@ async def get_async_yaml_core() -> AsyncYamlSettingsCore:
     Example:
         >>> core = await get_async_yaml_core()
         >>> value = await core.async_yaml_settings(str, YAML.Main, "key")
+
     """
     global _async_yaml_core  # noqa: PLW0603
 
@@ -456,7 +471,7 @@ async def yaml_settings_async(
     key_path: str,
     default: T | None = None,
 ) -> T | None:
-    """Convenience function for async settings retrieval.
+    """Provide convenience wrapper for async settings retrieval.
 
     Retrieves a setting from a YAML store using a specified key path.
     Returns the default value if the setting doesn't exist.
@@ -473,6 +488,7 @@ async def yaml_settings_async(
     Example:
         >>> version = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.version")
         >>> vr_mode = await yaml_settings_async(bool, YAML.Settings, "CLASSIC_Settings.VR Mode", False)
+
     """
     core = await get_async_yaml_core()
     result = await core.async_yaml_settings(return_type, yaml_store, key_path)
@@ -484,7 +500,7 @@ async def classic_settings_async(
     key_path: str,
     default: T | None = None,
 ) -> T | None:
-    """Convenience function for CLASSIC_Settings access.
+    """Provide convenience wrapper for CLASSIC_Settings access.
 
     Retrieves settings from the CLASSIC_Settings section of the Settings
     YAML store. Automatically prepends "CLASSIC_Settings." to the key path.
@@ -500,6 +516,7 @@ async def classic_settings_async(
     Example:
         >>> vr_mode = await classic_settings_async(bool, "VR Mode", False)
         >>> # Equivalent to: yaml_settings_async(bool, YAML.Settings, "CLASSIC_Settings.VR Mode", False)
+
     """
     # Prepend CLASSIC_Settings to the key path
     full_path = f"CLASSIC_Settings.{key_path}"

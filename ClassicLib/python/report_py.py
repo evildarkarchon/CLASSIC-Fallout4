@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of report generation.
+"""Pure Python implementation of report generation.
 
 This module provides the fallback Python implementation for generating crash
 analysis reports when Rust acceleration is not available. It handles the
@@ -14,8 +13,7 @@ if TYPE_CHECKING:
 
 
 class PythonReportGenerator:
-    """
-    Pure Python implementation for generating crash analysis reports.
+    """Pure Python implementation for generating crash analysis reports.
 
     This class provides the fallback implementation for generating standardized
     report fragments, including headers, error sections, suspect sections, and
@@ -24,21 +22,21 @@ class PythonReportGenerator:
 
     Attributes:
         yamldata: Configuration data for generating the report.
+
     """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
-        """
-        Initializes an instance of the class with provided scan log information.
+        """Initialize an instance of the class with provided scan log information.
 
         Args:
             yamldata (ClassicScanLogsInfo): Scan log information provided in the
                 initialization of the instance.
+
         """
         self.yamldata = yamldata
 
     def generate_header(self, crashlog_filename: str) -> "ReportFragment":
-        """
-        Generates a header for the crash log report.
+        """Generate a header for the crash log report.
 
         This method constructs and returns a `ReportFragment` object containing the
         header information for the crash log analysis report. The header includes
@@ -50,6 +48,7 @@ class PythonReportGenerator:
 
         Returns:
             ReportFragment: An object representing the header section of the report.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -70,8 +69,7 @@ class PythonReportGenerator:
         version_latest: Any,
         version_latest_vr: Any,
     ) -> "ReportFragment":
-        """
-        Generates an error section for a report.
+        """Generate an error section for a report.
 
         This method creates a formatted error section with information about the main
         error, the Crashgen tool version detected, and version compatibility. It checks
@@ -87,6 +85,7 @@ class PythonReportGenerator:
 
         Returns:
             ReportFragment: A ReportFragment object containing the constructed error section.
+
         """
         from ClassicLib import GlobalRegistry
         from ClassicLib.ScanLog.fragments import ReportFragment
@@ -113,11 +112,11 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_suspect_section_header() -> "ReportFragment":
-        """
-        Generates a section header for reporting known crash messages, errors, and suspects.
+        """Generate a section header for reporting known crash messages, errors, and suspects.
 
         Returns:
             ReportFragment: A fragment containing the section header for the report.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -127,8 +126,7 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_suspect_found_footer(found_suspect: bool) -> "ReportFragment":
-        """
-        Generates a footer message indicating whether suspects were detected.
+        """Generate a footer message indicating whether suspects were detected.
 
         This method generates a footer message suitable for inclusion in a report.
         The message provides information about the detection of one or more suspects
@@ -142,6 +140,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: An instance of ReportFragment containing the generated footer
                 message.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -157,12 +156,12 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_settings_section_header() -> "ReportFragment":
-        """
-        Generates a report fragment containing the header for the settings-related issues
+        """Generate a report fragment containing the header for the settings-related issues
         section in a report.
 
         Returns:
             ReportFragment: A report fragment initialized with the section header lines.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -172,8 +171,7 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_mod_check_header(check_type: str) -> "ReportFragment":
-        """
-        Generates a header for the mod-checking report fragment.
+        """Generate a header for the mod-checking report fragment.
 
         This method constructs a report header containing a message about
         checking for mods that match the specified condition.
@@ -185,6 +183,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: An instance of ReportFragment containing the
                 generated header lines.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -194,8 +193,7 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_plugin_suspect_header() -> "ReportFragment":
-        """
-        Generates a header fragment for reporting plugin-related errors.
+        """Generate a header fragment for reporting plugin-related errors.
 
         This method creates and returns a `ReportFragment` containing predefined
         content used as a header to indicate the start of a section checking
@@ -204,6 +202,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: A report fragment with the specified plugin-related
                 error section header.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -213,12 +212,12 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_formid_section_header() -> "ReportFragment":
-        """
-        Generates a section header for the FormID check in the ReportFragment.
+        """Generate a section header for the FormID check in the ReportFragment.
 
         Returns:
             ReportFragment: A new instance of ReportFragment containing the lines for
             the FormID section header.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -228,8 +227,7 @@ class PythonReportGenerator:
 
     @staticmethod
     def generate_record_section_header() -> "ReportFragment":
-        """
-        Generates the section header for the named records portion of the report.
+        """Generate the section header for the named records portion of the report.
 
         This static method creates and returns a `ReportFragment` object that contains
         a predefined header to be included in a report about named records.
@@ -237,6 +235,7 @@ class PythonReportGenerator:
         Returns:
             ReportFragment: A `ReportFragment` object initialized with the appropriate
             header lines.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -245,8 +244,7 @@ class PythonReportGenerator:
         ])
 
     def generate_footer(self) -> "ReportFragment":
-        """
-        Generates and returns a footer section for a report.
+        """Generate and returns a footer section for a report.
 
         The footer includes an end of report marker and metadata about the version
         of the tool used to generate the report. If no specific version details are
@@ -254,6 +252,7 @@ class PythonReportGenerator:
 
         Returns:
             ReportFragment: A formatted section representing the footer of the report.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 

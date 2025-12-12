@@ -1,5 +1,4 @@
-"""
-Hybrid orchestrator using Rust for batch parallelism, Python for single-log logic.
+"""Hybrid orchestrator using Rust for batch parallelism, Python for single-log logic.
 
 This module provides a hybrid implementation that combines the best of both worlds:
 - Python OrchestratorCore for single-log processing (complex analysis logic)
@@ -27,8 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 class HybridOrchestrator:
-    """
-    Hybrid orchestrator using Rust for batch parallelism, Python for single-log logic.
+    """Hybrid orchestrator using Rust for batch parallelism, Python for single-log logic.
 
     This class provides a seamless integration between Python's OrchestratorCore
     (for complex single-log analysis) and Rust's ClassicOrchestrator (for high-
@@ -61,6 +59,7 @@ class HybridOrchestrator:
         ...
         ...     # Batch processing uses Rust (if available)
         ...     results = await orch.process_crash_logs_batch(log_paths)
+
     """
 
     def __init__(
@@ -71,8 +70,7 @@ class HybridOrchestrator:
         formid_db_exists: bool,
         remove_list: tuple[str, ...] | None = None,
     ) -> None:
-        """
-        Initialize the hybrid orchestrator with Python and optional Rust backends.
+        """Initialize the hybrid orchestrator with Python and optional Rust backends.
 
         Args:
             yamldata: Configuration data loaded from YAML files.
@@ -84,6 +82,7 @@ class HybridOrchestrator:
                 be used for FormID resolution.
             remove_list: Optional tuple of strings to filter out during processing.
                 Defaults to None.
+
         """
         # Initialize Python orchestrator for single-log processing
         self._python_orch = OrchestratorCore(
@@ -113,8 +112,7 @@ class HybridOrchestrator:
                 logger.warning(f"Rust orchestrator unavailable, using Python fallback: {e}")
 
     async def __aenter__(self) -> "HybridOrchestrator":
-        """
-        Async context manager entry - initializes Python orchestrator resources.
+        """Async context manager entry - initializes Python orchestrator resources.
 
         This method delegates to the Python orchestrator's __aenter__ to initialize
         resources like database pools and locks. The Rust orchestrator doesn't
@@ -122,36 +120,36 @@ class HybridOrchestrator:
 
         Returns:
             HybridOrchestrator: The initialized hybrid orchestrator instance.
+
         """
         await self._python_orch.__aenter__()
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """
-        Async context manager exit - cleans up Python orchestrator resources.
+        """Async context manager exit - cleans up Python orchestrator resources.
 
         Args:
             exc_type: The exception type if an exception was raised, None otherwise.
             exc_val: The exception value if an exception was raised, None otherwise.
             exc_tb: The exception traceback if an exception was raised, None otherwise.
+
         """
         await self._python_orch.__aexit__(exc_type, exc_val, exc_tb)
 
     def is_rust_feature_complete(self) -> bool:
-        """
-        Check if the Rust orchestrator has full feature parity with Python.
+        """Check if the Rust orchestrator has full feature parity with Python.
 
         When Rust is feature-complete, it can be used for single-log processing
         in addition to batch processing, providing maximum performance.
 
         Returns:
             bool: True if Rust orchestrator can handle all processing tasks.
+
         """
         return self._rust_feature_complete
 
     async def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]:
-        """
-        Process a single crash log using Rust (if feature-complete) or Python.
+        """Process a single crash log using Rust (if feature-complete) or Python.
 
         When the Rust orchestrator is feature-complete, this method uses Rust for
         maximum performance (5-10x speedup). Otherwise, it falls back to Python's
@@ -170,6 +168,7 @@ class HybridOrchestrator:
         Raises:
             FileNotFoundError: If the crash log file doesn't exist.
             PermissionError: If the crash log file isn't readable.
+
         """
         # Use Rust for single-log processing when feature-complete
         if self._rust_feature_complete and self._rust_orch:
@@ -190,8 +189,7 @@ class HybridOrchestrator:
         return await self._python_orch.process_crash_log(crashlog_file)
 
     async def process_crash_logs_batch(self, crashlog_files: list[Path]) -> list[tuple[Path, list[str], bool, Counter[str]]]:
-        """
-        Process batch of logs using Rust orchestrator (parallelism) or Python fallback.
+        """Process batch of logs using Rust orchestrator (parallelism) or Python fallback.
 
         This method uses the Rust ClassicOrchestrator for batch processing when
         available, providing unbounded parallelism (not limited to batch_size=10).
@@ -211,6 +209,7 @@ class HybridOrchestrator:
         Note:
             Rust orchestrator provides 10-20x speedup for large batches by using
             true parallelism instead of Python's batch_size=10 limitation.
+
         """
         if self._rust_orch and len(crashlog_files) > 5:
             # Use Rust orchestrator for large batches (5+ logs)
@@ -237,8 +236,7 @@ class HybridOrchestrator:
 
     @staticmethod
     def _convert_single_rust_result(rust_result: Any) -> tuple[Path, list[str], bool, Counter[str]]:
-        """
-        Convert a single Rust AnalysisResult to Python orchestrator format.
+        """Convert a single Rust AnalysisResult to Python orchestrator format.
 
         Args:
             rust_result: AnalysisResult from Rust orchestrator.
@@ -246,6 +244,7 @@ class HybridOrchestrator:
         Returns:
             tuple[Path, list[str], bool, Counter[str]]: Converted result
             in Python orchestrator format.
+
         """
         log_path = Path(rust_result.log_path)
         report_lines = rust_result.report_lines
@@ -266,8 +265,7 @@ class HybridOrchestrator:
 
     @staticmethod
     def _convert_rust_results(batch_result: Any) -> list[tuple[Path, list[str], bool, Counter[str]]]:
-        """
-        Convert Rust BatchAnalysisResult to Python orchestrator format.
+        """Convert Rust BatchAnalysisResult to Python orchestrator format.
 
         This static method transforms Rust's AnalysisResult objects into the
         tuple format expected by Python code. Uses the new statistics fields
@@ -280,8 +278,8 @@ class HybridOrchestrator:
         Returns:
             list[tuple[Path, list[str], bool, Counter[str]]]: Converted results
             in Python orchestrator format.
-        """
 
+        """
         python_results = [HybridOrchestrator._convert_single_rust_result(rust_result) for rust_result in batch_result.results]
 
         logger.debug(
@@ -294,23 +292,23 @@ class HybridOrchestrator:
 
     @staticmethod
     async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
-        """
-        Write batch reports to files asynchronously.
+        """Write batch reports to files asynchronously.
 
         Delegates to Python orchestrator's static method for writing reports.
 
         Args:
             reports: List of tuples containing (log_path, report_lines, scan_failed).
+
         """
         await OrchestratorCore.write_reports_batch(reports)
 
     def __repr__(self) -> str:
-        """
-        String representation for debugging.
+        """Return string representation for debugging.
 
         Returns:
             str: Representation showing Python and Rust orchestrator availability
             and feature-completeness status.
+
         """
         rust_status = ("feature-complete" if self._rust_feature_complete else "batch-only") if self._rust_orch else "unavailable"
         return f"HybridOrchestrator(python=available, rust={rust_status})"

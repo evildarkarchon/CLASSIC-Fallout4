@@ -1,5 +1,4 @@
-"""
-Module for interacting with the GitHub API for release version parsing and
+"""Module for interacting with the GitHub API for release version parsing and
 retrieval.
 
 This module provides functions to fetch and parse release versions from GitHub
@@ -24,8 +23,7 @@ from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 def try_parse_version(version_str: str | None) -> Version | None:
-    """
-    Attempts to parse a version string into a `Version` object. This function is
+    """Attempt to parse a version string into a `Version` object. This function is
     designed to handle common formats of version strings, such as those commonly
     encountered in release names. If the parsing fails, the function returns None.
 
@@ -37,6 +35,7 @@ def try_parse_version(version_str: str | None) -> Version | None:
         Version: A `Version` object representing the parsed version, if parsing
             was successful.
         None: Returns None if the input is None, empty, or parsing was not successful.
+
     """
     if not version_str:
         return None
@@ -64,8 +63,7 @@ def try_parse_version(version_str: str | None) -> Version | None:
 
 
 async def get_github_latest_stable_version_from_endpoint(session: aiohttp.ClientSession, owner: str, repo: str) -> Version | None:
-    """
-    Fetches the latest stable release version of a GitHub repository using the GitHub API.
+    """Fetch the latest stable release version of a GitHub repository using the GitHub API.
 
     This function sends an asynchronous GET request to the GitHub API to fetch data about
     the latest release of a specified repository. It checks for the release type, ensuring
@@ -81,6 +79,7 @@ async def get_github_latest_stable_version_from_endpoint(session: aiohttp.Client
     Returns:
         Version | None: The version object representing the latest stable release,
         or None if no stable release is found or an error occurs.
+
     """
     url: str = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
     try:
@@ -106,8 +105,7 @@ async def get_github_latest_stable_version_from_endpoint(session: aiohttp.Client
 
 
 async def get_github_latest_prerelease_version_from_list(session: aiohttp.ClientSession, owner: str, repo: str) -> Version | None:
-    """
-    Fetches the latest prerelease version from a GitHub repository's releases list.
+    """Fetch the latest prerelease version from a GitHub repository's releases list.
 
     This function retrieves the list of releases from the GitHub API for a specified
     repository and identifies the most recent release marked as a prerelease.
@@ -122,6 +120,7 @@ async def get_github_latest_prerelease_version_from_list(session: aiohttp.Client
     Returns:
         The parsed `Version` object of the latest prerelease, or `None` if no valid
         prerelease is found or an error occurs.
+
     """
     url: str = f"https://api.github.com/repos/{owner}/{repo}/releases"
     try:
@@ -147,8 +146,7 @@ async def get_github_latest_prerelease_version_from_list(session: aiohttp.Client
 
 
 async def get_latest_and_top_release_details(session: aiohttp.ClientSession, owner: str, repo: str) -> dict[str, Any] | None:
-    """
-    Fetches details of the latest release and the top release from the repository's
+    """Fetch details of the latest release and the top release from the repository's
     releases list on the GitHub API, compares their IDs, and returns a
     structured dictionary with release data.
 
@@ -178,6 +176,7 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
         - "are_same_release_by_id": A boolean indicating whether the IDs of
           "latest_endpoint_release" and "top_of_list_release" are identical.
         Returns `None` if no valid release data is fetched.
+
     """
     latest_url: str = f"https://api.github.com/repos/{owner}/{repo}/releases/latest"
     all_releases_url: str = f"https://api.github.com/repos/{owner}/{repo}/releases"
@@ -236,8 +235,7 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
 
 
 async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
-    """
-    Fetches the NexusMods version information for a specific Fallout 4 mod.
+    """Fetch the NexusMods version information for a specific Fallout 4 mod.
 
     Uses BeautifulSoup to parse the HTML content and extract the version metadata
     from specific meta tags in the page header.
@@ -253,8 +251,8 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
         aiohttp.ClientError: May be raised during the HTTP request if an error in the connection
             or request occurs. However, the function catches this error internally and does not
             propagate it.
-    """
 
+    """
     # Constants
     nexus_mod_url = "https://www.nexusmods.com/fallout4/mods/56255"
     version_property_name = "twitter:label1"
@@ -307,8 +305,7 @@ async def get_nexus_version(session: aiohttp.ClientSession) -> Version | None:
 
 
 class VersionChecker:
-    """
-    Handles version checking for the CLASSIC application, including fetching the latest version
+    """Handle version checking for the CLASSIC application, including fetching the latest version
     information from various sources (e.g., GitHub, Nexus) and validating update requirements.
 
     This class is responsible for determining the currently installed version, comparing it
@@ -321,17 +318,18 @@ class VersionChecker:
         gui_request (bool): Specifies if the request was triggered by the GUI.
         repo_owner (str): The owner of the GitHub repository to fetch updates from.
         repo_name (str): The name of the GitHub repository to fetch updates from.
+
     """
 
     def __init__(self, quiet: bool, gui_request: bool) -> None:
-        """
-        Initializes the class with the given parameters.
+        """Initialize the class with the given parameters.
 
         Args:
             quiet: A boolean indicating whether the operation should run in quiet
                 mode without verbose output.
             gui_request: A boolean indicating whether the initialization is
                 triggered by a GUI request.
+
         """
         self.quiet = quiet
         self.gui_request = gui_request
@@ -339,8 +337,7 @@ class VersionChecker:
         self.repo_name = "CLASSIC-Fallout4"
 
     def _log_if_not_quiet(self, message: str, log_func: Any = msg_info) -> None:
-        """
-        Logs a message using the provided logging function if the `quiet` attribute is not set to True.
+        """Log a message using the provided logging function if the `quiet` attribute is not set to True.
 
         Args:
             message (str): The message to be logged.
@@ -351,8 +348,7 @@ class VersionChecker:
             log_func(message)
 
     def _check_update_enabled(self) -> bool:
-        """
-        Determines whether the update check feature is enabled by verifying specific
+        """Determine whether the update check feature is enabled by verifying specific
         settings and conditions.
 
         The method checks if the update check feature is enabled either by explicit
@@ -361,6 +357,7 @@ class VersionChecker:
 
         Returns:
             bool: True if the update check feature is enabled, otherwise False.
+
         """
         if not (self.gui_request or classic_settings(bool, "Update Check")):
             self._log_if_not_quiet("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n" + "=" * 79)
@@ -368,8 +365,7 @@ class VersionChecker:
         return True
 
     def _validate_update_source(self, update_source: str) -> bool:
-        """
-        Validates if the given update source is one of the allowed values.
+        """Validate if the given update source is one of the allowed values.
 
         The function checks whether the provided `update_source` is valid by
         comparing it to the set of allowed values: "Both", "GitHub", or "Nexus".
@@ -382,6 +378,7 @@ class VersionChecker:
 
         Returns:
             bool: True if the `update_source` is valid, otherwise False.
+
         """
         if update_source not in {"Both", "GitHub", "Nexus"}:
             self._log_if_not_quiet("\n❌ NOTICE: INVALID VALUE FOR UPDATE SOURCE IN CLASSIC Settings.yaml \n\n" + "=" * 79)
@@ -390,8 +387,7 @@ class VersionChecker:
 
     @staticmethod
     def _parse_local_version() -> Version | None:
-        """
-        Parses the local version from a YAML configuration file and returns it as a Version object.
+        """Parse the local version from a YAML configuration file and returns it as a Version object.
 
         The method retrieves a version string from a given YAML configuration file. It ensures
         that the string is properly split and parsed into a valid `Version` object. If parsing
@@ -399,6 +395,7 @@ class VersionChecker:
 
         Returns:
             Version | None: The parsed version object if successful, otherwise `None`.
+
         """
         classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
         if not classic_local_str:
@@ -413,8 +410,7 @@ class VersionChecker:
 
     @staticmethod
     def _determine_update_sources(update_source: str) -> tuple[bool, bool]:
-        """
-        Determines the update sources based on the given update_source parameter and specific settings.
+        """Determine the update sources based on the given update_source parameter and specific settings.
 
         This method evaluates whether updates should be sourced from GitHub, Nexus, or both, based
         on the input value and configuration stored in YAML settings.
@@ -424,14 +420,14 @@ class VersionChecker:
 
         Returns:
             tuple[bool, bool]: A tuple indicating whether to use GitHub and Nexus as update sources.
+
         """
         use_github = update_source in {"Both", "GitHub"}
         use_nexus = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
         return use_github, use_nexus
 
     async def _fetch_github_version(self, session: aiohttp.ClientSession) -> Version | None:
-        """
-        Fetches the latest stable GitHub version of the repository.
+        """Fetch the latest stable GitHub version of the repository.
 
         This asynchronous method contacts the GitHub API to retrieve the latest release
         and top of the list release details for the specified repository, evaluates them,
@@ -445,6 +441,7 @@ class VersionChecker:
         Returns:
             Version | None: The latest stable release version if available, or None if
             no valid version is determined.
+
         """
         logger.debug(f"Fetching GitHub release details for {self.repo_owner}/{self.repo_name}")
         github_details = await get_latest_and_top_release_details(session, self.repo_owner, self.repo_name)
@@ -466,8 +463,7 @@ class VersionChecker:
 
     @staticmethod
     async def _fetch_nexus_version(session: aiohttp.ClientSession) -> Version | None:
-        """
-        Fetches the Nexus version using the provided HTTP session.
+        """Fetch the Nexus version using the provided HTTP session.
 
         This asynchronous method communicates with the Nexus service to retrieve
         its current version. The version information is logged for debugging
@@ -480,6 +476,7 @@ class VersionChecker:
         Returns:
             Version | None: The Nexus version if successfully determined;
                 otherwise, None.
+
         """
         logger.debug("Fetching Nexus version")
         version = await get_nexus_version(session)
@@ -489,8 +486,7 @@ class VersionChecker:
 
     @staticmethod
     def _check_source_failures(use_github: bool, use_nexus: bool, github_version: Version | None, nexus_version: Version | None) -> None:
-        """
-        Checks for failures in fetching version information from specified sources.
+        """Check for failures in fetching version information from specified sources.
 
         This method evaluates failure conditions for fetching version information
         from GitHub and Nexus, based on the settings provided by the user. It raises
@@ -508,6 +504,7 @@ class VersionChecker:
         Raises:
             UpdateCheckError: If the version information could not be retrieved from
             the selected source(s) in one of the specified failure scenarios.
+
         """
         github_failed = use_github and github_version is None
         nexus_failed = use_nexus and nexus_version is None
@@ -526,8 +523,7 @@ class VersionChecker:
                 raise UpdateCheckError(message)
 
     def _handle_error(self, error: Exception) -> bool:
-        """
-        Handles an error encountered during the update check process.
+        """Handle an error encountered during the update check process.
 
         This method identifies the type of error that occurred during the update check,
         logs appropriate messages, and displays a user-facing message if applicable.
@@ -543,6 +539,7 @@ class VersionChecker:
         Raises:
             UpdateCheckError: If `gui_request` is set and the error is not suppressed,
                 this exception is raised with the error message.
+
         """
         error_msg = str(error)
 
@@ -566,8 +563,7 @@ class VersionChecker:
 
     @staticmethod
     def _check_if_outdated(version_local: Version | None, github_version: Version | None, nexus_version: Version | None) -> bool:
-        """
-        Checks if the local version is outdated compared to the remote sources: GitHub or Nexus.
+        """Check if the local version is outdated compared to the remote sources: GitHub or Nexus.
 
         This method determines whether the provided local version is older than the versions
         available on GitHub or Nexus. If the local version is unknown or outdated compared
@@ -581,6 +577,7 @@ class VersionChecker:
         Returns:
             bool: True if the local version is outdated or unknown compared to the provided
             remote versions. False otherwise.
+
         """
         if version_local is None:
             logger.debug("Local version is unknown")
@@ -600,8 +597,7 @@ class VersionChecker:
     def _format_success_message(
         version_local: Version | None, use_github: bool, github_version: Version | None, use_nexus: bool, nexus_version: Version | None
     ) -> str:
-        """
-        Formats a success message string indicating the current local version of CLASSIC and
+        """Format a success message string indicating the current local version of CLASSIC and
         information about the latest versions available from various sources (GitHub or Nexus),
         if applicable. This message is intended to provide a clear status on the version
         synchronization and comparison.
@@ -619,6 +615,7 @@ class VersionChecker:
         Returns:
             str: A formatted message string summarizing the local version and, if applicable,
             the latest versions from GitHub and Nexus.
+
         """
         message_parts = [f"Your CLASSIC Version: {version_local or 'Unknown'}"]
 
@@ -636,8 +633,7 @@ class VersionChecker:
 
 
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
-    """
-    Asynchronously checks if the currently installed version of CLASSIC Fallout 4 is the latest
+    """Asynchronously checks if the currently installed version of CLASSIC Fallout 4 is the latest
     version, comparing it against the latest releases from GitHub and Nexus. The function supports
     GUI-based requests and logs the update-check results in detail.
 
@@ -655,6 +651,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
         UpdateCheckError: Raised under different circumstances, such as errors in fetching
             version details from GitHub and Nexus, or when an update is available in response
             to a GUI request.
+
     """
     checker = VersionChecker(quiet, gui_request)
 

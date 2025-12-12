@@ -85,6 +85,7 @@ def get_db_paths() -> tuple[Path, Path]:
 
     Returns:
         A tuple containing (main_db_path, local_db_path) as Path objects.
+
     """
     from ClassicLib import GlobalRegistry
     from ClassicLib.ResourceLoader import ResourceLoader
@@ -111,6 +112,7 @@ class _DBPaths:
     Note:
         This class has no instance attributes. It delegates all access
         to get_db_paths() which returns paths based on GlobalRegistry state.
+
     """
 
     def __getitem__(self, index: int) -> Path:

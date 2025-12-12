@@ -1,5 +1,4 @@
-"""
-Rust-accelerated RecordScanner wrapper.
+"""Rust-accelerated RecordScanner wrapper.
 
 This module provides a drop-in replacement for the Python RecordScanner that uses
 the high-performance Rust implementation when available, providing 40x speedup
@@ -32,6 +31,7 @@ def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[
         A tuple containing two tuples of exception types:
             - ParseError types (RustParseError and module-specific parse errors)
             - Generic RustError types (RustError and module-specific scan log errors)
+
     """
     parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
     rust_errors: tuple[type[BaseException], ...] = (RustError,)
@@ -57,16 +57,14 @@ logger = logging.getLogger(__name__)
 
 
 class RustRecordScanner:
-    """
-    Wrapper for Rust RecordScanner that provides Python-compatible API.
+    """Wrapper for Rust RecordScanner that provides Python-compatible API.
 
     Provides high-performance record scanning when Rust is available.
     Achieves 40x performance improvement over pure Python implementation.
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
-        """
-        Initializes the scanner instance using the provided configuration data from yamldata.
+        """Initialize the scanner instance using the provided configuration data from yamldata.
         Determines whether a Rust-based or Python-based scanner implementation should
         be used. Rust implementation is preferred for performance benefits, but falls
         back to the Python implementation if unavailable or initialization fails.
@@ -74,6 +72,7 @@ class RustRecordScanner:
         Args:
             yamldata (ClassicScanLogsInfo): Configuration data required for the scanner,
                 including target records, ignore list, and crash generator name.
+
         """
         self._rust_scanner = None
         self._use_rust = False
@@ -109,8 +108,7 @@ class RustRecordScanner:
             self._python_scanner = RecordScanner(yamldata)
 
     def scan_named_records(self, segment_callstack: list[str]) -> tuple[Any, list[str]]:
-        """
-        Scans named records in the provided call stack segment.
+        """Scan named records in the provided call stack segment.
 
         This method attempts to scan for named records using a Rust-based scanner
         when possible for better performance. If the Rust scanner is unavailable or raises
@@ -124,6 +122,7 @@ class RustRecordScanner:
                 - Rust: list[str] of formatted report lines
                 - Python: ReportFragment object
                 - list[str] of matched record names
+
         """
         if self._use_rust and self._rust_scanner:
             try:
@@ -147,8 +146,7 @@ class RustRecordScanner:
         return scanner.scan_named_records(segment_callstack)
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
-        """
-        Extract records from callstack segment without formatting.
+        """Extract records from callstack segment without formatting.
 
         Extracts all matching records from the callstack without generating
         formatted report lines. This is faster when you only need the record names.
@@ -158,6 +156,7 @@ class RustRecordScanner:
 
         Returns:
             list[str]: List of matched record names
+
         """
         if self._use_rust and self._rust_scanner:
             try:
@@ -183,8 +182,7 @@ class RustRecordScanner:
         return matches
 
     def clear_cache(self) -> None:
-        """
-        Clear the scanner's internal cache.
+        """Clear the scanner's internal cache.
 
         Clears any cached data used for optimizing repeated scans. This can be useful
         when switching between different crash logs or resetting the scanner state.
@@ -202,8 +200,7 @@ class RustRecordScanner:
 
     @staticmethod
     def scan_for_pattern(lines: list[str], pattern: str) -> list[str]:
-        """
-        Scans through a list of strings to find lines that match a given pattern.
+        """Scan through a list of strings to find lines that match a given pattern.
 
         Note: This method uses Python regex as the Rust implementation
         does not provide a corresponding method (simple pattern matching).
@@ -214,6 +211,7 @@ class RustRecordScanner:
 
         Returns:
             list[str]: A list of strings from the input that match the specified pattern.
+
         """
         import re
 
@@ -221,8 +219,7 @@ class RustRecordScanner:
         return [line for line in lines if pattern_re.search(line)]
 
     def _generate_report_lines(self, matches: list[str]) -> list[str]:
-        """
-        Generate formatted report lines from matched records.
+        """Generate formatted report lines from matched records.
 
         Helper method to format record matches into report lines, mirroring
         the Rust implementation's output format.
@@ -232,6 +229,7 @@ class RustRecordScanner:
 
         Returns:
             list[str]: Formatted report lines
+
         """
         if not matches:
             return ["* COULDN'T FIND ANY NAMED RECORDS *\n\n"]
@@ -253,8 +251,7 @@ class RustRecordScanner:
         return lines
 
     def batch_scan_records(self, segments: list[list[str]]) -> list[tuple[Any, list[str]]]:
-        """
-        Scans multiple segments of records in parallel using Rust acceleration.
+        """Scan multiple segments of records in parallel using Rust acceleration.
 
         This method processes multiple segments concurrently when Rust is available,
         providing significant performance improvements for batch operations. Falls back
@@ -268,6 +265,7 @@ class RustRecordScanner:
                 - Rust: list[str] of formatted report lines
                 - Python: ReportFragment object
                 - list[str] of matched record names
+
         """
         if self._use_rust and self._rust_scanner:
             try:
@@ -299,8 +297,7 @@ class RustRecordScanner:
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """
-        Indicates whether Rust acceleration is enabled.
+        """Indicate whether Rust acceleration is enabled.
 
         This property checks whether the implementation is currently using
         Rust-based acceleration. Rust acceleration can provide performance
@@ -309,5 +306,6 @@ class RustRecordScanner:
 
         Returns:
             bool: True if Rust acceleration is enabled, False otherwise.
+
         """
         return self._use_rust

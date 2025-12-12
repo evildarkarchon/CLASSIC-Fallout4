@@ -1,5 +1,4 @@
-"""
-Fragment-based FCX mode handler for CLASSIC.
+"""Fragment-based FCX mode handler for CLASSIC.
 
 This module provides fragment-returning version of FCX mode handling,
 replacing the mutable list pattern with immutable fragment composition.
@@ -13,8 +12,7 @@ from ClassicLib.rust.report_rust import ReportFragment
 
 
 class FCXModeHandlerFragments:
-    """
-    Handles operations and checks related to the FCX mode for system setups.
+    """Handle operations and checks related to the FCX mode for system setups.
 
     This class manages FCX mode by providing file checking mechanisms specific to the FCX mode
     configuration. Its functionality includes running the necessary checks, retrieving messages
@@ -25,6 +23,7 @@ class FCXModeHandlerFragments:
         fcx_mode (bool | None): Indicates whether FCX mode is enabled. This attribute is initialized
             during object construction and determines if FCX-related checks and operations should be
             performed.
+
     """
 
     # Class-level attributes shared across all instances
@@ -35,19 +34,18 @@ class FCXModeHandlerFragments:
     _detected_issues: ClassVar[list] = []  # List of ConfigIssue objects
 
     def __init__(self, fcx_mode: bool | None) -> None:
-        """
-        Initialize the FCX mode handler.
+        """Initialize the FCX mode handler.
 
         Args:
             fcx_mode: Whether FCX mode is enabled
+
         """
         self.game_files_check = None
         self.main_files_check = None
         self.fcx_mode = fcx_mode
 
     async def check_fcx_mode_async(self) -> None:
-        """
-        Asynchronously checks and updates the FCX mode status.
+        """Asynchronously checks and updates the FCX mode status.
 
         This is the async version that should be used from async contexts.
         It runs the sync FCX checks in a thread pool to avoid blocking the event loop
@@ -58,6 +56,7 @@ class FCXModeHandlerFragments:
 
         Raises:
             ImportError: Raised when necessary external modules fail to import during execution.
+
         """
         if self.fcx_mode:
             try:
@@ -78,6 +77,7 @@ class FCXModeHandlerFragments:
                         - main_result: String containing the main files check result
                         - game_result: String containing the game files check result
                         - detected_issues: List of ConfigIssue objects detected during scan
+
                 """
                 coordinator = SetupCoordinator()
                 main_result = coordinator.generate_combined_results()
@@ -103,8 +103,7 @@ class FCXModeHandlerFragments:
             self.game_files_check = ""
 
     def check_fcx_mode(self) -> None:
-        """
-        Checks and updates the FCX mode status, ensuring checks are performed only once per session.
+        """Check and updates the FCX mode status, ensuring checks are performed only once per session.
 
         This method is responsible for verifying the FCX mode and performing validations by invoking
         necessary external components or fallback mechanisms. The FCX mode dictates whether certain
@@ -116,6 +115,7 @@ class FCXModeHandlerFragments:
 
         Raises:
             ImportError: Raised when necessary external modules fail to import during execution.
+
         """
         if self.fcx_mode:
             try:
@@ -148,8 +148,7 @@ class FCXModeHandlerFragments:
 
     @classmethod
     def reset_fcx_checks(cls) -> None:
-        """
-        Resets the state of FCX checks to their initial state.
+        """Reset the state of FCX checks to their initial state.
 
         This method is responsible for resetting all the state variables related to FCX
         checks. It ensures that the checks can start from a clean state by acquiring
@@ -163,8 +162,7 @@ class FCXModeHandlerFragments:
             cls._detected_issues = []
 
     def get_fcx_messages(self) -> ReportFragment:
-        """
-        Generates a detailed report fragment related to the FCX mode status and any detected
+        """Generate a detailed report fragment related to the FCX mode status and any detected
         configuration issues.
 
         This method is responsible for aggregating information about the current FCX mode
@@ -176,6 +174,7 @@ class FCXModeHandlerFragments:
         Returns:
             ReportFragment: An object representing the aggregated and formatted report
             detailing FCX mode status and its associated information.
+
         """
         lines = []
 

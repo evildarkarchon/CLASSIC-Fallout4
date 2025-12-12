@@ -49,6 +49,7 @@ class GithubAsset:
         browser_download_url: Download URL.
         content_type: MIME type.
         download_count: Number of downloads.
+
     """
 
     name: str
@@ -78,6 +79,7 @@ class GithubRelease:
         >>> release = await client.get_latest_release()
         >>> print(f"Version: {release.tag_name}")
         >>> print(f"Notes: {release.body}")
+
     """
 
     tag_name: str
@@ -105,6 +107,7 @@ class GithubClient:
         ...     if client.has_update("v8.0.0", latest.tag_name):
         ...         print("Update available!")
         >>> asyncio.run(check_updates())
+
     """
 
     def __init__(self, owner: str, repo: str) -> None:
@@ -116,6 +119,7 @@ class GithubClient:
 
         Example:
             >>> client = GithubClient("evildarkarchon", "CLASSIC-Fallout4")
+
         """
 
     @property
@@ -138,6 +142,7 @@ class GithubClient:
         Example:
             >>> latest = await client.get_latest_release()
             >>> print(latest.tag_name)
+
         """
 
     async def get_all_releases(self, include_prereleases: bool = False, include_drafts: bool = False) -> list[GithubRelease]:
@@ -157,6 +162,7 @@ class GithubClient:
             >>> releases = await client.get_all_releases()
             >>> for release in releases:
             ...     print(f"{release.tag_name}: {release.name}")
+
         """
 
     def has_update(self, current_version: str, latest_version: str) -> bool:
@@ -174,6 +180,7 @@ class GithubClient:
         Example:
             >>> if client.has_update("v8.0.0", "v8.1.0"):
             ...     print("Update available!")
+
         """
 
     def repo_url(self) -> str:
@@ -185,6 +192,7 @@ class GithubClient:
         Example:
             >>> print(client.repo_url())
             https://github.com/evildarkarchon/CLASSIC-Fallout4
+
         """
 
 class NexusModInfo:
@@ -207,6 +215,7 @@ class NexusModInfo:
         >>> info = await client.get_mod_info("fallout4", 1234)
         >>> print(f"{info.name} by {info.author}")
         >>> print(f"Version: {info.version}")
+
     """
 
     name: str
@@ -237,6 +246,7 @@ class NexusClient:
         ...     if await client.has_update("fallout4", 1234, "1.0"):
         ...         print("Mod has been updated!")
         >>> asyncio.run(check_mods())
+
     """
 
     def __init__(self) -> None:
@@ -244,6 +254,7 @@ class NexusClient:
 
         Example:
             >>> client = NexusClient()
+
         """
 
     async def get_mod_info(self, game: str, mod_id: int) -> NexusModInfo:
@@ -262,6 +273,7 @@ class NexusClient:
         Example:
             >>> info = await client.get_mod_info("fallout4", 1234)
             >>> print(f"Mod: {info.name}")
+
         """
 
     async def has_update(self, game: str, mod_id: int, current_version: str) -> bool:
@@ -281,4 +293,5 @@ class NexusClient:
         Example:
             >>> if await client.has_update("fallout4", 1234, "1.0"):
             ...     print("Mod has been updated!")
+
         """

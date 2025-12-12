@@ -1,5 +1,4 @@
-"""
-Rust-accelerated SuspectScanner wrapper.
+"""Rust-accelerated SuspectScanner wrapper.
 
 This module provides a transparent wrapper around the Rust SuspectScanner implementation,
 maintaining full API compatibility with the Python reference while delivering significant
@@ -29,8 +28,7 @@ if not RUST_AVAILABLE:
 
 
 class RustAcceleratedSuspectScanner:
-    """
-    Rust-accelerated suspect scanner with Python API compatibility.
+    """Rust-accelerated suspect scanner with Python API compatibility.
 
     This wrapper bridges the API differences between Rust and Python implementations:
     - Rust constructor takes suspects lists directly (as JSON strings)
@@ -39,14 +37,14 @@ class RustAcceleratedSuspectScanner:
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
-        """
-        Initializes an instance of the class with the provided ClassicScanLogsInfo object
+        """Initialize an instance of the class with the provided ClassicScanLogsInfo object
         and determines whether to use the Rust or Python implementation for the scanner,
         based on the availability of Rust.
 
         Args:
             yamldata: An instance of ClassicScanLogsInfo that contains information
                 necessary for initializing the scanner.
+
         """
         self.yamldata = yamldata
         self._use_rust = RUST_AVAILABLE
@@ -77,8 +75,7 @@ class RustAcceleratedSuspectScanner:
             self._scanner = PySuspectScannerImpl(yamldata)
 
     def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[ReportFragment, bool]:
-        """
-        Analyzes the main error extracted from a crashlog and determines potential suspects by scanning
+        """Analyze the main error extracted from a crashlog and determines potential suspects by scanning
         the input string and evaluating against a defined warning length threshold. This function either
         uses a Rust-based scanner or a Python-based scanner depending on the runtime configuration.
 
@@ -89,6 +86,7 @@ class RustAcceleratedSuspectScanner:
         Returns:
             tuple[ReportFragment, bool]: A tuple containing a `ReportFragment` object based on the scan
             results and a boolean indicating whether a suspect was found.
+
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
@@ -100,8 +98,7 @@ class RustAcceleratedSuspectScanner:
     def suspect_scan_stack(
         self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
     ) -> tuple[ReportFragment, bool]:
-        """
-        Perform a scan of the stack to identify potential suspects based on the crash log
+        """Perform a scan of the stack to identify potential suspects based on the crash log
         and call stack segment provided. This function determines whether any suspects
         can be identified and returns the processed report fragment alongside a boolean
         indicating detection status.
@@ -114,6 +111,7 @@ class RustAcceleratedSuspectScanner:
         Returns:
             tuple[ReportFragment, bool]: A tuple containing the processed report fragment
             and a boolean flag indicating whether any suspect was found.
+
         """
         if self._use_rust:
             # Rust returns (list[str], bool), need to convert to (ReportFragment, bool)
@@ -126,8 +124,7 @@ class RustAcceleratedSuspectScanner:
 
     @staticmethod
     def check_dll_crash(crashlog_mainerror: str) -> ReportFragment:
-        """
-        Checks for DLL-related crashes in the given crash log and returns a
+        """Check for DLL-related crashes in the given crash log and returns a
         processed report.
 
         This method attempts to analyze crash logs using Rust-based logic if

@@ -1,5 +1,4 @@
-"""
-Handles operations related to resolving and validating game installation paths, including system
+"""Handle operations related to resolving and validating game installation paths, including system
 registry checks, user interactions, and configuration updates.
 
 The module ensures the correct game path is determined based on platform-specific logic, registry
@@ -41,8 +40,7 @@ if TYPE_CHECKING:
 
 
 def _game_path_find_registry(exe_name: str) -> Path | None:
-    """
-    Finds the installation path of a game via system registry and validates the path.
+    """Find the installation path of a game via system registry and validates the path.
 
     The method attempts to retrieve the installation path of a specific game by querying the Windows
     registry for registry keys associated with the game's installation. It first checks the key for
@@ -58,6 +56,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
     Returns:
         A Path object representing the game's valid installation directory if found and validated,
         otherwise None.
+
     """
     # Try Rust acceleration first if available
     if _HAS_RUST_PATH and platform.system() == "Windows":
@@ -120,8 +119,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
 
 
 class GamePathFinder:
-    """
-    Handles the discovery and configuration of the game path.
+    """Handle the discovery and configuration of the game path.
 
     This class is responsible for locating the installation directory of
     a game. It utilizes various methods, including cached paths, system
@@ -139,11 +137,11 @@ class GamePathFinder:
         xse_acronym_base (str): Base acronym for XSE, loaded from a global YAML
             settings key.
         game_name (str): Root name of the game, loaded from YAML settings.
+
     """
 
     def __init__(self) -> None:
-        """
-        Represents a configuration class that initializes and manages key YAML settings and game-related identifiers.
+        """Represent a configuration class that initializes and manages key YAML settings and game-related identifiers.
 
         Note: This constructor uses synchronous yaml_settings(). For async contexts,
         use the async factory method create_async() instead.
@@ -152,6 +150,7 @@ class GamePathFinder:
             TypeError: If any of the YAML settings such as `xse_acronym`, `xse_acronym_base`, or
                 `game_name` are not strings.
             RuntimeError: If called from within an async context.
+
         """
         self.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
         self.xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
@@ -164,8 +163,7 @@ class GamePathFinder:
 
     @classmethod
     async def create_async(cls) -> "GamePathFinder":
-        """
-        Async factory method to create a GamePathFinder instance.
+        """Async factory method to create a GamePathFinder instance.
 
         This method should be used in async contexts instead of the synchronous __init__.
         It uses yaml_settings_async() to load configuration without blocking.
@@ -179,6 +177,7 @@ class GamePathFinder:
         Example:
             >>> finder = await GamePathFinder.create_async()
             >>> finder.find_game_path()
+
         """
         from ClassicLib.YamlSettings import yaml_settings_async
 
@@ -202,6 +201,7 @@ class GamePathFinder:
 
         Returns:
             bool: True if XSE file exists and is accessible, False otherwise.
+
         """
         from ClassicLib.Utils.path_utils import validate_path
 
@@ -221,12 +221,12 @@ class GamePathFinder:
         return True
 
     def _report_xse_error(self, error_msg: str) -> None:
-        """
-        Reports an error related to the XSE log file based on the provided error message. The error is logged
+        """Report an error related to the XSE log file based on the provided error message. The error is logged
         with details, guiding the user toward resolving the issue depending on the type of error.
 
         Args:
             error_msg (str): The error message indicating the reason for the encountered issue.
+
         """
         xse_acronym_lower = self.xse_acronym.lower() if self.xse_acronym else "xse"
         if "does not exist" in error_msg:
@@ -243,8 +243,7 @@ class GamePathFinder:
             )
 
     def _parse_xse_log_for_path(self) -> Path | None:
-        """
-        Parses a log file to extract a directory path.
+        """Parse a log file to extract a directory path.
 
         This method processes a log file associated with the `xse_file` attribute, searches
         for a line starting with the string "plugin directory", and extracts a directory
@@ -254,6 +253,7 @@ class GamePathFinder:
 
         Returns:
             Path | None: Extracted directory path if found; otherwise, None.
+
         """
         # Use Rust acceleration if available
         if _HAS_RUST_PATH:
@@ -276,8 +276,7 @@ class GamePathFinder:
         return None
 
     def _validate_game_path(self, game_path: Path) -> bool:
-        """
-        Validates the provided game path to ensure it meets the necessary criteria.
+        """Validate the provided game path to ensure it meets the necessary criteria.
 
         This function checks if the path is accessible, whether it is an existing directory,
         and if the expected executable file is present within the directory.
@@ -287,6 +286,7 @@ class GamePathFinder:
 
         Returns:
             bool: True if the game path is valid and meets all required conditions, False otherwise.
+
         """
         from ClassicLib.Utils.path_utils import validate_path
 
@@ -307,11 +307,11 @@ class GamePathFinder:
         return True
 
     async def _save_game_path_async(self, game_path: Path) -> None:  # noqa: PLR6301
-        """
-        Asynchronously saves the game path to cache locations and registers it.
+        """Asynchronously saves the game path to cache locations and registers it.
 
         Args:
             game_path (Path): The path to the game directory to be saved.
+
         """
         from ClassicLib.ResourceLoader import ResourceLoader
 
@@ -320,14 +320,14 @@ class GamePathFinder:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
 
     def _save_game_path(self, game_path: Path) -> None:  # noqa: PLR6301
-        """
-        Saves the provided game path to multiple cache locations and registers
+        """Save the provided game path to multiple cache locations and registers
         it within the global registry.
 
         Note: This is the sync version. For async contexts, use _save_game_path_async().
 
         Args:
             game_path (Path): The path to the game directory to be saved.
+
         """
         from ClassicLib.ResourceLoader import ResourceLoader
 
@@ -336,8 +336,7 @@ class GamePathFinder:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
 
     def _get_path_from_user_gui(self) -> Path:  # noqa: PLR6301
-        """
-        Retrieves a file path from the user via a graphical user interface (GUI).
+        """Retrieve a file path from the user via a graphical user interface (GUI).
 
         This method prompts the user with a dialog to select a file path. If the user
         cancels the selection, the application will safely handle it by raising a
@@ -348,6 +347,7 @@ class GamePathFinder:
 
         Returns:
             Path: The file path selected by the user.
+
         """
         # This will return a valid path or exit the application if cancelled
         result = show_game_path_dialog_static()
@@ -357,8 +357,7 @@ class GamePathFinder:
         return result
 
     def _get_path_from_user_console(self) -> Path:
-        """
-        Retrieves and validates a directory path for a game installation from the user via console input.
+        """Retrieve and validates a directory path for a game installation from the user via console input.
 
         This method prompts the user to provide the full directory path where the game is located.
         The entered path is validated for readability, and the existence of the game's executable file
@@ -367,6 +366,7 @@ class GamePathFinder:
 
         Returns:
             Path: The validated directory path provided by the user.
+
         """
         from ClassicLib.Utils.path_utils import validate_path
 
@@ -390,14 +390,14 @@ class GamePathFinder:
             msg_error(f"ERROR : NO {self.exe_name} FILE FOUND IN '{game_path}'! Please try again.")
 
     async def find_game_path_async(self) -> None:
-        """
-        Asynchronously finds and sets the game installation path.
+        """Asynchronously finds and sets the game installation path.
 
         This is the async version that should be used from async contexts (CLI, async workers).
         It uses yaml_settings_async() and _save_game_path_async() to properly handle async operations.
 
         Raises:
             ValueError: If the user-provided path or XSE-derived path is invalid.
+
         """
         # First, check if we have a cached path (for uvx compatibility)
         from ClassicLib.ResourceLoader import ResourceLoader
@@ -433,8 +433,7 @@ class GamePathFinder:
         await self._save_game_path_async(game_path)
 
     def find_game_path(self) -> None:
-        """
-        Finds and sets the game installation path (sync version).
+        """Find and sets the game installation path (sync version).
 
         This method determines the path to the game installation by using various approaches in a
         hierarchical manner. It first checks if a cached path is available. If not, on Windows systems,
@@ -482,8 +481,7 @@ class GamePathFinder:
 
 
 def game_path_find() -> None:
-    """
-    Find and verify the game path by initializing and utilizing the GamePathFinder
+    """Find and verify the game path by initializing and utilizing the GamePathFinder
     class. This function is responsible for initiating the game path check process
     and ensuring that the proper game path is found.
 
@@ -493,6 +491,7 @@ def game_path_find() -> None:
         Any exceptions raised by the `GamePathFinder` methods will propagate and need
         to be handled by the caller. Refer to the `GamePathFinder` class documentation
         for details on the exceptions.
+
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
 
@@ -501,8 +500,7 @@ def game_path_find() -> None:
 
 
 async def game_path_find_async() -> None:
-    """
-    Asynchronously verifies and determines the game path.
+    """Asynchronously verifies and determines the game path.
 
     This async function creates a GamePathFinder instance using async initialization
     and initiates the process of finding the game path. It should be used in async
@@ -511,6 +509,7 @@ async def game_path_find_async() -> None:
 
     Example:
         >>> await game_path_find_async()
+
     """
     logger.debug("- - - INITIATED GAME PATH CHECK (ASYNC)")
 
@@ -519,8 +518,7 @@ async def game_path_find_async() -> None:
 
 
 def game_generate_paths() -> None:
-    """
-    Generates game-specific paths and configurations using YAML settings and global registry data.
+    """Generate game-specific paths and configurations using YAML settings and global registry data.
 
     This function reads and verifies necessary game paths and settings and configures them based on
     the game version and type (e.g., VR or non-VR). It ensures that certain properties like file paths
@@ -531,6 +529,7 @@ def game_generate_paths() -> None:
     Raises:
         TypeError: If the game path or XSE acronym base is not of type `str`.
         ValueError: If the game version is unsupported or invalid.
+
     """
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 
@@ -583,8 +582,7 @@ def game_generate_paths() -> None:
 
 
 async def game_generate_paths_async() -> None:
-    """
-    Asynchronously generates game-specific paths and configurations using YAML settings.
+    """Asynchronously generates game-specific paths and configurations using YAML settings.
 
     This async version should be used in async contexts (like CLI async code or async workers)
     instead of the synchronous game_generate_paths(). It uses yaml_settings_async() to avoid
@@ -596,6 +594,7 @@ async def game_generate_paths_async() -> None:
 
     Example:
         >>> await game_generate_paths_async()
+
     """
     from ClassicLib.YamlSettings import yaml_settings_async
 

@@ -1,5 +1,4 @@
-"""
-Integration Configuration Module
+"""Integration Configuration Module.
 
 Contains configuration constants and performance thresholds for the
 Rust integration layer.

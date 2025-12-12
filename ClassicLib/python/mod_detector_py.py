@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of mod detection.
+"""Pure Python implementation of mod detection.
 
 This module provides the fallback Python implementation for detecting
 modifications (mods) when Rust acceleration is not available. It handles
@@ -14,8 +13,7 @@ if TYPE_CHECKING:
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
-    """
-    Converts all keys in a dictionary to lowercase.
+    """Convert all keys in a dictionary to lowercase.
 
     This function takes a dictionary where the keys are strings and returns a new
     dictionary where all the keys have been converted to lowercase. The values
@@ -26,13 +24,13 @@ def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
 
     Returns:
         dict[str, str]: A new dictionary with all keys converted to lowercase.
+
     """
     return {key.lower(): value for key, value in data.items()}
 
 
 def _validate_warning(mod_name: str, warning: str) -> None:
-    """
-    Validates the presence of a warning message for a given module name. If no warning is
+    """Validate the presence of a warning message for a given module name. If no warning is
     found, raises a ValueError to indicate a missing warning entry in the database.
 
     Args:
@@ -41,14 +39,14 @@ def _validate_warning(mod_name: str, warning: str) -> None:
 
     Raises:
         ValueError: If the warning message is empty or not provided.
+
     """
     if not warning:
         raise ValueError(f"ERROR: {mod_name} has no warning in the database!")
 
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
-    """
-    Detect modifications from the given mod dictionary and crash log plugins.
+    """Detect modifications from the given mod dictionary and crash log plugins.
 
     This function identifies modifications (mods) in a given crash log by matching them
     against a dictionary of known mods and their associated warnings. It uses optimized
@@ -72,6 +70,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     Returns:
         ReportFragment: An object encapsulating the lines of the consolidated report about
         detected mods, warnings, and matched plugins.
+
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -134,8 +133,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
-    """
-    Detect conflicting mods from given data and generate a report fragment.
+    """Detect conflicting mods from given data and generate a report fragment.
 
     This function analyzes two dictionaries: one containing pairs of mods with associated warnings
     and another representing plugins presumably linked to the mods. It detects potential conflicts
@@ -151,6 +149,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     Returns:
         ReportFragment: An instance of `ReportFragment` containing any detected conflicts along with
         warnings.
+
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -196,8 +195,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 def detect_mods_important(
     yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: Literal["nvidia", "amd"] | None
 ) -> "ReportFragment":
-    """
-    Processes mod detection based on provided plugin data and YAML configuration.
+    """Process mod detection based on provided plugin data and YAML configuration.
 
     This function performs detection of important mods by comparing plugin names
     against a pattern matching system created from a YAML configuration dictionary.

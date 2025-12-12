@@ -1,5 +1,4 @@
-"""
-Async-first core implementation for CLASSIC_ScanGame.py operations.
+"""Async-first core implementation for CLASSIC_ScanGame.py operations.
 
 This module provides the primary async implementations that are used by both
 sync adapters (for backwards compatibility) and async callers directly.
@@ -31,8 +30,7 @@ from ClassicLib.YamlSettings import yaml_settings_async
 
 
 class ScanGameCore:
-    """
-    Implements the core functionalities for scanning mods in an optimized and
+    """Implement the core functionalities for scanning mods in an optimized and
     concurrent manner. The class applies singleton design principles, ensuring
     only one instance exists and centralizes management of scan and validation
     operations for efficiency.
@@ -52,11 +50,11 @@ class ScanGameCore:
         log_processor (LogProcessor): Processor to analyze error logs.
         dds_processor (DDSProcessor): Component for handling DDS image scans.
         file_operations (FileOperations): Facilitates safe file operations under semaphore limits.
+
     """
 
     def __new__(cls) -> "ScanGameCore":
-        """
-        Creates a new instance of the ScanGameCore class or retrieves an existing one
+        """Create a new instance of the ScanGameCore class or retrieves an existing one
         from a shared store. Implements a Singleton pattern to ensure only one
         instance of the class exists.
 
@@ -65,6 +63,7 @@ class ScanGameCore:
 
         Returns:
             ScanGameCore: The instance of the ScanGameCore class.
+
         """
         instance = get(SCAN_GAME_CORE_KEY)
         if instance is None:
@@ -73,8 +72,7 @@ class ScanGameCore:
         return instance
 
     def __init__(self) -> None:
-        """
-        Initializes the class and configures internal semaphores, thread pools, and
+        """Initialize the class and configures internal semaphores, thread pools, and
         other components required for processing operations.
 
         This method ensures initialization is only performed once and sets up
@@ -111,8 +109,7 @@ class ScanGameCore:
             self._initialized = True
 
     async def cleanup_async(self) -> None:
-        """
-        Clean up thread pool executors to prevent resource leaks.
+        """Clean up thread pool executors to prevent resource leaks.
 
         This method should be called when the ScanGameCore instance is no longer needed
         to ensure proper cleanup of thread pools. It gracefully shuts down both
@@ -121,6 +118,7 @@ class ScanGameCore:
         Note:
             This is an async method to allow cleanup to happen without blocking the event loop.
             The actual shutdown operations are run in the executor to avoid blocking.
+
         """
         loop = asyncio.get_event_loop()
 
@@ -132,14 +130,11 @@ class ScanGameCore:
         )
 
     async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
-        """
-        Retrieves settings required for a scanning process asynchronously.
-        """
+        """Retrieve settings required for a scanning process asynchronously."""
         return await self.validators.get_scan_settings()
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
-        """
-        Retrieves issue messages for the given acronym and mode.
+        """Retrieve issue messages for the given acronym and mode.
 
         This method fetches issue messages using the specified acronym and mode as input
         parameters. It is commonly used to validate or retrieve diagnostic messages
@@ -155,12 +150,12 @@ class ScanGameCore:
             dict[str, list[str]]: A dictionary where the keys represent categories or
             issue types, and the values are lists of issue messages corresponding to
             those keys.
+
         """
         return self.validators.get_issue_messages(xse_acronym, mode)
 
     async def check_log_errors(self, folder_path: Path | str) -> str:
-        """
-        Checks for errors in log files within the specified folder.
+        """Check for errors in log files within the specified folder.
 
         This method processes the log files found in the given folder, identifies error entries,
         and returns a summary of the errors. It relies on an internal log processor to perform
@@ -172,12 +167,12 @@ class ScanGameCore:
 
         Returns:
             str: A summary of errors found within the processed log files.
+
         """
         return await self.log_processor.check_log_errors(folder_path)
 
     async def scan_mods_unpacked(self) -> str:
-        """
-        Scans and processes unpacked mod files for cleanup and issue detection. The method performs
+        """Scan and processes unpacked mod files for cleanup and issue detection. The method performs
         a comprehensive analysis of directories and files within a specified mod folder, identifying
         and reporting various issues, such as file format inconsistencies, directory misplacements,
         and other indicators for mod improvements.
@@ -193,6 +188,7 @@ class ScanGameCore:
         Raises:
             OSError: If there is an error accessing the mod files.
             FileNotFoundError: If the specified mod folder path does not exist.
+
         """
         # Get settings
         xse_acronym, xse_scriptfiles, mod_path = await self.get_scan_settings()
@@ -212,8 +208,7 @@ class ScanGameCore:
         return self.report_builder.build_unpacked_report(issue_lists, xse_acronym)
 
     async def scan_mods_archived(self) -> str:
-        """
-        Asynchronously scans for archived .ba2 mod files and processes them to detect potential issues
+        """Asynchronously scans for archived .ba2 mod files and processes them to detect potential issues
         like texture format problems, invalid dimensions, incorrect sound formats, and other file
         anomalies. Utilizes asynchronous I/O and controlled subprocess execution to ensure optimized
         performance.
@@ -232,6 +227,7 @@ class ScanGameCore:
             - Processes files in controlled asynchronous batches, leveraging system resources effectively.
             - Relies on external tools like BSArch.exe for parsing archive files and retrieving necessary
               metadata.
+
         """
         # Initialize the scan setup
         scan_setup = await self._initialize_archived_scan()
@@ -256,11 +252,11 @@ class ScanGameCore:
         return self.report_builder.build_archived_report(issue_lists, xse_acronym)
 
     async def _initialize_archived_scan(self) -> tuple[dict[str, set[str]], str, dict[str, str], Path, Path] | str:
-        """
-        Initialize the archived scan with validation and setup.
+        """Initialize the archived scan with validation and setup.
 
         Returns:
             Either a tuple of initialized components or an error message string.
+
         """
         # Initialize sets for collecting different issue types
         issue_lists: dict[str, set[str]] = {
@@ -288,11 +284,11 @@ class ScanGameCore:
 
     @staticmethod
     async def _validate_archived_scan_requirements(mod_path: Path | None, bsarch_path: Path) -> str | None:
-        """
-        Validate all requirements for archived scan.
+        """Validate all requirements for archived scan.
 
         Returns:
             Error message if validation fails, None if all requirements are satisfied.
+
         """
         if not mod_path:
             return str(await yaml_settings_async(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
@@ -304,8 +300,7 @@ class ScanGameCore:
 
     # Helper methods for internal operations
     async def _check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict, issue_locks: dict) -> None:
-        """
-        Checks a batch of DDS files asynchronously to validate their dimensions and adds issues
+        """Check a batch of DDS files asynchronously to validate their dimensions and adds issues
         to provided lists if any discrepancies are found.
 
         Optimized version that processes DDS headers in chunks for better performance,
@@ -333,8 +328,7 @@ class ScanGameCore:
 
             # Create batch processing function for better efficiency
             def process_chunk(chunk_data: list[tuple[Path, Path]]) -> list[tuple[Path, int, int]]:
-                """
-                Process a chunk of DDS files in one executor call.
+                """Process a chunk of DDS files in one executor call.
 
                 Args:
                     chunk_data: List of tuples containing DDS file path and relative path.
@@ -342,6 +336,7 @@ class ScanGameCore:
                 Returns:
                     list[tuple[Path, int, int]]: List of tuples with relative path, width, and height
                     for files with invalid dimensions.
+
                 """
                 results = []
                 for file_path, relative_path in chunk_data:

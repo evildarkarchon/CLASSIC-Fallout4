@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-Example of using Rust extensions in CLASSIC-Fallout4.
+"""Example of using Rust extensions in CLASSIC-Fallout4.
 
 This demonstrates how the ResourceLoader and rust_loader work together
 to provide transparent access to Rust-accelerated functionality.

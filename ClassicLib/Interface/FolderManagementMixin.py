@@ -1,5 +1,4 @@
-"""
-Folder management functionality for the CLASSIC interface.
+"""Folder management functionality for the CLASSIC interface.
 
 This module contains a mixin class that handles folder selection and validation.
 """
@@ -23,8 +22,7 @@ from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 class FolderManagementMixin:
-    """
-    Mixin providing folder management utilities.
+    """Mixin providing folder management utilities.
 
     This mixin is designed to handle folder-related operations such as selecting
     folders, validating folder paths, and initializing folder paths from settings.
@@ -38,6 +36,7 @@ class FolderManagementMixin:
             scan folder path used in the user interface.
         mods_folder_edit (QLineEdit | None): Input field reference for the mods
             folder path used in the user interface.
+
     """
 
     if TYPE_CHECKING:
@@ -46,13 +45,15 @@ class FolderManagementMixin:
         mods_folder_edit: QLineEdit | None
 
     def select_folder_scan(self) -> None:
-        """
-        Prompts the user to select a folder for custom scan functionality, validates the selected folder,
-        and updates the application settings accordingly. If the folder is invalid, a warning dialog is
-        shown, and the user can retry until a valid folder is chosen or the dialog is canceled.
+        """Prompt the user to select a folder for custom scan functionality.
+
+        Validates the selected folder and updates the application settings accordingly.
+        If the folder is invalid, a warning dialog is shown, and the user can retry
+        until a valid folder is chosen or the dialog is canceled.
 
         Raises:
             Warning: If the selected folder is not valid for a custom scan path.
+
         """
         while True:
             # noinspection PyTypeChecker
@@ -78,14 +79,15 @@ class FolderManagementMixin:
             )
 
     def validate_scan_folder_text(self) -> None:
-        """
-        Validates and processes the user-provided scan folder path entered in a text field.
-        Handles scenarios like empty input, non-existent paths, restricted paths, and valid paths,
-        updating the application settings and notifying the user accordingly.
+        """Validate and process the user-provided scan folder path from a text field.
+
+        Handles scenarios like empty input, non-existent paths, restricted paths, and
+        valid paths, updating the application settings and notifying the user accordingly.
 
         Raises:
             Warning: A QMessageBox warning is raised if the provided path is invalid
             or restricted, suggesting corrective actions to the user.
+
         """
         if self.scan_folder_edit is None:
             return
@@ -129,14 +131,14 @@ class FolderManagementMixin:
         yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(path_obj.resolve()))
 
     def select_folder_mods(self) -> None:
-        """
-        Selects a folder for staging mods and updates the relevant settings.
+        """Select a folder for staging mods and updates the relevant settings.
 
         This function allows the user to select a directory using a dialog for staging mods, updates the
         text field with the chosen directory, and saves the folder path to a YAML settings file.
 
         Raises:
             OSError: If there is an issue accessing the selected directory.
+
         """
         # noinspection PyTypeChecker
         folder: str = QFileDialog.getExistingDirectory(self, "Select Staging Mods Folder")  # pyright: ignore[reportArgumentType]
@@ -146,14 +148,14 @@ class FolderManagementMixin:
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", folder)
 
     def initialize_folder_paths(self) -> None:
-        """
-        Initializes folder paths for scanning and mods based on user settings.
+        """Initialize folder paths for scanning and mods based on user settings.
 
         This method retrieves folder paths for scanning and mods from user-defined
         settings and applies them to corresponding UI elements if they exist.
 
         Raises:
             None
+
         """
         scan_folder: str | None = classic_settings(str, "SCAN Custom Path")
         mods_folder: str | None = classic_settings(str, "MODS Folder Path")
@@ -164,8 +166,7 @@ class FolderManagementMixin:
             self.mods_folder_edit.setText(mods_folder)
 
     def open_settings(self) -> None:
-        """
-        Opens the settings dialog and applies changes if accepted.
+        """Open the settings dialog and applies changes if accepted.
 
         This method creates an instance of `SettingsDialog` and displays it to
         the user. If the user accepts the changes in the dialog, immediate
@@ -185,8 +186,7 @@ class FolderManagementMixin:
             self.apply_settings_changes()
 
     def apply_settings_changes(self) -> None:
-        """
-        Apply settings that affect the UI immediately.
+        """Apply settings that affect the UI immediately.
 
         This method is called after the settings dialog is accepted to apply
         any changes that need to take effect immediately in the current session.
@@ -195,8 +195,7 @@ class FolderManagementMixin:
         # This method is here for future use when settings might affect the UI
 
     def open_backup_folder(self) -> None:
-        """
-        Opens the backup folder if it exists and is registered.
+        """Open the backup folder if it exists and is registered.
 
         This method checks if the local directory is registered in the
         GlobalRegistry. If registered, it attempts to open the backup folder
@@ -207,6 +206,7 @@ class FolderManagementMixin:
         Raises:
             QMessageBox: Displays an error dialog if the backup folder is
             not registered or missing.
+
         """
         local_dir: Path = cast("Path", GlobalRegistry.get_local_dir())
         if local_dir.exists():
@@ -223,8 +223,7 @@ class FolderManagementMixin:
             )
 
     def open_crash_logs_folder(self) -> None:
-        """
-        Opens the Crash Logs directory in the system's file explorer.
+        """Open the Crash Logs directory in the system's file explorer.
 
         This method checks if the local directory is registered in the
         GlobalRegistry. If registered, it attempts to open the Crash Logs folder
@@ -233,6 +232,7 @@ class FolderManagementMixin:
 
         Raises:
             QMessageBox: Displays an error dialog if the local directory is not registered.
+
         """
         local_dir: Path = cast("Path", GlobalRegistry.get_local_dir())
         if local_dir.exists():

@@ -1,5 +1,4 @@
-"""
-A module to check and validate settings for Crash Generator (Buffout4) configuration.
+"""A module to check and validate settings for Crash Generator (Buffout4) configuration.
 
 This module contains the CrashgenChecker class, which is used to locate and verify
 the configuration files for Buffout4 and ensure that the settings are appropriate
@@ -19,8 +18,7 @@ from ClassicLib.YamlSettings import yaml_settings
 
 
 class CrashgenChecker:
-    """
-    Handles checking and validating the installation of crash generation mods, their configurations,
+    """Handle checking and validating the installation of crash generation mods, their configurations,
     and compatibility with installed plugins.
 
     This class is designed to manage the setup and requirements for crash generation tools, ensuring
@@ -34,15 +32,16 @@ class CrashgenChecker:
         crashgen_name (str): Name of the crash generator mod based on the settings or default value.
         config_file (Path | None): Path to the configuration file being used by the crash generator mod.
         installed_plugins (set[str]): Set of installed plugins (DLL files) detected in the plugins directory.
+
     """
 
     def __init__(self) -> None:
-        """
-        Initializes the class and sets up initial attributes for managing message list and
+        """Initialize the class and sets up initial attributes for managing message list and
         plugin configurations.
 
         Raises:
             FileNotFoundError: If the configuration file is not found during initialization.
+
         """
         self.message_list: list[str] = []
         self.plugins_path = self._get_plugins_path()
@@ -52,8 +51,7 @@ class CrashgenChecker:
 
     @staticmethod
     def _get_plugins_path() -> Path | None:
-        """
-        Gets the path to the plugins directory if available.
+        """Get the path to the plugins directory if available.
 
         This method retrieves the path to the plugins folder for a specific game configuration
         based on the provided YAML settings and the VR version fetched from the global registry.
@@ -61,14 +59,14 @@ class CrashgenChecker:
 
         Returns:
             Path | None: The path to the plugins directory or `None` if unavailable.
+
         """
         plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins")
         return plugins_path
 
     @staticmethod
     def _get_crashgen_name() -> str:
-        """
-        Returns the crash generator name based on the game's YAML settings.
+        """Return the crash generator name based on the game's YAML settings.
 
         If a valid string value for `CRASHGEN_LogName` is provided in the game's YAML
         settings, it will be returned. Otherwise, a default value of "Buffout4" is
@@ -77,13 +75,13 @@ class CrashgenChecker:
         Returns:
             str: The crash generator name derived from the YAML settings or the
             default "Buffout4" string.
+
         """
         crashgen_name_setting: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_LogName")
         return crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
 
     def _find_config_file(self) -> Path | None:
-        """
-        Finds the configuration file for the plugin based on the available file paths and
+        """Find the configuration file for the plugin based on the available file paths and
         resolves potential conflicts, such as missing or duplicate configuration files.
 
         If both configuration file versions are found, an error message is added to the
@@ -93,6 +91,7 @@ class CrashgenChecker:
         Returns:
             Path | None: The path to the configuration file, or None if no
             valid configuration file is found.
+
         """
         if not self.plugins_path:
             return None
@@ -123,8 +122,7 @@ class CrashgenChecker:
         return None
 
     def _detect_installed_plugins(self) -> set[str]:
-        """
-        Detect installed plugins by scanning the specified plugins directory.
+        """Detect installed plugins by scanning the specified plugins directory.
 
         This method identifies the installed plugins by iterating through files in the plugins
         directory specified by the `plugins_path` attribute. It collects the names of the files
@@ -140,6 +138,7 @@ class CrashgenChecker:
             PermissionError: If the plugins directory cannot be accessed due to permissions.
             OSError: If an operating system-related error occurs while accessing the
             plugins directory.
+
         """
         xse_files: set[str] = set()
         if self.plugins_path and self.plugins_path.exists():
@@ -151,8 +150,7 @@ class CrashgenChecker:
         return xse_files
 
     def has_plugin(self, plugin_names: list[str]) -> bool:
-        """
-        Determines if any of the specified plugins are present in the installed plugins list.
+        """Determine if any of the specified plugins are present in the installed plugins list.
 
         The method checks if at least one plugin from the given list of plugin names exists
         in the installed plugins list.
@@ -164,12 +162,12 @@ class CrashgenChecker:
         Returns:
             bool: True if any of the provided plugin names is found in the installed
                 plugins, otherwise False.
+
         """
         return any(plugin in self.installed_plugins for plugin in plugin_names)
 
     def _get_settings_to_check(self) -> list[dict[str, Any]]:
-        """
-        Retrieves a list of configuration settings to check for compatibility and stability
+        """Retrieve a list of configuration settings to check for compatibility and stability
         based on the installed game, plugins, and specific mod configurations for Fallout 4.
         The method conditionally evaluates the presence of various mods or plugins and returns
         appropriate settings designed to prevent conflicts and ensure proper functionality.
@@ -178,6 +176,7 @@ class CrashgenChecker:
             list[dict[str, Any]]: A list of dictionaries, each representing a setting to check.
             Includes information about configuration sections, keys, conditions, desired values,
             descriptions, and reasons for the suggested changes.
+
         """
         if GlobalRegistry.get_game() != "Fallout4":
             return []
@@ -279,8 +278,7 @@ class CrashgenChecker:
         setting: dict[str, Any],
         current_value: Any,
     ) -> ConfigIssue | None:
-        """
-        Detect a TOML configuration issue without modifying the file.
+        """Detect a TOML configuration issue without modifying the file.
 
         Args:
             config_file: Path to the TOML configuration file.
@@ -290,6 +288,7 @@ class CrashgenChecker:
 
         Returns:
             ConfigIssue if setting doesn't match desired value, None if correct.
+
         """
         if current_value != setting["desired_value"]:
             description = f"{setting['description']}. {setting['reason']}"
@@ -305,8 +304,7 @@ class CrashgenChecker:
         return None
 
     def _detect_settings_issues(self) -> list[ConfigIssue]:
-        """
-        Detect configuration issues in TOML settings without modifying files (FCX read-only mode).
+        """Detect configuration issues in TOML settings without modifying files (FCX read-only mode).
 
         This method follows the FCX read-only pattern established in ScanModInis.py.
         It detects configuration issues and returns them as ConfigIssue objects for
@@ -318,6 +316,7 @@ class CrashgenChecker:
         Note:
             This replaces the deprecated auto-fix behavior. See CLAUDE.md for FCX mode
             documentation (completed 2025-10-29).
+
         """
         issues: list[ConfigIssue] = []
 
@@ -369,8 +368,7 @@ class CrashgenChecker:
         return issues
 
     def check(self) -> tuple[str, list[ConfigIssue]]:
-        """
-        Checks the settings for the given configuration file and detects configuration issues.
+        """Check the settings for the given configuration file and detects configuration issues.
 
         This method follows the FCX read-only pattern, detecting configuration issues
         without modifying files. It returns both a formatted message string (for backward
@@ -384,6 +382,7 @@ class CrashgenChecker:
         Note:
             This method no longer auto-fixes configuration issues. It only detects and
             reports them. See CLAUDE.md for FCX read-only mode documentation.
+
         """
         # If no config file found, return message without raising exception
         if not self.config_file:
@@ -400,8 +399,7 @@ class CrashgenChecker:
 
 
 def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
-    """
-    Checks the crash generation settings using a CrashgenChecker instance (FCX read-only mode).
+    """Check the crash generation settings using a CrashgenChecker instance (FCX read-only mode).
 
     This function creates an instance of the CrashgenChecker class and
     uses it to check the current crash generation settings. It returns both
@@ -415,6 +413,7 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
     Note:
         This function no longer auto-fixes issues. It follows the FCX read-only
         pattern established in CLAUDE.md (2025-10-29).
+
     """
     checker: CrashgenChecker = CrashgenChecker()
     return checker.check()

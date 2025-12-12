@@ -69,6 +69,7 @@ class ModSite:
         Example:
             >>> site = ModSite.nexus_mods()
             >>> assert site.name() == "Nexus Mods"
+
         """
 
     def base_url(self) -> str:
@@ -80,6 +81,7 @@ class ModSite:
         Example:
             >>> site = ModSite.nexus_mods()
             >>> assert site.base_url() == "https://www.nexusmods.com"
+
         """
 
     def __eq__(self, other: object) -> bool:
@@ -90,6 +92,7 @@ class ModSite:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -97,6 +100,7 @@ class ModSite:
 
         Returns:
             The mod site name as a string.
+
         """
 
 def get_user_agent() -> str:
@@ -108,6 +112,7 @@ def get_user_agent() -> str:
     Example:
         >>> ua = get_user_agent()
         >>> assert ua.startswith("CLASSIC/")
+
     """
 
 def get_user_agent_with_suffix(suffix: str) -> str:
@@ -122,6 +127,7 @@ def get_user_agent_with_suffix(suffix: str) -> str:
     Example:
         >>> ua = get_user_agent_with_suffix("NexusMods")
         >>> assert "NexusMods" in ua
+
     """
 
 def validate_url(url_str: str) -> str:
@@ -139,6 +145,7 @@ def validate_url(url_str: str) -> str:
     Example:
         >>> url = validate_url("https://www.nexusmods.com")
         >>> assert url == "https://www.nexusmods.com/"
+
     """
 
 def is_valid_url(url_str: str) -> bool:
@@ -153,6 +160,7 @@ def is_valid_url(url_str: str) -> bool:
     Example:
         >>> assert is_valid_url("https://www.nexusmods.com")
         >>> assert not is_valid_url("not a url")
+
     """
 
 def extract_domain(url_str: str) -> str:
@@ -170,6 +178,7 @@ def extract_domain(url_str: str) -> str:
     Example:
         >>> domain = extract_domain("https://www.nexusmods.com/fallout4/mods/123")
         >>> assert domain == "www.nexusmods.com"
+
     """
 
 def join_url(base: str, path: str) -> str:
@@ -188,6 +197,7 @@ def join_url(base: str, path: str) -> str:
     Example:
         >>> url = join_url("https://www.nexusmods.com", "fallout4/mods")
         >>> assert url == "https://www.nexusmods.com/fallout4/mods"
+
     """
 
 def build_url_with_query(base: str, params: list[tuple[str, str]]) -> str:
@@ -209,4 +219,5 @@ def build_url_with_query(base: str, params: list[tuple[str, str]]) -> str:
         ...     [("game_id", "1151"), ("adult", "false")]
         ... )
         >>> assert "game_id=1151" in url
+
     """

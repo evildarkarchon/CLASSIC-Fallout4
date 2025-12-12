@@ -1,5 +1,4 @@
-"""
-Pure Python fallback implementation of BA2Scanner.
+"""Pure Python fallback implementation of BA2Scanner.
 
 This module provides a Python-only implementation of BA2 archive scanning
 that matches the Rust interface. It's used as a fallback when the Rust
@@ -17,6 +16,7 @@ class BA2Issues:
         tex_frmt: List of texture format issues (non-DDS textures).
         snd_frmt: List of sound format issues (MP3/M4A instead of XWM).
         xse_file: List of XSE script files found in archives.
+
     """
 
     def __init__(
@@ -33,6 +33,7 @@ class BA2Issues:
             tex_frmt: List of texture format issues.
             snd_frmt: List of sound format issues.
             xse_file: List of XSE script files.
+
         """
         self.tex_dims = tex_dims or []
         self.tex_frmt = tex_frmt or []
@@ -52,6 +53,7 @@ class BA2Scanner:
         >>> issues = scanner.scan_archive(Path("mod.ba2"))
         >>> print(len(issues.tex_frmt))
         5
+
     """
 
     def __init__(self) -> None:
@@ -73,6 +75,7 @@ class BA2Scanner:
         Note:
             This Python fallback provides basic validation but doesn't
             perform the full BSArch-based analysis that the Rust version does.
+
         """
         issues = BA2Issues()
 
@@ -102,6 +105,7 @@ class BA2Scanner:
             >>> results = scanner.scan_archives_batch([Path("mod1.ba2"), Path("mod2.ba2")])
             >>> for path, issues in results:
             ...     print(f"{path}: {len(issues.tex_frmt)} issues")
+
         """
         results: list[tuple[Path, BA2Issues]] = []
         for path in archive_paths:

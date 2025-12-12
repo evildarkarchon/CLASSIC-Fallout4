@@ -1,5 +1,4 @@
-"""
-Rust acceleration module for CLASSIC.
+"""Rust acceleration module for CLASSIC.
 
 This package contains all Rust-accelerated components providing 10-150x performance
 improvements for CLASSIC's core operations. All components provide transparent
@@ -141,11 +140,11 @@ __all__ = [
 
 
 def get_rust_component_summary() -> dict[str, bool]:
-    """
-    Get a summary of available Rust components.
+    """Get a summary of available Rust components.
 
     Returns:
         Dictionary mapping component names to availability status
+
     """
     return {
         "parser": RustLogParser is not None,

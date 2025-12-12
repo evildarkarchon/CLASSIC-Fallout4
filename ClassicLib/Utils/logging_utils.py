@@ -1,5 +1,4 @@
-"""
-This module configures and sets up logging for the CLASSIC application.
+"""Logging configuration and setup for the CLASSIC application.
 
 The module is responsible for setting up a logger with file and console handlers,
 applying appropriate log levels, and formatting. File logging includes a timestamped
@@ -24,8 +23,7 @@ from pathlib import Path
 
 
 def configure_logging(classic_logger: Logger) -> None:
-    """
-    Configure logging for the given logger instance with file and console handlers.
+    """Configure logging for the given logger instance with file and console handlers.
 
     Sets up file-based logging at INFO level by default (can be changed to DEBUG via
     the 'Debug Messages' setting using enable_debug_logging()). Console logging is
@@ -40,6 +38,7 @@ def configure_logging(classic_logger: Logger) -> None:
     Note:
         To enable DEBUG level logging, call enable_debug_logging() after loading settings
         if the 'Debug Messages' setting is enabled.
+
     """
     # Configure log format
     log_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
@@ -97,8 +96,7 @@ def configure_logging(classic_logger: Logger) -> None:
 
 
 def enable_debug_logging(classic_logger: Logger) -> None:
-    """
-    Enable DEBUG level logging on file handlers.
+    """Enable DEBUG level logging on file handlers.
 
     This function should be called after settings are loaded if the
     'Debug Messages' setting is enabled in CLASSIC Settings.yaml.
@@ -113,6 +111,7 @@ def enable_debug_logging(classic_logger: Logger) -> None:
         >>> from ClassicLib.Utils.logging_utils import enable_debug_logging
         >>> # After loading settings and determining debug mode is enabled:
         >>> enable_debug_logging(logger)
+
     """
     debug_enabled = False
     for handler in classic_logger.handlers:

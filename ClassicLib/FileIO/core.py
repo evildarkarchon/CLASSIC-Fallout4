@@ -1,5 +1,4 @@
-"""
-A module for asynchronous and synchronous file I/O operations with encoding handling.
+"""A module for asynchronous and synchronous file I/O operations with encoding handling.
 
 This module provides the `FileIOCore` class, which enables convenient reading and
 writing of files using async-first implementations. It supports automatic encoding
@@ -49,8 +48,7 @@ except ImportError:
 
 
 class FileIOCore:
-    """
-    Handles asynchronous file input/output operations with options for reading,
+    """Handle asynchronous file input/output operations with options for reading,
     writing, and appending textual or binary data. Includes functionality for
     working with crash logs and encoding detection.
 
@@ -63,24 +61,24 @@ class FileIOCore:
     Attributes:
         default_encoding (str): Default text encoding used for file reading and writing.
         default_errors (str): Error handling strategy for encoding-related errors.
+
     """
 
     def __init__(self, encoding: str = "utf-8", errors: str = "ignore") -> None:
-        """
-        Initializes the object with specified encoding and error handling.
+        """Initialize the object with specified encoding and error handling.
 
         Args:
             encoding (str): The encoding to be used as the default. Defaults to "utf-8".
             errors (str): The error handling strategy for encoding/decoding errors.
                 Defaults to "ignore".
+
         """
         self.default_encoding = encoding
         self.default_errors = errors
 
     @staticmethod
     def _ensure_path(path: Path | str) -> Path:
-        """
-        Ensures that the given path is of type `Path`. If the path is provided as a string,
+        """Ensure that the given path is of type `Path`. If the path is provided as a string,
         it will convert it to `Path` object and return it. This is mainly useful for
         standardizing input paths.
 
@@ -98,8 +96,7 @@ class FileIOCore:
     # ==========================================
 
     async def read_file(self, path: Path | str) -> str:
-        """
-        Reads the content of a file asynchronously using the most suitable method available.
+        """Read the content of a file asynchronously using the most suitable method available.
 
         This function reads the content of a file specified by the `path` parameter. It attempts
         to use an asynchronous file reading approach if the required libraries or encoding detection
@@ -111,6 +108,7 @@ class FileIOCore:
 
         Returns:
             str: The content of the file as a string.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -128,8 +126,7 @@ class FileIOCore:
             return await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
 
     async def read_lines(self, path: Path | str) -> list[str]:
-        """
-        Reads the contents of a file line by line asynchronously.
+        """Read the contents of a file line by line asynchronously.
 
         This method reads the file at the specified path and splits its contents into
         individual lines. Encoding detection, if available, is utilized to correctly
@@ -140,6 +137,7 @@ class FileIOCore:
 
         Returns:
             list[str]: A list of strings where each string is a line from the file.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -160,8 +158,7 @@ class FileIOCore:
             return content.splitlines()
 
     async def stream_lines(self, path: Path | str) -> AsyncIterator[str]:
-        """
-        Asynchronously streams the contents of a file line by line.
+        """Asynchronously streams the contents of a file line by line.
 
         This method yields lines from the file one by one, which is memory-efficient
         for large files. It utilizes automatic encoding detection if available.
@@ -172,6 +169,7 @@ class FileIOCore:
 
         Yields:
             str: A single line from the file.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -194,8 +192,7 @@ class FileIOCore:
 
     @staticmethod
     def stream_lines_sync(path: Path | str) -> Iterator[str]:
-        """
-        Synchronously streams the contents of a file line by line.
+        """Stream synchronously the contents of a file line by line.
 
         This method yields lines from the file one by one, using automatic encoding
         detection. It is memory-efficient for large files.
@@ -206,6 +203,7 @@ class FileIOCore:
 
         Yields:
             str: A single line from the file.
+
         """
         from ClassicLib.Utils.file_utils import open_file_with_encoding
 
@@ -216,8 +214,7 @@ class FileIOCore:
 
     @staticmethod
     async def read_bytes(path: Path | str) -> bytes:
-        """
-        Reads the contents of the file located at the specified path as bytes. This
+        """Read the contents of the file located at the specified path as bytes. This
         method uses asynchronous file handling if available, otherwise it falls
         back to synchronous file reading executed in an asynchronous executor.
 
@@ -227,6 +224,7 @@ class FileIOCore:
 
         Returns:
             bytes: The content of the file read as bytes.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -244,8 +242,7 @@ class FileIOCore:
     # ==========================================
 
     async def write_file(self, path: Path | str, content: str) -> None:
-        """
-        Writes the provided content to the specified file path asynchronously.
+        """Write the provided content to the specified file path asynchronously.
 
         This method ensures the parent directory exists before attempting to write
         to the file. If the `aiofiles` module is available, it writes to the file
@@ -255,6 +252,7 @@ class FileIOCore:
         Args:
             path (Path | str): The path to the file where content will be written.
             content (str): The content to write to the file.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -271,8 +269,7 @@ class FileIOCore:
             await loop.run_in_executor(None, path.write_text, content, self.default_encoding, self.default_errors)
 
     async def write_lines(self, path: Path | str, lines: list[str]) -> None:
-        """
-        Writes a list of lines to a file at the specified path.
+        """Write a list of lines to a file at the specified path.
 
         The lines are joined together into a single string using a newline character
         as a separator. If the resulting content does not end with a newline character,
@@ -291,8 +288,7 @@ class FileIOCore:
 
     @staticmethod
     async def write_bytes(path: Path | str, content: bytes) -> None:
-        """
-        Writes the given byte content to a specified file path, ensuring the parent
+        """Write the given byte content to a specified file path, ensuring the parent
         directory exists. Supports both asynchronous and synchronous file operations
         depending on the availability of aiofiles module.
 
@@ -316,14 +312,14 @@ class FileIOCore:
             await loop.run_in_executor(None, path.write_bytes, content)
 
     async def append_file(self, path: Path | str, content: str) -> None:
-        """
-        Asynchronously appends content to a file at the specified path. If the file does not exist, it creates
+        """Asynchronously appends content to a file at the specified path. If the file does not exist, it creates
         it along with its parent directories. Uses asynchronous file I/O if available, otherwise falls back
         to synchronous file writing executed in an executor.
 
         Args:
             path: The file path where the content should be appended. Can be a Path object or a string.
             content: The string content to append to the file.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -349,8 +345,7 @@ class FileIOCore:
     # ==========================================
 
     async def read_crash_log(self, path: Path | str) -> list[str]:
-        """
-        Reads the crash log from a specified file path asynchronously and returns a
+        """Read the crash log from a specified file path asynchronously and returns a
         list of non-empty lines. Trailing empty lines are removed for consistency.
 
         Args:
@@ -359,6 +354,7 @@ class FileIOCore:
         Returns:
             list[str]: A list of strings, each representing a line from the crash log
             file, excluding any trailing empty lines.
+
         """
         lines = await self.read_lines(path)
         # Strip any trailing empty lines for consistency
@@ -367,8 +363,7 @@ class FileIOCore:
         return lines
 
     async def write_crash_report(self, path: Path | str, report_lines: list[str]) -> None:
-        """
-        Writes a crash report to a markdown file at the specified location.
+        """Write a crash report to a markdown file at the specified location.
 
         This method takes a file path and a list of report lines to write a crash report
         to a markdown file. The file path will be ensured and adjusted if needed, and
@@ -380,6 +375,7 @@ class FileIOCore:
             report_lines (list[str]): A list of strings containing the lines to be
                 written in the crash report. Each string in the list is expected to
                 already include a newline character if necessary.
+
         """
         # Generate report file path
         path = FileIOCore._ensure_path(path)
@@ -395,8 +391,7 @@ class FileIOCore:
     # ==========================================
 
     async def read_multiple_files(self, paths: list[Path | str]) -> dict[str, str]:
-        """
-        Reads the content of multiple files concurrently and returns their data.
+        """Read the content of multiple files concurrently and returns their data.
 
         This method accepts a list of file paths, reads the content of each file
         asynchronously, and returns a dictionary where the keys are the file names
@@ -409,6 +404,7 @@ class FileIOCore:
 
         Returns:
             dict[str, str]: A dictionary mapping file names to their respective content.
+
         """
 
         async def read_single(path: Path | str) -> tuple[str, str]:
@@ -426,8 +422,7 @@ class FileIOCore:
         return dict(results)
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
-        """
-        Writes multiple files asynchronously.
+        """Write multiple files asynchronously.
 
         This method allows writing multiple files concurrently by mapping file paths
         to their corresponding content. Each file write operation is executed as an
@@ -436,11 +431,11 @@ class FileIOCore:
         Args:
             files (dict[Path | str, str]): A dictionary where the keys are file paths
                 (as Path or str) and the values are the file content to be written.
+
         """
 
         async def write_single(path: Path | str, content: str) -> None:
-            """
-            Writes the specified content to a file asynchronously.
+            """Write the specified content to a file asynchronously.
 
             This function attempts to write the given content to the file specified
             by the path. If any errors occur during the process, an error is logged
@@ -465,8 +460,7 @@ class FileIOCore:
 
     @staticmethod
     def file_exists(path: Path | str) -> bool:  # No longer async because Path.exists() is non-blocking and fast
-        """
-        Checks if the given file or directory exists at the specified path.
+        """Check if the given file or directory exists at the specified path.
 
         This method determines whether the specified file system path points to an
         existing file or directory. It utilizes a fast metadata check to determine
@@ -478,6 +472,7 @@ class FileIOCore:
 
         Returns:
             bool: True if the specified file or directory exists, False otherwise.
+
         """
         path = FileIOCore._ensure_path(path)
 
@@ -487,8 +482,7 @@ class FileIOCore:
 
     @staticmethod
     def get_file_size(path: Path | str) -> int:  # No longer async because Path.stat() is non-blocking and fast
-        """
-        Gets the size of the file located at the specified path.
+        """Get the size of the file located at the specified path.
 
         This method retrieves the size of a file in bytes using a fast filesystem
         metadata operation. It ensures the provided path is in the correct format
@@ -501,6 +495,7 @@ class FileIOCore:
         Returns:
             int: The size of the file in bytes. Returns -1 if the file does not exist
                 or an error occurs while accessing its metadata.
+
         """
         path = FileIOCore._ensure_path(path)
 

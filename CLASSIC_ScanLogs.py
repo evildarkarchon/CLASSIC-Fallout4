@@ -1,5 +1,4 @@
-"""
-CLASSIC ScanLogs CLI interface.
+"""CLASSIC ScanLogs CLI interface.
 
 This module provides a command-line interface for CLASSIC crash log scanning.
 It has been refactored to use the new modular architecture while maintaining
@@ -32,6 +31,7 @@ def parse_arguments() -> "argparse.Namespace":
 
     Returns:
         Parsed command line arguments containing configuration options for CLASSIC.
+
     """
     import argparse
 
@@ -60,6 +60,7 @@ def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
     Returns:
         ScanConfig: A configured ScanConfig instance with settings applied from
             command line arguments. Settings are also persisted to YAML files.
+
     """
     from ClassicLib import msg_error
 
@@ -120,8 +121,7 @@ def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
 
 
 async def main() -> None:
-    """
-    Main CLI entry point - Async-First (Phase 4).
+    """Serve as main CLI entry point - Async-First (Phase 4).
 
     This function is async and uses native await instead of AsyncBridge,
     matching the TUI pattern. asyncio.run() is only used at the entry point.

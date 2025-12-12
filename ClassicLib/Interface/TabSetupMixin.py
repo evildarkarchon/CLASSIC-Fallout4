@@ -1,5 +1,4 @@
-"""
-Tab widgets and setup functionality for the CLASSIC interface.
+"""Tab widgets and setup functionality for the CLASSIC interface.
 
 This module contains mixin classes that handle the setup of different tabs
 in the main window interface.
@@ -39,8 +38,7 @@ if TYPE_CHECKING:
 
 
 class TabSetupMixin:
-    """
-    Mixin providing features to set up and configure tabs for a graphical user interface.
+    """Mixin providing features to set up and configure tabs for a graphical user interface.
 
     This class defines methods and attributes required to configure main components, such as
     folder input sections, buttons, and layouts for tabs. It includes utility methods for
@@ -58,6 +56,7 @@ class TabSetupMixin:
         crash_logs_button (QPushButton | None): Button for navigating to crash logs.
         game_files_button (QPushButton | None): Button for scanning game files.
         papyrus_button (QPushButton | None): Button for toggling Papyrus monitoring.
+
     """
 
     # Type stubs for attributes that must be provided by the mixing class
@@ -97,8 +96,7 @@ class TabSetupMixin:
 
     # noinspection PyUnresolvedReferences
     def setup_main_tab(self) -> None:
-        """
-        Sets up the main tab layout and its components within the application.
+        """Set up the main tab layout and its components within the application.
 
         This method configures the main tab with a vertical layout and adds specific sections
         designed for user interaction. It includes widgets for folder selection, main control
@@ -159,8 +157,7 @@ class TabSetupMixin:
         # Add stretch at the end to push everything up and keep folder widgets at top
 
     def update_papyrus_button_style(self, monitoring: bool) -> None:
-        """
-        Updates the style and text of a button associated with starting or stopping
+        """Update the style and text of a button associated with starting or stopping
         a "Papyrus monitoring" feature. Depending on the monitoring state, the button
         is styled and labeled for either starting or stopping the monitoring process.
 
@@ -169,6 +166,7 @@ class TabSetupMixin:
                 currently active. If True, the button will reflect a "STOP" state
                 with red styling. If False, the button will reflect a "START" state
                 with green styling.
+
         """
         if not hasattr(self, "papyrus_button") or self.papyrus_button is None:
             return
@@ -205,8 +203,7 @@ class TabSetupMixin:
             )
 
     def setup_articles_tab(self) -> None:
-        """
-        Sets up the "Articles" tab with a list of buttons linking to relevant resources
+        """Set up the "Articles" tab with a list of buttons linking to relevant resources
         and articles. The layout includes a title label and a structured grid of
         buttons, each directing to specific URLs. Each button visually aligns with a
         customized style and adopts dynamic behavior when hovered over or disabled.
@@ -214,6 +211,7 @@ class TabSetupMixin:
         Raises:
             NotImplementedError: Raised if the method `open_url` is not implemented in
             the associated class.
+
         """
         layout: QVBoxLayout = QVBoxLayout(self.articles_tab)
         layout.setContentsMargins(20, 10, 20, 10)
@@ -276,8 +274,7 @@ class TabSetupMixin:
         layout.addStretch(1)  # Push content to the top
 
     def setup_backups_tab(self) -> None:
-        """
-        Sets up the backups tab within the application's user interface.
+        """Set up the backups tab within the application's user interface.
 
         This method configures the layout, labels, and buttons for the backups tab, providing explanations
         and options for backup, restore, and removal operations. It also dynamically adds backup sections
@@ -308,8 +305,7 @@ class TabSetupMixin:
         self.check_existing_backups()
 
     def setup_main_buttons(self, layout: QBoxLayout) -> None:
-        """
-        Sets up main buttons in the provided layout. The method creates a horizontal layout
+        """Set up main buttons in the provided layout. The method creates a horizontal layout
         to organize main action buttons, including "SCAN CRASH LOGS" and "SCAN GAME FILES".
         Each button is accompanied with its respective callback and description to indicate
         its functionality. Buttons are then added to a scan button group for potential
@@ -319,6 +315,7 @@ class TabSetupMixin:
         Args:
             layout (QBoxLayout): The parent layout to which the main buttons layout
                 will be added.
+
         """
         main_buttons_layout: QHBoxLayout = QHBoxLayout()
         main_buttons_layout.setSpacing(10)
@@ -342,8 +339,7 @@ class TabSetupMixin:
 
     @staticmethod
     def setup_articles_section(layout: QBoxLayout) -> None:
-        """
-        Sets up the "Useful Resources & Links" articles section in the given layout. This
+        """Set up the "Useful Resources & Links" articles section in the given layout. This
         section includes a title label and a grid of styled buttons, each linking to
         specific resources or guides. Buttons are arranged in a grid with three columns
         per row and feature hover and disabled styles for enhanced user experience.
@@ -351,6 +347,7 @@ class TabSetupMixin:
         Args:
             layout (QBoxLayout): The parent layout to which the articles section will be added,
                 ensuring proper placement in the UI.
+
         """
         articles_section_layout: QVBoxLayout = QVBoxLayout()  # Main layout for this section
         articles_section_layout.setSpacing(10)
@@ -405,8 +402,7 @@ class TabSetupMixin:
             layout.addLayout(articles_section_layout)
 
     def setup_bottom_buttons(self, layout: QBoxLayout) -> None:
-        """
-        Sets up and adds bottom button controls to the provided layout, including utility
+        """Set up and adds bottom button controls to the provided layout, including utility
         buttons and main action buttons like Papyrus monitoring and the exit button. This
         method integrates multiple rows of buttons with specified layout configurations,
         spacing, and margins.
@@ -414,6 +410,7 @@ class TabSetupMixin:
         Args:
             layout (QBoxLayout): The parent layout to which the bottom button controls
                 will be added. This must support adding nested layouts.
+
         """
         # First row of utility buttons
         bottom_buttons_hbox: QHBoxLayout = QHBoxLayout()
@@ -460,8 +457,7 @@ class TabSetupMixin:
 
     @staticmethod
     def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
-        """
-        Creates a QPushButton with the specified text, tooltip, and callback functionality.
+        """Create a QPushButton with the specified text, tooltip, and callback functionality.
 
         This function initializes a QPushButton, sets its tooltip, connects the provided
         callback to the appropriate signal based on the button type (toggle button or
@@ -474,6 +470,7 @@ class TabSetupMixin:
 
         Returns:
             QPushButton: The configured button instance.
+
         """
         button: QPushButton = QPushButton(text)
         button.setToolTip(tooltip)

@@ -1,5 +1,4 @@
-"""
-Mixin class adding functionality to fetch logs from Pastebin.
+"""Mixin class adding functionality to fetch logs from Pastebin.
 
 This module defines mixin functionality to support the integration of Pastebin log
 retrieval into a graphical user interface, including the setup of relevant user interface
@@ -35,8 +34,7 @@ if TYPE_CHECKING:
 
 
 class PastebinMixin:
-    """
-    Mixin class providing Pastebin log fetching functionality for the MainWindow.
+    """Mixin class providing Pastebin log fetching functionality for the MainWindow.
 
     This class requires the following attributes to be present in the class it's mixed into:
     - thread_manager: ThreadManager instance
@@ -57,19 +55,18 @@ class PastebinMixin:
         pastebin_fetch_button: QPushButton
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Initializes the instance of the class and parent class.
+        """Initialize the instance of the class and parent class.
 
         Args:
             *args: Positional arguments for initialization.
             **kwargs: Keyword arguments for initialization.
+
         """
         super().__init__(*args, **kwargs)
         self.pastebin_url_regex: re.Pattern = re.compile(r"^https?://pastebin\.com/(\w+)$")
 
     def setup_pastebin_elements(self, layout: QVBoxLayout) -> None:
-        """
-        Set up the UI elements to fetch logs from Pastebin and add them to the provided layout.
+        """Set up the UI elements to fetch logs from Pastebin and add them to the provided layout.
 
         This method initializes and configures UI components, including a QLabel for Pastebin
         instructions, a QLineEdit for Pastebin URL or ID input, and a QPushButton to trigger
@@ -78,6 +75,7 @@ class PastebinMixin:
 
         Args:
             layout (QVBoxLayout): The parent layout to which the Pastebin elements are added.
+
         """
         pastebin_layout: QHBoxLayout = QHBoxLayout()
 
@@ -102,8 +100,7 @@ class PastebinMixin:
         layout.addLayout(pastebin_layout)
 
     def fetch_pastebin_log(self) -> None:
-        """
-            Fetches a log from a Pastebin URL or ID provided by the user and processes it in a separate thread
+        """Fetch a log from a Pastebin URL or ID provided by the user and processes it in a separate thread
             using asynchronous operations.
 
             This method retrieves the text from a user input field, verifies if it matches a Pastebin URL pattern,
@@ -114,6 +111,7 @@ class PastebinMixin:
 
         Raises:
             SignalErrors: Raised when the worker encounters an error during network operations or data processing.
+
         """
         if self.pastebin_id_input is None:
             return  # Should not happen if UI is setup correctly

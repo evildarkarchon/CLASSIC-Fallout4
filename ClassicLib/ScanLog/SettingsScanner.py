@@ -1,5 +1,4 @@
-"""
-Fragment-based settings scanner for CLASSIC.
+"""Fragment-based settings scanner for CLASSIC.
 
 This module provides fragment-returning versions of all settings scanning functions,
 replacing the mutable list pattern with immutable fragment composition.
@@ -21,17 +20,16 @@ class SettingsScannerFragments:
     """Fragment-based settings scanner for crash log analysis."""
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
-        """
-        Initialize the settings scanner.
+        """Initialize the settings scanner.
 
         Args:
             yamldata: Configuration data
+
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
 
     def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, bool | int | str]) -> ReportFragment:
-        """
-        Scan the achievements setting for potential conflicts.
+        """Scan the achievements setting for potential conflicts.
 
         Args:
             xsemodules: A set of currently loaded XSE plugin modules.
@@ -39,6 +37,7 @@ class SettingsScannerFragments:
 
         Returns:
             ReportFragment containing the scan results.
+
         """
         lines = []
         crashgen_achievements = crashgen.get("Achievements")
@@ -60,8 +59,7 @@ class SettingsScannerFragments:
         has_old_xcell: bool,
         has_baka_scrapheap: bool,
     ) -> ReportFragment:
-        """
-        Analyze and validate memory management settings.
+        """Analyze and validate memory management settings.
 
         Args:
             crashgen: Configuration settings from CrashGen.
@@ -71,6 +69,7 @@ class SettingsScannerFragments:
 
         Returns:
             ReportFragment containing the scan results.
+
         """
         lines = []
         separator = "\n\n-----\n"
@@ -168,8 +167,7 @@ class SettingsScannerFragments:
                 add_success(f"{display_name} parameter is correctly configured for use with X-Cell in your {crashgen_name} settings!")
 
     def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: "Version | None" = None) -> ReportFragment:
-        """
-        Scan and validate the "ArchiveLimit" setting.
+        """Scan and validate the "ArchiveLimit" setting.
 
         Args:
             crashgen: Configuration settings from CrashGen.
@@ -177,6 +175,7 @@ class SettingsScannerFragments:
 
         Returns:
             ReportFragment containing the scan results.
+
         """
         # Import here to avoid circular dependency
         from packaging.version import Version
@@ -199,8 +198,7 @@ class SettingsScannerFragments:
         return ReportFragment.from_lines(lines)
 
     def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> ReportFragment:
-        """
-        Analyze the Looksmenu setting for proper compatibility.
+        """Analyze the Looksmenu setting for proper compatibility.
 
         Args:
             crashgen: Configuration settings from CrashGen.
@@ -208,6 +206,7 @@ class SettingsScannerFragments:
 
         Returns:
             ReportFragment containing the scan results.
+
         """
         lines = []
         crashgen_f4ee = crashgen.get("F4EE")
@@ -226,8 +225,7 @@ class SettingsScannerFragments:
         return ReportFragment.from_lines(lines)
 
     def check_disabled_settings(self, crashgen: dict[str, bool | int | str], crashgen_ignore: set[str]) -> ReportFragment:
-        """
-        Check disabled settings in crash generation configuration.
+        """Check disabled settings in crash generation configuration.
 
         Args:
             crashgen: Configuration settings from CrashGen.
@@ -235,6 +233,7 @@ class SettingsScannerFragments:
 
         Returns:
             ReportFragment containing any notices about disabled settings.
+
         """
         lines = []
 

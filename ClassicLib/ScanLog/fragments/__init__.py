@@ -1,5 +1,4 @@
-"""
-Report fragment system for functional report generation.
+"""Report fragment system for functional report generation.
 
 This module provides a functional approach to report generation where each
 component returns its contribution as a fragment, eliminating the need for

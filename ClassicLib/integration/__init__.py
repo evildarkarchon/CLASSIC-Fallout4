@@ -1,5 +1,4 @@
-"""
-CLASSIC Rust Integration Layer
+"""CLASSIC Rust Integration Layer.
 
 This package provides a clean separation between Rust component detection,
 factory functions, and status monitoring for the CLASSIC application.

@@ -9,8 +9,7 @@ from ClassicLib.Logger import logger
 
 
 class FileGenerator:
-    """
-    This class is responsible for generating essential configuration files required
+    """Generator for essential CLASSIC configuration files. generating essential configuration files required
     by the CLASSIC application. It ensures the presence of default files like CLASSIC Ignore.yaml
     and CLASSIC Data/CLASSIC <GAME> Local.yaml. These files are created with default content
     retrieved from YAML settings.
@@ -22,8 +21,7 @@ class FileGenerator:
 
     @staticmethod
     def generate_ignore_file() -> None:
-        """
-        Generate CLASSIC Ignore.yaml if it doesn't exist.
+        """Generate CLASSIC Ignore.yaml if it doesn't exist.
 
         Creates the ignore file with default content from YAML settings.
         The file content is written in UTF-8 encoding.
@@ -31,6 +29,7 @@ class FileGenerator:
         Raises:
             TypeError: If the default content retrieved for the ignore file
                 is not of type str.
+
         """
         from ClassicLib.YamlSettings import yaml_settings
 
@@ -44,8 +43,7 @@ class FileGenerator:
 
     @staticmethod
     def generate_local_yaml() -> None:
-        """
-        Generate CLASSIC Data/CLASSIC <GAME> Local.yaml if it doesn't exist.
+        """Generate CLASSIC Data/CLASSIC <GAME> Local.yaml if it doesn't exist.
 
         Creates the local YAML file with default content from YAML settings,
         where <GAME> is dynamically determined from GlobalRegistry.
@@ -54,6 +52,7 @@ class FileGenerator:
         Raises:
             TypeError: If the default content retrieved for the local YAML file
                 is not of type str.
+
         """
         from ClassicLib.YamlSettings import yaml_settings
 
@@ -69,8 +68,7 @@ class FileGenerator:
 
     @staticmethod
     async def generate_ignore_file_async() -> None:
-        """
-        Generates a "CLASSIC Ignore.yaml" file asynchronously if it does not already exist.
+        """Generate a "CLASSIC Ignore.yaml" file asynchronously if it does not already exist.
 
         This method checks for the existence of a "CLASSIC Ignore.yaml" file in the current
         directory. If the file does not exist, it retrieves the default ignore file content
@@ -80,6 +78,7 @@ class FileGenerator:
 
         Raises:
             TypeError: If the retrieved default ignore file content is not a string.
+
         """
         from ClassicLib.FileIO import FileIOCore
         from ClassicLib.YamlSettings import yaml_settings_async
@@ -96,8 +95,7 @@ class FileGenerator:
 
     @staticmethod
     async def generate_local_yaml_async() -> None:
-        """
-        Generates a local YAML file asynchronously for the CLASSIC application if it doesn't already exist.
+        """Generate a local YAML file asynchronously for the CLASSIC application if it doesn't already exist.
 
         This static method checks for the existence of a local YAML configuration file specific to the CLASSIC
         application. If the file is missing, it retrieves a default YAML configuration, validates it, creates
@@ -106,6 +104,7 @@ class FileGenerator:
 
         Raises:
             TypeError: If the retrieved default YAML content is not a string.
+
         """
         from ClassicLib.FileIO import FileIOCore
         from ClassicLib.YamlSettings import yaml_settings_async
@@ -124,8 +123,7 @@ class FileGenerator:
 
     @staticmethod
     async def generate_all_files_async() -> None:
-        """
-        Executes asynchronous file generation of multiple files concurrently with a fail-fast
+        """Execute asynchronous file generation of multiple files concurrently with a fail-fast
         behavior. This method ensures that all files are generated correctly, handles allowable
         errors such as type or filesystem errors, and logs relevant events or issues that
         occur during the process.
@@ -139,6 +137,7 @@ class FileGenerator:
                 All relevant permission-related errors are logged.
             Exception: Raised for any unexpected errors during file generation that do not
                 fall into the known error categories. Such errors are logged for troubleshooting.
+
         """
         import time
 
@@ -175,8 +174,7 @@ class FileGenerator:
 
     @staticmethod
     def generate_all_files() -> None:
-        """
-        Generates all files synchronously by invoking an asynchronous method through
+        """Generate all files synchronously by invoking an asynchronous method through
         a bridge. This method ensures the generation process is executed within the
         asynchronous context of the AsyncBridge.
         """

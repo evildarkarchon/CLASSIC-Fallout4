@@ -1,5 +1,4 @@
-"""
-Data models for scan log operations.
+"""Data models for scan log operations.
 
 This module contains data classes that define the configuration and results
 for crash log scanning operations, providing a clean interface between

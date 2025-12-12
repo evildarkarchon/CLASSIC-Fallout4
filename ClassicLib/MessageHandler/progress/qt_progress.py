@@ -27,6 +27,7 @@ class QtProgressHandler(QObject):
         progress_create_signal: Signal to create progress dialog (desc, total).
         progress_update_signal: Signal to update progress (value, desc).
         progress_close_signal: Signal to close progress dialog.
+
     """
 
     # Signals for thread-safe progress dialog management
@@ -42,6 +43,7 @@ class QtProgressHandler(QObject):
 
         Args:
             parent: Parent widget for the progress dialog.
+
         """
         super().__init__(parent)
         self._parent = parent
@@ -74,6 +76,7 @@ class QtProgressHandler(QObject):
         Args:
             description: Description of the operation.
             total: Total items, or None for indeterminate.
+
         """
         self._cancelled = False
         self._current = 0
@@ -89,6 +92,7 @@ class QtProgressHandler(QObject):
         Args:
             description: Description text.
             total: Total items (0 for indeterminate).
+
         """
         # Reset cancellation state
         self._cancelled = False
@@ -115,6 +119,7 @@ class QtProgressHandler(QObject):
         Args:
             n: Items completed since last update.
             description: Optional new description.
+
         """
         self._current += n
 
@@ -136,6 +141,7 @@ class QtProgressHandler(QObject):
         Args:
             value: Current progress value.
             description: Optional new description.
+
         """
         if self._progress_dialog is None:
             return
@@ -166,6 +172,7 @@ class QtProgressHandler(QObject):
 
         Returns:
             True if cancelled.
+
         """
         # Also check dialog directly if on main thread
         if self._progress_dialog is not None and self._is_main_thread() and self._progress_dialog.wasCanceled():
@@ -177,6 +184,7 @@ class QtProgressHandler(QObject):
 
         Returns:
             True if Qt is properly initialized.
+
         """
         try:
             from PySide6.QtWidgets import QApplication
@@ -190,5 +198,6 @@ class QtProgressHandler(QObject):
 
         Args:
             parent: New parent widget for progress dialogs.
+
         """
         self._parent = parent

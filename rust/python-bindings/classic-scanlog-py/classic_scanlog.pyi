@@ -38,6 +38,7 @@ class FormIDAnalyzer:
 
         Returns:
             List of FormID strings
+
         """
 
     def parse_formid(self, formid: str) -> int | None:
@@ -48,6 +49,7 @@ class FormIDAnalyzer:
 
         Returns:
             Parsed FormID as integer or None if invalid
+
         """
 
     def analyze_batch(self, formids: list[str], plugins: dict[str, str]) -> list[tuple[str, str | None]]:
@@ -59,6 +61,7 @@ class FormIDAnalyzer:
 
         Returns:
             List of (formid, resolved_plugin_name) tuples
+
         """
 
     def clear_cache(self) -> None:
@@ -69,6 +72,7 @@ class FormIDAnalyzer:
 
         Returns:
             Tuple of (cache_entries, cache_size_bytes)
+
         """
 
 class FormIDAnalyzerCore:
@@ -94,6 +98,7 @@ class FormIDAnalyzerCore:
             important_mods: Dictionary of important/problematic plugins
             mods_single: Single-pass mod detection database
             mods_double: Double-pass mod detection database
+
         """
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
@@ -107,6 +112,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             List of FormID strings found in the segment
+
         """
 
     def extract_formids_nocopy(self, segment_callstack: list[str]) -> list[str]:
@@ -120,6 +126,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             List of FormID strings found in the segment
+
         """
 
     def cache_plugins(self, cache_key: str, plugins: dict[str, str]) -> None:
@@ -132,6 +139,7 @@ class FormIDAnalyzerCore:
         Args:
             cache_key: Unique identifier for this plugin set (e.g., MD5 hash)
             plugins: Dictionary mapping plugin names to paths/details
+
         """
 
     def process_formids_cached(self, formids: list[str], cache_key: str) -> list[str]:
@@ -146,6 +154,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             List of formatted report lines for the FormID matches
+
         """
 
     def formid_match(self, formids: list[str], plugins: dict[str, str], report: Any) -> None:
@@ -158,6 +167,7 @@ class FormIDAnalyzerCore:
             formids: List of FormID strings to match
             plugins: Dictionary mapping plugin names to paths/details
             report: Report object to update with match results
+
         """
 
     def is_valid_formid(self, formid: str) -> bool:
@@ -168,6 +178,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             True if valid hex FormID
+
         """
 
     def parse_formid(self, formid: str) -> int | None:
@@ -178,6 +189,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             Parsed FormID integer or None if invalid
+
         """
 
     def extract_plugin_index(self, formid: str) -> int | None:
@@ -188,6 +200,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             Plugin index (0-255) or None if invalid
+
         """
 
 # =============================================================================
@@ -207,6 +220,7 @@ class LogParser:
         Args:
             custom_boundaries: Optional list of (start_marker, end_marker) tuples defining
                 custom log segment boundaries.
+
         """
 
     def add_pattern(self, name: str, pattern: str) -> None:
@@ -287,6 +301,7 @@ class PatternMatcher:
 
         Raises:
             ValueError: If any pattern has invalid regex syntax
+
         """
 
     def find_all(self, text: str) -> list[tuple[int, str]]:
@@ -297,6 +312,7 @@ class PatternMatcher:
 
         Returns:
             List of (position, matched_text) tuples
+
         """
 
     def has_match(self, text: str) -> bool:
@@ -307,6 +323,7 @@ class PatternMatcher:
 
         Returns:
             True if at least one pattern matches
+
         """
 
     def find_first(self, text: str) -> tuple[int, str] | None:
@@ -317,6 +334,7 @@ class PatternMatcher:
 
         Returns:
             (position, matched_text) tuple or None if no match
+
         """
 
     def replace_all(self, text: str, replacement: str) -> str:
@@ -328,6 +346,7 @@ class PatternMatcher:
 
         Returns:
             Text with all matches replaced
+
         """
 
     def clear_cache(self) -> None:
@@ -338,6 +357,7 @@ class PatternMatcher:
 
         Returns:
             Tuple of (pattern_count, cache_size)
+
         """
 
 # =============================================================================
@@ -369,6 +389,7 @@ class PluginAnalyzer:
             game_version: Base game version string (default: empty)
             game_version_vr: VR version string if applicable (default: empty)
             game_version_new: Next-gen/updated version string if applicable (default: empty)
+
         """
 
     def loadorder_scan_log(
@@ -389,6 +410,7 @@ class PluginAnalyzer:
                 - Dict mapping plugin names to IDs/status
                 - Boolean flag for plugin limit triggered
                 - Boolean flag for limit check disabled
+
         """
 
     def check_plugin_limit(self, segment_plugins: list[str], game_version: str, version_current: str) -> tuple[bool, bool]:
@@ -401,6 +423,7 @@ class PluginAnalyzer:
 
         Returns:
             Tuple of (plugin_limit_triggered, limit_check_disabled)
+
         """
 
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> list[str]:
@@ -412,6 +435,7 @@ class PluginAnalyzer:
 
         Returns:
             List of formatted report lines for plugin matches
+
         """
 
     def filter_ignored_plugins(self, plugins: dict[str, str]) -> dict[str, str]:
@@ -422,6 +446,7 @@ class PluginAnalyzer:
 
         Returns:
             HashMap with ignored plugins removed
+
         """
 
 # =============================================================================
@@ -442,6 +467,7 @@ class RecordScanner:
             target_records: List of target record names to scan for
             ignore_records: List of record names to ignore during scanning
             crashgen_name: Name of the crash generator (e.g., "Buffout4", "Crash Logger")
+
         """
 
     def scan_named_records(self, segment_callstack: list[str]) -> tuple[list[str], list[str]]:
@@ -457,6 +483,7 @@ class RecordScanner:
             Tuple containing:
                 - List of formatted report lines
                 - List of matched record names
+
         """
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
@@ -469,6 +496,7 @@ class RecordScanner:
 
         Returns:
             List of matched record names
+
         """
 
     def clear_cache(self) -> None:
@@ -494,6 +522,7 @@ class Orchestrator:
 
         Args:
             config: Analysis configuration containing game info and settings
+
         """
 
     def process_log(self, log_path: str) -> AnalysisResult:
@@ -517,6 +546,7 @@ class Orchestrator:
         Raises:
             IOError: If log file cannot be read
             ValueError: If log format is invalid
+
         """
 
     def process_logs_parallel(
@@ -539,6 +569,7 @@ class Orchestrator:
         Raises:
             IOError: If log files cannot be read
             ValueError: If log format is invalid
+
         """
 
     def process_logs_batch(self, log_paths: list[str]) -> list[AnalysisResult]:
@@ -557,6 +588,7 @@ class Orchestrator:
         Raises:
             IOError: If log files cannot be read
             ValueError: If log format is invalid
+
         """
 
     def is_feature_complete(self) -> bool:
@@ -567,6 +599,7 @@ class Orchestrator:
 
         Returns:
             True if all required features are available
+
         """
 
     def has_database_pool(self) -> bool:
@@ -574,6 +607,7 @@ class Orchestrator:
 
         Returns:
             True if database pool is available for FormID lookups
+
         """
 
     def is_initialized(self) -> bool:
@@ -581,6 +615,7 @@ class Orchestrator:
 
         Returns:
             True if initialized
+
         """
 
     def write_reports_batch(self, reports: list[tuple[str, list[str], bool]]) -> list[str]:
@@ -594,6 +629,7 @@ class Orchestrator:
 
         Returns:
             List of paths to successfully written reports
+
         """
 
     @staticmethod
@@ -605,6 +641,7 @@ class Orchestrator:
 
         Returns:
             True if loadorder.txt exists
+
         """
 
     def load_loadorder(self, loadorder_path: str) -> tuple[dict[str, str], list[str]]:
@@ -616,6 +653,7 @@ class Orchestrator:
         Returns:
             Tuple of (plugins_dict, info_lines) where plugins_dict maps plugin names
             to their origin marker ("LO")
+
         """
 
     def detect_folon(self, plugins: dict[str, str]) -> bool:
@@ -626,6 +664,7 @@ class Orchestrator:
 
         Returns:
             True if londonworldspace.esm is detected
+
         """
 
 class AnalysisConfig:
@@ -670,6 +709,7 @@ class AnalysisConfig:
         Args:
             game: Game name (e.g., "Fallout4", "Skyrim")
             vr_mode: Whether VR mode is enabled (default: False)
+
         """
 
     @staticmethod
@@ -690,6 +730,7 @@ class AnalysisConfig:
             >>> from classic_scanlog import AnalysisConfig
             >>> yamldata = YamlData([...], "Fallout4", False)
             >>> config = AnalysisConfig.from_yamldata(yamldata)
+
         """
 
 class AnalysisResult:
@@ -718,6 +759,7 @@ class AnalysisResult:
 
         Args:
             log_path: Path to the analyzed log file
+
         """
 
     def __repr__(self) -> str:
@@ -725,6 +767,7 @@ class AnalysisResult:
 
         Returns:
             String showing key statistics
+
         """
 
     def to_dict(self) -> dict[str, Any]:
@@ -732,6 +775,7 @@ class AnalysisResult:
 
         Returns:
             Dictionary representation of all fields
+
         """
 
     def get_report_text(self) -> str:
@@ -739,6 +783,7 @@ class AnalysisResult:
 
         Returns:
             Complete report text with newlines
+
         """
 
 # =============================================================================
@@ -762,6 +807,7 @@ class StringPool:
 
         Returns:
             Interned string reference (may be same object for duplicates)
+
         """
 
     def intern_batch(self, strings: list[str]) -> list[str]:
@@ -772,6 +818,7 @@ class StringPool:
 
         Returns:
             List of interned strings
+
         """
 
     def get_stats(self) -> tuple[int, int, int, int]:
@@ -779,6 +826,7 @@ class StringPool:
 
         Returns:
             Tuple of (total_strings, unique_strings, memory_saved, current_size)
+
         """
 
     def clear(self) -> None:
@@ -795,6 +843,7 @@ class ReportFragment:
 
         Args:
             lines: Optional list of lines to initialize the fragment with
+
         """
 
     @staticmethod
@@ -803,6 +852,7 @@ class ReportFragment:
 
         Returns:
             Empty ReportFragment instance
+
         """
 
     @staticmethod
@@ -814,6 +864,7 @@ class ReportFragment:
 
         Returns:
             ReportFragment initialized with the given lines
+
         """
 
     def with_header(self, header_lines: list[str]) -> ReportFragment:
@@ -824,6 +875,7 @@ class ReportFragment:
 
         Returns:
             New ReportFragment with header added
+
         """
 
     def combine(self, other: ReportFragment) -> ReportFragment:
@@ -834,6 +886,7 @@ class ReportFragment:
 
         Returns:
             New ReportFragment containing both fragments
+
         """
 
     def to_list(self) -> list[str]:
@@ -841,6 +894,7 @@ class ReportFragment:
 
         Returns:
             List of string lines in the fragment
+
         """
 
     def len(self) -> int:
@@ -848,6 +902,7 @@ class ReportFragment:
 
         Returns:
             Number of lines in the fragment
+
         """
 
     def is_empty(self) -> bool:
@@ -855,6 +910,7 @@ class ReportFragment:
 
         Returns:
             True if fragment has no lines
+
         """
 
 class ReportComposer:
@@ -871,6 +927,7 @@ class ReportComposer:
 
         Args:
             fragment: Fragment to add to composition
+
         """
 
     def add_many(self, fragments: list[ReportFragment]) -> None:
@@ -878,6 +935,7 @@ class ReportComposer:
 
         Args:
             fragments: List of fragments to add
+
         """
 
     def compose(self) -> list[str]:
@@ -887,6 +945,7 @@ class ReportComposer:
 
         Returns:
             Report lines (markdown format)
+
         """
 
     def compose_optimized(self) -> list[str]:
@@ -896,6 +955,7 @@ class ReportComposer:
 
         Returns:
             Report lines (markdown format)
+
         """
 
     def build_string(self) -> str:
@@ -903,6 +963,7 @@ class ReportComposer:
 
         Returns:
             Complete report as a single string
+
         """
 
     def fragment_count(self) -> int:
@@ -910,6 +971,7 @@ class ReportComposer:
 
         Returns:
             Number of fragments currently in the composer
+
         """
 
     def pool_stats(self) -> tuple[int, int, int, int]:
@@ -921,6 +983,7 @@ class ReportComposer:
                 - lookups: Total number of intern attempts
                 - hits: Number of cache hits (string already in pool)
                 - insertions: Number of new strings added to pool
+
         """
 
 class ReportGenerator:
@@ -944,6 +1007,7 @@ class ReportGenerator:
 
         Returns:
             Configured ReportGenerator instance
+
         """
 
     def generate_header(self, crashlog_filename: str) -> ReportFragment:
@@ -954,6 +1018,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the header section
+
         """
 
     def generate_error_section(self, main_error: str, crashgen_version: str, is_outdated: bool) -> ReportFragment:
@@ -966,6 +1031,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the error section
+
         """
 
     def generate_suspect_section_header(self) -> ReportFragment:
@@ -973,6 +1039,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the suspect section header
+
         """
 
     def generate_suspect_found_footer(self, found_suspect: bool) -> ReportFragment:
@@ -983,6 +1050,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the footer message
+
         """
 
     def generate_settings_section_header(self) -> ReportFragment:
@@ -990,6 +1058,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the settings section header
+
         """
 
     def generate_mod_check_header(self, check_type: str) -> ReportFragment:
@@ -1000,6 +1069,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the mod check header
+
         """
 
     def generate_plugin_suspect_header(self) -> ReportFragment:
@@ -1007,6 +1077,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the plugin suspect header
+
         """
 
     def generate_formid_section_header(self) -> ReportFragment:
@@ -1014,6 +1085,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the FormID section header
+
         """
 
     def generate_record_section_header(self) -> ReportFragment:
@@ -1021,6 +1093,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the record section header
+
         """
 
     def generate_footer(self) -> ReportFragment:
@@ -1028,6 +1101,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the report footer
+
         """
 
     def generate_suspect_section(self, found_suspects: list[str]) -> ReportFragment:
@@ -1038,6 +1112,7 @@ class ReportGenerator:
 
         Returns:
             ReportFragment containing the suspect section
+
         """
 
 class ParallelReportProcessor:
@@ -1060,6 +1135,7 @@ class ParallelReportProcessor:
 
         Returns:
             List of processed report fragments
+
         """
 
     @staticmethod
@@ -1071,6 +1147,7 @@ class ParallelReportProcessor:
 
         Returns:
             Single combined ReportFragment
+
         """
 
 # =============================================================================
@@ -1087,6 +1164,7 @@ def extract_formids_batch(segments: list[list[str]]) -> list[list[str]]:
 
     Returns:
         List of FormID lists for each segment
+
     """
 
 def is_valid_formid(formid: str) -> bool:
@@ -1097,6 +1175,7 @@ def is_valid_formid(formid: str) -> bool:
 
     Returns:
         True if valid FormID format (8-char hex)
+
     """
 
 def validate_formids_batch(formids: list[str]) -> list[bool]:
@@ -1107,6 +1186,7 @@ def validate_formids_batch(formids: list[str]) -> list[bool]:
 
     Returns:
         List of validation results (True for valid, False for invalid)
+
     """
 
 def scan_records_batch(texts: list[list[str]], record_list: list[str], ignore_records: list[str]) -> list[list[str]]:
@@ -1119,6 +1199,7 @@ def scan_records_batch(texts: list[list[str]], record_list: list[str], ignore_re
 
     Returns:
         List of found records for each text
+
     """
 
 def contains_record(text: str, target_records: list[str], ignore_records: list[str]) -> bool:
@@ -1131,6 +1212,7 @@ def contains_record(text: str, target_records: list[str], ignore_records: list[s
 
     Returns:
         True if record found in text
+
     """
 
 def detect_plugins_batch(texts: list[str], plugin_list: list[str]) -> list[list[str]]:
@@ -1142,6 +1224,7 @@ def detect_plugins_batch(texts: list[str], plugin_list: list[str]) -> list[list[
 
     Returns:
         List of detected plugins for each text
+
     """
 
 def contains_plugin(text: str, plugin: str) -> bool:
@@ -1153,6 +1236,7 @@ def contains_plugin(text: str, plugin: str) -> bool:
 
     Returns:
         True if plugin found in text
+
     """
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> list[str]:
@@ -1166,6 +1250,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     Returns:
         List of warning messages for detected mods
+
     """
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> list[str]:
@@ -1179,6 +1264,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     Returns:
         List of warning messages for detected mod conflicts
+
     """
 
 def detect_mods_important(
@@ -1196,6 +1282,7 @@ def detect_mods_important(
 
     Returns:
         List of warning messages for detected important mods
+
     """
 
 def detect_mods_batch(yaml_dict: dict[str, str], crashlog_plugins_list: list[dict[str, str]]) -> list[list[str]]:
@@ -1209,6 +1296,7 @@ def detect_mods_batch(yaml_dict: dict[str, str], crashlog_plugins_list: list[dic
 
     Returns:
         List of warning message lists, one per crash log
+
     """
 
 # =============================================================================
@@ -1230,6 +1318,7 @@ class SuspectScanner:
         Args:
             suspects_error_list: Dictionary mapping error patterns to descriptions
             suspects_stack_list: Dictionary mapping stack patterns to descriptions
+
         """
 
     def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[list[str], bool]:
@@ -1241,6 +1330,7 @@ class SuspectScanner:
 
         Returns:
             Tuple of (suspect_lines, found_suspect)
+
         """
 
     def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int) -> tuple[list[str], bool]:
@@ -1256,6 +1346,7 @@ class SuspectScanner:
 
         Returns:
             Tuple of (suspect_lines, found_suspect)
+
         """
 
     def scan_suspects_batch(self, crash_logs: list[tuple[str, str]], max_warn_length: int) -> list[tuple[list[str], bool]]:
@@ -1267,6 +1358,7 @@ class SuspectScanner:
 
         Returns:
             List of (suspect_lines, found_suspect) tuples
+
         """
 
     @staticmethod
@@ -1278,6 +1370,7 @@ class SuspectScanner:
 
         Returns:
             List of DLL crash indicators
+
         """
 
 # =============================================================================
@@ -1300,6 +1393,7 @@ class SettingsValidator:
         Args:
             crashgen_name: Name of crash generator (e.g., "Buffout 4")
             crashgen_ignore: List of settings to ignore during validation
+
         """
 
     def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, str]) -> list[str]:
@@ -1311,6 +1405,7 @@ class SettingsValidator:
 
         Returns:
             List of report lines for achievements issues
+
         """
 
     def scan_buffout_memorymanagement_settings(
@@ -1326,6 +1421,7 @@ class SettingsValidator:
 
         Returns:
             List of report lines for memory management issues
+
         """
 
     def scan_archivelimit_setting(self, crashgen: dict[str, str], crashgen_version: Any = None) -> list[str]:
@@ -1337,6 +1433,7 @@ class SettingsValidator:
 
         Returns:
             List of report lines for archive limit issues
+
         """
 
     def scan_buffout_looksmenu_setting(self, crashgen: dict[str, str], xsemodules: set[str]) -> list[str]:
@@ -1348,6 +1445,7 @@ class SettingsValidator:
 
         Returns:
             List of report lines for LooksMenu issues
+
         """
 
     def check_disabled_settings(self, crashgen: dict[str, str]) -> list[str]:
@@ -1361,6 +1459,7 @@ class SettingsValidator:
 
         Returns:
             List of report lines for disabled settings issues
+
         """
 
 # =============================================================================
@@ -1378,10 +1477,11 @@ class GpuVendor:
 
         Args:
             vendor_name: Vendor name (case-insensitive: "AMD", "NVIDIA", "INTEL")
+
         """
 
     def __str__(self) -> str:
-        """String representation of the vendor."""
+        """Return string representation of the vendor."""
 
     def __repr__(self) -> str:
         """Python repr() representation."""
@@ -1417,10 +1517,11 @@ class GpuInfo:
 
         Returns:
             Dictionary with keys: 'primary', 'secondary', 'manufacturer', 'rival'
+
         """
 
     def __str__(self) -> str:
-        """String representation of GPU info."""
+        """Return string representation of GPU info."""
 
     def __repr__(self) -> str:
         """Python repr() representation."""
@@ -1442,6 +1543,7 @@ class GpuDetector:
 
         Returns:
             Detected GPU information
+
         """
 
     def extract_gpu_info_batch(self, system_segments: list[list[str]]) -> list[GpuInfo]:
@@ -1452,6 +1554,7 @@ class GpuDetector:
 
         Returns:
             List of GPU information for each log
+
         """
 
 # =============================================================================
@@ -1485,6 +1588,7 @@ class ConfigIssue:
             recommended_value: Recommended value to fix the issue
             description: Human-readable description of the issue
             severity: Issue severity level ("error", "warning", "info")
+
         """
 
     @property
@@ -1520,10 +1624,11 @@ class ConfigIssue:
 
         Returns:
             Formatted markdown string describing the issue
+
         """
 
     def __repr__(self) -> str:
-        """String representation."""
+        """Return string representation."""
 
 class FcxModeHandler:
     """FCX mode state management.
@@ -1537,6 +1642,7 @@ class FcxModeHandler:
 
         Args:
             enabled: Whether FCX mode is enabled
+
         """
 
     def check_fcx_mode(self) -> None:
@@ -1560,6 +1666,7 @@ class FcxModeHandler:
 
         Returns:
             List of FCX-related report messages
+
         """
 
     def get_fcx_status_message(self) -> str:
@@ -1567,6 +1674,7 @@ class FcxModeHandler:
 
         Returns:
             Status message string
+
         """
 
     def has_results(self) -> bool:
@@ -1574,6 +1682,7 @@ class FcxModeHandler:
 
         Returns:
             True if there are results to show
+
         """
 
     @property
@@ -1589,6 +1698,7 @@ class FcxModeHandler:
 
         Args:
             issue: ConfigIssue to add to detected issues list
+
         """
 
     def set_detected_issues(self, issues: list[ConfigIssue]) -> None:
@@ -1596,6 +1706,7 @@ class FcxModeHandler:
 
         Args:
             issues: List of ConfigIssue objects
+
         """
 
     def get_detected_issues(self) -> list[ConfigIssue]:
@@ -1603,6 +1714,7 @@ class FcxModeHandler:
 
         Returns:
             List of detected ConfigIssue objects
+
         """
 
     def reset(self) -> None:
@@ -1621,6 +1733,7 @@ class FcxModeHandler:
             >>> from classic_scanlog import FcxModeHandler
             >>> # Reset global FCX state before starting a new scan
             >>> FcxModeHandler.reset_fcx_checks()
+
         """
 
 # =============================================================================
@@ -1666,6 +1779,7 @@ class PapyrusStats:
 
         Returns:
             Ratio of dumps to stacks, or 0.0 if no dumps/stacks
+
         """
 
     def total_issues(self) -> int:
@@ -1673,6 +1787,7 @@ class PapyrusStats:
 
         Returns:
             Sum of warnings and errors
+
         """
 
     def error_to_warning_ratio(self) -> float:
@@ -1680,6 +1795,7 @@ class PapyrusStats:
 
         Returns:
             Ratio of errors to warnings, or 0.0 if no warnings
+
         """
 
     def severity_level(self) -> str:
@@ -1689,10 +1805,11 @@ class PapyrusStats:
             "OK" if no errors or errors < 25% of warnings
             "Warning" if errors are 25-100% of warnings
             "Critical" if errors exceed warnings
+
         """
 
     def __repr__(self) -> str:
-        """String representation of statistics."""
+        """Return string representation of statistics."""
 
 class PapyrusAnalyzer:
     """Analyzer for Papyrus script logs.
@@ -1706,6 +1823,7 @@ class PapyrusAnalyzer:
 
         Args:
             log_path: Path to the Papyrus.0.log file
+
         """
 
     def log_exists(self) -> bool:
@@ -1713,6 +1831,7 @@ class PapyrusAnalyzer:
 
         Returns:
             True if log file exists and is readable
+
         """
 
     def log_path(self) -> str:
@@ -1720,6 +1839,7 @@ class PapyrusAnalyzer:
 
         Returns:
             Path to the log file as string
+
         """
 
     def stats(self) -> PapyrusStats:
@@ -1727,6 +1847,7 @@ class PapyrusAnalyzer:
 
         Returns:
             Current PapyrusStats snapshot
+
         """
 
     def reset(self) -> None:
@@ -1743,6 +1864,7 @@ class PapyrusAnalyzer:
         Raises:
             FileNotFoundError: If log file doesn't exist
             IOError: If failed to read the file
+
         """
 
     def analyze_to_string(self) -> str:
@@ -1750,6 +1872,7 @@ class PapyrusAnalyzer:
 
         Returns:
             Formatted string with statistics, or error message if log not found
+
         """
 
     def start_monitoring(self) -> None:
@@ -1762,6 +1885,7 @@ class PapyrusAnalyzer:
         Raises:
             FileNotFoundError: If file doesn't exist
             IOError: If can't read file metadata
+
         """
 
     def check_for_updates(self) -> tuple[list[str], PapyrusStats] | None:
@@ -1776,13 +1900,14 @@ class PapyrusAnalyzer:
 
         Raises:
             IOError: If failed to read the file or file was truncated
+
         """
 
     def __repr__(self) -> str:
-        """String representation."""
+        """Return string representation."""
 
 def papyrus_logging(log_path: str) -> tuple[str, int]:
-    """Convenience function to analyze a Papyrus log file.
+    """Provide convenience wrapper to analyze a Papyrus log file.
 
     This is equivalent to creating a PapyrusAnalyzer and calling
     analyze_to_string(), with the addition of returning the dumps count.
@@ -1800,4 +1925,5 @@ def papyrus_logging(log_path: str) -> tuple[str, int]:
         >>> summary, dumps_count = papyrus_logging("/path/to/Papyrus.0.log")
         >>> print(summary)
         >>> print(f"Total dumps: {dumps_count}")
+
     """

@@ -33,6 +33,7 @@ def _get_emoji_pattern() -> re.Pattern[str]:
 
     Returns:
         Compiled regex pattern for emoji matching.
+
     """
     global _EMOJI_PATTERN  # noqa: PLW0603
     if _EMOJI_PATTERN is None:
@@ -62,6 +63,7 @@ def _python_strip_emoji(text: str) -> str:
 
     Returns:
         Text with emojis removed and whitespace trimmed.
+
     """
     pattern = _get_emoji_pattern()
     return pattern.sub("", text).strip()
@@ -82,6 +84,7 @@ def strip_emoji(text: str) -> str:
     Example:
         >>> strip_emoji("Hello World!")
         'Hello  World !'
+
     """
     if RUST_AVAILABLE and classic_message is not None:
         return classic_message.strip_emoji(text)
@@ -97,6 +100,7 @@ def _python_format_log_message(content: str, details: str | None = None) -> str:
 
     Returns:
         Formatted log message with emojis stripped.
+
     """
     log_content = _python_strip_emoji(content)
     if details:
@@ -105,7 +109,7 @@ def _python_format_log_message(content: str, details: str | None = None) -> str:
 
 
 def format_log_message(content: str, details: str | None = None) -> str:
-    """Format message content with optional details for logging.
+    r"""Format message content with optional details for logging.
 
     Strips emojis from both content and details to avoid encoding issues
     on Windows console. Uses Rust acceleration when available.
@@ -120,6 +124,7 @@ def format_log_message(content: str, details: str | None = None) -> str:
     Example:
         >>> format_log_message("Success!", "All tests passed")
         'Success!\nDetails: All tests passed'
+
     """
     if RUST_AVAILABLE and classic_message is not None:
         return classic_message.format_log_message(content, details)

@@ -46,6 +46,7 @@ class CLIBackend:
 
         Args:
             message: The message to display.
+
         """
         prefix = self.PREFIX_MAP.get(message.msg_type, "")
         output = f"{prefix}{message.content}"
@@ -72,5 +73,6 @@ class CLIBackend:
 
         Returns:
             Always True - CLI is always available.
+
         """
         return True

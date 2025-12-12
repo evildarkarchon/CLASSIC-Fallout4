@@ -14,17 +14,19 @@ class PathHandler:
 
     Attributes:
         cache_ttl_seconds: Cache time-to-live in seconds (default: 300)
+
     """
 
     def __init__(self, cache_ttl_seconds: int = 300) -> None:
-        """Creates a new PathHandler with optional cache TTL.
+        """Create a new PathHandler with optional cache TTL.
 
         Args:
             cache_ttl_seconds: Cache time-to-live in seconds (default: 300)
+
         """
 
     def normalize_path(self, path: str) -> str:
-        """Normalizes a file path.
+        """Normalize a file path.
 
         Args:
             path: The path to normalize
@@ -34,16 +36,18 @@ class PathHandler:
 
         Raises:
             IOError: If the path cannot be normalized
+
         """
 
     def clear_cache(self) -> None:
         """Clear all caches."""
 
     def cache_stats(self) -> tuple[int, int]:
-        """Returns cache statistics.
+        """Return cache statistics.
 
         Returns:
             Tuple of (path_cache_size, validation_cache_size)
+
         """
 
     def cleanup_cache(self) -> None:
@@ -61,6 +65,7 @@ class PathHandler:
         Note:
             This method releases the GIL during parallel validation, allowing concurrent
             Python threads to continue execution.
+
         """
 
     def join_paths(self, base: str, components: list[str]) -> str:
@@ -72,6 +77,7 @@ class PathHandler:
 
         Returns:
             The joined path
+
         """
 
     def split_path(self, path: str) -> list[str]:
@@ -82,6 +88,7 @@ class PathHandler:
 
         Returns:
             List of path components
+
         """
 
     def get_filename(self, path: str) -> str | None:
@@ -92,6 +99,7 @@ class PathHandler:
 
         Returns:
             The filename, or None if not present
+
         """
 
     def get_extension(self, path: str) -> str | None:
@@ -102,6 +110,7 @@ class PathHandler:
 
         Returns:
             The extension, or None if not present
+
         """
 
     def get_parent(self, path: str) -> str | None:
@@ -112,6 +121,7 @@ class PathHandler:
 
         Returns:
             The parent directory, or None if at root
+
         """
 
     def is_absolute(self, path: str) -> bool:
@@ -122,6 +132,7 @@ class PathHandler:
 
         Returns:
             True if absolute, false otherwise
+
         """
 
     def to_absolute(self, path: str, base: str | None = None) -> str:
@@ -136,6 +147,7 @@ class PathHandler:
 
         Raises:
             IOError: If the path cannot be converted to absolute
+
         """
 
     def common_prefix(self, paths: list[str]) -> str | None:
@@ -146,6 +158,7 @@ class PathHandler:
 
         Returns:
             The common prefix, or None if there isn't one
+
         """
 
     def validate_paths_batch_fast(self, paths: list[str]) -> list[tuple[str, bool, str]]:
@@ -160,13 +173,15 @@ class PathHandler:
         Note:
             Returns PyList of PyTuples directly, avoiding intermediate Vec allocations.
             This provides 3-4x better performance for large batches (100+ paths).
+
         """
 
     def cache_metrics(self) -> tuple[int, int, float]:
-        """Returns cache hit/miss statistics.
+        """Return cache hit/miss statistics.
 
         Returns:
             Tuple of (hits, misses, hit_rate)
+
         """
 
     def split_path_fast(self, path: str) -> list[str]:
@@ -180,6 +195,7 @@ class PathHandler:
 
         Note:
             Returns PyList directly, reducing allocations by 30-40%.
+
         """
 
 class StringProcessor:
@@ -190,7 +206,7 @@ class StringProcessor:
     """
 
     def __init__(self) -> None:
-        """Creates a new StringProcessor."""
+        """Create a new StringProcessor."""
 
     def intern(self, s: str) -> str:
         """Intern a string for memory efficiency.
@@ -200,6 +216,7 @@ class StringProcessor:
 
         Returns:
             The interned string
+
         """
 
     def process_batch(self, strings: list[str], operation: str) -> list[str]:
@@ -215,6 +232,7 @@ class StringProcessor:
         Note:
             This method releases the GIL during parallel processing, allowing other Python
             threads to run concurrently.
+
         """
 
     def common_prefix(self, strings: list[str]) -> str:
@@ -229,6 +247,7 @@ class StringProcessor:
         Note:
             This method releases the GIL during computation and uses an optimized O(n)
             byte-wise comparison algorithm.
+
         """
 
     def split_lines(self, text: str) -> list[str]:
@@ -242,6 +261,7 @@ class StringProcessor:
 
         Note:
             This method releases the GIL during parallel line splitting.
+
         """
 
     def join_lines(self, lines: list[str], separator: str) -> str:
@@ -253,6 +273,7 @@ class StringProcessor:
 
         Returns:
             The joined string
+
         """
 
     def pool_stats(self) -> int:
@@ -260,6 +281,7 @@ class StringProcessor:
 
         Returns:
             Number of interned strings
+
         """
 
     def clear_pool(self) -> None:
@@ -282,6 +304,7 @@ class StringProcessor:
         Note:
             This method releases the GIL and provides 2-3x faster bulk interning
             compared to individual intern() calls.
+
         """
 
     def process_batch_fast(self, strings: list[str], operation: str) -> list[str]:
@@ -296,6 +319,7 @@ class StringProcessor:
 
         Note:
             Returns PyList directly instead of Vec<String>, reducing allocations by 40-50%.
+
         """
 
     def split_lines_fast(self, text: str) -> list[str]:
@@ -309,6 +333,7 @@ class StringProcessor:
 
         Note:
             Returns PyList directly, avoiding Vec<String> allocation and conversion.
+
         """
 
     def normalize(self, s: str) -> str:
@@ -319,6 +344,7 @@ class StringProcessor:
 
         Returns:
             The normalized string
+
         """
 
 class RustPerformanceMonitor:
@@ -328,7 +354,7 @@ class RustPerformanceMonitor:
     """
 
     def __init__(self) -> None:
-        """Creates a new RustPerformanceMonitor instance."""
+        """Create a new RustPerformanceMonitor instance."""
 
     def start_timer(self, operation: str) -> dict[str, object]:
         """Start timing an operation.
@@ -341,6 +367,7 @@ class RustPerformanceMonitor:
 
         Returns:
             Dictionary with "operation" and "start_time" keys
+
         """
 
     def stop_timer(self, timer_info: dict[str, object], bytes_processed: int | None = None) -> None:
@@ -349,6 +376,7 @@ class RustPerformanceMonitor:
         Args:
             timer_info: Dictionary returned from start_timer()
             bytes_processed: Optional number of bytes processed
+
         """
 
     def get_all_stats(self) -> dict[str, dict[str, object]]:
@@ -356,6 +384,7 @@ class RustPerformanceMonitor:
 
         Returns:
             Dictionary mapping operation names to their statistics
+
         """
 
     def get_operation_stats(self, operation: str) -> dict[str, object] | None:
@@ -366,6 +395,7 @@ class RustPerformanceMonitor:
 
         Returns:
             Dictionary with statistics, or None if not found
+
         """
 
     def clear_metrics(self) -> None:
@@ -383,6 +413,7 @@ class RustPerformanceMonitor:
             operation: Operation name
             duration_ms: Duration in milliseconds
             bytes_processed: Optional bytes processed
+
         """
 
 class RuntimeStats:
@@ -393,6 +424,7 @@ class RuntimeStats:
     Attributes:
         worker_threads: Number of worker threads in the runtime
         is_healthy: Whether runtime appears healthy
+
     """
 
     worker_threads: int
@@ -408,6 +440,7 @@ def get_runtime_stats() -> RuntimeStats:
 
     Returns:
         RuntimeStats object containing worker_threads and is_healthy
+
     """
 
 def is_runtime_healthy() -> bool:
@@ -415,4 +448,5 @@ def is_runtime_healthy() -> bool:
 
     Returns:
         True if the runtime appears to be functioning normally.
+
     """

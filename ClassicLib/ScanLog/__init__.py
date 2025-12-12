@@ -1,5 +1,4 @@
-"""
-ScanLog package initialization.
+"""ScanLog package initialization.
 
 This package contains modules for scanning and analyzing crash logs.
 

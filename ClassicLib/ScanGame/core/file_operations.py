@@ -9,8 +9,7 @@ from ClassicLib.ScanGame.Config import TEST_MODE
 
 
 class FileOperations:
-    """
-    Represents a class managing file operation tasks with controlled concurrency.
+    """Represent a class managing file operation tasks with controlled concurrency.
 
     This class is designed to handle file operations such as moving files or folders
     asynchronously while ensuring a controlled level of concurrency through the use
@@ -20,11 +19,11 @@ class FileOperations:
     Attributes:
         file_ops_semaphore (asyncio.Semaphore): Semaphore to control the number of
             concurrent file operations.
+
     """
 
     def __init__(self, file_ops_semaphore: asyncio.Semaphore) -> None:
-        """
-        Initializes an instance of the class encapsulating a semaphore for file operations.
+        """Initialize an instance of the class encapsulating a semaphore for file operations.
 
         This constructor sets up the semaphore that is used to regulate access to
         file operations, ensuring that a defined number of operations can proceed
@@ -33,12 +32,12 @@ class FileOperations:
         Args:
             file_ops_semaphore (asyncio.Semaphore): Semaphore object controlling
                 the number of concurrent file operations.
+
         """
         self.file_ops_semaphore = file_ops_semaphore
 
     async def move_fomod_async(self, context: dict, root: Path, dirname: str) -> None:
-        """
-        Move a specified folder asynchronously to a backup location while handling potential
+        """Move a specified folder asynchronously to a backup location while handling potential
         errors and updating issue tracking.
 
         Performs the folder move operation inside an asyncio semaphore to ensure controlled
@@ -50,6 +49,7 @@ class FileOperations:
                 to manage paths and track issues during execution.
             root (Path): The base directory path where the folder to be moved resides.
             dirname (str): The name of the directory that needs to be moved.
+
         """
         async with self.file_ops_semaphore:
             fomod_folder_path: Path = root / dirname
@@ -72,8 +72,7 @@ class FileOperations:
                 context["issue_lists"]["cleanup"].add(f"  - {relative_path}\n")
 
     async def move_file_async(self, context: dict, file_path: Path) -> None:
-        """
-        Asynchronously moves a file from the current location to a backup location specified
+        """Asynchronously moves a file from the current location to a backup location specified
         in the context. Ensures that the backup directory structure is maintained. Handles
         possible exceptions during the file operation process and logs errors appropriately.
 
@@ -88,6 +87,7 @@ class FileOperations:
             OSError: Raised for system-related errors during file operations.
             FileNotFoundError: Raised if the file to be moved is not found.
             FileExistsError: Raised if the destination file already exists.
+
         """
         async with self.file_ops_semaphore:
             relative_path: Path = file_path.relative_to(context["mod_path"])

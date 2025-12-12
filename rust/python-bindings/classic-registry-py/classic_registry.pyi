@@ -66,6 +66,7 @@ class Keys:
         >>> from classic_registry import Keys, register
         >>> register(Keys.GAME, "Fallout4")
         >>> register(Keys.IS_GUI_MODE, True)
+
     """
 
     YAML_CACHE: str
@@ -95,6 +96,7 @@ def register(key: str, value: Any) -> None:
         >>> register(Keys.GAME, "Fallout4")
         >>> register(Keys.IS_GUI_MODE, True)
         >>> register("custom_key", {"data": 123})
+
     """
 
 def is_registered(key: str) -> bool:
@@ -110,6 +112,7 @@ def is_registered(key: str) -> bool:
         >>> from classic_registry import is_registered, Keys
         >>> if is_registered(Keys.GAME):
         ...     print("Game is registered")
+
     """
 
 def get(key: str) -> Any | None:
@@ -126,6 +129,7 @@ def get(key: str) -> Any | None:
         >>> game = get(Keys.GAME)
         >>> if game is not None:
         ...     print(f"Current game: {game}")
+
     """
 
 def clear_all() -> None:
@@ -139,6 +143,7 @@ def clear_all() -> None:
         >>> from classic_registry import clear_all
         >>> # In test teardown
         >>> clear_all()
+
     """
 
 def get_game() -> str:
@@ -151,6 +156,7 @@ def get_game() -> str:
         >>> from classic_registry import get_game
         >>> game = get_game()
         >>> print(f"Current game: {game}")
+
     """
 
 def set_game(game_name: str) -> None:
@@ -162,6 +168,7 @@ def set_game(game_name: str) -> None:
     Example:
         >>> from classic_registry import set_game
         >>> set_game("Skyrim")
+
     """
 
 def is_gui_mode() -> bool:
@@ -176,6 +183,7 @@ def is_gui_mode() -> bool:
         ...     print("Running in GUI mode")
         >>> else:
         ...     print("Running in CLI mode")
+
     """
 
 def get_yaml_cache() -> Any | None:
@@ -189,6 +197,7 @@ def get_yaml_cache() -> Any | None:
         >>> cache = get_yaml_cache()
         >>> if cache is not None:
         ...     settings = cache.get_settings(...)
+
     """
 
 def get_manual_docs_gui() -> Any | None:
@@ -202,6 +211,7 @@ def get_manual_docs_gui() -> Any | None:
         >>> widget = get_manual_docs_gui()
         >>> if widget is not None:
         ...     widget.update_content(...)
+
     """
 
 def get_game_path_gui() -> Any | None:
@@ -215,6 +225,7 @@ def get_game_path_gui() -> Any | None:
         >>> widget = get_game_path_gui()
         >>> if widget is not None:
         ...     widget.set_path(...)
+
     """
 
 def get_vr() -> str:
@@ -228,6 +239,7 @@ def get_vr() -> str:
         >>> vr = get_vr()
         >>> if vr:
         ...     print(f"VR variant: {vr}")
+
     """
 
 def get_local_dir() -> str:
@@ -240,4 +252,5 @@ def get_local_dir() -> str:
         >>> from classic_registry import get_local_dir
         >>> local_dir = get_local_dir()
         >>> print(f"Local directory: {local_dir}")
+
     """

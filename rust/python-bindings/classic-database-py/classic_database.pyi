@@ -80,6 +80,7 @@ class DatabasePool:
 
         Example:
             >>> pool = DatabasePool(max_connections=8, cache_ttl_seconds=600, game_table="Skyrim")
+
         """
 
     async def initialize(self, db_paths: list[str]) -> None:
@@ -98,6 +99,7 @@ class DatabasePool:
         Example:
             >>> pool = DatabasePool()
             >>> await pool.initialize(["formids.db", "extra.db"])
+
         """
 
     async def get_entry(self, formid: str, plugin: str, table: str | None = None) -> dict[str, Any] | None:
@@ -120,6 +122,7 @@ class DatabasePool:
             >>> entry = await pool.get_entry("00012E46", "MyPlugin.esp")
             >>> if entry:
             ...     print(f"Found: {entry}")
+
         """
 
     async def get_entries_batch(
@@ -146,6 +149,7 @@ class DatabasePool:
             >>> results = await pool.get_entries_batch(pairs, batch_size=100)
             >>> for key, entry in results.items():
             ...     print(f"{key}: {entry}")
+
         """
 
     async def batch_lookup(
@@ -170,6 +174,7 @@ class DatabasePool:
             >>> results = await pool.batch_lookup(pairs)
             >>> for (formid, plugin), entry in results.items():
             ...     print(f"{formid} from {plugin}: {entry}")
+
         """
 
     def get_game_table(self) -> str:
@@ -182,6 +187,7 @@ class DatabasePool:
             >>> pool = DatabasePool()
             >>> print(pool.get_game_table())
             'Fallout4'
+
         """
 
     def set_game_table(self, table: str) -> None:
@@ -195,6 +201,7 @@ class DatabasePool:
         Example:
             >>> pool = DatabasePool()
             >>> pool.set_game_table("Skyrim")  # Switch to Skyrim database
+
         """
 
     def clear_cache(self, expired_only: bool | None = None) -> int:
@@ -214,6 +221,7 @@ class DatabasePool:
             >>> # ... perform many queries ...
             >>> cleared = pool.clear_cache()  # Clear all cached results
             >>> print(f"Cleared {cleared} entries")
+
         """
 
     def set_cache_ttl(self, seconds: int) -> None:
@@ -228,6 +236,7 @@ class DatabasePool:
         Example:
             >>> pool = DatabasePool()
             >>> pool.set_cache_ttl(120)  # Cache for 2 minutes
+
         """
 
     def get_max_connections(self) -> int | None:
@@ -240,6 +249,7 @@ class DatabasePool:
             >>> pool = DatabasePool(max_connections=8)
             >>> print(pool.get_max_connections())
             8
+
         """
 
     def set_max_connections(self, max_connections: int) -> None:
@@ -254,6 +264,7 @@ class DatabasePool:
         Example:
             >>> pool = DatabasePool()
             >>> pool.set_max_connections(16)  # Increase pool size
+
         """
 
     def recalculate_max_connections(self) -> None:
@@ -265,6 +276,7 @@ class DatabasePool:
         Example:
             >>> pool = DatabasePool()
             >>> pool.recalculate_max_connections()
+
         """
 
     def get_stats(self) -> dict[str, int]:
@@ -289,6 +301,7 @@ class DatabasePool:
             >>> stats = pool.get_stats()
             >>> print(f"Cache hit rate: {stats['cache_hit_rate']}%")
             >>> print(f"Active connections: {stats['active_connections']}")
+
         """
 
     async def optimize(self) -> None:

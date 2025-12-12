@@ -23,6 +23,7 @@ class ProgressHandler(Protocol):
         Args:
             description: Description of the operation.
             total: Total items to process, or None for indeterminate.
+
         """
         ...
 
@@ -32,6 +33,7 @@ class ProgressHandler(Protocol):
         Args:
             n: Number of items completed since last update.
             description: Optional updated description.
+
         """
         ...
 
@@ -44,6 +46,7 @@ class ProgressHandler(Protocol):
 
         Returns:
             True if cancelled.
+
         """
         ...
 
@@ -52,5 +55,6 @@ class ProgressHandler(Protocol):
 
         Returns:
             True if can be used.
+
         """
         ...

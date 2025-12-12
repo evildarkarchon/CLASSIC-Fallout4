@@ -1,5 +1,4 @@
-"""
-UI helper functions and style constants for the CLASSIC interface.
+"""UI helper functions and style constants for the CLASSIC interface.
 
 This module contains utility methods for creating UI components and style definitions.
 """
@@ -84,14 +83,14 @@ MAIN_BUTTON_STYLE = """
 
 
 def create_separator() -> QFrame:
-    """
-    Creates and returns a horizontal line separator.
+    """Create and returns a horizontal line separator.
 
     This function creates a QFrame widget configured to represent
     a horizontal line separator with a sunken shadow.
 
     Returns:
         QFrame: The QFrame instance configured as a horizontal line separator.
+
     """
     separator: QFrame = QFrame()
     separator.setFrameShape(QFrame.Shape.HLine)
@@ -100,8 +99,7 @@ def create_separator() -> QFrame:
 
 
 def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) -> QCheckBox:
-    """
-    Creates a QCheckBox with specified label text, initializes its state based on provided
+    """Create a QCheckBox with specified label text, initializes its state based on provided
     settings, and applies a given style.
 
     The checkbox state is synchronized with the settings dynamically. If the initial state
@@ -117,6 +115,7 @@ def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) 
     Returns:
         QCheckBox: A checkbox widget initialized with the specified label, style,
         and linked to the settings.
+
     """
     checkbox: QCheckBox = QCheckBox(label_text)
 
@@ -136,8 +135,7 @@ def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) 
 
 
 def supports_add_layout(layout: QLayout) -> bool:
-    """
-    Checks if the given layout is supported.
+    """Check if the given layout is supported.
 
     This function verifies whether the provided layout is an instance of QVBoxLayout
     or QHBoxLayout, effectively determining if it is a supported type of layout.
@@ -148,6 +146,7 @@ def supports_add_layout(layout: QLayout) -> bool:
     Returns:
         bool: True if the layout is supported (QVBoxLayout or QHBoxLayout).
         False otherwise.
+
     """
     return isinstance(layout, (QVBoxLayout, QHBoxLayout))
 
@@ -155,8 +154,7 @@ def supports_add_layout(layout: QLayout) -> bool:
 def setup_folder_section(
     layout: QBoxLayout, title: str, box_name: str, browse_callback: Callable[[], None], tooltip: str = ""
 ) -> QLineEdit | None:
-    """
-    Sets up a folder selection section within the provided layout using a label, line edit,
+    """Set up a folder selection section within the provided layout using a label, line edit,
     and a browse button. This creates a horizontal arrangement of these widgets which
     is added into the given parent layout (usually a QVBoxLayout or QHBoxLayout).
 
@@ -173,6 +171,7 @@ def setup_folder_section(
     Returns:
         QLineEdit | None: Returns the QLineEdit widget created for the folder input, or None
                           if the provided layout type is not expected.
+
     """
     section_layout: QHBoxLayout = QHBoxLayout()
     section_layout.setContentsMargins(0, 0, 0, 0)
@@ -206,8 +205,7 @@ def setup_folder_section(
 
 
 def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> QPushButton:
-    """
-    Add a main button to the specified layout with customizable appearance and behavior.
+    """Add a main button to the specified layout with customizable appearance and behavior.
 
     This function creates a QPushButton with a predefined style and size policy,
     sets its tooltip if provided, connects it to a callback, and adds it to the
@@ -223,6 +221,7 @@ def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], to
 
     Returns:
         QPushButton: The created QPushButton instance.
+
     """
     button: QPushButton = QPushButton(text)
     button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -235,8 +234,7 @@ def add_main_button(layout: QLayout, text: str, callback: Callable[[], None], to
 
 
 def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], tooltip: str = "") -> None:
-    """
-    Adds a styled button to the specified layout. The button expands horizontally, has a fixed
+    """Add a styled button to the specified layout. The button expands horizontally, has a fixed
     height, and a custom visual appearance. Optionally, a tooltip can be added to the button.
 
     Args:
@@ -244,6 +242,7 @@ def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], 
         text: The text displayed on the button.
         callback: The function to be triggered when the button is clicked.
         tooltip: Optional tooltip text for the button.
+
     """
     button: QPushButton = QPushButton(text)
     button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -265,8 +264,7 @@ def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], 
 
 
 def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
-    """
-    Creates and returns a styled QPushButton with given text, tooltip, and callback function.
+    """Create and returns a styled QPushButton with given text, tooltip, and callback function.
 
     The function initializes a QPushButton, sets its tooltip, and connects the appropriate
     signal to the provided callback. If the button is checkable, the `toggled` signal is
@@ -281,6 +279,7 @@ def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
 
     Returns:
         QPushButton: A styled and configured QPushButton instance.
+
     """
     button: QPushButton = QPushButton(text)
     button.setToolTip(tooltip)
@@ -299,8 +298,7 @@ def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
 
 
 def open_url(url: str) -> None:
-    """
-    Opens a given URL in the default system web browser.
+    """Open a given URL in the default system web browser.
 
     This function utilizes the QDesktopServices class from the Qt framework to
     open the specified URL. It ensures that the URL is parsed and handled using
@@ -308,5 +306,6 @@ def open_url(url: str) -> None:
 
     Args:
         url (str): The URL to be opened in the default web browser.
+
     """
     QDesktopServices.openUrl(QUrl(url))

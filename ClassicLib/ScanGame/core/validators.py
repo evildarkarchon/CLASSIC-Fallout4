@@ -1,5 +1,4 @@
-"""
-Validation and configuration methods for handling game mod scanning.
+"""Validation and configuration methods for handling game mod scanning.
 
 This module provides functionality to fetch and cache scanning settings, as well
 as to generate standardized issue messages for mod scan reports. The purpose is
@@ -24,13 +23,12 @@ class ScanValidators:
     """
 
     def __init__(self) -> None:
-        """Initializes an instance of the class."""
+        """Initialize an instance of the class."""
         self._scan_settings_cache: tuple[str, dict[str, str], Path | None] | None = None
         self._issue_messages_cache: dict[tuple[str, str], dict[str, list[str]]] = {}
 
     async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
-        """
-        Retrieves and caches scanning settings required for the application.
+        """Retrieve and caches scanning settings required for the application.
 
         This method gathers scanning settings information, caching it for further use
         to enhance performance. The settings include an acronym, details of hashed
@@ -42,6 +40,7 @@ class ScanValidators:
             tuple[str, dict[str, str], Path | None]: A tuple containing the acronym as
                 a string, hashed script files as a dictionary, and the mods folder
                 path as a `Path` object or `None`.
+
         """
         # Use cached value if available
         if self._scan_settings_cache is not None:
@@ -63,8 +62,7 @@ class ScanValidators:
         return self._scan_settings_cache
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:
-        """
-        Retrieves issue messages based on a combination of script engine acronym and mode, with details
+        """Retrieve issue messages based on a combination of script engine acronym and mode, with details
         of identified problems and recommendations. The issue messages provide detailed explanations
         for common mod issues and are categorized based on texture, sound formats, and other
         potential conflicts.
@@ -80,6 +78,7 @@ class ScanValidators:
         Returns:
             dict[str, list[str]]: A dictionary where keys are issue categories, and values are lists of
             associated warning or error messages.
+
         """
         # Check cache first
         cache_key = (xse_acronym, mode)

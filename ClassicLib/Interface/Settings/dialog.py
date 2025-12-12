@@ -1,5 +1,4 @@
-"""
-Settings dialog for the CLASSIC application.
+"""Settings dialog for the CLASSIC application.
 
 Centralizes application settings within a tabbed, modal dialog,
 allowing users to configure preferences and paths in a unified
@@ -33,8 +32,7 @@ from ClassicLib.YamlSettings import yaml_cache, yaml_settings
 
 
 class SettingsDialog(QDialog):
-    """
-    A dialog for managing application settings.
+    """A dialog for managing application settings.
 
     The SettingsDialog class represents a user interface for managing various
     application settings. It includes a tabbed layout for organizing settings
@@ -46,6 +44,7 @@ class SettingsDialog(QDialog):
         SETTINGS_MAP (dict[str, str]): Mapping of widget identifiers to YAML
             configuration keys. Used for organizing and linking UI elements
             to the underlying settings.
+
     """
 
     # Mapping between widget keys and YAML setting names
@@ -66,8 +65,7 @@ class SettingsDialog(QDialog):
         yaml_store: YAML = YAML.Settings,
         modal: bool = True,
     ) -> None:
-        """
-        Initializes a dialog for CLASSIC settings, providing a user interface to configure settings using
+        """Initialize a dialog for CLASSIC settings, providing a user interface to configure settings using
         a set of tabs and widgets. The dialog supports dark mode styling and can operate in modal or
         non-modal mode. It integrates with a YAML store to save or load settings persistently.
 
@@ -76,6 +74,7 @@ class SettingsDialog(QDialog):
             yaml_store (YAML): An instance of a YAML store that holds settings data.
             modal (bool): A flag indicating whether the dialog is modal. True means modal behavior,
                 blocking parent interface interaction, while False makes it non-modal.
+
         """
         super().__init__(parent)
         self.yaml_store = yaml_store
@@ -117,13 +116,13 @@ class SettingsDialog(QDialog):
         self.load_settings()
 
     def _create_tabs(self) -> None:
-        """
-        Creates and initializes tabs for a user interface, storing widget references for
+        """Create and initializes tabs for a user interface, storing widget references for
         settings management and ensuring backward compatibility by maintaining legacy attribute
         names. Each tab corresponds to a specific category: General, Scanning, Paths, and Updates.
 
         Raises:
             None
+
         """
         # General tab
         general_widget, general_widgets = TabCreator.create_general_tab(self)
@@ -167,8 +166,7 @@ class SettingsDialog(QDialog):
 
     # Backwards compatibility methods
     def _browse_ini_folder(self) -> None:
-        """
-        Triggers the browsing of an .ini folder through the path manager.
+        """Trigger the browsing of an .ini folder through the path manager.
 
         This method utilizes the path manager to prompt a folder browsing dialog,
         allowing users to select an .ini folder.
@@ -176,8 +174,7 @@ class SettingsDialog(QDialog):
         self.path_manager.browse_ini_folder()
 
     def _reset_ini_folder(self) -> None:
-        """
-        Resets the INI folder to its default state.
+        """Reset the INI folder to its default state.
 
         This method interacts with the path manager to reset the INI folder to its
         initial configuration or state.
@@ -185,18 +182,17 @@ class SettingsDialog(QDialog):
         self.path_manager.reset_ini_folder()
 
     def _autodetect_ini_folder(self) -> None:
-        """
-        Automatically detects the folder containing the INI configuration file and sets it
+        """Automatically detects the folder containing the INI configuration file and sets it
         appropriately in the path manager.
 
         Raises:
             None
+
         """
         self.path_manager.autodetect_ini_folder()
 
     def load_settings(self) -> None:
-        """
-        Loads and applies settings from a configuration source into the application's GUI elements.
+        """Load and applies settings from a configuration source into the application's GUI elements.
 
         This method retrieves settings from a YAML store using a batch request mechanism, processes
         the retrieved values, and then updates the corresponding GUI controls in the application.
@@ -208,6 +204,7 @@ class SettingsDialog(QDialog):
             TypeError: If the retrieved settings have incorrect types.
             ValueError: If the settings processing encounters unexpected values.
             KeyError: If a specified key is not found in the settings map.
+
         """
         from ClassicLib.Logger import logger
 
@@ -277,8 +274,7 @@ class SettingsDialog(QDialog):
             msg_error(f"Failed to load some settings: {e!s}\n\nDefault values will be used.")
 
     def save_settings(self) -> None:
-        """
-        Saves the user settings from the dialog widgets into the YAML storage.
+        """Save the user settings from the dialog widgets into the YAML storage.
 
         This method saves various user preferences and settings into a YAML
         store. It handles saving the states of checkboxes, combo box selections,
@@ -294,6 +290,7 @@ class SettingsDialog(QDialog):
                 saving process.
             OSError: Raised if there are file-related issues, such as lack of
                 permissions or invalid paths.
+
         """
         from ClassicLib.Logger import logger
 
@@ -342,8 +339,7 @@ class SettingsDialog(QDialog):
             msg_error(f"Failed to save settings: {e!s}\n\nPlease check file permissions and try again.")
 
     def _recalculate_derivative_paths(self) -> None:
-        """
-        Recalculates derivative paths related to documents, game, and mods based on the current
+        """Recalculates derivative paths related to documents, game, and mods based on the current
         INI folder input.
 
         This method updates derived paths by validating and resolving paths using external utilities.
@@ -356,6 +352,7 @@ class SettingsDialog(QDialog):
             TypeError: If an operation encounters unexpected data types.
             ValueError: If there are issues with the path values.
             OSError: If there is an operating system-related error during the process.
+
         """
         from ClassicLib.DocsPath import docs_path_find
         from ClassicLib.GamePath import game_path_find
@@ -384,28 +381,28 @@ class SettingsDialog(QDialog):
             # Don't show error to user as this is a background operation
 
     def accept(self) -> None:
-        """
-        Executes the acceptance workflow by saving settings, recalculating derivative
+        """Execute the acceptance workflow by saving settings, recalculating derivative
         paths, and invoking the base class's accept method.
 
         Raises:
             Various exceptions depending on the implementation of `save_settings`,
             `_recalculate_derivative_paths`, or `super().accept()` if errors occur
             during execution.
+
         """
         self.save_settings()
         self._recalculate_derivative_paths()
         super().accept()
 
     def reject(self) -> None:
-        """
-        Closes the dialog without saving any changes.
+        """Close the dialog without saving any changes.
 
         This method overrides the parent's `reject` method to ensure that no changes
         are saved when the dialog is closed.
 
         Raises:
             None
+
         """
         # Just close without saving
         super().reject()

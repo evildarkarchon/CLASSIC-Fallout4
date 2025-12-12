@@ -21,6 +21,7 @@ class GamePathFinder:
             xse_loader: Optional XSE loader name (e.g., "f4se_loader.exe")
             game_name: Game name for registry queries (e.g., "Fallout4")
             is_vr: Whether this is a VR version
+
         """
 
     def find_game_path(self, cached_path: str | None, xse_log_path: str | None) -> str:
@@ -36,6 +37,7 @@ class GamePathFinder:
         Raises:
             FileNotFoundError: If game not found by any method
             ValueError: If path validation fails
+
         """
 
     def validate_game_path(self, path: str) -> None:
@@ -47,6 +49,7 @@ class GamePathFinder:
         Raises:
             ValueError: If validation fails
             FileNotFoundError: If path or required files don't exist
+
         """
 
     @property
@@ -74,6 +77,7 @@ class GamePathFinder:
         Raises:
             FileNotFoundError: If log file doesn't exist
             ValueError: If log doesn't contain plugin directory line
+
         """
 
 class PathValidator:
@@ -88,6 +92,7 @@ class PathValidator:
 
         Returns:
             True if the path exists, False otherwise.
+
         """
 
     @staticmethod
@@ -99,6 +104,7 @@ class PathValidator:
 
         Returns:
             True if the path is restricted, False if safe.
+
         """
 
     @staticmethod
@@ -111,6 +117,7 @@ class PathValidator:
         Raises:
             ValueError: If the path is invalid or restricted
             FileNotFoundError: If the path does not exist
+
         """
 
     @staticmethod
@@ -124,6 +131,7 @@ class PathValidator:
         Raises:
             FileNotFoundError: If directory or any file does not exist
             ValueError: If the path is not a directory
+
         """
 
     @staticmethod
@@ -137,6 +145,7 @@ class PathValidator:
 
         Raises:
             ValueError: If validation fails
+
         """
 
     @staticmethod
@@ -151,6 +160,7 @@ class PathValidator:
 
         Raises:
             ValueError: If any validation fails
+
         """
 
     @staticmethod
@@ -162,6 +172,7 @@ class PathValidator:
 
         Returns:
             True if the path is a valid executable, False otherwise.
+
         """
 
     @staticmethod
@@ -173,6 +184,7 @@ class PathValidator:
 
         Raises:
             ValueError: If the drive does not exist (Windows only)
+
         """
 
     @staticmethod
@@ -185,6 +197,7 @@ class PathValidator:
         Raises:
             PermissionError: If read access is denied
             OSError: If the path cannot be accessed
+
         """
 
     @staticmethod
@@ -197,6 +210,7 @@ class PathValidator:
         Raises:
             PermissionError: If write access is denied
             OSError: If the path cannot be accessed
+
         """
 
     @staticmethod
@@ -213,6 +227,7 @@ class PathValidator:
             PermissionError: If permission checks fail
             ValueError: If drive check fails (Windows)
             OSError: If other access errors occur
+
         """
 
 class DocsPathFinder:
@@ -223,6 +238,7 @@ class DocsPathFinder:
 
         Args:
             relative_path: Path relative to documents folder
+
         """
 
     def find_docs_path(self, cached_path: str | None) -> str:
@@ -237,6 +253,7 @@ class DocsPathFinder:
         Raises:
             FileNotFoundError: If documents folder not found
             ValueError: If path validation fails
+
         """
 
     def validate_docs_path(self, path: str) -> None:
@@ -248,6 +265,7 @@ class DocsPathFinder:
         Raises:
             ValueError: If validation fails
             FileNotFoundError: If path doesn't exist
+
         """
 
     def validate_ini_files(self, docs_path: str, required_inis: list[str]) -> None:
@@ -260,6 +278,7 @@ class DocsPathFinder:
         Raises:
             FileNotFoundError: If any required INI file is missing
             ValueError: If INI file cannot be parsed
+
         """
 
     @property
@@ -274,6 +293,7 @@ class BackupManager:
 
         Args:
             backup_root: Root directory where backups will be stored
+
         """
 
     def extract_version_from_xse_log(self, xse_log_path: str) -> XseVersion:
@@ -288,6 +308,7 @@ class BackupManager:
         Raises:
             FileNotFoundError: If log file doesn't exist
             ValueError: If version string not found or invalid
+
         """
 
     def create_backup(self, source_file: str, version: XseVersion) -> str:
@@ -303,6 +324,7 @@ class BackupManager:
         Raises:
             FileNotFoundError: If source file doesn't exist
             IOError: If backup directory can't be created or file copy fails
+
         """
 
     @property
@@ -317,6 +339,7 @@ class BackupManager:
 
         Raises:
             IOError: If backup directory can't be read
+
         """
 
     def get_version_path(self, version: XseVersion) -> str:
@@ -327,6 +350,7 @@ class BackupManager:
 
         Returns:
             Path to the version's backup directory.
+
         """
 
 class XseVersion:
@@ -337,6 +361,7 @@ class XseVersion:
 
         Args:
             version: The full version string (e.g., "1.10.163.0")
+
         """
 
     def full_version(self) -> str:
@@ -344,6 +369,7 @@ class XseVersion:
 
         Returns:
             The complete version string (e.g., "1.10.163.0").
+
         """
 
     def sanitized(self) -> str:
@@ -351,6 +377,7 @@ class XseVersion:
 
         Returns:
             A sanitized version string (e.g., "1_10_163_0").
+
         """
 
     def __repr__(self) -> str: ...
@@ -384,6 +411,7 @@ class IniCheckResult:
 
         Returns:
             True if there's an issue, False otherwise.
+
         """
 
     def __repr__(self) -> str: ...
@@ -397,6 +425,7 @@ class DocumentsChecker:
 
         Args:
             game_name: Name of the game (e.g., "Fallout4")
+
         """
 
     def check_onedrive_in_path(self, docs_path: str) -> str | None:
@@ -407,6 +436,7 @@ class DocumentsChecker:
 
         Returns:
             Warning message if OneDrive is detected, None otherwise.
+
         """
 
     def validate_ini_file(self, docs_path: str, ini_name: str) -> IniCheckResult:
@@ -421,6 +451,7 @@ class DocumentsChecker:
 
         Raises:
             IOError: If file cannot be read
+
         """
 
     def run_all_checks(self, docs_path: str) -> list[str]:
@@ -434,6 +465,7 @@ class DocumentsChecker:
 
         Raises:
             IOError: If documents path cannot be accessed
+
         """
 
     @property
@@ -449,4 +481,5 @@ def remove_readonly(file_path: str) -> None:
     Raises:
         PermissionError: If unable to modify permissions
         OSError: If other I/O errors occur
+
     """

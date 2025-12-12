@@ -1,5 +1,4 @@
-"""
-Module to manage INI folder paths for applications or games.
+"""Module to manage INI folder paths for applications or games.
 
 This module encompasses the PathManager class, which interacts with the YAML
 settings and user interface components to streamline folder path operations. It
@@ -23,8 +22,7 @@ if TYPE_CHECKING:
 
 
 class PathManager:
-    """
-    Manage the operations related to the path configuration for INI folder settings.
+    """Manage the operations related to the path configuration for INI folder settings.
 
     This class provides methods for managing the INI folder settings using a graphical
     user interface (GUI). It enables browsing for a specific folder, resetting the INI
@@ -37,23 +35,23 @@ class PathManager:
         yaml_store (YAML): The YAML store instance utilized for managing settings.
         ini_folder_input (QLineEdit | None): Reference to the input widget for displaying
             and modifying the INI folder path.
+
     """
 
     def __init__(self, parent: QWidget, yaml_store: YAML = YAML.Settings) -> None:
-        """
-        Initializes a new instance of the class.
+        """Initialize a new instance of the class.
 
         Args:
             parent (QWidget): The parent widget associated with the instance.
             yaml_store (YAML): The YAML configuration or settings object.
+
         """
         self.parent = parent
         self.yaml_store = yaml_store
         self.ini_folder_input: QLineEdit | None = None
 
     def set_ini_folder_input(self, input_widget: QLineEdit) -> None:
-        """
-        Sets the folder input widget for the application.
+        """Set the folder input widget for the application.
 
         This method assigns an input widget to the attribute responsible for managing
         the folder path input. It should be used to dynamically set the widget for
@@ -62,12 +60,12 @@ class PathManager:
         Args:
             input_widget (QLineEdit): The input widget to set as the folder input
                 handler.
+
         """
         self.ini_folder_input = input_widget
 
     def browse_ini_folder(self) -> None:
-        """
-        Opens a folder dialog to allow the user to select an INI folder for a game. The selected
+        """Open a folder dialog to allow the user to select an INI folder for a game. The selected
         folder path is then set to the corresponding input field. If no input or folder is
         selected, the function exits without changes.
 
@@ -75,6 +73,7 @@ class PathManager:
             TypeError: Raised if an invalid type is provided when retrieving the game information.
             ValueError: Raised if an invalid value is encountered during game information retrieval.
             AttributeError: Raised if an attribute is missing during game information retrieval.
+
         """
         from ClassicLib import GlobalRegistry
 
@@ -97,8 +96,7 @@ class PathManager:
             self.ini_folder_input.setText(folder)
 
     def reset_ini_folder(self) -> None:
-        """
-        Resets the INI folder path in the configuration and triggers a fresh autodetection process.
+        """Reset the INI folder path in the configuration and triggers a fresh autodetection process.
 
         This method performs the following operations:
         1. Clears the INI folder path setting in the CLASSIC_Settings.yaml file and logs this
@@ -141,8 +139,7 @@ class PathManager:
             msg_error(f"Failed to reset INI folder path: {e!s}\n\nPlease try again or set the path manually.")
 
     def autodetect_ini_folder(self) -> None:
-        """
-        Autodetects the INI folder path and updates the user interface.
+        """Autodetects the INI folder path and updates the user interface.
 
         This method attempts to automatically detect the INI folder path used by the application or
         game. If a new path is successfully detected, the method updates the relevant UI element
@@ -154,6 +151,7 @@ class PathManager:
             TypeError: If there is a type-related error during the operation.
             ValueError: If a value-related error occurs, such as invalid YAML content.
             OSError: If a system-related error occurs, like file-related issues.
+
         """
         from ClassicLib import GlobalRegistry
         from ClassicLib.DocsPath import docs_path_find

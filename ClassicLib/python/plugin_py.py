@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of plugin analysis.
+"""Pure Python implementation of plugin analysis.
 
 This module provides the fallback Python implementation for plugin-related
 operations when Rust acceleration is not available. It handles loading plugins,
@@ -19,8 +18,7 @@ if TYPE_CHECKING:
 
 
 class PythonPluginAnalyzer:
-    """
-    Pure Python implementation for analyzing plugins and their crash log relationships.
+    """Pure Python implementation for analyzing plugins and their crash log relationships.
 
     This class provides the fallback implementation for plugin-related operations,
     including identifying plugin references in crash logs, parsing plugin load order files,
@@ -31,11 +29,11 @@ class PythonPluginAnalyzer:
         pluginsearch: Regular expression to match plugin identifiers and names.
         lower_plugins_ignore: Set of ignored plugins in lowercase for case-insensitive comparisons.
         ignore_plugins_list: Set of plugins specifically excluded from analysis.
+
     """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
-        """
-        Initializes an instance to handle scanning and processing of plugins information
+        """Initialize an instance to handle scanning and processing of plugins information
         from the provided YAML data.
 
         Args:
@@ -43,6 +41,7 @@ class PythonPluginAnalyzer:
                 data. This data includes information about plugins such as game ignored
                 plugins (`game_ignore_plugins`) and an optional ignore list
                 (`ignore_list`).
+
         """
         self.yamldata = yamldata
         # noinspection RegExpRedundantEscape
@@ -55,8 +54,7 @@ class PythonPluginAnalyzer:
 
     @staticmethod
     def loadorder_scan_loadorder_txt() -> tuple[dict[str, str], bool, "ReportFragment"]:
-        """
-        Parses the loadorder.txt file to detect and load plugin data.
+        """Parse the loadorder.txt file to detect and load plugin data.
 
         This method attempts to read the loadorder.txt file and extract a list of plugins.
         Detected plugins are marked with their origin. This feature enables tracking
@@ -67,6 +65,7 @@ class PythonPluginAnalyzer:
                 - A dictionary mapping plugin names to their origin.
                 - A boolean indicating if any plugins were successfully loaded.
                 - A ReportFragment object containing logs of the operation.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -104,8 +103,7 @@ class PythonPluginAnalyzer:
     def check_plugin_limit(
         self, segment_plugins: list[str], game_version: "Version | None" = None, version_current: "Version | None" = None
     ) -> tuple[bool, bool]:
-        """
-        Checks if a plugin limit has been triggered or if the limit check is disabled.
+        """Check if a plugin limit has been triggered or if the limit check is disabled.
 
         This function analyzes a list of segment plugins to determine if any plugin contains
         specific markers indicating a limit. It adjusts the check behavior based on the
@@ -122,6 +120,7 @@ class PythonPluginAnalyzer:
         Returns:
             tuple[bool, bool]: A tuple where the first value indicates if the plugin limit is
                 triggered, and the second value indicates if the limit check is disabled.
+
         """
         if not game_version or not version_current:
             return False, False
@@ -150,8 +149,7 @@ class PythonPluginAnalyzer:
     def loadorder_scan_log(
         self, segment_plugins: list[str], game_version: "Version | None" = None, version_current: "Version | None" = None
     ) -> tuple[dict[str, str], bool, bool]:
-        """
-        Scans and processes the plugin load order from the provided segment plugins.
+        """Scan and processes the plugin load order from the provided segment plugins.
 
         This function analyzes a list of segment plugins to extract their details and
         builds a mapping of plugin names to their identifiers or classification.
@@ -167,6 +165,7 @@ class PythonPluginAnalyzer:
                 - A dictionary mapping plugin names to their hex indices or status.
                 - A boolean flag for plugin limit triggered.
                 - A boolean flag for limit check disabled.
+
         """
         # Early return for empty input
         if not segment_plugins:
@@ -211,8 +210,7 @@ class PythonPluginAnalyzer:
         return plugin_map, plugin_limit_triggered, limit_check_disabled
 
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> "ReportFragment":
-        """
-        Matches plugins to call stack lines and generates a report fragment.
+        """Match plugins to call stack lines and generates a report fragment.
 
         This function analyzes the provided call stack segment and identifies plugins
         present within the crash log. It optimizes the matching process by pre-filtering
@@ -224,6 +222,7 @@ class PythonPluginAnalyzer:
 
         Returns:
             ReportFragment: A report fragment with the matched plugins and their occurrences.
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -261,8 +260,7 @@ class PythonPluginAnalyzer:
         return ReportFragment.from_lines(lines)
 
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
-        """
-        Filters out plugins listed in the ignore list from the given crashlog plugins.
+        """Filter out plugins listed in the ignore list from the given crashlog plugins.
 
         This method takes a dictionary of crashlog plugins and removes any plugin whose name
         matches an entry in the ignore plugins list. Matching is case-insensitive.
@@ -272,6 +270,7 @@ class PythonPluginAnalyzer:
 
         Returns:
             dict[str, str]: A dictionary of crashlog plugins with ignored plugins removed.
+
         """
         if not self.ignore_plugins_list:
             return crashlog_plugins

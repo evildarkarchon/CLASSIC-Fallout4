@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of FormID analysis.
+"""Pure Python implementation of FormID analysis.
 
 This module provides the fallback Python implementation for FormID extraction
 and analysis when Rust acceleration is not available. It maintains full
@@ -24,8 +23,7 @@ _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
 # LRU cache for FormID lookup results to avoid repeated database queries
 @lru_cache(maxsize=512)
 def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
-    """
-    Caches the lookup result of a FormID and its associated plugin.
+    """Cache the lookup result of a FormID and its associated plugin.
 
     This function performs a cached lookup to retrieve the entry
     associated with the given `formid` and `plugin`. It uses an
@@ -39,6 +37,7 @@ def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
     Returns:
         str | None: The retrieved entry associated with the given
         form ID and plugin, or None if no entry is found.
+
     """
     from ClassicLib.ScanLog.Util import get_entry
 
@@ -46,8 +45,7 @@ def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
 
 
 class PythonFormIDAnalyzer:
-    """
-    Pure Python implementation for processing and interpreting Form IDs in crash logs.
+    """Pure Python implementation for processing and interpreting Form IDs in crash logs.
 
     This class provides the fallback Python implementation for extracting, matching,
     and analyzing Form IDs when Rust acceleration is not available. Form IDs are
@@ -59,6 +57,7 @@ class PythonFormIDAnalyzer:
         formid_db_exists: Indicates if a FormID database is available for lookups.
         db_pool: Optional async database connection pool for lookups.
         formid_pattern: Compiled regex pattern for matching FormID formats in logs.
+
     """
 
     def __init__(
@@ -68,8 +67,7 @@ class PythonFormIDAnalyzer:
         formid_db_exists: bool,
         db_pool: "AsyncDatabasePool | None" = None,
     ) -> None:
-        """
-        Initializes a new instance of the FormID analyzer.
+        """Initialize a new instance of the FormID analyzer.
 
         This ensures certain patterns and configurations are ready for operations
         with provided data.
@@ -79,6 +77,7 @@ class PythonFormIDAnalyzer:
             show_formid_values: Flag to indicate whether FormID values should be displayed.
             formid_db_exists: Indicates the presence of a FormID database.
             db_pool: Optional asynchronous database pool for data operations.
+
         """
         self.yamldata = yamldata
         self.show_formid_values = show_formid_values
@@ -95,8 +94,7 @@ class PythonFormIDAnalyzer:
         self.formid_pattern = _PATTERN_CACHE[pattern_key]
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """
-        Extracts and processes Form IDs from a given list of callstack strings.
+        """Extract and processes Form IDs from a given list of callstack strings.
 
         This method scans through each entry in the provided callstack, identifies and
         extracts the Form IDs adhering to specific criteria, and compiles them into a list.
@@ -108,6 +106,7 @@ class PythonFormIDAnalyzer:
 
         Returns:
             list[str]: A list of processed Form IDs in the format "Form ID: <ID>".
+
         """
         formids_matches: list[str] = []
 
@@ -126,8 +125,7 @@ class PythonFormIDAnalyzer:
         return formids_matches
 
     async def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
-        """
-        Async-first implementation for FormID matching with optional concurrent database lookups.
+        """Async-first implementation for FormID matching with optional concurrent database lookups.
 
         This method analyzes FormID matches, compares them with plugins listed in the crash log,
         and optionally retrieves additional data from a FormID database. If a database pool is
@@ -139,6 +137,7 @@ class PythonFormIDAnalyzer:
 
         Returns:
             ReportFragment containing the FormID analysis results
+
         """
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -188,8 +187,7 @@ class PythonFormIDAnalyzer:
         return ReportFragment.from_lines(lines)
 
     async def _perform_async_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
-        """
-        Performs asynchronous database lookups for the given tasks and appends the processed
+        """Perform asynchronous database lookups for the given tasks and appends the processed
         results to the provided list of lines. If no database connection pool is available,
         a fallback mechanism is used to add basic formatted strings to the lines.
 
@@ -201,6 +199,7 @@ class PythonFormIDAnalyzer:
                 - The plugin name (str).
                 - The FormID count (int).
             lines (list[str]): A list of strings to which the results of the lookup are appended.
+
         """
         if not self.db_pool:
             # Fallback if no database pool available
@@ -226,8 +225,7 @@ class PythonFormIDAnalyzer:
 
     @staticmethod
     async def _perform_sync_lookups(lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
-        """
-        Performs synchronous lookups for provided tasks and modifies the given list of lines with the results.
+        """Perform synchronous lookups for provided tasks and modifies the given list of lines with the results.
 
         This method asynchronously handles a list of lookup tasks, each consisting of attributes for
         form ID details and associated plugin information, and appends formatted results to the `lines` list.
@@ -238,6 +236,7 @@ class PythonFormIDAnalyzer:
                 reference, form ID suffix, plugin name, and count for each lookup task.
             lines (list[str]): A list to which the method will append formatted output strings containing
                 the results of the lookup operations.
+
         """
         for formid_full, formid_suffix, plugin, count in lookup_tasks:
             # Use cached sync database lookup to avoid repeated queries
@@ -248,8 +247,7 @@ class PythonFormIDAnalyzer:
                 lines.append(f"- {formid_full} | [{plugin}] | {count}\n")
 
     async def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
-        """
-        Looks up the value associated with the given `formid` and `plugin` within
+        """Look up the value associated with the given `formid` and `plugin` within
         the form ID database. Returns the value if found, or `None` if the database
         does not exist or the entry is not present.
 
@@ -264,6 +262,7 @@ class PythonFormIDAnalyzer:
 
         Returns:
             str | None: The associated value as a string if found, otherwise `None`.
+
         """
         if not self.formid_db_exists:
             return None

@@ -60,6 +60,7 @@ class MetricsSummary:
         >>> stats = summary["op1"]
         >>> print(f"Average: {stats.average}s")
         Average: 0.15s
+
     """
 
     count: int
@@ -69,7 +70,7 @@ class MetricsSummary:
     max: float
 
     def __repr__(self) -> str:
-        """Gets a string representation of the metrics summary.
+        """Get a string representation of the metrics summary.
 
         Returns:
             Formatted string showing all statistics.
@@ -78,6 +79,7 @@ class MetricsSummary:
             >>> stats = MetricsSummary(...)
             >>> print(repr(stats))
             MetricsSummary(count=2, total=0.300s, average=0.150s, min=0.100s, max=0.200s)
+
         """
 
 class Timer:
@@ -99,6 +101,7 @@ class Timer:
     Note:
         If finish() is not called explicitly, the timer will automatically
         record when it goes out of scope (when Python garbage collects it).
+
     """
 
     def __init__(self, name: str) -> None:
@@ -111,6 +114,7 @@ class Timer:
             >>> timer = Timer("database_query")
             >>> # ... do work ...
             >>> timer.finish()
+
         """
 
     def finish(self) -> None:
@@ -124,6 +128,7 @@ class Timer:
             >>> timer = Timer("operation")
             >>> # ... do work ...
             >>> timer.finish()
+
         """
 
     def elapsed(self) -> float:
@@ -138,6 +143,7 @@ class Timer:
             >>> print(f"So far: {timer.elapsed()}s")
             >>> # ... do more work ...
             >>> timer.finish()
+
         """
 
     def __repr__(self) -> str:
@@ -145,6 +151,7 @@ class Timer:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
 def record_timing(name: str, duration_secs: float) -> None:
@@ -165,6 +172,7 @@ def record_timing(name: str, duration_secs: float) -> None:
         >>> summary = classic_perf.get_summary()
         >>> print(summary["my_operation"].count)
         2
+
     """
 
 def get_summary() -> dict[str, MetricsSummary]:
@@ -186,6 +194,7 @@ def get_summary() -> dict[str, MetricsSummary]:
         Average: 0.15s
         >>> print(f"Count: {stats.count}")
         Count: 2
+
     """
 
 def clear_metrics() -> None:
@@ -201,6 +210,7 @@ def clear_metrics() -> None:
         >>> summary = classic_perf.get_summary()
         >>> print(len(summary))
         0
+
     """
 
 def reset_metrics() -> None:
@@ -215,6 +225,7 @@ def reset_metrics() -> None:
         >>> summary = classic_perf.get_summary()
         >>> print(len(summary))
         0
+
     """
 
 def start_timer(name: str) -> Timer:
@@ -233,4 +244,5 @@ def start_timer(name: str) -> Timer:
         >>> timer = classic_perf.start_timer("my_operation")
         >>> # ... do work ...
         >>> timer.finish()
+
     """

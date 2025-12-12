@@ -17,6 +17,7 @@ Example:
     >>> value = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
     >>> # Read a CLASSIC_Settings value
     >>> vr_mode = classic_settings(bool, "VR Mode")
+
 """
 
 import asyncio
@@ -43,6 +44,7 @@ def _get_yaml_cache() -> YamlSettingsCache:
 
     Returns:
         The singleton YamlSettingsCache instance.
+
     """
     cache = YamlSettingsCache.get_instance()
     # Register with GlobalRegistry if not already registered
@@ -67,6 +69,7 @@ class _YamlCacheProxy:
         >>> yaml_cache.batch_get_settings([...])
         >>> # Or call it to get the singleton directly
         >>> cache = yaml_cache()
+
     """
 
     def __init__(self) -> None:
@@ -85,6 +88,7 @@ class _YamlCacheProxy:
 
         Returns:
             The value of the requested attribute from the real cache.
+
         """
         return getattr(_get_yaml_cache(), name)
 
@@ -93,6 +97,7 @@ class _YamlCacheProxy:
 
         Returns:
             The singleton YamlSettingsCache instance.
+
         """
         return _get_yaml_cache()
 
@@ -115,6 +120,7 @@ def _raise_async_context_error(yaml_store: YAML, key_path: str) -> None:
 
     Raises:
         RuntimeError: Always raises with details about the invalid call.
+
     """
     raise RuntimeError(
         "yaml_settings() called from async context. Use 'await yaml_settings_async()' instead.\n"
@@ -144,6 +150,7 @@ def yaml_settings[T](_type: type[T], yaml_store: YAML, key_path: str, new_value:
         >>> value = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
         >>> # Write a setting
         >>> yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.VR Mode", True)
+
     """
     # Check if we're in an async context
     try:
@@ -183,6 +190,7 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
     Example:
         >>> vr_mode = classic_settings(bool, "VR Mode")
         >>> # Equivalent to: yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.VR Mode")
+
     """
     # Check if settings file exists, create if needed
     settings_path = Path("CLASSIC Settings.yaml")

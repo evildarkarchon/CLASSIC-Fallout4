@@ -1,5 +1,4 @@
-"""
-This module analyzes and modifies game-related INI configuration files to ensure optimal game
+"""INI configuration file analyzer and modifier for game settings. to ensure optimal game
 performance, user experience, and adherence to desirable settings. It performs tasks such as
 checking for specific console command settings that might affect startup time, evaluating VSync
 settings across configuration files, applying required fixes, and logging messages for user
@@ -40,8 +39,7 @@ VSYNC_SETTINGS: list[tuple[str, str, str]] = [
 
 
 async def scan_mod_inis_async() -> str:
-    """
-    Asynchronously check INI files for mods and perform necessary fixes or notify about potential issues.
+    """Asynchronously check INI files for mods and perform necessary fixes or notify about potential issues.
 
     This async function analyzes INI configuration files associated with a game, looking for specific settings or
     conditions that can potentially impact game performance, startup time, or user settings. If specific
@@ -52,6 +50,7 @@ async def scan_mod_inis_async() -> str:
     Returns:
         str: A concatenated string of messages highlighting changes, issues, or notices for the user regarding
         the analyzed INI files.
+
     """
     message_list: list[str] = []
     config_files: ConfigFileCache = ConfigFileCache()
@@ -83,8 +82,7 @@ async def scan_mod_inis_async() -> str:
 
 
 def scan_mod_inis() -> str:
-    """
-    Synchronous wrapper for scan_mod_inis_async for backward compatibility.
+    """Wrap synchronously scan_mod_inis_async for backward compatibility.
 
     This wrapper uses AsyncBridge to run the async function in a sync context,
     maintaining compatibility with existing code that expects a synchronous interface.
@@ -92,6 +90,7 @@ def scan_mod_inis() -> str:
     Returns:
         str: A concatenated string of messages highlighting changes, issues, or notices for the user regarding
         the analyzed INI files.
+
     """
     from ClassicLib.AsyncBridge import AsyncBridge
 
@@ -106,13 +105,13 @@ def check_starting_console_command(config_files: ConfigFileCache, message_list: 
         config_files: A cache of configuration files containing file paths and their settings.
         message_list: A list of messages to be updated with notices if configuration files
             contain the specific console command setting.
+
     """
     return check_starting_console_command_async(config_files, message_list)
 
 
 def check_starting_console_command_async(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """
-    Checks for the presence of a specific console command setting in configuration files
+    """Check for the presence of a specific console command setting in configuration files
     matching the current game's name, and updates the message list with relevant notices.
 
     Args:
@@ -120,6 +119,7 @@ def check_starting_console_command_async(config_files: ConfigFileCache, message_
             corresponding sections and settings.
         message_list: A list of messages to be updated with notices if configuration files
             contain the specific console command setting.
+
     """
     game_lower: str = GlobalRegistry.get_game().lower()
 
@@ -140,6 +140,7 @@ def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
     Returns:
         list[str]: A list containing formatted strings that indicate which configuration
         files have VSync settings enabled.
+
     """
     from ClassicLib.AsyncBridge import AsyncBridge
 
@@ -148,8 +149,7 @@ def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
 
 
 async def check_vsync_settings_async(config_files: ConfigFileCache) -> list[str]:
-    """
-    Checks the VSync settings in the given configuration files.
+    """Check the VSync settings in the given configuration files.
 
     This function iterates through a predefined list of VSYNC_SETTINGS to determine
     if VSync is enabled for specific files and settings. Additionally, it performs a specific
@@ -162,6 +162,7 @@ async def check_vsync_settings_async(config_files: ConfigFileCache) -> list[str]
     Returns:
         list[str]: A list containing formatted strings that indicate which configuration
         files have VSync settings enabled.
+
     """
     vsync_list: list[str] = []
 
@@ -188,8 +189,7 @@ async def detect_ini_issue_async(
     description: str,
     severity: ConfigIssueSeverity = "warning",
 ) -> Any | None:
-    """
-    Detect a configuration issue in an INI file without modifying it.
+    """Detect a configuration issue in an INI file without modifying it.
 
     This function checks if a configuration setting meets a specific condition
     and, if so, creates a ConfigIssue report with the current value,
@@ -217,6 +217,7 @@ async def detect_ini_issue_async(
         lambda val: int(val) > 5000,
         "High particle count can cause crashes"
         )```
+
     """
     # Check if file exists in cache
     if file_name_lower not in config_files:
@@ -236,8 +237,7 @@ async def detect_ini_issue_async(
 
 
 async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any]:
-    """
-    Detect all configuration issues in INI files without modifying them.
+    """Detect all configuration issues in INI files without modifying them.
 
     This function checks for all known INI configuration issues and returns
     a list of ConfigIssue objects describing each detected issue.
@@ -256,6 +256,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
         - F4EE head parts locked (bUnlockHeadParts == 0)
         - F4EE face tints locked (bUnlockTints == 0)
         - High FPS Physics Fix loading screen FPS too low (< 600)
+
     """
     issues: list[Any] = []
 
@@ -338,8 +339,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
 
 
 def check_duplicate_files(config_files: ConfigFileCache, message_list: list[str]) -> None:
-    """
-    Check for duplicate files in the configuration files and update the provided message list with
+    """Check for duplicate files in the configuration files and update the provided message list with
     information about the duplicates. It sorts duplicate files by their name for consistent output
     and appends formatted messages detailing the duplicates.
 
@@ -352,6 +352,7 @@ def check_duplicate_files(config_files: ConfigFileCache, message_list: list[str]
         None
     Returns:
         None
+
     """
     if config_files.duplicate_files:
         all_duplicates: list[Path] = []

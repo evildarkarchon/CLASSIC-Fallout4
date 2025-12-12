@@ -1,5 +1,4 @@
-"""
-Custom list widget for managing and displaying scan reports with advanced
+"""Custom list widget for managing and displaying scan reports with advanced
 features.
 
 This module provides functionality to display, sort, and filter scan reports
@@ -33,8 +32,7 @@ from ClassicLib.Logger import logger
 
 
 class ReportListWidget(QListWidget):
-    """
-    A custom QListWidget subclass for managing and displaying a list of crash
+    """A custom QListWidget subclass for managing and displaying a list of crash
     report files with additional features such as filtering, styling, and metadata
     management.
 
@@ -49,11 +47,11 @@ class ReportListWidget(QListWidget):
 
     Attributes:
         search_box (QLineEdit): Search box to filter reports in the list.
+
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """
-        Initializes an instance of the class.
+        """Initialize an instance of the class.
 
         This constructor sets up properties for the widget, including alternating row colors,
         sorting settings, and selection mode. Additionally, it initializes specific behavior by
@@ -61,6 +59,7 @@ class ReportListWidget(QListWidget):
 
         Args:
             parent (QWidget | None): The parent widget for this class. Defaults to None.
+
         """
         super().__init__(parent)
 
@@ -79,8 +78,7 @@ class ReportListWidget(QListWidget):
         self._setup_styling()
 
     def _setup_search_filter(self) -> None:
-        """
-        Initializes and configures a search box for filtering reports.
+        """Initialize and configures a search box for filtering reports.
 
         This method sets up a QLineEdit widget to serve as a search box. The
         search box includes placeholder text, a connection to filter reports
@@ -89,6 +87,7 @@ class ReportListWidget(QListWidget):
 
         Raises:
             None
+
         """
         # Create search box (will be added to layout by parent)
         self.search_box = QLineEdit()
@@ -97,8 +96,7 @@ class ReportListWidget(QListWidget):
         self.search_box.setClearButtonEnabled(True)
 
     def _setup_styling(self) -> None:
-        """
-        Sets up the initial styling for the widget, including configuring the font size
+        """Set up the initial styling for the widget, including configuring the font size
         and minimum width of the widget for better readability and usability.
         """
         # Set font for better readability
@@ -110,8 +108,7 @@ class ReportListWidget(QListWidget):
         self.setMinimumWidth(250)
 
     def populate_reports(self, reports: list[Path]) -> None:
-        """
-        Populates the report list with given report file paths.
+        """Populate the report list with given report file paths.
 
         This method clears any existing items in the list and refreshes it with new
         items based on the provided list of file paths. It also selects the first item
@@ -120,6 +117,7 @@ class ReportListWidget(QListWidget):
         Args:
             reports (list[Path]): A list of Path objects representing report file
                 paths to populate the list with.
+
         """
         # Clear existing items
         self.clear()
@@ -137,8 +135,7 @@ class ReportListWidget(QListWidget):
             self.setCurrentRow(0)
 
     def _create_report_item(self, report_path: Path) -> QListWidgetItem:
-        """
-        Creates a QListWidgetItem based on the provided report file path. Extracts metadata
+        """Create a QListWidgetItem based on the provided report file path. Extracts metadata
         such as timestamp, status, and file size from the file to enhance the item's
         properties, including tooltip and display text. The status of the report is used
         to apply appropriate styling to the item.
@@ -148,6 +145,7 @@ class ReportListWidget(QListWidget):
 
         Returns:
             QListWidgetItem: The created list widget item with metadata and applied styling.
+
         """
         # Extract information from filename
         filename = report_path.stem  # Remove -AUTOSCAN suffix
@@ -180,8 +178,7 @@ class ReportListWidget(QListWidget):
 
     @staticmethod
     def _extract_timestamp(filename: str) -> str | None:
-        """
-        Extracts a timestamp from the given filename if it follows the specific pattern
+        """Extract a timestamp from the given filename if it follows the specific pattern
         for crash log timestamps, or falls back to `None` if extraction fails.
 
         The expected pattern for filenames is `crash-YYYY-MM-DD-HHMMSS`. If the filename
@@ -195,6 +192,7 @@ class ReportListWidget(QListWidget):
         Returns:
             str | None: A formatted timestamp as a string, or `None` if extraction
             fails.
+
         """
         # Pattern for crash log timestamps: crash-YYYY-MM-DD-HHMMSS
         pattern = r"crash-(\d{4})-(\d{2})-(\d{2})-(\d{6})"
@@ -217,8 +215,7 @@ class ReportListWidget(QListWidget):
 
     @staticmethod
     def _determine_report_status(report_path: Path) -> str:
-        """
-        Determines the status of a report based on its content.
+        """Determine the status of a report based on its content.
 
         The method reads the content of a report file and determines its status by
         checking for specific indicators within the text. The possible statuses
@@ -236,6 +233,7 @@ class ReportListWidget(QListWidget):
         Returns:
             str: A string representing the status of the report ("incomplete",
                 "unsolved", "solved", or "unknown").
+
         """
         try:
             content = report_path.read_text(encoding="utf-8", errors="ignore")
@@ -255,8 +253,7 @@ class ReportListWidget(QListWidget):
 
     @staticmethod
     def _apply_status_styling(item: QListWidgetItem, status: str) -> None:
-        """
-        Applies specific styling to a QListWidgetItem based on its status. Each status is
+        """Apply specific styling to a QListWidgetItem based on its status. Each status is
         represented by a distinct background and foreground color. The statuses handled
         are "solved", "unsolved", and "incomplete". If the status does not match one of
         these, the default styling remains unchanged.
@@ -284,13 +281,13 @@ class ReportListWidget(QListWidget):
             pass
 
     def _filter_reports(self, text: str) -> None:
-        """
-        Filters the reports displayed within the current context based on the provided
+        """Filter the reports displayed within the current context based on the provided
         text. Items that do not match the criteria will be hidden.
 
         Args:
             text (str): The text used for filtering items. Matching is case-insensitive
                 and checks against both the item's text and tooltip.
+
         """
         for i in range(self.count()):
             item = self.item(i)
@@ -301,8 +298,7 @@ class ReportListWidget(QListWidget):
 
     @staticmethod
     def get_report_path(item: QListWidgetItem) -> Path | None:
-        """
-        Gets the report path stored in the metadata of the given QListWidgetItem.
+        """Get the report path stored in the metadata of the given QListWidgetItem.
 
         The method accesses the metadata associated with the provided item in the UserRole
         property. If the metadata is a dictionary, it retrieves and returns the value
@@ -316,6 +312,7 @@ class ReportListWidget(QListWidget):
         Returns:
             Path | None: The path extracted from the item's metadata if available,
             otherwise None.
+
         """
         # Get the metadata stored in UserRole
         data = item.data(Qt.ItemDataRole.UserRole)
@@ -324,8 +321,7 @@ class ReportListWidget(QListWidget):
         return None
 
     def get_search_widget(self) -> QWidget:
-        """
-        Creates and configures a search widget with a label and search box.
+        """Create and configures a search widget with a label and search box.
 
         This method constructs a QWidget containing a horizontal layout. The layout
         includes a label ("Filter:") and a search box, both added to the layout,
@@ -333,6 +329,7 @@ class ReportListWidget(QListWidget):
 
         Returns:
             QWidget: The constructed widget containing the label and search box.
+
         """
         widget = QWidget()
         layout = QHBoxLayout(widget)
@@ -346,16 +343,13 @@ class ReportListWidget(QListWidget):
 
 
 class MarkdownViewer(QTextBrowser):
-    """
-    Enhanced text browser for displaying markdown-formatted reports.
+    """Enhanced text browser for displaying markdown-formatted reports.
 
     Provides markdown rendering via markdown2, zoom controls, and custom styling.
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """
-        Initializes a custom QTextBrowser with pre-configured properties and functionality.
-        """
+        """Initialize a custom QTextBrowser with pre-configured properties and functionality."""
         super().__init__(parent)
 
         # Configure viewer properties
@@ -366,12 +360,12 @@ class MarkdownViewer(QTextBrowser):
         self._zoom_level = 100
 
     def setMarkdown(self, markdown: str) -> None:
-        """
-        Processes a markdown string, converts it to HTML using markdown2,
+        """Process a markdown string, converts it to HTML using markdown2,
         injects custom styling, and displays it.
 
         Args:
             markdown (str): The markdown string to be processed and displayed.
+
         """
         # 1. Pre-process special blocks to HTML
         processed_text = self._preprocess_markdown(markdown)
@@ -392,8 +386,7 @@ class MarkdownViewer(QTextBrowser):
         self.moveCursor(QTextCursor.MoveOperation.Start)
 
     def _preprocess_markdown(self, text: str) -> str:  # noqa: PLR6301
-        """
-        Pre-processes the raw markdown text to identify and wrap specific
+        """Pre-processes the raw markdown text to identify and wrap specific
         CLASSIC report structures (Suspects, Found Mods, Errors) in HTML.
         """
 
@@ -444,9 +437,7 @@ class MarkdownViewer(QTextBrowser):
         return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
 
     def _wrap_in_html_template(self, content: str) -> str:
-        """
-        Wraps the HTML content in a full document structure with embedded CSS.
-        """
+        """Wrap the HTML content in a full document structure with embedded CSS."""
         # Base font size scaled by zoom level
         base_size = 16
         scaled_size = int(base_size * (self._zoom_level / 100.0))
@@ -605,13 +596,12 @@ class MarkdownViewer(QTextBrowser):
         self._refresh_display()
 
     def reset_zoom(self) -> None:
-        """Resets zoom to 100%."""
+        """Reset zoom to 100%."""
         self._zoom_level = 100
         self._refresh_display()
 
     def _refresh_display(self) -> None:
-        """
-        Refreshes the display by re-setting the HTML content.
+        """Refresh the display by re-setting the HTML content.
         This forces the CSS to re-evaluate with the new font size.
         """
         # We can't easily re-process the original markdown here without storing it.
@@ -632,12 +622,12 @@ class MarkdownViewer(QTextBrowser):
     # Let's update `setMarkdown` to store `self._last_processed_html`.
 
     def get_zoom_level(self) -> int:
+        """Return the current zoom level."""
         return self._zoom_level
 
 
 class ReportMetadataWidget(QGroupBox):
-    """
-    Widget for displaying report metadata.
+    """Widget for displaying report metadata.
 
     This widget provides a user interface to display metadata such as the last
     modification date, size of the report file, and the count of issues found
@@ -649,11 +639,11 @@ class ReportMetadataWidget(QGroupBox):
         size_label (QLabel): Label to display the size of the report file.
         issues_label (QLabel): Label for displaying the issue count within the
             report.
+
     """
 
     def __init__(self, parent: QWidget | None = None) -> None:
-        """
-        Creates a widget displaying metadata about a report including date, size, and issues.
+        """Create a widget displaying metadata about a report including date, size, and issues.
 
         The widget organizes the metadata within a horizontal layout and provides styling to
         keep the widget visually cohesive and compact. The metadata labels are dynamically
@@ -683,8 +673,7 @@ class ReportMetadataWidget(QGroupBox):
         self.setMaximumHeight(60)
 
     def _apply_styling(self) -> None:
-        """
-        Applies specific styling to the graphical components using Qt's stylesheet syntax.
+        """Apply specific styling to the graphical components using Qt's stylesheet syntax.
 
         This method configures the appearance of QGroupBox and QLabel elements by setting
         properties such as font weight, borders, margin, and padding. The styling is
@@ -709,8 +698,7 @@ class ReportMetadataWidget(QGroupBox):
         """)
 
     def update_metadata(self, report_path: Path, content: str) -> None:
-        """
-        Updates metadata display such as date, file size, and issue count for a given report.
+        """Update metadata display such as date, file size, and issue count for a given report.
 
         This method extracts metadata from the given report file, including its modification
         time and size in kilobytes, and updates corresponding display labels. It also analyzes
@@ -737,8 +725,7 @@ class ReportMetadataWidget(QGroupBox):
     # noinspection RegExpRedundantEscape
     @staticmethod
     def _count_issues(content: str) -> str:
-        """
-        Count various issue indicators in a given content.
+        """Count various issue indicators in a given content.
 
         This method examines the input string to identify and count specific issue
         indicators such as errors, warnings, and general issue items. It makes use
@@ -751,6 +738,7 @@ class ReportMetadataWidget(QGroupBox):
         Returns:
             str: A summary string indicating the number of errors, warnings, or issue items
             found in the content, or "None found" if no issues are detected.
+
         """
         # Count various issue indicators
         errors = len(re.findall(r"\[!?\s*ERROR\s*\]", content, re.IGNORECASE))
@@ -768,8 +756,7 @@ class ReportMetadataWidget(QGroupBox):
         return "None found"
 
     def clear(self) -> None:
-        """
-        Clears the content of the labels displaying date, size, and issues.
+        """Clear the content of the labels displaying date, size, and issues.
 
         This method resets the text content of `date_label`, `size_label`, and
         `issues_label` to indicate that the values are not available.

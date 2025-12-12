@@ -1,5 +1,4 @@
-"""
-Helper functions for PyInstaller spec files to locate and bundle Rust extensions.
+"""Helper functions for PyInstaller spec files to locate and bundle Rust extensions.
 
 This module provides a common way for all spec files to find Rust extensions,
 checking the local build directory first before falling back to site-packages.
@@ -32,8 +31,7 @@ def _process_module_file(
     binaries: list,
     datas: list,
 ) -> str:
-    """
-    Process a single .pyd file and its associated artifacts.
+    """Process a single .pyd file and its associated artifacts.
 
     Args:
         pyd_path: Path to the .pyd file
@@ -42,6 +40,7 @@ def _process_module_file(
 
     Returns:
         Module name (import name)
+
     """
     module_name = pyd_path.stem
     # The destination path is relative to the bundle root. By specifying the
@@ -70,8 +69,7 @@ def _try_local_rust_dir(
     binaries: list,
     datas: list,
 ) -> list[str]:
-    """
-    Try to find Rust extensions in the local rust_extensions directory.
+    """Try to find Rust extensions in the local rust_extensions directory.
     Scans for ANY .pyd file in the directory.
 
     Args:
@@ -81,6 +79,7 @@ def _try_local_rust_dir(
 
     Returns:
         List of module names that were found and processed
+
     """
     local_rust_dir = project_root / "rust_extensions"
     if not local_rust_dir.exists():
@@ -110,8 +109,7 @@ def _try_site_packages(
     binaries: list,
     datas: list,
 ) -> list[str]:
-    """
-    Try to find Rust extensions in site-packages.
+    """Try to find Rust extensions in site-packages.
     Scans for classic_*.pyd files.
 
     Args:
@@ -120,6 +118,7 @@ def _try_site_packages(
 
     Returns:
         List of module names that were found and processed
+
     """
     site_packages = Path(site.getsitepackages()[0])
     print(f"✓ Checking site-packages: {site_packages}")
@@ -181,8 +180,7 @@ def _print_not_found_warning(project_root: Path) -> None:
 
 
 def find_rust_extensions(project_root: Path) -> tuple[list, list, list, bool]:
-    """
-    Find Rust extensions for bundling in PyInstaller.
+    """Find Rust extensions for bundling in PyInstaller.
 
     Checks in order:
     1. Local rust_extensions/ directory (created by build_all.ps1/bat - flattened structure)
@@ -198,6 +196,7 @@ def find_rust_extensions(project_root: Path) -> tuple[list, list, list, bool]:
         - datas: List of (source, dest) tuples for __init__.py and other data
         - hidden_imports: List of module names to be added to hiddenimports
         - found: Boolean indicating if Rust extensions were found
+
     """
     binaries: list[tuple[str, str]] = []
     datas: list[tuple[str, str]] = []

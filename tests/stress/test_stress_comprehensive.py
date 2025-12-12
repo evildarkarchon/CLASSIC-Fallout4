@@ -526,7 +526,7 @@ class TestThreadSafetyValidation:
             thread.join()
 
         # Verify: within each thread, same instance was returned
-        print(f"\nAsyncBridge: Thread-local singleton pattern verified across 20 threads")
+        print("\nAsyncBridge: Thread-local singleton pattern verified across 20 threads")
         print(f"  Same instance within thread: {results['same_instance']}")
         print(f"  Unique instances (one per thread expected): {len(set(instances_per_thread.values()))}")
 

@@ -1,5 +1,4 @@
-"""
-Efficient bridge between synchronous and asynchronous code.
+"""Efficient bridge between synchronous and asynchronous code.
 
 This module provides a high-performance bridge for running async code from sync contexts
 without the overhead of creating new event loops for each operation.
@@ -79,6 +78,7 @@ When to Use What:
 See Also:
     - docs/ASYNC_BRIDGE_ELIMINATION_PLAN.md - Migration strategy
     - docs/testing_async_bridge.md - Testing guide
+
 """
 
 import asyncio
@@ -146,6 +146,7 @@ class AsyncBridge:
 
     See Also:
         docs/testing/testing_async_bridge.md for comprehensive testing guidance.
+
     """
 
     # Class-level storage for thread-local instances
@@ -166,13 +167,13 @@ class AsyncBridge:
 
     @classmethod
     def get_instance(cls) -> "AsyncBridge":
-        """
-        Get or create the AsyncBridge instance for the current thread.
+        """Get or create the AsyncBridge instance for the current thread.
 
         Uses thread-local caching for fast access without locks in the common case.
 
         Returns:
             AsyncBridge: Thread-local bridge instance
+
         """
         # Fast path - check thread-local cache (no lock needed)
         try:
@@ -227,14 +228,14 @@ class AsyncBridge:
             return instance
 
     def ensure_loop(self) -> None:
-        """
-        Ensure an event loop is running for this thread.
+        """Ensure an event loop is running for this thread.
 
         Creates a new event loop and runs it in a background thread if needed.
 
         Raises:
             RuntimeError: If the loop fails to start within 5 seconds or if
                          the background thread died
+
         """
         # Check if we have a healthy loop
         if self._loop is not None and not self._loop.is_closed() and self._loop.is_running():
@@ -286,6 +287,7 @@ class AsyncBridge:
 
         Args:
             ready_event: Threading event to signal when loop is ready for operations
+
         """
         if self._loop is None:
             return  # Should never happen, but satisfies type checker
@@ -337,8 +339,7 @@ class AsyncBridge:
                 logger.debug(f"AsyncBridge: Error closing loop for thread {self._thread_id}: {e}")
 
     def run_async(self, coro: Coroutine[Any, Any, T]) -> T:
-        """
-        Run an async coroutine from a sync context.
+        """Run an async coroutine from a sync context.
 
         Args:
             coro: The coroutine to run
@@ -348,6 +349,7 @@ class AsyncBridge:
 
         Raises:
             RuntimeError: If called from within an async context
+
         """
         start_time = time.perf_counter()
         success = False
@@ -359,6 +361,7 @@ class AsyncBridge:
 
             Raises:
                 RuntimeError: Always raised to indicate misuse of run_async() from async context.
+
             """
             raise RuntimeError(
                 "Cannot use AsyncBridge.run_async() from within an async context. "
@@ -411,8 +414,7 @@ class AsyncBridge:
                 )
 
     def run_async_with_timeout(self, coro: Coroutine[Any, Any, T], timeout: float) -> T:
-        """
-        Run an async coroutine with a timeout.
+        """Run an async coroutine with a timeout.
 
         Implements defense-in-depth by applying timeout at both the asyncio level
         (asyncio.wait_for) and the future level (future.result).
@@ -426,6 +428,7 @@ class AsyncBridge:
 
         Raises:
             TimeoutError: If the coroutine doesn't complete within the timeout
+
         """
         start_time = time.perf_counter()
         success = False
@@ -483,8 +486,7 @@ class AsyncBridge:
                 )
 
     def shutdown(self) -> None:
-        """
-        Shutdown the event loop for this thread.
+        """Shutdown the event loop for this thread.
 
         This is called automatically on program exit but can be called
         manually if needed.
@@ -531,8 +533,7 @@ class AsyncBridge:
                     logger.debug(f"AsyncBridge: Thread {self._thread_id} stopped gracefully")
 
     def __enter__(self) -> "AsyncBridge":
-        """
-        Context manager entry - ensures loop is running.
+        """Context manager entry - ensures loop is running.
 
         Usage:
             with AsyncBridge.get_instance() as bridge:
@@ -540,6 +541,7 @@ class AsyncBridge:
 
         Returns:
             AsyncBridge: The current bridge instance with an active event loop
+
         """
         self.ensure_loop()
         logger.debug(f"AsyncBridge: Entered context for thread {self._thread_id}")
@@ -552,8 +554,7 @@ class AsyncBridge:
 
     @classmethod
     def set_metrics_callback(cls, callback: Callable[[str, dict[str, Any]], None] | None) -> None:
-        """
-        Set a callback for metrics collection.
+        """Set a callback for metrics collection.
 
         The callback will be invoked after each async operation with:
         - event_name: str - Name of the operation ("async_bridge_run", "async_bridge_run_with_timeout")
@@ -572,14 +573,14 @@ class AsyncBridge:
                 print(f"{event}: {metrics}")
 
             AsyncBridge.set_metrics_callback(my_metrics_handler)
+
         """
         cls._metrics_callback = callback
         logger.debug(f"AsyncBridge: Metrics callback {'enabled' if callback else 'disabled'}")
 
     @classmethod
     def _cleanup_all(cls) -> None:
-        """
-        Cleanup all event loops on program exit.
+        """Cleanup all event loops on program exit.
 
         Attempts to shutdown all AsyncBridge instances gracefully, logging
         any errors encountered during cleanup for diagnostics.
@@ -604,8 +605,7 @@ class AsyncBridge:
 
 # Convenience functions
 def run_async[T](coro: Coroutine[Any, Any, T]) -> T:
-    """
-    Convenience function to run async code from sync context.
+    """Provide convenience wrapper to run async code from sync context.
 
     Args:
         coro: The coroutine to run
@@ -615,14 +615,14 @@ def run_async[T](coro: Coroutine[Any, Any, T]) -> T:
 
     Usage:
         result = run_async(my_async_func())
+
     """
     bridge = AsyncBridge.get_instance()
     return bridge.run_async(coro)
 
 
 def run_async_with_timeout[T](coro: Coroutine[Any, Any, T], timeout: float) -> T:
-    """
-    Convenience function to run async code with timeout.
+    """Provide convenience wrapper to run async code with timeout.
 
     Args:
         coro: The coroutine to run
@@ -636,6 +636,7 @@ def run_async_with_timeout[T](coro: Coroutine[Any, Any, T], timeout: float) -> T
 
     Usage:
         result = run_async_with_timeout(my_async_func(), 5.0)
+
     """
     bridge = AsyncBridge.get_instance()
     return bridge.run_async_with_timeout(coro, timeout)
@@ -646,8 +647,7 @@ def run_async_with_timeout[T](coro: Coroutine[Any, Any, T], timeout: float) -> T
 
 
 def context_aware_sync[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T | Coroutine[Any, Any, T]]:
-    """
-    Decorator that makes an async function context-aware.
+    """Decorate to makes an async function context-aware.
 
     In GUI mode: Returns sync result via AsyncBridge
     In CLI/TUI mode: Returns coroutine for await
@@ -668,6 +668,7 @@ def context_aware_sync[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> 
 
     Returns:
         A wrapper that adapts based on runtime mode
+
     """
 
     @wraps(async_func)
@@ -677,6 +678,7 @@ def context_aware_sync[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> 
         Returns:
             T | Coroutine[Any, Any, T]: In GUI mode, returns the sync result of type T.
                 In CLI/TUI mode, returns a coroutine that must be awaited.
+
         """
         coro = async_func(*args, **kwargs)
 
@@ -696,8 +698,7 @@ def context_aware_sync[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> 
 
 
 def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
-    """
-    Smart await that automatically chooses between AsyncBridge and native await.
+    """Smart await that automatically chooses between AsyncBridge and native await.
 
     In GUI mode: Uses AsyncBridge
     In CLI/TUI mode: Raises error (caller should use native await)
@@ -718,6 +719,7 @@ def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
 
     Raises:
         RuntimeError: If called in CLI/TUI mode (should use native await)
+
     """
     if GlobalRegistry.is_gui_mode():
         bridge = AsyncBridge.get_instance()
@@ -730,8 +732,7 @@ def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
 
 
 def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]], strict: bool = False) -> Callable[..., T]:
-    """
-    Create a sync wrapper for an async function with context-aware execution.
+    """Create a sync wrapper for an async function with context-aware execution.
 
     This wrapper automatically chooses the appropriate async execution method:
     - GUI mode: Uses AsyncBridge (Qt event loop integration)
@@ -748,6 +749,7 @@ def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]], st
 
     Raises:
         RuntimeError: If strict=True and called in CLI/TUI mode.
+
     """
     import asyncio
 

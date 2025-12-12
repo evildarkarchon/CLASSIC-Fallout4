@@ -1,5 +1,4 @@
-"""
-Unpacked mod scanner component for CLASSIC_ScanGame.
+"""Unpacked mod scanner component for CLASSIC_ScanGame.
 
 This module provides specialized scanning functionality for unpacked (loose) mod files,
 handling directory traversal, file type detection, cleanup operations, and issue tracking.
@@ -19,8 +18,7 @@ from ClassicLib.ScanGame.core.file_operations import FileOperations
 
 
 class UnpackedModsScanner:
-    """
-    Handles unpacked (loose) mod file scanning.
+    """Handle unpacked (loose) mod file scanning.
 
     This class provides specialized functionality for scanning unpacked mod files
     in the file system. It performs directory traversal, file type detection,
@@ -32,16 +30,17 @@ class UnpackedModsScanner:
         walk_executor (ThreadPoolExecutor): Executor for async directory walking operations.
         file_operations (FileOperations): Component for file/folder movement operations.
         dds_processor (DDSProcessor): Component for DDS texture validation.
+
     """
 
     def __init__(self, walk_executor: ThreadPoolExecutor, file_operations: FileOperations, dds_processor: DDSProcessor) -> None:
-        """
-        Initialize the UnpackedModsScanner.
+        """Initialize the UnpackedModsScanner.
 
         Args:
             walk_executor: Thread pool executor for async directory operations.
             file_operations: Component for handling file operations.
             dds_processor: Component for DDS texture processing.
+
         """
         self.walk_executor = walk_executor
         self.file_operations = file_operations
@@ -54,8 +53,7 @@ class UnpackedModsScanner:
         xse_scriptfiles: dict[str, str],
         dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> dict[str, set[str]]:
-        """
-        Scan unpacked mod files and return detected issues.
+        """Scan unpacked mod files and return detected issues.
 
         This method recursively scans the mod directory for various issues including:
         - Cleanup items (readme files, FOMOD folders)
@@ -85,6 +83,7 @@ class UnpackedModsScanner:
             ... )
             >>> len(issues["tex_frmt"])
             3
+
         """
         # Initialize sets for collecting different issue types
         issue_lists: dict[str, set[str]] = {
@@ -138,8 +137,7 @@ class UnpackedModsScanner:
         return issue_lists
 
     async def walk_directory_async(self, path: Path) -> list[tuple[Path, list[str], list[str]]]:
-        """
-        Recursively walk through directory tree asynchronously.
+        """Recursively walk through directory tree asynchronously.
 
         This method performs optimized directory traversal using pathlib's rglob,
         collecting all directories, subdirectories, and files in the tree. The
@@ -159,14 +157,15 @@ class UnpackedModsScanner:
             >>> dirs = await scanner.walk_directory_async(Path("/mods"))
             >>> len(dirs)
             125
+
         """
 
         def _walk() -> list[tuple[Path, list[str], list[str]]]:
-            """
-            Optimized directory traversal using pathlib's rglob.
+            """Optimized directory traversal using pathlib's rglob.
 
             Returns:
                 List of tuples with directory info.
+
             """
             # Use rglob to get all paths in one operation - much faster than os.walk
             try:
@@ -220,8 +219,7 @@ class UnpackedModsScanner:
         filter_names: tuple,
         dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> None:
-        """
-        Process a single directory for issues and cleanup operations.
+        """Process a single directory for issues and cleanup operations.
 
         This method processes all files and subdirectories in a given directory,
         performing cleanup operations (moving FOMOD folders and readme files),
@@ -246,6 +244,7 @@ class UnpackedModsScanner:
             ...     Path("/mods/textures"), ["subdir"], ["file.dds"],
             ...     context, "F4SE", xse_scriptfiles, filter_names, dds_check_callback
             ... )
+
         """
         mod_path = context["mod_path"]
         issue_lists = context["issue_lists"]
@@ -322,8 +321,7 @@ class UnpackedModsScanner:
         xse_scriptfiles: dict[str, str],
         filter_names: tuple,
     ) -> tuple[bool, bool]:
-        """
-        Process a single file based on its type.
+        """Process a single file based on its type.
 
         This method examines a file and takes appropriate action based on its type:
         - Cleanup files (readme, changelog) are queued for moving
@@ -359,6 +357,7 @@ class UnpackedModsScanner:
             ... )
             >>> len(dds_list)
             1
+
         """
         issue_lists = context["issue_lists"]
         issue_locks = context["issue_locks"]

@@ -37,6 +37,7 @@ Example:
     >>> from ClassicLib.YamlSettings import yaml_settings_async, classic_settings_async
     >>> version = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.version")
     >>> vr_mode = await classic_settings_async(bool, "VR Mode", False)
+
 """
 
 # ==========================================

@@ -86,6 +86,7 @@ class YamlOperations:
             >>> config = yaml_ops.load_yaml_file("config.yaml")
             >>> print(config["setting"])
             'value'
+
         """
 
     def parse_yaml(self, content: str) -> Any:
@@ -116,6 +117,7 @@ class YamlOperations:
             >>> data = yaml_ops.parse_yaml("key: value\\nlist:\\n  - item1\\n  - item2")
             >>> print(data["list"])
             ['item1', 'item2']
+
         """
 
     def dump_yaml(self, data: Any) -> str:
@@ -146,6 +148,7 @@ class YamlOperations:
               - 1
               - 2
               - 3
+
         """
 
     def save_yaml_file(self, path: str | Path, data: dict[str, Any]) -> None:
@@ -165,6 +168,7 @@ class YamlOperations:
         Example:
             >>> yaml_ops = YamlOperations()
             >>> yaml_ops.save_yaml_file("output.yaml", {"key": "value"})
+
         """
 
     def get_setting(self, data: dict[str, Any], key_path: str) -> Any | None:
@@ -186,6 +190,7 @@ class YamlOperations:
             >>> host = yaml_ops.get_setting(data, "database.host")
             >>> print(host)
             'localhost'
+
         """
 
     def set_setting(self, data: dict[str, Any], key_path: str, value: Any) -> dict[str, Any]:
@@ -210,6 +215,7 @@ class YamlOperations:
             >>> data = yaml_ops.parse_yaml("database: {}")
             >>> data = yaml_ops.set_setting(data, "database.host", "localhost")
             >>> data = yaml_ops.set_setting(data, "database.port", 5432)
+
         """
 
     def get_string_value(self, data: dict[str, Any], key_path: str, default: str) -> str:
@@ -238,6 +244,7 @@ class YamlOperations:
             >>> name = yaml_ops.get_string_value(data, "game.name", "Unknown")
             >>> print(name)
             'Fallout4'
+
         """
 
     def get_vec_value(self, data: dict[str, Any], key_path: str) -> list[str]:
@@ -267,6 +274,7 @@ class YamlOperations:
             >>> plugins = yaml_ops.get_vec_value(data, "game.plugins")
             >>> print(plugins)
             ['plugin1.esp', 'plugin2.esp', 'plugin3.esp']
+
         """
 
     def get_hashmap_value(self, data: dict[str, Any], key_path: str) -> dict[str, str]:
@@ -295,6 +303,7 @@ class YamlOperations:
             >>> mods = yaml_ops.get_hashmap_value(data, "game.mods")
             >>> print(mods)
             {'mod1': 'Description 1', 'mod2': 'Description 2'}
+
         """
 
     def clear_cache(self) -> None:
@@ -308,6 +317,7 @@ class YamlOperations:
             >>> yaml_ops.load_yaml_file("large_config.yaml")
             >>> # ... use data ...
             >>> yaml_ops.clear_cache()  # Free memory
+
         """
 
     def get_cache_stats(self) -> dict[str, int]:
@@ -327,4 +337,5 @@ class YamlOperations:
             >>> stats = yaml_ops.get_cache_stats()
             >>> print(f"Cached items: {stats['entries']}")
             >>> print(f"Memory used: {stats['memory_bytes']} bytes")
+
         """

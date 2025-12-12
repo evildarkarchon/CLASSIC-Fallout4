@@ -102,6 +102,7 @@ class ResourceType:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -109,6 +110,7 @@ class ResourceType:
 
         Returns:
             The resource type name as a string.
+
         """
 
 class ResourceInfo:
@@ -135,6 +137,7 @@ class ResourceInfo:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -142,6 +145,7 @@ class ResourceInfo:
 
         Returns:
             A formatted string with path, type, and size.
+
         """
 
 def detect_resource_type(path: str) -> ResourceType:
@@ -156,6 +160,7 @@ def detect_resource_type(path: str) -> ResourceType:
     Example:
         >>> rt = detect_resource_type("textures/armor.dds")
         >>> assert rt.as_str() == "texture"
+
     """
 
 def is_supported_resource(path: str) -> bool:
@@ -170,6 +175,7 @@ def is_supported_resource(path: str) -> bool:
     Example:
         >>> assert is_supported_resource("texture.dds")
         >>> assert not is_supported_resource("readme.txt")
+
     """
 
 def parse_resource_type(type_name: str) -> ResourceType:
@@ -184,6 +190,7 @@ def parse_resource_type(type_name: str) -> ResourceType:
     Example:
         >>> rt = parse_resource_type("texture")
         >>> assert rt.as_str() == "texture"
+
     """
 
 def enumerate_resources(root: str, filter_type: ResourceType | None = None) -> list[ResourceInfo]:
@@ -205,6 +212,7 @@ def enumerate_resources(root: str, filter_type: ResourceType | None = None) -> l
     Example:
         >>> resources = enumerate_resources("Data")
         >>> print(f"Found {len(resources)} resources")
+
     """
 
 def count_resources_by_type(root: str) -> list[tuple[ResourceType, int]]:
@@ -223,6 +231,7 @@ def count_resources_by_type(root: str) -> list[tuple[ResourceType, int]]:
         >>> counts = count_resources_by_type("Data")
         >>> for resource_type, count in counts:
         ...     print(f"{resource_type.as_str()}: {count} files")
+
     """
 
 def validate_resource(path: str) -> None:
@@ -241,4 +250,5 @@ def validate_resource(path: str) -> None:
         ...     print("Resource is valid")
         ... except IOError as e:
         ...     print(f"Validation failed: {e}")
+
     """

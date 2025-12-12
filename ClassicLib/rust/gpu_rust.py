@@ -1,5 +1,4 @@
-"""
-Rust-accelerated GPUDetector wrapper.
+"""Rust-accelerated GPUDetector wrapper.
 
 This module provides a transparent wrapper around the Rust GpuDetector implementation,
 maintaining full API compatibility with the Python reference while delivering performance
@@ -20,8 +19,7 @@ RUST_AVAILABLE, RustGpuDetector = detect_component("classic_scanlog", "GpuDetect
 
 
 def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
-    """
-    Extracts and processes GPU information from a given system specification.
+    """Extract and processes GPU information from a given system specification.
 
     This function takes a list of system specification data typically in string
     format and identifies GPU-related details such as the primary GPU name,
@@ -40,6 +38,7 @@ def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
               If not found, defaults to "Unknown".
             - rival: str | None - The name of the rival GPU manufacturer. If not found,
               defaults to None.
+
     """
     if RUST_AVAILABLE and RustGpuDetector is not None:
         # Use Rust implementation

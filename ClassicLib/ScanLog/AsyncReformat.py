@@ -1,5 +1,4 @@
-"""
-Provides asynchronous utilities for handling log file reformatting, crash log
+"""Provide asynchronous utilities for handling log file reformatting, crash log
 processing, file movement, and file copying operations.
 
 This module includes asynchronous functions designed to efficiently handle
@@ -20,8 +19,7 @@ from ClassicLib.YamlSettings import classic_settings_async
 
 
 async def reformat_single_log_async(file_path: Path, remove_list: tuple[str, ...], simplify_logs: bool) -> None:
-    """
-    Reformats a single log file asynchronously with specified adjustments.
+    """Reformats a single log file asynchronously with specified adjustments.
 
     This function reads the log file, applies formatting rules, removes unwanted
     lines, simplifies logs if specified, and rewrites the file with the modified
@@ -38,6 +36,7 @@ async def reformat_single_log_async(file_path: Path, remove_list: tuple[str, ...
 
     Raises:
         OSError: If an error occurs while reading or writing the file.
+
     """
     try:
         # Read file asynchronously
@@ -87,8 +86,7 @@ async def reformat_single_log_async(file_path: Path, remove_list: tuple[str, ...
 
 
 async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple[str, ...]) -> None:
-    """
-    Reformats crash log files asynchronously by processing them in manageable batches
+    """Reformats crash log files asynchronously by processing them in manageable batches
     to prevent overwhelming the file system. Each log file is reformatted with specific
     processing that involves removing specified log entries and optionally simplifying
     log content.
@@ -98,6 +96,7 @@ async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple
             to be reformatted.
         remove_list (tuple[str, ...]): A tuple containing substrings or patterns that
             should be removed from the logs.
+
     """
     logger.debug("- - - INITIATED ASYNC CRASH LOG FILE REFORMAT")
     simplify_logs: bool = bool(await classic_settings_async(bool, "Simplify Logs"))
@@ -122,8 +121,7 @@ async def crashlogs_reformat_async(crashlog_list: list[Path], remove_list: tuple
 
 
 async def batch_file_move_async(operations: list[tuple[Path, Path]]) -> None:
-    """
-    Moves multiple files asynchronously to their specified destinations. Each file
+    """Move multiple files asynchronously to their specified destinations. Each file
     move operation is executed concurrently using asyncio.
 
     Args:
@@ -135,11 +133,11 @@ async def batch_file_move_async(operations: list[tuple[Path, Path]]) -> None:
         OSError: Raised if there is an issue with renaming (moving) a file, such as
             permission errors or non-existent paths. Errors for individual files
             are logged.
+
     """
 
     async def move_file(src: Path, dst: Path) -> None:
-        """
-        Moves a file from the source path to the destination path asynchronously. This
+        """Move a file from the source path to the destination path asynchronously. This
         operation renames the file in the file system and logs the action. In case of
         an error, logs the error message.
 
@@ -150,6 +148,7 @@ async def batch_file_move_async(operations: list[tuple[Path, Path]]) -> None:
         Raises:
             OSError: If there is an issue with moving the file, such as
                 permission errors or invalid paths.
+
         """
         try:
             await asyncio.to_thread(src.rename, dst)
@@ -163,8 +162,7 @@ async def batch_file_move_async(operations: list[tuple[Path, Path]]) -> None:
 
 
 async def batch_file_copy_async(operations: list[tuple[Path, Path]]) -> None:
-    """
-    Executes batch file copy operations concurrently using asynchronous tasks.
+    """Execute batch file copy operations concurrently using asynchronous tasks.
 
     This function uses asynchronous threading to perform file copy operations,
     executing multiple copy tasks concurrently. It leverages asyncio.gather to
@@ -174,12 +172,12 @@ async def batch_file_copy_async(operations: list[tuple[Path, Path]]) -> None:
         operations (list[tuple[Path, Path]]): A list of tuples where each tuple
             contains the source path and destination path for the file copy
             operation.
+
     """
     import shutil
 
     async def copy_file(src: Path, dst: Path) -> None:
-        """
-        Asynchronously copies a file from the source path to the destination path.
+        """Asynchronously copies a file from the source path to the destination path.
 
         This function uses `shutil.copy2` to copy the file, preserving metadata. The
         copy operation is performed in a background thread to avoid blocking the
@@ -193,6 +191,7 @@ async def batch_file_copy_async(operations: list[tuple[Path, Path]]) -> None:
         Raises:
             OSError: If an OS-level error occurs during the copy.
             shutil.Error: If an error specific to the `shutil` library occurs.
+
         """
         try:
             await asyncio.to_thread(shutil.copy2, src, dst)

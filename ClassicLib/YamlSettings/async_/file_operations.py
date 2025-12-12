@@ -12,6 +12,7 @@ Example:
     >>> ops = YamlFileOperations()
     >>> data = await ops.load_yaml_file(Path("config.yaml"))
     >>> await ops.save_yaml_file(Path("config.yaml"), data)
+
 """
 
 import asyncio
@@ -50,6 +51,7 @@ class YamlFileOperations:
         >>> # Modify and save
         >>> data["key"] = "value"
         >>> await ops.save_yaml_file(Path("settings.yaml"), data)
+
     """
 
     # Static YAML stores that don't change based on game selection
@@ -73,6 +75,7 @@ class YamlFileOperations:
         Note:
             Rust acceleration is only used for static database files.
             User-editable files always use Python to preserve comments.
+
         """
         self.io_core = io_core or FileIOCore()
         self._file_cache: dict[str, dict[str, Any]] = {}
@@ -111,6 +114,7 @@ class YamlFileOperations:
             True
             >>> ops._should_use_rust_for_file(Path("CLASSIC Settings.yaml"))
             False
+
         """
         # Check if this file path corresponds to a static YAML store
         # Static stores are read-only and don't need comment preservation
@@ -156,6 +160,7 @@ class YamlFileOperations:
             >>> path = YamlFileOperations.get_path_for_store(YAML.Main)
             >>> print(path)
             CLASSIC Data/databases/CLASSIC Main.yaml
+
         """
         # Use ResourceLoader to get the data directory
         # This handles both development and installed package scenarios
@@ -194,7 +199,7 @@ class YamlFileOperations:
                 raise ValueError(f"Unknown YAML store: {yaml_store}")
 
     async def parse_yaml_content(self, content: str, preserve_comments: bool = True) -> dict[str, Any]:
-        """Parse YAML content string into a dictionary.
+        r"""Parse YAML content string into a dictionary.
 
         Can use Rust acceleration for read-only files or Python parser with
         comment preservation for user-editable files.
@@ -213,6 +218,7 @@ class YamlFileOperations:
         Example:
             >>> content = "key: value\\n# comment\\nother: data"
             >>> data = await ops.parse_yaml_content(content, preserve_comments=True)
+
         """
         # Use Rust acceleration for read-only files
         if not preserve_comments and self.rust_yaml:
@@ -254,6 +260,7 @@ class YamlFileOperations:
         Example:
             >>> data = {"key": "value", "list": [1, 2, 3]}
             >>> yaml_str = await YamlFileOperations.dump_yaml_content(data)
+
         """
         # Always use Python implementation to preserve comments from CommentedMap
         yaml = ruamel.yaml.YAML()
@@ -291,6 +298,7 @@ class YamlFileOperations:
         Example:
             >>> data = await ops.load_yaml_file(Path("config.yaml"))
             >>> print(data.get("setting", "default"))
+
         """
         # Check cache first if enabled
         file_key = str(file_path)
@@ -363,6 +371,7 @@ class YamlFileOperations:
             >>> success = await ops.save_yaml_file(Path("config.yaml"), data)
             >>> if success:
             ...     print("File saved successfully")
+
         """
         try:
             # Always use Python implementation for writing to preserve comments
@@ -393,6 +402,7 @@ class YamlFileOperations:
         Example:
             >>> await ops.ensure_file_exists(Path("new_config.yaml"))
             >>> # File now exists (empty if it was just created)
+
         """
         if not await asyncio.to_thread(file_path.exists):
             logger.debug(f"Creating missing YAML file: {file_path}")
@@ -422,6 +432,7 @@ class YamlFileOperations:
             >>> backup_path = await ops.backup_file(Path("config.yaml"))
             >>> print(backup_path)
             config.yaml.bak
+
         """
         backup_path = file_path.with_suffix(file_path.suffix + backup_suffix)
 
@@ -463,6 +474,7 @@ class YamlFileOperations:
             >>> data = await ops.regenerate_settings_file(YAML.Ignore)
             >>> if data:
             ...     print("Ignore file regenerated successfully")
+
         """
         logger.info(f"Regenerating {yaml_store} file")
 

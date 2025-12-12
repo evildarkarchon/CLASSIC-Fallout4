@@ -71,6 +71,7 @@ class YamlFile:
         'Settings'
         >>> print(settings.description())
         'CLASSIC Settings.yaml'
+
     """
 
     Main: YamlFile
@@ -104,6 +105,7 @@ class YamlFile:
             >>> from classic_constants import YamlFile
             >>> assert YamlFile.Main.as_str() == "Main"
             >>> assert YamlFile.Settings.as_str() == "Settings"
+
         """
 
     def description(self) -> str:
@@ -116,6 +118,7 @@ class YamlFile:
             >>> from classic_constants import YamlFile
             >>> desc = YamlFile.Main.description()
             >>> assert "CLASSIC Main.yaml" in desc
+
         """
 
     def __eq__(self, other: object) -> bool:
@@ -126,6 +129,7 @@ class YamlFile:
 
         Returns:
             True if both are the same variant, False otherwise.
+
         """
 
     def __hash__(self) -> int:
@@ -133,6 +137,7 @@ class YamlFile:
 
         Returns:
             Hash value suitable for use in sets and dicts.
+
         """
 
     def __repr__(self) -> str:
@@ -140,6 +145,7 @@ class YamlFile:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -147,6 +153,7 @@ class YamlFile:
 
         Returns:
             The variant name as a string.
+
         """
 
 class GameId:
@@ -168,6 +175,7 @@ class GameId:
         'Fallout4.exe'
         >>> print(game.is_vr())
         False
+
     """
 
     Fallout4: GameId
@@ -192,6 +200,7 @@ class GameId:
             >>> from classic_constants import GameId
             >>> assert GameId.Fallout4.as_str() == "Fallout4"
             >>> assert GameId.Fallout4VR.as_str() == "Fallout4VR"
+
         """
 
     def exe_name(self) -> str:
@@ -204,6 +213,7 @@ class GameId:
             >>> from classic_constants import GameId
             >>> assert GameId.Fallout4.exe_name() == "Fallout4.exe"
             >>> assert GameId.Skyrim.exe_name() == "SkyrimSE.exe"
+
         """
 
     def is_vr(self) -> bool:
@@ -216,6 +226,7 @@ class GameId:
             >>> from classic_constants import GameId
             >>> assert not GameId.Fallout4.is_vr()
             >>> assert GameId.Fallout4VR.is_vr()
+
         """
 
     def __eq__(self, other: object) -> bool:
@@ -226,6 +237,7 @@ class GameId:
 
         Returns:
             True if both are the same variant, False otherwise.
+
         """
 
     def __hash__(self) -> int:
@@ -233,6 +245,7 @@ class GameId:
 
         Returns:
             Hash value suitable for use in sets and dicts.
+
         """
 
     def __repr__(self) -> str:
@@ -240,6 +253,7 @@ class GameId:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -247,6 +261,7 @@ class GameId:
 
         Returns:
             The game identifier as a string.
+
         """
 
 def must_not_be_none(key: str) -> bool:
@@ -266,4 +281,5 @@ def must_not_be_none(key: str) -> bool:
         >>> assert must_not_be_none("SCAN Custom Path")
         >>> assert must_not_be_none("Root_Folder_Game")
         >>> assert not must_not_be_none("Some Other Setting")
+
     """

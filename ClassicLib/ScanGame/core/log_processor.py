@@ -18,8 +18,7 @@ from ClassicLib.YamlSettings import yaml_settings_async  # pyright: ignore[repor
 
 
 class LogProcessor:
-    """
-    Class for processing log files and detecting errors.
+    """Class for processing log files and detecting errors.
 
     Handles concurrent reading and analysis of log files located in a specified folder.
     The class ensures efficient processing with the use of concurrency controls like semaphores.
@@ -29,11 +28,11 @@ class LogProcessor:
     Attributes:
         log_read_semaphore (asyncio.Semaphore): Semaphore used to control concurrency when
             processing log files asynchronously.
+
     """
 
     def __init__(self, log_read_semaphore: asyncio.Semaphore) -> None:
-        """
-        Initializes an instance of the class with the provided log semaphore.
+        """Initialize an instance of the class with the provided log semaphore.
 
         The constructor takes an asyncio semaphore object to control the
         simultaneous execution of log-reading operations.
@@ -41,12 +40,12 @@ class LogProcessor:
         Args:
             log_read_semaphore (asyncio.Semaphore): Semaphore that regulates access
                 to log-reading operations based on its permits.
+
         """
         self.log_read_semaphore = log_read_semaphore
 
     async def check_log_errors(self, folder_path: Path | str) -> str:
-        """
-        Checks for errors in log files within the specified folder path and returns a detailed
+        """Check for errors in log files within the specified folder path and returns a detailed
         error report. This function scans log files for specific error patterns as defined in
         the YAML configuration and allows for the exclusion of certain files and error types.
 
@@ -57,11 +56,11 @@ class LogProcessor:
         Returns:
             str: A detailed error report containing information about detected errors in the
                 log files.
+
         """
 
         def format_error_report(file_path: Path, errors: list[str], total_count: int) -> list[str]:
-            """
-            Formats an error report for a given file path and list of error messages.
+            """Format an error report for a given file path and list of error messages.
 
             This function generates a formatted error report that includes a warning message,
             the file path of the log, the list of error messages, and a summary of the total
@@ -74,6 +73,7 @@ class LogProcessor:
 
             Returns:
                 list[str]: A list of strings containing the formatted error report.
+
             """
             report = [
                 "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n",
@@ -109,8 +109,7 @@ class LogProcessor:
         ]
 
         async def process_single_log(log_file_path: Path) -> list[str]:
-            """
-            Processes a single log file to detect and filter specific error messages.
+            """Process a single log file to detect and filter specific error messages.
 
             This asynchronous function reads a log file, identifies error lines based on
             specified criteria, and formats those errors for further processing. Different
@@ -125,6 +124,7 @@ class LogProcessor:
                     the log file. If no errors are detected, an empty list is returned.
                     If the file cannot be read, a list with a single error message is
                     returned.
+
             """
             async with self.log_read_semaphore:
                 try:

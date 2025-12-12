@@ -1,5 +1,4 @@
-"""
-Mod detection fragment generation utilities.
+"""Mod detection fragment generation utilities.
 
 This module provides functions for generating report fragments
 related to mod detection and warnings.
@@ -14,8 +13,7 @@ def detect_mods_single_fragment(
     yaml_dict: dict[str, str],
     crashlog_plugins: dict[str, str],
 ) -> ReportFragment:
-    """
-    Detects mod-related warnings by analyzing YAML-defined mod descriptions
+    """Detect mod-related warnings by analyzing YAML-defined mod descriptions
     against provided crashlog plugins and returns a formatted report fragment.
 
     Args:
@@ -29,6 +27,7 @@ def detect_mods_single_fragment(
     Returns:
         ReportFragment: An object representing the formatted list of mod-related
             warnings if any are found; otherwise, an empty report fragment.
+
     """
     lines = []
     found_count = 0
@@ -54,8 +53,7 @@ def detect_mods_single_fragment(
 
 
 def generate_mod_check_header_fragment(check_type: str) -> tuple[str, ...]:
-    """
-    Generates a markdown header fragment for mods based on the specified check type.
+    """Generate a markdown header fragment for mods based on the specified check type.
 
     This function creates a tuple containing a single markdown header string for
     displaying mod check information, which is formatted to include the provided
@@ -66,5 +64,6 @@ def generate_mod_check_header_fragment(check_type: str) -> tuple[str, ...]:
 
     Returns:
         tuple[str, ...]: A tuple containing the formatted markdown header string.
+
     """
     return (f"### Checking For Mods That {check_type}\n\n",)

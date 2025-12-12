@@ -1,3 +1,11 @@
+"""QML-based graphical user interface for CLASSIC Fallout 4 crash log analyzer.
+
+This module provides the Qt/QML backend implementation for CLASSIC, including:
+- ClassicBackend: Main QObject exposing properties and slots to QML
+- ScanWorker: Background worker for crash log and game file scanning
+- PapyrusWorker: Real-time Papyrus script log monitoring
+"""
+
 import asyncio
 import sys
 from operator import itemgetter
@@ -35,6 +43,7 @@ class ScanWorker(QObject):
         error: Signal emitted when the scan fails, carrying title, message,
             and details strings.
         scan_type: The type of scan to perform ("crashlogs" or "gamefiles").
+
     """
 
     finished = Signal()
@@ -47,6 +56,7 @@ class ScanWorker(QObject):
             scan_type: The type of scan to perform. Valid values are
                 "crashlogs" for crash log analysis or "gamefiles" for
                 game file integrity scanning.
+
         """
         super().__init__()
         self.scan_type = scan_type
@@ -64,6 +74,7 @@ class ScanWorker(QObject):
             AsyncBridge is designed for the main Qt thread and creates
             threading conflicts when used from QThread workers (it spawns
             a plain Python thread which can't use Qt timers).
+
         """
         try:
             if self.scan_type == "crashlogs":
@@ -91,6 +102,7 @@ class PapyrusWorker(QObject):
         statsUpdated: Signal emitted with updated statistics (dumps, stacks,
             ratio, warnings, errors).
         error: Signal emitted when an error occurs during monitoring.
+
     """
 
     statsUpdated = Signal(int, int, float, int, int)  # dumps, stacks, ratio, warns, errors
@@ -139,6 +151,7 @@ class PapyrusWorker(QObject):
         Returns:
             A tuple containing (dump_count, stacks, ratio, warnings, errors)
             where ratio is dumps/stacks or 0 if stacks is 0.
+
         """
         stacks = 0
         warnings = 0
@@ -182,6 +195,7 @@ class ClassicBackend(QObject):
         updateCheck: Whether to check for application updates.
         iniPath: Custom path for INI configuration files.
         papyrusMonitoring: Whether Papyrus log monitoring is active.
+
     """
 
     # Signals
@@ -228,6 +242,7 @@ class ClassicBackend(QObject):
     # Properties
     @Property(str, notify=stagingModsPathChanged)
     def stagingModsPath(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get the path to the mod staging folder."""
         return self._staging_mods_path
 
     @stagingModsPath.setter
@@ -239,6 +254,7 @@ class ClassicBackend(QObject):
 
     @Property(str, notify=customScanPathChanged)
     def customScanPath(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get the custom scan path."""
         return self._custom_scan_path
 
     @customScanPath.setter
@@ -250,6 +266,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=vrModeChanged)
     def vrMode(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get VR mode enabled status."""
         return self._vr_mode or False
 
     @vrMode.setter
@@ -261,6 +278,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=fcxModeChanged)
     def fcxMode(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get FCX mode enabled status."""
         return self._fcx_mode or False
 
     @fcxMode.setter
@@ -272,6 +290,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=simplifyLogsChanged)
     def simplifyLogs(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get simplify logs setting."""
         return self._simplify_logs or False
 
     @simplifyLogs.setter
@@ -283,6 +302,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=showFidValuesChanged)
     def showFidValues(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get show FormID values setting."""
         return self._show_fid_values or False
 
     @showFidValues.setter
@@ -294,6 +314,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=moveInvalidLogsChanged)
     def moveInvalidLogs(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get move invalid logs setting."""
         return self._move_invalid_logs or False
 
     @moveInvalidLogs.setter
@@ -305,6 +326,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=updateCheckChanged)
     def updateCheck(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get update check setting."""
         return self._update_check or False
 
     @updateCheck.setter
@@ -316,6 +338,7 @@ class ClassicBackend(QObject):
 
     @Property(str, notify=iniPathChanged)
     def iniPath(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get the INI folder path."""
         return self._ini_path
 
     @iniPath.setter
@@ -327,6 +350,7 @@ class ClassicBackend(QObject):
 
     @Property(bool, notify=papyrusMonitoringChanged)
     def papyrusMonitoring(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get papyrus monitoring status."""
         return self._papyrus_monitoring
 
     @papyrusMonitoring.setter
@@ -402,6 +426,7 @@ class ClassicBackend(QObject):
 
         Note:
             Emits scanError signal if the operation fails.
+
         """
         # Map category to what BackupManager or manage_game_files expects
         # manage_game_files(selected_list, selected_mode)
@@ -425,6 +450,7 @@ class ClassicBackend(QObject):
 
         Note:
             Emits scanFinished on success or scanError on failure.
+
         """
         from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 
@@ -519,6 +545,7 @@ class ClassicBackend(QObject):
             - name: The filename of the report
             - path: The full path to the report file
             - date: The file modification timestamp
+
         """
         reports: list[dict[str, Any]] = []
 
@@ -555,6 +582,7 @@ class ClassicBackend(QObject):
         Returns:
             The text contents of the file, or an error message if the
             file cannot be read.
+
         """
         try:
             return Path(path).read_text(encoding="utf-8", errors="ignore")
@@ -576,6 +604,7 @@ class ClassicBackend(QObject):
         Note:
             Automatically refreshes the reports list on success.
             Logs an error if deletion fails.
+
         """
         try:
             p = Path(path_str)

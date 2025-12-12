@@ -1,5 +1,4 @@
-"""
-Rust Extension Loader with Multi-Path Support.
+"""Rust Extension Loader with Multi-Path Support.
 
 This module handles loading Rust extensions from multiple possible locations:
 1. PyInstaller _internal directory (bundled in executable)
@@ -19,8 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 class RustExtensionLoader:
-    """
-    Legacy loader wrapper for backward compatibility.
+    """Legacy loader wrapper for backward compatibility.
     Delegates to ClassicLib.integration.detector.
     """
 
@@ -48,8 +46,7 @@ class RustExtensionLoader:
         }
 
     def load_extension(self) -> Any | None:
-        """
-        Attempt to detect Rust components.
+        """Attempt to detect Rust components.
         Returns a dummy object if successful to satisfy legacy checks.
         """
         if self.is_loaded():
@@ -62,24 +59,19 @@ _rust_loader = RustExtensionLoader()
 
 
 def load_rust_extensions() -> bool:
-    """
-    Loads Rust extensions dynamically during runtime.
+    """Load Rust extensions dynamically during runtime.
     Now delegates to component detection.
     """
     return _rust_loader.is_loaded()
 
 
 def is_rust_available() -> bool:
-    """
-    Determines if the Rust extension is available.
-    """
+    """Determine if the Rust extension is available."""
     return _rust_loader.is_loaded()
 
 
 def get_rust_info() -> dict:
-    """
-    Fetches and returns information related to the Rust environment.
-    """
+    """Fetch and returns information related to the Rust environment."""
     return _rust_loader.get_load_info()
 
 

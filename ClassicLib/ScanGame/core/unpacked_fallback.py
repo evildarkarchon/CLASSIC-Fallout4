@@ -1,5 +1,4 @@
-"""
-Pure Python fallback implementation of UnpackedScanner.
+"""Pure Python fallback implementation of UnpackedScanner.
 
 This module provides a Python-only implementation of unpacked file scanning
 that matches the Rust interface.
@@ -18,6 +17,7 @@ class UnpackedIssues:
         xse_file: List of XSE script files detected.
         previs: List of previs/precombine files detected.
         dds_files: List of DDS files found (for batch dimension checking).
+
     """
 
     def __init__(
@@ -38,6 +38,7 @@ class UnpackedIssues:
             xse_file: XSE script files.
             previs: Previs/precombine files.
             dds_files: DDS files for batch checking.
+
         """
         self.animdata = animdata or []
         self.tex_frmt = tex_frmt or []
@@ -51,6 +52,7 @@ class UnpackedIssues:
 
         Returns:
             True if any issues detected, False otherwise.
+
         """
         return bool(self.animdata or self.tex_frmt or self.snd_frmt or self.xse_file or self.previs)
 
@@ -59,12 +61,13 @@ class UnpackedIssues:
 
         Returns:
             Total number of detected issues.
+
         """
         return len(self.animdata) + len(self.tex_frmt) + len(self.snd_frmt) + len(self.xse_file) + len(self.previs)
 
 
 class UnpackedScanner:
-    """Scans directories for unpacked files that should be in BA2 archives.
+    """Scan directories for unpacked files that should be in BA2 archives.
 
     This is a Python fallback implementation that matches the Rust interface.
 
@@ -73,6 +76,7 @@ class UnpackedScanner:
         >>> issues = scanner.scan_directory(Path("/game/Data"), ["f4se.dll"])
         >>> if issues.has_issues():
         ...     print(f"Found {issues.total_count()} issues")
+
     """
 
     def __init__(self) -> None:
@@ -97,6 +101,7 @@ class UnpackedScanner:
             ... )
             >>> for file in issues.tex_frmt:
             ...     print(f"Non-DDS texture: {file}")
+
         """
         issues = UnpackedIssues()
 

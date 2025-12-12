@@ -27,6 +27,7 @@ Usage:
 Note:
     For async/CLI production code, use the async submodule instead:
     >>> from ClassicLib.YamlSettings.async_ import yaml_settings_async
+
 """
 
 from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache

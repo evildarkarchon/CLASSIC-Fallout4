@@ -1,5 +1,4 @@
-"""
-Update management functionality for the CLASSIC interface.
+"""Update management functionality for the CLASSIC interface.
 
 This module contains a mixin class that handles update checking and notification functionality.
 """
@@ -25,8 +24,7 @@ if TYPE_CHECKING:
 
 
 class UpdateManagerMixin:
-    """
-    Mixin class providing update management functionality for the MainWindow.
+    """Mixin class providing update management functionality for the MainWindow.
 
     This class requires the following attributes to be present in the class it's mixed into:
     - is_update_check_running: bool tracking if update check is in progress
@@ -49,8 +47,7 @@ class UpdateManagerMixin:
         def force_update_check(self) -> None: ...
 
     def update_popup(self) -> None:
-        """
-        Updates the popup display by initiating an update check if one is not already running.
+        """Update the popup display by initiating an update check if one is not already running.
 
         This method ensures that the update checking process is initiated only
         if no other update check is currently ongoing. It flags the update as
@@ -58,6 +55,7 @@ class UpdateManagerMixin:
 
         Raises:
             None
+
         """
         if not self.is_update_check_running:
             self.is_update_check_running = True
@@ -65,8 +63,7 @@ class UpdateManagerMixin:
 
     # noinspection PyUnresolvedReferences
     def update_popup_explicit(self) -> None:
-        """
-        Executes an explicit popup update by modifying the update timer's behavior and
+        """Execute an explicit popup update by modifying the update timer's behavior and
         initiating the update process, ensuring the check occurs immediately.
 
         This function disconnects the timer's default slot for performing an update
@@ -79,6 +76,7 @@ class UpdateManagerMixin:
                 checks in the application.
             is_update_check_running (bool): Flag indicating whether an update check
                 is currently in progress.
+
         """
         self.update_check_timer.timeout.disconnect(self.perform_update_check)
         self.update_check_timer.timeout.connect(self.force_update_check)
@@ -87,8 +85,7 @@ class UpdateManagerMixin:
             self.update_check_timer.start(0)
 
     def perform_update_check(self) -> None:
-        """
-        Performs an update check by initializing and starting a worker thread.
+        """Perform an update check by initializing and starting a worker thread.
 
         This method stops any existing update check timer, verifies if an update
         check is already in progress, and then proceeds to create a new thread
@@ -99,6 +96,7 @@ class UpdateManagerMixin:
 
         Raises:
             None
+
         """
         self.update_check_timer.stop()
 
@@ -129,8 +127,7 @@ class UpdateManagerMixin:
         self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
 
     def force_update_check(self) -> None:
-        """
-        Performs a force update check by initiating a new thread and worker to handle
+        """Perform a force update check by initiating a new thread and worker to handle
         the update process explicitly. This method bypasses the typical settings and
         ensures an immediate update check is started if no other update check is already
         running. Handles proper thread and worker lifecycle management, including signal
@@ -138,6 +135,7 @@ class UpdateManagerMixin:
 
         Raises:
             QMessageBox: Provides information if an update check is already in progress.
+
         """
         # Directly perform the update check without reading from settings
         self.is_update_check_running = True
@@ -172,8 +170,7 @@ class UpdateManagerMixin:
         self.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
 
     def _update_check_finished(self) -> None:
-        """
-        Marks the update check as finished by resetting relevant flags and clearing
+        """Mark the update check as finished by resetting relevant flags and clearing
         references to worker and thread objects.
 
         Resets the `is_update_check_running` flag to `False` and clears the references
@@ -181,6 +178,7 @@ class UpdateManagerMixin:
 
         Raises:
             None
+
         """
         self.is_update_check_running = False
         # ThreadManager handles thread cleanup, just clear our references
@@ -188,11 +186,11 @@ class UpdateManagerMixin:
         self.update_check_worker = None
 
     def show_update_result(self, is_up_to_date: bool) -> None:
-        """
-        Display results of an update check to the user and prompts for further action if an update is available.
+        """Display results of an update check to the user and prompts for further action if an update is available.
 
         Args:
             is_up_to_date: A boolean value indicating whether the current version is up to date.
+
         """
         if is_up_to_date:
             QMessageBox.information(self, "CLASSIC UPDATE", "You have the latest version of CLASSIC!", QMessageBox.StandardButton.Ok)  # pyright: ignore[reportArgumentType]
@@ -209,8 +207,7 @@ class UpdateManagerMixin:
                 QDesktopServices.openUrl(QUrl("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest"))
 
     def show_update_error(self, error_message: str) -> None:
-        """
-        Displays a warning message box indicating a failure to check for updates.
+        """Display a warning message box indicating a failure to check for updates.
 
         This method uses a QMessageBox to show an error message to the user when
         a check for updates fails, providing the supplied error message in the
@@ -219,6 +216,7 @@ class UpdateManagerMixin:
         Args:
             error_message (str): The error message to be displayed in the warning
                 dialog.
+
         """
         QMessageBox.warning(
             self,  # pyright: ignore[reportArgumentType]

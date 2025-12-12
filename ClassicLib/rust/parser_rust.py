@@ -1,5 +1,4 @@
-"""
-Rust-accelerated LogParser wrapper.
+"""Rust-accelerated LogParser wrapper.
 
 This module provides a drop-in replacement for the Python LogParser that uses
 the high-performance Rust implementation when available, providing 150x speedup
@@ -68,6 +67,7 @@ def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[
         A tuple containing two tuples of exception types:
             - ParseError types (RustParseError and module-specific parse errors)
             - Generic RustError types (RustError and module-specific scan log errors)
+
     """
     parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
     rust_errors: tuple[type[BaseException], ...] = (RustError,)
@@ -88,8 +88,7 @@ parse_errors, rust_errors = _get_rust_exception_types()
 
 
 class RustLogParser:
-    """
-    Wrapper for Rust LogParser that provides Python-compatible API.
+    """Wrapper for Rust LogParser that provides Python-compatible API.
 
     This class adapts the Rust parser interface to match what the Python
     code expects, handling API differences and providing fallback behavior.
@@ -97,8 +96,7 @@ class RustLogParser:
     """
 
     def __init__(self) -> None:
-        """
-        Initializes an instance of the class, setting up a Rust-based log parser
+        """Initialize an instance of the class, setting up a Rust-based log parser
         if available. If the Rust-based parser is not found or fails to initialize,
         the implementation falls back to a Python-based parser.
 
@@ -113,6 +111,7 @@ class RustLogParser:
 
         Raises:
             Exception: If an error occurs during the initialization of the Rust-based parser.
+
         """
         self._rust_parser = None
         self._use_rust = False
@@ -135,8 +134,7 @@ class RustLogParser:
     def find_segments(
         self, crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
     ) -> tuple[str, str, str, list[list[str]]]:
-        """
-        Finds and processes segments from provided crash data using either a Rust-based
+        """Find and processes segments from provided crash data using either a Rust-based
         parser or a Python fallback. This method attempts to extract game version,
         crash generator version, main error message, and various crash data segments.
         If an optimized Rust parser is available, it utilizes the faster single FFI
@@ -158,6 +156,7 @@ class RustLogParser:
 
         Raises:
             Exception: If the Rust parser encounters an issue and fallback to Python fails.
+
         """
         if self._use_rust and self._rust_parser:
             try:
@@ -226,8 +225,7 @@ class RustLogParser:
         return find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
     def extract_section(self, crash_data: list[str], start_marker: str, end_marker: str) -> list[str] | None:
-        """
-        Extracts a specified section from a list of crash data.
+        """Extract a specified section from a list of crash data.
 
         This method scans the provided crash data and returns the section between
         the specified start and end markers. If the Rust parser is enabled and
@@ -242,6 +240,7 @@ class RustLogParser:
         Returns:
             list[str] | None: The extracted section as a list of strings if found,
             or None if the markers are not present or section is empty.
+
         """
         if self._use_rust and self._rust_parser:
             try:
@@ -270,8 +269,7 @@ class RustLogParser:
 
     @staticmethod
     def _parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
-        """
-        Parses the crash header information from the provided crash data to extract the game version,
+        """Parse the crash header information from the provided crash data to extract the game version,
         CrashGen version, and the main error message. The method looks for specific lines in the crash
         data that match the provided identifiers for the game root name and CrashGen name.
 
@@ -283,6 +281,7 @@ class RustLogParser:
         Returns:
             tuple[str, str, str]: A tuple containing the game version, CrashGen version, and the main
             error message extracted from the crash data.
+
         """
         game_version = "UNKNOWN"
         crashgen_version = "UNKNOWN"
@@ -300,13 +299,13 @@ class RustLogParser:
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """
-        Checks if the feature is utilizing Rust acceleration.
+        """Check if the feature is utilizing Rust acceleration.
 
         This property returns a boolean indicating whether the functionality
         is currently accelerated using Rust.
 
         Returns:
             bool: True if Rust acceleration is enabled, otherwise False.
+
         """
         return self._use_rust

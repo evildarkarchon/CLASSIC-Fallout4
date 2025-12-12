@@ -52,6 +52,7 @@ class QtMessageHandler(MessageHandler, QObject):
 
         Args:
             parent: Parent widget for message boxes and dialogs.
+
         """
         # Initialize both parent classes
         MessageHandler.__init__(self, is_gui_mode=True)
@@ -84,6 +85,7 @@ class QtMessageHandler(MessageHandler, QObject):
 
         Returns:
             GUIBackend for Qt message display.
+
         """
         return self._gui_backend
 
@@ -97,6 +99,7 @@ class QtMessageHandler(MessageHandler, QObject):
 
         Returns:
             QtProgressHandler for Qt progress dialogs.
+
         """
         return self._qt_progress
 
@@ -108,6 +111,7 @@ class QtMessageHandler(MessageHandler, QObject):
 
         Args:
             message: The message to display.
+
         """
         # Always log
         self._log_backend.show(message)
@@ -125,6 +129,7 @@ class QtMessageHandler(MessageHandler, QObject):
         Args:
             description: Progress description.
             total: Total items (0 for indeterminate).
+
         """
         self._cancelled = False
         self._qt_progress.start(description, total if total > 0 else None)
@@ -135,6 +140,7 @@ class QtMessageHandler(MessageHandler, QObject):
         Args:
             value: Current progress value.
             description: Optional new description.
+
         """
         self._qt_progress._current = value
         self._qt_progress._update_dialog(value, description)
@@ -153,6 +159,7 @@ class QtMessageHandler(MessageHandler, QObject):
 
         Returns:
             True if user cancelled via progress dialog.
+
         """
         if self._qt_progress.was_cancelled():
             self._cancelled = True
@@ -163,6 +170,7 @@ class QtMessageHandler(MessageHandler, QObject):
 
         Args:
             parent: New parent widget.
+
         """
         self._parent_widget = parent
         self._gui_backend.set_parent(parent)

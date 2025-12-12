@@ -1,5 +1,4 @@
-"""
-Scan log information and caching components.
+"""Scan log information and caching components.
 
 This module provides configuration management for scan log operations.
 """

@@ -2,8 +2,7 @@
 
 
 def normalize_list(items: list[str]) -> list[str]:
-    """
-    Convert all string items in a list to lowercase.
+    """Convert all string items in a list to lowercase.
 
     This function takes a list of strings and returns a new list with all strings
     converted to lowercase, useful for case-insensitive comparisons.
@@ -13,13 +12,13 @@ def normalize_list(items: list[str]) -> list[str]:
 
     Returns:
         New list with all strings in lowercase
+
     """
     return [item.lower() for item in items]
 
 
 def append_or_extend(value: str | int | float | list | tuple | set | None, destination: list[str]) -> None:
-    """
-    Appends or extends a destination list with the string representation of a given value.
+    """Append or extends a destination list with the string representation of a given value.
 
     This function modifies the given destination list by either appending the string
     representation of a single value or extending the list with the string
@@ -32,6 +31,7 @@ def append_or_extend(value: str | int | float | list | tuple | set | None, desti
         destination: The list to which the string representation of the value is
             appended or extended. Each value is converted into a string before
             being added to the list.
+
     """
     if value is None:
         return

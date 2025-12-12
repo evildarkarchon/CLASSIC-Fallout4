@@ -1,5 +1,4 @@
-"""
-Qt stylesheet definitions for the CLASSIC application.
+"""Qt stylesheet definitions for the CLASSIC application.
 
 This module provides pre-defined stylesheets for customizing the appearance
 of Qt widgets throughout the application. It currently contains:

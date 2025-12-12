@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""
-CLASSIC-Fallout4 Poetry to uv Migration Script
+"""CLASSIC-Fallout4 Poetry to uv Migration Script.
 
 This script automates the migration from Poetry to uv package manager.
 Run this script to transition your development environment to use uv.
@@ -52,8 +51,7 @@ def print_info(message: str) -> None:
 
 
 def run_command(command: list[str], check: bool = True) -> tuple[bool, str]:
-    """
-    Run a shell command and return success status and output.
+    """Run a shell command and return success status and output.
 
     Args:
         command: Command and arguments as list
@@ -61,6 +59,7 @@ def run_command(command: list[str], check: bool = True) -> tuple[bool, str]:
 
     Returns:
         Tuple of (success, output)
+
     """
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=check)
@@ -286,7 +285,7 @@ def print_next_steps() -> None:
 
 
 def main() -> int:
-    """Main migration function."""
+    """Serve as main migration function."""
     print(f"\n{Colors.BOLD}CLASSIC-Fallout4 Poetry → uv Migration Tool{Colors.ENDC}")
     print("This script will help you migrate from Poetry to uv package manager.\n")
 

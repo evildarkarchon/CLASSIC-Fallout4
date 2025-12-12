@@ -1,5 +1,4 @@
-"""
-This module provides utilities for text file similarity comparison, file hashing, and
+"""File utilities for similarity comparison, hashing, and encoding detection., file hashing, and
 file handling with automatic encoding detection. It includes functionalities to calculate
 the similarity between text files, compute SHA256 file hashes, and open files with
 encoding detection, ensuring robustness against various encoding issues.
@@ -22,8 +21,7 @@ import chardet
 
 
 def calculate_similarity(file1: Path, file2: Path) -> float:
-    """
-    Calculate the similarity percentage between two text files.
+    """Calculate the similarity percentage between two text files.
 
     Args:
         file1: Path to the first file
@@ -31,6 +29,7 @@ def calculate_similarity(file1: Path, file2: Path) -> float:
 
     Returns:
         Similarity ratio as a float between 0.0 and 1.0
+
     """
     try:
         content1 = file1.read_text(encoding="utf-8", errors="ignore")
@@ -41,14 +40,14 @@ def calculate_similarity(file1: Path, file2: Path) -> float:
 
 
 def calculate_file_hash(file_path: Path) -> str:
-    """
-    Calculate SHA256 hash of a file.
+    """Calculate SHA256 hash of a file.
 
     Args:
         file_path: Path to the file
 
     Returns:
         Hex string of the SHA256 hash
+
     """
     sha256_hash = hashlib.sha256()
     try:
@@ -67,8 +66,7 @@ def calculate_file_hash(file_path: Path) -> str:
 
 @contextlib.contextmanager
 def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
-    """
-    Open a file with automatic encoding detection.
+    """Open a file with automatic encoding detection.
 
     This context manager attempts to detect the file's encoding using chardet,
     falling back to UTF-8 with error handling if detection fails.
@@ -82,6 +80,7 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
     Raises:
         FileNotFoundError: If the file doesn't exist
         OSError: If the file cannot be opened
+
     """
     file_path = Path(file_path)
 

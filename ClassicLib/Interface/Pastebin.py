@@ -1,5 +1,4 @@
-"""
-Pastebin URL fetching functionality for the CLASSIC interface.
+"""Pastebin URL fetching functionality for the CLASSIC interface.
 
 This module provides a QObject-based worker class for asynchronously fetching
 data from Pastebin URLs. It uses Qt signals for thread-safe communication and
@@ -14,8 +13,7 @@ from PySide6.QtCore import QObject, Signal, Slot
 
 
 class PastebinFetchWorker(QObject):
-    """
-    Handles fetching data from a given Pastebin URL within a PyQt framework.
+    """Handle fetching data from a given Pastebin URL within a PyQt framework.
 
     This class is designed as a worker object for performing asynchronous operations to retrieve data from a specified
     Pastebin URL. The class uses signals to emit the success, error, or completion states of the operation. It ensures
@@ -26,6 +24,7 @@ class PastebinFetchWorker(QObject):
         finished (Signal): Signal emitted when the operation finishes, regardless of success or failure.
         error (Signal): Signal emitted with an error message in case of failure.
         success (Signal): Signal emitted with the URL upon successful data fetch.
+
     """
 
     finished: Signal = Signal()
@@ -33,11 +32,11 @@ class PastebinFetchWorker(QObject):
     success: Signal = Signal(str)
 
     def __init__(self, url: str) -> None:
-        """
-        Initializes an instance with a specified URL.
+        """Initialize an instance with a specified URL.
 
         Args:
             url (str): The URL to be assigned to the instance.
+
         """
         super().__init__()
         self.url = url
@@ -45,8 +44,7 @@ class PastebinFetchWorker(QObject):
     # noinspection PyUnresolvedReferences
     @Slot()
     def run(self) -> None:
-        """
-        Executes a slot function to fetch data from a specified URL using the `pastebin_fetch_async` function. This
+        """Execute a slot function to fetch data from a specified URL using the `pastebin_fetch_async` function. This
         function emits corresponding signals based on the success or failure of the operation.
 
         The function is aimed to handle possible exceptions such as network-related issues, module import
@@ -68,6 +66,7 @@ class PastebinFetchWorker(QObject):
             aiohttp.ClientError: For network-related issues such as connection problems.
             ImportError: If the required import operation for a module fails to execute.
             Exception: If a general exception is encountered outside specific types mentioned.
+
         """
         try:
             # Make sure pastebin_fetch_async is properly imported

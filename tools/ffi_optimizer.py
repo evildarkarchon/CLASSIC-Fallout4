@@ -1,5 +1,4 @@
-"""
-FFI Optimization Strategies for CLASSIC Rust Integration
+"""FFI Optimization Strategies for CLASSIC Rust Integration.
 
 This module provides comprehensive optimization tools and strategies for minimizing
 Python↔Rust FFI overhead and maximizing performance gains in Phase 6 migration.
@@ -83,8 +82,7 @@ class OptimizationResult:
 
 
 class BatchCache:
-    """
-    Intelligent caching system for FFI calls to reduce redundant operations.
+    """Intelligent caching system for FFI calls to reduce redundant operations.
 
     Features:
     - LRU eviction with size limits
@@ -100,6 +98,14 @@ class BatchCache:
         default_ttl: float = 300.0,  # 5 minutes
         enable_memory_pressure: bool = True,
     ):
+        """Initialize the batch cache with size limits and TTL settings.
+
+        Args:
+            max_size: Maximum number of entries in the cache.
+            default_ttl: Default time-to-live in seconds for cache entries.
+            enable_memory_pressure: Enable memory pressure awareness.
+
+        """
         self.max_size = max_size
         self.default_ttl = default_ttl
         self.enable_memory_pressure = enable_memory_pressure
@@ -199,7 +205,7 @@ class BatchCache:
             self._access_order.append(key)
 
     def cache_function(self, ttl: float | None = None):
-        """Decorator to cache function results."""
+        """Decorate function to cache results."""
 
         def decorator(func: Callable) -> Callable:
             @functools.wraps(func)
@@ -236,8 +242,7 @@ class BatchCache:
 
 
 class BatchProcessor:
-    """
-    High-performance batch processor for FFI operations.
+    """High-performance batch processor for FFI operations.
 
     Automatically groups operations to minimize FFI boundary crossings
     and maximizes data transfer efficiency.
@@ -250,6 +255,15 @@ class BatchProcessor:
         batch_timeout: float = 0.1,  # 100ms
         enable_adaptive_sizing: bool = True,
     ):
+        """Initialize the batch processor with configurable settings.
+
+        Args:
+            default_batch_size: Default number of operations per batch.
+            max_batch_size: Maximum allowed batch size.
+            batch_timeout: Timeout in seconds before flushing pending batches.
+            enable_adaptive_sizing: Enable automatic batch size optimization.
+
+        """
         self.default_batch_size = default_batch_size
         self.max_batch_size = max_batch_size
         self.batch_timeout = batch_timeout
@@ -358,8 +372,7 @@ class BatchProcessor:
                     future.set_exception(e)
 
     def batch_call(self, operation_key: str, batch_func: Callable[[list[T]], list[R]], item: T) -> asyncio.Future[R]:
-        """
-        Add an item to be processed in a batch.
+        """Add an item to be processed in a batch.
 
         Args:
             operation_key: Unique identifier for the operation type
@@ -368,6 +381,7 @@ class BatchProcessor:
 
         Returns:
             Future that will contain the result for this specific item
+
         """
         future = asyncio.Future()
 
@@ -395,8 +409,7 @@ class BatchProcessor:
         return future
 
     def batch_operation(self, operation_key: str | None = None, batch_size: int | None = None, timeout: float | None = None):
-        """
-        Decorator to automatically batch function calls.
+        """Decorate function to automatically batch calls.
 
         Usage:
             @batch_processor.batch_operation("parse_logs")
@@ -429,8 +442,7 @@ class BatchProcessor:
 
 
 class DataOptimizer:
-    """
-    Optimizes data structures for efficient FFI transfer.
+    """Optimize data structures for efficient FFI transfer.
 
     Strategies:
     - Convert Python data structures to Rust-friendly formats
@@ -440,17 +452,18 @@ class DataOptimizer:
     """
 
     def __init__(self):
+        """Initialize the data optimizer with empty statistics."""
         # Track optimization statistics
         self.optimization_stats = defaultdict(int)
         self._size_reduction_history = []
 
     def optimize_for_rust_transfer(self, data: Any) -> tuple[Any, dict[str, Any]]:
-        """
-        Optimize data for transfer to Rust, returning optimized data and metadata.
+        """Optimize data for transfer to Rust, returning optimized data and metadata.
 
         Returns:
             Tuple of (optimized_data, metadata) where metadata contains
             information needed to reverse the optimization.
+
         """
         original_size = sys.getsizeof(data)
         metadata = {"original_type": type(data).__name__, "optimizations": []}
@@ -571,8 +584,7 @@ class DataOptimizer:
 
 
 class FFIOptimizer:
-    """
-    Main FFI optimization coordinator that combines all optimization strategies.
+    """Main FFI optimization coordinator that combines all optimization strategies.
 
     Provides a unified interface for:
     - Profiling FFI performance
@@ -589,7 +601,16 @@ class FFIOptimizer:
         cache_size: int = 1000,
         default_batch_size: int = 100,
     ):
+        """Initialize the FFI optimizer with configurable components.
 
+        Args:
+            enable_caching: Enable the batch cache for repeated calls.
+            enable_batching: Enable automatic batching of operations.
+            enable_data_optimization: Enable data structure optimization.
+            cache_size: Maximum size of the batch cache.
+            default_batch_size: Default batch size for batched operations.
+
+        """
         # Initialize optimization components
         self.cache = BatchCache(max_size=cache_size) if enable_caching else None
         self.batch_processor = BatchProcessor(default_batch_size=default_batch_size) if enable_batching else None
@@ -608,8 +629,7 @@ class FFIOptimizer:
     def analyze_ffi_performance(
         self, target_function: Callable, test_data: list[Any], warmup_runs: int = 3, measurement_runs: int = 10
     ) -> tuple[FFIProfiler, FFIProfiler]:
-        """
-        Analyze FFI performance before and after optimization.
+        """Analyze FFI performance before and after optimization.
 
         Args:
             target_function: Function to optimize
@@ -619,8 +639,8 @@ class FFIOptimizer:
 
         Returns:
             Tuple of (baseline_profiler, optimized_profiler)
-        """
 
+        """
         # Baseline measurement
         logger.info("Measuring baseline FFI performance...")
         baseline_profiler = FFIProfiler()
@@ -678,8 +698,7 @@ class FFIOptimizer:
     def optimize_function(
         self, func: Callable, cache_ttl: float | None = None, batch_key: str | None = None, enable_data_opt: bool | None = None
     ) -> Callable:
-        """
-        Apply all available optimizations to a function.
+        """Apply all available optimizations to a function.
 
         Args:
             func: Function to optimize
@@ -689,6 +708,7 @@ class FFIOptimizer:
 
         Returns:
             Optimized function
+
         """
         if enable_data_opt is None:
             enable_data_opt = self.enable_data_optimization
@@ -856,8 +876,7 @@ class FFIOptimizer:
 
 # Convenience decorators and functions
 def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: str | None = None):
-    """
-    Decorator for automatic batching of operations.
+    """Decorate for automatic batching of operations.
 
     Usage:
         @batch_operation(batch_size=50)
@@ -869,8 +888,7 @@ def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: 
 
 
 def cache_ffi_calls(ttl: float = 300.0, max_size: int = 1000):
-    """
-    Decorator for caching FFI call results.
+    """Decorate for caching FFI call results.
 
     Usage:
         @cache_ffi_calls(ttl=600.0)
@@ -882,8 +900,7 @@ def cache_ffi_calls(ttl: float = 300.0, max_size: int = 1000):
 
 
 def optimize_data_for_ffi(data: Any) -> Any:
-    """
-    Quick function to optimize data for FFI transfer.
+    """Quick function to optimize data for FFI transfer.
 
     Usage:
         optimized_data = optimize_data_for_ffi(large_python_object)

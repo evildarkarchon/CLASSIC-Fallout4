@@ -32,6 +32,7 @@ class GUIBackend(QObject):
 
     Class Attributes:
         ICON_MAP: Mapping of message types to QMessageBox icons.
+
     """
 
     # Signal for thread-safe message display
@@ -52,6 +53,7 @@ class GUIBackend(QObject):
 
         Args:
             parent: Parent widget for message boxes.
+
         """
         super().__init__(parent)
         self._parent = parent
@@ -65,6 +67,7 @@ class GUIBackend(QObject):
 
         Args:
             message: The message to display.
+
         """
         self.message_signal.emit(message)
 
@@ -73,6 +76,7 @@ class GUIBackend(QObject):
 
         Args:
             message: The message to display.
+
         """
         parent: QWidget | None = message.parent or self._parent  # type: ignore[assignment]
         title = message.get_display_title()
@@ -91,6 +95,7 @@ class GUIBackend(QObject):
 
         Returns:
             True if Qt is properly initialized.
+
         """
         try:
             from PySide6.QtWidgets import QApplication
@@ -104,5 +109,6 @@ class GUIBackend(QObject):
 
         Args:
             parent: New parent widget for message boxes.
+
         """
         self._parent = parent

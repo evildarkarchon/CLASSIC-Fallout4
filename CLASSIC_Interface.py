@@ -1,7 +1,6 @@
-"""
-This module defines the main application window for the CLASSIC GUI.
+"""Main application window for the CLASSIC GUI.
 
-It initializes and sets up the main GUI, including tabs, threads, and event
+Initializes and sets up the main GUI, including tabs, threads, and event
 handlers necessary for the application's functionality. The application utilizes
 multiple mix-ins to manage separate components such as folder management, backup
 operations, and style setup. The main interaction entry point includes an instance
@@ -98,11 +97,12 @@ class MainWindow(
     HelpAndAboutMixin,
     WindowGeometryMixin,
 ):
+    """Main application window for the CLASSIC GUI interface."""
+
     # Style constants are now imported from UIHelpers
 
     def __init__(self) -> None:
-        """
-        Initializes the main application window and sets up its elements and layout.
+        """Initialize the main application window and set up its elements and layout.
 
         This constructor initializes the main application window, setting up various visual
         components, tabs, and threads necessary for the application's functionality. It configures
@@ -112,6 +112,7 @@ class MainWindow(
 
         Raises:
             None
+
         """
         super().__init__()
         self.thread_manager = get_thread_manager()
@@ -182,8 +183,7 @@ class MainWindow(
     # game_files_scan_finished method is now inherited from ScanOperationsMixin
 
     def closeEvent(self, event: Any) -> None:
-        """
-        Override closeEvent to ensure proper cleanup of all running threads.
+        """Override closeEvent to ensure proper cleanup of all running threads.
 
         This method is called when the main window is being closed. It ensures
         all worker threads are properly stopped and cleaned up before the
@@ -191,6 +191,7 @@ class MainWindow(
 
         Args:
             event: The close event
+
         """
         logger.info("Application closing - cleaning up resources...")
 
@@ -218,18 +219,17 @@ class MainWindow(
 
     @staticmethod
     def open_url(url: str) -> None:
-        """
-        Opens the specified URL in the default web browser.
+        """Open the specified URL in the default web browser.
 
         Args:
             url (str): The URL to open in the browser.
+
         """
         QDesktopServices.openUrl(QUrl(url))
 
 
 def main() -> None:
-    """
-    Main entry point for the CLASSIC GUI application.
+    """Serve as main entry point for the CLASSIC GUI application.
 
     Initializes the Qt application, runs the setup coordinator to prepare
     the environment, creates the main window, and starts the event loop.

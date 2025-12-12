@@ -1,5 +1,4 @@
-"""
-Utility module for managing SQLite database connections, file operations, and handling directory paths.
+"""Utility module for managing SQLite database connections, file operations, and handling directory paths.
 
 This module provides a thread-safe SQLite connection pool, utilities for managing files and directories,
 and functions to validate and handle paths used for application configuration, especially related to crash
@@ -23,8 +22,7 @@ CRASH_AUTOSCAN_PATTERN = "crash-*-AUTOSCAN.md"
 
 
 class SyncDatabasePool:
-    """
-    Manages SQLite database connections safely in a multithreaded environment.
+    """Manage SQLite database connections safely in a multithreaded environment.
 
     This class ensures that SQLite connections are handled securely by using a
     lock mechanism to manage access when performing operations from multiple
@@ -35,14 +33,14 @@ class SyncDatabasePool:
             paths to their corresponding SQLite connection objects.
         _connection_lock (threading.Lock): A lock to ensure thread-safe access to
             the connections dictionary.
+
     """
 
     _instance = None
     _lock = threading.Lock()
 
     def __init__(self) -> None:
-        """
-        Manages SQLite database connections safely in a multithreaded environment.
+        """Manage SQLite database connections safely in a multithreaded environment.
 
         This class ensures that SQLite connections are
         handled securely by using a lock mechanism to
@@ -56,8 +54,7 @@ class SyncDatabasePool:
 
     @classmethod
     def get_instance(cls) -> "SyncDatabasePool":
-        """
-        Retrieves the singleton instance of the `SyncDatabasePool` class.
+        """Retrieve the singleton instance of the `SyncDatabasePool` class.
 
         This method ensures that there is only one instance of the `SyncDatabasePool`
         class by employing the singleton design pattern. It uses a thread-safe
@@ -65,6 +62,7 @@ class SyncDatabasePool:
 
         Returns:
             SyncDatabasePool: The singleton instance of the class.
+
         """
         if cls._instance is None:
             with cls._lock:
@@ -73,8 +71,7 @@ class SyncDatabasePool:
         return cls._instance
 
     def get_connection(self, db_path: Path) -> sqlite3.Connection:
-        """
-        Creates or retrieves a sqlite3 connection for the specified database file. Ensures that a single
+        """Create or retrieves a sqlite3 connection for the specified database file. Ensures that a single
         connection is reused for the same database path, and manages the connections in a thread-safe manner.
         If the connection is not alive or does not exist, a new connection is created.
 
@@ -86,6 +83,7 @@ class SyncDatabasePool:
 
         Raises:
             sqlite3.Error: If there is an issue connecting to the SQLite database file.
+
         """
         with self._connection_lock:
             if db_path not in self._connections or not self._is_connection_alive(self._connections[db_path]):
@@ -102,14 +100,14 @@ class SyncDatabasePool:
 
     @staticmethod
     def _is_connection_alive(conn: sqlite3.Connection) -> bool:
-        """
-        Checks if a given SQLite connection is active and alive by executing a test query.
+        """Check if a given SQLite connection is active and alive by executing a test query.
 
         Args:
             conn (sqlite3.Connection): The SQLite connection object to check.
 
         Returns:
             bool: True if the connection is alive, False otherwise.
+
         """
         try:
             conn.execute("SELECT 1")
@@ -128,20 +126,19 @@ class SyncDatabasePool:
 
 
 def ensure_directory_exists(directory: Path) -> None:
-    """
-    Ensures that the specified directory exists by creating it if it does not already exist.
+    """Ensure that the specified directory exists by creating it if it does not already exist.
 
     If necessary, this function will also create any intermediate directories in the path.
 
     Args:
         directory: A Path object representing the directory to ensure exists.
+
     """
     directory.mkdir(parents=True, exist_ok=True)
 
 
 def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
-    """
-    Moves files matching a given pattern from the source directory to the target directory.
+    """Move files matching a given pattern from the source directory to the target directory.
 
     This function searches for files in the specified source directory matching
     the given pattern, and moves them to the target directory. If a file with
@@ -152,6 +149,7 @@ def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
         source_dir (Path): Path to the source directory where files are located.
         target_dir (Path): Path to the target directory where files will be moved.
         pattern (str): Pattern to match files in the source directory.
+
     """
     for file in source_dir.glob(pattern):
         destination_file: Path = target_dir / file.name
@@ -160,8 +158,7 @@ def move_files(source_dir: Path, target_dir: Path, pattern: str) -> None:
 
 
 def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
-    """
-    Copies files from a source directory to a target directory based on a specified pattern.
+    """Copy files from a source directory to a target directory based on a specified pattern.
 
     This function iterates through all files in the given source directory that match the
     provided pattern. It then copies these files to the target directory if they do not
@@ -172,6 +169,7 @@ def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
             the function performs no operation.
         target_dir: The directory to which files will be copied.
         pattern: The pattern to match files in the source directory.
+
     """
     if source_dir and source_dir.is_dir():
         for file in source_dir.glob(pattern):
@@ -181,8 +179,7 @@ def copy_files(source_dir: Path | None, target_dir: Path, pattern: str) -> None:
 
 
 def get_path_from_setting(setting_value: str | None) -> Path | None:
-    """
-    Converts a setting value to a Path object if it is a valid string.
+    """Convert a setting value to a Path object if it is a valid string.
 
     This function takes a provided setting value and checks if it is a string.
     If the value is a string, it converts it to a Path object. If the value is
@@ -196,13 +193,13 @@ def get_path_from_setting(setting_value: str | None) -> Path | None:
 
     Returns:
         A Path object if the input value is a string, otherwise None.
+
     """
     return Path(setting_value) if isinstance(setting_value, str) else None
 
 
 def is_valid_custom_scan_path(path: Path | str | None) -> bool:
-    """
-    Check if the given path is valid as a custom scan directory.
+    """Check if the given path is valid as a custom scan directory.
 
     Prevents users from setting restricted directories as custom scan paths.
     This includes:
@@ -218,6 +215,7 @@ def is_valid_custom_scan_path(path: Path | str | None) -> bool:
 
     Returns:
         bool: True if the path is valid, False if it's a restricted directory
+
     """
     import os
     import platform
@@ -285,13 +283,13 @@ def is_valid_custom_scan_path(path: Path | str | None) -> bool:
 
 
 def _crashlogs_get_files_python() -> list[Path]:
-    """
-    Python implementation of crash log file collection.
+    """Python implementation of crash log file collection.
 
     This is the fallback implementation when Rust acceleration is not available.
 
     Returns:
         list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
+
     """
     logger.debug("- - - INITIATED CRASH LOG FILE LIST GENERATION (Python)")
 
@@ -324,13 +322,13 @@ def _crashlogs_get_files_python() -> list[Path]:
 
 
 def _crashlogs_get_files_rust() -> list[Path]:
-    """
-    Rust-accelerated implementation of crash log file collection (10x faster).
+    """Rust-accelerated implementation of crash log file collection (10x faster).
 
     Uses PyLogCollector from classic_file_io for high-performance async file operations.
 
     Returns:
         list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
+
     """
     import classic_file_io
 
@@ -356,8 +354,7 @@ def _crashlogs_get_files_rust() -> list[Path]:
 
 
 def crashlogs_get_files() -> list[Path]:
-    """
-    Generates a list of crash log file paths from various defined directories, ensuring that necessary
+    """Generate a list of crash log file paths from various defined directories, ensuring that necessary
     directories and files are aggregated and organized under a primary "Crash Logs" folder. This function
     handles file copying and renaming operations and supports the inclusion of custom and additional
     directories specified in settings.
@@ -367,6 +364,7 @@ def crashlogs_get_files() -> list[Path]:
 
     Returns:
         list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
+
     """
     # Try Rust acceleration first
     try:
@@ -385,8 +383,7 @@ query_cache: dict[tuple[str, str], str] = {}
 
 
 def get_entry(formid: str, plugin: str) -> str | None:
-    """
-    Fetches an entry from the cache or database based on the given form ID and plugin.
+    """Fetch an entry from the cache or database based on the given form ID and plugin.
 
     This function checks if an entry corresponding to the given `formid` and
     `plugin` exists in the query cache. If the entry is not found in the cache,
@@ -400,6 +397,7 @@ def get_entry(formid: str, plugin: str) -> str | None:
 
     Returns:
         str | None: The retrieved entry if found, or None if no such entry exists.
+
     """
     if (entry := query_cache.get((formid, plugin))) is not None:
         return entry

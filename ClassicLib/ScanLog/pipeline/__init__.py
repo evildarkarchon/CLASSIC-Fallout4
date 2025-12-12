@@ -1,5 +1,4 @@
-"""
-Async crash log processing pipeline components.
+"""Async crash log processing pipeline components.
 
 This module provides high-performance async processing capabilities
 for crash log analysis.

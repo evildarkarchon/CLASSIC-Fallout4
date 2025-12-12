@@ -64,6 +64,7 @@ class YamlData:
             >>> yaml_data = YamlData(["YAML/Main"], "Fallout4", False)
             >>> # Mixed
             >>> yaml_data = YamlData([Path("YAML/Main"), "YAML/Local"], "Fallout4", False)
+
         """
 
     @staticmethod
@@ -107,6 +108,7 @@ class YamlData:
             >>> config = YamlData.from_yaml_content(
             ...     main_yaml, game_yaml, ignore_yaml, "Fallout4", False
             ... )
+
         """
 
     # CLASSIC version information
@@ -156,6 +158,7 @@ class YamlData:
 
         Returns:
             List of ignore pattern strings
+
         """
 
     @property
@@ -166,6 +169,7 @@ class YamlData:
 
         Returns:
             List of plugin names to ignore
+
         """
 
     @property
@@ -176,6 +180,7 @@ class YamlData:
 
         Returns:
             List of record type strings
+
         """
 
     @property
@@ -184,6 +189,7 @@ class YamlData:
 
         Returns:
             Set of ignore pattern strings
+
         """
 
     # Mod detection lists
@@ -193,6 +199,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping mod names to detection patterns
+
         """
 
     @property
@@ -201,6 +208,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping FOLON mod names to detection patterns
+
         """
 
     @property
@@ -209,6 +217,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping mod names to detection patterns
+
         """
 
     @property
@@ -217,6 +226,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping solution mod names to detection patterns
+
         """
 
     @property
@@ -225,6 +235,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping optimization mod names to detection patterns
+
         """
 
     @property
@@ -233,6 +244,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping config mod names to detection patterns
+
         """
 
     # Records configuration
@@ -242,6 +254,7 @@ class YamlData:
 
         Returns:
             List of record type strings (e.g., ['TES4', 'GRUP', 'ACHR', ...])
+
         """
 
     # Suspect detection lists
@@ -251,6 +264,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping error categories to detection patterns
+
         """
 
     @property
@@ -259,6 +273,7 @@ class YamlData:
 
         Returns:
             Dictionary mapping callstack categories to detection patterns
+
         """
 
     # Warning messages
@@ -268,6 +283,7 @@ class YamlData:
 
         Returns:
             Warning message string
+
         """
 
     @property
@@ -276,6 +292,7 @@ class YamlData:
 
         Returns:
             Warning message string
+
         """
 
     # UI text
@@ -285,6 +302,7 @@ class YamlData:
 
         Returns:
             Autoscan description text
+
         """
 
     @property
@@ -293,6 +311,7 @@ class YamlData:
 
         Returns:
             List of hint strings
+
         """
 
 def clear_yaml_cache() -> None:
@@ -308,7 +327,7 @@ class RustConfigParseError(Exception):
     """Error raised when YAML content is invalid."""
 
 def create_yamldata(yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -> YamlData:
-    """Factory function to create a YamlData instance.
+    """Create via factory create a YamlData instance.
 
     This is a convenience function that creates and returns a new YamlData instance.
     Equivalent to calling YamlData() directly.
@@ -333,4 +352,5 @@ def create_yamldata(yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -
         >>> yaml_data = create_yamldata([Path("YAML/Main")], "Fallout4", False)
         >>> print(yaml_data.classic_version)
         '8.0.0'
+
     """

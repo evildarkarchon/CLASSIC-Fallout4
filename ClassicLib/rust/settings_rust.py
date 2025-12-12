@@ -1,5 +1,4 @@
-"""
-Rust-accelerated SettingsValidator wrapper.
+"""Rust-accelerated SettingsValidator wrapper.
 
 This module provides a transparent wrapper around the Rust SettingsValidator implementation,
 maintaining full API compatibility with the Python reference (SettingsScannerFragments) while
@@ -28,8 +27,7 @@ RUST_AVAILABLE, RustSettingsValidator = detect_component("classic_scanlog", "Set
 
 
 class RustAcceleratedSettingsValidator:
-    """
-    Rust-accelerated settings validator with Python API compatibility.
+    """Rust-accelerated settings validator with Python API compatibility.
 
     This wrapper bridges the API differences between Rust and Python implementations:
     - Rust constructor takes crashgen_name and crashgen_ignore directly
@@ -38,14 +36,14 @@ class RustAcceleratedSettingsValidator:
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
-        """
-        Initializes the validator instance for handling ClassicScanLogsInfo based on the
+        """Initialize the validator instance for handling ClassicScanLogsInfo based on the
         availability of a Rust implementation. If Rust is available, utilizes the Rust-
         based validation mechanism; otherwise, falls back to the Python implementation.
 
         Args:
             yamldata (ClassicScanLogsInfo): Data containing the YAML configuration
                 necessary for initializing the validator.
+
         """
         self.yamldata = yamldata
         self._use_rust = RUST_AVAILABLE
@@ -62,8 +60,7 @@ class RustAcceleratedSettingsValidator:
             self._validator = SettingsScannerFragments(yamldata)
 
     def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, bool | int | str]) -> ReportFragment:
-        """
-        Scans the provided `xsemodules` and `crashgen` to extract or validate Buffout achievements
+        """Scan the provided `xsemodules` and `crashgen` to extract or validate Buffout achievements
         settings, returning the corresponding `ReportFragment`.
 
         Depending on whether the Rust validator is used, the `crashgen` dictionary is adjusted so that
@@ -77,6 +74,7 @@ class RustAcceleratedSettingsValidator:
 
         Returns:
             ReportFragment: A fragment object containing details of the scanned results.
+
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
@@ -94,8 +92,7 @@ class RustAcceleratedSettingsValidator:
         has_old_xcell: bool,
         has_baka_scrapheap: bool,
     ) -> ReportFragment:
-        """
-        Scans memory management settings from Buffout and generates a report
+        """Scan memory management settings from Buffout and generates a report
         fragment based on the provided configurations.
 
         This method determines which version of the validator to use (Rust or
@@ -115,6 +112,7 @@ class RustAcceleratedSettingsValidator:
         Returns:
             ReportFragment: A processed fragment containing the scan results based on
             the provided Buffout memory management settings.
+
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
@@ -130,8 +128,7 @@ class RustAcceleratedSettingsValidator:
         return result
 
     def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: Version | None = None) -> ReportFragment:
-        """
-        Validates and processes the "archivelimit" setting based on the provided configuration
+        """Validate and processes the "archivelimit" setting based on the provided configuration
         and version. This function supports two implementations: one leveraging Rust for improved
         performance, and the other using native Python. When using Rust, the function converts
         the values of the input dictionary to strings to meet the expected format. Both
@@ -147,6 +144,7 @@ class RustAcceleratedSettingsValidator:
         Returns:
             ReportFragment: An object encapsulating the scanned and validated results of the
                 "archivelimit" setting, formatted based on the selected implementation (Rust or Python).
+
         """
         if self._use_rust and RustSettingsValidator is not None:
             # Rust requires dict[str, str], convert all values to strings
@@ -158,8 +156,7 @@ class RustAcceleratedSettingsValidator:
         return result
 
     def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> ReportFragment:
-        """
-        Analyzes the 'Buffout' and 'LooksMenu' settings from the provided crash generation data and XSE modules.
+        """Analyze the 'Buffout' and 'LooksMenu' settings from the provided crash generation data and XSE modules.
 
         This method validates the compatibility of 'Buffout' crashes and 'LooksMenu'
         settings based on the provided crash generation dictionary and XSE modules.

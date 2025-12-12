@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Install CLASSIC dependencies from requirements.txt"""
+"""Install CLASSIC dependencies from requirements.txt."""
 
 import argparse
 import subprocess
@@ -65,6 +65,7 @@ def install_requirements(include_gui: bool = False, include_cli: bool = False, i
 
 
 def main() -> int:
+    """Install CLASSIC dependencies via uv package manager."""
     parser = argparse.ArgumentParser(
         description="Install CLASSIC dependencies",
         formatter_class=argparse.RawDescriptionHelpFormatter,

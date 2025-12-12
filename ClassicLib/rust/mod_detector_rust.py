@@ -1,5 +1,4 @@
-"""
-Rust-accelerated mod detector functions.
+"""Rust-accelerated mod detector functions.
 
 This module provides high-performance mod detection and conflict analysis using
 Rust implementations when available, providing 35x speedup for mod detection.
@@ -36,6 +35,7 @@ def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[
         A tuple containing two tuples of exception types:
             - ParseError types (RustParseError and module-specific parse errors)
             - Generic RustError types (RustError and module-specific scan log errors)
+
     """
     parse_errors: tuple[type[BaseException], ...] = (RustParseError,)
     rust_errors: tuple[type[BaseException], ...] = (RustError,)
@@ -73,8 +73,7 @@ if _has_batch:
 
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
-    """
-    Determines modifications from the provided YAML dictionary and crash log plugins.
+    """Determine modifications from the provided YAML dictionary and crash log plugins.
     This function attempts to leverage a Rust implementation if available for better
     performance. If the Rust implementation is unavailable or fails, it will fall back
     to a Python-based detection mechanism.
@@ -85,6 +84,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     Returns:
         ReportFragment: Detected modifications represented as a `ReportFragment` object.
+
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -108,8 +108,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
-    """
-    Detects mod conflicts by leveraging Rust-based or Python fallback implementations.
+    """Detect mod conflicts by leveraging Rust-based or Python fallback implementations.
 
     This function attempts to use the Rust-based conflict detection if available,
     offering potentially faster performance. If the Rust implementation is not
@@ -123,6 +122,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     Returns:
         ReportFragment: An object representing the detected mod conflicts.
+
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -151,8 +151,7 @@ def detect_mods_important(
     gpu_rival: Literal["nvidia", "amd"] | None,
     xse_modules: set[str] | None = None,
 ) -> ReportFragment:
-    """
-    Detects important modifications (mods) using either Rust or Python implementation.
+    """Detect important modifications (mods) using either Rust or Python implementation.
 
     This function attempts to use a Rust-based implementation for performance benefits.
     If the Rust module is not available or encounters an error, it falls back to a
@@ -169,6 +168,7 @@ def detect_mods_important(
         ReportFragment: The result of the analysis represented in the form of a
         `ReportFragment` object, either containing important modification details
         or returned as empty if no data is detected.
+
     """
     from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -196,8 +196,7 @@ def detect_mods_important(
 
 
 def get_mod_detector_status() -> dict[str, Any]:
-    """
-    Retrieves the current status of the module detector, including information about
+    """Retrieve the current status of the module detector, including information about
     the availability of specific detection functions and performance metrics. It
     provides a summary of whether the functions are implemented and a relative
     performance gain depending on the availability of rust-based implementations.
@@ -216,6 +215,7 @@ def get_mod_detector_status() -> dict[str, Any]:
               implemented.
             - "performance_gain" (str): Indicates the performance gain factor as a
               string, formatted as "35x" if Rust is available, and "1x" otherwise.
+
     """
     return {
         "rust_available": RUST_AVAILABLE,
@@ -229,13 +229,13 @@ def get_mod_detector_status() -> dict[str, Any]:
 
 # Compatibility function for integration
 def is_rust_accelerated() -> bool:
-    """
-    Checks if Rust acceleration is available.
+    """Check if Rust acceleration is available.
 
     This function determines whether the Rust implementation is available and
     enabled for optimization purposes.
 
     Returns:
         bool: True if Rust acceleration is available, otherwise False.
+
     """
     return RUST_AVAILABLE

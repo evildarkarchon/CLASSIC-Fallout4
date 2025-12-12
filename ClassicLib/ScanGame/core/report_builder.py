@@ -1,5 +1,4 @@
-"""
-Report builder component for CLASSIC_ScanGame.
+"""Report builder component for CLASSIC_ScanGame.
 
 This module provides report generation functionality for mod scanning operations,
 formatting detected issues into human-readable reports for both unpacked and
@@ -12,8 +11,7 @@ from ClassicLib.ScanGame.core.validators import ScanValidators
 
 
 class ScanReportBuilder:
-    """
-    Builds formatted scan reports from issue collections.
+    """Build formatted scan reports from issue collections.
 
     This class provides report generation functionality for mod scanning operations.
     It takes collections of detected issues and formats them into human-readable
@@ -21,20 +19,20 @@ class ScanReportBuilder:
 
     Attributes:
         validators (ScanValidators): Component for retrieving issue messages.
+
     """
 
     def __init__(self, validators: ScanValidators) -> None:
-        """
-        Initialize the ScanReportBuilder.
+        """Initialize the ScanReportBuilder.
 
         Args:
             validators: Component for retrieving issue-specific messages.
+
         """
         self.validators = validators
 
     def build_unpacked_report(self, issue_lists: dict[str, set[str]], xse_acronym: str) -> str:
-        """
-        Build report for unpacked (loose) mod file scan.
+        """Build report for unpacked (loose) mod file scan.
 
         Generates a formatted report for unpacked mod file scanning results,
         including headers and categorized issues such as cleanup items,
@@ -53,6 +51,7 @@ class ScanReportBuilder:
             >>> report = builder.build_unpacked_report(issues, "F4SE")
             >>> "RESULTS FROM UNPACKED" in report
             True
+
         """
         message_list: list[str] = [
             "=================== MOD FILES SCAN ====================\n",
@@ -78,8 +77,7 @@ class ScanReportBuilder:
         return output.getvalue()
 
     def build_archived_report(self, issue_lists: dict[str, set[str]], xse_acronym: str) -> str:
-        """
-        Build report for archived (BA2) mod file scan.
+        """Build report for archived (BA2) mod file scan.
 
         Generates a formatted report for BA2 archive scanning results,
         including headers and categorized issues such as format problems,
@@ -98,6 +96,7 @@ class ScanReportBuilder:
             >>> report = builder.build_archived_report(issues, "F4SE")
             >>> "RESULTS FROM ARCHIVED" in report
             True
+
         """
         message_list: list[str] = ["\n========== RESULTS FROM ARCHIVED / BA2 FILES ==========\n"]
 
@@ -126,8 +125,7 @@ class ScanReportBuilder:
         archived_issues: dict[str, set[str]],
         xse_acronym: str,
     ) -> str:
-        """
-        Build combined report for both unpacked and archived scans.
+        """Build combined report for both unpacked and archived scans.
 
         Generates a comprehensive report combining results from both unpacked
         (loose) file scanning and archived (BA2) file scanning. This is useful
@@ -148,6 +146,7 @@ class ScanReportBuilder:
             >>> report = builder.build_combined_report(unpacked, archived, "F4SE")
             >>> "UNPACKED" in report and "ARCHIVED" in report
             True
+
         """
         unpacked_report = self.build_unpacked_report(unpacked_issues, xse_acronym)
         archived_report = self.build_archived_report(archived_issues, xse_acronym)

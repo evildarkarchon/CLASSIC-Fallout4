@@ -1,5 +1,4 @@
-"""
-Suspect scanner module for CLASSIC.
+"""Suspect scanner module for CLASSIC.
 
 This module scans for known crash patterns and suspects including:
 - Checking main errors against known patterns
@@ -18,8 +17,7 @@ if TYPE_CHECKING:
 
 
 class SuspectScanner:
-    """
-    Provides functionality to scan crash logs for suspect errors using predefined lists of errors and stack
+    """Provide functionality to scan crash logs for suspect errors using predefined lists of errors and stack
     signatures.
 
     The `SuspectScanner` class analyzes crash logs and call stack details to identify potential suspect errors.
@@ -29,20 +27,20 @@ class SuspectScanner:
     Attributes:
         yamldata (ClassicScanLogsInfo): Configuration data containing the suspect error and stack lists used
             for analysis.
+
     """
 
     def __init__(self, yamldata: "ClassicScanLogsInfo") -> None:
-        """
-        Initialize the suspect scanner.
+        """Initialize the suspect scanner.
 
         Args:
             yamldata: Configuration data containing suspect patterns
+
         """
         self.yamldata: ClassicScanLogsInfo = yamldata
 
     def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[ReportFragment, bool]:
-        """
-        Scans the crash log for errors listed in a predefined suspect error list.
+        """Scan the crash log for errors listed in a predefined suspect error list.
 
         Args:
             crashlog_mainerror: The main error output from a crash log to scan for suspect errors.
@@ -50,6 +48,7 @@ class SuspectScanner:
 
         Returns:
             Tuple of (ReportFragment containing findings, bool indicating if suspects found).
+
         """
         lines = []
         found_suspect = False
@@ -76,8 +75,7 @@ class SuspectScanner:
     def suspect_scan_stack(
         self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
     ) -> tuple[ReportFragment, bool]:
-        """
-        Analyzes a crash report and call stack information to identify potential suspect errors.
+        """Analyze a crash report and call stack information to identify potential suspect errors.
 
         Args:
             crashlog_mainerror: The main error extracted from the crash log.
@@ -86,6 +84,7 @@ class SuspectScanner:
 
         Returns:
             Tuple of (ReportFragment containing findings, bool indicating if suspects found).
+
         """
         lines = []
         any_suspect_found = False
@@ -125,11 +124,11 @@ class SuspectScanner:
 
     @staticmethod
     def _process_signal(signal: str, crashlog_mainerror: str, segment_callstack_intact: str, match_status: dict[str, bool]) -> bool:
-        """
-        Process an individual signal and update match status.
+        """Process an individual signal and update match status.
 
         Returns:
             True if processing should stop (NOT condition met)
+
         """
         # Debug signal type if not string
         if not isinstance(signal, str):
@@ -169,8 +168,7 @@ class SuspectScanner:
 
     @staticmethod
     def _is_suspect_match(match_status: dict[str, bool]) -> bool:
-        """
-        Determines whether a match is classified as a suspect based on the given match status criteria.
+        """Determine whether a match is classified as a suspect based on the given match status criteria.
 
         This function evaluates the provided match status dictionary to determine if specific conditions
         indicate a suspect match. Depending on the presence of certain flags, it either confirms the
@@ -187,6 +185,7 @@ class SuspectScanner:
         Returns:
             bool: True if the match is determined to be suspect based on the flags in match_status,
             False otherwise.
+
         """
         if match_status["has_required_item"]:
             return match_status["error_req_found"]
@@ -194,8 +193,7 @@ class SuspectScanner:
 
     @staticmethod
     def _format_suspect_message(error_name: str, error_severity: str, max_warn_length: int) -> str:
-        """
-        Formats a warning message for a suspected error condition. The function generates a formatted string
+        """Format a warning message for a suspected error condition. The function generates a formatted string
         that includes the name of the error padded to a specified maximum warning length, along with its
         severity level.
 
@@ -206,20 +204,21 @@ class SuspectScanner:
 
         Returns:
             str: A formatted string describing the suspected error with its severity.
+
         """
         formatted_error_name = error_name.ljust(max_warn_length, ".")
         return f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n-----\n"
 
     @staticmethod
     def check_dll_crash(crashlog_mainerror: str) -> ReportFragment:
-        """
-        Analyze a crash log to identify if a DLL file is implicated in the crash.
+        """Analyze a crash log to identify if a DLL file is implicated in the crash.
 
         Args:
             crashlog_mainerror: The main error message extracted from the crash log.
 
         Returns:
             ReportFragment containing DLL crash notification, or empty fragment.
+
         """
         crashlog_mainerror_lower = crashlog_mainerror.lower()
         if ".dll" in crashlog_mainerror_lower and "tbbmalloc" not in crashlog_mainerror_lower:

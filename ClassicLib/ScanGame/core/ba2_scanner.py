@@ -1,5 +1,4 @@
-"""
-BA2 archive scanner component for CLASSIC_ScanGame.
+"""BA2 archive scanner component for CLASSIC_ScanGame.
 
 This module provides specialized scanning functionality for Bethesda BA2 archive files,
 including texture (DX10) and general (GNRL) format processing. It handles subprocess
@@ -21,8 +20,7 @@ from ClassicLib import msg_error, msg_info, msg_warning
 
 
 class BA2ArchiveScanner:
-    """
-    Handles BA2 archive scanning and analysis.
+    """Handle BA2 archive scanning and analysis.
 
     This class provides specialized functionality for scanning and validating Bethesda
     BA2 archive files, supporting both texture-format (DX10) and general-format (GNRL)
@@ -32,22 +30,22 @@ class BA2ArchiveScanner:
     Attributes:
         process_semaphore (asyncio.Semaphore): Semaphore to limit concurrent subprocess execution.
         walk_executor (ThreadPoolExecutor): Thread pool for handling async directory operations.
+
     """
 
     def __init__(self, process_semaphore: asyncio.Semaphore, walk_executor: ThreadPoolExecutor) -> None:
-        """
-        Initialize the BA2ArchiveScanner.
+        """Initialize the BA2ArchiveScanner.
 
         Args:
             process_semaphore: Semaphore to control concurrent subprocess execution.
             walk_executor: Thread pool executor for async directory operations.
+
         """
         self.process_semaphore = process_semaphore
         self.walk_executor = walk_executor
 
     async def find_ba2_files_async(self, mod_path: Path) -> list[tuple[Path, str]]:
-        """
-        Find all BA2 files in the mod directory.
+        """Find all BA2 files in the mod directory.
 
         This method recursively searches the specified directory for all .ba2 and .BA2
         files, excluding specific files like "prp - main.ba2". The search is performed
@@ -64,14 +62,15 @@ class BA2ArchiveScanner:
             >>> files = await scanner.find_ba2_files_async(Path("/mods"))
             >>> len(files)
             15
+
         """
 
         def _find() -> list[tuple[Path, str]]:
-            """
-            Optimized BA2 file finding using pathlib.rglob().
+            """Optimized BA2 file finding using pathlib.rglob().
 
             Returns:
                 list[tuple[Path, str]]: List of BA2 file paths and filenames.
+
             """
             result = []
             try:
@@ -106,8 +105,7 @@ class BA2ArchiveScanner:
     async def process_ba2_files_async(
         self, ba2_files: list[tuple[Path, str]], bsarch_path: Path, xse_scriptfiles: dict[str, str]
     ) -> list[dict[str, set[str]]]:
-        """
-        Process multiple BA2 files concurrently.
+        """Process multiple BA2 files concurrently.
 
         This method processes all provided BA2 files concurrently, using the process
         semaphore to control the number of simultaneous subprocess executions. Each
@@ -127,11 +125,11 @@ class BA2ArchiveScanner:
             >>> for result in results:
             ...     if result["tex_frmt"]:
             ...         print(f"Found texture format issues: {len(result['tex_frmt'])}")
+
         """
 
         async def process_single_ba2(file_path: Path, filename: str) -> dict[str, set[str]]:
-            """
-            Processes a single BA2 file to identify and collect potential issues.
+            """Process a single BA2 file to identify and collect potential issues.
 
             The function first determines the format of the BA2 file and accordingly processes
             either texture-format or general-format files. It uses BSArch for extracting file data
@@ -144,6 +142,7 @@ class BA2ArchiveScanner:
 
             Returns:
                 Dictionary categorizing identified issues with the BA2 file.
+
             """
             local_issues: dict[str, set[str]] = {
                 "ba2_frmt": set(),
@@ -198,8 +197,7 @@ class BA2ArchiveScanner:
 
     @staticmethod
     async def read_ba2_header_async(file_path: Path, filename: str) -> bytes | None:
-        """
-        Read the BA2 file header asynchronously.
+        """Read the BA2 file header asynchronously.
 
         This method reads the first 12 bytes of a BA2 file, which contain the file
         signature and format identifier. Uses aiofiles if available for true async I/O.
@@ -215,6 +213,7 @@ class BA2ArchiveScanner:
             >>> header = await BA2ArchiveScanner.read_ba2_header_async(path, "mod.ba2")
             >>> header[:4]
             b'BTDX'
+
         """
         try:
             if aiofiles:
@@ -230,8 +229,7 @@ class BA2ArchiveScanner:
 
     @staticmethod
     def validate_ba2_header(header: bytes, filename: str, local_issues: dict[str, set[str]]) -> bool:
-        """
-        Validate BA2 file header format.
+        """Validate BA2 file header format.
 
         Checks if the header contains the correct BA2 signature (BTDX) and a valid
         format identifier (DX10 for textures or GNRL for general archives).
@@ -248,6 +246,7 @@ class BA2ArchiveScanner:
             >>> issues = {"ba2_frmt": set()}
             >>> BA2ArchiveScanner.validate_ba2_header(b"BTDX....DX10", "mod.ba2", issues)
             True
+
         """
         if header[:4] != b"BTDX" or header[8:] not in {b"DX10", b"GNRL"}:
             local_issues["ba2_frmt"].add(f"  - {filename} : {header!s}\n")
@@ -255,8 +254,7 @@ class BA2ArchiveScanner:
         return True
 
     async def process_texture_ba2_async(self, file_path: Path, filename: str, bsarch_path: Path) -> dict[str, set[str]]:
-        """
-        Process a texture-format BA2 file (DX10).
+        """Process a texture-format BA2 file (DX10).
 
         Uses BSArch.exe to dump texture information from the archive and validates
         texture formats and dimensions. Checks for non-DDS textures and odd-numbered
@@ -278,6 +276,7 @@ class BA2ArchiveScanner:
             >>> issues = await scanner.process_texture_ba2_async(path, "textures.ba2", bsarch)
             >>> if issues["tex_dims"]:
             ...     print("Found dimension issues")
+
         """
         local_issues: dict[str, set[str]] = {"tex_dims": set(), "tex_frmt": set()}
         proc: asyncio.subprocess.Process | None = None  # Initialize to None for exception handler access
@@ -328,8 +327,7 @@ class BA2ArchiveScanner:
 
     @staticmethod
     def process_texture_block(file_block: str, filename: str, local_issues: dict[str, set[str]]) -> None:
-        """
-        Process a single texture block from BSArch output.
+        """Process a single texture block from BSArch output.
 
         Parses texture information from BSArch dump output and checks for:
         - Non-DDS texture formats
@@ -345,6 +343,7 @@ class BA2ArchiveScanner:
             >>> BA2ArchiveScanner.process_texture_block(block, "mod.ba2", issues)
             >>> len(issues["tex_dims"])
             0
+
         """
         block_split: list[str] = file_block.split("\n", 3)
 
@@ -365,8 +364,7 @@ class BA2ArchiveScanner:
     async def process_general_ba2_async(
         self, file_path: Path, filename: str, bsarch_path: Path, xse_scriptfiles: dict[str, str]
     ) -> dict[str, set[str]]:
-        """
-        Process a general-format BA2 file (GNRL).
+        """Process a general-format BA2 file (GNRL).
 
         Uses BSArch.exe to list files in the archive and validates:
         - Sound file formats (checks for MP3/M4A which should be XWM)
@@ -389,6 +387,7 @@ class BA2ArchiveScanner:
             >>> issues = await scanner.process_general_ba2_async(path, "main.ba2", bsarch, xse)
             >>> if issues["snd_frmt"]:
             ...     print("Found sound format issues")
+
         """
         local_issues: dict[str, set[str]] = {
             "snd_frmt": set(),
@@ -436,8 +435,7 @@ class BA2ArchiveScanner:
     def analyze_general_files(
         files: list[str], filename: str, file_path: Path, xse_scriptfiles: dict[str, str], local_issues: dict[str, set[str]]
     ) -> None:
-        r"""
-        Analyze files in a general-format BA2 for various issues.
+        r"""Analyze files in a general-format BA2 for various issues.
 
         Scans through the file list from a GNRL BA2 archive and checks for:
         - MP3/M4A sound files (should be XWM for Bethesda games)
@@ -456,6 +454,7 @@ class BA2ArchiveScanner:
             >>> BA2ArchiveScanner.analyze_general_files(files, "mod.ba2", path, xse, issues)
             >>> len(issues["snd_frmt"])
             1
+
         """
         has_xse_files = False
 
@@ -477,8 +476,7 @@ class BA2ArchiveScanner:
 
     @staticmethod
     def merge_scan_results(results: list, target_issues: dict[str, set[str]]) -> None:
-        """
-        Merge scan results from multiple BA2 files into a target dictionary.
+        """Merge scan results from multiple BA2 files into a target dictionary.
 
         This method consolidates results from concurrent BA2 processing, handling
         both successful results (dictionaries) and exceptions. Failed tasks are
@@ -494,6 +492,7 @@ class BA2ArchiveScanner:
             >>> BA2ArchiveScanner.merge_scan_results(results, target)
             >>> len(target["tex_frmt"])
             2
+
         """
         for result in results:
             if isinstance(result, Exception):

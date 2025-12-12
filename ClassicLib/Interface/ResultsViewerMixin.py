@@ -1,5 +1,4 @@
-"""
-Results viewer functionality for displaying scan reports.
+"""Results viewer functionality for displaying scan reports.
 
 This module provides a mixin class for viewing and managing CLASSIC scan reports
 in a dedicated tab with markdown rendering support.
@@ -41,8 +40,7 @@ from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
 class ResultsViewerMixin:
-    """
-    Provides functionality for viewing and managing results or scan reports in a tab interface.
+    """Provide functionality for viewing and managing results or scan reports in a tab interface.
 
     ResultsViewerMixin contains utilities for displaying a list of reports, viewing report contents
     in markdown format, and managing report files. It handles initializing interface components,
@@ -61,6 +59,7 @@ class ResultsViewerMixin:
     Signals:
         report_loaded (Path): Emitted when a report is successfully loaded, with the loaded report's path.
         reports_refreshed (int): Emitted when the reports list is refreshed, indicating the number of reports found.
+
     """
 
     # Type stubs for attributes that must be provided by the mixing class
@@ -78,8 +77,7 @@ class ResultsViewerMixin:
     reports_refreshed = Signal(int)  # Number of reports found
 
     def setup_results_tab(self) -> None:
-        """
-        Sets up the results tab with a layout and functionality for displaying and managing
+        """Set up the results tab with a layout and functionality for displaying and managing
         reports.
 
         This method initializes the user interface elements, creates panels for report display
@@ -87,7 +85,6 @@ class ResultsViewerMixin:
         automatically when the associated directory changes. It also configures a timer
         to periodically refresh the reports list if auto-refresh is enabled.
         """
-
         # Create main layout
         layout = QHBoxLayout(self.results_tab)
         layout.setContentsMargins(10, 10, 10, 10)
@@ -143,8 +140,7 @@ class ResultsViewerMixin:
         logger.debug("Results viewer tab initialized")
 
     def _create_reports_panel(self) -> QWidget:
-        """
-        Creates a reports panel containing a list widget to display reports and a button bar
+        """Create a reports panel containing a list widget to display reports and a button bar
         for additional actions like refreshing, deleting, and opening the reports folder.
 
         The panel includes:
@@ -155,6 +151,7 @@ class ResultsViewerMixin:
 
         Returns:
             QWidget: The constructed reports panel containing the reports list and button bar.
+
         """
         from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
 
@@ -209,8 +206,7 @@ class ResultsViewerMixin:
 
     # noinspection PyUnresolvedReferences
     def _create_viewer_panel(self) -> QWidget:
-        """
-        Creates and returns a viewer panel containing a metadata widget, markdown
+        """Create and returns a viewer panel containing a metadata widget, markdown
         viewer, and a toolbar with various controls.
 
         The panel includes:
@@ -222,6 +218,7 @@ class ResultsViewerMixin:
         Returns:
             QWidget: A fully constructed viewer panel containing the components
             described above.
+
         """
         from ClassicLib.Interface.ResultsViewerWidgets import MarkdownViewer, ReportMetadataWidget
 
@@ -282,8 +279,7 @@ class ResultsViewerMixin:
         return panel
 
     def scan_for_reports(self) -> list[Path]:
-        """
-        Scans multiple directories for specific report files and returns them in a sorted list.
+        """Scan multiple directories for specific report files and returns them in a sorted list.
 
         The method searches for report files with names matching the pattern "*-AUTOSCAN.md"
         in predefined directories. These include the "Crash Logs" folder in the local
@@ -295,6 +291,7 @@ class ResultsViewerMixin:
         Returns:
             list[Path]: A sorted list of paths to all unique report files found, ordered
             by name in descending order (Z to A).
+
         """
         reports = []
 
@@ -335,8 +332,7 @@ class ResultsViewerMixin:
         return unique_reports
 
     def refresh_reports_list(self) -> None:
-        """
-        Clears the current list of reports, scans for updated reports, and populates
+        """Clear the current list of reports, scans for updated reports, and populates
         the list with new data. Updates associated widgets and emits a signal to notify
         listeners of changes.
         """
@@ -377,8 +373,7 @@ class ResultsViewerMixin:
         logger.info(f"Refreshed reports list: {len(reports)} reports found")
 
     def load_report(self, report_path: Path) -> bool:
-        """
-        Loads a report file specified by the given path, displays its content in a markdown viewer,
+        """Load a report file specified by the given path, displays its content in a markdown viewer,
         updates associated metadata, and signals the completion of the process. Verifies the
         existence of the file before attempting to load it, and handles errors gracefully.
 
@@ -387,6 +382,7 @@ class ResultsViewerMixin:
 
         Returns:
             bool: True if the report is loaded successfully; False otherwise.
+
         """
         logger.info(f"Loading report: {report_path}")
         # msg_info removed - not needed for every report load
@@ -597,8 +593,7 @@ class ResultsViewerMixin:
         self.refresh_reports_list()
 
     def _pause_file_watching(self) -> None:
-        """
-        Pause file watching during scans to prevent I/O bottleneck.
+        """Pause file watching during scans to prevent I/O bottleneck.
 
         During a scan, each new report triggers a directory change event,
         which causes refresh_reports_list() to read ALL existing reports.
@@ -610,8 +605,7 @@ class ResultsViewerMixin:
         logger.debug("File watching paused")
 
     def _resume_file_watching(self) -> None:
-        """
-        Resume file watching after scan completion.
+        """Resume file watching after scan completion.
 
         The caller should trigger a single refresh after resuming to show
         all new reports created during the scan.
@@ -620,7 +614,7 @@ class ResultsViewerMixin:
         logger.debug("File watching resumed")
 
     def _setup_auto_refresh(self) -> None:
-        """Setup auto-refresh based on settings."""
+        """Set up auto-refresh based on settings."""
         # Check if auto-refresh is enabled in settings
         auto_refresh = yaml_settings(bool, YAML.Settings, "ResultsViewer.AutoRefresh", False)
 

@@ -1,5 +1,4 @@
-"""
-Rust-accelerated report generation wrapper.
+"""Rust-accelerated report generation wrapper.
 
 This module provides backward-compatible wrappers for the Rust report generation
 components, implementing Phase 5 of the Rust migration plan. It offers:
@@ -49,16 +48,14 @@ from ClassicLib.ScanLog.fragments.report_generator_functional import ReportGener
 
 
 class RustAcceleratedReportFragment:
-    """
-    Wrapper for Rust-accelerated ReportFragment with Python fallback.
+    """Wrapper for Rust-accelerated ReportFragment with Python fallback.
 
     This class provides seamless integration between Rust and Python implementations,
     automatically falling back to Python if Rust is not available.
     """
 
     def __init__(self, lines: list[str] | tuple[str, ...] | None = None, check_content: bool = True, use_rust: bool = True) -> None:
-        """
-        Initializes the object with optional lines of text and configuration for content checking
+        """Initialize the object with optional lines of text and configuration for content checking
         and internal Rust implementation usage.
 
         Args:
@@ -68,6 +65,7 @@ class RustAcceleratedReportFragment:
                 Defaults to True.
             use_rust (bool): Flag to determine whether the Rust-based implementation should be
                 used when available. Defaults to True.
+
         """
         self._use_rust = use_rust and RUST_AVAILABLE
 
@@ -88,8 +86,7 @@ class RustAcceleratedReportFragment:
 
     @classmethod
     def empty(cls) -> RustAcceleratedReportFragment:
-        """
-        Creates and returns a new empty instance of RustAcceleratedReportFragment.
+        """Create and returns a new empty instance of RustAcceleratedReportFragment.
 
         This method is a class method that initializes an empty instance of
         RustAcceleratedReportFragment. It determines whether to use the Rust
@@ -100,6 +97,7 @@ class RustAcceleratedReportFragment:
             RustAcceleratedReportFragment: An instance of the class initialized
             with either the Rust or Python empty report fragment, depending on
             Rust availability.
+
         """
         instance = cls.__new__(cls)
         instance._use_rust = RUST_AVAILABLE
@@ -114,8 +112,7 @@ class RustAcceleratedReportFragment:
 
     @classmethod
     def from_lines(cls, lines: list[str] | tuple[str, ...], check_content: bool = True) -> RustAcceleratedReportFragment:
-        """
-        Creates an instance of the `RustAcceleratedReportFragment` class from a list or tuple of string lines.
+        """Create an instance of the `RustAcceleratedReportFragment` class from a list or tuple of string lines.
 
         Args:
             lines (list[str] | tuple[str, ...]): A sequence of strings representing the report details.
@@ -124,12 +121,12 @@ class RustAcceleratedReportFragment:
         Returns:
             RustAcceleratedReportFragment: A new instance of the class initialized using the given `lines` and
                                            `check_content` parameters.
+
         """
         return cls(lines, check_content)
 
     def with_header(self, header_lines: list[str] | tuple[str, ...]) -> RustAcceleratedReportFragment:
-        """
-        Adds headers to the current report fragment, either by using Rust acceleration
+        """Add headers to the current report fragment, either by using Rust acceleration
         or Python fallback depending on the internal configuration.
 
         This method modifies the fragment by prepending the provided header lines.
@@ -143,6 +140,7 @@ class RustAcceleratedReportFragment:
         Returns:
             RustAcceleratedReportFragment: A new instance of
                 RustAcceleratedReportFragment with the provided headers included.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = self._use_rust
@@ -158,8 +156,7 @@ class RustAcceleratedReportFragment:
         return result
 
     def __add__(self, other: RustAcceleratedReportFragment | PyReportFragment) -> RustAcceleratedReportFragment:
-        """
-        Adds two report fragments together to combine their
+        """Add two report fragments together to combine their
         internal fragments, with Rust acceleration if enabled. If Rust acceleration
         is not supported, it falls back to Python-based implementation for combining
         the fragments.
@@ -171,6 +168,7 @@ class RustAcceleratedReportFragment:
         Returns:
             RustAcceleratedReportFragment: A new instance containing the combined
                 result of both fragments.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
 
@@ -197,25 +195,25 @@ class RustAcceleratedReportFragment:
         return result
 
     def to_list(self) -> list[str]:
-        """
-        Converts the internal fragment structure into a list of strings.
+        """Convert the internal fragment structure into a list of strings.
 
         Returns:
             list[str]: A list containing string representations of the internal fragment
             elements.
+
         """
         return self._fragment.to_list()
 
     @property
     def content(self) -> tuple[str, ...]:
-        """
-        Gets the content of the fragment as a tuple of strings.
+        """Get the content of the fragment as a tuple of strings.
 
         This property retrieves the fragment content. If `use_rust` is enabled,
         it converts the content from Rust's internal to a Python tuple.
 
         Returns:
             tuple[str, ...]: A tuple containing all strings from the fragment content.
+
         """
         if self._use_rust:
             # Rust doesn't have content property, convert from to_list()
@@ -224,8 +222,7 @@ class RustAcceleratedReportFragment:
 
     @property
     def has_content(self) -> bool:
-        """
-        Indicates whether the instance has any content.
+        """Indicate whether the instance has any content.
 
         This property determines if there is content present within the instance.
         It either uses a Rust-based implementation to check content or relies
@@ -233,6 +230,7 @@ class RustAcceleratedReportFragment:
 
         Returns:
             bool: True if content is present, False otherwise.
+
         """
         if self._use_rust:
             # Rust has is_empty() method, invert it for has_content
@@ -240,8 +238,7 @@ class RustAcceleratedReportFragment:
         return self._fragment.has_content  # type: ignore[union-attr]
 
     def __len__(self) -> int:
-        """
-        Calculates the length of the fragment.
+        """Calculate the length of the fragment.
 
         This method determines the length of the fragment object. If the
         `_use_rust` flag is enabled, it utilizes the Rust implementation to
@@ -250,6 +247,7 @@ class RustAcceleratedReportFragment:
 
         Returns:
             int: The length of the fragment.
+
         """
         if self._use_rust:
             # Rust has len() method
@@ -257,8 +255,7 @@ class RustAcceleratedReportFragment:
         return len(self._fragment)  # type: ignore[arg-type]
 
     def __bool__(self) -> bool:
-        """
-        Determines the truth value of the object.
+        """Determine the truth value of the object.
 
         This method evaluates the truthiness of the object based on the state
         of its internal `_fragment` attribute and possibly additional logic
@@ -266,6 +263,7 @@ class RustAcceleratedReportFragment:
 
         Returns:
             bool: True if the `_fragment` has content; False otherwise.
+
         """
         if self._use_rust:
             assert RustReportFragment is not None, "Rust should be available when _use_rust is True"
@@ -274,16 +272,14 @@ class RustAcceleratedReportFragment:
 
 
 class RustAcceleratedReportComposer:
-    """
-    Wrapper for Rust-accelerated ReportComposer with Python fallback.
+    """Wrapper for Rust-accelerated ReportComposer with Python fallback.
 
     Provides parallel fragment processing when using Rust implementation,
     with automatic fallback to Python for compatibility.
     """
 
     def __init__(self, _parallel_threshold: int = 10) -> None:
-        """
-        Initializes the class with the desired threshold for parallel processing.
+        """Initialize the class with the desired threshold for parallel processing.
 
         The constructor determines whether to use a Rust-based composer or a
         Python-based composer depending on the availability of Rust.
@@ -291,6 +287,7 @@ class RustAcceleratedReportComposer:
         Args:
             _parallel_threshold: Reserved for future use. Currently unused as
                 Rust ReportComposer handles parallelization internally.
+
         """
         self._use_rust = RUST_AVAILABLE
 
@@ -304,8 +301,7 @@ class RustAcceleratedReportComposer:
         self._fragments: list[Any] = []
 
     def add(self, fragment: RustAcceleratedReportFragment | PyReportFragment | Any) -> RustAcceleratedReportComposer:
-        """
-        Adds a fragment to the report composer. The fragment can be a Python or Rust
+        """Add a fragment to the report composer. The fragment can be a Python or Rust
         oriented report fragment, or any compatible data structure, depending on
         implementation and requirements.
 
@@ -327,6 +323,7 @@ class RustAcceleratedReportComposer:
         Returns:
             RustAcceleratedReportComposer: The current instance of the composer,
                 allowing method chaining.
+
         """
         if self._use_rust:
             # Convert Python fragment to Rust if needed
@@ -362,8 +359,7 @@ class RustAcceleratedReportComposer:
         return self
 
     def compose(self) -> RustAcceleratedReportFragment:
-        """
-        Generates and returns a report fragment, utilizing Rust optimization if enabled.
+        """Generate and returns a report fragment, utilizing Rust optimization if enabled.
 
         The composing process is optimized using Rust-based functionality when applicable.
         If Rust is not enabled, the composing reverts to a standard method. The optimization
@@ -372,6 +368,7 @@ class RustAcceleratedReportComposer:
 
         Returns:
             RustAcceleratedReportFragment: The composed report fragment.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = self._use_rust
@@ -388,26 +385,26 @@ class RustAcceleratedReportComposer:
         return result
 
     def build(self) -> RustAcceleratedReportFragment:
-        """
-        Builds and returns a RustAcceleratedReportFragment instance.
+        """Build and returns a RustAcceleratedReportFragment instance.
 
         This method creates and composes an instance of RustAcceleratedReportFragment
         by utilizing the compose method.
 
         Returns:
             RustAcceleratedReportFragment: The resulting instance created by the compose method.
+
         """
         return self.compose()
 
     def to_list(self) -> list[str]:
-        """
-        Converts the internal composed object into a list of strings.
+        """Convert the internal composed object into a list of strings.
 
         This method determines whether to use a Rust-optimized composition
         or a Python-based composition, depending on the internal configuration.
 
         Returns:
             list[str]: A list of strings representing the composed object.
+
         """
         if self._use_rust:
             assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
@@ -416,8 +413,7 @@ class RustAcceleratedReportComposer:
         return self._composer.to_list()  # type: ignore[union-attr]
 
     def build_string(self) -> str:
-        """
-        Builds a string from the composer using either Rust implementation or a Python fallback.
+        """Build a string from the composer using either Rust implementation or a Python fallback.
 
         This method determines the string construction approach based on the use of
         Rust for computation. If Rust is enabled, it delegates the operation to the
@@ -426,6 +422,7 @@ class RustAcceleratedReportComposer:
 
         Returns:
             str: The constructed string from the composer.
+
         """
         if self._use_rust:
             assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
@@ -437,8 +434,7 @@ class RustAcceleratedReportComposer:
 
     @property
     def pool_stats(self) -> tuple[int, int, int, int] | None:
-        """
-        Gets the statistics of the pool.
+        """Get the statistics of the pool.
 
         Provides information about the pool's current state in a tuple format if available.
 
@@ -451,6 +447,7 @@ class RustAcceleratedReportComposer:
             - lookups: Total number of intern attempts
             - hits: Number of cache hits (string already in pool)
             - insertions: Number of new strings added to pool
+
         """
         if self._use_rust:
             assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
@@ -461,21 +458,20 @@ class RustAcceleratedReportComposer:
 
 
 class RustAcceleratedReportGenerator:
-    """
-    Wrapper for Rust-accelerated ReportGenerator with Python fallback.
+    """Wrapper for Rust-accelerated ReportGenerator with Python fallback.
 
     Provides efficient string building and pooling when using Rust implementation.
     """
 
     def __init__(self, yamldata: Any = None) -> None:
-        """
-        Initializes the object and sets up the report generator based on the availability
+        """Initialize the object and sets up the report generator based on the availability
         of the Rust implementation. If Rust is not available, a Python-based report
         generator is used.
 
         Args:
             yamldata: Optional initial data in YAML format that will be associated
                 with the report generator.
+
         """
         self._use_rust = RUST_AVAILABLE
         self.yamldata = yamldata
@@ -487,8 +483,7 @@ class RustAcceleratedReportGenerator:
             self._generator.yamldata = yamldata  # type: ignore[attr-defined]
 
     def generate_header(self, crashlog_filename: str, version: str = "") -> RustAcceleratedReportFragment:
-        """
-        Generates a header fragment for a Rust-accelerated report. The method determines
+        """Generate a header fragment for a Rust-accelerated report. The method determines
         the use of Rust acceleration and delegates the generation of the header accordingly.
 
         Args:
@@ -519,8 +514,7 @@ class RustAcceleratedReportGenerator:
         version_latest: Any,
         version_latest_vr: Any,
     ) -> RustAcceleratedReportFragment:
-        """
-        Generates an error section in the report.
+        """Generate an error section in the report.
 
         This method determines the appropriate error section for a report based on the
         provided parameters and handles logic for generating the fragment either using
@@ -536,6 +530,7 @@ class RustAcceleratedReportGenerator:
 
         Returns:
             RustAcceleratedReportFragment: A fragment object containing the error section.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = self._use_rust
@@ -566,8 +561,7 @@ class RustAcceleratedReportGenerator:
         return result
 
     def generate_suspect_section(self, found_suspects: list[str]) -> RustAcceleratedReportFragment:
-        """
-        Generates a suspect section fragment using either the Rust or Python generator,
+        """Generate a suspect section fragment using either the Rust or Python generator,
         depending on the specified configuration setting.
 
         Args:
@@ -576,6 +570,7 @@ class RustAcceleratedReportGenerator:
         Returns:
             RustAcceleratedReportFragment: A generated report fragment containing the
             suspect section.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = self._use_rust
@@ -589,14 +584,14 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_suspect_section_header() -> RustAcceleratedReportFragment:
-        """
-        Generates a section header for reporting known crash messages, errors, and suspects.
+        """Generate a section header for reporting known crash messages, errors, and suspects.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
 
         Returns:
             RustAcceleratedReportFragment: A fragment containing the section header.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -610,8 +605,7 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_suspect_found_footer(found_suspect: bool) -> RustAcceleratedReportFragment:
-        """
-        Generates a footer message indicating whether suspects were detected.
+        """Generate a footer message indicating whether suspects were detected.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
@@ -621,6 +615,7 @@ class RustAcceleratedReportGenerator:
 
         Returns:
             RustAcceleratedReportFragment: A fragment containing the footer message.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -641,14 +636,14 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_settings_section_header() -> RustAcceleratedReportFragment:
-        """
-        Generates a section header for reporting settings-related issues.
+        """Generate a section header for reporting settings-related issues.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
 
         Returns:
             RustAcceleratedReportFragment: A fragment containing the settings-related issues header.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -662,8 +657,7 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_mod_check_header(check_type: str) -> RustAcceleratedReportFragment:
-        """
-        Generates a report fragment header for mod checks based on the provided check type.
+        """Generate a report fragment header for mod checks based on the provided check type.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
@@ -673,6 +667,7 @@ class RustAcceleratedReportGenerator:
 
         Returns:
             RustAcceleratedReportFragment: A fragment containing the formatted header lines.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -686,14 +681,14 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_plugin_suspect_header() -> RustAcceleratedReportFragment:
-        """
-        Generates a header fragment for reports related to plugin-related errors.
+        """Generate a header fragment for reports related to plugin-related errors.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
 
         Returns:
             RustAcceleratedReportFragment: A fragment containing formatted header information.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -707,14 +702,14 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_formid_section_header() -> RustAcceleratedReportFragment:
-        """
-        Generates a section header for FormID checks.
+        """Generate a section header for FormID checks.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
 
         Returns:
             RustAcceleratedReportFragment: A segment of the report containing the FormID check header.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -728,14 +723,14 @@ class RustAcceleratedReportGenerator:
 
     @staticmethod
     def generate_record_section_header() -> RustAcceleratedReportFragment:
-        """
-        Generates a section header for checking named records.
+        """Generate a section header for checking named records.
 
         This method is not available in the Rust implementation, so it always uses
         the Python fallback implementation.
 
         Returns:
             RustAcceleratedReportFragment: An instance containing the predefined header lines.
+
         """
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
         result._use_rust = False  # Always use Python for this simple static method
@@ -749,15 +744,13 @@ class RustAcceleratedReportGenerator:
 
 
 class ParallelReportProcessor:
-    """
-    Parallel report processing capabilities (Rust-only feature).
+    """Parallel report processing capabilities (Rust-only feature).
 
     Falls back to sequential processing in Python.
     """
 
     def __init__(self) -> None:
-        """
-        Initializes an instance of the class, setting up a processor based on the availability
+        """Initialize an instance of the class, setting up a processor based on the availability
         of Rust support.
         """
         self._use_rust = RUST_AVAILABLE
@@ -769,8 +762,7 @@ class ParallelReportProcessor:
             self._processor = None
 
     def process_reports(self, reports: list[list[str]]) -> list[list[str]]:
-        """
-        Processes a list of report fragments by either utilizing a Rust-based processor
+        """Process a list of report fragments by either utilizing a Rust-based processor
         (if available) or falling back to Python implementation for sequential processing.
 
         This method takes a two-dimensional list of strings, processes each
@@ -784,6 +776,7 @@ class ParallelReportProcessor:
 
         Returns:
             list[list[str]]: A list of processed report fragments (each fragment is a list of strings).
+
         """
         if self._use_rust and self._processor is not None:
             from classic_scanlog import ParallelReportProcessor
@@ -799,8 +792,7 @@ class ParallelReportProcessor:
         return results
 
     def combine_fragments_parallel(self, fragments: list[RustAcceleratedReportFragment]) -> RustAcceleratedReportFragment:
-        """
-        Combines multiple RustAcceleratedReportFragment instances into a single fragment
+        """Combine multiple RustAcceleratedReportFragment instances into a single fragment
         utilizing parallel processing when applicable or falling back to sequential processing in Python.
 
         Args:
@@ -810,6 +802,7 @@ class ParallelReportProcessor:
         Returns:
             RustAcceleratedReportFragment: A new RustAcceleratedReportFragment instance that
             represents the combined result of the input fragments.
+
         """
         if self._use_rust and self._processor is not None and all(f._use_rust for f in fragments):
             from classic_scanlog import ParallelReportProcessor
@@ -858,6 +851,7 @@ else:
 
             Returns:
                 str: The input string unchanged.
+
             """
             self._strings.add(s)
             return s
@@ -867,6 +861,7 @@ else:
 
             Returns:
                 list[str]: The input strings unchanged.
+
             """
             for s in strings:
                 self._strings.add(s)
@@ -877,6 +872,7 @@ else:
 
             Returns:
                 tuple[int, int, int, int]: Tuple of (total, unique, saved, current).
+
             """
             size = len(self._strings)
             return (size, 0, 0, size)

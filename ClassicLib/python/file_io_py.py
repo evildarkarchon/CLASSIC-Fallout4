@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of file I/O operations.
+"""Pure Python implementation of file I/O operations.
 
 This module provides the fallback Python implementation for file I/O operations
 when the Rust acceleration is not available. It maintains full compatibility
@@ -28,8 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 class PythonFileIO:
-    """
-    Pure Python implementation of file I/O operations.
+    """Pure Python implementation of file I/O operations.
 
     This class provides async-first file operations using standard Python
     libraries and aiofiles when available. It serves as the fallback
@@ -37,20 +35,19 @@ class PythonFileIO:
     """
 
     def __init__(self, encoding: str = "utf-8", errors: str = "ignore") -> None:
-        """
-        Initialize PythonFileIO with default encoding settings.
+        """Initialize PythonFileIO with default encoding settings.
 
         Args:
             encoding: Default encoding for file operations
             errors: Error handling strategy for encoding errors
+
         """
         self.default_encoding = encoding
         self.default_errors = errors
 
     @staticmethod
     def _ensure_path(path: Path | str) -> Path:
-        """
-        Ensures that the given input is converted to a `Path` object. This utility method checks the
+        """Ensure that the given input is converted to a `Path` object. This utility method checks the
         type of the provided input and converts it to a `Path` object if it is not already one. It is
         useful for handling inputs that can either be file paths in string format or `Path` objects.
 
@@ -60,14 +57,14 @@ class PythonFileIO:
 
         Returns:
             Path: The input path converted to a `Path` object.
+
         """
         if isinstance(path, str):
             return Path(path)
         return path
 
     async def read_file(self, path: Path | str) -> str:
-        """
-        Reads the contents of a file asynchronously and returns it as a string.
+        """Read the contents of a file asynchronously and returns it as a string.
 
         This method ensures the given path is valid and attempts to read the file,
         with proper encoding detection if available. If async file handling is not
@@ -83,6 +80,7 @@ class PythonFileIO:
         Raises:
             ValueError: If the given path is invalid.
             ImportError: If the async encoding detection library cannot be imported.
+
         """
         path = self._ensure_path(path)
 
@@ -104,8 +102,7 @@ class PythonFileIO:
             return await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
 
     async def read_lines(self, path: Path | str) -> list[str]:
-        """
-        Reads the lines of a file and returns them as a list of strings.
+        """Read the lines of a file and returns them as a list of strings.
 
         This asynchronous method reads the content of a file at the specified path and
         splits its content into individual lines.
@@ -117,13 +114,13 @@ class PythonFileIO:
         Returns:
             list[str]: A list of strings, where each string represents a line from
                 the file.
+
         """
         content = await self.read_file(path)
         return content.splitlines()
 
     async def read_bytes(self, path: Path | str) -> bytes:
-        """
-        Reads and returns the content of a file as bytes asynchronously.
+        """Read and returns the content of a file as bytes asynchronously.
 
         This method works with both `Path` and string representations of paths.
         If `aiofiles` is available, it utilizes asynchronous file I/O for better
@@ -140,6 +137,7 @@ class PythonFileIO:
         Raises:
             AssertionError: If `aiofiles` is not available but is attempted to be
                 used.
+
         """
         path = self._ensure_path(path)
 
@@ -152,8 +150,7 @@ class PythonFileIO:
             return await loop.run_in_executor(None, path.read_bytes)
 
     async def write_file(self, path: Path | str, content: str) -> None:
-        """
-        Writes the given content to the specified file asynchronously. Ensures that
+        """Write the given content to the specified file asynchronously. Ensures that
         the parent directories for the file path exist before writing. Uses aiofiles
         if available for asynchronous I/O, otherwise falls back to running the
         file writing operation in an executor.
@@ -162,6 +159,7 @@ class PythonFileIO:
             path: The file path where the content should be written. It can be either
                 a Path object or a string.
             content: The content to write into the file.
+
         """
         path = self._ensure_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -175,8 +173,7 @@ class PythonFileIO:
             await loop.run_in_executor(None, path.write_text, content, self.default_encoding, self.default_errors)
 
     async def write_lines(self, path: Path | str, lines: list[str]) -> None:
-        """
-        Writes a list of strings to a file asynchronously.
+        """Write a list of strings to a file asynchronously.
 
         This method takes a list of strings and writes them to the specified file
         path. Each string in the list is joined by a newline character. If the
@@ -196,8 +193,7 @@ class PythonFileIO:
         await self.write_file(path, content)
 
     async def write_bytes(self, path: Path | str, content: bytes) -> None:
-        """
-        Writes a byte content to the specified file path asynchronously. Ensures that parent directories
+        """Write a byte content to the specified file path asynchronously. Ensures that parent directories
         exist before writing. If `aiofiles` is available, it uses asynchronous file operations to write
         the bytes. Otherwise, it falls back to using a thread executor for writing.
 
@@ -208,6 +204,7 @@ class PythonFileIO:
 
         Raises:
             AssertionError: If attempting to use `aiofiles` but it is not properly imported or available.
+
         """
         path = self._ensure_path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -221,8 +218,7 @@ class PythonFileIO:
             await loop.run_in_executor(None, path.write_bytes, content)
 
     async def append_file(self, path: Path | str, content: str) -> None:
-        """
-        Appends content to a file asynchronously. If the file does not exist, it creates
+        """Append content to a file asynchronously. If the file does not exist, it creates
         the file and writes the content to it. If the directory structure for the given
         file path does not exist, it is created automatically. The operation is
         performed asynchronously using aiofiles if available, otherwise it falls back
@@ -251,8 +247,7 @@ class PythonFileIO:
             await loop.run_in_executor(None, append_sync)
 
     async def read_crash_log(self, path: Path | str) -> list[str]:
-        """
-        Reads and processes a crash log file provided by its path. This method retrieves the
+        """Read and processes a crash log file provided by its path. This method retrieves the
         content of the file asynchronously by reading all lines, ensures any trailing empty
         lines are removed, and returns the processed content as a list of strings.
 
@@ -267,6 +262,7 @@ class PythonFileIO:
         Raises:
             Any exception related to file I/O or async operations encountered during reading
             the file can be propagated.
+
         """
         lines = await self.read_lines(path)
         # Strip any trailing empty lines for consistency
@@ -275,8 +271,7 @@ class PythonFileIO:
         return lines
 
     async def write_crash_report(self, path: Path | str, report_lines: list[str]) -> None:
-        """
-        Writes a crash report to a specified file.
+        """Write a crash report to a specified file.
 
         This method asynchronously creates a markdown file at the specified path and
         writes the provided report lines into it. The provided lines are assumed to
@@ -289,6 +284,7 @@ class PythonFileIO:
             report_lines (list[str]): A list of strings representing the lines of the
                 crash report. Each line should already include the necessary newline
                 character.
+
         """
         path = self._ensure_path(path)
         report_path = path.with_suffix(".md")
@@ -297,8 +293,7 @@ class PythonFileIO:
         logger.info(f"Report written to: {report_path}")
 
     async def read_multiple_files(self, paths: list[Path | str]) -> dict[str, str]:
-        """
-        Reads multiple files asynchronously and returns their contents in a dictionary.
+        """Read multiple files asynchronously and returns their contents in a dictionary.
 
         This function reads the contents of multiple files specified by their paths
         and returns a dictionary where the keys are the file names (as strings) and
@@ -318,11 +313,11 @@ class PythonFileIO:
             Exception: If an error occurs while reading a specific file, it is logged,
             and its content will be set to an empty string, but no exception is
             propagated to the caller.
+
         """
 
         async def read_single(path: Path | str) -> tuple[str, str]:
-            """
-            Reads the content of a single file asynchronously.
+            """Read the content of a single file asynchronously.
 
             This method attempts to read the content of the file at the specified
             path. If an error occurs during the file reading process, it logs the
@@ -338,6 +333,7 @@ class PythonFileIO:
                 the file, and the second element is the content of the file. If
                 an error occurs, the first element is the name of the file, and
                 the second element is an empty string.
+
             """
             path = self._ensure_path(path)
             try:
@@ -353,8 +349,7 @@ class PythonFileIO:
         return dict(results)
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
-        """
-        Writes multiple files asynchronously by delegating to a helper function that performs individual file writes.
+        """Write multiple files asynchronously by delegating to a helper function that performs individual file writes.
 
         This function takes in a dictionary where keys represent file paths and values represent the corresponding content to be written to the files. It efficiently writes all files concurrently, utilizing asynchronous tasks.
 
@@ -363,16 +358,17 @@ class PythonFileIO:
 
         Raises:
             Exception: Logged if any error occurs during the writing process.
+
         """
 
         async def write_single(path: Path | str, content: str) -> None:
-            """
-            Writes content to a specified file asynchronously. If there is an error during the write
+            """Write content to a specified file asynchronously. If there is an error during the write
             operation, it is logged.
 
             Args:
                 path (Path | str): The path of the file to write to.
                 content (str): The content to be written to the file.
+
             """
             try:
                 await self.write_file(path, content)
@@ -383,8 +379,7 @@ class PythonFileIO:
         await asyncio.gather(*tasks, return_exceptions=False)
 
     def file_exists(self, path: Path | str) -> bool:
-        """
-        Checks if the given file path exists.
+        """Check if the given file path exists.
 
         This method verifies the existence of a file or a directory at the specified
         path. It handles both string-based file paths and `Path` objects.
@@ -395,13 +390,13 @@ class PythonFileIO:
 
         Returns:
             bool: True if the path exists; otherwise, False.
+
         """
         path = self._ensure_path(path)
         return path.exists()
 
     def get_file_size(self, path: Path | str) -> int:
-        """
-        Returns the size of a given file in bytes. If the file does not exist or an
+        """Return the size of a given file in bytes. If the file does not exist or an
         error occurs while accessing it, the method returns -1.
 
         Args:
@@ -411,6 +406,7 @@ class PythonFileIO:
         Returns:
             int: The size of the file in bytes, or -1 if the file does not exist or
                 an error occurs.
+
         """
         path = self._ensure_path(path)
         try:

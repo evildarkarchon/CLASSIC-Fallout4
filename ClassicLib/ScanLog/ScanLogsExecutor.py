@@ -1,5 +1,4 @@
-"""
-Crash log scanning executor for business logic operations.
+"""Crash log scanning executor for business logic operations.
 
 This module contains the main executor class that orchestrates crash log scanning
 operations. It provides a clean interface between CLI/GUI components and the
@@ -40,6 +39,7 @@ class ScanLogsExecutor:
         >>> executor = ScanLogsExecutor()
         >>> result = executor.scan_sync()
         >>> print(f"Scanned {result.statistics.processed} files")
+
     """
 
     def __init__(self, config: ScanConfig | None = None, eager_load: bool = False) -> None:
@@ -51,6 +51,7 @@ class ScanLogsExecutor:
             eager_load: If True, eagerly loads YAML data and warms up
                 the database pool. Increases initialization time but
                 eliminates freeze on first scan. Default is False.
+
         """
         self.config = config or self._load_config_from_settings()
 
@@ -78,8 +79,7 @@ class ScanLogsExecutor:
         logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
 
     async def warm_up(self) -> None:
-        """
-        Proactively warm up resources to eliminate freeze on first scan.
+        """Proactively warm up resources to eliminate freeze on first scan.
 
         This method should be called after initialization to pre-load YAML data
         and warm up the database connection pool. This trades initialization time
@@ -109,8 +109,7 @@ class ScanLogsExecutor:
 
     @staticmethod
     def _load_config_from_settings() -> ScanConfig:
-        """
-        Loads and returns the scan configuration from application settings.
+        """Load and returns the scan configuration from application settings.
 
         This static method retrieves various settings required for scan configuration using
         classic settings function calls. The retrieved values are then used to
@@ -118,6 +117,7 @@ class ScanLogsExecutor:
 
         Returns:
             ScanConfig: An object containing the scan configuration settings.
+
         """
         return ScanConfig(
             fcx_mode=classic_settings(bool, "FCX Mode"),
@@ -127,8 +127,7 @@ class ScanLogsExecutor:
         )
 
     async def execute_scan(self) -> ScanResult:
-        """
-        Executes the crash log scanning process asynchronously.
+        """Execute the crash log scanning process asynchronously.
 
         This method handles the entire lifecycle of crash log scanning, including setup,
         processing, and cleanup. It creates an `OrchestratorCore` to manage resources,
@@ -186,14 +185,14 @@ class ScanLogsExecutor:
         return result
 
     async def _initialize_scan_resources(self) -> None:
-        """
-        Initialize scan resources including YAML data and game paths.
+        """Initialize scan resources including YAML data and game paths.
 
         This method ensures that all necessary resources are loaded before
         starting the scan process.
 
         Raises:
             RuntimeError: If resource initialization fails.
+
         """
         # Initialize yamldata here using async factory (no AsyncBridge overhead)
         # If eager_load was set, warm_up() should have been called already
@@ -211,8 +210,7 @@ class ScanLogsExecutor:
         await game_generate_paths_async()
 
     async def _process_crashlogs_with_progress(self, orchestrator: OrchestratorCore, result: ScanResult) -> None:
-        """
-        Process all crash logs with progress tracking and concurrency control.
+        """Process all crash logs with progress tracking and concurrency control.
 
         Args:
             orchestrator: The orchestrator instance for processing logs.
@@ -220,6 +218,7 @@ class ScanLogsExecutor:
 
         Raises:
             asyncio.CancelledError: If the operation is cancelled by the user.
+
         """
         # Use semaphore to limit concurrent operations
         max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
@@ -271,8 +270,7 @@ class ScanLogsExecutor:
         active_tasks: set[asyncio.Task],
         orchestrator: OrchestratorCore,
     ) -> None:
-        """
-        Handle the result of a completed task.
+        """Handle the result of a completed task.
 
         Args:
             task: The completed asyncio task.
@@ -284,6 +282,7 @@ class ScanLogsExecutor:
 
         Raises:
             None: All exceptions are caught and logged.
+
         """
         try:
             task_result = task.result()
@@ -330,8 +329,7 @@ class ScanLogsExecutor:
 
     @staticmethod
     async def _process_crashlog_async(crashlog_file: Path, orchestrator: OrchestratorCore) -> tuple[Path, list[str], bool, Counter[str]]:
-        """
-        Process a crash log with async database operations for FormID lookups.
+        """Process a crash log with async database operations for FormID lookups.
 
         This method is now fully async and doesn't create nested event loops.
 
@@ -341,6 +339,7 @@ class ScanLogsExecutor:
 
         Returns:
             Tuple containing file path, report, failure status, and statistics
+
         """
         try:
             # OrchestratorCore uses the base method name
@@ -351,14 +350,14 @@ class ScanLogsExecutor:
             return crashlog_file, [f"Error processing log: {e}"], True, Counter(failed=1)
 
     def generate_summary(self, result: ScanResult) -> str:
-        """
-        Generate a summary message for the scan results.
+        """Generate a summary message for the scan results.
 
         Args:
             result: The scan result to summarize
 
         Returns:
             Formatted summary string
+
         """
         if result.stats.scanned == 0 and result.stats.incomplete == 0:
             return "CLASSIC found no crash logs to scan or the scan failed.\n    There are no statistics to show (at this time)."
@@ -392,8 +391,7 @@ class ScanLogsExecutor:
         return "\n".join(summary_lines)
 
     def scan_sync(self) -> ScanResult:
-        """
-        Executes a synchronous scan - Phase 2 Context-Aware.
+        """Execute a synchronous scan - Phase 2 Context-Aware.
 
         Works in GUI mode (Qt workers), errors in CLI mode.
         For CLI/TUI, use: await executor.scan() or await executor.execute_scan()
@@ -405,6 +403,7 @@ class ScanLogsExecutor:
 
         Raises:
             RuntimeError: If called in CLI/TUI mode (use async methods)
+
         """
         # Create wrapper per call for proper instance method binding
         wrapper = create_sync_wrapper(self.execute_scan, strict=True)

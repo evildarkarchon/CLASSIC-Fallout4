@@ -1,5 +1,4 @@
-"""
-Pure Python fallback implementation of ConfigDuplicateDetector.
+"""Pure Python fallback implementation of ConfigDuplicateDetector.
 
 This module provides a Python-only implementation of configuration file
 duplicate detection that matches the Rust interface.
@@ -17,6 +16,7 @@ class DuplicateGroup:
     Attributes:
         original: Path to the original (canonical) file.
         duplicates: List of duplicate file paths.
+
     """
 
     def __init__(self, original: Path, duplicates: list[Path] | None = None) -> None:
@@ -25,13 +25,14 @@ class DuplicateGroup:
         Args:
             original: Path to the original file.
             duplicates: List of duplicate file paths.
+
         """
         self.original = original
         self.duplicates = duplicates or []
 
 
 class ConfigDuplicateDetector:
-    """Detects duplicate configuration files in a directory tree.
+    """Detect duplicate configuration files in a directory tree.
 
     This is a Python fallback implementation that matches the Rust interface.
     It finds configuration files with identical content based on file hashes.
@@ -43,6 +44,7 @@ class ConfigDuplicateDetector:
         ...     print(f"Original: {group.original}")
         ...     for dup in group.duplicates:
         ...         print(f"  Duplicate: {dup}")
+
     """
 
     @staticmethod
@@ -63,6 +65,7 @@ class ConfigDuplicateDetector:
             >>> groups = detector.detect_duplicates(Path("/mods"))
             >>> total_dupes = sum(len(g.duplicates) for g in groups)
             >>> print(f"Found {total_dupes} duplicate files")
+
         """
         if not root_path.exists():
             return []
@@ -114,6 +117,7 @@ class ConfigDuplicateDetector:
             >>> dup_map = detector.get_duplicate_map(Path("/mods"))
             >>> for filename, paths in dup_map.items():
             ...     print(f"{filename}: {len(paths)} copies")
+
         """
         groups = ConfigDuplicateDetector.detect_duplicates(root_path)
 

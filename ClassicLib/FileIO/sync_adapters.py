@@ -1,5 +1,4 @@
-"""
-Synchronous adapter functions for FileIOCore - Context-Aware.
+"""Synchronous adapter functions for FileIOCore - Context-Aware.
 
 These adapters automatically choose the appropriate async execution method:
 - GUI mode: Uses AsyncBridge for Qt event loop integration
@@ -51,6 +50,7 @@ Note:
     The CLI/TUI mode asyncio.run() fallback is intentional for testing
     and benchmarking. Production CLI code should use async methods directly
     with FileIOCore for optimal performance.
+
 """
 
 from collections.abc import Iterator
@@ -117,8 +117,7 @@ append_file_sync = create_sync_wrapper(_append_file)
 
 
 def stream_lines_sync(path: Path | str) -> Iterator[str]:
-    """
-    Synchronously streams the contents of a file line by line.
+    """Stream synchronously the contents of a file line by line.
 
     This function yields lines from the file one by one, using automatic encoding
     detection. It is memory-efficient for large files and does NOT use the
@@ -132,6 +131,7 @@ def stream_lines_sync(path: Path | str) -> Iterator[str]:
 
     Yields:
         str: A single line from the file.
+
     """
     # Try to use FileIOCore (which might be Rust-accelerated)
     io_core = _core()

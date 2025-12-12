@@ -18,6 +18,7 @@ Example:
     >>> from ClassicLib.YamlSettings.types import YAMLMapping, T
     >>> def get_setting(data: YAMLMapping, key: str) -> T | None:
     ...     return data.get(key)
+
 """
 
 from typing import TypeVar

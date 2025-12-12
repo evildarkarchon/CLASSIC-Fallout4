@@ -47,6 +47,7 @@ class BridgeOperationType(Enum):
         RunAsyncWithTimeout: run_async_with_timeout() operation.
         LoopCreation: Event loop creation.
         LoopCleanup: Event loop cleanup.
+
     """
 
     RunAsync = ...
@@ -71,6 +72,7 @@ class BridgeMetrics:
         timeout_total_time: Total timeout time (seconds).
         loops_created: Loops created.
         loops_cleaned: Loops cleaned up.
+
     """
 
     run_async_count: int
@@ -89,6 +91,7 @@ class BridgeMetrics:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
 class RuntimeInfo:
@@ -99,6 +102,7 @@ class RuntimeInfo:
     Attributes:
         available: Whether the runtime is available.
         worker_threads: Number of worker threads.
+
     """
 
     available: bool
@@ -109,6 +113,7 @@ class RuntimeInfo:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
 def record_operation(operation: BridgeOperationType, duration_secs: float, success: bool) -> None:
@@ -128,6 +133,7 @@ def record_operation(operation: BridgeOperationType, duration_secs: float, succe
         ...     0.123,
         ...     True
         ... )
+
     """
 
 def get_metrics() -> BridgeMetrics:
@@ -143,6 +149,7 @@ def get_metrics() -> BridgeMetrics:
         >>> metrics = get_metrics()
         >>> print(f"Total operations: {metrics.run_async_count}")
         >>> print(f"Success rate: {metrics.run_async_success}/{metrics.run_async_count}")
+
     """
 
 def clear_metrics() -> None:
@@ -156,6 +163,7 @@ def clear_metrics() -> None:
         >>> metrics = get_metrics()
         >>> metrics.run_async_count
         0
+
     """
 
 def is_runtime_available() -> bool:
@@ -167,6 +175,7 @@ def is_runtime_available() -> bool:
     Example:
         >>> is_runtime_available()
         True
+
     """
 
 def get_runtime_info() -> RuntimeInfo:
@@ -179,4 +188,5 @@ def get_runtime_info() -> RuntimeInfo:
         >>> info = get_runtime_info()
         >>> info.worker_threads
         8
+
     """

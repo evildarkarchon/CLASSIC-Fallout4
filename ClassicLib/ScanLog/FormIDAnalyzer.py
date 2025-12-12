@@ -1,5 +1,4 @@
-"""
-High-Performance FormID Analyzer with Rust Acceleration ⚡
+"""High-Performance FormID Analyzer with Rust Acceleration ⚡.
 
 This module provides dramatically accelerated FormID extraction and analysis through
 transparent Rust integration, delivering 50x performance improvements while maintaining
@@ -42,8 +41,7 @@ if TYPE_CHECKING:
 
 
 class FormIDAnalyzer:
-    """
-    GUI-ONLY synchronous adapter for FormID analysis (Backward Compatibility Wrapper).
+    """GUI-ONLY synchronous adapter for FormID analysis (Backward Compatibility Wrapper).
 
     ⚠️ WARNING: This class is designed for GUI contexts only and uses synchronous wrappers
     around async operations. It will error in CLI/TUI mode. New code should use
@@ -68,11 +66,11 @@ class FormIDAnalyzer:
 
     See Also:
         FormIDAnalyzerCore: Async-first implementation for production use
+
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo, show_formid_values: bool, formid_db_exists: bool) -> None:
-        """
-        Initializes the core analyzer for synchronous operations without an async database pool.
+        """Initialize the core analyzer for synchronous operations without an async database pool.
 
         Args:
             yamldata: Contains information regarding classic scan logs.
@@ -90,8 +88,7 @@ class FormIDAnalyzer:
         self.formid_pattern = self._core.formid_pattern
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """
-        Sync adapter for FormID extraction.
+        """Sync adapter for FormID extraction.
 
         Extracts Form IDs from a given call stack. This method processes each line
         in the provided call stack, searching for and extracting Form IDs that match
@@ -102,13 +99,13 @@ class FormIDAnalyzer:
 
         Returns:
             A list containing all extracted and formatted Form IDs that meet the criteria.
+
         """
         # Delegate to core (this method is already synchronous in core)
         return self._core.extract_formids(segment_callstack)
 
     def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> ReportFragment:
-        """
-        Sync adapter for FormID matching - Phase 2 Context-Aware.
+        """Sync adapter for FormID matching - Phase 2 Context-Aware.
 
         Processes and returns a report fragment based on Form ID matches retrieved from crash logs.
         This method analyzes Form ID matches, compares them with plugins listed in the crash log,
@@ -126,14 +123,14 @@ class FormIDAnalyzer:
 
         Raises:
             RuntimeError: If called in CLI/TUI mode (use FormIDAnalyzerCore instead)
+
         """
         # Use Phase 2 wrapper - errors in CLI/TUI, works in GUI
         wrapper = create_sync_wrapper(self._core.formid_match, strict=True)
         return wrapper(formids_matches, crashlog_plugins)
 
     def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
-        """
-        Sync adapter for FormID value lookup - Phase 2 Context-Aware.
+        """Sync adapter for FormID value lookup - Phase 2 Context-Aware.
 
         Look up the value associated with a given form ID and plugin in the database.
 
@@ -151,6 +148,7 @@ class FormIDAnalyzer:
 
         Raises:
             RuntimeError: If called in CLI/TUI mode (use FormIDAnalyzerCore instead)
+
         """
         # Use Phase 2 wrapper - errors in CLI/TUI, works in GUI
         wrapper = create_sync_wrapper(self._core.lookup_formid_value, strict=True)

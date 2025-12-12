@@ -1,5 +1,4 @@
-"""
-PapyrusManagerMixin module for managing the Papyrus monitoring processes.
+"""PapyrusManagerMixin module for managing the Papyrus monitoring processes.
 
 This module defines the PapyrusManagerMixin class, which provides methods and attributes
 to manage the lifecycle of a Papyrus monitoring worker and its associated UI elements, such
@@ -27,8 +26,7 @@ if TYPE_CHECKING:
 
 
 class PapyrusManagerMixin:
-    """
-    Mixin class for managing Papyrus monitoring functionality.
+    """Mixin class for managing Papyrus monitoring functionality.
 
     This mixin requires the mixing class to provide:
     - papyrus_button: QPushButton for toggling monitoring
@@ -47,8 +45,7 @@ class PapyrusManagerMixin:
         papyrus_monitor_dialog: PapyrusMonitorDialog | None
 
     def toggle_papyrus_worker(self) -> None:
-        """
-        Toggles the state of the Papyrus worker based on the state of the `papyrus_button`.
+        """Toggles the state of the Papyrus worker based on the state of the `papyrus_button`.
 
         If the `papyrus_button` is checked, the Papyrus monitoring process is started and
         the custom monitoring dialog is displayed. Otherwise, it stops the Papyrus monitoring
@@ -61,8 +58,7 @@ class PapyrusManagerMixin:
             self.stop_papyrus_monitoring()
 
     def start_papyrus_monitoring(self) -> None:
-        """
-        Initializes and starts the Papyrus monitoring process using a separate thread and worker. This allows
+        """Initialize and starts the Papyrus monitoring process using a separate thread and worker. This allows
         asynchronous monitoring of the Papyrus system, ensuring that updates, errors, and other signals are
         handled efficiently without blocking the main application. Uses ThreadManager for thread lifecycle
         management.
@@ -70,6 +66,7 @@ class PapyrusManagerMixin:
         Raises:
             Any exception or error handling will be caught and managed by connected signals
             such as `error`.
+
         """
         # Check if already running
         if self.thread_manager.is_thread_running(ThreadType.PAPYRUS_MONITOR):
@@ -117,8 +114,7 @@ class PapyrusManagerMixin:
         self.thread_manager.start_thread(ThreadType.PAPYRUS_MONITOR)
 
     def stop_papyrus_monitoring(self) -> None:
-        """
-        Stops the papyrus monitoring process and performs necessary cleanup.
+        """Stop the papyrus monitoring process and performs necessary cleanup.
 
         This function terminates the papyrus monitoring by halting the monitor worker and
         its associated thread using ThreadManager. It also updates the user interface components,

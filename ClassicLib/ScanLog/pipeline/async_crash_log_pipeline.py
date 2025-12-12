@@ -1,5 +1,4 @@
-"""
-Async crash log processing pipeline.
+"""Async crash log processing pipeline.
 
 This module provides the main AsyncCrashLogPipeline class that integrates
 all async components for maximum performance improvement.
@@ -25,8 +24,7 @@ if TYPE_CHECKING:
 
 
 async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
-    """
-    Writes batch reports to their respective files asynchronously.
+    """Write batch reports to their respective files asynchronously.
 
     Args:
         reports (list[tuple[Path, list[str], bool]]): A list of tuples, where each
@@ -34,6 +32,7 @@ async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> No
             - A Path object pointing to the crash log file.
             - A list of strings representing the autoscan report content.
             - A boolean indicating whether a scan failure occurred.
+
     """
     io_core = get_file_io()
     tasks = []
@@ -47,8 +46,7 @@ async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> No
 
 
 class AsyncCrashLogPipeline:
-    """
-    Handles the asynchronous processing of crash logs.
+    """Handle the asynchronous processing of crash logs.
 
     This class provides methods to process crash log files using a fully asynchronous pipeline. It operates in various stages:
     reformatting log files, loading logs asynchronously, orchestrating processing using an external core system, and finally
@@ -61,6 +59,7 @@ class AsyncCrashLogPipeline:
         show_formid_values (bool | None): Indicates whether FormID values are displayed in the results.
         formid_db_exists (bool): Indicates whether the FormID database is present for use during processing.
         performance_stats (dict): Tracks performance metrics including processing times for different stages of the pipeline.
+
     """
 
     def __init__(
@@ -70,8 +69,7 @@ class AsyncCrashLogPipeline:
         show_formid_values: bool | None,
         formid_db_exists: bool,
     ) -> None:
-        """
-        Initializes an instance for managing and processing classic scan logs information.
+        """Initialize an instance for managing and processing classic scan logs information.
 
         This constructor sets up various attributes related to scan logs, modes, and database
         status. It prepares the object for performance tracking by initializing a dictionary
@@ -82,6 +80,7 @@ class AsyncCrashLogPipeline:
             fcx_mode: Boolean or None indicating whether the FCX mode is active or unset.
             show_formid_values: Boolean or None to specify whether to display form ID values.
             formid_db_exists: Boolean indicating whether the form ID database already exists.
+
         """
         self.yamldata = yamldata
         self.fcx_mode = fcx_mode
@@ -94,8 +93,7 @@ class AsyncCrashLogPipeline:
     async def process_crash_logs_async(
         self, crashlog_list: list[Path], remove_list: tuple[str, ...]
     ) -> tuple[list[tuple[Path, list[str], bool, Counter[str]]], dict[str, float]]:
-        """
-        Processes a list of crash log files asynchronously, performing reformatting, loading,
+        """Process a list of crash log files asynchronously, performing reformatting, loading,
         database processing, and report writing within an optimized pipeline. Tracks performance
         metrics throughout the pipeline, including reformatting time, log loading time,
         processing time, report writing time, and overall throughput.
@@ -115,6 +113,7 @@ class AsyncCrashLogPipeline:
         Raises:
             Various exceptions may be raised depending on failures in file access,
             asynchronous tasks, or processing errors, which should be handled by the caller.
+
         """
         logger.info("Starting async crash log processing pipeline")
         total_start = time.perf_counter()
@@ -209,8 +208,7 @@ async def run_async_crash_log_scan(
     show_formid_values: bool | None,
     formid_db_exists: bool,
 ) -> tuple[list[tuple[Path, list[str], bool, Counter[str]]], dict[str, float]]:
-    """
-    Executes an asynchronous scan of crash logs and processes them based on the specified parameters.
+    """Execute an asynchronous scan of crash logs and processes them based on the specified parameters.
 
     This function utilizes an asynchronous pipeline to perform a comprehensive analysis of crash log files.
     The function prepares and processes provided crash logs and applies necessary filtration and decoding
@@ -235,6 +233,7 @@ async def run_async_crash_log_scan(
                 - Counter[str]: A counter object containing statistical data of processed elements in the log.
             - dict[str, float]: A dictionary containing performance statistics or other summary metrics from
               the scan process.
+
     """
     pipeline = AsyncCrashLogPipeline(yamldata, fcx_mode, show_formid_values, formid_db_exists)
 

@@ -1,5 +1,4 @@
-"""
-Async utilities for crash log scanning.
+"""Async utilities for crash log scanning.
 
 This module provides async versions of I/O-bound operations to improve
 performance through concurrent execution.
@@ -19,8 +18,7 @@ from ClassicLib.Logger import logger
 
 
 class DatabasePoolManager:
-    """
-    Singleton manager for database pool instances.
+    """Singleton manager for database pool instances.
 
     This manager checks for Rust DatabasePool availability and uses it for maximum
     performance (25x faster). Falls back to Python AsyncDatabasePool when Rust
@@ -41,14 +39,14 @@ class DatabasePoolManager:
         return cls._instance
 
     async def get_pool(self) -> Any:
-        """
-        Get or create the singleton database pool.
+        """Get or create the singleton database pool.
 
         Uses Rust DatabasePool when available (25x faster), otherwise falls back
         to Python AsyncDatabasePool (aiosqlite).
 
         Returns:
             The singleton database pool instance (Rust or Python).
+
         """
         # Initialize the lock if needed (must be done in async context)
         if self._lock is None:
@@ -106,8 +104,7 @@ class DatabasePoolManager:
 
 
 class AsyncDatabasePool:
-    """
-    Represents an asynchronous connection pool for handling database operations efficiently.
+    """Represent an asynchronous connection pool for handling database operations efficiently.
 
     Provides an interface for managing multiple SQLite database connections asynchronously.
     Allows querying for specific entries or batches of entries while supporting caching
@@ -119,11 +116,11 @@ class AsyncDatabasePool:
             respective asynchronous SQLite connection objects.
         query_cache (dict[tuple[str, str], str]): A cache for storing query results to reduce
             redundant database lookups.
+
     """
 
     def __init__(self, max_connections: int = 5) -> None:
-        """
-        Initializes a connection manager for handling database connections and caching query results.
+        """Initialize a connection manager for handling database connections and caching query results.
 
         This class is designed to manage a limited number of database connections, implement query
         caching for efficiency, and ensure thread safety when operating on internal data structures.
@@ -131,6 +128,7 @@ class AsyncDatabasePool:
         Args:
             max_connections: The maximum number of database connections allowed to be managed
                 simultaneously. Defaults to 5.
+
         """
         self.max_connections = max_connections
         self.connections: dict[Path, aiosqlite.Connection] = {}
@@ -138,19 +136,18 @@ class AsyncDatabasePool:
         self._lock = asyncio.Lock()
 
     async def __aenter__(self) -> "AsyncDatabasePool":
-        """
-        Handles the asynchronous context management protocol for the AsyncDatabasePool
+        """Handle the asynchronous context management protocol for the AsyncDatabasePool
         object. Ensures the pool is properly initialized upon entering the async context.
 
         Returns:
             AsyncDatabasePool: The initialized instance of the database pool.
+
         """
         await self.initialize()
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """
-        Handles the asynchronous exit process for the context manager.
+        """Handle the asynchronous exit process for the context manager.
         Ensures proper cleanup of resources by invoking the `close` method.
 
         Args:
@@ -163,8 +160,7 @@ class AsyncDatabasePool:
         await self.close()
 
     async def initialize(self) -> None:
-        """
-        Initializes asynchronous database connections.
+        """Initialize asynchronous database connections.
 
         This method ensures thread-safe initialization of database connections
         to files defined in `DB_PATHS`. It attempts to open an asynchronous
@@ -200,8 +196,7 @@ class AsyncDatabasePool:
                 raise
 
     async def close(self) -> None:
-        """
-        Closes all active connections managed by the object in an asynchronous manner.
+        """Close all active connections managed by the object in an asynchronous manner.
 
         This method ensures that all active connections are closed gracefully while
         avoiding potential deadlocks by managing the closure of connections outside the
@@ -231,8 +226,7 @@ class AsyncDatabasePool:
 
     @staticmethod
     async def _close_connection_with_timeout(conn: aiosqlite.Connection) -> None:
-        """
-        Closes the given SQLite database connection with a timeout.
+        """Close the given SQLite database connection with a timeout.
 
         This method attempts to close the specified database connection within the
         defined timeout period. If the connection does not close within the given
@@ -241,6 +235,7 @@ class AsyncDatabasePool:
 
         Args:
             conn (aiosqlite.Connection): The SQLite database connection to be closed.
+
         """
         try:
             await asyncio.wait_for(conn.close(), timeout=5.0)
@@ -265,6 +260,7 @@ class AsyncDatabasePool:
         Raises:
             aiosqlite.Error: If a SQLite error occurs during database operations.
             OSError: If an operating system error occurs.
+
         """
         # Check cache first
         cache_key = (formid, plugin)
@@ -289,8 +285,7 @@ class AsyncDatabasePool:
         return None
 
     async def get_entries_batch(self, formid_plugin_pairs: list[tuple[str, str]], batch_size: int = 100) -> dict[tuple[str, str], str]:
-        """
-        Fetch entries from the cache or databases for given pairs of form IDs and plugins.
+        """Fetch entries from the cache or databases for given pairs of form IDs and plugins.
 
         This asynchronous method retrieves data associated with specified pairs of form IDs
         and plugin names. For each pair, it first checks an internal cache for pre-existing data.
@@ -307,6 +302,7 @@ class AsyncDatabasePool:
         Returns:
             dict[tuple[str, str], str]: A dictionary mapping (form ID, plugin) pairs to their
                 respective queried entries.
+
         """
         results = {}
 
@@ -352,7 +348,7 @@ class AsyncDatabasePool:
 
 # noinspection PyUnusedImports
 async def read_file_async(file_path: Path) -> list[str]:
-    """Reads the content of a file asynchronously and returns its lines as a list of strings.
+    """Read the content of a file asynchronously and returns its lines as a list of strings.
 
     This function attempts to read the file content using an async encoding detection utility if
     available. If the utility is not available, it defaults to reading the file using UTF-8 encoding
@@ -365,6 +361,7 @@ async def read_file_async(file_path: Path) -> list[str]:
     Returns:
         list[str]: A list of strings, where each string represents a line in the file. If an error
         occurs during file reading, an empty list is returned.
+
     """
     try:
         # Try to use async encoding detection if available
@@ -383,8 +380,7 @@ async def read_file_async(file_path: Path) -> list[str]:
 
 
 async def write_file_async(file_path: Path, content: str) -> None:
-    """
-    Writes the specified content to a file asynchronously. This function utilizes
+    """Write the specified content to a file asynchronously. This function utilizes
     asynchronous file operations to write the content into the designated file
     path efficiently. In case of an error during the file writing operation, it
     logs the error details.
@@ -397,6 +393,7 @@ async def write_file_async(file_path: Path, content: str) -> None:
         OSError: If there is an issue accessing or writing to the file.
         UnicodeEncodeError: If the content cannot be encoded properly in the
         specified encoding.
+
     """
     try:
         async with aiofiles.open(file_path, mode="w", encoding="utf-8", errors="ignore") as f:
@@ -416,12 +413,12 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
 
     Returns:
         Dictionary mapping file names to lists of content lines.
+
     """
     cache: dict[str, list[str]] = {}
 
     async def load_single_log(file_path: Path) -> tuple[str, list[str]]:
-        """
-        Loads a single log file asynchronously and retrieves its content as a tuple.
+        """Load a single log file asynchronously and retrieves its content as a tuple.
 
         The function reads the content of a specified log file asynchronously and
         returns the file name along with its content as a list of lines. The file
@@ -435,6 +432,7 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
             tuple: A tuple where the first element is the file name as a string,
             and the second element is a list of strings containing the lines of
             the file.
+
         """
         lines = await read_file_async(file_path)
         return file_path.name, lines
@@ -454,8 +452,7 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
 
 
 async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None:
-    """
-    Perform batch file operations asynchronously.
+    """Perform batch file operations asynchronously.
 
     This function accepts a list of operations to perform on files asynchronously.
     Each operation is defined as a tuple containing the operation type, the file path,
@@ -471,6 +468,7 @@ async def batch_file_operations(operations: list[tuple[str, Path, Any]]) -> None
                 - path (Path): The path to the file involved in the operation.
                 - data (Any): Additional data required for the operation. For example,
                   file content for "write" or destination path for "move" or "copy".
+
     """
 
     async def execute_operation(op_type: str, path: Path, data: Any) -> None:

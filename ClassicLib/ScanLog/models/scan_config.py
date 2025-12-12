@@ -1,5 +1,4 @@
-"""
-Configuration data model for scan operations.
+"""Configuration data model for scan operations.
 
 This module contains the ScanConfig dataclass that encapsulates
 all configuration options for crash log scanning.
@@ -12,8 +11,7 @@ from typing import Any
 
 @dataclass
 class ScanConfig:
-    """
-    Configuration class for managing scan options and performance settings.
+    """Configuration class for managing scan options and performance settings.
 
     This class is designed to encapsulate various scan configuration options,
     customizable path mappings, and performance-related settings for executing
@@ -35,6 +33,7 @@ class ScanConfig:
             related to scan operations. Defaults to an empty dictionary.
         max_concurrent (int): The maximum number of concurrent scan processes
             allowed. Defaults to 10, with a permissible range of 1 to 50.
+
     """
 
     # Core scanning options
@@ -55,8 +54,7 @@ class ScanConfig:
     remove_list: tuple[str, ...] = field(default_factory=tuple)
 
     def __post_init__(self) -> None:
-        """
-        Ensures the proper initialization of instance attributes after dataclass creation.
+        """Ensure the proper initialization of instance attributes after dataclass creation.
 
         This method is automatically invoked after the creation of a dataclass instance. It
         performs additional setup and validation for specific attributes to ensure they meet

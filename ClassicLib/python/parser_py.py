@@ -1,5 +1,4 @@
-"""
-Pure Python implementation of crash log parsing.
+"""Pure Python implementation of crash log parsing.
 
 This module provides the fallback Python implementation for crash log parsing
 and segment extraction when Rust acceleration is not available. It maintains
@@ -16,8 +15,7 @@ _MODULE_NAME_PATTERN = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
 
 
 def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
-    """
-    Extract metadata from crash data including game version, crash generator version, and main error.
+    """Extract metadata from crash data including game version, crash generator version, and main error.
 
     This is the pure Python implementation of crash header parsing, used as a fallback
     when Rust acceleration is not available.
@@ -32,6 +30,7 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
         - Game version string (or "UNKNOWN")
         - Crash generator version string (or "UNKNOWN")
         - Main error message (or "UNKNOWN")
+
     """
     game_version = "UNKNOWN"
     crashgen_version = "UNKNOWN"
@@ -49,8 +48,7 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
 
 
 def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[list[str]]:
-    """
-    Extract segments of data from the crash_data based on provided segment boundaries and an EOF marker.
+    """Extract segments of data from the crash_data based on provided segment boundaries and an EOF marker.
 
     This is the pure Python implementation of segment extraction, providing the fallback
     logic when Rust acceleration is not available. It processes a list of crash data lines
@@ -65,6 +63,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
 
     Returns:
         List of lists, where each inner list represents a segment of extracted data.
+
     """
     segments = []
     total_lines = len(crash_data)
@@ -118,8 +117,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
 def find_segments(
     crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
 ) -> tuple[str, str, str, list[list[str]]]:
-    """
-    Parses crash report data to identify and extract specific segments of information.
+    """Parse crash report data to identify and extract specific segments of information.
 
     This is the pure Python implementation of the main parsing function, used as a fallback
     when Rust acceleration is not available. Each segment corresponds to a defined boundary
@@ -138,6 +136,7 @@ def find_segments(
             - main_error: The primary error message derived from the header.
             - processed_segments: A list of lists representing stripped contents of each segmented portion
               of the crash report. Missing segments are represented as empty lists.
+
     """
     # Define segment boundaries
     segment_boundaries = [
@@ -167,8 +166,7 @@ def find_segments(
 
 
 def extract_module_names(module_texts: set[str]) -> set[str]:
-    """
-    Extracts module names from a set of provided module texts.
+    """Extract module names from a set of provided module texts.
 
     This pure Python implementation processes a set of strings representing module texts and
     attempts to extract module names, which may include file names with a ".dll"
@@ -180,6 +178,7 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
 
     Returns:
         set[str]: A set of strings representing the extracted module names.
+
     """
     if not module_texts:
         return set()

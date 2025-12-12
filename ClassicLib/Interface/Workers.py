@@ -1,5 +1,4 @@
-"""
-Worker classes for background operations in the CLASSIC interface.
+"""Worker classes for background operations in the CLASSIC interface.
 
 This module contains QObject-based worker classes that run in separate threads
 to perform long-running operations without blocking the GUI.
@@ -15,8 +14,7 @@ from ClassicLib.Update import UpdateCheckError, is_latest_version
 
 
 class CrashLogsScanWorker(QObject):
-    """
-    Handles crash log scanning tasks with asynchronous mechanisms and emits relevant signals
+    """Handle crash log scanning tasks with asynchronous mechanisms and emits relevant signals
     for feedback.
 
     This class is responsible for executing crash log scans and handling errors.
@@ -29,6 +27,7 @@ class CrashLogsScanWorker(QObject):
             or failure.
         error_occurred (Signal): Signal emitted when an error occurs in the scanning process. It
             includes title, message, and details as arguments.
+
     """
 
     finished: Signal = Signal()
@@ -38,8 +37,7 @@ class CrashLogsScanWorker(QObject):
 
     @Slot()
     def run(self) -> None:
-        """
-        Executes the main logic of the function, performing a scan for crash logs.
+        """Execute the main logic of the function, performing a scan for crash logs.
 
         In case of an error during the scan, the error is handled appropriately.
         Once the process is complete, emits a signal to indicate the operation is finished.
@@ -47,6 +45,7 @@ class CrashLogsScanWorker(QObject):
         Raises:
             Exception: Propagates any unexpected exception encountered during
             the execution of the function.
+
         """
         # noinspection PyShadowingNames
         try:
@@ -58,8 +57,7 @@ class CrashLogsScanWorker(QObject):
 
     @staticmethod
     def _perform_crash_logs_scan() -> None:
-        """
-        Performs a scan for crash logs using AsyncBridge for proper async/sync coordination.
+        """Perform a scan for crash logs using AsyncBridge for proper async/sync coordination.
 
         This method uses the hybrid QThread+AsyncBridge pattern to:
         - Initialize scanner with Rust acceleration if available
@@ -72,6 +70,7 @@ class CrashLogsScanWorker(QObject):
 
         Raises:
             None
+
         """
         import time
         from datetime import datetime
@@ -104,8 +103,7 @@ class CrashLogsScanWorker(QObject):
         logger.debug(f"Scanner initialization took {(time.perf_counter() - init_start) * 1000:.0f}ms")
 
         async def run_scan() -> None:
-            """
-            Executes a scan process asynchronously with resource warm-up and performance logging.
+            """Execute a scan process asynchronously with resource warm-up and performance logging.
 
             This coroutine:
             1. Warms up scan resources (YAML data, databases, etc.)
@@ -115,6 +113,7 @@ class CrashLogsScanWorker(QObject):
             Raises:
                 Any exceptions raised during the warm-up or scanning process
                 will propagate to the caller.
+
             """
             # Warm up resources first
             warmup_start = time.perf_counter()
@@ -143,8 +142,7 @@ class CrashLogsScanWorker(QObject):
         )
 
     def _handle_scan_error(self, error: Exception) -> None:
-        """
-        Handles errors that occur during the crash log scanning process.
+        """Handle errors that occur during the crash log scanning process.
 
         This includes logging the error, preparing detailed error information,
         and emitting signals for dialog display.
@@ -153,6 +151,7 @@ class CrashLogsScanWorker(QObject):
             error (Exception): The exception instance that triggered the error
                 during the scan. This will be used to log the error message and
                 prepare dialog details.
+
         """
         logger.error(f"Crash logs scan failed: {error!s}")
 
@@ -167,8 +166,7 @@ class CrashLogsScanWorker(QObject):
 
 # noinspection PyBroadException
 class GameFilesScanWorker(QObject):
-    """
-    Worker class responsible for scanning game files.
+    """Worker class responsible for scanning game files.
 
     This class handles the game files scanning process and error handling.
     Its primary purpose is to manage the workflow for scanning game files
@@ -179,6 +177,7 @@ class GameFilesScanWorker(QObject):
             completed, regardless of success or failure.
         error_occurred (Signal): Signal emitted when an error occurs, providing
             error details (title, message, and traceback details).
+
     """
 
     scan_finished: Signal = Signal()
@@ -186,8 +185,7 @@ class GameFilesScanWorker(QObject):
 
     @Slot()
     def run(self) -> None:
-        """
-        Executes the main process for running game file scanning.
+        """Execute the main process for running game file scanning.
 
         Handles any exceptions that occur during the execution, ensuring
         that errors are properly managed. Always emits a signal indicating the scan
@@ -196,6 +194,7 @@ class GameFilesScanWorker(QObject):
         Raises:
             Exception: Propagates any unhandled exception that occurs during the
                 processing of the game results.
+
         """
         try:
             self._process_game_results_scan()
@@ -206,8 +205,7 @@ class GameFilesScanWorker(QObject):
 
     @staticmethod
     def _process_game_results_scan() -> None:
-        """
-        Processes game results scan using AsyncBridge for proper async/sync coordination.
+        """Process game results scan using AsyncBridge for proper async/sync coordination.
 
         This method uses the hybrid QThread+AsyncBridge pattern to:
         - Generate game integrity reports asynchronously
@@ -257,8 +255,7 @@ class GameFilesScanWorker(QObject):
         )
 
     def _handle_error(self, error: Exception) -> None:
-        """
-        Handles errors that occur during the game files scanning process.
+        """Handle errors that occur during the game files scanning process.
 
         This method logs the error details, prepares them for display in a dialog,
         and emits the error information.
@@ -266,6 +263,7 @@ class GameFilesScanWorker(QObject):
         Args:
             error (Exception): The exception that occurred during the game files
                 scanning process.
+
         """
         logger.error(f"Game files scan failed: {error!s}")
 
@@ -279,8 +277,7 @@ class GameFilesScanWorker(QObject):
 
 
 class UpdateCheckWorker(QObject):
-    """
-    Worker class for checking software updates.
+    """Worker class for checking software updates.
 
     This class enables background checking of software updates, utilizing
     asynchronous operations. It is specifically designed to work as a part
@@ -296,6 +293,7 @@ class UpdateCheckWorker(QObject):
             an update is available.
         error (Signal): Signal emitted when an error occurs during the
             update check. Emits a string containing the error message.
+
     """
 
     # Signals
@@ -304,19 +302,18 @@ class UpdateCheckWorker(QObject):
     error: Signal = Signal(str)
 
     def __init__(self, explicit: bool = False) -> None:
-        """
-        Initializes the object with the option to specify explicit behavior.
+        """Initialize the object with the option to specify explicit behavior.
 
         Args:
             explicit (bool): Determines whether the behavior should be explicit. Defaults to False.
+
         """
         super().__init__()
         self.explicit = explicit
 
     @Slot()
     def run(self) -> None:
-        """
-        Executes the process of checking for software updates, handling various
+        """Execute the process of checking for software updates, handling various
         errors and states.
 
         This method checks whether the software update process should proceed
@@ -330,6 +327,7 @@ class UpdateCheckWorker(QObject):
             RuntimeError: If a runtime-related error occurs.
             OSError: If an operating system-related error occurs.
             ValueError: If a value-related error occurs.
+
         """
         try:
             from ClassicLib.AsyncBridge import AsyncBridge
@@ -355,13 +353,13 @@ class UpdateCheckWorker(QObject):
             self.finished.emit()
 
     async def _async_check(self) -> bool:
-        """
-        Checks asynchronously whether the current version is the latest.
+        """Check asynchronously whether the current version is the latest.
 
         This method uses an external utility to determine if the application is up-to-date.
         It runs the check in a quiet mode and can optionally consider GUI-specific requests.
 
         Returns:
             bool: A boolean indicating whether the current version is the latest.
+
         """
         return await is_latest_version(quiet=True, gui_request=self.explicit)

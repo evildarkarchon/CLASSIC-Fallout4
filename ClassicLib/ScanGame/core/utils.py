@@ -32,8 +32,7 @@ except ImportError:
 
 
 def get_optimal_limits() -> dict[str, int]:
-    """
-    Determines optimal limits for various operations based on system resources.
+    """Determine optimal limits for various operations based on system resources.
 
     This function calculates optimal limits for subprocesses, file operations, log
     reads, and DDS (data distribution service) reads by considering the available
@@ -46,6 +45,7 @@ def get_optimal_limits() -> dict[str, int]:
         dict[str, int]: A dictionary containing optimal limits for subprocesses,
         file operations (`file_ops`), log reads (`log_reads`), and DDS reads
         (`dds_reads`).
+
     """
     cpu_count = os.cpu_count() or 4
 

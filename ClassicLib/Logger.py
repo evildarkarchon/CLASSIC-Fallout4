@@ -1,5 +1,4 @@
-"""
-Provides a logger instance for centralized logging functionality.
+"""Provide a logger instance for centralized logging functionality.
 
 This module initializes and provides a configured instance of a logger
 using Python's built-in `logging` module. The logger instance is named
@@ -8,6 +7,7 @@ log messages consistently and adhere to centralized logging practices.
 
 Attributes:
     logger (logging.Logger): A configured logger instance named 'CLASSIC'.
+
 """
 
 import logging

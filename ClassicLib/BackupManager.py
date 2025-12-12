@@ -1,5 +1,4 @@
-"""
-Provides functionality to manage automatic backups for game files.
+"""Provide functionality to manage automatic backups for game files.
 
 This module allows users to:
 - Load configuration for backup settings.
@@ -19,7 +18,7 @@ from ClassicLib.Utils.string_utils import normalize_list
 
 
 class BackupManager:
-    """Manages the process of creating backups for specified files.
+    """Manage the process of creating backups for specified files.
 
     This class provides methods to load backup configurations, extract information
     from logs, create versioned backup directories, and backup specified files.
@@ -31,6 +30,7 @@ class BackupManager:
             - game_path: Path to the game installation
             - xse_log_file: Path to the XSE log file
             - xse_ver_latest: Latest known XSE version string
+
     """
 
     def __init__(self) -> None:
@@ -38,8 +38,7 @@ class BackupManager:
         self._backup_config: dict[str, str | list[str] | None] = {}
 
     def load_backup_configuration(self) -> None:
-        """
-        Load backup settings from YAML configuration.
+        """Load backup settings from YAML configuration.
 
         Loads settings including:
         - List of files to backup
@@ -49,6 +48,7 @@ class BackupManager:
 
         Raises:
             TypeError: If any of the settings have invalid types.
+
         """
         from ClassicLib.YamlSettings import yaml_settings
 
@@ -77,14 +77,14 @@ class BackupManager:
         logger.debug("Loaded backup configuration")
 
     def extract_xse_version(self, log_file: str) -> str | None:
-        """
-        Extract XSE version from log file.
+        """Extract XSE version from log file.
 
         Args:
             log_file: Path to the XSE log file
 
         Returns:
             The extracted XSE version or None if no log data is available
+
         """
         xse_data_lower: list[str] = []
         try:
@@ -116,8 +116,7 @@ class BackupManager:
 
     @staticmethod
     def create_backup_directory(version: str) -> Path:
-        """
-        Creates a backup directory for the specified game version.
+        """Create a backup directory for the specified game version.
 
         The method constructs a backup directory path using the given game
         version and creates the directory, including any necessary parent
@@ -128,6 +127,7 @@ class BackupManager:
 
         Returns:
             Path: A Path object representing the created backup directory.
+
         """
         backup_path = Path(f"CLASSIC Backup/Game Files/{version}")
         backup_path.mkdir(parents=True, exist_ok=True)
@@ -135,13 +135,13 @@ class BackupManager:
         return backup_path
 
     def backup_files(self, source_dir: str, backup_list: list[str], version: str) -> None:
-        """
-        Backup specified files to versioned directory.
+        """Backup specified files to versioned directory.
 
         Args:
             source_dir: Source directory containing files to backup
             backup_list: List of file patterns to backup
             version: Version string for backup directory
+
         """
         # Create backup directory
         backup_path = self.create_backup_directory(version)
@@ -172,8 +172,7 @@ class BackupManager:
             logger.info(f"Backed up {backed_up_count} files to {backup_path}")
 
     def run_backup(self) -> None:
-        """
-        Execute complete backup process.
+        """Execute complete backup process.
 
         This method:
         1. Loads backup configuration if not already loaded

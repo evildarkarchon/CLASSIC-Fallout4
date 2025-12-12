@@ -1,5 +1,4 @@
-"""
-Detect and evaluate modifications (mods) using YAML mappings and crash log plugins.
+"""Detect and evaluate modifications (mods) using YAML mappings and crash log plugins.
 
 This module provides functions to detect the presence of modifications (mods),
 evaluate conflicts or combinations of modifications, and assess important mods'
@@ -22,8 +21,7 @@ from ClassicLib.rust.report_rust import ReportFragment
 
 
 def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
-    """
-    Converts all keys in a dictionary to lowercase.
+    """Convert all keys in a dictionary to lowercase.
 
     This function takes a dictionary with string keys and values, and returns a new
     dictionary where all the keys are transformed to lowercase. The values remain
@@ -35,13 +33,13 @@ def _convert_to_lowercase(data: dict[str, str]) -> dict[str, str]:
     Returns:
         A new dictionary with all keys converted to lowercase, while retaining the
         original values.
+
     """
     return {key.lower(): value for key, value in data.items()}
 
 
 def _validate_warning(mod_name: str, warning: str) -> None:
-    """
-    Validates the presence of a warning message for a given module.
+    """Validate the presence of a warning message for a given module.
 
     This function checks if the provided warning message is non-empty for the given
     module name. If the warning message is empty, it raises a `ValueError`.
@@ -52,6 +50,7 @@ def _validate_warning(mod_name: str, warning: str) -> None:
 
     Raises:
         ValueError: If the warning message is empty or not provided.
+
     """
     if not warning:
         raise ValueError(f"ERROR: {mod_name} has no warning in the database!")
@@ -59,8 +58,7 @@ def _validate_warning(mod_name: str, warning: str) -> None:
 
 @lru_cache(maxsize=128)
 def _compile_mod_pattern(mod_names: frozenset[str]) -> re.Pattern[str]:
-    """
-    Compiles a regex pattern from a frozenset of mod names with caching.
+    """Compiles a regex pattern from a frozenset of mod names with caching.
 
     This function creates a single compiled regex pattern that matches any of the
     provided mod names using alternation (|). Results are cached for performance.
@@ -70,6 +68,7 @@ def _compile_mod_pattern(mod_names: frozenset[str]) -> re.Pattern[str]:
 
     Returns:
         A compiled regex pattern with case-insensitive matching.
+
     """
     # Sort for consistent pattern generation (helps with debugging)
     sorted_names = sorted(mod_names, key=len, reverse=True)
@@ -79,21 +78,20 @@ def _compile_mod_pattern(mod_names: frozenset[str]) -> re.Pattern[str]:
 
 @lru_cache(maxsize=128)
 def _compile_single_pattern(mod_name: str) -> re.Pattern[str]:
-    """
-    Compiles a regex pattern for a single mod name with caching.
+    """Compiles a regex pattern for a single mod name with caching.
 
     Args:
         mod_name: The mod name to compile into a pattern.
 
     Returns:
         A compiled regex pattern with case-insensitive matching.
+
     """
     return re.compile(re.escape(mod_name.lower()), re.IGNORECASE)
 
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
-    """
-    Detects modifications (mods) based on provided YAML dictionary and crashlog plugins.
+    """Detect modifications (mods) based on provided YAML dictionary and crashlog plugins.
 
     This function checks if any mod names from the YAML dictionary exist in the crashlog plugins.
     If a match is found, it returns a fragment containing the warnings.
@@ -107,6 +105,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     Raises:
         ValueError: If a mod from the YAML dictionary has no warning defined.
+
     """
     lines = []
     yaml_dict_lower = _convert_to_lowercase(yaml_dict)
@@ -168,8 +167,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
-    """
-    Detects conflicts or combinations of specific plugins based on given mappings.
+    """Detect conflicts or combinations of specific plugins based on given mappings.
 
     This function checks for combinations of mods (plugins) defined in the yaml_dict.
     If a predefined combination is found, it returns a fragment with caution messages.
@@ -183,6 +181,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     Raises:
         ValueError: If a detected mod combination has no warning associated.
+
     """
     lines = []
     yaml_dict_lower = _convert_to_lowercase(yaml_dict)
@@ -228,8 +227,7 @@ def detect_mods_important(
     gpu_rival: Literal["nvidia", "amd"] | None,
     xse_modules: set[str],
 ) -> ReportFragment:
-    """
-    Detects and evaluates important mods based on provided information.
+    """Detect and evaluates important mods based on provided information.
 
     This function processes a dictionary of mods and their warnings, compares them
     against available plugins (ESP/ESM) and XSE modules (DLL), and returns a fragment
@@ -243,6 +241,7 @@ def detect_mods_important(
 
     Returns:
         ReportFragment containing important mod status.
+
     """
     lines = [
         "### Checking for Important Mods\n\n",

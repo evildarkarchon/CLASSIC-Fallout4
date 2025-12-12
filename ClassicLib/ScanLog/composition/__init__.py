@@ -1,5 +1,4 @@
-"""
-Report composition utilities for combining fragments with conditional headers.
+"""Report composition utilities for combining fragments with conditional headers.
 
 This module provides utilities for the common pattern of adding headers
 only when content exists, replacing the retroactive header insertion pattern.

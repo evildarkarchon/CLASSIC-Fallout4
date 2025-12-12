@@ -1,5 +1,4 @@
-"""
-A module to detect and analyze availability of Rust components.
+"""A module to detect and analyze availability of Rust components.
 
 This module provides functionality to verify the presence and availability of
 various Rust components utilized in the system. It includes options to fetch
@@ -99,6 +98,7 @@ def _check_module_components(module: Any, config: dict[str, Any], components: di
         module: The imported module to check.
         config: Configuration dict with 'components', 'base_component', and 'special_checks'.
         components: Dictionary to update with component availability.
+
     """
     # Check base component (the module itself)
     if "base_component" in config:
@@ -131,6 +131,7 @@ def _try_import_module(module_name: str, config: dict[str, Any], components: dic
         unexpected errors during component detection. Broad exception catching
         is necessary to prevent any single module's issues from breaking the
         entire detection process.
+
     """
     try:
         module = __import__(module_name)
@@ -144,8 +145,7 @@ def _try_import_module(module_name: str, config: dict[str, Any], components: dic
 
 
 def detect_rust_components() -> dict[str, bool]:
-    """
-    Detects and validates the availability of Rust-based components and modules.
+    """Detect and validates the availability of Rust-based components and modules.
 
     This function determines which Rust-based components are enabled and available
     for use. It uses a configuration-driven approach to check various modules and
@@ -158,6 +158,7 @@ def detect_rust_components() -> dict[str, bool]:
 
     Returns:
         dict[str, bool]: A dictionary indicating the availability of Rust components.
+
     """
     # Check if Rust is disabled via environment variable
     if os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in {"1", "true", "yes"}:
@@ -174,8 +175,7 @@ def detect_rust_components() -> dict[str, bool]:
 
 
 def get_available_components() -> dict[str, Any]:
-    """
-    Retrieves the available components and their respective state for the system.
+    """Retrieve the available components and their respective state for the system.
 
     This function gathers information about the available components by detecting
     Rust components and checking if they are disabled through an environment variable.
@@ -187,6 +187,7 @@ def get_available_components() -> dict[str, Any]:
             - "versions": Dict of module versions for available modules.
             - "disabled": Whether Rust components are disabled, determined by the
               environment variable `CLASSIC_DISABLE_RUST`.
+
     """
     disabled = os.environ.get("CLASSIC_DISABLE_RUST", "").lower() in {"1", "true", "yes"}
     versions = {}
@@ -217,8 +218,7 @@ def get_available_components() -> dict[str, Any]:
 
 
 def _get_empty_component_dict() -> dict[str, bool]:
-    """
-    Generates a dictionary representing the status of various components with initial
+    """Generate a dictionary representing the status of various components with initial
     states set to `False`.
 
     This function provides a structured way to initialize component status, suitable for
@@ -228,6 +228,7 @@ def _get_empty_component_dict() -> dict[str, bool]:
         dict[str, bool]: A dictionary where keys are component names as strings and values
         are booleans representing the initialization status of the components (default is
         `False`).
+
     """
     return {
         "parser": False,
@@ -282,6 +283,7 @@ def detect_component(module_name: str, class_name: str | None = None) -> tuple[b
         >>> available, YamlOps = detect_component("classic_yaml", "YamlOperations")
         >>> if available:
         ...     ops = YamlOps()
+
     """
     cache_key = f"{module_name}:{class_name}" if class_name else module_name
 
@@ -324,6 +326,7 @@ def is_component_available(module_name: str, class_name: str | None = None) -> b
     Example:
         >>> if is_component_available("classic_yaml", "YamlOperations"):
         ...     print("Rust YAML acceleration available")
+
     """
     available, _ = detect_component(module_name, class_name)
     return available
@@ -345,6 +348,7 @@ def get_component(module_name: str, class_name: str) -> Any:
     Example:
         >>> YamlOps = get_component("classic_yaml", "YamlOperations")
         >>> ops = YamlOps()
+
     """
     available, component = detect_component(module_name, class_name)
     if not available:

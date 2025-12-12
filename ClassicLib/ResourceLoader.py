@@ -1,5 +1,4 @@
-"""
-Resource loader for accessing bundled data files and managing persistent cache.
+"""Resource loader for accessing bundled data files and managing persistent cache.
 
 This module provides utilities to access data files that are bundled with
 the package, whether running from source, as an installed package, or as a
@@ -20,7 +19,7 @@ from ClassicLib.Logger import logger
 
 
 class ResourceLoader:
-    """Handles loading of bundled resource files."""
+    """Handle loading of bundled resource files."""
 
     @staticmethod
     def _check_executable_directory() -> Path | None:
@@ -32,6 +31,7 @@ class ResourceLoader:
 
         Returns:
             Path to CLASSIC Data next to executable, or None if not found
+
         """
         if getattr(sys, "frozen", False):
             # Get directory containing the executable
@@ -54,6 +54,7 @@ class ResourceLoader:
 
         Returns:
             Path to CLASSIC Data in frozen bundle, or None if not found
+
         """
         # Check if we're running as a PyInstaller frozen executable
         if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
@@ -69,8 +70,7 @@ class ResourceLoader:
 
     @staticmethod
     def _check_local_dir() -> Path | None:
-        """
-        Checks the existence of a specific local directory and retrieves its path if it exists.
+        """Check the existence of a specific local directory and retrieves its path if it exists.
 
         This method attempts to find a directory named "CLASSIC Data" under the local directory
         defined in the `GlobalRegistry`. If the directory exists, its path is returned. Otherwise,
@@ -78,6 +78,7 @@ class ResourceLoader:
 
         Returns:
             Path | None: Path to the "CLASSIC Data" directory if it exists; otherwise, `None`.
+
         """
         local_dir = GlobalRegistry.get_local_dir()
         if local_dir:
@@ -93,8 +94,7 @@ class ResourceLoader:
 
     @staticmethod
     def _check_package_installation() -> Path | None:
-        """
-        Checks the installation and location of a package to ensure that it is accessible
+        """Check the installation and location of a package to ensure that it is accessible
         and provides the necessary resources. Attempts to retrieve information about the
         package distribution, verify its location, and, if required, extract the package
         resources.
@@ -103,6 +103,7 @@ class ResourceLoader:
             Path | None: Returns the path to the package's necessary resource files if
             successful, or None if the package is not installed or the resources cannot
             be accessed.
+
         """
         try:
             # Get the distribution with either naming convention
@@ -124,8 +125,7 @@ class ResourceLoader:
 
     @staticmethod
     def _get_distribution() -> object | None:
-        """
-        Attempts to retrieve the distribution information for specific package names
+        """Attempt to retrieve the distribution information for specific package names
         using the `importlib.metadata` library. It tries the package names
         "classic-fallout4", "classic_fallout4", and "classic" in order.
 
@@ -135,6 +135,7 @@ class ResourceLoader:
 
         Returns:
             object | None: The distribution object if found, otherwise `None`.
+
         """
         try:
             # Try both naming conventions
@@ -153,8 +154,7 @@ class ResourceLoader:
 
     @staticmethod
     def _check_package_location(dist) -> Path | None:  # noqa: ANN001
-        """
-        Checks and retrieves the data directory for a package based on its distribution
+        """Check and retrieves the data directory for a package based on its distribution
         metadata. This method examines the attributes of the distribution object or uses
         alternative methods to locate the associated "CLASSIC Data" directory.
 
@@ -164,6 +164,7 @@ class ResourceLoader:
         Returns:
             Path | None: The path to the "CLASSIC Data" directory if found. Returns None
             if the directory cannot be located.
+
         """
         try:
             # Get location from the distribution metadata
@@ -194,8 +195,7 @@ class ResourceLoader:
 
     @staticmethod
     def _extract_from_package() -> Path | None:
-        """
-        Extracts the "CLASSIC Data" directory from the specified package and places it into a stable local directory.
+        """Extract the "CLASSIC Data" directory from the specified package and places it into a stable local directory.
 
         This method attempts to locate an installed Python package containing resources for "CLASSIC Data". If found, it
         ensures the data directory exists and extracts the bundled data resources using a stable path on the user's system.
@@ -206,6 +206,7 @@ class ResourceLoader:
         Returns:
             Path | None: The path to the `CLASSIC Data` directory if successfully extracted and verified, or None if the
             process fails or the resources are not available.
+
         """
         try:
             # Try to get package files - works for installed packages
@@ -251,8 +252,7 @@ class ResourceLoader:
 
     @staticmethod
     def _check_source_installation() -> Path | None:
-        """
-        Checks the source installation for the presence of the "CLASSIC Data" directory.
+        """Check the source installation for the presence of the "CLASSIC Data" directory.
 
         This method verifies if the "CLASSIC Data" directory exists in the parent
         directory of the module’s location. If the directory is present, its path
@@ -261,6 +261,7 @@ class ResourceLoader:
         Returns:
             Path | None: The path to the "CLASSIC Data" directory if it exists,
             otherwise None.
+
         """  # noqa: RUF002
         module_dir = Path(__file__).parent.parent
         data_dir = module_dir / "CLASSIC Data"
@@ -271,8 +272,7 @@ class ResourceLoader:
 
     @staticmethod
     def _check_current_directory() -> Path | None:
-        """
-        Checks if the current directory contains the "CLASSIC Data" folder.
+        """Check if the current directory contains the "CLASSIC Data" folder.
 
         This method verifies the existence of a "CLASSIC Data" folder in the current
         working directory. If such a directory exists, it logs its path and returns
@@ -281,6 +281,7 @@ class ResourceLoader:
         Returns:
             Path | None: The path to the "CLASSIC Data" folder if it exists in the
             current directory; otherwise, None.
+
         """
         cwd_data = Path.cwd() / "CLASSIC Data"
         if cwd_data.exists():
@@ -290,8 +291,7 @@ class ResourceLoader:
 
     @staticmethod
     def _create_in_app_data() -> Path:
-        """
-        Creates and ensures the existence of a directory for application-specific data storage. The method attempts to store
+        """Create and ensures the existence of a directory for application-specific data storage. The method attempts to store
         data in a user-specific directory, falling back to the current working directory in case of failure.
 
         Returns:
@@ -299,6 +299,7 @@ class ResourceLoader:
 
         Raises:
             Exception: If a directory creation operation is unsuccessful.
+
         """
         try:
             import appdirs
@@ -319,8 +320,7 @@ class ResourceLoader:
 
     @staticmethod
     def get_data_directory() -> Path:
-        """
-        Attempts to locate the data directory using various strategies in a prioritized
+        """Attempt to locate the data directory using various strategies in a prioritized
         order. The method systematically executes a list of strategies for determining
         the correct directory path for data resources and returns the first valid path
         found. If no strategies succeed, it creates and returns a path in the application
@@ -328,6 +328,7 @@ class ResourceLoader:
 
         Returns:
             Path: The directory path to be used for data resources.
+
         """
         # Try each strategy in order
         strategies = [
@@ -349,8 +350,7 @@ class ResourceLoader:
 
     @staticmethod
     def _extract_bundled_data_importlib(target_dir: Path, package_files=None) -> None:  # noqa: ANN001
-        """
-        Extracts bundled essential data using the importlib resources API.
+        """Extract bundled essential data using the importlib resources API.
 
         This method extracts specific files (not databases) from bundled package resources
         to a target directory. It checks and maintains file hierarchy in the destination
@@ -366,6 +366,7 @@ class ResourceLoader:
 
         Raises:
             Exception: If the extraction process fails for any file or operation.
+
         """
         try:
             # List of essential files to extract
@@ -427,8 +428,7 @@ class ResourceLoader:
 
     @staticmethod
     def ensure_data_files_exist() -> Path:
-        """
-        Ensures that essential data files exist in the specified data directory.
+        """Ensure that essential data files exist in the specified data directory.
 
         This static method checks the presence of essential database files required for the
         application's operation. If any files are missing, it logs a warning and defers handling
@@ -439,6 +439,7 @@ class ResourceLoader:
 
         Raises:
             None: This method does not directly raise any errors, but missing files are logged.
+
         """
         data_dir = ResourceLoader.get_data_directory()
 
@@ -459,8 +460,7 @@ class ResourceLoader:
 
     @staticmethod
     def get_cached_game_path(game_name: str | None = None, vr_suffix: str = "") -> Path | None:
-        """
-        Fetches the cached game installation directory path based on the specified game name and
+        """Fetch the cached game installation directory path based on the specified game name and
         optional VR (Virtual Reality) suffix. This method attempts multiple strategies to locate
         the game path: via an environment variable, a persistent `cache.yaml` configuration file,
         and a traditional `Local.yaml` configuration file. Returns the directory path as a Path
@@ -481,6 +481,7 @@ class ResourceLoader:
         Raises:
             This method does not explicitly raise exceptions, but any exceptions occurring during
             internal operations are logged.
+
         """
         if game_name is None:
             game_name = GlobalRegistry.get_game()
@@ -528,8 +529,7 @@ class ResourceLoader:
 
     @staticmethod
     async def get_cached_game_path_async(game_name: str | None = None, vr_suffix: str = "") -> Path | None:
-        """
-        Async version of get_cached_game_path() for use in async contexts.
+        """Async version of get_cached_game_path() for use in async contexts.
 
         This method properly uses yaml_settings_async() instead of yaml_settings()
         to avoid async/sync mixing errors. Use this version when calling from
@@ -541,6 +541,7 @@ class ResourceLoader:
 
         Returns:
             Path | None: The cached game path if found, otherwise None.
+
         """
         from ClassicLib.Constants import YAML
         from ClassicLib.YamlSettings import yaml_settings_async
@@ -585,8 +586,7 @@ class ResourceLoader:
 
     @staticmethod
     def get_cached_docs_path(game_name: str | None = None, vr_suffix: str = "") -> Path | None:
-        """
-        Retrieves the cached documentation path for a specific game and VR suffix. The method attempts
+        """Retrieve the cached documentation path for a specific game and VR suffix. The method attempts
         to locate the directory path using three strategies. First, it checks for an environment variable
         with a naming convention based on the provided game name and suffix. If no valid path is found,
         it proceeds to read from a persistent `cache.yaml` file. Finally, it attempts to locate the path
@@ -599,6 +599,7 @@ class ResourceLoader:
 
         Returns:
             Path | None: The cached documentation path if found, otherwise None.
+
         """
         if game_name is None:
             game_name = GlobalRegistry.get_game()
@@ -661,8 +662,7 @@ class ResourceLoader:
 
     @staticmethod
     async def save_path_to_cache_async(path: Path, path_type: str, game_name: str | None = None, vr_suffix: str = "") -> None:
-        """
-        Asynchronously saves a path to persistent cache and local configuration files.
+        """Asynchronously saves a path to persistent cache and local configuration files.
 
         This is the async version that should be used from async contexts.
         It uses yaml_settings_async() to properly handle async contexts without blocking.
@@ -672,6 +672,7 @@ class ResourceLoader:
             path_type (str): The type of path being saved, e.g., "GamePath" or "DocsPath".
             game_name (str | None, optional): The name of the game for which the path is associated.
             vr_suffix (str, optional): A suffix representing a specific virtual reality context.
+
         """
         if game_name is None:
             game_name = GlobalRegistry.get_game()
@@ -700,8 +701,7 @@ class ResourceLoader:
 
     @staticmethod
     def save_path_to_cache(path: Path, path_type: str, game_name: str | None = None, vr_suffix: str = "") -> None:
-        """
-        Saves a path to persistent cache and local configuration files (sync version).
+        """Save a path to persistent cache and local configuration files (sync version).
 
         This method detects whether it's being called from an async context and automatically
         uses the appropriate method (async or sync). When called from async context, it runs
@@ -715,6 +715,7 @@ class ResourceLoader:
             path_type (str): The type of path being saved, e.g., "GamePath" or "DocsPath".
             game_name (str | None, optional): The name of the game for which the path is associated.
             vr_suffix (str, optional): A suffix representing a specific virtual reality context.
+
         """
         # Check if we're in an async context
         try:
@@ -762,8 +763,7 @@ class ResourceLoader:
 
     @staticmethod
     def load_rust_extension() -> bool:
-        """
-        Loads Rust extensions to optimize performance if available.
+        """Load Rust extensions to optimize performance if available.
 
         This static method checks whether Rust extensions are available and loads them
         if they are not already loaded. If Rust extensions are successfully loaded,
@@ -777,6 +777,7 @@ class ResourceLoader:
         Raises:
             ImportError: If the required module 'rust_loader' cannot be imported.
             Exception: If any other unexpected error occurs during the loading process.
+
         """
         try:
             from ClassicLib.rust_loader import is_rust_available, load_rust_extensions
@@ -801,8 +802,7 @@ class ResourceLoader:
 
     @staticmethod
     def get_rust_extension_info() -> dict:
-        """
-        Retrieves information regarding the Rust extension module.
+        """Retrieve information regarding the Rust extension module.
 
         This method attempts to import and retrieve information about the Rust extension
         module using the `get_rust_info` function from the `ClassicLib.rust_loader`
@@ -818,6 +818,7 @@ class ResourceLoader:
                 - "in_pyinstaller" (bool): Indicates whether the environment is within a PyInstaller build.
                 - "error" (str): An error message indicating why the Rust module could not be loaded,
                   if applicable.
+
         """
         try:
             from ClassicLib.rust_loader import get_rust_info
@@ -835,8 +836,7 @@ class ResourceLoader:
 
 # Convenience function
 def get_resource_path(relative_path: str) -> Path:
-    """
-    Get the full path to a resource file.
+    """Get the full path to a resource file.
 
     This function handles path resolution for both frozen (PyInstaller) and
     non-frozen execution contexts. In frozen mode, it accesses files from
@@ -848,19 +848,20 @@ def get_resource_path(relative_path: str) -> Path:
 
     Returns:
         Full path to the resource file
+
     """
     data_dir = ResourceLoader.get_data_directory()
     return data_dir / relative_path
 
 
 def is_frozen() -> bool:
-    """
-    Check if the application is running as a frozen executable.
+    """Check if the application is running as a frozen executable.
 
     This is useful for conditional logic that needs to behave differently
     in development vs. production (frozen) environments.
 
     Returns:
         True if running as PyInstaller frozen executable, False otherwise
+
     """
     return getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS")

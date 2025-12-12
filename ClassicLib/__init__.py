@@ -1,5 +1,4 @@
-"""
-ClassicLib - Core library for CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker).
+"""ClassicLib - Core library for CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker).
 
 This module provides the main components for log analysis, file I/O, settings management,
 and various utility functions for the CLASSIC application.

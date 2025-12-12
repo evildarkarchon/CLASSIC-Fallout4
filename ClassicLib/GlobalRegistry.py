@@ -1,5 +1,4 @@
-"""
-Global registry for sharing objects across modules without circular imports.
+"""Global registry for sharing objects across modules without circular imports.
 
 This module serves as a central storage location for objects that need to be accessed
 from multiple modules throughout the application.
@@ -20,7 +19,7 @@ _TESTING_MODE_ENV_VAR = "PYTEST_CURRENT_TEST"
 
 # Define keys for consistent access
 class Keys:
-    """Contains constant keys used in the application.
+    """Contain constant keys used in the application.
 
     This class serves as a centralized definition of various constant strings
     used throughout the application. These constants serve as identifiers
@@ -38,6 +37,7 @@ class Keys:
         GAME (str): Key for non-VR game variables.
         LOCAL_DIR (str): Key for the local directory path.
         IS_PRERELEASE (str): Key indicating whether the application is a prerelease version.
+
     """
 
     YAML_CACHE = "yaml_cache"
@@ -54,8 +54,7 @@ class Keys:
 
 
 def register(key: str, obj: Any) -> None:
-    """
-    Register an object in the global registry.
+    """Register an object in the global registry.
 
     Args:
         key: Unique identifier for the object (must be a string)
@@ -63,6 +62,7 @@ def register(key: str, obj: Any) -> None:
 
     Raises:
         TypeError: If key is not a string
+
     """
     if not isinstance(key, str):
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
@@ -71,8 +71,7 @@ def register(key: str, obj: Any) -> None:
 
 
 def get(key: str) -> Any:
-    """
-    Retrieve an object from the global registry.
+    """Retrieve an object from the global registry.
 
     Args:
         key: The unique identifier of the object (must be a string)
@@ -82,6 +81,7 @@ def get(key: str) -> Any:
 
     Raises:
         TypeError: If key is not a string
+
     """
     if not isinstance(key, str):
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
@@ -90,8 +90,7 @@ def get(key: str) -> Any:
 
 
 def is_registered(key: str) -> bool:
-    """
-    Check if a key is registered.
+    """Check if a key is registered.
 
     Args:
         key: The unique identifier to check (must be a string)
@@ -101,6 +100,7 @@ def is_registered(key: str) -> bool:
 
     Raises:
         TypeError: If key is not a string
+
     """
     if not isinstance(key, str):
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
@@ -110,8 +110,7 @@ def is_registered(key: str) -> bool:
 
 # Convenience functions for commonly used registry items
 def get_yaml_cache() -> Any:
-    """
-    Retrieves the YAML cache from the application's storage.
+    """Retrieve the YAML cache from the application's storage.
 
     Fetches the YAML cache associated with the provided key and returns
     it. This function is typically used to retrieve cached configurations
@@ -125,14 +124,14 @@ def get_yaml_cache() -> Any:
 
 
 def set_game(game_name: str) -> None:
-    """
-    Sets the current game name in the system registry. This function ensures that
+    """Set the current game name in the system registry. This function ensures that
     a game name is either registered for the first time or updated if different
     from the currently registered game name. The operation is thread-safe due to
     the use of a lock mechanism.
 
     Args:
         game_name (str): The name of the game to set in the registry.
+
     """
     with _registry_lock:
         if not is_registered(Keys.GAME) or game_name != _registry[Keys.GAME]:
@@ -140,8 +139,7 @@ def set_game(game_name: str) -> None:
 
 
 def get_manual_docs_gui() -> Any:
-    """
-    Retrieves the manual documentation GUI by accessing the appropriate key.
+    """Retrieve the manual documentation GUI by accessing the appropriate key.
 
     This function fetches the manual documentation GUI value from a designated
     key repository. It leverages an internal mechanism to interact with the key
@@ -150,13 +148,13 @@ def get_manual_docs_gui() -> Any:
     Returns:
         Any: The manual documentation GUI object associated with the specified
         key.
+
     """
     return get(Keys.MANUAL_DOCS_GUI)
 
 
 def get_game_path_gui() -> Any:
-    """
-    Retrieves the value associated with the key `GAME_PATH_GUI` from a certain
+    """Retrieve the value associated with the key `GAME_PATH_GUI` from a certain
     storage or configuration.
 
     This function uses a predefined constant key to fetch the corresponding value
@@ -170,8 +168,7 @@ def get_game_path_gui() -> Any:
 
 
 def is_gui_mode() -> bool:
-    """
-    Determines if the application is running in GUI mode.
+    """Determine if the application is running in GUI mode.
 
     This function checks the current state of the application and determines
     whether it is running with a graphical user interface (GUI) or not.
@@ -179,13 +176,13 @@ def is_gui_mode() -> bool:
 
     Returns:
         bool: True if the application is in GUI mode; otherwise, False.
+
     """
     return get(Keys.IS_GUI_MODE) or False
 
 
 def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"):  # noqa: ANN201
-    """
-    Opens a file with a specified encoding and error handling strategy. The function
+    """Open a file with a specified encoding and error handling strategy. The function
     delegates the actual implementation to a registered handler, if available. If
     no handler is registered, raises a RuntimeError.
 
@@ -200,6 +197,7 @@ def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: s
 
     Raises:
         RuntimeError: If no function is registered to handle file opening.
+
     """
     func = get(Keys.OPEN_FILE_FUNC)
     if func:
@@ -208,12 +206,12 @@ def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: s
 
 
 def get_vr() -> str:
-    """
-    Retrieves the value associated with the VR key if it is registered and non-empty. Otherwise, returns an
+    """Retrieve the value associated with the VR key if it is registered and non-empty. Otherwise, returns an
     empty string.
 
     Returns:
         str: The value associated with the VR key if registered and non-empty, or an empty string otherwise.
+
     """
     if not is_registered(Keys.VR) or (is_registered(Keys.VR) and not Keys.VR):
         return ""
@@ -221,8 +219,7 @@ def get_vr() -> str:
 
 
 def get_game() -> str:
-    """
-    Retrieves the name of the game.
+    """Retrieve the name of the game.
 
     This function checks if a game is registered under the `Keys.GAME` key. If it is not registered or if the registered
     value is an empty string, the function defaults to returning the string "Fallout4". Otherwise, it retrieves and returns
@@ -231,6 +228,7 @@ def get_game() -> str:
     Returns:
         str: The name of the game. Defaults to "Fallout4" if no game is registered or if the registered game name is
         an empty string.
+
     """
     if not is_registered(Keys.GAME):
         return "Fallout4"
@@ -255,6 +253,7 @@ def get_local_dir(as_string: bool = False) -> Path | str:
 
     Returns:
         The local directory path as a Path object (default) or string.
+
     """
     if not is_registered(Keys.LOCAL_DIR) or (is_registered(Keys.LOCAL_DIR) and not Keys.LOCAL_DIR):
         if as_string:
@@ -298,6 +297,7 @@ def clear() -> None:
         For production code that needs to remove specific entries, use
         targeted removal via direct registry access or implement a
         specific ``unregister()`` function for individual keys.
+
     """
     # Safety check: only allow clearing in test environments
     if not os.environ.get(_TESTING_MODE_ENV_VAR):
@@ -334,6 +334,7 @@ def unregister(key: str) -> bool:
         True
         >>> GlobalRegistry.unregister("nonexistent")
         False
+
     """
     if not isinstance(key, str):
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")

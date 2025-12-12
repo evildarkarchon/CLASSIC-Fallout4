@@ -56,6 +56,7 @@ class PyLineStreamer:
     This struct wraps a Tokio Lines stream and exposes it as an async iterator
     in Python. This allows for memory-efficient line-by-line processing of large files.
     """
+
     def __aiter__(self) -> PyLineStreamer: ...
     def __anext__(self) -> Coroutine[Any, Any, str]: ...
 
@@ -66,6 +67,7 @@ class PySyncLineStreamer:
     in Python. This allows for memory-efficient line-by-line processing of large files
     in synchronous code.
     """
+
     def __iter__(self) -> PySyncLineStreamer: ...
     def __next__(self) -> str: ...
 
@@ -86,6 +88,7 @@ class FileIOCore:
     Note:
         All read/write methods return coroutines and must be awaited.
         Utility methods (file_exists, get_file_size, etc.) are synchronous.
+
     """
 
     def __init__(self, encoding: str = "utf-8", errors: str = "ignore", cache_size: int = 100, max_concurrent_io: int = 50) -> None:
@@ -106,6 +109,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> # Create with custom settings
             >>> io_core = FileIOCore(encoding="utf-8", errors="strict", cache_size=200)
+
         """
 
     def read_file(self, path: str) -> Coroutine[Any, Any, str]:
@@ -131,6 +135,7 @@ class FileIOCore:
         Example:
             >>> io_core = FileIOCore()
             >>> content = await io_core.read_file("config.txt")
+
         """
 
     def read_lines(self, path: str) -> Coroutine[Any, Any, list[str]]:
@@ -156,6 +161,7 @@ class FileIOCore:
             >>> lines = await io_core.read_lines("log.txt")
             >>> for line in lines:
             ...     print(line)
+
         """
 
     def stream_lines(self, path: str) -> Coroutine[Any, Any, PyLineStreamer]:
@@ -204,6 +210,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> data = await io_core.read_bytes("image.png")
             >>> print(f"File size: {len(data)} bytes")
+
         """
 
     def write_file(self, path: str, content: str) -> Coroutine[Any, Any, None]:
@@ -228,6 +235,7 @@ class FileIOCore:
         Example:
             >>> io_core = FileIOCore()
             >>> await io_core.write_file("output.txt", "Hello, World!")
+
         """
 
     def write_lines(self, path: str, lines: list[str]) -> Coroutine[Any, Any, None]:
@@ -253,6 +261,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> lines = ["Line 1", "Line 2", "Line 3"]
             >>> await io_core.write_lines("output.txt", lines)
+
         """
 
     def write_bytes(self, path: str, data: bytes) -> Coroutine[Any, Any, None]:
@@ -278,6 +287,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> data = b'\\x89PNG\\r\\n\\x1a\\n'
             >>> await io_core.write_bytes("image.png", data)
+
         """
 
     def append_file(self, path: str, content: str) -> Coroutine[Any, Any, None]:
@@ -302,6 +312,7 @@ class FileIOCore:
         Example:
             >>> io_core = FileIOCore()
             >>> await io_core.append_file("log.txt", "New log entry\\n")
+
         """
 
     def file_exists(self, path: str) -> bool:
@@ -320,6 +331,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> if io_core.file_exists("config.txt"):
             ...     content = await io_core.read_file("config.txt")
+
         """
 
     def get_file_size(self, path: str) -> int:
@@ -338,6 +350,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> size = io_core.get_file_size("large_file.dat")
             >>> print(f"Size: {size / 1024 / 1024:.2f} MB")
+
         """
 
     def get_file_info(self, path: str) -> dict[str, Any]:
@@ -355,6 +368,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> info = io_core.get_file_info("file.txt")
             >>> print(f"Size: {info.get('size')}")
+
         """
 
     def read_file_mmap(self, path: str) -> Coroutine[Any, Any, str]:
@@ -367,6 +381,7 @@ class FileIOCore:
 
         Returns:
             Coroutine that resolves to file contents as string
+
         """
 
     def read_file_with_encoding(self, path: str, encoding: str) -> Coroutine[Any, Any, str]:
@@ -380,6 +395,7 @@ class FileIOCore:
 
         Returns:
             Coroutine that resolves to file contents as string
+
         """
 
     def read_dds_header(self, path: str) -> tuple[int, int] | None:
@@ -400,6 +416,7 @@ class FileIOCore:
             >>> if header:
             ...     width, height = header
             ...     print(f"Size: {width}x{height}")
+
         """
 
     def read_dds_headers_batch(self, paths: list[str]) -> dict[str, tuple[int, int] | None]:
@@ -424,6 +441,7 @@ class FileIOCore:
             ...     if header:
             ...         width, height = header
             ...         print(f"{path}: {width}x{height}")
+
         """
 
     def clear_cache(self) -> None:
@@ -436,6 +454,7 @@ class FileIOCore:
             >>> io_core = FileIOCore()
             >>> # ... read many files ...
             >>> io_core.clear_cache()  # Free cached content
+
         """
 
     def py_walk_directory(self, path: str, pattern: str | None = None, max_depth: int | None = None) -> list[str]:
@@ -461,6 +480,7 @@ class FileIOCore:
             >>>
             >>> # Find all files with depth limit
             >>> all_files = io_core.py_walk_directory("data", max_depth=2)
+
         """
 
     def py_read_multiple_files(self, paths: list[str]) -> Coroutine[Any, Any, dict[str, str]]:
@@ -484,6 +504,7 @@ class FileIOCore:
             >>> contents = await io_core.py_read_multiple_files(files)
             >>> for path, content in contents.items():
             ...     print(f"{path}: {len(content)} chars")
+
         """
 
     def py_write_multiple_files(self, files: dict[str, str]) -> Coroutine[Any, Any, None]:
@@ -511,6 +532,7 @@ class FileIOCore:
             ...     "file3.txt": "Content 3"
             ... }
             >>> await io_core.py_write_multiple_files(writes)
+
         """
 
 class DDSHeader:
@@ -535,6 +557,7 @@ class DDSHeader:
         ...     print(f"Format: {header.format}")
         ...     if header.is_bc_compressed() and not header.has_valid_bc_dimensions():
         ...         print("ERROR: Invalid BC compression dimensions")
+
     """
 
     width: int
@@ -568,6 +591,7 @@ class DDSHeader:
         Example:
             >>> with open("texture.dds", "rb") as f:
             ...     header = DDSHeader.from_bytes(f.read())
+
         """
 
     def has_power_of_2_dimensions(self) -> bool:
@@ -579,6 +603,7 @@ class DDSHeader:
         Example:
             >>> if header.has_power_of_2_dimensions():
             ...     print("Optimal for mipmaps")
+
         """
 
     def has_valid_bc_dimensions(self) -> bool:
@@ -594,6 +619,7 @@ class DDSHeader:
         Example:
             >>> if header.is_bc_compressed() and not header.has_valid_bc_dimensions():
             ...     print("ERROR: BC texture with invalid dimensions")
+
         """
 
     def is_reasonable_size(self) -> bool:
@@ -605,6 +631,7 @@ class DDSHeader:
         Example:
             >>> if not header.is_reasonable_size():
             ...     print(f"WARNING: Unusual texture size {header.width}x{header.height}")
+
         """
 
     def has_mipmaps(self) -> bool:
@@ -616,6 +643,7 @@ class DDSHeader:
         Example:
             >>> if not header.has_mipmaps():
             ...     print("No mipmaps - may cause performance issues")
+
         """
 
     def is_bc_compressed(self) -> bool:
@@ -627,6 +655,7 @@ class DDSHeader:
         Example:
             >>> if header.is_bc_compressed():
             ...     print(f"BC-compressed: {header.format}")
+
         """
 
 class EncodingDetector:
@@ -642,6 +671,7 @@ class EncodingDetector:
         ...     data = f.read()
         >>> encoding = detector.detect_encoding(data)
         >>> print(f"Detected encoding: {encoding}")
+
     """
 
     def __init__(self) -> None:
@@ -660,6 +690,7 @@ class EncodingDetector:
             >>> detector = EncodingDetector()
             >>> with open("file.txt", "rb") as f:
             ...     encoding = detector.detect_encoding(f.read())
+
         """
 
 class FileHasher:
@@ -685,6 +716,7 @@ class FileHasher:
         >>> for path, hash_val in hashes.items():
         ...     if hash_val:
         ...         print(f"{path}: {hash_val}")
+
     """
 
     @staticmethod
@@ -704,6 +736,7 @@ class FileHasher:
             >>> hash_val = FileHasher.hash_file("game.exe")
             >>> print(len(hash_val))  # 64 (SHA256 is 256 bits = 64 hex chars)
             64
+
         """
 
     @staticmethod
@@ -731,6 +764,7 @@ class FileHasher:
             ...         print(f"{path}: {hash_val}")
             ...     else:
             ...         print(f"{path}: FAILED")
+
         """
 
     @staticmethod
@@ -754,6 +788,7 @@ class FileHasher:
             >>> hashes = FileHasher.hash_files_to_map(files)
             >>> print(len(hashes))  # Only successful hashes (e.g., 2)
             2
+
         """
 
     @staticmethod
@@ -764,6 +799,7 @@ class FileHasher:
 
         Example:
             >>> FileHasher.clear_cache()
+
         """
 
     @staticmethod
@@ -776,6 +812,7 @@ class FileHasher:
         Example:
             >>> count = FileHasher.cache_size()
             >>> print(f"Cached hashes: {count}")
+
         """
 
 class PyLogCollector:
@@ -802,6 +839,7 @@ class PyLogCollector:
         ...     log_paths = await collector.collect_all()
         ...     print(f"Found {len(log_paths)} crash logs")
         >>> asyncio.run(main())
+
     """
 
     def __init__(self, base_folder: str, xse_folder: str | None = None, custom_folder: str | None = None) -> None:
@@ -811,6 +849,7 @@ class PyLogCollector:
             base_folder: Working directory where Crash Logs folder will be created
             xse_folder: Optional path to game's XSE folder (e.g., My Games/Fallout4/F4SE)
             custom_folder: Optional path to custom scan directory
+
         """
 
     def collect_all(self) -> list[str]:
@@ -832,6 +871,7 @@ class PyLogCollector:
             >>> collector = PyLogCollector(base_folder=".")
             >>> log_paths = collector.collect_all()  # No await needed!
             >>> print(f"Found {len(log_paths)} crash logs")
+
         """
 
     def move_from_base_folder(self) -> int:
@@ -842,6 +882,7 @@ class PyLogCollector:
 
         Raises:
             IOError: If file operations fail
+
         """
 
     def copy_from_xse_folder(self) -> int:
@@ -855,6 +896,7 @@ class PyLogCollector:
 
         Raises:
             IOError: If file operations fail
+
         """
 
     def collect_crash_logs(self) -> list[str]:
@@ -869,6 +911,7 @@ class PyLogCollector:
 
         Raises:
             IOError: If file operations fail
+
         """
 
     def crash_logs_dir(self) -> str:
@@ -876,6 +919,7 @@ class PyLogCollector:
 
         Returns:
             Path to Crash Logs directory as a string
+
         """
 
     def pastebin_dir(self) -> str:
@@ -888,6 +932,7 @@ class PyLogCollector:
             >>> collector = PyLogCollector(base_folder=".")
             >>> pastebin_dir = collector.pastebin_dir()
             >>> print(f"Pastebin directory: {pastebin_dir}")
+
         """
 
 class FileGeneratorConfig:
@@ -905,6 +950,7 @@ class FileGeneratorConfig:
         ... )
         >>> print(config.game_name)
         Fallout4
+
     """
 
     ignore_file_content: str
@@ -923,6 +969,7 @@ class FileGeneratorConfig:
             ignore_file_content: Default content for CLASSIC Ignore.yaml
             local_yaml_content: Default content for local YAML file
             game_name: Game name for local YAML path (e.g., "Fallout4", "Skyrim")
+
         """
 
 class FileGenerator:
@@ -950,6 +997,7 @@ class FileGenerator:
         ...     local_created = await generator.generate_local_yaml_async()
         ...     print(f"Ignore: {ignore_created}, Local: {local_created}")
         >>> asyncio.run(main())
+
     """
 
     def __init__(self, config: FileGeneratorConfig) -> None:
@@ -957,6 +1005,7 @@ class FileGenerator:
 
         Args:
             config: File generation configuration
+
         """
 
     def generate_ignore_file_async(self) -> Coroutine[Any, Any, bool]:
@@ -978,6 +1027,7 @@ class FileGenerator:
             >>> created = await generator.generate_ignore_file_async()
             >>> if created:
             ...     print("Ignore file created")
+
         """
 
     def generate_local_yaml_async(self) -> Coroutine[Any, Any, bool]:
@@ -1001,6 +1051,7 @@ class FileGenerator:
             >>> created = await generator.generate_local_yaml_async()
             >>> if created:
             ...     print("Local YAML created")
+
         """
 
     def generate_all_files_async(self) -> Coroutine[Any, Any, tuple[bool, bool]]:
@@ -1021,6 +1072,7 @@ class FileGenerator:
             >>> generator = FileGenerator(config)
             >>> ignore_created, local_created = await generator.generate_all_files_async()
             >>> print(f"Generated: ignore={ignore_created}, local={local_created}")
+
         """
 
     def ignore_file_path(self) -> str:
@@ -1028,6 +1080,7 @@ class FileGenerator:
 
         Returns:
             Path to CLASSIC Ignore.yaml
+
         """
 
     def local_yaml_path(self) -> str:
@@ -1035,6 +1088,7 @@ class FileGenerator:
 
         Returns:
             Path to CLASSIC Data/CLASSIC <GAME> Local.yaml
+
         """
 
     def config(self) -> FileGeneratorConfig:
@@ -1042,6 +1096,7 @@ class FileGenerator:
 
         Returns:
             FileGeneratorConfig object
+
         """
 
 async def generate_ignore_file_async(content: str) -> bool:
@@ -1064,6 +1119,7 @@ async def generate_ignore_file_async(content: str) -> bool:
         >>> from classic_file_io import generate_ignore_file_async
         >>> result = asyncio.run(generate_ignore_file_async("# Ignore patterns\\n*.tmp"))
         >>> print(f"File generated: {result}")
+
     """
 
 async def generate_local_yaml_async(content: str, game_name: str) -> bool:
@@ -1087,4 +1143,5 @@ async def generate_local_yaml_async(content: str, game_name: str) -> bool:
         >>> from classic_file_io import generate_local_yaml_async
         >>> result = asyncio.run(generate_local_yaml_async("# Config", "Fallout4"))
         >>> print(f"File generated: {result}")
+
     """

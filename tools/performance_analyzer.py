@@ -1,5 +1,4 @@
-"""
-Performance Analyzer for CLASSIC Rust Integration
+"""Performance Analyzer for CLASSIC Rust Integration.
 
 This module provides comprehensive performance analysis tools for the Phase 6 Rust migration,
 focusing on detailed measurement, comparison, and reporting of FFI performance characteristics.
@@ -150,11 +149,11 @@ class StatisticalAnalyzer:
 
     @staticmethod
     def calculate_confidence_interval(data: list[float], confidence: float = 0.95) -> tuple[float, float, float]:
-        """
-        Calculate confidence interval for performance data.
+        """Calculate confidence interval for performance data.
 
         Returns:
             Tuple of (mean, lower_bound, upper_bound)
+
         """
         if not data:
             return 0.0, 0.0, 0.0
@@ -193,11 +192,11 @@ class StatisticalAnalyzer:
 
     @staticmethod
     def welch_t_test(sample1: list[float], sample2: list[float], alpha: float = 0.05) -> tuple[bool, float]:
-        """
-        Perform Welch's t-test to determine if performance difference is significant.
+        """Perform Welch's t-test to determine if performance difference is significant.
 
         Returns:
             Tuple of (is_significant, p_value)
+
         """
         if not sample1 or not sample2:
             return False, 1.0
@@ -241,11 +240,11 @@ class StatisticalAnalyzer:
 
     @staticmethod
     def detect_outliers(data: list[float], method: str = "iqr") -> list[bool]:
-        """
-        Detect outliers in performance data using IQR or Z-score method.
+        """Detect outliers in performance data using IQR or Z-score method.
 
         Returns:
             List of booleans indicating which values are outliers
+
         """
         if len(data) < 4:
             return [False] * len(data)
@@ -278,6 +277,13 @@ class PerformanceBenchmark:
     """High-precision benchmarking tool for performance measurements."""
 
     def __init__(self, warmup_runs: int = 3, measurement_runs: int = 10):
+        """Initialize the benchmark with warmup and measurement configurations.
+
+        Args:
+            warmup_runs: Number of warmup runs before measurement.
+            measurement_runs: Number of measured runs for statistics.
+
+        """
         self.warmup_runs = warmup_runs
         self.measurement_runs = measurement_runs
         self._process = psutil.Process()
@@ -285,8 +291,7 @@ class PerformanceBenchmark:
     def benchmark_function(
         self, func: Callable, test_data: list[Any], test_name: str = "", enable_ffi_profiling: bool = True
     ) -> PerformanceMetrics:
-        """
-        Benchmark a function with comprehensive performance measurements.
+        """Benchmark a function with comprehensive performance measurements.
 
         Args:
             func: Function to benchmark
@@ -296,6 +301,7 @@ class PerformanceBenchmark:
 
         Returns:
             PerformanceMetrics with detailed performance data
+
         """
         # Prepare for benchmarking
         gc.collect()  # Clean up before measurement
@@ -442,8 +448,7 @@ class PerformanceBenchmark:
     def benchmark_with_multiple_datasets(
         self, func: Callable, datasets: dict[str, list[Any]], test_name: str = ""
     ) -> dict[str, PerformanceMetrics]:
-        """
-        Benchmark a function with multiple different datasets.
+        """Benchmark a function with multiple different datasets.
 
         Args:
             func: Function to benchmark
@@ -452,6 +457,7 @@ class PerformanceBenchmark:
 
         Returns:
             Dictionary mapping dataset names to performance metrics
+
         """
         results = {}
 
@@ -472,6 +478,12 @@ class PerformanceAnalyzer:
     """Main performance analysis coordinator providing comprehensive analysis capabilities."""
 
     def __init__(self, confidence_level: float = 0.95):
+        """Initialize the performance analyzer with statistical settings.
+
+        Args:
+            confidence_level: Confidence level for statistical significance tests.
+
+        """
         self.confidence_level = confidence_level
         self.statistical_analyzer = StatisticalAnalyzer()
         self.benchmark = PerformanceBenchmark()
@@ -489,8 +501,7 @@ class PerformanceAnalyzer:
         optimized_name: str = "Rust",
         runs_per_implementation: int = 10,
     ) -> ComparisonResult:
-        """
-        Compare two implementations with statistical analysis.
+        """Compare two implementations with statistical analysis.
 
         Args:
             baseline_func: Baseline implementation (typically Python)
@@ -502,6 +513,7 @@ class PerformanceAnalyzer:
 
         Returns:
             ComparisonResult with detailed analysis
+
         """
         logger.info(f"Comparing {baseline_name} vs {optimized_name} implementations")
 
@@ -593,8 +605,7 @@ class PerformanceAnalyzer:
     def analyze_scaling_behavior(
         self, func: Callable, base_data: Any, scale_factors: list[int], func_name: str = "function"
     ) -> dict[str, Any]:
-        """
-        Analyze how function performance scales with input size.
+        """Analyze how function performance scales with input size.
 
         Args:
             func: Function to analyze
@@ -604,6 +615,7 @@ class PerformanceAnalyzer:
 
         Returns:
             Dictionary with scaling analysis results
+
         """
         logger.info(f"Analyzing scaling behavior for {func_name}")
 
@@ -667,8 +679,7 @@ class PerformanceAnalyzer:
     def regression_analysis(
         self, func: Callable, test_data: list[Any], baseline_metrics: PerformanceMetrics, tolerance_pct: float = 5.0
     ) -> dict[str, Any]:
-        """
-        Detect performance regressions by comparing current performance to baseline.
+        """Detect performance regressions by comparing current performance to baseline.
 
         Args:
             func: Function to test
@@ -678,6 +689,7 @@ class PerformanceAnalyzer:
 
         Returns:
             Dictionary with regression analysis results
+
         """
         logger.info("Running regression analysis...")
 
@@ -737,8 +749,7 @@ class PerformanceAnalyzer:
     def generate_report(
         self, comparison_result: ComparisonResult, output_file: str | Path | None = None, include_charts: bool = True
     ) -> str:
-        """
-        Generate a comprehensive HTML performance report.
+        """Generate a comprehensive HTML performance report.
 
         Args:
             comparison_result: Results from comparison analysis
@@ -747,6 +758,7 @@ class PerformanceAnalyzer:
 
         Returns:
             HTML report as string
+
         """
         baseline = comparison_result.baseline_metrics
         optimized = comparison_result.optimized_metrics

@@ -6,6 +6,7 @@ enabling detection of runtime issues and performance monitoring.
 Note:
     Runtime statistics require classic_shared v0.2.0+ with diagnostics support.
     Falls back gracefully if not available.
+
 """
 
 from __future__ import annotations
@@ -26,6 +27,7 @@ def get_runtime_stats() -> dict[str, Any] | None:
         >>> stats = get_runtime_stats()
         >>> if stats and not stats["is_healthy"]:
         ...     print("Warning: Runtime may be stalled!")
+
     """
     try:
         import classic_shared
@@ -51,6 +53,7 @@ def is_runtime_healthy() -> bool:
 
     Note:
         Returns True when diagnostics unavailable to avoid false alarms.
+
     """
     try:
         import classic_shared

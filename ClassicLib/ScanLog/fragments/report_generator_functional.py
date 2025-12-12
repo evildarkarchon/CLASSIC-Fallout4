@@ -1,5 +1,4 @@
-"""
-Functional report generator using fragments.
+"""Functional report generator using fragments.
 
 This module provides functional versions of report generation methods
 that return immutable fragments instead of mutating shared state.
@@ -11,8 +10,7 @@ from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
 
 
 class ReportGeneratorFunctional:
-    """
-    Handles the functionality of generating various sections of a report.
+    """Handle the functionality of generating various sections of a report.
 
     This class provides static methods to generate specific fragments of a report
     such as the header, error information section, and suspect section. These
@@ -22,8 +20,7 @@ class ReportGeneratorFunctional:
 
     @staticmethod
     def generate_header(crashlog_filename: str, version: str) -> ReportFragment:
-        """
-        Generates a formatted header for an autoscan report.
+        """Generate a formatted header for an autoscan report.
 
         The generated header includes information about the crashlog file name and the
         version of the tool that created the report. It provides suggestions for the
@@ -36,6 +33,7 @@ class ReportGeneratorFunctional:
 
         Returns:
             ReportFragment: A fragment containing the formatted header for the report.
+
         """
         return ReportFragment.from_lines([
             f"# {crashlog_filename}\n",
@@ -53,8 +51,7 @@ class ReportGeneratorFunctional:
         is_latest: bool,
         warn_outdated: str,
     ) -> ReportFragment:
-        """
-        Generates an error section for the crash report.
+        """Generate an error section for the crash report.
 
         This method composes a section containing detailed error information and other
         contextual metadata related to a crash. The generated section includes details
@@ -73,6 +70,7 @@ class ReportGeneratorFunctional:
 
         Returns:
             ReportFragment: A formatted report fragment containing the error section.
+
         """
         lines = [
             "### Error Information\n\n",
@@ -89,8 +87,7 @@ class ReportGeneratorFunctional:
 
     @staticmethod
     def generate_suspect_section(found_suspects: list[str]) -> ReportFragment:
-        """
-        Generates a suspect section for a report based on identified crash suspects.
+        """Generate a suspect section for a report based on identified crash suspects.
 
         This method compiles lines of text based on whether any suspects of crashes have
         been found. If no suspects are identified, the method generates a section stating
@@ -104,6 +101,7 @@ class ReportGeneratorFunctional:
         Returns:
             ReportFragment: A report fragment containing the completed suspect analysis
             section, formatted as lines of text.
+
         """
         if not found_suspects:
             return ReportFragment.from_lines([

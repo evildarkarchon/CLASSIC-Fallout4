@@ -126,6 +126,12 @@ skip-magic-trailing-comma = false
 preview = true
 ignore = [
 	"ANN401",  # Allow use of typing.Any
+	"D102",    # Missing docstring in public method (Protocol stubs)
+	"D105",    # Missing docstring in magic method
+	"D107",    # Missing docstring in __init__
+	"D205",    # Blank line between summary and description (many multi-line summaries)
+    "D211",
+    "D213",
 	"E501",    # Duplicate of B950 line-too-long
 	"E722",    # Duplicate of B001 bare-except
 	"PLR0904", # too-many-public-methods
@@ -144,7 +150,6 @@ ignore = [
 	"DOC502",
 	"Q000",
 	"RUF022",
-	"ANN401"
 ]
 
 extend-select = [

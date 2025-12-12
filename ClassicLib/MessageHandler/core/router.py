@@ -11,7 +11,7 @@ from ClassicLib.MessageHandler.core.enums import MessageTarget
 
 
 class MessageRouter:
-    """Determines whether messages should be displayed based on mode and target.
+    """Determine whether messages should be displayed based on mode and target.
 
     This class encapsulates the routing logic that was previously scattered
     throughout the MessageHandler. It provides a clean interface for checking
@@ -19,6 +19,7 @@ class MessageRouter:
 
     Attributes:
         is_gui_mode: Whether the handler is operating in GUI mode.
+
     """
 
     def __init__(self, is_gui_mode: bool = False) -> None:
@@ -26,6 +27,7 @@ class MessageRouter:
 
         Args:
             is_gui_mode: Whether operating in GUI mode.
+
         """
         self._is_gui_mode = is_gui_mode
 
@@ -42,6 +44,7 @@ class MessageRouter:
 
         Returns:
             True if the message should be displayed in the current mode.
+
         """
         # Normalize legacy enum values
         normalized = target.normalize()
@@ -68,6 +71,7 @@ class MessageRouter:
 
         Returns:
             'gui', 'cli', 'both', or None (for log-only).
+
         """
         normalized = target.normalize()
 

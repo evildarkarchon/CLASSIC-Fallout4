@@ -14,6 +14,7 @@ Example:
     >>> if is_modified:
     ...     # Reload file from disk
     ...     pass
+
 """
 
 import asyncio
@@ -48,6 +49,7 @@ class YamlCache:
         >>> # Get metrics
         >>> metrics = cache.get_metrics()
         >>> print(f"Cache hits: {metrics['cache_hits']}")
+
     """
 
     # Cache TTL in seconds (5 minutes default)
@@ -96,6 +98,7 @@ class YamlCache:
             >>> async with lock:
             ...     # Safely access the file
             ...     pass
+
         """
         if file_path not in self._cache_locks:
             async with self._global_lock:
@@ -127,6 +130,7 @@ class YamlCache:
             >>> if await cache.check_file_modification(Path("settings.yaml")):
             ...     # File changed, reload from disk
             ...     data = await load_file(path)
+
         """
         try:
             stat_result = await asyncio.to_thread(file_path.stat)
@@ -163,6 +167,7 @@ class YamlCache:
         Example:
             >>> metrics = cache.get_metrics()
             >>> hit_rate = metrics["cache_hits"] / max(metrics["total_reads"], 1)
+
         """
         return self._metrics.copy()
 
@@ -177,6 +182,7 @@ class YamlCache:
         Example:
             >>> cache.update_metrics("cache_hits")
             >>> cache.update_metrics("total_reads", 5)
+
         """
         if metric in self._metrics:
             self._metrics[metric] += increment
@@ -196,6 +202,7 @@ class YamlCache:
         Example:
             >>> cache.clear_cache("CLASSIC_Settings")  # Clear specific store
             >>> cache.clear_cache()  # Clear all caches
+
         """
         if store:
             # Clear specific store

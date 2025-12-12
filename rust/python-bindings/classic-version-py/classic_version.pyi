@@ -68,6 +68,7 @@ def parse_version(version_str: str) -> Version:
         >>> assert version == (1, 10, 163)
         >>> version = classic_version.parse_version("v1.2.3")
         >>> assert version == (1, 2, 3)
+
     """
 
 def try_parse_version(version_str: str) -> Version | None:
@@ -88,6 +89,7 @@ def try_parse_version(version_str: str) -> Version | None:
         >>> assert version == (1, 10, 163)
         >>> version = classic_version.try_parse_version("invalid")
         >>> assert version is None
+
     """
 
 def compare_versions(v1: Version, v2: Version) -> int:
@@ -110,6 +112,7 @@ def compare_versions(v1: Version, v2: Version) -> int:
         >>> assert result == 0
         >>> result = classic_version.compare_versions((1, 10, 984), (1, 10, 163))
         >>> assert result == 1
+
     """
 
 def is_known_fallout4_version(version: Version) -> bool:
@@ -126,6 +129,7 @@ def is_known_fallout4_version(version: Version) -> bool:
         >>> assert classic_version.is_known_fallout4_version((1, 10, 163))
         >>> assert classic_version.is_known_fallout4_version((1, 10, 984))
         >>> assert not classic_version.is_known_fallout4_version((9, 9, 9))
+
     """
 
 def is_known_f4se_version(version: Version) -> bool:
@@ -142,6 +146,7 @@ def is_known_f4se_version(version: Version) -> bool:
         >>> assert classic_version.is_known_f4se_version((0, 6, 23))
         >>> assert classic_version.is_known_f4se_version((0, 7, 2))
         >>> assert not classic_version.is_known_f4se_version((9, 9, 9))
+
     """
 
 def extract_version_from_filename(filename: str) -> Version | None:
@@ -166,6 +171,7 @@ def extract_version_from_filename(filename: str) -> Version | None:
         >>> assert version == (1, 2, 0)
         >>> version = classic_version.extract_version_from_filename("NoVersion.esp")
         >>> assert version is None
+
     """
 
 def extract_version_from_log(log_content: str) -> Version | None:
@@ -185,6 +191,7 @@ def extract_version_from_log(log_content: str) -> Version | None:
         >>> log = "Game Version: 1.10.163.0\\nOther info..."
         >>> version = classic_version.extract_version_from_log(log)
         >>> assert version == (1, 10, 163)
+
     """
 
 def extract_all_versions(content: str) -> list[Version]:
@@ -203,6 +210,7 @@ def extract_all_versions(content: str) -> list[Version]:
         >>> content = "Version 1.2.3 and version 4.5.6 found"
         >>> versions = classic_version.extract_all_versions(content)
         >>> assert versions == [(1, 2, 3), (4, 5, 6)]
+
     """
 
 def format_version(version: Version, prefix: str | None = None) -> str:
@@ -223,4 +231,5 @@ def format_version(version: Version, prefix: str | None = None) -> str:
         >>> assert formatted == "Version 1.10.163"
         >>> formatted = classic_version.format_version((1, 10, 163), prefix="")
         >>> assert formatted == "1.10.163"
+
     """

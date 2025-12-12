@@ -29,6 +29,7 @@ class StubValidator:
 
         Args:
             verbose: Whether to print detailed validation output.
+
         """
         self.verbose = verbose
         self.errors: list[str] = []
@@ -45,6 +46,7 @@ class StubValidator:
 
         Returns:
             Set of Python class names exported from Rust.
+
         """
         classes: set[Any] = set()
         # Match #[pyclass(..., name = "ClassName")]
@@ -64,6 +66,7 @@ class StubValidator:
 
         Returns:
             Set of Python function names exported from Rust.
+
         """
         functions: set[Any] = set()
         # Match #[pyfunction] followed by fn name
@@ -81,6 +84,7 @@ class StubValidator:
 
         Returns:
             Set of method names for the class.
+
         """
         methods: set[Any] = set()
 
@@ -109,6 +113,7 @@ class StubValidator:
 
         Returns:
             Set of class names defined in the stub.
+
         """
         classes: set[Any] = set()
         classes.update(match.group(1) for match in re.finditer(r"^class\s+(\w+)[:\(]", stub_content, re.MULTILINE))
@@ -123,6 +128,7 @@ class StubValidator:
 
         Returns:
             Set of function names defined in the stub.
+
         """
         functions: set[Any] = set()
         functions.update(match.group(1) for match in re.finditer(r"^def\s+(\w+)\s*\(", stub_content, re.MULTILINE))
@@ -138,6 +144,7 @@ class StubValidator:
 
         Returns:
             Set of method names for the class.
+
         """
         methods: set[Any] = set()
 
@@ -160,6 +167,7 @@ class StubValidator:
 
         Returns:
             Tuple of (error_count, warning_count).
+
         """
         crate_name = crate_path.name
         lib_rs = crate_path / "src" / "lib.rs"
@@ -226,6 +234,7 @@ class StubValidator:
 
         Returns:
             True if all validations passed, False otherwise.
+
         """
         bindings_dir = rust_dir / "python-bindings"
 
@@ -277,7 +286,7 @@ class StubValidator:
 
 
 def main() -> None:
-    """Main entry point for the validation script."""
+    """Serve as main entry point for the validation script."""
     parser = argparse.ArgumentParser(description="Validate Python type stub files against Rust implementations")
     parser.add_argument("--verbose", "-v", action="store_true", help="Show detailed validation output")
     parser.add_argument("--rust-dir", type=Path, default=Path(__file__).parent, help="Path to rust directory (default: script directory)")

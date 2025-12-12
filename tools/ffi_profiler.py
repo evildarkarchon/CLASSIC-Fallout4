@@ -1,5 +1,4 @@
-"""
-FFI Overhead Profiler for CLASSIC Rust Integration
+"""FFI Overhead Profiler for CLASSIC Rust Integration.
 
 This module provides comprehensive profiling tools for analyzing Python↔Rust FFI overhead
 and identifying optimization opportunities in the Phase 6 Rust migration.
@@ -63,7 +62,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class FFICall:
-    """Represents a single FFI call with comprehensive profiling data."""
+    """Represent a single FFI call with comprehensive profiling data."""
 
     # Basic call information
     function_name: str
@@ -134,8 +133,7 @@ class FFIProfileStats:
 
 
 class FFIProfiler:
-    """
-    Comprehensive FFI profiler for analyzing Python↔Rust boundary performance.
+    """Comprehensive FFI profiler for analyzing Python↔Rust boundary performance.
 
     This profiler uses multiple techniques to capture detailed performance data:
     1. Function call tracing with sys.settrace
@@ -151,14 +149,14 @@ class FFIProfiler:
         enable_gil_monitoring: bool = True,
         max_call_history: int = 10000,
     ) -> None:
-        """
-        Initialize the FFI profiler.
+        """Initialize the FFI profiler.
 
         Args:
             rust_module_patterns: List of module name patterns to identify Rust calls
             memory_sampling_interval: Interval for memory sampling (seconds)
             enable_gil_monitoring: Whether to monitor GIL contention
             max_call_history: Maximum number of calls to store in history
+
         """
         # Configuration
         self.rust_module_patterns = rust_module_patterns or [
@@ -211,8 +209,7 @@ class FFIProfiler:
         self._process = psutil.Process()
 
     def _is_rust_call(self, frame: Any) -> bool:
-        """
-        Determine if a frame represents a call to Rust code.
+        """Determine if a frame represents a call to Rust code.
 
         This uses heuristics to identify Rust calls:
         1. Module name patterns (classic_scanlog, _rust, etc.)
@@ -238,8 +235,7 @@ class FFIProfiler:
             return False
 
     def _get_data_size(self, obj: Any) -> int:
-        """
-        Estimate the size of data being transferred across FFI boundary.
+        """Estimate the size of data being transferred across FFI boundary.
 
         This provides a rough estimate of marshaling cost by analyzing
         the size and complexity of Python objects.
@@ -336,8 +332,7 @@ class FFIProfiler:
             logger.error(f"GIL monitor thread failed: {e}")
 
     def _trace_calls(self, frame: Any, event: str, arg: Any) -> Any:  # noqa: PLR0912
-        """
-        Trace function calls to identify and profile FFI calls.
+        """Trace function calls to identify and profile FFI calls.
 
         This is the core tracing function that captures detailed information
         about every function call, focusing on Rust FFI boundaries.
@@ -546,8 +541,7 @@ class FFIProfiler:
         return end_time - self._start_time
 
     def analyze_performance(self) -> FFIProfileStats:
-        """
-        Analyze collected profiling data and return comprehensive statistics.
+        """Analyze collected profiling data and return comprehensive statistics.
 
         This performs detailed analysis of:
         - Call frequency and patterns
@@ -653,11 +647,11 @@ class FFIProfiler:
         )
 
     def print_report(self, detailed: bool = True) -> None:  # noqa: PLR0912
-        """
-        Print a comprehensive FFI profiling report.
+        """Print a comprehensive FFI profiling report.
 
         Args:
             detailed: Whether to include detailed call-by-call analysis
+
         """
         stats = self.analyze_performance()
         duration = self.get_profile_duration()
@@ -810,8 +804,7 @@ class FFIProfiler:
 
 # Convenience functions for quick profiling
 def profile_ffi_function(func: Callable) -> Callable:
-    """
-    Decorator to profile a single function's FFI usage.
+    """Decorate to profile a single function's FFI usage.
 
     Usage:
         @profile_ffi_function
@@ -833,8 +826,7 @@ def profile_ffi_function(func: Callable) -> Callable:
 
 
 def quick_profile_context() -> Any:
-    """
-    Quick context manager for FFI profiling.
+    """Quick context manager for FFI profiling.
 
     Usage:
         with quick_profile_context() as profiler:

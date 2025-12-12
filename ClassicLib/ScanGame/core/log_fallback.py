@@ -1,5 +1,4 @@
-"""
-Pure Python fallback implementation of LogProcessor.
+"""Pure Python fallback implementation of LogProcessor.
 
 This module provides a Python-only implementation of log processing
 that matches the Rust interface.
@@ -9,7 +8,7 @@ from pathlib import Path
 
 
 class LogProcessor:
-    """Processes log files and detects errors based on patterns.
+    """Process log files and detects errors based on patterns.
 
     This is a simplified Python fallback implementation that matches
     the Rust interface. For full-featured async processing, use the
@@ -28,6 +27,7 @@ class LogProcessor:
         ... )
         >>> report = processor.process_logs(Path("/logs"))
         >>> print(report)
+
     """
 
     def __init__(
@@ -42,6 +42,7 @@ class LogProcessor:
             catch_errors: List of error patterns to catch in log lines.
             ignore_files: List of file patterns to ignore during scanning.
             ignore_errors: List of error patterns to ignore (exclude from results).
+
         """
         self.catch_errors = [pattern.lower() for pattern in catch_errors]
         self.ignore_files = [pattern.lower() for pattern in ignore_files]
@@ -63,6 +64,7 @@ class LogProcessor:
             >>> report = processor.process_logs(Path("/logs"))
             >>> if report:
             ...     print("Errors found in logs")
+
         """
         if not log_dir.exists() or not log_dir.is_dir():
             return ""
@@ -99,6 +101,7 @@ class LogProcessor:
 
         Returns:
             List of error lines found in the log file.
+
         """
         errors: list[str] = []
 
@@ -142,6 +145,7 @@ class LogProcessor:
 
         Returns:
             Formatted report lines.
+
         """
         report = [
             "[!] CAUTION : THE FOLLOWING LOG FILE REPORTS ONE OR MORE ERRORS!\n",

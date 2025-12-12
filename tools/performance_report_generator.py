@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-"""
-Performance Report Generator for CLASSIC
+"""Performance Report Generator for CLASSIC.
 
 This tool generates comprehensive performance reports by running benchmarks,
 analyzing results, and producing multiple output formats for different audiences:
@@ -35,8 +34,7 @@ sys.path.insert(0, str(project_root))
 
 
 class PerformanceReportGenerator:
-    """
-    Comprehensive performance report generator for CLASSIC Phase 6.
+    """Comprehensive performance report generator for CLASSIC Phase 6.
 
     This class orchestrates the entire report generation process:
     1. Running performance benchmarks
@@ -46,6 +44,13 @@ class PerformanceReportGenerator:
     """
 
     def __init__(self, output_dir: Path | None = None, verbose: bool = False):
+        """Initialize the report generator with output settings.
+
+        Args:
+            output_dir: Directory for generated reports, defaults to project reports folder.
+            verbose: Enable verbose logging during report generation.
+
+        """
         self.project_root = project_root
         self.output_dir = output_dir or (self.project_root / "reports")
         self.verbose = verbose
@@ -566,7 +571,7 @@ class PerformanceReportGenerator:
 
 
 def main():
-    """Main entry point for the performance report generator."""
+    """Serve as main entry point for the performance report generator."""
     parser = argparse.ArgumentParser(
         description="Generate comprehensive performance reports for CLASSIC Phase 6",
         formatter_class=argparse.RawDescriptionHelpFormatter,

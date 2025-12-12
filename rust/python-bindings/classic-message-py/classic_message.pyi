@@ -61,6 +61,7 @@ class MessageType(IntEnum):
         'Info'
         >>> print(msg_type.value)
         0
+
     """
 
     Info = 0
@@ -72,7 +73,7 @@ class MessageType(IntEnum):
     Critical = 6
 
     def name(self) -> str:  # pyright: ignore[reportIncompatibleMethodOverride]
-        """Gets the human-readable name of the message type.
+        """Get the human-readable name of the message type.
 
         Returns:
             The name of the message type (e.g., "Info", "Warning").
@@ -81,6 +82,7 @@ class MessageType(IntEnum):
             >>> msg_type = MessageType.WARNING
             >>> msg_type.name()
             'Warning'
+
         """
 
     def __repr__(self) -> str:
@@ -88,6 +90,7 @@ class MessageType(IntEnum):
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -95,6 +98,7 @@ class MessageType(IntEnum):
 
         Returns:
             The name of the message type.
+
         """
 
 class MessageTarget(IntEnum):
@@ -117,6 +121,7 @@ class MessageTarget(IntEnum):
         True
         >>> print(target.value)
         4
+
     """
 
     All = 0
@@ -127,7 +132,7 @@ class MessageTarget(IntEnum):
     Console = 5
 
     def should_display_in_gui(self) -> bool:
-        """Determines if the message should be displayed in GUI mode.
+        """Determine if the message should be displayed in GUI mode.
 
         Returns:
             True if the message should be displayed in GUI.
@@ -136,10 +141,11 @@ class MessageTarget(IntEnum):
             >>> target = MessageTarget.GUI
             >>> target.should_display_in_gui()
             True
+
         """
 
     def should_display_in_cli(self) -> bool:
-        """Determines if the message should be displayed in CLI mode.
+        """Determine if the message should be displayed in CLI mode.
 
         Returns:
             True if the message should be displayed in CLI.
@@ -148,10 +154,11 @@ class MessageTarget(IntEnum):
             >>> target = MessageTarget.CONSOLE
             >>> target.should_display_in_cli()
             True
+
         """
 
     def should_display(self) -> bool:
-        """Determines if the message should be displayed at all (not log-only).
+        """Determine if the message should be displayed at all (not log-only).
 
         Returns:
             True if the message should be displayed.
@@ -163,6 +170,7 @@ class MessageTarget(IntEnum):
             >>> target = MessageTarget.LOG_ONLY
             >>> target.should_display()
             False
+
         """
 
     def __repr__(self) -> str:
@@ -170,6 +178,7 @@ class MessageTarget(IntEnum):
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -177,6 +186,7 @@ class MessageTarget(IntEnum):
 
         Returns:
             The name of the message target.
+
         """
 
 class Message:
@@ -199,10 +209,11 @@ class Message:
         >>> msg = msg.with_title("Greeting").with_details("User logged in")
         >>> print(msg.title())
         'Greeting'
+
     """
 
     def __init__(self, content: str, msg_type: MessageType) -> None:
-        """Creates a new message with the specified content and type.
+        """Create a new message with the specified content and type.
 
         Args:
             content: The main content of the message.
@@ -212,11 +223,12 @@ class Message:
             >>> msg = Message("Operation completed", MessageType.SUCCESS)
             >>> print(msg.content())
             'Operation completed'
+
         """
 
     @staticmethod
     def with_target(content: str, msg_type: MessageType, target: MessageTarget) -> Message:
-        """Creates a new message with the specified content, type, and target.
+        """Create a new message with the specified content, type, and target.
 
         Args:
             content: The main content of the message.
@@ -234,6 +246,7 @@ class Message:
             ... )
             >>> print(msg.target())
             MessageTarget.LogOnly
+
         """
 
     def with_title(self, title: str) -> Message:
@@ -250,6 +263,7 @@ class Message:
             >>> msg = msg.with_title("Important")
             >>> print(msg.title())
             'Important'
+
         """
 
     def with_details(self, details: str) -> Message:
@@ -266,76 +280,87 @@ class Message:
             >>> msg = msg.with_details("Stack trace: ...")
             >>> print(msg.details())
             'Stack trace: ...'
+
         """
 
     def content(self) -> str:
-        """Gets the message content.
+        """Get the message content.
 
         Returns:
             The message content.
+
         """
 
     def msg_type(self) -> MessageType:
-        """Gets the message type.
+        """Get the message type.
 
         Returns:
             The message type.
+
         """
 
     def target(self) -> MessageTarget:
-        """Gets the message target.
+        """Get the message target.
 
         Returns:
             The message target.
+
         """
 
     def title(self) -> str | None:
-        """Gets the optional message title.
+        """Get the optional message title.
 
         Returns:
             The title if set, None otherwise.
+
         """
 
     def details(self) -> str | None:
-        """Gets the optional message details.
+        """Get the optional message details.
 
         Returns:
             The details if set, None otherwise.
+
         """
 
     def set_content(self, content: str) -> None:
-        """Sets the message content.
+        """Set the message content.
 
         Args:
             content: The new content for the message.
+
         """
 
     def set_msg_type(self, msg_type: MessageType) -> None:
-        """Sets the message type.
+        """Set the message type.
 
         Args:
             msg_type: The new type for the message.
+
         """
 
     def set_target(self, target: MessageTarget) -> None:
-        """Sets the message target.
+        """Set the message target.
 
         Args:
             target: The new target for the message.
+
         """
 
     def set_title(self, title: str | None) -> None:
-        """Sets the message title.
+        """Set the message title.
 
         Args:
             title: The new title for the message, or None to clear it.
+
         """
 
     def set_details(self, details: str | None) -> None:
-        """Sets the message details.
+        """Set the message details.
 
         Args:
             details: The new details for the message, or None to clear them.
+
         """
 
     def __repr__(self) -> str:
@@ -343,6 +368,7 @@ class Message:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -350,6 +376,7 @@ class Message:
 
         Returns:
             The message content.
+
         """
 
 class Logger:
@@ -367,19 +394,21 @@ class Logger:
 
     Thread Safety:
         The Logger is thread-safe and can be shared across multiple Python threads.
+
     """
 
     def __init__(self) -> None:
-        """Creates a new Logger instance with the name "CLASSIC".
+        """Create a new Logger instance with the name "CLASSIC".
 
         Example:
             >>> logger = Logger()
             >>> print(logger.name())
             'CLASSIC'
+
         """
 
     def name(self) -> str:
-        """Gets the logger name.
+        """Get the logger name.
 
         Returns:
             The logger name (always "CLASSIC").
@@ -388,10 +417,11 @@ class Logger:
             >>> logger = Logger()
             >>> logger.name()
             'CLASSIC'
+
         """
 
     def info(self, msg: str) -> None:
-        """Logs an info-level message.
+        """Log an info-level message.
 
         Args:
             msg: The message to log.
@@ -399,10 +429,11 @@ class Logger:
         Example:
             >>> logger = Logger()
             >>> logger.info("Application initialized")
+
         """
 
     def warning(self, msg: str) -> None:
-        """Logs a warning-level message.
+        """Log a warning-level message.
 
         Args:
             msg: The message to log.
@@ -410,10 +441,11 @@ class Logger:
         Example:
             >>> logger = Logger()
             >>> logger.warning("Configuration file not found, using defaults")
+
         """
 
     def error(self, msg: str) -> None:
-        """Logs an error-level message.
+        """Log an error-level message.
 
         Args:
             msg: The message to log.
@@ -421,10 +453,11 @@ class Logger:
         Example:
             >>> logger = Logger()
             >>> logger.error("Failed to load database")
+
         """
 
     def debug(self, msg: str) -> None:
-        """Logs a debug-level message.
+        """Log a debug-level message.
 
         Args:
             msg: The message to log.
@@ -432,10 +465,11 @@ class Logger:
         Example:
             >>> logger = Logger()
             >>> logger.debug("Request ID: 12345")
+
         """
 
     def trace(self, msg: str) -> None:
-        """Logs a trace-level message.
+        """Log a trace-level message.
 
         Args:
             msg: The message to log.
@@ -443,10 +477,11 @@ class Logger:
         Example:
             >>> logger = Logger()
             >>> logger.trace("Function entry: process_data")
+
         """
 
     def log(self, level: str, msg: str) -> None:
-        """Logs a message at the specified log level.
+        """Log a message at the specified log level.
 
         Args:
             level: The log level as a string ("info", "warning", "error", "debug", "trace").
@@ -458,10 +493,11 @@ class Logger:
         Example:
             >>> logger = Logger()
             >>> logger.log("info", "Dynamic log level")
+
         """
 
     def log_message(self, message: Message) -> None:
-        """Logs a Message instance at the appropriate log level.
+        """Log a Message instance at the appropriate log level.
 
         The log level is determined by the Message's MessageType.
 
@@ -472,10 +508,11 @@ class Logger:
             >>> logger = Logger()
             >>> msg = Message("Operation completed", MessageType.SUCCESS)
             >>> logger.log_message(msg)
+
         """
 
     def is_enabled_for(self, level: str) -> bool:
-        """Checks if the logger is enabled for the specified log level.
+        """Check if the logger is enabled for the specified log level.
 
         This is useful for avoiding expensive computations when the log level
         is not enabled.
@@ -494,10 +531,11 @@ class Logger:
             >>> if logger.is_enabled_for("debug"):
             ...     expensive_debug_info = compute_expensive_debug_info()
             ...     logger.debug(expensive_debug_info)
+
         """
 
     def is_info_enabled(self) -> bool:
-        """Checks if info-level logging is enabled.
+        """Check if info-level logging is enabled.
 
         Returns:
             True if info-level logging is enabled.
@@ -506,10 +544,11 @@ class Logger:
             >>> logger = Logger()
             >>> if logger.is_info_enabled():
             ...     logger.info("Info logging is enabled")
+
         """
 
     def is_debug_enabled(self) -> bool:
-        """Checks if debug-level logging is enabled.
+        """Check if debug-level logging is enabled.
 
         Returns:
             True if debug-level logging is enabled.
@@ -518,10 +557,11 @@ class Logger:
             >>> logger = Logger()
             >>> if logger.is_debug_enabled():
             ...     logger.debug("Debug logging is enabled")
+
         """
 
     def is_trace_enabled(self) -> bool:
-        """Checks if trace-level logging is enabled.
+        """Check if trace-level logging is enabled.
 
         Returns:
             True if trace-level logging is enabled.
@@ -530,10 +570,11 @@ class Logger:
             >>> logger = Logger()
             >>> if logger.is_trace_enabled():
             ...     logger.trace("Trace logging is enabled")
+
         """
 
 def strip_emoji(text: str) -> str:
-    """Strips emojis from the given text.
+    """Strip emojis from the given text.
 
     This function removes all emojis and symbols within specified Unicode ranges from
     the input text. This is particularly useful for logging to avoid encoding issues
@@ -550,10 +591,11 @@ def strip_emoji(text: str) -> str:
         >>> clean = strip_emoji(text)
         >>> print(clean)
         'Hello  World !'
+
     """
 
 def format_log_message(content: str, details: str | None) -> str:
-    """Formats a message for logging by stripping emojis from content and details.
+    """Format a message for logging by stripping emojis from content and details.
 
     Args:
         content: The main message content.
@@ -567,4 +609,5 @@ def format_log_message(content: str, details: str | None) -> str:
         >>> print(formatted)
         'Success!
         Details: All tests passed'
+
     """

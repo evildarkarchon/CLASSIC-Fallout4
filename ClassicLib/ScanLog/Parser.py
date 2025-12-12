@@ -1,5 +1,4 @@
-"""
-High-Performance Crash Log Parser with Rust Acceleration 🚀
+"""High-Performance Crash Log Parser with Rust Acceleration 🚀.
 
 This module provides dramatically accelerated crash log parsing and segment extraction
 through transparent Rust integration, delivering 150x performance improvements while
@@ -52,8 +51,7 @@ _MODULE_NAME_PATTERN = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
 
 
 def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
-    """
-    Extract metadata from crash data including game version, crash generator version, and main error.
+    """Extract metadata from crash data including game version, crash generator version, and main error.
 
     Args:
         crash_data: List of strings representing lines of the crash data
@@ -65,6 +63,7 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
         - Game version string (or "UNKNOWN")
         - Crash generator version string (or "UNKNOWN")
         - Main error message (or "UNKNOWN")
+
     """
     # Note: Rust parser doesn't have parse_crash_header method in simplified version
     # Always use Python implementation for now
@@ -86,8 +85,7 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
 
 
 def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[list[str]]:
-    """
-    Extract segments of data from the crash_data based on provided segment boundaries and an EOF marker.
+    """Extract segments of data from the crash_data based on provided segment boundaries and an EOF marker.
 
     This function processes a list of crash data lines and extracts segments defined by start
     and end boundaries. It supports dynamic handling of multiple segment boundaries and handles
@@ -102,6 +100,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
 
     Returns:
         List of lists, where each inner list represents a segment of extracted data.
+
     """
     # Try to use Rust parser if available for significant speedup
     if _rust_available and _rust_parser:
@@ -173,8 +172,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
 def find_segments(
     crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
 ) -> tuple[str, str, str, list[list[str]]]:
-    """
-    Parses crash report data to identify and extract specific segments of information. Each segment
+    """Parse crash report data to identify and extract specific segments of information. Each segment
     corresponds to a defined boundary within the crash report. The function also extracts metadata
     such as game version, crash generation version, and the main error message.
 
@@ -191,6 +189,7 @@ def find_segments(
             - main_error: The primary error message derived from the header.
             - processed_segments: A list of lists representing stripped contents of each segmented portion
               of the crash report. Missing segments are represented as empty lists.
+
     """
     # Use Rust parser if available for 150x speedup
     if _rust_available and hasattr(_rust_parser, "find_segments"):
@@ -229,8 +228,7 @@ def find_segments(
 
 
 def extract_module_names(module_texts: set[str]) -> set[str]:
-    """
-    Extracts module names from a set of provided module texts.
+    """Extract module names from a set of provided module texts.
 
     This function processes a set of strings representing module texts and
     attempts to extract module names, which may include file names with a ".dll"
@@ -244,6 +242,7 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
 
     Returns:
         set[str]: A set of strings representing the extracted module names.
+
     """
     if not module_texts:
         return set()
@@ -266,6 +265,7 @@ def is_rust_parser_available() -> bool:
 
     Returns:
         bool: True if Rust parser is loaded, False otherwise
+
     """
     return _rust_available
 
@@ -275,6 +275,7 @@ def get_parser_stats() -> dict[str, Any]:
 
     Returns:
         dict: Statistics including cache sizes and parser type
+
     """
     stats = {
         "parser_type": "rust" if _rust_available else "python",

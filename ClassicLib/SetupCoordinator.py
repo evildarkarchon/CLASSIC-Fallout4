@@ -1,5 +1,4 @@
-"""
-Initializes and coordinates various setup operations and integrity checks for the application.
+"""Initialize and coordinates various setup operations and integrity checks for the application.
 
 This module provides a setup coordinator which encapsulates the logic for configuring logging,
 generating configuration files, validating paths, performing game integrity checks, and running
@@ -42,6 +41,7 @@ class SetupCoordinator:
         backup_manager: BackupManager for XSE/ENB backup operations.
         docs_checker: DocumentsChecker for validating documents folder.
         path_validator: PathValidator for validating configured paths.
+
     """
 
     def __init__(self) -> None:
@@ -53,8 +53,7 @@ class SetupCoordinator:
         self.path_validator = PathValidator()
 
     def run_initial_setup(self) -> None:
-        """
-        Run complete initial setup sequence.
+        """Run complete initial setup sequence.
 
         This method:
         1. Configures logging
@@ -65,6 +64,7 @@ class SetupCoordinator:
 
         Raises:
             TypeError: If the classic version or game name settings are not of type str.
+
         """
         from ClassicLib.PerformanceMonitor import TimedBlock
         from ClassicLib.YamlSettings import yaml_cache, yaml_settings  # noqa: F401
@@ -118,8 +118,7 @@ class SetupCoordinator:
         msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES", target=MessageTarget.CONSOLE)
 
     def generate_combined_results(self) -> str:
-        """
-        Generate combined results from all checks.
+        """Generate combined results from all checks.
 
         This method executes a series of integrity checks including:
         - Game integrity validation
@@ -129,6 +128,7 @@ class SetupCoordinator:
 
         Returns:
             A concatenated string containing the results of all executed checks.
+
         """
         game_name: str = GlobalRegistry.get_game()  # noqa: F841
 
@@ -141,8 +141,7 @@ class SetupCoordinator:
         return "".join(combined_return)
 
     def initialize_application(self, is_gui: bool = False, parent: Any = None) -> None:
-        """
-        Initialize application with all required components.
+        """Initialize application with all required components.
 
         This method sets up the application state, loads YAML settings cache,
         configures the message handler, and validates paths.
@@ -152,6 +151,7 @@ class SetupCoordinator:
                 If True, GUI-related resources are initialized.
             parent: Optional parent widget for GUI mode. This is passed to the
                 message handler to ensure proper dialog parenting in GUI applications.
+
         """
         from ClassicLib.YamlSettings import yaml_cache
 
@@ -213,8 +213,7 @@ class SetupCoordinator:
         self._log_rust_acceleration_status()
 
     def _log_rust_acceleration_status(self) -> None:
-        """
-        Log the Rust acceleration status at application startup.
+        """Log the Rust acceleration status at application startup.
 
         This method checks which components are using Rust acceleration and logs
         a summary to help with debugging and performance monitoring.
@@ -304,8 +303,7 @@ class SetupCoordinator:
 
     @staticmethod
     def _display_status_message(message: str, level: str, is_gui: bool) -> None:
-        """
-        Displays a status message to the user, either via the command-line interface (CLI)
+        """Display a status message to the user, either via the command-line interface (CLI)
         or a graphical user interface (GUI). The display method and formatting vary
         based on the specified level and interface type.
 
@@ -314,6 +312,7 @@ class SetupCoordinator:
             level: The severity level of the message ("INFO", "WARNING", or "ERROR").
             is_gui: A flag indicating whether the message is to be displayed in a
                 graphical user interface (True) or the command-line interface (False).
+
         """
         # Always print for CLI visibility
         if not is_gui:

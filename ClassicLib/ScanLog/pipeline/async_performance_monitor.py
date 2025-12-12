@@ -1,5 +1,4 @@
-"""
-Performance monitoring for async pipeline operations.
+"""Performance monitoring for async pipeline operations.
 
 This module provides the AsyncPerformanceMonitor class for tracking
 and comparing async vs sync performance metrics.
@@ -17,8 +16,7 @@ if TYPE_CHECKING:
 
 
 class AsyncPerformanceMonitor:
-    """
-    Monitor and compare asynchronous vs synchronous performance metrics.
+    """Monitor and compare asynchronous vs synchronous performance metrics.
 
     This class provides functionalities for comparing the performance of asynchronous
     and synchronous processes, generating detailed metrics, and logging performance
@@ -34,8 +32,7 @@ class AsyncPerformanceMonitor:
 
     @staticmethod
     def compare_performance(async_stats: dict[str, float], sync_time: float, log_count: int) -> dict[str, str | float]:
-        """
-        Compares the performance of asynchronous and synchronous logging methods based on provided
+        """Compare the performance of asynchronous and synchronous logging methods based on provided
         statistics of execution times and the number of processed logs.
 
         Args:
@@ -62,6 +59,7 @@ class AsyncPerformanceMonitor:
                     - "load_time" (float): Time spent on loading during asynchronous processing.
                     - "process_time" (float): Time spent on processing during asynchronous processing.
                     - "write_time" (float): Time spent on writing during asynchronous processing.
+
         """
         async_total = async_stats.get("total_time", 0)
 
@@ -93,8 +91,7 @@ class AsyncPerformanceMonitor:
 
     @staticmethod
     def log_performance_summary(comparison: dict[str, str | float]) -> None:
-        """
-        Logs a summary of asynchronous performance metrics, providing insights into
+        """Log a summary of asynchronous performance metrics, providing insights into
         processing speed improvements, pipeline stage durations, and overall performance
         comparison against synchronous methods.
 
@@ -104,6 +101,7 @@ class AsyncPerformanceMonitor:
                 include 'speedup_factor', 'improvement_percent', 'async_logs_per_sec',
                 'sync_logs_per_sec', 'reformat_time', 'load_time', 'process_time',
                 'write_time', and 'async_total_time'.
+
         """
         logger.info("=== ASYNC PERFORMANCE SUMMARY ===")
 
@@ -133,8 +131,7 @@ async def benchmark_async_pipeline(
     formid_db_exists: bool,
     sync_baseline: float | None = None,
 ) -> dict[str, str | float]:
-    """
-    Benchmarks the asynchronous pipeline process by running a crash log scan, generating
+    """Benchmarks the asynchronous pipeline process by running a crash log scan, generating
     performance comparison, and logging the performance summary. This function allows for
     the analysis of asynchronous performance metrics and comparison with a synchronous
     baseline if provided.
@@ -150,6 +147,7 @@ async def benchmark_async_pipeline(
 
     Returns:
         dict[str, str | float]: Performance comparison data, including metrics and analysis results.
+
     """
     logger.info("Starting async pipeline benchmark...")
 

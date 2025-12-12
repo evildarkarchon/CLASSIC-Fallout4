@@ -60,6 +60,7 @@ class BA2Issues:
         tex_frmt: Texture format issues (non-DDS textures).
         snd_frmt: Sound format issues (MP3/M4A instead of XWM).
         xse_file: XSE script files detected in archive.
+
     """
 
     tex_dims: list[str]
@@ -72,6 +73,7 @@ class BA2Issues:
 
         Returns:
             True if any issue list is non-empty.
+
         """
 
     def total_count(self) -> int:
@@ -79,6 +81,7 @@ class BA2Issues:
 
         Returns:
             Sum of all issue list lengths.
+
         """
 
 class BA2Scanner:
@@ -93,6 +96,7 @@ class BA2Scanner:
         ...     issues = scanner.scan_archive(ba2_file)
         ...     if issues.has_issues():
         ...         print(f"Issues in {ba2_file}")
+
     """
 
     def __init__(self) -> None:
@@ -106,6 +110,7 @@ class BA2Scanner:
 
         Returns:
             List of BA2 archive file paths.
+
         """
 
     def scan_archive(self, archive_path: Path) -> BA2Issues:
@@ -116,6 +121,7 @@ class BA2Scanner:
 
         Returns:
             BA2Issues object containing lists of problematic entries.
+
         """
 
     def scan_archives_batch(self, archive_paths: list[Path]) -> list[tuple[Path, BA2Issues]]:
@@ -126,16 +132,18 @@ class BA2Scanner:
 
         Returns:
             List of tuples (archive_path, BA2Issues) for each archive.
+
         """
 
 def scan_all_ba2_archives(root_path: Path) -> list[tuple[Path, BA2Issues]]:
-    """Convenience function to find and scan all BA2 archives in a directory.
+    """Provide convenience wrapper to find and scan all BA2 archives in a directory.
 
     Args:
         root_path: Root directory to search.
 
     Returns:
         List of tuples (archive_path, BA2Issues) for all BA2 files found.
+
     """
 
 # ============================================================================
@@ -148,6 +156,7 @@ class DuplicateGroup:
     Attributes:
         original: Original file path (canonical).
         duplicates: List of duplicate file paths.
+
     """
 
     original: Path
@@ -165,6 +174,7 @@ class ConfigDuplicateDetector:
         ...     print(f"Original: {group.original}")
         ...     for dup in group.duplicates:
         ...         print(f"  Duplicate: {dup}")
+
     """
 
     def __init__(self) -> None:
@@ -178,6 +188,7 @@ class ConfigDuplicateDetector:
 
         Returns:
             List of DuplicateGroup objects containing original and duplicate paths.
+
         """
 
     def get_duplicate_map(self, root_path: Path) -> dict[str, list[Path]]:
@@ -188,16 +199,18 @@ class ConfigDuplicateDetector:
 
         Returns:
             Dictionary where keys are lowercase filenames and values are lists of paths.
+
         """
 
 def detect_config_duplicates(root_path: Path) -> list[DuplicateGroup]:
-    """Convenience function to detect duplicates without creating detector instance.
+    """Provide convenience wrapper to detect duplicates without creating detector instance.
 
     Args:
         root_path: Root directory path to scan.
 
     Returns:
         List of DuplicateGroup objects.
+
     """
 
 # ============================================================================
@@ -214,6 +227,7 @@ class UnpackedIssues:
         xse_file: XSE script files detected.
         previs: Previs/Precombine files detected.
         dds_files: DDS files found (for batch dimension checking).
+
     """
 
     animdata: list[str]
@@ -228,6 +242,7 @@ class UnpackedIssues:
 
         Returns:
             True if any issue list is non-empty.
+
         """
 
     def total_count(self) -> int:
@@ -235,6 +250,7 @@ class UnpackedIssues:
 
         Returns:
             Sum of all issue list lengths (excluding dds_files).
+
         """
 
 class UnpackedScanner:
@@ -247,6 +263,7 @@ class UnpackedScanner:
         >>> issues = scanner.scan_directory(Path("/path/to/game/Data"), ["f4se.dll"])
         >>> if issues.has_issues():
         ...     print(f"Found {issues.total_count()} issues")
+
     """
 
     def __init__(self) -> None:
@@ -261,10 +278,11 @@ class UnpackedScanner:
 
         Returns:
             UnpackedIssues object containing lists of problematic files.
+
         """
 
 def scan_unpacked_files(root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
-    """Convenience function to scan unpacked files without creating scanner instance.
+    """Provide convenience wrapper to scan unpacked files without creating scanner instance.
 
     Args:
         root_path: Root directory path to scan.
@@ -272,6 +290,7 @@ def scan_unpacked_files(root_path: Path, xse_scriptfiles: list[str]) -> Unpacked
 
     Returns:
         UnpackedIssues object.
+
     """
 
 # ============================================================================
@@ -285,6 +304,7 @@ class LogErrorEntry:
         file_path: Path to the log file.
         errors: Error lines found in the log (limited to last 50).
         total_errors: Total number of errors found (before truncation).
+
     """
 
     file_path: Path
@@ -302,6 +322,7 @@ class LogProcessor:
         ... )
         >>> report = processor.process_logs(Path("/path/to/logs"))
         >>> print(report)
+
     """
 
     def __init__(self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> None:
@@ -311,6 +332,7 @@ class LogProcessor:
             catch_errors: List of error patterns to catch.
             ignore_files: List of file patterns to ignore.
             ignore_errors: List of error patterns to ignore.
+
         """
 
     def process_logs(self, log_dir: Path) -> str:
@@ -321,10 +343,11 @@ class LogProcessor:
 
         Returns:
             Formatted error report as string.
+
         """
 
 def process_logs(log_dir: Path, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> str:
-    """Convenience function to process logs without creating processor instance.
+    """Provide convenience wrapper to process logs without creating processor instance.
 
     Args:
         log_dir: Directory containing log files.
@@ -334,6 +357,7 @@ def process_logs(log_dir: Path, catch_errors: list[str], ignore_files: list[str]
 
     Returns:
         Formatted error report as string.
+
     """
 
 # ============================================================================
@@ -358,6 +382,7 @@ class ConfigIssue:
         recommended_value: Recommended value to fix the issue.
         description: Description of the issue.
         severity: Severity level.
+
     """
 
     file_path: Path
@@ -377,6 +402,7 @@ class IniValidator:
         >>> validator = IniValidator("Fallout4")
         >>> report = validator.validate_inis(Path("/path/to/game"))
         >>> print(report)
+
     """
 
     def __init__(self, game_name: str) -> None:
@@ -384,6 +410,7 @@ class IniValidator:
 
         Args:
             game_name: Name of the game (e.g., "Fallout4").
+
         """
 
     def validate_inis(self, game_root: Path) -> str:
@@ -394,6 +421,7 @@ class IniValidator:
 
         Returns:
             Formatted validation report string.
+
         """
 
     def detect_all_issues(self, config_files: dict[str, Path]) -> list[ConfigIssue]:
@@ -404,6 +432,7 @@ class IniValidator:
 
         Returns:
             List of ConfigIssue objects.
+
         """
 
 # ============================================================================
@@ -428,6 +457,7 @@ class TomlConfigIssue:
         recommended_value: Recommended value to fix the issue.
         description: Description of the issue.
         severity: Severity level.
+
     """
 
     file_path: Path
@@ -447,6 +477,7 @@ class CrashgenChecker:
         >>> print(message)
         >>> for issue in issues:
         ...     print(f"{issue.description}")
+
     """
 
     def __init__(self, plugins_path: Path, crashgen_name: str) -> None:
@@ -455,6 +486,7 @@ class CrashgenChecker:
         Args:
             plugins_path: Path to plugins directory.
             crashgen_name: Name of crash generator (e.g., "Buffout4").
+
         """
 
     def check(self) -> tuple[str, list[TomlConfigIssue]]:
@@ -462,10 +494,11 @@ class CrashgenChecker:
 
         Returns:
             Tuple of (message_string, list of TomlConfigIssue objects).
+
         """
 
 def check_crashgen_config(plugins_path: Path, crashgen_name: str) -> tuple[str, list[TomlConfigIssue]]:
-    """Convenience function to check crashgen config without creating checker instance.
+    """Provide convenience wrapper to check crashgen config without creating checker instance.
 
     Args:
         plugins_path: Path to plugins directory.
@@ -473,6 +506,7 @@ def check_crashgen_config(plugins_path: Path, crashgen_name: str) -> tuple[str, 
 
     Returns:
         Tuple of (message_string, list of TomlConfigIssue objects).
+
     """
 
 # ============================================================================
@@ -504,6 +538,7 @@ class AddressLibInfo:
         filename: Filename of the Address Library file.
         description: Human-readable description.
         url: Nexus Mods URL for download.
+
     """
 
     version: GameVersion
@@ -517,6 +552,7 @@ class AddressLibInfo:
 
         Returns:
             AddressLibInfo for VR.
+
         """
 
     @staticmethod
@@ -525,6 +561,7 @@ class AddressLibInfo:
 
         Returns:
             AddressLibInfo for Original.
+
         """
 
     @staticmethod
@@ -533,6 +570,7 @@ class AddressLibInfo:
 
         Returns:
             AddressLibInfo for Next-Gen.
+
         """
 
 class XseChecker:
@@ -551,6 +589,7 @@ class XseChecker:
         ...     is_vr_mode=False,
         ...     game_version=GameVersion.NextGen
         ... )
+
     """
 
     def __init__(self, plugins_path: Path, is_vr_mode: bool = False, game_version: GameVersion = GameVersion.Original) -> None:
@@ -560,6 +599,7 @@ class XseChecker:
             plugins_path: Path to plugins directory.
             is_vr_mode: Whether game is in VR mode.
             game_version: Game version enum (uses Original if not specified).
+
         """
 
     def check(self) -> ValidationResult:
@@ -567,6 +607,7 @@ class XseChecker:
 
         Returns:
             ValidationResult indicating the status of the Address Library installation.
+
         """
 
     def validate(self) -> str:
@@ -574,10 +615,11 @@ class XseChecker:
 
         Returns:
             Formatted validation message string.
+
         """
 
 def check_xse_plugins(plugins_path: Path, is_vr_mode: bool, game_version: GameVersion) -> str:
-    """Convenience function to validate XSE plugins without creating checker instance.
+    """Provide convenience wrapper to validate XSE plugins without creating checker instance.
 
     Args:
         plugins_path: Path to F4SE/SKSE plugins directory.
@@ -586,6 +628,7 @@ def check_xse_plugins(plugins_path: Path, is_vr_mode: bool, game_version: GameVe
 
     Returns:
         Formatted validation message.
+
     """
 
 # ============================================================================
@@ -616,6 +659,7 @@ class IntegrityCheckResult:
         check_type: Type of check performed.
         is_valid: Whether the check passed.
         message: Detailed message about the check result.
+
     """
 
     check_type: CheckType
@@ -637,6 +681,7 @@ class IntegrityConfig:
             old_hash: Expected hash for old game version.
             new_hash: Expected hash for new game version.
             game_name: Display name of the game.
+
         """
 
     def with_steam_ini(self, ini_path: Path) -> IntegrityConfig:
@@ -647,6 +692,7 @@ class IntegrityConfig:
 
         Returns:
             Self for method chaining.
+
         """
 
 class GameIntegrityChecker:
@@ -666,6 +712,7 @@ class GameIntegrityChecker:
 
         Args:
             config: Configuration for integrity checks.
+
         """
 
     def check_executable_version(self) -> IntegrityCheckResult:
@@ -673,6 +720,7 @@ class GameIntegrityChecker:
 
         Returns:
             IntegrityCheckResult for executable version verification.
+
         """
 
     def check_installation_location(self) -> IntegrityCheckResult:
@@ -680,6 +728,7 @@ class GameIntegrityChecker:
 
         Returns:
             IntegrityCheckResult for installation location check.
+
         """
 
     def run_all_checks(self) -> list[IntegrityCheckResult]:
@@ -693,6 +742,7 @@ class GameIntegrityChecker:
             >>> results = checker.run_all_checks()
             >>> for result in results:
             ...     print(f"{result.check_type}: {result.is_valid}")
+
         """
 
     def run_full_check(self) -> str:
@@ -705,4 +755,5 @@ class GameIntegrityChecker:
             >>> checker = GameIntegrityChecker(config)
             >>> message = checker.run_full_check()
             >>> print(message)
+
         """

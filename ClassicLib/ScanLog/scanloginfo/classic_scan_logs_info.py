@@ -18,8 +18,7 @@ from ClassicLib.Constants import NULL_VERSION, YAML
 # noinspection PyUnresolvedReferences
 @dataclass
 class ClassicScanLogsInfo:
-    """
-    Represents the information and metadata regarding classic scan logs in a gaming system.
+    """Represent the information and metadata regarding classic scan logs in a gaming system.
 
     This class is used for managing and organizing details about classic scan logs, including
     game hints, records, versions, crash generation details, warnings, and mod configuration.
@@ -53,6 +52,7 @@ class ClassicScanLogsInfo:
         game_version (Version): The detected version of the game.
         game_version_new (Version): The new or updated detected version of the game.
         game_version_vr (Version): The detected version of the game in VR mode.
+
     """
 
     classic_game_hints: list[str] = field(default_factory=list)
@@ -85,8 +85,7 @@ class ClassicScanLogsInfo:
     _skip_post_init: bool = field(default=False, init=False, repr=False)
 
     def __post_init__(self) -> None:
-        """
-        Initializes and validates YAML cache settings while performing batch operations
+        """Initialize and validates YAML cache settings while performing batch operations
         to retrieve essential configuration values. This method is executed after the
         dataclass initialization (`__post_init__`). It ensures mandatory dependencies
         are registered in the `GlobalRegistry` and retrieves a comprehensive set of
@@ -120,11 +119,11 @@ class ClassicScanLogsInfo:
 
     @classmethod
     def _get_settings_requests(cls) -> list[tuple[type, YAML, str]]:
-        """
-        Build the list of settings requests.
+        """Build the list of settings requests.
 
         Returns:
             list: List of (type, YAML, key_path) tuples for batch loading
+
         """
         return [
             (list[str], YAML.Game, "Game_Hints"),
@@ -156,11 +155,11 @@ class ClassicScanLogsInfo:
         ]
 
     def _assign_values(self, values: list) -> None:
-        """
-        Assign values from batch_get_settings result to attributes.
+        """Assign values from batch_get_settings result to attributes.
 
         Args:
             values: List of values from batch_get_settings
+
         """
         # Unpack and assign values with defaults
         self.classic_game_hints = values[0] or []
@@ -192,8 +191,7 @@ class ClassicScanLogsInfo:
 
     @classmethod
     async def create_async(cls) -> "ClassicScanLogsInfo":
-        """
-        Async factory method to create ClassicScanLogsInfo without blocking.
+        """Async factory method to create ClassicScanLogsInfo without blocking.
 
         This method should be used when creating ClassicScanLogsInfo in async contexts
         to avoid AsyncBridge overhead.
@@ -207,6 +205,7 @@ class ClassicScanLogsInfo:
         Example:
             async def main():
                 info = await ClassicScanLogsInfo.create_async()
+
         """
         if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
             raise TypeError("YAML Cache is not initialized.")

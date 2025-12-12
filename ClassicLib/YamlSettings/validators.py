@@ -17,6 +17,7 @@ Example:
     True  # Can be coerced
     >>> validate_setting_value("hello", int)
     False
+
 """
 
 from typing import Any, get_origin
@@ -48,6 +49,7 @@ def validate_settings_structure(data: dict[str, Any], store_type: str) -> None:
         >>> validate_settings_structure(data, "Settings")  # OK
         >>> validate_settings_structure({}, "Settings")
         ValueError: Settings file missing 'CLASSIC_Settings' root key
+
     """
     if not isinstance(data, dict):
         raise TypeError(f"Invalid {store_type} structure: expected dict, got {type(data)}")
@@ -92,6 +94,7 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
         True  # Can be converted
         >>> validate_setting_value([1, 2], int)
         False
+
     """
     # None is valid if allowed by settings
     if value is None:
@@ -150,6 +153,7 @@ def coerce_setting_value(value: Any, expected_type: type) -> Any:
         Path("path/to/file")
         >>> coerce_setting_value("item", list)
         ["item"]
+
     """
     # Handle parameterized generics
     origin_type = get_origin(expected_type)

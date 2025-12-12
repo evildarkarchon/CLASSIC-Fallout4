@@ -1,5 +1,4 @@
-"""
-Python wrapper for Rust database pool - Phase 4 implementation.
+"""Python wrapper for Rust database pool - Phase 4 implementation.
 
 This module provides a backward-compatible interface for the high-performance
 Rust database pool implementation, maintaining the same API as AsyncDatabasePool
@@ -90,6 +89,7 @@ def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tup
         - DatabaseError types (RustDatabaseError and module-specific variants)
         - IOError types (RustError and RustDatabaseIOError variants)
         - QueryError types (RustError and RustDatabaseQueryError variants)
+
     """
     db_errors = (RustDatabaseError,)
     io_errors = (RustError,)  # RustDatabaseIOError inherits from RustDatabaseError
@@ -111,8 +111,7 @@ db_errors, io_errors, query_errors = _get_rust_exception_types()
 
 
 class DatabasePoolManager:
-    """
-    Singleton manager for DatabasePool instances.
+    """Singleton manager for DatabasePool instances.
 
     Provides backward compatibility with the existing AsyncDatabasePool
     interface while using the high-performance Rust implementation.
@@ -123,8 +122,7 @@ class DatabasePoolManager:
     _lock: ClassVar[asyncio.Lock | None] = None
 
     def __new__(cls) -> DatabasePoolManager:
-        """
-        Creates and manages a singleton instance of DatabasePoolManager.
+        """Create and manages a singleton instance of DatabasePoolManager.
 
         This method overrides the default behavior of instance creation to ensure that
         only one instance of the DatabasePoolManager class is created across the
@@ -137,6 +135,7 @@ class DatabasePoolManager:
 
         Returns:
             DatabasePoolManager: The singleton instance of the DatabasePoolManager class.
+
         """
         if cls._instance is None:
             cls._instance = super().__new__(cls)
@@ -144,14 +143,14 @@ class DatabasePoolManager:
         return cls._instance
 
     async def get_pool(self) -> RustAsyncDatabasePool:
-        """
-        Retrieves the singleton instance of the Rust asynchronous database pool. Ensures that
+        """Retrieve the singleton instance of the Rust asynchronous database pool. Ensures that
         only one instance of the database pool is created using an asyncio lock for thread
         safety. If the pool is uninitialized, it initializes it before returning the instance.
 
         Returns:
             RustAsyncDatabasePool: The single, shared instance of the Rust asynchronous
             database pool.
+
         """
         # Initialize the lock if needed (must be done in async context)
         if self._lock is None:
@@ -169,8 +168,7 @@ class DatabasePoolManager:
             return self._pool
 
     async def close_pool(self) -> None:
-        """
-        Closes the singleton Rust database pool if it exists.
+        """Close the singleton Rust database pool if it exists.
 
         This method ensures that the database connection pool is properly closed when
         it is no longer needed. It utilizes an asynchronous lock to ensure thread-safe
@@ -188,16 +186,14 @@ class DatabasePoolManager:
 
 
 class RustAsyncDatabasePool:
-    """
-    Async wrapper around the Rust database pool implementation.
+    """Async wrapper around the Rust database pool implementation.
 
     Provides the same interface as AsyncDatabasePool but uses the
     high-performance Rust backend for all operations.
     """
 
     def __init__(self, max_connections: int = 10, cache_ttl_seconds: int = 300) -> None:
-        """
-        Initialize the Rust database pool wrapper.
+        """Initialize the Rust database pool wrapper.
 
         Args:
             max_connections: Maximum number of database connections.
@@ -205,6 +201,7 @@ class RustAsyncDatabasePool:
 
         Raises:
             ImportError: If the Rust database module is not available.
+
         """
         self.max_connections = max_connections
         self.cache_ttl = cache_ttl_seconds
@@ -223,8 +220,7 @@ class RustAsyncDatabasePool:
         self._initialized = False
 
     async def __aenter__(self) -> RustAsyncDatabasePool:
-        """
-        Asynchronous context manager entry point for the object.
+        """Asynchronous context manager entry point for the object.
 
         This method is invoked when the object is used with an `async
         with` statement, providing proper initialization before entering
@@ -233,13 +229,13 @@ class RustAsyncDatabasePool:
         Returns:
             RustAsyncDatabasePool: The initialized object, ready for use in
             the `async with` context.
+
         """
         await self.initialize()
         return self
 
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """
-        Handles the exit of an asynchronous context manager.
+        """Handle the exit of an asynchronous context manager.
 
         This method is part of the standard asynchronous context manager protocol and ensures that necessary cleanup
         or closing operations are performed when the context manager's execution completes, even if an exception occurred.
@@ -248,12 +244,12 @@ class RustAsyncDatabasePool:
             exc_type: The exception type being handled, if an exception occurred, otherwise None.
             exc_val: The exception instance being handled, if an exception occurred, otherwise None.
             exc_tb: The traceback associated with the exception, if an exception occurred, otherwise None.
+
         """
         await self.close()
 
     async def initialize(self) -> None:
-        """
-        Initializes the class by setting up database connections.
+        """Initialize the class by setting up database connections.
 
         This method performs initialization tasks by verifying the existing database paths,
         and if valid paths are detected, it establishes database connections using a Rust
@@ -263,6 +259,7 @@ class RustAsyncDatabasePool:
         Raises:
             NotImplementedError: If the Rust coroutine fails or encounters an issue
             during execution.
+
         """
         if self._initialized:
             return
@@ -278,8 +275,7 @@ class RustAsyncDatabasePool:
         self._initialized = True
 
     async def close(self) -> None:
-        """
-        Closes the database connection pool.
+        """Close the database connection pool.
 
         This method is used to clean up and mark the database connection pool as
         uninitialized. The connections themselves are automatically managed and
@@ -289,6 +285,7 @@ class RustAsyncDatabasePool:
         Raises:
             No exceptions are explicitly raised by this method, though it logs the
             action for debugging purposes.
+
         """
         if not self._initialized:
             return
@@ -300,8 +297,7 @@ class RustAsyncDatabasePool:
         logger.debug("Rust database pool marked as closed (connections cleaned up on drop)")
 
     async def get_entry(self, formid: str, plugin: str) -> dict[str, Any] | None:
-        """
-        Asynchronously retrieves an entry from the Rust pool.
+        """Asynchronously retrieves an entry from the Rust pool.
 
         The method retrieves data corresponding to a specific `formid` and `plugin`.
         It ensures the component is initialized before execution and performs an
@@ -313,6 +309,7 @@ class RustAsyncDatabasePool:
 
         Returns:
             dict[str, Any] | None: The entry retrieved from the Rust pool if found, otherwise None.
+
         """
         if not self._initialized:
             await self.initialize()
@@ -326,8 +323,7 @@ class RustAsyncDatabasePool:
     async def get_entries_batch(
         self, formid_plugin_pairs: list[tuple[str, str]], batch_size: int = 100
     ) -> dict[tuple[str, str], dict[str, Any]]:
-        """
-        Fetches a batch of entries by querying an external Rust-based pool.
+        """Fetch a batch of entries by querying an external Rust-based pool.
 
         This asynchronous method attempts to retrieve entries in batches using
         a provided list of (formid, plugin) pairs. It first attempts to use the
@@ -379,8 +375,7 @@ class RustAsyncDatabasePool:
             return rust_results_batch
 
     async def clear_cache(self, expired_only: bool = False) -> int:
-        """
-        Clears the cache entries based on the specified condition.
+        """Clear the cache entries based on the specified condition.
 
         This method interacts with the underlying rust-based pool to clear
         entries in the cache. The behavior of cache clearing depends on
@@ -392,24 +387,24 @@ class RustAsyncDatabasePool:
 
         Returns:
             int: The number of entries removed from the cache.
+
         """
         return await self._rust_pool.clear_cache(expired_only)
 
     async def set_cache_ttl(self, seconds: int) -> None:
-        """
-        Sets the cache time-to-live (TTL) for the current instance.
+        """Set the cache time-to-live (TTL) for the current instance.
 
         This method allows you to specify the duration that the cache entries
         will remain valid before being invalidated.
 
         Args:
             seconds (int): The duration in seconds for the cache TTL.
+
         """
         await self._rust_pool.set_cache_ttl(seconds)
 
     async def get_stats(self) -> dict[str, Any]:
-        """
-        Fetches and returns statistical information from the underlying rust pool.
+        """Fetch and returns statistical information from the underlying rust pool.
 
         Provides detailed statistics about the state and performance of the rust pool
         when the method is called. The returned data includes a comprehensive snapshot
@@ -418,12 +413,12 @@ class RustAsyncDatabasePool:
         Returns:
             dict[str, Any]: A dictionary containing various statistics and metrics
             related to the rust pool's performance and state.
+
         """
         return await self._rust_pool.get_stats()
 
     async def optimize(self) -> None:
-        """
-        Asynchronously optimizes the underlying database.
+        """Asynchronously optimizes the underlying database.
 
         This method triggers an optimization routine in the Rust database pool,
         such as running `VACUUM` or `ANALYZE` commands, to improve query performance
@@ -431,12 +426,12 @@ class RustAsyncDatabasePool:
 
         Raises:
             RustDatabaseError: If the optimization operation fails in the Rust backend.
+
         """
         await self._rust_pool.optimize()
 
     def set_game_table(self, table: str) -> None:
-        """
-        Sets the game table for the current instance.
+        """Set the game table for the current instance.
 
         This method updates the game table configuration using the provided
         table name. It also logs the updated table name for debugging
@@ -446,14 +441,14 @@ class RustAsyncDatabasePool:
 
         Args:
             table (str): The name of the game table to be set.
+
         """
         if hasattr(self._rust_pool, "set_game_table"):
             self._rust_pool.set_game_table(table)
             logger.debug(f"Set game table to: {table}")
 
     def get_game_table(self) -> str:
-        """
-        Gets and returns the current active game table.
+        """Get and returns the current active game table.
 
         This function checks if an attribute 'get_game_table' is available in an
         existing resource pool (_rust_pool). If the attribute exists, it retrieves
@@ -462,6 +457,7 @@ class RustAsyncDatabasePool:
 
         Returns:
             str: The current active game table.
+
         """
         if hasattr(self._rust_pool, "get_game_table"):
             return self._rust_pool.get_game_table()
@@ -473,8 +469,7 @@ AsyncDatabasePool = RustAsyncDatabasePool
 
 
 def get_database_pool_implementation() -> type:
-    """
-    Determines and returns the appropriate database pool implementation based on
+    """Determine and returns the appropriate database pool implementation based on
     the availability of Rust or Python modules. If neither implementation is
     available, raises an ImportError.
 
@@ -485,6 +480,7 @@ def get_database_pool_implementation() -> type:
     Raises:
         ImportError: If neither Rust nor Python database pool implementation is
         available.
+
     """
     if RUST_AVAILABLE:
         return RustAsyncDatabasePool

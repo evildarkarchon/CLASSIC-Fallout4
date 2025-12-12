@@ -1,5 +1,4 @@
-"""
-Async-first core implementation for FormID analysis.
+"""Async-first core implementation for FormID analysis.
 
 This module provides the primary async implementation for FormID analysis,
 consolidating the functionality of both FormIDAnalyzer and AsyncFormIDAnalyzer
@@ -28,8 +27,7 @@ _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}
 # LRU cache for FormID lookup results to avoid repeated database queries
 @lru_cache(maxsize=512)
 def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
-    """
-    Caches and retrieves a specific form ID associated with a given plugin. This function leverages an
+    """Cache and retrieves a specific form ID associated with a given plugin. This function leverages an
     LRU (Least Recently Used) cache mechanism to enhance performance by storing up to a specified
     number of recent form ID lookups.
 
@@ -39,13 +37,13 @@ def _cached_formid_lookup(formid: str, plugin: str) -> str | None:
 
     Returns:
         str | None: The cached or retrieved string form ID if found, otherwise None.
+
     """
     return get_entry(formid, plugin)
 
 
 class FormIDAnalyzerCore:
-    """
-    Core analysis functionality for processing and interpreting Form IDs in crash logs.
+    """Core analysis functionality for processing and interpreting Form IDs in crash logs.
 
     This class provides utilities for extracting, matching, and analyzing Form IDs.
     Form IDs are unique identifiers often found in crash logs that refer to specific
@@ -60,6 +58,7 @@ class FormIDAnalyzerCore:
         formid_db_exists (bool): Indicates if a FormID database is available for lookups.
         db_pool (AsyncDatabasePool | None): Optional async database connection pool for lookups.
         formid_pattern (Pattern): Compiled regex pattern for matching FormID formats in logs, cached for reuse.
+
     """
 
     def __init__(
@@ -69,8 +68,7 @@ class FormIDAnalyzerCore:
         formid_db_exists: bool,
         db_pool: AsyncDatabasePool | None = None,
     ) -> None:
-        """
-        Initializes a new instance of the class, parsing and preparing information
+        """Initialize a new instance of the class, parsing and preparing information
         about crash logs. This ensures certain patterns and configurations are
         ready for operations with provided data.
 
@@ -83,6 +81,7 @@ class FormIDAnalyzerCore:
                 in the current context or configuration.
             db_pool (AsyncDatabasePool | None): Optional asynchronous database pool
                 used for various data fetching or writing operations.
+
         """
         self.yamldata = yamldata
         self.show_formid_values = show_formid_values
@@ -99,8 +98,7 @@ class FormIDAnalyzerCore:
         self.formid_pattern = _PATTERN_CACHE[pattern_key]
 
     def extract_formids(self, segment_callstack: list[str]) -> list[str]:
-        """
-        Extracts and processes Form IDs from a given list of callstack strings.
+        """Extract and processes Form IDs from a given list of callstack strings.
 
         This method scans through each entry in the provided callstack, identifies and extracts the
         Form IDs adhering to specific criteria, and compiles them into a list. It only includes
@@ -112,6 +110,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             list[str]: A list of processed Form IDs in the format "Form ID: <ID>".
+
         """
         formids_matches: list[str] = []
 
@@ -130,8 +129,7 @@ class FormIDAnalyzerCore:
         return formids_matches
 
     async def formid_match(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
-        """
-        Async-first implementation for FormID matching with optional concurrent database lookups.
+        """Async-first implementation for FormID matching with optional concurrent database lookups.
 
         This method analyzes FormID matches, compares them with plugins listed in the crash log,
         and optionally retrieves additional data from a FormID database. If a database pool is
@@ -143,6 +141,7 @@ class FormIDAnalyzerCore:
 
         Returns:
             ReportFragment containing the FormID analysis results
+
         """
         from ClassicLib.rust.report_rust import ReportFragment
 
@@ -192,8 +191,7 @@ class FormIDAnalyzerCore:
         return ReportFragment.from_lines(lines)
 
     async def _perform_async_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
-        """
-        Performs asynchronous lookups for provided tasks and formats the results.
+        """Perform asynchronous lookups for provided tasks and formats the results.
 
         Uses batch database queries to efficiently fetch multiple FormID entries in a single
         database round-trip, dramatically reducing query overhead and improving performance.
@@ -206,6 +204,7 @@ class FormIDAnalyzerCore:
                 - plugin_name (str): The name of the plugin associated with the FormID.
                 - formid_count (int): Count or occurrence of the specific FormID.
             lines (list[str]): A list to which the formatted output results will be appended.
+
         """
         if not self.db_pool:
             # Fallback if no database pool available
@@ -231,8 +230,7 @@ class FormIDAnalyzerCore:
 
     @staticmethod
     async def _perform_sync_lookups(lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
-        """
-        Performs synchronous database lookups in an asynchronous context using a thread pool.
+        """Perform synchronous database lookups in an asynchronous context using a thread pool.
 
         This method processes a list of lookup tasks that involve retrieving data from a
         database in a synchronous manner and appends the result to the specified lines.
@@ -244,6 +242,7 @@ class FormIDAnalyzerCore:
                 - plugin (str): Plugin associated with the form identifier.
                 - count (int): Count or occurrence related to the form.
             lines (list[str]): A list to which the formatted lookup results will be appended.
+
         """
         for formid_full, formid_suffix, plugin, count in lookup_tasks:
             # Use cached sync database lookup to avoid repeated queries
@@ -254,8 +253,7 @@ class FormIDAnalyzerCore:
                 lines.append(f"- {formid_full} | [{plugin}] | {count}\n")
 
     async def lookup_formid_value(self, formid: str, plugin: str) -> str | None:
-        """
-        Performs a lookup for a formid value in the database or cache.
+        """Perform a lookup for a formid value in the database or cache.
 
         If the database is present, it will try to use the async database
         connection pool to retrieve the formid entry associated with the
@@ -269,6 +267,7 @@ class FormIDAnalyzerCore:
         Returns:
             str | None: The value associated with the formid and plugin if found,
             otherwise None.
+
         """
         if not self.formid_db_exists:
             return None
@@ -281,19 +280,18 @@ class FormIDAnalyzerCore:
 
     # Synchronous wrapper methods for backwards compatibility
     def formid_match_sync(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
-        """
-        Synchronous wrapper for formid_match.
+        """Wrap synchronously formid_match.
 
         This method provides backwards compatibility for sync callers.
 
         Returns:
             ReportFragment containing the FormID analysis results
+
         """
         return run_async(self.formid_match(formids_matches, crashlog_plugins))
 
     def lookup_formid_value_sync(self, formid: str, plugin: str) -> str | None:
-        """
-        Synchronously retrieves the value for a given form ID and plugin.
+        """Retrieve synchronously the value for a given form ID and plugin.
 
         This method serves as a synchronous wrapper around an asynchronous function
         to retrieve the value associated with a particular form ID and plugin. If
@@ -306,5 +304,6 @@ class FormIDAnalyzerCore:
         Returns:
             str | None: The value associated with the form ID and plugin, or
             None if no value is found.
+
         """
         return run_async(self.lookup_formid_value(formid, plugin))

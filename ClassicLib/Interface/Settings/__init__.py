@@ -1,5 +1,4 @@
-"""
-Settings module for CLASSIC interface.
+"""Settings module for CLASSIC interface.
 
 This module provides backwards compatibility for the refactored SettingsDialog.
 """

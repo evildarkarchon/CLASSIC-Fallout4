@@ -1,5 +1,4 @@
-"""
-Utility functions for crash log scanning operations.
+"""Utility functions for crash log scanning operations.
 
 This module contains utility functions that support crash log scanning,
 including report writing, file management, and scan completion tasks.
@@ -26,8 +25,7 @@ if TYPE_CHECKING:
 async def write_report_to_file_async(
     crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, executor: "ScanLogsExecutor"
 ) -> None:
-    """
-    Writes an autoscan report to a file asynchronously.
+    """Write an autoscan report to a file asynchronously.
 
     This function handles writing the autoscan report to a file, with an optional
     fallback to a synchronous approach if `aiofiles` is unavailable. If the
@@ -40,6 +38,7 @@ async def write_report_to_file_async(
         autoscan_report: A list containing strings of the autoscan report to be concatenated.
         trigger_scan_failed: A boolean indicating whether the unsolved logs operation should be triggered.
         executor: An instance of `ScanLogsExecutor` to manage configurations and operations.
+
     """
     try:
         import aiofiles
@@ -64,8 +63,7 @@ async def write_report_to_file_async(
 
 
 def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigger_scan_failed: bool, executor: "ScanLogsExecutor") -> None:
-    """
-    Writes the autoscan report to a file, generates a properly named output file, and moves
+    """Write the autoscan report to a file, generates a properly named output file, and moves
     unsolved logs if required.
 
     Args:
@@ -73,6 +71,7 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
         autoscan_report (list[str]): A list of strings representing the autoscan report content.
         trigger_scan_failed (bool): A flag indicating if trigger scan has failed.
         executor (ScanLogsExecutor): An instance of the ScanLogsExecutor class to handle configurations.
+
     """
     autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")
     with autoscan_path.open("w", encoding="utf-8", errors="ignore") as autoscan_file:
@@ -85,8 +84,7 @@ def write_report_to_file(crashlog_file: Path, autoscan_report: list[str], trigge
 
 
 def move_unsolved_logs(crashlog_file: Path) -> None:
-    """
-    Moves unsolved crash logs and their associated autoscan reports to a backup directory.
+    """Move unsolved crash logs and their associated autoscan reports to a backup directory.
 
     This function ensures that unsolved crash logs are properly archived by transferring them
     to a designated "Unsolved Logs" backup folder. It handles both the original crash log and
@@ -95,6 +93,7 @@ def move_unsolved_logs(crashlog_file: Path) -> None:
 
     Args:
         crashlog_file (Path): The file path of the crash log to be moved to the backup directory.
+
     """
     backup_path: Path = cast("Path", GlobalRegistry.get_local_dir()) / "CLASSIC Backup/Unsolved Logs"
     backup_path.mkdir(parents=True, exist_ok=True)
@@ -120,8 +119,7 @@ def move_unsolved_logs(crashlog_file: Path) -> None:
 
 
 def complete_scan_with_summary(result: ScanResult, yamldata: ClassicScanLogsInfo, scan_start_time: float) -> None:
-    """
-    Completes the scanning process by performing final checks, displaying completion information, and
+    """Complete the scanning process by performing final checks, displaying completion information, and
     providing relevant scan statistics and hints.
 
     This function processes the scan results and handles any failed or invalid logs. It generates summary
@@ -138,6 +136,7 @@ def complete_scan_with_summary(result: ScanResult, yamldata: ClassicScanLogsInfo
 
     Raises:
         None
+
     """
     # Check for failed or invalid crash logs
     scan_invalid_list: list[Path] = sorted(Path.cwd().glob("crash-*.txt"))
@@ -185,8 +184,7 @@ def complete_scan_with_summary(result: ScanResult, yamldata: ClassicScanLogsInfo
 
 
 async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
-    """
-    Pure async crash log scanning with controlled concurrency.
+    """Pure async crash log scanning with controlled concurrency.
 
     This is the main async entry point that orchestrates the entire scanning process
     using the executor pattern for clean separation of concerns.
@@ -199,6 +197,7 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
 
     Raises:
         RuntimeError: If YAML data is not initialized after scan execution.
+
     """
     logger.info("Starting pure async crash log scanning")
 
@@ -222,8 +221,7 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
 
 
 def crashlogs_scan() -> ScanResult:
-    """
-    Scans crash logs and returns the scan results.
+    """Scan crash logs and returns the scan results.
 
     This function utilizes the `ScanLogsExecutor` to perform a scan on crash logs
     asynchronously. It executes the scan using the `run_async` utility, which
@@ -231,6 +229,7 @@ def crashlogs_scan() -> ScanResult:
 
     Returns:
         ScanResult: The result of the crash log scan.
+
     """
     from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
 
@@ -242,8 +241,7 @@ def crashlogs_scan() -> ScanResult:
 
 # Legacy function names for backward compatibility
 def _complete_scan_with_summary(executor: "ScanLogsExecutor", scan_failed_list: list[str], yamldata: ClassicScanLogsInfo) -> None:
-    """
-    Completes the scan process by consolidating scan results, statistics, and other relevant
+    """Complete the scan process by consolidating scan results, statistics, and other relevant
     data into a summarized format for further processing or reporting.
 
     Args:
@@ -262,8 +260,7 @@ def _complete_scan_with_summary(executor: "ScanLogsExecutor", scan_failed_list: 
 
 
 async def crashlogs_scan_async_pure_with_qt(executor: "ScanLogsExecutor") -> ScanResult:
-    """
-    Asynchronously scans crash logs using the provided executor.
+    """Asynchronously scans crash logs using the provided executor.
 
     This function delegates the crash logs scanning task to the main logic, and
     is intended to allow for Qt-specific handling to be added in the future, if
@@ -276,6 +273,7 @@ async def crashlogs_scan_async_pure_with_qt(executor: "ScanLogsExecutor") -> Sca
 
     Returns:
         ScanResult: The result of the crash logs scanning operation.
+
     """
     # For now, delegate to the main function - Qt-specific handling can be added later
     return await crashlogs_scan_async_pure(executor)

@@ -26,6 +26,7 @@ class Message:
         title: An optional title for the message.
         details: Additional details or context related to the message.
         parent: The optional parent widget associated with the message (GUI only).
+
     """
 
     content: str
@@ -43,6 +44,7 @@ class Message:
 
         Returns:
             New Message with the title set.
+
         """
         return Message(
             content=self.content,
@@ -61,6 +63,7 @@ class Message:
 
         Returns:
             New Message with the details set.
+
         """
         return Message(
             content=self.content,
@@ -76,6 +79,7 @@ class Message:
 
         Returns:
             Title string for display.
+
         """
         if self.title:
             return self.title

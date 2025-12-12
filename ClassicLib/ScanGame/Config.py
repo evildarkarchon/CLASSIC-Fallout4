@@ -1,5 +1,4 @@
-"""
-A module for managing and comparing configuration files, including detecting duplicates
+"""A module for managing and comparing configuration files, including detecting duplicates
 and loading file data into structured formats.
 
 The module provides utilities for comparing INI files, managing configuration files
@@ -32,8 +31,7 @@ TEST_MODE = False
 
 
 def compare_ini_files(file1: Path, file2: Path) -> bool:
-    """
-    Compares two INI files to determine if they have identical sections and content.
+    """Compare two INI files to determine if they have identical sections and content.
 
     This function verifies if both input files have a ".ini" extension, reads their
     contents using the `configparser` library, and compares their sections and
@@ -47,6 +45,7 @@ def compare_ini_files(file1: Path, file2: Path) -> bool:
     Returns:
         bool: True if both INI files have identical sections and content,
         False otherwise.
+
     """
     if file1.suffix == ".ini" and file2.suffix == ".ini":
         config1, config2 = configparser.ConfigParser(), configparser.ConfigParser()
@@ -57,8 +56,7 @@ def compare_ini_files(file1: Path, file2: Path) -> bool:
 
 
 class ConfigFile(TypedDict):
-    """
-    A TypedDict for defining the configuration file structure in a strongly-typed
+    """A TypedDict for defining the configuration file structure in a strongly-typed
     manner.
 
     This class is used to ensure type safety and clear structure when dealing
@@ -70,6 +68,7 @@ class ConfigFile(TypedDict):
         settings (iniparse.ConfigParser): The configuration parser object
             containing settings parsed from the config file.
         text (str): The raw text content of the configuration file.
+
     """
 
     encoding: str
@@ -116,6 +115,7 @@ class ConfigFileCache:
         - All file operations use UTF-8 encoding with automatic fallback detection.
         - Duplicate detection uses file hashes, similarity scores (≥90%), and INI comparison.
         - Prefer async methods (_load_config_async, get_async, detect_issue) over sync versions.
+
     """
 
     _config_files: dict[str, Path]
@@ -127,8 +127,7 @@ class ConfigFileCache:
 
     # noinspection PyUnresolvedReferences
     def __init__(self) -> None:
-        """
-        Initializes and scans the game's root directory for configuration files, identifying duplicates based on
+        """Initialize and scans the game's root directory for configuration files, identifying duplicates based on
         file hash, similarity, and specific comparison rules.
 
         The initialization sets up paths and attributes necessary for the operation, loads configuration
@@ -159,6 +158,7 @@ class ConfigFileCache:
         Todo:
             - Determine if a specific exception should be raised or a message returned when the game's
               root path is missing (observed in scan_mod_inis).
+
         """
         self._config_files = {}
         self._config_file_cache = {}
@@ -210,8 +210,7 @@ class ConfigFileCache:
                     self._config_files[file_lower] = file_path
 
     def _get_cached_hash(self, file_path: Path) -> str:
-        """
-        Get file hash with caching to avoid expensive recalculation.
+        """Get file hash with caching to avoid expensive recalculation.
 
         This method caches the hash of a file to prevent redundant calculations when
         checking for duplicates. The cache persists for the lifetime of the
@@ -222,6 +221,7 @@ class ConfigFileCache:
 
         Returns:
             str: The calculated or cached hash of the file.
+
         """
         # Check if we have a cached hash
         if file_path in self._hash_cache:
@@ -233,8 +233,7 @@ class ConfigFileCache:
         return file_hash
 
     def __contains__(self, file_name_lower: str) -> bool:
-        """
-        Checks if a given file name is in the configuration files.
+        """Check if a given file name is in the configuration files.
 
         This method determines if a specific file name is present within the
         internal collection of configuration files. The check is case-sensitive
@@ -248,6 +247,7 @@ class ConfigFileCache:
         Returns:
             bool: True if the file name exists in the configuration files,
                 False otherwise.
+
         """
         return file_name_lower in self._config_files
 
@@ -259,8 +259,7 @@ class ConfigFileCache:
     #     return len(self._config_files)
 
     def __getitem__(self, file_name_lower: str) -> Path:
-        """
-        Retrieves the file path associated with the given lowercase file name key.
+        """Retrieve the file path associated with the given lowercase file name key.
 
         Args:
             file_name_lower (str): The lowercase string of the file name to look up in the
@@ -268,12 +267,12 @@ class ConfigFileCache:
 
         Returns:
             Path: The file path corresponding to the given lowercase file name key.
+
         """
         return self._config_files[file_name_lower]
 
     async def _load_config_async(self, file_name_lower: str) -> None:
-        """
-        Asynchronously loads and parses a configuration file with optimized I/O.
+        """Asynchronously loads and parses a configuration file with optimized I/O.
 
         This method loads configuration files without blocking the event loop by
         running file I/O, encoding detection, and parsing operations in executors.
@@ -287,6 +286,7 @@ class ConfigFileCache:
         Raises:
             FileNotFoundError: If the specified `file_name_lower` does not exist in
                 the `_config_files` mapping.
+
         """
         if file_name_lower not in self._config_files:
             raise FileNotFoundError
@@ -322,8 +322,7 @@ class ConfigFileCache:
         self._config_file_cache[file_name_lower] = config_entry
 
     def get[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
-        """
-        Retrieves a configuration value of the specified type from a configuration file. The method
+        """Retrieve a configuration value of the specified type from a configuration file. The method
         accesses the given configuration section and retrieves the value associated with the provided key.
 
         Args:
@@ -338,6 +337,7 @@ class ConfigFileCache:
             The value of the requested configuration key, cast to the specified type. Returns None if the
             configuration file is not found, the requested section or key does not exist, or the value
             cannot be retrieved or cast to the specified type.
+
         """
         if value_type is not str and value_type is not bool and value_type is not int and value_type is not float:
             raise NotImplementedError
@@ -385,8 +385,7 @@ class ConfigFileCache:
             return None
 
     async def get_async[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
-        """
-        Asynchronously retrieves a configuration value of the specified type from a configuration file.
+        """Asynchronously retrieves a configuration value of the specified type from a configuration file.
 
         This is the async version of the get method that doesn't block the event loop
         when loading configuration files for the first time.
@@ -403,6 +402,7 @@ class ConfigFileCache:
             The value of the requested configuration key, cast to the specified type. Returns None if the
             configuration file is not found, the requested section or key does not exist, or the value
             cannot be retrieved or cast to the specified type.
+
         """
         if value_type is not str and value_type is not bool and value_type is not int and value_type is not float:
             raise NotImplementedError
@@ -457,8 +457,7 @@ class ConfigFileCache:
         condition_check: Any,
         severity: ConfigIssueSeverity = "warning",
     ) -> Any | None:
-        """
-        Detect a configuration issue without modifying the file.
+        """Detect a configuration issue without modifying the file.
 
         This method checks if a configuration setting meets a specific condition
         and, if so, creates a ConfigIssue report with the current value,
@@ -484,6 +483,7 @@ class ConfigFileCache:
             ...     "High particle count can cause crashes",
             ...     lambda val: int(val) > 5000
             ... )
+
         """
         from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 
@@ -511,9 +511,10 @@ class ConfigFileCache:
         )
 
     def get_strict[T](self, value_type: type[T], file: str, section: str, setting: str) -> T:
-        """
-        Fetches a configuration value with a strict fallback mechanism. If the value is not found, returns
-        a default value based on the specified type. Default values are as follows:
+        """Fetch a configuration value with strict type-based fallback.
+
+        If the value is not found, return a default value based on the specified type.
+        Default values are as follows:
 
         - str: An empty string.
         - bool: False.
@@ -537,6 +538,7 @@ class ConfigFileCache:
 
         Raises:
             NotImplementedError: If `value_type` is not handled for default fallback values.
+
         """
         value: T | None = self.get(value_type, file, section, setting)
         if value is not None:
@@ -552,8 +554,7 @@ class ConfigFileCache:
         raise NotImplementedError
 
     def has(self, file_name_lower: str, section: str, setting: str) -> bool:
-        """
-        Determines if a given setting exists under a specific section in the configuration
+        """Determine if a given setting exists under a specific section in the configuration
         file specified by its lower-cased file name. It checks the cache for previously
         loaded configurations and loads the file if not already cached.
 
@@ -565,6 +566,7 @@ class ConfigFileCache:
         Returns:
             bool: True if the setting exists in the specified section of the configuration
             file; otherwise, False.
+
         """
         if file_name_lower not in self._config_files:
             return False
@@ -579,8 +581,7 @@ class ConfigFileCache:
             return False
 
     def items(self) -> ItemsView[str, Path]:
-        """
-        Returns the items from the internal configuration files dictionary.
+        """Return the items from the internal configuration files dictionary.
 
         This method provides access to the key-value pairs stored in the
         configuration files dictionary. It can be used to iterate over or
@@ -591,13 +592,13 @@ class ConfigFileCache:
             dictionary's key-value tuple pairs. Keys are of type `str` and
             represent names or identifiers, while values are of type `Path`
             and represent corresponding directory or file paths.
+
         """
         return self._config_files.items()
 
 
 def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bool | int | None = None) -> Any | None:
-    """
-    Modifies a specific key in a TOML configuration file within a specified section if the key exists.
+    """Modify a specific key in a TOML configuration file within a specified section if the key exists.
     If a new value is provided, the function updates the key with the given value. The current value
     of the key is returned, whether updated or not. If the specified section or key does not exist,
     the function returns None. The function handles file encoding and ensures the integrity of the
@@ -613,8 +614,8 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: str | bo
     Returns:
         Any | None: The current value of the key (either the existing or updated value if changed).
         Returns None if the specified section or key does not exist.
-    """
 
+    """
     file_bytes: bytes = toml_path.read_bytes()
     file_encoding: str = chardet.detect(file_bytes)["encoding"] or "utf-8"
     file_text: str = file_bytes.decode(file_encoding)

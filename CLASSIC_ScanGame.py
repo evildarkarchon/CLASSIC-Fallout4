@@ -46,6 +46,7 @@ def get_scan_game_core() -> ScanGameCore:
 
     Returns:
         ScanGameCore: The singleton ScanGameCore instance managed by GlobalRegistry.
+
     """
     # ScanGameCore's __new__ method handles singleton via GlobalRegistry
     return ScanGameCore()
@@ -64,20 +65,21 @@ check_log_errors = create_sync_wrapper(_scan_game_core.check_log_errors)
 
 
 async def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
-    """Gets common settings used by mod scanning functions.
+    """Get common settings used by mod scanning functions.
 
     Returns:
         tuple[str, dict[str, str], Path | None]: A tuple containing:
             - str: XSE acronym (e.g., 'F4SE', 'SKSE')
             - dict[str, str]: Dictionary of scanning configuration settings
             - Path | None: Optional path to the mods folder, or None if not configured
+
     """
     core: ScanGameCore = get_scan_game_core()
     return await core.get_scan_settings()
 
 
 def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
-    """Returns standardized issue messages for mod scan reports.
+    """Return standardized issue messages for mod scan reports.
 
     Args:
         xse_acronym: The XSE acronym (e.g., 'F4SE', 'SKSE') for the current game.
@@ -86,6 +88,7 @@ def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
     Returns:
         dict[str, list[str]]: Dictionary mapping issue categories to lists of
             standardized issue messages for mod scan reports.
+
     """
     core: ScanGameCore = get_scan_game_core()
     return core.get_issue_messages(xse_acronym, mode)
@@ -99,14 +102,14 @@ scan_mods_archived = create_sync_wrapper(_scan_game_core.scan_mods_archived)
 # GAME FILES MANAGEMENT - DELEGATE TO NEW MODULE
 # ================================================
 def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
-    """
-    Manages game files by performing backup, restore, or removal operations.
+    """Manage game files by performing backup, restore, or removal operations.
 
     This function delegates to the new GameFilesManager module.
 
     Args:
         classic_list: The name of the list specifying which files need to be managed.
         mode: The operation mode ("BACKUP", "RESTORE", or "REMOVE").
+
     """
     manage_game_files(classic_list, mode)
 
@@ -115,8 +118,7 @@ def game_files_manage(classic_list: str, mode: Literal["BACKUP", "RESTORE", "REM
 # COMBINED RESULTS - DELEGATE TO NEW MODULE
 # ================================================
 def game_combined_result() -> str:
-    """
-    Generates a combined result summarizing game-related checks and scans.
+    """Generate a combined result summarizing game-related checks and scans.
 
     This function delegates to the new GameIntegrityOrchestrator module.
     Note: This wrapper maintains backward compatibility by unpacking the tuple
@@ -124,25 +126,26 @@ def game_combined_result() -> str:
 
     Returns:
         str: A string summarizing the results of all performed checks and scans.
+
     """
     report_text, _ = generate_game_combined_result()  # Unpack tuple, discard issues
     return report_text
 
 
 def mods_combined_result() -> str:
-    """
-    Combines the results of scanning unpacked and archived mods.
+    """Combine the results of scanning unpacked and archived mods.
 
     This function delegates to the new GameIntegrityOrchestrator module.
 
     Returns:
         str: The combined results of the unpacked and archived mods scans.
+
     """
     return generate_mods_combined_result()
 
 
 async def main() -> None:
-    """Main entry point for game scanning - Async-First Pattern.
+    """Serve as main entry point for game scanning - Async-First Pattern.
 
     This CLI entry point uses native async operations with a single asyncio.run()
     call, following the same pattern as CLASSIC_ScanLogs.py.

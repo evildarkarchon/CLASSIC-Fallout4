@@ -1,5 +1,4 @@
-"""
-Scan operations mixin for the CLASSIC interface.
+"""Scan operations mixin for the CLASSIC interface.
 
 This module contains a mixin class with methods for managing scan operations,
 including crash logs and game files scanning functionality.
@@ -35,6 +34,7 @@ class ScanOperationsMixin:
         crash_logs_worker: CrashLogsScanWorker instance (or None).
         game_files_thread: QThread for game files scanning (or None).
         game_files_worker: GameFilesScanWorker instance (or None).
+
     """
 
     # Type stubs for attributes that must be provided by the mixing class
@@ -57,8 +57,7 @@ class ScanOperationsMixin:
         def refresh_reports_list(self) -> None: ...  # From ResultsViewerMixin
 
     def crash_logs_scan(self) -> None:
-        """
-        Initiates a crash logs scan in a thread-safe manner, creating a dedicated worker for the scan.
+        """Initiate a crash logs scan in a thread-safe manner, creating a dedicated worker for the scan.
 
         This method ensures that only one crash logs scan is executed at a time by acquiring a mutex lock
         and checking the current state of scans. If a scan is already in progress, it shows a warning message
@@ -113,8 +112,7 @@ class ScanOperationsMixin:
         self.thread_manager.start_thread(ThreadType.CRASH_LOGS_SCAN)
 
     def game_files_scan(self) -> None:
-        """
-        Scans game files using a separate thread and handles thread setup, worker connections, and signal
+        """Scan game files using a separate thread and handles thread setup, worker connections, and signal
         communication to ensure non-blocking UI updates during the operation.
 
         Starts a scanning process by initializing a worker and a thread managed by ThreadManager.
@@ -160,8 +158,7 @@ class ScanOperationsMixin:
         self.thread_manager.start_thread(ThreadType.GAME_FILES_SCAN)
 
     def disable_scan_buttons(self) -> None:
-        """
-        Disables all scan buttons in the button group to prevent user interaction during a
+        """Disable all scan buttons in the button group to prevent user interaction during a
         scanning operation.
 
         This method ensures thread-safe interaction with the scan buttons by using a mutex
@@ -171,6 +168,7 @@ class ScanOperationsMixin:
         Raises:
             Any exception raised during button group iteration or setting button states
             will be propagated to the caller.
+
         """
         self._scan_mutex.lock()
         try:
@@ -180,8 +178,7 @@ class ScanOperationsMixin:
             self._scan_mutex.unlock()
 
     def enable_scan_buttons(self) -> None:
-        """
-        Enables scan buttons when no scans are running.
+        """Enable scan buttons when no scans are running.
 
         This method ensures that scan buttons within a button group are enabled
         only if there are no active scans currently running. It uses a mutex to
@@ -189,6 +186,7 @@ class ScanOperationsMixin:
 
         Raises:
             Any error that might arise from locking or unlocking the mutex.
+
         """
         self._scan_mutex.lock()
         try:
@@ -200,8 +198,7 @@ class ScanOperationsMixin:
             self._scan_mutex.unlock()
 
     def crash_logs_scan_finished(self) -> None:
-        """
-        Handles the completion of the crash logs scan operation. This method is executed
+        """Handle the completion of the crash logs scan operation. This method is executed
         when the crash logs scan thread finishes its work. It ensures the safe removal of
         the scan from active scans, manages scan button states, and optionally switches the
         interface to the Results tab if configured to do so.
@@ -231,8 +228,7 @@ class ScanOperationsMixin:
         self._switch_to_results_tab_if_enabled()
 
     def game_files_scan_finished(self) -> None:
-        """
-        Handles the completion process of the game files scanning thread.
+        """Handle the completion process of the game files scanning thread.
 
         This method is called when the game files scanning thread finishes its execution.
         It resets the thread instance, safely removes the "game_files" entry from the list of
@@ -241,6 +237,7 @@ class ScanOperationsMixin:
 
         Raises:
             None
+
         """
         self.game_files_thread = None
 
@@ -260,8 +257,7 @@ class ScanOperationsMixin:
             self.stop_papyrus_monitoring()
 
     def _switch_to_results_tab_if_enabled(self) -> None:
-        """
-        Switch to the Results tab after scan completion if configured.
+        """Switch to the Results tab after scan completion if configured.
 
         This method checks if automatic tab switching is enabled in settings
         and switches to the Results tab if available. Also refreshes the
@@ -298,8 +294,7 @@ class ScanOperationsMixin:
 
     @QtCore.Slot(str, str, str)
     def _show_scan_error_dialog(self, title: str, message: str, details: str) -> None:
-        """
-        Display an error dialog with scan failure details and copy-to-clipboard functionality.
+        """Display an error dialog with scan failure details and copy-to-clipboard functionality.
 
         This method is called when a scan operation encounters an error.
         It displays a CustomErrorDialog with the error information, including
@@ -310,6 +305,7 @@ class ScanOperationsMixin:
             title: The title of the error dialog
             message: The main error message to display
             details: Detailed error information (e.g., traceback)
+
         """
         logger.debug(f"Showing error dialog: {title}")
 

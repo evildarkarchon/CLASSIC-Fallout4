@@ -41,6 +41,7 @@ class LogBackend:
 
         Args:
             logger: Logger instance to use. Defaults to CLASSIC.MessageHandler.
+
         """
         self._logger = logger or logging.getLogger("CLASSIC.MessageHandler")
 
@@ -49,6 +50,7 @@ class LogBackend:
 
         Args:
             message: The message to log.
+
         """
         level = self.LEVEL_MAP.get(message.msg_type, logging.INFO)
         # Use Rust-accelerated formatting which strips emojis
@@ -60,6 +62,7 @@ class LogBackend:
 
         Returns:
             Always True - logging is always available.
+
         """
         return True
 
@@ -68,5 +71,6 @@ class LogBackend:
 
         Args:
             logger: New logger to use.
+
         """
         self._logger = logger

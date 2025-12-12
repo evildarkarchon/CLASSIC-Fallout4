@@ -1,5 +1,4 @@
-"""
-Result data model for scan operations.
+"""Result data model for scan operations.
 
 This module contains the ScanResult dataclass that holds
 the outcomes of scanning crash logs.
@@ -14,8 +13,7 @@ from ClassicLib.ScanLog.models.scan_statistics import ScanStatistics
 
 @dataclass
 class ScanResult:
-    """
-    Represents the results of a scanning operation.
+    """Represent the results of a scanning operation.
 
     Provides methods for managing scan result data such as failed logs, processed
     files, error messages, and statistical summaries.
@@ -26,6 +24,7 @@ class ScanResult:
         scan_time (float): Duration of the scan in seconds.
         processed_files (list[Path]): List of successfully processed files.
         error_messages (list[str]): List of error messages encountered during the scan.
+
     """
 
     stats: ScanStatistics = field(default_factory=ScanStatistics)
@@ -37,8 +36,7 @@ class ScanResult:
     error_messages: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        """
-        Calculates and assigns a default scan time if not explicitly provided during initialization.
+        """Calculate and assigns a default scan time if not explicitly provided during initialization.
 
         This method is automatically invoked after the object is initialized. It checks whether a
         scan time has been set. If the scan time is zero, it determines a default value by retrieving
@@ -47,49 +45,49 @@ class ScanResult:
         Raises:
             AttributeError: If `self.stats` does not have a `get_scan_duration` method, resulting
             in the inability to calculate the scan time.
+
         """
         # Calculate scan time if not provided
         if self.scan_time == 0.0:
             self.scan_time = self.stats.get_scan_duration()
 
     def add_failed_log(self, log_name: str) -> None:
-        """
-        Adds a log entry to the list of failed logs if it is not already present and
+        """Add a log entry to the list of failed logs if it is not already present and
         updates the count of failed logs.
 
         Args:
             log_name (str): The name of the log to be added to the failed logs list.
+
         """
         if log_name not in self.failed_logs:
             self.failed_logs.append(log_name)
         self.stats.increment_failed()
 
     def add_processed_file(self, file_path: Path) -> None:
-        """
-        Adds a file to the list of processed files if it has not already been processed.
+        """Add a file to the list of processed files if it has not already been processed.
 
         This method checks if the given file path is not already in the list of
         processed files. If it is not present, the file path is added to the list.
 
         Args:
             file_path (Path): The path of the file to be added to the processed files list.
+
         """
         if file_path not in self.processed_files:
             self.processed_files.append(file_path)
 
     def add_error_message(self, message: str) -> None:
-        """
-        Adds an error message to the list of error messages if it does not already exist.
+        """Add an error message to the list of error messages if it does not already exist.
 
         Args:
             message (str): The error message to add.
+
         """
         if message not in self.error_messages:
             self.error_messages.append(message)
 
     def is_successful(self) -> bool:
-        """
-        Determines whether the given operation was successful based on statistical thresholds.
+        """Determine whether the given operation was successful based on statistical thresholds.
 
         The method evaluates success based on the number of scanned and failed files in
         relation to the total number of files. The operation is considered successful
@@ -97,14 +95,14 @@ class ScanResult:
 
         Returns:
             bool: True if the operation meets the success criteria, False otherwise.
+
         """
         return (
             self.stats.scanned > 0 and self.stats.failed < self.stats.total_files * 0.5  # Less than 50% failure rate
         )
 
     def get_summary(self) -> dict[str, Any]:
-        """
-        Retrieves a summary of the current scan statistics and results.
+        """Retrieve a summary of the current scan statistics and results.
 
         This method compiles various metrics about the scan, such as the total number of files
         processed, the number of successful and failed scans, the scan duration, and additional
@@ -120,6 +118,7 @@ class ScanResult:
                 - scan_duration: Time taken to complete the scan process.
                 - failed_logs_count: Number of failure logs recorded.
                 - error_messages_count: Number of error messages registered during the scan.
+
         """
         return {
             "total_files": self.stats.total_files,

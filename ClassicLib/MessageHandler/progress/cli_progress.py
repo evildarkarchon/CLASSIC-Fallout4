@@ -21,6 +21,7 @@ class CLIProgressBar:
         desc: Description text for the progress bar.
         total: Total number of items, or None for indeterminate.
         current: Current progress count.
+
     """
 
     def __init__(self, desc: str, total: int | None = None) -> None:
@@ -29,6 +30,7 @@ class CLIProgressBar:
         Args:
             desc: Description to display.
             total: Total items, or None for indeterminate progress.
+
         """
         self.desc = desc
         self.total = total
@@ -64,6 +66,7 @@ class CLIProgressBar:
 
         Args:
             n: Number of items to increment.
+
         """
         if self._closed:
             return
@@ -84,6 +87,7 @@ class CLIProgressBar:
 
         Args:
             desc: New description text.
+
         """
         self.desc = desc
 
@@ -117,6 +121,7 @@ class CLIProgressHandler:
         Args:
             description: Description of the operation.
             total: Total items, or None for indeterminate.
+
         """
         self._progress_bar = CLIProgressBar(description, total)
         self._cancelled = False
@@ -128,6 +133,7 @@ class CLIProgressHandler:
         Args:
             n: Items completed since last update.
             description: Optional new description.
+
         """
         if self._progress_bar is None:
             return
@@ -155,6 +161,7 @@ class CLIProgressHandler:
 
         Returns:
             False - CLI progress cannot be cancelled by user.
+
         """
         return self._cancelled
 
@@ -163,5 +170,6 @@ class CLIProgressHandler:
 
         Returns:
             True - CLI is always available.
+
         """
         return True

@@ -11,6 +11,7 @@ Example:
     >>> from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache
     >>> cache = YamlSettingsCache.get_instance()
     >>> value = cache.get(str, "CLASSIC_Settings.VR Mode")
+
 """
 
 import logging
@@ -63,6 +64,7 @@ class YamlSettingsCache:
         >>> from ClassicLib.YamlSettings import yaml_cache
         >>> cache = yaml_cache()
         >>> value = cache.async_yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
+
     """
 
     # Class-level storage for singleton instance
@@ -87,6 +89,7 @@ class YamlSettingsCache:
 
         Returns:
             The AsyncBridge instance for this cache.
+
         """
         if self._bridge is None:
             with self._init_lock:
@@ -104,6 +107,7 @@ class YamlSettingsCache:
 
         Returns:
             The async core instance for this cache.
+
         """
         if self._async_core is None:
             with self._init_lock:
@@ -123,6 +127,7 @@ class YamlSettingsCache:
 
         Returns:
             The async core instance for this cache.
+
         """
         # No lock needed in async context - await is atomic enough
         # and we're running in single-threaded async context
@@ -146,6 +151,7 @@ class YamlSettingsCache:
             >>> # Same instance returned on subsequent calls
             >>> cache2 = YamlSettingsCache.get_instance()
             >>> assert cache is cache2
+
         """
         # Fast path - instance already exists
         if cls._instance is not None:
@@ -170,6 +176,7 @@ class YamlSettingsCache:
 
         Returns:
             The file system path corresponding to the given YAML store.
+
         """
         return self._get_async_core().file_ops.get_path_for_store(yaml_store)
 
@@ -184,6 +191,7 @@ class YamlSettingsCache:
 
         Raises:
             Exception: If an error occurs during file operations or parsing.
+
         """
         core = await self._ensure_async_core_async()
         return await core.file_ops.load_yaml_file(yaml_path)
@@ -201,6 +209,7 @@ class YamlSettingsCache:
 
         Returns:
             The parsed YAML content as a mapping.
+
         """
         return self._get_bridge().run_async(self._get_async_core().file_ops.load_yaml_file(yaml_path))
 
@@ -221,6 +230,7 @@ class YamlSettingsCache:
 
         Returns:
             The value retrieved or the updated value, or None if not found.
+
         """
         return self._get_bridge().run_async(self._get_async_core().async_yaml_settings(_type, yaml_store, key_path, new_value))
 
@@ -232,6 +242,7 @@ class YamlSettingsCache:
 
         Returns:
             A dictionary mapping each input YAML store to its loaded content.
+
         """
         core = await self._ensure_async_core_async()
         results = {}
@@ -251,6 +262,7 @@ class YamlSettingsCache:
 
         Returns:
             A dictionary mapping each input YAML store to its mapping.
+
         """
         return self._get_bridge().run_async(self.load_multiple_stores_async(stores))
 
@@ -262,6 +274,7 @@ class YamlSettingsCache:
 
         Returns:
             A list containing the results for each request.
+
         """
         core = await self._ensure_async_core_async()
         return await core.batch_get_settings(requests)
@@ -277,6 +290,7 @@ class YamlSettingsCache:
 
         Returns:
             A list containing the results for each request.
+
         """
         return self._get_bridge().run_async(self._get_async_core().batch_get_settings(requests))
 
@@ -289,6 +303,7 @@ class YamlSettingsCache:
         Note:
             This is typically called during GUI initialization. For CLI,
             consider using async prefetching if available.
+
         """
         # Load the three main YAML stores into file cache
         stores_to_prefetch = [YAML.Main, YAML.Settings, YAML.Game]
@@ -310,6 +325,7 @@ class YamlSettingsCache:
 
         Returns:
             An empty dictionary (metrics not currently implemented).
+
         """
         return {}
 
@@ -319,6 +335,7 @@ class YamlSettingsCache:
 
         Returns:
             The cache instance from the async core.
+
         """
         return self._get_async_core().cache
 
@@ -328,6 +345,7 @@ class YamlSettingsCache:
 
         Returns:
             A dictionary containing the cached path data.
+
         """
         return self._get_async_core().cache.path_cache
 
@@ -337,6 +355,7 @@ class YamlSettingsCache:
 
         Returns:
             A dictionary containing the cached settings.
+
         """
         return self._get_async_core().cache.settings_cache
 
@@ -346,6 +365,7 @@ class YamlSettingsCache:
 
         Returns:
             A dictionary mapping file paths to modification timestamps.
+
         """
         return self._get_async_core().cache.file_mod_times
 

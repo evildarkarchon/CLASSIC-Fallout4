@@ -18,6 +18,7 @@ Example:
     Run as standalone application:
 
     $ python formid_db_manager.py
+
 """
 
 import sqlite3
@@ -71,6 +72,7 @@ class FormIDManager(QMainWindow):
         >>> window = FormIDManager()
         >>> window.show()
         >>> sys.exit(app.exec())
+
     """
 
     def __init__(self) -> None:
@@ -234,6 +236,7 @@ class FormIDManager(QMainWindow):
         Note:
             Calls QApplication.processEvents() to ensure the UI updates
             immediately during long-running operations.
+
         """
         self.log_area.append(message)
         QApplication.processEvents()  # Ensures UI updates during processing
@@ -259,6 +262,7 @@ class FormIDManager(QMainWindow):
         Returns:
             A tuple of (plugin, formid, entry) if the line is valid, or None if the
             line is malformed or doesn't match the expected format.
+
         """
         line = line.strip()
         if " | " not in line:
@@ -281,6 +285,7 @@ class FormIDManager(QMainWindow):
                 - update_mode (bool): Whether to replace existing entries
                 - verbose (bool): Whether to log detailed per-entry information
                 - dry_run (bool): Whether to preview changes without modifying database
+
         """
         game = self.game_combo.currentText()
         return {
@@ -301,6 +306,7 @@ class FormIDManager(QMainWindow):
         Returns:
             True if validation passes (file exists and database path is valid),
             False otherwise.
+
         """
         file_path = config["file_path"]
         db_path = config["db_path"]
@@ -326,6 +332,7 @@ class FormIDManager(QMainWindow):
         Returns:
             True if database structure was successfully verified/created,
             False if a DatabaseError occurred during setup.
+
         """
         try:
             cursor = conn.cursor()

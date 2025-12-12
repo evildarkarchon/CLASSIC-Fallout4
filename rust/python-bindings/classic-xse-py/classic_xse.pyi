@@ -71,6 +71,7 @@ class XseType:
         Example:
             >>> xse = XseType.f4se()
             >>> assert xse.as_str() == "F4SE"
+
         """
 
     def loader_name(self) -> str:
@@ -79,6 +80,7 @@ class XseType:
         Example:
             >>> xse = XseType.f4se()
             >>> assert xse.loader_name() == "f4se_loader.exe"
+
         """
 
     def dll_prefix(self) -> str:
@@ -87,6 +89,7 @@ class XseType:
         Example:
             >>> xse = XseType.f4se()
             >>> assert xse.dll_prefix() == "f4se_"
+
         """
 
     def __eq__(self, other: object) -> bool:
@@ -97,6 +100,7 @@ class XseType:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -104,6 +108,7 @@ class XseType:
 
         Returns:
             The XSE type name as a string.
+
         """
 
 class XseInfo:
@@ -123,6 +128,7 @@ class XseInfo:
         Example:
             >>> info = XseInfo(XseType.f4se(), "C:\\Games\\Fallout4")
             >>> assert info.xse_type().as_str() == "F4SE"
+
         """
 
     def xse_type(self) -> XseType:
@@ -136,6 +142,7 @@ class XseInfo:
 
         Returns:
             A tuple of (major, minor, patch) if version was detected, None otherwise.
+
         """
 
     def installed(self) -> bool:
@@ -152,6 +159,7 @@ class XseInfo:
 
         Returns:
             A string representation suitable for debugging.
+
         """
 
     def __str__(self) -> str:
@@ -159,6 +167,7 @@ class XseInfo:
 
         Returns:
             A formatted string with type, installation status, and version.
+
         """
 
 def parse_xse_type(type_name: str) -> XseType:
@@ -178,6 +187,7 @@ def parse_xse_type(type_name: str) -> XseType:
         >>> assert xse.as_str() == "F4SE"
         >>> xse = parse_xse_type("SKSE64")
         >>> assert xse.as_str() == "SKSE64"
+
     """
 
 def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
@@ -199,6 +209,7 @@ def detect_xse_version(loader_path: str, xse_type: XseType) -> Version:
         ...     print(f"F4SE version: {version}")
         ... except IOError as e:
         ...     print(f"Detection failed: {e}")
+
     """
 
 def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
@@ -214,6 +225,7 @@ def is_xse_installed(game_path: str, xse_type: XseType) -> bool:
     Example:
         >>> if is_xse_installed("C:\\Games\\Fallout4", XseType.f4se()):
         ...     print("F4SE is installed")
+
     """
 
 def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:
@@ -230,4 +242,5 @@ def get_xse_info(game_path: str, xse_type: XseType) -> XseInfo:
         >>> info = get_xse_info("C:\\Games\\Fallout4", XseType.f4se())
         >>> if info.installed():
         ...     print(f"F4SE version: {info.version()}")
+
     """

@@ -1,5 +1,4 @@
-"""
-Async File I/O Utilities for CLASSIC.
+"""Async File I/O Utilities for CLASSIC.
 
 This module provides async-first implementations of common file operations,
 focusing on encoding detection and non-blocking reads.
@@ -26,8 +25,7 @@ from ClassicLib.Utils.path_utils import validate_path
 
 
 async def detect_encoding_async(file_path: Path | str | os.PathLike, sample_size: int = 65536) -> str:
-    """
-    Asynchronously detects the encoding of a given file by reading a sample of its
+    """Asynchronously detects the encoding of a given file by reading a sample of its
     content and using the chardet library for encoding detection.
 
     Args:
@@ -39,6 +37,7 @@ async def detect_encoding_async(file_path: Path | str | os.PathLike, sample_size
     Returns:
         str: The detected encoding of the provided file. Defaults to 'utf-8' if
             detection fails or confidence is low.
+
     """
     if not AIOFILES_AVAILABLE or aiofiles is None or chardet is None:
         raise ImportError("aiofiles and chardet are required for async encoding detection")
@@ -76,8 +75,7 @@ async def detect_encoding_async(file_path: Path | str | os.PathLike, sample_size
 
 @asynccontextmanager
 async def open_file_with_encoding_async(file_path: Path | str | os.PathLike, mode: str = "r", sample_size: int = 65536) -> AsyncIterator:
-    """
-    Async context manager for opening a file with automatically detected encoding.
+    """Async context manager for opening a file with automatically detected encoding.
 
     Args:
         file_path: Path to the file to open
@@ -86,6 +84,7 @@ async def open_file_with_encoding_async(file_path: Path | str | os.PathLike, mod
 
     Yields:
         An async file handle opened with the detected encoding
+
     """
     if not AIOFILES_AVAILABLE or aiofiles is None:
         raise ImportError("aiofiles is required for async file operations")
@@ -102,30 +101,25 @@ async def open_file_with_encoding_async(file_path: Path | str | os.PathLike, mod
 
 
 async def read_file_with_encoding_async(file_path: Path | str | os.PathLike, sample_size: int = 65536) -> str:
-    """
-    Convenience function to read entire file contents with automatic encoding detection.
-    """
+    """Provide convenience wrapper to read entire file contents with automatic encoding detection."""
     async with open_file_with_encoding_async(file_path, sample_size=sample_size) as f:
         return await f.read()
 
 
 async def read_lines_with_encoding_async(file_path: Path | str | os.PathLike, sample_size: int = 65536) -> list[str]:
-    """
-    Convenience function to read file lines with automatic encoding detection.
-    """
+    """Provide convenience wrapper to read file lines with automatic encoding detection."""
     async with open_file_with_encoding_async(file_path, sample_size=sample_size) as f:
         return await f.readlines()
 
 
 # Fallback implementations for when aiofiles is not available
 def get_encoding_detection_available() -> bool:
-    """Determines if encoding detection is available based on the availability of aiofiles."""
+    """Determine if encoding detection is available based on the availability of aiofiles."""
     return AIOFILES_AVAILABLE
 
 
 async def fallback_to_sync_encoding_detection(file_path: Path | str | os.PathLike) -> str:
-    """
-    Determines the encoding of a given file path using a synchronous method executed
+    """Determine the encoding of a given file path using a synchronous method executed
     in an asynchronous context.
     """
     if not isinstance(file_path, Path):
