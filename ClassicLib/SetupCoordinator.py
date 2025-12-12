@@ -23,7 +23,7 @@ from ClassicLib.GamePath import game_generate_paths, game_path_find
 from ClassicLib.Logger import logger
 from ClassicLib.PathValidator import PathValidator
 from ClassicLib.ResourceLoader import ResourceLoader
-from ClassicLib.Utils.logging_utils import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
 from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
 
 if TYPE_CHECKING:
@@ -76,7 +76,7 @@ class SetupCoordinator:
         with TimedBlock("File Generation", log_level="debug"):
             self.file_generator.generate_all_files()
 
-        # Batch load version, game information, and game path
+        # Batch load version, game information, game path, and debug setting
         # Use asyncio.run() during initialization (before Qt event loop)
         # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
         with TimedBlock("Initial Settings Load", log_level="debug"):
@@ -84,9 +84,14 @@ class SetupCoordinator:
                 (str, YAML.Main, "CLASSIC_Info.version"),
                 (str, YAML.Game, "Game_Info.Main_Root_Name"),
                 (str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game"),
+                (bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"),
             ]
 
-            classic_ver, game_name, game_path = asyncio.run(yaml_cache.batch_get_settings_async(requests))
+            classic_ver, game_name, game_path, debug_messages = asyncio.run(yaml_cache.batch_get_settings_async(requests))
+
+            # Enable debug logging if setting is enabled
+            if debug_messages:
+                enable_debug_logging(logger)
 
         if not (isinstance(classic_ver, str) and isinstance(game_name, str)):
             raise TypeError("Classic version and game name must be strings")
@@ -176,9 +181,14 @@ class SetupCoordinator:
             (bool, YAML.Settings, "CLASSIC_Settings.VR Mode"),
             (str, YAML.Settings, "CLASSIC_Settings.Managed Game"),
             (bool, YAML.Main, "CLASSIC_Info.is_prerelease"),
+            (bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"),
         ]
 
-        vr_mode, managed_game_setting, is_prerelease = asyncio.run(yaml_cache.batch_get_settings_async(requests))
+        vr_mode, managed_game_setting, is_prerelease, debug_messages = asyncio.run(yaml_cache.batch_get_settings_async(requests))
+
+        # Enable debug logging if setting is enabled
+        if debug_messages:
+            enable_debug_logging(logger)
 
         # Register application settings
         # noinspection PyTypedDict

@@ -2,23 +2,38 @@
 //!
 //! This module provides the main orchestration layer that coordinates all analysis
 //! components into a unified pipeline for processing crash logs.
+//!
+//! The orchestrator achieves feature parity with Python's `OrchestratorCore`, providing:
+//! - Report generation with Python-identical output
+//! - Version checking and validation
+//! - Crash data reformatting (simplify logs)
+//! - Incomplete/failed log detection with statistics
+//! - Full analysis pipeline integration
 
 use crate::error::Result;
+use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
 use crate::gpu_detector::GpuDetector;
 use crate::mod_detector::{detect_mods_double, detect_mods_important, detect_mods_single};
 use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
+use crate::record_scanner::RecordScanner;
+use crate::report::ReportGenerator;
+use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
+use crate::version::{CrashgenVersion, crashgen_version_gen};
+use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
+use std::path::Path;
 use std::sync::Arc;
 
 /// Analysis configuration
 ///
 /// Contains all necessary configuration data for analyzing crash logs.
+/// This struct matches the fields from Python's `ClassicScanLogsInfo`.
 #[derive(Clone)]
 pub struct AnalysisConfig {
     /// Game name (e.g., "Fallout4")
@@ -30,8 +45,11 @@ pub struct AnalysisConfig {
     /// Crashgen name (e.g., "Buffout 4")
     pub crashgen_name: String,
 
-    /// Latest crashgen version
+    /// Latest crashgen version (OG/non-VR)
     pub crashgen_latest: String,
+
+    /// Latest crashgen version for VR variant
+    pub crashgen_latest_vr: String,
 
     /// Game version
     pub game_version: String,
@@ -45,6 +63,12 @@ pub struct AnalysisConfig {
     /// XSE acronym (e.g., "F4SE")
     pub xse_acronym: String,
 
+    /// Game root name (e.g., "Fallout4" from Main_Root_Name setting)
+    pub game_root_name: String,
+
+    /// CLASSIC version string (e.g., "CLASSIC v8.0.0")
+    pub classic_version: String,
+
     /// Ignore lists (plugins, records, general)
     pub ignore_plugins: Vec<String>,
     /// Records to ignore during analysis (e.g., FormIDs, record types)
@@ -54,6 +78,15 @@ pub struct AnalysisConfig {
 
     /// Whether to show FormID values in reports (requires database pool)
     pub show_formid_values: bool,
+
+    /// Whether FCX mode is enabled
+    pub fcx_mode: bool,
+
+    /// Whether to simplify logs by removing specified strings
+    pub simplify_logs: bool,
+
+    /// List of strings to remove from crash logs when simplify_logs is enabled
+    pub remove_list: Vec<String>,
 
     /// Pattern dictionaries for suspect detection
     pub suspects_error: HashMap<String, String>,
@@ -70,6 +103,14 @@ pub struct AnalysisConfig {
     pub mods_solu: HashMap<String, String>,
     /// Outdated, redundant, or community patch mods database
     pub mods_opc2: HashMap<String, String>,
+    /// FOLON (Fallout: London) specific mods database
+    pub mods_core_folon: HashMap<String, String>,
+
+    /// Named records list for RecordScanner
+    pub classic_records_list: Vec<String>,
+
+    /// Settings to ignore when validating crashgen configuration
+    pub crashgen_ignore: Vec<String>,
 }
 
 impl AnalysisConfig {
@@ -110,14 +151,20 @@ impl AnalysisConfig {
             vr_mode,
             crashgen_name: String::new(),
             crashgen_latest: String::new(),
+            crashgen_latest_vr: String::new(),
             game_version: String::new(),
             game_version_vr: String::new(),
             game_version_new: String::new(),
             xse_acronym: String::new(),
+            game_root_name: String::new(),
+            classic_version: "CLASSIC".to_string(),
             ignore_plugins: Vec::new(),
             ignore_records: Vec::new(),
             ignore_list: Vec::new(),
             show_formid_values: false,
+            fcx_mode: false,
+            simplify_logs: false,
+            remove_list: Vec::new(),
             suspects_error: HashMap::new(),
             suspects_stack: HashMap::new(),
             mods_core: HashMap::new(),
@@ -125,6 +172,9 @@ impl AnalysisConfig {
             mods_conf: HashMap::new(),
             mods_solu: HashMap::new(),
             mods_opc2: HashMap::new(),
+            mods_core_folon: HashMap::new(),
+            classic_records_list: Vec::new(),
+            crashgen_ignore: Vec::new(),
         }
     }
 }
@@ -132,7 +182,8 @@ impl AnalysisConfig {
 /// Analysis result for a single crash log
 ///
 /// Contains all analysis results including the generated report,
-/// statistics, and any errors encountered.
+/// statistics, and any errors encountered. This struct matches the
+/// return type from Python's `OrchestratorCore.process_crash_log()`.
 #[derive(Clone)]
 pub struct AnalysisResult {
     /// Path to the log file that was analyzed
@@ -158,6 +209,19 @@ pub struct AnalysisResult {
 
     /// Number of suspect patterns matched
     pub suspect_count: usize,
+
+    // === Python-compatible statistics (Counter[str]) ===
+    /// Number of logs successfully scanned (always 1 for single log, decremented on failure)
+    pub scanned: u32,
+
+    /// Number of logs detected as incomplete (missing plugin segment)
+    pub incomplete: u32,
+
+    /// Number of logs that failed to scan (too short or parse error)
+    pub failed: u32,
+
+    /// Whether the scan triggered a failure condition (for Python compatibility)
+    pub trigger_scan_failed: bool,
 }
 
 impl AnalysisResult {
@@ -206,6 +270,11 @@ impl AnalysisResult {
             formid_count: 0,
             plugin_count: 0,
             suspect_count: 0,
+            // Default statistics - will be updated during processing
+            scanned: 1,
+            incomplete: 0,
+            failed: 0,
+            trigger_scan_failed: false,
         }
     }
 
@@ -249,7 +318,28 @@ impl AnalysisResult {
             formid_count: 0,
             plugin_count: 0,
             suspect_count: 0,
+            // Failed logs have scanned=0, failed=1
+            scanned: 0,
+            incomplete: 0,
+            failed: 1,
+            trigger_scan_failed: true,
         }
+    }
+
+    /// Mark this result as having an incomplete log (missing plugin segment).
+    ///
+    /// This updates the statistics to indicate the log was incomplete.
+    pub fn mark_incomplete(&mut self) {
+        self.incomplete = 1;
+    }
+
+    /// Mark this result as failed (too short or parse error).
+    ///
+    /// This updates the statistics to indicate scan failure.
+    pub fn mark_failed(&mut self) {
+        self.scanned = 0;
+        self.failed = 1;
+        self.trigger_scan_failed = true;
     }
 }
 
@@ -296,6 +386,9 @@ fn extract_module_names(module_lines: &[Arc<str>]) -> HashSet<String> {
 ///
 /// Coordinates all analysis components to process crash logs from start to finish.
 /// Uses async I/O and parallel processing for maximum performance.
+///
+/// The orchestrator supports optional database pool integration for FormID lookups,
+/// context manager pattern for resource management, and loadorder.txt override support.
 pub struct OrchestratorCore {
     config: AnalysisConfig,
     file_io: FileIOCore,
@@ -303,6 +396,10 @@ pub struct OrchestratorCore {
     plugin_analyzer: Option<PluginAnalyzer>,
     formid_analyzer: FormIDAnalyzerCore,
     suspect_scanner: Option<SuspectScanner>,
+    /// Optional database pool for async FormID lookups
+    db_pool: Option<Arc<DatabasePool>>,
+    /// Whether the orchestrator has been initialized via async_enter
+    initialized: bool,
 }
 
 impl OrchestratorCore {
@@ -387,7 +484,7 @@ impl OrchestratorCore {
             parser: LogParser::new(None)?,
             plugin_analyzer,
             formid_analyzer: FormIDAnalyzerCore::new(
-                None, // No database pool
+                None, // No database pool initially
                 show_formid_values,
                 crashgen_name,
                 mods_core,
@@ -395,7 +492,129 @@ impl OrchestratorCore {
                 mods_conf,
             )?,
             suspect_scanner,
+            db_pool: None,
+            initialized: false,
         })
+    }
+
+    /// Builder method to attach a database pool for async FormID lookups.
+    ///
+    /// The database pool enables rich FormID resolution, providing descriptive names
+    /// for FormIDs found in crash logs. Without a database pool, only FormID hex values
+    /// and plugin associations are shown.
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - The database connection pool to use for FormID lookups
+    ///
+    /// # Returns
+    ///
+    /// The orchestrator instance with the database pool attached.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+    /// use classic_database_core::DatabasePool;
+    /// use std::sync::Arc;
+    /// use std::time::Duration;
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let db_pool = DatabasePool::new(Some(10), Duration::from_secs(300), "Fallout4".to_string());
+    ///
+    /// let orchestrator = OrchestratorCore::new(config)?
+    ///     .with_database_pool(Arc::new(db_pool));
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[must_use]
+    pub fn with_database_pool(mut self, pool: Arc<DatabasePool>) -> Self {
+        // Update the FormID analyzer with the database pool
+        self.formid_analyzer = FormIDAnalyzerCore::new(
+            Some(pool.clone()),
+            self.config.show_formid_values,
+            self.config.crashgen_name.clone(),
+            self.config.mods_core.clone(),
+            self.config.mods_freq.clone(),
+            self.config.mods_conf.clone(),
+        )
+        .unwrap_or_else(|_| {
+            // Fallback without database pool if creation fails
+            FormIDAnalyzerCore::new(
+                None,
+                self.config.show_formid_values,
+                self.config.crashgen_name.clone(),
+                self.config.mods_core.clone(),
+                self.config.mods_freq.clone(),
+                self.config.mods_conf.clone(),
+            )
+            .expect("FormID analyzer creation should not fail")
+        });
+        self.db_pool = Some(pool);
+        self
+    }
+
+    /// Returns whether this orchestrator has a database pool attached.
+    ///
+    /// This can be used to determine if rich FormID resolution is available.
+    #[must_use]
+    pub fn has_database_pool(&self) -> bool {
+        self.db_pool.is_some()
+    }
+
+    /// Returns a reference to the database pool, if available.
+    #[must_use]
+    pub fn database_pool(&self) -> Option<&Arc<DatabasePool>> {
+        self.db_pool.as_ref()
+    }
+
+    /// Async context manager entry - initializes resources.
+    ///
+    /// This method should be called before processing logs to initialize any
+    /// async resources. Currently initializes the database pool if paths are provided.
+    ///
+    /// # Arguments
+    ///
+    /// * `db_paths` - Optional list of database file paths to initialize
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` on success.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ScanLogError)` if database initialization fails.
+    pub async fn async_enter(&mut self, db_paths: Option<Vec<std::path::PathBuf>>) -> Result<()> {
+        if let (Some(pool), Some(paths)) = (&self.db_pool, db_paths) {
+            pool.initialize(paths).await.map_err(|e| {
+                crate::error::ScanLogError::ParseError(format!("Database init failed: {}", e))
+            })?;
+        }
+        self.initialized = true;
+        Ok(())
+    }
+
+    /// Async context manager exit - cleans up resources.
+    ///
+    /// This method should be called after processing is complete to clean up
+    /// any async resources. The database pool is managed by the singleton pattern
+    /// and is NOT closed here to allow reuse.
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` on success.
+    pub async fn async_exit(&mut self) -> Result<()> {
+        // Database pool is managed by singleton and not closed here
+        // This allows reuse across multiple orchestrator instances
+        self.initialized = false;
+        Ok(())
+    }
+
+    /// Returns whether the orchestrator has been initialized via async_enter.
+    #[must_use]
+    pub fn is_initialized(&self) -> bool {
+        self.initialized
     }
 
     /// Asynchronously processes a single crash log file and generates an analysis report.
@@ -462,8 +681,18 @@ impl OrchestratorCore {
         use std::path::Path;
         let log_content = self.file_io.read_file(Path::new(&log_path)).await?;
 
-        // Convert to lines for parser (using Arc<str> for efficient memory sharing)
-        let lines: Vec<Arc<str>> = log_content.lines().map(Arc::from).collect();
+        // Convert to lines and apply preprocessing (matches Python's _reformat_crash_data_inline)
+        // This handles:
+        // 1. Removing lines containing strings from remove_list (if simplify_logs enabled)
+        // 2. Normalizing bracket padding in PLUGINS section (e.g., "[ 1]" -> "[01]")
+        let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
+        let processed_lines = self.reformat_crash_data_inline(&raw_lines);
+
+        // Convert to Arc<str> for efficient memory sharing during parsing
+        let lines: Vec<Arc<str>> = processed_lines
+            .iter()
+            .map(|s| Arc::from(s.as_str()))
+            .collect();
 
         // Parse log into segments
         let segments = self.parser.parse_segments(&lines);
@@ -797,5 +1026,425 @@ impl OrchestratorCore {
     /// ```
     pub fn config(&self) -> &AnalysisConfig {
         &self.config
+    }
+
+    // ============================================================================
+    // Python-compatible helper methods
+    // ============================================================================
+
+    /// Reformats crash data inline as part of the processing pipeline.
+    ///
+    /// This method matches Python's `_reformat_crash_data_inline()` behavior exactly:
+    /// 1. Iterates from bottom to top to detect the PLUGINS section
+    /// 2. Removes entire lines containing strings from `remove_list` if `simplify_logs` is enabled
+    /// 3. Pads brackets (replaces spaces with zeros) within the PLUGINS section
+    ///
+    /// The PLUGINS section is detected by finding the "PLUGINS:" marker while iterating
+    /// from the bottom of the file upward. Lines below (and including) "PLUGINS:" are
+    /// considered part of the plugins section.
+    ///
+    /// # Arguments
+    ///
+    /// * `lines` - The crash log lines to reformat
+    ///
+    /// # Returns
+    ///
+    /// A new vector of reformatted lines with:
+    /// - Lines containing remove_list strings filtered out (if simplify_logs enabled)
+    /// - Bracket padding applied in the PLUGINS section
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Before: "[ 1] MyMod.esp"
+    /// // After:  "[01] MyMod.esp"
+    /// ```
+    pub fn reformat_crash_data_inline(&self, lines: &[String]) -> Vec<String> {
+        use std::collections::VecDeque;
+
+        // Use VecDeque for O(1) prepend operations (like Python's deque)
+        let mut processed_lines: VecDeque<String> = VecDeque::with_capacity(lines.len());
+
+        // State for tracking if currently in the PLUGINS section
+        // Start as true because we iterate from bottom, and PLUGINS is typically at the end
+        let mut in_plugins_section = true;
+
+        // Pre-compute remove set for efficiency
+        let should_simplify = self.config.simplify_logs && !self.config.remove_list.is_empty();
+
+        // Iterate over lines from bottom to top (like Python's reversed())
+        for line in lines.iter().rev() {
+            // Check if we're exiting the PLUGINS section (going upward)
+            if in_plugins_section && line.starts_with("PLUGINS:") {
+                in_plugins_section = false;
+            }
+
+            // Remove entire lines if Simplify Logs is enabled and line contains a remove string
+            if should_simplify
+                && self
+                    .config
+                    .remove_list
+                    .iter()
+                    .any(|remove_str| line.contains(remove_str))
+            {
+                // Skip this line entirely (don't add to processed_lines)
+                continue;
+            }
+
+            // Reformat lines within the PLUGINS section (bracket padding)
+            if in_plugins_section && line.contains('[') {
+                // Replace all spaces inside the load order [brackets] with 0s.
+                // This maintains consistency between different versions of Buffout 4.
+                // Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]"
+                if let Some((indent, rest)) = line.split_once('[') {
+                    if let Some((fid, name)) = rest.split_once(']') {
+                        // Only modify if spaces exist inside brackets
+                        if fid.contains(' ') {
+                            let modified_line =
+                                format!("{}[{}]{}", indent, fid.replace(' ', "0"), name);
+                            processed_lines.push_front(modified_line);
+                            continue;
+                        }
+                    }
+                }
+                // If format is unexpected, keep original line
+                processed_lines.push_front(line.clone());
+            } else {
+                // Line is not in PLUGINS section or doesn't need modification
+                processed_lines.push_front(line.clone());
+            }
+        }
+
+        // Convert VecDeque to Vec (already in correct order due to push_front)
+        processed_lines.into_iter().collect()
+    }
+
+    /// Detects if a crash log is incomplete (missing plugin segment).
+    ///
+    /// This matches Python's `_detect_incomplete_log()` logic.
+    ///
+    /// # Arguments
+    ///
+    /// * `segment_plugin` - The plugin segment from the parsed crash log
+    ///
+    /// # Returns
+    ///
+    /// `true` if the log is incomplete (plugin segment is empty or too short).
+    pub fn detect_incomplete_log(&self, segment_plugin: &[String]) -> bool {
+        // Python considers log incomplete if plugin segment is missing or empty
+        segment_plugin.is_empty() || segment_plugin.len() < 2
+    }
+
+    /// Detects if a crash log has failed (too short to analyze).
+    ///
+    /// This matches Python's `_detect_failed_log()` logic.
+    ///
+    /// # Arguments
+    ///
+    /// * `crash_data` - The full crash log data
+    ///
+    /// # Returns
+    ///
+    /// `true` if the log is too short (fewer than 20 lines).
+    pub fn detect_failed_log(&self, crash_data: &[String]) -> bool {
+        // Python considers log failed if it has fewer than 20 lines
+        crash_data.len() < 20
+    }
+
+    /// Creates a ReportGenerator configured for this orchestrator.
+    ///
+    /// # Returns
+    ///
+    /// A `ReportGenerator` instance configured with the current CLASSIC version
+    /// and crashgen name from the analysis configuration.
+    pub fn create_report_generator(&self) -> ReportGenerator {
+        ReportGenerator::with_config(
+            self.config.classic_version.clone(),
+            self.config.crashgen_name.clone(),
+        )
+    }
+
+    /// Creates a SettingsValidator configured for this orchestrator.
+    ///
+    /// # Returns
+    ///
+    /// A `SettingsValidator` instance configured with the crashgen name
+    /// and ignore settings from the analysis configuration.
+    pub fn create_settings_validator(&self) -> SettingsValidator {
+        SettingsValidator::new(
+            self.config.crashgen_name.clone(),
+            self.config.crashgen_ignore.clone(),
+        )
+    }
+
+    /// Creates a RecordScanner configured for this orchestrator.
+    ///
+    /// # Returns
+    ///
+    /// A `RecordScanner` instance configured with the classic records list
+    /// and ignore records from the analysis configuration.
+    pub fn create_record_scanner(&self) -> RecordScanner {
+        RecordScanner::new(
+            self.config.classic_records_list.clone(),
+            self.config.ignore_records.clone(),
+            self.config.crashgen_name.clone(),
+        )
+    }
+
+    /// Creates an FcxModeHandler configured for this orchestrator.
+    ///
+    /// # Returns
+    ///
+    /// An `FcxModeHandler` instance based on the fcx_mode setting.
+    pub fn create_fcx_handler(&self) -> FcxModeHandler {
+        FcxModeHandler::new(self.config.fcx_mode)
+    }
+
+    /// Parses crashgen version from a crash log and checks if it's outdated.
+    ///
+    /// # Arguments
+    ///
+    /// * `crashgen_version_str` - The crashgen version string from the crash log
+    ///
+    /// # Returns
+    ///
+    /// A tuple of (parsed_version, is_outdated).
+    pub fn check_crashgen_version(&self, crashgen_version_str: &str) -> (CrashgenVersion, bool) {
+        let current = crashgen_version_gen(crashgen_version_str);
+        let latest = crashgen_version_gen(&self.config.crashgen_latest);
+        let latest_vr = crashgen_version_gen(&self.config.crashgen_latest_vr);
+
+        let is_outdated = current.is_outdated(&latest, &latest_vr, self.config.vr_mode);
+
+        (current, is_outdated)
+    }
+
+    /// Checks if the game is running FOLON (Fallout: London) based on plugins.
+    ///
+    /// # Arguments
+    ///
+    /// * `plugins` - Map of plugin names to their data
+    ///
+    /// # Returns
+    ///
+    /// `true` if FOLON (londonworldspace.esm) is detected.
+    pub fn detect_folon(&self, plugins: &HashMap<String, String>) -> bool {
+        plugins
+            .keys()
+            .any(|name| name.to_lowercase().contains("londonworldspace.esm"))
+    }
+
+    /// Returns the appropriate mods_core database based on whether FOLON is detected.
+    ///
+    /// When FOLON (Fallout: London) is detected and a FOLON-specific mod database is
+    /// available, returns that database. Otherwise, returns the standard mods_core.
+    ///
+    /// # Arguments
+    ///
+    /// * `plugins` - Map of plugin names to their data (used to detect FOLON)
+    ///
+    /// # Returns
+    ///
+    /// Reference to the appropriate mods_core database.
+    pub fn get_mods_core_for_plugins(
+        &self,
+        plugins: &HashMap<String, String>,
+    ) -> &HashMap<String, String> {
+        if self.detect_folon(plugins) && !self.config.mods_core_folon.is_empty() {
+            &self.config.mods_core_folon
+        } else {
+            &self.config.mods_core
+        }
+    }
+
+    // ============================================================================
+    // Loadorder.txt support
+    // ============================================================================
+
+    /// Checks if a loadorder.txt file exists in the specified directory.
+    ///
+    /// # Arguments
+    ///
+    /// * `dir_path` - Directory path to check for loadorder.txt
+    ///
+    /// # Returns
+    ///
+    /// `true` if loadorder.txt exists.
+    pub fn check_loadorder_exists(dir_path: &Path) -> bool {
+        dir_path.join("loadorder.txt").exists()
+    }
+
+    /// Asynchronously loads plugins from loadorder.txt file.
+    ///
+    /// This method reads the loadorder.txt file, skips the first line (header),
+    /// and returns a map of plugin names to their origin marker ("LO").
+    ///
+    /// # Arguments
+    ///
+    /// * `loadorder_path` - Path to the loadorder.txt file
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok((plugins, fragment))` where:
+    /// - `plugins` is a HashMap of plugin names to origin markers
+    /// - `fragment` is a ReportFragment with loading status
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ScanLogError)` if file cannot be read.
+    pub async fn load_loadorder_async(
+        &self,
+        loadorder_path: &Path,
+    ) -> Result<(HashMap<String, String>, crate::report::ReportFragment)> {
+        use crate::report::ReportFragment;
+
+        let mut lines = vec![
+            "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n".to_string(),
+            "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n".to_string(),
+            "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n".to_string(),
+        ];
+
+        let mut loadorder_plugins: HashMap<String, String> = HashMap::new();
+        let loadorder_origin = "LO".to_string();
+
+        // Read the file using FileIOCore
+        match self.file_io.read_file(loadorder_path).await {
+            Ok(content) => {
+                let loadorder_data: Vec<&str> = content.lines().collect();
+
+                // Skip the header line (first line)
+                if loadorder_data.len() > 1 {
+                    for plugin_entry in &loadorder_data[1..] {
+                        let plugin_entry = plugin_entry.trim();
+                        if !plugin_entry.is_empty() && !loadorder_plugins.contains_key(plugin_entry)
+                        {
+                            loadorder_plugins
+                                .insert(plugin_entry.to_string(), loadorder_origin.clone());
+                        }
+                    }
+                }
+            }
+            Err(e) => {
+                lines.push(format!("Error reading loadorder.txt: {}\n", e));
+            }
+        }
+
+        Ok((loadorder_plugins, ReportFragment::from_lines(lines)))
+    }
+
+    // ============================================================================
+    // Batch report writing
+    // ============================================================================
+
+    /// Writes batch reports to files asynchronously.
+    ///
+    /// This method processes a batch of reports, generating autoscan filenames
+    /// (replacing the extension with `-AUTOSCAN.md`) and writing concurrently.
+    ///
+    /// # Arguments
+    ///
+    /// * `reports` - Vector of tuples containing (log_path, report_lines, scan_failed)
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(Vec<PathBuf>)` with paths of successfully written reports.
+    ///
+    /// # Errors
+    ///
+    /// Returns `Err(ScanLogError)` if any write operation fails.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
+    /// use std::path::PathBuf;
+    ///
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let config = AnalysisConfig::new("Fallout4".to_string(), false);
+    /// let orchestrator = OrchestratorCore::new(config)?;
+    ///
+    /// let reports = vec![
+    ///     (PathBuf::from("crash.log"), vec!["Report content".to_string()], false),
+    /// ];
+    ///
+    /// let written_paths = orchestrator.write_reports_batch(reports).await?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub async fn write_reports_batch(
+        &self,
+        reports: Vec<(std::path::PathBuf, Vec<String>, bool)>,
+    ) -> Result<Vec<std::path::PathBuf>> {
+        use futures::future::join_all;
+
+        let write_futures: Vec<_> = reports
+            .into_iter()
+            .map(|(log_path, report_lines, _scan_failed)| {
+                let file_io = self.file_io.clone();
+                async move {
+                    // Generate autoscan filename: crash.log -> crash-AUTOSCAN.md
+                    let stem = log_path
+                        .file_stem()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("unknown");
+                    let autoscan_name = format!("{}-AUTOSCAN.md", stem);
+                    let autoscan_path = log_path.with_file_name(autoscan_name);
+
+                    // Join report lines
+                    let content = report_lines.join("");
+
+                    // Write using FileIOCore
+                    match file_io.write_file(&autoscan_path, &content).await {
+                        Ok(_) => Ok(autoscan_path),
+                        Err(e) => Err(crate::error::ScanLogError::ReportError(format!(
+                            "Failed to write report {}: {}",
+                            autoscan_path.display(),
+                            e
+                        ))),
+                    }
+                }
+            })
+            .collect();
+
+        // Execute all writes concurrently
+        let results = join_all(write_futures).await;
+
+        // Collect successful writes
+        let mut written_paths = Vec::new();
+        for result in results {
+            match result {
+                Ok(path) => written_paths.push(path),
+                Err(e) => {
+                    // Log error but continue with other writes
+                    log::warn!("Report write failed: {}", e);
+                }
+            }
+        }
+
+        Ok(written_paths)
+    }
+
+    // ============================================================================
+    // Feature completeness check
+    // ============================================================================
+
+    /// Checks if this orchestrator has all features required for Rust-first processing.
+    ///
+    /// A feature-complete orchestrator can replace Python's OrchestratorCore for
+    /// both single-log and batch processing. This includes:
+    /// - Plugin analysis support
+    /// - Suspect scanning support
+    /// - Optional database pool (not required for feature completeness)
+    ///
+    /// # Returns
+    ///
+    /// `true` if all required features are available.
+    #[must_use]
+    pub fn is_feature_complete(&self) -> bool {
+        // Required features:
+        // 1. Plugin analyzer must be available
+        // 2. Suspect scanner must be available
+        // Database pool is optional (degrades gracefully)
+        self.plugin_analyzer.is_some() && self.suspect_scanner.is_some()
     }
 }

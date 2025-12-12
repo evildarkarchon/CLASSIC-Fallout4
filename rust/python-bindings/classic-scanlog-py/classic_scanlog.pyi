@@ -559,6 +559,75 @@ class Orchestrator:
             ValueError: If log format is invalid
         """
 
+    def is_feature_complete(self) -> bool:
+        """Check if the orchestrator has all features required for Rust-first processing.
+
+        A feature-complete orchestrator can replace Python's OrchestratorCore for
+        both single-log and batch processing.
+
+        Returns:
+            True if all required features are available
+        """
+
+    def has_database_pool(self) -> bool:
+        """Check if this orchestrator has a database pool attached.
+
+        Returns:
+            True if database pool is available for FormID lookups
+        """
+
+    def is_initialized(self) -> bool:
+        """Check if the orchestrator has been initialized via async_enter.
+
+        Returns:
+            True if initialized
+        """
+
+    def write_reports_batch(self, reports: list[tuple[str, list[str], bool]]) -> list[str]:
+        """Write batch reports to files.
+
+        This operation writes multiple report files concurrently, generating
+        autoscan filenames (e.g., crash.log -> crash-AUTOSCAN.md).
+
+        Args:
+            reports: List of tuples: (log_path, report_lines, scan_failed)
+
+        Returns:
+            List of paths to successfully written reports
+        """
+
+    @staticmethod
+    def check_loadorder_exists(dir_path: str) -> bool:
+        """Check if a loadorder.txt file exists in the specified directory.
+
+        Args:
+            dir_path: Directory path to check
+
+        Returns:
+            True if loadorder.txt exists
+        """
+
+    def load_loadorder(self, loadorder_path: str) -> tuple[dict[str, str], list[str]]:
+        """Load plugins from a loadorder.txt file.
+
+        Args:
+            loadorder_path: Path to the loadorder.txt file
+
+        Returns:
+            Tuple of (plugins_dict, info_lines) where plugins_dict maps plugin names
+            to their origin marker ("LO")
+        """
+
+    def detect_folon(self, plugins: dict[str, str]) -> bool:
+        """Detect if FOLON (Fallout: London) is loaded based on plugins.
+
+        Args:
+            plugins: Dictionary of plugin names to data
+
+        Returns:
+            True if londonworldspace.esm is detected
+        """
+
 class AnalysisConfig:
     """Analysis configuration.
 
@@ -570,14 +639,20 @@ class AnalysisConfig:
     vr_mode: bool
     crashgen_name: str
     crashgen_latest: str
+    crashgen_latest_vr: str  # VR version of crashgen
     game_version: str
     game_version_vr: str
     game_version_new: str
     xse_acronym: str
+    game_root_name: str  # Root name (e.g., "Fallout4")
+    classic_version: str  # CLASSIC version string
     ignore_plugins: list[str]
     ignore_records: list[str]
     ignore_list: list[str]
     show_formid_values: bool
+    fcx_mode: bool  # FCX mode enabled
+    simplify_logs: bool  # Whether to simplify logs
+    remove_list: list[str]  # Strings to remove when simplifying
     suspects_error: dict[str, str]
     suspects_stack: dict[str, list[str]]
     mods_core: dict[str, str]
@@ -585,6 +660,9 @@ class AnalysisConfig:
     mods_conf: dict[str, str]
     mods_solu: dict[str, str]
     mods_opc2: dict[str, str]
+    mods_core_folon: dict[str, str]  # FOLON-specific mods
+    classic_records_list: list[str]  # Named records to scan
+    crashgen_ignore: list[str]  # Settings to ignore during validation
 
     def __init__(self, game: str, vr_mode: bool = False) -> None:
         """Create analysis config.
@@ -629,6 +707,11 @@ class AnalysisResult:
     plugin_count: int
     formid_count: int
     suspect_count: int
+    # Statistics for Python compatibility (Counter[str] style)
+    scanned: int  # Number of logs successfully scanned (1 for success, 0 for failure)
+    incomplete: int  # Number of logs detected as incomplete (missing plugin segment)
+    failed: int  # Number of logs that failed to scan
+    trigger_scan_failed: bool  # Whether scan triggered a failure condition
 
     def __init__(self, log_path: str) -> None:
         """Create analysis result.
@@ -844,41 +927,111 @@ class ReportGenerator:
     """High-performance report generation (75x speedup).
 
     Generates markdown-formatted crash analysis reports with all
-    relevant information organized by section.
+    relevant information organized by section. Output is identical
+    to Python's ReportGeneratorFragments.
     """
 
     def __init__(self) -> None:
-        """Create report generator."""
+        """Create report generator with default configuration."""
 
-    def generate_header(self, filename: str, version: str) -> ReportFragment:
+    @staticmethod
+    def with_config(classic_version: str, crashgen_name: str) -> ReportGenerator:
+        """Create report generator with custom configuration.
+
+        Args:
+            classic_version: CLASSIC version string (e.g., "CLASSIC v8.0.0")
+            crashgen_name: Crash generator name (e.g., "Buffout 4")
+
+        Returns:
+            Configured ReportGenerator instance
+        """
+
+    def generate_header(self, crashlog_filename: str) -> ReportFragment:
         """Generate header fragment.
 
         Args:
-            filename: Crash log filename
-            version: Application version string
+            crashlog_filename: Name of the crash log file
 
         Returns:
             ReportFragment containing the header section
         """
 
-    def generate_error_section(
-        self, main_error: str, crashgen_version: str, crashgen_name: str, is_latest: bool, warn_outdated: str
-    ) -> ReportFragment:
+    def generate_error_section(self, main_error: str, crashgen_version: str, is_outdated: bool) -> ReportFragment:
         """Generate error section.
 
         Args:
             main_error: Main error message from crash log
-            crashgen_version: Version of crash generator
-            crashgen_name: Name of crash generator
-            is_latest: Whether the crashgen version is the latest
-            warn_outdated: Warning message to display if outdated
+            crashgen_version: Version of crash generator detected
+            is_outdated: Whether the crashgen version is outdated
 
         Returns:
             ReportFragment containing the error section
         """
 
+    def generate_suspect_section_header(self) -> ReportFragment:
+        """Generate suspect section header.
+
+        Returns:
+            ReportFragment containing the suspect section header
+        """
+
+    def generate_suspect_found_footer(self, found_suspect: bool) -> ReportFragment:
+        """Generate suspect found footer.
+
+        Args:
+            found_suspect: Whether any suspects were detected
+
+        Returns:
+            ReportFragment containing the footer message
+        """
+
+    def generate_settings_section_header(self) -> ReportFragment:
+        """Generate settings section header.
+
+        Returns:
+            ReportFragment containing the settings section header
+        """
+
+    def generate_mod_check_header(self, check_type: str) -> ReportFragment:
+        """Generate mod check header.
+
+        Args:
+            check_type: Description of what mods are being checked
+
+        Returns:
+            ReportFragment containing the mod check header
+        """
+
+    def generate_plugin_suspect_header(self) -> ReportFragment:
+        """Generate plugin suspect header.
+
+        Returns:
+            ReportFragment containing the plugin suspect header
+        """
+
+    def generate_formid_section_header(self) -> ReportFragment:
+        """Generate FormID section header.
+
+        Returns:
+            ReportFragment containing the FormID section header
+        """
+
+    def generate_record_section_header(self) -> ReportFragment:
+        """Generate record section header.
+
+        Returns:
+            ReportFragment containing the record section header
+        """
+
+    def generate_footer(self) -> ReportFragment:
+        """Generate report footer.
+
+        Returns:
+            ReportFragment containing the report footer
+        """
+
     def generate_suspect_section(self, found_suspects: list[str]) -> ReportFragment:
-        """Generate suspect section.
+        """Generate suspect section (legacy method for backward compatibility).
 
         Args:
             found_suspects: List of suspect lines to include

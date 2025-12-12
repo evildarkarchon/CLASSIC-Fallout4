@@ -479,7 +479,7 @@ class TestRustAcceleration:
             pass  # module_file is already the extension
         elif hasattr(classic_pybridge, "classic_pybridge"):
             # Case 2a: Package with inner extension module attribute
-            inner_module = classic_pybridge.classic_pybridge # pyright: ignore[reportAttributeAccessIssue]
+            inner_module = classic_pybridge.classic_pybridge  # pyright: ignore[reportAttributeAccessIssue]
             module_file = inner_module.__file__
         else:
             # Case 2b: Package structure, check directory for .pyd/.so/.dylib files

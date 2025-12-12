@@ -338,36 +338,31 @@ class TestRustReportGenerator:
     def test_generate_header(self):
         """Test header generation."""
         generator = RustReportGenerator()
-        header = generator.generate_header("test.log", "v1.0.0")
+        header = generator.generate_header("test.log")
 
         lines = header.to_list()
         assert any("test.log" in line for line in lines)
-        assert any("v1.0.0" in line or "1.0.0" in line for line in lines)
         assert any("AUTOSCAN" in line.upper() for line in lines)
 
     def test_generate_error_section(self):
         """Test error section generation."""
         generator = RustReportGenerator()
 
-        # Test with latest version
+        # Test with up-to-date version (is_outdated=False)
         section = generator.generate_error_section(
             main_error="Test Error",
             crashgen_version="4.0",
-            crashgen_name="Buffout",
-            is_latest=True,
-            warn_outdated="",
+            is_outdated=False,
         )
 
         lines = section.to_list()
         assert any("Test Error" in line for line in lines)
 
-        # Test with outdated version
+        # Test with outdated version (is_outdated=True)
         section_outdated = generator.generate_error_section(
             main_error="Test Error",
             crashgen_version="3.0",
-            crashgen_name="Buffout",
-            is_latest=False,
-            warn_outdated="Please update!",
+            is_outdated=True,
         )
 
         lines_outdated = section_outdated.to_list()

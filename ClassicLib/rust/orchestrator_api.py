@@ -259,6 +259,55 @@ class ClassicOrchestrator:
             parallelism_factor=parallelism_factor,
         )
 
+    def process_single_log(self, log_path: Path) -> AnalysisResult:
+        """
+        Process a single crash log using Rust orchestrator directly.
+
+        This method is used by HybridOrchestrator when Rust is feature-complete.
+        Unlike process_crash_log(), this calls the Rust orchestrator's process_log
+        method directly instead of using batch processing.
+
+        Args:
+            log_path: Path to the crash log file to process.
+
+        Returns:
+            AnalysisResult from Rust orchestrator with all statistics fields:
+            - scanned: 1 for success, 0 for failure
+            - incomplete: 1 if log is incomplete, 0 otherwise
+            - failed: 1 if log failed to scan, 0 otherwise
+            - trigger_scan_failed: Whether scan triggered a failure condition
+        """
+        return self.orchestrator.process_log(str(log_path))
+
+    def is_feature_complete(self) -> bool:
+        """
+        Check if the Rust orchestrator has full feature parity with Python.
+
+        A feature-complete Rust orchestrator can be used for single-log processing
+        in addition to batch processing, providing maximum performance benefits.
+
+        Feature completeness requires:
+        - Plugin analyzer is available
+        - Suspect scanner is available
+        - (Database pool is optional - degrades gracefully)
+
+        Returns:
+            bool: True if Rust can handle all crash log analysis tasks.
+        """
+        return self.orchestrator.is_feature_complete()
+
+    def has_database_pool(self) -> bool:
+        """
+        Check if the Rust orchestrator has a database pool for FormID lookups.
+
+        The database pool enables rich FormID resolution with descriptive names.
+        Without it, only FormID hex values and plugin associations are shown.
+
+        Returns:
+            bool: True if database pool is attached and available.
+        """
+        return self.orchestrator.has_database_pool()
+
     def get_config(self) -> AnalysisConfig:
         """
         Retrieves the configuration for analysis.
@@ -280,7 +329,8 @@ class ClassicOrchestrator:
             str: A string that contains a readable summary of key attributes of the
             ClassicOrchestrator instance.
         """
-        return f"ClassicOrchestrator(game='{self.config.game}', vr_mode={self.config.vr_mode}, rust_available={RUST_AVAILABLE})"
+        feature_status = "feature-complete" if self.is_feature_complete() else "batch-only"
+        return f"ClassicOrchestrator(game='{self.config.game}', vr_mode={self.config.vr_mode}, rust={feature_status})"
 
 
 # Convenience function for quick processing

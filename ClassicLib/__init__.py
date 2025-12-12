@@ -87,7 +87,7 @@ from ClassicLib.PerformanceMonitor import TimedBlock, async_timed_operation, tim
 #     try_parse_version,
 # )
 from ClassicLib.Utils.file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
-from ClassicLib.Utils.logging_utils import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
 from ClassicLib.Utils.path_utils import remove_readonly
 from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
 from ClassicLib.Utils.version_utils import crashgen_version_gen, get_game_version
@@ -168,6 +168,7 @@ __all__ = [
     "calculate_file_hash",
     "calculate_similarity",
     "configure_logging",
+    "enable_debug_logging",
     "crashgen_version_gen",
     "get_game_version",
     "normalize_list",

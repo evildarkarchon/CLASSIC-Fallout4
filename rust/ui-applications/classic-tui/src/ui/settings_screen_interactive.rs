@@ -831,10 +831,9 @@ mod tests {
 
     #[test]
     fn test_toggle_focused() {
-        let mut state = SettingsState::new();
         let mut app = App::new();
 
-        state.focused_item = SettingItem::FcxMode;
+        // Test toggling fcx_mode setting
         assert!(!app.config.fcx_mode);
 
         // Directly toggle the setting instead of using removed method
