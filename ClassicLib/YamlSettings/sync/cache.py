@@ -313,10 +313,8 @@ class YamlSettingsCache:
                 file_path = self._get_async_core().file_ops.get_path_for_store(store)
                 # Trigger file load which will cache it
                 self._get_bridge().run_async(self._get_async_core().file_ops.load_yaml_file(file_path, use_cache=True))
-            except Exception as e:  # noqa: BLE001
-                # Broad catch is intentional: prefetch is best-effort and should never crash.
-                from ClassicLib.Logger import logger
-
+            except (OSError, FileNotFoundError, ValueError, RuntimeError, AttributeError) as e:
+                # Prefetch is best-effort: file system, parsing, or initialization errors are logged but don't crash
                 logger.debug(f"Could not prefetch {store}: {e}")
 
     @staticmethod

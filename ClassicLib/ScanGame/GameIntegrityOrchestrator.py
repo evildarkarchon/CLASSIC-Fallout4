@@ -225,7 +225,7 @@ class GameIntegrityOrchestratorCore:
             asynchronously.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, check_xse_plugins)
 
     @staticmethod
@@ -246,7 +246,7 @@ class GameIntegrityOrchestratorCore:
             issues but does not modify files.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, check_crashgen_settings)
 
     @staticmethod
@@ -284,7 +284,7 @@ class GameIntegrityOrchestratorCore:
             `scan_wryecheck` function.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, scan_wryecheck)
 
     @staticmethod

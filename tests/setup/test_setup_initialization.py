@@ -35,6 +35,8 @@ class TestSetupInitialization:
         assert coordinator.docs_checker is not None
         assert coordinator.path_validator is not None
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -45,6 +47,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test application initialization in GUI mode."""
@@ -68,6 +72,8 @@ class TestSetupInitialization:
         # Verify paths were validated
         mock_validate_paths.assert_called_once()
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -78,6 +84,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test application initialization in GUI mode with parent widget."""
@@ -101,6 +109,8 @@ class TestSetupInitialization:
         # Verify registry was set up
         assert GlobalRegistry.get(GlobalRegistry.Keys.IS_GUI_MODE) is True
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -111,6 +121,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test application initialization in CLI mode."""
@@ -136,6 +148,8 @@ class TestSetupInitialization:
         game = GlobalRegistry.get(GlobalRegistry.Keys.GAME)
         assert game == "SkyrimSE"  # Spaces are removed
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -146,6 +160,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test application initialization for frozen executable."""
@@ -167,6 +183,8 @@ class TestSetupInitialization:
                 local_dir = GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)
                 assert local_dir == Path("C:/Program Files/CLASSIC")
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -177,6 +195,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test application initialization in source mode (not frozen)."""
@@ -200,6 +220,8 @@ class TestSetupInitialization:
         # Should be parent of SetupCoordinator.py location
         assert local_dir.name == "ClassicLib" or local_dir.name == "CLASSIC-Fallout4"
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -210,6 +232,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test application initialization when managed game setting is None."""
@@ -229,6 +253,8 @@ class TestSetupInitialization:
         # When None is passed, it might be stored as empty string or kept as previous value
         assert game in ["", "Fallout4", None]  # Accept possible values
 
+    @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
+    @patch.object(SetupCoordinator, "_ensure_paths_configured")
     @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
     @patch("ClassicLib.SetupCoordinator.init_message_handler")
     @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
@@ -239,6 +265,8 @@ class TestSetupInitialization:
         mock_batch_get: MagicMock,
         mock_init_handler: MagicMock,
         mock_validate_paths: MagicMock,
+        mock_ensure_paths: MagicMock,
+        mock_log_rust: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test that YAML files are NOT preloaded during initialization (performance optimization)."""

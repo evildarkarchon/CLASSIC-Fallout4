@@ -154,8 +154,8 @@ class ThreadManager(QObject):
             managed_thread = ManagedThread(thread, worker, thread_type)
             self._threads[thread_type] = managed_thread
 
-            # Connect cleanup signals
-            thread.finished.connect(lambda: self._on_thread_finished(thread_type))
+            # Connect cleanup signals (capture thread_type by value to avoid closure issues)
+            thread.finished.connect(lambda tt=thread_type: self._on_thread_finished(tt))
 
             logger.info(f"Registered thread: {thread_type.value}")
             return True

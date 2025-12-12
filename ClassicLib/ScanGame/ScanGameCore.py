@@ -120,7 +120,7 @@ class ScanGameCore:
             The actual shutdown operations are run in the executor to avoid blocking.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         # Shutdown executors in parallel
         await asyncio.gather(
@@ -315,7 +315,7 @@ class ScanGameCore:
                 to the issue lists.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         # Capture reference to dds_processor for use in closure
         read_header = self.dds_processor.read_dds_header_mmap

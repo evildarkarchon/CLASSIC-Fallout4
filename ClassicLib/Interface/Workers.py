@@ -339,11 +339,11 @@ class UpdateCheckWorker(QObject):
                 self.finished.emit()
                 return
 
-            # Use AsyncBridge context manager for explicit cleanup
-            with AsyncBridge.get_instance() as bridge:
-                # Run the async update check using AsyncBridge
-                result = bridge.run_async(self._async_check())
-                self.updateAvailable.emit(not result)
+            # Use AsyncBridge directly (without context manager to avoid premature shutdown)
+            bridge = AsyncBridge.get_instance()
+            # Run the async update check using AsyncBridge
+            result = bridge.run_async(self._async_check())
+            self.updateAvailable.emit(not result)
 
         except UpdateCheckError as e:
             self.error.emit(str(e))

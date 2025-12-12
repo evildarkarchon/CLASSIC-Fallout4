@@ -122,7 +122,7 @@ class FileIOCore:
                 return await f.read()
         else:
             # Fallback to sync read in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
 
     async def read_lines(self, path: Path | str) -> list[str]:
@@ -153,7 +153,7 @@ class FileIOCore:
                 return content.splitlines()
         else:
             # Fallback to sync read in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             content = await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
             return content.splitlines()
 
@@ -234,7 +234,7 @@ class FileIOCore:
                 return await f.read()
         else:
             # Fallback to sync read in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, path.read_bytes)
 
     # ==========================================
@@ -265,7 +265,7 @@ class FileIOCore:
                 await f.write(content)
         else:
             # Fallback to sync write in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, path.write_text, content, self.default_encoding, self.default_errors)
 
     async def write_lines(self, path: Path | str, lines: list[str]) -> None:
@@ -308,7 +308,7 @@ class FileIOCore:
                 await f.write(content)
         else:
             # Fallback to sync write in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, path.write_bytes, content)
 
     async def append_file(self, path: Path | str, content: str) -> None:
@@ -332,7 +332,7 @@ class FileIOCore:
                 await f.write(content)
         else:
             # Fallback to sync append in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
 
             def append_sync() -> None:
                 with path.open("a", encoding=self.default_encoding, errors=self.default_errors) as f:

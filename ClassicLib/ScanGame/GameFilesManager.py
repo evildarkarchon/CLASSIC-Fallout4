@@ -402,7 +402,7 @@ class GameFilesManagerCore:
                 msg_error(f"Unexpected error copying {source} to {destination}: {e}")
                 raise
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, copy_operation)
 
     # noinspection PyUnresolvedReferences,PyTypeChecker
@@ -447,7 +447,7 @@ class GameFilesManagerCore:
                 msg_error(f"Unexpected error removing {file}: {e}")
                 raise
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, remove_operation)
 
     @staticmethod

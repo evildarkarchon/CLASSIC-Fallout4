@@ -96,7 +96,7 @@ class BA2ArchiveScanner:
 
         # Collect all BA2 files
         try:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(self.walk_executor, _find)
         except OSError as e:
             msg_error(f"Error scanning for BA2 files: {e}")

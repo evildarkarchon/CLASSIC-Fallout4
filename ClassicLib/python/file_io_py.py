@@ -98,7 +98,7 @@ class PythonFileIO:
                 return await f.read()
         else:
             # Fallback to sync read in executor
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, path.read_text, self.default_encoding, self.default_errors)
 
     async def read_lines(self, path: Path | str) -> list[str]:
@@ -146,7 +146,7 @@ class PythonFileIO:
             async with aiofiles.open(path, mode="rb") as f:
                 return await f.read()
         else:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, path.read_bytes)
 
     async def write_file(self, path: Path | str, content: str) -> None:
@@ -169,7 +169,7 @@ class PythonFileIO:
             async with aiofiles.open(path, mode="w", encoding=self.default_encoding, errors=self.default_errors) as f:
                 await f.write(content)
         else:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, path.write_text, content, self.default_encoding, self.default_errors)
 
     async def write_lines(self, path: Path | str, lines: list[str]) -> None:
@@ -214,7 +214,7 @@ class PythonFileIO:
             async with aiofiles.open(path, mode="wb") as f:
                 await f.write(content)
         else:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, path.write_bytes, content)
 
     async def append_file(self, path: Path | str, content: str) -> None:
@@ -238,7 +238,7 @@ class PythonFileIO:
             async with aiofiles.open(path, mode="a", encoding=self.default_encoding, errors=self.default_errors) as f:
                 await f.write(content)
         else:
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
 
             def append_sync() -> None:
                 with path.open("a", encoding=self.default_encoding, errors=self.default_errors) as f:

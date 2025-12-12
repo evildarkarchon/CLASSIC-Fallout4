@@ -186,37 +186,25 @@ class TestConfigFileCacheAsync:
         cache._load_config_async.assert_not_called()
 
     @pytest.mark.asyncio
-    async def test_load_config_async_processes_file(self):
+    async def test_load_config_async_processes_file(self, tmp_path):
         """Test _load_config_async processes files asynchronously."""
+        # Create an actual test file to avoid FileNotFoundError
+        test_file = tmp_path / "test.ini"
+        test_file.write_text("[section]\nkey=value", encoding="utf-8")
+
         # Mock yaml_settings to avoid async context error during init
         with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()):
             cache = ConfigFileCache()
-        cache._config_files = {"test.ini": Path("test/test.ini")}
+        cache._config_files = {"test.ini": test_file}
         cache._config_file_cache = {}
 
-        # Mock file operations with proper async handling
-        with patch("asyncio.get_event_loop") as mock_get_loop:
-            mock_loop = MagicMock()
-            mock_get_loop.return_value = mock_loop
+        # Load the config file
+        await cache._load_config_async("test.ini")
 
-            # Mock the config parser
-            mock_config = MagicMock()
-
-            # Set up run_in_executor to return the right values synchronously
-            # (AsyncBridge pattern - executor returns sync results)
-            mock_loop.run_in_executor = AsyncMock()
-            mock_loop.run_in_executor.side_effect = [
-                b"[section]\nkey=value",  # File bytes
-                "utf-8",  # Encoding detection
-                (mock_config, "[section]\nkey=value"),  # Config parsing result
-            ]
-
-            await cache._load_config_async("test.ini")
-
-            # Verify async operations were performed
-            assert mock_loop.run_in_executor.call_count == 3
-            assert "test.ini" in cache._config_file_cache
-            assert cache._config_file_cache["test.ini"]["settings"] == mock_config
+        # Verify the file was loaded into the cache
+        assert "test.ini" in cache._config_file_cache
+        assert cache._config_file_cache["test.ini"]["settings"] is not None
+        assert cache._config_file_cache["test.ini"]["encoding"] is not None
 
     @pytest.mark.asyncio
     async def test_hash_caching_prevents_recalculation(self):

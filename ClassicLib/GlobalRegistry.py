@@ -6,6 +6,7 @@ from multiple modules throughout the application.
 
 import os
 import threading
+from io import TextIOWrapper
 from pathlib import Path
 from typing import Any
 
@@ -181,7 +182,7 @@ def is_gui_mode() -> bool:
     return get(Keys.IS_GUI_MODE) or False
 
 
-def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore"):  # noqa: ANN201
+def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore") -> TextIOWrapper:
     """Open a file with a specified encoding and error handling strategy. The function
     delegates the actual implementation to a registered handler, if available. If
     no handler is registered, raises a RuntimeError.
@@ -213,9 +214,10 @@ def get_vr() -> str:
         str: The value associated with the VR key if registered and non-empty, or an empty string otherwise.
 
     """
-    if not is_registered(Keys.VR) or (is_registered(Keys.VR) and not Keys.VR):
+    if not is_registered(Keys.VR):
         return ""
-    return get(Keys.VR)
+    vr_value = get(Keys.VR)
+    return vr_value or ""
 
 
 def get_game() -> str:
@@ -255,13 +257,20 @@ def get_local_dir(as_string: bool = False) -> Path | str:
         The local directory path as a Path object (default) or string.
 
     """
-    if not is_registered(Keys.LOCAL_DIR) or (is_registered(Keys.LOCAL_DIR) and not Keys.LOCAL_DIR):
+    if not is_registered(Keys.LOCAL_DIR):
         if as_string:
             return str(Path.cwd())
         return Path.cwd()
+
+    local_dir_value = get(Keys.LOCAL_DIR)
+    if not local_dir_value:
+        if as_string:
+            return str(Path.cwd())
+        return Path.cwd()
+
     if as_string:
-        return str(get(Keys.LOCAL_DIR))
-    return get(Keys.LOCAL_DIR)
+        return str(local_dir_value)
+    return local_dir_value
 
 
 def clear() -> None:

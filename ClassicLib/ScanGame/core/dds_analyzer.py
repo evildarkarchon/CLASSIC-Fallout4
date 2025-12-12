@@ -426,7 +426,7 @@ class EnhancedDDSAnalyzer:
             Exception: For any other errors that occur during the analysis process.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self.analyze_file, file_path)
 
     @staticmethod

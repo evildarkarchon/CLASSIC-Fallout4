@@ -57,7 +57,7 @@ class YamlCache:
 
     # Class-level locks for thread safety
     _cache_locks: ClassVar[dict[str, asyncio.Lock]] = {}
-    _global_lock: ClassVar[asyncio.Lock] = asyncio.Lock()
+    _global_lock: ClassVar[asyncio.Lock | None] = None  # Lazy init to avoid creating Lock outside async context
 
     def __init__(self) -> None:
         """Initialize the cache with empty storage containers.
@@ -101,6 +101,9 @@ class YamlCache:
 
         """
         if file_path not in self._cache_locks:
+            # Lazy initialize global lock on first use (inside async context)
+            if self._global_lock is None:
+                YamlCache._global_lock = asyncio.Lock()
             async with self._global_lock:
                 # Double-check after acquiring global lock
                 if file_path not in self._cache_locks:

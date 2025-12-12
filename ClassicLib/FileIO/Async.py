@@ -60,7 +60,7 @@ async def detect_encoding_async(file_path: Path | str | os.PathLike, sample_size
         sample_data = await f.read(sample_size)
 
     # Detect encoding (this is CPU-bound, so run in executor)
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     result = await loop.run_in_executor(None, chardet.detect, sample_data)
 
     encoding = result.get("encoding")
@@ -126,7 +126,7 @@ async def fallback_to_sync_encoding_detection(file_path: Path | str | os.PathLik
         file_path = Path(file_path)
 
     # Run in executor to avoid blocking
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     def get_encoding() -> str:
         with open_file_with_encoding(file_path) as f:

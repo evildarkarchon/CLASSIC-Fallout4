@@ -59,7 +59,7 @@ class FileOperations:
             if not TEST_MODE:
                 try:
                     # Use executor for blocking shutil.move
-                    loop = asyncio.get_event_loop()
+                    loop = asyncio.get_running_loop()
                     await loop.run_in_executor(None, shutil.move, str(fomod_folder_path), str(new_folder_path))
                 except PermissionError:
                     msg_error(f"Permission denied moving folder: {fomod_folder_path}")
@@ -99,7 +99,7 @@ class FileOperations:
             if not TEST_MODE:
                 try:
                     # Use executor for blocking file operations
-                    loop = asyncio.get_event_loop()
+                    loop = asyncio.get_running_loop()
                     await loop.run_in_executor(None, shutil.move, str(file_path), str(new_file_path))
                 except PermissionError:
                     msg_error(f"Permission denied moving file: {file_path}")

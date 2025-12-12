@@ -298,7 +298,7 @@ class ConfigFileCache:
         file_path: Path = self._config_files[file_name_lower]
 
         # Read file in executor to avoid blocking
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         file_bytes = await loop.run_in_executor(None, file_path.read_bytes)
 
         # Detect encoding in executor to avoid blocking

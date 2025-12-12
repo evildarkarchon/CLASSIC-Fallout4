@@ -137,7 +137,7 @@ class LogProcessor:
                             log_lines = await log_file.readlines()
                     else:
                         # Fallback to sync read with async wrapper
-                        loop = asyncio.get_event_loop()
+                        loop = asyncio.get_running_loop()
                         with open_file_with_encoding(log_file_path) as log_file:
                             log_lines = await loop.run_in_executor(None, log_file.readlines)
 

@@ -205,7 +205,7 @@ class UnpackedModsScanner:
                 for parent, data in sorted(dir_structure.items(), key=lambda x: str(x[0]).count(os.sep), reverse=True)
             ]
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(self.walk_executor, _walk)
 
     async def process_directory_async(

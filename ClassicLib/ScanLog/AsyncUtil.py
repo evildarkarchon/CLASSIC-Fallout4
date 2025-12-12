@@ -5,6 +5,7 @@ performance through concurrent execution.
 """
 
 import asyncio
+import threading
 from itertools import starmap
 from pathlib import Path
 from typing import Any, ClassVar
@@ -28,14 +29,16 @@ class DatabasePoolManager:
 
     _instance: ClassVar["DatabasePoolManager | None"] = None
     _pool: Any = None  # Can be DatabasePool or AsyncDatabasePool
-    _lock: ClassVar[asyncio.Lock | None] = None
+    _lock: ClassVar[asyncio.Lock | None] = None  # For async operations
+    _creation_lock: ClassVar[threading.Lock] = threading.Lock()  # For __new__ thread safety
     _using_rust: bool = False
 
     def __new__(cls) -> "DatabasePoolManager":
         """Ensure only one instance of DatabasePoolManager exists."""
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-            cls._lock = None
+        with cls._creation_lock:
+            if cls._instance is None:
+                cls._instance = super().__new__(cls)
+                cls._lock = None
         return cls._instance
 
     async def get_pool(self) -> Any:

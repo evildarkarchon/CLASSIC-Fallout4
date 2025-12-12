@@ -708,7 +708,7 @@ class AsyncLazyLoader:
     async def _load_data(self) -> Any:
         if asyncio.iscoroutinefunction(self._loader_func):
             return await self._loader_func()
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._loader_func)
 
     def reset(self) -> None:

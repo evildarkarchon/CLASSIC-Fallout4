@@ -248,7 +248,7 @@ class DDSProcessor:
             Empty list if no issues found.
 
         """
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         # Try Rust parser first (much faster and more accurate)
         if HAS_RUST_DDS:

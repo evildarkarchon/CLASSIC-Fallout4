@@ -70,23 +70,19 @@ class PastebinFetchWorker(QObject):
         """
         try:
             # Make sure pastebin_fetch_async is properly imported
-            import asyncio
-
             import aiohttp
 
+            from ClassicLib.AsyncBridge import AsyncBridge
             from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 
-            # Create and run async event loop
-            loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            # Use AsyncBridge for consistent async handling in GUI workers
+            bridge = AsyncBridge.get_instance()
 
             try:
-                loop.run_until_complete(pastebin_fetch_async(self.url))
+                bridge.run_async(pastebin_fetch_async(self.url))
                 self.success.emit(self.url)
             except aiohttp.ClientError as e:
                 self.error.emit(f"Network error: {e!s}")
-            finally:
-                loop.close()
 
         except (OSError, ValueError) as e:
             self.error.emit(f"File system or value error: {e!s}")
