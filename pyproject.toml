@@ -132,6 +132,7 @@ ignore = [
 	"D205",    # Blank line between summary and description (many multi-line summaries)
     "D211",
     "D213",
+    "D203",
 	"E501",    # Duplicate of B950 line-too-long
 	"E722",    # Duplicate of B001 bare-except
 	"PLR0904", # too-many-public-methods

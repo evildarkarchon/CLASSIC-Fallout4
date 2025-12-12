@@ -1041,9 +1041,7 @@ class TestBatchProcessingAtScale:
         # Note: generate_large_crash_log creates formid_count // 10 FormIDs per file
         # With formid_count=300, that's 30 FormIDs per file, so 200 * 30 = 6000 total
         expected_formids_per_file = 300 // 10  # 30 FormIDs per file from generator
-        assert total_formids > file_count * expected_formids_per_file * 0.8, (
-            f"Too few FormIDs from streaming processing: {total_formids}"
-        )
+        assert total_formids > file_count * expected_formids_per_file * 0.8, f"Too few FormIDs from streaming processing: {total_formids}"
 
         assert total_plugins > file_count * 20, f"Too few plugins from streaming processing: {total_plugins}"
 

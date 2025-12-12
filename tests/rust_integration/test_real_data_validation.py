@@ -78,7 +78,6 @@ def real_crash_logs() -> dict[str, Path]:
             log_files = list(crash_logs_dir.glob("*.log"))
 
     if log_files:
-
         # Categorize logs by characteristics
         for log_file in log_files:
             try:

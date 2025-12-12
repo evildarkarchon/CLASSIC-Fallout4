@@ -285,8 +285,7 @@ class TestParallelismEfficiency:
         else:
             # For slower operations, expect meaningful speedup
             assert speedup > 1.5, (
-                f"Insufficient speedup from parallelism: {speedup:.2f}x "
-                f"(sequential={sequential_time}ms, parallel={parallel_time}ms)"
+                f"Insufficient speedup from parallelism: {speedup:.2f}x (sequential={sequential_time}ms, parallel={parallel_time}ms)"
             )
 
 

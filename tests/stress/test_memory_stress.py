@@ -177,6 +177,7 @@ class TestMemoryLeakDetection:
 
         # Reset singleton to start fresh (clear_cache method doesn't exist)
         from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache as YSC
+
         YSC._instance = None
         fresh_memory_tracker.take_measurement("cache_cleared")
 

@@ -1,4 +1,5 @@
 """Generate SHA256 hash file for CLASSIC Fallout4 database."""
+
 import hashlib
 from pathlib import Path
 

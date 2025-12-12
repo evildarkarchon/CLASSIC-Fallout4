@@ -118,9 +118,7 @@ class TestAsyncPerformancePipeline:
                 patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orch,
             ):
                 mock_orchestrator = AsyncMock()
-                mock_orchestrator.process_crash_logs_batch.return_value = [
-                    (f, ["report"], False, Counter()) for f in test_files
-                ]
+                mock_orchestrator.process_crash_logs_batch.return_value = [(f, ["report"], False, Counter()) for f in test_files]
                 mock_orch.return_value.__aenter__.return_value = mock_orchestrator
                 mock_orch.return_value.__aexit__.return_value = None
 
