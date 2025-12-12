@@ -181,7 +181,7 @@ extend-select = [
 	"Q",
 	"TID252",
 
-	# "D",     # pydocstyle
+	"D",     # pydocstyle
 	# "C901",  # Complex Structures
 	# "COM",   # Commas
 	# "DTZ",   # Unsafe/Naive Datetimes
@@ -247,6 +247,7 @@ ban-relative-imports = "all"
     "TRY",
     # Upgrade suggestions - not critical for tests
     "UP",
+    "D"
 ]
 "tests/conftest.py" = ["ANN001", "ANN201", "ANN202"]
 "tests/fixtures/**/*.py" = ["ANN001", "ANN201", "ANN202"]
