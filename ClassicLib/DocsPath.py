@@ -106,12 +106,6 @@ class DocumentsPathManager:
         """
         yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}", value)
 
-        # If this is a docs path update, also save to cache for uvx compatibility
-        if setting_name == "Root_Folder_Docs":
-            from ClassicLib.ResourceLoader import ResourceLoader
-
-            ResourceLoader.save_path_to_cache(Path(value), "DocsPath")
-
     def find_docs_path(self) -> None:
         """Validate and determines the path used for documentation files in the system,
         with a focus on detecting and validating user-specified or auto-detected paths.
@@ -156,7 +150,7 @@ class DocumentsPathManager:
 
         # Check if path already exists and is accessible
         docs_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
-        if isinstance(docs_path, str):
+        if isinstance(docs_path, str) and docs_path.strip():
             is_valid, error_msg = validate_path(docs_path, check_write=True, check_read=True)
             if is_valid and Path(docs_path).is_dir():
                 return  # Path is valid, no need to re-detect
@@ -291,7 +285,7 @@ class DocumentsPathManager:
         xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
         docs_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
-        if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str)):
+        if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str) and docs_path_str.strip()):
             raise TypeError("Missing or invalid settings")
 
         docs_path: Path = Path(docs_path_str)

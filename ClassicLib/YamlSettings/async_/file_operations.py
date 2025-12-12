@@ -183,18 +183,8 @@ class YamlFileOperations:
                 # Test store for unit tests
                 return Path(GlobalRegistry.get_local_dir()) / "tests" / "test_settings.yaml"
             case YAML.Cache:
-                # User-specific persistent cache for uvx compatibility
-                # This uses the user's config directory which persists across uvx invocations
-                try:
-                    import appdirs
-
-                    cache_dir = Path(appdirs.user_config_dir("CLASSIC-Fallout4", "CLASSIC"))
-                    cache_dir.mkdir(parents=True, exist_ok=True)
-                    return cache_dir / "cache.yaml"
-                except ImportError:
-                    # Fallback to local data directory if appdirs not available
-                    logger.warning("appdirs not available, using local cache")
-                    return base_path / "cache.yaml"
+                # Local cache in CLASSIC Data directory
+                return base_path / "cache.yaml"
             case _:
                 raise ValueError(f"Unknown YAML store: {yaml_store}")
 

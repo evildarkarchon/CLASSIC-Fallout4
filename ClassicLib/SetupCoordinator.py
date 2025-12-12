@@ -209,8 +209,41 @@ class SetupCoordinator:
         # Validate settings paths after initialization
         self.path_validator.validate_all_settings_paths()
 
+        # Detect game and docs paths if not configured
+        self._ensure_paths_configured(is_gui)
+
         # Log Rust acceleration status
         self._log_rust_acceleration_status()
+
+    def _ensure_paths_configured(self, is_gui: bool) -> None:
+        """Ensure game and docs paths are configured, detecting them if needed.
+
+        This method checks if game and docs paths exist in settings. If not,
+        it triggers automatic path detection.
+
+        Args:
+            is_gui: Whether running in GUI mode (affects path detection UI).
+
+        """
+        from ClassicLib.YamlSettings import yaml_settings
+
+        vr_suffix = GlobalRegistry.get_vr()
+
+        # Check if paths are configured
+        game_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
+        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs")
+
+        # Detect docs path if missing
+        if not docs_path:
+            logger.debug("Docs path not configured, running docs path detection")
+            docs_path_find(is_gui)
+            docs_generate_paths()
+
+        # Detect game path if missing
+        if not game_path:
+            logger.debug("Game path not configured, running game path detection")
+            game_path_find()
+            game_generate_paths()
 
     def _log_rust_acceleration_status(self) -> None:
         """Log the Rust acceleration status at application startup.

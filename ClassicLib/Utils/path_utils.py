@@ -106,6 +106,11 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
     """
     try:
+        # Reject empty or whitespace-only paths
+        path_str = str(path).strip() if path else ""
+        if not path_str:
+            return False, "Path is empty"
+
         path_obj = Path(path) if not isinstance(path, Path) else path
 
         # Check if the drive exists (Windows)

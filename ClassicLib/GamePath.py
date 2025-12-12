@@ -536,7 +536,7 @@ def game_generate_paths() -> None:
     game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
     yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
     xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
-    if not (isinstance(game_path, str) and isinstance(xse_acronym_base, str)):
+    if not (isinstance(game_path, str) and game_path.strip() and isinstance(xse_acronym_base, str)):
         raise TypeError
 
     yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
@@ -603,7 +603,7 @@ async def game_generate_paths_async() -> None:
     game_path: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
     await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
     xse_acronym_base: str | None = await yaml_settings_async(str, YAML.Game, "Game_Info.XSE_Acronym")
-    if not (isinstance(game_path, str) and isinstance(xse_acronym_base, str)):
+    if not (isinstance(game_path, str) and game_path.strip() and isinstance(xse_acronym_base, str)):
         raise TypeError
 
     await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
