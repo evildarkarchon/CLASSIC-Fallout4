@@ -1055,17 +1055,19 @@ impl OrchestratorCore {
             }
         }
 
-        // Pad brackets in plugin segment (for formatting: [xx] -> [  xx])
+        // Replace spaces with zeros inside brackets in plugin segment
+        // Python: "Replace all spaces inside the load order [brackets] with 0s."
+        // This maintains consistency between different versions of Buffout 4.
+        // Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]"
         if let Some(plugins) = segment_plugin {
             for line in plugins.iter_mut() {
-                // Python: pad_brackets_in_line - pads single-char brackets like [0] -> [  0]
                 if let Some(start) = line.find('[') {
                     if let Some(end) = line.find(']') {
                         let content = &line[start + 1..end];
-                        // Pad if content is 1-2 characters
-                        if content.len() <= 2 && content.len() >= 1 {
-                            let padded = format!("{:>4}", content);
-                            *line = format!("{}[{}]{}", &line[..start], padded, &line[end + 1..]);
+                        // Only modify if spaces exist inside brackets
+                        if content.contains(' ') {
+                            let modified_content = content.replace(' ', "0");
+                            *line = format!("{}[{}]{}", &line[..start], modified_content, &line[end + 1..]);
                         }
                     }
                 }
