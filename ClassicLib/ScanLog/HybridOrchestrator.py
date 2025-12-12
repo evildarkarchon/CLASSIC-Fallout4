@@ -106,10 +106,7 @@ class HybridOrchestrator:
                 # Check if Rust orchestrator has full feature parity
                 self._rust_feature_complete = self._rust_orch.is_feature_complete()
                 if self._rust_feature_complete:
-                    logger.debug(
-                        "Rust orchestrator initialized with FULL feature parity "
-                        "(single-log: 5-10x, batch: 10-20x speedup)"
-                    )
+                    logger.debug("Rust orchestrator initialized with FULL feature parity (single-log: 5-10x, batch: 10-20x speedup)")
                 else:
                     logger.debug("Rust orchestrator initialized for batch processing (10-20x speedup)")
             except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust module fails for any reason
@@ -180,9 +177,7 @@ class HybridOrchestrator:
                 logger.debug(f"Using Rust for single-log processing: {crashlog_file}")
 
                 # Run Rust processing in thread pool to avoid blocking
-                rust_result = await asyncio.to_thread(
-                    self._rust_orch.process_single_log, crashlog_file
-                )
+                rust_result = await asyncio.to_thread(self._rust_orch.process_single_log, crashlog_file)
 
                 # Convert single Rust result to Python format
                 return self._convert_single_rust_result(rust_result)
@@ -286,12 +281,8 @@ class HybridOrchestrator:
             list[tuple[Path, list[str], bool, Counter[str]]]: Converted results
             in Python orchestrator format.
         """
-        python_results = []
 
-        for rust_result in batch_result.results:
-            python_results.append(
-                HybridOrchestrator._convert_single_rust_result(rust_result)
-            )
+        python_results = [HybridOrchestrator._convert_single_rust_result(rust_result) for rust_result in batch_result.results]
 
         logger.debug(
             f"Converted {len(python_results)} Rust results "
@@ -321,8 +312,5 @@ class HybridOrchestrator:
             str: Representation showing Python and Rust orchestrator availability
             and feature-completeness status.
         """
-        if self._rust_orch:
-            rust_status = "feature-complete" if self._rust_feature_complete else "batch-only"
-        else:
-            rust_status = "unavailable"
+        rust_status = ("feature-complete" if self._rust_feature_complete else "batch-only") if self._rust_orch else "unavailable"
         return f"HybridOrchestrator(python=available, rust={rust_status})"

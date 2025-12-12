@@ -330,10 +330,7 @@ class ClassicOrchestrator:
             ClassicOrchestrator instance.
         """
         feature_status = "feature-complete" if self.is_feature_complete() else "batch-only"
-        return (
-            f"ClassicOrchestrator(game='{self.config.game}', vr_mode={self.config.vr_mode}, "
-            f"rust={feature_status})"
-        )
+        return f"ClassicOrchestrator(game='{self.config.game}', vr_mode={self.config.vr_mode}, rust={feature_status})"
 
 
 # Convenience function for quick processing

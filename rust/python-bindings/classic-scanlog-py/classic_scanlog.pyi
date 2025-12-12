@@ -583,9 +583,7 @@ class Orchestrator:
             True if initialized
         """
 
-    def write_reports_batch(
-        self, reports: list[tuple[str, list[str], bool]]
-    ) -> list[str]:
+    def write_reports_batch(self, reports: list[tuple[str, list[str], bool]]) -> list[str]:
         """Write batch reports to files.
 
         This operation writes multiple report files concurrently, generating
@@ -609,9 +607,7 @@ class Orchestrator:
             True if loadorder.txt exists
         """
 
-    def load_loadorder(
-        self, loadorder_path: str
-    ) -> tuple[dict[str, str], list[str]]:
+    def load_loadorder(self, loadorder_path: str) -> tuple[dict[str, str], list[str]]:
         """Load plugins from a loadorder.txt file.
 
         Args:
@@ -960,9 +956,7 @@ class ReportGenerator:
             ReportFragment containing the header section
         """
 
-    def generate_error_section(
-        self, main_error: str, crashgen_version: str, is_outdated: bool
-    ) -> ReportFragment:
+    def generate_error_section(self, main_error: str, crashgen_version: str, is_outdated: bool) -> ReportFragment:
         """Generate error section.
 
         Args:

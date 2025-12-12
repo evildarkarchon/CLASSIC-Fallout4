@@ -951,8 +951,7 @@ PLUGINS:
         # With populated suspects and ignore_plugins, should be feature-complete
         result = orch.is_rust_feature_complete()
         assert result is True, (
-            "is_feature_complete() should return True when suspects_error_list, "
-            "suspects_stack_list, and game_ignore_plugins are populated"
+            "is_feature_complete() should return True when suspects_error_list, suspects_stack_list, and game_ignore_plugins are populated"
         )
         assert orch._rust_feature_complete is True, "_rust_feature_complete flag should be True"
 
@@ -1203,8 +1202,7 @@ PLUGINS:
         # With empty suspects and ignore_plugins, should NOT be feature-complete
         result = orch.is_rust_feature_complete()
         assert result is False, (
-            "is_feature_complete() should return False when suspects_error_list, "
-            "suspects_stack_list, or game_ignore_plugins are empty"
+            "is_feature_complete() should return False when suspects_error_list, suspects_stack_list, or game_ignore_plugins are empty"
         )
         assert orch._rust_feature_complete is False, "_rust_feature_complete flag should be False"
 
