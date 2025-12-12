@@ -64,19 +64,26 @@ class TestE2EPipeline:
         Provide paths to real crash log samples for testing.
 
         Returns a dictionary mapping crash log types to file paths.
-        Uses backup crash logs from the project for testing.
+        Uses valid test directories: sample_logs/FO4 or Crash Logs.
         """
         project_root = Path(__file__).parent.parent.parent
-        backup_logs = project_root / "CLASSIC Backup" / "Unsolved Logs"
 
         samples = {}
 
-        if backup_logs.exists():
-            # Get different types of crash logs for comprehensive testing
-            log_files = list(backup_logs.glob("*.log"))[:5]  # Limit to 5 for performance
-
+        # Primary: sample_logs/FO4 has extensive test data
+        sample_logs = project_root / "sample_logs" / "FO4"
+        if sample_logs.exists():
+            log_files = list(sample_logs.glob("*.log"))[:5]  # Limit to 5 for performance
             for i, log_file in enumerate(log_files):
                 samples[f"sample_{i}"] = log_file
+
+        # Secondary: Crash Logs directory
+        if not samples:
+            crash_logs = project_root / "Crash Logs"
+            if crash_logs.exists():
+                log_files = list(crash_logs.glob("*.log"))[:5]
+                for i, log_file in enumerate(log_files):
+                    samples[f"sample_{i}"] = log_file
 
         # If no backup logs available, create synthetic test data
         if not samples:

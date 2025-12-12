@@ -164,9 +164,10 @@ Tests automatically skip when:
 ### Real Crash Logs
 
 Tests look for real crash logs in:
-1. `CLASSIC Backup/Unsolved Logs/` (project backup directory)
-2. Path specified by `CLASSIC_TEST_CRASH_LOGS_PATH` environment variable
-3. Falls back to synthetic data if real logs unavailable
+1. `sample_logs/FO4/` (primary - extensive test data)
+2. `Crash Logs/` (secondary - real-world logs)
+3. Path specified by `CLASSIC_TEST_CRASH_LOGS_PATH` environment variable
+4. Falls back to synthetic data if real logs unavailable
 
 ### Synthetic Data
 
@@ -235,7 +236,7 @@ The tests validate against these performance targets:
    ```
 
 2. **"No crash logs available for testing"**
-   - Ensure `CLASSIC Backup/Unsolved Logs/` contains `.log` files
+   - Ensure `sample_logs/FO4/` or `Crash Logs/` contains `.log` files
    - Set `CLASSIC_TEST_CRASH_LOGS_PATH` to crash log directory
    - Tests will use synthetic data if no real logs found
 

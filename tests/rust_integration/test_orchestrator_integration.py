@@ -227,26 +227,56 @@ class TestOrchestratorStressTests:
         config = AnalysisConfig("Fallout4", False)
         return Orchestrator(config)
 
+    @pytest.fixture
+    def sample_log_dir(self, tmp_path):
+        """Create a directory with sample crash log files for stress testing."""
+        log_dir = tmp_path / "sample_logs"
+        log_dir.mkdir()
+
+        # Create sample crash log content
+        sample_content = """Buffout 4 Crash Log
+EXCEPTION_ACCESS_VIOLATION (0xc0000005)
+Unhandled exception at 0x7FF6DEADBEEF
+
+PROBABLE CALL STACK:
+[0] 0x7FF6DEADBEEF    FormID: 0x00012345    TestMod.esp
+[1] 0x7FF6CAFEBABE    FormID: 0x00023456    Fallout4.esm
+
+PLUGINS:
+[00] Fallout4.esm
+[01] DLCRobot.esm
+[02] TestMod.esp
+"""
+        # Create 25 sample log files for stress testing
+        for i in range(25):
+            log_file = log_dir / f"crash_{i:03d}.log"
+            # Vary content slightly per file
+            content = sample_content + f"\nLog file index: {i}\n"
+            log_file.write_text(content, encoding="utf-8")
+
+        return log_dir
+
     @pytest.mark.slow
     def test_high_concurrency(self, orchestrator, sample_log_dir):
-        """Test with high concurrency level."""
+        """Test batch processing with many log files."""
         log_files = [str(f) for f in sample_log_dir.glob("*.log")]
         if len(log_files) < 10:
             pytest.skip("Need at least 10 log files for stress test")
 
-        # Test with very high concurrency
-        results = orchestrator.process_logs_parallel(log_files[:20], max_concurrent=20)
+        # Test batch processing with many files (Rust handles parallelism internally)
+        results = orchestrator.process_logs_batch(log_files[:20])
         assert results is not None
         assert len(results) > 0
 
     @pytest.mark.slow
     def test_many_small_logs(self, orchestrator, sample_log_dir):
-        """Test processing many small log files."""
+        """Test processing many small log files in batch."""
         log_files = [str(f) for f in sample_log_dir.glob("*.log")]
         if len(log_files) < 20:
             pytest.skip("Need at least 20 log files for stress test")
 
-        results = orchestrator.process_logs_parallel(log_files[:50], max_concurrent=10)
+        # Process all available log files in a batch
+        results = orchestrator.process_logs_batch(log_files[:25])
         assert results is not None
 
     @pytest.mark.slow
@@ -256,8 +286,8 @@ class TestOrchestratorStressTests:
         if not log_files:
             pytest.skip("No log files found")
 
-        # Process same logs 5 times
+        # Process same logs 5 times in a row
         for _ in range(5):
-            results = orchestrator.process_logs_parallel(log_files[:5], max_concurrent=3)
+            results = orchestrator.process_logs_batch(log_files[:5])
             assert results is not None
             assert len(results) > 0

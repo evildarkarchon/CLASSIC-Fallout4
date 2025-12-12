@@ -95,6 +95,8 @@ class TestAsyncPerformancePipeline:
     @pytest.mark.asyncio
     async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
         """Baseline: Async pipeline scalability with different log counts."""
+        from collections import Counter
+
         test_counts = [5, 10, 25]
         results = []
 
@@ -108,17 +110,17 @@ class TestAsyncPerformancePipeline:
                 formid_db_exists=False,
             )
 
-            # Mock pipeline components
+            # Mock pipeline components - updated for current API
+            # Note: load_crash_logs_async was removed, pipeline now uses direct file I/O
             with (
-                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async"),
-                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async") as mock_load,
-                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch"),
-                patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orch,
+                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock),
+                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orch,
             ):
-                mock_load.return_value = {f.name: ["content"] for f in test_files}
-
                 mock_orchestrator = AsyncMock()
-                mock_orchestrator.process_crash_logs_batch.return_value = [(f, ["report"], False, {}) for f in test_files]
+                mock_orchestrator.process_crash_logs_batch.return_value = [
+                    (f, ["report"], False, Counter()) for f in test_files
+                ]
                 mock_orch.return_value.__aenter__.return_value = mock_orchestrator
                 mock_orch.return_value.__aexit__.return_value = None
 

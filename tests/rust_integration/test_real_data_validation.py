@@ -58,14 +58,26 @@ def real_crash_logs() -> dict[str, Path]:
 
     Returns a dictionary mapping crash log categories to file paths,
     allowing tests to focus on specific types of crash logs.
+
+    Uses valid test directories: sample_logs/FO4 or Crash Logs.
     """
     project_root = Path(__file__).parent.parent.parent
-    backup_logs = project_root / "CLASSIC Backup" / "Unsolved Logs"
 
     crash_logs = {}
+    log_files: list[Path] = []
 
-    if backup_logs.exists():
-        log_files = list(backup_logs.glob("*.log"))
+    # Primary: sample_logs/FO4 has extensive test data
+    sample_logs = project_root / "sample_logs" / "FO4"
+    if sample_logs.exists():
+        log_files = list(sample_logs.glob("*.log"))
+
+    # Secondary: Crash Logs directory
+    if not log_files:
+        crash_logs_dir = project_root / "Crash Logs"
+        if crash_logs_dir.exists():
+            log_files = list(crash_logs_dir.glob("*.log"))
+
+    if log_files:
 
         # Categorize logs by characteristics
         for log_file in log_files:

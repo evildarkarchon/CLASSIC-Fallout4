@@ -122,6 +122,7 @@ class TestRealWorldCrashLogProcessing:
 
         # Now run async test
         print("\n--- ASYNC PIPELINE TEST ---")
+        from collections import Counter
 
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
@@ -137,21 +138,20 @@ class TestRealWorldCrashLogProcessing:
         async_cache = await load_crash_logs_async(crash_log_files)
 
         # Process with mocked orchestrator for consistent timing
+        # Note: load_crash_logs_async was removed from pipeline - it now uses direct file I/O
         with (
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.load_crash_logs_async") as mock_load,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.ScanLog.OrchestratorCore.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock) as mock_reformat,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock) as mock_write,
+            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Return actual loaded data
             mock_reformat.return_value = None
-            mock_load.return_value = async_cache
             mock_write.return_value = None
 
             # Setup orchestrator with realistic processing
             mock_orchestrator: AsyncMock = AsyncMock()
 
-            async def process_real_logs(batch: list[Path]) -> list[tuple[Path, list[str], bool, dict]]:
+            async def process_real_logs(batch: list[Path]) -> list[tuple[Path, list[str], bool, Counter]]:
                 results = []
                 for log_file in batch:
                     lines = async_cache.get(log_file.name, [])
@@ -159,7 +159,7 @@ class TestRealWorldCrashLogProcessing:
                     for i, line in enumerate(lines[:100]):
                         if "Form ID:" in line or "EXCEPTION_" in line or ".dll" in line.lower():
                             report.append(f"Line {i + 1}: {line.strip()}\n")
-                    results.append((log_file, report, False, {}))
+                    results.append((log_file, report, False, Counter()))
                 return results
 
             mock_orchestrator.process_crash_logs_batch.side_effect = process_real_logs
