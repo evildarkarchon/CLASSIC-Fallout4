@@ -53,6 +53,7 @@ class TestSetupInitialization:
             False,  # VR Mode disabled
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
+            False,  # Debug Messages
         ]
 
         # Initialize application
@@ -85,6 +86,7 @@ class TestSetupInitialization:
             False,  # VR Mode disabled
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
+            False,  # Debug Messages
         ]
 
         # Create a mock parent widget
@@ -117,6 +119,7 @@ class TestSetupInitialization:
             True,  # VR Mode enabled
             "Skyrim SE",  # Managed Game
             True,  # is_prerelease
+            False,  # Debug Messages
         ]
 
         # Initialize application
@@ -151,6 +154,7 @@ class TestSetupInitialization:
             False,  # VR Mode disabled
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
+            False,  # Debug Messages
         ]
 
         # Mock frozen state
@@ -181,6 +185,7 @@ class TestSetupInitialization:
             False,  # VR Mode disabled
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
+            False,  # Debug Messages
         ]
 
         # Ensure not frozen
@@ -213,6 +218,7 @@ class TestSetupInitialization:
             False,  # VR Mode disabled
             None,  # Managed Game (None)
             False,  # is_prerelease False
+            False,  # Debug Messages
         ]
 
         # Initialize application
@@ -241,6 +247,7 @@ class TestSetupInitialization:
             False,  # VR Mode disabled
             "Fallout 4",  # Managed Game
             False,  # not prerelease
+            False,  # Debug Messages
         ]
 
         # Initialize application
@@ -254,7 +261,8 @@ class TestSetupInitialization:
 
         # Verify the requests passed to batch_get_settings
         call_args = mock_batch_get.call_args[0][0]
-        assert len(call_args) == 3  # Three settings requested
+        assert len(call_args) == 4  # Four settings requested
         assert any("VR Mode" in str(req) for req in call_args)
         assert any("Managed Game" in str(req) for req in call_args)
         assert any("is_prerelease" in str(req) for req in call_args)
+        assert any("Debug Messages" in str(req) for req in call_args)

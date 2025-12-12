@@ -62,6 +62,7 @@ class TestInitialSetup:
                 "7.31.0",  # classic_ver
                 "Fallout4",  # game_name
                 None,  # game_path (not configured)
+                False,  # debug_messages
             ]
 
         mock_yaml_cache.batch_get_settings_async.side_effect = async_return
@@ -115,6 +116,7 @@ class TestInitialSetup:
                 "7.31.0",  # classic_ver
                 "Fallout4",  # game_name
                 "C:/Games/Fallout4",  # game_path (configured)
+                False,  # debug_messages
             ]
 
         mock_yaml_cache.batch_get_settings_async.side_effect = async_return
@@ -155,6 +157,7 @@ class TestInitialSetup:
                 123,  # classic_ver (not a string)
                 "Fallout4",  # game_name
                 None,  # game_path
+                False,  # debug_messages
             ]
 
         mock_yaml_cache.batch_get_settings_async.side_effect = async_return
@@ -186,6 +189,7 @@ class TestInitialSetup:
                 "7.31.0",  # classic_ver
                 None,  # game_name (not a string)
                 None,  # game_path
+                False,  # debug_messages
             ]
 
         mock_yaml_cache.batch_get_settings_async.side_effect = async_return

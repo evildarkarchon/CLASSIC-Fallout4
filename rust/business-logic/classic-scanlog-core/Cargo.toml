@@ -48,6 +48,9 @@ smartstring = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 
+# Version parsing
+semver = { workspace = true }
+
 # Logging
 log = { workspace = true }
 

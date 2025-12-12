@@ -135,6 +135,9 @@ sha2 = "0.10"           # Cryptographic hashing (SHA256 for file comparison)
 strsim = "0.11"         # String similarity algorithms
 configparser = "3.1"    # INI file parsing
 
+# Version parsing
+semver = "1.0"          # Semantic versioning for crashgen version comparison
+
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

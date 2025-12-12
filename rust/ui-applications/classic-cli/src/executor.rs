@@ -2,6 +2,7 @@ use anyhow::{Context, Result};
 use classic_config_core::YamlDataCore;
 use classic_file_io_core::{FileIOCore, LogCollector};
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use crate::config::CliConfig;
@@ -164,14 +165,20 @@ impl ScanExecutor {
             vr_mode: self.config.vr_mode,
             crashgen_name: self.yaml_data.crashgen_name.clone(),
             crashgen_latest: self.yaml_data.crashgen_latest_og.clone(),
+            crashgen_latest_vr: self.yaml_data.crashgen_latest_vr.clone(),
             game_version: self.yaml_data.game_version.clone(),
             game_version_vr: self.yaml_data.game_version_vr.clone(),
             game_version_new: self.yaml_data.game_version_new.clone(),
             xse_acronym: self.yaml_data.xse_acronym.clone(),
+            game_root_name: "Fallout4".to_string(),
+            classic_version: "CLASSIC v8.0.0".to_string(),
             ignore_plugins: self.yaml_data.game_ignore_plugins.clone(),
             ignore_records: self.yaml_data.game_ignore_records.clone(),
             ignore_list: self.yaml_data.ignore_list.clone(),
             show_formid_values: self.config.show_formid_values,
+            fcx_mode: false, // CLI doesn't support FCX mode yet
+            simplify_logs: false, // CLI doesn't support log simplification yet
+            remove_list: Vec::new(),
             suspects_error: self.yaml_data.suspects_error_list.clone(),
             suspects_stack,
             mods_core: self.yaml_data.game_mods_core.clone(),
@@ -179,6 +186,9 @@ impl ScanExecutor {
             mods_conf: self.yaml_data.game_mods_conf.clone(),
             mods_solu: self.yaml_data.game_mods_solu.clone(),
             mods_opc2: self.yaml_data.game_mods_opc2.clone(),
+            mods_core_folon: HashMap::new(), // FOLON support not yet implemented in CLI
+            classic_records_list: self.yaml_data.classic_records_list.clone(),
+            crashgen_ignore: self.yaml_data.crashgen_ignore.clone(),
         }
     }
 

@@ -9,7 +9,7 @@ All functions are re-exported from their new locations.
 from ClassicLib.Utils.file_utils import calculate_file_hash, calculate_similarity, open_file_with_encoding
 
 # Logging utilities
-from ClassicLib.Utils.logging_utils import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
 
 # Path utilities
 from ClassicLib.Utils.path_utils import remove_readonly, validate_path
@@ -56,6 +56,7 @@ __all__ = [
     "VERSION_PATTERNS",
     # Logging utilities
     "configure_logging",
+    "enable_debug_logging",
     # Web utilities
     "pastebin_fetch",
     "async_pastebin_fetch",

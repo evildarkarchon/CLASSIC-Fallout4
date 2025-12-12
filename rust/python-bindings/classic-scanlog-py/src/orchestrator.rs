@@ -105,6 +105,31 @@ impl PyAnalysisConfig {
             .getattr("game_mods_opc2")?
             .extract::<std::collections::HashMap<String, String>>()?;
 
+        // New fields for Python-Rust parity
+        config.crashgen_latest_vr = yamldata
+            .getattr("crashgen_latest_vr")
+            .ok()
+            .and_then(|attr| attr.extract::<String>().ok())
+            .unwrap_or_default();
+
+        config.mods_core_folon = yamldata
+            .getattr("game_mods_core_folon")
+            .ok()
+            .and_then(|attr| attr.extract::<std::collections::HashMap<String, String>>().ok())
+            .unwrap_or_default();
+
+        config.classic_records_list = yamldata
+            .getattr("classic_records_list")
+            .ok()
+            .and_then(|attr| attr.extract::<Vec<String>>().ok())
+            .unwrap_or_default();
+
+        config.crashgen_ignore = yamldata
+            .getattr("crashgen_ignore")
+            .ok()
+            .and_then(|attr| attr.extract::<Vec<String>>().ok())
+            .unwrap_or_default();
+
         Ok(Self { inner: config })
     }
 
@@ -363,6 +388,122 @@ impl PyAnalysisConfig {
     pub fn set_mods_opc2(&mut self, value: std::collections::HashMap<String, String>) {
         self.inner.mods_opc2 = value;
     }
+
+    // ============================================================================
+    // New fields added for Python-Rust parity
+    // ============================================================================
+
+    /// Get the latest VR crashgen version
+    #[getter]
+    pub fn crashgen_latest_vr(&self) -> String {
+        self.inner.crashgen_latest_vr.clone()
+    }
+
+    /// Set the latest VR crashgen version
+    #[setter]
+    pub fn set_crashgen_latest_vr(&mut self, value: String) {
+        self.inner.crashgen_latest_vr = value;
+    }
+
+    /// Get the game root name (e.g., "Fallout4")
+    #[getter]
+    pub fn game_root_name(&self) -> String {
+        self.inner.game_root_name.clone()
+    }
+
+    /// Set the game root name
+    #[setter]
+    pub fn set_game_root_name(&mut self, value: String) {
+        self.inner.game_root_name = value;
+    }
+
+    /// Get the CLASSIC version string
+    #[getter]
+    pub fn classic_version(&self) -> String {
+        self.inner.classic_version.clone()
+    }
+
+    /// Set the CLASSIC version string
+    #[setter]
+    pub fn set_classic_version(&mut self, value: String) {
+        self.inner.classic_version = value;
+    }
+
+    /// Get whether FCX mode is enabled
+    #[getter]
+    pub fn fcx_mode(&self) -> bool {
+        self.inner.fcx_mode
+    }
+
+    /// Set whether FCX mode is enabled
+    #[setter]
+    pub fn set_fcx_mode(&mut self, value: bool) {
+        self.inner.fcx_mode = value;
+    }
+
+    /// Get whether to simplify logs by removing strings
+    #[getter]
+    pub fn simplify_logs(&self) -> bool {
+        self.inner.simplify_logs
+    }
+
+    /// Set whether to simplify logs
+    #[setter]
+    pub fn set_simplify_logs(&mut self, value: bool) {
+        self.inner.simplify_logs = value;
+    }
+
+    /// Get the list of strings to remove when simplifying logs
+    #[getter]
+    pub fn remove_list(&self) -> Vec<String> {
+        self.inner.remove_list.clone()
+    }
+
+    /// Set the list of strings to remove when simplifying logs
+    #[setter]
+    pub fn set_remove_list(&mut self, value: Vec<String>) {
+        self.inner.remove_list = value;
+    }
+
+    /// Get the FOLON-specific mods database
+    #[getter]
+    pub fn mods_core_folon(&self, py: Python<'_>) -> PyResult<Py<pyo3::types::PyDict>> {
+        let dict = pyo3::types::PyDict::new(py);
+        for (key, value) in &self.inner.mods_core_folon {
+            dict.set_item(key, value)?;
+        }
+        Ok(dict.into())
+    }
+
+    /// Set the FOLON-specific mods database
+    #[setter]
+    pub fn set_mods_core_folon(&mut self, value: std::collections::HashMap<String, String>) {
+        self.inner.mods_core_folon = value;
+    }
+
+    /// Get the list of named records to scan for
+    #[getter]
+    pub fn classic_records_list(&self) -> Vec<String> {
+        self.inner.classic_records_list.clone()
+    }
+
+    /// Set the list of named records to scan for
+    #[setter]
+    pub fn set_classic_records_list(&mut self, value: Vec<String>) {
+        self.inner.classic_records_list = value;
+    }
+
+    /// Get the list of crashgen settings to ignore during validation
+    #[getter]
+    pub fn crashgen_ignore(&self) -> Vec<String> {
+        self.inner.crashgen_ignore.clone()
+    }
+
+    /// Set the list of crashgen settings to ignore during validation
+    #[setter]
+    pub fn set_crashgen_ignore(&mut self, value: Vec<String>) {
+        self.inner.crashgen_ignore = value;
+    }
 }
 
 /// Python wrapper for AnalysisResult
@@ -424,6 +565,34 @@ impl PyAnalysisResult {
     #[getter]
     pub fn suspect_count(&self) -> usize {
         self.inner.suspect_count
+    }
+
+    // ============================================================================
+    // Statistics fields for Python-Rust parity (Counter[str] compatibility)
+    // ============================================================================
+
+    /// Get the number of logs successfully scanned (1 for success, 0 for failure)
+    #[getter]
+    pub fn scanned(&self) -> u32 {
+        self.inner.scanned
+    }
+
+    /// Get the number of logs detected as incomplete (missing plugin segment)
+    #[getter]
+    pub fn incomplete(&self) -> u32 {
+        self.inner.incomplete
+    }
+
+    /// Get the number of logs that failed to scan
+    #[getter]
+    pub fn failed(&self) -> u32 {
+        self.inner.failed
+    }
+
+    /// Get whether the scan triggered a failure condition
+    #[getter]
+    pub fn trigger_scan_failed(&self) -> bool {
+        self.inner.trigger_scan_failed
     }
 }
 
@@ -506,5 +675,113 @@ impl PyRustOrchestrator {
         PyAnalysisConfig {
             inner: self.inner.config().clone(),
         }
+    }
+
+    /// Check if the orchestrator has all features required for Rust-first processing.
+    ///
+    /// A feature-complete orchestrator can replace Python's OrchestratorCore for
+    /// both single-log and batch processing.
+    ///
+    /// # Returns
+    /// True if all required features are available
+    pub fn is_feature_complete(&self) -> bool {
+        self.inner.is_feature_complete()
+    }
+
+    /// Check if this orchestrator has a database pool attached.
+    ///
+    /// # Returns
+    /// True if database pool is available for FormID lookups
+    pub fn has_database_pool(&self) -> bool {
+        self.inner.has_database_pool()
+    }
+
+    /// Check if the orchestrator has been initialized via async_enter.
+    ///
+    /// # Returns
+    /// True if initialized
+    pub fn is_initialized(&self) -> bool {
+        self.inner.is_initialized()
+    }
+
+    /// Write batch reports to files.
+    ///
+    /// This operation writes multiple report files concurrently, generating
+    /// autoscan filenames (e.g., crash.log -> crash-AUTOSCAN.md).
+    ///
+    /// # Arguments
+    /// * `py` - Python GIL token
+    /// * `reports` - List of tuples: (log_path, report_lines, scan_failed)
+    ///
+    /// # Returns
+    /// List of paths to successfully written reports
+    pub fn write_reports_batch(
+        &self,
+        py: Python<'_>,
+        reports: Vec<(String, Vec<String>, bool)>,
+    ) -> PyResult<Vec<String>> {
+        // Convert String paths to PathBuf
+        let reports_pathbuf: Vec<(std::path::PathBuf, Vec<String>, bool)> = reports
+            .into_iter()
+            .map(|(path, lines, failed)| (std::path::PathBuf::from(path), lines, failed))
+            .collect();
+
+        // Release GIL during file I/O
+        let result = without_gil(py, || {
+            get_runtime()
+                .block_on(async { self.inner.write_reports_batch(reports_pathbuf).await })
+                .map_err(crate::to_pyerr)
+        })?;
+
+        // Convert PathBuf back to String
+        Ok(result.into_iter().map(|p| p.to_string_lossy().to_string()).collect())
+    }
+
+    /// Check if a loadorder.txt file exists in the specified directory.
+    ///
+    /// # Arguments
+    /// * `dir_path` - Directory path to check
+    ///
+    /// # Returns
+    /// True if loadorder.txt exists
+    #[staticmethod]
+    pub fn check_loadorder_exists(dir_path: String) -> bool {
+        OrchestratorCore::check_loadorder_exists(std::path::Path::new(&dir_path))
+    }
+
+    /// Load plugins from a loadorder.txt file.
+    ///
+    /// # Arguments
+    /// * `py` - Python GIL token
+    /// * `loadorder_path` - Path to the loadorder.txt file
+    ///
+    /// # Returns
+    /// Tuple of (plugins_dict, info_lines) where plugins_dict maps plugin names
+    /// to their origin marker ("LO")
+    pub fn load_loadorder(
+        &self,
+        py: Python<'_>,
+        loadorder_path: String,
+    ) -> PyResult<(std::collections::HashMap<String, String>, Vec<String>)> {
+        let path = std::path::Path::new(&loadorder_path);
+
+        let result = without_gil(py, || {
+            get_runtime()
+                .block_on(async { self.inner.load_loadorder_async(path).await })
+                .map_err(crate::to_pyerr)
+        })?;
+
+        Ok((result.0, result.1.to_list()))
+    }
+
+    /// Detect if FOLON (Fallout: London) is loaded based on plugins.
+    ///
+    /// # Arguments
+    /// * `plugins` - Dictionary of plugin names to data
+    ///
+    /// # Returns
+    /// True if londonworldspace.esm is detected
+    pub fn detect_folon(&self, plugins: std::collections::HashMap<String, String>) -> bool {
+        self.inner.detect_folon(&plugins)
     }
 }

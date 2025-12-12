@@ -27,6 +27,7 @@ pub mod record_scanner;
 pub mod report;
 pub mod settings_validator;
 pub mod suspect_scanner;
+pub mod version;
 
 // Re-export key types for convenience
 pub use error::ScanLogError;
@@ -48,3 +49,4 @@ pub use record_scanner::{RecordScanner, contains_record, scan_records_batch};
 pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;
+pub use version::{CrashgenVersion, crashgen_version_gen};

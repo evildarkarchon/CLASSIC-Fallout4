@@ -195,34 +195,114 @@ impl PyReportGenerator {
         }
     }
 
+    /// Create a report generator with custom configuration
+    #[staticmethod]
+    pub fn with_config(classic_version: String, crashgen_name: String) -> Self {
+        Self {
+            inner: ReportGenerator::with_config(classic_version, crashgen_name),
+        }
+    }
+
     /// Generate header fragment
-    pub fn generate_header(&self, filename: String, version: String) -> PyReportFragment {
+    ///
+    /// Args:
+    ///     crashlog_filename: Name of the crash log file
+    ///
+    /// Returns:
+    ///     ReportFragment containing the formatted header
+    pub fn generate_header(&self, crashlog_filename: String) -> PyReportFragment {
         PyReportFragment {
-            inner: self.inner.generate_header(&filename, &version),
+            inner: self.inner.generate_header(&crashlog_filename),
         }
     }
 
     /// Generate error section
+    ///
+    /// Args:
+    ///     main_error: Main error message from crash log
+    ///     crashgen_version: Detected crashgen version
+    ///     is_outdated: Whether the version is outdated
+    ///
+    /// Returns:
+    ///     ReportFragment containing the formatted error section
     pub fn generate_error_section(
         &self,
         main_error: String,
         crashgen_version: String,
-        crashgen_name: String,
-        is_latest: bool,
-        warn_outdated: String,
+        is_outdated: bool,
     ) -> PyReportFragment {
         PyReportFragment {
             inner: self.inner.generate_error_section(
                 &main_error,
                 &crashgen_version,
-                &crashgen_name,
-                is_latest,
-                &warn_outdated,
+                is_outdated,
             ),
         }
     }
 
-    /// Generate suspect section
+    /// Generate suspect section header
+    pub fn generate_suspect_section_header(&self) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_suspect_section_header(),
+        }
+    }
+
+    /// Generate suspect found footer
+    ///
+    /// Args:
+    ///     found_suspect: Whether any suspects were detected
+    pub fn generate_suspect_found_footer(&self, found_suspect: bool) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_suspect_found_footer(found_suspect),
+        }
+    }
+
+    /// Generate settings section header
+    pub fn generate_settings_section_header(&self) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_settings_section_header(),
+        }
+    }
+
+    /// Generate mod check header
+    ///
+    /// Args:
+    ///     check_type: Description of what mods are being checked
+    pub fn generate_mod_check_header(&self, check_type: String) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_mod_check_header(&check_type),
+        }
+    }
+
+    /// Generate plugin suspect header
+    pub fn generate_plugin_suspect_header(&self) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_plugin_suspect_header(),
+        }
+    }
+
+    /// Generate FormID section header
+    pub fn generate_formid_section_header(&self) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_formid_section_header(),
+        }
+    }
+
+    /// Generate record section header
+    pub fn generate_record_section_header(&self) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_record_section_header(),
+        }
+    }
+
+    /// Generate report footer
+    pub fn generate_footer(&self) -> PyReportFragment {
+        PyReportFragment {
+            inner: self.inner.generate_footer(),
+        }
+    }
+
+    /// Generate suspect section (legacy method for backward compatibility)
     pub fn generate_suspect_section(&self, found_suspects: Vec<String>) -> PyReportFragment {
         PyReportFragment {
             inner: self.inner.generate_suspect_section(found_suspects),

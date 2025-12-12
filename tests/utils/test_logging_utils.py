@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Utils.logging_utils import configure_logging
+from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
 
 
 class TestLoggingUtilities:
@@ -77,7 +77,7 @@ class TestLoggingUtilities:
                 break
 
         assert file_handler is not None
-        assert file_handler.level == logging.DEBUG
+        assert file_handler.level == logging.INFO  # Default is INFO; DEBUG requires enable_debug_logging()
         # Check formatter includes expected components
         assert file_handler.formatter is not None
         fmt = file_handler.formatter._fmt
@@ -156,6 +156,74 @@ class TestLoggingUtilities:
 
             # Should have same number of handlers (clears and recreates)
             assert len(test_logger.handlers) == first_call_count
+
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    def test_enable_debug_logging(self, mock_get_local_dir: MagicMock) -> None:
+        """Test enable_debug_logging switches file handler from INFO to DEBUG."""
+        test_logger = logging.getLogger("test_classic_logger_debug")
+        test_logger.handlers.clear()
+
+        mock_get_local_dir.return_value = "."
+        configure_logging(test_logger)
+
+        # Find file handler and verify it's at INFO level
+        file_handler = None
+        for handler in test_logger.handlers:
+            if isinstance(handler, logging.FileHandler):
+                file_handler = handler
+                break
+
+        assert file_handler is not None
+        assert file_handler.level == logging.INFO
+
+        # Enable debug logging
+        enable_debug_logging(test_logger)
+
+        # Verify file handler is now at DEBUG level
+        assert file_handler.level == logging.DEBUG
+
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    def test_enable_debug_logging_no_file_handler(self, mock_get_local_dir: MagicMock) -> None:
+        """Test enable_debug_logging handles logger with no file handlers gracefully."""
+        test_logger = logging.getLogger("test_classic_logger_no_file")
+        test_logger.handlers.clear()
+
+        # Add only a console handler (no file handler)
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.WARNING)
+        test_logger.addHandler(console_handler)
+
+        # Should not raise, even with no file handlers
+        enable_debug_logging(test_logger)
+
+        # Console handler should still be at WARNING level (unaffected)
+        assert console_handler.level == logging.WARNING
+
+    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    def test_enable_debug_logging_also_updates_root_logger(self, mock_get_local_dir: MagicMock) -> None:
+        """Test enable_debug_logging also updates root logger file handlers."""
+        test_logger = logging.getLogger("test_classic_logger_root")
+        test_logger.handlers.clear()
+        logging.root.handlers.clear()
+
+        mock_get_local_dir.return_value = "."
+        configure_logging(test_logger)
+
+        # Find root logger file handler
+        root_file_handler = None
+        for handler in logging.root.handlers:
+            if isinstance(handler, logging.FileHandler):
+                root_file_handler = handler
+                break
+
+        assert root_file_handler is not None
+        assert root_file_handler.level == logging.INFO
+
+        # Enable debug logging
+        enable_debug_logging(test_logger)
+
+        # Root logger file handler should also be at DEBUG level
+        assert root_file_handler.level == logging.DEBUG
 
 
 if __name__ == "__main__":
