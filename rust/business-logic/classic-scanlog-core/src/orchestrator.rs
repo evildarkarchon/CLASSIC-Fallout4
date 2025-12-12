@@ -681,8 +681,15 @@ impl OrchestratorCore {
         use std::path::Path;
         let log_content = self.file_io.read_file(Path::new(&log_path)).await?;
 
-        // Convert to lines for parser (using Arc<str> for efficient memory sharing)
-        let lines: Vec<Arc<str>> = log_content.lines().map(Arc::from).collect();
+        // Convert to lines and apply preprocessing (matches Python's _reformat_crash_data_inline)
+        // This handles:
+        // 1. Removing lines containing strings from remove_list (if simplify_logs enabled)
+        // 2. Normalizing bracket padding in PLUGINS section (e.g., "[ 1]" -> "[01]")
+        let raw_lines: Vec<String> = log_content.lines().map(String::from).collect();
+        let processed_lines = self.reformat_crash_data_inline(&raw_lines);
+
+        // Convert to Arc<str> for efficient memory sharing during parsing
+        let lines: Vec<Arc<str>> = processed_lines.iter().map(|s| Arc::from(s.as_str())).collect();
 
         // Parse log into segments
         let segments = self.parser.parse_segments(&lines);
@@ -1022,57 +1029,91 @@ impl OrchestratorCore {
     // Python-compatible helper methods
     // ============================================================================
 
-    /// Reformats crash data by removing specified strings and handling bracket padding.
+    /// Reformats crash data inline as part of the processing pipeline.
     ///
-    /// This method matches Python's `_reformat_crash_data_inline()` behavior:
-    /// 1. Removes strings from `remove_list` if `simplify_logs` is enabled
-    /// 2. Pads brackets in the plugin segment for proper formatting
+    /// This method matches Python's `_reformat_crash_data_inline()` behavior exactly:
+    /// 1. Iterates from bottom to top to detect the PLUGINS section
+    /// 2. Removes entire lines containing strings from `remove_list` if `simplify_logs` is enabled
+    /// 3. Pads brackets (replaces spaces with zeros) within the PLUGINS section
+    ///
+    /// The PLUGINS section is detected by finding the "PLUGINS:" marker while iterating
+    /// from the bottom of the file upward. Lines below (and including) "PLUGINS:" are
+    /// considered part of the plugins section.
     ///
     /// # Arguments
     ///
-    /// * `crash_data` - Mutable reference to crash data lines to reformat
-    /// * `segment_plugin` - Optional mutable reference to plugin segment for bracket padding
+    /// * `lines` - The crash log lines to reformat
     ///
     /// # Returns
     ///
-    /// The modified crash_data vector.
-    pub fn reformat_crash_data_inline(
-        &self,
-        crash_data: &mut Vec<String>,
-        segment_plugin: Option<&mut Vec<String>>,
-    ) {
-        // Simplify logs by removing specified strings
-        if self.config.simplify_logs && !self.config.remove_list.is_empty() {
-            let remove_set: HashSet<&str> =
-                self.config.remove_list.iter().map(|s| s.as_str()).collect();
+    /// A new vector of reformatted lines with:
+    /// - Lines containing remove_list strings filtered out (if simplify_logs enabled)
+    /// - Bracket padding applied in the PLUGINS section
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// // Before: "[ 1] MyMod.esp"
+    /// // After:  "[01] MyMod.esp"
+    /// ```
+    pub fn reformat_crash_data_inline(&self, lines: &[String]) -> Vec<String> {
+        use std::collections::VecDeque;
 
-            for line in crash_data.iter_mut() {
-                for remove_str in &remove_set {
-                    if line.contains(*remove_str) {
-                        *line = line.replace(*remove_str, "");
-                    }
-                }
+        // Use VecDeque for O(1) prepend operations (like Python's deque)
+        let mut processed_lines: VecDeque<String> = VecDeque::with_capacity(lines.len());
+
+        // State for tracking if currently in the PLUGINS section
+        // Start as true because we iterate from bottom, and PLUGINS is typically at the end
+        let mut in_plugins_section = true;
+
+        // Pre-compute remove set for efficiency
+        let should_simplify = self.config.simplify_logs && !self.config.remove_list.is_empty();
+
+        // Iterate over lines from bottom to top (like Python's reversed())
+        for line in lines.iter().rev() {
+            // Check if we're exiting the PLUGINS section (going upward)
+            if in_plugins_section && line.starts_with("PLUGINS:") {
+                in_plugins_section = false;
             }
-        }
 
-        // Replace spaces with zeros inside brackets in plugin segment
-        // Python: "Replace all spaces inside the load order [brackets] with 0s."
-        // This maintains consistency between different versions of Buffout 4.
-        // Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]"
-        if let Some(plugins) = segment_plugin {
-            for line in plugins.iter_mut() {
-                if let Some(start) = line.find('[') {
-                    if let Some(end) = line.find(']') {
-                        let content = &line[start + 1..end];
+            // Remove entire lines if Simplify Logs is enabled and line contains a remove string
+            if should_simplify
+                && self
+                    .config
+                    .remove_list
+                    .iter()
+                    .any(|remove_str| line.contains(remove_str))
+            {
+                // Skip this line entirely (don't add to processed_lines)
+                continue;
+            }
+
+            // Reformat lines within the PLUGINS section (bracket padding)
+            if in_plugins_section && line.contains('[') {
+                // Replace all spaces inside the load order [brackets] with 0s.
+                // This maintains consistency between different versions of Buffout 4.
+                // Example: "[ 1]" -> "[01]", "[  A]" -> "[00A]"
+                if let Some((indent, rest)) = line.split_once('[') {
+                    if let Some((fid, name)) = rest.split_once(']') {
                         // Only modify if spaces exist inside brackets
-                        if content.contains(' ') {
-                            let modified_content = content.replace(' ', "0");
-                            *line = format!("{}[{}]{}", &line[..start], modified_content, &line[end + 1..]);
+                        if fid.contains(' ') {
+                            let modified_line =
+                                format!("{}[{}]{}", indent, fid.replace(' ', "0"), name);
+                            processed_lines.push_front(modified_line);
+                            continue;
                         }
                     }
                 }
+                // If format is unexpected, keep original line
+                processed_lines.push_front(line.clone());
+            } else {
+                // Line is not in PLUGINS section or doesn't need modification
+                processed_lines.push_front(line.clone());
             }
         }
+
+        // Convert VecDeque to Vec (already in correct order due to push_front)
+        processed_lines.into_iter().collect()
     }
 
     /// Detects if a crash log is incomplete (missing plugin segment).
