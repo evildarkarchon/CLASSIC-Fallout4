@@ -232,11 +232,9 @@ impl PyReportGenerator {
         is_outdated: bool,
     ) -> PyReportFragment {
         PyReportFragment {
-            inner: self.inner.generate_error_section(
-                &main_error,
-                &crashgen_version,
-                is_outdated,
-            ),
+            inner: self
+                .inner
+                .generate_error_section(&main_error, &crashgen_version, is_outdated),
         }
     }
 

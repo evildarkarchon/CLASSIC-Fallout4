@@ -176,7 +176,7 @@ impl ScanExecutor {
             ignore_records: self.yaml_data.game_ignore_records.clone(),
             ignore_list: self.yaml_data.ignore_list.clone(),
             show_formid_values: self.config.show_formid_values,
-            fcx_mode: false, // CLI doesn't support FCX mode yet
+            fcx_mode: false,      // CLI doesn't support FCX mode yet
             simplify_logs: false, // CLI doesn't support log simplification yet
             remove_list: Vec::new(),
             suspects_error: self.yaml_data.suspects_error_list.clone(),

@@ -115,7 +115,10 @@ impl PyAnalysisConfig {
         config.mods_core_folon = yamldata
             .getattr("game_mods_core_folon")
             .ok()
-            .and_then(|attr| attr.extract::<std::collections::HashMap<String, String>>().ok())
+            .and_then(|attr| {
+                attr.extract::<std::collections::HashMap<String, String>>()
+                    .ok()
+            })
             .unwrap_or_default();
 
         config.classic_records_list = yamldata
@@ -734,7 +737,10 @@ impl PyRustOrchestrator {
         })?;
 
         // Convert PathBuf back to String
-        Ok(result.into_iter().map(|p| p.to_string_lossy().to_string()).collect())
+        Ok(result
+            .into_iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect())
     }
 
     /// Check if a loadorder.txt file exists in the specified directory.

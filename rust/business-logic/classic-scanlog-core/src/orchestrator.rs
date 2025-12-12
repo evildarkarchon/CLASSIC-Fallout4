@@ -211,7 +211,6 @@ pub struct AnalysisResult {
     pub suspect_count: usize,
 
     // === Python-compatible statistics (Counter[str]) ===
-
     /// Number of logs successfully scanned (always 1 for single log, decremented on failure)
     pub scanned: u32,
 
@@ -1044,7 +1043,8 @@ impl OrchestratorCore {
     ) {
         // Simplify logs by removing specified strings
         if self.config.simplify_logs && !self.config.remove_list.is_empty() {
-            let remove_set: HashSet<&str> = self.config.remove_list.iter().map(|s| s.as_str()).collect();
+            let remove_set: HashSet<&str> =
+                self.config.remove_list.iter().map(|s| s.as_str()).collect();
 
             for line in crash_data.iter_mut() {
                 for remove_str in &remove_set {
@@ -1183,7 +1183,9 @@ impl OrchestratorCore {
     ///
     /// `true` if FOLON (londonworldspace.esm) is detected.
     pub fn detect_folon(&self, plugins: &HashMap<String, String>) -> bool {
-        plugins.keys().any(|name| name.to_lowercase().contains("londonworldspace.esm"))
+        plugins
+            .keys()
+            .any(|name| name.to_lowercase().contains("londonworldspace.esm"))
     }
 
     /// Returns the appropriate mods_core database based on whether FOLON is detected.
@@ -1198,7 +1200,10 @@ impl OrchestratorCore {
     /// # Returns
     ///
     /// Reference to the appropriate mods_core database.
-    pub fn get_mods_core_for_plugins(&self, plugins: &HashMap<String, String>) -> &HashMap<String, String> {
+    pub fn get_mods_core_for_plugins(
+        &self,
+        plugins: &HashMap<String, String>,
+    ) -> &HashMap<String, String> {
         if self.detect_folon(plugins) && !self.config.mods_core_folon.is_empty() {
             &self.config.mods_core_folon
         } else {
@@ -1265,8 +1270,10 @@ impl OrchestratorCore {
                 if loadorder_data.len() > 1 {
                     for plugin_entry in &loadorder_data[1..] {
                         let plugin_entry = plugin_entry.trim();
-                        if !plugin_entry.is_empty() && !loadorder_plugins.contains_key(plugin_entry) {
-                            loadorder_plugins.insert(plugin_entry.to_string(), loadorder_origin.clone());
+                        if !plugin_entry.is_empty() && !loadorder_plugins.contains_key(plugin_entry)
+                        {
+                            loadorder_plugins
+                                .insert(plugin_entry.to_string(), loadorder_origin.clone());
                         }
                     }
                 }
@@ -1330,7 +1337,8 @@ impl OrchestratorCore {
                 let file_io = self.file_io.clone();
                 async move {
                     // Generate autoscan filename: crash.log -> crash-AUTOSCAN.md
-                    let stem = log_path.file_stem()
+                    let stem = log_path
+                        .file_stem()
                         .and_then(|s| s.to_str())
                         .unwrap_or("unknown");
                     let autoscan_name = format!("{}-AUTOSCAN.md", stem);

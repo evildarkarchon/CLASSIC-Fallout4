@@ -11,9 +11,8 @@ use semver::Version;
 use std::cmp::Ordering;
 
 /// Pattern to extract version numbers from strings like "Buffout 4 v1.28.0"
-static VERSION_PATTERN: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"v?(\d+)\.(\d+)\.?(\d*)").expect("Invalid version regex pattern")
-});
+static VERSION_PATTERN: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"v?(\d+)\.(\d+)\.?(\d*)").expect("Invalid version regex pattern"));
 
 /// Represents a crashgen version that can be compared
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
@@ -99,11 +98,7 @@ impl CrashgenVersion {
                 .get(3)
                 .and_then(|m| {
                     let s = m.as_str();
-                    if s.is_empty() {
-                        None
-                    } else {
-                        s.parse().ok()
-                    }
+                    if s.is_empty() { None } else { s.parse().ok() }
                 })
                 .unwrap_or(0);
 
@@ -173,7 +168,12 @@ impl CrashgenVersion {
     /// // VR: compare against both
     /// assert!(current.is_outdated(&latest, &latest_vr, true));
     /// ```
-    pub fn is_outdated(&self, latest: &CrashgenVersion, latest_vr: &CrashgenVersion, is_vr_mode: bool) -> bool {
+    pub fn is_outdated(
+        &self,
+        latest: &CrashgenVersion,
+        latest_vr: &CrashgenVersion,
+        is_vr_mode: bool,
+    ) -> bool {
         // Port of Python logic:
         // if (version_current < version_latest_vr and version_current != version_latest) or
         //    (not game_is_vr and version_current < version_latest):
