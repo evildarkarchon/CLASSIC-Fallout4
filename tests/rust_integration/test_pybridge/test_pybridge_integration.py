@@ -469,20 +469,35 @@ class TestRustAcceleration:
         import classic_pybridge
 
         # Check if the Rust extension module exists
-        # The module structure is: classic_pybridge (package) -> classic_pybridge.pyd (extension)
-        if hasattr(classic_pybridge, "classic_pybridge"):
-            # Accessing the inner extension module
-            rust_module = classic_pybridge
-            module_file = rust_module.__file__
-        else:
-            # For packages, check the directory for .pyd/.so/.dylib files
-            package_file = classic_pybridge.__file__
-            package_dir = Path(package_file).parent
-            rust_files = list(package_dir.glob("*.pyd")) + list(package_dir.glob("*.so")) + list(package_dir.glob("*.dylib"))
-            assert len(rust_files) > 0, f"No Rust extension found in {package_dir}"
-            module_file = str(rust_files[0])
+        # The module structure can be either:
+        # 1. Direct extension: classic_pybridge.pyd (module file is the .pyd)
+        # 2. Package with extension: classic_pybridge/ directory with __init__.py and .pyd inside
+        module_file = classic_pybridge.__file__
 
-        assert module_file is not None
+        if module_file is not None and any(ext in module_file.lower() for ext in [".pyd", ".so", ".dylib"]):
+            # Case 1: Direct extension module
+            pass  # module_file is already the extension
+        elif hasattr(classic_pybridge, "classic_pybridge"):
+            # Case 2a: Package with inner extension module attribute
+            inner_module = classic_pybridge.classic_pybridge # pyright: ignore[reportAttributeAccessIssue]
+            module_file = inner_module.__file__
+        else:
+            # Case 2b: Package structure, check directory for .pyd/.so/.dylib files
+            package_file = classic_pybridge.__file__
+            if package_file:
+                package_dir = Path(package_file).parent
+                rust_files = (
+                    list(package_dir.glob("*.pyd"))
+                    + list(package_dir.glob("*.so"))
+                    + list(package_dir.glob("*.dylib"))
+                    + list(package_dir.glob("classic_pybridge*.pyd"))
+                    + list(package_dir.glob("classic_pybridge*.so"))
+                    + list(package_dir.glob("classic_pybridge*.dylib"))
+                )
+                assert len(rust_files) > 0, f"No Rust extension found in {package_dir}"
+                module_file = str(rust_files[0])
+
+        assert module_file is not None, "Module file is None - cannot determine module location"
         # Windows: .pyd, Linux: .so, Mac: .dylib
         assert any(ext in module_file.lower() for ext in [".pyd", ".so", ".dylib"]), f"Module file {module_file} is not a Rust extension"
 
