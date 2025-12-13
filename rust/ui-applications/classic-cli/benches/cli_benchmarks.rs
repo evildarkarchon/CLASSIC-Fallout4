@@ -8,6 +8,27 @@
 //! - Path validation
 //! - Memory allocation patterns
 //! - Cold start simulation (most critical metric)
+//!
+//! # Runtime Isolation
+//!
+//! **NOTE**: This file intentionally creates separate `tokio::runtime::Runtime` instances
+//! instead of using the shared runtime from `classic_shared_core::get_runtime()`.
+//!
+//! This is an intentional deviation from the project's ONE RUNTIME RULE for the following reasons:
+//!
+//! 1. **Measurement Isolation**: Benchmarks require isolated environments to ensure accurate,
+//!    reproducible measurements without interference from other async tasks or state.
+//!
+//! 2. **Cold Start Simulation**: The `cold_start_simulation` benchmark specifically needs to
+//!    measure the cost of runtime initialization as part of startup overhead.
+//!
+//! 3. **Independent Execution**: Each benchmark group runs independently and may be executed
+//!    in any order by Criterion, requiring self-contained runtime instances.
+//!
+//! 4. **Test Code Isolation**: Benchmark code is not production code and doesn't need to share
+//!    state with the application runtime.
+//!
+//! Production code MUST use `classic_shared_core::get_runtime()` to avoid runtime conflicts.
 
 #![allow(missing_docs)] // Benchmark functions don't need individual documentation
 
@@ -27,6 +48,7 @@ fn bench_config_creation(c: &mut Criterion) {
 
 /// Benchmark config save/load cycle
 fn bench_config_save_load(c: &mut Criterion) {
+    // Intentionally isolated runtime for benchmark accuracy (see module docs)
     let rt = Runtime::new().unwrap();
 
     c.bench_function("config_save_load_cycle", |b| {
@@ -45,6 +67,7 @@ fn bench_config_save_load(c: &mut Criterion) {
 
 /// Benchmark YAML serialization
 fn bench_yaml_serialization(c: &mut Criterion) {
+    // Intentionally isolated runtime for benchmark accuracy (see module docs)
     let rt = Runtime::new().unwrap();
 
     c.bench_function("config_yaml_serialization", |b| {
@@ -118,6 +141,7 @@ fn bench_arg_parsing(c: &mut Criterion) {
 
 /// Benchmark config merge operations
 fn bench_config_merge(c: &mut Criterion) {
+    // Intentionally isolated runtime for benchmark accuracy (see module docs)
     let rt = Runtime::new().unwrap();
 
     c.bench_function("config_merge_cli_args", |b| {
@@ -188,6 +212,7 @@ fn bench_memory_patterns(c: &mut Criterion) {
 
 /// Startup simulation benchmark (most critical metric)
 fn bench_startup_simulation(c: &mut Criterion) {
+    // Intentionally isolated runtime - measures cold start including runtime init
     let rt = Runtime::new().unwrap();
 
     let mut group = c.benchmark_group("startup");

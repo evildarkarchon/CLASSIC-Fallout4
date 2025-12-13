@@ -26,11 +26,32 @@ use std::time::Duration;
 
 use slint::{PhysicalPosition, PhysicalSize};
 
-/// Wrapper for slint::Timer to allow it to be passed between threads (needed for AsyncBridge)
-/// This is safe because we only access the timer on the UI thread.
+/// Wrapper for slint::Timer to allow it to be passed between threads.
+///
+/// This wrapper is needed because `slint::Timer` is not `Send + Sync` by default,
+/// but we need to store it in an `Arc<Mutex<Option<ThreadSafeTimer>>>` which requires
+/// these traits for the AsyncBridge callback pattern.
+///
+/// # Safety
+///
+/// This is safe because:
+/// 1. The timer is only created on the Slint UI thread during window initialization
+/// 2. The timer's callbacks are always executed on the Slint event loop (UI thread)
+/// 3. The wrapper is stored in an `Arc<parking_lot::Mutex<Option<ThreadSafeTimer>>>`
+///    but the actual timer operations are only performed from the UI thread context
+/// 4. Access is synchronized through `AsyncBridge::run_with_ui_update()` which
+///    ensures UI updates happen on the correct thread via Slint's `invoke_from_event_loop`
+/// 5. The timer is never actually sent between threads in practice - we only need
+///    the traits to satisfy the type system for the Arc wrapper
 #[allow(dead_code)] // The field 0 is conceptually used even if not directly accessed
 struct ThreadSafeTimer(slint::Timer);
+
+// Safety: Timer is only created and accessed from the Slint UI thread.
+// The Arc wrapper requires Send, but actual operations stay on UI thread.
 unsafe impl Send for ThreadSafeTimer {}
+
+// Safety: Timer is only accessed from the Slint UI thread via the event loop.
+// The Mutex wrapper requires Sync, but actual operations stay on UI thread.
 unsafe impl Sync for ThreadSafeTimer {}
 
 /// Pending action awaiting user confirmation

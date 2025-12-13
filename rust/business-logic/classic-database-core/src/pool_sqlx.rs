@@ -136,7 +136,11 @@ impl DatabasePool {
     /// Initialize database connections for given paths
     pub async fn initialize(&self, db_paths: Vec<PathBuf>) -> Result<(), DatabaseError> {
         let mut valid_paths = Vec::new();
-        let max_conn = self.max_connections.read().unwrap().unwrap_or(50);
+        let max_conn = self
+            .max_connections
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .unwrap_or(50);
 
         info!(
             "Initializing sqlx pools for {} database files",
@@ -197,7 +201,11 @@ impl DatabasePool {
     ) -> Result<Option<String>, DatabaseError> {
         let game_table = match table {
             Some(t) => t.to_string(),
-            None => self.game_table.read().unwrap().clone(),
+            None => self
+                .game_table
+                .read()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .clone(),
         };
 
         let cache_key = format!("{}:{}:{}", game_table, formid, plugin);
@@ -241,7 +249,10 @@ impl DatabasePool {
             {
                 Ok(Some(row)) => {
                     let value: String = row.try_get(0)?;
-                    let cache_ttl = *self.cache_ttl.read().unwrap();
+                    let cache_ttl = *self
+                        .cache_ttl
+                        .read()
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
                     self.query_cache
                         .insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
                     debug!("Found FormID {} in database {:?}", formid, db_path);
@@ -271,7 +282,11 @@ impl DatabasePool {
     ) -> Result<HashMap<String, String>, DatabaseError> {
         let game_table = match table {
             Some(t) => t.to_string(),
-            None => self.game_table.read().unwrap().clone(),
+            None => self
+                .game_table
+                .read()
+                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .clone(),
         };
 
         info!(
@@ -313,7 +328,10 @@ impl DatabasePool {
             return Ok(results);
         }
 
-        let cache_ttl = *self.cache_ttl.read().unwrap();
+        let cache_ttl = *self
+            .cache_ttl
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
 
         // Process uncached pairs in batches (TRUE ASYNC!)
         for batch in uncached_pairs.chunks(batch_size) {
@@ -385,7 +403,10 @@ impl DatabasePool {
 
     /// Get the current game table name
     pub fn get_game_table(&self) -> String {
-        self.game_table.read().unwrap().clone()
+        self.game_table
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .clone()
     }
 
     /// Clear the query cache
@@ -417,7 +438,10 @@ impl DatabasePool {
 
     /// Get the maximum number of connections per pool
     pub fn get_max_connections(&self) -> Option<usize> {
-        *self.max_connections.read().unwrap()
+        *self
+            .max_connections
+            .read()
+            .unwrap_or_else(|poisoned| poisoned.into_inner())
     }
 
     /// Set the maximum number of connections per pool

@@ -998,9 +998,21 @@ impl FileIOCore {
     /// This function uses `unsafe` internally for memory mapping, but the interface
     /// is safe. The memory map is properly managed and dropped when the function returns.
     /// The unsafe block is safe because:
-    /// 1. We only read, never write
-    /// 2. The file won't be modified during the mapping lifetime
-    /// 3. The mapping is dropped after reading
+    /// 1. We only read, never write to the mapped memory
+    /// 2. The mapping is dropped after reading, before the function returns
+    /// 3. The file handle remains open for the duration of the mapping
+    ///
+    /// # External Modification Warning
+    ///
+    /// **IMPORTANT**: This function assumes the file will not be modified by external
+    /// processes during the mapping lifetime. If an external process modifies the file
+    /// while it is memory-mapped, the behavior is undefined and could result in:
+    /// - Reading inconsistent or corrupted data
+    /// - Potential memory safety issues on some platforms
+    ///
+    /// Callers should ensure file stability during the operation. For files that may be
+    /// concurrently modified (e.g., actively written log files), use the regular
+    /// `read_file_with_encoding()` method instead, which reads a snapshot of the file.
     #[allow(unsafe_code)]
     pub async fn read_file_mmap(&self, path: &Path) -> Result<String, FileIOError> {
         // Optimization 1.7: Check file size to determine read strategy
