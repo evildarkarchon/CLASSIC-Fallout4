@@ -285,7 +285,9 @@ class DocumentsPathManager:
         xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
         docs_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
-        if not (isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str) and docs_path_str.strip()):
+        if not (
+            isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str) and docs_path_str.strip()
+        ):
             raise TypeError("Missing or invalid settings")
 
         docs_path: Path = Path(docs_path_str)
