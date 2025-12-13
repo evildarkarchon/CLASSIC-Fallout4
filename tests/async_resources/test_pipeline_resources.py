@@ -54,6 +54,9 @@ class TestAsyncPipelineResourceManagement:
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
         mock_yamldata = MagicMock()
+        # Provide actual string values for attributes that may be passed to Rust
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.xse_acronym = "F4SE"
 
         def _raise_test_exception():
             """Helper function to raise a test exception during context operations."""
@@ -122,6 +125,9 @@ class TestAsyncPipelineResourceManagement:
         from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
         mock_yamldata = MagicMock()
+        # Provide actual string values for attributes that may be passed to Rust
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.xse_acronym = "F4SE"
 
         # Patch DatabasePoolManager instead of AsyncDatabasePool directly
         with patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager_class:

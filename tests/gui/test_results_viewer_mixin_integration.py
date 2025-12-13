@@ -163,7 +163,10 @@ class TestReportLifecycleIntegration:
         report_path.write_text(original_content)
 
         # Step 2: Scan and find report
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             reports = integrated_viewer.scan_for_reports()
             assert len(reports) == 1
 
@@ -202,7 +205,10 @@ class TestReportLifecycleIntegration:
     def test_refresh_reports_list_integration(self, integrated_viewer, tmp_path, gui_message_handler):
         """Test refreshing reports list with real files."""
         # Start with no reports
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             integrated_viewer.refresh_reports_list()
 
             integrated_viewer.results_list.clear.assert_called()
@@ -233,7 +239,10 @@ class TestReportLifecycleIntegration:
             report_path.write_text(f"Report {i}")
             report_paths.append(report_path)
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             # Scan reports
             reports = integrated_viewer.scan_for_reports()
             assert len(reports) == 5
@@ -288,7 +297,10 @@ class TestErrorHandlingIntegration:
 
         shutil.rmtree(integrated_viewer.crash_logs_dir)
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             reports = integrated_viewer.scan_for_reports()
 
             # Should return empty list without crashing
@@ -305,6 +317,7 @@ class TestAutoRefreshIntegration:
         with (
             patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
             patch("ClassicLib.Interface.ResultsViewerMixin.yaml_settings") as mock_settings,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
         ):
             # Configure auto-refresh
             mock_settings.side_effect = [True, 1000]  # Enabled, 1 second interval
@@ -435,7 +448,10 @@ class TestBackupLocationIntegration:
         backup_report = integrated_viewer.backup_dir / "unsolved-AUTOSCAN.md"
         backup_report.write_text("Unsolved report")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             reports = integrated_viewer.scan_for_reports()
 
             # Should find report in backup location
@@ -451,7 +467,10 @@ class TestReportListRefreshIntegration:
 
     def test_refresh_clears_viewer_when_no_reports(self, integrated_viewer, gui_message_handler):
         """Should clear viewer and show message when no reports found."""
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(integrated_viewer.test_dir)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(integrated_viewer.test_dir)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             integrated_viewer.refresh_reports_list()
 
             # Viewer should be cleared
@@ -478,7 +497,10 @@ class TestReportListRefreshIntegration:
         new_report = integrated_viewer.crash_logs_dir / "new-AUTOSCAN.md"
         new_report.write_text("New report")
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             # Clear call counts
             integrated_viewer.markdown_viewer.clear.reset_mock()
             integrated_viewer.metadata_widget.clear.reset_mock()

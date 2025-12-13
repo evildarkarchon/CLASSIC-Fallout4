@@ -58,7 +58,8 @@ class TestAsyncYamlCaching:
         async with aiofiles.open(temp_yaml_file, mode="w") as f:
             await f.write(stream.getvalue())
 
-        # Clear cache to force reload
+        # Clear both FileIOCore cache and YAML cache to force reload
+        async_yaml_core.file_ops.io_core.clear_cache()
         await async_yaml_core.clear_cache()
 
         # After cache clear, should reload from file

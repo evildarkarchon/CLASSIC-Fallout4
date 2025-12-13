@@ -186,6 +186,7 @@ class TestAutoRefreshIntegration:
         with (
             patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
             patch("ClassicLib.Interface.ResultsViewerMixin.yaml_settings") as mock_settings,
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
         ):
             # Configure auto-refresh
             mock_settings.side_effect = [True, 1000]  # Enabled, 1 second interval
@@ -247,7 +248,10 @@ class TestErrorHandlingIntegration:
         # Remove crash logs directory
         shutil.rmtree(integrated_viewer.crash_logs_dir)
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)):
+        with (
+            patch.object(GlobalRegistry, "get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.Interface.ResultsViewerMixin.classic_settings", return_value=None),
+        ):
             reports = integrated_viewer.scan_for_reports()
 
             # Should return empty list without crashing

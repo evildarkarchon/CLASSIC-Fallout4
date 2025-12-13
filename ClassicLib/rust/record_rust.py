@@ -118,9 +118,8 @@ class RustRecordScanner:
             segment_callstack (list[str]): A list representing the segment call stack to be scanned.
 
         Returns:
-            tuple[Any, list[str]]: A tuple containing:
-                - Rust: list[str] of formatted report lines
-                - Python: ReportFragment object
+            tuple[ReportFragment, list[str]]: A tuple containing:
+                - ReportFragment object with formatted report content
                 - list[str] of matched record names
 
         """
@@ -135,7 +134,10 @@ class RustRecordScanner:
             except (TypeError, ValueError) as e:
                 logger.warning(f"Rust scan_named_records error: {e}")
             else:
-                return report_lines, matches
+                # Convert Rust list[str] to ReportFragment for consistency with Python implementation
+                from ClassicLib.ScanLog.fragments import ReportFragment
+
+                return ReportFragment.from_lines(report_lines), matches
 
         # Use Python fallback - returns (ReportFragment, list[str])
         if self._python_scanner:
@@ -262,14 +264,15 @@ class RustRecordScanner:
 
         Returns:
             A list of tuples, where each tuple contains:
-                - Rust: list[str] of formatted report lines
-                - Python: ReportFragment object
+                - ReportFragment object with formatted report content
                 - list[str] of matched record names
 
         """
         if self._use_rust and self._rust_scanner:
             try:
                 import classic_scanlog
+
+                from ClassicLib.ScanLog.fragments import ReportFragment
 
                 # Get stored patterns from initialization
                 target_records = list(getattr(self.yamldata, "classic_records_list", []) or [])
@@ -278,11 +281,11 @@ class RustRecordScanner:
                 # Call standalone batch function for parallel processing
                 matches_batch = classic_scanlog.scan_records_batch(segments, target_records, ignore_records)
 
-                # Format results to match Python API: list[tuple[report_lines, matches]]
+                # Format results to match Python API: list[tuple[ReportFragment, matches]]
                 results = []
                 for matches in matches_batch:
                     report_lines = self._generate_report_lines(matches)
-                    results.append((report_lines, matches))
+                    results.append((ReportFragment.from_lines(report_lines), matches))
 
                 return results  # noqa: TRY300 - Return in try block is clear here
             except parse_errors as e:

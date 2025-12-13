@@ -343,6 +343,10 @@ async def test_yaml_cache_bypass(yaml_file_ops, temp_yaml_file):
     # Modify file
     temp_yaml_file.write_text("new_key: new_value\n", encoding="utf-8")
 
+    # Clear both FileIOCore cache and YAML cache to ensure fresh read
+    yaml_file_ops.io_core.clear_cache()
+    yaml_file_ops.clear_cache()
+
     # Load without cache - should see new content
     result2 = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
 
