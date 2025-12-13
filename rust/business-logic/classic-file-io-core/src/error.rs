@@ -27,7 +27,7 @@ pub enum FileIOError {
 
     /// Async task join operation failed
     #[error("Task join error: {0}")]
-    JoinError(String),
+    JoinError(#[from] tokio::task::JoinError),
 
     /// File cache operation error
     #[error("Cache error: {0}")]

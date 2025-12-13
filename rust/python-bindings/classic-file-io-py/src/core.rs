@@ -4,7 +4,7 @@
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
 use classic_file_io_core::FileIOCore;
-use classic_shared::PathLike;
+use classic_shared::{without_gil, PathLike};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -253,11 +253,14 @@ impl PyFileIOCore {
     }
 
     /// Clear all caches
-    pub fn clear_cache(&self, _py: Python<'_>) -> PyResult<()> {
-        get_runtime().block_on(async {
-            self.inner.clear_cache().await;
-            Ok(())
-        })
+    pub fn clear_cache(&self, py: Python<'_>) -> PyResult<()> {
+        // Release GIL during blocking cache clear operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                self.inner.clear_cache().await;
+            });
+        });
+        Ok(())
     }
 
     /// Check if file exists (fast, non-blocking)
@@ -355,14 +358,17 @@ impl PyFileIOCore {
     /// Parse DDS header with zero-copy operations
     ///
     /// Accepts both string paths and pathlib.Path objects.
-    pub fn read_dds_header(&self, _py: Python<'_>, path: PathLike) -> PyResult<Option<(u32, u32)>> {
+    pub fn read_dds_header(&self, py: Python<'_>, path: PathLike) -> PyResult<Option<(u32, u32)>> {
         let path_buf: PathBuf = path.into();
-        get_runtime().block_on(async {
-            match self.inner.read_dds_header(&path_buf).await {
-                Ok(Some(header)) => Ok(Some((header.width, header.height))),
-                Ok(None) => Ok(None),
-                Err(e) => Err(to_pyerr(e)),
-            }
+        // Release GIL during blocking file I/O operation
+        without_gil(py, || {
+            get_runtime().block_on(async {
+                match self.inner.read_dds_header(&path_buf).await {
+                    Ok(Some(header)) => Ok(Some((header.width, header.height))),
+                    Ok(None) => Ok(None),
+                    Err(e) => Err(to_pyerr(e)),
+                }
+            })
         })
     }
 

@@ -22,16 +22,26 @@ static TIMER_START: Lazy<Instant> = Lazy::new(Instant::now);
 ///
 /// Performance Optimization: Replaces unbounded Vec<Duration> with streaming statistics,
 /// providing 80% memory reduction and O(1) stats computation.
-#[derive(Default)]
 struct RollingStats {
     /// Number of operations recorded
     count: AtomicUsize,
     /// Sum of all durations in nanoseconds
     sum_nanos: AtomicU64,
-    /// Minimum duration in nanoseconds
+    /// Minimum duration in nanoseconds (initialized to MAX so first value becomes min)
     min_nanos: AtomicU64,
     /// Maximum duration in nanoseconds
     max_nanos: AtomicU64,
+}
+
+impl Default for RollingStats {
+    fn default() -> Self {
+        Self {
+            count: AtomicUsize::new(0),
+            sum_nanos: AtomicU64::new(0),
+            min_nanos: AtomicU64::new(u64::MAX), // Start at MAX so first value becomes min
+            max_nanos: AtomicU64::new(0),
+        }
+    }
 }
 
 impl RollingStats {
@@ -199,7 +209,7 @@ pub struct OperationStats {
 impl OperationStats {
     /// Calculate throughput in bytes per second
     pub fn throughput(&self) -> Option<f64> {
-        if self.bytes_processed > 0 && self.total.as_secs() > 0 {
+        if self.bytes_processed > 0 && !self.total.is_zero() {
             Some(self.bytes_processed as f64 / self.total.as_secs_f64())
         } else {
             None

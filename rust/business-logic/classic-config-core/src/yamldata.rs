@@ -185,10 +185,10 @@ impl YamlDataCore {
         // Verify files exist before loading
         for path in [&main_yaml, &game_yaml, &ignore_yaml] {
             if !path.exists() {
-                return Err(ConfigError::IOError(format!(
-                    "YAML file not found: {}",
-                    path.display()
-                )));
+                return Err(ConfigError::IOError {
+                    context: format!("YAML file not found: {}", path.display()),
+                    source: std::io::Error::new(std::io::ErrorKind::NotFound, "File not found"),
+                });
             }
         }
 
@@ -200,31 +200,49 @@ impl YamlDataCore {
             tokio::fs::read_to_string(&ignore_yaml)
         );
 
-        let main_content = main_result
-            .map_err(|e| ConfigError::IOError(format!("Failed to read main YAML: {}", e)))?;
-        let game_content = game_result
-            .map_err(|e| ConfigError::IOError(format!("Failed to read game YAML: {}", e)))?;
-        let ignore_content = ignore_result
-            .map_err(|e| ConfigError::IOError(format!("Failed to read ignore YAML: {}", e)))?;
+        let main_content = main_result.map_err(|e| ConfigError::IOError {
+            context: "Failed to read main YAML".to_string(),
+            source: e,
+        })?;
+        let game_content = game_result.map_err(|e| ConfigError::IOError {
+            context: "Failed to read game YAML".to_string(),
+            source: e,
+        })?;
+        let ignore_content = ignore_result.map_err(|e| ConfigError::IOError {
+            context: "Failed to read ignore YAML".to_string(),
+            source: e,
+        })?;
 
         // Parse YAML contents using yaml-rust2
-        let main_docs = YamlLoader::load_from_str(&main_content)
-            .map_err(|e| ConfigError::ParseError(format!("Failed to parse main YAML: {}", e)))?;
-        let game_docs = YamlLoader::load_from_str(&game_content)
-            .map_err(|e| ConfigError::ParseError(format!("Failed to parse game YAML: {}", e)))?;
-        let ignore_docs = YamlLoader::load_from_str(&ignore_content)
-            .map_err(|e| ConfigError::ParseError(format!("Failed to parse ignore YAML: {}", e)))?;
+        let main_docs = YamlLoader::load_from_str(&main_content).map_err(|e| {
+            ConfigError::ParseError {
+                context: "Failed to parse main YAML".to_string(),
+                source: e,
+            }
+        })?;
+        let game_docs = YamlLoader::load_from_str(&game_content).map_err(|e| {
+            ConfigError::ParseError {
+                context: "Failed to parse game YAML".to_string(),
+                source: e,
+            }
+        })?;
+        let ignore_docs = YamlLoader::load_from_str(&ignore_content).map_err(|e| {
+            ConfigError::ParseError {
+                context: "Failed to parse ignore YAML".to_string(),
+                source: e,
+            }
+        })?;
 
         // Get first document from each file
         let main_data = main_docs
             .first()
-            .ok_or_else(|| ConfigError::ParseError("Main YAML is empty".to_string()))?;
+            .ok_or_else(|| ConfigError::EmptyDocument("Main YAML".to_string()))?;
         let game_data = game_docs
             .first()
-            .ok_or_else(|| ConfigError::ParseError("Game YAML is empty".to_string()))?;
+            .ok_or_else(|| ConfigError::EmptyDocument("Game YAML".to_string()))?;
         let ignore_data = ignore_docs
             .first()
-            .ok_or_else(|| ConfigError::ParseError("Ignore YAML is empty".to_string()))?;
+            .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
 
         // Create YamlOperations instance for using helper methods
         let yaml_ops = YamlOperations::new();
@@ -353,23 +371,35 @@ impl YamlDataCore {
         vr_mode: bool,
     ) -> Result<Self, ConfigError> {
         // Parse YAML contents using yaml-rust2
-        let main_docs = YamlLoader::load_from_str(main_content)
-            .map_err(|e| ConfigError::ParseError(format!("Failed to parse main YAML: {}", e)))?;
-        let game_docs = YamlLoader::load_from_str(game_content)
-            .map_err(|e| ConfigError::ParseError(format!("Failed to parse game YAML: {}", e)))?;
-        let ignore_docs = YamlLoader::load_from_str(ignore_content)
-            .map_err(|e| ConfigError::ParseError(format!("Failed to parse ignore YAML: {}", e)))?;
+        let main_docs = YamlLoader::load_from_str(main_content).map_err(|e| {
+            ConfigError::ParseError {
+                context: "Failed to parse main YAML".to_string(),
+                source: e,
+            }
+        })?;
+        let game_docs = YamlLoader::load_from_str(game_content).map_err(|e| {
+            ConfigError::ParseError {
+                context: "Failed to parse game YAML".to_string(),
+                source: e,
+            }
+        })?;
+        let ignore_docs = YamlLoader::load_from_str(ignore_content).map_err(|e| {
+            ConfigError::ParseError {
+                context: "Failed to parse ignore YAML".to_string(),
+                source: e,
+            }
+        })?;
 
         // Get first document from each file
         let main_data = main_docs
             .first()
-            .ok_or_else(|| ConfigError::ParseError("Main YAML is empty".to_string()))?;
+            .ok_or_else(|| ConfigError::EmptyDocument("Main YAML".to_string()))?;
         let game_data = game_docs
             .first()
-            .ok_or_else(|| ConfigError::ParseError("Game YAML is empty".to_string()))?;
+            .ok_or_else(|| ConfigError::EmptyDocument("Game YAML".to_string()))?;
         let ignore_data = ignore_docs
             .first()
-            .ok_or_else(|| ConfigError::ParseError("Ignore YAML is empty".to_string()))?;
+            .ok_or_else(|| ConfigError::EmptyDocument("Ignore YAML".to_string()))?;
 
         // Create YamlOperations instance for using helper methods
         let yaml_ops = YamlOperations::new();
@@ -453,12 +483,28 @@ pub enum ConfigError {
     InvalidInput(String),
 
     /// I/O error occurred while reading configuration files
-    #[error("IO error: {0}")]
-    IOError(String),
+    #[error("{context}: {source}")]
+    IOError {
+        /// Contextual information about which file operation failed
+        context: String,
+        /// The underlying I/O error
+        #[source]
+        source: std::io::Error,
+    },
 
     /// Error parsing YAML configuration content
-    #[error("Parse error: {0}")]
-    ParseError(String),
+    #[error("{context}: {source}")]
+    ParseError {
+        /// Contextual information about which file failed to parse
+        context: String,
+        /// The underlying YAML parse error
+        #[source]
+        source: yaml_rust2::ScanError,
+    },
+
+    /// YAML document is empty (no content to parse)
+    #[error("Empty YAML document: {0}")]
+    EmptyDocument(String),
 
     /// Runtime error during configuration processing
     #[error("Runtime error: {0}")]

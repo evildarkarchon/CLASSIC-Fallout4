@@ -139,7 +139,10 @@ impl DatabasePool {
         let max_conn = self
             .max_connections
             .read()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .unwrap_or_else(|poisoned| {
+                warn!("max_connections lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
             .unwrap_or(50);
 
         info!(
@@ -204,7 +207,10 @@ impl DatabasePool {
             None => self
                 .game_table
                 .read()
-                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .unwrap_or_else(|poisoned| {
+                    warn!("game_table lock was poisoned - recovering");
+                    poisoned.into_inner()
+                })
                 .clone(),
         };
 
@@ -252,7 +258,10 @@ impl DatabasePool {
                     let cache_ttl = *self
                         .cache_ttl
                         .read()
-                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                        .unwrap_or_else(|poisoned| {
+                            warn!("cache_ttl lock was poisoned - recovering");
+                            poisoned.into_inner()
+                        });
                     self.query_cache
                         .insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
                     debug!("Found FormID {} in database {:?}", formid, db_path);
@@ -285,7 +294,10 @@ impl DatabasePool {
             None => self
                 .game_table
                 .read()
-                .unwrap_or_else(|poisoned| poisoned.into_inner())
+                .unwrap_or_else(|poisoned| {
+                    warn!("game_table lock was poisoned - recovering");
+                    poisoned.into_inner()
+                })
                 .clone(),
         };
 
@@ -331,7 +343,10 @@ impl DatabasePool {
         let cache_ttl = *self
             .cache_ttl
             .read()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+            .unwrap_or_else(|poisoned| {
+                warn!("cache_ttl lock was poisoned - recovering");
+                poisoned.into_inner()
+            });
 
         // Process uncached pairs in batches (TRUE ASYNC!)
         for batch in uncached_pairs.chunks(batch_size) {
@@ -405,7 +420,10 @@ impl DatabasePool {
     pub fn get_game_table(&self) -> String {
         self.game_table
             .read()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .unwrap_or_else(|poisoned| {
+                warn!("game_table lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
             .clone()
     }
 
@@ -441,7 +459,10 @@ impl DatabasePool {
         *self
             .max_connections
             .read()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
+            .unwrap_or_else(|poisoned| {
+                warn!("max_connections lock was poisoned - recovering");
+                poisoned.into_inner()
+            })
     }
 
     /// Set the maximum number of connections per pool

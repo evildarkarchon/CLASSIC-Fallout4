@@ -80,6 +80,7 @@
 //! ```
 
 use classic_config_core::{ConfigError, YamlDataCore};
+use classic_shared::without_gil;
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
@@ -122,11 +123,13 @@ pub struct PyYamlData {
 impl PyYamlData {
     #[new]
     #[pyo3(signature = (yaml_dirs, game, vr_mode))]
-    fn new(yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
-        // Call pure Rust core using shared runtime
-        let core = get_runtime()
-            .block_on(async { YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await })
-            .map_err(to_pyerr)?;
+    fn new(py: Python<'_>, yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
+        // Call pure Rust core using shared runtime, releasing GIL during blocking I/O
+        let core = without_gil(py, || {
+            get_runtime()
+                .block_on(async { YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await })
+        })
+        .map_err(to_pyerr)?;
 
         Ok(Self { inner: core })
     }
@@ -400,11 +403,16 @@ impl PyYamlData {
 fn to_pyerr(err: ConfigError) -> PyErr {
     match err {
         // I/O errors map to RustConfigIOError
-        ConfigError::IOError(msg) => RustConfigIOError::new_err(format!("I/O error: {}", msg)),
+        ConfigError::IOError { context, source } => {
+            RustConfigIOError::new_err(format!("{}: {}", context, source))
+        }
 
         // Parse errors map to RustConfigParseError
-        ConfigError::ParseError(msg) => {
-            RustConfigParseError::new_err(format!("Parse error: {}", msg))
+        ConfigError::ParseError { context, source } => {
+            RustConfigParseError::new_err(format!("{}: {}", context, source))
+        }
+        ConfigError::EmptyDocument(doc_name) => {
+            RustConfigParseError::new_err(format!("Empty YAML document: {}", doc_name))
         }
         ConfigError::InvalidInput(msg) => {
             RustConfigParseError::new_err(format!("Invalid input: {}", msg))
@@ -424,11 +432,12 @@ fn to_pyerr(err: ConfigError) -> PyErr {
 #[pyfunction]
 #[pyo3(signature = (yaml_dirs, game, vr_mode))]
 pub fn create_yamldata(
+    py: Python<'_>,
     yaml_dirs: Vec<PathBuf>,
     game: String,
     vr_mode: bool,
 ) -> PyResult<PyYamlData> {
-    PyYamlData::new(yaml_dirs, game, vr_mode)
+    PyYamlData::new(py, yaml_dirs, game, vr_mode)
 }
 
 /// Clear the global YAML cache

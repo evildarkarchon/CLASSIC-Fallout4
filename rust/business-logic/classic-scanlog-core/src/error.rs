@@ -43,7 +43,7 @@ pub enum ScanLogError {
 
     /// Error matching patterns in crash log
     #[error("Pattern matching error: {0}")]
-    PatternError(String),
+    PatternError(#[from] aho_corasick::BuildError),
 
     /// Error generating analysis report
     #[error("Report generation error: {0}")]

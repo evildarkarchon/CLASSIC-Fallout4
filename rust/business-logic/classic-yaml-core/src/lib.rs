@@ -503,6 +503,7 @@ impl YamlOperations {
     ///     }
     /// }
     /// ```
+    #[must_use = "parsing may fail; handle the Result"]
     pub fn parse_yaml(&self, content: &str) -> Result<Yaml, YamlError> {
         let docs =
             YamlLoader::load_from_str(content).map_err(|e| YamlError::ParseError(e.to_string()))?;
@@ -542,6 +543,7 @@ impl YamlOperations {
     ///     Err(e) => eprintln!("Failed to serialize YAML: {:?}", e),
     /// }
     /// ```
+    #[must_use = "serialization may fail; handle the Result"]
     pub fn dump_yaml(&self, yaml: &Yaml) -> Result<String, YamlError> {
         let mut out_str = String::new();
         let mut emitter = YamlEmitter::new(&mut out_str);
@@ -632,6 +634,7 @@ impl YamlOperations {
     ///
     /// The method assumes thread-safe operations where necessary, particularly for the global `YAML_CACHE`.
     /// Use of `Arc` ensures shared ownership of cached YAML data across threads.
+    #[must_use = "file loading may fail; handle the Result"]
     pub fn load_yaml_file(&self, path: &Path) -> Result<Yaml, YamlError> {
         let file_path = path.to_path_buf();
 
@@ -724,6 +727,7 @@ impl YamlOperations {
     ///     println!("YAML file saved successfully!");
     /// }
     /// ```
+    #[must_use = "file saving may fail; handle the Result"]
     pub fn save_yaml_file(&self, path: &Path, yaml: &Yaml) -> Result<(), YamlError> {
         // Serialize
         let yaml_str = self.dump_yaml(yaml)?;
@@ -848,6 +852,7 @@ impl YamlOperations {
     ///   do not exist in the YAML object, they will be automatically created as empty `Yaml::Hash`.
     /// - The function handles both existing and missing paths gracefully, ensuring a nested structure
     ///   is built as needed.
+    #[must_use = "setting modification may fail; handle the Result"]
     pub fn set_setting(&self, yaml: &Yaml, key_path: &str, value: Yaml) -> Result<Yaml, YamlError> {
         // Check for empty key path
         if key_path.trim().is_empty() {

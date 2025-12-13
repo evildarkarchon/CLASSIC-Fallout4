@@ -1,6 +1,6 @@
 //! Pattern matching engine with multi-pattern optimization
 
-use crate::error::{Result, ScanLogError};
+use crate::error::Result;
 use aho_corasick::{AhoCorasick, Match};
 use dashmap::DashMap;
 use std::sync::Arc;
@@ -53,8 +53,7 @@ impl PatternMatcher {
     pub fn new(patterns: Vec<String>) -> Result<Self> {
         let matcher = AhoCorasick::builder()
             .ascii_case_insensitive(true)
-            .build(&patterns)
-            .map_err(|e| ScanLogError::PatternError(e.to_string()))?;
+            .build(&patterns)?;
 
         Ok(Self {
             patterns: Arc::new(patterns),

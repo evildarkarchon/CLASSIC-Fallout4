@@ -173,7 +173,7 @@ pub fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
         }
 
         // Generic errors map to base RustFileIOError
-        FileIOError::JoinError(s) => RustFileIOError::new_err(format!("Task error: {}", s)),
+        FileIOError::JoinError(e) => RustFileIOError::new_err(format!("Task error: {}", e)),
         FileIOError::CacheError(s) => RustFileIOError::new_err(format!("Cache error: {}", s)),
     }
 }

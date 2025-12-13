@@ -47,6 +47,7 @@ gui-bridge = ["slint"]
 
 [dev-dependencies]
 criterion = { version = "0.5", features = ["html_reports"] }
+serial_test = "3.2"
 
 [[bench]]
 name = "string_benchmarks"

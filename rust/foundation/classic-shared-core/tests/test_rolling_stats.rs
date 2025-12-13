@@ -1,10 +1,12 @@
 //! Unit tests for rolling statistics optimizations
 
 use classic_shared_core::performance_core::{Timer, get_global_metrics};
+use serial_test::serial;
 use std::thread;
 use std::time::Duration;
 
 #[test]
+#[serial]
 fn test_rolling_stats_basic() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -32,6 +34,7 @@ fn test_rolling_stats_basic() {
 }
 
 #[test]
+#[serial]
 fn test_rolling_stats_constant_memory() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -70,6 +73,7 @@ fn test_rolling_stats_constant_memory() {
 }
 
 #[test]
+#[serial]
 fn test_rolling_stats_min_max() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -90,6 +94,7 @@ fn test_rolling_stats_min_max() {
 }
 
 #[test]
+#[serial]
 fn test_rolling_stats_with_bytes() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -111,6 +116,7 @@ fn test_rolling_stats_with_bytes() {
 }
 
 #[test]
+#[serial]
 fn test_rolling_stats_multiple_operations() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -137,6 +143,7 @@ fn test_rolling_stats_multiple_operations() {
 }
 
 #[test]
+#[serial]
 fn test_timer_integration() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -156,6 +163,7 @@ fn test_timer_integration() {
 }
 
 #[test]
+#[serial]
 fn test_timer_auto_drop() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -177,6 +185,7 @@ fn test_timer_auto_drop() {
 }
 
 #[test]
+#[serial]
 fn test_timer_with_bytes() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -194,6 +203,7 @@ fn test_timer_with_bytes() {
 }
 
 #[test]
+#[serial]
 fn test_concurrent_recording() {
     let metrics = get_global_metrics();
     metrics.clear();
@@ -229,6 +239,7 @@ fn test_concurrent_recording() {
 }
 
 #[test]
+#[serial]
 fn test_clear_metrics() {
     let metrics = get_global_metrics();
 
@@ -254,12 +265,14 @@ fn test_clear_metrics() {
 }
 
 #[test]
+#[serial]
 fn test_rolling_stats_accuracy() {
     let metrics = get_global_metrics();
     metrics.clear();
 
-    // Known sequence of timings
-    let timings = vec![5, 10, 15, 20, 25, 30, 35, 40, 45, 50];
+    // Known sequence of timings that divide evenly
+    // Sum = 10+20+30+40 = 100, Count = 4, Average = 25 (no rounding issues)
+    let timings = vec![10, 20, 30, 40];
     let expected_sum: u64 = timings.iter().sum();
     let expected_count = timings.len();
     let expected_avg = expected_sum / expected_count as u64;
