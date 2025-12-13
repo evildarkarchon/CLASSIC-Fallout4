@@ -14,7 +14,7 @@ from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer
+from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer, get_record_scanner
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager
@@ -24,7 +24,6 @@ from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from ClassicLib.ScanLog.Parser import extract_module_names
-from ClassicLib.ScanLog.RecordScanner import RecordScanner
 from ClassicLib.ScanLog.ReportGenerator import ReportGeneratorFragments
 from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
 from ClassicLib.ScanLog.SuspectScanner import SuspectScanner
@@ -107,11 +106,11 @@ class OrchestratorCore:
         self.simplify_logs: bool = False
         self.game_root_name: str | None = None
 
-        # Initialize modules - use Rust PluginAnalyzer (30x speedup), Python for others (API compatibility)
-        self.plugin_analyzer = get_plugin_analyzer(yamldata)  # Rust accelerated
+        # Initialize modules - use Rust acceleration via factory pattern (10-40x speedup)
+        self.plugin_analyzer = get_plugin_analyzer(yamldata)  # Rust accelerated (30x speedup)
         self.formid_analyzer = FormIDAnalyzer(yamldata, show_formid_values or False, formid_db_exists)
         self.suspect_scanner = SuspectScanner(yamldata)
-        self.record_scanner = RecordScanner(yamldata)
+        self.record_scanner = get_record_scanner(yamldata)  # Rust accelerated (40x speedup)
         self.settings_scanner = SettingsScannerFragments(yamldata)
         self.report_generator = ReportGeneratorFragments(yamldata)
         self.fcx_handler = FCXModeHandlerFragments(fcx_mode)

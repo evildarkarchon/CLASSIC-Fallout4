@@ -11,7 +11,7 @@ from pathlib import Path
 from ClassicLib import GlobalRegistry
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIO import FileIOCore
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.Logger import logger
 from ClassicLib.ScanGame.CheckCrashgen import check_crashgen_settings
 from ClassicLib.ScanGame.CheckXsePlugins import check_xse_plugins
@@ -37,7 +37,7 @@ class GameIntegrityOrchestratorCore:
 
     def __init__(self) -> None:
         """Initialize the game integrity orchestrator core."""
-        self.file_io = FileIOCore()
+        self.file_io = get_file_io()  # Use factory for Rust acceleration
 
     async def generate_game_combined_result_async(self) -> tuple[str, list[ConfigIssue]]:
         """Async implementation for generating combined game integrity results with detected issues.

@@ -13,7 +13,7 @@ from typing import Literal, cast
 from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIO import FileIOCore
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.Logger import logger
 from ClassicLib.YamlSettings import yaml_settings
 
@@ -38,7 +38,7 @@ class GameFilesManagerCore:
         settings and initializes necessary components for managing file input
         and output operations.
         """
-        self.file_io = FileIOCore()
+        self.file_io = get_file_io()  # Use factory for Rust acceleration
 
     async def manage_game_files_async(self, classic_list: str, mode: Literal["BACKUP", "RESTORE", "REMOVE"] = "BACKUP") -> None:
         """Async implementation of game files management operations.

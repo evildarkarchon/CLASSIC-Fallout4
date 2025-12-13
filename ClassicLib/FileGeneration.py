@@ -80,11 +80,11 @@ class FileGenerator:
             TypeError: If the retrieved default ignore file content is not a string.
 
         """
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.integration.factory import get_file_io
         from ClassicLib.YamlSettings import yaml_settings_async
 
         ignore_path = Path("CLASSIC Ignore.yaml")
-        io_core = FileIOCore()
+        io_core = get_file_io()  # Use factory for Rust acceleration
 
         if not io_core.file_exists(ignore_path):
             default_ignorefile = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
@@ -106,11 +106,11 @@ class FileGenerator:
             TypeError: If the retrieved default YAML content is not a string.
 
         """
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.integration.factory import get_file_io
         from ClassicLib.YamlSettings import yaml_settings_async
 
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
-        io_core = FileIOCore()
+        io_core = get_file_io()  # Use factory for Rust acceleration
 
         if not io_core.file_exists(local_path):
             default_yaml = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_localyaml")

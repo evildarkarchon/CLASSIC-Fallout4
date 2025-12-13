@@ -24,7 +24,7 @@ import ruamel.yaml
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.FileIO import FileIOCore
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.Logger import logger
 from ClassicLib.ResourceLoader import ResourceLoader
 
@@ -61,7 +61,7 @@ class YamlFileOperations:
         YAML.Game,  # Game database files are static
     }
 
-    def __init__(self, io_core: FileIOCore | None = None) -> None:
+    def __init__(self, io_core: Any | None = None) -> None:
         """Initialize YamlFileOperations with optional FileIOCore.
 
         Sets up the file I/O core and attempts to load Rust YAML operations
@@ -70,14 +70,14 @@ class YamlFileOperations:
 
         Args:
             io_core: Optional FileIOCore instance for handling file I/O.
-                If not provided, a new FileIOCore instance is created.
+                If not provided, uses the factory to get the optimal implementation.
 
         Note:
             Rust acceleration is only used for static database files.
             User-editable files always use Python to preserve comments.
 
         """
-        self.io_core = io_core or FileIOCore()
+        self.io_core = io_core or get_file_io()  # Use factory for Rust acceleration
         self._file_cache: dict[str, dict[str, Any]] = {}
 
         # Try to get Rust YAML operations for static database files only
