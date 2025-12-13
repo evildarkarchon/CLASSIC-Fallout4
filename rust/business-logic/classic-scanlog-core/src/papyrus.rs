@@ -290,14 +290,19 @@ impl PapyrusAnalyzer {
         }
 
         // Read only the new content
-        use std::fs::File;
-        use std::io::{Read, Seek, SeekFrom};
+        // Use a scoped block to ensure File handle is dropped immediately after read
+        let new_content = {
+            use std::fs::File;
+            use std::io::{Read, Seek, SeekFrom};
 
-        let mut file = File::open(&self.log_path)?;
-        file.seek(SeekFrom::Start(self.last_position))?;
+            let mut file = File::open(&self.log_path)?;
+            file.seek(SeekFrom::Start(self.last_position))?;
 
-        let mut new_content = Vec::new();
-        file.read_to_end(&mut new_content)?;
+            let mut buffer = Vec::new();
+            file.read_to_end(&mut buffer)?;
+            buffer
+            // File handle is automatically dropped here when scope ends
+        };
 
         // Update position
         self.last_position = current_size;
