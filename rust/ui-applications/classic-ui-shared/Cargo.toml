@@ -17,6 +17,9 @@ classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }
+# Note: classic-version-core is NOT used here because update_check.rs needs
+# strict semver parsing for GitHub releases (with pre-release support),
+# while classic-version-core is designed for lenient game version parsing.
 
 # Async runtime (shared with core crates)
 tokio = { workspace = true }

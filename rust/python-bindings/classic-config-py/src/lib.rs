@@ -80,31 +80,18 @@
 //! ```
 
 use classic_config_core::{ConfigError, YamlDataCore};
-use classic_shared::without_gil;
+use classic_shared::{define_exceptions, register_exceptions, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
-use pyo3::{create_exception, exceptions::PyException};
 use std::path::PathBuf;
 
-// Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(
-    classic_config,
-    RustConfigError,
-    PyException,
-    "Base for Config Rust errors"
-);
-create_exception!(
-    classic_config,
-    RustConfigIOError,
-    RustConfigError,
-    "Config I/O errors"
-);
-create_exception!(
-    classic_config,
-    RustConfigParseError,
-    RustConfigError,
-    "Config parse errors"
+// Define the standard 3-tier exception hierarchy using the shared macro
+define_exceptions!(
+    module: classic_config,
+    base: RustConfigError,
+    io: RustConfigIOError,
+    parse: RustConfigParseError
 );
 
 /// Python wrapper for YamlDataCore
@@ -457,13 +444,8 @@ fn classic_config(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
-    // Register custom exception types
-    m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
-    m.add("RustConfigIOError", m.py().get_type::<RustConfigIOError>())?;
-    m.add(
-        "RustConfigParseError",
-        m.py().get_type::<RustConfigParseError>(),
-    )?;
+    // Register custom exception types using the shared macro
+    register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);
 
     Ok(())
 }
@@ -475,13 +457,8 @@ pub fn register_config_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(create_yamldata, m)?)?;
     m.add_function(wrap_pyfunction!(clear_yaml_cache, m)?)?;
 
-    // Register custom exception types
-    m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
-    m.add("RustConfigIOError", m.py().get_type::<RustConfigIOError>())?;
-    m.add(
-        "RustConfigParseError",
-        m.py().get_type::<RustConfigParseError>(),
-    )?;
+    // Register custom exception types using the shared macro
+    register_exceptions!(m, RustConfigError, RustConfigIOError, RustConfigParseError);
 
     Ok(())
 }

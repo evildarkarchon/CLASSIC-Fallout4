@@ -13,6 +13,9 @@ crate-type = ["rlib"]  # Pure Rust library ONLY - NO Python bindings
 [dependencies]
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
+# Note: classic-version-core is NOT used here because GitHub releases use
+# proper semver with pre-release support (e.g., 8.0.0-beta.1), while
+# classic-version-core is designed for lenient game version parsing.
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }

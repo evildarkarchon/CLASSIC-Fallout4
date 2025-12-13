@@ -78,27 +78,17 @@
 //! All scanlog components are thread-safe and can be used from multiple Python threads
 //! or async tasks. The orchestrator uses Arc internally for safe sharing.
 
+use classic_shared::{define_exceptions, register_exceptions};
 use pyo3::prelude::*;
-use pyo3::{create_exception, exceptions::PyException};
 
-// Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(
-    classic_scanlog,
-    RustScanLogError,
-    PyException,
-    "Base for ScanLog Rust errors"
-);
-create_exception!(
-    classic_scanlog,
-    RustParseError,
-    RustScanLogError,
-    "Parse/analysis errors"
-);
-create_exception!(
-    classic_scanlog,
-    RustConfigError,
-    RustScanLogError,
-    "Configuration errors"
+// Define the standard 3-tier exception hierarchy using the shared macro
+// Note: scanlog uses different naming convention (RustParseError, RustConfigError)
+// The macro parameter names (io, parse) don't dictate the exception names
+define_exceptions!(
+    module: classic_scanlog,
+    base: RustScanLogError,
+    io: RustParseError,       // Actually used for parse/analysis errors
+    parse: RustConfigError    // Actually used for configuration errors
 );
 
 // Import all wrapper modules
@@ -220,10 +210,8 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
-    // Register custom exception types
-    m.add("RustScanLogError", m.py().get_type::<RustScanLogError>())?;
-    m.add("RustParseError", m.py().get_type::<RustParseError>())?;
-    m.add("RustConfigError", m.py().get_type::<RustConfigError>())?;
+    // Register custom exception types using the shared macro
+    register_exceptions!(m, RustScanLogError, RustParseError, RustConfigError);
 
     Ok(())
 }

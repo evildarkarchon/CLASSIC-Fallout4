@@ -282,7 +282,12 @@ impl GithubClient {
         Ok(latest > current)
     }
 
-    /// Parses a version string, removing 'v' prefix if present.
+    /// Parses a version string into a strict semantic version.
+    ///
+    /// This function uses strict semver parsing (via `semver::Version::parse`)
+    /// rather than the lenient `classic_version_core::parse_version` because
+    /// GitHub releases use proper semver including pre-release versions
+    /// like `8.0.0-beta.1` or `1.2.3-alpha`.
     ///
     /// # Arguments
     ///

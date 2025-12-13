@@ -134,8 +134,10 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```
-    /// let instance = MyStruct::new("utf-8", "strict", 128, 10);
+    /// ```rust
+    /// use classic_file_io_core::FileIOCore;
+    ///
+    /// let instance = FileIOCore::new("utf-8", "strict", 128, 10);
     /// ```
     ///
     /// This creates an instance with "utf-8" as the default encoding, "strict" error handling,
@@ -199,20 +201,20 @@ impl FileIOCore {
     ///   the encoding detection or reading process.
     ///
     /// # Example
-    /// ```rust
-    /// use tokio::fs;
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let file_io = FileIO::new(); // Assume `FileIO` is properly initialized.
-    ///     let path = Path::new("example.txt");
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let file_io = FileIOCore::default();
+    /// let path = Path::new("example.txt");
     ///
-    ///     match file_io.read_file(&path).await {
-    ///         Ok(content) => println!("File content: {}", content),
-    ///         Err(err) => eprintln!("Error reading file: {:?}", err),
-    ///     }
+    /// match file_io.read_file(&path).await {
+    ///     Ok(content) => println!("File content: {}", content),
+    ///     Err(err) => eprintln!("Error reading file: {:?}", err),
     /// }
+    /// # Ok(())
+    /// # }
     /// ```
     pub async fn read_file(&self, path: &Path) -> Result<String, FileIOError> {
         // Optimization 1.3: Lock-free cache access (no await needed!)
@@ -265,19 +267,17 @@ impl FileIOCore {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
-    /// use your_crate::YourStruct;
     ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let your_instance = YourStruct::new();
-    ///     let path = Path::new("example.txt");
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let file_io = FileIOCore::default();
+    /// let path = Path::new("example.txt");
     ///
-    ///     if let Err(e) = your_instance.write_file(&path, "Hello, world!").await {
-    ///         eprintln!("Failed to write to file: {}", e);
-    ///     }
-    /// }
+    /// file_io.write_file(&path, "Hello, world!").await?;
+    /// # Ok(())
+    /// # }
     /// ```
     ///
     /// # Notes
@@ -315,23 +315,24 @@ impl FileIOCore {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
-    /// #[tokio::main]
-    /// async fn main() {
-    ///     let file_io = FileIO::new(); // Assume FileIO is a struct with read_file implemented.
-    ///     let path = Path::new("example.txt");
+    /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
+    /// let file_io = FileIOCore::default();
+    /// let path = Path::new("example.txt");
     ///
-    ///     match file_io.read_lines(path).await {
-    ///         Ok(lines) => {
-    ///             for line in lines {
-    ///                 println!("{}", line);
-    ///             }
-    ///         },
-    ///         Err(e) => eprintln!("Error reading file: {:?}", e),
-    ///     }
+    /// match file_io.read_lines(path).await {
+    ///     Ok(lines) => {
+    ///         for line in lines {
+    ///             println!("{}", line);
+    ///         }
+    ///     },
+    ///     Err(e) => eprintln!("Error reading file: {:?}", e),
     /// }
+    /// # Ok(())
+    /// # }
     /// ```
     ///
     /// # Notes
@@ -428,7 +429,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -478,7 +480,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -524,7 +527,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -576,7 +580,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -615,6 +620,8 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
+    ///
     /// # async fn example() {
     /// let file_io = FileIOCore::default();
     ///
@@ -658,6 +665,7 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # fn example() {
@@ -709,6 +717,7 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # fn example() {
@@ -766,6 +775,7 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # fn example() {
@@ -808,6 +818,8 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
+    ///
     /// # fn example() {
     /// let file_io = FileIOCore::default();
     ///
@@ -847,7 +859,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -913,6 +926,7 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::PathBuf;
     ///
     /// # fn example() {
@@ -974,7 +988,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -1087,6 +1102,7 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::Path;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -1167,6 +1183,8 @@ impl FileIOCore {
     /// # Example
     ///
     /// ```rust
+    /// use classic_file_io_core::FileIOCore;
+    ///
     /// # fn example() {
     /// let file_io = FileIOCore::default();
     ///
@@ -1217,7 +1235,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::PathBuf;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
@@ -1296,7 +1315,8 @@ impl FileIOCore {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_file_io_core::FileIOCore;
     /// use std::path::PathBuf;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {

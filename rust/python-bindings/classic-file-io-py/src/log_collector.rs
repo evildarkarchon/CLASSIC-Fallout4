@@ -3,16 +3,11 @@
 //! This module provides THIN adapters that delegate all business logic to classic-file-io-core.
 //! It ONLY handles Python ↔ Rust type conversions and async runtime bridging.
 
+use crate::to_pyerr;
 use classic_file_io_core::LogCollector;
 use classic_shared_core::get_runtime;
-use pyo3::exceptions::PyIOError;
 use pyo3::prelude::*;
 use std::path::PathBuf;
-
-/// Convert FileIOError to PyErr
-fn to_pyerr(err: classic_file_io_core::FileIOError) -> PyErr {
-    PyIOError::new_err(err.to_string())
-}
 
 /// Python wrapper for LogCollector - THIN ADAPTER ONLY
 ///

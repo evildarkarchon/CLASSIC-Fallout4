@@ -92,27 +92,15 @@
 //! asyncio.run(main())
 //! ```
 
+use classic_shared::{define_exceptions, register_exceptions};
 use pyo3::prelude::*;
-use pyo3::{create_exception, exceptions::PyException};
 
-// Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(
-    classic_file_io,
-    RustFileIOError,
-    PyException,
-    "Base for File I/O Rust errors"
-);
-create_exception!(
-    classic_file_io,
-    RustFileIOIOError,
-    RustFileIOError,
-    "File I/O errors"
-);
-create_exception!(
-    classic_file_io,
-    RustFileIOParseError,
-    RustFileIOError,
-    "File parsing errors (DDS, encoding)"
+// Define the standard 3-tier exception hierarchy using the shared macro
+define_exceptions!(
+    module: classic_file_io,
+    base: RustFileIOError,
+    io: RustFileIOIOError,
+    parse: RustFileIOParseError
 );
 
 mod core;
@@ -197,13 +185,8 @@ pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Phase 5 - File generation
     generation::register(m)?;
 
-    // Register custom exception types
-    m.add("RustFileIOError", m.py().get_type::<RustFileIOError>())?;
-    m.add("RustFileIOIOError", m.py().get_type::<RustFileIOIOError>())?;
-    m.add(
-        "RustFileIOParseError",
-        m.py().get_type::<RustFileIOParseError>(),
-    )?;
+    // Register custom exception types using the shared macro
+    register_exceptions!(m, RustFileIOError, RustFileIOIOError, RustFileIOParseError);
 
     Ok(())
 }

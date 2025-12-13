@@ -153,10 +153,12 @@ pub async fn check_for_updates(current_version: &str, repo: &str) -> Result<Upda
     }
 }
 
-/// Parse a version string into a semantic version.
+/// Parse a version string into a strict semantic version.
 ///
-/// This function handles version strings with or without 'v' prefix and
-/// normalizes them into proper semantic versions.
+/// This function uses strict semver parsing (via `semver::Version::parse`)
+/// rather than the lenient `classic_version_core::parse_version` because
+/// GitHub releases use proper semver including pre-release versions
+/// like `8.0.0-beta.1`.
 ///
 /// # Arguments
 ///
@@ -173,7 +175,7 @@ fn parse_version(version_str: &str) -> Result<Version> {
     // Remove 'v' prefix if present
     let clean_version = version_str.trim_start_matches('v');
 
-    // Parse with semver
+    // Parse with strict semver (handles pre-release versions like 8.0.0-beta.1)
     Version::parse(clean_version)
         .with_context(|| format!("Invalid semantic version: {}", version_str))
 }

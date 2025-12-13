@@ -197,7 +197,7 @@ class TestYamlData:
         game = GlobalRegistry.get_game()
         vr_mode = bool(GlobalRegistry.get_vr())
 
-        with pytest.raises(classic_config.RustConfigParseError, match="Parse error"):  # pyright: ignore[reportAttributeAccessIssue]
+        with pytest.raises(classic_config.RustConfigParseError, match="Failed to parse"):  # pyright: ignore[reportAttributeAccessIssue]
             classic_config.create_yamldata(yaml_dirs, game, vr_mode)
 
     def test_init_invalid_game(self, create_mock_yaml_config: Path, setup_global_registry):

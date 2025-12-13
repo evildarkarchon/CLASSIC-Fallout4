@@ -6,6 +6,16 @@
 //!
 //! This is the **-py** layer containing PyO3 bindings for Python integration.
 //! Pure Rust business logic is in `classic-shared-core`.
+//!
+//! # Exception Patterns
+//!
+//! This crate provides macros and traits for standardized exception handling:
+//! - [`define_exceptions!`] - Create the standard 3-tier exception hierarchy
+//! - [`register_exceptions!`] - Register exceptions in a Python module
+//! - [`ToPyErr`] - Trait for converting errors to PyErr
+//! - [`ResultExt`] - Extension trait for Result error conversion
+//!
+//! See [`exceptions`] and [`error_convert`] modules for details.
 
 use pyo3::exceptions::{
     PyFileNotFoundError, PyIOError, PyPermissionError, PyRuntimeError, PyTimeoutError, PyValueError,
@@ -13,6 +23,8 @@ use pyo3::exceptions::{
 use pyo3::prelude::*;
 
 // Module declarations
+pub mod error_convert;
+pub mod exceptions;
 pub mod path;
 pub mod path_py;
 pub mod performance_py;
@@ -23,6 +35,9 @@ pub use path::PathLike;
 pub use path_py::PyPathHandler;
 pub use performance_py::PyRustPerformanceMonitor;
 pub use strings_py::PyStringProcessor;
+
+// Re-export error conversion traits
+pub use error_convert::{ResultExt, ToPyErr};
 
 // Re-export core types for convenience
 pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};

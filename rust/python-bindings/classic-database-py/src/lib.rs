@@ -78,27 +78,16 @@
 //! asyncio.run(main())
 //! ```
 
+use classic_shared::{define_exceptions, register_exceptions};
 use pyo3::prelude::*;
-use pyo3::{create_exception, exceptions::PyException};
 
-// Custom exception types matching Python ClassicLib.integration.exceptions
-create_exception!(
-    classic_database,
-    RustDatabaseError,
-    PyException,
-    "Base for Database Rust errors"
-);
-create_exception!(
-    classic_database,
-    RustDatabaseIOError,
-    RustDatabaseError,
-    "Database I/O errors"
-);
-create_exception!(
-    classic_database,
-    RustDatabaseQueryError,
-    RustDatabaseError,
-    "Database query errors"
+// Define the standard 3-tier exception hierarchy using the shared macro
+// Note: third parameter is called "parse" in macro but we use QueryError for database
+define_exceptions!(
+    module: classic_database,
+    base: RustDatabaseError,
+    io: RustDatabaseIOError,
+    parse: RustDatabaseQueryError
 );
 
 mod pool;
@@ -138,16 +127,8 @@ fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDatabasePool>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
-    // Register custom exception types
-    m.add("RustDatabaseError", m.py().get_type::<RustDatabaseError>())?;
-    m.add(
-        "RustDatabaseIOError",
-        m.py().get_type::<RustDatabaseIOError>(),
-    )?;
-    m.add(
-        "RustDatabaseQueryError",
-        m.py().get_type::<RustDatabaseQueryError>(),
-    )?;
+    // Register custom exception types using the shared macro
+    register_exceptions!(m, RustDatabaseError, RustDatabaseIOError, RustDatabaseQueryError);
 
     Ok(())
 }
