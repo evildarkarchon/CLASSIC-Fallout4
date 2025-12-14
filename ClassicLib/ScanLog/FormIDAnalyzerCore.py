@@ -12,8 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 import regex as re
 
-from ClassicLib.AsyncBridge import run_async
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
 
 if TYPE_CHECKING:
@@ -278,24 +277,30 @@ class FormIDAnalyzerCore:
         # Fallback to cached sync lookup in thread
         return await asyncio.to_thread(_cached_formid_lookup, formid, plugin)
 
-    # Synchronous wrapper methods for backwards compatibility
+    # Synchronous wrapper methods for backwards compatibility - GUI workers only
     def formid_match_sync(self, formids_matches: list[str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
-        """Wrap synchronously formid_match.
+        """Sync wrapper for formid_match. GUI workers only.
 
-        This method provides backwards compatibility for sync callers.
+        WARNING: This method uses AsyncBridge internally and creates additional event loop overhead.
+        Not for CLI use.
+
+        For CLI usage, use formid_match() directly with await.
 
         Returns:
             ReportFragment containing the FormID analysis results
 
         """
+        from ClassicLib.AsyncBridge import run_async
+
         return run_async(self.formid_match(formids_matches, crashlog_plugins))
 
     def lookup_formid_value_sync(self, formid: str, plugin: str) -> str | None:
-        """Retrieve synchronously the value for a given form ID and plugin.
+        """Sync wrapper for lookup_formid_value. GUI workers only.
 
-        This method serves as a synchronous wrapper around an asynchronous function
-        to retrieve the value associated with a particular form ID and plugin. If
-        no value is found, the method will return None.
+        WARNING: This method uses AsyncBridge internally and creates additional event loop overhead.
+        Not for CLI use.
+
+        For CLI usage, use lookup_formid_value() directly with await.
 
         Args:
             formid (str): The form ID to look up.
@@ -306,4 +311,6 @@ class FormIDAnalyzerCore:
             None if no value is found.
 
         """
+        from ClassicLib.AsyncBridge import run_async
+
         return run_async(self.lookup_formid_value(formid, plugin))

@@ -98,7 +98,7 @@ class BackupManager:
             return None
 
         # Use default version from config if available
-        version: str = self._backup_config.get("xse_ver_latest", "unknown")  # type: ignore
+        version: str = self._backup_config.get("xse_ver_latest", "unknown")  # type: ignore[assignment]  # dict.get returns union type, but default ensures str
 
         try:
             line_with_version: str = next(line for line in xse_data_lower if "version = " in line)

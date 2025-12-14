@@ -591,7 +591,7 @@ async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
     if callable(coro) and not hasattr(coro, "__await__"):
         awaitable = coro()
         return await awaitable
-    return await coro  # type: ignore
+    return await coro  # type: ignore[misc]  # Union type handling for callable vs awaitable
 
 
 def run_with_timeout(

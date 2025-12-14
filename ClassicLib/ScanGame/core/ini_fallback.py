@@ -61,7 +61,10 @@ class IniValidator:
         return scan_mod_inis()
 
     def detect_all_issues(self, _config_files: dict[str, Path]) -> list[ConfigIssue]:  # noqa: PLR6301
-        """Detect all INI configuration issues.
+        """Detect all INI configuration issues. GUI workers only.
+
+        WARNING: This method uses AsyncBridge internally and creates additional event loop overhead.
+        Not for CLI use. For CLI usage, use detect_all_ini_issues_async() directly with await.
 
         Scans INI files for known configuration issues and returns a list
         of ConfigIssue objects describing each problem. Uses the validator's

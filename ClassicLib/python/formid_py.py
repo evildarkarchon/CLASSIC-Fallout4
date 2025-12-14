@@ -12,7 +12,7 @@ from functools import lru_cache
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+    from ClassicLib.Database import AsyncDatabasePool
     from ClassicLib.ScanLog.fragments import ReportFragment
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 

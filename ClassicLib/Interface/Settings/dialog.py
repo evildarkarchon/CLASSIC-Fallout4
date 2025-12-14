@@ -264,7 +264,7 @@ class SettingsDialog(QDialog):
                         root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
                         ini_path = yaml_settings(str, YAML.Game_Local, root_docs_key) or ""
                     except (ImportError, TypeError, ValueError):
-                        pass
+                        pass  # Registry not initialized, use default
                 self.ini_folder_input.setText(ini_path)
 
             logger.info("Loaded settings into dialog")
@@ -329,7 +329,7 @@ class SettingsDialog(QDialog):
                         root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
                         yaml_settings(str, YAML.Game_Local, root_docs_key, ini_path)
                     except (ImportError, TypeError, ValueError):
-                        pass
+                        pass  # Registry not initialized, skip Game_Local update
 
             logger.info("Saved settings from dialog")
             msg_success("Settings saved successfully!")

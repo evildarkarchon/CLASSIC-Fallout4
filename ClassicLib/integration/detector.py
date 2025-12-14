@@ -212,7 +212,7 @@ def get_available_components() -> dict[str, Any]:
                 module = __import__(module_name)
                 versions[module_name] = getattr(module, "__version__", "unknown")
             except ImportError:
-                pass
+                pass  # Module not available, skip
 
     return {"components": detect_rust_components(), "versions": versions, "disabled": disabled}
 

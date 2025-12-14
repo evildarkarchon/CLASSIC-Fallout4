@@ -53,7 +53,7 @@ class CrashLogsScanWorker(QObject):
         except Exception as e:  # noqa: BLE001
             self._handle_scan_error(e)
         finally:
-            self.finished.emit()  # type: ignore
+            self.finished.emit()  # type: ignore[union-attr]  # Qt signal emission
 
     @staticmethod
     def _perform_crash_logs_scan() -> None:
@@ -161,7 +161,7 @@ class CrashLogsScanWorker(QObject):
         details = traceback.format_exc()
 
         # Always emit error details for dialog display
-        self.error_occurred.emit(title, message, details)  # type: ignore
+        self.error_occurred.emit(title, message, details)  # type: ignore[union-attr]  # Qt signal emission
 
 
 # noinspection PyBroadException
@@ -201,7 +201,7 @@ class GameFilesScanWorker(QObject):
         except Exception as e:  # noqa: BLE001
             self._handle_error(e)
         finally:
-            self.scan_finished.emit()  # type: ignore
+            self.scan_finished.emit()  # type: ignore[union-attr]  # Qt signal emission
 
     @staticmethod
     def _process_game_results_scan() -> None:
@@ -273,7 +273,7 @@ class GameFilesScanWorker(QObject):
         details = traceback.format_exc()
 
         # Always emit error details for dialog display
-        self.error_occurred.emit(title, message, details)  # type: ignore
+        self.error_occurred.emit(title, message, details)  # type: ignore[union-attr]  # Qt signal emission
 
 
 class UpdateCheckWorker(QObject):

@@ -25,7 +25,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager
+from ClassicLib.Database import AsyncDatabasePool, DatabasePoolManager
 
 
 @pytest.mark.integration
@@ -70,7 +70,7 @@ class TestAsyncDatabasePool:
                 return mock_conn
 
             with (
-                patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
+                patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path]),
                 patch("aiosqlite.connect", side_effect=mock_connect) as mock_connect_patch,
             ):
                 # Create pool directly for low-level testing
@@ -118,7 +118,7 @@ class TestAsyncDatabasePool:
                 return mock_conn
 
             with (
-                patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", db_paths),
+                patch("ClassicLib.Database.async_pool.DB_PATHS", db_paths),
                 patch("aiosqlite.connect", side_effect=mock_connect),
             ):
                 pool: AsyncDatabasePool = AsyncDatabasePool()
@@ -170,7 +170,7 @@ class TestAsyncDatabasePool:
                 return mock_conn
 
             with (
-                patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
+                patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path]),
                 patch("aiosqlite.connect", side_effect=mock_connect),
             ):
                 pool: AsyncDatabasePool = AsyncDatabasePool()
@@ -209,7 +209,7 @@ class TestAsyncDatabasePool:
                 raise aiosqlite.Error("Database connection failed")
 
             with (
-                patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
+                patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path]),
                 patch("aiosqlite.connect", side_effect=mock_connect_error),
             ):
                 pool: AsyncDatabasePool = AsyncDatabasePool()
@@ -256,7 +256,7 @@ class TestAsyncDatabasePool:
                 return mock_conn
 
             with (
-                patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
+                patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path]),
                 patch("aiosqlite.connect", side_effect=mock_connect),
             ):
                 pool: AsyncDatabasePool = AsyncDatabasePool()
@@ -276,7 +276,7 @@ class TestAsyncDatabasePool:
     @pytest.mark.asyncio
     async def test_database_pool_empty_db_paths(self) -> None:
         """Test database pool with no databases configured."""
-        with patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", []):
+        with patch("ClassicLib.Database.async_pool.DB_PATHS", []):
             pool: AsyncDatabasePool = AsyncDatabasePool()
             await pool.initialize()
 

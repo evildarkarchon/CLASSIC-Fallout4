@@ -141,7 +141,6 @@ class UnpackedScanner:
                     issues.dds_files.append(file_path)
 
         except (OSError, PermissionError):
-            # Return partial results if scan fails
-            pass
+            pass  # Return partial results if scan fails
 
         return issues

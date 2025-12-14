@@ -174,9 +174,12 @@ class FileGenerator:
 
     @staticmethod
     def generate_all_files() -> None:
-        """Generate all files synchronously by invoking an asynchronous method through
-        a bridge. This method ensures the generation process is executed within the
-        asynchronous context of the AsyncBridge.
+        """Sync wrapper for generate_all_files_async. GUI workers only.
+
+        WARNING: This function uses AsyncBridge internally and creates additional event loop overhead.
+        Not for CLI use.
+
+        For CLI usage, use generate_all_files_async() directly with await.
         """
         from ClassicLib.AsyncBridge import AsyncBridge
 

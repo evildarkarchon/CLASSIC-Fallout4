@@ -286,7 +286,7 @@ def get_parser_stats() -> dict[str, Any]:
         try:
             rust_stats = _rust_parser.get_stats()
             stats.update(rust_stats)
-        except Exception:  # noqa: BLE001 - Intentional: stats collection is optional, failures are non-critical
-            pass
+        except Exception:  # noqa: BLE001 - Intentional: stats collection is optional
+            pass  # Stats collection failures are non-critical
 
     return stats

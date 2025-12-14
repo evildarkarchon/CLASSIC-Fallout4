@@ -322,8 +322,12 @@ class ConfigFileCache:
         self._config_file_cache[file_name_lower] = config_entry
 
     def get[T](self, value_type: type[T], file_name_lower: str, section: str, setting: str) -> T | None:
-        """Retrieve a configuration value of the specified type from a configuration file. The method
-        accesses the given configuration section and retrieves the value associated with the provided key.
+        """Sync wrapper for get_async. GUI workers only.
+
+        WARNING: This method uses AsyncBridge internally and creates additional event loop overhead.
+        Not for CLI use.
+
+        For CLI usage, use get_async() directly with await.
 
         Args:
             value_type: The expected data type of the configuration value. Must be one of: str, bool,
@@ -554,9 +558,11 @@ class ConfigFileCache:
         raise NotImplementedError
 
     def has(self, file_name_lower: str, section: str, setting: str) -> bool:
-        """Determine if a given setting exists under a specific section in the configuration
-        file specified by its lower-cased file name. It checks the cache for previously
-        loaded configurations and loads the file if not already cached.
+        """Check if a setting exists. GUI workers only.
+
+        WARNING: This method uses AsyncBridge internally and creates additional event loop overhead.
+        Not for CLI use. For CLI usage, use has_async() (to be implemented) or load the file
+        beforehand with await _load_config_async().
 
         Args:
             file_name_lower (str): The lower-cased name of the configuration file to check.

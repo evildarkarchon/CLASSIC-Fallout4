@@ -89,8 +89,7 @@ class BA2ArchiveScanner:
                         result.append((ba2_path, filename))
 
             except (OSError, PermissionError):
-                # Return empty list if we can't access the directory
-                pass
+                pass  # Return empty list if we can't access the directory
 
             return result
 
@@ -358,8 +357,7 @@ class BA2ArchiveScanner:
             if (width.isdecimal() and int(width) % 2 != 0) or (height.isdecimal() and int(height) % 2 != 0):
                 local_issues["tex_dims"].add(f"  - {width}x{height} : {filename} > {block_split[0]}")
         except (ValueError, IndexError):
-            # Skip if we can't parse dimensions
-            pass
+            pass  # Skip unparseable dimensions
 
     async def process_general_ba2_async(
         self, file_path: Path, filename: str, bsarch_path: Path, xse_scriptfiles: dict[str, str]

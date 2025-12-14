@@ -16,8 +16,8 @@ try:
 
     AIOFILES_AVAILABLE = True
 except ImportError:
-    aiofiles = None  # type: ignore
-    chardet = None  # type: ignore
+    aiofiles = None  # type: ignore[assignment]  # Optional dependency fallback
+    chardet = None  # type: ignore[assignment]  # Optional dependency fallback
     AIOFILES_AVAILABLE = False
 
 from ClassicLib.Utils.file_utils import open_file_with_encoding

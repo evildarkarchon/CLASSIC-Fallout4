@@ -29,7 +29,13 @@ This file contains important historical decisions, bug fixes, and lessons learne
 - **Rust directory reorganization** (2025-11-01): All Rust crates moved to `rust/` directory with subdirectories: `foundation/`, `business-logic/`, `python-bindings/`, `ui-applications/`. ALL new Rust crates MUST be created in the appropriate subdirectory. Workspace manifest at `rust/Cargo.toml`. Build scripts (`rebuild_rust.ps1`, `build_all.ps1`) updated to reference new paths.
 
 ## AsyncBridge Usage
-- **AsyncBridge usage patterns** (2025-11-02): AsyncBridge and `create_sync_wrapper()` are ONLY for GUI workers (Qt threads) and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point (see CLASSIC_ScanLogs.py). The `asyncio.run()` fallback in `create_sync_wrapper()` is intentional for testing but creates new event loops (inefficient for production). Shared components should provide separate sync (GUI) and async (CLI) interfaces. YamlSettingsCache now uses lazy AsyncBridge initialization - only creates bridge when needed in GUI contexts.
+- **AsyncBridge usage patterns** (2025-11-02, enforced 2025-12-14): AsyncBridge and `create_sync_wrapper()` are ONLY for GUI workers (Qt threads) and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point. **ENFORCEMENT**: Non-GUI production code using AsyncBridge is an architecture violation that must be refactored.
+- **Three-tier import classification**:
+  - **Tier 1 (Core)**: `AsyncBridge.py`, `_async_utils/bridge_helpers.py` - Never refactor
+  - **Tier 2 (Legitimate)**: GUI workers (`Interface/Workers.py`), test files, sync adapters for GUI - Keep as-is
+  - **Tier 3 (Violation)**: Production CLI paths using AsyncBridge - Must be refactored to async-first
+- **Dual interface pattern**: Modules shared by GUI and CLI SHALL provide async methods as primary API (for CLI) and sync wrappers clearly documented as "GUI-only" (for Qt workers).
+- **Single event loop rule**: CLI applications SHALL use single `asyncio.run(main())` at entry point; no AsyncBridge or `create_sync_wrapper()` in CLI execution paths.
 
 ## Type Hints and Exceptions
 - **PyO3 type stubs requirement** (2025-11-04): ALL Python binding crates (`-py` crates) MUST have corresponding `.pyi` stub files for type hints and IDE support. When creating a new Python binding crate or modifying APIs (functions, classes, signatures), the `.pyi` file MUST be created or updated. Stub files are placed in the same directory as the crate (e.g., `rust/python-bindings/classic-yaml-py/classic_yaml.pyi`).

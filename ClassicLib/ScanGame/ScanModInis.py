@@ -82,10 +82,12 @@ async def scan_mod_inis_async() -> str:
 
 
 def scan_mod_inis() -> str:
-    """Wrap synchronously scan_mod_inis_async for backward compatibility.
+    """Sync wrapper for scan_mod_inis_async. GUI workers only.
 
-    This wrapper uses AsyncBridge to run the async function in a sync context,
-    maintaining compatibility with existing code that expects a synchronous interface.
+    WARNING: This function uses AsyncBridge internally and creates
+    additional event loop overhead. Not for CLI use.
+
+    For CLI usage, use scan_mod_inis_async() directly with await.
 
     Returns:
         str: A concatenated string of messages highlighting changes, issues, or notices for the user regarding
@@ -132,7 +134,12 @@ def check_starting_console_command_async(config_files: ConfigFileCache, message_
 
 
 def check_vsync_settings(config_files: ConfigFileCache) -> list[str]:
-    """Sync wrapper for backward compatibility.
+    """Sync wrapper for check_vsync_settings_async. GUI workers only.
+
+    WARNING: This function uses AsyncBridge internally and creates
+    additional event loop overhead. Not for CLI use.
+
+    For CLI usage, use check_vsync_settings_async() directly with await.
 
     Args:
         config_files: A cache object containing the configuration files and their settings.

@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
+from ClassicLib.Database import DatabasePoolManager
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
@@ -145,9 +145,9 @@ class TestOrchestratorPerformance:
 
         # Also mock the Rust acceleration check to force use of Python fallback
         # This ensures we test the Python AsyncDatabasePool path
-        # Note: is_rust_accelerated is imported locally, so patch at source
+        # Note: DatabasePoolManager imports from ClassicLib.Database.async_pool
         with (
-            patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool", MockAsyncDatabasePool),
+            patch("ClassicLib.Database.async_pool.AsyncDatabasePool", MockAsyncDatabasePool),
             patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False),
         ):
             # Clear any existing pool and reset using_rust flag

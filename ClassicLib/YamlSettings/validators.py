@@ -104,9 +104,9 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
     origin_type = get_origin(expected_type)
     if origin_type is not None:
         if not isinstance(value, origin_type):
-            pass
-        # For generic types, check against the origin (e.g., list for list[str])
+            pass  # Type mismatch, continue to other checks below
         else:
+            # For generic types, check against the origin (e.g., list for list[str])
             return True
     # Direct type match for non-generic types
     elif isinstance(value, expected_type):
@@ -122,7 +122,7 @@ def validate_setting_value(value: Any, expected_type: type) -> bool:
             expected_type(value)
             return True
     except (ValueError, TypeError):
-        pass
+        pass  # Coercion failed
 
     return False
 

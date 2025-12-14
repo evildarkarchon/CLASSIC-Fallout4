@@ -291,7 +291,7 @@ class TabSetupMixin:
 
         categories: list[str] = ["XSE", "RESHADE", "VULKAN", "ENB"]
         for category in categories:
-            self.add_backup_section(layout, category, category)  # type: ignore
+            self.add_backup_section(layout, category, category)  # type: ignore[attr-defined]  # Mixin method from BackupOperationsMixin
 
         layout.addStretch(1)  # Push content to the top
 

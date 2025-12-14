@@ -38,7 +38,8 @@ from ClassicLib.ScanLog.AsyncReformat import (
     crashlogs_reformat_async,
     reformat_single_log_async,
 )
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, write_file_async
+from ClassicLib.Database import AsyncDatabasePool
+from ClassicLib.ScanLog.AsyncUtil import write_file_async
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments as FCXModeHandler

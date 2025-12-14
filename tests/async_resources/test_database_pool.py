@@ -14,7 +14,7 @@ class TestDatabasePoolResourceManagement:
 
     async def test_database_pool_cleanup_on_error(self, tmp_path):
         """Test that database pool properly cleans up connections on initialization error."""
-        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+        from ClassicLib.Database import AsyncDatabasePool
 
         # Create a test database file
         db_path = tmp_path / "test.db"
@@ -38,7 +38,7 @@ class TestDatabasePoolResourceManagement:
             return mock_conn
 
         with (
-            patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path, db_path, db_path]),
+            patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path, db_path, db_path]),
             patch("aiosqlite.connect", side_effect=mock_connect),
         ):
             pool = AsyncDatabasePool()
@@ -58,11 +58,11 @@ class TestDatabasePoolResourceManagement:
 
     async def test_database_pool_context_manager_cleanup(self):
         """Test that database pool context manager ensures cleanup."""
-        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+        from ClassicLib.Database import AsyncDatabasePool
 
         cleanup_called = False
 
-        with patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", []):
+        with patch("ClassicLib.Database.async_pool.DB_PATHS", []):
             async with AsyncDatabasePool() as pool:
                 # Monkey-patch to track cleanup
                 original_close = pool.close
@@ -80,7 +80,7 @@ class TestDatabasePoolResourceManagement:
 
     async def test_connection_pool_concurrent_access(self, tmp_path):
         """Test that connection pool handles concurrent access properly."""
-        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+        from ClassicLib.Database import AsyncDatabasePool
 
         db_path = tmp_path / "test.db"
         db_path.write_text("dummy")
@@ -103,7 +103,7 @@ class TestDatabasePoolResourceManagement:
             raise RuntimeError("Too many connections")
 
         with (
-            patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
+            patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path]),
             patch("aiosqlite.connect", side_effect=mock_connect),
         ):
             async with AsyncDatabasePool() as pool:
@@ -113,7 +113,7 @@ class TestDatabasePoolResourceManagement:
 
     async def test_pool_error_recovery(self, tmp_path):
         """Test that pool can recover from connection errors."""
-        from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+        from ClassicLib.Database import AsyncDatabasePool
 
         db_path = tmp_path / "test.db"
         db_path.touch()
@@ -132,7 +132,7 @@ class TestDatabasePoolResourceManagement:
             return mock_conn
 
         with (
-            patch("ClassicLib.ScanLog.AsyncUtil.DB_PATHS", [db_path]),
+            patch("ClassicLib.Database.async_pool.DB_PATHS", [db_path]),
             patch("aiosqlite.connect", side_effect=mock_connect),
         ):
             pool = AsyncDatabasePool()

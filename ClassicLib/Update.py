@@ -397,7 +397,7 @@ class VersionChecker:
             Version | None: The parsed version object if successful, otherwise `None`.
 
         """
-        classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore
+        classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore[arg-type]  # yaml_settings handles type conversion
         if not classic_local_str:
             return None
 
@@ -553,7 +553,7 @@ class VersionChecker:
 
         # Get and display unable message if available
         if not self.quiet and isinstance(error, (aiohttp.ClientError, UpdateCheckError)):
-            unable_msg = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{get_game()}")  # type: ignore
+            unable_msg = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{get_game()}")  # type: ignore[arg-type]  # yaml_settings handles type conversion
             if unable_msg:
                 msg_error(unable_msg)
 
@@ -704,7 +704,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     if is_outdated:
         # Show update warning
         if not quiet:
-            warning_msg = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore
+            warning_msg = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings handles type conversion
             msg_warning(warning_msg)
 
         if gui_request:

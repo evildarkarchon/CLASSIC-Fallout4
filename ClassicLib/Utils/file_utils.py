@@ -98,8 +98,7 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[Tex
                     if result.get("confidence", 0) > 0.7:
                         encoding = detected_encoding
     except OSError:
-        # If we can't read for detection, fall back to UTF-8
-        pass
+        pass  # Can't read for detection, fall back to UTF-8
 
     # Open with detected or default encoding
     try:
