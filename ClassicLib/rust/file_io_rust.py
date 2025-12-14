@@ -639,7 +639,7 @@ class FileIOCore:
                     elif item.is_dir():
                         walk(item, depth + 1)
             except PermissionError:
-                pass
+                pass  # Skip inaccessible directories
 
         walk(path)
         return results

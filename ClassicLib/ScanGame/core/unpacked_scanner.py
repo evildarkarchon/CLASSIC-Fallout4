@@ -197,7 +197,7 @@ class UnpackedModsScanner:
                     if root_files or root_dirs:
                         dir_structure[path] = {"dirs": root_dirs, "files": root_files}
                 except (OSError, PermissionError):
-                    pass
+                    pass  # Skip inaccessible directories
 
             # Convert to expected format, maintaining bottom-up order for compatibility
             return [

@@ -91,11 +91,11 @@ class ScanOperationsMixin:
             return
 
         # Connect signals
-        self.crash_logs_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
+        self.crash_logs_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore[union-attr]  # Qt signal
 
         self.crash_logs_thread.started.connect(self.crash_logs_worker.run)
-        self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore
-        self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater)  # type: ignore
+        self.crash_logs_worker.finished.connect(self.crash_logs_thread.quit)  # type: ignore[union-attr]  # Qt signal
+        self.crash_logs_worker.finished.connect(self.crash_logs_worker.deleteLater)  # type: ignore[union-attr]  # Qt signal
         self.crash_logs_thread.finished.connect(self.crash_logs_thread.deleteLater)
         self.crash_logs_thread.finished.connect(self.crash_logs_scan_finished)
 
@@ -143,11 +143,11 @@ class ScanOperationsMixin:
             return
 
         # Connect signals
-        self.game_files_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore
+        self.game_files_worker.error_occurred.connect(self._show_scan_error_dialog)  # type: ignore[union-attr]  # Qt signal
 
         self.game_files_thread.started.connect(self.game_files_worker.run)
-        self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore
-        self.game_files_worker.finished.connect(self.game_files_worker.deleteLater)  # type: ignore
+        self.game_files_worker.finished.connect(self.game_files_thread.quit)  # type: ignore[union-attr]  # Qt signal
+        self.game_files_worker.finished.connect(self.game_files_worker.deleteLater)  # type: ignore[union-attr]  # Qt signal
         self.game_files_thread.finished.connect(self.game_files_thread.deleteLater)
         self.game_files_thread.finished.connect(self.game_files_scan_finished)
 

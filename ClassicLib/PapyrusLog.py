@@ -45,7 +45,7 @@ def papyrus_logging() -> tuple[str, int]:
     # Log optimization status (only once at module level)
     if not hasattr(papyrus_logging, "_logged_status"):
         logger.debug("Papyrus log reading using Streaming I/O (Memory Efficient)")
-        papyrus_logging._logged_status = True  # type: ignore
+        papyrus_logging._logged_status = True  # type: ignore[attr-defined]  # Dynamic attribute for one-time logging
 
     count_dumps = count_stacks = count_warnings = count_errors = 0
     if papyrus_path and papyrus_path.exists():

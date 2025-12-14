@@ -726,8 +726,7 @@ class ResourceLoader:
             asyncio.create_task(ResourceLoader.save_path_to_cache_async(path, path_type, game_name, vr_suffix))  # noqa: RUF006
             return  # noqa: TRY300
         except RuntimeError:
-            # No running event loop - we're in a sync context, continue with sync version
-            pass
+            pass  # No running event loop - use sync version below
 
         if game_name is None:
             game_name = GlobalRegistry.get_game()

@@ -485,7 +485,7 @@ class ClassicBackend(QObject):
             self._papyrus_thread.started.connect(self._papyrus_worker.run)
             self._papyrus_worker.statsUpdated.connect(self.papyrusStatsUpdated)
             self._papyrus_worker.error.connect(lambda e: self.scanError.emit("Papyrus Error", e))
-            self._papyrus_worker.finished.connect(self._papyrus_thread.quit)  # type: ignore
+            self._papyrus_worker.finished.connect(self._papyrus_thread.quit)  # type: ignore[union-attr]  # Qt signal connection
 
             self._papyrus_thread.start()
         else:

@@ -276,8 +276,7 @@ def is_valid_custom_scan_path(path: Path | str | None) -> bool:
                 logger.warning(f"Attempted to set restricted path as custom scan directory: {path}")
                 return False
         except (ValueError, OSError):
-            # Can happen if paths are on different drives on Windows or path doesn't exist
-            pass
+            pass  # Different drives or path doesn't exist
 
     return True
 

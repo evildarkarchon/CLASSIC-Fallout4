@@ -90,7 +90,7 @@ class PythonFileIO:
 
             return await read_file_with_encoding_async(path)
         except ImportError:
-            pass
+            pass  # Fall back to basic aiofiles implementation
 
         if AIOFILES_AVAILABLE:
             assert aiofiles is not None

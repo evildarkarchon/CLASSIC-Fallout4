@@ -114,7 +114,7 @@ class BackupOperationsMixin:
             button.clicked.connect(
                 lambda b=backup_type, a=action: self.classic_files_manage(  # checked arg for signal
                     f"Backup {b}",
-                    a,  # type: ignore
+                    a,  # type: ignore[arg-type]  # Lambda default captures string value
                 )
             )
             button.setStyleSheet(button_style_sheet)

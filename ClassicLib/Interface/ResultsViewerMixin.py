@@ -165,7 +165,7 @@ class ResultsViewerMixin:
             self.results_list = ReportListWidget()
             self.results_list.itemSelectionChanged.connect(self._on_report_selected)
             logger.info("ReportListWidget created successfully")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - Re-raises after logging; Qt widget creation can fail unexpectedly
             logger.error(f"Failed to create ReportListWidget: {e}", exc_info=True)
             raise
         self.results_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -237,7 +237,7 @@ class ResultsViewerMixin:
             # Don't set any initial content - let refresh_reports_list handle it
             layout.addWidget(self.markdown_viewer)
             logger.info("MarkdownViewer created successfully")
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - Re-raises after logging; Qt widget creation can fail unexpectedly
             logger.error(f"Failed to create MarkdownViewer: {e}", exc_info=True)
             raise
 

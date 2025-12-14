@@ -69,8 +69,7 @@ class PathValidator:
             try:
                 return classic_path.PathValidator.is_valid_path(str(path))
             except (ValueError, OSError, RuntimeError):
-                # Fall through to Python implementation on error
-                pass
+                pass  # Fall through to Python implementation
 
         # Pure Python implementation
         try:
@@ -112,8 +111,7 @@ class PathValidator:
             try:
                 return classic_path.PathValidator.is_restricted_path(str(path))
             except (ValueError, OSError, RuntimeError):
-                # Fall through to Python implementation on error
-                pass
+                pass  # Fall through to Python implementation
 
         # Pure Python implementation
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path

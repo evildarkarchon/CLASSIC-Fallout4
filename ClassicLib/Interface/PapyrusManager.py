@@ -91,7 +91,7 @@ class PapyrusManagerMixin:
         self.papyrus_monitor_worker.error.connect(self.papyrus_monitor_dialog.handle_error)
         self.papyrus_monitor_dialog.stop_monitoring.connect(self.stop_papyrus_monitoring)
         self.papyrus_monitor_thread.finished.connect(self.papyrus_monitor_thread.deleteLater)
-        self.papyrus_monitor_worker.finished.connect(self.papyrus_monitor_worker.deleteLater)  # type: ignore
+        self.papyrus_monitor_worker.finished.connect(self.papyrus_monitor_worker.deleteLater)  # type: ignore[union-attr]  # Qt signal connection
 
         # Start monitoring
         if self.papyrus_button:

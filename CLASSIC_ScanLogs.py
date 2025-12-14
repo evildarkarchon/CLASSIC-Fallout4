@@ -129,7 +129,7 @@ async def main() -> None:
     # Ensure UTF-8 encoding for Windows console
     from ClassicLib.MessageHandler import msg_info
 
-    if sys.platform == "win32":  # type: ignore
+    if sys.platform == "win32":  # type: ignore[comparison-overlap]  # Platform type narrowing
         import io
 
         # noinspection PyTypeChecker

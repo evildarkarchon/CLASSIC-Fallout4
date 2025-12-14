@@ -211,7 +211,7 @@ class ReportListWidget(QListWidget):
                 dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
                 return dt.strftime("%Y-%m-%d %H:%M:%S")
             except ValueError:
-                pass
+                pass  # Invalid date/time, fall through to file modification time
 
         # Fallback to file modification time
         return None
@@ -280,8 +280,7 @@ class ReportListWidget(QListWidget):
             item.setBackground(QBrush(QColor(255, 255, 200, 30)))
             item.setForeground(QBrush(QColor(128, 128, 0)))
         else:
-            # Default styling
-            pass
+            pass  # Default styling, no changes needed
 
     def _filter_reports(self, text: str) -> None:
         """Filter the reports displayed within the current context based on the provided

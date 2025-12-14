@@ -88,8 +88,7 @@ class LogProcessor:
                     report_lines.extend(self._format_error_report(log_file, errors))
 
         except (OSError, PermissionError):
-            # Return partial results if scan fails
-            pass
+            pass  # Return partial results if scan fails
 
         return "".join(report_lines)
 
@@ -130,8 +129,7 @@ class LogProcessor:
                     errors = errors[-50:]
 
         except (OSError, UnicodeDecodeError):
-            # Return empty list if file can't be read
-            pass
+            pass  # Return empty list if file can't be read
 
         return errors
 

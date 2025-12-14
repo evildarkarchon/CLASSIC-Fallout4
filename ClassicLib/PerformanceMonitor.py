@@ -41,7 +41,7 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
 
             try:
                 result = func(*args, **kwargs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Re-raises after logging; timing decorator must catch all to measure failure duration
                 elapsed = time.perf_counter() - start
                 logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
                 raise
@@ -62,7 +62,7 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
 
                 return result
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]  # Decorator preserves function signature
 
     return decorator
 
@@ -92,7 +92,7 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
 
             try:
                 result = await func(*args, **kwargs)
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - Re-raises after logging; timing decorator must catch all to measure failure duration
                 elapsed = time.perf_counter() - start
                 logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
                 raise
@@ -113,7 +113,7 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
 
                 return result
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]  # Decorator preserves function signature
 
     return decorator
 
@@ -155,7 +155,7 @@ def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
 
             return result
 
-        return wrapper  # type: ignore
+        return wrapper  # type: ignore[return-value]  # Decorator preserves function signature
 
     return decorator
 

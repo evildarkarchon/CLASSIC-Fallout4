@@ -56,7 +56,7 @@ def _check_read_permissions(path_obj: Path) -> tuple[bool, str]:
         # For files, check if we can open for reading
         else:
             with path_obj.open("rb"):
-                pass
+                pass  # Just checking file is readable
     except PermissionError:
         return False, f"No read permission for: {path_obj}"
     except OSError as e:
