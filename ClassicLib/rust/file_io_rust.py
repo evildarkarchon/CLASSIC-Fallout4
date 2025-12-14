@@ -860,9 +860,10 @@ def get_rust_file_io() -> FileIOCore | None:
 
 
 def create_file_io_sync(encoding: str = "utf-8", errors: str = "ignore") -> Any:
-    """Create a synchronous file I/O utility by wrapping asynchronous file I/O core
-    operations with synchronous equivalents for ease of use in synchronous
-    contexts.
+    """Create a synchronous file I/O utility. GUI workers only.
+
+    WARNING: This function uses AsyncBridge internally and creates additional event loop overhead.
+    Not for CLI use. For CLI usage, use FileIOCore async methods directly with await.
 
     Args:
         encoding: Encoding to use for reading and writing text files. Default
@@ -881,7 +882,7 @@ def create_file_io_sync(encoding: str = "utf-8", errors: str = "ignore") -> Any:
 
     # Wrap async methods for sync usage
     class SyncWrapper:
-        """Synchronous wrapper for FileIOCore async methods."""
+        """Synchronous wrapper for FileIOCore async methods. GUI workers only."""
 
         def __init__(self, core: FileIOCore) -> None:
             self._core = core

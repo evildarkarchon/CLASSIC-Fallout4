@@ -13,7 +13,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info
-from ClassicLib.AsyncBridge import run_async
 from ClassicLib.Logger import logger
 from ClassicLib.ScanLog.models import ScanResult
 from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
@@ -221,16 +220,18 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
 
 
 def crashlogs_scan() -> ScanResult:
-    """Scan crash logs and returns the scan results.
+    """Sync wrapper for crashlogs_scan_async_pure. GUI workers only.
 
-    This function utilizes the `ScanLogsExecutor` to perform a scan on crash logs
-    asynchronously. It executes the scan using the `run_async` utility, which
-    handles asynchronous workflows for the log scanning process.
+    WARNING: This function uses AsyncBridge internally and creates additional event loop overhead.
+    Not for CLI use.
+
+    For CLI usage, use crashlogs_scan_async_pure() directly with await.
 
     Returns:
         ScanResult: The result of the crash log scan.
 
     """
+    from ClassicLib.AsyncBridge import run_async
     from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
 
     executor = ScanLogsExecutor()
