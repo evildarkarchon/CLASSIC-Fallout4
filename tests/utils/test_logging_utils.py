@@ -12,6 +12,8 @@ import pytest
 
 from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestLoggingUtilities:
     """Tests for logging configuration functions."""

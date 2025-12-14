@@ -6,7 +6,7 @@ This file contains unit tests that test individual functions with mocked depende
 
 import pytest
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.gui, pytest.mark.unit]
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QDialogButtonBox

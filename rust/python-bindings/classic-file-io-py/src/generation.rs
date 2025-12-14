@@ -95,7 +95,7 @@ impl PyFileGenerator {
         })
     }
 
-    /// Generate CLASSIC Data/CLASSIC <GAME> Local.yaml if it doesn't exist (async)
+    /// Generate CLASSIC Data/CLASSIC `<GAME>` Local.yaml if it doesn't exist (async)
     ///
     /// Creates the local YAML file with default content from configuration,
     /// where <GAME> is dynamically determined from config.
@@ -202,7 +202,7 @@ pub fn generate_ignore_file_async<'py>(
     })
 }
 
-/// Generate CLASSIC Data/CLASSIC <GAME> Local.yaml if it doesn't exist (async)
+/// Generate CLASSIC Data/CLASSIC `<GAME>` Local.yaml if it doesn't exist (async)
 ///
 /// Standalone function that creates the local YAML file with provided content.
 ///

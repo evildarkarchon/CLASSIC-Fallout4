@@ -64,6 +64,9 @@ def _is_valid_directory(path: str | Path) -> bool:
     Args:
         path: Path to check
 
+    Returns:
+        True if path exists and is a directory, False otherwise.
+
     """
     path_str = str(path)
 

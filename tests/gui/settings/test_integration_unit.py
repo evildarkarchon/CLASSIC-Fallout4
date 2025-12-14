@@ -7,13 +7,14 @@ This file contains unit tests that test individual functions with mocked depende
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = [pytest.mark.gui, pytest.mark.unit]
+
 from PySide6.QtWidgets import QDialog, QWidget
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
 from ClassicLib.YamlSettings import yaml_settings
-
-pytestmark = pytest.mark.unit
 
 
 class TestMixinIntegration:

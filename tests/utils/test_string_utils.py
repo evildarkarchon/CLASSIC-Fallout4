@@ -20,6 +20,8 @@ from ClassicLib.Utils.file_utils import calculate_similarity
 from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestStringUtilities:
     """Tests for string manipulation and parsing utility functions."""

@@ -16,9 +16,9 @@
 //! # Severity Levels
 //!
 //! The screen displays one of three severity levels based on PapyrusStats:
-//! - **Critical** (Red [X]): High error/warning ratio or dumps/stacks ratio indicates serious issues
-//! - **Warning** (Yellow [!]): Moderate ratios suggest potential problems
-//! - **OK** (Green [OK]): Normal operation, or only informational dumps present
+//! - **Critical** (Red `[X]`): High error/warning ratio or dumps/stacks ratio indicates serious issues
+//! - **Warning** (Yellow `[!]`): Moderate ratios suggest potential problems
+//! - **OK** (Green `[OK]`): Normal operation, or only informational dumps present
 //!
 //! # Layout
 //!

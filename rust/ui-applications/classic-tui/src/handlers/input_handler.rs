@@ -9,7 +9,7 @@
 //! The input handler follows a hierarchical dispatch pattern:
 //! 1. **Modal Overlays** (highest priority): Error dialogs, update notifications, folder pickers
 //! 2. **Global Bindings**: Q to quit, Ctrl+C to quit (work on all screens)
-//! 3. **Screen-Specific Bindings**: Dispatched based on [`UiState`]
+//! 3. **Screen-Specific Bindings**: Dispatched based on `UiState`
 //!
 //! This ensures modals always capture input first, preventing key events from bleeding through
 //! to underlying screens.
@@ -17,13 +17,13 @@
 //! # Key Binding Organization
 //!
 //! Each screen has a dedicated handler function:
-//! - [`handle_main_screen_keys`]: Main screen (F5 scan, F6 game scan, F7 papyrus, etc.)
-//! - [`handle_help_screen_keys`]: Help screen (ESC to return)
-//! - [`handle_settings_screen_keys`]: Settings screen (Tab, ↑/↓, Space to toggle, S to save)
-//! - [`handle_papyrus_screen_keys`]: Papyrus monitoring (F7/P toggle, C clear, ESC back)
-//! - [`handle_backup_screen_keys`]: Backup operations (1-4 backup, 5-8 restore, 9-0 remove)
-//! - [`handle_results_screen_keys`]: Results viewer (↑/↓ scroll, / search, n/N navigate matches)
-//! - [`handle_articles_screen_keys`]: Articles browser (Left/Right categories, ↑/↓ articles, Tab URLs)
+//! - `handle_main_screen_keys`: Main screen (F5 scan, F6 game scan, F7 papyrus, etc.)
+//! - `handle_help_screen_keys`: Help screen (ESC to return)
+//! - `handle_settings_screen_keys`: Settings screen (Tab, ↑/↓, Space to toggle, S to save)
+//! - `handle_papyrus_screen_keys`: Papyrus monitoring (F7/P toggle, C clear, ESC back)
+//! - `handle_backup_screen_keys`: Backup operations (1-4 backup, 5-8 restore, 9-0 remove)
+//! - `handle_results_screen_keys`: Results viewer (↑/↓ scroll, / search, n/N navigate matches)
+//! - `handle_articles_screen_keys`: Articles browser (Left/Right categories, ↑/↓ articles, Tab URLs)
 //!
 //! # Global Key Bindings
 //!

@@ -8,6 +8,8 @@ import pytest
 from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.DetectMods import detect_mods_double
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestConflictDetection:
     """Tests for mod conflict detection functionality."""

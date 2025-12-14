@@ -29,7 +29,12 @@ if TYPE_CHECKING:
 
 
 def _get_fragment_class() -> type:
-    """Get RustAcceleratedReportFragment class lazily to avoid circular imports."""
+    """Get RustAcceleratedReportFragment class lazily to avoid circular imports.
+
+    Returns:
+        The RustAcceleratedReportFragment class.
+
+    """
     from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
     return RustAcceleratedReportFragment
 

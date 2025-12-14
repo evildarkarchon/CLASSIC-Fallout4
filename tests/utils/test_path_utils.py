@@ -12,6 +12,8 @@ import pytest
 
 from ClassicLib.Utils.path_utils import validate_path
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestPathUtilities:
     """Tests for path validation and related utility functions."""

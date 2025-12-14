@@ -130,7 +130,12 @@ class ScanGameCore:
         )
 
     async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
-        """Retrieve settings required for a scanning process asynchronously."""
+        """Retrieve settings required for a scanning process asynchronously.
+
+        Returns:
+            Tuple of (game_type, ini_settings, game_path) for the scan configuration.
+
+        """
         return await self.validators.get_scan_settings()
 
     def get_issue_messages(self, xse_acronym: str, mode: str) -> dict[str, list[str]]:

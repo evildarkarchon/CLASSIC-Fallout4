@@ -11,6 +11,7 @@ from tests.fixtures.data_fixtures import *  # noqa: F403
 from tests.fixtures.mock_fixtures import *  # noqa: F403
 from tests.fixtures.qt_fixtures import *  # noqa: F403
 from tests.fixtures.registry_fixtures import *  # noqa: F403
+from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 
 __all__ = [
     # Async fixtures
@@ -36,4 +37,22 @@ __all__ = [
     "setup_global_registry",
     "mock_global_registry",
     "init_message_handler_fixture",
+    # ScanLog fixtures
+    "sample_crash_log_content",
+    "sample_crash_log_lines",
+    "malformed_crash_log_content",
+    "minimal_crash_log_content",
+    "crash_log_file",
+    "malformed_crash_log_file",
+    "crash_logs_directory",
+    "mock_yamldata",
+    "mock_yamldata_async",
+    "mock_database_pool",
+    "mock_database_pool_with_data",
+    "segment_boundaries",
+    "expected_segments",
+    "mock_orchestrator_dependencies",
+    "mock_file_io",
+    "mock_parser",
+    "patch_scanlog_dependencies",
 ]

@@ -101,26 +101,57 @@ async def open_file_with_encoding_async(file_path: Path | str | os.PathLike, mod
 
 
 async def read_file_with_encoding_async(file_path: Path | str | os.PathLike, sample_size: int = 65536) -> str:
-    """Provide convenience wrapper to read entire file contents with automatic encoding detection."""
+    """Provide convenience wrapper to read entire file contents with automatic encoding detection.
+
+    Args:
+        file_path: Path to the file to read.
+        sample_size: Number of bytes to sample for encoding detection.
+
+    Returns:
+        The complete file contents as a string.
+
+    """
     async with open_file_with_encoding_async(file_path, sample_size=sample_size) as f:
         return await f.read()
 
 
 async def read_lines_with_encoding_async(file_path: Path | str | os.PathLike, sample_size: int = 65536) -> list[str]:
-    """Provide convenience wrapper to read file lines with automatic encoding detection."""
+    """Provide convenience wrapper to read file lines with automatic encoding detection.
+
+    Args:
+        file_path: Path to the file to read.
+        sample_size: Number of bytes to sample for encoding detection.
+
+    Returns:
+        List of lines from the file.
+
+    """
     async with open_file_with_encoding_async(file_path, sample_size=sample_size) as f:
         return await f.readlines()
 
 
 # Fallback implementations for when aiofiles is not available
 def get_encoding_detection_available() -> bool:
-    """Determine if encoding detection is available based on the availability of aiofiles."""
+    """Determine if encoding detection is available based on the availability of aiofiles.
+
+    Returns:
+        True if aiofiles is available for async encoding detection, False otherwise.
+
+    """
     return AIOFILES_AVAILABLE
 
 
 async def fallback_to_sync_encoding_detection(file_path: Path | str | os.PathLike) -> str:
-    """Determine the encoding of a given file path using a synchronous method executed
-    in an asynchronous context.
+    """Determine the encoding of a given file path using a synchronous method.
+
+    Executes encoding detection in an asynchronous context via run_in_executor.
+
+    Args:
+        file_path: Path to the file whose encoding should be detected.
+
+    Returns:
+        The detected encoding string, defaults to 'utf-8' if detection fails.
+
     """
     if not isinstance(file_path, Path):
         file_path = Path(file_path)

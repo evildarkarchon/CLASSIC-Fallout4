@@ -30,7 +30,12 @@ except ImportError:
 
         @staticmethod
         def currentThread() -> "QThread":  # pyright: ignore[reportReturnType]
-            """Return the current thread (stub)."""
+            """Return the current thread (stub).
+
+            Returns:
+                Stub QThread instance.
+
+            """
 
     class QMessageBox:
         """Stub for QMessageBox when PySide6 is not available."""
@@ -60,7 +65,12 @@ except ImportError:
             """Set window title (stub)."""
 
         def exec(self) -> int:  # noqa: PLR6301
-            """Execute dialog (stub)."""
+            """Execute dialog (stub).
+
+            Returns:
+                Always returns 0 in stub implementation.
+
+            """
             return 0
 
     class QProgressDialog:
@@ -103,7 +113,12 @@ except ImportError:
             """Set label text (stub)."""
 
         def wasCanceled(self) -> bool:  # noqa: PLR6301
-            """Check if canceled (stub)."""
+            """Check if canceled (stub).
+
+            Returns:
+                Always returns False in stub implementation.
+
+            """
             return False
 
     class Signal:

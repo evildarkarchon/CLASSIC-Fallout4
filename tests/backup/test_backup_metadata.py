@@ -7,6 +7,8 @@ import pytest
 
 from ClassicLib.BackupManager import BackupManager
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestXSEVersionExtraction:
     """Tests for XSE version extraction from log files."""

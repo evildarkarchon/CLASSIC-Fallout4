@@ -16,6 +16,8 @@ from ClassicLib.Utils.web_utils import pastebin_fetch
 
 # Message handler fixture is imported via conftest automatically
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestPastebinOperations:
     """Tests for Pastebin fetching operations."""

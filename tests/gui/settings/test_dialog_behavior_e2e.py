@@ -6,7 +6,7 @@ This file contains e2e tests that test complete workflows from entry to output.
 
 import pytest
 
-pytestmark = pytest.mark.e2e
+pytestmark = [pytest.mark.gui, pytest.mark.e2e]
 
 from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest

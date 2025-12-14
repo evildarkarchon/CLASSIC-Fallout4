@@ -15,6 +15,8 @@ from packaging.version import Version
 from ClassicLib import Constants
 from ClassicLib.Utils.version_utils import get_game_version
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestGameVersionDetection:
     """Tests for game version detection functions."""

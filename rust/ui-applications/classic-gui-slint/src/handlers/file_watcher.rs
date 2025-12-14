@@ -22,11 +22,11 @@ use std::time::{Duration, Instant};
 use tracing::{error, info, instrument, warn};
 
 /// The file watcher instance. Wrapped in Option to allow for explicit dropping.
-/// Wrapped in Arc<Mutex> for thread-safe shared access.
+/// Wrapped in `Arc<Mutex>` for thread-safe shared access.
 pub type SharedWatcher = Arc<Mutex<Option<RecommendedWatcher>>>;
 
 /// Holds the sender for file watcher events.
-/// Wrapped in Arc<Mutex> for thread-safe shared access.
+/// Wrapped in `Arc<Mutex>` for thread-safe shared access.
 type SharedEventSender = Arc<Mutex<Option<Sender<Vec<PathBuf>>>>>;
 
 /// Global file watcher state.

@@ -14,6 +14,8 @@ import pytest
 from ClassicLib import GlobalRegistry
 from ClassicLib.GamePath import game_path_find
 
+pytestmark = pytest.mark.unit
+
 
 class TestMultiPlatformSupport:
     """Tests for cross-platform compatibility."""

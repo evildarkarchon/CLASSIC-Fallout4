@@ -29,7 +29,15 @@ from ClassicLib.Logger import logger
 
 
 def __getattr__(name: str) -> Any:
-    """Provide deprecated imports with warnings."""
+    """Provide deprecated imports with warnings.
+
+    Args:
+        name: The attribute name being accessed.
+
+    Returns:
+        The requested class or raises AttributeError if not found.
+
+    """
     if name == "DatabasePoolManager":
         warnings.warn(
             "Import DatabasePoolManager from ClassicLib.Database instead of "

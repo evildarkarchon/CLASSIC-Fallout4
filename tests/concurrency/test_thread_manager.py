@@ -6,7 +6,10 @@ import os
 import pytest
 
 # Skip all tests in this module when running in xdist worker (parallel execution)
-pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+]
 
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication

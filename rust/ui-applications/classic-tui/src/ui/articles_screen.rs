@@ -25,7 +25,7 @@
 //! # Architecture
 //!
 //! The module uses several optimization strategies:
-//! - [`RENDERED_ARTICLES_CACHE`]: Global OnceLock cache initialized on first access
+//! - `RENDERED_ARTICLES_CACHE`: Global OnceLock cache initialized on first access
 //! - Pre-rendering: All markdown parsed once at startup, not every frame (30 FPS rendering loop)
 //! - Cache key: `(ArticleCategory, &'static str)` tuple for self-documenting, order-independent lookups
 //! - URL tracking: Each article tracks detected URLs with line numbers for keyboard navigation

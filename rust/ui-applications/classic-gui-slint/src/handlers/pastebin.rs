@@ -4,9 +4,9 @@ use anyhow::{Context, Result};
 /// Extract the paste ID from a Pastebin URL
 ///
 /// Supports formats:
-/// - https://pastebin.com/ABC123
-/// - https://pastebin.com/raw/ABC123
-/// - pastebin.com/ABC123
+/// - `https://pastebin.com/ABC123`
+/// - `https://pastebin.com/raw/ABC123`
+/// - `pastebin.com/ABC123`
 ///
 /// # Arguments
 /// * `url` - Pastebin URL

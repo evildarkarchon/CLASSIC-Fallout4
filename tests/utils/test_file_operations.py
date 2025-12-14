@@ -14,6 +14,8 @@ import pytest
 from ClassicLib.Utils.file_utils import calculate_file_hash, open_file_with_encoding
 from ClassicLib.Utils.path_utils import remove_readonly
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestEncodingOperations:
     """Tests for file encoding detection and handling."""

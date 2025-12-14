@@ -1,7 +1,11 @@
 """Tests for GlobalRegistry state management and validation."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
+import pytest
+
 from ClassicLib import GlobalRegistry
+
+pytestmark = [pytest.mark.unit]
 
 
 class TestStateManagement:

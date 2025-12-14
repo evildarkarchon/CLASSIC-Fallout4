@@ -8,6 +8,8 @@ import pytest
 from ClassicLib.ScanLog.DetectMods import _convert_to_lowercase, _validate_warning, detect_mods_single
 from ClassicLib.ScanLog.fragments import ReportFragment
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestHelperFunctions:
     """Tests for helper functions used in mod detection."""

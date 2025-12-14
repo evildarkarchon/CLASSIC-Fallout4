@@ -6,10 +6,10 @@ This file contains e2e tests that test complete workflows from entry to output.
 
 import pytest
 
+pytestmark = [pytest.mark.gui, pytest.mark.e2e]
+
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
-
-pytestmark = pytest.mark.e2e
 
 
 class TestEdgeCases:

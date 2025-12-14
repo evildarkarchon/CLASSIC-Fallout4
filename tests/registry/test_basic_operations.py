@@ -5,6 +5,8 @@ import pytest
 
 from ClassicLib import GlobalRegistry
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestBasicRegistryOperations:
     """Tests for basic registry operations."""

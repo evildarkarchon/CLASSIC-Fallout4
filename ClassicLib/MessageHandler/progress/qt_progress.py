@@ -59,7 +59,12 @@ class QtProgressHandler(QObject):
         self.progress_close_signal.connect(self._close_dialog)
 
     def _is_main_thread(self) -> bool:  # noqa: PLR6301
-        """Check if we're on the main thread."""
+        """Check if we're on the main thread.
+
+        Returns:
+            True if on main Qt thread, False otherwise.
+
+        """
         try:
             from PySide6.QtWidgets import QApplication
 

@@ -11,6 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+pytestmark = [pytest.mark.unit]
+
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.FileGeneration import FileGenerator

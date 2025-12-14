@@ -6,7 +6,7 @@
 //!
 //! # Features
 //!
-//! - **Visual States**: Checked ([X]) vs. unchecked ([ ]) with color coding
+//! - **Visual States**: Checked (`[X]`) vs. unchecked (`[ ]`) with color coding
 //! - **Focus Highlighting**: Yellow border and bold text when focused
 //! - **Dirty Tracking**: Marks widget dirty on state/focus changes for selective rendering
 //! - **Color Coding**: Green checkmark when checked, White when unchecked
@@ -25,7 +25,7 @@
 //! **Focused, Checked**:
 //! ```text
 //! ┌────────────────────┐ (Yellow border)
-//! │ [X] FCX Mode       │ (Bold text, Green X)
+//! │ `[X]` FCX Mode     │ (Bold text, Green X)
 //! └────────────────────┘
 //! ```
 //!

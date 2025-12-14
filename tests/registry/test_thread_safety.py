@@ -1,11 +1,14 @@
 """Tests for GlobalRegistry thread safety."""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
+import pytest
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from ClassicLib import GlobalRegistry
+
+pytestmark = [pytest.mark.unit]
 
 
 class TestThreadSafety:

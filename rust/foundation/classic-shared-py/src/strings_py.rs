@@ -170,7 +170,7 @@ impl PyStringProcessor {
     /// PyList of processed strings
     ///
     /// # Performance
-    /// Returns PyList directly instead of Vec<String>, reducing allocations by 40-50%.
+    /// Returns PyList directly instead of `Vec<String>`, reducing allocations by 40-50%.
     /// Combined with GIL release, this provides optimal performance for batch operations.
     pub fn process_batch_fast<'py>(
         &self,
@@ -200,7 +200,7 @@ impl PyStringProcessor {
     /// PyList of lines
     ///
     /// # Performance
-    /// Returns PyList directly, avoiding Vec<String> allocation and conversion.
+    /// Returns PyList directly, avoiding `Vec<String>` allocation and conversion.
     /// This provides 30-40% fewer allocations compared to split_lines().
     pub fn split_lines_fast<'py>(
         &self,

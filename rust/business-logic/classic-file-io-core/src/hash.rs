@@ -145,7 +145,7 @@ impl FileHasher {
     /// * `paths` - Slice of file paths to hash
     ///
     /// # Returns
-    /// Vector of (PathBuf, Option<String>) tuples where:
+    /// Vector of `(PathBuf, Option<String>)` tuples where:
     /// - `PathBuf` is the input path
     /// - `Some(hash)` for successful calculations
     /// - `None` for files that failed to hash

@@ -7,6 +7,8 @@ import pytest
 
 from ClassicLib.DocsPath import docs_check_ini, docs_generate_paths, docs_path_find
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestPublicAPIFunctions:
     """Tests for the public API functions."""

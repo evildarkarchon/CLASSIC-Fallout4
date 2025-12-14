@@ -33,7 +33,12 @@ class MessageRouter:
 
     @property
     def is_gui_mode(self) -> bool:
-        """Whether operating in GUI mode."""
+        """Whether operating in GUI mode.
+
+        Returns:
+            True if in GUI mode, False for CLI mode.
+
+        """
         return self._is_gui_mode
 
     def should_display(self, target: MessageTarget) -> bool:

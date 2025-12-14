@@ -211,7 +211,12 @@ class ExecutorDecisionMaker:
         self.func_name = getattr(func, "__name__", "")
 
     async def _run_with_executor(self) -> Any:
-        """Run the function using the thread pool executor."""
+        """Run the function using the thread pool executor.
+
+        Returns:
+            The result of the function execution.
+
+        """
         loop = asyncio.get_running_loop()
         if self.kwargs:
             from functools import partial
@@ -221,11 +226,21 @@ class ExecutorDecisionMaker:
         return await loop.run_in_executor(None, self.func, *self.args)
 
     def _run_directly(self) -> Any:
-        """Run the function directly without executor."""
+        """Run the function directly without executor.
+
+        Returns:
+            The result of the function execution.
+
+        """
         return self.func(*self.args, **self.kwargs)
 
     def _should_use_executor_for_io(self) -> bool:
-        """Determine if I/O operation should use executor based on size."""
+        """Determine if I/O operation should use executor based on size.
+
+        Returns:
+            True if the operation should use an executor, False if it can run directly.
+
+        """
         if not self.args:
             return True
 
@@ -256,7 +271,16 @@ class ExecutorDecisionMaker:
             return True  # Default to executor if no specific condition matched
 
     async def execute(self, force_executor: bool | None) -> Any:
-        """Execute the function with the appropriate strategy."""
+        """Execute the function with the appropriate strategy.
+
+        Args:
+            force_executor: If True, always use executor; if False, run directly;
+                if None, auto-detect based on operation type.
+
+        Returns:
+            The result of the function execution.
+
+        """
         # Handle explicit override
         if force_executor is True:
             return await self._run_with_executor()
@@ -289,6 +313,17 @@ async def smart_run_in_executor[R](
     2. Fast path operations (filesystem metadata, string ops) run directly
     3. I/O operations check file size - small files run directly
     4. Unknown operations default to executor for safety
+
+    Args:
+        func: The function to execute.
+        *args: Positional arguments for the function.
+        threshold_bytes: Size threshold for I/O operations (default 1KB).
+        force_executor: Override auto-detection (True=always executor, False=never).
+        **kwargs: Keyword arguments for the function.
+
+    Returns:
+        The result of the function execution.
+
     """
     decision_maker = ExecutorDecisionMaker(func, args, kwargs, threshold_bytes)
     return await decision_maker.execute(force_executor)
@@ -300,7 +335,17 @@ async def smart_run_in_executor[R](
 
 
 async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent: int | None = None) -> list[Any]:
-    """Async version of map with concurrency control."""
+    """Async version of map with concurrency control.
+
+    Args:
+        func: Function to apply to each item (sync or async).
+        items: Items to process.
+        max_concurrent: Maximum concurrent operations (None for unlimited).
+
+    Returns:
+        List of results from applying func to each item.
+
+    """
     if max_concurrent:
         semaphore = asyncio.Semaphore(max_concurrent)
 
@@ -333,6 +378,9 @@ async def async_map_smart(
         items: Items to process
         max_concurrent: Maximum concurrent operations (None for unlimited)
         use_executor: Executor usage strategy ("auto", "always", "never", "profile")
+
+    Returns:
+        List of results from applying func to each item.
 
     """
     if use_executor == "profile" and items:
@@ -404,7 +452,18 @@ async def async_map_smart(
 
 
 async def batch_process(items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5) -> list[Any]:
-    """Process items in batches with concurrency control."""
+    """Process items in batches with concurrency control.
+
+    Args:
+        items: Items to process.
+        processor: Function to process each item (sync or async).
+        batch_size: Number of items per batch.
+        max_concurrent: Maximum concurrent operations within each batch.
+
+    Returns:
+        List of results from processing all items.
+
+    """
     results = []
 
     for i in range(0, len(items), batch_size):
@@ -434,6 +493,9 @@ async def batch_process_smart(
         batch_size: Size of each batch
         max_concurrent: Max concurrent operations within each batch
         use_executor: Executor usage strategy (see async_map_smart for options)
+
+    Returns:
+        List of results from processing all items.
 
     """
     results = []
@@ -475,6 +537,9 @@ async def async_filter_smart(
         items: Items to process
         max_concurrent: Maximum concurrent operations (None for unlimited)
         use_executor: Executor usage strategy ("auto", "always", "never")
+
+    Returns:
+        List of items for which the predicate returned True.
 
     """
     items_list = list(items)
@@ -543,7 +608,18 @@ async def async_filter(
 def async_retry(
     max_attempts: int = 3, delay: float = 1.0, backoff: float = 2.0, exceptions: tuple[type[Exception], ...] = (Exception,)
 ) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
-    """Decorate to retry an async function with exponential backoff."""
+    """Decorate to retry an async function with exponential backoff.
+
+    Args:
+        max_attempts: Maximum number of retry attempts.
+        delay: Initial delay between retries in seconds.
+        backoff: Multiplier for delay after each retry.
+        exceptions: Tuple of exception types to catch and retry.
+
+    Returns:
+        Decorator function that wraps async functions with retry logic.
+
+    """
 
     def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @wraps(func)
@@ -571,7 +647,15 @@ def async_retry(
 
 
 def async_timeout(seconds: float) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
-    """Decorate to apply a timeout to an asynchronous function call."""
+    """Decorate to apply a timeout to an asynchronous function call.
+
+    Args:
+        seconds: Maximum time in seconds before raising TimeoutError.
+
+    Returns:
+        Decorator function that wraps async functions with timeout logic.
+
+    """
 
     def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @wraps(func)
@@ -587,7 +671,15 @@ def async_timeout(seconds: float) -> Callable[[Callable[P, Awaitable[R]]], Calla
 
 
 async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
-    """Provide internal helper to run an awaitable without timeout handling."""
+    """Provide internal helper to run an awaitable without timeout handling.
+
+    Args:
+        coro: Either an awaitable or a callable returning an awaitable.
+
+    Returns:
+        The result of awaiting the coroutine.
+
+    """
     if callable(coro) and not hasattr(coro, "__await__"):
         awaitable = coro()
         return await awaitable
@@ -597,7 +689,17 @@ async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
 def run_with_timeout(
     coro: Awaitable[T] | Callable[[], Awaitable[T]], timeout_seconds: float, default: T | None = None
 ) -> Callable[[], Awaitable[T | None]]:
-    """Create a coroutine that runs with timeout, returning default on timeout."""
+    """Create a coroutine that runs with timeout, returning default on timeout.
+
+    Args:
+        coro: Either an awaitable or a callable returning an awaitable.
+        timeout_seconds: Maximum time in seconds before timeout.
+        default: Value to return if timeout occurs.
+
+    Returns:
+        A callable that returns an awaitable with timeout handling.
+
+    """
 
     async def _timeout_wrapper() -> T | None:
         try:

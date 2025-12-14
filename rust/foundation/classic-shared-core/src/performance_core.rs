@@ -118,7 +118,7 @@ impl RollingStats {
 /// Thread-safe storage for tracking operation timings, counts, and bytes processed.
 ///
 /// Performance Optimization: Uses RollingStats for O(1) memory per operation
-/// instead of O(n) with Vec<Duration>. This prevents memory leaks and provides
+/// instead of O(n) with `Vec<Duration>`. This prevents memory leaks and provides
 /// instant statistics computation.
 pub struct PerformanceMetrics {
     /// Rolling statistics for each operation (constant memory)

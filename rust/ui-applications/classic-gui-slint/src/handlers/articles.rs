@@ -12,7 +12,7 @@ use tracing::{debug, info, warn};
 ///
 /// # Arguments
 ///
-/// * `url` - The URL to open (e.g., "https://www.nexusmods.com/fallout4/mods/56255")
+/// * `url` - The URL to open (e.g., `https://www.nexusmods.com/fallout4/mods/56255`)
 ///
 /// # Returns
 ///

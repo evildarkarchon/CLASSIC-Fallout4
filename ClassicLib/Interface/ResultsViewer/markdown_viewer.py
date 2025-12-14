@@ -59,8 +59,16 @@ class MarkdownViewer(QTextBrowser):
         self.moveCursor(QTextCursor.MoveOperation.Start)
 
     def _preprocess_markdown(self, text: str) -> str:  # noqa: PLR6301
-        """Pre-processes the raw markdown text to identify and wrap specific
-        CLASSIC report structures (Suspects, Found Mods, Errors) in HTML.
+        """Pre-process raw markdown text to identify and wrap CLASSIC report structures.
+
+        Wraps specific CLASSIC report structures (Suspects, Found Mods, Errors) in HTML.
+
+        Args:
+            text: Raw markdown text to preprocess.
+
+        Returns:
+            Preprocessed text with CLASSIC structures wrapped in HTML.
+
         """
 
         # 1. Suspect Found Box
@@ -110,7 +118,15 @@ class MarkdownViewer(QTextBrowser):
         return re.sub(r"\*\*([^*]+)\*\*", r"<b>\1</b>", text)
 
     def _wrap_in_html_template(self, content: str) -> str:
-        """Wrap the HTML content in a full document structure with embedded CSS."""
+        """Wrap the HTML content in a full document structure with embedded CSS.
+
+        Args:
+            content: HTML content to wrap.
+
+        Returns:
+            Complete HTML document with embedded CSS styling.
+
+        """
         # Base font size scaled by zoom level
         base_size = 16
         scaled_size = int(base_size * (self._zoom_level / 100.0))
@@ -295,7 +311,12 @@ class MarkdownViewer(QTextBrowser):
     # Let's update `setMarkdown` to store `self._last_processed_html`.
 
     def get_zoom_level(self) -> int:
-        """Return the current zoom level."""
+        """Return the current zoom level.
+
+        Returns:
+            The current zoom level as a percentage (e.g., 100 for 100%).
+
+        """
         return self._zoom_level
 
 

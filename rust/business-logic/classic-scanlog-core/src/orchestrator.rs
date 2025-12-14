@@ -1055,9 +1055,9 @@ impl OrchestratorCore {
     ///
     /// # Example
     ///
-    /// ```ignore
-    /// // Before: "[ 1] MyMod.esp"
-    /// // After:  "[01] MyMod.esp"
+    /// ```text
+    /// Before: "[ 1] MyMod.esp"
+    /// After:  "[01] MyMod.esp"
     /// ```
     pub fn reformat_crash_data_inline(&self, lines: &[String]) -> Vec<String> {
         use std::collections::VecDeque;

@@ -7,6 +7,8 @@ import pytest
 
 from ClassicLib.BackupManager import BackupManager
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestBackupWorkflow:
     """Tests for the complete backup workflow."""

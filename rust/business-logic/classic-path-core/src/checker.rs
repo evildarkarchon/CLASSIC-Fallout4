@@ -185,7 +185,7 @@ impl DocumentsChecker {
     /// This method checks:
     /// 1. If the INI file exists
     /// 2. If it's parseable
-    /// 3. For Custom.ini files, if the [Archive] section exists
+    /// 3. For Custom.ini files, if the `[Archive]` section exists
     ///
     /// # Arguments
     ///

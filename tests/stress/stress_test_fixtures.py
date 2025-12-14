@@ -664,19 +664,59 @@ def mock_yamldata_python_only():
 
 @pytest.fixture
 def mock_yamldata():
-    """
-    Mock yamldata that works with Rust components.
+    """Mock yamldata that works with Rust components.
 
-    This is a simple Mock object. For Rust integration tests, this will likely cause
-    PyO3 type conversion errors. In that case, use actual test data or mock_yamldata_python_only.
+    This fixture provides a MagicMock with all attributes required for Rust
+    compatibility. The key attributes (game_ignore_plugins, ignore_list, etc.)
+    must be real Python types, not Mock objects, because PyO3 cannot convert
+    Mock objects to Rust types.
+
+    Returns:
+        MagicMock: Mock object with Rust-compatible attributes.
     """
-    # Create a simple mock WITHOUT disabling Rust
-    # This allows Rust integration tests to run with Rust enabled
-    mock = Mock()
-    # Add common attributes
+    mock = Mock(spec=False)
+
+    # Common attributes
     mock.game_path = "C:\\Games\\Fallout4"
     mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
     mock.plugins = {}
     mock.settings = {}
+
+    # Basic game info
+    mock.crashgen_name = "Buffout 4"
+    mock.xse_acronym = "F4SE"
+    mock.crashgen_latest_og = "1.28.6"
+    mock.crashgen_latest_vr = "1.26.2"
+
+    # CRITICAL: These attributes are required by RustPluginAnalyzer
+    # They must be proper Python types, not Mock objects
+    mock.game_ignore_plugins = []  # List of plugins to ignore
+    mock.ignore_list = []  # Additional ignore list
+    mock.game_version = "1.10.163"  # Game version string
+    mock.game_version_vr = "1.2.72"  # VR game version
+    mock.game_version_new = "1.10.163"  # New game version
+
+    # Required for report generation
+    mock.classic_version = "CLASSIC v1.0.0"
+
+    # Required for suspect scanning
+    mock.suspects_error_list = {}
+    mock.suspects_stack_list = {}
+
+    # Game mod data for detection
+    mock.game_mods_conf = {}
+    mock.game_mods_freq = {}
+    mock.game_mods_solu = {}
+    mock.game_mods_core = {}
+    mock.game_mods_core_folon = {}
+    mock.game_mods_opc2 = {}
+
+    # Crash log error/stack checks
+    mock.crashlog_error_check = {}
+    mock.crashlog_stack_check = {}
+
+    # Game hints
+    mock.classic_game_hints = []
+    mock.autoscan_text = ""
 
     return mock

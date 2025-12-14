@@ -3,7 +3,7 @@
 //! This module provides functionality for generating essential configuration files
 //! required by the CLASSIC application, including:
 //! - CLASSIC Ignore.yaml (ignore patterns)
-//! - CLASSIC Data/CLASSIC <GAME> Local.yaml (game-specific local config)
+//! - CLASSIC Data/CLASSIC `<GAME>` Local.yaml (game-specific local config)
 
 use crate::error::FileIOError;
 use std::path::PathBuf;
@@ -88,10 +88,10 @@ impl FileGenerator {
         Ok(true)
     }
 
-    /// Generate CLASSIC Data/CLASSIC <GAME> Local.yaml if it doesn't exist (async)
+    /// Generate CLASSIC Data/CLASSIC `<GAME>` Local.yaml if it doesn't exist (async)
     ///
     /// Creates the local YAML file with default content from configuration,
-    /// where <GAME> is dynamically determined from config.
+    /// where `<GAME>` is dynamically determined from config.
     /// The file is written in UTF-8 encoding.
     /// Creates parent directories if they don't exist.
     ///

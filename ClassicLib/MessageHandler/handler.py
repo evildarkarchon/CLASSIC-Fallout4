@@ -61,12 +61,22 @@ class MessageHandler:
 
     @property
     def is_gui_mode(self) -> bool:
-        """Whether operating in GUI mode."""
+        """Whether operating in GUI mode.
+
+        Returns:
+            True if in GUI mode, False for CLI mode.
+
+        """
         return self._is_gui_mode
 
     @property
     def parent_widget(self) -> Any:
-        """Parent widget (None for base class)."""
+        """Parent widget (None for base class).
+
+        Returns:
+            The parent Qt widget, or None in CLI mode.
+
+        """
         return None
 
     @property

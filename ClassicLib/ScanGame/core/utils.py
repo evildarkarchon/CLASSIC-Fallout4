@@ -27,7 +27,18 @@ except ImportError:
 
     # Provide a stub to satisfy type checker
     async def read_lines_with_encoding_async(file_path: Path) -> list[str]:
-        """Stub function - should never be called when ASYNC_ENCODING_AVAILABLE is False."""
+        """Stub function - should never be called when ASYNC_ENCODING_AVAILABLE is False.
+
+        Args:
+            file_path: Path to the file to read.
+
+        Returns:
+            Never returns - always raises NotImplementedError.
+
+        Raises:
+            NotImplementedError: Always raised when called.
+
+        """
         raise NotImplementedError("Async encoding utilities not available")
 
 

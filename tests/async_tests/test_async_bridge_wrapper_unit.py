@@ -15,7 +15,7 @@ from ClassicLib.AsyncBridge import AsyncBridge
 
 logger = logging.getLogger(__name__)
 
-pytestmark = pytest.mark.unit
+pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
 
 
 class TestAsyncBridgeWrapper:

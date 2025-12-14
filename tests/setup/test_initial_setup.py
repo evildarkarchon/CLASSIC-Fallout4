@@ -8,6 +8,8 @@ import pytest
 from ClassicLib import GlobalRegistry
 from ClassicLib.SetupCoordinator import SetupCoordinator
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestInitialSetup:
     """Test suite for initial setup functionality."""

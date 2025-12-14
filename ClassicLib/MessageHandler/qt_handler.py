@@ -72,12 +72,22 @@ class QtMessageHandler(MessageHandler, QObject):
 
     @property
     def parent_widget(self) -> QWidget | None:
-        """Parent widget for dialogs."""
+        """Parent widget for dialogs.
+
+        Returns:
+            The parent QWidget, or None if not set.
+
+        """
         return self._parent_widget
 
     @property
     def main_thread(self) -> QThread:
-        """Reference to the main Qt thread."""
+        """Reference to the main Qt thread.
+
+        Returns:
+            The main QThread instance.
+
+        """
         return self._main_thread
 
     def _get_output_backend(self) -> OutputBackend:

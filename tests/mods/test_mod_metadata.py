@@ -8,6 +8,8 @@ import pytest
 from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanLog.DetectMods import detect_mods_important
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestImportantModDetection:
     """Tests for important mod detection with GPU compatibility."""

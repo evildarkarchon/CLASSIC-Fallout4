@@ -63,7 +63,7 @@ use crate::{Message, MessageType};
 ///
 /// # Thread Safety
 ///
-/// The Logger is thread-safe and can be shared across threads using Arc<Logger> or cloned
+/// The Logger is thread-safe and can be shared across threads using `Arc<Logger>` or cloned
 /// since it contains no mutable state.
 ///
 /// # Examples

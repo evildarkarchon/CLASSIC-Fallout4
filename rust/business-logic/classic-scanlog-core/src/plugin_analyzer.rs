@@ -288,7 +288,7 @@ impl PluginAnalyzer {
         Ok((plugin_map, plugin_limit_triggered, limit_check_disabled))
     }
 
-    /// Checks for plugin limit markers ([FF]) in crash logs with version-specific logic.
+    /// Checks for plugin limit markers (`[FF]`) in crash logs with version-specific logic.
     ///
     /// This method detects the plugin limit marker (`[FF]`) and interprets its meaning based on
     /// game version. In original game versions, `[FF]` indicates the plugin limit was hit (a problem).

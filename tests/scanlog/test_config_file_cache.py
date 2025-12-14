@@ -8,9 +8,11 @@ read-only issue detection.
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pytest
+
+pytestmark = [pytest.mark.unit]
+
+from pathlib import Path
 
 from ClassicLib.ScanGame.Config import ConfigFileCache
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue

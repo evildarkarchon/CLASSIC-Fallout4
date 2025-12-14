@@ -8,6 +8,8 @@ import pytest
 
 from ClassicLib.DocsPath import DocumentsPathManager
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestIniValidation:
     """Tests for INI file validation and checking."""

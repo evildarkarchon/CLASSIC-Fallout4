@@ -9,6 +9,8 @@ from ClassicLib import GlobalRegistry
 from ClassicLib.BackupManager import BackupManager
 from ClassicLib.Constants import YAML
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestBackupConfiguration:
     """Tests for backup configuration loading."""

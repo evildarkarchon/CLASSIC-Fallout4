@@ -18,6 +18,8 @@ import pytest
 
 from ClassicLib.Logger import logger
 
+pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
+
 T = TypeVar("T")
 
 

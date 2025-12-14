@@ -6,10 +6,10 @@ This file contains unit tests that test individual functions with mocked depende
 
 import pytest
 
+pytestmark = [pytest.mark.gui, pytest.mark.unit]
+
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettings import yaml_settings
-
-pytestmark = pytest.mark.unit
 
 
 class TestSettingsLoading:

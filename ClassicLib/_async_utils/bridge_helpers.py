@@ -25,13 +25,23 @@ if TYPE_CHECKING:
 
 
 def _get_bridge() -> "AsyncBridge":
-    """Get AsyncBridge instance lazily to avoid circular imports."""
+    """Get AsyncBridge instance lazily to avoid circular imports.
+
+    Returns:
+        The singleton AsyncBridge instance.
+
+    """
     from ClassicLib.AsyncBridge import AsyncBridge
     return AsyncBridge.get_instance()
 
 
 def _is_gui_mode() -> bool:
-    """Check GUI mode lazily to avoid circular imports."""
+    """Check GUI mode lazily to avoid circular imports.
+
+    Returns:
+        True if running in GUI mode, False otherwise.
+
+    """
     from ClassicLib import GlobalRegistry
     return GlobalRegistry.is_gui_mode()
 

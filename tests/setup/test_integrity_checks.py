@@ -8,6 +8,8 @@ import pytest
 from ClassicLib import GlobalRegistry
 from ClassicLib.SetupCoordinator import SetupCoordinator
 
+pytestmark = [pytest.mark.unit]
+
 
 class TestIntegrityChecks:
     """Test suite for integrity checking functionality."""
