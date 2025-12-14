@@ -1,26 +1,13 @@
-"""RustAcceleration Coordination Module for CLASSIC (Pre-release Version).
+"""RustAcceleration Coordinator for CLASSIC.
 
-This module provides centralized coordination and management of all Rust-accelerated
-components in CLASSIC. It handles component orchestration, performance monitoring,
-automatic optimization, and provides a unified interface for the entire Rust subsystem.
-
-Features:
-- Centralized component management and configuration
-- Performance monitoring and metrics collection
-- Automatic optimization based on workload characteristics
-- Component health checks and diagnostics
-- Unified error handling and recovery
-- Real-time performance statistics
-
-This is the primary interface for Phase 6: Integration & Optimization.
+This module provides the main RustAcceleration class for centralized coordination
+and management of all Rust-accelerated components in CLASSIC.
 """
 
 from __future__ import annotations
 
 import logging
 import time
-from dataclasses import dataclass, field
-from enum import Enum
 from typing import Any
 
 from ClassicLib.integration.factory import (
@@ -32,293 +19,16 @@ from ClassicLib.integration.factory import (
     get_record_scanner,
     get_report_generator,
 )
-
-# Import the module-level status dicts
 from ClassicLib.integration.status import (
     RUST_AVAILABLE,
     get_rust_component_status,
     is_rust_accelerated,
 )
+from ClassicLib.RustAcceleration.metrics import ComponentMetrics
+from ClassicLib.RustAcceleration.types import ComponentType
+from ClassicLib.RustAcceleration.workload import OptimizationLevel, WorkloadCharacteristics
 
 logger = logging.getLogger(__name__)
-
-
-class ComponentType(Enum):
-    """Represent various component types as an enumeration.
-
-    This enumeration provides a set of predefined categories for categorizing
-    different types of components in a system. Each member of the enumeration
-    is a string constant that represents a specific component type.
-
-    Attributes:
-        PARSER (str): Represents components responsible for parsing activities.
-        FORMID_ANALYZER (str): Represents components used for analyzing form IDs.
-        PLUGIN_ANALYZER (str): Represents components designed to analyze plugins.
-        RECORD_SCANNER (str): Represents components that scan and process records.
-        REPORT_GENERATION (str): Represents components for generating reports.
-        DATABASE_POOL (str): Represents components functioning as database pools.
-        FILE_IO_CORE (str): Represents components handling core file I/O tasks.
-        MOD_DETECTOR (str): Represents components detecting modifications or mods.
-
-    """
-
-    PARSER = "parser"
-    FORMID_ANALYZER = "formid_analyzer"
-    PLUGIN_ANALYZER = "plugin_analyzer"
-    RECORD_SCANNER = "record_scanner"
-    REPORT_GENERATION = "report_generation"
-    DATABASE_POOL = "database_pool"
-    FILE_IO_CORE = "file_io_core"
-    MOD_DETECTOR = "mod_detector"
-
-
-class OptimizationLevel(Enum):
-    """Represent different levels of optimization that can be applied.
-
-    This enumeration defines a range of optimization strategies that vary
-    from being completely disabled to dynamically adjusting based on workloads.
-    It is designed to provide flexible options for balancing performance,
-    compatibility, and resource usage.
-
-    Attributes:
-        DISABLED (int): Component disabled, no optimizations applied.
-        MINIMAL (int): Minimal optimization level, prioritizing maximum
-            compatibility, and stability.
-        BALANCED (int): Balances performance and resource usage, serving
-            as the default option for general scenarios.
-        AGGRESSIVE (int): Focuses on maximum performance, potentially
-            utilizing higher amounts of resources.
-        ADAPTIVE (int): Dynamically adjusts optimization level based on the
-            workload to maintain optimal performance and resource efficiency.
-
-    """
-
-    DISABLED = 0  # Component disabled
-    MINIMAL = 1  # Minimal optimization, maximum compatibility
-    BALANCED = 2  # Balanced performance and resource usage (default)
-    AGGRESSIVE = 3  # Maximum performance, higher resource usage
-    ADAPTIVE = 4  # Dynamically adjust based on workload
-
-
-@dataclass
-class ComponentMetrics:
-    """Represent metrics for a component, tracking performance and error data.
-
-    This class is designed to aggregate and provide metrics related to calls made
-    to a given component. It includes information about the number of calls,
-    execution times, cache performance, and errors. It also provides calculated
-    properties such as average execution time and cache hit rate.
-
-    Attributes:
-        name (str): The name of the component being tracked.
-        calls (int): The total number of calls made to the component.
-        total_time (float): The total execution time of all calls.
-        min_time (float): The shortest execution time of any single call.
-        max_time (float): The longest execution time of any single call.
-        errors (int): The total number of errors recorded.
-        cache_hits (int): The number of successful cache hits.
-        cache_misses (int): The number of cache misses.
-        last_error (str | None): The most recent error message, if any.
-
-    """
-
-    name: str
-    calls: int = 0
-    total_time: float = 0.0
-    min_time: float = float("inf")
-    max_time: float = 0.0
-    errors: int = 0
-    cache_hits: int = 0
-    cache_misses: int = 0
-    last_error: str | None = None
-
-    @property
-    def avg_time(self) -> float:
-        """Calculate and retrieves the average time per call.
-
-        This property computes the average time taken for each call by dividing
-        the total accumulated time by the number of recorded calls. If no calls
-        have been recorded, the average time defaults to 0.0.
-
-        Returns:
-            float: The average time per call. Returns 0.0 if there are no calls.
-
-        """
-        return self.total_time / self.calls if self.calls > 0 else 0.0
-
-    @property
-    def cache_hit_rate(self) -> float:
-        """Calculate and returns the cache hit rate as a percentage.
-
-        The cache hit rate is the ratio of cache hits to the total cache
-        accesses (hits + misses), expressed as a percentage. If there are
-        no cache accesses, the hit rate is considered to be 0.0.
-
-        Returns:
-            float: The cache hit rate as a percentage, or 0.0 if there are no
-            cache hits or misses.
-
-        """
-        total = self.cache_hits + self.cache_misses
-        return (self.cache_hits / total * 100) if total > 0 else 0.0
-
-    def record_call(self, duration: float, cache_hit: bool = False) -> None:
-        """Record a single function call's duration and whether it was a cache hit or miss.
-        Updates the statistics including total calls, total time, minimum time, maximum time,
-        cache hits, and cache misses based on the provided data.
-
-        Args:
-            duration (float): The duration of the function call to be recorded.
-            cache_hit (bool, optional): Specifies whether the call was a cache hit. Defaults to False.
-
-        """
-        self.calls += 1
-        self.total_time += duration
-        self.min_time = min(self.min_time, duration)
-        self.max_time = max(self.max_time, duration)
-
-        if cache_hit:
-            self.cache_hits += 1
-        else:
-            self.cache_misses += 1
-
-    def record_error(self, error: str) -> None:
-        """Record an error by incrementing the error count and storing the latest error.
-
-        Args:
-            error (str): The error message to be recorded.
-
-        """
-        self.errors += 1
-        self.last_error = error
-
-
-@dataclass
-class WorkloadCharacteristics:
-    """Represent characteristics of a computational workload and provides methods to
-    evaluate its optimization level and performance.
-
-    The WorkloadCharacteristics class is used to encapsulate various metrics and
-    attributes of a workload, including file count, file sizes, batch operation
-    flags, memory constraints, and extended metrics such as rust acceleration,
-    component errors, and performance timings. It supports determining the optimal
-    optimization level and calculating a performance score based on the given inputs.
-
-    Attributes:
-        file_count (int): Number of files involved in the workload.
-        total_file_size (int): Aggregate file size (in bytes) across all files.
-        formid_count (int): Count of FormID elements in the workload.
-        plugin_count (int): Number of plugins included in the workload.
-        database_queries (int): Number of database queries in the workload.
-        report_fragments (int): Count of report fragments being processed.
-        is_batch_operation (bool): Indicates whether the workload is part of a batch operation.
-        is_memory_constrained (bool): Specifies if memory availability is limited.
-        extended_metrics (dict[str, Any]): Additional workload metrics, such as
-            acceleration percentage, performance timings, or cache metrics.
-
-    """
-
-    file_count: int = 0
-    total_file_size: int = 0
-    formid_count: int = 0
-    plugin_count: int = 0
-    database_queries: int = 0
-    report_fragments: int = 0
-    is_batch_operation: bool = False
-    is_memory_constrained: bool = False
-    extended_metrics: dict[str, Any] = field(default_factory=dict)  # Phase 6 addition
-
-    def determine_optimization_level(self) -> OptimizationLevel:
-        """Determine the optimal level of optimization based on various dynamic system metrics
-        and configuration parameters. This method analyzes conditions such as system stability,
-        Rust acceleration percentage, cache utilization, memory constraints, and workload
-        characteristics to return the appropriate optimization level for the current operation.
-
-        Returns:
-            OptimizationLevel: The determined optimization level based on the analyzed metrics.
-
-        Raises:
-            KeyError: If any required key in `extended_metrics` is missing.
-
-        """
-        # Check for component instability first
-        component_errors = self.extended_metrics.get("component_errors", 0)
-        if component_errors > 3:
-            # Many component errors suggest instability - use minimal optimization
-            return OptimizationLevel.MINIMAL
-
-        # Check acceleration percentage for Rust availability
-        acceleration_pct = self.extended_metrics.get("acceleration_percentage", 100)
-
-        # Large batch operations with good Rust acceleration
-        if self.is_batch_operation and self.file_count > 10 and acceleration_pct > 70:
-            return OptimizationLevel.AGGRESSIVE
-
-        # High-performance single operations with excellent acceleration
-        if not self.is_batch_operation and acceleration_pct > 90:
-            cache_util = self.extended_metrics.get("cache_utilization", 0)
-            if cache_util > 80:  # Good cache performance
-                return OptimizationLevel.AGGRESSIVE
-
-        # Memory constrained environments or low acceleration
-        if self.is_memory_constrained or acceleration_pct < 30:
-            return OptimizationLevel.BALANCED
-
-        # Heavy database operations benefit from aggressive caching
-        if self.database_queries > 100 and acceleration_pct > 50:
-            return OptimizationLevel.AGGRESSIVE
-
-        # Large plugin counts with good acceleration
-        if self.plugin_count > 200 and acceleration_pct > 60:
-            return OptimizationLevel.AGGRESSIVE
-
-        # High FormID counts need optimization
-        if self.formid_count > 500 and acceleration_pct > 50:
-            return OptimizationLevel.AGGRESSIVE
-
-        # Consider performance timings
-        parse_time = self.extended_metrics.get("parse_time", 0)
-        if parse_time > 2.0 and acceleration_pct < 50:  # Slow parsing without Rust
-            return OptimizationLevel.BALANCED  # Don't stress the system further
-
-        # Default to balanced for most workloads
-        return OptimizationLevel.BALANCED
-
-    def get_performance_score(self) -> float:
-        """Calculate the performance score based on various metrics such as acceleration
-        percentage, cache utilization, component errors, and parse time. The score is
-        adjusted to provide bonuses or penalties based on these criteria, ensuring it
-        falls within the range of 0 to 100.
-
-        Returns:
-            float: The calculated performance score, constrained between 0.0 and 100.0.
-
-        Raises:
-            None
-
-        """
-        score = 50.0  # Base score
-
-        # Rust acceleration bonus
-        acceleration_pct = self.extended_metrics.get("acceleration_percentage", 0)
-        score += (acceleration_pct / 100) * 30  # Up to 30 points for full acceleration
-
-        # Cache utilization bonus
-        cache_util = self.extended_metrics.get("cache_utilization", 0)
-        score += (cache_util / 100) * 15  # Up to 15 points for excellent caching
-
-        # Error penalty
-        component_errors = self.extended_metrics.get("component_errors", 0)
-        score -= min(component_errors * 5, 20)  # Up to 20 points penalty for errors
-
-        # Performance timing bonus/penalty
-        parse_time = self.extended_metrics.get("parse_time", 1.0)
-        if parse_time < 0.1:  # Very fast parsing
-            score += 5
-        elif parse_time > 5.0:  # Slow parsing
-            score -= 10
-
-        return max(0.0, min(100.0, score))
 
 
 class RustAcceleration:
@@ -837,5 +547,11 @@ def perform_health_check() -> bool:
     return is_healthy
 
 
-# Initialize on module import for pre-release
-_accelerator = get_rust_acceleration()
+__all__ = [
+    "RustAcceleration",
+    "configure_for_batch_processing",
+    "configure_for_single_file",
+    "get_rust_acceleration",
+    "perform_health_check",
+    "print_acceleration_status",
+]
