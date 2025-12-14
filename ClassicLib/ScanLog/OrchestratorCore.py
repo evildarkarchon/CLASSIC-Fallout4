@@ -17,7 +17,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer, get_record_scanner
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.rust.report_rust import ReportFragment
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool, DatabasePoolManager
+from ClassicLib.Database import AsyncDatabasePool, DatabasePoolManager
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from ClassicLib.ScanLog.FormIDAnalyzer import FormIDAnalyzer

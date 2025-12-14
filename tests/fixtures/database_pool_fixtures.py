@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
+from ClassicLib.Database import DatabasePoolManager
 
 
 @pytest.fixture(autouse=True)

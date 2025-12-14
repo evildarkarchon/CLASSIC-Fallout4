@@ -19,7 +19,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
+from ClassicLib.Database import DatabasePoolManager
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 

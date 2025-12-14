@@ -115,7 +115,7 @@ def test_runtime_diagnostics_print(capsys):
 def test_wrapper_modules_use_centralized_detection():
     """Verify wrapper modules use centralized detection."""
     # Import all wrapper modules and check they work
-    from ClassicLib.rust.database_rust import RUST_AVAILABLE as database_avail
+    from ClassicLib.Database.rust_pool import RUST_AVAILABLE as database_avail
     from ClassicLib.rust.fcx_rust import RUST_AVAILABLE as fcx_avail
     from ClassicLib.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
     from ClassicLib.rust.gpu_rust import RUST_AVAILABLE as gpu_avail

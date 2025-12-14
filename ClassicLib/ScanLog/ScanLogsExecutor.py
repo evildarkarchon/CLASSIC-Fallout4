@@ -99,7 +99,7 @@ class ScanLogsExecutor:
 
         # Warm up database pool if database exists
         if self.config.formid_db_exists:
-            from ClassicLib.ScanLog.AsyncUtil import DatabasePoolManager
+            from ClassicLib.Database import DatabasePoolManager
 
             pool_manager = DatabasePoolManager()
             await pool_manager.get_pool()

@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 

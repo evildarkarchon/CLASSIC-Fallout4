@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 import regex as re
 
 from ClassicLib.AsyncBridge import run_async
-from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
 
 if TYPE_CHECKING:

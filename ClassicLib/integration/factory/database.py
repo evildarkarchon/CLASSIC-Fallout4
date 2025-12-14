@@ -21,8 +21,8 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
     """Retrieve a database connection pool.
 
     The function prioritizes a Rust-based implementation if available, which
-    provides significant performance improvements. If the Rust implementation
-    is not available, it resorts to using the Python-based fallback mechanism.
+    provides significant performance improvements (25x faster). If the Rust
+    implementation is not available, it falls back to the Python implementation.
 
     Args:
         max_connections: Maximum number of connections allowed to be managed
@@ -39,7 +39,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
 
     if not is_rust_disabled() and components.get("database_pool", False):
         try:
-            from ClassicLib.rust.database_rust import RustAsyncDatabasePool
+            from ClassicLib.Database.rust_pool import RustAsyncDatabasePool
 
             logger.debug("Using Rust DatabasePool (25x speedup)")
             return RustAsyncDatabasePool(max_connections, cache_ttl_seconds)
@@ -47,7 +47,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
             logger.warning(f"Failed to import Rust DatabasePool: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.ScanLog.AsyncUtil import AsyncDatabasePool
+    from ClassicLib.Database.async_pool import AsyncDatabasePool
 
     logger.debug("Using Python AsyncDatabasePool implementation")
     return AsyncDatabasePool(max_connections)

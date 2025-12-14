@@ -2,354 +2,57 @@
 
 This module provides async versions of I/O-bound operations to improve
 performance through concurrent execution.
+
+Deprecated:
+    The DatabasePoolManager and AsyncDatabasePool classes have been moved to
+    ClassicLib.Database. Import from there instead:
+
+    ```python
+    from ClassicLib.Database import DatabasePoolManager, AsyncDatabasePool
+    ```
 """
 
+from __future__ import annotations
+
 import asyncio
-import threading
+import warnings
 from itertools import starmap
 from pathlib import Path
-from typing import Any, ClassVar
+from typing import Any
 
 import aiofiles
-import aiosqlite
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import DB_PATHS
 from ClassicLib.Logger import logger
 
+# Backward compatibility re-exports with deprecation warnings
+# These will be removed in a future version
+
+
+def __getattr__(name: str) -> Any:
+    """Provide deprecated imports with warnings."""
+    if name == "DatabasePoolManager":
+        warnings.warn(
+            "Import DatabasePoolManager from ClassicLib.Database instead of "
+            "ClassicLib.ScanLog.AsyncUtil. This import path will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from ClassicLib.Database.pool_manager import DatabasePoolManager
+
+        return DatabasePoolManager
+    if name == "AsyncDatabasePool":
+        warnings.warn(
+            "Import AsyncDatabasePool from ClassicLib.Database instead of "
+            "ClassicLib.ScanLog.AsyncUtil. This import path will be removed in a future version.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        from ClassicLib.Database.async_pool import AsyncDatabasePool
+
+        return AsyncDatabasePool
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
-class DatabasePoolManager:
-    """Singleton manager for database pool instances.
 
-    This manager checks for Rust DatabasePool availability and uses it for maximum
-    performance (25x faster). Falls back to Python AsyncDatabasePool when Rust
-    is not available. This ensures database connections are reused across multiple
-    orchestrator instances.
-    """
-
-    _instance: ClassVar["DatabasePoolManager | None"] = None
-    _pool: Any = None  # Can be DatabasePool or AsyncDatabasePool
-    _lock: ClassVar[asyncio.Lock | None] = None  # For async operations
-    _creation_lock: ClassVar[threading.Lock] = threading.Lock()  # For __new__ thread safety
-    _using_rust: bool = False
-
-    def __new__(cls) -> "DatabasePoolManager":
-        """Ensure only one instance of DatabasePoolManager exists."""
-        with cls._creation_lock:
-            if cls._instance is None:
-                cls._instance = super().__new__(cls)
-                cls._lock = None
-        return cls._instance
-
-    async def get_pool(self) -> Any:
-        """Get or create the singleton database pool.
-
-        Uses Rust DatabasePool when available (25x faster), otherwise falls back
-        to Python AsyncDatabasePool (aiosqlite).
-
-        Returns:
-            The singleton database pool instance (Rust or Python).
-
-        """
-        # Initialize the lock if needed (must be done in async context)
-        if self._lock is None:
-            self.__class__._lock = asyncio.Lock()
-
-        # Store in local variable for type checker
-        lock = self._lock
-        assert lock is not None, "Lock should be initialized"
-
-        async with lock:
-            if self._pool is None:
-                # Try to use Rust DatabasePool first
-                try:
-                    from ClassicLib.integration.factory import get_database_pool
-                    from ClassicLib.integration.status import is_rust_accelerated
-
-                    # Check if database pool is actually using Rust acceleration
-                    if is_rust_accelerated("database_pool"):
-                        # Match max_connections to max_concurrent for optimal performance
-                        # Default scan config has max_concurrent=50, so use 50 connections
-                        # This prevents connection contention during concurrent scans
-                        rust_pool = get_database_pool(max_connections=50, cache_ttl_seconds=300)
-                        # The factory will return Rust pool when available
-                        # Check type to confirm it's not the Python fallback
-                        if not isinstance(rust_pool, AsyncDatabasePool):
-                            self._pool = rust_pool
-                            self._using_rust = True
-                            logger.debug("Created singleton Rust DatabasePool (25x acceleration, 50 connections)")
-                            return self._pool
-                except (ImportError, AttributeError) as e:
-                    logger.debug(f"Rust DatabasePool not available, using Python: {e}")
-
-                # Fallback to Python AsyncDatabasePool with increased connection limit
-                # Match max_concurrent=50 to prevent connection contention
-                self._pool = AsyncDatabasePool(max_connections=50)
-                await self._pool.initialize()
-                self._using_rust = False
-                logger.debug("Created singleton Python database pool (aiosqlite, 50 connections)")
-            return self._pool
-
-    async def close_pool(self) -> None:
-        """Close the singleton database pool if it exists."""
-        if self._lock is None:
-            return
-
-        # Store in local variable for type checker
-        lock = self._lock
-        assert lock is not None, "Lock should exist after None check"
-
-        async with lock:
-            if self._pool is not None:
-                await self._pool.close()
-                self._pool = None
-                logger.debug("Closed singleton database pool")
-
-
-class AsyncDatabasePool:
-    """Represent an asynchronous connection pool for handling database operations efficiently.
-
-    Provides an interface for managing multiple SQLite database connections asynchronously.
-    Allows querying for specific entries or batches of entries while supporting caching
-    to minimize database load.
-
-    Attributes:
-        max_connections (int): Maximum number of database connections allowed concurrently.
-        connections (dict[Path, aiosqlite.Connection]): A mapping of database paths to their
-            respective asynchronous SQLite connection objects.
-        query_cache (dict[tuple[str, str], str]): A cache for storing query results to reduce
-            redundant database lookups.
-
-    """
-
-    def __init__(self, max_connections: int = 5) -> None:
-        """Initialize a connection manager for handling database connections and caching query results.
-
-        This class is designed to manage a limited number of database connections, implement query
-        caching for efficiency, and ensure thread safety when operating on internal data structures.
-
-        Args:
-            max_connections: The maximum number of database connections allowed to be managed
-                simultaneously. Defaults to 5.
-
-        """
-        self.max_connections = max_connections
-        self.connections: dict[Path, aiosqlite.Connection] = {}
-        self.query_cache: dict[tuple[str, str], str] = {}
-        self._lock = asyncio.Lock()
-
-    async def __aenter__(self) -> "AsyncDatabasePool":
-        """Handle the asynchronous context management protocol for the AsyncDatabasePool
-        object. Ensures the pool is properly initialized upon entering the async context.
-
-        Returns:
-            AsyncDatabasePool: The initialized instance of the database pool.
-
-        """
-        await self.initialize()
-        return self
-
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-        """Handle the asynchronous exit process for the context manager.
-        Ensures proper cleanup of resources by invoking the `close` method.
-
-        Args:
-            exc_type: Exception type if an exception is raised inside the context.
-            exc_val: Exception instance providing details about the raised exception.
-            exc_tb: Traceback object representing the point at which
-                the exception occurred.
-
-        """
-        await self.close()
-
-    async def initialize(self) -> None:
-        """Initialize asynchronous database connections.
-
-        This method ensures thread-safe initialization of database connections
-        to files defined in `DB_PATHS`. It attempts to open an asynchronous
-        connection for each valid database path and stores the connection
-        in the `connections` dictionary. If an error occurs while opening any
-        database, it logs the error for debugging purposes.
-
-        Raises:
-            KeyError: If the dictionary `connections` does not exist or cannot
-                      be accessed.
-            Any exceptions raised by `aiosqlite.connect` or file operations.
-
-        """
-        async with self._lock:
-            try:
-                for db_path in DB_PATHS:
-                    if db_path.is_file():
-                        try:
-                            conn = await aiosqlite.connect(db_path)
-                            self.connections[db_path] = conn
-                            logger.debug(f"Opened async connection to {db_path}")
-                        except (OSError, aiosqlite.Error) as e:
-                            logger.error(f"Failed to open database {db_path}: {e}")
-            except Exception as e:
-                # Clean up any connections that were opened before the exception
-                logger.error(f"Critical error during database initialization: {e}")
-                for conn in self.connections.values():
-                    try:
-                        await conn.close()
-                    except Exception as close_error:  # noqa: BLE001
-                        logger.error(f"Error closing connection during cleanup: {close_error}")
-                self.connections.clear()
-                raise
-
-    async def close(self) -> None:
-        """Close all active connections managed by the object in an asynchronous manner.
-
-        This method ensures that all active connections are closed gracefully while
-        avoiding potential deadlocks by managing the closure of connections outside the
-        main locking mechanism. Each connection is closed with a defined timeout to
-        prevent indefinite hanging.
-
-        Raises:
-            Exception: If an error occurs during the closure of any active connection,
-                it is captured and returned as an exception in the gathering process.
-
-        """
-        # Get a copy of connections to close without holding the lock
-        async with self._lock:
-            connections_to_close = list(self.connections.values())
-            self.connections.clear()
-
-        # Close connections outside the lock to prevent deadlock
-        close_tasks = []
-        for conn in connections_to_close:
-            # Create task with timeout for each connection close
-            task = asyncio.create_task(self._close_connection_with_timeout(conn))
-            close_tasks.append(task)
-
-        # Wait for all connections to close (or timeout)
-        if close_tasks:
-            await asyncio.gather(*close_tasks, return_exceptions=True)
-
-    @staticmethod
-    async def _close_connection_with_timeout(conn: aiosqlite.Connection) -> None:
-        """Close the given SQLite database connection with a timeout.
-
-        This method attempts to close the specified database connection within the
-        defined timeout period. If the connection does not close within the given
-        timeout, a TimeoutError is logged. Other potential errors during the closing
-        process are also logged for debugging purposes.
-
-        Args:
-            conn (aiosqlite.Connection): The SQLite database connection to be closed.
-
-        """
-        try:
-            await asyncio.wait_for(conn.close(), timeout=5.0)
-        except TimeoutError:
-            logger.error("Timeout closing database connection after 5.0s")
-        except (aiosqlite.Error, OSError, asyncio.CancelledError) as e:
-            logger.error(f"Error closing database connection: {e}")
-
-    async def get_entry(self, formid: str, plugin: str) -> str | None:
-        """Fetch a specific entry from the database.
-
-        Checks the cache first, then queries connected databases sequentially
-        until the entry is found. Results are cached for future requests.
-
-        Args:
-            formid: The unique form ID to look up.
-            plugin: The plugin name associated with the form ID.
-
-        Returns:
-            The database entry for the form ID and plugin, or None if not found.
-
-        Raises:
-            aiosqlite.Error: If a SQLite error occurs during database operations.
-            OSError: If an operating system error occurs.
-
-        """
-        # Check cache first
-        cache_key = (formid, plugin)
-        if cache_key in self.query_cache:
-            return self.query_cache[cache_key]
-
-        # Query databases
-        game_table = GlobalRegistry.get_game()
-        query = f"SELECT entry FROM {game_table} WHERE formid=? AND plugin=? COLLATE nocase"
-
-        for db_path, conn in self.connections.items():
-            try:
-                async with conn.execute(query, (formid, plugin)) as cursor:
-                    result = await cursor.fetchone()
-                    if result:
-                        entry = result[0]
-                        self.query_cache[cache_key] = entry
-                        return entry
-            except (aiosqlite.Error, OSError) as e:
-                logger.error(f"Database query error in {db_path}: {e}")
-
-        return None
-
-    async def get_entries_batch(self, formid_plugin_pairs: list[tuple[str, str]], batch_size: int = 100) -> dict[tuple[str, str], str]:
-        """Fetch entries from the cache or databases for given pairs of form IDs and plugins.
-
-        This asynchronous method retrieves data associated with specified pairs of form IDs
-        and plugin names. For each pair, it first checks an internal cache for pre-existing data.
-        If any data is not found in the cache, the method queries the available databases in
-        batches to minimize the potential SQL query size limits. The queried data is then stored
-        in the cache for future usage.
-
-        Args:
-            formid_plugin_pairs (list[tuple[str, str]]): A list of (form ID, plugin) tuples to
-                retrieve entries for.
-            batch_size (int): The maximum number of pairs to process in a single batch
-                when querying the databases. Defaults to 100.
-
-        Returns:
-            dict[tuple[str, str], str]: A dictionary mapping (form ID, plugin) pairs to their
-                respective queried entries.
-
-        """
-        results = {}
-
-        # First check cache for all pairs
-        uncached_pairs = []
-        for pair in formid_plugin_pairs:
-            if pair in self.query_cache:
-                results[pair] = self.query_cache[pair]
-            else:
-                uncached_pairs.append(pair)
-
-        if not uncached_pairs:
-            return results
-
-        # Query databases for uncached pairs
-        game_table = GlobalRegistry.get_game()
-
-        # Process in batches to avoid SQL query size limits
-        for i in range(0, len(uncached_pairs), batch_size):
-            batch = uncached_pairs[i : i + batch_size]
-
-            # Build parameterized query with OR conditions
-            conditions = " OR ".join(["(formid=? AND plugin=?)"] * len(batch))
-            query = f"SELECT formid, plugin, entry FROM {game_table} WHERE {conditions} COLLATE nocase"
-
-            # Flatten parameters
-            params = [item for pair in batch for item in pair]
-
-            # Query each database
-            for db_path, conn in self.connections.items():
-                try:
-                    async with conn.execute(query, params) as cursor:
-                        async for row in cursor:
-                            formid, plugin, entry = row
-                            cache_key = (formid, plugin)
-                            results[cache_key] = entry
-                            self.query_cache[cache_key] = entry
-                except (aiosqlite.Error, OSError) as e:
-                    logger.error(f"Batch query error in {db_path}: {e}")
-
-        return results
-
-
-# noinspection PyUnusedImports
 async def read_file_async(file_path: Path) -> list[str]:
     """Read the content of a file asynchronously and returns its lines as a list of strings.
 
