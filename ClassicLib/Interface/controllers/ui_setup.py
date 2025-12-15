@@ -368,9 +368,10 @@ class UISetupController:
             self._papyrus.toggle_monitoring,
         )
         papyrus_button.setCheckable(True)
+        # Register button BEFORE applying style (style method looks up from context)
+        self._ctx.ui_widgets.papyrus_button = papyrus_button
         self._update_papyrus_button_style(False)
         main_actions_hbox.addWidget(papyrus_button, 1)
-        self._ctx.ui_widgets.papyrus_button = papyrus_button
 
         # Exit button
         exit_button = self._create_button("EXIT", "Close CLASSIC.", QApplication.quit)
@@ -398,12 +399,14 @@ class UISetupController:
                 """
                 QPushButton {
                     color: black;
-                    background: rgb(237, 45, 45);  /* Red background */
+                    background: rgb(237, 45, 45);  /* Bright red background */
                     border-radius: 10px;
                     border: 1px solid black;
                     font-weight: bold;
                     font-size: 14px;
                 }
+                QPushButton:hover { background-color: rgb(255, 60, 60); }
+                QPushButton:pressed { background-color: rgb(200, 35, 35); }
                 """
             )
         else:
@@ -412,12 +415,14 @@ class UISetupController:
                 """
                 QPushButton {
                     color: black;
-                    background: rgb(45, 237, 138);  /* Green background */
+                    background: rgb(45, 237, 138);  /* Bright green background */
                     border-radius: 10px;
                     border: 1px solid black;
                     font-weight: bold;
                     font-size: 14px;
                 }
+                QPushButton:hover { background-color: rgb(55, 255, 150); }
+                QPushButton:pressed { background-color: rgb(35, 200, 115); }
                 """
             )
 

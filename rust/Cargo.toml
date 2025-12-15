@@ -66,7 +66,6 @@ members = [
     # Native Applications
     "ui-applications/classic-cli",
     "ui-applications/classic-tui",
-    "ui-applications/classic-gui-slint",
 ]
 resolver = "2"
 
@@ -105,7 +104,7 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # File I/O
 encoding_rs = "0.8"
-chardetng = "0.1"    # Character encoding detection (Phase 5 - PapyrusLog)
+chardetng = "0.1"   # Character encoding detection (Phase 5 - PapyrusLog)
 memmap2 = "0.9"
 walkdir = "2.5"
 ddsfile = "0.5"
@@ -129,22 +128,22 @@ rustc-hash = "2.1"      # Fast hasher for short strings (optimization 1.2)
 xxhash-rust = { version = "0.8", features = [
     "xxh3",
 ] } # Fast non-cryptographic hash (optimization 4.1)
-sha2 = "0.10"           # Cryptographic hashing (SHA256 for file comparison)
+sha2 = "0.10" # Cryptographic hashing (SHA256 for file comparison)
 
 # Text processing
-strsim = "0.11"         # String similarity algorithms
-configparser = "3.1"    # INI file parsing
+strsim = "0.11"      # String similarity algorithms
+configparser = "3.1" # INI file parsing
 
 # Version parsing
-semver = "1.0"          # Semantic versioning for crashgen version comparison
+semver = "1.0" # Semantic versioning for crashgen version comparison
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # Network (Phase 5 - Update system)
-reqwest = { version = "0.12", features = ["json"] }    # Async HTTP client
-scraper = "0.20"                                        # HTML parsing
+reqwest = { version = "0.12", features = ["json"] } # Async HTTP client
+scraper = "0.20"                                    # HTML parsing
 
 # Logging
 log = "0.4"

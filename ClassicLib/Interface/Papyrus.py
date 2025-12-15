@@ -93,6 +93,8 @@ class PapyrusMonitorWorker(QObject):
             new statistics are successfully parsed and detected as updated.
         error (Signal): A Qt signal that emits a string representation of an error
             message when an exception occurs during the monitoring process.
+        finished (Signal): A Qt signal that emits when the monitoring process finishes,
+            regardless of success or failure.
 
     """
 
@@ -101,6 +103,9 @@ class PapyrusMonitorWorker(QObject):
 
     # Signal for errors
     error: Signal = Signal(str)
+
+    # Signal when monitoring finishes
+    finished: Signal = Signal()
 
     # noinspection GrazieInspection
     def __init__(self) -> None:
@@ -153,35 +158,39 @@ class PapyrusMonitorWorker(QObject):
                 change in stats is detected.
             error: This signal is emitted with a string representation of the error
                 when an exception occurs during execution.
+            finished: This signal is emitted when the monitoring loop exits, regardless
+                of whether it exited normally or due to an error.
 
         """
-        """Serve as main monitoring loop"""
-        while True:
-            # Thread-safe check of _should_run
-            self._should_run_mutex.lock()
-            should_continue = self._should_run
-            self._should_run_mutex.unlock()
+        try:
+            while True:
+                # Thread-safe check of _should_run
+                self._should_run_mutex.lock()
+                should_continue = self._should_run
+                self._should_run_mutex.unlock()
 
-            if not should_continue:
-                break
+                if not should_continue:
+                    break
 
-            try:
-                message, count = papyrus_logging()
+                try:
+                    message, count = papyrus_logging()
 
-                # Parse the message to extract stats
-                current_stats: PapyrusStats = self._parse_stats(message, count)
+                    # Parse the message to extract stats
+                    current_stats: PapyrusStats = self._parse_stats(message, count)
 
-                # Only emit if stats have changed
-                if self._last_stats != current_stats:
-                    self.statsUpdated.emit(current_stats)
-                    self._last_stats = current_stats
+                    # Only emit if stats have changed
+                    if self._last_stats != current_stats:
+                        self.statsUpdated.emit(current_stats)
+                        self._last_stats = current_stats
 
-                # Sleep for a short interval to prevent excessive CPU usage
-                QThread.msleep(1000)  # Check every second
+                    # Sleep for a short interval to prevent excessive CPU usage
+                    QThread.msleep(1000)  # Check every second
 
-            except (OSError, ValueError) as e:
-                self.error.emit(str(e))
-                break
+                except (OSError, ValueError) as e:
+                    self.error.emit(str(e))
+                    break
+        finally:
+            self.finished.emit()  # type: ignore[union-attr]  # Qt signal emission
 
     @staticmethod
     def _parse_stats(message: str, dump_count: int) -> PapyrusStats:

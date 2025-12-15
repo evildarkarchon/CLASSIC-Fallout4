@@ -103,9 +103,10 @@ class TestCustomErrorDialog:
 
         # Mock clipboard
         mock_clipboard = MagicMock()
+        mock_msg_box = MagicMock()
         with patch.object(QApplication, "clipboard", return_value=mock_clipboard):
-            # Mock the confirmation dialog
-            with patch("ClassicLib.Interface.Dialogs.QMessageBox.information"):
+            # Mock the confirmation dialog (now uses QMessageBox instance, not static method)
+            with patch("ClassicLib.Interface.Dialogs.QMessageBox", return_value=mock_msg_box):
                 # Find and click copy button
                 copy_button = [btn for btn in dialog.findChildren(QPushButton) if "Copy" in btn.text()][0]
                 qtbot.mouseClick(copy_button, Qt.MouseButton.LeftButton)
@@ -126,17 +127,19 @@ class TestCustomErrorDialog:
         qtbot.addWidget(dialog)
 
         mock_clipboard = MagicMock()
+        mock_msg_box = MagicMock()
         with patch.object(QApplication, "clipboard", return_value=mock_clipboard):
-            with patch("ClassicLib.Interface.Dialogs.QMessageBox.information") as mock_info:
+            # Mock QMessageBox instance (now uses instance instead of static method)
+            with patch("ClassicLib.Interface.Dialogs.QMessageBox", return_value=mock_msg_box) as mock_msg_class:
                 # Find and click copy button
                 copy_button = [btn for btn in dialog.findChildren(QPushButton) if "Copy" in btn.text()][0]
                 qtbot.mouseClick(copy_button, Qt.MouseButton.LeftButton)
 
-                # Verify confirmation dialog was shown
-                mock_info.assert_called_once()
-                call_args = mock_info.call_args[0]
-                assert "Copied" in call_args[1]  # Title
-                assert "clipboard" in call_args[2].lower()  # Message
+                # Verify confirmation dialog was created and shown
+                mock_msg_class.assert_called_once()
+                mock_msg_box.setWindowTitle.assert_called_with("Copied")
+                mock_msg_box.setText.assert_called()
+                mock_msg_box.exec.assert_called_once()
 
     def test_ok_button_closes_dialog(self, qtbot, sample_error_data):
         """Test that OK button closes the dialog."""

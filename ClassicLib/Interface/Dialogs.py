@@ -301,10 +301,11 @@ class CustomErrorDialog(QDialog):
 
         clipboard.setText(full_text)
 
-        # Show brief confirmation
-        QMessageBox.information(
-            self,
-            "Copied",
-            "Error details copied to clipboard.",
-            QMessageBox.StandardButton.Ok,
-        )
+        # Show brief confirmation using non-parented dialog to avoid threading issues
+        # when CustomErrorDialog is shown via cross-thread signal-slot connections
+        msg_box = QMessageBox()
+        msg_box.setIcon(QMessageBox.Icon.Information)
+        msg_box.setWindowTitle("Copied")
+        msg_box.setText("Error details copied to clipboard.")
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+        msg_box.exec()

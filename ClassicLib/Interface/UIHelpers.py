@@ -75,6 +75,14 @@ MAIN_BUTTON_STYLE = """
         min-height: 48px;
         max-height: 48px;
     }
+    QPushButton:hover {
+        background-color: rgba(230, 230, 230, 0.95);
+        border: 1px solid #cccccc;
+    }
+    QPushButton:pressed {
+        background-color: rgba(200, 200, 200, 0.95);
+        border: 1px solid #999999;
+    }
     QPushButton:disabled {
         color: gray;
         background-color: rgba(10, 10, 10, 0.75);

@@ -179,8 +179,8 @@ class ScanController:
         # Connect signals
         self._game_files_worker.error_occurred.connect(self._show_scan_error_dialog)
         self._game_files_thread.started.connect(self._game_files_worker.run)
-        self._game_files_worker.finished.connect(self._game_files_thread.quit)
-        self._game_files_worker.finished.connect(self._game_files_worker.deleteLater)
+        self._game_files_worker.scan_finished.connect(self._game_files_thread.quit)
+        self._game_files_worker.scan_finished.connect(self._game_files_worker.deleteLater)
         self._game_files_thread.finished.connect(self._game_files_thread.deleteLater)
         self._game_files_thread.finished.connect(self._game_files_scan_finished)
 
