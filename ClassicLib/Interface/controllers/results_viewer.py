@@ -1,7 +1,12 @@
-"""Results viewer functionality for displaying scan reports.
+"""Results viewer controller for CLASSIC interface.
 
-This module provides a mixin class for viewing and managing CLASSIC scan reports
-in a dedicated tab with markdown rendering support.
+This module provides the ResultsViewerController class that handles displaying
+scan reports with markdown rendering and file watching for auto-refresh.
+
+Example:
+    >>> from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
+    >>> results_ctrl = ResultsViewerController(context)
+    >>> results_ctrl.setup_results_tab()
 """
 
 from __future__ import annotations
@@ -23,70 +28,87 @@ from PySide6.QtWidgets import (
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-
-# Import Rust-accelerated file I/O
 from ClassicLib.FileIO import read_file_sync
 from ClassicLib.integration.status import is_rust_accelerated
-
-# Import the widget classes from ResultsViewerWidgets
 from ClassicLib.Interface.ResultsViewerWidgets import (
-    MarkdownViewer,  # noqa: TC001
-    ReportListWidget,  # noqa: TC001
-    ReportMetadataWidget,  # noqa: TC001
+    MarkdownViewer,
+    ReportListWidget,
+    ReportMetadataWidget,
 )
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
 from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
+if TYPE_CHECKING:
+    from ClassicLib.Interface.context import FeatureContext
 
-class ResultsViewerMixin:
-    """Provide functionality for viewing and managing results or scan reports in a tab interface.
 
-    ResultsViewerMixin contains utilities for displaying a list of reports, viewing report contents
-    in markdown format, and managing report files. It handles initializing interface components,
-    loading reports, refreshing the report list, and interacting with file system events via
-    directory watching. This mixin is designed to be used within a graphical interface.
+class ResultsViewerController:
+    """Controller for the results viewer tab functionality.
+
+    This controller manages the results viewer tab including:
+    - Setting up the tab UI with report list and markdown viewer
+    - Loading and displaying scan reports
+    - File watching for auto-refresh on new reports
+    - Context menu operations (view, copy, delete)
 
     Attributes:
-        results_tab (QWidget): Widget serving as the main container for the results viewer tab.
-        results_list (ReportListWidget): List widget displaying the available scan reports.
-        markdown_viewer (MarkdownViewer): Viewer widget for rendering and displaying markdown content.
-        metadata_widget (ReportMetadataWidget): Widget for displaying metadata of selected reports.
-        file_watcher (QFileSystemWatcher): File watcher for monitoring directories for new or updated reports.
-        refresh_timer (QTimer): Timer for periodically refreshing the reports list.
-        current_report_path (Path | None): Path to the currently loaded report file, or None if no report is loaded.
+        _ctx: The FeatureContext providing access to shared dependencies.
+        _results_list: Widget displaying the list of reports.
+        _markdown_viewer: Widget for rendering markdown content.
+        _metadata_widget: Widget displaying report metadata.
+        _file_watcher: File system watcher for directories.
+        _refresh_timer: Timer for auto-refresh.
+        _current_report_path: Path to currently loaded report.
+        _file_watching_paused: Flag to pause file watching during scans.
+        _refresh_pending: Flag for debounced refresh.
 
-    Signals:
-        report_loaded (Path): Emitted when a report is successfully loaded, with the loaded report's path.
-        reports_refreshed (int): Emitted when the reports list is refreshed, indicating the number of reports found.
-
+    Example:
+        >>> controller = ResultsViewerController(context)
+        >>> controller.setup_results_tab()
+        >>> controller.refresh_reports_list()
     """
 
-    # Type stubs for attributes that must be provided by the mixing class
-    if TYPE_CHECKING:
-        results_tab: QWidget
-        results_list: ReportListWidget
-        markdown_viewer: MarkdownViewer
-        metadata_widget: ReportMetadataWidget
-        file_watcher: QFileSystemWatcher
-        refresh_timer: QTimer
-        current_report_path: Path | None
+    def __init__(self, context: FeatureContext) -> None:
+        """Initialize the ResultsViewerController.
 
-    # Signals for inter-component communication
-    report_loaded = Signal(Path)
-    reports_refreshed = Signal(int)  # Number of reports found
+        Args:
+            context: FeatureContext providing access to main_window, signal_hub,
+                and ui_widgets.
+        """
+        self._ctx = context
+
+        # UI components (created during setup)
+        self._results_list: ReportListWidget | None = None
+        self._markdown_viewer: MarkdownViewer | None = None
+        self._metadata_widget: ReportMetadataWidget | None = None
+        self._file_watcher: QFileSystemWatcher | None = None
+        self._refresh_timer: QTimer | None = None
+
+        # State
+        self._current_report_path: Path | None = None
+        self._file_watching_paused = False
+        self._refresh_pending = False
+
+        # Connect to SignalHub signals
+        self._ctx.signal_hub.pause_file_watching.connect(self._pause_file_watching)
+        self._ctx.signal_hub.resume_file_watching.connect(self._resume_file_watching)
+        self._ctx.signal_hub.refresh_reports_requested.connect(self.refresh_reports_list)
 
     def setup_results_tab(self) -> None:
-        """Set up the results tab with a layout and functionality for displaying and managing
-        reports.
+        """Set up the results tab UI.
 
-        This method initializes the user interface elements, creates panels for report display
-        and a viewer, and includes functionalities for refreshing the list of reports
-        automatically when the associated directory changes. It also configures a timer
-        to periodically refresh the reports list if auto-refresh is enabled.
+        Creates the main layout with a splitter containing the reports list
+        panel and the viewer panel. Also initializes file watching and
+        auto-refresh if enabled.
         """
+        results_tab = self._ctx.ui_widgets.results_tab
+        if results_tab is None:
+            logger.warning("Results tab widget not found")
+            return
+
         # Create main layout
-        layout = QHBoxLayout(self.results_tab)
+        layout = QHBoxLayout(results_tab)
         layout.setContentsMargins(10, 10, 10, 10)
         layout.setSpacing(10)
 
@@ -111,19 +133,12 @@ class ResultsViewerMixin:
         layout.addWidget(splitter)
 
         # Initialize file watcher for auto-refresh
-        self.file_watcher = QFileSystemWatcher()
-        self.file_watcher.directoryChanged.connect(self._on_directory_changed)
+        self._file_watcher = QFileSystemWatcher()
+        self._file_watcher.directoryChanged.connect(self._on_directory_changed)
 
         # Setup refresh timer
-        self.refresh_timer = QTimer()
-        self.refresh_timer.timeout.connect(self.refresh_reports_list)
-
-        # Initialize file watching state
-        self._file_watching_paused = False
-        self._refresh_pending = False
-
-        # Initialize current report path
-        self.current_report_path = None
+        self._refresh_timer = QTimer()
+        self._refresh_timer.timeout.connect(self.refresh_reports_list)
 
         # Initial scan for reports
         self.refresh_reports_list()
@@ -131,7 +146,7 @@ class ResultsViewerMixin:
         # Setup auto-refresh if enabled
         self._setup_auto_refresh()
 
-        # Log Rust acceleration status for file I/O operations
+        # Log Rust acceleration status
         if is_rust_accelerated("file_io"):
             logger.info("Results viewer using Rust-accelerated file I/O (10x faster)")
         else:
@@ -140,21 +155,11 @@ class ResultsViewerMixin:
         logger.debug("Results viewer tab initialized")
 
     def _create_reports_panel(self) -> QWidget:
-        """Create a reports panel containing a list widget to display reports and a button bar
-        for additional actions like refreshing, deleting, and opening the reports folder.
-
-        The panel includes:
-        - A list widget (`ReportListWidget`) for displaying reports, allowing item selection
-          and interaction via a context menu.
-        - A button bar with buttons for refreshing the list, deleting a selected report,
-          and opening the folder containing the crash logs.
+        """Create the reports list panel.
 
         Returns:
-            QWidget: The constructed reports panel containing the reports list and button bar.
-
+            QWidget containing the reports list and action buttons.
         """
-        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
-
         panel = QWidget()
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -162,17 +167,17 @@ class ResultsViewerMixin:
 
         # Create reports list widget
         try:
-            self.results_list = ReportListWidget()
-            self.results_list.itemSelectionChanged.connect(self._on_report_selected)
+            self._results_list = ReportListWidget()
+            self._results_list.itemSelectionChanged.connect(self._on_report_selected)
             logger.info("ReportListWidget created successfully")
-        except Exception as e:  # noqa: BLE001 - Re-raises after logging; Qt widget creation can fail unexpectedly
+        except Exception as e:
             logger.error(f"Failed to create ReportListWidget: {e}", exc_info=True)
             raise
-        self.results_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.results_list.customContextMenuRequested.connect(self._show_context_menu)
 
-        # Add list to layout
-        layout.addWidget(self.results_list)
+        self._results_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self._results_list.customContextMenuRequested.connect(self._show_context_menu)
+
+        layout.addWidget(self._results_list)
 
         # Create button bar
         button_bar = QWidget()
@@ -204,40 +209,27 @@ class ResultsViewerMixin:
 
         return panel
 
-    # noinspection PyUnresolvedReferences
     def _create_viewer_panel(self) -> QWidget:
-        """Create and returns a viewer panel containing a metadata widget, markdown
-        viewer, and a toolbar with various controls.
-
-        The panel includes:
-        - A metadata widget for displaying report metadata.
-        - A markdown viewer for rendering markdown content.
-        - A toolbar for interactions such as copying the report to the clipboard
-          and zoom controls for the markdown viewer.
+        """Create the viewer panel with markdown display and controls.
 
         Returns:
-            QWidget: A fully constructed viewer panel containing the components
-            described above.
-
+            QWidget containing the metadata, viewer, and toolbar.
         """
-        from ClassicLib.Interface.ResultsViewerWidgets import MarkdownViewer, ReportMetadataWidget
-
         panel = QWidget()
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(5)
 
         # Create metadata widget
-        self.metadata_widget = ReportMetadataWidget()
-        layout.addWidget(self.metadata_widget)
+        self._metadata_widget = ReportMetadataWidget()
+        layout.addWidget(self._metadata_widget)
 
         # Create markdown viewer
         try:
-            self.markdown_viewer = MarkdownViewer()
-            # Don't set any initial content - let refresh_reports_list handle it
-            layout.addWidget(self.markdown_viewer)
+            self._markdown_viewer = MarkdownViewer()
+            layout.addWidget(self._markdown_viewer)
             logger.info("MarkdownViewer created successfully")
-        except Exception as e:  # noqa: BLE001 - Re-raises after logging; Qt widget creation can fail unexpectedly
+        except Exception as e:
             logger.error(f"Failed to create MarkdownViewer: {e}", exc_info=True)
             raise
 
@@ -256,20 +248,20 @@ class ResultsViewerMixin:
         toolbar_layout.addStretch()
 
         # Zoom controls
-        zoom_out_btn = QPushButton("−")  # noqa: RUF001
-        zoom_out_btn.clicked.connect(self.markdown_viewer.zoom_out)
+        zoom_out_btn = QPushButton("−")
+        zoom_out_btn.clicked.connect(self._markdown_viewer.zoom_out)
         zoom_out_btn.setFixedWidth(30)
         zoom_out_btn.setToolTip("Zoom out")
         toolbar_layout.addWidget(zoom_out_btn)
 
         zoom_reset_btn = QPushButton("100%")
-        zoom_reset_btn.clicked.connect(self.markdown_viewer.reset_zoom)
+        zoom_reset_btn.clicked.connect(self._markdown_viewer.reset_zoom)
         zoom_reset_btn.setFixedWidth(50)
         zoom_reset_btn.setToolTip("Reset zoom")
         toolbar_layout.addWidget(zoom_reset_btn)
 
         zoom_in_btn = QPushButton("+")
-        zoom_in_btn.clicked.connect(self.markdown_viewer.zoom_in)
+        zoom_in_btn.clicked.connect(self._markdown_viewer.zoom_in)
         zoom_in_btn.setFixedWidth(30)
         zoom_in_btn.setToolTip("Zoom in")
         toolbar_layout.addWidget(zoom_in_btn)
@@ -279,32 +271,28 @@ class ResultsViewerMixin:
         return panel
 
     def scan_for_reports(self) -> list[Path]:
-        """Scan multiple directories for specific report files and returns them in a sorted list.
+        """Scan directories for report files.
 
-        The method searches for report files with names matching the pattern "*-AUTOSCAN.md"
-        in predefined directories. These include the "Crash Logs" folder in the local
-        directory, a custom scan folder defined in the settings, and a backup folder for
-        unsolved logs. The function also ensures that the directories are monitored by
-        the file watcher for modifications. Duplicates in the list of found reports are removed,
-        and the results are sorted by name in descending order.
+        Searches for *-AUTOSCAN.md files in:
+        - Crash Logs folder in local directory
+        - Custom scan folder from settings
+        - Backup location for unsolved logs
 
         Returns:
-            list[Path]: A sorted list of paths to all unique report files found, ordered
-            by name in descending order (Z to A).
-
+            Sorted list of unique report paths (descending by name).
         """
-        reports = []
+        reports: list[Path] = []
 
-        # Primary location - Crash Logs folder in local directory
-        local_dir = GlobalRegistry.get_local_dir()
+        # Primary location - Crash Logs folder
+        local_dir = self._ctx.local_dir
         if local_dir:
-            crash_logs_dir = Path(local_dir) / "Crash Logs"
+            crash_logs_dir = local_dir / "Crash Logs"
             if crash_logs_dir.exists():
                 reports.extend(crash_logs_dir.glob("*-AUTOSCAN.md"))
 
                 # Add directory to file watcher
-                if crash_logs_dir.as_posix() not in self.file_watcher.directories():
-                    self.file_watcher.addPath(str(crash_logs_dir))
+                if self._file_watcher and crash_logs_dir.as_posix() not in self._file_watcher.directories():
+                    self._file_watcher.addPath(str(crash_logs_dir))
 
         # Custom scan folder from settings
         custom_path_str = classic_settings(str, "SCAN Custom Path")
@@ -313,14 +301,12 @@ class ResultsViewerMixin:
             if custom_path.exists() and custom_path.is_dir():
                 reports.extend(custom_path.glob("*-AUTOSCAN.md"))
 
-                # Add to file watcher
-                if custom_path.as_posix() not in self.file_watcher.directories():
-                    self.file_watcher.addPath(str(custom_path))
+                if self._file_watcher and custom_path.as_posix() not in self._file_watcher.directories():
+                    self._file_watcher.addPath(str(custom_path))
 
         # Backup location for unsolved logs
-        local_dir = GlobalRegistry.get_local_dir()
         if local_dir:
-            backup_path = Path(local_dir) / "CLASSIC Backup" / "Unsolved Logs"
+            backup_path = local_dir / "CLASSIC Backup" / "Unsolved Logs"
             if backup_path.exists():
                 reports.extend(backup_path.glob("*-AUTOSCAN.md"))
 
@@ -332,60 +318,64 @@ class ResultsViewerMixin:
         return unique_reports
 
     def refresh_reports_list(self) -> None:
-        """Clear the current list of reports, scans for updated reports, and populates
-        the list with new data. Updates associated widgets and emits a signal to notify
-        listeners of changes.
+        """Refresh the reports list from disk.
+
+        Clears the current list, scans for reports, and repopulates.
+        Auto-selects the first report if none is currently selected.
         """
+        if self._results_list is None or self._markdown_viewer is None:
+            return
+
         # Clear current list
-        self.results_list.clear()
+        self._results_list.clear()
 
         # Scan for reports
         reports = self.scan_for_reports()
 
         # Populate list
-        self.results_list.populate_reports(reports)
+        self._results_list.populate_reports(reports)
 
-        # Emit signal
-        self.reports_refreshed.emit(len(reports))  # pyright: ignore[reportAttributeAccessIssue]
+        # Emit signal for count change
+        self._ctx.signal_hub.reports_count_changed.emit(len(reports))
 
         # Update status
         if not reports:
-            self.metadata_widget.clear()
-            self.markdown_viewer.clear()
-            self.markdown_viewer.setMarkdown(
+            if self._metadata_widget:
+                self._metadata_widget.clear()
+            self._markdown_viewer.clear()
+            self._markdown_viewer.setMarkdown(
                 "# No Reports Found\n\nNo scan reports are available. Run a crash log scan to generate reports."
             )
         else:
             # Check if current report is still available
-            current_still_exists = self.current_report_path and self.current_report_path in reports
+            current_still_exists = self._current_report_path and self._current_report_path in reports
 
             if not current_still_exists:
-                # Reports found but current one is gone or none loaded - clear and show instructions
-                self.markdown_viewer.clear()
-                self.markdown_viewer.setMarkdown("# Reports Available\n\nSelect a report from the list to view its contents.")
-                self.current_report_path = None
+                self._markdown_viewer.clear()
+                self._markdown_viewer.setMarkdown(
+                    "# Reports Available\n\nSelect a report from the list to view its contents."
+                )
+                self._current_report_path = None
 
-                # Auto-select the first report for better UX
-                if self.results_list.count() > 0:
-                    self.results_list.setCurrentRow(0)
-            # Else: Keep showing current report (do nothing to viewer)
+                # Auto-select the first report
+                if self._results_list.count() > 0:
+                    self._results_list.setCurrentRow(0)
 
         logger.info(f"Refreshed reports list: {len(reports)} reports found")
 
     def load_report(self, report_path: Path) -> bool:
-        """Load a report file specified by the given path, displays its content in a markdown viewer,
-        updates associated metadata, and signals the completion of the process. Verifies the
-        existence of the file before attempting to load it, and handles errors gracefully.
+        """Load and display a report file.
 
         Args:
-            report_path (Path): The path to the report file to be loaded.
+            report_path: Path to the report file.
 
         Returns:
-            bool: True if the report is loaded successfully; False otherwise.
-
+            True if loaded successfully, False otherwise.
         """
+        if self._markdown_viewer is None or self._metadata_widget is None:
+            return False
+
         logger.info(f"Loading report: {report_path}")
-        # msg_info removed - not needed for every report load
 
         try:
             if not report_path.exists():
@@ -397,74 +387,75 @@ class ResultsViewerMixin:
             content = read_file_sync(report_path)
 
             # Display in viewer
-            self.markdown_viewer.setMarkdown(content)
+            self._markdown_viewer.setMarkdown(content)
 
             # Update metadata
-            self.metadata_widget.update_metadata(report_path, content)
+            self._metadata_widget.update_metadata(report_path, content)
 
             # Store current report path
-            self.current_report_path = report_path
+            self._current_report_path = report_path
 
             # Emit signal
-            self.report_loaded.emit(report_path)  # pyright: ignore[reportAttributeAccessIssue]
+            self._ctx.signal_hub.report_loaded.emit(report_path)
 
             logger.debug(f"Loaded report: {report_path.name}")
+            return True
 
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             error_message = f"Failed to load report: {e}"
             QTimer.singleShot(0, lambda: msg_error(error_message))
             logger.error(f"Error loading report {report_path}: {e}", exc_info=True)
-            # If markdown fails, try displaying as plain text
+
+            # Try displaying as plain text
             try:
                 content = read_file_sync(report_path)
-                self.markdown_viewer.setPlainText(content)
+                self._markdown_viewer.setPlainText(content)
                 QTimer.singleShot(0, lambda: msg_warning("Displayed report as plain text due to markdown error"))
-            except Exception as fallback_e:  # noqa: BLE001
+                return True
+            except Exception as fallback_e:
                 logger.error(f"Fallback plain text also failed: {fallback_e}")
                 return False
-            else:
-                return True  # Fallback succeeded
-        else:
-            logger.debug(f"Successfully loaded report: {report_path.name}")
-            return True
 
     def _on_report_selected(self) -> None:
         """Handle report selection from the list."""
-        selected_items = self.results_list.selectedItems()
+        if self._results_list is None:
+            return
+
+        selected_items = self._results_list.selectedItems()
         if not selected_items:
             logger.debug("No items selected")
             return
 
-        # Get the report path from the selected item
         item = selected_items[0]
-        item_text = item.text()
-        logger.debug(f"Selected item text: {item_text}")
-
-        report_path = self.results_list.get_report_path(item)
-        logger.debug(f"Report path from list: {report_path}")
+        report_path = self._results_list.get_report_path(item)
 
         if report_path:
             self.load_report(report_path)
         else:
-            msg_error(f"No report path found for: {item_text}")
-            logger.error(f"No report path found for selected item: {item_text}")
+            msg_error(f"No report path found for: {item.text()}")
+            logger.error(f"No report path found for selected item: {item.text()}")
 
     def _delete_selected_report(self) -> None:
         """Delete the currently selected report with confirmation."""
-        selected_items = self.results_list.selectedItems()
+        if self._results_list is None:
+            return
+
+        selected_items = self._results_list.selectedItems()
         if not selected_items:
             msg_warning("No report selected")
             return
 
         item = selected_items[0]
-        report_path = self.results_list.get_report_path(item)
+        report_path = self._results_list.get_report_path(item)
 
         if not report_path:
             return
 
+        results_tab = self._ctx.ui_widgets.results_tab
+
         # Confirmation dialog
         reply = QMessageBox.question(
-            self.results_tab,
+            results_tab,
             "Delete Report",
             f"Are you sure you want to delete:\n{report_path.name}?",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
@@ -486,10 +477,12 @@ class ResultsViewerMixin:
                     logger.info(f"Deleted crash log: {crash_log_path.name}")
 
                 # Clear viewer if this was the current report
-                if self.current_report_path == report_path:
-                    self.markdown_viewer.clear()
-                    self.metadata_widget.clear()
-                    self.current_report_path = None
+                if self._current_report_path == report_path:
+                    if self._markdown_viewer:
+                        self._markdown_viewer.clear()
+                    if self._metadata_widget:
+                        self._metadata_widget.clear()
+                    self._current_report_path = None
 
                 # Refresh list
                 self.refresh_reports_list()
@@ -501,15 +494,15 @@ class ResultsViewerMixin:
                 logger.error(f"Error deleting report {report_path}: {e}")
 
     def _copy_report(self) -> None:
-        """Copy the current report content to clipboard with Rust-accelerated file I/O."""
-        if not self.current_report_path:
+        """Copy the current report content to clipboard."""
+        if not self._current_report_path:
             msg_warning("No report loaded")
             return
 
         try:
             from PySide6.QtWidgets import QApplication
 
-            content = read_file_sync(self.current_report_path)
+            content = read_file_sync(self._current_report_path)
             QApplication.clipboard().setText(content)
             msg_info("Report copied to clipboard")
 
@@ -543,11 +536,14 @@ class ResultsViewerMixin:
 
     def _show_context_menu(self, position: QPoint) -> None:
         """Show context menu for report list."""
-        item = self.results_list.itemAt(position)
+        if self._results_list is None:
+            return
+
+        item = self._results_list.itemAt(position)
         if not item:
             return
 
-        menu = QMenu(self.results_list)
+        menu = QMenu(self._results_list)
 
         # View action
         view_action = QAction("View Report", menu)
@@ -568,14 +564,13 @@ class ResultsViewerMixin:
         delete_action.triggered.connect(self._delete_selected_report)
         menu.addAction(delete_action)
 
-        # Show menu
-        menu.exec(self.results_list.mapToGlobal(position))
+        menu.exec(self._results_list.mapToGlobal(position))
 
     def _on_directory_changed(self, path: str) -> None:
         """Handle directory change notifications from file watcher."""
         logger.debug(f"Directory changed: {path}")
 
-        # Skip if file watching is paused (e.g., during scan)
+        # Skip if file watching is paused
         if self._file_watching_paused:
             logger.debug("File watching paused, ignoring directory change")
             return
@@ -593,34 +588,28 @@ class ResultsViewerMixin:
         self.refresh_reports_list()
 
     def _pause_file_watching(self) -> None:
-        """Pause file watching during scans to prevent I/O bottleneck.
+        """Pause file watching during scans.
 
-        During a scan, each new report triggers a directory change event,
-        which causes refresh_reports_list() to read ALL existing reports.
-        With 754 reports, this causes 48,000+ file reads during a single scan!
-
-        This method pauses the file watcher to eliminate this bottleneck.
+        This prevents I/O bottlenecks where each new report triggers
+        refresh_reports_list() which reads ALL existing reports.
         """
         self._file_watching_paused = True
         logger.debug("File watching paused")
 
     def _resume_file_watching(self) -> None:
-        """Resume file watching after scan completion.
-
-        The caller should trigger a single refresh after resuming to show
-        all new reports created during the scan.
-        """
+        """Resume file watching after scan completion."""
         self._file_watching_paused = False
         logger.debug("File watching resumed")
 
     def _setup_auto_refresh(self) -> None:
         """Set up auto-refresh based on settings."""
-        # Check if auto-refresh is enabled in settings
+        if self._refresh_timer is None:
+            return
+
         auto_refresh = yaml_settings(bool, YAML.Settings, "ResultsViewer.AutoRefresh", False)
 
         if auto_refresh:
-            # Get refresh interval (default 5 seconds)
             interval = yaml_settings(int, YAML.Settings, "ResultsViewer.RefreshInterval", 5000)
             if interval is not None:
-                self.refresh_timer.start(interval)
+                self._refresh_timer.start(interval)
             logger.debug(f"Auto-refresh enabled with interval: {interval}ms")

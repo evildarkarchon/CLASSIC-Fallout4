@@ -25,7 +25,7 @@ from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERS
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
-from ClassicLib.Interface.PathDialogMixin import show_game_path_dialog_static
+from ClassicLib.Interface.controllers.path_dialog import show_game_path_dialog_static
 from ClassicLib.Logger import logger
 from ClassicLib.Utils.file_utils import open_file_with_encoding
 from ClassicLib.Utils.version_utils import get_game_version

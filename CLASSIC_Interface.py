@@ -2,16 +2,15 @@
 
 Initializes and sets up the main GUI, including tabs, threads, and event
 handlers necessary for the application's functionality. The application utilizes
-multiple mix-ins to manage separate components such as folder management, backup
-operations, and style setup. The main interaction entry point includes an instance
-of MainWindow.
+a composition-based architecture with controller classes managing separate
+components such as folder management, backup operations, and scan operations.
 """
 
 import sys
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import QMutex, QThread, QTimer, QUrl
-from PySide6.QtGui import QDesktopServices, QIcon
+from PySide6.QtCore import QTimer
+from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
@@ -24,121 +23,94 @@ from PySide6.QtWidgets import (
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
-from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
-from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
-from ClassicLib.Interface.PapyrusManager import PapyrusManagerMixin
-from ClassicLib.Interface.PastebinMixin import PastebinMixin
-from ClassicLib.Interface.PathDialogMixin import PathDialogMixin
-from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
-from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
+from ClassicLib.Interface.context import FeatureContext
+from ClassicLib.Interface.controllers.backup_manager import BackupManager
+from ClassicLib.Interface.controllers.folder_manager import FolderManager
+from ClassicLib.Interface.controllers.help_about import HelpAboutController
+from ClassicLib.Interface.controllers.papyrus_manager import PapyrusManager
+from ClassicLib.Interface.controllers.pastebin_controller import PastebinController
+from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
+from ClassicLib.Interface.controllers.scan_controller import ScanController
+from ClassicLib.Interface.controllers.ui_setup import UISetupController
+from ClassicLib.Interface.controllers.update_manager import UpdateManager
+from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
+from ClassicLib.Interface.signal_hub import SignalHub
 from ClassicLib.Interface.StyleSheets import DARK_MODE
-from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
 from ClassicLib.Interface.ThreadManager import get_thread_manager
-from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
-from ClassicLib.Interface.WindowGeometryMixin import WindowGeometryMixin
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import init_message_handler, msg_error
 from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
-    from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
-    from ClassicLib.Interface.Workers import (
-        UpdateCheckWorker,
-    )
-
-CHECKBOX_STYLE = """
-    QCheckBox {
-        spacing: 10px;
-    }
-    QCheckBox::indicator {
-        width: 25px;
-        height: 25px;
-    }
-    QCheckBox::indicator:unchecked {
-        image: url("CLASSIC Data/graphics/unchecked.svg");
-    }
-    QCheckBox::indicator:checked {
-        image: url("CLASSIC Data/graphics/checked.svg");
-     }
-"""
-
-# TabSetupMixin methods are now inherited from TabSetupMixin
-# Add this as a class constant near other style constants
-BOTTOM_BUTTON_STYLE = """
-    QPushButton {
-        color: white;
-        background: rgba(60, 60, 60, 0.9);
-        border-radius: 5px;
-        border: 1px solid #5c5c5c;
-        font-size: 11px;
-        padding: 6px 10px;
-        min-height: 30px;
-    }
-    QPushButton:hover { background-color: rgba(80, 80, 80, 0.9); }
-    QPushButton:pressed { background-color: rgba(40, 40, 40, 0.9); }
-"""
+    pass
 
 
-# noinspection DuplicatedCode
-class MainWindow(
-    QMainWindow,
-    ScanOperationsMixin,
-    UpdateManagerMixin,
-    FolderManagementMixin,
-    BackupOperationsMixin,
-    PapyrusManagerMixin,
-    PastebinMixin,
-    PathDialogMixin,
-    TabSetupMixin,
-    ResultsViewerMixin,
-    HelpAndAboutMixin,
-    WindowGeometryMixin,
-):
-    """Main application window for the CLASSIC GUI interface."""
+class MainWindow(QMainWindow):
+    """Main application window for the CLASSIC GUI interface.
 
-    # Style constants are now imported from UIHelpers
+    This class uses a composition-based architecture where functionality is
+    delegated to controller classes rather than inherited from mixins.
+
+    Attributes:
+        thread_manager: Central thread lifecycle manager.
+        signal_hub: Central hub for inter-component Qt signals.
+        context: Dependency injection container for controllers.
+        scan_controller: Handles crash logs and game files scanning.
+        update_manager: Manages application update checking.
+        papyrus_manager: Controls Papyrus log monitoring.
+        pastebin_controller: Handles Pastebin log fetching.
+        results_viewer: Manages results tab and report display.
+        backup_manager: Handles backup/restore operations.
+        folder_manager: Manages folder selection and validation.
+        help_about: Provides help and about dialogs.
+        window_geometry: Handles per-tab window sizing.
+        ui_setup: Orchestrates UI tab setup.
+    """
 
     def __init__(self) -> None:
-        """Initialize the main application window and set up its elements and layout.
+        """Initialize the main application window and set up its elements.
 
-        This constructor initializes the main application window, setting up various visual
-        components, tabs, and threads necessary for the application's functionality. It configures
-        the window properties such as title, icon, size, and layout while preparing the widgets and
-        their placement in the UI. Additional application setup, including initializing paths,
-        message handling, and the optional update check, is also performed.
-
-        Raises:
-            None
-
+        Creates the infrastructure (SignalHub, FeatureContext) and all
+        controller instances, then sets up the UI through UISetupController.
         """
         super().__init__()
+
+        # Create thread manager
         self.thread_manager = get_thread_manager()
-        self.scan_button_group = QButtonGroup()
-        self.papyrus_monitor_thread: QThread | None = None
-        self.papyrus_monitor_worker: PapyrusMonitorWorker | None = None
-        self.papyrus_monitor_dialog: PapyrusMonitorDialog | None = None
-        self._last_stats: PapyrusStats | None = None
-        self.update_check_thread: QThread | None = None
-        self.update_check_worker: UpdateCheckWorker | None = None
-        self._scan_mutex = QMutex()
-        self._running_scans: set[str] = set()
-        self.setWindowTitle(f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
+
+        # Create central signal hub for inter-component communication
+        self.signal_hub = SignalHub(self)
+
+        # Create feature context for dependency injection
+        self.context = FeatureContext(
+            main_window=self,
+            thread_manager=self.thread_manager,
+            signal_hub=self.signal_hub,
+        )
+
+        # Set up window properties
+        self.setWindowTitle(
+            f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}"
+        )
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
         self.setStyleSheet(DARK_MODE)
-        # Initial size will be set by WindowGeometryMixin
-        self.setMinimumSize(550, 350)  # Default minimum, will be adjusted per tab
-        self.resize(650, 350)  # Default size, will be overridden by saved geometry
+        self.setMinimumSize(550, 350)
+        self.resize(650, 350)
+
+        # Create central widget and layout
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
         self.main_layout = QVBoxLayout(self.central_widget)
         self.main_layout.setContentsMargins(10, 10, 10, 10)
         self.main_layout.setSpacing(10)
+
+        # Create tab widget
         self.tab_widget = QTabWidget()
         self.main_layout.addWidget(self.tab_widget)
+
+        # Create tab widgets
         self.main_tab = QWidget()
         self.backups_tab = QWidget()
         self.articles_tab = QWidget()
@@ -147,85 +119,88 @@ class MainWindow(
         self.tab_widget.addTab(self.backups_tab, "FILE BACKUP")
         self.tab_widget.addTab(self.articles_tab, "ARTICLES")
         self.tab_widget.addTab(self.results_tab, "RESULTS")
-        self.setup_main_tab()
-        self.setup_backups_tab()
-        self.setup_articles_tab()
-        self.setup_results_tab()
+
+        # Create scan button group and register with context
+        self.scan_button_group = QButtonGroup()
+        self.context.ui_widgets.scan_button_group = self.scan_button_group
+
+        # Register tab widgets with context
+        self.context.ui_widgets.tab_widget = self.tab_widget
+        self.context.ui_widgets.main_tab = self.main_tab
+        self.context.ui_widgets.backups_tab = self.backups_tab
+        self.context.ui_widgets.articles_tab = self.articles_tab
+        self.context.ui_widgets.results_tab = self.results_tab
+
+        # Create controllers (order matters for dependencies)
+        self.help_about = HelpAboutController(self.context)
+        self.folder_manager = FolderManager(self.context)
+        self.backup_manager = BackupManager(self.context)
+        self.results_viewer = ResultsViewerController(self.context)
+        self.papyrus_manager = PapyrusManager(self.context)
+        self.pastebin_controller = PastebinController(self.context)
+        self.update_manager = UpdateManager(self.context)
+        self.scan_controller = ScanController(self.context)
+        self.window_geometry = WindowGeometryManager(self.context)
+
+        # Create UI setup controller with references to all other controllers
+        self.ui_setup = UISetupController(
+            context=self.context,
+            scan=self.scan_controller,
+            results=self.results_viewer,
+            papyrus=self.papyrus_manager,
+            backup=self.backup_manager,
+            folder=self.folder_manager,
+            help_about=self.help_about,
+            update=self.update_manager,
+            pastebin=self.pastebin_controller,
+        )
+
+        # Set up all tabs
+        self.ui_setup.setup_all_tabs()
 
         # Initialize window geometry management after tabs are set up
-        self.setup_window_geometry()
-        self.initialize_folder_paths()
-        # noinspection PyTypeChecker
+        self.window_geometry.setup()
+
+        # Initialize folder paths
+        self.folder_manager.initialize_folder_paths()
+
+        # Initialize message handler for GUI mode
         init_message_handler(parent=self, is_gui_mode=True)
-        # Initial setup should be handled by the entry point, not here
-        # setup_coordinator = SetupCoordinator()
-        # setup_coordinator.run_initial_setup()
+
+        # Start update check if enabled
         if classic_settings(bool, "Update Check"):
-            QTimer.singleShot(0, self.update_popup)
-        self.update_check_timer = QTimer()
-        self.update_check_timer.timeout.connect(self.perform_update_check)
-        self.is_update_check_running = False
-        self.crash_logs_thread: QThread | None = None
-
-    # Help and About methods are now inherited from HelpAndAboutMixin
-
-    # Folder management methods are now inherited from FolderManagementMixin
-    # crash_logs_scan method is now inherited from ScanOperationsMixin
-
-    # game_files_scan method is now inherited from ScanOperationsMixin
-
-    # disable_scan_buttons method is now inherited from ScanOperationsMixin
-
-    # enable_scan_buttons method is now inherited from ScanOperationsMixin
-
-    # crash_logs_scan_finished method is now inherited from ScanOperationsMixin
-
-    # game_files_scan_finished method is now inherited from ScanOperationsMixin
+            QTimer.singleShot(0, self.update_manager.update_popup)
 
     def closeEvent(self, event: Any) -> None:
-        """Override closeEvent to ensure proper cleanup of all running threads.
+        """Handle window close event with proper cleanup.
 
-        This method is called when the main window is being closed. It ensures
-        all worker threads are properly stopped and cleaned up before the
-        application exits using the central ThreadManager.
+        Ensures all worker threads are properly stopped and cleaned up
+        before the application exits using the central ThreadManager.
 
         Args:
-            event: The close event
-
+            event: The close event.
         """
         logger.info("Application closing - cleaning up resources...")
 
         # Save current tab's window geometry
-        self.save_current_tab_geometry()
+        self.window_geometry.save_current_tab_geometry()
 
-        # Stop Papyrus monitoring first to ensure worker cleanup
-        if self.papyrus_monitor_worker is not None:
+        # Stop Papyrus monitoring
+        if self.papyrus_manager.is_monitoring():
             logger.debug("Stopping Papyrus monitoring...")
-            self.stop_papyrus_monitoring()
+            self.papyrus_manager.stop_monitoring()
 
         # Use thread manager to stop all threads gracefully
-        # 3-second timeout (task cleanup has 2s timeout, +1s for overhead)
         logger.debug("Stopping all managed threads...")
         self.thread_manager.stop_all_threads(wait_ms=3000)
 
         # Stop update check timer
-        if hasattr(self, "update_check_timer") and self.update_check_timer:
-            self.update_check_timer.stop()
+        self.update_manager.stop_timer()
 
         logger.info("Resource cleanup completed")
 
         # Accept the close event
         event.accept()
-
-    @staticmethod
-    def open_url(url: str) -> None:
-        """Open the specified URL in the default web browser.
-
-        Args:
-            url (str): The URL to open in the browser.
-
-        """
-        QDesktopServices.openUrl(QUrl(url))
 
 
 def main() -> None:
@@ -241,40 +216,19 @@ def main() -> None:
     coordinator.initialize_application(is_gui=True)
     _manual_docs_gui: Any = GlobalRegistry.get_manual_docs_gui()
     _game_path_gui: Any = GlobalRegistry.get_game_path_gui()
-    window: MainWindow | None = None  # Initialize window to ensure it's defined
+    window: MainWindow | None = None
     try:
         window = MainWindow()
         window.show()
         sys.exit(app.exec())
     except KeyboardInterrupt:
         app.exit(1)
-    except Exception as exc:  # pyrefly: ignore  # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         msg_error(f"Unhandled exception during application startup: {exc}")
         if QApplication.instance():
-            # noinspection PyTypeChecker
-            QMessageBox.critical(None, "Application Startup Error", f"An critical error occurred: {exc}")  # pyrefly: ignore
+            QMessageBox.critical(None, "Application Startup Error", f"A critical error occurred: {exc}")
         sys.exit(1)
 
 
 if __name__ == "__main__":
     main()
-
-    # Backup operations methods are now inherited from BackupOperationsMixin
-
-    # create_separator moved to UIHelpers
-
-    # TabSetupMixin methods are now inherited from TabSetupMixin
-    # Add this constant to the MainWindow class alongside other style constants
-
-    # Folder management methods are now inherited from FolderManagementMixin
-    # crash_logs_scan method is now inherited from ScanOperationsMixin
-
-    # game_files_scan method is now inherited from ScanOperationsMixin
-
-    # disable_scan_buttons method is now inherited from ScanOperationsMixin
-
-    # enable_scan_buttons method is now inherited from ScanOperationsMixin
-
-    # crash_logs_scan_finished method is now inherited from ScanOperationsMixin
-
-    # game_files_scan_finished method is now inherited from ScanOperationsMixin
