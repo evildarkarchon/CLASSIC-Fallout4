@@ -127,15 +127,10 @@ class TestClassicInterface:
         mock_timer_instance = MagicMock()
         mock_qtimer.return_value = mock_timer_instance
 
-        # Act
-        with (
-            patch.object(MainWindow, "setup_main_tab"),
-            patch.object(MainWindow, "setup_backups_tab"),
-            patch.object(MainWindow, "setup_articles_tab"),
-            patch.object(MainWindow, "setup_results_tab"),
-            patch.object(MainWindow, "setup_window_geometry"),
-            patch.object(MainWindow, "initialize_folder_paths"),
-        ):
+        # Act - patch UISetupController to avoid complex UI initialization
+        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+            mock_ui_setup_instance = MagicMock()
+            mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
 
         # Assert
@@ -148,33 +143,40 @@ class TestClassicInterface:
         assert window.tab_widget.tabText(3) == "RESULTS"
         mock_init_msg_handler.assert_called_once_with(parent=window, is_gui_mode=True)
 
-    def test_main_window_mixins_inheritance(self) -> None:
-        """Test that MainWindow properly inherits from all required mixins."""
+    def test_main_window_composition_architecture(self) -> None:
+        """Test that MainWindow uses composition-based controller architecture."""
         from CLASSIC_Interface import MainWindow
-        from ClassicLib.Interface.BackupOperations import BackupOperationsMixin
-        from ClassicLib.Interface.FolderManagementMixin import FolderManagementMixin
-        from ClassicLib.Interface.HelpAndAboutMixin import HelpAndAboutMixin
-        from ClassicLib.Interface.PapyrusManager import PapyrusManagerMixin
-        from ClassicLib.Interface.PastebinMixin import PastebinMixin
-        from ClassicLib.Interface.PathDialogMixin import PathDialogMixin
-        from ClassicLib.Interface.ResultsViewerMixin import ResultsViewerMixin
-        from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
-        from ClassicLib.Interface.TabSetupMixin import TabSetupMixin
-        from ClassicLib.Interface.UpdateManager import UpdateManagerMixin
-        from ClassicLib.Interface.WindowGeometryMixin import WindowGeometryMixin
+        from ClassicLib.Interface.controllers.backup_manager import BackupManager
+        from ClassicLib.Interface.controllers.folder_manager import FolderManager
+        from ClassicLib.Interface.controllers.help_about import HelpAboutController
+        from ClassicLib.Interface.controllers.papyrus_manager import PapyrusManager
+        from ClassicLib.Interface.controllers.pastebin_controller import PastebinController
+        from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
+        from ClassicLib.Interface.controllers.scan_controller import ScanController
+        from ClassicLib.Interface.controllers.ui_setup import UISetupController
+        from ClassicLib.Interface.controllers.update_manager import UpdateManager
+        from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
 
-        # Assert all mixins are properly inherited
-        assert issubclass(MainWindow, ScanOperationsMixin)
-        assert issubclass(MainWindow, UpdateManagerMixin)
-        assert issubclass(MainWindow, FolderManagementMixin)
-        assert issubclass(MainWindow, BackupOperationsMixin)
-        assert issubclass(MainWindow, PapyrusManagerMixin)
-        assert issubclass(MainWindow, PastebinMixin)
-        assert issubclass(MainWindow, PathDialogMixin)
-        assert issubclass(MainWindow, TabSetupMixin)
-        assert issubclass(MainWindow, ResultsViewerMixin)
-        assert issubclass(MainWindow, HelpAndAboutMixin)
-        assert issubclass(MainWindow, WindowGeometryMixin)
+        # MainWindow should NOT inherit from mixins (composition architecture)
+        assert not any(
+            "Mixin" in base.__name__ for base in MainWindow.__mro__ if hasattr(base, "__name__")
+        ), "MainWindow should not inherit from mixin classes"
+
+        # MainWindow should use QMainWindow as base
+        from PySide6.QtWidgets import QMainWindow
+        assert issubclass(MainWindow, QMainWindow), "MainWindow should inherit from QMainWindow"
+
+        # Verify controller class imports work (architecture is in place)
+        assert ScanController is not None
+        assert UpdateManager is not None
+        assert FolderManager is not None
+        assert BackupManager is not None
+        assert PapyrusManager is not None
+        assert PastebinController is not None
+        assert ResultsViewerController is not None
+        assert HelpAboutController is not None
+        assert WindowGeometryManager is not None
+        assert UISetupController is not None
 
     @patch("CLASSIC_Interface.QTimer")
     @patch("CLASSIC_Interface.classic_settings")
@@ -201,23 +203,16 @@ class TestClassicInterface:
         mock_timer_instance = MagicMock()
         mock_qtimer.return_value = mock_timer_instance
 
-        # Act
-        with (
-            patch.object(MainWindow, "setup_main_tab"),
-            patch.object(MainWindow, "setup_backups_tab"),
-            patch.object(MainWindow, "setup_articles_tab"),
-            patch.object(MainWindow, "setup_results_tab"),
-            patch.object(MainWindow, "setup_window_geometry"),
-            patch.object(MainWindow, "initialize_folder_paths"),
-        ):
+        # Act - patch UISetupController to avoid complex UI initialization
+        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+            mock_ui_setup_instance = MagicMock()
+            mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
 
-        # Assert
-        assert hasattr(window, "update_check_timer")
-        assert window.update_check_timer is mock_timer_instance
-        assert not window.is_update_check_running
-        # QTimer.singleShot was called because classic_settings returned True
-        mock_qtimer.singleShot.assert_called_once_with(0, window.update_popup)
+        # Assert - update check should be triggered via singleShot
+        # In the new architecture, update check is handled by UpdateManager controller
+        assert hasattr(window, "update_manager")
+        mock_qtimer.singleShot.assert_called_once()
 
     @patch("CLASSIC_Interface.QTimer")
     @patch("CLASSIC_Interface.logger")
@@ -246,25 +241,23 @@ class TestClassicInterface:
         # Mock QTimer to prevent access violations on Windows offscreen platform
         mock_timer_instance = MagicMock()
         mock_qtimer.return_value = mock_timer_instance
-        with (
-            patch.object(MainWindow, "setup_main_tab"),
-            patch.object(MainWindow, "setup_backups_tab"),
-            patch.object(MainWindow, "setup_articles_tab"),
-            patch.object(MainWindow, "setup_results_tab"),
-            patch.object(MainWindow, "setup_window_geometry"),
-            patch.object(MainWindow, "initialize_folder_paths"),
-        ):
+
+        # Create window with mocked UISetupController
+        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+            mock_ui_setup_instance = MagicMock()
+            mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
 
         # Setup mock event
         mock_event = MagicMock()
-        window.papyrus_monitor_worker = MagicMock()
 
         # Act
         with (
-            patch.object(window, "save_current_tab_geometry") as mock_save,
-            patch.object(window, "stop_papyrus_monitoring") as mock_stop_papyrus,
+            patch.object(window.window_geometry, "save_current_tab_geometry") as mock_save,
+            patch.object(window.papyrus_manager, "is_monitoring", return_value=True),
+            patch.object(window.papyrus_manager, "stop_monitoring") as mock_stop_papyrus,
             patch.object(window.thread_manager, "stop_all_threads") as mock_stop_threads,
+            patch.object(window.update_manager, "stop_timer") as mock_stop_timer,
         ):
             window.closeEvent(mock_event)
 
@@ -273,28 +266,9 @@ class TestClassicInterface:
         mock_save.assert_called_once()
         mock_stop_papyrus.assert_called_once()
         mock_stop_threads.assert_called_once_with(wait_ms=3000)
+        mock_stop_timer.assert_called_once()
         mock_event.accept.assert_called_once()
         mock_logger.info.assert_any_call("Resource cleanup completed")
-
-    def test_open_url_static_method(self) -> None:
-        """Test the open_url static method."""
-        from PySide6.QtCore import QUrl
-        from PySide6.QtGui import QDesktopServices
-
-        from CLASSIC_Interface import MainWindow
-
-        # Arrange - QApplication is managed by qt_application fixture via setup
-        test_url = "https://example.com"
-
-        # Act
-        with patch.object(QDesktopServices, "openUrl") as mock_open:
-            MainWindow.open_url(test_url)
-
-        # Assert
-        mock_open.assert_called_once()
-        call_args = mock_open.call_args[0][0]
-        assert isinstance(call_args, QUrl)
-        assert call_args.toString() == test_url
 
     @patch("CLASSIC_Interface.SetupCoordinator")
     @patch("CLASSIC_Interface.QApplication")
@@ -349,7 +323,7 @@ class TestClassicInterface:
     @patch("CLASSIC_Interface.classic_settings")
     @patch("CLASSIC_Interface.yaml_settings")
     @patch("CLASSIC_Interface.get_thread_manager")
-    def test_thread_manager_initialization(
+    def test_controller_initialization(
         self,
         mock_get_thread_manager: Mock,
         mock_yaml_settings: Mock,
@@ -357,7 +331,7 @@ class TestClassicInterface:
         mock_global_registry: Mock,
         mock_qtimer: Mock,
     ) -> None:
-        """Test that thread manager is properly initialized."""
+        """Test that all controllers are properly initialized."""
         from CLASSIC_Interface import MainWindow
 
         # Arrange - QApplication is managed by qt_application fixture via setup
@@ -370,22 +344,27 @@ class TestClassicInterface:
         mock_timer_instance = MagicMock()
         mock_qtimer.return_value = mock_timer_instance
 
-        # Act
-        with (
-            patch.object(MainWindow, "setup_main_tab"),
-            patch.object(MainWindow, "setup_backups_tab"),
-            patch.object(MainWindow, "setup_articles_tab"),
-            patch.object(MainWindow, "setup_results_tab"),
-            patch.object(MainWindow, "setup_window_geometry"),
-            patch.object(MainWindow, "initialize_folder_paths"),
-        ):
+        # Act - patch UISetupController to avoid complex UI initialization
+        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+            mock_ui_setup_instance = MagicMock()
+            mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
 
-        # Assert - thread_manager comes from the mock
+        # Assert - all controllers should be created
+        assert hasattr(window, "scan_controller")
+        assert hasattr(window, "update_manager")
+        assert hasattr(window, "papyrus_manager")
+        assert hasattr(window, "pastebin_controller")
+        assert hasattr(window, "results_viewer")
+        assert hasattr(window, "backup_manager")
+        assert hasattr(window, "folder_manager")
+        assert hasattr(window, "help_about")
+        assert hasattr(window, "window_geometry")
+        assert hasattr(window, "ui_setup")
+
+        # Assert - context and signal_hub should be created
+        assert hasattr(window, "context")
+        assert hasattr(window, "signal_hub")
         assert hasattr(window, "thread_manager")
         assert window.thread_manager is mock_thread_manager
         mock_get_thread_manager.assert_called_once()
-        assert hasattr(window, "_scan_mutex")
-        assert window._scan_mutex is not None
-        assert hasattr(window, "_running_scans")
-        assert isinstance(window._running_scans, set)

@@ -12,10 +12,10 @@ pytestmark = [
     pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
 ]
 
-from PySide6.QtCore import QMutex, QThread
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtCore import QThread
+from PySide6.QtWidgets import QApplication, QMainWindow
 
-from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType, get_thread_manager
+from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType
 
 
 class TestRaceConditionPrevention:
@@ -30,36 +30,74 @@ class TestRaceConditionPrevention:
         return app  # pyright: ignore[reportReturnType]
 
     def test_scan_mutex_protection(self, app: QApplication) -> None:
-        """Test that scan operations are protected by mutex."""
-        # Test the ScanOperationsMixin directly instead of full MainWindow
-        from ClassicLib.Interface.ScanOperations import ScanOperationsMixin
+        """Test that scan operations are protected by mutex in ScanController."""
+        from ClassicLib.Interface.context import FeatureContext
+        from ClassicLib.Interface.controllers.scan_controller import ScanController
+        from ClassicLib.Interface.signal_hub import SignalHub
+        from ClassicLib.Interface.ThreadManager import get_thread_manager
 
-        # Create a test class that uses the mixin and inherits from QWidget
-        class TestScanClass(QWidget, ScanOperationsMixin):
-            def __init__(self):
-                super().__init__()
-                self._scan_mutex = QMutex()
-                self._running_scans = set()
-                self.thread_manager = get_thread_manager()
-                self.crash_logs_thread = None
-                self.crash_logs_worker = None
-                self.game_files_thread = None
-                self.game_files_worker = None
-                self.scan_button_group = MagicMock()
-                self.papyrus_button = None
+        # Create a minimal main window for the context
+        main_window = QMainWindow()
 
-        # Create instance and test
-        test_obj = TestScanClass()
+        # Create the context infrastructure
+        thread_manager = get_thread_manager()
+        signal_hub = SignalHub(main_window)
+        context = FeatureContext(
+            main_window=main_window,
+            thread_manager=thread_manager,
+            signal_hub=signal_hub,
+        )
 
-        # Simulate concurrent scan attempts
-        test_obj._running_scans.add("crash_logs")
+        # Create ScanController instance
+        scan_controller = ScanController(context)
 
-        # Try to start another crash logs scan
-        # Should be prevented by mutex check
+        # Simulate concurrent scan attempts by adding crash_logs to running scans
+        scan_controller._running_scans.add("crash_logs")
+
+        # Try to start another crash logs scan - should be prevented by mutex check
         with patch("PySide6.QtWidgets.QMessageBox.warning") as mock_warning:
-            test_obj.crash_logs_scan()
+            scan_controller.crash_logs_scan()
             # Should show warning about scan in progress
-            mock_warning.assert_called_once_with(test_obj, "Scan in Progress", "A crash logs scan is already in progress.")
+            mock_warning.assert_called_once_with(
+                main_window,
+                "Scan in Progress",
+                "A crash logs scan is already in progress."
+            )
+
+    def test_game_files_mutex_protection(self, app: QApplication) -> None:
+        """Test that game files scan operations are protected by mutex."""
+        from ClassicLib.Interface.context import FeatureContext
+        from ClassicLib.Interface.controllers.scan_controller import ScanController
+        from ClassicLib.Interface.signal_hub import SignalHub
+        from ClassicLib.Interface.ThreadManager import get_thread_manager
+
+        # Create a minimal main window for the context
+        main_window = QMainWindow()
+
+        # Create the context infrastructure
+        thread_manager = get_thread_manager()
+        signal_hub = SignalHub(main_window)
+        context = FeatureContext(
+            main_window=main_window,
+            thread_manager=thread_manager,
+            signal_hub=signal_hub,
+        )
+
+        # Create ScanController instance
+        scan_controller = ScanController(context)
+
+        # Simulate concurrent scan attempts by adding game_files to running scans
+        scan_controller._running_scans.add("game_files")
+
+        # Try to start another game files scan - should be prevented by mutex check
+        with patch("PySide6.QtWidgets.QMessageBox.warning") as mock_warning:
+            scan_controller.game_files_scan()
+            # Should show warning about scan in progress
+            mock_warning.assert_called_once_with(
+                main_window,
+                "Scan in Progress",
+                "A game files scan is already in progress."
+            )
 
 
 class TestThreadReusePrevention:
