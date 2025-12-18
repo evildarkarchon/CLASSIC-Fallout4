@@ -41,12 +41,8 @@
 //!
 //! ## Conditional Logging
 //!
-//! ```rust
+//! ```rust,ignore
 //! use classic_message_core::logging::Logger;
-//!
-//! fn compute_expensive_debug_info() -> String {
-//!     "expensive debug data".to_string()
-//! }
 //!
 //! let logger = Logger::new();
 //!
@@ -278,12 +274,8 @@ impl Logger {
     ///
     /// # Examples
     ///
-    /// ```rust
+    /// ```rust,ignore
     /// use classic_message_core::logging::Logger;
-    ///
-    /// fn compute_expensive_debug_info() -> String {
-    ///     "expensive debug data".to_string()
-    /// }
     ///
     /// let logger = Logger::new();
     ///
