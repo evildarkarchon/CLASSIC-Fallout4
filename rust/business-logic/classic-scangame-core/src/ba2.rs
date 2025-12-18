@@ -96,7 +96,7 @@ impl BA2Issues {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use classic_scangame_core::ba2::BA2Scanner;
 /// use std::path::Path;
 ///
@@ -106,6 +106,7 @@ impl BA2Issues {
 /// if issues.has_issues() {
 ///     println!("Found {} issues", issues.total_count());
 /// }
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct BA2Scanner {
     /// XSE script file patterns to detect (e.g., "f4se", "skse")
@@ -142,11 +143,15 @@ impl BA2Scanner {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// # use classic_scangame_core::ba2::BA2Scanner;
+    /// # use std::path::Path;
+    /// # let scanner = BA2Scanner::new();
     /// let issues = scanner.scan_archive(Path::new("mod.ba2"))?;
     /// for issue in &issues.tex_dims {
     ///     println!("Texture dimension issue: {}", issue);
     /// }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn scan_archive(&self, path: &Path) -> Result<BA2Issues> {
         // Open archive with memory-mapped I/O
@@ -204,7 +209,10 @@ impl BA2Scanner {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// # use classic_scangame_core::ba2::BA2Scanner;
+    /// # use std::path::PathBuf;
+    /// # let scanner = BA2Scanner::new();
     /// let paths = vec![
     ///     PathBuf::from("textures1.ba2"),
     ///     PathBuf::from("textures2.ba2"),

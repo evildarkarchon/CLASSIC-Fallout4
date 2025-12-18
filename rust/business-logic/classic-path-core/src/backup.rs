@@ -43,7 +43,7 @@ use std::path::{Path, PathBuf};
 /// # Examples
 ///
 /// ```rust
-/// use classic_path_core::backup::XseVersion;
+/// use classic_path_core::XseVersion;
 ///
 /// let version = XseVersion::new("1.10.163.0");
 /// assert_eq!(version.full_version(), "1.10.163.0");
@@ -68,7 +68,7 @@ impl XseVersion {
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::backup::XseVersion;
+    /// use classic_path_core::XseVersion;
     ///
     /// let version = XseVersion::new("1.10.163.0");
     /// assert_eq!(version.full_version(), "1.10.163.0");
@@ -99,7 +99,7 @@ impl XseVersion {
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::backup::XseVersion;
+    /// use classic_path_core::XseVersion;
     ///
     /// let version = XseVersion::new("1.10.163.0");
     /// assert_eq!(version.sanitized(), "1_10_163_0");
@@ -242,7 +242,7 @@ impl BackupManager {
     /// # Examples
     ///
     /// ```rust,no_run
-    /// use classic_path_core::{BackupManager, backup::XseVersion};
+    /// use classic_path_core::{BackupManager, XseVersion};
     /// use std::path::Path;
     ///
     /// let manager = BackupManager::new("Backups");
@@ -342,7 +342,7 @@ impl BackupManager {
     /// # Examples
     ///
     /// ```rust
-    /// use classic_path_core::{BackupManager, backup::XseVersion};
+    /// use classic_path_core::{BackupManager, XseVersion};
     ///
     /// let manager = BackupManager::new("Backups");
     /// let version = XseVersion::new("1.10.163.0");

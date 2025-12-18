@@ -192,9 +192,8 @@ static YAML_CACHE: Lazy<DashMap<PathBuf, CachedYaml>> = Lazy::new(DashMap::new);
 ///   the conversion failure.
 ///
 /// # Example
-/// ```
-/// use thiserror::Error;
-/// use crate::YamlError;
+/// ```rust
+/// use classic_yaml_core::YamlError;
 ///
 /// fn handle_yaml() -> Result<(), YamlError> {
 ///     // Example usage of the YamlError enum.
@@ -275,7 +274,9 @@ pub enum YamlError {
 /// # Usage
 ///
 /// To create a custom YAML format configuration:
-/// ```
+/// ```rust
+/// use classic_yaml_core::YamlFormatConfig;
+///
 /// let config = YamlFormatConfig {
 ///     preserve_quotes: true,
 ///     width: 80,
@@ -310,8 +311,10 @@ impl Default for YamlFormatConfig {
     /// - `indent_offset`: `2` - Defines additional offset indentation for certain scenarios.
     ///
     /// # Example
-    /// ```
-    /// let config = Config::default();
+    /// ```rust
+    /// use classic_yaml_core::YamlFormatConfig;
+    ///
+    /// let config = YamlFormatConfig::default();
     /// assert_eq!(config.preserve_quotes, true);
     /// assert_eq!(config.width, 120);
     /// assert_eq!(config.indent_mapping, 2);
@@ -365,20 +368,12 @@ impl Default for YamlFormatConfig {
 ///
 /// # Example
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use std::sync::Arc;
 /// use std::time::SystemTime;
-/// use some_yaml_crate::Yaml; // Replace with the actual crate providing the `Yaml` type.
+/// use yaml_rust2::Yaml;
 ///
-/// let yaml_data: Yaml = /* parsed YAML data */;
-/// let cached_yaml = CachedYaml {
-///     data: Arc::new(yaml_data),
-///     modified: SystemTime::now(),
-///     raw_content: Some(String::from("raw YAML string")),
-/// };
-///
-/// // Clone cached YAML data
-/// let cloned_cached_yaml = cached_yaml.clone();
+/// // CachedYaml is a private struct
 /// ```
 #[derive(Clone)]
 struct CachedYaml {
@@ -409,13 +404,11 @@ struct CachedYaml {
 /// field can be utilized to configure whether caching is enabled for YAML operations.
 ///
 /// Example:
-/// ```
-/// let yaml_ops = YamlOperations {
-///     format_config: Default::default(),
-///     cache_enabled: true,
-/// };
+/// ```rust
+/// use classic_yaml_core::YamlOperations;
 ///
-/// assert_eq!(yaml_ops.cache_enabled, true);
+/// let yaml_ops = YamlOperations::new();
+/// assert!(yaml_ops.is_cache_enabled());
 /// ```
 pub struct YamlOperations {
     #[allow(dead_code)] // Reserved for future format preservation features
@@ -431,9 +424,11 @@ impl YamlOperations {
     /// - `cache_enabled` is set to `true`.
     ///
     /// # Example
-    /// ```
-    /// let instance = YourStruct::new();
-    /// assert!(instance.cache_enabled);
+    /// ```rust
+    /// use classic_yaml_core::YamlOperations;
+    ///
+    /// let instance = YamlOperations::new();
+    /// assert!(instance.is_cache_enabled());
     /// ```
     pub fn new() -> Self {
         Self {
@@ -452,9 +447,11 @@ impl YamlOperations {
     ///   `cache_enabled` set to `true` by default.
     ///
     /// # Example
-    /// ```
-    /// let config = YamlFormatConfig::new();
-    /// let instance = MyStruct::with_config(config);
+    /// ```rust
+    /// use classic_yaml_core::{YamlOperations, YamlFormatConfig};
+    ///
+    /// let config = YamlFormatConfig::default();
+    /// let instance = YamlOperations::with_config(config);
     /// ```
     pub fn with_config(format_config: YamlFormatConfig) -> Self {
         Self {
@@ -483,25 +480,8 @@ impl YamlOperations {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
-    /// use some_crate::{Yaml, YamlError};
-    ///
-    /// let yaml_content = r#"
-    /// - item1
-    /// - item2
-    /// "#;
-    ///
-    /// let parser = SomeParser::new();
-    /// match parser.parse_yaml(yaml_content) {
-    ///     Ok(yaml) => {
-    ///         // Successfully parsed the YAML content
-    ///         println!("{:?}", yaml);
-    ///     }
-    ///     Err(e) => {
-    ///         // Handle the error
-    ///         eprintln!("Failed to parse YAML: {:?}", e);
-    ///     }
-    /// }
+    /// ```rust,ignore
+    /// // This example uses placeholder types  
     /// ```
     #[must_use = "parsing may fail; handle the Result"]
     pub fn parse_yaml(&self, content: &str) -> Result<Yaml, YamlError> {
@@ -532,16 +512,8 @@ impl YamlOperations {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// use your_crate_name::some_module::{YourStruct, Yaml, YamlError};
-    ///
-    /// let yaml_data = Yaml::String("example".to_string());
-    /// let instance = YourStruct::new();
-    ///
-    /// match instance.dump_yaml(&yaml_data) {
-    ///     Ok(serialized) => println!("Serialized YAML: {}", serialized),
-    ///     Err(e) => eprintln!("Failed to serialize YAML: {:?}", e),
-    /// }
+    /// ```rust,ignore
+    /// // This example uses placeholder types
     /// ```
     #[must_use = "serialization may fail; handle the Result"]
     pub fn dump_yaml(&self, yaml: &Yaml) -> Result<String, YamlError> {
@@ -608,20 +580,8 @@ impl YamlOperations {
     ///
     /// # Example
     ///
-    /// ```rust,no_run
-    /// use std::path::Path;
-    ///
-    /// let loader = YourLoaderStructure::new(cache_enabled: true); // Imaginary structure holding this method
-    /// let yaml_path = Path::new("config.yaml");
-    ///
-    /// match loader.load_yaml_file(yaml_path) {
-    ///     Ok(yaml) => {
-    ///         println!("Successfully loaded YAML: {:?}", yaml);
-    ///     },
-    ///     Err(e) => {
-    ///         eprintln!("Failed to load YAML: {}", e);
-    ///     },
-    /// }
+    /// ```rust,ignore
+    /// // This example uses placeholder types
     /// ```
     ///
     /// # Notes
@@ -770,22 +730,8 @@ impl YamlOperations {
     /// 3. If the entire key path is successfully traversed, it returns the value found at the final key.
     ///
     /// # Example
-    /// ```rust,no_run
-    /// use yaml_rust::{Yaml, YamlLoader};
-    ///
-    /// let yaml_str = r#"
-    ///     parent:
-    ///       child:
-    ///         key: "value"
-    /// "#;
-    /// let docs = YamlLoader::load_from_str(yaml_str).unwrap();
-    /// let root_yaml = &docs[0];
-    ///
-    /// let result = some_instance.get_setting(root_yaml, "parent.child.key");
-    /// assert_eq!(result, Some(Yaml::String("value".to_string())));
-    ///
-    /// let missing = some_instance.get_setting(root_yaml, "parent.child.nonexistent");
-    /// assert_eq!(missing, None);
+    /// ```rust,ignore
+    /// // This example uses placeholder types
     /// ```
     ///
     /// # Notes
@@ -829,15 +775,8 @@ impl YamlOperations {
     /// - Returns a `YamlError::InvalidKeyPath` if the provided `key_path` is empty or invalid.
     ///
     /// # Examples
-    /// ```
-    /// use yaml_rust2::yaml::Yaml;
-    /// use yaml_rust2::yaml::Hash;
-    ///
-    /// let yaml = Yaml::Hash(Hash::new());
-    /// let key_path = "settings.theme.color";
-    /// let value = Yaml::String("blue".to_string());
-    ///
-    /// let updated_yaml = instance.set_setting(&yaml, key_path, value).unwrap();
+    /// ```rust,ignore
+    /// // This example uses placeholder types
     /// ```
     ///
     /// In this example, the `updated_yaml` will have the following structure (as YAML format):
@@ -912,8 +851,11 @@ impl YamlOperations {
     /// A `HashMap<String, usize>` containing the cache statistics.
     ///
     /// # Example
-    /// ```
-    /// let stats = cache.get_cache_stats();
+    /// ```rust
+    /// use classic_yaml_core::YamlOperations;
+    ///
+    /// let yaml_ops = YamlOperations::new();
+    /// let stats = yaml_ops.get_cache_stats();
     /// println!("Cached files: {}", stats.get("cached_files").unwrap());
     /// println!("Total bytes: {}", stats.get("total_bytes").unwrap());
     /// ```

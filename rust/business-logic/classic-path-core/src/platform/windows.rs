@@ -32,7 +32,7 @@ use winreg::enums::*;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::platform::windows::query_game_registry;
+/// use classic_path_core::query_game_registry;
 ///
 /// // Find Fallout 4
 /// let game_path = query_game_registry("Fallout4", "", true)?;
@@ -77,9 +77,9 @@ pub fn query_game_registry(
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::platform::windows::get_documents_path;
+/// use classic_path_core::get_system_documents_path;
 ///
-/// let docs = get_documents_path()?;
+/// let docs = get_system_documents_path()?;
 /// println!("Documents: {}", docs.display());
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
@@ -135,7 +135,7 @@ fn query_registry_path(hkey: &RegKey, path: &str, value_name: &str) -> GamePathR
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::platform::windows::remove_readonly;
+/// use classic_path_core::remove_readonly;
 /// use std::path::Path;
 ///
 /// let file = Path::new("C:\\Games\\Fallout4\\Fallout4.ini");

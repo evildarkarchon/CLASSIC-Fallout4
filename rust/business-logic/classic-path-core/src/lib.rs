@@ -33,12 +33,12 @@
 //! # Examples
 //!
 //! ```rust,no_run
-//! use classic_path_core::{validator, GamePathFinder};
+//! use classic_path_core::{is_valid_path, GamePathFinder};
 //! use std::path::PathBuf;
 //!
 //! // Validate a path
 //! let path = PathBuf::from("C:\\Games\\Fallout4");
-//! assert!(validator::is_valid_path(&path));
+//! assert!(is_valid_path(&path));
 //!
 //! // Find game path (requires YAML settings)
 //! // let finder = GamePathFinder::new("Fallout4.exe", Some("f4se_loader.exe"));

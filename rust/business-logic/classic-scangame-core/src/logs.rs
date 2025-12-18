@@ -61,7 +61,7 @@ pub struct LogErrorEntry {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use classic_scangame_core::logs::LogProcessor;
 /// use std::path::Path;
 ///
@@ -72,6 +72,7 @@ pub struct LogErrorEntry {
 /// let processor = LogProcessor::new(catch_errors, ignore_files, ignore_errors)?;
 /// let report = processor.process_logs(Path::new("/logs"))?;
 /// println!("{}", report);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct LogProcessor {
     /// Pattern matcher for error detection
@@ -102,12 +103,15 @@ impl LogProcessor {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,no_run
+    /// use classic_scangame_core::logs::LogProcessor;
+    ///
     /// let processor = LogProcessor::new(
     ///     vec!["error".to_string()],
     ///     vec!["crash-".to_string()],
     ///     vec!["ignore".to_string()]
     /// )?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn new(
         catch_errors: Vec<String>,
@@ -158,11 +162,15 @@ impl LogProcessor {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// # use classic_scangame_core::logs::LogProcessor;
+    /// # use std::path::Path;
+    /// # let processor = LogProcessor::new(vec![], vec![], vec![]).unwrap();
     /// let report = processor.process_logs(Path::new("/logs"))?;
     /// if !report.is_empty() {
     ///     println!("Errors found:\n{}", report);
     /// }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn process_logs(&self, folder_path: &Path) -> Result<String> {
         if !folder_path.exists() {

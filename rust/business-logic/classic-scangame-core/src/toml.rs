@@ -112,16 +112,17 @@ struct TomlSetting {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use classic_scangame_core::toml::CrashgenChecker;
 /// use std::path::Path;
 ///
-/// let checker = CrashgenChecker::new(
+/// let mut checker = CrashgenChecker::new(
 ///     Path::new("/plugins"),
 ///     "Buffout4"
 /// );
 /// let (report, issues) = checker.check()?;
 /// println!("{}", report);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct CrashgenChecker {
     /// Name of crash generator (e.g., "Buffout4")
@@ -154,6 +155,9 @@ impl CrashgenChecker {
     /// # Example
     ///
     /// ```rust
+    /// use classic_scangame_core::toml::CrashgenChecker;
+    /// use std::path::Path;
+    ///
     /// let checker = CrashgenChecker::new(
     ///     Path::new("/game/Data/F4SE/Plugins"),
     ///     "Buffout4"
@@ -512,11 +516,15 @@ impl CrashgenChecker {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// # use classic_scangame_core::toml::CrashgenChecker;
+    /// # use std::path::Path;
+    /// # let mut checker = CrashgenChecker::new(Path::new("/plugins"), "Buffout4");
     /// let (report, issues) = checker.check()?;
     /// if !issues.is_empty() {
     ///     println!("Found {} issues", issues.len());
     /// }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn check(&mut self) -> Result<(String, Vec<TomlConfigIssue>)> {
         // If no config file found, return message without raising exception

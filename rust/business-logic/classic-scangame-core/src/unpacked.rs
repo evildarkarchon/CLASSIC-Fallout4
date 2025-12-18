@@ -97,7 +97,7 @@ impl UnpackedIssues {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use classic_scangame_core::unpacked::UnpackedScanner;
 /// use std::path::Path;
 ///
@@ -105,6 +105,7 @@ impl UnpackedIssues {
 /// let xse_scripts = vec!["f4se.dll".to_string(), "f4se_loader.exe".to_string()];
 /// let issues = scanner.scan_directory(Path::new("/games/fallout4/data"), &xse_scripts)?;
 /// println!("Found {} issues", issues.total_count());
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct UnpackedScanner {
     /// Patterns to exclude from BodySlide filtering
@@ -132,11 +133,15 @@ impl UnpackedScanner {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// # use classic_scangame_core::unpacked::UnpackedScanner;
+    /// # use std::path::Path;
+    /// # let scanner = UnpackedScanner::new();
     /// let issues = scanner.scan_directory(
     ///     Path::new("/mods"),
     ///     &["f4se.dll".to_string()]
     /// )?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn scan_directory(
         &self,

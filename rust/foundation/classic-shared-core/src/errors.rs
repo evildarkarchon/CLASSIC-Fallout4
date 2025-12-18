@@ -18,7 +18,7 @@
 //!
 //! # Complete Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use classic_shared_core::{ClassicError, ClassicResult, IntoClassicError};
 //! use std::path::Path;
 //!
@@ -37,9 +37,9 @@
 //!         ));
 //!     }
 //!
-//!     // Add context for debugging
+//!     // Add context for debugging - use map_err to apply with_context
 //!     parse_config(&content)
-//!         .with_context(format!("While parsing {}", path.display()))
+//!         .map_err(|e| e.with_context(format!("While parsing {}", path.display())))
 //! }
 //!
 //! fn parse_config(content: &str) -> ClassicResult<String> {

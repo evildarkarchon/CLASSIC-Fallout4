@@ -22,7 +22,7 @@ use std::path::Path;
 /// # Examples
 ///
 /// ```rust
-/// use classic_path_core::validator::is_valid_path;
+/// use classic_path_core::is_valid_path;
 /// use std::path::Path;
 ///
 /// let path = Path::new(".");
@@ -53,7 +53,7 @@ pub fn is_valid_path(path: &Path) -> bool {
 /// # Examples
 ///
 /// ```rust
-/// use classic_path_core::validator::is_restricted_path;
+/// use classic_path_core::is_restricted_path;
 /// use std::path::Path;
 ///
 /// let safe_path = Path::new("C:\\Users\\Name\\Downloads\\Mods");
@@ -103,7 +103,7 @@ pub fn is_restricted_path(path: &Path) -> bool {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::validate_path_exists;
+/// use classic_path_core::validate_path_exists;
 /// use std::path::Path;
 ///
 /// let path = Path::new(".");
@@ -167,7 +167,7 @@ pub fn validate_is_file(path: &Path) -> PathResult<()> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::validate_required_files;
+/// use classic_path_core::validate_required_files;
 /// use std::path::Path;
 ///
 /// let game_dir = Path::new("C:\\Games\\Fallout4");
@@ -209,7 +209,7 @@ pub fn validate_required_files(
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::validate_custom_scan_path;
+/// use classic_path_core::validate_custom_scan_path;
 /// use std::path::Path;
 ///
 /// let scan_path = Path::new("C:\\Users\\Name\\Downloads\\Mods");
@@ -246,7 +246,7 @@ pub fn validate_custom_scan_path(path: &Path) -> ValidationResult<()> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::validate_settings_path;
+/// use classic_path_core::validate_settings_path;
 /// use std::path::Path;
 ///
 /// let game_path = Path::new("C:\\Games\\Fallout4");
@@ -303,7 +303,7 @@ pub fn validate_settings_path(
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::validate_settings_paths;
+/// use classic_path_core::validate_settings_paths;
 /// use std::path::PathBuf;
 ///
 /// let game = PathBuf::from("C:\\Games\\Fallout4");
@@ -352,7 +352,7 @@ pub fn validate_settings_paths(
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::is_valid_executable_path;
+/// use classic_path_core::is_valid_executable_path;
 /// use std::path::Path;
 ///
 /// let exe_path = Path::new("C:\\Games\\Fallout4\\Fallout4.exe");
@@ -389,7 +389,7 @@ pub fn is_valid_executable_path(path: &Path) -> bool {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::check_drive_exists;
+/// use classic_path_core::check_drive_exists;
 /// use std::path::Path;
 ///
 /// let path = Path::new("C:\\Games\\Fallout4");
@@ -440,7 +440,7 @@ pub fn check_drive_exists(_path: &Path) -> PathResult<()> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::check_read_permissions;
+/// use classic_path_core::check_read_permissions;
 /// use std::path::Path;
 ///
 /// let path = Path::new("C:\\Games\\Fallout4");
@@ -487,7 +487,7 @@ pub fn check_read_permissions(path: &Path) -> PathResult<()> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::check_write_permissions;
+/// use classic_path_core::check_write_permissions;
 /// use std::path::Path;
 ///
 /// let path = Path::new("C:\\Games\\Fallout4");
@@ -545,7 +545,7 @@ pub fn check_write_permissions(path: &Path) -> PathResult<()> {
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::validator::validate_path_with_permissions;
+/// use classic_path_core::validate_path_with_permissions;
 /// use std::path::Path;
 ///
 /// // Check existence and read permission

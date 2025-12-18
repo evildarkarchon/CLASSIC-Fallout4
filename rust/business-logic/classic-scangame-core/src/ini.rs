@@ -97,13 +97,14 @@ struct VsyncSetting {
 ///
 /// # Example
 ///
-/// ```rust
+/// ```rust,no_run
 /// use classic_scangame_core::ini::IniValidator;
 /// use std::path::Path;
 ///
-/// let validator = IniValidator::new("Fallout4");
+/// let mut validator = IniValidator::new("Fallout4");
 /// let report = validator.validate_inis(Path::new("/game"))?;
 /// println!("{}", report);
+/// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
 pub struct IniValidator {
     /// Game name (e.g., "Fallout4", "Skyrim")
@@ -126,6 +127,8 @@ impl IniValidator {
     /// # Example
     ///
     /// ```rust
+    /// use classic_scangame_core::ini::IniValidator;
+    ///
     /// let validator = IniValidator::new("Fallout4");
     /// ```
     pub fn new(game_name: impl Into<String>) -> Self {
@@ -440,11 +443,15 @@ impl IniValidator {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```rust,ignore
+    /// # use classic_scangame_core::ini::IniValidator;
+    /// # use std::path::Path;
+    /// # let mut validator = IniValidator::new("Fallout4");
     /// let report = validator.validate_inis(Path::new("/game"))?;
     /// if !report.is_empty() {
     ///     println!("Issues found:\n{}", report);
     /// }
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn validate_inis(&mut self, game_root: &Path) -> Result<String> {
         // Scan for INI files

@@ -335,22 +335,24 @@ fn cache_keys() -> Vec<String> {
 /// synchronous and asynchronous APIs. It integrates with the ONE RUNTIME RULE
 /// to ensure all async operations use the shared global Tokio runtime.
 ///
-/// Core Functions:
-///     Synchronous API:
-///         load_settings_sync(key, path): Load and cache a YAML file
-///         load_batch_sync(paths): Load multiple files
+/// # Synchronous API
 ///
-///     Asynchronous API:
-///         load_settings_async(key, path): Load and cache a YAML file (async)
-///         load_batch_async(paths): Load multiple files (async)
+/// - `load_settings_sync(key, path)`: Load and cache a YAML file
+/// - `load_batch_sync(paths)`: Load multiple files
 ///
-///     Cache Management:
-///         get_cached(key): Get cached settings
-///         is_cached(key): Check if key exists
-///         invalidate(key): Remove a key
-///         clear_cache(): Clear all entries
-///         cache_size(): Get number of entries
-///         cache_keys(): Get all keys
+/// # Asynchronous API
+///
+/// - `load_settings_async(key, path)`: Load and cache a YAML file (async)
+/// - `load_batch_async(paths)`: Load multiple files (async)
+///
+/// # Cache Management
+///
+/// - `get_cached(key)`: Get cached settings
+/// - `is_cached(key)`: Check if key exists
+/// - `invalidate(key)`: Remove a key
+/// - `clear_cache()`: Clear all entries
+/// - `cache_size()`: Get number of entries
+/// - `cache_keys()`: Get all keys
 ///
 /// Example:
 ///     >>> import classic_settings

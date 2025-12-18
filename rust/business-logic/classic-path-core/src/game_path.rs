@@ -122,7 +122,7 @@ impl GamePathFinder {
     /// use classic_path_core::GamePathFinder;
     /// use std::path::PathBuf;
     ///
-    /// let finder = GamePathFinder::new("Fallout4.exe", None, "Fallout4", false);
+    /// let finder = GamePathFinder::new("Fallout4.exe", None::<&str>, "Fallout4", false);
     ///
     /// // Try with cached path
     /// let cached = Some(PathBuf::from("C:\\Games\\Fallout4"));
@@ -199,7 +199,7 @@ impl GamePathFinder {
     /// use classic_path_core::GamePathFinder;
     /// use std::path::Path;
     ///
-    /// let finder = GamePathFinder::new("Fallout4.exe", None, "Fallout4", false);
+    /// let finder = GamePathFinder::new("Fallout4.exe", None::<&str>, "Fallout4", false);
     /// let log_path = Path::new("C:\\Users\\Name\\Documents\\My Games\\Fallout4\\F4SE\\f4se.log");
     ///
     /// let game_path = finder.find_via_xse_log(log_path)?;

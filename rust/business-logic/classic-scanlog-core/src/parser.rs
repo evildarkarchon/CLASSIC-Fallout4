@@ -205,8 +205,8 @@ impl LogParser {
     ///
     /// // Add pattern to find mod-specific errors
     /// parser.add_pattern(
-    ///     "my_mod_error".to_string(),
-    ///     r"MyMod: (ERROR|FATAL)".to_string()
+    ///     "my_mod_error",
+    ///     r"MyMod: (ERROR|FATAL)"
     /// ).unwrap();
     ///
     /// // Pattern is now used in find_patterns() calls
@@ -289,14 +289,15 @@ impl LogParser {
     ///
     /// ```rust
     /// # use classic_scanlog_core::LogParser;
+    /// # use std::sync::Arc;
     /// let parser = LogParser::new(None).unwrap();
-    /// let log_lines = vec![
-    ///     "Fallout 4 v1.10.163".to_string(),
-    ///     "[Compatibility]".to_string(),
-    ///     "F4SE: true".to_string(),
-    ///     "SYSTEM SPECS:".to_string(),
-    ///     "CPU: AMD Ryzen 9".to_string(),
-    ///     "PROBABLE CALL STACK:".to_string(),
+    /// let log_lines: Vec<Arc<str>> = vec![
+    ///     Arc::from("Fallout 4 v1.10.163"),
+    ///     Arc::from("[Compatibility]"),
+    ///     Arc::from("F4SE: true"),
+    ///     Arc::from("SYSTEM SPECS:"),
+    ///     Arc::from("CPU: AMD Ryzen 9"),
+    ///     Arc::from("PROBABLE CALL STACK:"),
     ///     // ... more lines
     /// ];
     ///
@@ -724,7 +725,7 @@ impl LogParser {
     ///
     /// let all_sections = parser.parse_all_sections(&log_lines);
     ///
-    /// for (name, section_lines) in all_sections {
+    /// for (name, section_lines) in &all_sections {
     ///     println!("{}: {} lines", name, section_lines.len());
     /// }
     ///

@@ -105,9 +105,13 @@ impl ConfigDuplicateDetector {
     ///
     /// # Example
     ///
-    /// ```rust
-    /// let detector = ConfigDuplicateDetector::new();
+    /// ```rust,no_run
+    /// use classic_scangame_core::config::ConfigDuplicateDetector;
+    /// use std::path::Path;
+    ///
+    /// let mut detector = ConfigDuplicateDetector::new();
     /// let duplicates = detector.scan_directory(Path::new("/games/fallout4"))?;
+    /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
     pub fn scan_directory(&mut self, root_path: &Path) -> Result<HashMap<String, Vec<PathBuf>>> {
         // First pass: collect all config files

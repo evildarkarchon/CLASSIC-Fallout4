@@ -28,7 +28,7 @@ pub mod linux;
 /// # Examples
 ///
 /// ```rust,no_run
-/// use classic_path_core::platform::get_system_documents_path;
+/// use classic_path_core::get_system_documents_path;
 ///
 /// let docs_path = get_system_documents_path()?;
 /// println!("Documents: {}", docs_path.display());
