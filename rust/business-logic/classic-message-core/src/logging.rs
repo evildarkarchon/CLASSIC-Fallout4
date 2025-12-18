@@ -44,6 +44,10 @@
 //! ```rust
 //! use classic_message_core::logging::Logger;
 //!
+//! fn compute_expensive_debug_info() -> String {
+//!     "expensive debug data".to_string()
+//! }
+//!
 //! let logger = Logger::new();
 //!
 //! if logger.is_enabled_for(log::Level::Debug) {
@@ -276,6 +280,10 @@ impl Logger {
     ///
     /// ```rust
     /// use classic_message_core::logging::Logger;
+    ///
+    /// fn compute_expensive_debug_info() -> String {
+    ///     "expensive debug data".to_string()
+    /// }
     ///
     /// let logger = Logger::new();
     ///
