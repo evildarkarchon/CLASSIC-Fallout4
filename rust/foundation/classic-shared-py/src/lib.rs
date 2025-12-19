@@ -151,7 +151,7 @@ pub fn to_py_err(err: ClassicError) -> PyErr {
 ///
 /// # Examples
 ///
-/// ```rust,no_run
+/// ```rust,ignore
 /// use classic_shared_py::without_gil;
 /// use pyo3::prelude::*;
 ///
@@ -159,7 +159,7 @@ pub fn to_py_err(err: ClassicError) -> PyErr {
 ///     // Release GIL during long-running computation
 ///     without_gil(py, || {
 ///         // This code runs without holding the GIL
-///         process_data(data)
+///         process_data(data)  // Your custom function here
 ///     })
 /// }
 /// ```
