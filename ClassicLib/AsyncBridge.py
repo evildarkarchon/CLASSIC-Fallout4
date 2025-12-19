@@ -89,10 +89,7 @@ import threading
 import time
 from collections.abc import Callable, Coroutine
 from concurrent.futures import TimeoutError as FutureTimeoutError
-from functools import wraps
 from typing import Any, ClassVar, TypeVar
-
-from ClassicLib import GlobalRegistry
 
 # Module exports
 __all__ = [
@@ -392,7 +389,7 @@ class AsyncBridge:
             result = future.result()
             success = True
 
-        except Exception as e:  # noqa: BLE001 - Re-raises after logging; bridge must catch all for metrics tracking
+        except Exception as e:
             error_type = type(e).__name__
             logger.debug(f"AsyncBridge: run_async failed with {error_type}: {e}")
             raise
@@ -465,7 +462,7 @@ class AsyncBridge:
             logger.debug(f"AsyncBridge: Asyncio timeout after {timeout} seconds (thread: {self._thread_id})")
             raise TimeoutError(f"Operation timed out after {timeout} seconds") from e
 
-        except Exception as e:  # noqa: BLE001 - Re-raises after logging; bridge must catch all for metrics tracking
+        except Exception as e:
             error_type = type(e).__name__
             logger.debug(f"AsyncBridge: run_async_with_timeout failed with {error_type}: {e}")
             raise
@@ -605,7 +602,7 @@ class AsyncBridge:
 
 # Re-export convenience functions and Phase 2 wrappers from refactored module
 # for backward compatibility
-from ClassicLib._async_utils.bridge_helpers import (
+from ._async_utils.bridge_helpers import (  # noqa: E402, TID252
     context_aware_sync,
     create_sync_wrapper,
     run_async,

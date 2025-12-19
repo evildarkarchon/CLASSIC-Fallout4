@@ -262,7 +262,7 @@ class YamlFileOperations:
             output = StringIO()
             yaml.dump(data, output)
             return output.getvalue()
-        except Exception as e:  # noqa: BLE001 - Re-raises after logging; YAML dump can fail with various ruamel.yaml errors
+        except Exception as e:
             logger.error(f"Failed to dump YAML content: {e}")
             raise
 

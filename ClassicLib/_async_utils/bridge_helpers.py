@@ -10,21 +10,22 @@ patterns for CLI/TUI contexts.
 Note:
     These helpers were extracted from ClassicLib.AsyncBridge to improve modularity.
     Import from ClassicLib.AsyncBridge for backward compatibility.
+
 """
 
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from ClassicLib import GlobalRegistry as GlobalRegistryType
+    from collections.abc import Callable, Coroutine
+
     from ClassicLib.AsyncBridge import AsyncBridge
 
 
-def _get_bridge() -> "AsyncBridge":
+def _get_bridge() -> AsyncBridge:
     """Get AsyncBridge instance lazily to avoid circular imports.
 
     Returns:

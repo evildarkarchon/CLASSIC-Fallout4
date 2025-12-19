@@ -398,7 +398,7 @@ class GameFilesManagerCore:
             except (OSError, FileNotFoundError, FileExistsError) as e:
                 msg_error(f"Failed to copy {source} to {destination}: {e}")
                 raise
-            except Exception as e:  # noqa: BLE001 - Re-raises after logging; file system operations can fail unexpectedly
+            except Exception as e:
                 msg_error(f"Unexpected error copying {source} to {destination}: {e}")
                 raise
 
@@ -443,7 +443,7 @@ class GameFilesManagerCore:
             except PermissionError:
                 msg_error(f"Permission denied removing {file}")
                 raise
-            except Exception as e:  # noqa: BLE001 - Re-raises after logging; file system operations can fail unexpectedly
+            except Exception as e:
                 msg_error(f"Unexpected error removing {file}: {e}")
                 raise
 

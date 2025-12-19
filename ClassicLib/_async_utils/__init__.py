@@ -7,7 +7,7 @@ rather than under ClassicLib/Utils to avoid circular import issues. The undersco
 prefix indicates it's an internal package.
 """
 
-from ClassicLib._async_utils.bridge_helpers import (
+from .bridge_helpers import (  # noqa: TID252
     context_aware_sync,
     create_sync_wrapper,
     run_async,

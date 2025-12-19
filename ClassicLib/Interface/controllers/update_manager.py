@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.update_manager import UpdateManager
     >>> update_mgr = UpdateManager(context)
     >>> update_mgr.update_popup()
+
 """
 
 from __future__ import annotations
@@ -49,6 +50,7 @@ class UpdateManager:
         >>> manager = UpdateManager(context)
         >>> manager.update_popup()  # Check with timer delay
         >>> manager.update_popup_explicit()  # Check immediately
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -57,6 +59,7 @@ class UpdateManager:
         Args:
             context: FeatureContext providing access to main_window, thread_manager,
                 and signal_hub.
+
         """
         self._ctx = context
         self._is_update_check_running = False
@@ -83,11 +86,11 @@ class UpdateManager:
         Switches the timer to use force_update_check and starts immediately.
         The explicit check always shows results, even if up-to-date.
         """
+        import contextlib
+
         # Switch timer to force check
-        try:
+        with contextlib.suppress(RuntimeError):
             self._update_check_timer.timeout.disconnect(self.perform_update_check)
-        except RuntimeError:
-            pass  # Not connected
         self._update_check_timer.timeout.connect(self.force_update_check)
 
         if not self._is_update_check_running:
@@ -191,6 +194,7 @@ class UpdateManager:
 
         Args:
             is_up_to_date: True if current version is the latest.
+
         """
         if is_up_to_date:
             QMessageBox.information(
@@ -200,9 +204,7 @@ class UpdateManager:
                 QMessageBox.StandardButton.Ok,
             )
         else:
-            update_popup_text: str = yaml_settings(
-                str, YAML.Main, "CLASSIC_Interface.update_popup_text"
-            ) or ""
+            update_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
             result = QMessageBox.question(
                 self._ctx.main_window,
                 "CLASSIC UPDATE",
@@ -211,15 +213,14 @@ class UpdateManager:
                 QMessageBox.StandardButton.NoButton,
             )
             if result == QMessageBox.StandardButton.Yes:
-                QDesktopServices.openUrl(
-                    QUrl("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest")
-                )
+                QDesktopServices.openUrl(QUrl("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest"))
 
     def show_update_error(self, error_message: str) -> None:
         """Display an update check error to the user.
 
         Args:
             error_message: Description of the error that occurred.
+
         """
         QMessageBox.warning(
             self._ctx.main_window,

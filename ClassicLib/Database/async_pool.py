@@ -107,7 +107,7 @@ class AsyncDatabasePool:
                             logger.debug(f"Opened async connection to {db_path}")
                         except (OSError, aiosqlite.Error) as e:
                             logger.error(f"Failed to open database {db_path}: {e}")
-            except Exception as e:  # noqa: BLE001 - Critical initialization error; must clean up and re-raise
+            except Exception as e:
                 # Clean up any connections that were opened before the exception
                 logger.error(f"Critical error during database initialization: {e}")
                 for conn in self.connections.values():

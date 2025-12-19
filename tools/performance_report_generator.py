@@ -337,8 +337,7 @@ class PerformanceReportGenerator:
             shutil.copy2(template_path, output_path)
 
             # Update dashboard with current data (basic approach)
-            with Path(output_path).open(encoding="utf-8") as f:
-                content = f.read()
+            content = Path(output_path).read_text(encoding="utf-8")
 
             # Update title and timestamp
             timestamp_str = self.generation_timestamp.strftime("%Y-%m-%d %H:%M:%S")
@@ -347,8 +346,7 @@ class PerformanceReportGenerator:
                 f"Rust Integration & Optimization - Generated {timestamp_str}",
             )
 
-            with Path(output_path).open("w", encoding="utf-8") as f:
-                f.write(content)
+            Path(output_path).write_text(content, encoding="utf-8")
         else:
             # Generate basic HTML dashboard
             with Path(output_path).open("w", encoding="utf-8") as f:

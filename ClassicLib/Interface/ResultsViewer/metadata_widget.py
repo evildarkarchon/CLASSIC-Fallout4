@@ -7,10 +7,13 @@ such as modification date, file size, and issue counts for scan reports.
 from __future__ import annotations
 
 import re
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QDateTime
 from PySide6.QtWidgets import QGroupBox, QHBoxLayout, QLabel, QWidget
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class ReportMetadataWidget(QGroupBox):

@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.backup_manager import BackupManager
     >>> backup_mgr = BackupManager(context)
     >>> backup_mgr.check_existing_backups()
+
 """
 
 from __future__ import annotations
@@ -15,7 +16,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Literal
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -53,6 +54,7 @@ class BackupManager:
         >>> manager = BackupManager(context)
         >>> manager.add_backup_section(layout, "XSE Files", "XSE")
         >>> manager.check_existing_backups()
+
     """
 
     # Valid backup types
@@ -63,6 +65,7 @@ class BackupManager:
 
         Args:
             context: FeatureContext providing access to main_window and ui_widgets.
+
         """
         self._ctx = context
         self._restore_buttons: dict[str, QPushButton] = {}
@@ -101,6 +104,7 @@ class BackupManager:
             layout: The layout to add the backup section to.
             title: The title text for the section.
             backup_type: The type of backup (XSE, RESHADE, VULKAN, or ENB).
+
         """
         layout.addWidget(create_separator())
 
@@ -151,7 +155,7 @@ class BackupManager:
         ]:
             # Use default arguments in lambda to capture current values
             button.clicked.connect(
-                lambda checked=False, b=backup_type, a=action: self.classic_files_manage(
+                lambda _checked=False, b=backup_type, a=action: self.classic_files_manage(
                     f"Backup {b}",
                     a,  # type: ignore[arg-type]
                 )
@@ -182,6 +186,7 @@ class BackupManager:
         Raises:
             ValueError: If selected_list format is invalid.
             PermissionError: If file access is denied.
+
         """
         try:
             parts = self._validate_selected_list_format(selected_list)
@@ -198,8 +203,7 @@ class BackupManager:
             QMessageBox.critical(
                 self._ctx.main_window,
                 "Error",
-                "Unable to access files from your game folder. "
-                "Please run CLASSIC in admin mode to resolve this problem.",
+                "Unable to access files from your game folder. Please run CLASSIC in admin mode to resolve this problem.",
                 QMessageBox.StandardButton.NoButton,
                 QMessageBox.StandardButton.NoButton,
             )
@@ -224,12 +228,11 @@ class BackupManager:
 
         Raises:
             ValueError: If format doesn't match "Backup TYPE".
+
         """
         parts = selected_list.split()
         if len(parts) != 2 or parts[0] != "Backup":
-            raise ValueError(
-                f"Invalid format for selected_list: '{selected_list}'. Expected 'Backup TYPE'."
-            )
+            raise ValueError(f"Invalid format for selected_list: '{selected_list}'. Expected 'Backup TYPE'.")
         return parts
 
     def _enable_restore_button_for_type(self, backup_type: str) -> None:
@@ -237,13 +240,15 @@ class BackupManager:
 
         Args:
             backup_type: The backup type whose restore button to enable.
+
         """
         restore_button = self._restore_buttons.get(backup_type)
         if restore_button:
             restore_button.setEnabled(True)
             restore_button.setStyleSheet(ENABLED_BUTTON_STYLE)
 
-    def open_backup_folder(self) -> None:
+    @staticmethod
+    def open_backup_folder() -> None:
         """Open the CLASSIC Backup folder in the system file explorer.
 
         Creates the backup folder if it doesn't exist, then opens it

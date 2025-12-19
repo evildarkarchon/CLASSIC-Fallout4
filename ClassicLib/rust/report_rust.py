@@ -11,6 +11,7 @@ Note:
     This module is a compatibility shim. The actual implementations have been
     refactored into the `ClassicLib.rust.report` package. Import from there
     for new code, or continue importing from here for backward compatibility.
+
 """
 
 from __future__ import annotations

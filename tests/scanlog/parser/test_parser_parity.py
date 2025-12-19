@@ -14,7 +14,6 @@ from ClassicLib.ScanLog.Parser import (
     parse_crash_header,
 )
 
-
 # Skip parity tests if Rust parser is not available
 pytestmark = [
     pytest.mark.unit,

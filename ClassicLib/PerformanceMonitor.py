@@ -41,7 +41,7 @@ def timed_operation(name: str | None = None, log_level: str = "info") -> Callabl
 
             try:
                 result = func(*args, **kwargs)
-            except Exception as e:  # noqa: BLE001 - Re-raises after logging; timing decorator must catch all to measure failure duration
+            except Exception as e:
                 elapsed = time.perf_counter() - start
                 logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
                 raise
@@ -92,7 +92,7 @@ def async_timed_operation(name: str | None = None, log_level: str = "info") -> C
 
             try:
                 result = await func(*args, **kwargs)
-            except Exception as e:  # noqa: BLE001 - Re-raises after logging; timing decorator must catch all to measure failure duration
+            except Exception as e:
                 elapsed = time.perf_counter() - start
                 logger.error(f"{operation_name} failed after {elapsed:.3f}s: {e}")
                 raise

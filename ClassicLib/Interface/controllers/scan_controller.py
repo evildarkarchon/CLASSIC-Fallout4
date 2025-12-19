@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.scan_controller import ScanController
     >>> scan_ctrl = ScanController(context)
     >>> scan_ctrl.crash_logs_scan()
+
 """
 
 from __future__ import annotations
@@ -50,6 +51,7 @@ class ScanController:
         >>> controller = ScanController(context)
         >>> controller.crash_logs_scan()  # Start crash logs scan
         >>> controller.game_files_scan()  # Start game files scan
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -58,6 +60,7 @@ class ScanController:
         Args:
             context: FeatureContext providing access to main_window, thread_manager,
                 signal_hub, and ui_widgets.
+
         """
         self._ctx = context
         self._scan_mutex = QMutex()
@@ -231,6 +234,7 @@ class ScanController:
 
         Args:
             enabled: Whether buttons should be enabled.
+
         """
         if enabled:
             self._enable_scan_buttons()
@@ -334,6 +338,7 @@ class ScanController:
             title: The title of the error dialog.
             message: The main error message to display.
             details: Detailed error information (e.g., traceback).
+
         """
         logger.debug(f"Showing error dialog: {title}")
 
@@ -357,6 +362,7 @@ class ScanController:
 
         Returns:
             True if the specified scan (or any scan) is running.
+
         """
         self._scan_mutex.lock()
         try:

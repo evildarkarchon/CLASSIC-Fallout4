@@ -7,18 +7,18 @@ Example:
     >>> from ClassicLib.Interface.controllers.folder_manager import FolderManager
     >>> folder_mgr = FolderManager(context)
     >>> folder_mgr.select_folder_scan()
+
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
 
-from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 from ClassicLib.YamlSettings import classic_settings, yaml_settings
@@ -46,6 +46,7 @@ class FolderManager:
         >>> manager = FolderManager(context)
         >>> manager.select_folder_scan()  # Opens folder picker
         >>> manager.initialize_folder_paths()  # Load saved paths
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -53,6 +54,7 @@ class FolderManager:
 
         Args:
             context: FeatureContext providing access to main_window and ui_widgets.
+
         """
         self._ctx = context
 

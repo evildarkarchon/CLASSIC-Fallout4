@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.papyrus_manager import PapyrusManager
     >>> papyrus_mgr = PapyrusManager(context)
     >>> papyrus_mgr.start_monitoring()
+
 """
 
 from __future__ import annotations
@@ -44,6 +45,7 @@ class PapyrusManager:
         >>> manager.toggle_monitoring()  # Based on button state
         >>> manager.start_monitoring()  # Explicitly start
         >>> manager.stop_monitoring()  # Explicitly stop
+
     """
 
     # Button styles
@@ -75,6 +77,7 @@ class PapyrusManager:
         Args:
             context: FeatureContext providing access to main_window, thread_manager,
                 signal_hub, and ui_widgets.
+
         """
         self._ctx = context
         self._monitor_thread: QThread | None = None
@@ -178,6 +181,7 @@ class PapyrusManager:
 
         Args:
             monitoring: True if monitoring is active, False otherwise.
+
         """
         papyrus_button = self._ctx.ui_widgets.papyrus_button
         if papyrus_button is None:
@@ -199,5 +203,6 @@ class PapyrusManager:
 
         Returns:
             True if monitoring is running, False otherwise.
+
         """
         return self._ctx.thread_manager.is_thread_running(ThreadType.PAPYRUS_MONITOR)

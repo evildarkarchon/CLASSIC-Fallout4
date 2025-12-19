@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
     >>> geometry_mgr = WindowGeometryManager(context)
     >>> geometry_mgr.setup()
+
 """
 
 from __future__ import annotations
@@ -46,6 +47,7 @@ class WindowGeometryManager:
         >>> manager = WindowGeometryManager(context)
         >>> manager.setup()  # Initialize and connect signals
         >>> manager.handle_tab_changed(1)  # Save/restore on tab switch
+
     """
 
     # Default minimum sizes for each tab (width, height)
@@ -70,6 +72,7 @@ class WindowGeometryManager:
         Args:
             context: FeatureContext providing access to main_window, signal_hub,
                 and ui_widgets.
+
         """
         self._ctx = context
         self._last_tab_index: int | None = None
@@ -105,6 +108,7 @@ class WindowGeometryManager:
 
         Args:
             index: The new tab index.
+
         """
         # Request reports refresh when switching to results tab
         if index == 3:
@@ -119,6 +123,7 @@ class WindowGeometryManager:
 
         Args:
             index: Index of the newly active tab.
+
         """
         if not self._geometry_initialized:
             return
@@ -143,6 +148,7 @@ class WindowGeometryManager:
 
         Args:
             tab_index: Index of the tab to save geometry for.
+
         """
         if tab_index not in self.TAB_NAMES:
             return
@@ -187,6 +193,7 @@ class WindowGeometryManager:
 
         Args:
             tab_index: Index of the tab to restore geometry for.
+
         """
         if tab_index not in self.TAB_NAMES:
             return
@@ -237,6 +244,7 @@ class WindowGeometryManager:
 
         Returns:
             Tuple of (width, height) minimum size.
+
         """
         return self.DEFAULT_MIN_SIZES.get(tab_index, (550, 350))
 

@@ -912,8 +912,7 @@ class PerformanceAnalyzer:
         # Save to file if requested
         if output_file:
             output_path = Path(output_file)
-            with Path(output_path).open("w", encoding="utf-8") as f:
-                f.write(html)
+            Path(output_path).write_text(html, encoding="utf-8")
             logger.info(f"Performance report saved to {output_path}")
 
         return html

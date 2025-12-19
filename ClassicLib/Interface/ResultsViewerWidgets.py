@@ -9,6 +9,7 @@ Note:
     MarkdownViewer and ReportMetadataWidget have been refactored into
     the ClassicLib.Interface.ResultsViewer package. Import from there
     for new code, or continue importing from here for backward compatibility.
+
 """
 
 from __future__ import annotations
@@ -28,10 +29,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.Logger import logger
-
 # Re-export from refactored modules for backward compatibility
 from ClassicLib.Interface.ResultsViewer import MarkdownViewer, ReportMetadataWidget
+from ClassicLib.Logger import logger
 
 
 class ReportListWidget(QListWidget):

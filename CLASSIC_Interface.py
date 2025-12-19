@@ -7,7 +7,7 @@ components such as folder management, backup operations, and scan operations.
 """
 
 import sys
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QIcon
@@ -42,9 +42,6 @@ from ClassicLib.MessageHandler import init_message_handler, msg_error
 from ClassicLib.SetupCoordinator import SetupCoordinator
 from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
-if TYPE_CHECKING:
-    pass
-
 
 class MainWindow(QMainWindow):
     """Main application window for the CLASSIC GUI interface.
@@ -66,6 +63,7 @@ class MainWindow(QMainWindow):
         help_about: Provides help and about dialogs.
         window_geometry: Handles per-tab window sizing.
         ui_setup: Orchestrates UI tab setup.
+
     """
 
     def __init__(self) -> None:
@@ -179,6 +177,7 @@ class MainWindow(QMainWindow):
 
         Args:
             event: The close event.
+
         """
         logger.info("Application closing - cleaning up resources...")
 

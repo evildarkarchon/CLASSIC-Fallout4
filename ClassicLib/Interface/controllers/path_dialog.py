@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.path_dialog import PathDialogController
     >>> path_ctrl = PathDialogController(context)
     >>> path_ctrl.show_game_path_dialog()
+
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ class PathDialogController:
         >>> controller = PathDialogController(context)
         >>> controller.show_game_path_dialog()  # Shows game path selection
         >>> controller.show_manual_docs_path_dialog()  # Shows docs path selection
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -46,6 +48,7 @@ class PathDialogController:
 
         Args:
             context: FeatureContext providing access to main_window and signal_hub.
+
         """
         self._ctx = context
 
@@ -102,6 +105,7 @@ def show_game_path_dialog_static() -> Path | None:
     Note:
         This function may call sys.exit(0) if the user chooses to exit
         after canceling the dialog.
+
     """
     exe_name: str = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
     game_name: str = GlobalRegistry.get_game()

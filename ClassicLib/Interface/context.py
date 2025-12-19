@@ -7,11 +7,12 @@ Example:
     >>> from ClassicLib.Interface.context import FeatureContext, UIWidgets
     >>> context = FeatureContext(main_window, thread_manager, signal_hub)
     >>> context.ui_widgets.papyrus_button = some_button
+
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -63,6 +64,7 @@ class UIWidgets:
         >>> widgets.papyrus_button = papyrus_btn
         >>> print(widgets.papyrus_button.text())
         START PAPYRUS MONITORING
+
     """
 
     # Required widgets (set during construction)
@@ -114,6 +116,7 @@ class FeatureContext:
         >>> context = FeatureContext(window, thread_mgr, signal_hub)
         >>> scan_ctrl = ScanController(context)
         >>> results_ctrl = ResultsViewerController(context)
+
     """
 
     def __init__(
@@ -128,6 +131,7 @@ class FeatureContext:
             main_window: The main application window.
             thread_manager: ThreadManager instance for thread lifecycle.
             signal_hub: SignalHub instance for inter-component signals.
+
         """
         self._main_window = main_window
         self._thread_manager = thread_manager
@@ -140,6 +144,7 @@ class FeatureContext:
 
         Returns:
             The QMainWindow instance.
+
         """
         return self._main_window
 
@@ -149,6 +154,7 @@ class FeatureContext:
 
         Returns:
             The ThreadManager instance.
+
         """
         return self._thread_manager
 
@@ -158,6 +164,7 @@ class FeatureContext:
 
         Returns:
             The SignalHub instance.
+
         """
         return self._signal_hub
 
@@ -167,6 +174,7 @@ class FeatureContext:
 
         Returns:
             The UIWidgets instance containing shared widget references.
+
         """
         return self._ui_widgets
 
@@ -179,6 +187,7 @@ class FeatureContext:
 
         Returns:
             Path to the local directory, or None if not configured.
+
         """
         from ClassicLib import GlobalRegistry
 

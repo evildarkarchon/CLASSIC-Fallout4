@@ -11,17 +11,14 @@ Example:
     >>> hub.scan_completed.connect(on_scan_done)
     >>> # Controller B emits signals
     >>> hub.scan_completed.emit("crash_logs")
+
 """
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, Signal
-
-if TYPE_CHECKING:
-    from ClassicLib.Interface.Papyrus import PapyrusStats
 
 
 class SignalHub(QObject):
@@ -47,6 +44,7 @@ class SignalHub(QObject):
         >>> hub.scan_started.connect(lambda t: print(f"Scan started: {t}"))
         >>> hub.scan_started.emit("crash_logs")
         Scan started: crash_logs
+
     """
 
     # =========================================================================
@@ -226,5 +224,6 @@ class SignalHub(QObject):
 
         Args:
             parent: Optional parent QObject for Qt memory management.
+
         """
         super().__init__(parent)

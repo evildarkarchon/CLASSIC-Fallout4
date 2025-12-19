@@ -87,7 +87,7 @@ def pastebin_fetch(url: str) -> None:
     except requests.RequestException as e:
         msg_error(f"Failed to fetch pastebin content: {e}")
         raise
-    except Exception as e:  # noqa: BLE001 - Re-raises after logging; catches unexpected errors from pastebin parsing
+    except Exception as e:
         msg_error(f"Unexpected error fetching pastebin: {e}")
         raise
 

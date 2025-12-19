@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.help_about import HelpAboutController
     >>> help_ctrl = HelpAboutController(context)
     >>> help_ctrl.show_about()
+
 """
 
 from __future__ import annotations
@@ -37,6 +38,7 @@ class HelpAboutController:
         >>> controller = HelpAboutController(context)
         >>> controller.show_about()  # Shows about dialog
         >>> controller.help_popup_main()  # Shows help dialog
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -44,6 +46,7 @@ class HelpAboutController:
 
         Args:
             context: FeatureContext providing access to main_window and signal_hub.
+
         """
         self._ctx = context
 

@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
     >>> results_ctrl = ResultsViewerController(context)
     >>> results_ctrl.setup_results_tab()
+
 """
 
 from __future__ import annotations
@@ -14,7 +15,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QFileSystemWatcher, QPoint, Qt, QTimer, Signal
+from PySide6.QtCore import QFileSystemWatcher, QPoint, Qt, QTimer
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import (
     QHBoxLayout,
@@ -67,6 +68,7 @@ class ResultsViewerController:
         >>> controller = ResultsViewerController(context)
         >>> controller.setup_results_tab()
         >>> controller.refresh_reports_list()
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -75,6 +77,7 @@ class ResultsViewerController:
         Args:
             context: FeatureContext providing access to main_window, signal_hub,
                 and ui_widgets.
+
         """
         self._ctx = context
 
@@ -159,6 +162,7 @@ class ResultsViewerController:
 
         Returns:
             QWidget containing the reports list and action buttons.
+
         """
         panel = QWidget()
         layout = QVBoxLayout(panel)
@@ -214,6 +218,7 @@ class ResultsViewerController:
 
         Returns:
             QWidget containing the metadata, viewer, and toolbar.
+
         """
         panel = QWidget()
         layout = QVBoxLayout(panel)
@@ -248,7 +253,7 @@ class ResultsViewerController:
         toolbar_layout.addStretch()
 
         # Zoom controls
-        zoom_out_btn = QPushButton("−")
+        zoom_out_btn = QPushButton("-")
         zoom_out_btn.clicked.connect(self._markdown_viewer.zoom_out)
         zoom_out_btn.setFixedWidth(30)
         zoom_out_btn.setToolTip("Zoom out")
@@ -280,6 +285,7 @@ class ResultsViewerController:
 
         Returns:
             Sorted list of unique report paths (descending by name).
+
         """
         reports: list[Path] = []
 
@@ -352,9 +358,7 @@ class ResultsViewerController:
 
             if not current_still_exists:
                 self._markdown_viewer.clear()
-                self._markdown_viewer.setMarkdown(
-                    "# Reports Available\n\nSelect a report from the list to view its contents."
-                )
+                self._markdown_viewer.setMarkdown("# Reports Available\n\nSelect a report from the list to view its contents.")
                 self._current_report_path = None
 
                 # Auto-select the first report
@@ -371,6 +375,7 @@ class ResultsViewerController:
 
         Returns:
             True if loaded successfully, False otherwise.
+
         """
         if self._markdown_viewer is None or self._metadata_widget is None:
             return False
@@ -399,9 +404,8 @@ class ResultsViewerController:
             self._ctx.signal_hub.report_loaded.emit(report_path)
 
             logger.debug(f"Loaded report: {report_path.name}")
-            return True
 
-        except Exception as e:
+        except OSError as e:
             error_message = f"Failed to load report: {e}"
             QTimer.singleShot(0, lambda: msg_error(error_message))
             logger.error(f"Error loading report {report_path}: {e}", exc_info=True)
@@ -411,10 +415,13 @@ class ResultsViewerController:
                 content = read_file_sync(report_path)
                 self._markdown_viewer.setPlainText(content)
                 QTimer.singleShot(0, lambda: msg_warning("Displayed report as plain text due to markdown error"))
-                return True
-            except Exception as fallback_e:
+            except OSError as fallback_e:
                 logger.error(f"Fallback plain text also failed: {fallback_e}")
                 return False
+        else:
+            return True
+
+        return True
 
     def _on_report_selected(self) -> None:
         """Handle report selection from the list."""

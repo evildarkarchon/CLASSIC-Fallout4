@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.ui_setup import UISetupController
     >>> ui_setup = UISetupController(context, scan=scan_ctrl, results=results_ctrl, ...)
     >>> ui_setup.setup_all_tabs()
+
 """
 
 from __future__ import annotations
@@ -81,6 +82,7 @@ class UISetupController:
         ...     pastebin=pastebin_ctrl,
         ... )
         >>> ui_setup.setup_all_tabs()
+
     """
 
     def __init__(
@@ -108,6 +110,7 @@ class UISetupController:
             help_about: HelpAboutController for help and about dialogs.
             update: UpdateManager for update checking.
             pastebin: PastebinController for Pastebin fetching.
+
         """
         self._ctx = context
         self._scan = scan
@@ -302,6 +305,7 @@ class UISetupController:
 
         Args:
             layout: The parent layout to add buttons to.
+
         """
         main_buttons_layout = QHBoxLayout()
         main_buttons_layout.setSpacing(10)
@@ -338,6 +342,7 @@ class UISetupController:
 
         Args:
             layout: The parent layout to add buttons to.
+
         """
         # First row of utility buttons
         bottom_buttons_hbox = QHBoxLayout()
@@ -388,6 +393,7 @@ class UISetupController:
 
         Args:
             monitoring: True if monitoring is active, False otherwise.
+
         """
         papyrus_button = self._ctx.ui_widgets.papyrus_button
         if papyrus_button is None:
@@ -437,6 +443,7 @@ class UISetupController:
 
         Returns:
             The configured QPushButton.
+
         """
         button = QPushButton(text)
         button.setToolTip(tooltip)
@@ -451,5 +458,6 @@ class UISetupController:
 
         Args:
             url: The URL to open.
+
         """
         QDesktopServices.openUrl(QUrl(url))

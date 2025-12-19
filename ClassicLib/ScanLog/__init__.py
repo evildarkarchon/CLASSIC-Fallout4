@@ -32,13 +32,13 @@ See `ClassicLib.integration.factory` for complete documentation.
 
 # Core scanning components
 # Modern async-first core components
+from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.ScanLog.AsyncReformat import (
     batch_file_copy_async,
     batch_file_move_async,
     crashlogs_reformat_async,
     reformat_single_log_async,
 )
-from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.ScanLog.AsyncUtil import write_file_async
 from ClassicLib.ScanLog.composition import ConditionalSection, ReportComposer
 from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single

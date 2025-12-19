@@ -23,8 +23,6 @@ else:
         RustParallelProcessor = None  # type: ignore[assignment, misc]
 
 # Import fragment wrapper - using lazy import to avoid circular imports
-if TYPE_CHECKING:
-    from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
 
 
 def _get_fragment_class() -> type:

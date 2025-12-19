@@ -23,11 +23,10 @@ logger = logging.getLogger(__name__)
 
 # Import all Rust wrapper components
 try:
-    from ClassicLib.rust import gpu_rust
-
     # Database imports from new canonical location
     from ClassicLib.Database import AsyncDatabasePool, DatabasePoolManager
     from ClassicLib.Database.rust_pool import RustAsyncDatabasePool
+    from ClassicLib.rust import gpu_rust
 
     # Legacy function (deprecated)
     from ClassicLib.rust.database_rust import get_database_pool_implementation

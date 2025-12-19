@@ -7,6 +7,7 @@ Example:
     >>> from ClassicLib.Interface.controllers.pastebin_controller import PastebinController
     >>> pastebin_ctrl = PastebinController(context)
     >>> pastebin_ctrl.fetch_pastebin_log()
+
 """
 
 from __future__ import annotations
@@ -51,6 +52,7 @@ class PastebinController:
         >>> controller = PastebinController(context)
         >>> controller.setup_pastebin_elements(layout)
         >>> controller.fetch_pastebin_log()
+
     """
 
     def __init__(self, context: FeatureContext) -> None:
@@ -59,6 +61,7 @@ class PastebinController:
         Args:
             context: FeatureContext providing access to main_window, thread_manager,
                 and ui_widgets.
+
         """
         self._ctx = context
         self._pastebin_url_regex: re.Pattern[str] = re.compile(r"^https?://pastebin\.com/(\w+)$")
@@ -75,6 +78,7 @@ class PastebinController:
 
         Args:
             layout: The parent layout to add elements to.
+
         """
         pastebin_layout = QHBoxLayout()
 
@@ -118,10 +122,7 @@ class PastebinController:
             return
 
         # Construct URL from input
-        if self._pastebin_url_regex.match(input_text):
-            url = input_text
-        else:
-            url = f"https://pastebin.com/{input_text}"
+        url = input_text if self._pastebin_url_regex.match(input_text) else f"https://pastebin.com/{input_text}"
 
         # Check if a fetch is already in progress
         if self._ctx.thread_manager.is_thread_running(ThreadType.PASTEBIN_FETCH):
@@ -172,6 +173,7 @@ class PastebinController:
 
         Args:
             pb_source: The source URL that was fetched.
+
         """
         QMessageBox.information(
             self._ctx.main_window,
@@ -184,6 +186,7 @@ class PastebinController:
 
         Args:
             error_message: Description of the error.
+
         """
         QMessageBox.warning(
             self._ctx.main_window,
