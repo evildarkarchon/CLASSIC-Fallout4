@@ -615,7 +615,12 @@ class ClassicBackend(QObject):
             logger.error(f"Failed to delete report: {e}")
 
 
-if __name__ == "__main__":
+def main() -> None:
+    """Entry point for the QML-based CLASSIC GUI application.
+
+    Initializes the Qt application, sets up the QML engine with the ClassicBackend,
+    and starts the main event loop.
+    """
     app = QApplication(sys.argv)
     app.setOrganizationName("CLASSIC")
     app.setOrganizationDomain("classic.fallout4")
@@ -649,3 +654,7 @@ if __name__ == "__main__":
         sys.exit(-1)
 
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()
