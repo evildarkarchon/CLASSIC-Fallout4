@@ -288,7 +288,7 @@ uv run python CLASSIC_Interface.py 2>&1 | tee debug.log
 cargo build --release --profile profiling
 
 # Run with profiler
-cargo flamegraph --bin classic-gui-slint
+cargo flamegraph --bin classic-cli
 ```
 
 ### Profile Python-Rust Integration

@@ -115,7 +115,6 @@ rust/
 └── ui-applications/                  # UI Applications
     ├── classic-cli/                 # Command-line interface
     ├── classic-tui/                 # Terminal UI (Ratatui)
-    ├── classic-gui-slint/           # Slint GUI
     └── classic-ui-shared/           # Shared UI components
 ```
 

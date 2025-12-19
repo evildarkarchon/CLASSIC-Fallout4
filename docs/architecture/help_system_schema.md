@@ -300,14 +300,13 @@ The help system detects current context:
    - Populate with initial help topics
 
 2. **Rust Helper Module**
-   - `classic-gui-slint/src/handlers/help.rs`
+   - `rust/ui-applications/classic-ui-shared/src/help.rs`
    - Load and parse YAML
    - Lookup help topics by category/ID
    - Format content for display
 
-3. **UI Dialog Component**
-   - `classic-gui-slint/ui/dialogs/help_dialog.slint`
-   - Markdown viewer for content
+3. **UI Dialog Component** (TUI/CLI or future GUI)
+   - Help content display
    - Related topics links
    - Responsive layout
 

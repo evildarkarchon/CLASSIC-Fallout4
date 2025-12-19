@@ -48,7 +48,7 @@ This document outlines a phased approach to port the remaining Python components
 | Config | `rust/business-logic/classic-config-core` + `rust/python-bindings/classic-config-py` | ✅ Complete | - |
 | Shared Runtime | `rust/foundation/classic-shared-core` + `rust/foundation/classic-shared-py` | ✅ Complete | Foundation |
 | TUI | `rust/ui-applications/classic-tui` | ✅ Complete | Pure Rust app |
-| Slint GUI | `classic-gui-slint` | ✅ Complete | Pure Rust app |
+| UI Shared | `rust/ui-applications/classic-ui-shared` | ✅ Complete | Shared UI components |
 
 ### Components to Port (Estimated 60% remaining)
 
@@ -917,10 +917,9 @@ Existing Crates (unchanged):
 ├── rust/python-bindings/classic-scanlog-py/            # ScanLog Python bindings
 ├── rust/business-logic/classic-config-core/           # Config management
 ├── rust/python-bindings/classic-config-py/             # Config Python bindings
-├── classic-ui-shared/             # UI coordination
+├── rust/ui-applications/classic-ui-shared/             # UI coordination
 ├── rust/ui-applications/classic-cli/                   # CLI app (pure Rust)
-├── rust/ui-applications/classic-tui/                   # TUI app (pure Rust)
-└── classic-gui-slint/             # Slint GUI (pure Rust)
+└── rust/ui-applications/classic-tui/                   # TUI app (pure Rust)
 ```
 
 **Total New Crates**: ~40 (20 -core + 20 -py)

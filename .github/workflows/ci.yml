@@ -160,12 +160,7 @@ jobs:
         run: cargo build --workspace --release --manifest-path rust/Cargo.toml
 
       - name: Run Rust tests
-        run: |
-          # Run most tests in parallel
-          cargo test --workspace --release --manifest-path rust/Cargo.toml --exclude classic-gui-slint
-          # Run Slint GUI tests single-threaded to avoid Windows heap corruption during cleanup
-          # (all tests pass; crash only occurs during multi-threaded process shutdown)
-          cargo test --release --manifest-path rust/Cargo.toml -p classic-gui-slint -- --test-threads=1
+        run: cargo test --workspace --release --manifest-path rust/Cargo.toml
 
       - name: Upload Rust build artifacts
         uses: actions/upload-artifact@v4

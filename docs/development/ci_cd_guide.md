@@ -287,9 +287,6 @@ uv run pytest tests/rust_integration/ -v
 
    # TUI
    cargo build --release --manifest-path rust/Cargo.toml -p classic-tui
-
-   # Slint GUI
-   cargo build --release --manifest-path rust/Cargo.toml -p classic-gui-slint
    ```
 
 ## CI Workflow Dependencies

@@ -45,8 +45,8 @@ The Rust codebase follows a strict modular layered architecture:
     -   Example: `classic-yaml-py`, `classic-scanlog-py`.
 
 4.  **UI Applications (`rust/ui-applications/`)**:
-    -   Standalone Rust apps (CLI, TUI, Slint GUI).
-    -   Example: `classic-cli`, `classic-gui-slint`.
+    -   Standalone Rust apps (CLI, TUI) and shared UI code.
+    -   Example: `classic-cli`, `classic-tui`, `classic-ui-shared`.
 
 ## Development & Usage
 
