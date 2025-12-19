@@ -128,7 +128,12 @@ fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     // Register custom exception types using the shared macro
-    register_exceptions!(m, RustDatabaseError, RustDatabaseIOError, RustDatabaseQueryError);
+    register_exceptions!(
+        m,
+        RustDatabaseError,
+        RustDatabaseIOError,
+        RustDatabaseQueryError
+    );
 
     Ok(())
 }

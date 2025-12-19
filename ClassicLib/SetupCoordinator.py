@@ -214,6 +214,7 @@ class SetupCoordinator:
 
         # Log Rust acceleration status
         self._log_rust_acceleration_status()
+
     @staticmethod
     def _ensure_paths_configured(is_gui: bool) -> None:
         """Ensure game and docs paths are configured, detecting them if needed.

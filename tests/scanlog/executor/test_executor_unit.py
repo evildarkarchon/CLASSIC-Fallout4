@@ -133,6 +133,7 @@ class TestScanLogsExecutorLoadConfig:
 
     def test_load_config_with_fcx_mode(self) -> None:
         """Test config loading with FCX mode enabled."""
+
         def mock_settings(type_arg, key: str) -> bool | None:
             if key == "FCX Mode":
                 return True
@@ -145,6 +146,7 @@ class TestScanLogsExecutorLoadConfig:
 
     def test_load_config_with_all_settings(self) -> None:
         """Test config loading with all settings enabled."""
+
         def mock_settings(type_arg, key: str) -> bool:
             return True  # All settings enabled
 

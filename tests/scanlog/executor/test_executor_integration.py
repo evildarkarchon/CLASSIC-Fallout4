@@ -249,9 +249,7 @@ class TestScanLogsExecutorCancellation:
             mock_get_io.return_value = mock_io
 
             mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(
-                return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []])
-            )
+            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
             mock_get_parser.return_value = mock_parser
 
             executor = ScanLogsExecutor()

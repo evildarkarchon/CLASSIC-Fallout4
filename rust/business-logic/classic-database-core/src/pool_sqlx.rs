@@ -255,13 +255,10 @@ impl DatabasePool {
             {
                 Ok(Some(row)) => {
                     let value: String = row.try_get(0)?;
-                    let cache_ttl = *self
-                        .cache_ttl
-                        .read()
-                        .unwrap_or_else(|poisoned| {
-                            warn!("cache_ttl lock was poisoned - recovering");
-                            poisoned.into_inner()
-                        });
+                    let cache_ttl = *self.cache_ttl.read().unwrap_or_else(|poisoned| {
+                        warn!("cache_ttl lock was poisoned - recovering");
+                        poisoned.into_inner()
+                    });
                     self.query_cache
                         .insert(cache_key.clone(), CacheEntry::new(value.clone(), cache_ttl));
                     debug!("Found FormID {} in database {:?}", formid, db_path);
@@ -340,13 +337,10 @@ impl DatabasePool {
             return Ok(results);
         }
 
-        let cache_ttl = *self
-            .cache_ttl
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("cache_ttl lock was poisoned - recovering");
-                poisoned.into_inner()
-            });
+        let cache_ttl = *self.cache_ttl.read().unwrap_or_else(|poisoned| {
+            warn!("cache_ttl lock was poisoned - recovering");
+            poisoned.into_inner()
+        });
 
         // Process uncached pairs in batches (TRUE ASYNC!)
         for batch in uncached_pairs.chunks(batch_size) {
@@ -456,13 +450,10 @@ impl DatabasePool {
 
     /// Get the maximum number of connections per pool
     pub fn get_max_connections(&self) -> Option<usize> {
-        *self
-            .max_connections
-            .read()
-            .unwrap_or_else(|poisoned| {
-                warn!("max_connections lock was poisoned - recovering");
-                poisoned.into_inner()
-            })
+        *self.max_connections.read().unwrap_or_else(|poisoned| {
+            warn!("max_connections lock was poisoned - recovering");
+            poisoned.into_inner()
+        })
     }
 
     /// Set the maximum number of connections per pool

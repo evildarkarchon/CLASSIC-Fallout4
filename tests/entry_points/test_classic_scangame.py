@@ -35,10 +35,10 @@ class TestClassicScanGame:
         assert core1 == mock_instance
         assert core2 == mock_instance
 
-    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
     @patch("ClassicLib.AsyncBridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_check_log_errors_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
+    def test_check_log_errors_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test check_log_errors sync adapter for async operation."""
         from CLASSIC_ScanGame import check_log_errors
 
@@ -58,7 +58,7 @@ class TestClassicScanGame:
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
-        mock_registry_get.return_value = True
+        mock_gui_mode.return_value = True
 
         # Act
         result = check_log_errors(test_path)
@@ -116,10 +116,10 @@ class TestClassicScanGame:
         mock_get_core.assert_called_once()
         mock_core.get_issue_messages.assert_called_once_with(xse_acronym, mode)
 
-    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
     @patch("ClassicLib.AsyncBridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_scan_mods_unpacked_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
+    def test_scan_mods_unpacked_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test scan_mods_unpacked sync adapter for async operation."""
         from CLASSIC_ScanGame import scan_mods_unpacked
 
@@ -138,7 +138,7 @@ class TestClassicScanGame:
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
-        mock_registry_get.return_value = True
+        mock_gui_mode.return_value = True
 
         # Act
         result = scan_mods_unpacked()
@@ -176,10 +176,10 @@ class TestClassicScanGame:
         assert ScanGameCore is not None
         assert SetupCoordinator is not None
 
-    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
     @patch("ClassicLib.AsyncBridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
-    def test_check_log_errors_with_string_path(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
+    def test_check_log_errors_with_string_path(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test check_log_errors accepts string paths as well as Path objects."""
         from CLASSIC_ScanGame import check_log_errors
 
@@ -199,7 +199,7 @@ class TestClassicScanGame:
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
-        mock_registry_get.return_value = True
+        mock_gui_mode.return_value = True
 
         # Act
         result = check_log_errors(test_path_str)
@@ -230,9 +230,9 @@ class TestClassicScanGame:
         assert config == {"setting": "value"}
         assert mods_path is None
 
-    @patch("ClassicLib.AsyncBridge.GlobalRegistry.get")
+    @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
     @patch("ClassicLib.AsyncBridge.AsyncBridge")
-    def test_async_bridge_singleton_usage(self, mock_async_bridge: Mock, mock_registry_get: Mock) -> None:
+    def test_async_bridge_singleton_usage(self, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test that AsyncBridge singleton is used consistently."""
         from CLASSIC_ScanGame import check_log_errors, scan_mods_unpacked
 
@@ -248,7 +248,7 @@ class TestClassicScanGame:
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
         # Simulate GUI mode to force AsyncBridge usage
-        mock_registry_get.return_value = True
+        mock_gui_mode.return_value = True
 
         with patch("CLASSIC_ScanGame.get_scan_game_core") as mock_get_core:
             mock_core = MagicMock()

@@ -85,7 +85,7 @@
 //!     t.join()
 //! ```
 
-use classic_shared::{define_exceptions, register_exceptions, PathLike};
+use classic_shared::{PathLike, define_exceptions, register_exceptions};
 use classic_yaml_core::{YamlError, YamlOperations};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};

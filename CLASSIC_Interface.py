@@ -88,9 +88,7 @@ class MainWindow(QMainWindow):
         )
 
         # Set up window properties
-        self.setWindowTitle(
-            f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}"
-        )
+        self.setWindowTitle(f"Crash Log Auto Scanner & Setup Integrity Checker | {yaml_settings(str, YAML.Main, 'CLASSIC_Info.version')}")
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
         self.setStyleSheet(DARK_MODE)

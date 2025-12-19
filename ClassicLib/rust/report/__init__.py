@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from classic_scanlog import StringPool as RustStringPool
 else:
     from ClassicLib.integration.detector import detect_component
+
     _has_stringpool, RustStringPool = detect_component("classic_scanlog", "StringPool")
 
 

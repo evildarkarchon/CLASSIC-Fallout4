@@ -33,6 +33,7 @@ def _get_fragment_class() -> type:
 
     """
     from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+
     return RustAcceleratedReportFragment
 
 

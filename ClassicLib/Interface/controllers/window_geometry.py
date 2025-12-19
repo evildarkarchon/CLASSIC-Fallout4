@@ -171,8 +171,7 @@ class WindowGeometryManager:
                 yaml_settings(int, YAML.Settings, f"UI.window_geometry.{tab_name}.width", normal_geom.width())
                 yaml_settings(int, YAML.Settings, f"UI.window_geometry.{tab_name}.height", normal_geom.height())
                 logger.debug(
-                    f"Saved normal geometry for maximized {tab_name}: "
-                    f"{normal_geom.width()}x{normal_geom.height()} (maximized=True)"
+                    f"Saved normal geometry for maximized {tab_name}: {normal_geom.width()}x{normal_geom.height()} (maximized=True)"
                 )
             else:
                 # Fallback if normalGeometry is not available

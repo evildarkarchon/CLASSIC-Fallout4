@@ -43,7 +43,9 @@ class TestMultiPlatformSupport:
             with patch("ClassicLib.GamePath.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
                 with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file")):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
-                        with patch("ClassicLib.Interface.controllers.path_dialog.show_game_path_dialog_static", return_value=Path("/fake/path")):
+                        with patch(
+                            "ClassicLib.Interface.controllers.path_dialog.show_game_path_dialog_static", return_value=Path("/fake/path")
+                        ):
                             game_path_find()
 
         # Registry function should not be called on Linux
@@ -72,7 +74,9 @@ class TestMultiPlatformSupport:
             with patch("ClassicLib.GamePath.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
                 with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file")):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
-                        with patch("ClassicLib.Interface.controllers.path_dialog.show_game_path_dialog_static", return_value=Path("/fake/path")):
+                        with patch(
+                            "ClassicLib.Interface.controllers.path_dialog.show_game_path_dialog_static", return_value=Path("/fake/path")
+                        ):
                             game_path_find()
 
         # Registry function should be called on Windows

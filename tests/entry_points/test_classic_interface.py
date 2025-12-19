@@ -158,12 +158,13 @@ class TestClassicInterface:
         from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
 
         # MainWindow should NOT inherit from mixins (composition architecture)
-        assert not any(
-            "Mixin" in base.__name__ for base in MainWindow.__mro__ if hasattr(base, "__name__")
-        ), "MainWindow should not inherit from mixin classes"
+        assert not any("Mixin" in base.__name__ for base in MainWindow.__mro__ if hasattr(base, "__name__")), (
+            "MainWindow should not inherit from mixin classes"
+        )
 
         # MainWindow should use QMainWindow as base
         from PySide6.QtWidgets import QMainWindow
+
         assert issubclass(MainWindow, QMainWindow), "MainWindow should inherit from QMainWindow"
 
         # Verify controller class imports work (architecture is in place)

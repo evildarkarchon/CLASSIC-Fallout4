@@ -184,9 +184,7 @@ class TestAsyncCrashLogPipelineProcessing:
             assert "total_time" in stats
             assert "logs_per_second" in stats
 
-    async def test_process_crash_logs_async_tracks_performance(
-        self, mock_yamldata: MagicMock, crash_log_file: Path
-    ) -> None:
+    async def test_process_crash_logs_async_tracks_performance(self, mock_yamldata: MagicMock, crash_log_file: Path) -> None:
         """Test that processing tracks performance statistics."""
         with (
             patch(
@@ -215,9 +213,7 @@ class TestAsyncCrashLogPipelineProcessing:
             mock_get_io.return_value = mock_io
 
             mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(
-                return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []])
-            )
+            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
             mock_get_parser.return_value = mock_parser
 
             pipeline = AsyncCrashLogPipeline(
@@ -278,9 +274,7 @@ class TestRunAsyncCrashLogScan:
             assert isinstance(results, list)
             assert isinstance(stats, dict)
 
-    async def test_run_async_crash_log_scan_passes_params(
-        self, mock_yamldata: MagicMock, crash_log_file: Path
-    ) -> None:
+    async def test_run_async_crash_log_scan_passes_params(self, mock_yamldata: MagicMock, crash_log_file: Path) -> None:
         """Test that parameters are correctly passed to pipeline."""
         # Create a properly mocked DatabasePoolManager
         mock_pool_manager = MagicMock()
@@ -313,9 +307,7 @@ class TestRunAsyncCrashLogScan:
             mock_get_io.return_value = mock_io
 
             mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(
-                return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []])
-            )
+            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
             mock_get_parser.return_value = mock_parser
 
             results, stats = await run_async_crash_log_scan(
@@ -356,9 +348,7 @@ class TestPipelineErrorHandling:
             with pytest.raises(RuntimeError, match="Reformat failed"):
                 await pipeline.process_crash_logs_async([crash_log_file], ("",))
 
-    async def test_handles_individual_log_errors(
-        self, mock_yamldata: MagicMock, crash_logs_directory: Path
-    ) -> None:
+    async def test_handles_individual_log_errors(self, mock_yamldata: MagicMock, crash_logs_directory: Path) -> None:
         """Test pipeline handles individual log processing errors."""
         crash_files = list(crash_logs_directory.glob("*.log"))
 
@@ -399,9 +389,7 @@ class TestPipelineErrorHandling:
             mock_get_io.return_value = mock_io
 
             mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(
-                return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []])
-            )
+            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
             mock_get_parser.return_value = mock_parser
 
             pipeline = AsyncCrashLogPipeline(
@@ -460,9 +448,7 @@ class TestPipelineBatchSizing:
             mock_get_io.return_value = mock_io
 
             mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(
-                return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []])
-            )
+            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
             mock_get_parser.return_value = mock_parser
 
             pipeline = AsyncCrashLogPipeline(

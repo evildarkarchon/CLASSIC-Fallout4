@@ -33,6 +33,7 @@ def _get_bridge() -> AsyncBridge:
 
     """
     from ClassicLib.AsyncBridge import AsyncBridge
+
     return AsyncBridge.get_instance()
 
 
@@ -44,6 +45,7 @@ def _is_gui_mode() -> bool:
 
     """
     from ClassicLib import GlobalRegistry
+
     return GlobalRegistry.is_gui_mode()
 
 

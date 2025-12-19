@@ -249,34 +249,18 @@ def mock_yamldata() -> MagicMock:
     yamldata.suspects_stack_list = {}
 
     # Game mod data for detection
-    yamldata.game_mods_conf = {
-        "conflict_mod_1|conflict_mod_2": "These mods conflict together"
-    }
-    yamldata.game_mods_freq = {
-        "problemplugin.esp": "This plugin causes frequent crashes"
-    }
-    yamldata.game_mods_solu = {
-        "outdated.esp": "Update to latest version"
-    }
+    yamldata.game_mods_conf = {"conflict_mod_1|conflict_mod_2": "These mods conflict together"}
+    yamldata.game_mods_freq = {"problemplugin.esp": "This plugin causes frequent crashes"}
+    yamldata.game_mods_solu = {"outdated.esp": "Update to latest version"}
     yamldata.game_mods_core = {
-        "ufop4": {
-            "warn": "Unofficial Patch not detected",
-            "plugin": "Unofficial Fallout 4 Patch.esp",
-            "required": True
-        }
+        "ufop4": {"warn": "Unofficial Patch not detected", "plugin": "Unofficial Fallout 4 Patch.esp", "required": True}
     }
     yamldata.game_mods_core_folon = {}
-    yamldata.game_mods_opc2 = {
-        "oldmod.esp": "This mod is outdated"
-    }
+    yamldata.game_mods_opc2 = {"oldmod.esp": "This mod is outdated"}
 
     # Crash log error/stack checks
-    yamldata.crashlog_error_check = {
-        "HIGH | Test Error": "error_signal"
-    }
-    yamldata.crashlog_stack_check = {
-        "MEDIUM | Stack Error": ["required:signal1", "optional:signal2"]
-    }
+    yamldata.crashlog_error_check = {"HIGH | Test Error": "error_signal"}
+    yamldata.crashlog_stack_check = {"MEDIUM | Stack Error": ["required:signal1", "optional:signal2"]}
 
     # Game hints
     yamldata.classic_game_hints = ["Test hint 1", "Test hint 2"]

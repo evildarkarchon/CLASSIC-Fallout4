@@ -21,7 +21,9 @@ class TestXSELogParsing:
     @patch("ClassicLib.GamePath.msg_info")
     @patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path", return_value=None)
     @patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache")
-    def test_game_path_find_xse_log_parsing(self, mock_save_cache: MagicMock, mock_cached_path: MagicMock, mock_msg_info: MagicMock, tmp_path: Path) -> None:
+    def test_game_path_find_xse_log_parsing(
+        self, mock_save_cache: MagicMock, mock_cached_path: MagicMock, mock_msg_info: MagicMock, tmp_path: Path
+    ) -> None:
         """Test game path detection from XSE log file."""
         xse_log = tmp_path / "f4se.log"
         xse_log.write_text(

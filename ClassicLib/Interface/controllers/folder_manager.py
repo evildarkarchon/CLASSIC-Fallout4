@@ -114,8 +114,7 @@ class FolderManager:
             QMessageBox.warning(
                 self._ctx.main_window,
                 "Invalid Path",
-                f"The path '{folder_text}' does not exist or is not a directory.\n\n"
-                "The custom scan path has been cleared.",
+                f"The path '{folder_text}' does not exist or is not a directory.\n\nThe custom scan path has been cleared.",
             )
             scan_folder_edit.clear()
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")

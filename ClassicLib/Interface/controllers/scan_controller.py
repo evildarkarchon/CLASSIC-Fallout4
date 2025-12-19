@@ -87,9 +87,7 @@ class ScanController:
         # Thread-safe check and update
         self._scan_mutex.lock()
         try:
-            if "crash_logs" in self._running_scans or self._ctx.thread_manager.is_thread_running(
-                ThreadType.CRASH_LOGS_SCAN
-            ):
+            if "crash_logs" in self._running_scans or self._ctx.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN):
                 QMessageBox.warning(
                     self._ctx.main_window,
                     "Scan in Progress",
@@ -149,9 +147,7 @@ class ScanController:
         # Thread-safe check and update
         self._scan_mutex.lock()
         try:
-            if "game_files" in self._running_scans or self._ctx.thread_manager.is_thread_running(
-                ThreadType.GAME_FILES_SCAN
-            ):
+            if "game_files" in self._running_scans or self._ctx.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN):
                 QMessageBox.warning(
                     self._ctx.main_window,
                     "Scan in Progress",

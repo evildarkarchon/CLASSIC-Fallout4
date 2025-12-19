@@ -823,6 +823,7 @@ class TestResultsViewerController:
 
         # Process any pending Qt events (like QTimer.singleShot)
         from PySide6.QtCore import QCoreApplication
+
         QCoreApplication.processEvents()
 
         assert result is False

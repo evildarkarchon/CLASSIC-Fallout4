@@ -113,8 +113,9 @@ impl PyYamlData {
     fn new(py: Python<'_>, yaml_dirs: Vec<PathBuf>, game: String, vr_mode: bool) -> PyResult<Self> {
         // Call pure Rust core using shared runtime, releasing GIL during blocking I/O
         let core = without_gil(py, || {
-            get_runtime()
-                .block_on(async { YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await })
+            get_runtime().block_on(async {
+                YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await
+            })
         })
         .map_err(to_pyerr)?;
 

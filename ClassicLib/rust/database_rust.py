@@ -18,8 +18,7 @@ from typing import Any
 
 # Issue deprecation warning on module import
 warnings.warn(
-    "The ClassicLib.rust.database_rust module is deprecated. "
-    "Import from ClassicLib.Database instead.",
+    "The ClassicLib.rust.database_rust module is deprecated. Import from ClassicLib.Database instead.",
     DeprecationWarning,
     stacklevel=2,
 )
@@ -59,8 +58,7 @@ def get_database_pool_implementation() -> type[Any]:
 
     """
     warnings.warn(
-        "get_database_pool_implementation() is deprecated. "
-        "Use ClassicLib.integration.factory.get_database_pool() instead.",
+        "get_database_pool_implementation() is deprecated. Use ClassicLib.integration.factory.get_database_pool() instead.",
         DeprecationWarning,
         stacklevel=2,
     )
@@ -72,8 +70,7 @@ def get_database_pool_implementation() -> type[Any]:
         from ClassicLib.Database.async_pool import AsyncDatabasePool as PythonAsyncDatabasePool
     except ImportError as e:
         raise ImportError(
-            "Neither Rust nor Python database pool implementation available. "
-            "Please rebuild with maturin or check your installation."
+            "Neither Rust nor Python database pool implementation available. Please rebuild with maturin or check your installation."
         ) from e
     else:
         return PythonAsyncDatabasePool

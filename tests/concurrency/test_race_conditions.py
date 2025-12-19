@@ -9,7 +9,7 @@ import pytest
 # Skip all tests in this module when running in xdist worker (parallel execution)
 pytestmark = [
     pytest.mark.unit,
-    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
+    pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers"),
 ]
 
 from PySide6.QtCore import QThread
@@ -58,11 +58,7 @@ class TestRaceConditionPrevention:
         with patch("PySide6.QtWidgets.QMessageBox.warning") as mock_warning:
             scan_controller.crash_logs_scan()
             # Should show warning about scan in progress
-            mock_warning.assert_called_once_with(
-                main_window,
-                "Scan in Progress",
-                "A crash logs scan is already in progress."
-            )
+            mock_warning.assert_called_once_with(main_window, "Scan in Progress", "A crash logs scan is already in progress.")
 
     def test_game_files_mutex_protection(self, app: QApplication) -> None:
         """Test that game files scan operations are protected by mutex."""
@@ -93,11 +89,7 @@ class TestRaceConditionPrevention:
         with patch("PySide6.QtWidgets.QMessageBox.warning") as mock_warning:
             scan_controller.game_files_scan()
             # Should show warning about scan in progress
-            mock_warning.assert_called_once_with(
-                main_window,
-                "Scan in Progress",
-                "A game files scan is already in progress."
-            )
+            mock_warning.assert_called_once_with(main_window, "Scan in Progress", "A game files scan is already in progress.")
 
 
 class TestThreadReusePrevention:

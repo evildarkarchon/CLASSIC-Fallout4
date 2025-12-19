@@ -214,24 +214,21 @@ impl YamlDataCore {
         })?;
 
         // Parse YAML contents using yaml-rust2
-        let main_docs = YamlLoader::load_from_str(&main_content).map_err(|e| {
-            ConfigError::ParseError {
+        let main_docs =
+            YamlLoader::load_from_str(&main_content).map_err(|e| ConfigError::ParseError {
                 context: "Failed to parse main YAML".to_string(),
                 source: e,
-            }
-        })?;
-        let game_docs = YamlLoader::load_from_str(&game_content).map_err(|e| {
-            ConfigError::ParseError {
+            })?;
+        let game_docs =
+            YamlLoader::load_from_str(&game_content).map_err(|e| ConfigError::ParseError {
                 context: "Failed to parse game YAML".to_string(),
                 source: e,
-            }
-        })?;
-        let ignore_docs = YamlLoader::load_from_str(&ignore_content).map_err(|e| {
-            ConfigError::ParseError {
+            })?;
+        let ignore_docs =
+            YamlLoader::load_from_str(&ignore_content).map_err(|e| ConfigError::ParseError {
                 context: "Failed to parse ignore YAML".to_string(),
                 source: e,
-            }
-        })?;
+            })?;
 
         // Get first document from each file
         let main_data = main_docs
@@ -371,24 +368,21 @@ impl YamlDataCore {
         vr_mode: bool,
     ) -> Result<Self, ConfigError> {
         // Parse YAML contents using yaml-rust2
-        let main_docs = YamlLoader::load_from_str(main_content).map_err(|e| {
-            ConfigError::ParseError {
+        let main_docs =
+            YamlLoader::load_from_str(main_content).map_err(|e| ConfigError::ParseError {
                 context: "Failed to parse main YAML".to_string(),
                 source: e,
-            }
-        })?;
-        let game_docs = YamlLoader::load_from_str(game_content).map_err(|e| {
-            ConfigError::ParseError {
+            })?;
+        let game_docs =
+            YamlLoader::load_from_str(game_content).map_err(|e| ConfigError::ParseError {
                 context: "Failed to parse game YAML".to_string(),
                 source: e,
-            }
-        })?;
-        let ignore_docs = YamlLoader::load_from_str(ignore_content).map_err(|e| {
-            ConfigError::ParseError {
+            })?;
+        let ignore_docs =
+            YamlLoader::load_from_str(ignore_content).map_err(|e| ConfigError::ParseError {
                 context: "Failed to parse ignore YAML".to_string(),
                 source: e,
-            }
-        })?;
+            })?;
 
         // Get first document from each file
         let main_data = main_docs

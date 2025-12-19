@@ -136,10 +136,7 @@ class RustAsyncDatabasePool:
             self._rust_pool: DatabasePoolType = DatabasePool(  # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
                 max_connections, cache_ttl_seconds, game_table
             )
-            logger.debug(
-                f"Initialized Rust database pool (max_conn={max_connections}, "
-                f"ttl={cache_ttl_seconds}s, table={game_table})"
-            )
+            logger.debug(f"Initialized Rust database pool (max_conn={max_connections}, ttl={cache_ttl_seconds}s, table={game_table})")
         else:
             raise ImportError("Rust database module not available. Please rebuild with maturin.")
 
