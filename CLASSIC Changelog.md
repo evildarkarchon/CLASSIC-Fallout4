@@ -2,17 +2,6 @@
 
 ### 8.0.0 CHANGES
 
-- **For Developers**: Removed deprecated import shim modules that were providing backward compatibility during refactoring:
-  - `ClassicLib.FileIOCore` → Use `ClassicLib.FileIO` instead
-  - `ClassicLib.AsyncUtil` → Use `ClassicLib.FileIO.Async` instead
-  - `ClassicLib.AsyncYamlSettingsCore` → Use `ClassicLib.YamlSettings` instead
-  - `ClassicLib.AsyncYamlSettings` → Use `ClassicLib.YamlSettings` instead
-  - `ClassicLib.AsyncUtilities` → Use `ClassicLib.Utils.Async` instead
-  - `ClassicLib.AsyncUtilities_Enhanced` → Use `ClassicLib.Utils.Async` instead
-  - `rust_loader.get_rust_module()` → Import specific Rust modules directly (e.g., `classic_scanlog`)
-  - `MessageTarget.GUI_ONLY` → Use `MessageTarget.GUI` instead
-  - `MessageTarget.CLI_ONLY` → Use `MessageTarget.CONSOLE` instead
-  - `ClassicLib.YamlSettingsCache` → Use `ClassicLib.YamlSettings` instead
 - Window is now resizable and should scale to smaller screens and handle high scaling better.
 - Remove the text box and convert messages to either use dialog boxes or the CLI, depending on the mode it's launched in.
 - Add progress window (for GUI mode) or CLI progress bar (for CLI) to show scanning progress.
@@ -33,6 +22,7 @@
 - For Developers: Most business logic has been moved to a separate module called `ClassicLib` to make development of applications that use CLASSIC easier. Some of the components are written in Rust and exposed to Python via PyO3 bindings, with native Python fallbacks for now.
 - Beta 2: Fix some bugs that were causing the new Rust-accelerated scanning to be slower than the old version in some cases. As well as further optimizations to them.
 - Beta 3: More performance optimizations, hopefully better looking results in the results tab (still WIP).
+- RC 1: Even more performance optimizations and backend changes, add database of FOLON Form-IDs.
 - Known Issue: Standard Markdown treats single "new line" characters as a space, so some of the formatting in the reports may look off in the results viewer. This does not affect the saved report files and they will look correct in Discord.
 
 ### 7.31.0 CHANGES

@@ -150,7 +150,9 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     version="version_info.txt" if Path("version_info.txt").exists() else None,
-    icon=str(PROJECT_ROOT / "CLASSIC Data/graphics/CLASSIC.ico")
+    icon=str(PROJECT_ROOT / "CLASSIC Data" / "graphics" / "CLASSIC.ico")
+    if (PROJECT_ROOT / "CLASSIC Data" / "graphics" / "CLASSIC.ico").exists()
+    else None,
 )
 
 print("\n" + "=" * 60)

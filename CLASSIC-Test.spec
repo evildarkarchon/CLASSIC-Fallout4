@@ -108,5 +108,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(PROJECT_ROOT / 'CLASSIC Data' / 'graphics' / 'CLASSIC.ico'),
+    icon=str(PROJECT_ROOT / "CLASSIC Data" / "graphics" / "CLASSIC.ico")
+    if (PROJECT_ROOT / "CLASSIC Data" / "graphics" / "CLASSIC.ico").exists()
+    else None,
 )

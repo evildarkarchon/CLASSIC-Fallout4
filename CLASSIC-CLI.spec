@@ -123,6 +123,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    # CLI doesn't need an icon, but we can add one if desired
-    # icon=str(PROJECT_ROOT / 'CLASSIC Data' / 'graphics' / 'CLASSIC.ico'),
+    icon=str(PROJECT_ROOT / "CLASSIC Data" / "graphics" / "CLASSIC.ico")
+    if (PROJECT_ROOT / "CLASSIC Data" / "graphics" / "CLASSIC.ico").exists()
+    else None,
 )
