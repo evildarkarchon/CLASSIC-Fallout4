@@ -76,7 +76,7 @@ SETTINGS_IGNORE_NONE = {
 
 # Define paths for both Main and Local databases
 # Changed to a function to avoid circular import at module level
-def get_db_paths() -> tuple[Path, Path]:
+def get_db_paths() -> tuple[Path, Path, Path]:
     """Get absolute database paths based on current game.
 
     Returns absolute paths by resolving relative to CLASSIC Data directory
@@ -84,7 +84,7 @@ def get_db_paths() -> tuple[Path, Path]:
     running from source, installed package, or frozen executable.
 
     Returns:
-        A tuple containing (main_db_path, local_db_path) as Path objects.
+        A tuple containing (main_db_path, local_db_path, and FOLON db path) as Path objects.
 
     """
     from ClassicLib import GlobalRegistry
@@ -98,6 +98,7 @@ def get_db_paths() -> tuple[Path, Path]:
     return (
         data_dir / "databases" / f"{game} FormIDs Main.db",
         data_dir / "databases" / f"{game} FormIDs Local.db",
+        data_dir / "databases"/ "FOLON FormIDs.db",
     )
 
 
@@ -122,7 +123,7 @@ class _DBPaths:
         return iter(get_db_paths())
 
     def __len__(self) -> int:
-        return 2
+        return 3
 
 
 DB_PATHS = _DBPaths()
