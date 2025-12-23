@@ -173,9 +173,18 @@ class RustLogParser:
                     ]
 
                     # SINGLE FFI CALL - All parsing in one operation
-                    game_version, crashgen_version, main_error, segments = self._rust_parser.parse_complete(  # type: ignore[attr-defined]
+                    scan_output = self._rust_parser.parse_complete(  # type: ignore[attr-defined]
                         crash_data, segment_boundaries, xse_acronym
                     )
+                    
+                    game_version = scan_output.game_version
+                    crashgen_version = scan_output.crashgen_version
+                    main_error = scan_output.main_error
+                    segments = scan_output.segments
+                    
+                    # Rust-optimized path already strips whitespace and returns correct structure
+                    processed_segments = segments
+                    
                     logger.debug("🚀 Using optimized parse_complete (single FFI call)")
                 else:
                     # Fallback to multiple calls if new method not available
@@ -199,8 +208,8 @@ class RustLogParser:
                         segments.append(section or [])
                     logger.debug("⚠️  Using legacy multiple FFI calls (7+ crossings)")
 
-                # Process segments to strip whitespace
-                processed_segments = [[line.strip() for line in segment] for segment in segments]
+                    # Process segments to strip whitespace (Legacy path only)
+                    processed_segments = [[line.strip() for line in segment] for segment in segments]
 
                 # Ensure all expected segments exist
                 missing_segments = len(segment_boundaries) - len(processed_segments)

@@ -258,8 +258,12 @@ class LogParser:
 
     def parse_complete(
         self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str
-    ) -> tuple[str, str, str, list[list[str]]]:
-        """Optimized batch operation: complete log analysis in single FFI call."""
+    ) -> ScanOutput:
+        """Optimized batch operation: complete log analysis in single FFI call.
+
+        Returns:
+            ScanOutput object containing metadata and segments.
+        """
 
     def get_segment_sizes(self, lines: list[str]) -> dict[str, int]:
         """Count lines in each segment for analysis."""
@@ -281,6 +285,14 @@ class LogParser:
 
     def benchmark(self, lines: list[str], iterations: int) -> dict[str, float]:
         """Benchmark parsing performance on given data."""
+
+class ScanOutput:
+    """Result of optimized complete log parsing."""
+
+    game_version: str
+    crashgen_version: str
+    main_error: str
+    segments: list[list[str]]
 
 # =============================================================================
 # Pattern Matching

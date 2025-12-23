@@ -12,6 +12,19 @@ fn to_arc_str_vec(strings: &[String]) -> Vec<Arc<str>> {
     strings.iter().map(|s| Arc::from(s.as_str())).collect()
 }
 
+/// Output of parse_complete
+#[pyclass]
+pub struct ScanOutput {
+    #[pyo3(get)]
+    pub game_version: String,
+    #[pyo3(get)]
+    pub crashgen_version: String,
+    #[pyo3(get)]
+    pub main_error: String,
+    #[pyo3(get)]
+    pub segments: Py<PyList>,
+}
+
 /// Python-facing log parser wrapper
 #[pyclass(name = "LogParser")]
 pub struct PyLogParser {
@@ -203,15 +216,32 @@ impl PyLogParser {
 
     /// Optimized batch operation: complete log analysis in single FFI call
     #[pyo3(name = "parse_complete")]
-    pub fn parse_complete(
+    pub fn parse_complete<'py>(
         &self,
+        py: Python<'py>,
         lines: Vec<String>,
         segment_boundaries: Vec<(String, String)>,
         xse_acronym: String,
-    ) -> PyResult<(String, String, String, Vec<Vec<String>>)> {
-        self.inner
+    ) -> PyResult<ScanOutput> {
+        let (game_ver, crashgen_ver, main_err, segments) = self.inner
             .parse_complete(&lines, &segment_boundaries, &xse_acronym)
-            .map_err(crate::to_pyerr)
+            .map_err(crate::to_pyerr)?;
+
+        // Manually convert segments to PyList with zero-copy optimization and trimming
+        let mut outer_items = Vec::with_capacity(segments.len());
+        for segment in segments {
+            let inner_items = segment.iter().map(|line| PyString::new(py, line.trim()));
+            let inner_list = PyList::new(py, inner_items)?;
+            outer_items.push(inner_list);
+        }
+        let segments_list = PyList::new(py, outer_items)?;
+
+        Ok(ScanOutput {
+            game_version: game_ver,
+            crashgen_version: crashgen_ver,
+            main_error: main_err,
+            segments: segments_list.unbind(),
+        })
     }
 
     /// Count lines in each segment for analysis
