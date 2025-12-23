@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-## [ ] Track: Optimize Python-Rust Integration Layer
+## [~] Track: Optimize Python-Rust Integration Layer
 *Link: [./conductor/tracks/rust_integration_opt_20251222/](./conductor/tracks/rust_integration_opt_20251222/)*
