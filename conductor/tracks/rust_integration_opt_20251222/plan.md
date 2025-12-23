@@ -15,7 +15,7 @@
 ## Phase 3: Type Safety & Zero-Copy Optimization
 - [x] Task: Refactor `classic-scanlog-py` to use direct struct mapping instead of JSON strings where feasible. [07200c4]
 - [x] Task: Update Python type stubs (`.pyi`) to reflect stricter types. [7fedf04]
-- [ ] Task: Implement `#[pyclass]` for complex data structures returned by the scanner to avoid recreation in Python.
+- [x] Task: Implement `#[pyclass]` for complex data structures returned by the scanner to avoid recreation in Python. [814a19e]
 - [ ] Task: Conductor - User Manual Verification 'Type Safety & Zero-Copy Optimization' (Protocol in workflow.md)
 
 ## Phase 4: Verification & Cleanup
