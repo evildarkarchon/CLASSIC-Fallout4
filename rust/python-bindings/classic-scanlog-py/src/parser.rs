@@ -290,4 +290,10 @@ impl PyLogParser {
         let arc_lines = to_arc_str_vec(&lines);
         self.inner.benchmark(&arc_lines, iterations)
     }
+
+    /// Detect if a crash log is from Fallout 4 VR.
+    #[pyo3(name = "detect_vr_log")]
+    pub fn detect_vr_log(&self, content: &str) -> bool {
+        classic_scanlog_core::detect_vr_log(content)
+    }
 }

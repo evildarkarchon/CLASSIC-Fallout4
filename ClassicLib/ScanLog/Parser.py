@@ -290,3 +290,30 @@ def get_parser_stats() -> dict[str, Any]:
             pass  # Stats collection failures are non-critical
 
     return stats
+
+
+def detect_vr_log(crash_data: list[str] | str) -> bool:
+    """Detect if a crash log is from Fallout 4 VR based on content.
+
+    Checks for the presence of Fallout4VR.exe or Fallout4VR.esm in the log
+    content, case-insensitively.
+
+    Args:
+        crash_data: List of log lines or full log content as string
+
+    Returns:
+        True if VR indicators are found, False otherwise
+
+    """
+    # Try to use Rust implementation if available
+    if _rust_available and hasattr(_rust_parser, "detect_vr_log"):
+        try:
+            content = "\n".join(crash_data) if isinstance(crash_data, list) else crash_data
+            return _rust_parser.detect_vr_log(content)
+        except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback
+            logger.debug(f"Rust VR detection failed, falling back to Python: {e}")
+
+    # Python fallback implementation
+    content = "\n".join(crash_data).lower() if isinstance(crash_data, list) else crash_data.lower()
+
+    return "fallout4vr.exe" in content or "fallout4vr.esm" in content

@@ -12,10 +12,11 @@ from typing import TYPE_CHECKING, Any
 
 import regex as re
 
-from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.ScanLog.Util import get_entry
 
 if TYPE_CHECKING:
+    from ClassicLib.Database import AsyncDatabasePool
+    from ClassicLib.Database.rust_pool import RustAsyncDatabasePool
     from ClassicLib.rust.report_rust import ReportFragment
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
@@ -55,7 +56,7 @@ class FormIDAnalyzerCore:
         yamldata (ClassicScanLogsInfo): Configuration data for the scan logs analyzer.
         show_formid_values (bool): Controls whether FormID details are displayed in the analysis.
         formid_db_exists (bool): Indicates if a FormID database is available for lookups.
-        db_pool (AsyncDatabasePool | None): Optional async database connection pool for lookups.
+        db_pool (AsyncDatabasePool | RustAsyncDatabasePool | None): Optional async database connection pool for lookups.
         formid_pattern (Pattern): Compiled regex pattern for matching FormID formats in logs, cached for reuse.
 
     """
@@ -65,7 +66,7 @@ class FormIDAnalyzerCore:
         yamldata: "ClassicScanLogsInfo",
         show_formid_values: bool,
         formid_db_exists: bool,
-        db_pool: AsyncDatabasePool | None = None,
+        db_pool: "AsyncDatabasePool | RustAsyncDatabasePool | None" = None,
     ) -> None:
         """Initialize a new instance of the class, parsing and preparing information
         about crash logs. This ensures certain patterns and configurations are
@@ -78,7 +79,7 @@ class FormIDAnalyzerCore:
                 be displayed in outputs or logs.
             formid_db_exists (bool): Indicates the presence of a FormID database
                 in the current context or configuration.
-            db_pool (AsyncDatabasePool | None): Optional asynchronous database pool
+            db_pool (AsyncDatabasePool | RustAsyncDatabasePool | None): Optional asynchronous database pool
                 used for various data fetching or writing operations.
 
         """
@@ -222,6 +223,10 @@ class FormIDAnalyzerCore:
             cache_key = (formid, plugin_name)
             report = batch_results.get(cache_key)
 
+            # Handle Rust pool returning dict vs Python pool returning str
+            if isinstance(report, dict):
+                report = report.get("entry")
+
             if report:
                 lines.append(f"- {full_formid} | [{plugin_name}] | {report} | {formid_count}\n")
             else:
@@ -273,7 +278,11 @@ class FormIDAnalyzerCore:
 
         if self.db_pool:
             # Use async database pool
-            return await self.db_pool.get_entry(formid, plugin)
+            result = await self.db_pool.get_entry(formid, plugin)
+            # Handle Rust pool returning dict vs Python pool returning str
+            if isinstance(result, dict):
+                return result.get("entry")
+            return result  # type: ignore[return-value]
         # Fallback to cached sync lookup in thread
         return await asyncio.to_thread(_cached_formid_lookup, formid, plugin)
 

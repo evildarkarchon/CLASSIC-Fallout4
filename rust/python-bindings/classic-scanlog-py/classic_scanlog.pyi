@@ -256,13 +256,12 @@ class LogParser:
     def parse_all_sections(self, lines: list[str]) -> dict[str, list[str]]:
         """Parse and extract all important sections at once."""
 
-    def parse_complete(
-        self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str
-    ) -> ScanOutput:
+    def parse_complete(self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str) -> ScanOutput:
         """Optimized batch operation: complete log analysis in single FFI call.
 
         Returns:
             ScanOutput object containing metadata and segments.
+
         """
 
     def get_segment_sizes(self, lines: list[str]) -> dict[str, int]:
@@ -285,6 +284,17 @@ class LogParser:
 
     def benchmark(self, lines: list[str], iterations: int) -> dict[str, float]:
         """Benchmark parsing performance on given data."""
+
+    def detect_vr_log(self, content: str) -> bool:
+        """Detect if a crash log is from Fallout 4 VR.
+
+        Args:
+            content: Crash log content string
+
+        Returns:
+            True if VR indicators are found
+
+        """
 
 class ScanOutput:
     """Result of optimized complete log parsing."""

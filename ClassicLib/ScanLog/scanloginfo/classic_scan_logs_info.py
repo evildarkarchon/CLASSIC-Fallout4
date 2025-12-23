@@ -30,10 +30,12 @@ class ClassicScanLogsInfo:
         classic_records_list (list[str]): List of classic record data related to logs.
         classic_version (str): Version of the classic log system.
         classic_version_date (str): Release date of the classic version.
-        crashgen_name (str): Name of the crash generation log.
+        crashgen_name (str): Name of the crash generation log (Standard).
+        crashgen_name_vr (str): Name of the crash generation log (VR).
         crashgen_latest_og (str): Latest version detail for the crash generation (original).
         crashgen_latest_vr (str): Latest version detail for the crash generation (VR).
-        crashgen_ignore (set): Set of ignored crash generation logs.
+        crashgen_ignore (set): Set of ignored crash generation logs (Standard).
+        crashgen_ignore_vr (set): Set of ignored crash generation logs (VR).
         warn_noplugins (str): Warning message for missing plugins.
         warn_outdated (str): Warning message for outdated records or configurations.
         xse_acronym (str): Acronym used for XSE terminology in the classic logs.
@@ -52,6 +54,8 @@ class ClassicScanLogsInfo:
         game_version (Version): The detected version of the game.
         game_version_new (Version): The new or updated detected version of the game.
         game_version_vr (Version): The detected version of the game in VR mode.
+        game_root_name (str): Root name of the game (Standard).
+        game_root_name_vr (str): Root name of the game (VR).
 
     """
 
@@ -60,9 +64,11 @@ class ClassicScanLogsInfo:
     classic_version: str = ""
     classic_version_date: str = ""
     crashgen_name: str = ""
+    crashgen_name_vr: str = ""
     crashgen_latest_og: str = ""
     crashgen_latest_vr: str = ""
     crashgen_ignore: set = field(default_factory=set)
+    crashgen_ignore_vr: set = field(default_factory=set)
     warn_noplugins: str = ""
     warn_outdated: str = ""
     xse_acronym: str = ""
@@ -81,6 +87,8 @@ class ClassicScanLogsInfo:
     game_version: Version = field(default=NULL_VERSION, init=False)
     game_version_new: Version = field(default=NULL_VERSION, init=False)
     game_version_vr: Version = field(default=NULL_VERSION, init=False)
+    game_root_name: str = ""
+    game_root_name_vr: str = ""
     # Internal flag to skip __post_init__ for async factory
     _skip_post_init: bool = field(default=False, init=False, repr=False)
 
@@ -130,10 +138,14 @@ class ClassicScanLogsInfo:
             (list[str], YAML.Main, "catch_log_records"),
             (str, YAML.Main, "CLASSIC_Info.version"),
             (str, YAML.Main, "CLASSIC_Info.version_date"),
-            (str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_LogName"),
-            (str, YAML.Game, "Game_Info.CRASHGEN_LatestVer"),
-            (str, YAML.Game, "GameVR_Info.CRASHGEN_LatestVer"),
-            (list[str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.CRASHGEN_Ignore"),
+            # Load BOTH crashgen names for per-log VR selection
+            (str, YAML.Game, "Game_Info.CRASHGEN_LogName"),  # crashgen_name [4]
+            (str, YAML.Game, "GameVR_Info.CRASHGEN_LogName"),  # crashgen_name_vr [5] NEW
+            (str, YAML.Game, "Game_Info.CRASHGEN_LatestVer"),  # crashgen_latest_og [6]
+            (str, YAML.Game, "GameVR_Info.CRASHGEN_LatestVer"),  # crashgen_latest_vr [7]
+            # Load BOTH ignore lists
+            (list[str], YAML.Game, "Game_Info.CRASHGEN_Ignore"),  # crashgen_ignore [8]
+            (list[str], YAML.Game, "GameVR_Info.CRASHGEN_Ignore"),  # crashgen_ignore_vr [9] NEW
             (str, YAML.Game, "Warnings_CRASHGEN.Warn_NOPlugins"),
             (str, YAML.Game, "Warnings_CRASHGEN.Warn_Outdated"),
             (str, YAML.Game, "Game_Info.XSE_Acronym"),
@@ -152,6 +164,9 @@ class ClassicScanLogsInfo:
             (str, YAML.Game, "Game_Info.GameVersion"),
             (str, YAML.Game, "Game_Info.GameVersionNEW"),
             (str, YAML.Game, "GameVR_Info.GameVersion"),
+            # Load BOTH game root names for per-log VR selection
+            (str, YAML.Game, "Game_Info.Main_Root_Name"),  # game_root_name [28] NEW
+            (str, YAML.Game, "GameVR_Info.Main_Root_Name"),  # game_root_name_vr [29] NEW
         ]
 
     def _assign_values(self, values: list) -> None:
@@ -167,27 +182,31 @@ class ClassicScanLogsInfo:
         self.classic_version = values[2] or ""
         self.classic_version_date = values[3] or ""
         self.crashgen_name = values[4] or ""
-        self.crashgen_latest_og = values[5] or ""
-        self.crashgen_latest_vr = values[6] or ""
-        self.crashgen_ignore = set(values[7] or [])
-        self.warn_noplugins = values[8] or ""
-        self.warn_outdated = values[9] or ""
-        self.xse_acronym = values[10] or ""
-        self.game_ignore_plugins = values[11] or []
-        self.game_ignore_records = values[12] or []
-        self.suspects_error_list = values[13] or {}
-        self.suspects_stack_list = values[14] or {}
-        self.autoscan_text = values[15] or ""
-        self.ignore_list = values[16] or []
-        self.game_mods_conf = values[17] or {}
-        self.game_mods_core = values[18] or {}
-        self.game_mods_core_folon = values[19] or {}
-        self.game_mods_freq = values[20] or {}
-        self.game_mods_opc2 = values[21] or {}
-        self.game_mods_solu = values[22] or {}
-        self.game_version = Version(values[23] or str(NULL_VERSION))
-        self.game_version_new = Version(values[24] or str(NULL_VERSION))
-        self.game_version_vr = Version(values[25] or str(NULL_VERSION))
+        self.crashgen_name_vr = values[5] or ""
+        self.crashgen_latest_og = values[6] or ""
+        self.crashgen_latest_vr = values[7] or ""
+        self.crashgen_ignore = set(values[8] or [])
+        self.crashgen_ignore_vr = set(values[9] or [])
+        self.warn_noplugins = values[10] or ""
+        self.warn_outdated = values[11] or ""
+        self.xse_acronym = values[12] or ""
+        self.game_ignore_plugins = values[13] or []
+        self.game_ignore_records = values[14] or []
+        self.suspects_error_list = values[15] or {}
+        self.suspects_stack_list = values[16] or {}
+        self.autoscan_text = values[17] or ""
+        self.ignore_list = values[18] or []
+        self.game_mods_conf = values[19] or {}
+        self.game_mods_core = values[20] or {}
+        self.game_mods_core_folon = values[21] or {}
+        self.game_mods_freq = values[22] or {}
+        self.game_mods_opc2 = values[23] or {}
+        self.game_mods_solu = values[24] or {}
+        self.game_version = Version(values[25] or str(NULL_VERSION))
+        self.game_version_new = Version(values[26] or str(NULL_VERSION))
+        self.game_version_vr = Version(values[27] or str(NULL_VERSION))
+        self.game_root_name = values[28] or ""
+        self.game_root_name_vr = values[29] or ""
 
     @classmethod
     async def create_async(cls) -> "ClassicScanLogsInfo":
@@ -222,9 +241,11 @@ class ClassicScanLogsInfo:
         instance.classic_version = ""
         instance.classic_version_date = ""
         instance.crashgen_name = ""
+        instance.crashgen_name_vr = ""
         instance.crashgen_latest_og = ""
         instance.crashgen_latest_vr = ""
         instance.crashgen_ignore = set()
+        instance.crashgen_ignore_vr = set()
         instance.warn_noplugins = ""
         instance.warn_outdated = ""
         instance.xse_acronym = ""
@@ -243,6 +264,8 @@ class ClassicScanLogsInfo:
         instance.game_version = NULL_VERSION
         instance.game_version_new = NULL_VERSION
         instance.game_version_vr = NULL_VERSION
+        instance.game_root_name = ""
+        instance.game_root_name_vr = ""
 
         # Batch load all settings in async context
         with TimedBlock("ScanLogInfo Settings Load (async)", log_level="debug"):
@@ -253,3 +276,19 @@ class ClassicScanLogsInfo:
             instance._assign_values(values)
 
         return instance
+
+    def get_crashgen_name(self, is_vr: bool) -> str:
+        """Get crash generator name based on VR mode."""
+        return self.crashgen_name_vr if is_vr else self.crashgen_name
+
+    def get_crashgen_ignore(self, is_vr: bool) -> set:
+        """Get crash generator ignore set based on VR mode."""
+        return self.crashgen_ignore_vr if is_vr else self.crashgen_ignore
+
+    def get_game_root_name(self, is_vr: bool) -> str:
+        """Get game root name based on VR mode."""
+        return self.game_root_name_vr if is_vr else self.game_root_name
+
+    def get_crashgen_latest(self, is_vr: bool) -> str:
+        """Get latest crash generator version based on VR mode."""
+        return self.crashgen_latest_vr if is_vr else self.crashgen_latest_og

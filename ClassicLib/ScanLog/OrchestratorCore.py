@@ -14,7 +14,7 @@ from packaging.version import Version
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Constants import YAML
-from ClassicLib.Database import AsyncDatabasePool, DatabasePoolManager
+from ClassicLib.Database import DatabasePoolManager
 from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer, get_record_scanner
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.rust.report_rust import ReportFragment
@@ -31,6 +31,8 @@ from ClassicLib.Utils.version_utils import crashgen_version_gen
 from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
 
 if TYPE_CHECKING:
+    from ClassicLib.Database.async_pool import AsyncDatabasePool
+    from ClassicLib.Database.rust_pool import RustAsyncDatabasePool
     from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
@@ -63,8 +65,6 @@ class OrchestratorCore:
             fragments such as headers and footers for crash log reports.
         fcx_handler (FCXModeHandlerFragments): Handles operations related to the
             FCX mode functionality.
-        game_root_name (str | None): Name of the game root directory from YAML
-            settings.
 
     """
 
@@ -104,7 +104,6 @@ class OrchestratorCore:
         # Deferred YAML loading - these will be initialized in __aenter__
         self.remove_list: tuple[str, ...] = ("",)
         self.simplify_logs: bool = False
-        self.game_root_name: str | None = None
 
         # Initialize modules - use Rust acceleration via factory pattern (10-40x speedup)
         self.plugin_analyzer = get_plugin_analyzer(yamldata)  # Rust accelerated (30x speedup)
@@ -116,7 +115,7 @@ class OrchestratorCore:
         self.fcx_handler = FCXModeHandlerFragments(fcx_mode)
 
         # Async-specific attributes
-        self._db_pool: AsyncDatabasePool | None = None
+        self._db_pool: AsyncDatabasePool | RustAsyncDatabasePool | None = None
         self._async_formid_analyzer: FormIDAnalyzerCore | None = None
         self._state_lock: Any = None  # asyncio.Lock - initialized in __aenter__
 
@@ -142,7 +141,7 @@ class OrchestratorCore:
         # Load YAML settings asynchronously (deferred from __init__)
         self.remove_list = self._remove_list_param or await yaml_settings_async(tuple, YAML.Main, "exclude_log_records") or ("",)
         self.simplify_logs = await classic_settings_async(bool, "Simplify Logs") or False
-        self.game_root_name = await yaml_settings_async(str, YAML.Game, f"Game_{GlobalRegistry.get_vr()}Info.Main_Root_Name")
+        # REMOVED: game_root_name loading - now handled per-log via yamldata accessor methods
 
         # Lazy database pool initialization - only if database exists
         if self.formid_db_exists:
@@ -200,19 +199,31 @@ class OrchestratorCore:
         io_core = get_file_io()
         content = await io_core.read_file(crashlog_file)
 
+        # Detect VR mode for THIS SPECIFIC LOG
+        from ClassicLib.ScanLog.Parser import detect_vr_log
+
+        is_vr_log = detect_vr_log(content)
+
+        # Log VR detection if auto-detected
+        if is_vr_log and not GlobalRegistry.get_vr():
+            logger.info(f"VR mode auto-detected for log: {crashlog_file.name}")
+
         # Reformat inline as part of processing pipeline
         crash_data = self._reformat_crash_data_inline(content.splitlines())
 
         # Create report composer
         composer = ReportComposer()
 
-        # Generate report header
-        composer.add(self.report_generator.generate_header(crashlog_file.name))  # pyright: ignore[reportArgumentType]
+        # Generate report header with VR indicator if auto-detected
+        composer.add(self.report_generator.generate_header(crashlog_file.name, is_vr_log))  # pyright: ignore[reportArgumentType]
 
-        # Parse crash log segments using Rust acceleration if available
+        # Parse crash log segments using VR-AWARE settings
         parser = get_parser()
+        effective_crashgen = self.yamldata.get_crashgen_name(is_vr_log)
+        effective_root_name = self.yamldata.get_game_root_name(is_vr_log)
+
         (crashlog_gameversion, crashlog_crashgen, crashlog_mainerror, segments) = parser.find_segments(
-            crash_data, self.yamldata.crashgen_name, self.yamldata.xse_acronym, self.game_root_name or ""
+            crash_data, effective_crashgen, self.yamldata.xse_acronym, effective_root_name
         )
 
         # Unpack segments
@@ -243,6 +254,7 @@ class OrchestratorCore:
             segment_callstack,
             segment_xsemodules,
             segment_plugins,
+            is_vr_log,
         )
 
         composer.add(section_fragments)
@@ -265,6 +277,7 @@ class OrchestratorCore:
         segment_callstack: list[str],
         segment_xsemodules: list[str],
         segment_plugins: list[str],
+        is_vr_log: bool,
     ) -> ReportFragment:
         """Process and analyzes various segments of a crash log to generate a detailed
         ReportFragment. This includes error section generation, plugin processing,
@@ -288,6 +301,7 @@ class OrchestratorCore:
                 crash log.
             segment_plugins: A list of strings representing the plugins loaded during
                 the crash event.
+            is_vr_log: Boolean indicating if the log is from VR version.
 
         Returns:
             A ReportFragment object containing the compiled and analyzed report based
@@ -305,7 +319,7 @@ class OrchestratorCore:
         # Generate error section
         composer.add(
             self.report_generator.generate_error_section(
-                crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr
+                crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr, is_vr_log
             )  # pyright: ignore[reportArgumentType]
         )
 

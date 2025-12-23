@@ -50,3 +50,12 @@ pub use report::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
 pub use settings_validator::SettingsValidator;
 pub use suspect_scanner::SuspectScanner;
 pub use version::{CrashgenVersion, crashgen_version_gen};
+
+/// Detect if a crash log is from Fallout 4 VR.
+///
+/// Checks for the presence of Fallout4VR.exe or Fallout4VR.esm
+/// in the log content, case-insensitively.
+pub fn detect_vr_log(content: &str) -> bool {
+    let lower = content.to_lowercase();
+    lower.contains("fallout4vr.exe") || lower.contains("fallout4vr.esm")
+}
