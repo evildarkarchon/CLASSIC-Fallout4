@@ -42,6 +42,17 @@ pub use error_convert::{ResultExt, ToPyErr};
 // Re-export core types for convenience
 pub use classic_shared_core::{ClassicError, ClassicResult, get_runtime};
 
+// Implement ToPyErr for ClassicError so it can be used with map_pyerr()
+impl ToPyErr for ClassicError {
+    type BaseException = PyRuntimeError;
+    type IOException = PyIOError;
+    type ParseException = PyValueError;
+
+    fn to_pyerr(self) -> PyErr {
+        to_py_err(self)
+    }
+}
+
 /// Convert ClassicError to PyErr
 ///
 /// Helper function to convert Rust errors to Python exceptions.
