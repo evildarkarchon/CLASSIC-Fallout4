@@ -82,6 +82,7 @@
 use classic_config_core::{ConfigError, YamlDataCore};
 use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};
 use classic_shared_core::get_runtime;
+use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;
@@ -94,14 +95,17 @@ define_exceptions!(
     parse: RustConfigParseError
 );
 
-// Implement ToPyErr for ConfigError
-impl ToPyErr for ConfigError {
-    type BaseException = RustConfigError;
-    type IOException = RustConfigIOError;
-    type ParseException = RustConfigParseError;
+// Wrapper to satisfy orphan rules
+struct PyConfigError(ConfigError);
+
+// Implement ToPyErr for the local wrapper
+impl ToPyErr for PyConfigError {
+    type BaseException = PyRuntimeError;
+    type IOException = PyIOError;
+    type ParseException = PyValueError;
 
     fn to_pyerr(self) -> PyErr {
-        match self {
+        match self.0 {
             ConfigError::IOError { context, source } => {
                 Self::io_err(format!("{}: {}", context, source))
             }
@@ -144,6 +148,7 @@ impl PyYamlData {
                 YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await
             })
         })
+        .map_err(PyConfigError)
         .map_pyerr()?;
 
         Ok(Self { inner: core })
@@ -182,6 +187,7 @@ impl PyYamlData {
             game,
             vr_mode,
         )
+        .map_err(PyConfigError)
         .map_pyerr()?;
 
         Ok(Self { inner })

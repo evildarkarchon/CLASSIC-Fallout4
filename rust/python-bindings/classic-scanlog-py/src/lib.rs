@@ -157,6 +157,7 @@ pub fn to_pyerr(err: impl std::fmt::Display) -> PyErr {
 fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Parser
     m.add_class::<PyLogParser>()?;
+    m.add_class::<parser::ScanOutput>()?;
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;
@@ -221,6 +222,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
 pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Parser
     m.add_class::<PyLogParser>()?;
+    m.add_class::<parser::ScanOutput>()?;
 
     // FormID analysis
     m.add_class::<PyRustFormIDAnalyzer>()?;
