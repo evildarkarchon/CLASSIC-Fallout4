@@ -184,7 +184,7 @@ class TestYamlData:
         yaml_dirs: list[str | Path] = [str(create_mock_yaml_config), str(create_mock_yaml_config / "YAML" / "NonExistent")]
         game = GlobalRegistry.get_game()
         vr_mode = bool(GlobalRegistry.get_vr())
-        with pytest.raises(classic_config.RustConfigIOError, match="YAML file not found"):  # pyright: ignore[reportAttributeAccessIssue]
+        with pytest.raises(IOError, match="YAML file not found"):
             classic_config.YamlData(yaml_dirs, game, vr_mode)
 
     def test_init_malformed_yaml(self, create_mock_yaml_config: Path, setup_global_registry):
@@ -197,7 +197,7 @@ class TestYamlData:
         game = GlobalRegistry.get_game()
         vr_mode = bool(GlobalRegistry.get_vr())
 
-        with pytest.raises(classic_config.RustConfigParseError, match="Failed to parse"):  # pyright: ignore[reportAttributeAccessIssue]
+        with pytest.raises(ValueError, match="Failed to parse"):
             classic_config.create_yamldata(yaml_dirs, game, vr_mode)
 
     def test_init_invalid_game(self, create_mock_yaml_config: Path, setup_global_registry):
@@ -209,7 +209,7 @@ class TestYamlData:
 
         # Assuming the Rust backend would validate game names and raise an error
         # The exact error type might need adjustment based on Rust's PyO3 error handling
-        with pytest.raises(classic_config.RustConfigIOError, match=r"YAML file not found: .*CLASSIC InvalidGame.yaml"):  # pyright: ignore[reportAttributeAccessIssue]
+        with pytest.raises(IOError, match=r"YAML file not found: .*CLASSIC InvalidGame.yaml"):
             classic_config.YamlData(yaml_dirs, game, vr_mode)
 
     def test_create_yamldata_factory(self, create_mock_yaml_config: Path, setup_global_registry):
