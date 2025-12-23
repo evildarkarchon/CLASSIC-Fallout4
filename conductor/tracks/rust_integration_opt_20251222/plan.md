@@ -19,7 +19,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Type Safety & Zero-Copy Optimization' (Protocol in workflow.md)
 
 ## Phase 4: Verification & Cleanup
-- [ ] Task: Run the benchmark suite again to quantify performance improvements.
+- [x] Task: Run the benchmark suite again to quantify performance improvements. [76f672e]
 - [ ] Task: Run the full test suite (`pytest` and `cargo test`) to ensure no regressions.
 - [ ] Task: Document the new FFI patterns in `docs/development/rust_bindings.md`.
 - [ ] Task: Conductor - User Manual Verification 'Verification & Cleanup' (Protocol in workflow.md)
