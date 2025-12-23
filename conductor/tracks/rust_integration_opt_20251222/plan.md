@@ -2,7 +2,7 @@
 
 ## Phase 1: Analysis & Benchmarking
 - [x] Task: Audit existing PyO3 bindings in `rust/python-bindings/` to identify high-overhead patterns (e.g., excessive JSON serialization). [91e2298]
-- [ ] Task: Create a benchmark suite in `tests/benchmarks/` to measure current FFI call overhead for key functions (`scan_log`, `validate_file`).
+- [x] Task: Create a benchmark suite in `tests/benchmarks/` to measure current FFI call overhead for key functions (`scan_log`, `validate_file`). [25bcfb6]
 - [ ] Task: Conductor - User Manual Verification 'Analysis & Benchmarking' (Protocol in workflow.md)
 
 ## Phase 2: Error Handling Standardization
