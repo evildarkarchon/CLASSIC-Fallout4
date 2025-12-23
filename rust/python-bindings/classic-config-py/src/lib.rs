@@ -80,7 +80,7 @@
 //! ```
 
 use classic_config_core::{ConfigError, YamlDataCore};
-use classic_shared::{define_exceptions, register_exceptions, without_gil};
+use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
@@ -93,6 +93,33 @@ define_exceptions!(
     io: RustConfigIOError,
     parse: RustConfigParseError
 );
+
+// Implement ToPyErr for ConfigError
+impl ToPyErr for ConfigError {
+    type BaseException = RustConfigError;
+    type IOException = RustConfigIOError;
+    type ParseException = RustConfigParseError;
+
+    fn to_pyerr(self) -> PyErr {
+        match self {
+            ConfigError::IOError { context, source } => {
+                Self::io_err(format!("{}: {}", context, source))
+            }
+            ConfigError::ParseError { context, source } => {
+                Self::parse_err(format!("{}: {}", context, source))
+            }
+            ConfigError::EmptyDocument(doc_name) => {
+                Self::parse_err(format!("Empty YAML document: {}", doc_name))
+            }
+            ConfigError::InvalidInput(msg) => {
+                Self::parse_err(format!("Invalid input: {}", msg))
+            }
+            ConfigError::RuntimeError(msg) => {
+                Self::base_err(format!("Runtime error: {}", msg))
+            }
+        }
+    }
+}
 
 /// Python wrapper for YamlDataCore
 ///
@@ -117,7 +144,7 @@ impl PyYamlData {
                 YamlDataCore::load_from_yaml_files(yaml_dirs, game, vr_mode).await
             })
         })
-        .map_err(to_pyerr)?;
+        .map_pyerr()?;
 
         Ok(Self { inner: core })
     }
@@ -155,7 +182,7 @@ impl PyYamlData {
             game,
             vr_mode,
         )
-        .map_err(to_pyerr)?;
+        .map_pyerr()?;
 
         Ok(Self { inner })
     }
@@ -381,35 +408,6 @@ impl PyYamlData {
             self.inner.classic_version,
             !self.inner.crashgen_latest_vr.is_empty()
         )
-    }
-}
-
-/// Convert ConfigError to PyErr using custom exception types
-///
-/// Maps Rust ConfigError variants to Python exception types from
-/// ClassicLib.integration.exceptions for better error handling.
-fn to_pyerr(err: ConfigError) -> PyErr {
-    match err {
-        // I/O errors map to RustConfigIOError
-        ConfigError::IOError { context, source } => {
-            RustConfigIOError::new_err(format!("{}: {}", context, source))
-        }
-
-        // Parse errors map to RustConfigParseError
-        ConfigError::ParseError { context, source } => {
-            RustConfigParseError::new_err(format!("{}: {}", context, source))
-        }
-        ConfigError::EmptyDocument(doc_name) => {
-            RustConfigParseError::new_err(format!("Empty YAML document: {}", doc_name))
-        }
-        ConfigError::InvalidInput(msg) => {
-            RustConfigParseError::new_err(format!("Invalid input: {}", msg))
-        }
-
-        // Generic errors map to base RustConfigError
-        ConfigError::RuntimeError(msg) => {
-            RustConfigError::new_err(format!("Runtime error: {}", msg))
-        }
     }
 }
 
