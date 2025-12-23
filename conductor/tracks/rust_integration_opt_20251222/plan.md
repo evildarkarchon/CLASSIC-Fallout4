@@ -5,7 +5,7 @@
 - [x] Task: Create a benchmark suite in `tests/benchmarks/` to measure current FFI call overhead for key functions (`scan_log`, `validate_file`). [25bcfb6]
 - [ ] Task: Conductor - User Manual Verification 'Analysis & Benchmarking' (Protocol in workflow.md)
 
-## Phase 2: Error Handling Standardization
+## Phase 2: Error Handling Standardization [checkpoint: 652a453]
 - [x] Task: Define a shared error schema in Rust (`classic-shared-core`) that maps cleanly to Python exceptions. [8b58767]
 - [x] Task: Implement `From<RustError> for PyErr` conversions in a shared utility crate. [4b76228]
 - [x] Task: Update one low-risk module (e.g., `classic-config-py`) to use the new error handling pattern. [6eeade4]
