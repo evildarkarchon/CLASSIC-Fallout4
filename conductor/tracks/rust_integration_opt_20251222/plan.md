@@ -13,7 +13,7 @@
 - [ ] Task: Conductor - User Manual Verification 'Error Handling Standardization' (Protocol in workflow.md)
 
 ## Phase 3: Type Safety & Zero-Copy Optimization
-- [ ] Task: Refactor `classic-scanlog-py` to use direct struct mapping instead of JSON strings where feasible.
+- [x] Task: Refactor `classic-scanlog-py` to use direct struct mapping instead of JSON strings where feasible. [07200c4]
 - [ ] Task: Update Python type stubs (`.pyi`) to reflect stricter types.
 - [ ] Task: Implement `#[pyclass]` for complex data structures returned by the scanner to avoid recreation in Python.
 - [ ] Task: Conductor - User Manual Verification 'Type Safety & Zero-Copy Optimization' (Protocol in workflow.md)
