@@ -1,7 +1,7 @@
 # Plan: Optimize Python-Rust Integration Layer
 
 ## Phase 1: Analysis & Benchmarking
-- [~] Task: Audit existing PyO3 bindings in `rust/python-bindings/` to identify high-overhead patterns (e.g., excessive JSON serialization).
+- [x] Task: Audit existing PyO3 bindings in `rust/python-bindings/` to identify high-overhead patterns (e.g., excessive JSON serialization). [91e2298]
 - [ ] Task: Create a benchmark suite in `tests/benchmarks/` to measure current FFI call overhead for key functions (`scan_log`, `validate_file`).
 - [ ] Task: Conductor - User Manual Verification 'Analysis & Benchmarking' (Protocol in workflow.md)
 
