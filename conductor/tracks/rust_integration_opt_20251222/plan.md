@@ -20,6 +20,6 @@
 
 ## Phase 4: Verification & Cleanup
 - [x] Task: Run the benchmark suite again to quantify performance improvements. [76f672e]
-- [ ] Task: Run the full test suite (`pytest` and `cargo test`) to ensure no regressions.
-- [ ] Task: Document the new FFI patterns in `docs/development/rust_bindings.md`.
+- [x] Task: Run the full test suite (`pytest` and `cargo test`) to ensure no regressions. [a51f3b1]
+- [x] Task: Document the new FFI patterns in `docs/development/rust_bindings.md`. [6ba741c]
 - [ ] Task: Conductor - User Manual Verification 'Verification & Cleanup' (Protocol in workflow.md)
