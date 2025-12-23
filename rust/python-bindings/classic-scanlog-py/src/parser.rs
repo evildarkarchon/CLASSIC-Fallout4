@@ -3,6 +3,7 @@
 use classic_scanlog_core::LogParser;
 use classic_shared::without_gil;
 use pyo3::prelude::*;
+use pyo3::types::{PyList, PyString};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -74,7 +75,11 @@ impl PyLogParser {
     /// Parse log into segments using SIMD-optimized boundary detection
     ///
     /// For large logs (>1000 lines), this releases the GIL to allow other Python threads to run.
-    pub fn parse_segments(&self, py: Python<'_>, lines: Vec<String>) -> Vec<Vec<String>> {
+    pub fn parse_segments<'py>(
+        &self,
+        py: Python<'py>,
+        lines: Vec<String>,
+    ) -> PyResult<Bound<'py, PyList>> {
         let arc_lines = to_arc_str_vec(&lines);
 
         // Release GIL for large parsing operations
@@ -85,23 +90,27 @@ impl PyLogParser {
             self.inner.parse_segments(&arc_lines)
         };
 
-        // Convert result back to Vec<Vec<String>>
-        result
-            .into_iter()
-            .map(|segment| segment.into_iter().map(|s| s.to_string()).collect())
-            .collect()
+        // Convert result back to list[list[str]] without intermediate String allocation
+        let mut outer_items = Vec::with_capacity(result.len());
+        for segment in result {
+            // Create PyString directly from Arc<str> reference (no String allocation)
+            let inner_items = segment.iter().map(|line| PyString::new(py, line));
+            let inner_list = PyList::new(py, inner_items)?;
+            outer_items.push(inner_list);
+        }
+        PyList::new(py, outer_items)
     }
 
     /// Parse segments in parallel for large logs
     ///
     /// This operation always releases the GIL to allow other Python threads to run concurrently.
     #[pyo3(name = "parse_segments_parallel", signature = (lines, chunk_size=None))]
-    pub fn parse_segments_parallel(
+    pub fn parse_segments_parallel<'py>(
         &self,
-        py: Python<'_>,
+        py: Python<'py>,
         lines: Vec<String>,
         chunk_size: Option<usize>,
-    ) -> Vec<Vec<String>> {
+    ) -> PyResult<Bound<'py, PyList>> {
         let arc_lines = to_arc_str_vec(&lines);
 
         // Always release GIL for parallel operations
@@ -109,11 +118,15 @@ impl PyLogParser {
             self.inner.parse_segments_parallel(&arc_lines, chunk_size)
         });
 
-        // Convert result back to Vec<Vec<String>>
-        result
-            .into_iter()
-            .map(|segment| segment.into_iter().map(|s| s.to_string()).collect())
-            .collect()
+        // Convert result back to list[list[str]] without intermediate String allocation
+        let mut outer_items = Vec::with_capacity(result.len());
+        for segment in result {
+            // Create PyString directly from Arc<str> reference (no String allocation)
+            let inner_items = segment.iter().map(|line| PyString::new(py, line));
+            let inner_list = PyList::new(py, inner_items)?;
+            outer_items.push(inner_list);
+        }
+        PyList::new(py, outer_items)
     }
 
     /// Find all pattern matches in parallel with caching
