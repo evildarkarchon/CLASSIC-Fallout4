@@ -320,12 +320,6 @@ def clear_yaml_cache() -> None:
     Forces the next YamlData initialization to reload from disk.
     """
 
-class RustConfigIOError(Exception):
-    """Error raised when YAML files cannot be read."""
-
-class RustConfigParseError(Exception):
-    """Error raised when YAML content is invalid."""
-
 def create_yamldata(yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -> YamlData:
     """Create via factory create a YamlData instance.
 
@@ -342,8 +336,8 @@ def create_yamldata(yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -
         Configured YamlData instance with all YAML data loaded
 
     Raises:
-        RustConfigIOError: If required YAML files are missing
-        RustConfigParseError: If YAML data is malformed or invalid
+        IOError: If required YAML files are missing
+        ValueError: If YAML data is malformed or invalid
 
     Example:
         >>> from classic_config import create_yamldata
