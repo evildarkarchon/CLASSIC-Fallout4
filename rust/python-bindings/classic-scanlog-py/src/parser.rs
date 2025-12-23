@@ -15,12 +15,16 @@ fn to_arc_str_vec(strings: &[String]) -> Vec<Arc<str>> {
 /// Output of parse_complete
 #[pyclass]
 pub struct ScanOutput {
+    /// Detected game version (e.g., "1.10.163")
     #[pyo3(get)]
     pub game_version: String,
+    /// Detected crash generator version (e.g., "Buffout 4 v1.26.2")
     #[pyo3(get)]
     pub crashgen_version: String,
+    /// Main error message or exception extracted from the log
     #[pyo3(get)]
     pub main_error: String,
+    /// List of log segments, where each segment is a list of lines
     #[pyo3(get)]
     pub segments: Py<PyList>,
 }
@@ -223,7 +227,8 @@ impl PyLogParser {
         segment_boundaries: Vec<(String, String)>,
         xse_acronym: String,
     ) -> PyResult<ScanOutput> {
-        let (game_ver, crashgen_ver, main_err, segments) = self.inner
+        let (game_ver, crashgen_ver, main_err, segments) = self
+            .inner
             .parse_complete(&lines, &segment_boundaries, &xse_acronym)
             .map_err(crate::to_pyerr)?;
 
