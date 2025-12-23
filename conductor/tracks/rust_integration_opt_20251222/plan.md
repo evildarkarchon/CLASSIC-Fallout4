@@ -8,7 +8,7 @@
 ## Phase 2: Error Handling Standardization
 - [x] Task: Define a shared error schema in Rust (`classic-shared-core`) that maps cleanly to Python exceptions. [8b58767]
 - [x] Task: Implement `From<RustError> for PyErr` conversions in a shared utility crate. [4b76228]
-- [ ] Task: Update one low-risk module (e.g., `classic-config-py`) to use the new error handling pattern.
+- [x] Task: Update one low-risk module (e.g., `classic-config-py`) to use the new error handling pattern. [6eeade4]
 - [ ] Task: Verify error propagation with Python unit tests.
 - [ ] Task: Conductor - User Manual Verification 'Error Handling Standardization' (Protocol in workflow.md)
 
