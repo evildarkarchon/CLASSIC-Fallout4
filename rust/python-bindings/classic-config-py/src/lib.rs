@@ -115,12 +115,8 @@ impl ToPyErr for PyConfigError {
             ConfigError::EmptyDocument(doc_name) => {
                 Self::parse_err(format!("Empty YAML document: {}", doc_name))
             }
-            ConfigError::InvalidInput(msg) => {
-                Self::parse_err(format!("Invalid input: {}", msg))
-            }
-            ConfigError::RuntimeError(msg) => {
-                Self::base_err(format!("Runtime error: {}", msg))
-            }
+            ConfigError::InvalidInput(msg) => Self::parse_err(format!("Invalid input: {}", msg)),
+            ConfigError::RuntimeError(msg) => Self::base_err(format!("Runtime error: {}", msg)),
         }
     }
 }

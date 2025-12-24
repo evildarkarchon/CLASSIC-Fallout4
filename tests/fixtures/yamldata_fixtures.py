@@ -177,9 +177,7 @@ def mock_yamldata_with_data() -> MagicMock:
     mock.game_mods_conf = {"conflict_mod_1|conflict_mod_2": "These mods conflict together"}
     mock.game_mods_freq = {"problemplugin.esp": "This plugin causes frequent crashes"}
     mock.game_mods_solu = {"outdated.esp": "Update to latest version"}
-    mock.game_mods_core = {
-        "ufop4": {"warn": "Unofficial Patch not detected", "plugin": "Unofficial Fallout 4 Patch.esp", "required": True}
-    }
+    mock.game_mods_core = {"ufop4": {"warn": "Unofficial Patch not detected", "plugin": "Unofficial Fallout 4 Patch.esp", "required": True}}
     mock.game_mods_core_folon = {}
     mock.game_mods_opc2 = {"oldmod.esp": "This mod is outdated"}
 

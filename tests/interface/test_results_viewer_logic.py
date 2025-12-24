@@ -16,7 +16,6 @@ from unittest.mock import MagicMock
 
 import pytest
 
-
 # =============================================================================
 # ReportListWidget Tests - Pure Logic (No Qt Required)
 # =============================================================================

@@ -527,7 +527,13 @@ def parity_sample_crash_data():
 
 @pytest.fixture
 def parity_mock_scanlog_info(parity_mock_yaml_cache):
-    """Fixture providing mock ClassicScanLogsInfo for testing."""
+    """Fixture providing mock ClassicScanLogsInfo for testing.
+
+    This fixture provides a comprehensive mock with all attributes required
+    by the various analyzers (PluginAnalyzer, FormIDAnalyzer, RecordScanner, etc.).
+    """
+    from packaging.version import Version
+
     mock_info = Mock(spec=ClassicScanLogsInfo)
 
     # Configure mock attributes that Rust/Python implementations expect
@@ -535,6 +541,66 @@ def parity_mock_scanlog_info(parity_mock_yaml_cache):
     mock_info.formid_db_exists = False
     mock_info.debug_mode = False
     mock_info.enable_advanced_analysis = True
+
+    # PluginAnalyzer required attributes
+    mock_info.game_ignore_plugins = [
+        "Fallout4.esm",
+        "DLCRobot.esm",
+        "DLCworkshop01.esm",
+        "DLCCoast.esm",
+        "DLCworkshop02.esm",
+        "DLCworkshop03.esm",
+        "DLCNukaWorld.esm",
+    ]
+    mock_info.ignore_list = []
+
+    # Plugin limit detection required attributes
+    mock_info.game_version = Version("1.10.163")
+    mock_info.game_version_new = Version("1.10.984")
+    mock_info.game_version_vr = Version("1.2.72")
+
+    # CrashGen info (required by plugin_match)
+    mock_info.crashgen_name = "Buffout 4"
+    mock_info.crashgen_name_vr = "Buffout 4 VR"
+    mock_info.crashgen_latest_og = "1.32.1"
+    mock_info.crashgen_latest_vr = "1.32.1"
+    # Note: Rust bindings expect sequences (lists), not sets
+    mock_info.crashgen_ignore = []
+    mock_info.crashgen_ignore_vr = []
+
+    # Additional attributes for FormIDAnalyzer
+    mock_info.classic_game_hints = []
+    mock_info.classic_records_list = []
+    mock_info.game_ignore_records = []
+
+    # Mod configuration (for Mods analysis)
+    mock_info.game_mods_conf = {}
+    mock_info.game_mods_core = {}
+    mock_info.game_mods_core_folon = {}
+    mock_info.game_mods_freq = {}
+    mock_info.game_mods_opc2 = {}
+    mock_info.game_mods_solu = {}
+
+    # Suspect checking data
+    mock_info.suspects_error_list = {}
+    mock_info.suspects_stack_list = {}
+
+    # Warning messages
+    mock_info.warn_noplugins = "No plugins detected"
+    mock_info.warn_outdated = "Outdated version detected"
+
+    # XSE info
+    mock_info.xse_acronym = "F4SE"
+
+    # Game root names
+    mock_info.game_root_name = "Fallout4"
+    mock_info.game_root_name_vr = "Fallout4VR"
+
+    # Helper methods
+    mock_info.get_crashgen_name = Mock(side_effect=lambda is_vr: mock_info.crashgen_name_vr if is_vr else mock_info.crashgen_name)
+    mock_info.get_crashgen_ignore = Mock(side_effect=lambda is_vr: mock_info.crashgen_ignore_vr if is_vr else mock_info.crashgen_ignore)
+    mock_info.get_game_root_name = Mock(side_effect=lambda is_vr: mock_info.game_root_name_vr if is_vr else mock_info.game_root_name)
+    mock_info.get_crashgen_latest = Mock(side_effect=lambda is_vr: mock_info.crashgen_latest_vr if is_vr else mock_info.crashgen_latest_og)
 
     # Mock YAML cache integration
     mock_info.yaml_cache = parity_mock_yaml_cache

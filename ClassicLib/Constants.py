@@ -98,7 +98,7 @@ def get_db_paths() -> tuple[Path, Path, Path]:
     return (
         data_dir / "databases" / f"{game} FormIDs Main.db",
         data_dir / "databases" / f"{game} FormIDs Local.db",
-        data_dir / "databases"/ "FOLON FormIDs.db",
+        data_dir / "databases" / "FOLON FormIDs.db",
     )
 
 

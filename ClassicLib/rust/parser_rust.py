@@ -176,15 +176,15 @@ class RustLogParser:
                     scan_output = self._rust_parser.parse_complete(  # type: ignore[attr-defined]
                         crash_data, segment_boundaries, xse_acronym
                     )
-                    
+
                     game_version = scan_output.game_version
                     crashgen_version = scan_output.crashgen_version
                     main_error = scan_output.main_error
                     segments = scan_output.segments
-                    
+
                     # Rust-optimized path already strips whitespace and returns correct structure
                     processed_segments = segments
-                    
+
                     logger.debug("🚀 Using optimized parse_complete (single FFI call)")
                 else:
                     # Fallback to multiple calls if new method not available

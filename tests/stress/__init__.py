@@ -26,8 +26,9 @@ The stress tests are designed to validate that the Rust migration components
 can handle production-level workloads and extreme conditions without failures.
 """
 
-from .stress_report_generator import StressTestReporter, SystemSpecs, TestMetric, TestSectionResult
 from tests.fixtures.stress_fixtures import ConcurrencyTestHelper, MemoryTracker, PerformanceProfiler, StressDataGenerator
+
+from .stress_report_generator import StressTestReporter, SystemSpecs, TestMetric, TestSectionResult
 
 __all__ = [
     "MemoryTracker",

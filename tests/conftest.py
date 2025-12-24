@@ -31,31 +31,31 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 # Core fixtures
 from tests.fixtures.async_fixtures import *  # noqa: F403
-from tests.fixtures.data_fixtures import *  # noqa: F403
-from tests.fixtures.database_pool_fixtures import *  # noqa: F403
-from tests.fixtures.mock_fixtures import *  # noqa: F403
-from tests.fixtures.qt_fixtures import *  # noqa: F403
-from tests.fixtures.registry_fixtures import *  # noqa: F403
-from tests.fixtures.version_cache_fixtures import *  # noqa: F403
-
-# Consolidated fixture modules (Phase 1 consolidation)
-from tests.fixtures.crash_log_fixtures import *  # noqa: F403
-from tests.fixtures.rust_fixtures import *  # noqa: F403
-from tests.fixtures.stress_fixtures import *  # noqa: F403
-from tests.fixtures.yamldata_fixtures import *  # noqa: F403
-
-# Scanlog fixtures (orchestrator, parser fixtures)
-from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 
 # Phase 2 consolidated fixtures (fixture consolidation task)
 from tests.fixtures.backup_fixtures import *  # noqa: F403
 from tests.fixtures.concurrency_fixtures import *  # noqa: F403
+
+# Consolidated fixture modules (Phase 1 consolidation)
+from tests.fixtures.crash_log_fixtures import *  # noqa: F403
+from tests.fixtures.data_fixtures import *  # noqa: F403
+from tests.fixtures.database_pool_fixtures import *  # noqa: F403
 from tests.fixtures.game_fixtures import *  # noqa: F403
 from tests.fixtures.gui_settings_fixtures import *  # noqa: F403
 from tests.fixtures.io_fixtures import *  # noqa: F403
+from tests.fixtures.mock_fixtures import *  # noqa: F403
 from tests.fixtures.mods_fixtures import *  # noqa: F403
 from tests.fixtures.parity_fixtures import *  # noqa: F403
 from tests.fixtures.performance_fixtures import *  # noqa: F403
+from tests.fixtures.qt_fixtures import *  # noqa: F403
+from tests.fixtures.registry_fixtures import *  # noqa: F403
+from tests.fixtures.rust_fixtures import *  # noqa: F403
+
+# Scanlog fixtures (orchestrator, parser fixtures)
+from tests.fixtures.scanlog_fixtures import *  # noqa: F403
+from tests.fixtures.stress_fixtures import *  # noqa: F403
+from tests.fixtures.version_cache_fixtures import *  # noqa: F403
+from tests.fixtures.yamldata_fixtures import *  # noqa: F403
 
 
 def pytest_configure(config):
