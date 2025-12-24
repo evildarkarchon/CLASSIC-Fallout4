@@ -766,7 +766,8 @@ class AnalysisResult:
     report_lines: list[str]
     success: bool
     error: str | None
-    processing_time_ms: int
+    processing_time_us: int  # Processing time in microseconds (for sub-millisecond precision)
+    processing_time_ms: int  # Processing time in milliseconds (minimum 1ms for non-zero processing)
     plugin_count: int
     formid_count: int
     suspect_count: int

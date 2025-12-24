@@ -1,18 +1,22 @@
-"""
-Stress test fixtures and utilities for CLASSIC-Fallout4 Phase 6 validation.
+"""Stress test fixtures and utilities.
 
 This module provides comprehensive fixtures and utilities for stress testing
 the Rust migration components under extreme production conditions.
+
+Includes:
+- Memory tracking utilities
+- Concurrency testing helpers
+- Data generators for large test datasets
+- Performance profiling tools
 """
 
-import gc
-import os
 import threading
 import time
 import traceback
 import tracemalloc
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
 
@@ -20,22 +24,26 @@ import psutil
 import pytest
 
 
+# ============================================================================
+# Memory Tracking
+# ============================================================================
+
+
 class MemoryTracker:
-    """
-    Tracks memory usage patterns during test execution.
+    """Tracks memory usage patterns during test execution.
 
     Provides detailed memory profiling including peak usage, growth patterns,
     and leak detection for comprehensive memory stress testing.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize memory tracking."""
-        self._initial_memory = None
-        self._peak_memory = 0
-        self._measurements = []
-        self._tracking_enabled = False
+        self._initial_memory: float | None = None
+        self._peak_memory: float = 0
+        self._measurements: list[dict[str, Any]] = []
+        self._tracking_enabled: bool = False
 
-    def start_tracking(self):
+    def start_tracking(self) -> None:
         """Start memory tracking with tracemalloc."""
         tracemalloc.start()
         self._initial_memory = self._get_current_memory()
@@ -44,8 +52,7 @@ class MemoryTracker:
         self._tracking_enabled = True
 
     def stop_tracking(self) -> dict[str, Any]:
-        """
-        Stop tracking and return comprehensive memory statistics.
+        """Stop tracking and return comprehensive memory statistics.
 
         Returns:
             Dict containing memory statistics including peak usage,
@@ -54,8 +61,6 @@ class MemoryTracker:
         if not self._tracking_enabled:
             return {}
 
-        # Assert that _initial_memory was set by start_tracking()
-        # This narrows the type from float | None to float for the type checker
         assert self._initial_memory is not None, "start_tracking() must be called before stop_tracking()"
 
         final_memory = self._get_current_memory()
@@ -72,8 +77,7 @@ class MemoryTracker:
         }
 
     def take_measurement(self, label: str = "") -> float:
-        """
-        Take a memory measurement and update peak tracking.
+        """Take a memory measurement and update peak tracking.
 
         Args:
             label: Optional label for the measurement
@@ -97,25 +101,32 @@ class MemoryTracker:
         return process.memory_info().rss / 1024 / 1024
 
 
+# ============================================================================
+# Concurrency Testing
+# ============================================================================
+
+
 class ConcurrencyTestHelper:
-    """
-    Helper for testing concurrent operations and race conditions.
+    """Helper for testing concurrent operations and race conditions.
 
     Provides utilities for creating high-contention scenarios,
     detecting race conditions, and validating thread safety.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize concurrency test helper."""
-        self._shared_state = {}
+        self._shared_state: dict[str, Any] = {}
         self._lock = threading.Lock()
-        self._error_collector = []
+        self._error_collector: list[dict[str, Any]] = []
 
     def create_contention_scenario(
-        self, target_func: Callable[..., Any], num_threads: int = 20, iterations_per_thread: int = 100, shared_data: Any = None
+        self,
+        target_func: Callable[..., Any],
+        num_threads: int = 20,
+        iterations_per_thread: int = 100,
+        shared_data: Any = None,
     ) -> dict[str, Any]:
-        """
-        Create a high-contention scenario to test thread safety.
+        """Create a high-contention scenario to test thread safety.
 
         Args:
             target_func: Function to execute concurrently
@@ -127,9 +138,9 @@ class ConcurrencyTestHelper:
             Dict containing results and error information
         """
         self._error_collector = []
-        results = []
+        results: list[Any] = []
 
-        def worker(thread_id: int):
+        def worker(thread_id: int) -> list[Any]:
             """Worker function for concurrent execution."""
             thread_results = []
             try:
@@ -163,8 +174,7 @@ class ConcurrencyTestHelper:
         }
 
     def detect_race_conditions(self, operations: list[Callable[..., Any]], num_iterations: int = 1000) -> dict[str, Any]:
-        """
-        Detect potential race conditions by running operations many times.
+        """Detect potential race conditions by running operations many times.
 
         Args:
             operations: List of operations to run concurrently
@@ -192,18 +202,21 @@ class ConcurrencyTestHelper:
             "total_iterations": num_iterations,
             "inconsistencies_found": len(inconsistencies),
             "race_condition_rate": len(inconsistencies) / num_iterations,
-            "sample_inconsistencies": inconsistencies[:5],  # First 5 examples
+            "sample_inconsistencies": inconsistencies[:5],
         }
 
     def _is_state_inconsistent(self) -> bool:
         """Check if current shared state shows inconsistencies."""
-        # Simple heuristic: check if counter matches data length
         return self._shared_state.get("counter", 0) != len(self._shared_state.get("data", []))
 
 
+# ============================================================================
+# Data Generation
+# ============================================================================
+
+
 class StressDataGenerator:
-    """
-    Generates large datasets for stress testing.
+    """Generates large datasets for stress testing.
 
     Creates realistic test data that simulates production workloads
     with configurable complexity and size characteristics.
@@ -211,8 +224,7 @@ class StressDataGenerator:
 
     @staticmethod
     def generate_large_crash_log(size_mb: int = 100, plugin_count: int = 500, formid_count: int = 10000) -> str:
-        """
-        Generate a very large crash log for memory stress testing.
+        """Generate a very large crash log for memory stress testing.
 
         Args:
             size_mb: Target size in MB (approximate)
@@ -248,7 +260,7 @@ class StressDataGenerator:
 
         # Large stack trace with many FormIDs
         lines.append("STACK TRACE:")
-        for i in range(formid_count // 10):  # Spread FormIDs across stack frames
+        for i in range(formid_count // 10):
             formid = f"0x{(0x14000000 + i):08X}"
             lines.extend([
                 f"\t{i:04d} Fallout4.exe+{0x500000 + i * 16:07X}",
@@ -261,9 +273,8 @@ class StressDataGenerator:
         current_size_mb = len(current_content.encode("utf-8")) / 1024 / 1024
 
         if current_size_mb < size_mb:
-            # Add repeated sections to reach target size
             filler_lines = []
-            for section in range(int((size_mb - current_size_mb) * 100)):  # Rough calculation
+            for section in range(int((size_mb - current_size_mb) * 100)):
                 filler_lines.extend([
                     f"MEMORY SECTION {section:06d}:",
                     f"\tAddress: 0x{0x7FF000000000 + section * 0x1000:012X}",
@@ -278,8 +289,7 @@ class StressDataGenerator:
 
     @staticmethod
     def generate_plugin_load_order(count: int = 500) -> list[str]:
-        """
-        Generate a large plugin load order for testing.
+        """Generate a large plugin load order for testing.
 
         Args:
             count: Number of plugins to generate
@@ -303,19 +313,18 @@ class StressDataGenerator:
 
         # Generate stress test plugins
         for i in range(count - len(essential)):
-            if i < 50:  # Some ESM files
+            if i < 50:
                 plugins.append(f"StressMaster_{i:03d}.esm")
-            elif i < count - 100:  # Mostly ESP files
+            elif i < count - 100:
                 plugins.append(f"StressPlugin_{i:04d}.esp")
-            else:  # Some ESL files
+            else:
                 plugins.append(f"StressLight_{i:03d}.esl")
 
         return plugins
 
     @staticmethod
     def generate_formid_dataset(count: int = 10000) -> list[str]:
-        """
-        Generate a large set of FormIDs for testing.
+        """Generate a large set of FormIDs for testing.
 
         Args:
             count: Number of FormIDs to generate
@@ -326,39 +335,40 @@ class StressDataGenerator:
         formids = []
 
         for i in range(count):
-            # Mix of different FormID formats and ranges
             if i % 10 == 0:
-                # Base game FormIDs (0x00000000 - 0x00FFFFFF)
                 formids.append(f"0x{i % 0xFFFFFF:08X}")
             elif i % 10 == 1:
-                # DLC FormIDs (0x01000000+)
                 formids.append(f"0x{0x01000000 + (i % 0xFFFFFF):08X}")
             elif i % 10 == 2:
-                # Mod FormIDs (0x02000000+)
                 formids.append(f"0x{0x02000000 + (i % 0xFFFFFF):08X}")
             else:
-                # Random high FormIDs
                 formids.append(f"0x{0x14000000 + i:08X}")
 
         return formids
 
 
+# ============================================================================
+# Performance Profiling
+# ============================================================================
+
+
 class PerformanceProfiler:
-    """
-    Profiles performance characteristics during stress tests.
+    """Profiles performance characteristics during stress tests.
 
     Monitors CPU usage, I/O patterns, and response times to detect
     performance degradation under sustained load.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize performance profiler."""
-        self._start_time = None
-        self._measurements = []
-        self._cpu_measurements = []
-        self._io_measurements = []
+        self._start_time: float | None = None
+        self._measurements: list[dict[str, Any]] = []
+        self._cpu_measurements: list[dict[str, Any]] = []
+        self._io_measurements: list[dict[str, Any]] = []
+        self._monitoring: bool = False
+        self._monitor_thread: threading.Thread | None = None
 
-    def start_profiling(self):
+    def start_profiling(self) -> None:
         """Start performance profiling."""
         self._start_time = time.time()
         self._measurements = []
@@ -371,19 +381,17 @@ class PerformanceProfiler:
         self._monitor_thread.start()
 
     def stop_profiling(self) -> dict[str, Any]:
-        """
-        Stop profiling and return comprehensive performance statistics.
+        """Stop profiling and return comprehensive performance statistics.
 
         Returns:
             Dict containing detailed performance metrics
         """
         self._monitoring = False
-        if hasattr(self, "_monitor_thread"):
+        if self._monitor_thread is not None:
             self._monitor_thread.join(timeout=1)
 
         duration = time.time() - self._start_time if self._start_time else 0
 
-        # Calculate statistics
         cpu_stats = self._calculate_cpu_stats()
         io_stats = self._calculate_io_stats()
 
@@ -395,7 +403,7 @@ class PerformanceProfiler:
             "performance_degradation": self._detect_degradation(),
         }
 
-    def record_operation(self, operation_name: str, duration: float, memory_used: float = 0):
+    def record_operation(self, operation_name: str, duration: float, memory_used: float = 0) -> None:
         """Record a single operation's performance metrics."""
         self._measurements.append({
             "timestamp": time.time(),
@@ -404,15 +412,13 @@ class PerformanceProfiler:
             "memory_mb": memory_used,
         })
 
-    def _background_monitor(self):
+    def _background_monitor(self) -> None:
         """Background monitoring of system resources."""
-        while getattr(self, "_monitoring", False):
+        while self._monitoring:
             try:
-                # CPU usage
                 cpu_percent = psutil.cpu_percent(interval=0.1)
                 self._cpu_measurements.append({"timestamp": time.time(), "cpu_percent": cpu_percent})
 
-                # I/O statistics
                 process = psutil.Process()
                 io_counters = process.io_counters()
                 self._io_measurements.append({
@@ -421,9 +427,8 @@ class PerformanceProfiler:
                     "write_bytes": io_counters.write_bytes,
                 })
 
-                time.sleep(0.1)  # Sample every 100ms
+                time.sleep(0.1)
             except Exception:
-                # Ignore monitoring errors
                 pass
 
     def _calculate_cpu_stats(self) -> dict[str, float]:
@@ -458,7 +463,6 @@ class PerformanceProfiler:
         if len(self._measurements) < 10:
             return {"degradation_detected": False}
 
-        # Analyze operation durations over time
         early_ops = self._measurements[: len(self._measurements) // 3]
         late_ops = self._measurements[-len(self._measurements) // 3 :]
 
@@ -475,40 +479,105 @@ class PerformanceProfiler:
         }
 
 
+# ============================================================================
+# Resource Simulation
+# ============================================================================
+
+
+class ResourceExhaustionSimulator:
+    """Simulator for resource exhaustion scenarios."""
+
+    def __init__(self) -> None:
+        self.file_handles: int = 0
+        self.memory_allocated: int = 0
+        self.max_handles: int = 100
+        self.max_memory: int = 1024 * 1024 * 1024  # 1GB
+
+    def allocate_file_handle(self) -> Mock:
+        """Allocate a simulated file handle."""
+        if self.file_handles >= self.max_handles:
+            raise OSError("Too many open files")
+        self.file_handles += 1
+        return Mock()
+
+    def allocate_memory(self, size_bytes: int) -> bytearray:
+        """Allocate simulated memory."""
+        if self.memory_allocated + size_bytes > self.max_memory:
+            raise MemoryError("Cannot allocate memory")
+        self.memory_allocated += size_bytes
+        return bytearray(size_bytes)
+
+    def release_handle(self) -> None:
+        """Release a file handle."""
+        if self.file_handles > 0:
+            self.file_handles -= 1
+
+    def release_memory(self, size_bytes: int) -> None:
+        """Release memory."""
+        self.memory_allocated = max(0, self.memory_allocated - size_bytes)
+
+
+class FailingDatabasePool:
+    """Mock database pool that fails after some operations."""
+
+    def __init__(self, fail_after: int = 100) -> None:
+        self.operations: int = 0
+        self.fail_after: int = fail_after
+
+    def execute_query(self, query: str) -> Mock:
+        """Execute a query, failing after threshold."""
+        self.operations += 1
+        if self.operations > self.fail_after:
+            raise Exception(f"Database connection failed after {self.operations} operations")
+        return Mock()
+
+
+# ============================================================================
+# Fixtures
+# ============================================================================
+
+
 @pytest.fixture(scope="session")
-def memory_tracker():
+def memory_tracker() -> MemoryTracker:
     """Session-wide memory tracker for leak detection across tests."""
-    tracker = MemoryTracker()
-    return tracker
+    return MemoryTracker()
 
 
 @pytest.fixture
-def fresh_memory_tracker():
+def fresh_memory_tracker() -> MemoryTracker:
     """Fresh memory tracker for individual test isolation."""
     return MemoryTracker()
 
 
 @pytest.fixture
-def concurrency_helper():
+def concurrency_helper() -> ConcurrencyTestHelper:
     """Helper for concurrency and race condition testing."""
     return ConcurrencyTestHelper()
 
 
 @pytest.fixture(scope="session")
-def stress_data_generator():
+def stress_data_generator() -> StressDataGenerator:
     """Generator for large test datasets."""
     return StressDataGenerator()
 
 
 @pytest.fixture
-def performance_profiler():
+def performance_profiler() -> PerformanceProfiler:
     """Performance profiler for monitoring test execution."""
     return PerformanceProfiler()
 
 
 @pytest.fixture
-def large_crash_log(tmp_path, stress_data_generator):
-    """Generate a large crash log file for memory stress testing."""
+def large_crash_log(tmp_path: Path, stress_data_generator: StressDataGenerator) -> Path:
+    """Generate a large crash log file for memory stress testing.
+
+    Args:
+        tmp_path: Pytest temporary directory.
+        stress_data_generator: Data generator fixture.
+
+    Returns:
+        Path to the large crash log file.
+    """
     log_content = stress_data_generator.generate_large_crash_log(size_mb=50)
     log_file = tmp_path / "large_crash.log"
     log_file.write_text(log_content, encoding="utf-8")
@@ -516,27 +585,34 @@ def large_crash_log(tmp_path, stress_data_generator):
 
 
 @pytest.fixture
-def massive_plugin_list(stress_data_generator):
+def massive_plugin_list(stress_data_generator: StressDataGenerator) -> list[str]:
     """Generate a massive plugin load order for testing."""
     return stress_data_generator.generate_plugin_load_order(count=500)
 
 
 @pytest.fixture
-def formid_dataset(stress_data_generator):
+def formid_dataset(stress_data_generator: StressDataGenerator) -> list[str]:
     """Generate a large FormID dataset for testing."""
     return stress_data_generator.generate_formid_dataset(count=5000)
 
 
 @pytest.fixture
-def temp_crash_logs_dir(tmp_path, stress_data_generator):
-    """Create directory with multiple large crash logs."""
+def temp_crash_logs_dir(tmp_path: Path, stress_data_generator: StressDataGenerator) -> Path:
+    """Create directory with multiple large crash logs.
+
+    Args:
+        tmp_path: Pytest temporary directory.
+        stress_data_generator: Data generator fixture.
+
+    Returns:
+        Path to directory containing crash logs.
+    """
     logs_dir = tmp_path / "stress_crash_logs"
     logs_dir.mkdir()
 
-    # Create multiple large logs
     for i in range(10):
         log_content = stress_data_generator.generate_large_crash_log(
-            size_mb=10,  # Smaller individual files
+            size_mb=10,
             plugin_count=100,
             formid_count=1000,
         )
@@ -546,177 +622,13 @@ def temp_crash_logs_dir(tmp_path, stress_data_generator):
     return logs_dir
 
 
-@pytest.fixture(autouse=True)
-def cleanup_after_test():
-    """Automatic cleanup after each test to prevent pollution."""
-    yield
-
-    # Force garbage collection
-    gc.collect()
-
-    # Clear any module-level caches if they exist
-    # Note: classic_scanlog uses instance-level clear_cache() methods on
-    # PyLogParser, PyRustFormIDAnalyzer, etc. - no global cache clearing function.
-    # Instances are garbage collected above.
-
-    # Clear config/yaml caches if available
-    try:
-        import classic_config
-
-        if hasattr(classic_config, "clear_yaml_cache"):
-            classic_config.clear_yaml_cache()
-    except ImportError:
-        pass
-
-    # Clear registry caches if available
-    try:
-        import classic_registry
-
-        if hasattr(classic_registry, "clear_all"):
-            classic_registry.clear_all()
-    except ImportError:
-        pass
-
-
-# Mock fixtures for error simulation
 @pytest.fixture
-def failing_database_pool():
+def failing_database_pool() -> FailingDatabasePool:
     """Mock database pool that fails after some operations."""
-
-    class FailingPool:
-        def __init__(self, fail_after: int = 100):
-            self.operations = 0
-            self.fail_after = fail_after
-
-        def execute_query(self, query: str):
-            self.operations += 1
-            if self.operations > self.fail_after:
-                raise Exception(f"Database connection failed after {self.operations} operations")
-            return Mock()
-
-    return FailingPool()
+    return FailingDatabasePool()
 
 
 @pytest.fixture
-def resource_exhaustion_simulator():
+def resource_exhaustion_simulator() -> ResourceExhaustionSimulator:
     """Simulator for resource exhaustion scenarios."""
-
-    class ResourceSimulator:
-        def __init__(self):
-            self.file_handles = 0
-            self.memory_allocated = 0
-            self.max_handles = 100
-            self.max_memory = 1024 * 1024 * 1024  # 1GB
-
-        def allocate_file_handle(self):
-            if self.file_handles >= self.max_handles:
-                raise OSError("Too many open files")
-            self.file_handles += 1
-            return Mock()
-
-        def allocate_memory(self, size_bytes: int):
-            if self.memory_allocated + size_bytes > self.max_memory:
-                raise MemoryError("Cannot allocate memory")
-            self.memory_allocated += size_bytes
-            return bytearray(size_bytes)
-
-        def release_handle(self):
-            if self.file_handles > 0:
-                self.file_handles -= 1
-
-        def release_memory(self, size_bytes: int):
-            self.memory_allocated = max(0, self.memory_allocated - size_bytes)
-
-    return ResourceSimulator()
-
-
-@pytest.fixture
-def mock_yamldata_python_only():
-    """
-    Mock yamldata that DISABLES Rust acceleration (forces Python fallback).
-
-    Use this fixture ONLY for stress tests or unit tests that use complex mocking patterns
-    that don't work with PyO3 type conversion.
-
-    For Rust integration tests, DO NOT use this fixture - use proper test data instead.
-    """
-
-    # Disable Rust to avoid PyO3 type conversion issues with Mock objects
-    original_value = os.environ.get("CLASSIC_DISABLE_RUST")
-    os.environ["CLASSIC_DISABLE_RUST"] = "1"
-
-    # Create a simple mock that works with Python fallback
-    mock = Mock()
-    # Add common attributes that yamldata should have
-    mock.game_path = "C:\\Games\\Fallout4"
-    mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
-    mock.plugins = {}
-    mock.settings = {}
-
-    yield mock
-
-    # Restore original environment variable state
-    if original_value is None:
-        os.environ.pop("CLASSIC_DISABLE_RUST", None)
-    else:
-        os.environ["CLASSIC_DISABLE_RUST"] = original_value
-
-
-@pytest.fixture
-def mock_yamldata():
-    """Mock yamldata that works with Rust components.
-
-    This fixture provides a MagicMock with all attributes required for Rust
-    compatibility. The key attributes (game_ignore_plugins, ignore_list, etc.)
-    must be real Python types, not Mock objects, because PyO3 cannot convert
-    Mock objects to Rust types.
-
-    Returns:
-        MagicMock: Mock object with Rust-compatible attributes.
-    """
-    mock = Mock(spec=False)
-
-    # Common attributes
-    mock.game_path = "C:\\Games\\Fallout4"
-    mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
-    mock.plugins = {}
-    mock.settings = {}
-
-    # Basic game info
-    mock.crashgen_name = "Buffout 4"
-    mock.xse_acronym = "F4SE"
-    mock.crashgen_latest_og = "1.28.6"
-    mock.crashgen_latest_vr = "1.26.2"
-
-    # CRITICAL: These attributes are required by RustPluginAnalyzer
-    # They must be proper Python types, not Mock objects
-    mock.game_ignore_plugins = []  # List of plugins to ignore
-    mock.ignore_list = []  # Additional ignore list
-    mock.game_version = "1.10.163"  # Game version string
-    mock.game_version_vr = "1.2.72"  # VR game version
-    mock.game_version_new = "1.10.163"  # New game version
-
-    # Required for report generation
-    mock.classic_version = "CLASSIC v1.0.0"
-
-    # Required for suspect scanning
-    mock.suspects_error_list = {}
-    mock.suspects_stack_list = {}
-
-    # Game mod data for detection
-    mock.game_mods_conf = {}
-    mock.game_mods_freq = {}
-    mock.game_mods_solu = {}
-    mock.game_mods_core = {}
-    mock.game_mods_core_folon = {}
-    mock.game_mods_opc2 = {}
-
-    # Crash log error/stack checks
-    mock.crashlog_error_check = {}
-    mock.crashlog_stack_check = {}
-
-    # Game hints
-    mock.classic_game_hints = []
-    mock.autoscan_text = ""
-
-    return mock
+    return ResourceExhaustionSimulator()

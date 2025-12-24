@@ -546,10 +546,16 @@ impl PyAnalysisResult {
         self.inner.error.clone()
     }
 
-    /// Get the processing time in milliseconds
+    /// Get the processing time in milliseconds (minimum 1ms for non-zero processing)
     #[getter]
     pub fn processing_time_ms(&self) -> u64 {
         self.inner.processing_time_ms
+    }
+
+    /// Get the processing time in microseconds (for sub-millisecond precision)
+    #[getter]
+    pub fn processing_time_us(&self) -> u64 {
+        self.inner.processing_time_us
     }
 
     /// Get the number of FormIDs found in the log

@@ -28,17 +28,24 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
 # Import all fixtures from the organized modules
 # This makes them available to all test files
+
+# Core fixtures
 from tests.fixtures.async_fixtures import *  # noqa: F403
 from tests.fixtures.data_fixtures import *  # noqa: F403
 from tests.fixtures.database_pool_fixtures import *  # noqa: F403
 from tests.fixtures.mock_fixtures import *  # noqa: F403
 from tests.fixtures.qt_fixtures import *  # noqa: F403
 from tests.fixtures.registry_fixtures import *  # noqa: F403
-from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 from tests.fixtures.version_cache_fixtures import *  # noqa: F403
 
-# Import stress test fixtures
-from tests.stress.stress_test_fixtures import *  # noqa: F403
+# Consolidated fixture modules (Phase 1 consolidation)
+from tests.fixtures.crash_log_fixtures import *  # noqa: F403
+from tests.fixtures.rust_fixtures import *  # noqa: F403
+from tests.fixtures.stress_fixtures import *  # noqa: F403
+from tests.fixtures.yamldata_fixtures import *  # noqa: F403
+
+# Scanlog fixtures (orchestrator, parser fixtures)
+from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 
 
 def pytest_configure(config):

@@ -198,7 +198,10 @@ pub struct AnalysisResult {
     /// Error message if analysis failed
     pub error: Option<String>,
 
-    /// Processing time in milliseconds
+    /// Processing time in microseconds (for sub-millisecond precision)
+    pub processing_time_us: u64,
+
+    /// Processing time in milliseconds (derived from microseconds, minimum 1ms for non-zero processing)
     pub processing_time_ms: u64,
 
     /// Number of FormIDs found
@@ -254,18 +257,25 @@ impl AnalysisResult {
     /// let result = AnalysisResult::success(
     ///     "crash-2024-01-01.log".to_string(),
     ///     report,
-    ///     150, // Processing took 150ms
+    ///     150_000, // Processing took 150ms (150,000 microseconds)
     /// );
     ///
     /// assert!(result.success);
     /// assert!(result.error.is_none());
     /// ```
-    pub fn success(log_path: String, report_lines: Vec<String>, processing_time_ms: u64) -> Self {
+    pub fn success(log_path: String, report_lines: Vec<String>, processing_time_us: u64) -> Self {
+        // Calculate milliseconds from microseconds, with minimum of 1ms for non-zero processing
+        let processing_time_ms = if processing_time_us > 0 {
+            (processing_time_us / 1000).max(1)
+        } else {
+            0
+        };
         Self {
             log_path,
             report_lines,
             success: true,
             error: None,
+            processing_time_us,
             processing_time_ms,
             formid_count: 0,
             plugin_count: 0,
@@ -307,6 +317,7 @@ impl AnalysisResult {
     /// assert!(result.error.is_some());
     /// assert_eq!(result.report_lines.len(), 0);
     /// assert_eq!(result.processing_time_ms, 0);
+    /// assert_eq!(result.processing_time_us, 0);
     /// ```
     pub fn failure(log_path: String, error: String) -> Self {
         Self {
@@ -314,6 +325,7 @@ impl AnalysisResult {
             report_lines: Vec::new(),
             success: false,
             error: Some(error),
+            processing_time_us: 0,
             processing_time_ms: 0,
             formid_count: 0,
             plugin_count: 0,
@@ -900,14 +912,15 @@ impl OrchestratorCore {
 
         report_lines.push("─".repeat(60).to_string());
         report_lines.push("\n".to_string());
+        let elapsed = start_time.elapsed();
+        let elapsed_us = elapsed.as_micros() as u64;
+        let elapsed_ms_display = elapsed_us as f64 / 1000.0;
         report_lines.push(format!(
-            "Analysis completed in {}ms\n",
-            start_time.elapsed().as_millis()
+            "Analysis completed in {:.2}ms\n",
+            elapsed_ms_display
         ));
 
-        let processing_time_ms = start_time.elapsed().as_millis() as u64;
-
-        let mut result = AnalysisResult::success(log_path, report_lines, processing_time_ms);
+        let mut result = AnalysisResult::success(log_path, report_lines, elapsed_us);
 
         // Update statistics
         result.formid_count = formid_count;

@@ -21,9 +21,12 @@ def create_rust_compatible_yamldata() -> MagicMock:
     """Create a mock yamldata with all Rust-compatible attributes."""
     mock_yamldata = MagicMock(spec=False)
     mock_yamldata.crashgen_name = "Buffout 4"
+    mock_yamldata.crashgen_name_vr = "Buffout 4 NG"
     mock_yamldata.xse_acronym = "F4SE"
     mock_yamldata.crashgen_latest_og = "1.28.6"
     mock_yamldata.crashgen_latest_vr = "1.26.2"
+    mock_yamldata.game_root_name = "Fallout4"
+    mock_yamldata.game_root_name_vr = "Fallout4VR"
     mock_yamldata.game_mods_conf = {}
     mock_yamldata.game_mods_freq = {}
     mock_yamldata.game_mods_solu = {}
@@ -45,6 +48,18 @@ def create_rust_compatible_yamldata() -> MagicMock:
     # Required for suspect scanning
     mock_yamldata.suspects_error_list = {}
     mock_yamldata.suspects_stack_list = {}
+
+    # Method to get crashgen name based on VR status
+    def get_crashgen_name(is_vr: bool) -> str:
+        return mock_yamldata.crashgen_name_vr if is_vr else mock_yamldata.crashgen_name
+
+    mock_yamldata.get_crashgen_name = get_crashgen_name
+
+    # Method to get game root name based on VR status
+    def get_game_root_name(is_vr: bool) -> str:
+        return mock_yamldata.game_root_name_vr if is_vr else mock_yamldata.game_root_name
+
+    mock_yamldata.get_game_root_name = get_game_root_name
     return mock_yamldata
 
 

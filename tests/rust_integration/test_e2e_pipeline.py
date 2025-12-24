@@ -113,11 +113,25 @@ class TestE2EPipeline:
         # Mock game configuration
         mock_yaml.game_type = "fallout4"
         mock_yaml.crashgen_name = "Buffout 4"
+        mock_yaml.crashgen_name_vr = "Buffout 4 NG"
         mock_yaml.xse_acronym = "F4SE"
         mock_yaml.game_root_name = "Fallout 4"
+        mock_yaml.game_root_name_vr = "Fallout 4 VR"
         mock_yaml.crashgen_latest_og = "1.28.6"
         mock_yaml.crashgen_latest_vr = "1.28.6"
         mock_yaml.classic_version = "7.31.0"
+
+        # Method to get crashgen name based on VR status
+        def get_crashgen_name(is_vr: bool) -> str:
+            return mock_yaml.crashgen_name_vr if is_vr else mock_yaml.crashgen_name
+
+        mock_yaml.get_crashgen_name = get_crashgen_name
+
+        # Method to get game root name based on VR status
+        def get_game_root_name(is_vr: bool) -> str:
+            return mock_yaml.game_root_name_vr if is_vr else mock_yaml.game_root_name
+
+        mock_yaml.get_game_root_name = get_game_root_name
 
         # Mock problematic plugins list
         mock_yaml.problematic_plugins = {"test_plugin.esp": "Test problematic plugin", "broken_mod.esp": "Known broken mod"}

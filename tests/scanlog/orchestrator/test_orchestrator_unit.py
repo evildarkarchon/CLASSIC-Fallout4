@@ -105,7 +105,7 @@ class TestOrchestratorCoreInit:
         # These should have default values before __aenter__
         assert orchestrator.remove_list == ("",)
         assert orchestrator.simplify_logs is False
-        assert orchestrator.game_root_name is None
+        # Note: game_root_name is now accessed per-log via yamldata.get_game_root_name(is_vr)
 
 
 @pytest.mark.unit
@@ -453,7 +453,8 @@ class TestOrchestratorCoreErrorHandling:
             ) as orchestrator:
                 # Should use defaults
                 assert orchestrator.simplify_logs is False
-                assert orchestrator.game_root_name is None
+                assert orchestrator.remove_list == ("",)
+                # Note: game_root_name is now accessed per-log via yamldata.get_game_root_name(is_vr)
 
     async def test_handles_db_pool_error_gracefully(self, mock_yamldata: MagicMock) -> None:
         """Test that database pool errors are handled gracefully."""
