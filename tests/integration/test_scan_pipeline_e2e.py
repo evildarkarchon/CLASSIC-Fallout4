@@ -474,51 +474,6 @@ class TestScanPipelineE2E:
         assert memory_increase < 100, f"Memory leak detected: {memory_increase}MB increase"
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="GameScanner module has been removed/refactored. Need to update test to use GameIntegrityOrchestrator.")
-    async def test_game_scan_to_integrity_check_pipeline(self, setup_pipeline, tmp_path):
-        """Test game scanning to integrity check pipeline."""
-        from ClassicLib.ScanGame.GameScanner import GameScanner  # type: ignore
-
-        from ClassicLib.GameIntegrity import GameIntegrityChecker
-
-        # Create synthetic game structure
-        game_path = tmp_path / "synthetic_game"
-        game_path.mkdir()
-
-        # Create synthetic game files
-        (game_path / "Data").mkdir()
-        (game_path / "Data" / "Fallout4.esm").write_bytes(b"SYNTH_MASTER")
-        (game_path / "Data" / "DLCRobot.esm").write_bytes(b"SYNTH_DLC")
-        (game_path / "Data" / "SyntheticMod.esp").write_bytes(b"SYNTH_MOD")
-
-        # Mock scanner and checker
-        with patch("ClassicLib.ScanGame.GameScanner.GameScanner") as MockScanner:
-            scanner_instance = MockScanner.return_value
-            scanner_instance.scan_game_directory = AsyncMock(
-                return_value={
-                    "masters": ["Fallout4.esm", "DLCRobot.esm"],
-                    "plugins": ["SyntheticMod.esp"],
-                    "archives": [],
-                    "issues": [],
-                }
-            )
-
-            # Run game scan pipeline
-            GameScanner(str(game_path))
-            scan_result = await scanner_instance.scan_game_directory()
-
-            # Validate scan results
-            assert "masters" in scan_result
-            assert len(scan_result["masters"]) == 2
-            assert "Fallout4.esm" in scan_result["masters"]
-
-            # Run integrity check
-            checker = GameIntegrityChecker()
-            with patch.object(checker, "check_executable_version", return_value=(True, "")):
-                # Just verify we can instantiate and mock check
-                pass
-
-    @pytest.mark.asyncio
     async def test_mod_detection_to_conflict_resolution_pipeline(self, setup_pipeline):
         """Test mod detection to plugin analysis to conflict resolution."""
         from ClassicLib.integration.factory import get_plugin_analyzer

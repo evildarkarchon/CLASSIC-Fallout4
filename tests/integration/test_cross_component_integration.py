@@ -106,41 +106,6 @@ class TestGUIToRustIntegration:
             if isinstance(result, dict) and "plugins" in result:
                 assert len(result["plugins"]) >= 2
 
-    @pytest.mark.skip(reason="API changed: ReportGenerator no longer has generate method")
-    @pytest.mark.asyncio
-    async def test_gui_to_report_generation_flow(self):
-        """Test complete flow from GUI to report generation."""
-        from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.integration.factory import get_parser, get_report_generator
-
-        bridge = AsyncBridge.get_instance()
-        parser = get_parser()
-        report_gen = get_report_generator()
-
-        crash_log = IntegrationTestHelpers.create_synthetic_crash_log()
-
-        # Simulate GUI flow
-        async def complete_gui_flow():
-            # Step 1: Parse log using find_segments
-            lines = crash_log.splitlines()
-            game_ver, crashgen_ver, error, segments = await asyncio.to_thread(
-                parser.find_segments, lines, "Buffout 4", "F4SE", "Fallout4.exe"
-            )
-
-            # Step 2: Generate report
-            report_data = {
-                "crash_address": "0x7FF6EF4C3512",
-                "exception": "EXCEPTION_ACCESS_VIOLATION",
-                "plugins": segments.get("plugins", []) if isinstance(segments, dict) else [],
-                "formids": ["00000014", "FE000800"],
-            }
-
-            return await asyncio.to_thread(report_gen.generate, report_data)
-
-        # Execute through bridge
-        report = bridge.run_async(complete_gui_flow())
-        assert report is not None
-
     @pytest.mark.asyncio
     async def test_gui_concurrent_operations(self):
         """Test GUI handling multiple concurrent operations."""
@@ -327,40 +292,6 @@ class TestCLIBatchProcessing:
         # Verify all logs processed
         assert len(batch_results) == num_logs
         assert all(r["result"] is not None for r in batch_results)
-
-    @pytest.mark.skip(reason="API changed: ReportGenerator no longer has generate method")
-    @pytest.mark.asyncio
-    async def test_cli_output_format_generation(self):
-        """Test CLI generating different output formats."""
-        from ClassicLib.integration.factory import get_report_generator
-
-        report_gen = get_report_generator()
-
-        # Test data
-        report_data = {
-            "crash_address": "0x7FF6EF4C3512",
-            "exception": "EXCEPTION_ACCESS_VIOLATION",
-            "plugins": ["Fallout4.esm", "DLCRobot.esm", "PRP.esp"],
-            "formids": ["00000014", "FE000800"],
-        }
-
-        # Test different output formats
-        output_formats = ["text", "json", "markdown", "html"]
-
-        for format_type in output_formats:
-            with patch.object(report_gen, "generate") as mock_generate:
-                # Mock different format outputs
-                if format_type == "json":
-                    mock_generate.return_value = '{"crash": "data"}'
-                elif format_type == "markdown":
-                    mock_generate.return_value = "# Crash Report\n## Details"
-                elif format_type == "html":
-                    mock_generate.return_value = "<html><body>Report</body></html>"
-                else:
-                    mock_generate.return_value = "Plain text report"
-
-                result = report_gen.generate(report_data)
-                assert result is not None
 
     @pytest.mark.asyncio
     async def test_cli_parallel_processing(self):

@@ -15,7 +15,7 @@ from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication
 
 from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType
-from tests.concurrency.conftest import ThreadTestWorker
+from tests.fixtures.concurrency_fixtures import ThreadTestWorker
 
 
 class TestThreadManager:

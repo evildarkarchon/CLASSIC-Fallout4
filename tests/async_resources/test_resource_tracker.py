@@ -5,7 +5,7 @@ import asyncio
 
 import pytest
 
-from tests.async_tests.test_async_utils import (
+from tests.test_infra.async_resource_tracker import (
     AsyncResourceTracker,
     async_test_context,
     ensure_event_loop_cleanup,

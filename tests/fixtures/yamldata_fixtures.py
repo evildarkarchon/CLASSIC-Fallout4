@@ -6,13 +6,20 @@ Fixtures are designed to be Rust-compatible by default.
 IMPORTANT: Use `mock_yamldata` for Rust integration tests.
 Use `mock_yamldata_simple` for unit tests that don't call Rust.
 Use `mock_yamldata_with_data` for mod detection tests.
+
+Consolidated from:
+- Original yamldata_fixtures.py
+- tests/yaml/conftest.py (yaml_async_core, yaml_temp_file)
 """
 
+import math
 import os
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
+import ruamel.yaml
 
 
 def _create_vr_methods(mock: MagicMock) -> None:
@@ -293,3 +300,61 @@ def mock_scanlog_info() -> Any:
             return self.game_root_name_vr if is_vr else self.game_root_name
 
     return MockScanLogInfo()
+
+
+# ============================================================================
+# YAML Settings Fixtures (from tests/yaml/conftest.py)
+# ============================================================================
+
+
+@pytest.fixture
+async def yaml_async_core():
+    """Get the AsyncYamlSettingsCore singleton instance for testing.
+
+    This fixture provides access to the async YAML settings core for
+    testing async YAML operations.
+
+    Returns:
+        The AsyncYamlSettingsCore singleton instance.
+
+    Note:
+        Since it's a singleton, the instance is not disposed after the test.
+    """
+    from ClassicLib.YamlSettings.async_ import get_async_yaml_core
+
+    core = await get_async_yaml_core()
+    return core
+
+
+@pytest.fixture
+def yaml_temp_file(tmp_path: Path) -> Path:
+    """Create a temporary YAML file with test data.
+
+    Args:
+        tmp_path: Pytest's temporary directory fixture.
+
+    Returns:
+        Path to the temporary YAML file containing test settings.
+    """
+    yaml_file = tmp_path / "test_settings.yaml"
+    data = {
+        "test_settings": {
+            "string_value": "test",
+            "bool_value": True,
+            "int_value": 42,
+            "float_value": math.pi,
+            "list_value": [1, 2, 3],
+            "dict_value": {"nested": "value"},
+        }
+    }
+
+    yaml = ruamel.yaml.YAML()
+    with Path(yaml_file).open("w") as f:
+        yaml.dump(data, f)
+
+    return yaml_file
+
+
+# Backward compatibility aliases (deprecated - use prefixed names)
+async_yaml_core = yaml_async_core
+temp_yaml_file = yaml_temp_file

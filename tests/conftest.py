@@ -47,6 +47,16 @@ from tests.fixtures.yamldata_fixtures import *  # noqa: F403
 # Scanlog fixtures (orchestrator, parser fixtures)
 from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 
+# Phase 2 consolidated fixtures (fixture consolidation task)
+from tests.fixtures.backup_fixtures import *  # noqa: F403
+from tests.fixtures.concurrency_fixtures import *  # noqa: F403
+from tests.fixtures.game_fixtures import *  # noqa: F403
+from tests.fixtures.gui_settings_fixtures import *  # noqa: F403
+from tests.fixtures.io_fixtures import *  # noqa: F403
+from tests.fixtures.mods_fixtures import *  # noqa: F403
+from tests.fixtures.parity_fixtures import *  # noqa: F403
+from tests.fixtures.performance_fixtures import *  # noqa: F403
+
 
 def pytest_configure(config):
     """Register custom markers for test types."""

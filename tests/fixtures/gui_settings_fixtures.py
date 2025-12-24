@@ -1,0 +1,200 @@
+"""
+GUI settings dialog fixtures for CLASSIC-Fallout4 test suite.
+
+This module provides fixtures for testing the settings dialog and
+related GUI components, including mock settings cache implementation.
+
+Consolidated from:
+- tests/gui/settings/conftest.py
+
+Note: These tests use a mocked settings cache to avoid file I/O and ensure speed.
+"""
+
+from typing import Any
+from unittest.mock import MagicMock
+
+import pytest
+from PySide6.QtWidgets import QWidget
+
+from ClassicLib.Constants import YAML
+from ClassicLib.Interface.Settings.dialog import SettingsDialog
+from ClassicLib.MessageHandler import init_message_handler
+from ClassicLib.YamlSettings import yaml_settings
+
+
+class MockSettingsCache:
+    """Mock YAML settings cache for testing.
+
+    Provides an in-memory implementation of the settings cache
+    to avoid file I/O during tests.
+
+    Attributes:
+        store: Dictionary storing settings by (yaml_store, key_path) tuples.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the mock settings cache."""
+        self.store: dict[tuple[Any, str], Any] = {}
+
+    def async_yaml_settings(
+        self,
+        _type: type,
+        yaml_store: Any,
+        key_path: str,
+        new_value: Any | None = None,
+    ) -> Any:
+        """Get or set a setting value.
+
+        Args:
+            _type: The expected type of the setting value.
+            yaml_store: The YAML store identifier.
+            key_path: The dot-separated path to the setting.
+            new_value: Optional new value to set.
+
+        Returns:
+            The setting value, or None if not found.
+        """
+        key = (yaml_store, key_path)
+        if new_value is not None:
+            self.store[key] = new_value
+            return new_value
+        return self.store.get(key)
+
+    def batch_get_settings(
+        self,
+        requests: list[tuple[type, Any, str]],
+    ) -> list[Any]:
+        """Batch retrieve settings.
+
+        Args:
+            requests: List of (type, yaml_store, key_path) tuples.
+
+        Returns:
+            List of setting values corresponding to each request.
+        """
+        return [self.store.get((req[1], req[2])) for req in requests]
+
+
+class TestWindowMock(QWidget):
+    """Mock window class for testing integration with mixins.
+
+    Provides a minimal window implementation for testing
+    settings dialog integration.
+
+    Attributes:
+        settings_applied: Flag indicating if apply_settings_changes was called.
+    """
+
+    def __init__(self) -> None:
+        """Initialize the mock window."""
+        super().__init__()
+        self.settings_applied = False
+
+    def apply_settings_changes(self) -> None:
+        """Mock method for applying settings changes."""
+        self.settings_applied = True
+
+
+@pytest.fixture
+def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> MockSettingsCache:
+    """Patch YamlSettingsCache to use in-memory storage.
+
+    This fixture properly handles the module structure where YamlSettingsCache
+    is a class with a class-level _instance attribute (singleton pattern),
+    and yaml_cache is a proxy object in the convenience module.
+
+    Args:
+        monkeypatch: Pytest's monkeypatch fixture.
+
+    Yields:
+        The mock cache instance for test assertions.
+    """
+    mock_cache = MockSettingsCache()
+
+    # Import the class to patch
+    from ClassicLib.YamlSettings import YamlSettingsCache
+
+    # Save original instance for cleanup
+    original_instance = YamlSettingsCache._instance
+
+    # Reset the singleton instance to None so get_instance will use our mock
+    YamlSettingsCache._instance = None
+
+    # Mock the get_instance class method to return our mock cache
+    monkeypatch.setattr(YamlSettingsCache, "get_instance", lambda: mock_cache)
+
+    yield mock_cache
+
+    # Restore original instance after test (cleanup)
+    YamlSettingsCache._instance = original_instance
+
+
+@pytest.fixture
+def gui_settings_app(qapp: Any) -> Any:
+    """Provide QApplication instance for tests.
+
+    Args:
+        qapp: The Qt application fixture.
+
+    Returns:
+        The Qt application instance.
+    """
+    return qapp
+
+
+@pytest.fixture
+def gui_settings_dialog(
+    gui_settings_app: Any,
+    gui_settings_mock_cache: MockSettingsCache,
+) -> SettingsDialog:
+    """Create a SettingsDialog instance for testing.
+
+    The dialog is created as non-modal to prevent freezing when shown during tests.
+    This allows tests to safely call show() without the dialog blocking or freezing.
+
+    Args:
+        gui_settings_app: The Qt application fixture.
+        gui_settings_mock_cache: The mock settings cache.
+
+    Yields:
+        A configured SettingsDialog instance.
+    """
+    # Initialize message handler for GUI mode
+    handler = init_message_handler(parent=None, is_gui_mode=True)
+
+    # Mock the GUI backend's show method to prevent blocking QMessageBox
+    handler._gui_backend.show = MagicMock()  # pyright: ignore[reportAttributeAccessIssue]
+
+    # Create dialog as NON-MODAL to prevent freezing in tests
+    # mock_settings_cache is active (autouse via dependency or singleton patch), so it will use memory
+    dialog = SettingsDialog(yaml_store=YAML.TEST, modal=False)
+    yield dialog
+    dialog.close()
+
+
+@pytest.fixture
+def gui_settings_reset(gui_settings_mock_cache: MockSettingsCache) -> None:
+    """Reset settings to default values after test.
+
+    Args:
+        gui_settings_mock_cache: The mock settings cache.
+
+    Yields:
+        None (cleanup happens after test).
+    """
+    yield
+    # Reset to defaults after test (updates the mock)
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", False)
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs", False)
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Show FormID Values", False)
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Move Unsolved Logs", False)
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Update Check", False)
+    yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "Both")
+
+
+# Backward compatibility aliases (deprecated - use prefixed names)
+mock_settings_cache = gui_settings_mock_cache
+app = gui_settings_app
+settings_dialog = gui_settings_dialog
+reset_settings = gui_settings_reset

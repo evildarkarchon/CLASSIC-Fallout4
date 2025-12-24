@@ -12,8 +12,8 @@
 ## Phase 1: Core Infrastructure & Mocking Foundation (DONE)
 - **Goal:** Fix core import errors, fixture scopes, and basic mocking issues.
 - **Key Actions:**
-    - Updated `tests/settings/test_yaml_batch_operations.py` to use `AsyncMock` for async context managers.
-    - Updated `tests/settings/test_yaml_sync_wrapper_unit.py` to mock `_async_core`.
+    - Updated `tests/yaml/test_yaml_batch_operations.py` to use `AsyncMock` for async context managers.
+    - Updated `tests/yaml/test_yaml_sync_wrapper_unit.py` to mock `_async_core`.
     - Fixed `tests/game/test_game_integrity_synthetic.py` import paths and mocking.
     - Fixed `tests/edge_cases/test_file_permission_errors.py` message handler usage.
     - Fixed `tests/setup/test_setup_initialization.py` mocking.

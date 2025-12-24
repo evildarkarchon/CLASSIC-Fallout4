@@ -256,7 +256,7 @@ uv run pytest tests/scanning/
 uv run pytest tests/game/
 
 # Settings and YAML tests
-uv run pytest tests/settings/
+uv run pytest tests/yaml/
 
 # Performance tests only
 uv run pytest tests/performance/

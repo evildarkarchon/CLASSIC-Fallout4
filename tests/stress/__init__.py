@@ -27,7 +27,7 @@ can handle production-level workloads and extreme conditions without failures.
 """
 
 from .stress_report_generator import StressTestReporter, SystemSpecs, TestMetric, TestSectionResult
-from .stress_test_fixtures import ConcurrencyTestHelper, MemoryTracker, PerformanceProfiler, StressDataGenerator
+from tests.fixtures.stress_fixtures import ConcurrencyTestHelper, MemoryTracker, PerformanceProfiler, StressDataGenerator
 
 __all__ = [
     "MemoryTracker",

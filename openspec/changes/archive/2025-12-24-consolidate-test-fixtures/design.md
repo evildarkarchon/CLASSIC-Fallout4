@@ -229,7 +229,7 @@ Split the 737-line file into focused modules:
 - `tests/performance/` - Benchmarks
 - `tests/rust_integration/` - Rust FFI tests
 - `tests/scanlog/` - Core parsing domain
-- `tests/settings/` - Configuration tests
+- `tests/yaml/` - Configuration tests
 - `tests/stress/` - Stress testing
 - `tests/test_data/` - Static test data
 

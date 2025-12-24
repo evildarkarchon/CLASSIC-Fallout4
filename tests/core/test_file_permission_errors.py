@@ -205,11 +205,6 @@ class TestWritePermissionErrors:
             # Restore permissions
             readonly_dir.chmod(0o755)
 
-    @pytest.mark.asyncio
-    @pytest.mark.skip("Atomic write functionality not exposed/implemented in FileIOCore")
-    async def test_atomic_write_permission_error(self):
-        """Test atomic write operation with permission errors."""
-
 
 class TestDirectoryPermissionErrors:
     """Test handling of directory permission errors."""

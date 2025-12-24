@@ -112,18 +112,6 @@ class TestUpdateManagerNetworkResilience:
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False
 
-    @pytest.mark.skip(reason="Retry logic not implemented in VersionChecker")
-    @pytest.mark.asyncio
-    async def test_update_check_retry_logic(self):
-        """Test automatic retry logic on network failures."""
-        pass
-
-    @pytest.mark.skip(reason="Retry logic not implemented in VersionChecker")
-    @pytest.mark.asyncio
-    async def test_intermittent_network_handling(self):
-        """Test handling of intermittent network issues."""
-        pass
-
     @pytest.mark.asyncio
     async def test_slow_network_timeout(self):
         """Test timeout handling for slow network responses."""
