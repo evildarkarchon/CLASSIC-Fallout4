@@ -86,7 +86,7 @@ class TestRustDatabasePool:
     return Python coroutines. These tests use async/await accordingly.
     """
 
-    def test_pool_creation(self):
+    async def test_pool_creation(self):
         """Test creating a new database pool with custom parameters."""
         if not RustDatabasePool:
             pytest.skip("RustDatabasePool not available")
