@@ -5,12 +5,22 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 ## 📚 Quick Navigation
 
 ### Start Here
+- **[Quick Start Guide](api/QUICK_START.md)** - Get up and running in 5 minutes
+- **[API Reference](api/API_REFERENCE.md)** - Complete ClassicLib API documentation
+- **[Architecture Overview](architecture/ARCHITECTURE_OVERVIEW.md)** - System design with diagrams
 - **[Rust Documentation Index](RUST_DOCUMENTATION_INDEX.md)** - Complete guide to all Rust documentation
 
 ### Documentation by Category
 
+#### 📖 API Documentation
+**[api/](api/)** - API reference and getting started
+- **[Quick Start Guide](api/QUICK_START.md)** - Get started in 5 minutes
+- **[API Reference](api/API_REFERENCE.md)** - Complete ClassicLib API
+- **[Code Examples](examples/CODE_EXAMPLES.md)** - Practical code patterns
+
 #### 🛠️ Development
 **[development/](development/)** - Development guides for working with CLASSIC
+- **[Rust Integration Guide](development/RUST_INTEGRATION_GUIDE.md)** - Hybrid Python-Rust architecture
 - Slint GUI development patterns
 - Rust 2024 edition guide
 - Rust workspace architecture
@@ -62,6 +72,7 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 
 #### 🏗️ Architecture
 **[architecture/](architecture/)** - Architectural documentation
+- **[Architecture Overview](architecture/ARCHITECTURE_OVERVIEW.md)** - Complete system design
 - CLI/TUI architecture
 - Help system schema
 
@@ -126,6 +137,11 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 
 ## 🆕 Recent Additions
 
+- **[Quick Start Guide](api/QUICK_START.md)** - Get up and running in 5 minutes
+- **[API Reference](api/API_REFERENCE.md)** - Complete ClassicLib API documentation
+- **[Architecture Overview](architecture/ARCHITECTURE_OVERVIEW.md)** - System design with Mermaid diagrams
+- **[Rust Integration Guide](development/RUST_INTEGRATION_GUIDE.md)** - Hybrid Python-Rust architecture
+- **[Code Examples](examples/CODE_EXAMPLES.md)** - Practical code patterns
 - **[Slint GUI Development](development/slint_gui_development.md)** - New Slint GUI patterns
 - **[Rust 2024 Edition Guide](development/rust_2024_edition_guide.md)** - Modern Rust features
 - **[Async Development Guide](development/async_development_guide.md)** - Comprehensive async patterns
@@ -144,16 +160,18 @@ When adding new documentation:
 docs/
 ├── README.md (this file)
 ├── RUST_DOCUMENTATION_INDEX.md (master index)
+├── api/                 (API reference and quick start)
+├── architecture/        (architectural docs)
 ├── development/         (development guides)
-├── planning/           (strategic plans)
-├── testing/            (testing documentation)
-├── rust/               (Rust reference docs)
-├── performance/        (performance guides)
-├── guides/             (user guides)
-├── architecture/       (architectural docs)
-├── implementation/     (implementation reports)
-├── migration/          (migration guides)
-└── other/              (miscellaneous)
+├── examples/            (code examples)
+├── guides/              (user guides)
+├── implementation/      (implementation reports)
+├── migration/           (migration guides)
+├── other/               (miscellaneous)
+├── performance/         (performance guides)
+├── planning/            (strategic plans)
+├── rust/                (Rust reference docs)
+└── testing/             (testing documentation)
 ```
 
 ## ❓ Need Help?
