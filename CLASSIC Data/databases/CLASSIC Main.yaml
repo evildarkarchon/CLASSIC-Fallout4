@@ -441,28 +441,6 @@ Version_Registry:
       priority: 200
       deprecated: false
 
-    # Fallout 4 Anniversary Edition (Active development branch)
-    - id: FO4_AE
-      game: Fallout4
-      is_vr: false
-      version: "1.11.191.0"
-      display_name: Fallout 4 Anniversary Edition
-      short_name: AE
-      description: Anniversary Edition version (active development branch)
-      address_library:
-        filename: version-1-11-191-0.bin
-        format: bin
-        nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
-      xse:
-        acronym: F4SE
-        compatible_version: "0.7.3"
-        loader: f4se_loader.exe
-      compatible_range:
-        min: "1.11.137.0"
-        max: "1.11.999.999"
-      priority: 300
-      deprecated: false
-
     # Fallout 4 VR
     - id: FO4_VR
       game: Fallout4
