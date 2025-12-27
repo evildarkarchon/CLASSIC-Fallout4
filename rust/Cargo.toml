@@ -32,6 +32,9 @@ members = [
     # Phase 5 - Application Coordination (Business Logic)
     "business-logic/classic-update-core",
 
+    # Version Registry (Game version detection and matching)
+    "business-logic/classic-version-registry-core",
+
     # UI Coordination (Shared across CLI/TUI/GUI)
     "ui-applications/classic-ui-shared",
 
