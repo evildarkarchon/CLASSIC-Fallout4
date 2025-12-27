@@ -33,6 +33,7 @@ if TYPE_CHECKING:
 # Removed to fix circular import - GlobalRegistry will be imported when needed
 
 # Null version constant - NOT deprecated (used for error handling)
+# Null version constant - NOT deprecated (used for error handling)
 NULL_VERSION: Version = Version("0.0.0.0")
 
 

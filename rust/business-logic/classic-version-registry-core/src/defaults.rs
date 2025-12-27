@@ -2,13 +2,13 @@
 //!
 //! This module provides default version configurations when YAML loading
 //! fails or the Version_Registry section is not present. It includes
-//! the four standard Fallout 4 versions: OG, NG, AE (Anniversary Edition), and VR.
+//! the three standard Fallout 4 versions: OG, NG, and VR.
 
 use std::collections::HashMap;
 
 use crate::GameVersion;
 use crate::models::{
-    AddressLibFormat, AddressLibraryConfig, CompatibleRange, LogLevel, UnknownVersionHandling,
+    AddressLibFormat, AddressLibraryConfig, LogLevel, UnknownVersionHandling,
     UnknownVersionStrategy, VersionInfo, XseConfig,
 };
 
@@ -56,36 +56,6 @@ pub fn create_fo4_ng() -> VersionInfo {
     }
 }
 
-/// Create default Fallout 4 Anniversary Edition version info.
-///
-/// The Anniversary Edition covers game versions from 1.11.137/1.11.140 to 1.11.191
-/// and beyond (as it's an active development branch). Uses a generous compatible
-/// range to match future versions in this branch.
-pub fn create_fo4_ae() -> VersionInfo {
-    VersionInfo {
-        id: "FO4_AE".to_string(),
-        game: "Fallout4".to_string(),
-        is_vr: false,
-        version: GameVersion::new(1, 11, 191, 0), // Current max version
-        display_name: "Fallout 4 Anniversary Edition".to_string(),
-        short_name: "AE".to_string(),
-        description: "Anniversary Edition version (active development branch)".to_string(),
-        address_library: Some(AddressLibraryConfig::new(
-            "version-1-11-191-0.bin",
-            AddressLibFormat::Bin,
-            "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
-        )),
-        xse: Some(XseConfig::new("F4SE", "0.7.3", "f4se_loader.exe")),
-        // Generous compatible range: 1.11.137.0 through 1.11.999.0 (future-proof for active branch)
-        compatible_range: Some(CompatibleRange::new(
-            GameVersion::new(1, 11, 137, 0),
-            GameVersion::new(1, 11, 999, 0),
-        )),
-        priority: 300, // Highest priority - most recent version branch
-        deprecated: false,
-    }
-}
-
 /// Create default Fallout 4 VR version info.
 pub fn create_fo4_vr() -> VersionInfo {
     VersionInfo {
@@ -116,12 +86,10 @@ pub fn get_default_versions() -> HashMap<String, VersionInfo> {
 
     let og = create_fo4_og();
     let ng = create_fo4_ng();
-    let ae = create_fo4_ae();
     let vr = create_fo4_vr();
 
     versions.insert(og.id.clone(), og);
     versions.insert(ng.id.clone(), ng);
-    versions.insert(ae.id.clone(), ae);
     versions.insert(vr.id.clone(), vr);
 
     versions
@@ -148,10 +116,9 @@ mod tests {
     fn test_default_versions() {
         let versions = get_default_versions();
 
-        assert_eq!(versions.len(), 4);
+        assert_eq!(versions.len(), 3);
         assert!(versions.contains_key("FO4_OG"));
         assert!(versions.contains_key("FO4_NG"));
-        assert!(versions.contains_key("FO4_AE"));
         assert!(versions.contains_key("FO4_VR"));
     }
 
@@ -179,27 +146,6 @@ mod tests {
         assert_eq!(ng.short_name, "NG");
         assert!(!ng.is_vr);
         assert_eq!(ng.priority, 200); // Higher priority than OG
-    }
-
-    #[test]
-    fn test_ae_version() {
-        let ae = create_fo4_ae();
-
-        assert_eq!(ae.id, "FO4_AE");
-        assert_eq!(ae.version, GameVersion::new(1, 11, 191, 0));
-        assert_eq!(ae.short_name, "AE");
-        assert!(!ae.is_vr);
-        assert_eq!(ae.priority, 300); // Highest priority - most recent version branch
-        assert!(ae.compatible_range.is_some());
-
-        // Test compatible range includes expected versions
-        let range = ae.compatible_range.as_ref().unwrap();
-        assert!(range.contains(&GameVersion::new(1, 11, 137, 0))); // Min version
-        assert!(range.contains(&GameVersion::new(1, 11, 140, 0))); // Early AE version
-        assert!(range.contains(&GameVersion::new(1, 11, 191, 0))); // Current max
-        assert!(range.contains(&GameVersion::new(1, 11, 200, 0))); // Future version
-        assert!(!range.contains(&GameVersion::new(1, 10, 984, 0))); // NG version
-        assert!(!range.contains(&GameVersion::new(1, 12, 0, 0))); // Outside range
     }
 
     #[test]
