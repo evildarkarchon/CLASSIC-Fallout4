@@ -390,3 +390,90 @@ exclude_log_files:  # EXCLUDE .log files that contain *these* strings in their n
   - f4se
   - HHS
   - PluginPreloader
+
+# ========================================================================================
+# VERSION REGISTRY - Data-driven game version configuration
+# Add new game versions here without code changes
+# ========================================================================================
+Version_Registry:
+  schema_version: "1.0"
+
+  versions:
+    # Fallout 4 Original (Pre-Next-Gen Update)
+    - id: FO4_OG
+      game: Fallout4
+      is_vr: false
+      version: "1.10.163.0"
+      display_name: Fallout 4 Original
+      short_name: OG
+      description: Pre-Next-Gen Update version
+      address_library:
+        filename: version-1-10-163-0.bin
+        format: bin
+        nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
+      xse:
+        acronym: F4SE
+        compatible_version: "0.6.23"
+        loader: f4se_loader.exe
+      compatible_range:
+        min: "1.10.163.0"
+        max: "1.10.163.999"
+      priority: 100
+      deprecated: false
+
+    # Fallout 4 Next-Gen
+    - id: FO4_NG
+      game: Fallout4
+      is_vr: false
+      version: "1.10.984.0"
+      display_name: Fallout 4 Next-Gen
+      short_name: NG
+      description: Next-Gen Update version
+      address_library:
+        filename: version-1-10-984-0.bin
+        format: bin
+        nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
+      xse:
+        acronym: F4SE
+        compatible_version: "0.7.2"
+        loader: f4se_loader.exe
+      compatible_range:
+        min: "1.10.984.0"
+        max: "1.10.999.999"
+      priority: 200
+      deprecated: false
+
+    # Fallout 4 VR
+    - id: FO4_VR
+      game: Fallout4
+      is_vr: true
+      version: "1.2.72.0"
+      display_name: Fallout 4 VR
+      short_name: VR
+      description: Virtual Reality version
+      address_library:
+        filename: version-1-2-72-0.csv
+        format: csv
+        nexus_url: https://www.nexusmods.com/fallout4/mods/64879?tab=files
+      xse:
+        acronym: F4SEVR
+        compatible_version: "0.6.20"
+        loader: f4sevr_loader.exe
+      compatible_range:
+        min: "1.2.0.0"
+        max: "1.2.999.999"
+      priority: 100
+      deprecated: false
+
+  # Configuration for handling unknown/unsupported versions
+  unknown_version_handling:
+    # Strategy: nearest_match | strict | default_only
+    strategy: nearest_match
+
+    # Default version to use when no match found (by game)
+    defaults:
+      Fallout4: FO4_NG
+      Fallout4VR: FO4_VR
+
+    # Log level for unknown versions: debug | warning | error
+    log_level: warning

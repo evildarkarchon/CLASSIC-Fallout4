@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info
-from ClassicLib.Constants import FO4_VERSIONS, NG_VERSION, NULL_VERSION, OG_VERSION, YAML
+from ClassicLib.Constants import NULL_VERSION, YAML
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
@@ -29,6 +29,7 @@ from ClassicLib.Interface.controllers.path_dialog import show_game_path_dialog_s
 from ClassicLib.Logger import logger
 from ClassicLib.Utils.file_utils import open_file_with_encoding
 from ClassicLib.Utils.version_utils import get_game_version
+from ClassicLib.VersionRegistry import get_version_registry
 from ClassicLib.YamlSettings import yaml_settings
 
 # Get Rust module if available, None otherwise
@@ -38,13 +39,24 @@ _HAS_RUST_PATH = classic_path is not None
 _VERSION_WARNING_LOGGED = False
 
 
-def _log_version_warning(game_version: "Version") -> None:
+def _log_version_warning(game_version: "Version", match_message: str = "") -> None:
+    """Log a warning about unsupported or unknown game versions.
+
+    Uses the VersionRegistry to get the list of supported versions dynamically.
+
+    Args:
+        game_version: The detected game version.
+        match_message: Optional message from VersionRegistry matching.
+
+    """
     global _VERSION_WARNING_LOGGED  # noqa: PLW0603
     if not _VERSION_WARNING_LOGGED:
+        registry = get_version_registry()
+        supported = [str(v.version) for v in registry.get_all_for_game("Fallout4")]
         logger.warning(
-            f"Unsupported game version detected: {game_version}. "
-            f"Supported versions: {', '.join(str(v) for v in FO4_VERSIONS)}. "
-            "Skipping version-dependent checks."
+            f"Unknown game version detected: {game_version}. "
+            f"Supported versions: {', '.join(supported)}. "
+            f"{match_message}"
         )
         _VERSION_WARNING_LOGGED = True
 
@@ -569,31 +581,39 @@ def game_generate_paths() -> None:
         Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
     )
     match GlobalRegistry.get_game():
-        case "Fallout4" if not GlobalRegistry.get_vr():
-            if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
-                _log_version_warning(game_version)
+        case "Fallout4":
+            vr_suffix = GlobalRegistry.get_vr()  # Returns "" or "VR"
+            is_vr = bool(vr_suffix)  # Convert to boolean
+            registry = get_version_registry()
+
+            # Handle NULL_VERSION (version detection failed) - use default
+            if game_version == NULL_VERSION:
+                default_id = "FO4_VR" if is_vr else "FO4_OG"
+                default_info = registry.get_by_id(default_id)
+                if default_info and default_info.address_library:
+                    yaml_key = f"Game{vr_suffix}_Info"
+                    yaml_settings(
+                        str,
+                        YAML.Game_Local,
+                        f"{yaml_key}.Game_File_AddressLib",
+                        rf"{game_path}\Data\{xse_acronym_base}\plugins\{default_info.address_library.filename}",
+                    )
                 return
-            if game_version in {OG_VERSION, NULL_VERSION}:
+
+            # Match version using registry (with graceful fallback)
+            match_result = registry.match_version(game_version, "Fallout4", is_vr=is_vr)
+
+            if match_result.should_warn:
+                _log_version_warning(game_version, match_result.message)
+
+            if match_result.version_info and match_result.version_info.address_library:
+                yaml_key = f"Game{vr_suffix}_Info"
                 yaml_settings(
                     str,
                     YAML.Game_Local,
-                    "Game_Info.Game_File_AddressLib",
-                    rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin",
+                    f"{yaml_key}.Game_File_AddressLib",
+                    rf"{game_path}\Data\{xse_acronym_base}\plugins\{match_result.version_info.address_library.filename}",
                 )
-            elif game_version == NG_VERSION:
-                yaml_settings(
-                    str,
-                    YAML.Game_Local,
-                    "Game_Info.Game_File_AddressLib",
-                    rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin",
-                )
-        case "Fallout4" if GlobalRegistry.get_vr():
-            yaml_settings(
-                str,
-                YAML.Game_Local,
-                "GameVR_Info.Game_File_AddressLib",
-                rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv",
-            )
 
 
 async def game_generate_paths_async() -> None:
@@ -637,28 +657,36 @@ async def game_generate_paths_async() -> None:
         Path(cast("str", await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
     )
     match GlobalRegistry.get_game():
-        case "Fallout4" if not GlobalRegistry.get_vr():
-            if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
-                _log_version_warning(game_version)
+        case "Fallout4":
+            vr_suffix = GlobalRegistry.get_vr()  # Returns "" or "VR"
+            is_vr = bool(vr_suffix)  # Convert to boolean
+            registry = get_version_registry()
+
+            # Handle NULL_VERSION (version detection failed) - use default
+            if game_version == NULL_VERSION:
+                default_id = "FO4_VR" if is_vr else "FO4_OG"
+                default_info = registry.get_by_id(default_id)
+                if default_info and default_info.address_library:
+                    yaml_key = f"Game{vr_suffix}_Info"
+                    await yaml_settings_async(
+                        str,
+                        YAML.Game_Local,
+                        f"{yaml_key}.Game_File_AddressLib",
+                        rf"{game_path}\Data\{xse_acronym_base}\plugins\{default_info.address_library.filename}",
+                    )
                 return
-            if game_version in {OG_VERSION, NULL_VERSION}:
+
+            # Match version using registry (with graceful fallback)
+            match_result = registry.match_version(game_version, "Fallout4", is_vr=is_vr)
+
+            if match_result.should_warn:
+                _log_version_warning(game_version, match_result.message)
+
+            if match_result.version_info and match_result.version_info.address_library:
+                yaml_key = f"Game{vr_suffix}_Info"
                 await yaml_settings_async(
                     str,
                     YAML.Game_Local,
-                    "Game_Info.Game_File_AddressLib",
-                    rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-163-0.bin",
+                    f"{yaml_key}.Game_File_AddressLib",
+                    rf"{game_path}\Data\{xse_acronym_base}\plugins\{match_result.version_info.address_library.filename}",
                 )
-            elif game_version == NG_VERSION:
-                await yaml_settings_async(
-                    str,
-                    YAML.Game_Local,
-                    "Game_Info.Game_File_AddressLib",
-                    rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-10-984-0.bin",
-                )
-        case "Fallout4" if GlobalRegistry.get_vr():
-            await yaml_settings_async(
-                str,
-                YAML.Game_Local,
-                "GameVR_Info.Game_File_AddressLib",
-                rf"{game_path}\Data\{xse_acronym_base}\plugins\version-1-2-72-0.csv",
-            )
