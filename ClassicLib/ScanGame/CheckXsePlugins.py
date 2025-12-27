@@ -10,8 +10,9 @@ from pathlib import Path
 from typing import TypedDict
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import NG_VERSION, NULL_VERSION, OG_VERSION, VR_VERSION, YAML, Version
+from ClassicLib.Constants import NULL_VERSION, YAML, Version
 from ClassicLib.Utils.version_utils import get_game_version
+from ClassicLib.VersionRegistry import VersionInfo, get_version_registry
 from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
 
@@ -38,26 +39,44 @@ class AddressLibVersionInfo(TypedDict):
     url: str
 
 
-ALL_ADDRESS_LIB_INFO: dict[str, AddressLibVersionInfo] = {
-    "VR": {
-        "version_const": VR_VERSION,
-        "filename": "version-1-2-72-0.csv",
-        "description": "Virtual Reality (VR) version",
-        "url": "https://www.nexusmods.com/fallout4/mods/64879?tab=files",
-    },
-    "OG": {
-        "version_const": OG_VERSION,
-        "filename": "version-1-10-163-0.bin",
-        "description": "Non-VR (Regular) version",
-        "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
-    },
-    "NG": {
-        "version_const": NG_VERSION,
-        "filename": "version-1-10-984-0.bin",
-        "description": "Non-VR (New Game) version",
-        "url": "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
-    },
-}
+def _version_info_to_address_lib_info(version_info: VersionInfo) -> AddressLibVersionInfo:
+    """Convert a VersionInfo from the registry to AddressLibVersionInfo.
+
+    Args:
+        version_info: VersionInfo from the VersionRegistry.
+
+    Returns:
+        AddressLibVersionInfo dict compatible with existing functions.
+
+    """
+    addr_lib = version_info.address_library
+    return {
+        "version_const": version_info.version,
+        "filename": addr_lib.filename if addr_lib else "",
+        "description": version_info.display_name or version_info.description,
+        "url": addr_lib.nexus_url if addr_lib else "",
+    }
+
+
+def get_all_address_lib_info() -> dict[str, AddressLibVersionInfo]:
+    """Get all Address Library info from the VersionRegistry.
+
+    Returns:
+        Dictionary mapping short names to AddressLibVersionInfo.
+
+    """
+    registry = get_version_registry()
+    result: dict[str, AddressLibVersionInfo] = {}
+
+    for version_info in registry.get_all():
+        if version_info.address_library:
+            result[version_info.short_name] = _version_info_to_address_lib_info(version_info)
+
+    return result
+
+
+# Legacy alias for backward compatibility (deprecated)
+ALL_ADDRESS_LIB_INFO = get_all_address_lib_info()
 
 
 def _determine_relevant_versions(is_vr_mode: bool) -> tuple[list[AddressLibVersionInfo], list[AddressLibVersionInfo]]:
@@ -76,12 +95,20 @@ def _determine_relevant_versions(is_vr_mode: bool) -> tuple[list[AddressLibVersi
         contains the wrong or non-relevant ones.
 
     """
-    if is_vr_mode:
-        correct_versions: list = [ALL_ADDRESS_LIB_INFO["VR"]]
-        wrong_versions: list = [ALL_ADDRESS_LIB_INFO["OG"], ALL_ADDRESS_LIB_INFO["NG"]]
-    else:
-        correct_versions = [ALL_ADDRESS_LIB_INFO["OG"], ALL_ADDRESS_LIB_INFO["NG"]]
-        wrong_versions = [ALL_ADDRESS_LIB_INFO["VR"]]
+    registry = get_version_registry()
+
+    correct_versions: list[AddressLibVersionInfo] = [
+        _version_info_to_address_lib_info(v)
+        for v in registry.get_correct_versions(is_vr_mode)
+        if v.address_library
+    ]
+
+    wrong_versions: list[AddressLibVersionInfo] = [
+        _version_info_to_address_lib_info(v)
+        for v in registry.get_wrong_versions(is_vr_mode)
+        if v.address_library
+    ]
+
     return correct_versions, wrong_versions
 
 
@@ -97,11 +124,18 @@ def _format_game_version_not_detected_message() -> list[str]:
         list[str]: A list of strings representing the notification message.
 
     """
+    registry = get_version_registry()
+    og_info = registry.get_by_short_name("OG")
+    vr_info = registry.get_by_short_name("VR")
+
+    og_url = og_info.address_library.nexus_url if og_info and og_info.address_library else ""
+    vr_url = vr_info.address_library.nexus_url if vr_info and vr_info.address_library else ""
+
     return [
         "❓ NOTICE : Unable to locate Address Library\n",
         "  If you have Address Library installed, please check the path in your settings.\n",
         "  If you don't have it installed, you can find it on the Nexus.\n",
-        f"  Link: Regular: {ALL_ADDRESS_LIB_INFO['OG']['url']} or VR: {ALL_ADDRESS_LIB_INFO['VR']['url']}\n-----\n",
+        f"  Link: Regular: {og_url} or VR: {vr_url}\n-----\n",
     ]
 
 
