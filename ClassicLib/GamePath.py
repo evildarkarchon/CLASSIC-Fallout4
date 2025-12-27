@@ -39,7 +39,7 @@ _VERSION_WARNING_LOGGED = False
 
 
 def _log_version_warning(game_version: "Version") -> None:
-    global _VERSION_WARNING_LOGGED
+    global _VERSION_WARNING_LOGGED  # noqa: PLW0603
     if not _VERSION_WARNING_LOGGED:
         logger.warning(
             f"Unsupported game version detected: {game_version}. "

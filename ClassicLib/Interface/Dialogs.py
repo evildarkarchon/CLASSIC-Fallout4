@@ -7,7 +7,9 @@ with details about the application, contributors, and application icon.
 tracebacks, including functionality for copying error details to the clipboard.
 """
 
-from PySide6.QtCore import Qt
+import threading
+
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QIcon, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
@@ -15,7 +17,6 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
-    QMessageBox,
     QPushButton,
     QStyle,
     QTextEdit,
@@ -23,6 +24,7 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib import GlobalRegistry
+from ClassicLib.Logger import logger
 
 
 class CustomAboutDialog(QDialog):
@@ -283,29 +285,131 @@ class CustomErrorDialog(QDialog):
         return button_layout
 
     def _copy_to_clipboard(self) -> None:
-        """Copy the error details to the system clipboard and displays a confirmation message.
+        """Copy the error details to the system clipboard and display a confirmation message.
 
         This method constructs a text representation of the error, including the title,
         message, and optional details. The constructed text is copied to the system
         clipboard for easy access. Additionally, a brief confirmation message is shown
         to the user to indicate the successful copy operation.
 
+        The method includes robust error handling to prevent crashes when:
+        - The clipboard access fails (permission or platform issues)
+        - The dialog is invoked from cross-thread signal-slot connections
+        - The QApplication is not properly initialized
+
+        If the clipboard operation fails, appropriate feedback is provided to the user
+        without causing application instability.
+
         Raises:
-            None: This method does not raise any exceptions.
+            None: This method handles all exceptions internally and does not propagate them.
 
         """
-        clipboard = QApplication.clipboard()
-        full_text = f"{self.title}\n\n{self.message}"
-        if self.details and self.details.strip():
-            full_text += f"\n\nDetails:\n{self.details}"
+        # Log thread information for debugging cross-thread issues
+        current_thread = threading.current_thread()
+        is_main_thread = current_thread is threading.main_thread()
+        logger.debug(f"_copy_to_clipboard called from thread: {current_thread.name}, is_main_thread: {is_main_thread}")
 
-        clipboard.setText(full_text)
+        try:
+            # Verify QApplication exists before accessing clipboard
+            app = QApplication.instance()
+            if app is None or not isinstance(app, QApplication):
+                logger.error("Cannot copy to clipboard: QApplication instance not found")
+                self._show_copy_feedback(success=False, error_msg="Application not initialized")
+                return
 
-        # Show brief confirmation using non-parented dialog to avoid threading issues
-        # when CustomErrorDialog is shown via cross-thread signal-slot connections
-        msg_box = QMessageBox()
-        msg_box.setIcon(QMessageBox.Icon.Information)
-        msg_box.setWindowTitle("Copied")
-        msg_box.setText("Error details copied to clipboard.")
-        msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
-        msg_box.exec()
+            clipboard = app.clipboard()
+            if clipboard is None:
+                logger.error("Cannot copy to clipboard: clipboard() returned None")
+                self._show_copy_feedback(success=False, error_msg="Clipboard not available")
+                return
+
+            # Build the full text to copy
+            full_text = f"{self.title}\n\n{self.message}"
+            if self.details and self.details.strip():
+                full_text += f"\n\nDetails:\n{self.details}"
+
+            # Perform the clipboard operation
+            clipboard.setText(full_text)
+
+            logger.debug(f"Successfully copied {len(full_text)} characters to clipboard")
+
+            # Show success feedback using non-blocking method
+            self._show_copy_feedback(success=True)
+
+        except RuntimeError as e:
+            # Qt-related runtime errors (e.g., invalid object state)
+            logger.error(f"RuntimeError during clipboard operation: {e}")
+            self._show_copy_feedback(success=False, error_msg=str(e))
+
+        except OSError as e:
+            # Platform-level clipboard access errors
+            logger.error(f"OSError during clipboard operation: {e}")
+            self._show_copy_feedback(success=False, error_msg=str(e))
+
+        except Exception as e:  # noqa: BLE001
+            # Catch-all for any unexpected errors to prevent crashes
+            logger.error(f"Unexpected error during clipboard operation: {e}", exc_info=True)
+            self._show_copy_feedback(success=False, error_msg="Unexpected error occurred")
+
+    def _show_copy_feedback(self, *, success: bool, error_msg: str | None = None) -> None:
+        """Show feedback to user about clipboard copy operation.
+
+        Uses a non-blocking approach via QTimer.singleShot to avoid nested event loop
+        issues that can occur when CustomErrorDialog is shown via cross-thread
+        signal-slot connections.
+
+        Args:
+            success: Whether the clipboard operation succeeded.
+            error_msg: Error message to display if operation failed (optional).
+
+        """
+        if success:
+            # Update the copy button text temporarily to provide feedback
+            # This avoids creating a nested event loop with a modal dialog
+            copy_button = self.findChild(QPushButton, "")
+
+            # Find the copy button by iterating through buttons
+            for child in self.findChildren(QPushButton):
+                if child.text() == "Copy to Clipboard":
+                    copy_button = child
+                    break
+
+            if copy_button is not None:
+                original_text = copy_button.text()
+                copy_button.setText("✓ Copied!")
+                copy_button.setEnabled(False)
+
+                # Reset button text after a short delay
+                def reset_button() -> None:
+                    try:
+                        if copy_button is not None:
+                            copy_button.setText(original_text)
+                            copy_button.setEnabled(True)
+                    except RuntimeError:
+                        # Button may have been deleted if dialog was closed
+                        pass
+
+                QTimer.singleShot(1500, reset_button)
+            else:
+                logger.debug("Clipboard copy succeeded (copy button not found for visual feedback)")
+
+        else:
+            # Show error feedback - also non-blocking
+            error_display = error_msg or "Unknown error"
+
+            # Find the copy button and update its text to show error
+            for child in self.findChildren(QPushButton):
+                if child.text() in {"Copy to Clipboard", "✓ Copied!"}:
+                    original_text = "Copy to Clipboard"
+                    child.setText(f"✗ Failed: {error_display[:20]}")
+                    child.setEnabled(False)
+
+                    def reset_button_error(btn: QPushButton = child, orig: str = original_text) -> None:
+                        try:
+                            btn.setText(orig)
+                            btn.setEnabled(True)
+                        except RuntimeError:
+                            pass
+
+                    QTimer.singleShot(3000, reset_button_error)
+                    break
