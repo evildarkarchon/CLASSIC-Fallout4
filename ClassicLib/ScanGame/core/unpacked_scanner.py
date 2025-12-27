@@ -120,7 +120,7 @@ class UnpackedModsScanner:
             raise
 
         # Process all directories concurrently
-        msg_info(f"Processing {len(all_dirs_data)} directories with async pipeline...")
+        msg_info(f"Processing {len(all_dirs_data)} directories...")
 
         # Create tasks for all directories
         tasks = [

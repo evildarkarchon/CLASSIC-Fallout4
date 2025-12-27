@@ -23,6 +23,8 @@
 - Beta 2: Fix some bugs that were causing the new Rust-accelerated scanning to be slower than the old version in some cases. As well as further optimizations to them.
 - Beta 3: More performance optimizations, hopefully better looking results in the results tab (still WIP).
 - RC 1: Even more performance optimizations and backend changes, add database of FOLON Form-IDs.
+- RC 2: Make the unsupported game version error non-fatal, it will now simply skip the version-dependent checks.
+- RC 3: Fix Settings file creation on first start.
 - Known Issue: Standard Markdown treats single "new line" characters as a space, so some of the formatting in the reports may look off in the results viewer. This does not affect the saved report files and they will look correct in Discord.
 
 ### 7.31.0 CHANGES

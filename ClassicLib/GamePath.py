@@ -35,6 +35,20 @@ from ClassicLib.YamlSettings import yaml_settings
 classic_path = get_path_operations()
 _HAS_RUST_PATH = classic_path is not None
 
+_VERSION_WARNING_LOGGED = False
+
+
+def _log_version_warning(game_version: "Version") -> None:
+    global _VERSION_WARNING_LOGGED
+    if not _VERSION_WARNING_LOGGED:
+        logger.warning(
+            f"Unsupported game version detected: {game_version}. "
+            f"Supported versions: {', '.join(str(v) for v in FO4_VERSIONS)}. "
+            "Skipping version-dependent checks."
+        )
+        _VERSION_WARNING_LOGGED = True
+
+
 if TYPE_CHECKING:
     from packaging.version import Version
 
@@ -557,7 +571,8 @@ def game_generate_paths() -> None:
     match GlobalRegistry.get_game():
         case "Fallout4" if not GlobalRegistry.get_vr():
             if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
-                raise ValueError("Unsupported or invalid game version")
+                _log_version_warning(game_version)
+                return
             if game_version in {OG_VERSION, NULL_VERSION}:
                 yaml_settings(
                     str,
@@ -624,7 +639,8 @@ async def game_generate_paths_async() -> None:
     match GlobalRegistry.get_game():
         case "Fallout4" if not GlobalRegistry.get_vr():
             if (not game_version or game_version not in FO4_VERSIONS) and game_version != NULL_VERSION:
-                raise ValueError("Unsupported or invalid game version")
+                _log_version_warning(game_version)
+                return
             if game_version in {OG_VERSION, NULL_VERSION}:
                 await yaml_settings_async(
                     str,

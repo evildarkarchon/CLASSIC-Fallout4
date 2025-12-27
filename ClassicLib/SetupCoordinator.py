@@ -174,6 +174,22 @@ class SetupCoordinator:
         # Settings will load lazily on first access, which is fine for startup performance
         # If prefetching is needed, it should be done async with asyncio.run() or after Qt starts
 
+        # Ensure CLASSIC Settings.yaml exists before batch loading
+        # This prevents crashes on first launch when the file is missing
+        settings_path = Path("CLASSIC Settings.yaml")
+        if not settings_path.exists():
+            from ClassicLib.integration.factory import get_file_io
+            from ClassicLib.YamlSettings import yaml_settings_async
+
+            async def _create_default_settings() -> None:
+                default_settings = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_settings")
+                if isinstance(default_settings, str):
+                    io_core = get_file_io()
+                    await io_core.write_file(settings_path, default_settings)
+                    logger.info(f"Created default settings file at {settings_path}")
+
+            asyncio.run(_create_default_settings())
+
         # Batch load all application settings
         # Use asyncio.run() during initialization (before Qt event loop)
         # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
