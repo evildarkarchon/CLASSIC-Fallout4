@@ -18,14 +18,11 @@
 - Many markdown compliance fixes for the reports.
 - Some sections that have no content will now be hidden in the report.
 - Probably a bunch of other things I forgot to write down.
+- Add database of FOLON Form-IDs.
+- Make the unsupported game version error non-fatal, it will now simply skip the version-dependent checks.
+- Fix Settings file creation on first start.
 - This version is not API compatible with previous versions (thus the major version update).
 - For Developers: Most business logic has been moved to a separate module called `ClassicLib` to make development of applications that use CLASSIC easier. Some of the components are written in Rust and exposed to Python via PyO3 bindings, with native Python fallbacks for now.
-- Beta 2: Fix some bugs that were causing the new Rust-accelerated scanning to be slower than the old version in some cases. As well as further optimizations to them.
-- Beta 3: More performance optimizations, hopefully better looking results in the results tab (still WIP).
-- RC 1: Even more performance optimizations and backend changes, add database of FOLON Form-IDs.
-- RC 2: Make the unsupported game version error non-fatal, it will now simply skip the version-dependent checks.
-- RC 3: Fix Settings file creation on first start.
-- Known Issue: Standard Markdown treats single "new line" characters as a space, so some of the formatting in the reports may look off in the results viewer. This does not affect the saved report files and they will look correct in Discord.
 
 ### 7.31.0 CHANGES
 - Reduced volume for audio notifications
