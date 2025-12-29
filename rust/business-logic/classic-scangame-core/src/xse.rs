@@ -8,6 +8,8 @@
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
+use classic_version_registry_core::get_version_registry;
+
 /// Error types for XSE plugin validation operations.
 #[derive(Debug, Error)]
 pub enum XseError {
@@ -33,23 +35,47 @@ pub enum GameVersion {
     Original,
     /// New Gen version (1.10.984.0)
     NextGen,
+    /// Anniversary Edition version (1.11.137.0 - 1.11.191.0+)
+    AnniversaryEdition,
     /// VR version (1.2.72.0)
     Vr,
 }
 
 impl GameVersion {
+    /// Get the VersionRegistry ID for this version.
+    fn registry_id(&self) -> Option<&'static str> {
+        match self {
+            Self::Null => None,
+            Self::Original => Some("FO4_OG"),
+            Self::NextGen => Some("FO4_NG"),
+            Self::AnniversaryEdition => Some("FO4_AE"),
+            Self::Vr => Some("FO4_VR"),
+        }
+    }
+
     /// Returns true if this is the null version (not detected).
     pub fn is_null(&self) -> bool {
         matches!(self, Self::Null)
     }
 
     /// Returns a human-readable description of this version.
-    pub fn description(&self) -> &'static str {
+    ///
+    /// Uses the VersionRegistry to get the display name and version string.
+    /// Falls back to hardcoded values if registry lookup fails.
+    pub fn description(&self) -> String {
+        if let Some(id) = self.registry_id() {
+            let registry = get_version_registry();
+            if let Some(info) = registry.get_by_id(id) {
+                return format!("{} ({})", info.display_name, info.version);
+            }
+        }
+        // Fallback to hardcoded values if registry fails
         match self {
-            Self::Null => "Not Detected",
-            Self::Original => "Original (1.10.163.0)",
-            Self::NextGen => "Next Gen (1.10.984.0)",
-            Self::Vr => "VR (1.2.72.0)",
+            Self::Null => "Not Detected".to_string(),
+            Self::Original => "Original (1.10.163.0)".to_string(),
+            Self::NextGen => "Next Gen (1.10.984.0)".to_string(),
+            Self::AnniversaryEdition => "Anniversary Edition (1.11.137.0 - 1.11.191.0)".to_string(),
+            Self::Vr => "VR (1.2.72.0)".to_string(),
         }
     }
 }
@@ -68,34 +94,89 @@ pub struct AddressLibInfo {
 }
 
 impl AddressLibInfo {
-    /// Create VR Address Library info.
-    pub fn vr() -> Self {
-        Self {
-            version: GameVersion::Vr,
-            filename: "version-1-2-72-0.csv".to_string(),
-            description: "Virtual Reality (VR) version".to_string(),
-            url: "https://www.nexusmods.com/fallout4/mods/64879?tab=files".to_string(),
+    /// Create Address Library info from VersionRegistry with fallback.
+    ///
+    /// Attempts to get Address Library configuration from the registry,
+    /// falling back to hardcoded values if not available.
+    fn from_registry_id(
+        id: &str,
+        version: GameVersion,
+        fallback_filename: &str,
+        fallback_desc: &str,
+        fallback_url: &str,
+    ) -> Self {
+        let registry = get_version_registry();
+
+        if let Some(info) = registry.get_by_id(id) {
+            if let Some(addr_lib) = &info.address_library {
+                return Self {
+                    version,
+                    filename: addr_lib.filename.clone(),
+                    description: format!("{} ({})", info.display_name, info.short_name),
+                    url: addr_lib.nexus_url.clone(),
+                };
+            }
         }
+
+        // Fallback to hardcoded values
+        Self {
+            version,
+            filename: fallback_filename.to_string(),
+            description: fallback_desc.to_string(),
+            url: fallback_url.to_string(),
+        }
+    }
+
+    /// Create VR Address Library info.
+    ///
+    /// Uses VersionRegistry when available, falls back to hardcoded values.
+    pub fn vr() -> Self {
+        Self::from_registry_id(
+            "FO4_VR",
+            GameVersion::Vr,
+            "version-1-2-72-0.csv",
+            "Virtual Reality (VR) version",
+            "https://www.nexusmods.com/fallout4/mods/64879?tab=files",
+        )
     }
 
     /// Create Original (OG) Address Library info.
+    ///
+    /// Uses VersionRegistry when available, falls back to hardcoded values.
     pub fn original() -> Self {
-        Self {
-            version: GameVersion::Original,
-            filename: "version-1-10-163-0.bin".to_string(),
-            description: "Non-VR (Regular) version".to_string(),
-            url: "https://www.nexusmods.com/fallout4/mods/47327?tab=files".to_string(),
-        }
+        Self::from_registry_id(
+            "FO4_OG",
+            GameVersion::Original,
+            "version-1-10-163-0.bin",
+            "Non-VR (Regular) version",
+            "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
+        )
     }
 
     /// Create Next Gen (NG) Address Library info.
+    ///
+    /// Uses VersionRegistry when available, falls back to hardcoded values.
     pub fn next_gen() -> Self {
-        Self {
-            version: GameVersion::NextGen,
-            filename: "version-1-10-984-0.bin".to_string(),
-            description: "Non-VR (Next Gen) version".to_string(),
-            url: "https://www.nexusmods.com/fallout4/mods/47327?tab=files".to_string(),
-        }
+        Self::from_registry_id(
+            "FO4_NG",
+            GameVersion::NextGen,
+            "version-1-10-984-0.bin",
+            "Non-VR (Next Gen) version",
+            "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
+        )
+    }
+
+    /// Create Anniversary Edition (AE) Address Library info.
+    ///
+    /// Uses VersionRegistry when available, falls back to hardcoded values.
+    pub fn anniversary_edition() -> Self {
+        Self::from_registry_id(
+            "FO4_AE",
+            GameVersion::AnniversaryEdition,
+            "version-1-11-191-0.bin",
+            "Non-VR (Anniversary Edition) version",
+            "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
+        )
     }
 }
 
@@ -160,13 +241,21 @@ impl XseChecker {
     /// Determine the correct and wrong Address Library versions based on VR mode.
     fn determine_relevant_versions(&self) -> (Vec<AddressLibInfo>, Vec<AddressLibInfo>) {
         if self.is_vr_mode {
-            // VR mode: correct = VR, wrong = OG + NG
+            // VR mode: correct = VR, wrong = OG + NG + AE
             let correct = vec![AddressLibInfo::vr()];
-            let wrong = vec![AddressLibInfo::original(), AddressLibInfo::next_gen()];
+            let wrong = vec![
+                AddressLibInfo::original(),
+                AddressLibInfo::next_gen(),
+                AddressLibInfo::anniversary_edition(),
+            ];
             (correct, wrong)
         } else {
-            // Non-VR mode: correct = OG + NG, wrong = VR
-            let correct = vec![AddressLibInfo::original(), AddressLibInfo::next_gen()];
+            // Non-VR mode: correct = OG + NG + AE, wrong = VR
+            let correct = vec![
+                AddressLibInfo::original(),
+                AddressLibInfo::next_gen(),
+                AddressLibInfo::anniversary_edition(),
+            ];
             let wrong = vec![AddressLibInfo::vr()];
             (correct, wrong)
         }
@@ -293,6 +382,7 @@ mod tests {
         assert!(GameVersion::Null.is_null());
         assert!(!GameVersion::Original.is_null());
         assert!(!GameVersion::NextGen.is_null());
+        assert!(!GameVersion::AnniversaryEdition.is_null());
         assert!(!GameVersion::Vr.is_null());
     }
 
@@ -309,6 +399,20 @@ mod tests {
         let ng_info = AddressLibInfo::next_gen();
         assert_eq!(ng_info.version, GameVersion::NextGen);
         assert_eq!(ng_info.filename, "version-1-10-984-0.bin");
+
+        let ae_info = AddressLibInfo::anniversary_edition();
+        assert_eq!(ae_info.version, GameVersion::AnniversaryEdition);
+        assert_eq!(ae_info.filename, "version-1-11-191-0.bin");
+    }
+
+    #[test]
+    fn test_correct_version_non_vr_ae() {
+        let temp_dir = setup_test_plugins_dir(&["version-1-11-191-0.bin"]);
+        let checker =
+            XseChecker::new(temp_dir.path(), false, GameVersion::AnniversaryEdition).unwrap();
+
+        let result = checker.check();
+        assert_eq!(result, ValidationResult::CorrectVersion);
     }
 
     #[test]

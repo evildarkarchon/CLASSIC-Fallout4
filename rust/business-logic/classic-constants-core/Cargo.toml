@@ -8,7 +8,7 @@ description = "Application constants and enumerations for CLASSIC (no PyO3)"
 repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 
 [lib]
-crate-type = ["rlib"]  # Pure Rust library only - no PyO3
+crate-type = ["rlib"] # Pure Rust library only - no PyO3
 
 [dependencies]
 # Version handling
@@ -19,6 +19,9 @@ phf = { version = "0.11", features = ["macros"] }
 
 # Serialization (for potential YAML integration)
 serde = { workspace = true, features = ["derive"] }
+
+# VersionRegistry integration (mandatory for version metadata)
+classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # NO PyO3 dependency!
 

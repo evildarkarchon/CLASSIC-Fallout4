@@ -57,15 +57,23 @@ class Keys:
         DOCS_PATH: Key for documents folder path.
         IS_GUI_MODE: Key for GUI mode flag.
         OPEN_FILE_FUNC: Key for file opening function callback.
-        VR: Key for VR game variant identifier.
+        VR: **DEPRECATED** - Key for VR game variant identifier.
+            Use GAME_VERSION instead. Will be removed in v9.0.
         GAME: Key for current game name.
         LOCAL_DIR: Key for local application directory.
         IS_PRERELEASE: Key for prerelease version flag.
+        GAME_VERSION: Key for Fallout4Version enum (Original/NextGen/Vr).
+            Replaces the deprecated VR key with proper version enum support.
+        VERSION_AUTO_DETECTED: Key for version auto-detection status boolean.
+            True if version was auto-detected from game files.
 
     Example:
         >>> from classic_registry import Keys, register
         >>> register(Keys.GAME, "Fallout4")
         >>> register(Keys.IS_GUI_MODE, True)
+        >>> # New version-aware registration
+        >>> register(Keys.GAME_VERSION, "NextGen")
+        >>> register(Keys.VERSION_AUTO_DETECTED, True)
 
     """
 
@@ -76,10 +84,12 @@ class Keys:
     DOCS_PATH: str
     IS_GUI_MODE: str
     OPEN_FILE_FUNC: str
-    VR: str
+    VR: str  # Deprecated - use GAME_VERSION
     GAME: str
     LOCAL_DIR: str
     IS_PRERELEASE: str
+    GAME_VERSION: str  # New in v8.0 - replaces VR
+    VERSION_AUTO_DETECTED: str  # New in v8.0
 
 def register(key: str, value: Any) -> None:
     """Register a value in the global registry.
@@ -231,14 +241,21 @@ def get_game_path_gui() -> Any | None:
 def get_vr() -> str:
     """Get the VR game variant identifier.
 
+    **DEPRECATED**: Use `is_version_auto_detected()` and check GAME_VERSION
+    instead. VR is now treated as a version variant of Fallout 4, not a
+    separate mode toggle. This function will be removed in v9.0.
+
     Returns:
-        The VR variant name, or empty string if not set.
+        The VR variant suffix ("VR" if VR mode, empty string otherwise).
 
     Example:
         >>> from classic_registry import get_vr
         >>> vr = get_vr()
         >>> if vr:
         ...     print(f"VR variant: {vr}")
+
+    .. deprecated:: 8.0.0
+        Use `get(Keys.GAME_VERSION)` and `is_version_auto_detected()` instead.
 
     """
 
@@ -252,5 +269,30 @@ def get_local_dir() -> str:
         >>> from classic_registry import get_local_dir
         >>> local_dir = get_local_dir()
         >>> print(f"Local directory: {local_dir}")
+
+    """
+
+def is_version_auto_detected() -> bool:
+    """Check if the game version was auto-detected.
+
+    This function returns whether the current game version (Original,
+    NextGen, or VR) was automatically detected from game files rather
+    than manually selected by the user.
+
+    Returns:
+        True if the version was auto-detected from game files,
+        False if manually selected or not set.
+
+    Example:
+        >>> from classic_registry import is_version_auto_detected, Keys, get
+        >>> if is_version_auto_detected():
+        ...     print("Version was auto-detected")
+        >>> else:
+        ...     print("Version was manually selected")
+        >>> # Get the actual version
+        >>> version = get(Keys.GAME_VERSION)
+        >>> print(f"Game version: {version}")
+
+    .. versionadded:: 8.0.0
 
     """

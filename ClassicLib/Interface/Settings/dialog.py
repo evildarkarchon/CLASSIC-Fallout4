@@ -25,7 +25,7 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Settings.path_manager import PathManager
-from ClassicLib.Interface.Settings.tab_creators import TabCreator
+from ClassicLib.Interface.Settings.tab_creators import TabCreator, ensure_game_version_options
 from ClassicLib.Interface.StyleSheets import DARK_MODE
 from ClassicLib.MessageHandler import msg_error, msg_success
 from ClassicLib.YamlSettings import yaml_cache, yaml_settings
@@ -49,7 +49,7 @@ class SettingsDialog(QDialog):
 
     # Mapping between widget keys and YAML setting names
     SETTINGS_MAP: ClassVar[dict[str, str]] = {
-        "vr_mode": "VR Mode",
+        "game_version": "Game Version",
         "fcx_mode": "FCX Mode",
         "simplify_logs": "Simplify Logs",
         "show_fid_values": "Show FormID Values",
@@ -130,7 +130,7 @@ class SettingsDialog(QDialog):
         self.tab_widget.addTab(general_widget, "General")
 
         # Store widget references for backwards compatibility
-        self.vr_checkbox = general_widgets.get("vr_mode")
+        self.game_version_combo = general_widgets.get("game_version")
 
         # Scanning tab
         scanning_widget, scanning_widgets = TabCreator.create_scanning_tab(self)
@@ -191,14 +191,82 @@ class SettingsDialog(QDialog):
         """
         self.path_manager.autodetect_ini_folder()
 
+    def _load_game_version_combo(self, game_version_value: str) -> None:
+        """Load game version value into the dropdown widget.
+
+        Args:
+            game_version_value: The version value to set ("auto", "Original", "NextGen", "VR").
+
+        """
+        game_version_widget = self.settings_widgets.get("game_version")
+        if not isinstance(game_version_widget, QComboBox):
+            return
+
+        # Get version options dynamically from VersionRegistry
+        version_options = ensure_game_version_options()
+
+        # Find the index by matching the stored value
+        target_index = 0  # Default to "Auto-detect"
+        for i, (_, value) in enumerate(version_options):
+            if value == game_version_value:
+                target_index = i
+                break
+        game_version_widget.setCurrentIndex(target_index)
+
+    def _load_update_source_combo(self, update_source: str) -> None:
+        """Load update source value into the dropdown widget.
+
+        Args:
+            update_source: The source value to set ("Nexus", "GitHub", "Both").
+
+        """
+        if not isinstance(self.update_source_combo, QComboBox):
+            return
+
+        index = self.update_source_combo.findText(update_source)
+        if index != -1:
+            self.update_source_combo.setCurrentIndex(index)
+        else:
+            # Invalid value - use default "Both"
+            default_index = self.update_source_combo.findText("Both")
+            if default_index != -1:
+                self.update_source_combo.setCurrentIndex(default_index)
+
+    def _load_ini_folder_path(self, ini_path: str) -> None:
+        """Load INI folder path into the text input widget.
+
+        Args:
+            ini_path: The path to set, or empty string to auto-detect.
+
+        """
+        if not isinstance(self.ini_folder_input, QLineEdit):
+            return
+
+        if not ini_path:
+            # Try to get from Game_Local YAML if not set in settings
+            from ClassicLib import GlobalRegistry
+
+            try:
+                # Use VersionRegistry-based config suffix
+                vr_suffix = GlobalRegistry.get_config_suffix()
+                root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
+                ini_path = yaml_settings(str, YAML.Game_Local, root_docs_key) or ""
+            except (ImportError, TypeError, ValueError):
+                pass  # Registry not initialized, use default
+
+        self.ini_folder_input.setText(ini_path)
+
     def load_settings(self) -> None:
-        """Load and applies settings from a configuration source into the application's GUI elements.
+        """Load and apply settings from a configuration source into the application's GUI elements.
 
         This method retrieves settings from a YAML store using a batch request mechanism, processes
         the retrieved values, and then updates the corresponding GUI controls in the application.
-        It handles both boolean and string settings, updating checkboxes, combo boxes, and text
+        It handles boolean and string settings, updating checkboxes, combo boxes, and text
         inputs accordingly. Default values or backup configurations are used when invalid or missing
         values are encountered during the loading process.
+
+        The method also handles migration from the legacy VR Mode boolean setting to the new
+        Game Version dropdown. If VR Mode is set but Game Version is not, it migrates the value.
 
         Raises:
             TypeError: If the retrieved settings have incorrect types.
@@ -209,16 +277,19 @@ class SettingsDialog(QDialog):
         from ClassicLib.Logger import logger
 
         try:
-            # Get current settings - boolean settings
+            # Get current settings - boolean settings (checkboxes only, not game_version)
             bool_requests = [
                 (bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}")
                 for key, setting_name in self.SETTINGS_MAP.items()
-                if key not in {"update_source", "ini_folder_path"}
+                if key not in {"game_version", "update_source", "ini_folder_path"}
             ]
-            # String settings
+            # String settings (includes game_version as string)
             str_requests = [
+                (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['game_version']}"),
                 (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}"),
                 (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['ini_folder_path']}"),
+                # Also check for legacy VR Mode setting for migration
+                (bool, self.yaml_store, "CLASSIC_Settings.VR Mode"),
             ]
             # Combine all requests
             requests = bool_requests + str_requests
@@ -228,44 +299,26 @@ class SettingsDialog(QDialog):
             value_iter = iter(values)
 
             # Update checkboxes
-            for key in [
-                "vr_mode",
-                "fcx_mode",
-                "simplify_logs",
-                "show_fid_values",
-                "move_invalid_logs",
-                "update_check",
-            ]:
+            for key in ["fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "update_check"]:
                 widget = self.settings_widgets.get(key)
                 if isinstance(widget, QCheckBox):
                     widget.setChecked(next(value_iter) or False)
 
-            # Update combo box
+            # Get string settings and legacy VR mode
+            game_version_value = next(value_iter) or "auto"
             update_source = next(value_iter) or "Nexus"
-            if isinstance(self.update_source_combo, QComboBox):
-                index = self.update_source_combo.findText(update_source)
-                if index != -1:
-                    self.update_source_combo.setCurrentIndex(index)
-                else:
-                    # Invalid value - use default
-                    default_index = self.update_source_combo.findText("Both")
-                    if default_index != -1:
-                        self.update_source_combo.setCurrentIndex(default_index)
-
-            # Update INI folder path
             ini_path = next(value_iter) or ""
-            if isinstance(self.ini_folder_input, QLineEdit):
-                if not ini_path:
-                    # Try to get from Game_Local YAML if not set in settings
-                    from ClassicLib import GlobalRegistry
+            legacy_vr_mode = next(value_iter) or False
 
-                    try:
-                        vr_suffix = GlobalRegistry.get_vr()
-                        root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
-                        ini_path = yaml_settings(str, YAML.Game_Local, root_docs_key) or ""
-                    except (ImportError, TypeError, ValueError):
-                        pass  # Registry not initialized, use default
-                self.ini_folder_input.setText(ini_path)
+            # Handle migration from legacy VR Mode to Game Version
+            if game_version_value == "auto" and legacy_vr_mode:
+                game_version_value = "VR"
+                logger.info("Migrated legacy VR Mode setting to Game Version: VR")
+
+            # Update UI widgets using helper methods
+            self._load_game_version_combo(game_version_value)
+            self._load_update_source_combo(update_source)
+            self._load_ini_folder_path(ini_path)
 
             logger.info("Loaded settings into dialog")
 
@@ -283,6 +336,10 @@ class SettingsDialog(QDialog):
         Errors encountered during the process are logged, and appropriate user
         messages are displayed.
 
+        The method also handles the new Game Version setting, saving it as a string
+        and updating the GlobalRegistry with the new version. Legacy VR Mode
+        setting is set to False to prevent confusion during transition.
+
         Raises:
             TypeError: Raised if there are type compatibility issues during
                 the saving process.
@@ -295,9 +352,8 @@ class SettingsDialog(QDialog):
         from ClassicLib.Logger import logger
 
         try:
-            # Save checkboxes
+            # Save checkboxes (excluding removed vr_mode)
             for key in [
-                "vr_mode",
                 "fcx_mode",
                 "simplify_logs",
                 "show_fid_values",
@@ -309,7 +365,37 @@ class SettingsDialog(QDialog):
                     setting_name = self.SETTINGS_MAP[key]
                     yaml_settings(bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}", widget.isChecked())
 
-            # Save combo box
+            # Save Game Version dropdown
+            game_version_widget = self.settings_widgets.get("game_version")
+            if isinstance(game_version_widget, QComboBox):
+                # Get version options dynamically from VersionRegistry
+                version_options = ensure_game_version_options()
+                current_index = game_version_widget.currentIndex()
+                if 0 <= current_index < len(version_options):
+                    _, game_version_value = version_options[current_index]
+                    yaml_settings(
+                        str,
+                        self.yaml_store,
+                        f"CLASSIC_Settings.{self.SETTINGS_MAP['game_version']}",
+                        game_version_value,
+                    )
+
+                    # Update GlobalRegistry with the new version
+                    from ClassicLib import GlobalRegistry
+
+                    # Set GAME_VERSION key for the new system
+                    GlobalRegistry.register(GlobalRegistry.Keys.GAME_VERSION, game_version_value)
+
+                    # For backward compatibility, also update VR key based on game version
+                    if game_version_value == "VR":
+                        GlobalRegistry.register(GlobalRegistry.Keys.VR, "VR")
+                    else:
+                        GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
+
+                    # Clear legacy VR Mode setting to prevent confusion
+                    yaml_settings(bool, self.yaml_store, "CLASSIC_Settings.VR Mode", False)
+
+            # Save Update Source combo box
             if isinstance(self.update_source_combo, QComboBox):
                 yaml_settings(
                     str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}", self.update_source_combo.currentText()
@@ -325,7 +411,8 @@ class SettingsDialog(QDialog):
                     from ClassicLib import GlobalRegistry
 
                     try:
-                        vr_suffix = GlobalRegistry.get_vr()
+                        # Use VersionRegistry-based config suffix
+                        vr_suffix = GlobalRegistry.get_config_suffix()
                         root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
                         yaml_settings(str, YAML.Game_Local, root_docs_key, ini_path)
                     except (ImportError, TypeError, ValueError):

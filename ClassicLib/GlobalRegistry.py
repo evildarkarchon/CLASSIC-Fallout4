@@ -4,11 +4,18 @@ This module serves as a central storage location for objects that need to be acc
 from multiple modules throughout the application.
 """
 
+from __future__ import annotations
+
 import os
 import threading
-from io import TextIOWrapper
+import warnings
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any, Literal
+
+if TYPE_CHECKING:
+    from io import TextIOWrapper
+
+    from ClassicLib.VersionRegistry.models import VersionInfo
 
 # Central storage for all globally accessible objects
 _registry: dict[str, Any] = {}
@@ -16,6 +23,9 @@ _registry_lock = threading.RLock()
 
 # Environment variable to enable test-only functionality
 _TESTING_MODE_ENV_VAR = "PYTEST_CURRENT_TEST"
+
+# Type alias for Game Version values
+GameVersionValue = Literal["auto", "Original", "NextGen", "AnniversaryEdition", "VR"]
 
 
 # Define keys for consistent access
@@ -34,7 +44,8 @@ class Keys:
         DOCS_PATH (str): Key for storing the documentation path.
         IS_GUI_MODE (str): Key for checking if the application is in GUI mode.
         OPEN_FILE_FUNC (str): Key for the function to open files with encoding.
-        VR (str): Key for VR-related game variables.
+        VR (str): Key for VR-related game variables (deprecated, use GAME_VERSION).
+        GAME_VERSION (str): Key for the current game version (Original, NextGen, VR, or auto).
         GAME (str): Key for non-VR game variables.
         LOCAL_DIR (str): Key for the local directory path.
         IS_PRERELEASE (str): Key indicating whether the application is a prerelease version.
@@ -48,7 +59,8 @@ class Keys:
     DOCS_PATH = "docs_path"
     IS_GUI_MODE = "is_gui_mode"
     OPEN_FILE_FUNC = "open_file_with_encoding"
-    VR = "gamevars_vr"
+    VR = "gamevars_vr"  # Deprecated: Use GAME_VERSION instead
+    GAME_VERSION = "gamevars_version"  # New in v8.0: Replaces VR Mode
     GAME = "gamevars_game"
     LOCAL_DIR = "local_dir"
     IS_PRERELEASE = "is_prerelease"
@@ -206,14 +218,82 @@ def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: s
     raise RuntimeError("open_file_with_encoding function not registered")
 
 
-def get_vr() -> str:
-    """Retrieve the value associated with the VR key if it is registered and non-empty. Otherwise, returns an
-    empty string.
+def get_game_version() -> GameVersionValue:
+    """Get the currently configured Fallout 4 version.
+
+    This function returns the game version as set in the settings:
+    - "auto" - Auto-detect from game files (default)
+    - "Original" - Pre-Next-Gen update version (1.10.163)
+    - "NextGen" - Next-Gen update version (1.10.984)
+    - "AnniversaryEdition" - Anniversary Edition version (1.11.137 - 1.11.191+)
+    - "VR" - Fallout 4 VR (1.2.72)
 
     Returns:
-        str: The value associated with the VR key if registered and non-empty, or an empty string otherwise.
+        GameVersionValue: The current game version setting. Defaults to "auto" if not set.
+
+    Example:
+        >>> from ClassicLib import GlobalRegistry
+        >>> version = GlobalRegistry.get_game_version()
+        >>> if version == "VR":
+        ...     print("VR mode enabled")
+
+    .. versionadded:: 8.0.0
+        Replaces the legacy VR Mode boolean setting with a proper version enum.
 
     """
+    if not is_registered(Keys.GAME_VERSION):
+        # Check if legacy VR key is set for backward compatibility
+        vr_value = get(Keys.VR) if is_registered(Keys.VR) else ""
+        if vr_value == "VR":
+            return "VR"
+        return "auto"
+    game_version = get(Keys.GAME_VERSION)
+    if game_version in {"auto", "Original", "NextGen", "AnniversaryEdition", "VR"}:
+        return game_version  # type: ignore[return-value]
+    return "auto"
+
+
+def get_vr() -> str:
+    """Retrieve the VR suffix for configuration lookups.
+
+    .. deprecated:: 8.0.0
+       Use :func:`get_game_version()` instead. VR is now a version variant
+       of Fallout 4, not a separate mode.
+
+    This function is maintained for backward compatibility. It derives
+    the VR suffix from the new GAME_VERSION setting.
+
+    Returns:
+        str: "VR" if game version is VR, otherwise empty string "".
+
+    Example:
+        >>> from ClassicLib import GlobalRegistry
+        >>> # Old way (deprecated):
+        >>> vr_suffix = GlobalRegistry.get_vr()
+        >>> config_key = f"Game{vr_suffix}_Info.Setting"
+        >>>
+        >>> # New way (preferred):
+        >>> version = GlobalRegistry.get_game_version()
+        >>> if version == "VR":
+        ...     config_key = "GameVR_Info.Setting"
+
+    """
+    # Issue deprecation warning only in non-test environments to reduce noise
+    if not os.environ.get(_TESTING_MODE_ENV_VAR):
+        warnings.warn(
+            "get_vr() is deprecated, use get_game_version() instead. VR is now a version variant of Fallout 4.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+
+    # First check the new GAME_VERSION key
+    if is_registered(Keys.GAME_VERSION):
+        game_version = get(Keys.GAME_VERSION)
+        if game_version == "VR":
+            return "VR"
+        return ""
+
+    # Fall back to legacy VR key for backward compatibility
     if not is_registered(Keys.VR):
         return ""
     vr_value = get(Keys.VR)
@@ -352,3 +432,114 @@ def unregister(key: str) -> bool:
             del _registry[key]
             return True
         return False
+
+
+def get_version_info() -> VersionInfo | None:
+    """Get the VersionInfo from VersionRegistry based on current game version setting.
+
+    This function looks up the current game version in the VersionRegistry and
+    returns the corresponding VersionInfo object containing all metadata about
+    the version (address library config, XSE config, etc.).
+
+    Returns:
+        VersionInfo: The VersionInfo for the current game version, or None if
+            the version could not be found in the registry.
+
+    Example:
+        >>> from ClassicLib import GlobalRegistry
+        >>> info = GlobalRegistry.get_version_info()
+        >>> if info:
+        ...     print(f"Game version: {info.display_name}")
+        ...     if info.address_library:
+        ...         print(f"Address Library: {info.address_library.filename}")
+
+    .. versionadded:: 8.0.0
+        Uses the VersionRegistry for data-driven version metadata.
+
+    """
+    from ClassicLib.VersionRegistry import get_version_registry
+
+    game_version = get_game_version()
+
+    if game_version == "auto":
+        # For auto-detect, we can't determine the version without game file analysis
+        # Return None and let the caller handle detection
+        return None
+
+    registry = get_version_registry()
+
+    # Map the setting value to the short name used in VersionRegistry
+    short_name_map = {
+        "Original": "OG",
+        "NextGen": "NG",
+        "AnniversaryEdition": "AE",
+        "VR": "VR",
+    }
+    short_name = short_name_map.get(game_version)
+    if short_name:
+        return registry.get_by_short_name(short_name)
+
+    return None
+
+
+def get_config_suffix() -> str:
+    """Get the config key suffix based on game version from VersionRegistry.
+
+    This function returns the configuration suffix ("" or "VR") to use when
+    building YAML config keys like "Game_Info" or "GameVR_Info". The suffix
+    is determined from the VersionRegistry based on the current game version.
+
+    This is the preferred replacement for get_vr() that uses the VersionRegistry
+    instead of legacy boolean settings.
+
+    Returns:
+        str: "VR" if the current game version is VR, otherwise empty string "".
+
+    Example:
+        >>> from ClassicLib import GlobalRegistry
+        >>> suffix = GlobalRegistry.get_config_suffix()
+        >>> config_key = f"Game{suffix}_Info.Root_Folder_Game"
+        >>> # For VR: "GameVR_Info.Root_Folder_Game"
+        >>> # For non-VR: "Game_Info.Root_Folder_Game"
+
+    .. versionadded:: 8.0.0
+        Replaces get_vr() with VersionRegistry integration.
+
+    """
+    game_version = get_game_version()
+
+    # For VR, return "VR" suffix
+    if game_version == "VR":
+        return "VR"
+
+    # For auto-detect mode, check if a VersionInfo is available from registry
+    if game_version == "auto":
+        version_info = get_version_info()
+        if version_info and version_info.is_vr:
+            return "VR"
+
+    # For Original, NextGen, and auto (non-VR), return empty suffix
+    return ""
+
+
+def is_vr_version() -> bool:
+    """Check if the current game version is a VR version.
+
+    This function uses the VersionRegistry to determine if the current
+    game version is VR.
+
+    Returns:
+        bool: True if the current game version is VR, False otherwise.
+
+    Example:
+        >>> from ClassicLib import GlobalRegistry
+        >>> if GlobalRegistry.is_vr_version():
+        ...     print("VR mode is active")
+        >>> else:
+        ...     print("Standard (non-VR) mode")
+
+    .. versionadded:: 8.0.0
+        Uses VersionRegistry for version determination.
+
+    """
+    return get_config_suffix() == "VR"

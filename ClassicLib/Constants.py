@@ -18,10 +18,13 @@ This module provides:
     1.10.163.0
 """
 
+from __future__ import annotations
+
+import warnings
 from collections.abc import Iterator
 from enum import Enum, auto
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 from packaging.version import Version
 
@@ -29,6 +32,7 @@ from packaging.version import Version
 
 # Null version constant - NOT deprecated (used for error handling)
 NULL_VERSION: Version = Version("0.0.0.0")
+
 
 # =============================================================================
 # DEPRECATED: Use ClassicLib.VersionRegistry instead
@@ -42,13 +46,124 @@ NULL_VERSION: Version = Version("0.0.0.0")
 #     og_info = registry.get_by_id("FO4_OG")
 #     ng_info = registry.get_by_id("FO4_NG")
 # =============================================================================
-OG_VERSION: Version = Version("1.10.163.0")
-NG_VERSION: Version = Version("1.10.984.0")
-VR_VERSION: Version = Version("1.2.72.0")
-OG_F4SE_VERSION: Version = Version("0.6.23")
-NG_F4SE_VERSION: Version = Version("0.7.2")
-FO4_VERSIONS: tuple[Version, Version] = (OG_VERSION, NG_VERSION)
-F4SE_VERSIONS: tuple[Version, Version] = (OG_F4SE_VERSION, NG_F4SE_VERSION)
+class _DeprecatedVersion:
+    """Wrapper that emits deprecation warning on access.
+
+    This class wraps Version constants and emits a DeprecationWarning
+    when the value is accessed.
+    """
+
+    def __init__(self, value: Version, name: str, replacement: str) -> None:
+        """Initialize the deprecated version wrapper.
+
+        Args:
+            value: The actual Version object
+            name: The constant name (for warning message)
+            replacement: The suggested replacement code
+        """
+        self._value = value
+        self._name = name
+        self._replacement = replacement
+        self._warned = False
+
+    def __repr__(self) -> str:
+        """Return string representation of the wrapped version."""
+        self._warn()
+        return repr(self._value)
+
+    def __str__(self) -> str:
+        """Return string of the wrapped version."""
+        self._warn()
+        return str(self._value)
+
+    def __eq__(self, other: object) -> bool:
+        """Compare for equality, emitting warning."""
+        self._warn()
+        if isinstance(other, _DeprecatedVersion):
+            return self._value == other._value
+        return self._value == other
+
+    def __hash__(self) -> int:
+        """Return hash of wrapped version."""
+        self._warn()
+        return hash(self._value)
+
+    def __lt__(self, other: object) -> bool:
+        """Compare for less than."""
+        self._warn()
+        if isinstance(other, _DeprecatedVersion):
+            return self._value < other._value
+        return self._value < other  # type: ignore[return-value]
+
+    def __le__(self, other: object) -> bool:
+        """Compare for less than or equal."""
+        self._warn()
+        if isinstance(other, _DeprecatedVersion):
+            return self._value <= other._value
+        return self._value <= other  # type: ignore[return-value]
+
+    def __gt__(self, other: object) -> bool:
+        """Compare for greater than."""
+        self._warn()
+        if isinstance(other, _DeprecatedVersion):
+            return self._value > other._value
+        return self._value > other  # type: ignore[return-value]
+
+    def __ge__(self, other: object) -> bool:
+        """Compare for greater than or equal."""
+        self._warn()
+        if isinstance(other, _DeprecatedVersion):
+            return self._value >= other._value
+        return self._value >= other  # type: ignore[return-value]
+
+    def _warn(self) -> None:
+        """Emit deprecation warning once."""
+        if not self._warned:
+            self._warned = True
+            warnings.warn(
+                f"{self._name} is deprecated. Use {self._replacement} instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+
+    @property
+    def value(self) -> Version:
+        """Get the underlying Version object."""
+        self._warn()
+        return self._value
+
+
+# Create deprecated version constants with runtime warnings
+OG_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
+    Version("1.10.163.0"),
+    "OG_VERSION",
+    "get_version_registry().get_by_id('FO4_OG').version",
+)
+NG_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
+    Version("1.10.984.0"),
+    "NG_VERSION",
+    "get_version_registry().get_by_id('FO4_NG').version",
+)
+VR_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
+    Version("1.2.72.0"),
+    "VR_VERSION",
+    "get_version_registry().get_by_id('FO4_VR').version",
+)
+OG_F4SE_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
+    Version("0.6.23"),
+    "OG_F4SE_VERSION",
+    "get_version_registry().get_by_id('FO4_OG').xse.compatible_version",
+)
+NG_F4SE_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
+    Version("0.7.2"),
+    "NG_F4SE_VERSION",
+    "get_version_registry().get_by_id('FO4_NG').xse.compatible_version",
+)
+
+# These tuples still use the deprecated constants but don't emit warnings themselves
+# (warning is emitted when accessing the tuple elements)
+FO4_VERSIONS: tuple[Version, Version] = (OG_VERSION, NG_VERSION)  # type: ignore[assignment]
+F4SE_VERSIONS: tuple[Version, Version] = (OG_F4SE_VERSION, NG_F4SE_VERSION)  # type: ignore[assignment]
 type GameID = (
     Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str
 )  # Entries must correspond to the game's Main ESM or EXE file name.

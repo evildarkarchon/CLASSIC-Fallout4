@@ -51,11 +51,29 @@ impl Keys {
     #[classattr]
     const OPEN_FILE_FUNC: &'static str = classic_registry_core::Keys::OPEN_FILE_FUNC;
 
+    /// VR game variant identifier (DEPRECATED).
+    ///
+    /// This key is deprecated. Use `GAME_VERSION` instead, which stores
+    /// a Fallout4Version enum that treats VR as a version variant.
     #[classattr]
+    #[allow(deprecated)]
     const VR: &'static str = classic_registry_core::Keys::VR;
 
     #[classattr]
     const GAME: &'static str = classic_registry_core::Keys::GAME;
+
+    /// Current game version for Fallout 4 (Original, NextGen, or Vr).
+    ///
+    /// This is the new key for storing the detected or selected Fallout 4 version.
+    /// It replaces the legacy VR mode toggle.
+    #[classattr]
+    const GAME_VERSION: &'static str = classic_registry_core::Keys::GAME_VERSION;
+
+    /// Whether the game version was auto-detected.
+    ///
+    /// True if auto-detected from game files, False if manually selected.
+    #[classattr]
+    const VERSION_AUTO_DETECTED: &'static str = classic_registry_core::Keys::VERSION_AUTO_DETECTED;
 
     #[classattr]
     const LOCAL_DIR: &'static str = classic_registry_core::Keys::LOCAL_DIR;
@@ -260,9 +278,12 @@ fn get_game_path_gui(py: Python) -> Option<Py<PyAny>> {
 
 /// Get the VR game variant identifier.
 ///
+/// **DEPRECATED**: Use `get_game_version()` instead. VR is now treated as
+/// a version variant of Fallout 4, not a separate mode toggle.
+///
 /// # Returns
 ///
-/// The VR variant name, or empty string if not set
+/// The VR variant suffix ("VR" if VR mode, empty string otherwise)
 ///
 /// # Python Example
 ///
@@ -274,8 +295,10 @@ fn get_game_path_gui(py: Python) -> Option<Py<PyAny>> {
 ///     print(f"VR variant: {vr}")
 /// ```
 #[pyfunction]
+#[allow(deprecated)]
 fn get_vr(py: Python) -> String {
     // Try to get as PyObjectWrapper first (for Python string), then fallback to native string
+    #[allow(deprecated)]
     if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(Keys::VR) {
         let obj = wrapper.get(py);
         if let Ok(value) = obj.extract::<String>(py) {
@@ -283,7 +306,28 @@ fn get_vr(py: Python) -> String {
         }
     }
     // Fallback to native string (for compatibility)
+    #[allow(deprecated)]
     classic_registry_core::get_vr()
+}
+
+/// Check if the game version was auto-detected.
+///
+/// # Returns
+///
+/// `True` if the version was auto-detected from game files,
+/// `False` if manually selected or not set.
+///
+/// # Python Example
+///
+/// ```python
+/// from classic_core import registry
+///
+/// if registry.is_version_auto_detected():
+///     print("Version was auto-detected")
+/// ```
+#[pyfunction]
+fn is_version_auto_detected() -> bool {
+    classic_registry_core::is_version_auto_detected()
 }
 
 /// Get the local application directory.
@@ -347,8 +391,11 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_yaml_cache, m)?)?;
     m.add_function(wrap_pyfunction!(get_manual_docs_gui, m)?)?;
     m.add_function(wrap_pyfunction!(get_game_path_gui, m)?)?;
-    m.add_function(wrap_pyfunction!(get_vr, m)?)?;
+    m.add_function(wrap_pyfunction!(get_vr, m)?)?; // Deprecated - kept for backward compatibility
     m.add_function(wrap_pyfunction!(get_local_dir, m)?)?;
+
+    // Add new version-aware functions
+    m.add_function(wrap_pyfunction!(is_version_auto_detected, m)?)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
