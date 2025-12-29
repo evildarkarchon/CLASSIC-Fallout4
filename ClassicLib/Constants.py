@@ -21,9 +21,7 @@ This module provides:
 from __future__ import annotations
 
 import warnings
-from collections.abc import Iterator
 from enum import Enum, auto
-from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 from packaging.version import Version
@@ -64,6 +62,7 @@ class _DeprecatedVersion:
             value: The actual Version object
             name: The constant name (for warning message)
             replacement: The suggested replacement code
+
         """
         self._value = value
         self._name = name
