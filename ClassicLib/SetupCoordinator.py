@@ -76,6 +76,9 @@ class SetupCoordinator:
         with TimedBlock("File Generation", log_level="debug"):
             self.file_generator.generate_all_files()
 
+        # Get config suffix from GAME_VERSION using VersionRegistry-based function
+        vr_suffix = GlobalRegistry.get_config_suffix()
+
         # Batch load version, game information, game path, and debug setting
         # Use asyncio.run() during initialization (before Qt event loop)
         # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
@@ -83,7 +86,7 @@ class SetupCoordinator:
             requests = [
                 (str, YAML.Main, "CLASSIC_Info.version"),
                 (str, YAML.Game, "Game_Info.Main_Root_Name"),
-                (str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game"),
+                (str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game"),
                 (bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"),
             ]
 
@@ -116,6 +119,25 @@ class SetupCoordinator:
 
         msg_success("ALL CLASSIC AND GAME SETTINGS CHECKS HAVE BEEN PERFORMED!", target=MessageTarget.CONSOLE)
         msg_info("YOU CAN NOW SCAN YOUR CRASH LOGS, GAME AND/OR MOD FILES", target=MessageTarget.CONSOLE)
+
+    @staticmethod
+    def _get_config_suffix() -> str:
+        """Get the config key suffix based on game version.
+
+        .. deprecated::
+            Use :func:`GlobalRegistry.get_config_suffix()` instead.
+            This method is kept for backward compatibility.
+
+        This method provides the configuration suffix ("" or "VR") based on the
+        current GAME_VERSION setting. It's used for constructing YAML config keys
+        like "Game_Info" or "GameVR_Info".
+
+        Returns:
+            str: "VR" if game version is VR, otherwise empty string "".
+
+        """
+        # Delegate to the VersionRegistry-based function in GlobalRegistry
+        return GlobalRegistry.get_config_suffix()
 
     def generate_combined_results(self) -> str:
         """Generate combined results from all checks.
@@ -193,22 +215,40 @@ class SetupCoordinator:
         # Batch load all application settings
         # Use asyncio.run() during initialization (before Qt event loop)
         # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
+        # Load both legacy VR Mode (for migration) and new Game Version setting
         requests = [
-            (bool, YAML.Settings, "CLASSIC_Settings.VR Mode"),
+            (str, YAML.Settings, "CLASSIC_Settings.Game Version"),  # New setting (v8.0+)
+            (bool, YAML.Settings, "CLASSIC_Settings.VR Mode"),  # Legacy setting (deprecated)
             (str, YAML.Settings, "CLASSIC_Settings.Managed Game"),
             (bool, YAML.Main, "CLASSIC_Info.is_prerelease"),
             (bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"),
         ]
 
-        vr_mode, managed_game_setting, is_prerelease, debug_messages = asyncio.run(yaml_cache.batch_get_settings_async(requests))
+        game_version, legacy_vr_mode, managed_game_setting, is_prerelease, debug_messages = asyncio.run(
+            yaml_cache.batch_get_settings_async(requests)
+        )
 
         # Enable debug logging if setting is enabled
         if debug_messages:
             enable_debug_logging(logger)
 
-        # Register application settings
-        # noinspection PyTypedDict
-        GlobalRegistry.register(GlobalRegistry.Keys.VR, "" if not vr_mode else "VR")
+        # Handle migration from legacy VR Mode to Game Version
+        if (not game_version or game_version == "auto") and legacy_vr_mode:
+            # Migrate legacy VR Mode = true to Game Version = "VR"
+            game_version = "VR"
+            logger.info("Migrated legacy VR Mode setting to Game Version: VR")
+
+        # Register the game version (new system)
+        # Defaults to "auto" if not set
+        effective_game_version = game_version if game_version in {"Original", "NextGen", "VR"} else "auto"
+        GlobalRegistry.register(GlobalRegistry.Keys.GAME_VERSION, effective_game_version)
+
+        # Also update legacy VR key for backward compatibility with components not yet migrated
+        # This allows get_vr() to work correctly during the transition period
+        if effective_game_version == "VR":
+            GlobalRegistry.register(GlobalRegistry.Keys.VR, "VR")
+        else:
+            GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
         game_value: str = managed_game_setting.replace(" ", "") if isinstance(managed_game_setting, str) else ""
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, game_value)
@@ -244,7 +284,8 @@ class SetupCoordinator:
         """
         from ClassicLib.YamlSettings import yaml_settings
 
-        vr_suffix = GlobalRegistry.get_vr()
+        # Get config suffix using VersionRegistry-based function
+        vr_suffix = GlobalRegistry.get_config_suffix()
 
         # Check if paths are configured
         game_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")

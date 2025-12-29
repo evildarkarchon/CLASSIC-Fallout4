@@ -1,5 +1,15 @@
 # CLASSIC CHANGELOG #
 
+### 8.1.0 CHANGES
+
+- **VR Mode Deprecation - Phase 2**: Replaced the VR Mode checkbox with a Game Version dropdown.
+  - Users can now select: Auto-detect, Original (1.10.163), Next-Gen (1.10.984), or VR (1.2.72)
+  - Legacy VR Mode setting is automatically migrated to the new Game Version setting
+  - Added `get_game_version()` function to GlobalRegistry (replaces deprecated `get_vr()`)
+  - The new `GAME_VERSION` registry key stores the actual version selection ("auto", "Original", "NextGen", "VR")
+  - Backward compatibility: `get_vr()` still works but emits deprecation warnings
+  - This change prepares for Phase 3 where VR Mode will be completely removed
+
 ### 8.0.0 CHANGES
 
 - Window is now resizable and should scale to smaller screens and handle high scaling better.

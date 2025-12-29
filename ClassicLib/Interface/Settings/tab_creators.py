@@ -26,6 +26,145 @@ if TYPE_CHECKING:
     from ClassicLib.Interface.Settings.path_manager import PathManager
 
 
+def get_game_version_options() -> list[tuple[str, str]]:
+    """Get game version options from the VersionRegistry.
+
+    Dynamically generates version options for the Game Version dropdown
+    by querying the VersionRegistry. This ensures that if new versions
+    are added to the registry, they will automatically appear in the UI.
+
+    Returns:
+        List of tuples containing (display_name, value_to_store) for each version.
+        Always includes "Auto-detect" as the first option.
+
+    Example:
+        >>> options = get_game_version_options()
+        >>> options[0]
+        ('Auto-detect', 'auto')
+        >>> # Subsequent options come from VersionRegistry
+
+    """
+    from ClassicLib.Logger import logger
+    from ClassicLib.VersionRegistry import get_version_registry
+
+    # Always start with Auto-detect option
+    options: list[tuple[str, str]] = [("Auto-detect", "auto")]
+
+    try:
+        registry = get_version_registry()
+
+        # Get all versions for Fallout4, sorted by priority (descending)
+        all_versions = registry.get_all()
+
+        for version_info in all_versions:
+            if version_info.deprecated:
+                continue  # Skip deprecated versions
+
+            # Format: "Display Name (version)" -> short_name
+            display_version = version_info.version_string
+            display_name = f"{version_info.display_name or version_info.short_name} ({display_version})"
+            # Use short_name as the stored value (Original, NextGen, VR, etc.)
+            # Map to expected values for backward compatibility
+            value = version_info.short_name
+            if value == "OG":
+                value = "Original"
+            elif value == "NG":
+                value = "NextGen"
+            # VR stays as "VR"
+
+            options.append((display_name, value))
+
+    except Exception as e:  # noqa: BLE001
+        logger.warning(f"Failed to load version options from registry: {e}, using defaults")
+        # Fallback to hardcoded defaults if registry fails
+        options.extend([
+            ("Fallout 4 Original (1.10.163.0)", "Original"),
+            ("Fallout 4 Next-Gen (1.10.984.0)", "NextGen"),
+            ("Fallout 4 VR (1.2.72.0)", "VR"),
+        ])
+
+    return options
+
+
+def get_version_tooltip() -> str:
+    """Generate version tooltip dynamically from VersionRegistry.
+
+    Creates a tooltip string describing available Fallout 4 versions
+    by querying the VersionRegistry for display names and version strings.
+
+    Returns:
+        Formatted tooltip string for the Game Version dropdown.
+
+    """
+    from ClassicLib.Logger import logger
+    from ClassicLib.VersionRegistry import get_version_registry
+
+    # Build tooltip dynamically
+    tooltip_lines = ["Select your Fallout 4 version:", "• Auto-detect - Automatically determine version from game files"]
+
+    try:
+        registry = get_version_registry()
+        for version_info in registry.get_all():
+            if version_info.deprecated:
+                continue
+            # Format: "• Display Name - Description (version)"
+            version_str = version_info.version_string
+            display = version_info.display_name or version_info.short_name
+            desc = version_info.description or ""
+            if desc:
+                tooltip_lines.append(f"• {display} - {desc} ({version_str})")
+            else:
+                tooltip_lines.append(f"• {display} ({version_str})")
+    except Exception as e:  # noqa: BLE001
+        logger.debug(f"Failed to generate version tooltip from registry: {e}")
+        # Fallback to hardcoded tooltip
+        tooltip_lines.extend([
+            "• Original - Pre-Next-Gen update version (1.10.163)",
+            "• Next-Gen - Next-Gen update version (1.10.984)",
+            "• VR - Fallout 4 VR (1.2.72)",
+        ])
+
+    return "\n".join(tooltip_lines)
+
+
+# Version options for Game Version dropdown - loaded dynamically
+# This is called at module load time; if VersionRegistry isn't available yet,
+# it will use fallback defaults
+GAME_VERSION_OPTIONS: list[tuple[str, str]] = []
+_VERSION_TOOLTIP: str = ""
+
+
+def ensure_game_version_options() -> list[tuple[str, str]]:
+    """Ensure GAME_VERSION_OPTIONS is populated.
+
+    Lazily loads the version options on first access to avoid import-time
+    issues with VersionRegistry initialization.
+
+    Returns:
+        List of game version options.
+
+    """
+    global GAME_VERSION_OPTIONS  # noqa: PLW0603
+    if not GAME_VERSION_OPTIONS:
+        GAME_VERSION_OPTIONS = get_game_version_options()
+    return GAME_VERSION_OPTIONS
+
+
+def ensure_version_tooltip() -> str:
+    """Ensure the version tooltip is populated.
+
+    Lazily generates the tooltip on first access.
+
+    Returns:
+        The version tooltip string.
+
+    """
+    global _VERSION_TOOLTIP  # noqa: PLW0603
+    if not _VERSION_TOOLTIP:
+        _VERSION_TOOLTIP = get_version_tooltip()
+    return _VERSION_TOOLTIP
+
+
 class TabCreator:
     """A utility class for creating and organizing settings tabs in a graphical user interface.
 
@@ -39,9 +178,8 @@ class TabCreator:
         """Create the general settings tab UI with specific settings widgets.
 
         The method initializes a QWidget containing a layout for general settings
-        and populates it with checkboxes for user-configurable settings such as
-        VR mode. The created widgets are arranged into a group box with appropriate
-        spacing and tooltips.
+        and populates it with a dropdown for game version selection. The created
+        widgets are arranged into a group box with appropriate spacing and tooltips.
 
         Args:
             parent (QWidget | None): Parent widget to which the general settings
@@ -65,11 +203,28 @@ class TabCreator:
         general_layout = QVBoxLayout(general_group)
         general_layout.setSpacing(10)
 
-        # VR Mode checkbox
-        vr_checkbox = QCheckBox("VR Mode")
-        vr_checkbox.setToolTip("Prioritize settings and checks for VR version of the game")
-        general_layout.addWidget(vr_checkbox)
-        settings_widgets["vr_mode"] = vr_checkbox
+        # Game Version dropdown (replaces VR Mode checkbox)
+        version_layout = QHBoxLayout()
+        version_layout.setSpacing(10)
+
+        version_label = QLabel("Game Version:")
+        # Use dynamically generated tooltip from VersionRegistry
+        version_label.setToolTip(ensure_version_tooltip())
+        version_layout.addWidget(version_label)
+
+        game_version_combo = QComboBox()
+        # Load version options dynamically from VersionRegistry
+        version_options = ensure_game_version_options()
+        for display_name, _value in version_options:
+            game_version_combo.addItem(display_name)
+        game_version_combo.setToolTip(
+            "Choose which Fallout 4 version to use for scanning and checks.\nAuto-detect will determine the version from your game files."
+        )
+        version_layout.addWidget(game_version_combo)
+        version_layout.addStretch()
+
+        general_layout.addLayout(version_layout)
+        settings_widgets["game_version"] = game_version_combo
 
         layout.addWidget(general_group)
         layout.addStretch()
