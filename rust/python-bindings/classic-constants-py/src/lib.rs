@@ -50,6 +50,7 @@ pub struct PyYamlFile {
 impl PyYamlFile {
     /// CLASSIC Data/databases/CLASSIC Main.yaml
     #[classattr]
+    #[allow(non_snake_case)]
     fn Main() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Main,
@@ -58,6 +59,7 @@ impl PyYamlFile {
 
     /// CLASSIC Settings.yaml
     #[classattr]
+    #[allow(non_snake_case)]
     fn Settings() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Settings,
@@ -66,6 +68,7 @@ impl PyYamlFile {
 
     /// CLASSIC Ignore.yaml
     #[classattr]
+     #[allow(non_snake_case)]
     fn Ignore() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Ignore,
@@ -74,6 +77,7 @@ impl PyYamlFile {
 
     /// CLASSIC Data/databases/CLASSIC {Game}.yaml
     #[classattr]
+     #[allow(non_snake_case)]
     fn Game() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Game,
@@ -82,6 +86,7 @@ impl PyYamlFile {
 
     /// CLASSIC Data/CLASSIC {Game} Local.yaml
     #[classattr]
+     #[allow(non_snake_case)]
     fn GameLocal() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::GameLocal,
@@ -90,6 +95,7 @@ impl PyYamlFile {
 
     /// tests/test_settings.yaml (for testing only)
     #[classattr]
+    #[allow(non_snake_case)]
     fn Test() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Test,
@@ -98,6 +104,7 @@ impl PyYamlFile {
 
     /// User config dir/CLASSIC-Fallout4/cache.yaml (persistent cache for uvx)
     #[classattr]
+    #[allow(non_snake_case)]
     fn Cache() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Cache,
@@ -189,6 +196,7 @@ pub struct PyGameId {
 impl PyGameId {
     /// Fallout 4 (base game)
     #[classattr]
+    #[allow(non_snake_case)]
     fn Fallout4() -> Self {
         Self {
             inner: classic_constants_core::GameId::Fallout4,
@@ -197,6 +205,7 @@ impl PyGameId {
 
     /// Fallout 4 VR
     #[classattr]
+    #[allow(non_snake_case)]
     fn Fallout4VR() -> Self {
         Self {
             inner: classic_constants_core::GameId::Fallout4VR,
@@ -205,6 +214,7 @@ impl PyGameId {
 
     /// Skyrim Special Edition
     #[classattr]
+    #[allow(non_snake_case)]
     fn Skyrim() -> Self {
         Self {
             inner: classic_constants_core::GameId::Skyrim,
@@ -213,6 +223,7 @@ impl PyGameId {
 
     /// Starfield
     #[classattr]
+    #[allow(non_snake_case)]
     fn Starfield() -> Self {
         Self {
             inner: classic_constants_core::GameId::Starfield,

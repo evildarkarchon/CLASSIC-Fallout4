@@ -62,10 +62,10 @@ uv run pyinstaller --clean --upx-dir 'C:\\Path\\to\\UPX' .\\CLASSIC.spec
 cd rust/python-bindings/classic-yaml-py && maturin build --release --out dist && cd ../../..
 uv pip install rust/python-bindings/classic-yaml-py/dist/classic_yaml_py-*.whl --force-reinstall
 
-# Or use rebuild_rust.ps1 (Unified Script):
-./rebuild_rust.ps1              # Build all (incremental)
-./rebuild_rust.ps1 yaml         # Build specific crate
-./rebuild_rust.ps1 -Clean       # Clean build
+# Or use the rebuild_rust.ps1 (Unified Script) through powershell:
+pwsh -ExecutionPolicy Bypass -File ./rebuild_rust.ps1              # Build all (incremental)
+pwsh -ExecutionPolicy Bypass -File ./rebuild_rust.ps1 yaml         # Build specific crate
+pwsh -ExecutionPolicy Bypass -File ./rebuild_rust.ps1 -Clean       # Clean build
 
 # Method 2: Editable install (DEVELOPMENT)
 uv pip install -e . --force-reinstall
