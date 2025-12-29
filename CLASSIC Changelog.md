@@ -17,12 +17,12 @@
 - Add window size persistence on a per-tab basis.
 - Many markdown compliance fixes for the reports.
 - Some sections that have no content will now be hidden in the report.
-- Probably a bunch of other things I forgot to write down.
 - Add database of FOLON Form-IDs.
 - Make the unsupported game version error non-fatal, it will now simply skip the version-dependent checks.
 - Fix Settings file creation on first start.
 - This version is not API compatible with previous versions (thus the major version update).
 - For Developers: Most business logic has been moved to a separate module called `ClassicLib` to make development of applications that use CLASSIC easier. Some of the components are written in Rust and exposed to Python via PyO3 bindings, with native Python fallbacks for now.
+- Probably a bunch of other things I forgot to write down.
 
 ### 7.31.0 CHANGES
 - Reduced volume for audio notifications
