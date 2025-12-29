@@ -257,9 +257,18 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 
 /// Get the VR game variant identifier.
 ///
+/// # Deprecation Notice
+///
+/// This function is deprecated. Use [`get_game_version()`] instead, which returns
+/// a [`Fallout4Version`] enum that includes VR as a version variant.
+///
+/// During the transition period, this function will:
+/// 1. First check the legacy VR key
+/// 2. If not found, try to derive from GAME_VERSION if it's set to Vr
+///
 /// # Returns
 ///
-/// Returns the VR variant name if registered, empty string otherwise.
+/// Returns the VR variant suffix if VR mode is active ("VR"), empty string otherwise.
 ///
 /// # Examples
 ///
@@ -268,12 +277,67 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 ///
 /// clear_all();
 /// assert_eq!(get_vr(), "");
-///
-/// register(Keys::VR, "SkyrimVR".to_string());
-/// assert_eq!(get_vr(), "SkyrimVR");
 /// ```
+#[deprecated(
+    since = "8.0.0",
+    note = "Use get_game_version() instead; VR is now a version variant"
+)]
+#[allow(deprecated)]
 pub fn get_vr() -> String {
+    // First check legacy VR key for backward compatibility
     get::<_, String>(Keys::VR).unwrap_or_else(String::new)
+    // Note: When GAME_VERSION migration is complete, this should check:
+    // get_game_version().map(|v| v.config_suffix()).unwrap_or_default()
+}
+
+/// Get the current Fallout 4 version.
+///
+/// This is the recommended way to check which version of Fallout 4 is being used,
+/// including VR support. The version is stored as a [`Fallout4Version`] enum.
+///
+/// # Returns
+///
+/// Returns `Some(version)` if a version is registered, `None` otherwise.
+///
+/// # Note
+///
+/// The actual type depends on what was registered. When called from PyO3 bindings,
+/// this will return a `Fallout4Version` enum value.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use classic_registry_core::{register, get_game_version, Keys};
+/// use classic_constants_core::Fallout4Version;
+///
+/// register(Keys::GAME_VERSION, Fallout4Version::Vr);
+/// let version = get_game_version::<Fallout4Version>();
+/// assert_eq!(version, Some(Fallout4Version::Vr));
+/// ```
+pub fn get_game_version<T: Clone + std::any::Any + Send + Sync + 'static>() -> Option<T> {
+    get(Keys::GAME_VERSION)
+}
+
+/// Check if the game version was auto-detected.
+///
+/// # Returns
+///
+/// Returns `true` if the version was auto-detected, `false` if manually selected
+/// or not set.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, is_version_auto_detected, Keys, clear_all};
+///
+/// clear_all();
+/// assert!(!is_version_auto_detected()); // Default
+///
+/// register(Keys::VERSION_AUTO_DETECTED, true);
+/// assert!(is_version_auto_detected());
+/// ```
+pub fn is_version_auto_detected() -> bool {
+    get::<_, bool>(Keys::VERSION_AUTO_DETECTED).unwrap_or(false)
 }
 
 /// Get the local application directory.

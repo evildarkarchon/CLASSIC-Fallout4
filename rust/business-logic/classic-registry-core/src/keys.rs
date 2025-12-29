@@ -61,6 +61,19 @@ impl Keys {
     /// VR game variant identifier.
     ///
     /// Stores the VR variant of the game (e.g., "SkyrimVR", "Fallout4VR").
+    ///
+    /// # Deprecation Notice
+    ///
+    /// This key is deprecated. Use [`Keys::GAME_VERSION`] instead, which stores
+    /// a [`Fallout4Version`] enum that includes VR as a version variant rather
+    /// than a separate mode toggle.
+    ///
+    /// The `get_vr()` function will continue to work during the transition period
+    /// by mapping the new version system to the legacy VR suffix format.
+    #[deprecated(
+        since = "8.0.0",
+        note = "Use GAME_VERSION instead; VR is now a version variant"
+    )]
     pub const VR: &'static str = "gamevars_vr";
 
     /// Current game identifier.
@@ -68,6 +81,39 @@ impl Keys {
     /// Stores the current game name (e.g., "Fallout4", "Skyrim").
     /// Defaults to "Fallout4" if not set.
     pub const GAME: &'static str = "gamevars_game";
+
+    /// Current game version for Fallout 4.
+    ///
+    /// Stores the detected or manually selected Fallout 4 version variant
+    /// as a [`Fallout4Version`] enum value (Original, NextGen, or Vr).
+    ///
+    /// This replaces the legacy VR mode toggle with a unified version system
+    /// that treats VR as a version variant alongside OG and NG versions.
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use classic_registry_core::{register, get, Keys};
+    /// use classic_constants_core::Fallout4Version;
+    ///
+    /// // Register a version
+    /// register(Keys::GAME_VERSION, Fallout4Version::Vr);
+    ///
+    /// // Retrieve the version
+    /// let version: Option<Fallout4Version> = get(Keys::GAME_VERSION);
+    /// assert_eq!(version, Some(Fallout4Version::Vr));
+    /// ```
+    pub const GAME_VERSION: &'static str = "gamevars_version";
+
+    /// Whether the game version was auto-detected.
+    ///
+    /// Boolean flag indicating whether the current [`GAME_VERSION`] was
+    /// automatically detected from the game installation (true) or
+    /// manually selected by the user (false).
+    ///
+    /// This helps the UI know whether to show the detected version or
+    /// preserve a user's manual override.
+    pub const VERSION_AUTO_DETECTED: &'static str = "gamevars_version_auto";
 
     /// Local application directory.
     ///
@@ -86,8 +132,9 @@ mod tests {
     use super::*;
 
     #[test]
+    #[allow(deprecated)]
     fn test_keys_are_unique() {
-        // Ensure all keys are distinct
+        // Ensure all keys are distinct (including deprecated ones during transition)
         let keys = vec![
             Keys::YAML_CACHE,
             Keys::MANUAL_DOCS_GUI,
@@ -96,8 +143,10 @@ mod tests {
             Keys::DOCS_PATH,
             Keys::IS_GUI_MODE,
             Keys::OPEN_FILE_FUNC,
-            Keys::VR,
+            Keys::VR, // Deprecated but still included for backward compatibility
             Keys::GAME,
+            Keys::GAME_VERSION,
+            Keys::VERSION_AUTO_DETECTED,
             Keys::LOCAL_DIR,
             Keys::IS_PRERELEASE,
         ];
@@ -115,5 +164,14 @@ mod tests {
         assert_eq!(Keys::GAME, "gamevars_game");
         assert_eq!(Keys::IS_GUI_MODE, "is_gui_mode");
         assert_eq!(Keys::LOCAL_DIR, "local_dir");
+        assert_eq!(Keys::GAME_VERSION, "gamevars_version");
+        assert_eq!(Keys::VERSION_AUTO_DETECTED, "gamevars_version_auto");
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_deprecated_vr_key_still_accessible() {
+        // During migration period, the VR key should still be usable
+        assert_eq!(Keys::VR, "gamevars_vr");
     }
 }

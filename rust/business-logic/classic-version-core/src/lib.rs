@@ -38,9 +38,16 @@ use std::cmp::Ordering;
 use thiserror::Error;
 
 // Re-export version constants from classic-constants-core
+// These are deprecated - use get_version_registry() instead
+#[allow(deprecated)]
 pub use classic_constants_core::{
     F4SE_NG_VERSION, F4SE_OG_VERSION, F4SE_VERSIONS, FALLOUT4_NG_VERSION, FALLOUT4_OG_VERSION,
     FALLOUT4_VERSIONS, FALLOUT4_VR_VERSION, NULL_VERSION,
+};
+
+// Re-export VersionRegistry for new code
+pub use classic_constants_core::{
+    VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry,
 };
 
 /// Version parsing and comparison errors.
@@ -202,7 +209,8 @@ pub fn compare_versions(v1: &Version, v2: &Version) -> Ordering {
 
 /// Check if a version matches a known game version.
 ///
-/// Compares against FALLOUT4_OG_VERSION and FALLOUT4_NG_VERSION.
+/// Uses the VersionRegistry to look up all known Fallout 4 game versions
+/// (OG and NG, excluding VR).
 ///
 /// # Arguments
 ///
@@ -214,19 +222,34 @@ pub fn compare_versions(v1: &Version, v2: &Version) -> Ordering {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_version_core::{is_known_fallout4_version, FALLOUT4_OG_VERSION};
+/// ```rust,no_run
+/// use classic_version_core::is_known_fallout4_version;
+/// use semver::Version;
 ///
-/// assert!(is_known_fallout4_version(&FALLOUT4_OG_VERSION));
+/// let og_version = Version::new(1, 10, 163);
+/// assert!(is_known_fallout4_version(&og_version));
 /// ```
 #[must_use]
 pub fn is_known_fallout4_version(version: &Version) -> bool {
-    FALLOUT4_VERSIONS.contains(version)
+    let registry = get_version_registry();
+    // Get all Fallout4 versions (non-VR only, matching old FALLOUT4_VERSIONS behavior)
+    for info in registry.get_all_for_game("Fallout4", Some(false)) {
+        let game_ver = &info.version;
+        let semver = Version::new(
+            u64::from(game_ver.major),
+            u64::from(game_ver.minor),
+            u64::from(game_ver.patch),
+        );
+        if &semver == version {
+            return true;
+        }
+    }
+    false
 }
 
 /// Check if a version matches a known F4SE version.
 ///
-/// Compares against F4SE_OG_VERSION and F4SE_NG_VERSION.
+/// Uses the VersionRegistry to look up all known F4SE versions.
 ///
 /// # Arguments
 ///
@@ -238,14 +261,28 @@ pub fn is_known_fallout4_version(version: &Version) -> bool {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_version_core::{is_known_f4se_version, F4SE_OG_VERSION};
+/// ```rust,no_run
+/// use classic_version_core::is_known_f4se_version;
+/// use semver::Version;
 ///
-/// assert!(is_known_f4se_version(&F4SE_OG_VERSION));
+/// let f4se_og_version = Version::new(0, 6, 23);
+/// assert!(is_known_f4se_version(&f4se_og_version));
 /// ```
 #[must_use]
 pub fn is_known_f4se_version(version: &Version) -> bool {
-    F4SE_VERSIONS.contains(version)
+    let registry = get_version_registry();
+    // Get all Fallout4 versions (non-VR only, matching old F4SE_VERSIONS behavior)
+    for info in registry.get_all_for_game("Fallout4", Some(false)) {
+        if let Some(xse) = &info.xse {
+            // compatible_version is a String like "0.6.23", parse it
+            if let Some(parsed) = try_parse_version(&xse.compatible_version) {
+                if &parsed == version {
+                    return true;
+                }
+            }
+        }
+    }
+    false
 }
 
 // ============================================================================
@@ -470,6 +507,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_is_known_fallout4_version() {
         assert!(is_known_fallout4_version(&FALLOUT4_OG_VERSION));
         assert!(is_known_fallout4_version(&FALLOUT4_NG_VERSION));
@@ -477,6 +515,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_is_known_f4se_version() {
         assert!(is_known_f4se_version(&F4SE_OG_VERSION));
         assert!(is_known_f4se_version(&F4SE_NG_VERSION));

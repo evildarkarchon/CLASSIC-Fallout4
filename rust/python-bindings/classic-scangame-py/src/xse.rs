@@ -14,6 +14,8 @@ pub enum PyGameVersion {
     Original,
     /// Next-gen/updated game version
     NextGen,
+    /// Anniversary Edition game version
+    AnniversaryEdition,
     /// VR game version
     Vr,
 }
@@ -87,6 +89,17 @@ impl PyAddressLibInfo {
         }
     }
 
+    #[staticmethod]
+    fn anniversary_edition() -> Self {
+        let info = AddressLibInfo::anniversary_edition();
+        Self {
+            version: PyGameVersion::AnniversaryEdition,
+            filename: info.filename,
+            description: info.description,
+            url: info.url,
+        }
+    }
+
     fn __repr__(&self) -> String {
         format!(
             "AddressLibInfo(version={:?}, filename='{}')",
@@ -126,6 +139,7 @@ impl PyXseChecker {
             PyGameVersion::Null => GameVersion::Null,
             PyGameVersion::Original => GameVersion::Original,
             PyGameVersion::NextGen => GameVersion::NextGen,
+            PyGameVersion::AnniversaryEdition => GameVersion::AnniversaryEdition,
             PyGameVersion::Vr => GameVersion::Vr,
         };
 

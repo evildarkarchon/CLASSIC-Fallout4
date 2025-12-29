@@ -66,14 +66,12 @@ CLASSIC_Info:
     # This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
       Disable CLI Progress: false
 
-
   default_localyaml: |
     Game_Info:
       Root_Folder_Game:
 
     GameVR_Info:
       Root_Folder_Game:
-
 
   default_ignorefile: |
     # This file contains plugin names that CLASSIC will IGNORE while scanning your crash logs and mod files.
@@ -272,7 +270,7 @@ Warnings_WRYE:
       Contact the mod authors and consider uninstalling these plugins if you encounter problems.
       -----
 
-# ================= WN SEARCH IN TITLE =================
+  # ================= WN SEARCH IN TITLE =================
   Invalid: |
 
     ❓ These plugins were made with a non-standard or invalid Creation Kit version.
@@ -336,12 +334,12 @@ Mods_Warn:
 
 # =============== INCLUDE & EXCLUDE LISTS ==============
 
-catch_log_errors:  # DETECT lines that contain *these* strings from .log files in Documents XSE folder.
+catch_log_errors: # DETECT lines that contain *these* strings from .log files in Documents XSE folder.
   - critical
   - error
   - failed
 
-catch_log_records:  # DETECT lines that contain *these* strings from all available Crash Logs.
+catch_log_records: # DETECT lines that contain *these* strings from all available Crash Logs.
   - .bgsm
   - .bto
   - .btr
@@ -362,18 +360,18 @@ catch_log_records:  # DETECT lines that contain *these* strings from all availab
   - data/
   - data\\
   - scaleform
-  - 'editorid:'
-  - 'file:'
-  - 'function:'
-  - 'name:'
+  - "editorid:"
+  - "file:"
+  - "function:"
+  - "name:"
 
-exclude_log_records:  # EXCLUDE lines that contain *these* strings from crash logs while Simplify Logs is true.
- - (Main*)
- - (size_t)
- - (void*)
- - Basic Render Driver
+exclude_log_records: # EXCLUDE lines that contain *these* strings from crash logs while Simplify Logs is true.
+  - (Main*)
+  - (size_t)
+  - (void*)
+  - Basic Render Driver
 
-exclude_log_errors:  # EXCLUDE lines that contain *these* strings from .log files in Documents XSE folder.
+exclude_log_errors: # EXCLUDE lines that contain *these* strings from .log files in Documents XSE folder.
   - failed to get next record
   - failed to open pdb
   - failed to register method
@@ -381,7 +379,7 @@ exclude_log_errors:  # EXCLUDE lines that contain *these* strings from .log file
   - no errors with this
   - unable to locate pdb
 
-exclude_log_files:  # EXCLUDE .log files that contain *these* strings in their name while checking errors.
+exclude_log_files: # EXCLUDE .log files that contain *these* strings in their name while checking errors.
   - cbpfo4
   - crash-
   - CreationKit
@@ -441,6 +439,28 @@ Version_Registry:
         min: "1.10.984.0"
         max: "1.10.999.999"
       priority: 200
+      deprecated: false
+
+    # Fallout 4 Anniversary Edition (Active development branch)
+    - id: FO4_AE
+      game: Fallout4
+      is_vr: false
+      version: "1.11.191.0"
+      display_name: Fallout 4 Anniversary Edition
+      short_name: AE
+      description: Anniversary Edition version (active development branch)
+      address_library:
+        filename: version-1-11-191-0.bin
+        format: bin
+        nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
+      xse:
+        acronym: F4SE
+        compatible_version: "0.7.3"
+        loader: f4se_loader.exe
+      compatible_range:
+        min: "1.11.137.0"
+        max: "1.11.999.999"
+      priority: 300
       deprecated: false
 
     # Fallout 4 VR

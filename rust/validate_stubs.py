@@ -131,7 +131,8 @@ class StubValidator:
 
         """
         functions: set[Any] = set()
-        functions.update(match.group(1) for match in re.finditer(r"^def\s+(\w+)\s*\(", stub_content, re.MULTILINE))
+        # Match both regular functions and async functions at module level
+        functions.update(match.group(1) for match in re.finditer(r"^(?:async\s+)?def\s+(\w+)\s*\(", stub_content, re.MULTILINE))
         return functions
 
     @staticmethod

@@ -44,10 +44,14 @@ pub use keys::Keys;
 pub use registry::{clear_all, get, is_registered, register};
 
 // Convenience functions matching Python API
+#[allow(deprecated)]
 pub use registry::{
     get_game, get_game_path_gui, get_local_dir, get_manual_docs_gui, get_vr, get_yaml_cache,
     is_gui_mode, set_game,
 };
+
+// New version-aware convenience functions
+pub use registry::{get_game_version, is_version_auto_detected};
 
 #[cfg(test)]
 mod tests {
