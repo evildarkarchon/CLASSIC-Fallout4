@@ -73,7 +73,7 @@ impl PyYamlFile {
 
     /// CLASSIC Ignore.yaml
     #[classattr]
-    #[allow(non_snake_case)]
+     #[allow(non_snake_case)]
     fn Ignore() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Ignore,
@@ -82,7 +82,7 @@ impl PyYamlFile {
 
     /// CLASSIC Data/databases/CLASSIC {Game}.yaml
     #[classattr]
-    #[allow(non_snake_case)]
+     #[allow(non_snake_case)]
     fn Game() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::Game,
@@ -91,7 +91,7 @@ impl PyYamlFile {
 
     /// CLASSIC Data/CLASSIC {Game} Local.yaml
     #[classattr]
-    #[allow(non_snake_case)]
+     #[allow(non_snake_case)]
     fn GameLocal() -> Self {
         Self {
             inner: classic_constants_core::YamlFile::GameLocal,
