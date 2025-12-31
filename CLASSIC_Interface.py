@@ -92,8 +92,8 @@ class MainWindow(QMainWindow):
         local_dir_path = GlobalRegistry.get_local_dir(as_string=True)
         self.setWindowIcon(QIcon(f"{local_dir_path}/CLASSIC Data/graphics/CLASSIC.ico"))
         self.setStyleSheet(DARK_MODE)
-        self.setMinimumSize(550, 350)
-        self.resize(650, 350)
+        self.setMinimumSize(550, 580)
+        self.resize(650, 580)
 
         # Create central widget and layout
         self.central_widget = QWidget()

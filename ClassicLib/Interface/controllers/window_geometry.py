@@ -53,7 +53,7 @@ class WindowGeometryManager:
     # Default minimum sizes for each tab (width, height)
     DEFAULT_MIN_SIZES: ClassVar[dict[int, tuple[int, int]]] = {
         0: (550, 350),  # Main Options tab
-        1: (750, 450),  # File Backup tab (larger)
+        1: (750, 580),  # File Backup tab (larger for backup sections)
         2: (550, 350),  # Articles tab
         3: (750, 450),  # Results tab
     }

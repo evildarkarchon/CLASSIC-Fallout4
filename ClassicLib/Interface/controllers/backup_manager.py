@@ -106,7 +106,16 @@ class BackupManager:
             backup_type: The type of backup (XSE, RESHADE, VULKAN, or ENB).
 
         """
-        layout.addWidget(create_separator())
+        separator = create_separator()
+        separator.setMaximumWidth(480)
+
+        # Center the separator
+        separator_layout = QHBoxLayout()
+        separator_layout.setContentsMargins(0, 12, 0, 6)
+        separator_layout.addStretch(1)
+        separator_layout.addWidget(separator)
+        separator_layout.addStretch(1)
+        layout.addLayout(separator_layout)
 
         # Title label
         title_label = QLabel(title)
@@ -114,9 +123,11 @@ class BackupManager:
         title_label.setStyleSheet("color: white; font-weight: bold; font-size: 14px;")
         layout.addWidget(title_label)
 
-        # Button row
+        # Button row - centered
         buttons_layout = QHBoxLayout()
+        buttons_layout.setContentsMargins(0, 6, 0, 0)
         buttons_layout.setSpacing(10)
+        buttons_layout.addStretch(1)
 
         backup_button = QPushButton(f"BACKUP {backup_type}")
         restore_button = QPushButton(f"RESTORE {backup_type}")
@@ -132,8 +143,8 @@ class BackupManager:
                 border-radius: 5px;
                 border: 1px solid #5c5c5c;
                 font-size: 12px;
-                padding: 8px;
-                min-height: 40px;
+                padding: 6px 12px;
+                min-height: 32px;
             }
             QPushButton:hover {
                 background-color: rgba(80, 80, 80, 0.9);
@@ -161,12 +172,14 @@ class BackupManager:
                 )
             )
             button.setStyleSheet(button_style_sheet)
-            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+            button.setMaximumWidth(150)
             buttons_layout.addWidget(button)
 
         # Restore button starts disabled
         restore_button.setEnabled(False)
 
+        buttons_layout.addStretch(1)
         layout.addLayout(buttons_layout)
 
     def classic_files_manage(

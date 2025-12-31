@@ -32,6 +32,7 @@ from PySide6.QtWidgets import (
 from ClassicLib.Interface.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
     add_main_button,
+    create_separator,
     setup_folder_section,
     supports_add_layout,
 )
@@ -278,8 +279,8 @@ class UISetupController:
             return
 
         layout = QVBoxLayout(backups_tab)
-        layout.setContentsMargins(20, 10, 20, 10)
-        layout.setSpacing(10)
+        layout.setContentsMargins(20, 5, 20, 25)
+        layout.setSpacing(5)
 
         layout.addWidget(QLabel("BACKUP > Backup files from the game folder into the CLASSIC Backup folder."))
         layout.addWidget(QLabel("RESTORE > Restore file backup from the CLASSIC Backup folder into the game folder."))
@@ -291,10 +292,44 @@ class UISetupController:
 
         layout.addStretch(1)
 
+        # Separator before bottom buttons
+        separator = create_separator()
+        separator.setMaximumWidth(480)
+        separator_layout = QHBoxLayout()
+        separator_layout.setContentsMargins(0, 12, 0, 6)
+        separator_layout.addStretch(1)
+        separator_layout.addWidget(separator)
+        separator_layout.addStretch(1)
+        layout.addLayout(separator_layout)
+
+        # Bottom buttons - centered
         bottom_layout = QHBoxLayout()
+        bottom_layout.setContentsMargins(0, 6, 0, 0)
+        bottom_layout.addStretch(1)
+
         open_backups_button = QPushButton("OPEN CLASSIC BACKUPS")
+        open_backups_button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        open_backups_button.setMaximumWidth(250)
+        open_backups_button.setStyleSheet("""
+            QPushButton {
+                color: white;
+                background: rgba(60, 60, 60, 0.9);
+                border-radius: 5px;
+                border: 1px solid #5c5c5c;
+                font-size: 12px;
+                padding: 6px 12px;
+                min-height: 32px;
+            }
+            QPushButton:hover {
+                background-color: rgba(80, 80, 80, 0.9);
+            }
+            QPushButton:pressed {
+                background-color: rgba(40, 40, 40, 0.9);
+            }
+        """)
         open_backups_button.clicked.connect(self._backup.open_backup_folder)
         bottom_layout.addWidget(open_backups_button)
+
         bottom_layout.addStretch(1)
         layout.addLayout(bottom_layout)
 
