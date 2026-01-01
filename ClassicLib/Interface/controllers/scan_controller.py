@@ -311,7 +311,7 @@ class ScanController:
                 return
 
             # Check if auto-switch is enabled (default to True for better UX)
-            auto_switch = yaml_settings(bool, YAML.Settings, "ResultsViewer.AutoSwitchAfterScan", True)
+            auto_switch = yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Auto Switch After Scan", True)
 
             if auto_switch:
                 # Find the index of the Results tab

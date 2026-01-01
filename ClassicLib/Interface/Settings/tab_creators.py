@@ -283,6 +283,12 @@ class TabCreator:
         scanning_layout.addWidget(move_invalid_checkbox)
         settings_widgets["move_invalid_logs"] = move_invalid_checkbox
 
+        # Auto-Switch to Results checkbox
+        auto_switch_checkbox = QCheckBox("Auto-Switch to Results Tab")
+        auto_switch_checkbox.setToolTip("Automatically switch to the Results tab after a scan completes")
+        scanning_layout.addWidget(auto_switch_checkbox)
+        settings_widgets["auto_switch_results"] = auto_switch_checkbox
+
         layout.addWidget(scanning_group)
         layout.addStretch()
 

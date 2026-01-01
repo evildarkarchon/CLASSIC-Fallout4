@@ -54,6 +54,7 @@ class SettingsDialog(QDialog):
         "simplify_logs": "Simplify Logs",
         "show_fid_values": "Show FormID Values",
         "move_invalid_logs": "Move Unsolved Logs",  # Note: YAML uses "Unsolved" not "Invalid"
+        "auto_switch_results": "Auto Switch After Scan",
         "update_check": "Update Check",
         "update_source": "Update Source",
         "ini_folder_path": "INI Folder Path",
@@ -142,6 +143,7 @@ class SettingsDialog(QDialog):
         self.simplify_checkbox = scanning_widgets.get("simplify_logs")
         self.show_fid_checkbox = scanning_widgets.get("show_fid_values")
         self.move_invalid_checkbox = scanning_widgets.get("move_invalid_logs")
+        self.auto_switch_checkbox = scanning_widgets.get("auto_switch_results")
 
         # Paths tab
         paths_widget, paths_widgets = TabCreator.create_paths_tab(self, self.path_manager)
@@ -299,7 +301,7 @@ class SettingsDialog(QDialog):
             value_iter = iter(values)
 
             # Update checkboxes
-            for key in ["fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "update_check"]:
+            for key in ["fcx_mode", "simplify_logs", "show_fid_values", "move_invalid_logs", "auto_switch_results", "update_check"]:
                 widget = self.settings_widgets.get(key)
                 if isinstance(widget, QCheckBox):
                     widget.setChecked(next(value_iter) or False)
@@ -358,6 +360,7 @@ class SettingsDialog(QDialog):
                 "simplify_logs",
                 "show_fid_values",
                 "move_invalid_logs",
+                "auto_switch_results",
                 "update_check",
             ]:
                 widget = self.settings_widgets.get(key)
