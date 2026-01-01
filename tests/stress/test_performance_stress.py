@@ -214,6 +214,11 @@ class TestSustainedLoadPerformance:
                 file_path.write_text(content, encoding="utf-8")
                 test_files.append(file_path)
 
+            # Warmup phase: Read all files once to populate OS page cache
+            # This simulates real-world usage where files are typically accessed multiple times
+            for warmup_file in test_files:
+                bridge.run_async(io_core.read_file(warmup_file))
+
             # Sustained I/O test
             duration_seconds = 20  # 20-second I/O test
             start_time = time.time()

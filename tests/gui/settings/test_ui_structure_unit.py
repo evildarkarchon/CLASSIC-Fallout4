@@ -76,13 +76,14 @@ class TestDialogStructure:
 
     def test_settings_widgets_dictionary(self, settings_dialog):
         """Test that settings_widgets dictionary is properly populated."""
-        assert len(settings_dialog.settings_widgets) == 8
+        assert len(settings_dialog.settings_widgets) == 9
         expected_keys = [
             "game_version",
             "fcx_mode",
             "simplify_logs",
             "show_fid_values",
             "move_invalid_logs",
+            "auto_switch_results",
             "update_check",
             "update_source",
             "ini_folder_path",
