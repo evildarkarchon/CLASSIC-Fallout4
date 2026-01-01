@@ -187,7 +187,8 @@ class ClassicBackend(QObject):
         reportsUpdated: Signal emitted when the reports list changes.
         stagingModsPath: Path to the mod staging folder.
         customScanPath: Custom path for crash log scanning.
-        vrMode: Whether VR mode is enabled.
+        gameVersion: Selected game version (auto, Original, NextGen, VR).
+        version: The CLASSIC application version (read-only).
         fcxMode: Whether FCX (Fallout Custom xEdit) mode is enabled.
         simplifyLogs: Whether to simplify crash log output.
         showFidValues: Whether to show FormID values in reports.
@@ -207,7 +208,7 @@ class ClassicBackend(QObject):
     # Property Notify Signals
     stagingModsPathChanged = Signal()
     customScanPathChanged = Signal()
-    vrModeChanged = Signal()
+    gameVersionChanged = Signal()
     fcxModeChanged = Signal()
     simplifyLogsChanged = Signal()
     showFidValuesChanged = Signal()
@@ -231,7 +232,7 @@ class ClassicBackend(QObject):
         self._scan_thread = None
 
         # Settings cache
-        self._vr_mode = classic_settings(bool, "VR Mode")
+        self._game_version = classic_settings(str, "Game Version") or "auto"
         self._fcx_mode = classic_settings(bool, "FCX Mode")
         self._simplify_logs = classic_settings(bool, "Simplify Logs")
         self._show_fid_values = classic_settings(bool, "Show FormID Values")
@@ -264,17 +265,45 @@ class ClassicBackend(QObject):
             yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", val)
             self.customScanPathChanged.emit()
 
-    @Property(bool, notify=vrModeChanged)
-    def vrMode(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
-        """Get VR mode enabled status."""
-        return self._vr_mode or False
+    @Slot(result=list)
+    @staticmethod
+    def getGameVersionOptions() -> list[dict[str, str]]:
+        """Get game version options for the dropdown.
 
-    @vrMode.setter
-    def vrMode(self, val: bool) -> None:
-        if self._vr_mode != val:
-            self._vr_mode = val
-            yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.VR Mode", val)
-            self.vrModeChanged.emit()
+        Queries the VersionRegistry to get available Fallout 4 versions
+        and formats them for QML ComboBox population.
+
+        Returns:
+            List of dicts with 'display' and 'value' keys for ComboBox population.
+
+        """
+        from ClassicLib.Interface.Settings.tab_creators import ensure_game_version_options
+
+        options = ensure_game_version_options()
+        return [{"display": display, "value": value} for display, value in options]
+
+    @Property(str, notify=gameVersionChanged)
+    def gameVersion(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201
+        """Get the current game version setting."""
+        return self._game_version
+
+    @gameVersion.setter
+    def gameVersion(self, val: str) -> None:
+        if self._game_version != val:
+            self._game_version = val
+            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.Game Version", val)
+            self.gameVersionChanged.emit()
+
+    @Property(str, constant=True)
+    def version(self) -> str:  # noqa: PLR6301
+        """Get the CLASSIC application version.
+
+        Returns:
+            The version string from the main YAML configuration,
+            or "Unknown" if not available.
+
+        """
+        return yaml_settings(str, YAML.Main, "CLASSIC_Info.version") or "Unknown"
 
     @Property(bool, notify=fcxModeChanged)
     def fcxMode(self):  # pyright: ignore[reportRedeclaration]  # noqa: ANN201

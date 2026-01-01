@@ -9,7 +9,7 @@ ApplicationWindow {
     width: 1000
     height: 700
     visible: true
-    title: "CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker"
+    title: "Crash Log Auto Scanner & Setup Integrity Checker | " + backend.version
     color: "#1e1e1e"
 
     property color accentColor: "#0078d4"

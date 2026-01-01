@@ -31,10 +31,41 @@ Item {
 
                 ColumnLayout {
                     anchors.fill: parent
-                    ToggleSwitch {
-                        text: "VR Mode"
-                        checked: backend.vrMode
-                        onToggled: backend.vrMode = checked
+                    spacing: 10
+
+                    RowLayout {
+                        spacing: 10
+                        Label { text: "Game Version:"; color: "#ccc" }
+                        ComboBox {
+                            id: gameVersionCombo
+                            Layout.preferredWidth: 250
+                            model: ListModel { id: versionModel }
+                            textRole: "display"
+                            
+                            Component.onCompleted: {
+                                var options = backend.getGameVersionOptions()
+                                for (var i = 0; i < options.length; i++) {
+                                    versionModel.append(options[i])
+                                    if (options[i].value === backend.gameVersion) {
+                                        currentIndex = i
+                                    }
+                                }
+                            }
+                            
+                            onCurrentIndexChanged: {
+                                if (currentIndex >= 0 && versionModel.count > 0) {
+                                    backend.gameVersion = versionModel.get(currentIndex).value
+                                }
+                            }
+                            
+                            background: Rectangle { color: "#333"; border.color: "#555"; radius: 4 }
+                            contentItem: Text {
+                                text: gameVersionCombo.displayText
+                                color: "white"
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 10
+                            }
+                        }
                     }
                 }
             }
