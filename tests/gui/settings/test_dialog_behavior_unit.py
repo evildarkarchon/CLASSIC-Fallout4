@@ -39,11 +39,13 @@ class TestDialogAcceptReject:
 
     def test_accept_multiple_changes(self, settings_dialog, reset_settings):
         """Test accepting dialog with multiple setting changes."""
-        settings_dialog.vr_checkbox.setChecked(True)
+        from tests.fixtures.gui_settings_fixtures import set_game_version_by_value
+
+        set_game_version_by_value(settings_dialog.game_version_combo, "VR")
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("GitHub")
         settings_dialog.accept()
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
+        assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version") == "VR"
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "GitHub"
 

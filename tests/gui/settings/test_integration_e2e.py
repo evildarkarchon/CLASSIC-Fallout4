@@ -22,14 +22,16 @@ from ClassicLib.YamlSettings import yaml_settings
 class TestSettingsApplication:
     """Test how settings affect application behavior."""
 
-    def test_vr_mode_setting_propagation(self, app, reset_settings, gui_message_handler, async_bridge):
-        """Test that VR mode setting can be accessed by other components."""
+    def test_game_version_setting_propagation(self, app, reset_settings, gui_message_handler, async_bridge):
+        """Test that Game Version setting can be accessed by other components."""
+        from tests.fixtures.gui_settings_fixtures import set_game_version_by_value
+
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        dialog.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
         dialog.close()
-        vr_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
-        assert vr_enabled is True
+        game_version = yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version")
+        assert game_version == "VR"
 
     def test_update_settings_propagation(self, app, reset_settings, gui_message_handler, async_bridge):
         """Test that update settings propagate correctly."""
@@ -59,16 +61,18 @@ class TestMultipleDialogs:
 
     def test_independent_dialog_states(self, app, gui_message_handler):
         """Test that dialog instances maintain independent states."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
+
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.fcx_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        dialog2.vr_checkbox.setChecked(False)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog2.game_version_combo, "Original")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog2.simplify_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert dialog1.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog1.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert dialog1.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert not dialog1.simplify_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert not dialog2.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog2.game_version_combo) == "Original"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert not dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert dialog2.simplify_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.close()
@@ -87,14 +91,18 @@ class TestSettingsImpact:
         assert simplify_enabled is True
         dialog.close()
 
-    def test_vr_mode_impact(self, app, reset_settings, gui_message_handler, async_bridge):
-        """Test that VR mode setting has expected impact."""
+    def test_game_version_impact(self, app, reset_settings, gui_message_handler, async_bridge):
+        """Test that Game Version setting has expected impact."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
+
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        original = dialog.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        dialog.vr_checkbox.setChecked(not original)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        original = get_game_version_value(dialog.game_version_combo)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        # Change to a different version
+        new_version = "VR" if original != "VR" else "Original"
+        set_game_version_by_value(dialog.game_version_combo, new_version)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
-        new_value = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
-        assert new_value != original
+        saved_value = yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version")
+        assert saved_value == new_version
         dialog.close()
 
 

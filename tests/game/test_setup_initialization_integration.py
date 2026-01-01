@@ -55,8 +55,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test application initialization in GUI mode."""
         # Mock batch_get_settings to return values for GUI mode
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            False,  # VR Mode disabled
+            "auto",  # Game Version (new setting)
+            False,  # VR Mode (legacy, deprecated)
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
             False,  # Debug Messages
@@ -92,8 +94,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test application initialization in GUI mode with parent widget."""
         # Mock batch_get_settings to return values
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            False,  # VR Mode disabled
+            "auto",  # Game Version (new setting)
+            False,  # VR Mode (legacy, deprecated)
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
             False,  # Debug Messages
@@ -129,8 +133,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test application initialization in CLI mode."""
         # Mock batch_get_settings to return values for CLI mode
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            True,  # VR Mode enabled
+            "VR",  # Game Version (new setting - VR mode)
+            True,  # VR Mode (legacy, deprecated - used for migration)
             "Skyrim SE",  # Managed Game
             True,  # is_prerelease
             False,  # Debug Messages
@@ -168,8 +174,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test application initialization for frozen executable."""
         # Mock batch_get_settings to return values
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            False,  # VR Mode disabled
+            "auto",  # Game Version (new setting)
+            False,  # VR Mode (legacy, deprecated)
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
             False,  # Debug Messages
@@ -203,8 +211,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test application initialization in source mode (not frozen)."""
         # Mock batch_get_settings to return values
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            False,  # VR Mode disabled
+            "auto",  # Game Version (new setting)
+            False,  # VR Mode (legacy, deprecated)
             "Fallout 4",  # Managed Game
             False,  # is_prerelease False
             False,  # Debug Messages
@@ -240,8 +250,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test application initialization when managed game setting is None."""
         # Mock batch_get_settings with None game
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            False,  # VR Mode disabled
+            "auto",  # Game Version (new setting)
+            False,  # VR Mode (legacy, deprecated)
             None,  # Managed Game (None)
             False,  # is_prerelease False
             False,  # Debug Messages
@@ -273,8 +285,10 @@ class TestSetupInitialization:
     ) -> None:
         """Test that YAML files are NOT preloaded during initialization (performance optimization)."""
         # Mock batch_get_settings to return values
+        # Order: Game Version, VR Mode (legacy), Managed Game, is_prerelease, Debug Messages
         mock_batch_get.return_value = [
-            False,  # VR Mode disabled
+            "auto",  # Game Version (new setting)
+            False,  # VR Mode (legacy, deprecated)
             "Fallout 4",  # Managed Game
             False,  # not prerelease
             False,  # Debug Messages
@@ -291,7 +305,8 @@ class TestSetupInitialization:
 
         # Verify the requests passed to batch_get_settings
         call_args = mock_batch_get.call_args[0][0]
-        assert len(call_args) == 4  # Four settings requested
+        assert len(call_args) == 5  # Five settings requested
+        assert any("Game Version" in str(req) for req in call_args)
         assert any("VR Mode" in str(req) for req in call_args)
         assert any("Managed Game" in str(req) for req in call_args)
         assert any("is_prerelease" in str(req) for req in call_args)

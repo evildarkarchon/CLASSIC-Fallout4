@@ -17,18 +17,22 @@ class TestSettingsLoading:
 
     def test_load_settings(self, settings_dialog, reset_settings):
         """Test that settings are loaded correctly from YAML."""
-        yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", True)
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value
+
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", "VR")
         yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "GitHub")
         settings_dialog.load_settings()
-        assert settings_dialog.vr_checkbox.isChecked()
+        assert get_game_version_value(settings_dialog.game_version_combo) == "VR"
         assert not settings_dialog.fcx_checkbox.isChecked()
         assert settings_dialog.update_source_combo.currentText() == "GitHub"
 
     def test_load_all_settings(self, settings_dialog, reset_settings):
         """Test that all settings are loaded correctly."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value
+
+        # Boolean settings (checkboxes)
         test_values = {
-            "CLASSIC_Settings.VR Mode": True,
             "CLASSIC_Settings.FCX Mode": True,
             "CLASSIC_Settings.Simplify Logs": True,
             "CLASSIC_Settings.Show FormID Values": False,
@@ -37,9 +41,11 @@ class TestSettingsLoading:
         }
         for key, value in test_values.items():
             yaml_settings(bool, YAML.TEST, key, value)
+        # String settings (dropdowns)
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", "NextGen")
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "Nexus")
         settings_dialog.load_settings()
-        assert settings_dialog.vr_checkbox.isChecked()
+        assert get_game_version_value(settings_dialog.game_version_combo) == "NextGen"
         assert settings_dialog.fcx_checkbox.isChecked()
         assert settings_dialog.simplify_checkbox.isChecked()
         assert not settings_dialog.show_fid_checkbox.isChecked()
@@ -53,17 +59,19 @@ class TestSettingsSaving:
 
     def test_save_settings(self, settings_dialog, reset_settings):
         """Test that settings are saved correctly to YAML."""
-        settings_dialog.vr_checkbox.setChecked(False)
+        settings_dialog.game_version_combo.setCurrentIndex(0)  # Auto-detect
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("Nexus")
         settings_dialog.save_settings()
-        assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
+        assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version") == "auto"
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "Nexus"
 
     def test_save_all_settings(self, settings_dialog, reset_settings):
         """Test that all settings are saved correctly."""
-        settings_dialog.vr_checkbox.setChecked(True)
+        from tests.fixtures.gui_settings_fixtures import set_game_version_by_value
+
+        set_game_version_by_value(settings_dialog.game_version_combo, "VR")
         settings_dialog.fcx_checkbox.setChecked(True)
         settings_dialog.simplify_checkbox.setChecked(True)
         settings_dialog.show_fid_checkbox.setChecked(False)
@@ -71,10 +79,32 @@ class TestSettingsSaving:
         settings_dialog.update_check_checkbox.setChecked(True)
         settings_dialog.update_source_combo.setCurrentText("GitHub")
         settings_dialog.save_settings()
-        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode")
+        assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version") == "VR"
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs")
         assert not yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Show FormID Values")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Move Unsolved Logs")
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Update Check")
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "GitHub"
+
+
+class TestLegacyMigration:
+    """Test migration from legacy VR Mode to Game Version."""
+
+    def test_legacy_vr_mode_migrates(self, settings_dialog, reset_settings):
+        """Test legacy VR Mode True migrates to Game Version VR."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value
+
+        yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", True)
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", "auto")
+        settings_dialog.load_settings()
+        assert get_game_version_value(settings_dialog.game_version_combo) == "VR"
+
+    def test_legacy_vr_mode_false_no_migration(self, settings_dialog, reset_settings):
+        """Test legacy VR Mode False does not override Game Version."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value
+
+        yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", False)
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", "Original")
+        settings_dialog.load_settings()
+        assert get_game_version_value(settings_dialog.game_version_combo) == "Original"

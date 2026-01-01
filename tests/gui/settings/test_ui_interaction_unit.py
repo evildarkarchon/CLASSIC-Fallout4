@@ -28,7 +28,8 @@ class TestCheckboxInteraction:
 
     def test_checkbox_triple_state(self, settings_dialog):
         """Test that checkboxes are not tri-state."""
-        checkboxes = [settings_dialog.vr_checkbox, settings_dialog.fcx_checkbox]
+        # Note: game_version is now a combo box, not a checkbox
+        checkboxes = [settings_dialog.fcx_checkbox, settings_dialog.simplify_checkbox]
         for checkbox in checkboxes:
             assert not checkbox.isTristate()
             assert checkbox.checkState() in [Qt.CheckState.Checked, Qt.CheckState.Unchecked]

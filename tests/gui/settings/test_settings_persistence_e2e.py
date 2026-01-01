@@ -18,13 +18,15 @@ class TestPersistenceAcrossInstances:
 
     def test_settings_persistence_across_instances(self, app, reset_settings):
         """Test that settings persist across dialog instances."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
+
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.fcx_checkbox.setChecked(False)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.save_settings()
         dialog1.close()
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog2.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog2.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert not dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog2.close()
 
@@ -49,7 +51,9 @@ class TestDefaultValues:
         """Test that missing settings use appropriate defaults."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
         dialog.load_settings()
-        assert isinstance(dialog.vr_checkbox.isChecked(), bool)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        # Game version combo should have a valid selection
+        assert isinstance(dialog.game_version_combo.currentIndex(), int)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert dialog.game_version_combo.currentIndex() >= 0  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert isinstance(dialog.fcx_checkbox.isChecked(), bool)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert dialog.update_source_combo.currentText() in ["Nexus", "GitHub", "Both"]  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.close()

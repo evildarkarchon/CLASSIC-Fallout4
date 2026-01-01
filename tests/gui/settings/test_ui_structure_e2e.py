@@ -24,12 +24,14 @@ class TestEdgeCases:
 
     def test_multiple_dialog_instances(self, app):
         """Test that multiple dialog instances don't interfere."""
+        from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
+
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        dialog1.vr_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        dialog2.vr_checkbox.setChecked(False)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert dialog1.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert not dialog2.vr_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog2.game_version_combo, "Original")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog1.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog2.game_version_combo) == "Original"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.close()
         dialog2.close()
 

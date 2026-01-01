@@ -14,12 +14,54 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QComboBox, QWidget
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
 from ClassicLib.MessageHandler import init_message_handler
 from ClassicLib.YamlSettings import yaml_settings
+
+
+def set_game_version_by_value(combo: QComboBox, value: str) -> bool:
+    """Set the game version combo box to a specific value.
+
+    Searches for the item whose stored value matches the given value
+    and selects it.
+
+    Args:
+        combo: The game version QComboBox widget.
+        value: The value to select (e.g., "VR", "Original", "NextGen", "auto").
+
+    Returns:
+        True if the value was found and selected, False otherwise.
+    """
+    from ClassicLib.Interface.Settings.tab_creators import ensure_game_version_options
+
+    version_options = ensure_game_version_options()
+    for i, (_, stored_value) in enumerate(version_options):
+        if stored_value == value:
+            combo.setCurrentIndex(i)
+            return True
+    return False
+
+
+def get_game_version_value(combo: QComboBox) -> str:
+    """Get the stored value for the current selection in the game version combo.
+
+    Args:
+        combo: The game version QComboBox widget.
+
+    Returns:
+        The stored value (e.g., "VR", "Original", "NextGen", "auto").
+    """
+    from ClassicLib.Interface.Settings.tab_creators import ensure_game_version_options
+
+    version_options = ensure_game_version_options()
+    current_index = combo.currentIndex()
+    if 0 <= current_index < len(version_options):
+        _, value = version_options[current_index]
+        return value
+    return "auto"
 
 
 class MockSettingsCache:
@@ -184,7 +226,8 @@ def gui_settings_reset(gui_settings_mock_cache: MockSettingsCache) -> None:
     """
     yield
     # Reset to defaults after test (updates the mock)
-    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", False)
+    yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", "auto")
+    yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.VR Mode", False)  # Legacy setting for migration
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode", False)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Simplify Logs", False)
     yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Show FormID Values", False)

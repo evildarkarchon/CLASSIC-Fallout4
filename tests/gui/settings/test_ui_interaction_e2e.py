@@ -45,19 +45,20 @@ class TestCheckboxInteraction:
 
     def test_checkbox_interaction(self, settings_dialog, app):
         """Test that checkboxes can be toggled."""
-        settings_dialog.vr_checkbox.setChecked(False)
-        assert not settings_dialog.vr_checkbox.isChecked()
-        settings_dialog.vr_checkbox.click()
-        assert settings_dialog.vr_checkbox.isChecked()
-        settings_dialog.fcx_checkbox.setChecked(True)
-        assert settings_dialog.fcx_checkbox.isChecked()
-        settings_dialog.fcx_checkbox.click()
+        # Note: game_version is now a combo box, testing actual checkboxes
+        settings_dialog.fcx_checkbox.setChecked(False)
         assert not settings_dialog.fcx_checkbox.isChecked()
+        settings_dialog.fcx_checkbox.click()
+        assert settings_dialog.fcx_checkbox.isChecked()
+        settings_dialog.simplify_checkbox.setChecked(True)
+        assert settings_dialog.simplify_checkbox.isChecked()
+        settings_dialog.simplify_checkbox.click()
+        assert not settings_dialog.simplify_checkbox.isChecked()
 
     def test_all_checkboxes_toggle(self, settings_dialog):
         """Test that all checkboxes can be toggled."""
+        # Note: game_version is now a combo box, not a checkbox
         checkboxes = [
-            settings_dialog.vr_checkbox,
             settings_dialog.fcx_checkbox,
             settings_dialog.simplify_checkbox,
             settings_dialog.show_fid_checkbox,
@@ -111,7 +112,7 @@ class TestWidgetFocus:
 
         # Test that setFocus() calls work without errors
         # We don't verify hasFocus() because it requires a visible, active window
-        settings_dialog.vr_checkbox.setFocus()
+        settings_dialog.game_version_combo.setFocus()
         QApplication.processEvents()
 
         settings_dialog.update_source_combo.setFocus()
@@ -133,7 +134,7 @@ class TestWidgetFocus:
         from PySide6.QtWidgets import QApplication
 
         # Test that tab key simulation works without errors
-        settings_dialog.vr_checkbox.setFocus()
+        settings_dialog.game_version_combo.setFocus()
         QApplication.processEvents()
 
         for _ in range(3):
