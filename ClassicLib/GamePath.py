@@ -53,11 +53,7 @@ def _log_version_warning(game_version: "Version", match_message: str = "") -> No
     if not _VERSION_WARNING_LOGGED:
         registry = get_version_registry()
         supported = [str(v.version) for v in registry.get_all_for_game("Fallout4")]
-        logger.warning(
-            f"Unknown game version detected: {game_version}. "
-            f"Supported versions: {', '.join(supported)}. "
-            f"{match_message}"
-        )
+        logger.warning(f"Unknown game version detected: {game_version}. Supported versions: {', '.join(supported)}. {match_message}")
         _VERSION_WARNING_LOGGED = True
 
 

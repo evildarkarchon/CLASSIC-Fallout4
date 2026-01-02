@@ -170,18 +170,27 @@ impl VersionRegistry {
         let version = GameVersion::parse(&version_str)?;
 
         // Parse address library config
-        let address_library = yaml_ops.get_setting(yaml, "address_library").map(|al_yaml| AddressLibraryConfig::new(
-                yaml_ops.get_string_value(&al_yaml, "filename", ""),
-                yaml_ops.get_string_value(&al_yaml, "format", "bin").parse().unwrap(),
-                yaml_ops.get_string_value(&al_yaml, "nexus_url", ""),
-            ));
+        let address_library = yaml_ops
+            .get_setting(yaml, "address_library")
+            .map(|al_yaml| {
+                AddressLibraryConfig::new(
+                    yaml_ops.get_string_value(&al_yaml, "filename", ""),
+                    yaml_ops
+                        .get_string_value(&al_yaml, "format", "bin")
+                        .parse()
+                        .unwrap(),
+                    yaml_ops.get_string_value(&al_yaml, "nexus_url", ""),
+                )
+            });
 
         // Parse XSE config
-        let xse = yaml_ops.get_setting(yaml, "xse").map(|xse_yaml| XseConfig::new(
+        let xse = yaml_ops.get_setting(yaml, "xse").map(|xse_yaml| {
+            XseConfig::new(
                 yaml_ops.get_string_value(&xse_yaml, "acronym", ""),
                 yaml_ops.get_string_value(&xse_yaml, "compatible_version", ""),
                 yaml_ops.get_string_value(&xse_yaml, "loader", ""),
-            ));
+            )
+        });
 
         // Parse compatible range
         let compatible_range = if let Some(cr_yaml) = yaml_ops.get_setting(yaml, "compatible_range")
@@ -519,9 +528,9 @@ mod tests {
         let registry = create_test_registry();
         let all = registry.get_all();
 
-        assert_eq!(all.len(), 3);
-        // Should be sorted by priority (NG has highest priority)
-        assert_eq!(all[0].id, "FO4_NG");
+        assert_eq!(all.len(), 4); // OG, NG, AE, VR
+        // Should be sorted by priority (AE has highest priority at 300)
+        assert_eq!(all[0].id, "FO4_AE");
     }
 
     #[test]
@@ -529,14 +538,14 @@ mod tests {
         let registry = create_test_registry();
 
         let non_vr = registry.get_all_for_game("Fallout4", Some(false));
-        assert_eq!(non_vr.len(), 2);
+        assert_eq!(non_vr.len(), 3); // OG, NG, AE
 
         let vr = registry.get_all_for_game("Fallout4", Some(true));
         assert_eq!(vr.len(), 1);
         assert!(vr[0].is_vr);
 
         let all = registry.get_all_for_game("Fallout4", None);
-        assert_eq!(all.len(), 3);
+        assert_eq!(all.len(), 4); // OG, NG, AE, VR
     }
 
     #[test]
@@ -544,7 +553,7 @@ mod tests {
         let registry = create_test_registry();
 
         let correct_non_vr = registry.get_correct_versions(false);
-        assert_eq!(correct_non_vr.len(), 2);
+        assert_eq!(correct_non_vr.len(), 3); // OG, NG, AE
 
         let wrong_for_non_vr = registry.get_wrong_versions(false);
         assert_eq!(wrong_for_non_vr.len(), 1);

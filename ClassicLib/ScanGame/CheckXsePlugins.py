@@ -98,15 +98,11 @@ def _determine_relevant_versions(is_vr_mode: bool) -> tuple[list[AddressLibVersi
     registry = get_version_registry()
 
     correct_versions: list[AddressLibVersionInfo] = [
-        _version_info_to_address_lib_info(v)
-        for v in registry.get_correct_versions(is_vr_mode)
-        if v.address_library
+        _version_info_to_address_lib_info(v) for v in registry.get_correct_versions(is_vr_mode) if v.address_library
     ]
 
     wrong_versions: list[AddressLibVersionInfo] = [
-        _version_info_to_address_lib_info(v)
-        for v in registry.get_wrong_versions(is_vr_mode)
-        if v.address_library
+        _version_info_to_address_lib_info(v) for v in registry.get_wrong_versions(is_vr_mode) if v.address_library
     ]
 
     return correct_versions, wrong_versions

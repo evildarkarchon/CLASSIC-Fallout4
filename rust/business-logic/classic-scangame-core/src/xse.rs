@@ -502,7 +502,8 @@ mod tests {
         let message = checker.validate();
         assert!(message.contains("❌"));
         assert!(message.contains("wrong version"));
-        assert!(message.contains("Non-VR (Regular) version"));
+        // Description from VersionRegistry: "Fallout 4 Original (OG)"
+        assert!(message.contains("Fallout 4 Original"));
     }
 
     #[test]

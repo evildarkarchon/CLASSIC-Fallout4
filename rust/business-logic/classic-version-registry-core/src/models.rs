@@ -11,8 +11,7 @@ use std::str::FromStr;
 use crate::GameVersion;
 
 /// Address Library file format.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum AddressLibFormat {
     /// Binary format (.bin) - used by non-VR versions.
     #[default]
@@ -52,7 +51,6 @@ impl AddressLibFormat {
         }
     }
 }
-
 
 /// Address Library configuration for a game version.
 ///
@@ -321,10 +319,22 @@ mod tests {
 
     #[test]
     fn test_address_lib_format() {
-        assert_eq!("bin".parse::<AddressLibFormat>().unwrap(), AddressLibFormat::Bin);
-        assert_eq!("csv".parse::<AddressLibFormat>().unwrap(), AddressLibFormat::Csv);
-        assert_eq!("CSV".parse::<AddressLibFormat>().unwrap(), AddressLibFormat::Csv);
-        assert_eq!("unknown".parse::<AddressLibFormat>().unwrap(), AddressLibFormat::Bin);
+        assert_eq!(
+            "bin".parse::<AddressLibFormat>().unwrap(),
+            AddressLibFormat::Bin
+        );
+        assert_eq!(
+            "csv".parse::<AddressLibFormat>().unwrap(),
+            AddressLibFormat::Csv
+        );
+        assert_eq!(
+            "CSV".parse::<AddressLibFormat>().unwrap(),
+            AddressLibFormat::Csv
+        );
+        assert_eq!(
+            "unknown".parse::<AddressLibFormat>().unwrap(),
+            AddressLibFormat::Bin
+        );
     }
 
     #[test]

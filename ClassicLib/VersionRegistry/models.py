@@ -18,18 +18,16 @@ Example:
     ...     version=Version("1.10.163.0"),
     ...     address_library=addr_lib
     ... )
+
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from pathlib import Path  # noqa: TC003
+from typing import Literal
 
 from packaging.version import Version
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 @dataclass(frozen=True)
@@ -53,6 +51,7 @@ class AddressLibraryConfig:
         ... )
         >>> config.get_path(Path("C:/Games/Fallout4/Data/F4SE/plugins"))
         WindowsPath('C:/Games/Fallout4/Data/F4SE/plugins/version-1-10-163-0.bin')
+
     """
 
     filename: str
@@ -67,6 +66,7 @@ class AddressLibraryConfig:
 
         Returns:
             Full path to the Address Library file.
+
         """
         return plugins_dir / self.filename
 
@@ -89,6 +89,7 @@ class XseConfig:
         ...     compatible_version="0.6.23",
         ...     loader="f4se_loader.exe"
         ... )
+
     """
 
     acronym: str
@@ -101,6 +102,7 @@ class XseConfig:
 
         Returns:
             Parsed Version object for comparison operations.
+
         """
         return Version(self.compatible_version)
 
@@ -125,6 +127,7 @@ class CompatibleRange:
         True
         >>> range_config.contains(Version("1.10.984.0"))
         False
+
     """
 
     min_version: Version
@@ -138,6 +141,7 @@ class CompatibleRange:
 
         Returns:
             True if the version is within the range (inclusive), False otherwise.
+
         """
         return self.min_version <= version <= self.max_version
 
@@ -151,6 +155,7 @@ class CompatibleRange:
 
         Returns:
             A new CompatibleRange instance.
+
         """
         return cls(min_version=Version(min_str), max_version=Version(max_str))
 
@@ -188,6 +193,7 @@ class VersionInfo:
         ... )
         >>> info.version_string
         '1.10.163.0'
+
     """
 
     id: str
@@ -209,6 +215,7 @@ class VersionInfo:
 
         Returns:
             String representation of the version.
+
         """
         return str(self.version)
 
@@ -224,6 +231,7 @@ class VersionInfo:
 
         Returns:
             True if the detected version is compatible, False otherwise.
+
         """
         if self.compatible_range:
             return self.compatible_range.contains(detected)
@@ -234,6 +242,7 @@ class VersionInfo:
 
         Returns:
             Hash of the version ID.
+
         """
         return hash(self.id)
 
@@ -245,6 +254,7 @@ class VersionInfo:
 
         Returns:
             True if other is a VersionInfo with the same ID.
+
         """
         if not isinstance(other, VersionInfo):
             return NotImplemented
@@ -269,6 +279,7 @@ class UnknownVersionHandling:
         ...     defaults={"Fallout4": "FO4_NG"},
         ...     log_level="warning"
         ... )
+
     """
 
     strategy: Literal["nearest_match", "strict", "default_only"] = "nearest_match"

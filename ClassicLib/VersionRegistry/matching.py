@@ -18,6 +18,7 @@ Example:
     >>> result = matcher.match(Version("1.10.163.0"), "Fallout4", is_vr=False)
     >>> result.confidence
     <MatchConfidence.EXACT: 1>
+
 """
 
 from __future__ import annotations
@@ -26,13 +27,14 @@ from dataclasses import dataclass
 from enum import Enum, auto
 from typing import TYPE_CHECKING
 
-from packaging.version import Version
-
 from ClassicLib.Logger import logger
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
+    from packaging.version import Version
+
+    from ClassicLib.VersionRegistry.core import VersionRegistry
     from ClassicLib.VersionRegistry.models import VersionInfo
 
 
@@ -48,6 +50,7 @@ class MatchConfidence(Enum):
         NEAREST: Matched to nearest known version by distance calculation.
         DEFAULT: Using default fallback for the game.
         UNKNOWN: No match found at all.
+
     """
 
     EXACT = auto()
@@ -81,6 +84,7 @@ class MatchResult:
         True
         >>> result.should_warn
         False
+
     """
 
     version_info: VersionInfo | None
@@ -94,6 +98,7 @@ class MatchResult:
 
         Returns:
             True if the match confidence is EXACT, False otherwise.
+
         """
         return self.confidence == MatchConfidence.EXACT
 
@@ -106,12 +111,13 @@ class MatchResult:
 
         Returns:
             True if this was a fallback match (NEAREST, DEFAULT, or UNKNOWN).
+
         """
-        return self.confidence in (
+        return self.confidence in {
             MatchConfidence.NEAREST,
             MatchConfidence.DEFAULT,
             MatchConfidence.UNKNOWN,
-        )
+        }
 
     @property
     def should_warn(self) -> bool:
@@ -122,11 +128,12 @@ class MatchResult:
 
         Returns:
             True if the user should be warned about this match.
+
         """
-        return self.confidence in (
+        return self.confidence in {
             MatchConfidence.NEAREST,
             MatchConfidence.DEFAULT,
-        )
+        }
 
     @property
     def is_valid(self) -> bool:
@@ -134,6 +141,7 @@ class MatchResult:
 
         Returns:
             True if version_info is not None and confidence is not UNKNOWN.
+
         """
         return self.version_info is not None and self.confidence != MatchConfidence.UNKNOWN
 
@@ -158,6 +166,7 @@ class VersionMatcher:
         >>> result = matcher.match(Version("1.10.500.0"), "Fallout4", False)
         >>> result.confidence
         <MatchConfidence.NEAREST: 3>
+
     """
 
     def __init__(self, registry: VersionRegistry) -> None:
@@ -165,9 +174,8 @@ class VersionMatcher:
 
         Args:
             registry: The VersionRegistry instance to use for matching.
-        """
-        from ClassicLib.VersionRegistry.core import VersionRegistry
 
+        """
         self._registry: VersionRegistry = registry
 
     def match(
@@ -188,6 +196,7 @@ class VersionMatcher:
 
         Returns:
             MatchResult containing the matched version and confidence level.
+
         """
         # 1. Try exact match
         exact = self._registry.get_by_version(detected)
@@ -213,9 +222,7 @@ class VersionMatcher:
         # 3. Try nearest major.minor match
         nearest = self._find_nearest(detected, candidates)
         if nearest:
-            logger.warning(
-                f"Unknown version {detected} matched to nearest: {nearest.display_name}"
-            )
+            logger.warning(f"Unknown version {detected} matched to nearest: {nearest.display_name}")
             return MatchResult(
                 version_info=nearest,
                 confidence=MatchConfidence.NEAREST,
@@ -226,9 +233,7 @@ class VersionMatcher:
         # 4. Use default fallback
         if candidates:
             default = candidates[0]  # Highest priority (sorted by priority desc)
-            logger.warning(
-                f"Unknown version {detected} using default: {default.display_name}"
-            )
+            logger.warning(f"Unknown version {detected} using default: {default.display_name}")
             return MatchResult(
                 version_info=default,
                 confidence=MatchConfidence.DEFAULT,
@@ -245,7 +250,7 @@ class VersionMatcher:
             message=f"No matching version found for {detected}",
         )
 
-    def _find_nearest(
+    def _find_nearest(  # noqa: PLR6301
         self,
         detected: Version,
         candidates: Sequence[VersionInfo],
@@ -265,6 +270,7 @@ class VersionMatcher:
 
         Returns:
             The nearest matching VersionInfo, or None if no reasonable match.
+
         """
         if not candidates:
             return None

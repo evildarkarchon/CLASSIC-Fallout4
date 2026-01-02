@@ -287,9 +287,7 @@ class TestVersionMatcher:
     def test_exact_match(self):
         """Test exact version matching."""
         registry = get_version_registry()
-        result = registry.match_version(
-            Version("1.10.163.0"), "Fallout4", is_vr=False
-        )
+        result = registry.match_version(Version("1.10.163.0"), "Fallout4", is_vr=False)
 
         assert result.confidence == MatchConfidence.EXACT
         assert result.version_info is not None
@@ -301,9 +299,7 @@ class TestVersionMatcher:
     def test_exact_match_ng(self):
         """Test exact version matching for NG."""
         registry = get_version_registry()
-        result = registry.match_version(
-            Version("1.10.984.0"), "Fallout4", is_vr=False
-        )
+        result = registry.match_version(Version("1.10.984.0"), "Fallout4", is_vr=False)
 
         assert result.confidence == MatchConfidence.EXACT
         assert result.version_info is not None
@@ -313,9 +309,7 @@ class TestVersionMatcher:
     def test_exact_match_vr(self):
         """Test exact version matching for VR."""
         registry = get_version_registry()
-        result = registry.match_version(
-            Version("1.2.72.0"), "Fallout4", is_vr=True
-        )
+        result = registry.match_version(Version("1.2.72.0"), "Fallout4", is_vr=True)
 
         assert result.confidence == MatchConfidence.EXACT
         assert result.version_info is not None
@@ -326,9 +320,7 @@ class TestVersionMatcher:
         """Test nearest matching for unknown version."""
         registry = get_version_registry()
         # Unknown version in 1.10.x range should match to NG (higher priority)
-        result = registry.match_version(
-            Version("1.10.500.0"), "Fallout4", is_vr=False
-        )
+        result = registry.match_version(Version("1.10.500.0"), "Fallout4", is_vr=False)
 
         assert result.confidence in (MatchConfidence.RANGE, MatchConfidence.NEAREST)
         assert result.version_info is not None
@@ -340,9 +332,7 @@ class TestVersionMatcher:
         """Test fallback for completely unknown version."""
         registry = get_version_registry()
         # Completely unknown major version
-        result = registry.match_version(
-            Version("99.99.99.0"), "Fallout4", is_vr=False
-        )
+        result = registry.match_version(Version("99.99.99.0"), "Fallout4", is_vr=False)
 
         # Should still return something (default fallback)
         assert result.version_info is not None or result.confidence == MatchConfidence.UNKNOWN
@@ -351,9 +341,7 @@ class TestVersionMatcher:
     def test_match_result_properties(self):
         """Test MatchResult property methods."""
         registry = get_version_registry()
-        result = registry.match_version(
-            Version("1.10.163.0"), "Fallout4", is_vr=False
-        )
+        result = registry.match_version(Version("1.10.163.0"), "Fallout4", is_vr=False)
 
         assert result.is_exact
         assert not result.is_fallback
@@ -423,9 +411,7 @@ class TestGetAddressLibraryFilename:
     def test_get_address_library_filename_og(self):
         """Test getting Address Library filename for OG version."""
         registry = get_version_registry()
-        filename = registry.get_address_library_filename(
-            Version("1.10.163.0"), is_vr=False
-        )
+        filename = registry.get_address_library_filename(Version("1.10.163.0"), is_vr=False)
 
         assert filename == "version-1-10-163-0.bin"
 
@@ -433,9 +419,7 @@ class TestGetAddressLibraryFilename:
     def test_get_address_library_filename_ng(self):
         """Test getting Address Library filename for NG version."""
         registry = get_version_registry()
-        filename = registry.get_address_library_filename(
-            Version("1.10.984.0"), is_vr=False
-        )
+        filename = registry.get_address_library_filename(Version("1.10.984.0"), is_vr=False)
 
         assert filename == "version-1-10-984-0.bin"
 
@@ -443,8 +427,6 @@ class TestGetAddressLibraryFilename:
     def test_get_address_library_filename_vr(self):
         """Test getting Address Library filename for VR version."""
         registry = get_version_registry()
-        filename = registry.get_address_library_filename(
-            Version("1.2.72.0"), is_vr=True
-        )
+        filename = registry.get_address_library_filename(Version("1.2.72.0"), is_vr=True)
 
         assert filename == "version-1-2-72-0.csv"

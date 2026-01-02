@@ -15,14 +15,16 @@ Example:
     >>> og = registry.get_by_id("FO4_OG")
     >>> print(og.address_library.filename)
     version-1-10-163-0.bin
+
 """
 
 from __future__ import annotations
 
 import threading
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import Any, ClassVar
 
-from packaging.version import Version
+import ruamel.yaml
+from packaging.version import InvalidVersion, Version
 
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
@@ -34,9 +36,6 @@ from ClassicLib.VersionRegistry.models import (
     VersionInfo,
     XseConfig,
 )
-
-if TYPE_CHECKING:
-    from collections.abc import Sequence
 
 
 class VersionRegistry:
@@ -60,6 +59,7 @@ class VersionRegistry:
         >>> info = registry.get_by_id("FO4_OG")
         >>> print(info.address_library.filename)
         version-1-10-163-0.bin
+
     """
 
     _instance: ClassVar[VersionRegistry | None] = None
@@ -90,6 +90,7 @@ class VersionRegistry:
 
         Example:
             >>> registry = VersionRegistry.get_instance()
+
         """
         if cls._instance is None:
             with cls._lock:
@@ -122,14 +123,10 @@ class VersionRegistry:
                 from ClassicLib.YamlSettings import yaml_settings
 
                 # Load version registry from YAML
-                versions_data = yaml_settings(
-                    list, YAML.Main, "Version_Registry.versions"
-                )
+                versions_data = yaml_settings(list, YAML.Main, "Version_Registry.versions")
 
                 if not versions_data:
-                    logger.warning(
-                        "No versions found in Version_Registry, using defaults"
-                    )
+                    logger.warning("No versions found in Version_Registry, using defaults")
                     self._load_defaults()
                     return
 
@@ -139,9 +136,7 @@ class VersionRegistry:
                     self._by_version[version_info.version_string] = version_info
 
                 # Load unknown version handling config
-                handling_data = yaml_settings(
-                    dict, YAML.Main, "Version_Registry.unknown_version_handling"
-                )
+                handling_data = yaml_settings(dict, YAML.Main, "Version_Registry.unknown_version_handling")
                 if handling_data:
                     self._unknown_handling = UnknownVersionHandling(
                         strategy=handling_data.get("strategy", "nearest_match"),
@@ -152,11 +147,22 @@ class VersionRegistry:
                 self._loaded = True
                 logger.debug(f"Loaded {len(self._versions)} versions from registry")
 
-            except Exception as e:
+            except (
+                KeyError,
+                TypeError,
+                ValueError,
+                InvalidVersion,
+                OSError,
+                RuntimeError,
+                AttributeError,
+                ImportError,
+                ruamel.yaml.YAMLError,
+            ) as e:
                 logger.warning(f"Failed to load version registry: {e}, using defaults")
                 self._load_defaults()
 
-    def _parse_version_data(self, data: dict[str, Any]) -> VersionInfo:
+    @staticmethod
+    def _parse_version_data(data: dict[str, Any]) -> VersionInfo:
         """Parse version data from YAML dict.
 
         Args:
@@ -164,6 +170,7 @@ class VersionRegistry:
 
         Returns:
             Parsed VersionInfo object.
+
         """
         # Parse Address Library config
         addr_lib = None
@@ -313,6 +320,7 @@ class VersionRegistry:
             >>> og = registry.get_by_id("FO4_OG")
             >>> print(og.version)
             1.10.163.0
+
         """
         return self._versions.get(version_id)
 
@@ -330,6 +338,7 @@ class VersionRegistry:
             >>> info = registry.get_by_version(Version("1.10.163.0"))
             >>> print(info.id)
             FO4_OG
+
         """
         return self._by_version.get(str(version))
 
@@ -347,6 +356,7 @@ class VersionRegistry:
             >>> og = registry.get_by_short_name("OG")
             >>> print(og.version)
             1.10.163.0
+
         """
         for version_info in self._versions.values():
             if version_info.short_name == short_name:
@@ -378,6 +388,7 @@ class VersionRegistry:
             >>> result = registry.match_version(Version("1.10.500.0"), "Fallout4", False)
             >>> print(result.confidence)
             MatchConfidence.NEAREST
+
         """
         if self._matcher is None:
             self._matcher = VersionMatcher(self)
@@ -388,6 +399,7 @@ class VersionRegistry:
 
         Returns:
             List of all VersionInfo objects, sorted by priority (descending).
+
         """
         return sorted(
             self._versions.values(),
@@ -408,12 +420,9 @@ class VersionRegistry:
 
         Returns:
             List of matching versions, sorted by priority (descending).
+
         """
-        result = []
-        for v in self._versions.values():
-            if v.game == game:
-                if is_vr is None or v.is_vr == is_vr:
-                    result.append(v)
+        result = [v for v in self._versions.values() if v.game == game and (is_vr is None or v.is_vr == is_vr)]
         return sorted(result, key=lambda x: x.priority, reverse=True)
 
     def get_correct_versions(self, is_vr: bool) -> list[VersionInfo]:
@@ -427,6 +436,7 @@ class VersionRegistry:
 
         Returns:
             List of versions matching the VR mode.
+
         """
         return [v for v in self._versions.values() if v.is_vr == is_vr]
 
@@ -441,6 +451,7 @@ class VersionRegistry:
 
         Returns:
             List of versions NOT matching the VR mode.
+
         """
         return [v for v in self._versions.values() if v.is_vr != is_vr]
 
@@ -468,6 +479,7 @@ class VersionRegistry:
             ... )
             >>> print(filename)
             version-1-10-163-0.bin
+
         """
         result = self.match_version(version, "Fallout4", is_vr)
         if result.version_info and result.version_info.address_library:
@@ -480,6 +492,7 @@ class VersionRegistry:
 
         Returns:
             The UnknownVersionHandling configuration.
+
         """
         if self._unknown_handling is None:
             return UnknownVersionHandling()
@@ -497,5 +510,6 @@ def get_version_registry() -> VersionRegistry:
     Example:
         >>> registry = get_version_registry()
         >>> og = registry.get_by_id("FO4_OG")
+
     """
     return VersionRegistry.get_instance()

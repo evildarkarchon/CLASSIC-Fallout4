@@ -429,7 +429,7 @@ impl PyFallout4Version {
         use std::str::FromStr;
         classic_constants_core::Fallout4Version::from_str(s)
             .map(|inner| Self { inner })
-            .map_err(|e| pyo3::exceptions::PyValueError::new_err(e))
+            .map_err(pyo3::exceptions::PyValueError::new_err)
     }
 
     /// Get all Fallout 4 version variants.

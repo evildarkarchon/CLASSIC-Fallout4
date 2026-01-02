@@ -402,7 +402,7 @@ impl Fallout4Version {
     #[must_use]
     pub fn game_version(&self) -> classic_version_registry_core::GameVersion {
         self.get_version_info()
-            .map(|info| info.version.clone())
+            .map(|info| info.version)
             .unwrap_or_else(|| classic_version_registry_core::GameVersion::new(0, 0, 0, 0))
     }
 
