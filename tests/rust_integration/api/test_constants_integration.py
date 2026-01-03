@@ -25,15 +25,18 @@ class TestVersionConstants:
         # Individual version constants
         assert hasattr(classic_constants, "FALLOUT4_OG_VERSION")
         assert hasattr(classic_constants, "FALLOUT4_NG_VERSION")
+        assert hasattr(classic_constants, "FALLOUT4_AE_VERSION")
         assert hasattr(classic_constants, "FALLOUT4_VR_VERSION")
 
         # All should be non-empty strings
         assert isinstance(classic_constants.FALLOUT4_OG_VERSION, str)
         assert isinstance(classic_constants.FALLOUT4_NG_VERSION, str)
+        assert isinstance(classic_constants.FALLOUT4_AE_VERSION, str)
         assert isinstance(classic_constants.FALLOUT4_VR_VERSION, str)
 
         assert len(classic_constants.FALLOUT4_OG_VERSION) > 0
         assert len(classic_constants.FALLOUT4_NG_VERSION) > 0
+        assert len(classic_constants.FALLOUT4_AE_VERSION) > 0
         assert len(classic_constants.FALLOUT4_VR_VERSION) > 0
 
     def test_f4se_versions(self):
@@ -41,38 +44,53 @@ class TestVersionConstants:
         # Individual version constants
         assert hasattr(classic_constants, "F4SE_OG_VERSION")
         assert hasattr(classic_constants, "F4SE_NG_VERSION")
+        assert hasattr(classic_constants, "F4SE_AE_VERSION")
 
         # All should be non-empty strings
         assert isinstance(classic_constants.F4SE_OG_VERSION, str)
         assert isinstance(classic_constants.F4SE_NG_VERSION, str)
+        assert isinstance(classic_constants.F4SE_AE_VERSION, str)
 
         assert len(classic_constants.F4SE_OG_VERSION) > 0
         assert len(classic_constants.F4SE_NG_VERSION) > 0
+        assert len(classic_constants.F4SE_AE_VERSION) > 0
 
     def test_fallout4_versions_array(self):
-        """Test FALLOUT4_VERSIONS array contains OG and NG versions.
+        """Test FALLOUT4_VERSIONS array contains OG, NG, and AE versions.
 
         Note: VR version is NOT included in FALLOUT4_VERSIONS - it exists
         as a separate FALLOUT4_VR_VERSION constant since VR has different
         versioning and compatibility requirements.
+
+        The array includes:
+        - OG (Original): 1.10.163.0
+        - NG (Next-Gen): 1.10.984.0
+        - AE (Anniversary Edition): 1.11.191.0
         """
         versions = classic_constants.FALLOUT4_VERSIONS
         assert isinstance(versions, list)
-        assert len(versions) == 2  # OG and NG only, VR is separate
+        assert len(versions) == 3  # OG, NG, and AE (VR is separate)
         assert classic_constants.FALLOUT4_OG_VERSION in versions
         assert classic_constants.FALLOUT4_NG_VERSION in versions
+        assert classic_constants.FALLOUT4_AE_VERSION in versions
 
     def test_f4se_versions_array(self):
-        """Test F4SE_VERSIONS array contains OG and NG versions.
+        """Test F4SE_VERSIONS array contains OG, NG, and AE versions.
 
-        Note: F4SE versions only cover OG and NG - there is no separate
+        Note: F4SE versions only cover OG, NG, and AE - there is no separate
         F4SE VR version constant (VR uses a different script extender).
+
+        The array includes:
+        - OG: 0.6.23
+        - NG: 0.7.2
+        - AE: 0.7.3
         """
         versions = classic_constants.F4SE_VERSIONS
         assert isinstance(versions, list)
-        assert len(versions) == 2  # OG and NG only
+        assert len(versions) == 3  # OG, NG, and AE
         assert classic_constants.F4SE_OG_VERSION in versions
         assert classic_constants.F4SE_NG_VERSION in versions
+        assert classic_constants.F4SE_AE_VERSION in versions
 
 
 @pytest.mark.rust

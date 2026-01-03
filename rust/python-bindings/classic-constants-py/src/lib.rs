@@ -828,6 +828,11 @@ fn classic_constants(m: &Bound<'_, PyModule>) -> PyResult<()> {
     )?;
     m.add("F4SE_OG_VERSION", get_xse_version("FO4_OG", "0.6.23"))?;
     m.add("F4SE_NG_VERSION", get_xse_version("FO4_NG", "0.7.2"))?;
+    m.add(
+        "FALLOUT4_AE_VERSION",
+        get_game_version("FO4_AE", "1.11.191.0"),
+    )?;
+    m.add("F4SE_AE_VERSION", get_xse_version("FO4_AE", "0.7.3"))?;
 
     // Add version arrays from VersionRegistry
     // DEPRECATED: Use get_version_registry().get_all_for_game() instead
