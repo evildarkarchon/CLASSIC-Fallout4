@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 
 from ClassicLib.MessageHandler.handler import MessageHandler
 from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
@@ -65,10 +65,11 @@ class QtMessageHandler(MessageHandler, QObject):
         # Override main thread reference with Qt thread
         self._main_thread = QThread.currentThread()  # type: ignore[assignment]
 
-        # Connect progress signals to handler
-        self.progress_create_signal.connect(self._on_progress_create)
-        self.progress_signal.connect(self._on_progress_update)
-        self.progress_close_signal.connect(self._on_progress_close)
+        # Connect progress signals to handler with QueuedConnection to ensure
+        # slots always run on the main thread, even when emitted from workers
+        self.progress_create_signal.connect(self._on_progress_create, Qt.ConnectionType.QueuedConnection)
+        self.progress_signal.connect(self._on_progress_update, Qt.ConnectionType.QueuedConnection)
+        self.progress_close_signal.connect(self._on_progress_close, Qt.ConnectionType.QueuedConnection)
 
     @property
     def parent_widget(self) -> QWidget | None:

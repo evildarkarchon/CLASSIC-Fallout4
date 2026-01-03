@@ -12,7 +12,7 @@ from __future__ import annotations
 import time
 from typing import Final
 
-from PySide6.QtCore import QObject, QThread, Signal
+from PySide6.QtCore import QObject, Qt, QThread, Signal
 from PySide6.QtWidgets import QProgressDialog, QWidget
 
 
@@ -53,10 +53,11 @@ class QtProgressHandler(QObject):
         self._current = 0
         self._total: int | None = None
 
-        # Connect signals to slots
-        self.progress_create_signal.connect(self._create_dialog)
-        self.progress_update_signal.connect(self._update_dialog)
-        self.progress_close_signal.connect(self._close_dialog)
+        # Connect signals to slots with QueuedConnection to ensure slots always
+        # run on the main thread, even when signals are emitted from worker threads
+        self.progress_create_signal.connect(self._create_dialog, Qt.ConnectionType.QueuedConnection)
+        self.progress_update_signal.connect(self._update_dialog, Qt.ConnectionType.QueuedConnection)
+        self.progress_close_signal.connect(self._close_dialog, Qt.ConnectionType.QueuedConnection)
 
     def _is_main_thread(self) -> bool:  # noqa: PLR6301
         """Check if we're on the main thread.

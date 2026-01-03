@@ -57,21 +57,22 @@ class CrashLogsScanWorker(QObject):
 
     @staticmethod
     def _perform_crash_logs_scan() -> None:
-        """Perform a scan for crash logs using AsyncBridge for proper async/sync coordination.
+        """Perform a scan for crash logs using asyncio.run() for thread-safe async execution.
 
-        This method uses the hybrid QThread+AsyncBridge pattern to:
+        This method runs in a QThread and uses asyncio.run() directly to:
         - Initialize scanner with Rust acceleration if available
         - Warm up resources asynchronously
-        - Execute the scan with AsyncBridge (no manual event loop)
+        - Execute the scan with Rust acceleration
         - Provide detailed performance metrics
 
-        The AsyncBridge handles all event loop management and ensures proper cleanup,
-        making this implementation simpler and more reliable than manual loop management.
+        Note: Do NOT use AsyncBridge here - it's a main-thread singleton and accessing
+        it from this worker thread causes cross-thread QObject parenting errors.
 
         Raises:
             None
 
         """
+        import asyncio
         import time
         from datetime import datetime
 
@@ -83,7 +84,6 @@ class CrashLogsScanWorker(QObject):
         logger.debug(f"Starting crash logs scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
         # Import here to avoid circular dependency
-        from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.integration.status import is_rust_accelerated
         from ClassicLib.ScanLog import FCXModeHandler
         from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
@@ -126,10 +126,11 @@ class CrashLogsScanWorker(QObject):
             await crashlogs_scan_async_pure(scanner)
             logger.debug(f"Actual scan took {time.perf_counter() - scan_start:.2f}s")
 
-        # Use AsyncBridge for proper async/sync coordination (no manual event loop)
-        # This is the hybrid pattern: QThread worker + AsyncBridge for async work
-        bridge = AsyncBridge.get_instance()
-        bridge.run_async(run_scan())
+        # Use asyncio.run() directly since we're in a separate QThread.
+        # Do NOT use AsyncBridge here - it's a main-thread singleton and accessing
+        # it from this worker thread causes "Cannot set parent, new parent is in
+        # a different thread" errors.
+        asyncio.run(run_scan())
 
         # Calculate timings with both methods for verification
         perf_elapsed = time.perf_counter() - perf_start
@@ -318,9 +319,8 @@ class UpdateCheckWorker(QObject):
 
         This method checks whether the software update process should proceed
         based on the current stage of the application (e.g., pre-release).
-        It uses the `AsyncBridge` class for performing asynchronous tasks
-        related to checking updates and emits relevant signals based on the
-        outcome of the process.
+        It uses asyncio.run() directly since this worker runs in its own QThread,
+        avoiding cross-thread issues with the main thread's AsyncBridge singleton.
 
         Raises:
             UpdateCheckError: If a specific error occurs during the update check.
@@ -329,9 +329,9 @@ class UpdateCheckWorker(QObject):
             ValueError: If a value-related error occurs.
 
         """
-        try:
-            from ClassicLib.AsyncBridge import AsyncBridge
+        import asyncio
 
+        try:
             # Check if pre-release
             if GlobalRegistry.get(GlobalRegistry.Keys.IS_PRERELEASE):
                 if self.explicit:
@@ -339,10 +339,11 @@ class UpdateCheckWorker(QObject):
                 self.finished.emit()
                 return
 
-            # Use AsyncBridge directly (without context manager to avoid premature shutdown)
-            bridge = AsyncBridge.get_instance()
-            # Run the async update check using AsyncBridge
-            result = bridge.run_async(self._async_check())
+            # Use asyncio.run() directly since we're in a separate QThread.
+            # Do NOT use AsyncBridge here - it's a main-thread singleton and accessing
+            # it from this worker thread causes "Cannot set parent, new parent is in
+            # a different thread" errors.
+            result = asyncio.run(self._async_check())
             self.updateAvailable.emit(not result)
 
         except UpdateCheckError as e:

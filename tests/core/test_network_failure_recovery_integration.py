@@ -75,7 +75,7 @@ class TestUpdateManagerNetworkResilience:
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings", return_value=True):
+        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             # Patch _fetch_github_version to timeout
             with patch("ClassicLib.Update.VersionChecker._fetch_github_version", side_effect=simulator.simulate_timeout):
                 # Should handle timeout gracefully (return False)
@@ -88,7 +88,7 @@ class TestUpdateManagerNetworkResilience:
         from ClassicLib.Update import is_latest_version
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings", return_value=True):
+        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_get.side_effect = aiohttp.ClientConnectionError("Connection refused")
 
@@ -104,7 +104,7 @@ class TestUpdateManagerNetworkResilience:
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings", return_value=True):
+        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_get.side_effect = simulator.simulate_dns_failure
 
@@ -120,7 +120,7 @@ class TestUpdateManagerNetworkResilience:
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings", return_value=True):
+        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 mock_response.json = AsyncMock(side_effect=lambda: simulator.simulate_slow_response(10.0))
@@ -141,7 +141,7 @@ class TestUpdateManagerNetworkResilience:
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings", return_value=True):
+        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 mock_response.json = AsyncMock(side_effect=simulator.simulate_partial_response)
@@ -158,10 +158,8 @@ class TestUpdateManagerNetworkResilience:
 
         from ClassicLib.Update import is_latest_version
 
-        simulator = NetworkFailureSimulator()
-
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings", return_value=True):
+        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 # VersionChecker calls .json()

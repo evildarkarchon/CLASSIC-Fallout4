@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtWidgets import QMessageBox, QWidget
 
 from ClassicLib.MessageHandler.core.enums import MessageType
@@ -57,7 +57,9 @@ class GUIBackend(QObject):
         """
         super().__init__(parent)
         self._parent = parent
-        self.message_signal.connect(self._handle_message)
+        # Use QueuedConnection explicitly to ensure _handle_message always runs
+        # on the main thread, even when show() is called from a worker thread
+        self.message_signal.connect(self._handle_message, Qt.ConnectionType.QueuedConnection)
 
     def show(self, message: Message) -> None:
         """Display a message via signal emission.

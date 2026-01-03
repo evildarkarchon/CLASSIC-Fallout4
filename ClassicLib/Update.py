@@ -19,7 +19,7 @@ from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.GlobalRegistry import get_game  # Import just the function we need
 from ClassicLib.Logger import logger
 from ClassicLib.MessageHandler import msg_error, msg_info, msg_success, msg_warning
-from ClassicLib.YamlSettings import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
 
 
 def try_parse_version(version_str: str | None) -> Version | None:
@@ -347,7 +347,7 @@ class VersionChecker:
         if not self.quiet:
             log_func(message)
 
-    def _check_update_enabled(self) -> bool:
+    async def _check_update_enabled(self) -> bool:
         """Determine whether the update check feature is enabled by verifying specific
         settings and conditions.
 
@@ -359,7 +359,7 @@ class VersionChecker:
             bool: True if the update check feature is enabled, otherwise False.
 
         """
-        if not (self.gui_request or classic_settings(bool, "Update Check")):
+        if not (self.gui_request or await classic_settings_async(bool, "Update Check")):
             self._log_if_not_quiet("\n❌ NOTICE: UPDATE CHECK IS DISABLED IN CLASSIC Settings.yaml \n\n" + "=" * 79)
             return False
         return True
@@ -386,7 +386,7 @@ class VersionChecker:
         return True
 
     @staticmethod
-    def _parse_local_version() -> Version | None:
+    async def _parse_local_version() -> Version | None:
         """Parse the local version from a YAML configuration file and returns it as a Version object.
 
         The method retrieves a version string from a given YAML configuration file. It ensures
@@ -397,7 +397,7 @@ class VersionChecker:
             Version | None: The parsed version object if successful, otherwise `None`.
 
         """
-        classic_local_str: str | None = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore[arg-type]  # yaml_settings handles type conversion
+        classic_local_str: str | None = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
         if not classic_local_str:
             return None
 
@@ -409,7 +409,7 @@ class VersionChecker:
         return try_parse_version(parsed_version_str) if parsed_version_str else None
 
     @staticmethod
-    def _determine_update_sources(update_source: str) -> tuple[bool, bool]:
+    async def _determine_update_sources(update_source: str) -> tuple[bool, bool]:
         """Determine the update sources based on the given update_source parameter and specific settings.
 
         This method evaluates whether updates should be sourced from GitHub, Nexus, or both, based
@@ -423,7 +423,7 @@ class VersionChecker:
 
         """
         use_github = update_source in {"Both", "GitHub"}
-        use_nexus = update_source in {"Both", "Nexus"} and not yaml_settings(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
+        use_nexus = update_source in {"Both", "Nexus"} and not await yaml_settings_async(bool, YAML.Main, "CLASSIC_Info.is_prerelease")
         return use_github, use_nexus
 
     async def _fetch_github_version(self, session: aiohttp.ClientSession) -> Version | None:
@@ -522,7 +522,7 @@ class VersionChecker:
             if condition:
                 raise UpdateCheckError(message)
 
-    def _handle_error(self, error: Exception) -> bool:
+    async def _handle_error(self, error: Exception) -> bool:
         """Handle an error encountered during the update check process.
 
         This method identifies the type of error that occurred during the update check,
@@ -553,7 +553,7 @@ class VersionChecker:
 
         # Get and display unable message if available
         if not self.quiet and isinstance(error, (aiohttp.ClientError, UpdateCheckError)):
-            unable_msg = yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_unable_{get_game()}")  # type: ignore[arg-type]  # yaml_settings handles type conversion
+            unable_msg = await yaml_settings_async(str, YAML.Main, f"CLASSIC_Interface.update_unable_{get_game()}")  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
             if unable_msg:
                 msg_error(unable_msg)
 
@@ -658,16 +658,16 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     logger.debug("- - - INITIATED UPDATE CHECK")
 
     # Early exit if update check is disabled
-    if not checker._check_update_enabled():
+    if not await checker._check_update_enabled():
         return False
 
     # Validate update source configuration
-    update_source = classic_settings(str, "Update Source") or "Both"
+    update_source = await classic_settings_async(str, "Update Source") or "Both"
     if not checker._validate_update_source(update_source):
         return False
 
     # Parse local version
-    version_local = checker._parse_local_version()
+    version_local = await checker._parse_local_version()
 
     # Show checking message
     checker._log_if_not_quiet(
@@ -676,7 +676,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     )
 
     # Determine which sources to check
-    use_github, use_nexus = checker._determine_update_sources(update_source)
+    use_github, use_nexus = await checker._determine_update_sources(update_source)
 
     # Fetch remote versions
     version_github = None
@@ -692,11 +692,11 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
             checker._check_source_failures(use_github, use_nexus, version_github, version_nexus)
 
     except (aiohttp.ClientError, UpdateCheckError) as e:
-        return checker._handle_error(e)
+        return await checker._handle_error(e)
     except Exception as e:  # noqa: BLE001
         # Catch unexpected exceptions for proper error handling and graceful degradation
         logger.error(f"Unexpected error during version fetch: {e}", exc_info=True)
-        return checker._handle_error(e)
+        return await checker._handle_error(e)
 
     # Check if outdated
     is_outdated = checker._check_if_outdated(version_local, version_github, version_nexus)
@@ -704,7 +704,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
     if is_outdated:
         # Show update warning
         if not quiet:
-            warning_msg = str(yaml_settings(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings handles type conversion
+            warning_msg = str(await yaml_settings_async(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
             msg_warning(warning_msg)
 
         if gui_request:

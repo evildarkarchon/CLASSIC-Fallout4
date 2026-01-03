@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QThread, QTimer, QUrl
+from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QMessageBox
 
@@ -66,6 +66,10 @@ class UpdateManager:
         self._update_check_timer = QTimer()
         self._update_check_thread: QThread | None = None
         self._update_check_worker: UpdateCheckWorker | None = None
+
+        # Store pending result to show dialog after thread cleanup
+        self._pending_update_result: bool | None = None
+        self._pending_error_message: str | None = None
 
         # Connect timer to perform_update_check by default
         self._update_check_timer.timeout.connect(self.perform_update_check)
@@ -123,14 +127,22 @@ class UpdateManager:
             logger.error("Failed to register update check thread")
             return
 
-        # Connect signals
+        # Connect signals with proper connection types for cross-thread safety
+        # Use QueuedConnection for signals that trigger UI operations to prevent
+        # threading issues when the modal QMessageBox runs a nested event loop
         self._update_check_thread.started.connect(self._update_check_worker.run)
-        self._update_check_worker.updateAvailable.connect(self.show_update_result)
-        self._update_check_worker.error.connect(self.show_update_error)
-        self._update_check_worker.finished.connect(self._update_check_thread.quit)
-        self._update_check_worker.finished.connect(self._update_check_worker.deleteLater)
-        self._update_check_thread.finished.connect(self._update_check_thread.deleteLater)
-        self._update_check_thread.finished.connect(self._update_check_finished)
+        self._update_check_worker.updateAvailable.connect(self._on_update_result, Qt.ConnectionType.QueuedConnection)
+        self._update_check_worker.error.connect(self._on_update_error, Qt.ConnectionType.QueuedConnection)
+
+        # Worker signals thread to quit
+        self._update_check_worker.finished.connect(self._update_check_thread.quit, Qt.ConnectionType.QueuedConnection)
+
+        # Only delete the thread after it finishes - don't call deleteLater() on worker
+        # The worker will be garbage collected when Python refs are cleared
+        # This avoids cross-thread deletion issues with QBasicTimer
+        # Use QueuedConnection to ensure these run on the main thread, not the worker thread
+        self._update_check_thread.finished.connect(self._update_check_thread.deleteLater, Qt.ConnectionType.QueuedConnection)
+        self._update_check_thread.finished.connect(self._update_check_finished, Qt.ConnectionType.QueuedConnection)
 
         # Start through thread manager
         self._ctx.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
@@ -168,14 +180,22 @@ class UpdateManager:
             self._is_update_check_running = False
             return
 
-        # Connect signals
+        # Connect signals with proper connection types for cross-thread safety
+        # Use QueuedConnection for signals that trigger UI operations to prevent
+        # threading issues when the modal QMessageBox runs a nested event loop
         self._update_check_thread.started.connect(self._update_check_worker.run)
-        self._update_check_worker.updateAvailable.connect(self.show_update_result)
-        self._update_check_worker.error.connect(self.show_update_error)
-        self._update_check_worker.finished.connect(self._update_check_thread.quit)
-        self._update_check_worker.finished.connect(self._update_check_worker.deleteLater)
-        self._update_check_thread.finished.connect(self._update_check_thread.deleteLater)
-        self._update_check_thread.finished.connect(self._update_check_finished)
+        self._update_check_worker.updateAvailable.connect(self._on_update_result, Qt.ConnectionType.QueuedConnection)
+        self._update_check_worker.error.connect(self._on_update_error, Qt.ConnectionType.QueuedConnection)
+
+        # Worker signals thread to quit
+        self._update_check_worker.finished.connect(self._update_check_thread.quit, Qt.ConnectionType.QueuedConnection)
+
+        # Only delete the thread after it finishes - don't call deleteLater() on worker
+        # The worker will be garbage collected when Python refs are cleared
+        # This avoids cross-thread deletion issues with QBasicTimer
+        # Use QueuedConnection to ensure these run on the main thread, not the worker thread
+        self._update_check_thread.finished.connect(self._update_check_thread.deleteLater, Qt.ConnectionType.QueuedConnection)
+        self._update_check_thread.finished.connect(self._update_check_finished, Qt.ConnectionType.QueuedConnection)
 
         # Start through thread manager
         self._ctx.thread_manager.start_thread(ThreadType.UPDATE_CHECK)
@@ -183,11 +203,53 @@ class UpdateManager:
     def _update_check_finished(self) -> None:
         """Handle update check completion.
 
-        Resets the running flag and clears thread/worker references.
+        Resets the running flag, clears thread/worker references, and shows
+        any pending dialog. The dialog is shown AFTER thread cleanup to avoid
+        cross-thread QObject parenting issues.
         """
         self._is_update_check_running = False
         self._update_check_thread = None
         self._update_check_worker = None
+
+        # Show pending dialog AFTER thread cleanup is complete
+        # Use singleShot to ensure we're fully out of the signal handler
+        if self._pending_error_message is not None:
+            error_msg = self._pending_error_message
+            self._pending_error_message = None
+            QTimer.singleShot(0, lambda: self.show_update_error(error_msg))
+        elif self._pending_update_result is not None:
+            result = self._pending_update_result
+            self._pending_update_result = None
+            QTimer.singleShot(0, lambda: self.show_update_result(result))
+
+    def _on_update_result(self, update_available: bool) -> None:
+        """Handle update result signal by storing result for later display.
+
+        The dialog is NOT shown here - it's shown from _update_check_finished
+        after the thread has fully cleaned up to prevent cross-thread issues.
+
+        Args:
+            update_available: True if an update IS available (not up-to-date),
+                False if no update available (is up-to-date).
+
+        """
+        # Signal sends True if update IS available (not up-to-date).
+        # show_update_result expects True if IS up-to-date.
+        # Invert the value to match expected semantics.
+        self._pending_update_result = not update_available
+
+    def _on_update_error(self, error_message: str) -> None:
+        """Handle update error signal by storing error for later display.
+
+        The dialog is NOT shown here - it's shown from _update_check_finished
+        after the thread has fully cleaned up to prevent cross-thread issues.
+
+        Args:
+            error_message: Description of the error that occurred.
+
+        """
+        # Store error - dialog will be shown from _update_check_finished
+        self._pending_error_message = error_message
 
     def show_update_result(self, is_up_to_date: bool) -> None:
         """Display the update check result to the user.

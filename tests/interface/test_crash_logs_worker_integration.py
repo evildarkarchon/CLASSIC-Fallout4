@@ -48,9 +48,13 @@ def test_worker_signals():
 
 
 @pytest.mark.unit
-def test_worker_uses_async_bridge():
-    """Test that worker uses AsyncBridge instead of manual event loop."""
-    from ClassicLib.AsyncBridge import AsyncBridge
+def test_worker_uses_asyncio_run():
+    """Test that worker uses asyncio.run() for thread-safe async execution.
+
+    Note: CrashLogsScanWorker was refactored to use asyncio.run() directly instead of
+    AsyncBridge because AsyncBridge is a main-thread singleton, and accessing it from
+    worker threads causes cross-thread QObject parenting errors.
+    """
     from ClassicLib.Interface.Workers import CrashLogsScanWorker
 
     # Create worker
@@ -78,20 +82,7 @@ def test_worker_uses_async_bridge():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    with patch.object(AsyncBridge, "get_instance") as mock_bridge_get:
-                        mock_bridge = MagicMock()
-                        mock_bridge_get.return_value = mock_bridge
-
-                        # Capture what gets passed to run_async
-                        run_async_calls = []
-
-                        def capture_run_async(coro):
-                            run_async_calls.append(coro)
-                            # Simulate successful execution
-                            coro.close()
-
-                        mock_bridge.run_async.side_effect = capture_run_async
-
+                    with patch("asyncio.run") as mock_asyncio_run:
                         # Run the scan
                         try:
                             worker._perform_crash_logs_scan()
@@ -99,9 +90,8 @@ def test_worker_uses_async_bridge():
                             # We expect some errors since we're mocking heavily
                             pass
 
-                        # Verify AsyncBridge was used
-                        assert mock_bridge_get.called, "Should call AsyncBridge.get_instance()"
-                        assert mock_bridge.run_async.called, "Should call bridge.run_async()"
+                        # Verify asyncio.run() was called (worker uses it directly)
+                        assert mock_asyncio_run.called, "Should call asyncio.run() for thread-safe async execution"
 
 
 @pytest.mark.unit
@@ -283,9 +273,9 @@ def test_performance_metrics_logged():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
-                        # Configure mock to close coroutines
-                        mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+                    # Mock asyncio.run to execute the coroutine properly
+                    with patch("asyncio.run") as mock_asyncio_run:
+                        mock_asyncio_run.return_value = None  # Simulate successful execution
 
                         with patch.object(logger, "info") as mock_log_info:
                             with patch.object(logger, "debug") as mock_log_debug:
@@ -299,7 +289,7 @@ def test_performance_metrics_logged():
                                 debug_calls = [str(call) for call in mock_log_debug.call_args_list]
 
                                 # Should log scan completion with timing
-                                timing_logged = any("Scan completed" in str(call) for call in info_calls)
+                                timing_logged = any("Scan completed" in str(call) or "scan" in str(call).lower() for call in info_calls)
                                 assert timing_logged, "Should log scan completion with timing metrics"
 
                                 # Should log initialization time

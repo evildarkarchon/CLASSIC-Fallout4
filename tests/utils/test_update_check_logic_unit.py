@@ -6,7 +6,7 @@ exception class, including various update scenarios, error handling,
 and edge cases.
 """
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from packaging.version import Version
@@ -29,8 +29,8 @@ class TestUpdateChecking:
         preventing RuntimeError about uninitialized message handler.
         """
         with (
-            patch("ClassicLib.Update.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.Update.classic_settings") as mock_classic_settings,
+            patch("ClassicLib.Update.yaml_settings_async") as mock_yaml_settings_async,
+            patch("ClassicLib.Update.classic_settings_async") as mock_classic_settings_async,
             patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game,
             patch("ClassicLib.Update.logger") as mock_logger,
         ):
@@ -38,8 +38,8 @@ class TestUpdateChecking:
             from ClassicLib import msg_error, msg_success, msg_warning
 
             yield {
-                "yaml_settings": mock_yaml_settings,
-                "classic_settings": mock_classic_settings,
+                "yaml_settings_async": mock_yaml_settings_async,
+                "classic_settings_async": mock_classic_settings_async,
                 "get_game": mock_get_game,
                 "msg_warning": msg_warning,
                 "msg_success": msg_success,
@@ -51,13 +51,13 @@ class TestUpdateChecking:
     async def test_is_latest_version_disabled_check(self, mock_dependencies):
         """Test when update check is disabled."""
 
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             # Return False for Update Check
             if key == "Update Check":
                 return False
             return default
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect  # Update check disabled
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect  # Update check disabled
 
         result = await is_latest_version(quiet=False, gui_request=False)
 
@@ -69,11 +69,11 @@ class TestUpdateChecking:
     async def test_is_latest_version_invalid_source(self, mock_dependencies):
         """Test with invalid update source setting."""
 
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "InvalidSource"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         result = await is_latest_version(quiet=False, gui_request=False)
 
@@ -85,18 +85,21 @@ class TestUpdateChecking:
     async def test_is_latest_version_up_to_date(self, mock_dependencies):
         """Test when local version is up to date."""
 
-        # Configure settings - classic_settings takes type and key
-        def classic_settings_side_effect(type_arg, key, default=None):
+        # Configure settings - classic_settings_async takes type and key
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock local version
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.1",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.1",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -129,17 +132,20 @@ class TestUpdateChecking:
         """Test when update is available and called from GUI."""
 
         # Configure settings
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock local version (older)
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.0",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.0",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -160,18 +166,21 @@ class TestUpdateChecking:
         """Test when update is available and called from CLI."""
 
         # Configure settings
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock local version (older)
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.0",
-            "CLASSIC_Info.is_prerelease": False,
-            "CLASSIC_Interface.update_warning_fallout4": "Update warning message",
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.0",
+                "CLASSIC_Info.is_prerelease": False,
+                "CLASSIC_Interface.update_warning_fallout4": "Update warning message",
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -193,17 +202,20 @@ class TestUpdateChecking:
         """Test checking both GitHub and Nexus sources."""
 
         # Configure settings for both sources
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "Both"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock local version
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.0",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.0",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -228,18 +240,21 @@ class TestUpdateChecking:
         """Test handling of network errors."""
 
         # Configure settings
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock local version
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.1",
-            "CLASSIC_Info.is_prerelease": False,
-            "CLASSIC_Interface.update_unable_fallout4": "Unable to check updates",
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.1",
+                "CLASSIC_Info.is_prerelease": False,
+                "CLASSIC_Interface.update_unable_fallout4": "Unable to check updates",
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -262,17 +277,20 @@ class TestUpdateChecking:
         """Test that Nexus is skipped for prerelease versions."""
 
         # Configure settings for Nexus only
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "Nexus"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock prerelease version
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.31.0-beta",
-            "CLASSIC_Info.is_prerelease": True,  # Prerelease
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.31.0-beta",
+                "CLASSIC_Info.is_prerelease": True,  # Prerelease
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -287,17 +305,20 @@ class TestUpdateChecking:
         """Test when local version is unknown."""
 
         # Configure settings
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
         # Mock unknown local version
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": None,  # Unknown version
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": None,  # Unknown version
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
@@ -315,10 +336,6 @@ class TestUpdateChecking:
             # Warning message would be logged via the real msg_warning function
 
 
-# Need to import AsyncMock for the test file
-from unittest.mock import AsyncMock
-
-
 @pytest.mark.unit
 class TestUpdateCheckErrorHandling:
     """Test update checking error handling and edge cases."""
@@ -331,14 +348,13 @@ class TestUpdateCheckErrorHandling:
         preventing RuntimeError about uninitialized message handler.
         """
         with (
-            patch("ClassicLib.Update.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.Update.classic_settings") as mock_classic_settings,
+            patch("ClassicLib.Update.yaml_settings_async") as mock_yaml_settings_async,
+            patch("ClassicLib.Update.classic_settings_async") as mock_classic_settings_async,
             patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game,
         ):
             yield {
-                "yaml_settings": mock_yaml_settings,
-                "classic_settings": mock_classic_settings,
-                "classic_settings": mock_classic_settings,
+                "yaml_settings_async": mock_yaml_settings_async,
+                "classic_settings_async": mock_classic_settings_async,
                 "get_game": mock_get_game,
             }
 
@@ -347,16 +363,19 @@ class TestUpdateCheckErrorHandling:
         """Test error when GitHub-only source fails."""
 
         # Configure settings for GitHub only
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.1",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.1",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
@@ -373,16 +392,19 @@ class TestUpdateCheckErrorHandling:
         """Test error when Nexus-only source fails."""
 
         # Configure settings for Nexus only
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "Nexus"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.1",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.1",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
@@ -399,16 +421,19 @@ class TestUpdateCheckErrorHandling:
         """Test error when both sources fail."""
 
         # Configure settings for both sources
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "Both"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.1",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.1",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
@@ -429,16 +454,19 @@ class TestUpdateCheckErrorHandling:
         """Test when one source fails but other succeeds (Both mode)."""
 
         # Configure settings for both sources
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "Both"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.0",  # Older version
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.0",  # Older version
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
@@ -465,16 +493,19 @@ class TestUpdateCheckErrorHandling:
         """Test handling of unexpected exceptions."""
 
         # Configure settings
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             settings_map = {"Update Check": True, "Update Source": "GitHub"}
             return settings_map.get(key, default)
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
-        mock_dependencies["yaml_settings"].side_effect = lambda type_cls, enum, key, default=None: {
-            "CLASSIC_Info.version": "CLASSIC v7.30.1",
-            "CLASSIC_Info.is_prerelease": False,
-        }.get(key, default)
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC v7.30.1",
+                "CLASSIC_Info.is_prerelease": False,
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
@@ -490,13 +521,13 @@ class TestUpdateCheckErrorHandling:
     async def test_quiet_mode_suppresses_output(self, mock_dependencies):
         """Test that quiet mode suppresses output."""
 
-        def classic_settings_side_effect(type_arg, key, default=None):
+        async def classic_settings_side_effect(type_arg, key, default=None):
             # Return False for Update Check
             if key == "Update Check":
                 return False
             return default
 
-        mock_dependencies["classic_settings"].side_effect = classic_settings_side_effect  # Update check disabled
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect  # Update check disabled
 
         # In quiet mode, messages are suppressed by the _log_if_not_quiet method
         result = await is_latest_version(quiet=True, gui_request=False)

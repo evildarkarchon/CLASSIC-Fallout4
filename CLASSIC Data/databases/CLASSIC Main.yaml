@@ -6,7 +6,7 @@ CLASSIC_Info:
   # ========================================================================================
   version: CLASSIC v8.0.0
   version_date: 25.08.24 #YY/MM/DD
-  is_prerelease: true
+  is_prerelease: false
 
   default_settings: |
     # This file contains settings for CLASSIC v7.00+, used by both source scripts and the executable.
@@ -492,7 +492,7 @@ Version_Registry:
 
     # Default version to use when no match found (by game)
     defaults:
-      Fallout4: FO4_NG
+      Fallout4: FO4_AE
       Fallout4VR: FO4_VR
 
     # Log level for unknown versions: debug | warning | error
