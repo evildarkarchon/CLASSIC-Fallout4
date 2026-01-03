@@ -53,7 +53,7 @@ class TestVersionConstants:
         """Test FALLOUT4_VERSIONS array contains OG and NG versions."""
         versions = classic_constants.FALLOUT4_VERSIONS
         assert isinstance(versions, list)
-        assert len(versions) == 2
+        assert len(versions) == 3
         assert classic_constants.FALLOUT4_OG_VERSION in versions
         assert classic_constants.FALLOUT4_NG_VERSION in versions
         # Note: VR version exists separately but is not in FALLOUT4_VERSIONS array
@@ -62,7 +62,7 @@ class TestVersionConstants:
         """Test F4SE_VERSIONS array contains all versions."""
         versions = classic_constants.F4SE_VERSIONS
         assert isinstance(versions, list)
-        assert len(versions) == 2
+        assert len(versions) == 3
         assert classic_constants.F4SE_OG_VERSION in versions
         assert classic_constants.F4SE_NG_VERSION in versions
 
