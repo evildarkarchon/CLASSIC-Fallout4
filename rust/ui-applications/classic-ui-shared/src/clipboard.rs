@@ -138,15 +138,17 @@ pub fn get_clipboard_text() -> Result<String> {
     Ok(text)
 }
 
-/// Check if clipboard is available on the current system.
+/// Check if clipboard is available and functional on the current system.
 ///
-/// This function attempts to create a clipboard instance to verify
-/// that clipboard functionality is available. Useful for disabling
-/// clipboard-related UI elements in headless environments.
+/// This function attempts to create a clipboard instance and perform
+/// a test write operation to verify that clipboard functionality is
+/// fully available. This is more thorough than just checking if the
+/// clipboard can be instantiated, as some environments (like Windows CI)
+/// may allow creating an instance but fail on actual write operations.
 ///
 /// # Returns
 ///
-/// Returns `true` if clipboard is available, `false` otherwise.
+/// Returns `true` if clipboard is fully functional, `false` otherwise.
 ///
 /// # Examples
 ///
@@ -160,7 +162,16 @@ pub fn get_clipboard_text() -> Result<String> {
 /// }
 /// ```
 pub fn is_clipboard_available() -> bool {
-    Clipboard::new().is_ok()
+    // Just creating a clipboard instance is not enough - on some platforms
+    // (like Windows CI), Clipboard::new() succeeds but set_text() fails.
+    // We need to actually test the write operation.
+    match Clipboard::new() {
+        Ok(mut clipboard) => {
+            // Try to write a small test string to verify full functionality
+            clipboard.set_text("__clipboard_test__".to_string()).is_ok()
+        }
+        Err(_) => false,
+    }
 }
 
 /// Copy formatted error information to clipboard.
