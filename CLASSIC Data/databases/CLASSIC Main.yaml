@@ -413,6 +413,35 @@ Version_Registry:
         acronym: F4SE
         compatible_version: "0.6.23"
         loader: f4se_loader.exe
+        script_hashes: # SHA-256 from https://f4se.silverlock.org/
+          Actor.pex: 9333aa9b33d6009933afc3a1234a89ca93b5522ea186b44bc6c78846ed5a82c4
+          ActorBase.pex: cb5d29fead7df77eca8674101abdc57349a8cf345f18c3ddd6ef8d94ad254da7
+          Armor.pex: 2bc34ab0d58f701e8684fc911742257e0768bd3e63b1eb8bdb2e043e7b67346b
+          ArmorAddon.pex: 5d9ff578b6e401526dbddedf93bdbccb4e202dba2b8b2e77809140b48fc8c1af
+          Cell.pex: 25d742d4fbe274fe5b8b3adc3775964ab9e22c1f32c47d5d3102b735c5b4e190
+          Component.pex: 80eef0f21bb7b1b9882c4a953a24aff3df8095f8464c006a96fafc0858f9b889
+          ConstructibleObject.pex: 51bdb39c81465bfbbbe509dc0a1ed40baebf4791cb35c978108e4334bcabc017
+          DefaultObject.pex: 715dff0394599587c4596488d66aab4d91311361a3ebec24a91d0ce1ddf39d77
+          EncounterZone.pex: be0efccf70adc3a6a28f2465044d4df44cf7abe409c8624f6695d9a193eb96b6
+          EquipSlot.pex: 0e00da824263e60041086cc721896aeb304c7ec6d38fba1f548df96fda0c9ff3
+          FavoritesManager.pex: aed53963a5e725cea561f67525c1d50297c7a8410e6a5738b00356908d5daca7
+          Form.pex: 3ac9cd7ecb22d377800ca316413eb1d8f4def3ff3721a14b4c6fa61500f9f568
+          Game.pex: 19c858908f1a2054755b602121e5944dbbfb1ee0be38a24a532e6ab2f9390f4d
+          HeadPart.pex: d25869fbf81b7d351e71cd17b6913cae01dd1b58ba76419050df6af1ed6525af
+          Input.pex: 9509a73024680963b8446b57247fdf160513a540531e87a0e2faedb610b1ffcd
+          InstanceData.pex: 57e68c4b355a94b709950ccec297b3d466f1d25e5029fed9e1423e8a12dd179f
+          Location.pex: 3538c0aaa4fe450828aee3848fe317c1654c8ed39bd811be9cff22a1e7618b49
+          Math.pex: 9bb0019795b85076837ac6845d0c79d65c9826739e59c43b97cfb949f611e822
+          MatSwap.pex: b49d34fe1b6387d19df5140ddfbd9c340d3b10fc396e003142cdc755dc6815fc
+          MiscObject.pex: 7615656ab2867c5502507d1189cf7f938919dc585608698d2f31f782d858d23c
+          ObjectMod.pex: d02235b5013375bf0c7785408380b3a567697879a966818df883256031b8a2b8
+          ObjectReference.pex: 97cfd2749b70545c9378955b09a898631fa03a0e235623b76f2c5631f2801be5
+          Perk.pex: 04a9d0309198cbeb3a419265490be03e051d35b17b7f8ce749ffc4ea0673e16c
+          ScriptObject.pex: a395b7fc15b193b6d8ef0184dff6293100e79ec4dd431d85e10515da46e0502c
+          UI.pex: 6b7a65b8be433bcb99dbe07d4ca9e9de2fa94140d402247b877351c2b34a36d5
+          Utility.pex: e10d65904d0a1e9ee568bdaba02636f0183bfa9565b4056758b1461540f9be75
+          WaterType.pex: c4f8589ed33f72265e95a6bec2c9cab58667795e972bcf5f7d17c40deed43207
+          Weapon.pex: f39cf899d90d47d694873ccaa2a72308c6717f5e36a302d6f95243e53672d77d
       compatible_range:
         min: "1.10.163.0"
         max: "1.10.163.999"
@@ -435,6 +464,36 @@ Version_Registry:
         acronym: F4SE
         compatible_version: "0.7.2"
         loader: f4se_loader.exe
+        script_hashes: # SHA-256 from https://f4se.silverlock.org/
+          Actor.pex: 12175169977977bf382631272ae6dfda03f002c268434144eedf8653000b2b90
+          ActorBase.pex: 6c7f6b82306ef541673ebb31142c5f69d32f574d81f932d957e3e7f3b649863f
+          Armor.pex: ddc0e2f1b84351932cd357d4917e50faa3e262e93e4d153ec3f88a819f6711ec
+          ArmorAddon.pex: d46a9c0c567dfbabedb2db87f29b4647ea4eca7e3a0056ab75378f2b8966ce2c
+          Cell.pex: d472ead545a6798143db57c42f11a88754cb34bcf99ea92bb6bf3388b24dac15
+          Component.pex: a66d315f4161747d6edc0edb7f837f937cb7eb7d5a3414777914e7b9273ba777
+          ConstructibleObject.pex: 385950805c323fa8e20beca8a940f0806169ca5cc1d173360da66a252caea384
+          DefaultObject.pex: cd249af625d426878215682f76d870d0fe1ec4a5191a9f973187d11d700dc9b7
+          EncounterZone.pex: bcb823d3cc4c530fcc89650a116eedfea94e69383614fe61f2daf919d5fb885b
+          EquipSlot.pex: 6188c879cc982d1e9bb2d92ebc02c32545246fd0cfd0cd892a14f9d1cdb3dee2
+          FavoritesManager.pex: 435469503cf478cb05293bc8e3fbf1945516620b52846123a55c7c89ed7a61f0
+          Form.pex: 7afbf5bdf3e454dbf968c784807c6bef79fa88893083f1160bc4bb4e980228b3
+          Game.pex: c0bba25948ddb5574d84d995ee71886f6aacab10f25d979145e684d9625d6cda
+          HeadPart.pex: 925eefd6e57f7b349d4fb3e66388bee1f884a19e0d07d06ed0e63c55f4b79303
+          Input.pex: 03e390c9b6ab30f3c15108baeff00936cf26053c3357ec0ea6811e5bd6014fd4
+          InstanceData.pex: 868ce9edda89b7ee0005311280804cda2ffa975d4f4c3a10c08298dab779e58c
+          Location.pex: 1c287c2db3e6522cbe024ed24992d3c2e0d6c5eb3a49da52163ca8793e33178a
+          Math.pex: 6e2efd94287e6571b95720e5bc944b2072849290ed52092972ad69c102617089
+          MatSwap.pex: 06858608fa2701c5c1d78c0eb21e864df84c164f66f1a82edd322c2300dccce0
+          MiscObject.pex: 6729e322508d5b06f9d56dd6f833fa048ec73bff8f0086759edf1295a8fd2c96
+          ObjectMod.pex: 816e2897c7853dd15001498a762284e3c71d53f3a5c97bce167ecd30b562574e
+          ObjectReference.pex: c166855a4b2b34a1f07cb1bc928aed34a323b3a7da5fc90d6b6d9cfb6f7c22da
+          Perk.pex: 00364ee941b24ae7be7ed02f2d037da44ecf1458ce43d104de3ade6b1e2df3c7
+          ScriptObject.pex: d7760385d670d69627408898f5b93455e8502428709fc007cd1fda2494d945c4
+          UI.pex: a7605779bf4a29f79a8179913fca625de0f87517026a994e68bb1565c5f279b5
+          Utility.pex: 496aaa38ee6f850907d6172b996274109431d3fb8f2f459c0ab111bbbc01fe93
+          WaterType.pex: 7a1d41e063bdd8179a72b97869d27e636469988d088420c85f5297dcb1488d7a
+          Weapon.pex: e6eee491b5a59f285a1482eb625ffb18bc63ed398bf5f8a4babca0b7edac918c
+
       compatible_range:
         min: "1.10.984.0"
         max: "1.10.999.999"
