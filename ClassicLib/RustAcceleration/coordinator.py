@@ -7,8 +7,10 @@ and management of all Rust-accelerated components in CLASSIC.
 from __future__ import annotations
 
 import logging
+import os
+import threading
 import time
-from typing import Any
+from typing import Any, ClassVar
 
 from ClassicLib.integration.factory import (
     get_database_pool,
@@ -50,21 +52,27 @@ class RustAcceleration:
 
     """
 
-    _instance: RustAcceleration | None = None
+    _instance: ClassVar[RustAcceleration | None] = None
+    _lock: ClassVar[threading.RLock] = threading.RLock()  # RLock allows reentrant locking
 
     def __new__(cls) -> RustAcceleration:
         """Create and manages a singleton instance of the RustAcceleration class.
 
         This method ensures that only one instance of the class is created and shared
-        throughout the application. If an instance already exists, the existing one
-        is returned; otherwise, it creates a new instance.
+        throughout the application. Uses double-checked locking for thread-safety
+        in multi-threaded GUI contexts.
 
         Returns:
             RustAcceleration: The singleton instance of the RustAcceleration class.
 
         """
+        # Fast path - instance already exists
         if cls._instance is None:
-            cls._instance = super().__new__(cls)
+            # Slow path - need thread-safe creation
+            with cls._lock:
+                # Double-check pattern
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
         return cls._instance
 
     def __init__(self) -> None:
@@ -468,13 +476,40 @@ class RustAcceleration:
     def get_instance(cls) -> RustAcceleration:
         """Get the singleton instance of RustAcceleration.
 
+        This method uses double-checked locking for thread-safety in
+        multi-threaded GUI contexts while maintaining performance.
+
         Returns:
             RustAcceleration: The singleton instance of the RustAcceleration coordinator.
 
         """
-        if cls._instance is None:
-            cls._instance = cls()
+        # Fast path - instance already exists
+        if cls._instance is not None:
+            return cls._instance
+
+        # Slow path - need thread-safe creation
+        with cls._lock:
+            # Double-check pattern - another thread may have created it
+            if cls._instance is None:
+                cls._instance = cls()
         return cls._instance
+
+    @classmethod
+    def reset_instance(cls) -> None:
+        """Reset the singleton instance - test environments only.
+
+        This method is intended for test isolation to ensure each test starts
+        with a fresh instance. It is guarded to only work in pytest environments.
+
+        Raises:
+            RuntimeError: If called outside of a pytest testing context.
+
+        """
+        if not os.environ.get("PYTEST_CURRENT_TEST"):
+            msg = "reset_instance() is only allowed in testing contexts"
+            raise RuntimeError(msg)
+        with cls._lock:
+            cls._instance = None
 
 
 # Module-level convenience functions

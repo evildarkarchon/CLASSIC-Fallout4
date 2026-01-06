@@ -16,6 +16,8 @@ Note:
 from __future__ import annotations
 
 import asyncio
+import os
+import warnings
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
@@ -176,18 +178,26 @@ def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
     )
 
 
-def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]], strict: bool = False) -> Callable[..., T]:
+def create_sync_wrapper[T](
+    async_func: Callable[..., Coroutine[Any, Any, T]],
+    strict: bool = False,
+    warn_on_cli: bool = False,
+) -> Callable[..., T]:
     """Create a sync wrapper for an async function with context-aware execution.
 
     This wrapper automatically chooses the appropriate async execution method:
     - GUI mode: Uses AsyncBridge (Qt event loop integration)
     - CLI/TUI mode: Uses asyncio.run() (creates new event loop per call)
+    - Testing: Always allowed without warnings
 
     Args:
         async_func: The async function to wrap
         strict: If True, raises RuntimeError in CLI/TUI mode instead of falling back
                to asyncio.run(). Use this for functions that must only be called
                in GUI contexts to prevent performance "footguns".
+        warn_on_cli: If True, emits a RuntimeWarning when called in CLI/TUI mode
+               (but still works). Use this to help identify architecture violations
+               during development. Pytest testing contexts are always allowed.
 
     Returns:
         A sync wrapper that works in both GUI and CLI modes (unless strict=True)
@@ -206,12 +216,24 @@ def create_sync_wrapper[T](async_func: Callable[..., Coroutine[Any, Any, T]], st
             bridge = _get_bridge()
             return bridge.run_async(coro)
 
-        # Strict mode check - prevent inefficient usage in CLI
-        if strict:
+        # Check if we're in a testing context (always allowed)
+        is_testing = os.environ.get("PYTEST_CURRENT_TEST") is not None
+
+        # Strict mode check - prevent inefficient usage in CLI (unless testing)
+        if strict and not is_testing:
             raise RuntimeError(
                 f"Strict mode: Cannot use sync wrapper for '{async_func.__name__}' in CLI/TUI mode.\n"
                 "This function creates a new event loop for every call, which is inefficient.\n"
                 "Use 'await' and call the async function directly instead."
+            )
+
+        # Warn mode - help identify architecture violations during development
+        if warn_on_cli and not is_testing:
+            warnings.warn(
+                f"Sync wrapper for '{async_func.__name__}' called outside GUI context. "
+                "Use async version directly in CLI code for better performance.",
+                RuntimeWarning,
+                stacklevel=2,
             )
 
         # CLI/TUI mode: Use standard asyncio.run()

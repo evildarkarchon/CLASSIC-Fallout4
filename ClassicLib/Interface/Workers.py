@@ -206,17 +206,19 @@ class GameFilesScanWorker(QObject):
 
     @staticmethod
     def _process_game_results_scan() -> None:
-        """Process game results scan using AsyncBridge for proper async/sync coordination.
+        """Process game results scan using asyncio.run() for thread-safe async execution.
 
-        This method uses the hybrid QThread+AsyncBridge pattern to:
+        This method runs in a QThread and uses asyncio.run() directly to:
         - Generate game integrity reports asynchronously
         - Generate mod scan reports asynchronously
         - Combine and write results with Rust file I/O if available
         - Provide detailed performance metrics
 
-        The AsyncBridge handles all event loop management and ensures proper cleanup,
-        making this implementation simpler and more reliable than manual loop management.
+        Note: Do NOT use AsyncBridge here - it's a main-thread singleton and accessing
+        it from this worker thread causes cross-thread QObject parenting errors.
+        This matches the pattern used by CrashLogsScanWorker for consistency.
         """
+        import asyncio
         import time
         from datetime import datetime
 
@@ -228,7 +230,6 @@ class GameFilesScanWorker(QObject):
         logger.debug(f"Starting game files scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
         # Import here to avoid circular dependency
-        from ClassicLib.AsyncBridge import AsyncBridge
         from ClassicLib.integration.status import is_rust_accelerated
         from ClassicLib.ScanGame import write_combined_results_async
 
@@ -238,10 +239,11 @@ class GameFilesScanWorker(QObject):
         else:
             logger.debug("Game file scanning using Python implementation")
 
-        # Use AsyncBridge for proper async/sync coordination (no manual event loop)
-        # This is the hybrid pattern: QThread worker + AsyncBridge for async work
-        bridge = AsyncBridge.get_instance()
-        bridge.run_async(write_combined_results_async())
+        # Use asyncio.run() directly since we're in a separate QThread.
+        # Do NOT use AsyncBridge here - it's a main-thread singleton and accessing
+        # it from this worker thread causes "Cannot set parent, new parent is in
+        # a different thread" errors. This matches CrashLogsScanWorker's pattern.
+        asyncio.run(write_combined_results_async())
 
         # Calculate timings with both methods for verification
         perf_elapsed = time.perf_counter() - perf_start

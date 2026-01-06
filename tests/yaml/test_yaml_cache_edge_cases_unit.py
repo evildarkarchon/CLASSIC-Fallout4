@@ -3,15 +3,17 @@ Tests for YamlSettingsCache edge cases and stress scenarios.
 
 This module validates YamlSettingsCache behavior in edge cases including
 singleton deletion, weak references, stress testing under high concurrency,
-and async operations.
+event loop changes, and async operations.
 
 Test Categories:
 - Singleton behavior after deletion
 - Weak reference handling
 - Stress testing with concurrent creation
+- Event loop change handling
 - Async operations integration
 """
 
+import asyncio
 import gc
 import threading
 import time
@@ -150,3 +152,105 @@ class TestEdgeCases:
             # Use async method directly
             results = await cache.batch_get_settings_async(requests)
             assert results == ["value1", 42, True]
+
+
+class TestEventLoopChange:
+    """Tests for handling event loop changes.
+
+    asyncio.Lock objects are bound to the event loop in which they're first used.
+    If the event loop changes, we need to create a new lock to avoid
+    "Lock object is bound to a different loop" errors.
+    """
+
+    def test_async_init_lock_survives_event_loop_change(self) -> None:
+        """Test that _get_async_init_lock handles event loop changes.
+
+        This test simulates the scenario where:
+        1. asyncio.run() is called, creating event loop A
+        2. A lock is created and cached
+        3. asyncio.run() completes, closing event loop A
+        4. asyncio.run() is called again, creating event loop B
+        5. The cached lock should be replaced with a new one for loop B
+
+        Before the fix, step 5 would raise:
+        RuntimeError: Lock object is bound to a different loop than the current one
+        """
+        # Reset the async init lock to start fresh
+        YamlSettingsCache._async_init_lock = None
+
+        locks_and_loops: list[tuple[asyncio.Lock, asyncio.AbstractEventLoop]] = []
+
+        async def capture_lock_and_loop() -> None:
+            """Capture the lock and current event loop."""
+            lock = YamlSettingsCache._get_async_init_lock()
+            loop = asyncio.get_running_loop()
+            locks_and_loops.append((lock, loop))
+            # Actually use the lock to ensure it's bound
+            async with lock:
+                pass
+
+        # First event loop
+        asyncio.run(capture_lock_and_loop())
+
+        # Second event loop (simulates app restart or sequential asyncio.run() calls)
+        asyncio.run(capture_lock_and_loop())
+
+        # Third event loop for good measure
+        asyncio.run(capture_lock_and_loop())
+
+        # We should have 3 different event loops
+        loops = [loop for _, loop in locks_and_loops]
+        assert len(set(id(loop) for loop in loops)) == 3, "Should have 3 different event loops"
+
+        # The locks should be different for different event loops
+        locks = [lock for lock, _ in locks_and_loops]
+        lock_ids = [id(lock) for lock in locks]
+        # At least the locks for different loops should be different
+        assert len(set(lock_ids)) == 3, (
+            "Should create new locks for new event loops to avoid 'Lock object is bound to a different loop' error"
+        )
+
+    def test_async_init_lock_reused_in_same_event_loop(self) -> None:
+        """Test that the same lock is reused within the same event loop.
+
+        Multiple calls to _get_async_init_lock() within the same event loop
+        should return the same lock instance for efficiency.
+        """
+        # Reset the async init lock to start fresh
+        YamlSettingsCache._async_init_lock = None
+
+        locks: list[asyncio.Lock] = []
+
+        async def capture_locks() -> None:
+            """Capture locks from multiple calls in the same loop."""
+            lock1 = YamlSettingsCache._get_async_init_lock()
+            lock2 = YamlSettingsCache._get_async_init_lock()
+            lock3 = YamlSettingsCache._get_async_init_lock()
+            locks.extend([lock1, lock2, lock3])
+
+        asyncio.run(capture_locks())
+
+        # All locks should be the same within the same event loop
+        assert locks[0] is locks[1] is locks[2], "Same lock should be reused within the same event loop"
+
+    def test_async_init_lock_raises_without_event_loop(self) -> None:
+        """Test that _get_async_init_lock raises RuntimeError without a running event loop.
+
+        In Python 3.12+, creating asyncio.Lock() without a running event loop raises
+        RuntimeError or DeprecationWarning. The _get_async_init_lock() method should
+        detect this condition and raise a clear error before attempting to create
+        the lock.
+
+        This ensures graceful failure with a helpful message instead of a cryptic
+        "There is no current event loop" error.
+        """
+        # Reset the async init lock to start fresh
+        YamlSettingsCache._async_init_lock = None
+
+        # Calling outside of async context should raise RuntimeError
+        with pytest.raises(RuntimeError) as exc_info:
+            YamlSettingsCache._get_async_init_lock()
+
+        # Verify the error message is helpful
+        assert "_get_async_init_lock() must be called from an async context" in str(exc_info.value)
+        assert "running event loop" in str(exc_info.value)

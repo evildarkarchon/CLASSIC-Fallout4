@@ -14,7 +14,9 @@ Example:
 
 """
 
+import asyncio
 import logging
+import os
 import threading
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
@@ -70,6 +72,9 @@ class YamlSettingsCache:
     # Class-level storage for singleton instance
     _instance: ClassVar["YamlSettingsCache | None"] = None
     _lock: ClassVar[threading.Lock] = threading.Lock()
+    # Async lock for async core initialization (lazily created)
+    # Stored as tuple of (lock, event_loop) to detect event loop changes
+    _async_init_lock: ClassVar[tuple[asyncio.Lock, asyncio.AbstractEventLoop] | None] = None
 
     def __init__(self) -> None:
         """Initialize the sync wrapper with lazy AsyncBridge and async core.
@@ -118,22 +123,83 @@ class YamlSettingsCache:
                     self._async_core = self._get_bridge().run_async(get_async_yaml_core())
         return self._async_core
 
+    @classmethod
+    def _get_async_init_lock(cls) -> asyncio.Lock:
+        """Get or create the async initialization lock lazily.
+
+        This lock protects async core initialization from race conditions
+        when multiple concurrent async tasks attempt initialization.
+
+        The lock is bound to the current event loop. If the event loop changes
+        (e.g., after asyncio.run() completes and a new one starts), a new lock
+        is created for the new event loop to avoid "Lock object is bound to a
+        different loop" errors.
+
+        Returns:
+            The asyncio.Lock instance for async core initialization.
+
+        """
+        try:
+            current_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            # No running event loop - this shouldn't happen in async context
+            # but handle gracefully by always creating a new lock
+            current_loop = None
+
+        # Check if we have a valid lock for the current event loop
+        if cls._async_init_lock is not None:
+            cached_lock, cached_loop = cls._async_init_lock
+            # Reuse lock if event loop matches
+            if current_loop is not None and cached_loop is current_loop:
+                return cached_lock
+            # Event loop changed or no current loop - need a new lock
+
+        # Use threading lock for thread-safe creation of the async lock
+        with cls._lock:
+            # Double-check after acquiring lock
+            if cls._async_init_lock is not None:
+                cached_lock, cached_loop = cls._async_init_lock
+                if current_loop is not None and cached_loop is current_loop:
+                    return cached_lock
+
+            # Check for running event loop before creating lock
+            # In Python 3.12+, creating asyncio.Lock() without a running event loop
+            # raises RuntimeError or DeprecationWarning (will become error in future)
+            if current_loop is None:
+                msg = (
+                    "_get_async_init_lock() must be called from an async context "
+                    "with a running event loop. This method is intended for use "
+                    "within _ensure_async_core_async()."
+                )
+                raise RuntimeError(msg)
+
+            # Create new lock and store with current event loop reference
+            new_lock = asyncio.Lock()
+            cls._async_init_lock = (new_lock, current_loop)
+            return new_lock
+
     async def _ensure_async_core_async(self) -> AsyncYamlSettingsCore:
         """Get or create AsyncYamlSettingsCore instance lazily (async contexts).
 
         This method initializes the async core without using AsyncBridge,
         making it suitable for async contexts (CLI, tests) where an event
-        loop is already running.
+        loop is already running. Uses an async lock for thread-safety when
+        multiple concurrent async tasks attempt initialization.
 
         Returns:
             The async core instance for this cache.
 
         """
-        # No lock needed in async context - await is atomic enough
-        # and we're running in single-threaded async context
-        if self._async_core is None:
-            # Directly await initialization without AsyncBridge
-            self._async_core = await get_async_yaml_core()
+        # Fast path - already initialized
+        if self._async_core is not None:
+            return self._async_core
+
+        # Slow path - use async lock for safe initialization
+        async with self._get_async_init_lock():
+            # Double-check pattern
+            if self._async_core is None:
+                # Directly await initialization without AsyncBridge
+                self._async_core = await get_async_yaml_core()
         return self._async_core
 
     @classmethod
@@ -167,6 +233,25 @@ class YamlSettingsCache:
             cls._instance = cls()
 
             return cls._instance
+
+    @classmethod
+    def reset_instance(cls) -> None:
+        """Reset the singleton instance - test environments only.
+
+        This method is intended for test isolation to ensure each test starts
+        with a fresh instance. It is guarded to only work in pytest environments.
+        Also resets the async initialization lock.
+
+        Raises:
+            RuntimeError: If called outside of a pytest testing context.
+
+        """
+        if not os.environ.get("PYTEST_CURRENT_TEST"):
+            msg = "reset_instance() is only allowed in testing contexts"
+            raise RuntimeError(msg)
+        with cls._lock:
+            cls._instance = None
+            cls._async_init_lock = None
 
     def get_path_for_store(self, yaml_store: YAML) -> Path:
         """Get the file path for a given YAML store.
