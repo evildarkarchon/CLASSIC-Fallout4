@@ -10,6 +10,7 @@ Consolidated from:
 Note: These tests use a mocked settings cache to avoid file I/O and ensure speed.
 """
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -138,7 +139,7 @@ class TestWindowMock(QWidget):
 
 
 @pytest.fixture
-def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> MockSettingsCache:
+def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[MockSettingsCache, None, None]:
     """Patch YamlSettingsCache to use in-memory storage.
 
     This fixture properly handles the module structure where YamlSettingsCache
@@ -188,7 +189,7 @@ def gui_settings_app(qapp: Any) -> Any:
 def gui_settings_dialog(
     gui_settings_app: Any,
     gui_settings_mock_cache: MockSettingsCache,
-) -> SettingsDialog:
+) -> Generator[SettingsDialog, None, None]:
     """Create a SettingsDialog instance for testing.
 
     The dialog is created as non-modal to prevent freezing when shown during tests.
@@ -215,7 +216,7 @@ def gui_settings_dialog(
 
 
 @pytest.fixture
-def gui_settings_reset(gui_settings_mock_cache: MockSettingsCache) -> None:
+def gui_settings_reset(gui_settings_mock_cache: MockSettingsCache) -> Generator[None, None, None]:
     """Reset settings to default values after test.
 
     Args:

@@ -465,14 +465,14 @@ class TestRustAsyncDatabasePool:
             await pool.initialize()
 
             # Clear cache
-            cleared = await pool.clear_cache()
+            cleared = pool.clear_cache()
             assert cleared >= 0
 
             # Update TTL
-            await pool.set_cache_ttl(300)
+            pool.set_cache_ttl(300)
 
             # Get stats
-            stats = await pool.get_stats()
+            stats = pool.get_stats()
             assert "total_queries" in stats
             assert "cache_hits" in stats
             assert "cache_hit_rate" in stats
@@ -543,7 +543,7 @@ class TestRustAsyncDatabasePool:
             for worker_results in all_results:
                 assert len(worker_results) == 10
 
-            stats = await pool.get_stats()
+            stats = pool.get_stats()
             assert stats["total_queries"] >= 50
 
 

@@ -117,7 +117,6 @@ __all__ = [
     "malformed_crash_log_file",
     "crash_logs_directory",
     "mock_yamldata",
-    "mock_yamldata_async",
     "mock_database_pool",
     "mock_database_pool_with_data",
     "segment_boundaries",

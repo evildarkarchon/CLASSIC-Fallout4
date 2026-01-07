@@ -15,6 +15,8 @@ from ClassicLib.ScanLog.fragments.report_generator_functional import ReportGener
 if TYPE_CHECKING:
     from classic_scanlog import ReportGenerator as RustReportGenerator
 
+    from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+
     RUST_AVAILABLE: bool = True
 else:
     _has_generator, RustReportGenerator = detect_component("classic_scanlog", "ReportGenerator")
@@ -26,7 +28,7 @@ else:
 # Import fragment wrapper - using lazy import to avoid circular imports
 
 
-def _get_fragment_class() -> type:
+def _get_fragment_class() -> type[RustAcceleratedReportFragment]:
     """Get RustAcceleratedReportFragment class lazily to avoid circular imports.
 
     Returns:
@@ -83,9 +85,11 @@ class RustAcceleratedReportGenerator:
         result._use_rust = self._use_rust
 
         if self._use_rust:
-            result._fragment = self._generator.generate_header(crashlog_filename, version)
+            # Rust API only takes crashlog_filename (version configured at construction)
+            result._fragment = self._generator.generate_header(crashlog_filename)  # type: ignore[call-arg]
         else:
-            result._fragment = self._generator.generate_header(crashlog_filename, version)
+            # Python API takes both crashlog_filename and version
+            result._fragment = self._generator.generate_header(crashlog_filename, version)  # type: ignore[call-arg]
 
         return result
 
@@ -125,7 +129,6 @@ class RustAcceleratedReportGenerator:
             # Rust implementation expects different signature - convert parameters
             from ClassicLib import GlobalRegistry
 
-            crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
             game_is_vr = GlobalRegistry.get_vr() == "VR"
 
             # Check if version is latest
@@ -134,14 +137,24 @@ class RustAcceleratedReportGenerator:
                 or (not game_is_vr and version_current < version_latest)
             )
 
-            warn_outdated = f"***\u274c WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***"
-
-            result._fragment = self._generator.generate_error_section(main_error, crashgen_version, crashgen_name, is_latest, warn_outdated)
+            # Rust API: generate_error_section(main_error, crashgen_version, is_outdated)
+            result._fragment = self._generator.generate_error_section(main_error, crashgen_version, not is_latest)  # type: ignore[call-arg]
         else:
-            # Python implementation uses the original signature
-            result._fragment = self._generator.generate_error_section(
-                main_error, crashgen_version, version_current, version_latest, version_latest_vr
+            # Python implementation uses the original signature with version comparison
+            crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
+            from ClassicLib import GlobalRegistry
+
+            game_is_vr = GlobalRegistry.get_vr() == "VR"
+            is_latest = not (
+                (version_current < version_latest_vr and version_current != version_latest)
+                or (not game_is_vr and version_current < version_latest)
             )
+            warn_outdated = f"***\u274c WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***"
+            # Python implementation takes 5 args, use cast to help type checker
+            from typing import cast
+
+            py_gen = cast("PyReportGenerator", self._generator)
+            result._fragment = py_gen.generate_error_section(main_error, crashgen_version, crashgen_name, is_latest, warn_outdated)
 
         return result
 

@@ -129,11 +129,14 @@ class ScanGameCore:
             return_exceptions=False,
         )
 
-    async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
+    async def get_scan_settings(self) -> tuple[str, dict[str, set[str]], Path | None]:
         """Retrieve settings required for a scanning process asynchronously.
 
         Returns:
-            Tuple of (game_type, ini_settings, game_path) for the scan configuration.
+            Tuple of (xse_acronym, xse_scriptfiles, mod_path) for the scan configuration.
+            - xse_acronym: The script extender acronym (e.g., "F4SE", "SKSE")
+            - xse_scriptfiles: Dict mapping script file patterns to their expected hashes
+            - mod_path: Path to the mods folder, or None if not configured
 
         """
         return await self.validators.get_scan_settings()
@@ -256,7 +259,7 @@ class ScanGameCore:
 
         return self.report_builder.build_archived_report(issue_lists, xse_acronym)
 
-    async def _initialize_archived_scan(self) -> tuple[dict[str, set[str]], str, dict[str, str], Path, Path] | str:
+    async def _initialize_archived_scan(self) -> tuple[dict[str, set[str]], str, dict[str, set[str]], Path, Path] | str:
         """Initialize the archived scan with validation and setup.
 
         Returns:

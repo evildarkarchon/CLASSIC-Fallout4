@@ -64,13 +64,13 @@ _scan_game_core = get_scan_game_core()
 check_log_errors = create_sync_wrapper(_scan_game_core.check_log_errors)
 
 
-async def get_scan_settings() -> tuple[str, dict[str, str], Path | None]:
+async def get_scan_settings() -> tuple[str, dict[str, set[str]], Path | None]:
     """Get common settings used by mod scanning functions.
 
     Returns:
-        tuple[str, dict[str, str], Path | None]: A tuple containing:
+        tuple[str, dict[str, set[str]], Path | None]: A tuple containing:
             - str: XSE acronym (e.g., 'F4SE', 'SKSE')
-            - dict[str, str]: Dictionary of scanning configuration settings
+            - dict[str, set[str]]: Dictionary mapping script file patterns to their expected hashes
             - Path | None: Optional path to the mods folder, or None if not configured
 
     """

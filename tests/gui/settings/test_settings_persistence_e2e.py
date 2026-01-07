@@ -21,12 +21,12 @@ class TestPersistenceAcrossInstances:
         from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
 
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
-        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         dialog1.fcx_checkbox.setChecked(False)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.save_settings()
         dialog1.close()
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        assert get_game_version_value(dialog2.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog2.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         assert not dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog2.close()
 

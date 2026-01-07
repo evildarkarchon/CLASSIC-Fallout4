@@ -179,7 +179,7 @@ class FeatureContext:
         return self._ui_widgets
 
     @property
-    def local_dir(self) -> Path | None:
+    def local_dir(self) -> Path | str | None:
         """Get the application local directory.
 
         This is a convenience property that retrieves the local directory

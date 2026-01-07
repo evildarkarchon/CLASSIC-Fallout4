@@ -1,14 +1,20 @@
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
-try:
+if TYPE_CHECKING:
     import classic_config
 
     RUST_AVAILABLE = True
-except ImportError:
-    classic_config = None
-    RUST_AVAILABLE = False
+else:
+    try:
+        import classic_config
+
+        RUST_AVAILABLE = True
+    except ImportError:
+        classic_config = None
+        RUST_AVAILABLE = False
 
 
 @pytest.mark.rust

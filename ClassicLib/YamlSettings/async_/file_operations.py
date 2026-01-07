@@ -338,7 +338,7 @@ class YamlFileOperations:
             # Cache the result if caching is enabled (only on success)
             if use_cache:
                 if not hasattr(self, "_file_cache"):
-                    self._file_cache: dict[str, dict[str, Any]] = {}
+                    self._file_cache = {}
                 self._file_cache[file_key] = data
 
             return data

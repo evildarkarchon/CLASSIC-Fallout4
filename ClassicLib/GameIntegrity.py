@@ -21,7 +21,8 @@ class GameIntegrityChecker:
 
     Attributes:
         _config (dict[str, str | None]): Stores configuration details such as paths to the
-            game executable, expected hash values, and location information.
+            game executable and location information.
+        _valid_exe_hashes (set[str]): Set of valid executable hash strings from VersionRegistry.
 
     """
 
@@ -32,6 +33,7 @@ class GameIntegrityChecker:
         internal configuration storage.
         """
         self._config: dict[str, str | None] = {}
+        self._valid_exe_hashes: set[str] = set()
 
     def load_configuration(self) -> None:
         """Load game configuration from YAML settings and VersionRegistry.
@@ -55,21 +57,18 @@ class GameIntegrityChecker:
 
         # Get valid exe hashes from VersionRegistry
         registry = get_version_registry()
-        valid_exe_hashes: set[str] = registry.get_all_exe_hashes("Fallout4", is_vr)
+        self._valid_exe_hashes = registry.get_all_exe_hashes("Fallout4", is_vr)
 
         # Load settings from YAML
         self._config = {
             "steam_ini_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-            "valid_exe_hashes": valid_exe_hashes,
             "game_exe_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
             "root_name": yaml_settings(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
             "root_warn": yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path"),
         }
 
-        # Validate string settings types (valid_exe_hashes is a set, not a string)
+        # Validate string settings types
         for key, value in self._config.items():
-            if key == "valid_exe_hashes":
-                continue  # Skip set validation
             if value is not None and not isinstance(value, str):
                 raise TypeError(f"Expected string for {key}, got {type(value)}")
 
@@ -93,21 +92,18 @@ class GameIntegrityChecker:
 
         # Get valid exe hashes from VersionRegistry
         registry = get_version_registry()
-        valid_exe_hashes: set[str] = registry.get_all_exe_hashes("Fallout4", is_vr)
+        self._valid_exe_hashes = registry.get_all_exe_hashes("Fallout4", is_vr)
 
         # Load settings from YAML asynchronously
         self._config = {
             "steam_ini_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-            "valid_exe_hashes": valid_exe_hashes,
             "game_exe_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
             "root_name": await yaml_settings_async(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
             "root_warn": await yaml_settings_async(str, YAML.Main, "Warnings_GAME.warn_root_path"),
         }
 
-        # Validate string settings types (valid_exe_hashes is a set, not a string)
+        # Validate string settings types
         for key, value in self._config.items():
-            if key == "valid_exe_hashes":
-                continue  # Skip set validation
             if value is not None and not isinstance(value, str):
                 raise TypeError(f"Expected string for {key}, got {type(value)}")
 
@@ -130,8 +126,7 @@ class GameIntegrityChecker:
         local_hash: str = calculate_file_hash(exe_path)
 
         # Check if hash matches known versions from VersionRegistry
-        valid_hashes: set[str] = self._config["valid_exe_hashes"]
-        is_valid_version: bool = local_hash in valid_hashes
+        is_valid_version: bool = local_hash in self._valid_exe_hashes
 
         # Check for Steam INI (indicates outdated installation)
         steam_ini_path = Path(self._config["steam_ini_path"]) if self._config["steam_ini_path"] else None

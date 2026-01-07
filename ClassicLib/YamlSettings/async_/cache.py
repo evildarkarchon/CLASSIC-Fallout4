@@ -104,7 +104,7 @@ class YamlCache:
             # Lazy initialize global lock on first use (inside async context)
             if self._global_lock is None:
                 YamlCache._global_lock = asyncio.Lock()
-            async with self._global_lock:
+            async with self._global_lock:  # pyright: ignore[reportOptionalContextManager]
                 # Double-check after acquiring global lock
                 if file_path not in self._cache_locks:
                     self._cache_locks[file_path] = asyncio.Lock()

@@ -661,9 +661,7 @@ def get_detected_version_info() -> VersionInfo | None:
     is_vr = vr_suffix == "VR"
 
     # Get the game executable path
-    exe_path_str: str | None = yaml_settings(
-        str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"
-    )
+    exe_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE")
     if not exe_path_str:
         return None
 

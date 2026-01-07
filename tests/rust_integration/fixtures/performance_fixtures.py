@@ -371,8 +371,8 @@ class PerformanceTestFixtures:
     @staticmethod
     def generate_concurrent_test_scenarios(
         base_operation: Callable,
-        thread_counts: list[int] = None,
-        iterations_per_thread: int = 10,  # pyright: ignore[reportArgumentType]
+        thread_counts: list[int] | None = None,
+        iterations_per_thread: int = 10,
     ) -> dict[str, Callable]:
         """
         Generate concurrent test scenarios for performance testing.

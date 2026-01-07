@@ -269,7 +269,7 @@ class RustAsyncDatabasePool:
                     results[formid, plugin] = rust_results[key]
             return results
 
-    async def clear_cache(self, expired_only: bool = False) -> int:
+    def clear_cache(self, expired_only: bool = False) -> int:
         """Clear cache entries.
 
         Args:
@@ -279,25 +279,25 @@ class RustAsyncDatabasePool:
             The number of entries removed from the cache.
 
         """
-        return await self._rust_pool.clear_cache(expired_only)
+        return self._rust_pool.clear_cache(expired_only)
 
-    async def set_cache_ttl(self, seconds: int) -> None:
+    def set_cache_ttl(self, seconds: int) -> None:
         """Set the cache time-to-live.
 
         Args:
             seconds: The duration in seconds for the cache TTL.
 
         """
-        await self._rust_pool.set_cache_ttl(seconds)
+        self._rust_pool.set_cache_ttl(seconds)
 
-    async def get_stats(self) -> dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get pool statistics.
 
         Returns:
             A dictionary containing pool performance metrics.
 
         """
-        return await self._rust_pool.get_stats()
+        return self._rust_pool.get_stats()
 
     async def optimize(self) -> None:
         """Optimize the underlying database.

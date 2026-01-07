@@ -16,6 +16,8 @@ if TYPE_CHECKING:
     from classic_scanlog import ReportComposer as RustReportComposer
     from classic_scanlog import ReportFragment as RustReportFragment
 
+    from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment as _FragmentType
+
     RUST_AVAILABLE: bool = True
 else:
     _has_fragment, RustReportFragment = detect_component("classic_scanlog", "ReportFragment")
@@ -29,7 +31,7 @@ else:
 # Import fragment wrapper - using lazy import to avoid circular imports
 
 
-def _get_fragment_class() -> type:
+def _get_fragment_class() -> type[_FragmentType]:
     """Get RustAcceleratedReportFragment class lazily to avoid circular imports.
 
     Returns:

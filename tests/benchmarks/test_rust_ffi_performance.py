@@ -41,6 +41,7 @@ def test_settings_yaml_path():
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust extensions not built")
 def test_benchmark_scanlog_parse_segments(benchmark, complex_crash_log_lines):
     """Benchmark the parse_segments function."""
+    assert classic_scanlog is not None
     parser = classic_scanlog.LogParser()
 
     # Benchmark the FFI call
@@ -53,6 +54,7 @@ def test_benchmark_scanlog_parse_segments(benchmark, complex_crash_log_lines):
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust extensions not built")
 def test_benchmark_scanlog_extract_formids(benchmark, complex_crash_log_lines):
     """Benchmark extract_formids."""
+    assert classic_scanlog is not None
     parser = classic_scanlog.LogParser()
 
     result = benchmark(parser.extract_formids, complex_crash_log_lines)
@@ -68,6 +70,7 @@ def test_benchmark_yaml_load_file(benchmark, test_settings_yaml_path):
     if not test_settings_yaml_path.exists():
         pytest.skip("Test settings yaml not found")
 
+    assert classic_yaml is not None
     ops = classic_yaml.YamlOperations()
 
     # Benchmark loading from file
@@ -83,6 +86,7 @@ def test_benchmark_yaml_parse_string(benchmark, test_settings_yaml_path):
     if not test_settings_yaml_path.exists():
         pytest.skip("Test settings yaml not found")
 
+    assert classic_yaml is not None
     content = test_settings_yaml_path.read_text(encoding="utf-8")
     ops = classic_yaml.YamlOperations()
 

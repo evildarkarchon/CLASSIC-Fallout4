@@ -27,7 +27,7 @@ class TestSettingsApplication:
         from tests.fixtures.gui_settings_fixtures import set_game_version_by_value
 
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        set_game_version_by_value(dialog.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         dialog.save_settings()
         dialog.close()
         game_version = yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version")
@@ -65,14 +65,14 @@ class TestMultipleDialogs:
 
         dialog1 = SettingsDialog(yaml_store=YAML.TEST)
         dialog2 = SettingsDialog(yaml_store=YAML.TEST)
-        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog1.game_version_combo, "VR")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         dialog1.fcx_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        set_game_version_by_value(dialog2.game_version_combo, "Original")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog2.game_version_combo, "Original")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         dialog2.simplify_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert get_game_version_value(dialog1.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog1.game_version_combo) == "VR"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         assert dialog1.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert not dialog1.simplify_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert get_game_version_value(dialog2.game_version_combo) == "Original"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        assert get_game_version_value(dialog2.game_version_combo) == "Original"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         assert not dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert dialog2.simplify_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog1.close()
@@ -96,10 +96,10 @@ class TestSettingsImpact:
         from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
 
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        original = get_game_version_value(dialog.game_version_combo)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        original = get_game_version_value(dialog.game_version_combo)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         # Change to a different version
         new_version = "VR" if original != "VR" else "Original"
-        set_game_version_by_value(dialog.game_version_combo, new_version)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        set_game_version_by_value(dialog.game_version_combo, new_version)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         dialog.save_settings()
         saved_value = yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version")
         assert saved_value == new_version

@@ -9,6 +9,7 @@ Fixtures for Rust integration testing including:
 
 import asyncio
 import time
+from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -126,7 +127,7 @@ def rust_yaml_files(tmp_path: Path) -> dict[str, Path]:
 
 
 @pytest.fixture
-def mock_rust_yaml_environment(rust_yaml_files: dict[str, Path]) -> dict[str, Path]:
+def mock_rust_yaml_environment(rust_yaml_files: dict[str, Path]) -> Generator[dict[str, Path], None, None]:
     """Mock the environment for Rust YamlData initialization.
 
     This fixture patches ResourceLoader.get_data_directory() and GlobalRegistry

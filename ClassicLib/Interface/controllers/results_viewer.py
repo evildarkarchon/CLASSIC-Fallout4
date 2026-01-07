@@ -292,7 +292,7 @@ class ResultsViewerController:
         # Primary location - Crash Logs folder
         local_dir = self._ctx.local_dir
         if local_dir:
-            crash_logs_dir = local_dir / "Crash Logs"
+            crash_logs_dir = Path(local_dir) / "Crash Logs"
             if crash_logs_dir.exists():
                 reports.extend(crash_logs_dir.glob("*-AUTOSCAN.md"))
 
@@ -312,7 +312,7 @@ class ResultsViewerController:
 
         # Backup location for unsolved logs
         if local_dir:
-            backup_path = local_dir / "CLASSIC Backup" / "Unsolved Logs"
+            backup_path = Path(local_dir) / "CLASSIC Backup" / "Unsolved Logs"
             if backup_path.exists():
                 reports.extend(backup_path.glob("*-AUTOSCAN.md"))
 

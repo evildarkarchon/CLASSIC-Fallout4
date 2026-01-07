@@ -108,7 +108,7 @@ class ParallelReportProcessor:
             rust_fragments = [f._fragment for f in fragments]  # type: ignore[misc]
             result_fragment = ParallelReportProcessor.combine_fragments(rust_fragments)  # type: ignore[arg-type]
 
-            result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
+            result = object.__new__(RustAcceleratedReportFragment)
             result._use_rust = True
             result._fragment = result_fragment
             return result

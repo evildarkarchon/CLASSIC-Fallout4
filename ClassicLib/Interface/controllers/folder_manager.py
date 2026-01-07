@@ -193,9 +193,11 @@ class FolderManager:
         Opens the CLASSIC Backup/Game Files folder if it exists.
         Shows an error dialog if the folder is not found.
         """
-        local_dir: Path | None = self._ctx.local_dir
-        if local_dir and local_dir.exists():
-            backup_path: Path = local_dir / "CLASSIC Backup/Game Files"
+        local_dir: Path | str | None = self._ctx.local_dir
+        if local_dir and (
+            (isinstance(local_dir, Path) and local_dir.exists()) or (isinstance(local_dir, str) and Path(local_dir).exists())
+        ):
+            backup_path: Path = Path(local_dir) / "CLASSIC Backup/Game Files"
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(backup_path)))
         else:
             QMessageBox.critical(
@@ -212,9 +214,11 @@ class FolderManager:
         Opens the Crash Logs folder, creating it if it doesn't exist.
         Shows an error dialog if the local directory is not configured.
         """
-        local_dir: Path | None = self._ctx.local_dir
-        if local_dir and local_dir.exists():
-            crash_logs_path: Path = local_dir / "Crash Logs"
+        local_dir: Path | str | None = self._ctx.local_dir
+        if local_dir and (
+            (isinstance(local_dir, Path) and local_dir.exists()) or (isinstance(local_dir, str) and Path(local_dir).exists())
+        ):
+            crash_logs_path: Path = Path(local_dir) / "Crash Logs"
             crash_logs_path.mkdir(exist_ok=True)
             QDesktopServices.openUrl(QUrl.fromLocalFile(str(crash_logs_path)))
         else:
