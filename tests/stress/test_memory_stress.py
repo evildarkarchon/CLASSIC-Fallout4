@@ -7,12 +7,14 @@ real-world production scenarios.
 """
 
 import gc
+import tracemalloc
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 # Skip these tests if Rust extensions are not available
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
+
 
 import classic_scanlog
 from classic_scanlog import FormIDAnalyzer, LogParser, PatternMatcher
@@ -370,6 +372,7 @@ class TestLargeDatasetProcessing:
 @pytest.mark.stress
 @pytest.mark.slow
 @pytest.mark.memory
+@pytest.mark.skipif(tracemalloc.is_tracing(), reason="tracemalloc poisons the test results.")
 class TestMemoryLimitHandling:
     """
     Test behavior when approaching system memory limits.
