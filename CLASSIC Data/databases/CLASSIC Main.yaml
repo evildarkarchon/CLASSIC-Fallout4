@@ -4,7 +4,7 @@ CLASSIC_Info:
   # ========================================================================================
   # CAUTION: DO NOT CHANGE YOUR SETTINGS HERE! OPEN & EDIT CLASSIC Settings.yaml instead!
   # ========================================================================================
-  version: CLASSIC v8.0.0
+  version: CLASSIC v8.1.0
   version_date: 25.08.24 #YY/MM/DD
   is_prerelease: false
 
