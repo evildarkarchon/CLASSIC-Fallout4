@@ -298,7 +298,13 @@ class TestRustDatabasePool:
 
 
 class MockRustPool:
-    """Mock Rust pool implementation for testing."""
+    """Mock Rust pool implementation for testing.
+
+    Note: Methods like clear_cache(), get_stats(), set_cache_ttl() are SYNC
+    because the real RustAsyncDatabasePool wraps them synchronously.
+    Methods like initialize(), get_entry(), get_entries_batch() are ASYNC
+    because the real Rust pool uses PyO3's future_into_py for these.
+    """
 
     def __init__(self, *args, **kwargs):
         self.stats = {
@@ -352,13 +358,16 @@ class MockRustPool:
                 results[formid, plugin] = "Custom Weapon"
         return results
 
-    async def clear_cache(self, expired_only=False):
+    def clear_cache(self, expired_only=False):
+        # SYNC method - matches RustAsyncDatabasePool.clear_cache()
         return 0
 
-    async def get_stats(self):
+    def get_stats(self):
+        # SYNC method - matches RustAsyncDatabasePool.get_stats()
         return self.stats
 
-    async def set_cache_ttl(self, ttl):
+    def set_cache_ttl(self, ttl):
+        # SYNC method - matches RustAsyncDatabasePool.set_cache_ttl()
         pass
 
     async def optimize(self):

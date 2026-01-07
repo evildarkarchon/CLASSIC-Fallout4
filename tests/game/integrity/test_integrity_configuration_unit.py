@@ -37,10 +37,12 @@ class TestConfigurationLoading:
 
         # Verify configuration was loaded
         assert checker._config["steam_ini_path"] == "C:/Games/Fallout4/steam_api.ini"
-        assert checker._config["valid_exe_hashes"] == {"hash_og", "hash_ng"}
         assert checker._config["game_exe_path"] == "C:/Games/Fallout4/Fallout4.exe"
         assert checker._config["root_name"] == "Fallout4"
         assert checker._config["root_warn"] == "Warning message"
+
+        # Verify valid_exe_hashes is stored on the instance attribute, not in _config
+        assert checker._valid_exe_hashes == {"hash_og", "hash_ng"}
 
         # Verify yaml_settings was called correctly (4 calls now, not 6)
         assert mock_yaml_settings.call_count == 4

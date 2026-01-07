@@ -21,6 +21,8 @@ class TestHashVerification:
         mock_config["game_exe_path"] = str(test_game_exe)
         mock_config["steam_ini_path"] = str(test_game_exe.parent / "steam_api.ini")
         checker._config = mock_config  # pyright: ignore[reportAttributeAccessIssue]
+        # Set valid exe hashes on the checker (separate from _config)
+        checker._valid_exe_hashes = {"hash_old_version", "hash_new_version"}  # pyright: ignore[reportAttributeAccessIssue]
 
         # Mock hash calculation to return new version hash
         mock_hash.return_value = "hash_new_version"
@@ -89,6 +91,8 @@ class TestHashVerification:
         mock_config["game_exe_path"] = str(test_game_exe)
         mock_config["steam_ini_path"] = str(test_game_exe.parent / "steam_api.ini")
         checker._config = mock_config  # pyright: ignore[reportAttributeAccessIssue]
+        # Set valid exe hashes on the checker (separate from _config)
+        checker._valid_exe_hashes = {"hash_old_version", "hash_new_version"}  # pyright: ignore[reportAttributeAccessIssue]
 
         # Mock hash calculation to return old version hash
         mock_hash.return_value = "hash_old_version"
