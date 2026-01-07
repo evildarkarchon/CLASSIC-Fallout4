@@ -116,18 +116,12 @@ impl PyIntegrityConfig {
     ///
     /// Args:
     ///     game_exe_path: Path to the game executable
-    ///     exe_hash_old: SHA256 hash of the old game version
-    ///     exe_hash_new: SHA256 hash of the new game version
+    ///     valid_exe_hashes: List of valid SHA256 hashes for known game versions
     ///     root_name: Game root name (e.g., "Fallout 4", "Skyrim")
     #[new]
-    fn new(
-        game_exe_path: PathBuf,
-        exe_hash_old: String,
-        exe_hash_new: String,
-        root_name: String,
-    ) -> Self {
+    fn new(game_exe_path: PathBuf, valid_exe_hashes: Vec<String>, root_name: String) -> Self {
         Self {
-            inner: IntegrityConfig::new(game_exe_path, exe_hash_old, exe_hash_new, root_name),
+            inner: IntegrityConfig::new(game_exe_path, valid_exe_hashes, root_name),
         }
     }
 
@@ -161,16 +155,10 @@ impl PyIntegrityConfig {
         self.inner.game_exe_path.clone()
     }
 
-    /// Get the old hash
+    /// Get the valid exe hashes
     #[getter]
-    fn exe_hash_old(&self) -> String {
-        self.inner.exe_hash_old.clone()
-    }
-
-    /// Get the new hash
-    #[getter]
-    fn exe_hash_new(&self) -> String {
-        self.inner.exe_hash_new.clone()
+    fn valid_exe_hashes(&self) -> Vec<String> {
+        self.inner.valid_exe_hashes.clone()
     }
 
     /// Get the game root name

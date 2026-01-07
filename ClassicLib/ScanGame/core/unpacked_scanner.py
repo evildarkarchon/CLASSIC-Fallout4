@@ -50,7 +50,7 @@ class UnpackedModsScanner:
         self,
         mod_path: Path,
         xse_acronym: str,
-        xse_scriptfiles: dict[str, str],
+        xse_scriptfiles: dict[str, set[str]],
         dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> dict[str, set[str]]:
         """Scan unpacked mod files and return detected issues.
@@ -215,7 +215,7 @@ class UnpackedModsScanner:
         files: list[str],
         context: dict,
         _xse_acronym: str,
-        xse_scriptfiles: dict[str, str],
+        xse_scriptfiles: dict[str, set[str]],
         filter_names: tuple,
         dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> None:
@@ -318,7 +318,7 @@ class UnpackedModsScanner:
         has_previs_files: bool,
         root: Path,
         root_main: Path,
-        xse_scriptfiles: dict[str, str],
+        xse_scriptfiles: dict[str, set[str]],
         filter_names: tuple,
     ) -> tuple[bool, bool]:
         """Process a single file based on its type.

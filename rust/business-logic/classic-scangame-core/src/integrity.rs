@@ -30,11 +30,8 @@ pub struct IntegrityConfig {
     /// Path to the game executable
     pub game_exe_path: PathBuf,
 
-    /// SHA256 hash of the old game version
-    pub exe_hash_old: String,
-
-    /// SHA256 hash of the new game version
-    pub exe_hash_new: String,
+    /// Valid SHA256 hashes for known game versions
+    pub valid_exe_hashes: Vec<String>,
 
     /// Path to Steam INI (indicates outdated installation if present)
     pub steam_ini_path: Option<PathBuf>,
@@ -52,23 +49,16 @@ impl IntegrityConfig {
     /// # Arguments
     ///
     /// * `game_exe_path` - Path to the game executable
-    /// * `exe_hash_old` - SHA256 hash of the old version
-    /// * `exe_hash_new` - SHA256 hash of the new version
+    /// * `valid_exe_hashes` - List of valid SHA256 hashes for known game versions
     /// * `root_name` - Game root name
     ///
     /// # Returns
     ///
     /// A new `IntegrityConfig` instance
-    pub fn new(
-        game_exe_path: PathBuf,
-        exe_hash_old: String,
-        exe_hash_new: String,
-        root_name: String,
-    ) -> Self {
+    pub fn new(game_exe_path: PathBuf, valid_exe_hashes: Vec<String>, root_name: String) -> Self {
         Self {
             game_exe_path,
-            exe_hash_old,
-            exe_hash_new,
+            valid_exe_hashes,
             steam_ini_path: None,
             root_name,
             root_warn: None,
@@ -90,7 +80,7 @@ impl IntegrityConfig {
 
 impl Default for IntegrityConfig {
     fn default() -> Self {
-        Self::new(PathBuf::new(), String::new(), String::new(), String::new())
+        Self::new(PathBuf::new(), Vec::new(), String::new())
     }
 }
 
@@ -179,8 +169,7 @@ impl GameIntegrityChecker {
         let local_hash = calculate_sha256_file(&self.config.game_exe_path)?;
 
         // Check if hash matches known versions
-        let is_valid_version =
-            local_hash == self.config.exe_hash_old || local_hash == self.config.exe_hash_new;
+        let is_valid_version = self.config.valid_exe_hashes.contains(&local_hash);
 
         // Check for Steam INI (indicates outdated installation)
         let steam_ini_exists = self
@@ -362,14 +351,14 @@ mod tests {
     fn test_integrity_config_creation() {
         let config = IntegrityConfig::new(
             PathBuf::from("/path/to/game.exe"),
-            "old_hash".to_string(),
-            "new_hash".to_string(),
+            vec!["hash1".to_string(), "hash2".to_string()],
             "Test Game".to_string(),
         );
 
         assert_eq!(config.game_exe_path, PathBuf::from("/path/to/game.exe"));
-        assert_eq!(config.exe_hash_old, "old_hash");
-        assert_eq!(config.exe_hash_new, "new_hash");
+        assert_eq!(config.valid_exe_hashes.len(), 2);
+        assert!(config.valid_exe_hashes.contains(&"hash1".to_string()));
+        assert!(config.valid_exe_hashes.contains(&"hash2".to_string()));
         assert_eq!(config.root_name, "Test Game");
         assert!(config.steam_ini_path.is_none());
         assert!(config.root_warn.is_none());
@@ -379,8 +368,7 @@ mod tests {
     fn test_integrity_config_builders() {
         let config = IntegrityConfig::new(
             PathBuf::from("/path/to/game.exe"),
-            "old_hash".to_string(),
-            "new_hash".to_string(),
+            vec!["hash1".to_string(), "hash2".to_string()],
             "Test Game".to_string(),
         )
         .with_steam_ini(PathBuf::from("/path/to/steam.ini"))
@@ -421,8 +409,7 @@ mod tests {
 
         let config = IntegrityConfig::new(
             temp_path,
-            "old_hash".to_string(),
-            "new_hash".to_string(),
+            vec!["hash1".to_string(), "hash2".to_string()],
             "Test Game".to_string(),
         );
 
@@ -442,8 +429,7 @@ mod tests {
     fn test_check_installation_location_nonexistent() {
         let config = IntegrityConfig::new(
             PathBuf::from("/nonexistent/game.exe"),
-            "old_hash".to_string(),
-            "new_hash".to_string(),
+            vec!["hash1".to_string()],
             "Test Game".to_string(),
         );
 

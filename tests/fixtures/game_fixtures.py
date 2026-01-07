@@ -26,7 +26,7 @@ def game_integrity_checker() -> GameIntegrityChecker:
 
 
 @pytest.fixture
-def game_mock_config() -> dict[str, str]:
+def game_mock_config() -> dict[str, str | set[str]]:
     """Create mock configuration for game integrity testing.
 
     Returns:
@@ -34,8 +34,7 @@ def game_mock_config() -> dict[str, str]:
     """
     return {
         "steam_ini_path": "C:/Games/Fallout4/steam_api.ini",
-        "exe_hash_old": "hash_old_version",
-        "exe_hash_new": "hash_new_version",
+        "valid_exe_hashes": {"hash_old_version", "hash_new_version"},
         "game_exe_path": "C:/Games/Fallout4/Fallout4.exe",
         "root_name": "Fallout4",
         "root_warn": "WARNING: Game installed in Program Files!",

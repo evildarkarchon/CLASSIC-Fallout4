@@ -24,10 +24,10 @@ class ScanValidators:
 
     def __init__(self) -> None:
         """Initialize an instance of the class."""
-        self._scan_settings_cache: tuple[str, dict[str, str], Path | None] | None = None
+        self._scan_settings_cache: tuple[str, dict[str, set[str]], Path | None] | None = None
         self._issue_messages_cache: dict[tuple[str, str], dict[str, list[str]]] = {}
 
-    async def get_scan_settings(self) -> tuple[str, dict[str, str], Path | None]:
+    async def get_scan_settings(self) -> tuple[str, dict[str, set[str]], Path | None]:
         """Retrieve and caches scanning settings required for the application.
 
         This method gathers scanning settings information, caching it for further use
@@ -37,22 +37,25 @@ class ScanValidators:
         the method facilitates fetching and caching of new settings data.
 
         Returns:
-            tuple[str, dict[str, str], Path | None]: A tuple containing the acronym as
-                a string, hashed script files as a dictionary, and the mods folder
-                path as a `Path` object or `None`.
+            tuple[str, dict[str, set[str]], Path | None]: A tuple containing the acronym as
+                a string, hashed script files as a dictionary (script filename -> set of valid
+                hashes), and the mods folder path as a `Path` object or `None`.
 
         """
         # Use cached value if available
         if self._scan_settings_cache is not None:
             return self._scan_settings_cache
 
-        # Get XSE settings - YamlSettingsCache already caches these
+        # Get XSE acronym from YAML (still needed for display purposes)
         xse_acronym_setting: str | None = await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        xse_scriptfiles_setting: dict[str, str] | None = await yaml_settings_async(
-            dict[str, str], YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_HashedScripts"
-        )
         xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
-        xse_scriptfiles: dict[str, str] = xse_scriptfiles_setting if isinstance(xse_scriptfiles_setting, dict) else {}
+
+        # Get script hashes from VersionRegistry
+        from ClassicLib.VersionRegistry import get_version_registry
+
+        registry = get_version_registry()
+        is_vr = GlobalRegistry.get_vr() == "VR"
+        xse_scriptfiles: dict[str, set[str]] = registry.get_all_script_hashes("Fallout4", is_vr)
 
         # Get mods path
         mod_path: Path | None = await classic_settings_async(Path, "MODS Folder Path")

@@ -34,11 +34,11 @@ class GameIntegrityChecker:
         self._config: dict[str, str | None] = {}
 
     def load_configuration(self) -> None:
-        """Load game configuration from YAML settings.
+        """Load game configuration from YAML settings and VersionRegistry.
 
         Loads settings including:
         - Steam INI path
-        - Executable hash values (old and new versions)
+        - Valid executable hashes from VersionRegistry
         - Game executable path
         - Root name and warning messages
 
@@ -47,22 +47,29 @@ class GameIntegrityChecker:
                 files is not of the expected type.
 
         """
+        from ClassicLib.VersionRegistry import get_version_registry
         from ClassicLib.YamlSettings import yaml_settings
 
         vr_suffix: str = GlobalRegistry.get_vr()
+        is_vr: bool = vr_suffix == "VR"
+
+        # Get valid exe hashes from VersionRegistry
+        registry = get_version_registry()
+        valid_exe_hashes: set[str] = registry.get_all_exe_hashes("Fallout4", is_vr)
 
         # Load settings from YAML
         self._config = {
             "steam_ini_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-            "exe_hash_old": yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedOLD"),
-            "exe_hash_new": yaml_settings(str, YAML.Game, "Game_Info.EXE_HashedNEW"),
+            "valid_exe_hashes": valid_exe_hashes,
             "game_exe_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
             "root_name": yaml_settings(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
             "root_warn": yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path"),
         }
 
-        # Validate settings types
+        # Validate string settings types (valid_exe_hashes is a set, not a string)
         for key, value in self._config.items():
+            if key == "valid_exe_hashes":
+                continue  # Skip set validation
             if value is not None and not isinstance(value, str):
                 raise TypeError(f"Expected string for {key}, got {type(value)}")
 
@@ -78,22 +85,29 @@ class GameIntegrityChecker:
             TypeError: If any of the loaded settings are not strings.
 
         """
+        from ClassicLib.VersionRegistry import get_version_registry
         from ClassicLib.YamlSettings import yaml_settings_async
 
         vr_suffix: str = GlobalRegistry.get_vr()
+        is_vr: bool = vr_suffix == "VR"
+
+        # Get valid exe hashes from VersionRegistry
+        registry = get_version_registry()
+        valid_exe_hashes: set[str] = registry.get_all_exe_hashes("Fallout4", is_vr)
 
         # Load settings from YAML asynchronously
         self._config = {
             "steam_ini_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-            "exe_hash_old": await yaml_settings_async(str, YAML.Game, "Game_Info.EXE_HashedOLD"),
-            "exe_hash_new": await yaml_settings_async(str, YAML.Game, "Game_Info.EXE_HashedNEW"),
+            "valid_exe_hashes": valid_exe_hashes,
             "game_exe_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
             "root_name": await yaml_settings_async(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
             "root_warn": await yaml_settings_async(str, YAML.Main, "Warnings_GAME.warn_root_path"),
         }
 
-        # Validate settings types
+        # Validate string settings types (valid_exe_hashes is a set, not a string)
         for key, value in self._config.items():
+            if key == "valid_exe_hashes":
+                continue  # Skip set validation
             if value is not None and not isinstance(value, str):
                 raise TypeError(f"Expected string for {key}, got {type(value)}")
 
@@ -115,8 +129,9 @@ class GameIntegrityChecker:
         # Calculate local executable hash
         local_hash: str = calculate_file_hash(exe_path)
 
-        # Check if hash matches known versions
-        is_valid_version: bool = local_hash in {self._config["exe_hash_old"], self._config["exe_hash_new"]}
+        # Check if hash matches known versions from VersionRegistry
+        valid_hashes: set[str] = self._config["valid_exe_hashes"]
+        is_valid_version: bool = local_hash in valid_hashes
 
         # Check for Steam INI (indicates outdated installation)
         steam_ini_path = Path(self._config["steam_ini_path"]) if self._config["steam_ini_path"] else None

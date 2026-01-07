@@ -59,6 +59,7 @@ Adding New Versions:
 
 from ClassicLib.VersionRegistry.core import (
     VersionRegistry,
+    get_detected_version_info,
     get_version_registry,
 )
 from ClassicLib.VersionRegistry.matching import (
@@ -78,6 +79,7 @@ __all__ = [
     # Core registry
     "VersionRegistry",
     "get_version_registry",
+    "get_detected_version_info",
     # Data models
     "VersionInfo",
     "AddressLibraryConfig",

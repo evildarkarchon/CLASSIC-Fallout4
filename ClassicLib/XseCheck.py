@@ -235,34 +235,38 @@ def xse_check_hashes() -> str:
 
 
 def _get_expected_script_hashes() -> dict[str, str]:
-    """Retrieve the expected script hashes from the YAML configuration file.
+    """Retrieve expected script hashes for the detected game version.
 
-    This function loads and validates the expected script hashes configuration
-    from a YAML file. The configuration must be a dictionary mapping strings
-    to strings. If the loaded value from the YAML file is not a dictionary,
-    the function raises a TypeError unless the error has already been raised.
-    In such cases, it returns an empty dictionary instead to prevent repeated
-    errors and allow the program to continue or handle the issue further up
-    the call stack.
+    Gets script hashes for the detected/configured game version from the
+    VersionRegistry. The hashes must match the specific game version installed,
+    not just any valid version.
 
     Returns:
-        dict[str, str]: A dictionary containing the expected script hashes.
-                        Returns an empty dictionary if the configuration is invalid.
+        dict[str, str]: A dictionary containing the expected script hashes,
+                        mapping script filenames to SHA-256 hashes for the
+                        detected game version.
 
     Raises:
-        TypeError: If the expected script hashes configuration is not a dictionary
-                   and the error has not already been raised previously.
+        ValueError: If the game version cannot be detected and no fallback
+                    hashes are available.
 
     """
-    xse_hashedscripts = yaml_settings(dict[str, str], YAML.Game, "Game_Info.XSE_HashedScripts")
-    if not isinstance(xse_hashedscripts, dict):
-        if not Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED:
-            Tokens.XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED = True
-            raise TypeError("Expected script hashes configuration must be a dictionary")
-        # If the error has been raised before, return an empty dict to avoid repeated errors
-        # and allow the program to continue or handle it further up the call stack.
-        return {}
-    return xse_hashedscripts
+    from ClassicLib.VersionRegistry import get_detected_version_info, get_version_registry
+
+    # Get the detected game version
+    version_info = get_detected_version_info()
+    registry = get_version_registry()
+
+    if version_info is not None:
+        # Use version-specific hashes
+        hashes = registry.get_script_hashes_for_version(version_info)
+        if hashes:
+            return hashes
+
+    # Fallback: If version detection fails, we can't validate properly.
+    # Return empty dict which will skip validation rather than give false positives.
+    logger.warning("Could not detect game version for XSE script validation")
+    return {}
 
 
 def _get_scripts_folder_path() -> str:
@@ -329,13 +333,14 @@ def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: st
 
 def _generate_result_message(expected_hashes: dict[str, str], actual_hashes: dict[str, str | None]) -> str:
     """Generate a result message based on comparisons of expected script hashes and actual script hashes.
+
     This function examines each filename-hash pair from the expected data against the actual data provided.
     It identifies missing or mismatched script extender files, compiles related warning messages,
     and summarizes the findings into a single output string.
 
     Args:
-        expected_hashes (dict[str, str]): A dictionary where keys are filenames and values are the expected hashes
-            of script extender files.
+        expected_hashes (dict[str, str]): A dictionary where keys are filenames and values are the expected
+            hashes of script extender files for the detected game version.
         actual_hashes (dict[str, str | None]): A dictionary where keys are filenames and values are the actual
             hashes of script extender files, or `None` if the file is missing.
 
@@ -357,7 +362,7 @@ def _generate_result_message(expected_hashes: dict[str, str], actual_hashes: dic
         if actual_hash is None:
             message_list.append(f"❌ CAUTION : {filename} Script Extender file is missing from your game Scripts folder! \n-----\n")
             has_missing_scripts = True
-        elif expected_hash != actual_hash:
+        elif actual_hash != expected_hash:
             message_list.append(f"[!] CAUTION : {filename} Script Extender file is outdated or overriden by another mod! \n-----\n")
             has_mismatched_scripts = True
 

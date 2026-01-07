@@ -102,7 +102,7 @@ class BA2ArchiveScanner:
             return []
 
     async def process_ba2_files_async(
-        self, ba2_files: list[tuple[Path, str]], bsarch_path: Path, xse_scriptfiles: dict[str, str]
+        self, ba2_files: list[tuple[Path, str]], bsarch_path: Path, xse_scriptfiles: dict[str, set[str]]
     ) -> list[dict[str, set[str]]]:
         """Process multiple BA2 files concurrently.
 
@@ -360,7 +360,7 @@ class BA2ArchiveScanner:
             pass  # Skip unparseable dimensions
 
     async def process_general_ba2_async(
-        self, file_path: Path, filename: str, bsarch_path: Path, xse_scriptfiles: dict[str, str]
+        self, file_path: Path, filename: str, bsarch_path: Path, xse_scriptfiles: dict[str, set[str]]
     ) -> dict[str, set[str]]:
         """Process a general-format BA2 file (GNRL).
 
@@ -431,7 +431,7 @@ class BA2ArchiveScanner:
 
     @staticmethod
     def analyze_general_files(
-        files: list[str], filename: str, file_path: Path, xse_scriptfiles: dict[str, str], local_issues: dict[str, set[str]]
+        files: list[str], filename: str, file_path: Path, xse_scriptfiles: dict[str, set[str]], local_issues: dict[str, set[str]]
     ) -> None:
         r"""Analyze files in a general-format BA2 for various issues.
 

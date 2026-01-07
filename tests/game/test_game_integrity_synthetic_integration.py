@@ -200,14 +200,13 @@ class TestGameIntegritySynthetic:
         # Mock dependencies for load_configuration_async
         with (
             patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
+            patch("ClassicLib.VersionRegistry.core.VersionRegistry.get_all_exe_hashes", return_value={"some_old_hash", "some_new_hash"}),
             patch("ClassicLib.YamlSettings.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
             patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
         ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
             mock_yaml_settings_async.side_effect = [
                 "some/steam/ini/path",  # steam_ini_path
-                "some_old_hash",  # exe_hash_old
-                "some_new_hash",  # exe_hash_new
                 str(mock_game_files / "Fallout4.exe"),  # game_exe_path
                 "Fallout4",  # root_name
                 "Some warning message",  # root_warn
@@ -234,14 +233,13 @@ class TestGameIntegritySynthetic:
         # Mock dependencies for load_configuration_async
         with (
             patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
+            patch("ClassicLib.VersionRegistry.core.VersionRegistry.get_all_exe_hashes", return_value={"some_old_hash", "some_new_hash"}),
             patch("ClassicLib.YamlSettings.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
             patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
         ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
             mock_yaml_settings_async.side_effect = [
                 "some/nonexistent/steam/ini/path",  # steam_ini_path (non-existent to trigger out-of-date)
-                "some_old_hash",  # exe_hash_old
-                "some_new_hash",  # exe_hash_new
                 str(synthetic_game_dir / "nonexistent_game.exe"),  # game_exe_path (non-existent)
                 "Fallout4",  # root_name
                 "Some warning message",  # root_warn

@@ -673,16 +673,19 @@ class IntegrityConfig:
     including executable verification, INI validation, and version detection.
     """
 
-    def __init__(self, executable_path: Path, old_hash: str, new_hash: str, game_name: str) -> None:
+    def __init__(self, executable_path: Path, valid_exe_hashes: list[str], game_name: str) -> None:
         """Create a new integrity check configuration.
 
         Args:
             executable_path: Path to the game executable.
-            old_hash: Expected hash for old game version.
-            new_hash: Expected hash for new game version.
+            valid_exe_hashes: List of valid SHA256 hashes for known game versions.
             game_name: Display name of the game.
 
         """
+
+    @property
+    def valid_exe_hashes(self) -> list[str]:
+        """Get the list of valid executable hashes."""
 
     def with_steam_ini(self, ini_path: Path) -> IntegrityConfig:
         """Set the Steam INI file path (builder pattern).

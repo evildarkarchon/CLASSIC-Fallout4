@@ -405,6 +405,7 @@ Version_Registry:
       display_name: Fallout 4 Original
       short_name: OG
       description: Pre-Next-Gen Update version
+      exe_hash: 55f57947db9e05575122fae1088f0b0247442f11e566b56036caa0ac93329c36
       address_library:
         filename: version-1-10-163-0.bin
         format: bin
@@ -456,6 +457,7 @@ Version_Registry:
       display_name: Fallout 4 Next-Gen
       short_name: NG
       description: Next-Gen Update version
+      exe_hash: bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2
       address_library:
         filename: version-1-10-984-0.bin
         format: bin
@@ -508,6 +510,7 @@ Version_Registry:
       display_name: Fallout 4 Anniversary Edition
       short_name: AE
       description: Anniversary Edition version (active development branch)
+      exe_hash: # Placeholder - hash not yet available for AE version
       address_library:
         filename: version-1-11-191-0.bin
         format: bin
@@ -530,6 +533,7 @@ Version_Registry:
       display_name: Fallout 4 VR
       short_name: VR
       description: Virtual Reality version
+      exe_hash: # Placeholder - hash not yet available for VR version
       address_library:
         filename: version-1-2-72-0.csv
         format: csv

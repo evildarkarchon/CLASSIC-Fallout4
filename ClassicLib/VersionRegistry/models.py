@@ -82,12 +82,14 @@ class XseConfig:
         acronym: XSE acronym (e.g., "F4SE", "F4SEVR", "SKSE").
         compatible_version: Compatible XSE version string (e.g., "0.6.23").
         loader: Loader executable name (e.g., "f4se_loader.exe").
+        script_hashes: SHA-256 hashes for XSE script files (e.g., {"Actor.pex": "abc123..."}).
 
     Example:
         >>> config = XseConfig(
         ...     acronym="F4SE",
         ...     compatible_version="0.6.23",
-        ...     loader="f4se_loader.exe"
+        ...     loader="f4se_loader.exe",
+        ...     script_hashes={"Actor.pex": "abc123..."}
         ... )
 
     """
@@ -95,6 +97,7 @@ class XseConfig:
     acronym: str
     compatible_version: str
     loader: str = ""
+    script_hashes: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
     @property
     def compatible_version_parsed(self) -> Version:
@@ -181,6 +184,7 @@ class VersionInfo:
         compatible_range: Version range for matching unknown versions.
         priority: Priority for ambiguous matching (higher = preferred).
         deprecated: Whether this version is deprecated.
+        exe_hash: SHA-256 hash of the game executable for this version.
 
     Example:
         >>> info = VersionInfo(
@@ -189,7 +193,8 @@ class VersionInfo:
         ...     is_vr=False,
         ...     version=Version("1.10.163.0"),
         ...     display_name="Fallout 4 Original",
-        ...     short_name="OG"
+        ...     short_name="OG",
+        ...     exe_hash="55f57947..."
         ... )
         >>> info.version_string
         '1.10.163.0'
@@ -208,6 +213,7 @@ class VersionInfo:
     compatible_range: CompatibleRange | None = None
     priority: int = 100
     deprecated: bool = False
+    exe_hash: str | None = None
 
     @property
     def version_string(self) -> str:
