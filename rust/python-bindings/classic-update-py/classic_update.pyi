@@ -98,10 +98,23 @@ class GithubClient:
     Provides access to GitHub API for checking releases and updates.
     5-10x faster than Python requests with native async.
 
+    Authentication:
+        Automatically loads environment variables from a `.env` file
+        (if present in the current directory) and uses the `GITHUB_TOKEN` variable.
+        This increases the rate limit from 60 requests/hour (unauthenticated)
+        to 5,000 requests/hour (authenticated).
+
+        Create a `.env` file with::
+
+            GITHUB_TOKEN=ghp_your_token_here
+
     Example:
         >>> import asyncio
         >>> async def check_updates():
+        ...     # Uses GITHUB_TOKEN from .env file or environment
         ...     client = GithubClient("evildarkarchon", "CLASSIC-Fallout4")
+        ...     # Or provide a token explicitly
+        ...     client = GithubClient("evildarkarchon", "CLASSIC-Fallout4", token="ghp_xxx")
         ...     latest = await client.get_latest_release()
         ...     print(f"Latest version: {latest.tag_name}")
         ...     if client.has_update("v8.0.0", latest.tag_name):
@@ -110,15 +123,23 @@ class GithubClient:
 
     """
 
-    def __init__(self, owner: str, repo: str) -> None:
+    def __init__(self, owner: str, repo: str, token: str | None = None) -> None:
         """Create a new GitHub client.
+
+        Automatically loads environment variables from a `.env` file if present,
+        then uses the `GITHUB_TOKEN` environment variable if set.
 
         Args:
             owner: Repository owner (username or organization).
             repo: Repository name.
+            token: Optional GitHub personal access token. If not provided,
+                   uses the GITHUB_TOKEN from `.env` file or environment.
 
         Example:
+            >>> # Uses GITHUB_TOKEN from .env file or environment
             >>> client = GithubClient("evildarkarchon", "CLASSIC-Fallout4")
+            >>> # Or provide a token explicitly
+            >>> client = GithubClient("evildarkarchon", "CLASSIC-Fallout4", token="ghp_xxx")
 
         """
 

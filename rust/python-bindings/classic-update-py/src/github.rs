@@ -213,20 +213,35 @@ pub struct PyGithubClient {
 impl PyGithubClient {
     /// Creates a new GitHub client for the specified repository.
     ///
+    /// Automatically uses the `GITHUB_TOKEN` environment variable if set.
+    /// This increases the rate limit from 60 requests/hour to 5,000 requests/hour.
+    ///
     /// Args:
     ///     owner: Repository owner (e.g., "evildarkarchon").
     ///     repo: Repository name (e.g., "CLASSIC-Fallout4").
+    ///     token: Optional GitHub personal access token (overrides GITHUB_TOKEN env var).
     ///
     /// Returns:
     ///     A new GithubClient instance.
     ///
     /// Example:
+    ///     >>> # Uses GITHUB_TOKEN env var if set
     ///     >>> client = classic_update.GithubClient("evildarkarchon", "CLASSIC-Fallout4")
+    ///     >>> # Or provide a token explicitly
+    ///     >>> client = classic_update.GithubClient("evildarkarchon", "CLASSIC-Fallout4", token="ghp_xxx")
     #[new]
-    fn new(owner: String, repo: String) -> Self {
-        Self {
-            inner: core::GithubClient::new(owner, repo),
-        }
+    #[pyo3(signature = (owner, repo, token=None))]
+    fn new(owner: String, repo: String, token: Option<String>) -> Self {
+        // Filter empty strings before checking - empty string should behave like None
+        // and fall through to new() which loads .env and checks GITHUB_TOKEN env var
+        let token = token.filter(|t| !t.is_empty());
+
+        let inner = if let Some(t) = token {
+            core::GithubClient::with_token(owner, repo, Some(t))
+        } else {
+            core::GithubClient::new(owner, repo)
+        };
+        Self { inner }
     }
 
     /// Gets the latest release for the repository (async).

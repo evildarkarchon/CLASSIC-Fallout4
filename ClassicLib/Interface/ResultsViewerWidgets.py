@@ -114,8 +114,9 @@ class ReportListWidget(QListWidget):
         """Populate the report list with given report file paths.
 
         This method clears any existing items in the list and refreshes it with new
-        items based on the provided list of file paths. It also selects the first item
-        in the list if the list is not empty.
+        items based on the provided list of file paths. Failed reports (those containing
+        parsing errors) are filtered out. It also selects the first item in the list
+        if the list is not empty.
 
         Args:
             reports (list[Path]): A list of Path objects representing report file
@@ -127,8 +128,14 @@ class ReportListWidget(QListWidget):
         self._report_paths.clear()
 
         for report_path in reports:
-            # Create list item
-            item = self._create_report_item(report_path)
+            # Determine status and skip failed reports
+            status = self._determine_report_status(report_path)
+            if status == "failed":
+                logger.debug(f"Filtering out failed report: {report_path.name}")
+                continue
+
+            # Create list item with pre-computed status
+            item = self._create_report_item(report_path, status)
 
             # Add to list
             self.addItem(item)
@@ -137,7 +144,7 @@ class ReportListWidget(QListWidget):
         if self.count() > 0:
             self.setCurrentRow(0)
 
-    def _create_report_item(self, report_path: Path) -> QListWidgetItem:
+    def _create_report_item(self, report_path: Path, status: str | None = None) -> QListWidgetItem:
         """Create a QListWidgetItem based on the provided report file path. Extracts metadata
         such as timestamp, status, and file size from the file to enhance the item's
         properties, including tooltip and display text. The status of the report is used
@@ -145,6 +152,8 @@ class ReportListWidget(QListWidget):
 
         Args:
             report_path (Path): The path to the report file.
+            status (str | None): Optional pre-computed status to avoid reading the file
+                again. If None, the status will be determined by reading the file.
 
         Returns:
             QListWidgetItem: The created list widget item with metadata and applied styling.
@@ -156,8 +165,9 @@ class ReportListWidget(QListWidget):
         # Parse timestamp from filename if possible
         timestamp_str = self._extract_timestamp(filename)
 
-        # Determine report status
-        status = self._determine_report_status(report_path)
+        # Use pre-computed status if provided, otherwise determine it
+        if status is None:
+            status = self._determine_report_status(report_path)
 
         # Create item with display text
         # display_text = filename.replace("-AUTOSCAN", "") # looks to be unused.
@@ -223,6 +233,8 @@ class ReportListWidget(QListWidget):
         The method reads the content of a report file and determines its status by
         checking for specific indicators within the text. The possible statuses
         returned are:
+        - "failed" if the content contains error indicators like "Error processing log:",
+          "UNABLE TO PROPERLY SCAN", "# Processing Error", or "could not be processed"
         - "incomplete" if the content contains "INCOMPLETE"
         - "unsolved" if the content contains "UNSOLVED" or "could not be determined"
         - "solved" if the content contains "SOLVED" or "RECOMMENDATIONS"
@@ -234,8 +246,8 @@ class ReportListWidget(QListWidget):
                 determined.
 
         Returns:
-            str: A string representing the status of the report ("incomplete",
-                "unsolved", "solved", or "unknown").
+            str: A string representing the status of the report ("failed",
+                "incomplete", "unsolved", "solved", or "unknown").
 
         """
         try:
@@ -244,6 +256,16 @@ class ReportListWidget(QListWidget):
         except Exception as e:  # noqa: BLE001
             logger.debug(f"Could not determine status for {report_path.name}: {e}")
         else:
+            # Check for FAILED indicators first (most specific)
+            content_upper = content.upper()
+            if (
+                "Error processing log:" in content
+                or "UNABLE TO PROPERLY SCAN" in content_upper
+                or "# PROCESSING ERROR" in content_upper
+                or "COULD NOT BE PROCESSED" in content_upper
+            ):
+                return "failed"
+
             # Check for status indicators in content
             if "INCOMPLETE" in content.upper():
                 return "incomplete"

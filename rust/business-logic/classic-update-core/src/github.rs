@@ -3,6 +3,18 @@
 //! This module provides functionality to interact with the GitHub API
 //! to check for new releases, download updates, and manage version information.
 //!
+//! # Authentication
+//!
+//! The client automatically loads environment variables from a `.env` file
+//! (if present in the current directory) and uses the `GITHUB_TOKEN` variable.
+//! This increases the API rate limit from 60 requests/hour (unauthenticated)
+//! to 5,000 requests/hour (authenticated).
+//!
+//! Create a `.env` file with:
+//! ```text
+//! GITHUB_TOKEN=ghp_your_token_here
+//! ```
+//!
 //! # Examples
 //!
 //! ```rust,no_run
@@ -88,6 +100,12 @@ pub struct GithubAsset {
 /// This client handles API requests, rate limiting, and version comparison
 /// for GitHub repositories.
 ///
+/// # Authentication
+///
+/// The client automatically uses the `GITHUB_TOKEN` environment variable if set.
+/// This increases the rate limit from 60 requests/hour (unauthenticated) to
+/// 5,000 requests/hour (authenticated).
+///
 /// # Thread Safety
 ///
 /// The client is thread-safe and can be cloned cheaply for use across threads.
@@ -97,6 +115,8 @@ pub struct GithubClient {
     repo: String,
     client: Client,
     base_url: String,
+    /// Optional authentication token for increased rate limits.
+    token: Option<String>,
 }
 
 impl GithubClient {
@@ -106,7 +126,21 @@ impl GithubClient {
     /// GitHub API base URL.
     const GITHUB_API_BASE: &'static str = "https://api.github.com";
 
+    /// Environment variable name for GitHub token.
+    const GITHUB_TOKEN_ENV: &'static str = "GITHUB_TOKEN";
+
     /// Creates a new GitHub client for the specified repository.
+    ///
+    /// Automatically loads environment variables from a `.env` file if present,
+    /// then uses the `GITHUB_TOKEN` environment variable if set.
+    /// This increases the rate limit from 60 requests/hour to 5,000 requests/hour.
+    ///
+    /// # .env File Support
+    ///
+    /// Create a `.env` file in the current directory with:
+    /// ```text
+    /// GITHUB_TOKEN=ghp_your_token_here
+    /// ```
     ///
     /// # Arguments
     ///
@@ -121,6 +155,11 @@ impl GithubClient {
     /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
     /// ```
     pub fn new(owner: impl Into<String>, repo: impl Into<String>) -> Self {
+        // Load .env file if present (silently ignores if not found)
+        let _ = dotenvy::dotenv();
+
+        let token = std::env::var(Self::GITHUB_TOKEN_ENV).ok().filter(|t| !t.is_empty());
+
         let client = Client::builder()
             .timeout(Self::API_TIMEOUT)
             .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
@@ -132,7 +171,55 @@ impl GithubClient {
             repo: repo.into(),
             client,
             base_url: Self::GITHUB_API_BASE.to_string(),
+            token,
         }
+    }
+
+    /// Creates a new GitHub client with an explicit token.
+    ///
+    /// Use this when you want to provide a token explicitly rather than
+    /// relying on the `GITHUB_TOKEN` environment variable.
+    ///
+    /// # Arguments
+    ///
+    /// * `owner` - Repository owner (e.g., "evildarkarchon")
+    /// * `repo` - Repository name (e.g., "CLASSIC-Fallout4")
+    /// * `token` - GitHub personal access token or None for unauthenticated requests
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use classic_update_core::github::GithubClient;
+    ///
+    /// let client = GithubClient::with_token("evildarkarchon", "CLASSIC-Fallout4", Some("ghp_xxx".to_string()));
+    /// ```
+    pub fn with_token(
+        owner: impl Into<String>,
+        repo: impl Into<String>,
+        token: Option<String>,
+    ) -> Self {
+        let client = Client::builder()
+            .timeout(Self::API_TIMEOUT)
+            .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
+            .build()
+            .expect("Failed to create HTTP client");
+
+        Self {
+            owner: owner.into(),
+            repo: repo.into(),
+            client,
+            base_url: Self::GITHUB_API_BASE.to_string(),
+            token: token.filter(|t| !t.is_empty()),
+        }
+    }
+
+    /// Builds a request with optional authentication headers.
+    fn build_request(&self, url: &str) -> reqwest::RequestBuilder {
+        let mut request = self.client.get(url);
+        if let Some(ref token) = self.token {
+            request = request.header("Authorization", format!("Bearer {}", token));
+        }
+        request
     }
 
     /// Gets the latest release for the repository.
@@ -166,7 +253,7 @@ impl GithubClient {
             self.base_url, self.owner, self.repo
         );
 
-        let response = self.client.get(&url).send().await?;
+        let response = self.build_request(&url).send().await?;
 
         match response.status() {
             reqwest::StatusCode::OK => {
@@ -225,7 +312,7 @@ impl GithubClient {
             self.base_url, self.owner, self.repo
         );
 
-        let response = self.client.get(&url).send().await?;
+        let response = self.build_request(&url).send().await?;
 
         match response.status() {
             reqwest::StatusCode::OK => {
@@ -394,5 +481,26 @@ mod tests {
 
         assert_eq!(client1.owner(), client2.owner());
         assert_eq!(client1.repo(), client2.repo());
+    }
+
+    #[test]
+    fn test_client_with_token() {
+        let client = GithubClient::with_token("owner", "repo", Some("test_token".to_string()));
+        assert_eq!(client.owner(), "owner");
+        assert_eq!(client.repo(), "repo");
+        assert!(client.token.is_some());
+        assert_eq!(client.token.as_deref(), Some("test_token"));
+    }
+
+    #[test]
+    fn test_client_with_empty_token() {
+        let client = GithubClient::with_token("owner", "repo", Some("".to_string()));
+        assert!(client.token.is_none()); // Empty tokens should be filtered out
+    }
+
+    #[test]
+    fn test_client_without_token() {
+        let client = GithubClient::with_token("owner", "repo", None);
+        assert!(client.token.is_none());
     }
 }

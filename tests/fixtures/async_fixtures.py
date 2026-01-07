@@ -52,9 +52,14 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
         await asyncio.gather(*cleanup_tasks, return_exceptions=True)
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def event_loop_policy():
-    """Set event loop policy for consistent behavior across platforms."""
+    """Set event loop policy for consistent behavior across platforms.
+
+    This is session-scoped because the event loop policy only needs to be set
+    once for the entire test session. This also allows module-scoped async
+    fixtures to work correctly with pytest-asyncio 1.0+.
+    """
     if sys.platform == "win32":
         # Windows requires ProactorEventLoop for subprocess support
         asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())

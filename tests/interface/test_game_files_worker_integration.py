@@ -64,8 +64,13 @@ def test_worker_uses_asyncio_run():
     # Create worker
     worker = GameFilesScanWorker()
 
-    # Mock asyncio.run() to capture calls
-    with patch("asyncio.run") as mock_asyncio_run:
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
+    # Mock asyncio.run() to capture calls and close coroutines
+    with patch("asyncio.run", side_effect=close_coro) as mock_asyncio_run:
         with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
             # Run the scan
             worker._process_game_results_scan()
@@ -86,8 +91,13 @@ def test_no_manual_event_loop_creation():
 
     worker = GameFilesScanWorker()
 
-    # Mock asyncio.run() to prevent actual execution
-    with patch("asyncio.run"):
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
+    # Mock asyncio.run() to prevent actual execution (close coroutines to avoid warnings)
+    with patch("asyncio.run", side_effect=close_coro):
         with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
             with patch("asyncio.new_event_loop") as mock_new_loop:
                 with patch("asyncio.set_event_loop") as mock_set_loop:
@@ -122,8 +132,13 @@ def test_rust_status_logging():
 
     worker = GameFilesScanWorker()
 
-    # Mock asyncio.run() to prevent actual async execution
-    with patch("asyncio.run"):
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
+    # Mock asyncio.run() to prevent actual async execution (close coroutines to avoid warnings)
+    with patch("asyncio.run", side_effect=close_coro):
         with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
             with patch.object(logger, "info") as mock_log_info:
                 with patch.object(logger, "debug"):
@@ -228,8 +243,13 @@ def test_performance_metrics_logged():
 
     worker = GameFilesScanWorker()
 
-    # Mock asyncio.run() to prevent actual async execution
-    with patch("asyncio.run"):
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
+    # Mock asyncio.run() to prevent actual async execution (close coroutines to avoid warnings)
+    with patch("asyncio.run", side_effect=close_coro):
         with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
             with patch.object(logger, "info") as mock_log_info:
                 with patch.object(logger, "debug") as mock_log_debug:

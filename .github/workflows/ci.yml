@@ -11,6 +11,7 @@ env:
   CARGO_TERM_COLOR: always
   # Python version must match project requirements
   PYTHON_VERSION: "3.12"
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
   # Formatting checks (non-blocking, aesthetic only)

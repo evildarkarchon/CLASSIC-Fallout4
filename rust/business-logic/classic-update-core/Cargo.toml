@@ -36,6 +36,9 @@ thiserror = { workspace = true }
 # Logging
 log = { workspace = true }
 
+# Environment loading
+dotenvy = "0.15"
+
 # Version comparison
 semver = "1.0"
 

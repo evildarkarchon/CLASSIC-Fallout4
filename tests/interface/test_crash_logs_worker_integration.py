@@ -72,6 +72,11 @@ def test_worker_uses_asyncio_run():
     # Create async mock that returns mock_result
     mock_async_func = AsyncMock(return_value=mock_result)
 
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
     # Patch the imports at the point they're used (inside the method)
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor") as mock_executor_cls:
         mock_executor_cls.return_value = mock_scanner
@@ -82,7 +87,7 @@ def test_worker_uses_asyncio_run():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    with patch("asyncio.run") as mock_asyncio_run:
+                    with patch("asyncio.run", side_effect=close_coro) as mock_asyncio_run:
                         # Run the scan
                         try:
                             worker._perform_crash_logs_scan()
@@ -102,6 +107,11 @@ def test_no_manual_event_loop_creation():
 
     worker = CrashLogsScanWorker()
 
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
     # Mock everything to prevent actual execution
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
@@ -111,16 +121,17 @@ def test_no_manual_event_loop_creation():
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
                     with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
                         # Configure mock to close coroutines to avoid warnings
-                        mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+                        mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
 
                         with patch("asyncio.new_event_loop") as mock_new_loop:
-                            try:
-                                worker._perform_crash_logs_scan()
-                            except Exception:
-                                pass
+                            with patch("asyncio.run", side_effect=close_coro):
+                                try:
+                                    worker._perform_crash_logs_scan()
+                                except Exception:
+                                    pass
 
-                            # Verify new_event_loop was NOT called
-                            assert not mock_new_loop.called, "Should NOT create manual event loop"
+                                # Verify new_event_loop was NOT called
+                                assert not mock_new_loop.called, "Should NOT create manual event loop"
 
 
 # Test Rust acceleration detection
@@ -150,6 +161,11 @@ def test_rust_status_logging():
 
     worker = CrashLogsScanWorker()
 
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
     # Mock dependencies
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
@@ -157,7 +173,7 @@ def test_rust_status_logging():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
                 # Configure mock to close coroutines
-                mock_bridge_cls.get_instance.return_value.run_async.side_effect = lambda coro: coro.close()
+                mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
 
                 with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
                     with patch.object(logger, "info") as mock_log_info:
@@ -165,10 +181,12 @@ def test_rust_status_logging():
                             # Test with Rust available
                             mock_rust_check.return_value = True
 
-                            try:
-                                worker._perform_crash_logs_scan()
-                            except Exception:
-                                pass
+                            # Also patch asyncio.run to close coroutines
+                            with patch("asyncio.run", side_effect=close_coro):
+                                try:
+                                    worker._perform_crash_logs_scan()
+                                except Exception:
+                                    pass
 
                             # Check if Rust acceleration was logged
                             info_calls = [str(call) for call in mock_log_info.call_args_list]
@@ -266,6 +284,11 @@ def test_performance_metrics_logged():
 
     worker = CrashLogsScanWorker()
 
+    # Helper to close coroutines to avoid "coroutine was never awaited" warnings
+    def close_coro(coro):
+        coro.close()
+        return None
+
     # Mock dependencies
     with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
         with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
@@ -273,10 +296,8 @@ def test_performance_metrics_logged():
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    # Mock asyncio.run to execute the coroutine properly
-                    with patch("asyncio.run") as mock_asyncio_run:
-                        mock_asyncio_run.return_value = None  # Simulate successful execution
-
+                    # Mock asyncio.run to close coroutines to avoid warnings
+                    with patch("asyncio.run", side_effect=close_coro):
                         with patch.object(logger, "info") as mock_log_info:
                             with patch.object(logger, "debug") as mock_log_debug:
                                 try:
