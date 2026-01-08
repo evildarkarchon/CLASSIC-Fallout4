@@ -158,7 +158,9 @@ impl GithubClient {
         // Load .env file if present (silently ignores if not found)
         let _ = dotenvy::dotenv();
 
-        let token = std::env::var(Self::GITHUB_TOKEN_ENV).ok().filter(|t| !t.is_empty());
+        let token = std::env::var(Self::GITHUB_TOKEN_ENV)
+            .ok()
+            .filter(|t| !t.is_empty());
 
         let client = Client::builder()
             .timeout(Self::API_TIMEOUT)

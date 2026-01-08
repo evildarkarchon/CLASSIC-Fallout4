@@ -92,7 +92,9 @@ define_exceptions!(
 
 mod pool;
 
-pub use pool::PyDatabasePool;
+pub use pool::{
+    PyDatabasePool, py_get_batch_cache_ttl, py_get_default_cache_ttl, py_get_max_cache_ttl,
+};
 
 /// Convert DatabaseError to PyErr using custom exception types
 ///
@@ -126,6 +128,22 @@ pub fn to_pyerr(err: classic_database_core::DatabaseError) -> PyErr {
 fn classic_database(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyDatabasePool>()?;
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
+
+    // Add cache TTL helper functions
+    m.add_function(wrap_pyfunction!(py_get_default_cache_ttl, m)?)?;
+    m.add_function(wrap_pyfunction!(py_get_batch_cache_ttl, m)?)?;
+    m.add_function(wrap_pyfunction!(py_get_max_cache_ttl, m)?)?;
+
+    // Add cache TTL constants as module attributes for convenience
+    m.add(
+        "DEFAULT_CACHE_TTL",
+        classic_database_core::DEFAULT_CACHE_TTL_SECS,
+    )?;
+    m.add(
+        "BATCH_CACHE_TTL",
+        classic_database_core::BATCH_CACHE_TTL_SECS,
+    )?;
+    m.add("MAX_CACHE_TTL", classic_database_core::MAX_CACHE_TTL_SECS)?;
 
     // Register custom exception types using the shared macro
     register_exceptions!(

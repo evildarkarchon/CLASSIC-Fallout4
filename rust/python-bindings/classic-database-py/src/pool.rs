@@ -2,8 +2,16 @@
 //!
 //! This module provides Python bindings for the pure Rust DatabasePool.
 //! All business logic is delegated to classic-database-core.
+//!
+//! ## Cache TTL Constants
+//!
+//! - `DEFAULT_CACHE_TTL_SECS` (300): For single log scanning
+//! - `BATCH_CACHE_TTL_SECS` (1800): For batch log scanning (30 minutes)
+//! - `MAX_CACHE_TTL_SECS` (3600): For very large batches (60 minutes)
 
-use classic_database_core::DatabasePool;
+use classic_database_core::{
+    BATCH_CACHE_TTL_SECS, DEFAULT_CACHE_TTL_SECS, DatabasePool, MAX_CACHE_TTL_SECS,
+};
 use pyo3::prelude::*;
 use pyo3::types::PyList;
 use pyo3_async_runtimes::tokio::future_into_py;
@@ -13,6 +21,27 @@ use std::time::Duration;
 
 // Use the error conversion function from lib.rs
 use crate::to_pyerr;
+
+/// Get the default cache TTL for single log operations (300 seconds).
+#[pyfunction]
+#[pyo3(name = "get_default_cache_ttl")]
+pub fn py_get_default_cache_ttl() -> u64 {
+    DEFAULT_CACHE_TTL_SECS
+}
+
+/// Get the recommended cache TTL for batch log operations (1800 seconds / 30 min).
+#[pyfunction]
+#[pyo3(name = "get_batch_cache_ttl")]
+pub fn py_get_batch_cache_ttl() -> u64 {
+    BATCH_CACHE_TTL_SECS
+}
+
+/// Get the maximum recommended cache TTL (3600 seconds / 60 min).
+#[pyfunction]
+#[pyo3(name = "get_max_cache_ttl")]
+pub fn py_get_max_cache_ttl() -> u64 {
+    MAX_CACHE_TTL_SECS
+}
 
 /// Python-facing database pool wrapper
 ///
@@ -31,7 +60,7 @@ impl PyDatabasePool {
     /// # Arguments
     ///
     /// * `max_connections` - Optional maximum number of database connections (defaults to auto-calculated)
-    /// * `cache_ttl_seconds` - Optional cache TTL in seconds (defaults to 300)
+    /// * `cache_ttl_seconds` - Optional cache TTL in seconds (defaults to 1800 / 30 min for batch operations)
     /// * `game_table` - Optional game table name (defaults to "Fallout4")
     ///
     /// # Returns
@@ -41,20 +70,25 @@ impl PyDatabasePool {
     /// # Example
     ///
     /// ```python
-    /// # Create with defaults
+    /// # Create with defaults (uses batch TTL of 30 minutes)
     /// pool = DatabasePool()
     ///
     /// # Create with custom settings
     /// pool = DatabasePool(max_connections=50, cache_ttl_seconds=600, game_table="Skyrim")
+    ///
+    /// # Use TTL constants
+    /// from classic_database import get_default_cache_ttl, get_batch_cache_ttl
+    /// pool = DatabasePool(cache_ttl_seconds=get_batch_cache_ttl())
     /// ```
     #[new]
-    #[pyo3(signature = (max_connections=None, cache_ttl_seconds=300, game_table=None))]
+    #[pyo3(signature = (max_connections=None, cache_ttl_seconds=None, game_table=None))]
     pub fn new(
         max_connections: Option<usize>,
         cache_ttl_seconds: Option<u64>,
         game_table: Option<String>,
     ) -> Self {
-        let ttl = Duration::from_secs(cache_ttl_seconds.unwrap_or(300));
+        // Default to batch TTL (30 min) for better cross-log cache performance
+        let ttl = Duration::from_secs(cache_ttl_seconds.unwrap_or(BATCH_CACHE_TTL_SECS));
         let table = game_table.unwrap_or_else(|| "Fallout4".to_string());
 
         Self {

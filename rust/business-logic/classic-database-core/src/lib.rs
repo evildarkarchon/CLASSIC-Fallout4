@@ -14,4 +14,7 @@
 
 mod pool_sqlx;
 
-pub use pool_sqlx::{CacheEntry, DatabaseError, DatabasePool, PoolStatistics};
+pub use pool_sqlx::{
+    BATCH_CACHE_TTL_SECS, CacheEntry, CacheKey, DEFAULT_CACHE_TTL_SECS, DatabaseError,
+    DatabasePool, MAX_CACHE_TTL_SECS, PoolStatistics,
+};

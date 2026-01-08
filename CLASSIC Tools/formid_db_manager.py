@@ -322,7 +322,11 @@ class FormIDManager(QMainWindow):
         return True
 
     def _ensure_database_structure(self, conn: sqlite3.Connection, game: str, dry_run: bool) -> bool:
-        """Ensure database table and index exist.
+        """Ensure database table and indexes exist.
+
+        Creates the table if it doesn't exist and ensures both the legacy index
+        and the optimized covering index are present. The covering index includes
+        the entry column to enable index-only queries without table lookups.
 
         Args:
             conn: Active SQLite database connection.
@@ -341,9 +345,13 @@ class FormIDManager(QMainWindow):
             cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{game}'")
             table_exists = cursor.fetchone() is not None
 
-            # Check index existence
+            # Check legacy index existence
             cursor.execute(f"SELECT name FROM sqlite_master WHERE type='index' AND name='{game}_index'")
             index_exists = cursor.fetchone() is not None
+
+            # Check covering index existence (includes entry column for index-only queries)
+            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='index' AND name='{game}_covering_idx'")
+            covering_index_exists = cursor.fetchone() is not None
 
             # Create table if needed
             if not table_exists:
@@ -356,12 +364,20 @@ class FormIDManager(QMainWindow):
                         plugin TEXT, formid TEXT, entry TEXT)"""
                     )
 
-            # Create index if needed
+            # Create legacy index if needed (for backward compatibility)
             if not index_exists:
                 msg = "Would create" if dry_run else "Creating"
                 self.log(f"{msg} index {game}_index...")
                 if not dry_run:
                     conn.execute(f"CREATE INDEX IF NOT EXISTS {game}_index ON {game} (formid, plugin COLLATE nocase);")
+
+            # Create covering index for optimized queries (includes entry column)
+            # This allows queries to be satisfied entirely from the index without table lookups
+            if not covering_index_exists:
+                msg = "Would create" if dry_run else "Creating"
+                self.log(f"{msg} covering index {game}_covering_idx (formid, plugin, entry)...")
+                if not dry_run:
+                    conn.execute(f"CREATE INDEX IF NOT EXISTS {game}_covering_idx ON {game} (formid, plugin COLLATE nocase, entry);")
 
             if not dry_run and conn.in_transaction:
                 conn.commit()

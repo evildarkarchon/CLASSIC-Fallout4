@@ -19,6 +19,7 @@ sqlx = { workspace = true }
 
 # Async runtime
 tokio = { workspace = true, features = ["full"] }
+futures = { workspace = true }
 
 # Caching and concurrency
 dashmap = { workspace = true }
