@@ -2,7 +2,7 @@
 
 ### 8.1.0 CHANGES
 
-- Replace VR mode with a Game Version dropdown in settings window (VR support is still mostly placeholder because I don't have a VR version of the game to test with).
+- Replace VR mode with a Game Version dropdown in settings window (VR support is still mostly placeholder because I don't have a VR version of the game to test with, or get data from).
 - Fixed thread-related crashes in the update check.
 - Multiple thread-safety fixes.
 
