@@ -192,16 +192,22 @@ class RustAsyncDatabasePool:
     async def close(self) -> None:
         """Close the database connection pool.
 
-        Marks the pool as uninitialized. Rust connections are automatically
-        cleaned up when the pool is dropped.
+        Properly closes all SQLite connections and clears caches. This is
+        important for WAL mode databases to ensure the WAL file is checkpointed
+        back to the main database, removing .db-wal and .db-shm files.
         """
         if not self._initialized:
             return
 
-        # Rust DatabasePool doesn't have a close() method
-        # Connections are automatically cleaned up when the pool is dropped
-        self._initialized = False
-        logger.debug("Rust database pool marked as closed (connections cleaned up on drop)")
+        try:
+            # Call Rust close() to properly close all SQLite connections
+            # This ensures WAL mode checkpoints are performed
+            await self._rust_pool.close()
+            logger.debug("Rust database pool connections closed successfully")
+        except (RustDatabaseError, RustError) as e:
+            logger.warning(f"Error during Rust database pool close: {e}")
+        finally:
+            self._initialized = False
 
     async def get_entry(self, formid: str, plugin: str) -> dict[str, Any] | None:
         """Retrieve an entry from the database.

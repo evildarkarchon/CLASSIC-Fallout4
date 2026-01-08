@@ -34,12 +34,12 @@ from pathlib import Path
 
 # Default database locations relative to CLASSIC root
 DEFAULT_DB_LOCATIONS = [
-    "CLASSIC Data/Databases/Fallout4 FormIDs (MAIN).db",
-    "CLASSIC Data/Databases/Fallout4 FormIDs (LOCAL).db",
-    "CLASSIC Data/Databases/Skyrim FormIDs (MAIN).db",
-    "CLASSIC Data/Databases/Skyrim FormIDs (LOCAL).db",
-    "CLASSIC Data/Databases/Starfield FormIDs (MAIN).db",
-    "CLASSIC Data/Databases/Starfield FormIDs (LOCAL).db",
+    "CLASSIC Data/databases/Fallout4 FormIDs Main.db",
+    "CLASSIC Data/databases/Fallout4 FormIDs Local.db",
+    "CLASSIC Data/databases/Skyrim FormIDs Main.db",
+    "CLASSIC Data/databases/Skyrim FormIDs Local.db",
+    "CLASSIC Data/databases/Starfield FormIDs Main.db",
+    "CLASSIC Data/databases/Starfield FormIDs Local.db",
 ]
 
 # Supported game table names

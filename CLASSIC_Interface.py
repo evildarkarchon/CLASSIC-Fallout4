@@ -172,6 +172,8 @@ class MainWindow(QMainWindow):
 
         Ensures all worker threads are properly stopped and cleaned up
         before the application exits using the central ThreadManager.
+        Also properly closes database connections to ensure SQLite WAL
+        files are checkpointed.
 
         Args:
             event: The close event.
@@ -193,6 +195,13 @@ class MainWindow(QMainWindow):
 
         # Stop update check timer
         self.update_manager.stop_timer()
+
+        # Close database connections to ensure WAL files are properly checkpointed
+        # This prevents .db-wal and .db-shm files from persisting after exit
+        logger.debug("Closing database connections...")
+        from ClassicLib.Database import cleanup_database_pools
+
+        cleanup_database_pools()
 
         logger.info("Resource cleanup completed")
 

@@ -280,4 +280,33 @@ impl PyDatabasePool {
         let inner = self.inner.clone();
         future_into_py(py, async move { inner.optimize().await.map_err(to_pyerr) })
     }
+
+    /// Close all database connections and clear caches
+    ///
+    /// This method should be called before application exit to ensure proper
+    /// cleanup of SQLite connections. This is especially important when using
+    /// WAL mode, as it ensures the WAL file is checkpointed back to the main
+    /// database and the .db-wal and .db-shm files are removed.
+    ///
+    /// Returns a Python coroutine - use with await in Python.
+    ///
+    /// # Example
+    ///
+    /// ```python
+    /// # Proper cleanup on application exit
+    /// await pool.close()
+    /// ```
+    #[pyo3(name = "close")]
+    pub fn py_close<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+        future_into_py(py, async move { inner.close().await.map_err(to_pyerr) })
+    }
+
+    /// Check if the pool has any active connections
+    ///
+    /// Returns True if the pool has been initialized and has active connections.
+    #[pyo3(name = "is_available")]
+    pub fn py_is_available(&self) -> bool {
+        self.inner.is_available()
+    }
 }

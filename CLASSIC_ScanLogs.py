@@ -141,16 +141,23 @@ async def main() -> None:
     coordinator = SetupCoordinator()
     coordinator.initialize_application(is_gui=False)
 
-    # Parse command line arguments and create configuration
-    args: Namespace = parse_arguments()
-    config: ScanConfig = create_config_from_args(args)
+    try:
+        # Parse command line arguments and create configuration
+        args: Namespace = parse_arguments()
+        config: ScanConfig = create_config_from_args(args)
 
-    # Create executor and run scan using native async
-    executor = ScanLogsExecutor(config)
-    result: ScanResult = await executor.execute_scan()  # ✅ Direct async, no AsyncBridge
+        # Create executor and run scan using native async
+        executor = ScanLogsExecutor(config)
+        result: ScanResult = await executor.execute_scan()  # ✅ Direct async, no AsyncBridge
 
-    # Display results summary
-    msg_info(executor.generate_summary(result))
+        # Display results summary
+        msg_info(executor.generate_summary(result))
+    finally:
+        # Close database connections to ensure WAL files are properly checkpointed
+        # This prevents .db-wal and .db-shm files from persisting after exit
+        from ClassicLib.Database import cleanup_database_pools_async
+
+        await cleanup_database_pools_async()
 
     # Ensure all output is flushed before pause
     sys.stdout.flush()

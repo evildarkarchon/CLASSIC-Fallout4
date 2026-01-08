@@ -309,3 +309,41 @@ class DatabasePool:
 
         Triggers database optimization routines to improve query performance.
         """
+
+    async def close(self) -> None:
+        """Close all database connections and clear caches.
+
+        This method should be called before application exit to ensure proper
+        cleanup of SQLite connections. This is especially important when using
+        WAL mode, as it ensures the WAL file is checkpointed back to the main
+        database and the .db-wal and .db-shm files are removed.
+
+        After calling close(), the pool should not be used for queries.
+        Call initialize() again to reopen connections if needed.
+
+        Example:
+            >>> pool = DatabasePool()
+            >>> await pool.initialize(["formids.db"])
+            >>> # ... perform queries ...
+            >>> await pool.close()  # Proper cleanup before exit
+
+        """
+
+    def is_available(self) -> bool:
+        """Check if the pool has any active connections.
+
+        Returns True if the pool has been initialized and has active connections.
+        Returns False if the pool has never been initialized or has been closed.
+
+        Returns:
+            True if pool is ready for queries, False otherwise
+
+        Example:
+            >>> pool = DatabasePool()
+            >>> print(pool.is_available())  # False - not initialized
+            >>> await pool.initialize(["formids.db"])
+            >>> print(pool.is_available())  # True - ready
+            >>> await pool.close()
+            >>> print(pool.is_available())  # False - closed
+
+        """

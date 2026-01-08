@@ -1,5 +1,10 @@
 # CLASSIC CHANGELOG #
 
+### 8.1.1 CHANGES
+- Optimize the Form-ID database lookup code.
+- Fix database connections not being properly closed on application exit, which caused .db-wal and .db-shm files to persist.
+- Fix migration tool path casing to match codebase conventions (`databases` lowercase, `Main`/`Local` title case).
+
 ### 8.1.0 CHANGES
 
 - Replace VR mode with a Game Version dropdown in settings window (VR support is still mostly placeholder because I don't have a VR version of the game to test with, or get data from).
