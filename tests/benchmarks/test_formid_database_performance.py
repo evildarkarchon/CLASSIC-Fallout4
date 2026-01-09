@@ -23,10 +23,12 @@ Example:
 from __future__ import annotations
 
 import asyncio
+import gc
 import random
 import sqlite3
 import string
 import tempfile
+import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -114,7 +116,9 @@ class TestFormIDDatabaseFixture:
             Path to the temporary database file.
 
         """
-        with tempfile.TemporaryDirectory() as tmpdir:
+        # Use ignore_cleanup_errors=True to handle Windows file locking issues
+        # when SQLite connections aren't fully released before cleanup
+        with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmpdir:
             db_path = Path(tmpdir) / "test_formids.db"
 
             # Create database with test data
@@ -152,6 +156,11 @@ class TestFormIDDatabaseFixture:
                 conn.commit()
 
             yield db_path
+
+            # Force garbage collection and brief delay to help release file handles
+            # before temp directory cleanup on Windows
+            gc.collect()
+            time.sleep(0.1)
 
     @pytest.fixture
     def formid_plugin_pairs_small(self, temp_database: Path) -> list[tuple[str, str]]:
@@ -227,12 +236,11 @@ class TestFormIDDatabaseFixture:
 
 
 @pytest.mark.benchmark
-@pytest.mark.asyncio
 @pytest.mark.performance
 class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
     """Benchmark tests for Python async database pool implementation."""
 
-    async def test_benchmark_python_batch_lookup_small(
+    def test_benchmark_python_batch_lookup_small(
         self,
         benchmark,
         temp_database: Path,
@@ -246,19 +254,20 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             formid_plugin_pairs_small: Small batch of test pairs.
 
         """
-        pool = AsyncDatabasePool()
-        pool.connections[temp_database] = await __import__("aiosqlite").connect(temp_database)
 
-        async def do_lookup() -> dict[tuple[str, str], str]:
+        async def setup_and_lookup() -> dict[tuple[str, str], str]:
+            pool = AsyncDatabasePool()
+            pool.connections[temp_database] = await __import__("aiosqlite").connect(temp_database)
             pool.query_cache.clear()  # Clear cache for fair comparison
-            return await pool.get_entries_batch(formid_plugin_pairs_small)
+            result = await pool.get_entries_batch(formid_plugin_pairs_small)
+            await pool.close()
+            return result
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
-        await pool.close()
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0, "Should find at least some entries"
 
-    async def test_benchmark_python_batch_lookup_medium(
+    def test_benchmark_python_batch_lookup_medium(
         self,
         benchmark,
         temp_database: Path,
@@ -272,19 +281,20 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             formid_plugin_pairs_medium: Medium batch of test pairs.
 
         """
-        pool = AsyncDatabasePool()
-        pool.connections[temp_database] = await __import__("aiosqlite").connect(temp_database)
 
-        async def do_lookup() -> dict[tuple[str, str], str]:
+        async def setup_and_lookup() -> dict[tuple[str, str], str]:
+            pool = AsyncDatabasePool()
+            pool.connections[temp_database] = await __import__("aiosqlite").connect(temp_database)
             pool.query_cache.clear()
-            return await pool.get_entries_batch(formid_plugin_pairs_medium)
+            result = await pool.get_entries_batch(formid_plugin_pairs_medium)
+            await pool.close()
+            return result
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
-        await pool.close()
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0
 
-    async def test_benchmark_python_batch_lookup_large(
+    def test_benchmark_python_batch_lookup_large(
         self,
         benchmark,
         temp_database: Path,
@@ -298,18 +308,20 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             formid_plugin_pairs_large: Large batch of test pairs.
 
         """
-        pool = AsyncDatabasePool()
-        pool.connections[temp_database] = await __import__("aiosqlite").connect(temp_database)
 
-        async def do_lookup() -> dict[tuple[str, str], str]:
+        async def setup_and_lookup() -> dict[tuple[str, str], str]:
+            pool = AsyncDatabasePool()
+            pool.connections[temp_database] = await __import__("aiosqlite").connect(temp_database)
             pool.query_cache.clear()
-            return await pool.get_entries_batch(formid_plugin_pairs_large)
+            result = await pool.get_entries_batch(formid_plugin_pairs_large)
+            await pool.close()
+            return result
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
-        await pool.close()
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0
 
+    @pytest.mark.asyncio
     async def test_benchmark_python_cache_hit_rate(
         self,
         temp_database: Path,
@@ -338,13 +350,12 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
 
 
 @pytest.mark.benchmark
-@pytest.mark.asyncio
 @pytest.mark.performance
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust extensions not built")
 class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
     """Benchmark tests for Rust database pool implementation."""
 
-    async def test_benchmark_rust_batch_lookup_small(
+    def test_benchmark_rust_batch_lookup_small(
         self,
         benchmark: Any,
         temp_database: Path,
@@ -359,18 +370,22 @@ class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
 
         """
         assert classic_database is not None
-        pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)
-        await pool.initialize([str(temp_database)])
 
-        async def do_lookup() -> dict[str, Any]:
+        async def setup_and_lookup() -> dict[str, Any]:
+            pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)  # pyright: ignore[reportOptionalMemberAccess]
+            await pool.initialize([str(temp_database)])
             pool.clear_cache()  # Clear cache for fair comparison
-            return await pool.get_entries_batch(formid_plugin_pairs_small)  # type: ignore[no-any-return]
+            result = await pool.get_entries_batch(formid_plugin_pairs_small)
+            # Close pool to release SQLite connections and avoid file lock
+            if hasattr(pool, "close"):
+                await pool.close()
+            return result  # type: ignore[no-any-return]
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0, "Should find at least some entries"
 
-    async def test_benchmark_rust_batch_lookup_medium(
+    def test_benchmark_rust_batch_lookup_medium(
         self,
         benchmark: Any,
         temp_database: Path,
@@ -385,18 +400,22 @@ class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
 
         """
         assert classic_database is not None
-        pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)
-        await pool.initialize([str(temp_database)])
 
-        async def do_lookup() -> dict[str, Any]:
+        async def setup_and_lookup() -> dict[str, Any]:
+            pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)  # pyright: ignore[reportOptionalMemberAccess]
+            await pool.initialize([str(temp_database)])
             pool.clear_cache()
-            return await pool.get_entries_batch(formid_plugin_pairs_medium)  # type: ignore[no-any-return]
+            result = await pool.get_entries_batch(formid_plugin_pairs_medium)
+            # Close pool to release SQLite connections and avoid file lock
+            if hasattr(pool, "close"):
+                await pool.close()
+            return result  # type: ignore[no-any-return]
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0
 
-    async def test_benchmark_rust_batch_lookup_large(
+    def test_benchmark_rust_batch_lookup_large(
         self,
         benchmark: Any,
         temp_database: Path,
@@ -411,18 +430,22 @@ class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
 
         """
         assert classic_database is not None
-        pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)
-        await pool.initialize([str(temp_database)])
 
-        async def do_lookup() -> dict[str, Any]:
+        async def setup_and_lookup() -> dict[str, Any]:
+            pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)  # pyright: ignore[reportOptionalMemberAccess]
+            await pool.initialize([str(temp_database)])
             pool.clear_cache()
-            return await pool.get_entries_batch(formid_plugin_pairs_large)  # type: ignore[no-any-return]
+            result = await pool.get_entries_batch(formid_plugin_pairs_large)
+            # Close pool to release SQLite connections and avoid file lock
+            if hasattr(pool, "close"):
+                await pool.close()
+            return result  # type: ignore[no-any-return]
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0
 
-    async def test_benchmark_rust_batch_lookup_very_large(
+    def test_benchmark_rust_batch_lookup_very_large(
         self,
         benchmark: Any,
         temp_database: Path,
@@ -437,17 +460,22 @@ class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
 
         """
         assert classic_database is not None
-        pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)
-        await pool.initialize([str(temp_database)])
 
-        async def do_lookup() -> dict[str, Any]:
+        async def setup_and_lookup() -> dict[str, Any]:
+            pool = classic_database.DatabasePool(game_table=TEST_GAME_TABLE)  # pyright: ignore[reportOptionalMemberAccess]
+            await pool.initialize([str(temp_database)])
             pool.clear_cache()
-            return await pool.get_entries_batch(formid_plugin_pairs_very_large)  # type: ignore[no-any-return]
+            result = await pool.get_entries_batch(formid_plugin_pairs_very_large)
+            # Close pool to release SQLite connections and avoid file lock
+            if hasattr(pool, "close"):
+                await pool.close()
+            return result  # type: ignore[no-any-return]
 
-        result = benchmark(lambda: asyncio.get_event_loop().run_until_complete(do_lookup()))
+        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
 
         assert len(result) > 0
 
+    @pytest.mark.asyncio
     async def test_benchmark_rust_cache_performance(
         self,
         temp_database: Path,
@@ -481,6 +509,10 @@ class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
         # Get stats after second lookup
         stats2 = pool.get_stats()
 
+        # Close pool to release SQLite connections and avoid file lock
+        if hasattr(pool, "close"):
+            await pool.close()
+
         assert len(result1) > 0, "First lookup should find entries"
         assert result1 == result2, "Cached results should match"
 
@@ -489,7 +521,6 @@ class TestRustDatabaseBenchmarks(TestFormIDDatabaseFixture):
 
 
 @pytest.mark.benchmark
-@pytest.mark.asyncio
 @pytest.mark.performance
 class TestCacheTTLConstants:
     """Test that cache TTL constants are properly exposed."""

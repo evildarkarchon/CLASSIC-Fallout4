@@ -373,6 +373,10 @@ class MockRustPool:
     async def optimize(self):
         pass
 
+    async def close(self):
+        """Close the mock pool (no-op for mock)."""
+        pass
+
 
 @pytest.mark.skipif(not RUST_AVAILABLE, reason="Rust database pool not available")
 @pytest.mark.asyncio
