@@ -39,8 +39,9 @@ Example:
 
 """
 
-import atexit
 import asyncio
+import atexit
+import contextlib
 import logging
 import sys
 
@@ -48,6 +49,9 @@ from ClassicLib.Database.async_pool import AsyncDatabasePool
 from ClassicLib.Database.pool_manager import DatabasePoolManager
 
 logger = logging.getLogger(__name__)
+
+# Set to hold strong references to background tasks to prevent garbage collection
+_background_tasks: set[asyncio.Task[None]] = set()
 
 # Import RustAsyncDatabasePool conditionally
 try:
@@ -121,7 +125,7 @@ def cleanup_database_pools() -> None:
     Example:
         >>> cleanup_database_pools()
 
-    """
+    """  # noqa: D401
     logger.debug("Starting sync database pool cleanup")
 
     # Close the SyncDatabasePool singleton first (always safe)
@@ -143,7 +147,10 @@ def cleanup_database_pools() -> None:
             try:
                 loop = asyncio.get_running_loop()
                 # We're in an async context - schedule cleanup
-                loop.create_task(manager.close_pool())
+                # Store task reference to prevent garbage collection before completion
+                task = loop.create_task(manager.close_pool())
+                _background_tasks.add(task)
+                task.add_done_callback(_background_tasks.discard)
                 logger.debug("Scheduled async pool cleanup in running loop")
             except RuntimeError:
                 # No running loop - create a new one for cleanup
@@ -164,12 +171,9 @@ def _atexit_cleanup() -> None:
 
     This is a fallback to ensure database connections are closed even if
     the application doesn't explicitly call cleanup functions.
-    """
-    try:
+    """  # noqa: D401
+    with contextlib.suppress(Exception):
         cleanup_database_pools()
-    except Exception:  # noqa: BLE001, S110 - Must not fail during atexit
-        # Silently ignore errors during atexit - logging may be unavailable
-        pass
 
 
 # Register atexit handler as a fallback for database cleanup
