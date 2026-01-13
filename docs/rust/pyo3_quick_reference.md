@@ -1,6 +1,6 @@
-# PyO3 0.26.0 Quick Reference for CLASSIC Developers
+# PyO3 0.27 Quick Reference for CLASSIC Developers
 
-Quick reference guide for writing Rust-Python integration code with PyO3 0.26.0 in CLASSIC.
+Quick reference guide for writing Rust-Python integration code with PyO3 0.27 in CLASSIC.
 
 ## Common Patterns
 
@@ -291,7 +291,7 @@ perf report
 
 ## See Also
 
-- [PyO3 0.26.0 Migration Guide](0.26_migration_guide.md) - Detailed migration documentation
-- [PyO3 Documentation](https://pyo3.rs/v0.26.0/) - Official PyO3 documentation
+- [PyO3 0.27 Migration Guide](PyO3-0.27-migration.md) - Detailed migration documentation
+- [PyO3 Documentation](https://pyo3.rs/v0.27.0/) - Official PyO3 documentation
 - [Rust Usage Guide](usage_guide.md) - Using Rust components in CLASSIC
 - [Development with Rust](development_with_rust.md) - Development workflow

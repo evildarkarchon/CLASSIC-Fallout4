@@ -3,7 +3,8 @@
 #![allow(missing_docs)]
 
 use classic_shared_core::performance_core::{Timer, get_global_metrics};
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
+use std::hint::black_box;
 use std::time::Duration;
 
 fn bench_record_timing(c: &mut Criterion) {

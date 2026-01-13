@@ -22,6 +22,7 @@
 //! the `__fspath__()` method on objects. This allows any path-like object to work
 //! seamlessly with Rust code.
 
+use pyo3::Borrowed;
 use pyo3::exceptions::PyTypeError;
 use pyo3::prelude::*;
 use std::path::PathBuf;
@@ -62,8 +63,10 @@ use std::path::PathBuf;
 #[derive(Debug, Clone)]
 pub struct PathLike(pub PathBuf);
 
-impl<'source> FromPyObject<'source> for PathLike {
-    fn extract_bound(ob: &Bound<'source, PyAny>) -> PyResult<Self> {
+impl<'py> FromPyObject<'_, 'py> for PathLike {
+    type Error = PyErr;
+
+    fn extract(ob: Borrowed<'_, 'py, PyAny>) -> Result<Self, Self::Error> {
         // Try __fspath__() protocol first (pathlib.Path, os.PathLike)
         if let Ok(path_method) = ob.call_method0("__fspath__") {
             let path_str: String = path_method.extract()?;

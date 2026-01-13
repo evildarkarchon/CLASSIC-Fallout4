@@ -184,7 +184,7 @@ uv pip install dist/classic_yaml_py-*.whl --force-reinstall
 - **[Troubleshooting Guide](docs/rust/troubleshooting_rust.md)** - Debug Rust issues
 - **[Development Guide](docs/rust/development_with_rust.md)** - Develop with Rust components
 
-### PyO3 0.26.0 Documentation
-- **[PyO3 0.26.0 Migration Guide](docs/rust/pyo3_0.26_migration_guide.md)** - Migration from 0.22 to 0.26.0
+### PyO3 0.27 Documentation
+- **[PyO3 0.27 Migration Guide](docs/rust/PyO3-0.27-migration.md)** - Migration from 0.22 to 0.27
 - **[PyO3 Quick Reference](docs/rust/pyo3_quick_reference.md)** - Quick reference for common patterns
-- **[Official PyO3 Docs](https://pyo3.rs/v0.26.0/)** - Official PyO3 documentation
+- **[Official PyO3 Docs](https://pyo3.rs/v0.27.0/)** - Official PyO3 documentation

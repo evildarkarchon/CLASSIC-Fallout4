@@ -74,23 +74,23 @@ resolver = "2"
 
 [workspace.dependencies]
 # PyO3 bindings
-pyo3 = { version = "0.26.0", features = ["abi3-py312"] }
-pyo3-async-runtimes = { version = "0.26.0" }
+pyo3 = { version = "0.27.2", features = ["abi3-py312"] }
+pyo3-async-runtimes = { version = "0.27.0" }
 
 # Async runtime (ONE RUNTIME RULE)
-tokio = { version = "1.48.0", features = ["full"] }
+tokio = { version = "1.49.0", features = ["full"] }
 futures = "0.3"
 
 # Performance
 once_cell = "1.20"
 dashmap = "6.1"
-parking_lot = "0.12"
+parking_lot = "0.12.5"
 rayon = "1.10"
 crossbeam = "0.8"
 num_cpus = "1.16"
 
 # YAML
-yaml-rust2 = "0.10.4"
+yaml-rust2 = "0.11.0"
 
 # Strings & errors
 string_cache = "0.9.0"
@@ -102,27 +102,27 @@ thiserror = "2.0"
 anyhow = "1.0"
 
 # Database
-rusqlite = { version = "0.37.0", features = ["bundled", "backup"] }
+rusqlite = { version = "0.38.0", features = ["bundled", "backup"] }
 sqlx = { version = "0.8", features = ["runtime-tokio", "sqlite"] }
 
 # File I/O
 encoding_rs = "0.8"
 chardetng = "0.1"   # Character encoding detection (Phase 5 - PapyrusLog)
-memmap2 = "0.9"
+memmap2 = "0.9.9"
 walkdir = "2.5"
 ddsfile = "0.5"
-dirs = "5.0"
+dirs = "6.0.0"
 
 # BA2 Archive support
 ba2 = "3.0.1"
 
 # Parsing
-regex = "1.11"
-memchr = "2.7"
-aho-corasick = "1.1"
+regex = "1.12.2"
+memchr = "2.7.6"
+aho-corasick = "1.1.4"
 
 # Caching
-lru = "0.16.1"
+lru = "0.16.3"
 linked-hash-map = "0.5"
 quick_cache = "0.6"     # Lock-free concurrent cache (optimization 1.3)
 rustc-hash = "2.1"      # Fast hasher for short strings (optimization 1.2)
@@ -145,20 +145,20 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
 # Network (Phase 5 - Update system)
-reqwest = { version = "0.12", features = ["json"] } # Async HTTP client
+reqwest = { version = "0.13.1", features = ["json"] } # Async HTTP client
 scraper = "0.20"                                    # HTML parsing
 
 # Logging
-log = "0.4"
+log = "0.4.29"
 env_logger = "0.11"
-tracing = "0.1"
-tracing-subscriber = "0.3"
+tracing = "0.1.44"
+tracing-subscriber = "0.3.22"
 
 # GUI (Slint)
-slint = "1.13"
+slint = "1.14.1"
 
 # Testing
-tempfile = "3.18"
+tempfile = "3.24.0"
 
 [workspace.lints.rust]
 deprecated = "deny"

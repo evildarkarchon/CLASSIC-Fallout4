@@ -22,7 +22,7 @@ tokio = { workspace = true, features = ["full"] }
 
 # YAML parsing
 yaml-rust2 = { workspace = true }
-hashlink = "0.10" # LinkedHashMap for yaml-rust2
+hashlink = "0.11.0" # LinkedHashMap for yaml-rust2
 
 # Serialization
 serde = { workspace = true }

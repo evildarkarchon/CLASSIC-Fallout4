@@ -69,8 +69,8 @@ async def wrapper():
 
 ```toml
 [dependencies]
-pyo3 = { version = "0.26", features = ["extension-module", "abi3-py312"] }
-pyo3-async-runtimes = { version = "0.26", features = ["tokio-runtime"] }
+pyo3 = { version = "0.27", features = ["extension-module", "abi3-py312"] }
+pyo3-async-runtimes = { version = "0.27", features = ["tokio-runtime"] }
 tokio = { version = "1", features = ["full"] }
 
 [lib]

@@ -438,7 +438,7 @@ fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
         return Ok(Yaml::String(s));
     }
 
-    if let Ok(list) = bound_obj.downcast::<PyList>() {
+    if let Ok(list) = bound_obj.clone().into_any().cast_into::<PyList>() {
         let mut arr = Vec::new();
         for item in list.iter() {
             arr.push(python_to_yaml(py, item.unbind())?);
@@ -446,7 +446,7 @@ fn python_to_yaml(py: Python<'_>, obj: Py<PyAny>) -> PyResult<Yaml> {
         return Ok(Yaml::Array(arr));
     }
 
-    if let Ok(dict) = bound_obj.downcast::<PyDict>() {
+    if let Ok(dict) = bound_obj.clone().into_any().cast_into::<PyDict>() {
         let mut hash = yaml_rust2::yaml::Hash::new();
         for (k, v) in dict.iter() {
             let key = python_to_yaml(py, k.unbind())?;

@@ -30,10 +30,10 @@ arboard = "3.4"
 
 # Update checking
 semver = "1.0"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+reqwest = { version = "0.13.1", default-features = false, features = ["rustls", "json"] }
 
 # File system operations
-notify = "7.0"
+notify = "8.2.0"
 walkdir = { workspace = true }
 
 # System directories

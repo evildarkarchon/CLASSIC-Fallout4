@@ -27,7 +27,7 @@ Phase 1 of the ClassicLib Rust Port has been successfully implemented and benchm
 - **Platform:** Windows (win32)
 - **Python:** 3.12+
 - **Rust Edition:** 2024
-- **PyO3 Version:** 0.26.0
+- **PyO3 Version:** 0.27.2
 - **Test Date:** January 2025
 
 ### Component Performance

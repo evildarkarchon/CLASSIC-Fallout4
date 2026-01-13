@@ -33,21 +33,21 @@ classic-config-core = { path = "../../business-logic/classic-config-core" }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 
 # CLI utilities
-indicatif = "0.17"
-console = "0.15"
+indicatif = "0.18.3"
+console = "0.16.2"
 walkdir = { workspace = true }
-dirs = "5.0"
+dirs = "6.0.0"
 
 # Serialization (for config)
 serde = { version = "1.0", features = ["derive"] }
 yaml-rust2 = { workspace = true }
-hashlink = "0.10"
+hashlink = "0.11.0"
 
 [dev-dependencies]
 tempfile = { workspace = true }
 criterion = { version = "0.5", features = ["html_reports", "async_tokio"] }
 proptest = "1.5"
-mockall = "0.13"
+mockall = "0.14.0"
 
 [[bench]]
 name = "cli_benchmarks"

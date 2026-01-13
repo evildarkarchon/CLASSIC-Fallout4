@@ -27,7 +27,7 @@ CLASSIC (Crash Log Auto Scanner & Setup Integrity Checker) is a high-performance
 **Key characteristics**:
 - Hybrid Python-Rust architecture (10-150x Rust acceleration)
 - GUI (PySide6/Qt), CLI (Python), and TUI (Ratatui/Rust) interfaces
-- PyO3 0.26.0 bindings with native async solution
+- PyO3 0.27 bindings with native async solution
 - Python 3.12+ required, uv package manager
 
 ## Documentation Structure

@@ -6,7 +6,7 @@
   - **Foundation Layer**: `classic-shared` (runtime, errors, utilities)
   - **Business Logic Layer** (Pure Rust - no PyO3): `-core` crates
   - **Python Bindings Layer** (PyO3 adapters): `-py` crates
-- **Integration**: PyO3 0.26.0 bindings with native async solution
+- **Integration**: PyO3 0.27 bindings with native async solution
 - **Direct Imports**: Python imports individual modules (e.g., `import classic_yaml`)
 - **Fallback**: Full Python implementations ensure compatibility
 - **Transparent**: Automatic acceleration - no API changes required

@@ -3,8 +3,9 @@
 #![allow(missing_docs)]
 
 use classic_shared_core::path_core::PathHandler;
-use criterion::{BenchmarkId, Criterion, black_box, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::env;
+use std::hint::black_box;
 
 fn bench_normalize_path(c: &mut Criterion) {
     let mut group = c.benchmark_group("normalize_path");

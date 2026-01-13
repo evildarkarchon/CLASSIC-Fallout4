@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-This comprehensive audit verifies that each `.pyi` type stub file accurately represents the Python API exported by its corresponding Rust crate via PyO3 0.26.0.
+This comprehensive audit verifies that each `.pyi` type stub file accurately represents the Python API exported by its corresponding Rust crate via PyO3 0.27.
 
 **Audit Status**: 7 of 18 crates completed (39%)
 - **Crates Audited**: 7

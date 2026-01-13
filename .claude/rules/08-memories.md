@@ -13,7 +13,7 @@ This file contains important historical decisions, bug fixes, and lessons learne
 - **ONE RUNTIME RULE**: All Rust crates use `classic_shared::get_runtime()` to share global Tokio runtime
 - **PyO3 module registration**: `#[pyclass]` types ONLY export from standalone cdylib modules
 - **Standalone module pattern**: Each Rust crate exporting Python classes must have `crate-type = ["cdylib", "rlib"]`
-- **GIL handling for parallel work**: Use `py.detach()` to release GIL, `Python::attach()` to reacquire in worker threads (PyO3 0.26)
+- **GIL handling for parallel work**: Use `py.detach()` to release GIL, `Python::attach()` to reacquire in worker threads (PyO3 0.27)
 - **Runtime conflicts**: Avoid `get_runtime().block_on()` when already in Python context
 
 ## Architecture Decisions

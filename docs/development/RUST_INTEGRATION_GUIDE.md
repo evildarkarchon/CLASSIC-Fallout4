@@ -715,7 +715,7 @@ py.allow_threads(|| {
 - [Rust Workspace Architecture](rust_workspace_architecture.md)
 - [PyO3 Integration Patterns](pyo3_integration_patterns.md)
 - [Async Development Guide](async_development_guide.md)
-- [PyO3 0.26 Migration Guide](../rust/pyo3_0.26_migration_guide.md)
+- [PyO3 0.27 Migration Guide](../rust/PyO3-0.27-migration.md)
 - [Rust Acceleration Guide](rust_acceleration_guide.md)
 
 ---

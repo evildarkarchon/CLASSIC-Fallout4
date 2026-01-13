@@ -23,7 +23,7 @@ serde_json = "1.0"
 
 [dev-dependencies]
 # Testing
-tokio = { version = "1.42.0", features = ["full", "test-util"] }
+tokio = { version = "1.49.0", features = ["full", "test-util"] }
 serial_test = "3.2"
 
 [lib]

@@ -51,7 +51,7 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 - Rust architecture overview
 - Native async pattern guide
 - Module-specific documentation
-- PyO3 0.26.0 migration guide
+- PyO3 0.27 migration guide
 - PyO3 quick reference
 - Troubleshooting Rust issues
 - Development with Rust components

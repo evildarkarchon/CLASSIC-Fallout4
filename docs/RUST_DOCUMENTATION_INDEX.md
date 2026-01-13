@@ -272,29 +272,29 @@ Specialized documentation for the high-performance parser module.
 - Memory-efficient parsing strategies
 - Integration with Python parser API
 
-### 🔧 PyO3 0.26.0 Integration (Current)
+### 🔧 PyO3 0.27 Integration (Current)
 
-#### 18. [PyO3 0.26.0 Migration Guide](rust/pyo3_0.26_migration_guide.md) - **MIGRATION COMPLETE ✅**
-Comprehensive guide for PyO3 0.26.0 migration completed on September 27, 2025.
+#### 18. [PyO3 0.27 Migration Guide](rust/PyO3-0.27-migration.md) - **MIGRATION COMPLETE ✅**
+Comprehensive guide for PyO3 0.27 migration completed on September 27, 2025 and updated to 0.27 in January 2026.
 
 **Perfect for:**
 - Developers writing new Rust-Python integration code
-- Understanding the API changes from PyO3 0.22 to 0.26.0
+- Understanding the API changes from PyO3 0.22 to 0.27
 - Troubleshooting PyO3-related build or runtime issues
 - Contributors reviewing Rust code with PyO3
 
 **Topics Covered:**
-- Complete migration from PyO3 0.22 to 0.26.0 with examples
+- Complete migration from PyO3 0.22 to 0.27 with examples
 - GIL API changes (`with_gil` → `attach`, `allow_threads` → `detach`)
 - Type system updates (`PyObject` → `Py<PyAny>`)
 - Collection creation API modernization
-- Building and testing with PyO3 0.26.0
+- Building and testing with PyO3 0.27
 - Troubleshooting and best practices
 - Migration checklist for code review
 
 **Migration Status:**
-- ✅ All Rust code migrated to PyO3 0.26.0 APIs
-- ✅ Cargo.toml updated to PyO3 0.26.0
+- ✅ All Rust code migrated to PyO3 0.27 APIs
+- ✅ Cargo.toml updated to PyO3 0.27.2
 - ✅ 19/21 Rust tests passing (2 pre-existing failures)
 - ✅ Python API 100% backward compatible
 - ✅ No performance regressions
@@ -643,8 +643,8 @@ def monitor_production():
 - **[All Rust Documentation](../docs/testing/)** - Complete documentation directory
 
 ### 🌐 External Resources & Learning
-- **[PyO3 0.26.0 Documentation](https://pyo3.rs/v0.26.0/)** - Current PyO3 version official documentation
-- **[PyO3 0.26.0 Migration Guide](https://pyo3.rs/v0.26.0/migration.html)** - Official PyO3 migration guide
+- **[PyO3 0.27 Documentation](https://pyo3.rs/v0.27.0/)** - Current PyO3 version official documentation
+- **[PyO3 0.27 Migration Guide](https://pyo3.rs/v0.27.0/migration.html)** - Official PyO3 migration guide
 - **[Tokio Documentation](https://tokio.rs/)** - Async runtime used in our native solution
 - **[Rust Book](https://doc.rust-lang.org/book/)** - Complete Rust programming guide
 - **[Maturin Guide](https://www.maturin.rs/)** - Python extension building tool

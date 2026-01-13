@@ -156,7 +156,7 @@ pub fn to_py_err(err: ClassicError) -> PyErr {
     }
 }
 
-/// Helper to run a function without the GIL (PyO3 0.26 compatible)
+/// Helper to run a function without the GIL (PyO3 0.27 compatible)
 ///
 /// This provides a convenient way to release the GIL during CPU-intensive or blocking operations.
 ///
@@ -193,7 +193,7 @@ where
     F: FnOnce() -> R + Send,
     R: Send,
 {
-    // PyO3 0.26: detach() takes a closure
+    // PyO3 0.27: detach() takes a closure
     py.detach(f)
 }
 

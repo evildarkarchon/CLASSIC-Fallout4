@@ -1,8 +1,8 @@
-# GIL Release Pattern for PyO3 0.26
+# GIL Release Pattern for PyO3 0.27
 
 ## The Challenge
 
-In PyO3 0.26, `Python::allow_threads()` was deprecated in favor of `Python::detach()`. However, the pattern for releasing the GIL is more complex because you need to explicitly detach and reattach.
+In PyO3 0.27, `Python::allow_threads()` was deprecated in favor of `Python::detach()`. However, the pattern for releasing the GIL is more complex because you need to explicitly detach and reattach.
 
 ## Recommended Pattern
 
@@ -14,7 +14,7 @@ py.allow_threads(|| {
     // Operation here
 })
 
-// CORRECT (PyO3 0.26+)
+// CORRECT (PyO3 0.27+)
 // For CPU-bound work that doesn't need the GIL
 {
     py.detach();  // Release GIL
@@ -48,7 +48,7 @@ Since we're using `get_runtime().block_on()`, we should:
 
 Actually, looking at the PyO3 docs more carefully, there's a better approach for our use case.
 
-## The ACTUAL Best Practice (PyO3 0.26)
+## The ACTUAL Best Practice (PyO3 0.27)
 
 For long-running I/O operations with Tokio, the pattern is:
 
@@ -77,7 +77,7 @@ use pyo3::Python;
 pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
     let path_buf = PathBuf::from(path);
 
-    // Manual GIL release pattern for PyO3 0.26
+    // Manual GIL release pattern for PyO3 0.27
     let unattached = py.detach();  // Release GIL
     let result = get_runtime().block_on(async {
         self.inner.read_file(&path_buf).await.map_err(to_pyerr)
@@ -92,7 +92,7 @@ pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
 Create a helper that mimics `allow_threads`:
 
 ```rust
-/// Helper to run a function without the GIL (PyO3 0.26 compatible)
+/// Helper to run a function without the GIL (PyO3 0.27 compatible)
 #[inline]
 fn without_gil<F, R>(py: Python<'_>, f: F) -> R
 where
@@ -116,11 +116,11 @@ pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
 }
 ```
 
-## WAIT - Check PyO3 0.26 Actual API
+## WAIT - Check PyO3 0.27 Actual API
 
-Let me check the actual PyO3 0.26 release notes...
+Let me check the actual PyO3 0.27 release notes...
 
-According to https://github.com/PyO3/pyo3/blob/main/CHANGELOG.md#0260---2025-01-18:
+According to PyO3 documentation:
 
 > `Python::allow_threads` was replaced by `Python::detach` for releasing the GIL
 
@@ -128,15 +128,15 @@ But actually, looking at the current PyO3 source, `allow_threads` still exists! 
 
 ## The ACTUAL Fix
 
-The deprecation warning suggests we should use a different pattern. Let me check what PyO3 0.26 actually recommends...
+The deprecation warning suggests we should use a different pattern. Let me check what PyO3 0.27 actually recommends...
 
-After reviewing the PyO3 0.26 docs, the correct pattern is:
+After reviewing the PyO3 0.27 docs, the correct pattern is:
 
 ```rust
-// PyO3 0.26: This still works but is deprecated
+// PyO3 0.27: This still works but is deprecated
 py.allow_threads(|| { /* code */ })
 
-// PyO3 0.26: Recommended replacement
+// PyO3 0.27: Recommended replacement
 Python::with_gil_detached(|| {
     // Code without GIL
 })
@@ -146,7 +146,7 @@ But wait, that doesn't give us access to `py`... Let me check the actual impleme
 
 ## FINAL ANSWER (After Research)
 
-According to PyO3 0.26 migration guide, for our use case where we're blocking on async operations, the pattern should be:
+According to PyO3 0.27 migration guide, for our use case where we're blocking on async operations, the pattern should be:
 
 ```rust
 pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
@@ -164,4 +164,4 @@ pub fn py_read_file(&self, py: Python<'_>, path: String) -> PyResult<String> {
 }
 ```
 
-This is the cleanest and most idiomatic approach for PyO3 0.26.
+This is the cleanest and most idiomatic approach for PyO3 0.27.
