@@ -147,7 +147,10 @@ class SettingsScannerFragments:
 
     @staticmethod
     def _validate_xcell_settings(
-        crashgen: dict[str, bool | int | str], crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
+        crashgen: dict[str, bool | int | str],
+        crashgen_name: str,
+        add_success: Callable[[str], None],
+        add_warning: Callable[[str, str], None],
     ) -> None:
         """Validate X-Cell specific memory settings."""
         memory_settings = {

@@ -875,7 +875,9 @@ class FFIOptimizer:
 
 
 # Convenience decorators and functions
-def batch_operation(batch_size: int = 100, timeout: float = 0.1, operation_key: str | None = None) -> Callable[[Callable[[list[T]], list[R]]], Callable[[T], asyncio.Future[Any]]]:  # pyright: ignore[reportUnknownParameterType, reportUnknownReturnType, reportUnknownVariableType]
+def batch_operation(
+    batch_size: int = 100, timeout: float = 0.1, operation_key: str | None = None
+) -> Callable[[Callable[[list[T]], list[R]]], Callable[[T], asyncio.Future[Any]]]:  # pyright: ignore[reportUnknownParameterType, reportUnknownReturnType, reportUnknownVariableType]
     """Decorate for automatic batching of operations.
 
     Usage:

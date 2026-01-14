@@ -6,7 +6,7 @@ replacing the mutable list pattern with immutable fragment composition.
 
 import asyncio
 import threading
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from ClassicLib.rust.report_rust import ReportFragment
 from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue

@@ -277,7 +277,9 @@ class DDSProcessor:
 
         return []
 
-    async def check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict[str, set[str]], issue_locks: dict[str, asyncio.Lock]) -> None:
+    async def check_dds_batch_async(
+        self, dds_files: list[tuple[Path, Path]], issue_lists: dict[str, set[str]], issue_locks: dict[str, asyncio.Lock]
+    ) -> None:
         """Perform a batch check on DDS files asynchronously, analyzing texture dimensions and
         validating them for compatibility with "Fallout 4".
 

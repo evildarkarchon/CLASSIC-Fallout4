@@ -241,11 +241,7 @@ class DocumentsPathManager:
             if str(game_sid) in library_line:
                 library_path /= "steamapps"
                 linux_docs: Path = (
-                    library_path
-                    / "compatdata"
-                    / str(game_sid)
-                    / "pfx/drive_c/users/steamuser/My Documents/My Games"
-                    / self.docs_name
+                    library_path / "compatdata" / str(game_sid) / "pfx/drive_c/users/steamuser/My Documents/My Games" / self.docs_name
                 )
                 self._update_game_setting("Root_Folder_Docs", str(linux_docs))
 

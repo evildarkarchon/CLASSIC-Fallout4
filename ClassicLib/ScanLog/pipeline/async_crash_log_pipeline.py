@@ -180,7 +180,8 @@ class AsyncCrashLogPipeline:
 
         # Prepare reports for batch writing
         reports_to_write = [  # pyright: ignore[reportUnknownVariableType]
-            (crashlog_file, autoscan_report, trigger_scan_failed) for crashlog_file, autoscan_report, trigger_scan_failed, _ in all_results  # pyright: ignore[reportUnknownVariableType]
+            (crashlog_file, autoscan_report, trigger_scan_failed)
+            for crashlog_file, autoscan_report, trigger_scan_failed, _ in all_results  # pyright: ignore[reportUnknownVariableType]
         ]
 
         await write_reports_batch(reports_to_write)  # pyright: ignore[reportUnknownArgumentType]
