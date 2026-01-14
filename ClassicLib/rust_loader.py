@@ -46,7 +46,7 @@ class RustExtensionLoader:
         components = detect_rust_components()
         return any(components.values())
 
-    def get_load_info(self) -> dict:
+    def get_load_info(self) -> dict[str, Any]:
         """Get load info from detector.
 
         Returns:
@@ -103,7 +103,7 @@ def is_rust_available() -> bool:
     return _rust_loader.is_loaded()
 
 
-def get_rust_info() -> dict:
+def get_rust_info() -> dict[str, Any]:
     """Fetch and return information related to the Rust environment.
 
     Returns:

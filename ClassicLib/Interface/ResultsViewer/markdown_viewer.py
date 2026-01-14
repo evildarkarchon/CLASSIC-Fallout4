@@ -10,7 +10,7 @@ import html
 import re
 import textwrap
 
-import markdown2
+import markdown2  # pyright: ignore[reportMissingTypeStubs]
 from PySide6.QtGui import QTextCursor
 from PySide6.QtWidgets import QTextBrowser, QWidget
 
@@ -72,7 +72,7 @@ class MarkdownViewer(QTextBrowser):
         """
 
         # 1. Suspect Found Box
-        def suspect_replacer(match: re.Match) -> str:
+        def suspect_replacer(match: re.Match[str]) -> str:
             full_line = match.group(0)
             # Remove ** and - markers
             clean_line = full_line.replace("**", "").replace("- ", "").strip()
@@ -89,7 +89,7 @@ class MarkdownViewer(QTextBrowser):
 
         # 2. Found Mod Cards
         # Regex: Match Header, then content until separator -----
-        def found_replacer(match: re.Match) -> str:
+        def found_replacer(match: re.Match[str]) -> str:
             header = match.group(1).strip()
             content = match.group(2)  # Keep raw content with whitespace for dedent
 

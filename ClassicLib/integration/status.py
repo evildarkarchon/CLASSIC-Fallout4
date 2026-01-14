@@ -332,24 +332,28 @@ def get_performance_report() -> dict[str, Any]:
     max_speedup = len(PERFORMANCE_MULTIPLIERS)
     actual_speedup = sum(1 for comp in PERFORMANCE_MULTIPLIERS if status["available"].get(comp, False))
 
+    # Extract component lists with explicit types for type checker
+    active_components: list[str] = [comp for comp, active in status["available"].items() if active]
+    inactive_components: list[str] = [comp for comp, active in status["available"].items() if not active]
+
     report = {
         "acceleration_level": status["acceleration_level"],
         "active_percentage": status["percentage"],
         "speedup_coverage": (actual_speedup / max_speedup * 100) if max_speedup > 0 else 0,
-        "active_components": [comp for comp, active in status["available"].items() if active],
-        "inactive_components": [comp for comp, active in status["available"].items() if not active],
+        "active_components": active_components,
+        "inactive_components": inactive_components,
         "performance_gains": status["performance_gains"],
     }
 
     # Add recommendations
-    recommendations = []
+    recommendations: list[str] = []
     if status["percentage"] < PERFORMANCE_THRESHOLD_EXCELLENT * 100:
         if status["disabled"]:
             recommendations.append("Enable Rust acceleration by unsetting CLASSIC_DISABLE_RUST")
         elif status["active_count"] == 0:
             recommendations.append("Build and install the Rust extension for significant performance gains")
         else:
-            recommendations.append(f"Additional components available for acceleration: {', '.join(report['inactive_components'])}")
+            recommendations.append(f"Additional components available for acceleration: {', '.join(inactive_components)}")
 
     report["recommendations"] = recommendations
 

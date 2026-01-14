@@ -157,7 +157,7 @@ class AsyncDatabasePool:
 
         # Wait for all connections to close (or timeout)
         if close_tasks:
-            await asyncio.gather(*close_tasks, return_exceptions=True)
+            await asyncio.gather(*close_tasks, return_exceptions=True)  # pyright: ignore[reportUnknownArgumentType]
 
     @staticmethod
     async def _close_connection_with_timeout(conn: aiosqlite.Connection) -> None:

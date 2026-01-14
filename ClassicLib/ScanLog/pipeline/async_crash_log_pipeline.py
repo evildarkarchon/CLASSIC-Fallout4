@@ -41,7 +41,7 @@ async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> No
         content = "".join(autoscan_report)
         tasks.append(io_core.write_file(report_path, content))
 
-    await asyncio.gather(*tasks, return_exceptions=True)
+    await asyncio.gather(*tasks, return_exceptions=True)  # pyright: ignore[reportUnknownArgumentType]
     logger.debug(f"Wrote {len(reports)} reports using batch I/O")
 
 
@@ -179,11 +179,11 @@ class AsyncCrashLogPipeline:
         write_start = time.perf_counter()
 
         # Prepare reports for batch writing
-        reports_to_write = [
-            (crashlog_file, autoscan_report, trigger_scan_failed) for crashlog_file, autoscan_report, trigger_scan_failed, _ in all_results
+        reports_to_write = [  # pyright: ignore[reportUnknownVariableType]
+            (crashlog_file, autoscan_report, trigger_scan_failed) for crashlog_file, autoscan_report, trigger_scan_failed, _ in all_results  # pyright: ignore[reportUnknownVariableType]
         ]
 
-        await write_reports_batch(reports_to_write)
+        await write_reports_batch(reports_to_write)  # pyright: ignore[reportUnknownArgumentType]
 
         self.performance_stats["write_time"] = time.perf_counter() - write_start
         logger.debug(f"Async report writing completed in {self.performance_stats['write_time']:.3f}s")
@@ -197,7 +197,7 @@ class AsyncCrashLogPipeline:
             f"({self.performance_stats['logs_per_second']:.1f} logs/sec)"
         )
 
-        return all_results, self.performance_stats
+        return all_results, self.performance_stats  # pyright: ignore[reportUnknownVariableType]
 
 
 async def run_async_crash_log_scan(

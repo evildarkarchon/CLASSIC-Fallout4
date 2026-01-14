@@ -196,7 +196,7 @@ class TabCreator:
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        settings_widgets = {}
+        settings_widgets: dict[str, QWidget] = {}
 
         # Create general settings group
         general_group = QGroupBox("General Settings")
@@ -252,7 +252,7 @@ class TabCreator:
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        settings_widgets = {}
+        settings_widgets: dict[str, QWidget] = {}
 
         # Create scanning settings group
         scanning_group = QGroupBox("Scanning Options")
@@ -322,7 +322,7 @@ class TabCreator:
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        settings_widgets = {}
+        settings_widgets: dict[str, QWidget] = {}
 
         # Create paths settings group
         paths_group = QGroupBox("Path Settings")
@@ -404,7 +404,7 @@ class TabCreator:
         layout.setSpacing(15)
         layout.setContentsMargins(20, 20, 20, 20)
 
-        settings_widgets = {}
+        settings_widgets: dict[str, QWidget] = {}
 
         # Create update settings group
         updates_group = QGroupBox("Update Settings")

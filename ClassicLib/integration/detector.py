@@ -88,6 +88,19 @@ MODULE_CONFIGS = {
     "classic_web": {
         "base_component": "web_utils",
     },
+    "classic_scangame": {
+        "base_component": "scangame",
+        "components": {
+            "BA2Scanner": "ba2_scanner",
+            "ConfigDuplicateDetector": "config_duplicates",
+            "UnpackedScanner": "unpacked_scanner",
+            "LogProcessor": "log_processor",
+            "IniValidator": "ini_validator",
+            "CrashgenChecker": "crashgen_checker",
+            "XseChecker": "xse_checker",
+            "GameIntegrityChecker": "integrity_checker",
+        },
+    },
 }
 
 
@@ -207,6 +220,7 @@ def get_available_components() -> dict[str, Any]:
             "classic_resource",
             "classic_xse",
             "classic_web",
+            "classic_scangame",
         ]:
             try:
                 module = __import__(module_name)
@@ -258,6 +272,16 @@ def _get_empty_component_dict() -> dict[str, bool]:
         "resource_mgmt": False,
         "xse_utils": False,
         "web_utils": False,
+        # ScanGame components
+        "scangame": False,
+        "ba2_scanner": False,
+        "config_duplicates": False,
+        "unpacked_scanner": False,
+        "log_processor": False,
+        "ini_validator": False,
+        "crashgen_checker": False,
+        "xse_checker": False,
+        "integrity_checker": False,
     }
 
 

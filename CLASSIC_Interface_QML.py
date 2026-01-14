@@ -513,7 +513,7 @@ class ClassicBackend(QObject):
 
             self._papyrus_thread.started.connect(self._papyrus_worker.run)
             self._papyrus_worker.statsUpdated.connect(self.papyrusStatsUpdated)
-            self._papyrus_worker.error.connect(lambda e: self.scanError.emit("Papyrus Error", e))
+            self._papyrus_worker.error.connect(lambda e: self.scanError.emit("Papyrus Error", e))  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
             self._papyrus_worker.finished.connect(self._papyrus_thread.quit)  # type: ignore[union-attr]  # Qt signal connection
 
             self._papyrus_thread.start()
@@ -670,7 +670,7 @@ def main() -> None:
 
     # Load Main.qml
     # PyInstaller bundle or Development
-    base_path = Path(sys._MEIPASS) if getattr(sys, "frozen", False) else Path(__file__).parent  # pyright: ignore[reportAttributeAccessIssue]
+    base_path = Path(sys._MEIPASS) if getattr(sys, "frozen", False) else Path(__file__).parent  # pyright: ignore[reportAttributeAccessIssue, reportUnknownArgumentType]
 
     qml_file = base_path / "qml" / "Main.qml"
     if not qml_file.exists():

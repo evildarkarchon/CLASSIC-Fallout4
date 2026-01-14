@@ -15,7 +15,7 @@ from .utils import (
     MAX_CONCURRENT_SUBPROCESSES,
     SCAN_GAME_CORE_KEY,
     get_optimal_limits,
-    read_lines_with_encoding_async,
+    read_lines_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
 )
 from .validators import ScanValidators
 

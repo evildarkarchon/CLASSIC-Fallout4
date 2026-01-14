@@ -67,15 +67,15 @@ class PythonRecordScanner:
         records_matches = []
 
         # Find matching records
-        self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)
+        self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)  # pyright: ignore[reportUnknownArgumentType]
 
         # Generate report fragment
         if records_matches:
-            fragment = self._generate_found_records_fragment(records_matches)
+            fragment = self._generate_found_records_fragment(records_matches)  # pyright: ignore[reportUnknownArgumentType]
         else:
             fragment = ReportFragment.from_lines(["* COULDN'T FIND ANY NAMED RECORDS *\n\n"])
 
-        return fragment, records_matches
+        return fragment, records_matches  # pyright: ignore[reportUnknownVariableType]
 
     def _find_matching_records(self, segment_callstack: list[str], records_matches: list[str], rsp_marker: str, rsp_offset: int) -> None:
         """Find and collects matching records from a call stack segment.
@@ -133,7 +133,7 @@ class PythonRecordScanner:
             "Named records should give extra info on involved game objects, record types or mod files.\n\n",
         ))
 
-        return ReportFragment.from_lines(lines)
+        return ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownArgumentType]
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
         """Extract records from a segment callstack based on specific matching criteria.
@@ -154,9 +154,9 @@ class PythonRecordScanner:
         rsp_marker = "[RSP+"
         rsp_offset = 30
 
-        self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)
+        self._find_matching_records(segment_callstack, records_matches, rsp_marker, rsp_offset)  # pyright: ignore[reportUnknownArgumentType]
 
-        return records_matches
+        return records_matches  # pyright: ignore[reportUnknownVariableType]
 
 
 # Alias for compatibility

@@ -8,7 +8,7 @@ pattern with core async functions and sync adapters for backwards compatibility.
 import asyncio
 import shutil
 from pathlib import Path
-from typing import Literal, cast
+from typing import Any, Literal, cast
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info, msg_success
 from ClassicLib.AsyncBridge import AsyncBridge
@@ -263,9 +263,9 @@ class GameFilesManagerCore:
                     restore_tasks.append(self._copy_file_with_semaphore(semaphore, source_file, file))
 
         if restore_tasks:
-            results = await asyncio.gather(*restore_tasks, return_exceptions=True)
+            results: list[Any] = await asyncio.gather(*restore_tasks, return_exceptions=True)  # pyright: ignore[reportUnknownArgumentType]
             # Check for exceptions in results
-            failed_operations = [r for r in results if isinstance(r, Exception)]
+            failed_operations: list[Exception] = [r for r in results if isinstance(r, Exception)]
             if failed_operations:
                 logger.error(f"Some restore operations failed for {list_name}:")
                 for exc in failed_operations:
@@ -298,7 +298,7 @@ class GameFilesManagerCore:
         tasks = [self._remove_file_with_semaphore(semaphore, file) for file in matching_files]
 
         if tasks:
-            results = await asyncio.gather(*tasks, return_exceptions=True)
+            results: list[Any] = await asyncio.gather(*tasks, return_exceptions=True)
             # Check for exceptions in results
             failed_operations = [r for r in results if isinstance(r, Exception)]
             if failed_operations:

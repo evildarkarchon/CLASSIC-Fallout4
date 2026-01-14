@@ -65,7 +65,7 @@ class ProgressContext:
         self._progress_handler = self.handler.create_progress_handler()
 
         # Check if handler is available
-        if self._progress_handler is not None and self._progress_handler.is_available():
+        if self._progress_handler and self._progress_handler.is_available():
             self._progress_handler.start(self.description, self.total)
         else:
             self._progress_handler = None

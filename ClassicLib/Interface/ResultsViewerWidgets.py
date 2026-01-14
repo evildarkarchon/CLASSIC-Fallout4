@@ -341,7 +341,7 @@ class ReportListWidget(QListWidget):
         # Get the metadata stored in UserRole
         data = item.data(Qt.ItemDataRole.UserRole)
         if data and isinstance(data, dict):
-            return data.get("path")
+            return data.get("path")  # pyright: ignore[reportUnknownVariableType]
         return None
 
     def get_search_widget(self) -> QWidget:

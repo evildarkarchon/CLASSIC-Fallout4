@@ -102,15 +102,44 @@ disable_error_code = [
 ]
 
 [tool.pyright]
-typeCheckingMode = "standard"
+typeCheckingMode = "strict"
 extraPaths = [".", "./ClassicLib", "./tests"]
-reportArgumentType = false         # Redundant with Mypy arg-type
-reportAssignmentType = false       # Redundant with Mypy assignment
-reportMissingParameterType = false # Redundant with Ruff ANN001
-reportReturnType = false           # Redundant with Mypy return-type
-reportUndefinedVariable = false    # Redundant with Ruff F821
-reportUnusedImport = false         # Redundant with Ruff F401
-reportAttributeAccessIssue = "warning" # Messes with my docstrings, but could be useful elsewhere
+reportUnknownMemberType = false
+reportWildcardImportFromLibrary = false
+reportAssignmentType = false            # Redundant with Mypy assignment
+reportMissingParameterType = false      # Redundant with Ruff ANN001
+reportReturnType = false                # Redundant with Mypy return-type
+reportUndefinedVariable = false         # Redundant with Ruff F821
+reportUnusedImport = false              # Redundant with Ruff F401
+reportUnusedVariable = false            # Redundant with Ruff F841
+reportUnknownLambdaType = "warning"
+reportUnknownParameterType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownArgumentType = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportPrivateUsage = "warning"
+exclude = [ "**/_internal", "**/dist", "**/build", ".venv", "**/Release", "**/PySide6" ]
+ignore = [ "**/_internal", "**/dist", "**/build", ".venv", "**/Release", "**/PySide6" ]
+
+[tool.basedpyright]
+typeCheckingMode = "strict"
+extraPaths = [".", "./ClassicLib", "./tests"]
+reportUnknownMemberType = false
+reportWildcardImportFromLibrary = false
+reportAssignmentType = false            # Redundant with Mypy assignment
+reportMissingParameterType = false      # Redundant with Ruff ANN001
+reportReturnType = false                # Redundant with Mypy return-type
+reportUndefinedVariable = false         # Redundant with Ruff F821
+reportUnusedImport = false              # Redundant with Ruff F401
+reportUnusedVariable = false            # Redundant with Ruff F841
+reportUnknownLambdaType = "warning"
+reportUnknownParameterType = "warning"
+reportUnknownVariableType = "warning"
+reportUnknownArgumentType = "warning"
+reportUntypedFunctionDecorator = "warning"
+reportPrivateUsage = "warning"
+exclude = [ "**/_internal/**/*.py", "**/dist/**/*.py", "**/build/**/*.py", ".venv/**/*.py", "**/Release/**/*.py", "**/PySide6/**/*.py" ]
+ignore = [ "**/_internal/**/*.py", "**/dist/**/*.py", "**/build/**/*.py", ".venv/**/*.py", "**/Release/**/*.py", "**/PySide6/**/*.py" ]
 
 [tool.ruff]
 indent-width = 4

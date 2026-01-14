@@ -670,7 +670,7 @@ class OrchestratorCore:
 
         from ClassicLib.ScanLog.fragments import ReportFragment
 
-        lines = []
+        lines: list[str] = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt
 
         lines.extend((
@@ -793,7 +793,7 @@ class OrchestratorCore:
                 converted values.
 
         """
-        crashgen = {}
+        crashgen: dict[str, bool | int | str] = {}
         if segment_crashgen:
             for elem in segment_crashgen:
                 if ":" in elem:
@@ -835,7 +835,7 @@ class OrchestratorCore:
         """
         # Process logs in batches to avoid overwhelming the system
         batch_size = 10
-        results = []
+        results: list[tuple[Path, list[str], bool, Counter[str]]] = []
 
         for i in range(0, len(crashlog_files), batch_size):
             batch = crashlog_files[i : i + batch_size]
@@ -873,7 +873,7 @@ class OrchestratorCore:
 
         """
         io_core = get_file_io()
-        write_tasks = []
+        write_tasks: list[Any] = []
 
         for crashlog_file, autoscan_report, _trigger_scan_failed in reports:
             autoscan_path: Path = crashlog_file.with_name(f"{crashlog_file.stem}-AUTOSCAN.md")

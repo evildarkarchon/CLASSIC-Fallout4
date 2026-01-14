@@ -60,7 +60,7 @@ class PathValidator:
 
         """
         # Handle None and empty strings
-        if path is None or (isinstance(path, str) and not path.strip()):
+        if not path or (isinstance(path, str) and not path.strip()):
             return False
 
         # Use Rust acceleration when available

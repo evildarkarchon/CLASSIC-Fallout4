@@ -15,8 +15,8 @@ if TYPE_CHECKING:
     import aiofiles
 
     from ClassicLib.FileIO.Async import (
-        open_file_with_encoding_async,
-        read_file_with_encoding_async,
+        open_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
+        read_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
     )
 
 try:
@@ -36,8 +36,8 @@ from ClassicLib.Logger import logger
 # Import async utilities if available
 try:
     from ClassicLib.FileIO.Async import (
-        open_file_with_encoding_async,
-        read_file_with_encoding_async,
+        open_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
+        read_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
     )
 
     ASYNC_ENCODING_AVAILABLE = True
@@ -176,8 +176,8 @@ class FileIOCore:
         # Use encoding detection if available
         if ASYNC_ENCODING_AVAILABLE:
             assert open_file_with_encoding_async is not None
-            async with open_file_with_encoding_async(path) as f:
-                async for line in f:
+            async with open_file_with_encoding_async(path) as f:  # pyright: ignore[reportUnknownVariableType]
+                async for line in f:  # pyright: ignore[reportUnknownVariableType]
                     yield line.rstrip("\n")
         elif AIOFILES_AVAILABLE:
             assert aiofiles is not None

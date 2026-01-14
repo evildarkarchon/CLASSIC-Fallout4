@@ -185,7 +185,7 @@ class YamlFileOperations:
             case YAML.Cache:
                 # Local cache in CLASSIC Data directory
                 return base_path / "cache.yaml"
-            case _:
+            case _:  # pyright: ignore[reportUnnecessaryComparison]
                 raise ValueError(f"Unknown YAML store: {yaml_store}")
 
     async def parse_yaml_content(self, content: str, preserve_comments: bool = True) -> dict[str, Any]:
@@ -214,7 +214,7 @@ class YamlFileOperations:
         if not preserve_comments and self.rust_yaml:
             try:
                 result = self.rust_yaml.parse_yaml(content)
-                return result if isinstance(result, dict) else {}
+                return result if isinstance(result, dict) else {}  # pyright: ignore[reportUnknownVariableType]
             except (RuntimeError, ValueError, TypeError) as e:
                 logger.debug(f"Rust YAML parsing failed, falling back to Python: {e}")
 
@@ -226,7 +226,7 @@ class YamlFileOperations:
         try:
             # Use StringIO for parsing
             data = yaml.load(StringIO(content))
-            return data if isinstance(data, dict) else {}
+            return data if isinstance(data, dict) else {}  # pyright: ignore[reportUnknownVariableType]
         except ruamel.yaml.YAMLError as e:
             logger.error(f"Failed to parse YAML content: {e}")
             raise
@@ -304,7 +304,7 @@ class YamlFileOperations:
                 try:
                     result = self.rust_yaml.load_yaml_file(str(file_path))
                     logger.debug(f"Loaded {file_path.name} with Rust acceleration")
-                    data = result if isinstance(result, dict) else {}
+                    data = result if isinstance(result, dict) else {}  # pyright: ignore[reportUnknownVariableType]
                 except (RuntimeError, ValueError, TypeError, OSError) as e:
                     logger.debug(f"Rust YAML loading failed for {file_path.name}, falling back to Python: {e}")
                     # Fall through to Python loading
@@ -341,7 +341,7 @@ class YamlFileOperations:
                     self._file_cache = {}
                 self._file_cache[file_key] = data
 
-            return data
+            return data  # pyright: ignore[reportUnknownVariableType]
 
     async def save_yaml_file(self, file_path: Path, data: dict[str, Any]) -> bool:
         """Save a dictionary as a YAML file with formatting preservation.

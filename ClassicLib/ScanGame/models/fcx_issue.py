@@ -46,7 +46,7 @@ class ConfigIssue:
                 values ("error", "warning", "info").
 
         """
-        if not isinstance(self.file_path, Path):
+        if not isinstance(self.file_path, Path):  # pyright: ignore[reportUnnecessaryIsInstance]
             self.file_path = Path(self.file_path)
 
         if self.severity not in {"error", "warning", "info"}:

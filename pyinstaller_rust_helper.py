@@ -28,8 +28,8 @@ from pathlib import Path
 
 def _process_module_file(
     pyd_path: Path,
-    binaries: list,
-    datas: list,
+    binaries: list[tuple[str, str]],
+    datas: list[tuple[str, str]],
 ) -> str:
     """Process a single .pyd file and its associated artifacts.
 
@@ -66,8 +66,8 @@ def _process_module_file(
 
 def _try_local_rust_dir(
     project_root: Path,
-    binaries: list,
-    datas: list,
+    binaries: list[tuple[str, str]],
+    datas: list[tuple[str, str]],
 ) -> list[str]:
     """Try to find Rust extensions in the local rust_extensions directory.
     Scans for ANY .pyd file in the directory.
@@ -100,14 +100,14 @@ def _try_local_rust_dir(
         datas.append((str(manifest_file), "."))
 
     if modules_found:
-        print(f"  Total modules bundled: {len(modules_found)}")
+        print(f"  Total modules bundled: {len(modules_found)}")  # pyright: ignore[reportUnknownArgumentType]
 
-    return modules_found
+    return modules_found  # pyright: ignore[reportUnknownVariableType]
 
 
 def _try_site_packages(
-    binaries: list,
-    datas: list,
+    binaries: list[tuple[str, str]],
+    datas: list[tuple[str, str]],
 ) -> list[str]:
     """Try to find Rust extensions in site-packages.
     Scans for classic_*.pyd files.
@@ -157,10 +157,10 @@ def _try_site_packages(
             datas.append((str(pyi_file), module_name))
 
     if modules_found:
-        print(f"  Total modules bundled from site-packages: {len(modules_found)}")
+        print(f"  Total modules bundled from site-packages: {len(modules_found)}")  # pyright: ignore[reportUnknownArgumentType]
         print("  Note: Using installed versions. Run build_all.ps1 to use local builds.")
 
-    return modules_found
+    return modules_found  # pyright: ignore[reportUnknownVariableType]
 
 
 def _print_not_found_warning(project_root: Path) -> None:
@@ -179,7 +179,7 @@ def _print_not_found_warning(project_root: Path) -> None:
     print("    .\rebuild_rust.ps1")
 
 
-def find_rust_extensions(project_root: Path) -> tuple[list, list, list, bool]:
+def find_rust_extensions(project_root: Path) -> tuple[list[tuple[str, str]], list[tuple[str, str]], list[str], bool]:
     """Find Rust extensions for bundling in PyInstaller.
 
     Checks in order:

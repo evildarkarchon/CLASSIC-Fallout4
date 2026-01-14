@@ -222,7 +222,7 @@ def find_segments(
     # Ensure all expected segments exist (add empty lists for missing segments)
     missing_segments_count: int = len(segment_boundaries) - len(processed_segments)
     if missing_segments_count > 0:
-        processed_segments.extend([[]] * missing_segments_count)
+        processed_segments.extend([[]] * missing_segments_count)  # pyright: ignore[reportUnknownArgumentType]
 
     return game_version, crashgen_version, main_error, processed_segments
 

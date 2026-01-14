@@ -69,7 +69,7 @@ class GameIntegrityChecker:
 
         # Validate string settings types
         for key, value in self._config.items():
-            if value is not None and not isinstance(value, str):
+            if value is not None and not isinstance(value, str):  # pyright: ignore[reportUnnecessaryIsInstance]
                 raise TypeError(f"Expected string for {key}, got {type(value)}")
 
         logger.debug("Loaded game integrity configuration")
@@ -104,7 +104,7 @@ class GameIntegrityChecker:
 
         # Validate string settings types
         for key, value in self._config.items():
-            if value is not None and not isinstance(value, str):
+            if value is not None and not isinstance(value, str):  # pyright: ignore[reportUnnecessaryIsInstance]
                 raise TypeError(f"Expected string for {key}, got {type(value)}")
 
         logger.debug("Loaded game integrity configuration (async)")

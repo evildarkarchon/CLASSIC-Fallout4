@@ -360,7 +360,7 @@ class RustAcceleration:
         total_errors = sum(m.errors for m in self.metrics.values())
 
         # Component-specific metrics
-        component_stats = {}
+        component_stats: dict[str, Any] = {}
         for comp_type, metrics in self.metrics.items():
             if metrics.calls > 0:
                 component_stats[comp_type.value] = {
@@ -462,8 +462,8 @@ class RustAcceleration:
             if metrics.calls > 10 and metrics.avg_time > 1.0:  # Taking more than 1 second average
                 issues.append(f"{comp_type.value}: Slow performance (avg {metrics.avg_time:.2f}s)")
 
-        is_healthy = len(issues) == 0
-        return is_healthy, issues
+        is_healthy: bool = len(issues) == 0  # pyright: ignore[reportUnknownArgumentType]
+        return is_healthy, issues  # pyright: ignore[reportUnknownVariableType]
 
     def reset_metrics(self) -> None:
         """Reset all performance metrics."""

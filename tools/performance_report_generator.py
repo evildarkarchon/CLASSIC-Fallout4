@@ -118,7 +118,7 @@ class PerformanceReportGenerator:
         if include_real_logs:
             benchmark_scripts.append(("benchmark_report_generation_realistic.py", "Realistic scenario benchmarks"))
 
-        results = {}
+        results: dict[str, Any] = {}
 
         for script_name, description in benchmark_scripts:
             self.log(f"Running {description}...")
@@ -152,22 +152,23 @@ class PerformanceReportGenerator:
                 self.log(f"❌ Unexpected error running {description}: {e}", "ERROR")
                 results[script_path.stem] = {"error": f"Unexpected error: {e}"}
 
-        self.log(f"Benchmark suite completed: {len(results)} scripts executed")
+        self.log(f"Benchmark suite completed: {len(results)} scripts executed")  # pyright: ignore[reportUnknownArgumentType]
         return results
 
     def analyze_benchmark_results(self, benchmark_results: dict[str, Any]) -> dict[str, Any]:
         """Analyze benchmark results and generate insights."""
         self.log("Analyzing benchmark results...")
 
-        analysis = {
+        summary: dict[str, Any] = {
+            "benchmarks_run": len(benchmark_results),
+            "successful_benchmarks": 0,
+            "failed_benchmarks": 0,
+            "components_tested": set(),
+            "overall_status": "UNKNOWN",
+        }
+        analysis: dict[str, Any] = {
             "timestamp": self.generation_timestamp.isoformat(),
-            "summary": {
-                "benchmarks_run": len(benchmark_results),
-                "successful_benchmarks": 0,
-                "failed_benchmarks": 0,
-                "components_tested": set(),
-                "overall_status": "UNKNOWN",
-            },
+            "summary": summary,
             "performance_insights": [],
             "recommendations": [],
             "component_status": {},
@@ -176,66 +177,71 @@ class PerformanceReportGenerator:
         # Analyze each benchmark result
         for benchmark_name, results in benchmark_results.items():
             if isinstance(results, dict) and "error" not in results:
-                analysis["summary"]["successful_benchmarks"] += 1
+                summary["successful_benchmarks"] += 1
 
                 # Extract component information
                 if benchmark_name == "working_rust_benchmarks":
-                    self._analyze_working_benchmarks(results, analysis)
+                    self._analyze_working_benchmarks(results, analysis, summary)  # pyright: ignore[reportUnknownArgumentType]
                 elif benchmark_name == "comprehensive_benchmark":
-                    self._analyze_comprehensive_benchmarks(results, analysis)
+                    self._analyze_comprehensive_benchmarks(results, summary)  # pyright: ignore[reportUnknownArgumentType]
                 elif benchmark_name == "benchmark_report_generation_realistic":
-                    self._analyze_realistic_benchmarks(results, analysis)
+                    self._analyze_realistic_benchmarks(results, summary)  # pyright: ignore[reportUnknownArgumentType]
             else:
-                analysis["summary"]["failed_benchmarks"] += 1
+                summary["failed_benchmarks"] += 1
 
         # Determine overall status
-        success_rate = analysis["summary"]["successful_benchmarks"] / len(benchmark_results) if benchmark_results else 0
+        success_rate = summary["successful_benchmarks"] / len(benchmark_results) if benchmark_results else 0
 
         if success_rate >= 0.8:
-            analysis["summary"]["overall_status"] = "EXCELLENT"
+            summary["overall_status"] = "EXCELLENT"
         elif success_rate >= 0.6:
-            analysis["summary"]["overall_status"] = "GOOD"
+            summary["overall_status"] = "GOOD"
         elif success_rate >= 0.4:
-            analysis["summary"]["overall_status"] = "FAIR"
+            summary["overall_status"] = "FAIR"
         else:
-            analysis["summary"]["overall_status"] = "NEEDS_IMPROVEMENT"
+            summary["overall_status"] = "NEEDS_IMPROVEMENT"
 
-        analysis["summary"]["components_tested"] = list(analysis["summary"]["components_tested"])
-        self.log(f"Analysis completed: {analysis['summary']['overall_status']} status")
+        summary["components_tested"] = list(summary["components_tested"])
+        self.log(f"Analysis completed: {summary['overall_status']} status")
 
         return analysis
 
-    def _analyze_working_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
+    def _analyze_working_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any], summary: dict[str, Any]) -> None:
         """Analyze working benchmark results."""
+        performance_insights: list[dict[str, Any]] = analysis["performance_insights"]
+        recommendations: list[dict[str, Any]] = analysis["recommendations"]
+        component_status: dict[str, Any] = analysis["component_status"]
+        components_tested: set[str] = summary["components_tested"]
+
         for component, component_results in results.items():
             if isinstance(component_results, dict) and "error" not in component_results:
-                analysis["summary"]["components_tested"].add(component)
+                components_tested.add(component)
 
                 # Analyze performance metrics
                 if "speedup" in component_results:
-                    speedup = component_results["speedup"]
+                    speedup: float = component_results["speedup"]
 
                     if speedup >= 2.0:
-                        analysis["performance_insights"].append({
+                        performance_insights.append({
                             "component": component,
                             "insight": f"Excellent performance: {speedup:.2f}x speedup",
                             "level": "EXCELLENT",
                         })
                     elif speedup >= 1.2:
-                        analysis["performance_insights"].append({
+                        performance_insights.append({
                             "component": component,
                             "insight": f"Good performance: {speedup:.2f}x speedup",
                             "level": "GOOD",
                         })
                     else:
-                        analysis["performance_insights"].append({
+                        performance_insights.append({
                             "component": component,
                             "insight": f"Limited performance: {speedup:.2f}x speedup (FFI overhead likely)",
                             "level": "LIMITED",
                         })
 
                         # Add recommendation for FFI overhead
-                        analysis["recommendations"].append({
+                        recommendations.append({
                             "component": component,
                             "recommendation": "Consider batch processing APIs to reduce FFI overhead",
                             "priority": "HIGH",
@@ -243,35 +249,37 @@ class PerformanceReportGenerator:
 
                 # Analyze memory efficiency
                 if "memory_reduction_percent" in component_results:
-                    reduction = component_results["memory_reduction_percent"]
+                    reduction: float = component_results["memory_reduction_percent"]
                     if reduction >= 90:
-                        analysis["performance_insights"].append({
+                        performance_insights.append({
                             "component": component,
                             "insight": f"Exceptional memory efficiency: {reduction:.1f}% reduction",
                             "level": "EXCEPTIONAL",
                         })
 
                 # Component status
-                analysis["component_status"][component] = {
+                component_status[component] = {
                     "functional": True,
                     "performance": component_results.get("speedup", "N/A"),
                     "status": "WORKING",
                 }
 
-    def _analyze_comprehensive_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
+    def _analyze_comprehensive_benchmarks(self, results: dict[str, Any], summary: dict[str, Any]) -> None:
         """Analyze comprehensive benchmark results."""
         # This would analyze the comprehensive benchmark results
         # For now, just mark components as tested
+        components_tested: set[str] = summary["components_tested"]
         for component in results:
             if component not in ["error"]:
-                analysis["summary"]["components_tested"].add(component)
+                components_tested.add(component)
 
-    def _analyze_realistic_benchmarks(self, results: dict[str, Any], analysis: dict[str, Any]):
+    def _analyze_realistic_benchmarks(self, results: dict[str, Any], summary: dict[str, Any]) -> None:
         """Analyze realistic benchmark results."""
         # This would analyze realistic benchmark results
         # For now, just extract any performance insights
+        components_tested: set[str] = summary["components_tested"]
         if "rust_available" in results:
-            analysis["summary"]["components_tested"].add("realistic_scenarios")
+            components_tested.add("realistic_scenarios")
 
     def generate_markdown_report(self, analysis: dict[str, Any]) -> Path:
         """Generate comprehensive markdown performance report."""
@@ -473,7 +481,7 @@ class PerformanceReportGenerator:
         """Generate all report formats."""
         self.log("Starting comprehensive report generation...")
 
-        generated_files = {}
+        generated_files: dict[str, Path] = {}
 
         # Step 1: Check Rust availability
         self.check_rust_availability()
@@ -526,11 +534,11 @@ class PerformanceReportGenerator:
 
         # Step 5: Generate index file
         try:
-            generated_files["index"] = self.generate_index_file(generated_files)
+            generated_files["index"] = self.generate_index_file(generated_files)  # pyright: ignore[reportUnknownArgumentType]
         except Exception as e:
             self.log(f"❌ Index generation failed: {e}", "ERROR")
 
-        self.log(f"✅ Report generation completed: {len(generated_files)} files generated")
+        self.log(f"✅ Report generation completed: {len(generated_files)} files generated")  # pyright: ignore[reportUnknownArgumentType]
         return generated_files
 
     def generate_index_file(self, generated_files: dict[str, Path]) -> Path:
@@ -621,7 +629,7 @@ Examples:
 
             # Load existing data
             generator.benchmark_results = {}  # Would load existing results
-            generator.analysis_results = generator.analyze_benchmark_results(generator.benchmark_results)
+            generator.analysis_results = generator.analyze_benchmark_results(generator.benchmark_results)  # pyright: ignore[reportUnknownArgumentType]
 
             output_file = None
             if args.format == "markdown":

@@ -105,11 +105,11 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
                 mod_matches[matched_mod] = plugin_id
 
     # Build output lines for all matches
-    for mod_name in sorted(mod_matches.keys(), key=len, reverse=True):
+    for mod_name in sorted(mod_matches.keys(), key=len, reverse=True):  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
         mod_warning = mod_lookup[mod_name]
-        _validate_warning(mod_name, mod_warning)
+        _validate_warning(mod_name, mod_warning)  # pyright: ignore[reportUnknownArgumentType]
 
-        plugin_id = mod_matches[mod_name]
+        plugin_id = mod_matches[mod_name]  # pyright: ignore[reportUnknownVariableType]
         plugin_list = f"[{plugin_id}]"
 
         # Build the complete entry using hybrid approach with Qt-compatible newlines
@@ -129,7 +129,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
             # Fallback if no warning content
             lines.append(f"**[!] FOUND : {plugin_list}**\n\n")
 
-    return ReportFragment.from_lines(lines)
+    return ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownArgumentType]
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> "ReportFragment":
@@ -158,8 +158,8 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     crashlog_plugins_lower = _convert_to_lowercase(crashlog_plugins)
 
     # Build a set of all unique mod names from the pairs
-    all_mod_names = set()
-    mod_pairs_map = {}
+    all_mod_names: set[str] = set()
+    mod_pairs_map: dict[tuple[str, str], str] = {}
 
     for mod_pair, mod_warning in yaml_dict_lower.items():
         mod1, mod2 = mod_pair.split(" | ", 1)
@@ -175,13 +175,13 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     combined_pattern = re.compile("|".join(mod_patterns), re.IGNORECASE)
 
     # Find which mods are present in the plugins
-    mods_present = set()
+    mods_present: set[str] = set()
     for plugin_name in crashlog_plugins_lower:
         matches = combined_pattern.findall(plugin_name)
         mods_present.update(match.lower() for match in matches)
 
     # Check for conflicting pairs
-    for (mod1, mod2), mod_warning in mod_pairs_map.items():
+    for (mod1, mod2), mod_warning in mod_pairs_map.items():  # pyright: ignore[reportUnknownVariableType]
         if mod1 in mods_present and mod2 in mods_present:
             _validate_warning(f"{mod1} | {mod2}", mod_warning)
             lines.extend(("[!] CAUTION : Conflicting mods detected\n", mod_warning))
@@ -189,7 +189,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
                 lines.append("\n")
             lines.append("\n")
 
-    return ReportFragment.from_lines(lines)
+    return ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownArgumentType]
 
 
 def detect_mods_important(
@@ -231,12 +231,12 @@ def detect_mods_important(
     all_plugins_text = " ".join(plugin_names_lower)
 
     # Build patterns for all mod IDs
-    mod_patterns = {}
+    mod_patterns: dict[str, re.Pattern[str]] = {}
     for mod_entry in yaml_dict:
         mod_id, _ = mod_entry.split(" | ", 1)
         mod_patterns[mod_entry] = re.compile(re.escape(mod_id.lower()), re.IGNORECASE)
 
-    for mod_entry, mod_warning in yaml_dict.items():
+    for mod_entry, mod_warning in yaml_dict.items():  # pyright: ignore[reportUnknownVariableType]
         mod_id, mod_display_name = mod_entry.split(" | ", 1)
         mod_found = bool(mod_patterns[mod_entry].search(all_plugins_text))
 

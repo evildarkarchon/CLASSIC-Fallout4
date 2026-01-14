@@ -71,7 +71,7 @@ class SuspectScanner:
             # Update suspect found status
             found_suspect = True
 
-        return ReportFragment.from_lines(lines), found_suspect
+        return ReportFragment.from_lines(lines), found_suspect  # pyright: ignore[reportUnknownArgumentType]
 
     def suspect_scan_stack(
         self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
@@ -121,7 +121,7 @@ class SuspectScanner:
                 lines.extend((f"- **Checking for {formatted_error_name} SUSPECT FOUND! > Severity : {error_severity}** \n\n", "-----\n"))
                 any_suspect_found = True
 
-        return ReportFragment.from_lines(lines), any_suspect_found
+        return ReportFragment.from_lines(lines), any_suspect_found  # pyright: ignore[reportUnknownArgumentType]
 
     @staticmethod
     def _process_signal(signal: str, crashlog_mainerror: str, segment_callstack_intact: str, match_status: dict[str, bool]) -> bool:
@@ -132,7 +132,7 @@ class SuspectScanner:
 
         """
         # Debug signal type if not string
-        if not isinstance(signal, str):
+        if not isinstance(signal, str):  # pyright: ignore[reportUnnecessaryIsInstance]
             logger.debug(f"_process_signal received non-string signal: {type(signal)} - {signal}")
 
         # Constants for signal modifiers

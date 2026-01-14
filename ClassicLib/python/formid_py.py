@@ -168,13 +168,13 @@ class PythonFormIDAnalyzer:
         # Execute database lookups
         if self.show_formid_values and self.formid_db_exists and self.db_pool and lookup_tasks:
             # Use async database pool for concurrent lookups
-            await self._perform_async_lookups(lookup_tasks, lines)
+            await self._perform_async_lookups(lookup_tasks, lines)  # pyright: ignore[reportUnknownArgumentType]
         elif self.show_formid_values and self.formid_db_exists and lookup_tasks:
             # Fallback to sync database lookups
-            await self._perform_sync_lookups(lookup_tasks, lines)
+            await self._perform_sync_lookups(lookup_tasks, lines)  # pyright: ignore[reportUnknownArgumentType]
         else:
             # No database lookups needed
-            for formid_full, _formid_suffix, plugin, count in lookup_tasks:
+            for formid_full, _formid_suffix, plugin, count in lookup_tasks:  # pyright: ignore[reportUnknownVariableType]
                 lines.append(f"- {formid_full} | [{plugin}] | {count}\n")
 
         # Add footer information
@@ -184,7 +184,7 @@ class PythonFormIDAnalyzer:
             "You can try searching any listed Form IDs in xEdit and see if they lead to relevant records.\n\n",
         ])
 
-        return ReportFragment.from_lines(lines)
+        return ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownArgumentType]
 
     async def _perform_async_lookups(self, lookup_tasks: list[tuple[str, str, str, int]], lines: list[str]) -> None:
         """Perform asynchronous database lookups for the given tasks and appends the processed

@@ -86,7 +86,7 @@ class PythonFileIO:
 
         # Try to use async encoding detection if available
         try:
-            from ClassicLib.FileIO.Async import read_file_with_encoding_async
+            from ClassicLib.FileIO.Async import read_file_with_encoding_async  # pyright: ignore[reportUnknownVariableType]
 
             return await read_file_with_encoding_async(path)
         except ImportError:

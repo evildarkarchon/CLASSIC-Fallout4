@@ -6,22 +6,6 @@ import sys
 from pathlib import Path
 
 
-def _is_valid_executable_path(path: Path | None) -> bool:
-    """Check if the provided path points to a valid executable file.
-
-    This function validates whether the given path exists, is a file, and has a
-    recognized executable file extension (".exe", ".app", or no extension).
-
-    Args:
-        path: The path to validate as a potential executable.
-
-    Returns:
-        True if the path is a valid executable, otherwise False.
-
-    """
-    return path is not None and path.exists() and path.is_file() and path.suffix.lower() in {".exe", ".app", ""}
-
-
 def _check_drive_exists(path_obj: Path) -> tuple[bool, str]:
     """Check if the drive exists (Windows only).
 

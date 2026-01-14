@@ -27,7 +27,7 @@ from ClassicLib.Constants import NULL_VERSION, YAML
 from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.Interface.controllers.path_dialog import show_game_path_dialog_static
 from ClassicLib.Logger import logger
-from ClassicLib.Utils.file_utils import open_file_with_encoding
+from ClassicLib.Utils.file_utils import open_file_with_encoding  # pyright: ignore[reportUnknownVariableType]
 from ClassicLib.Utils.version_utils import get_game_version
 from ClassicLib.VersionRegistry import get_version_registry
 from ClassicLib.YamlSettings import yaml_settings
@@ -235,7 +235,7 @@ class GamePathFinder:
             )
             return False
 
-        is_valid, error_msg = validate_path(cast("str", self.xse_file), check_write=False, check_read=True)
+        is_valid, error_msg = validate_path(self.xse_file, check_write=False, check_read=True)
         if not is_valid:
             self._report_xse_error(error_msg)
             return False
@@ -610,6 +610,8 @@ def game_generate_paths() -> None:
                     f"{yaml_key}.Game_File_AddressLib",
                     rf"{game_path}\Data\{xse_acronym_base}\plugins\{match_result.version_info.address_library.filename}",
                 )
+        case _:
+            raise ValueError(f"Unsupported game: {GlobalRegistry.get_game()!r}. Only Fallout4 is supported.")
 
 
 async def game_generate_paths_async() -> None:
@@ -686,3 +688,5 @@ async def game_generate_paths_async() -> None:
                     f"{yaml_key}.Game_File_AddressLib",
                     rf"{game_path}\Data\{xse_acronym_base}\plugins\{match_result.version_info.address_library.filename}",
                 )
+        case _:
+            raise ValueError(f"Unsupported game: {GlobalRegistry.get_game()!r}. Only Fallout4 is supported.")

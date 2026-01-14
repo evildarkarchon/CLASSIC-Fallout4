@@ -96,9 +96,9 @@ class PythonPluginAnalyzer:
             lines.append(f"Error reading loadorder.txt: {e!s}")
 
         # Check if any plugins were loaded
-        plugins_loaded = bool(loadorder_plugins)
+        plugins_loaded = bool(loadorder_plugins)  # pyright: ignore[reportUnknownArgumentType]
 
-        return loadorder_plugins, plugins_loaded, ReportFragment.from_lines(lines)
+        return loadorder_plugins, plugins_loaded, ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
 
     def check_plugin_limit(
         self, segment_plugins: list[str], game_version: "Version | None" = None, version_current: "Version | None" = None
@@ -207,7 +207,7 @@ class PythonPluginAnalyzer:
             else:
                 plugin_map[plugin_name] = plugin_status_unknown
 
-        return plugin_map, plugin_limit_triggered, limit_check_disabled
+        return plugin_map, plugin_limit_triggered, limit_check_disabled  # pyright: ignore[reportUnknownVariableType]
 
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> "ReportFragment":
         """Match plugins to call stack lines and generates a report fragment.
@@ -232,7 +232,7 @@ class PythonPluginAnalyzer:
         relevant_lines = [line for line in segment_callstack_lower if "modified by:" not in line]
 
         # Use Counter directly instead of list + Counter conversion
-        plugins_matches = Counter()
+        plugins_matches: Counter[str] = Counter()
 
         # Optimize the matching algorithm
         for line in relevant_lines:
@@ -257,7 +257,7 @@ class PythonPluginAnalyzer:
         else:
             lines.append("* COULDN'T FIND ANY PLUGIN SUSPECTS *\n\n")
 
-        return ReportFragment.from_lines(lines)
+        return ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownArgumentType]
 
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]:
         """Filter out plugins listed in the ignore list from the given crashlog plugins.
@@ -276,10 +276,10 @@ class PythonPluginAnalyzer:
             return crashlog_plugins
 
         # Create lowercase version for comparison
-        crashlog_plugins_lower = {k.lower(): k for k in crashlog_plugins}
+        crashlog_plugins_lower: dict[str, str] = {k.lower(): k for k in crashlog_plugins}
 
         # Remove ignored plugins
-        for signal in self.ignore_plugins_list:
+        for signal in self.ignore_plugins_list:  # pyright: ignore[reportUnknownVariableType]
             if signal in crashlog_plugins_lower:
                 original_key = crashlog_plugins_lower[signal]
                 del crashlog_plugins[original_key]

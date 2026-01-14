@@ -244,7 +244,7 @@ class TestIntegration:
 
         # Test batch checking
         dds_files = [(valid_dds, mod_dir), (odd_dds, mod_dir)]
-        issue_lists = {"tex_dims": []}
+        issue_lists = {"tex_dims": set()}
         issue_locks = {"tex_dims": asyncio.Lock()}
 
         await processor.check_dds_batch_async(dds_files, issue_lists, issue_locks)

@@ -14,9 +14,9 @@ from pathlib import Path
 from typing import Any, TypedDict
 
 import chardet
-import iniparse
+import iniparse  # pyright: ignore[reportMissingTypeStubs]
 import tomlkit
-from iniparse import configparser
+from iniparse import configparser  # pyright: ignore[reportMissingTypeStubs]
 from tomlkit import TOMLDocument
 
 from ClassicLib import GlobalRegistry, msg_error
@@ -373,7 +373,7 @@ class ConfigFileCache:
 
         try:
             if value_type is str:
-                return config.get(section, setting)
+                return config.get(section, setting)  # pyright: ignore[reportUnknownVariableType]
             if value_type is bool:
                 return config.getboolean(section, setting)  # pyright: ignore[reportReturnType]
             if value_type is int:
@@ -436,7 +436,7 @@ class ConfigFileCache:
 
         try:
             if value_type is str:
-                return config.get(section, setting)
+                return config.get(section, setting)  # pyright: ignore[reportUnknownVariableType]
             if value_type is bool:
                 return config.getboolean(section, setting)  # type: ignore[no-any-return]
             if value_type is int:

@@ -193,7 +193,7 @@ async def run_in_executor[R](func: Callable[..., R], *args: Any, executor: Execu
 class ExecutorDecisionMaker:
     """Helper class to encapsulate executor decision logic."""
 
-    def __init__(self, func: Callable, args: tuple, kwargs: dict, threshold_bytes: int) -> None:
+    def __init__(self, func: Callable[..., Any], args: tuple[Any, ...], kwargs: dict[str, Any], threshold_bytes: int) -> None:
         """Initialize the executor decision maker.
 
         Args:
@@ -205,8 +205,8 @@ class ExecutorDecisionMaker:
 
         """
         self.func = func
-        self.args = args
-        self.kwargs = kwargs
+        self.args = args  # pyright: ignore[reportUnknownVariableType]
+        self.kwargs = kwargs  # pyright: ignore[reportUnknownVariableType]
         self.threshold_bytes = threshold_bytes
         self.func_name = getattr(func, "__name__", "")
 
@@ -219,11 +219,11 @@ class ExecutorDecisionMaker:
         """
         loop = asyncio.get_running_loop()
         if self.kwargs:
-            from functools import partial
+            from functools import partial  # pyright: ignore[reportUnknownVariableType]
 
-            func = partial(self.func, **self.kwargs)
-            return await loop.run_in_executor(None, func, *self.args)
-        return await loop.run_in_executor(None, self.func, *self.args)
+            func = partial(self.func, **self.kwargs)  # pyright: ignore[reportUnknownVariableType]
+            return await loop.run_in_executor(None, func, *self.args)  # pyright: ignore[reportUnknownVariableType]
+        return await loop.run_in_executor(None, self.func, *self.args)  # pyright: ignore[reportUnknownVariableType]
 
     def _run_directly(self) -> Any:
         """Run the function directly without executor.
@@ -464,7 +464,7 @@ async def batch_process(items: list[T], processor: Callable[[T], Any], batch_siz
         List of results from processing all items.
 
     """
-    results = []
+    results: list[Any] = []
 
     for i in range(0, len(items), batch_size):
         batch = items[i : i + batch_size]
@@ -521,7 +521,7 @@ async def batch_process_smart(
         batch_results = await gather_with_concurrency(max_concurrent, *batch_coros)
         results.extend(batch_results)
 
-    return results
+    return results  # pyright: ignore[reportUnknownVariableType]
 
 
 async def async_filter_smart(
@@ -741,14 +741,14 @@ class Throttler:
         self.rate_limit = rate_limit
         self.time_window = time_window
         self.semaphore = asyncio.Semaphore(rate_limit)
-        self.tasks: set[asyncio.Task] = set()
+        self.tasks: set[asyncio.Task[Any]] = set()
 
     async def __aenter__(self) -> "Throttler":
         await self.semaphore.acquire()
         return self
 
     async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
-        task = asyncio.create_task(self.release_after_delay())
+        task: asyncio.Task[Any] = asyncio.create_task(self.release_after_delay())
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)
 
@@ -757,7 +757,7 @@ class Throttler:
         self.semaphore.release()
 
     async def cleanup(self) -> None:
-        for task in list(self.tasks):
+        for task in list(self.tasks):  # pyright: ignore[reportUnknownVariableType]
             if not task.done():
                 task.cancel()
                 with contextlib.suppress(asyncio.CancelledError):

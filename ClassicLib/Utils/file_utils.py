@@ -65,7 +65,7 @@ def calculate_file_hash(file_path: Path) -> str:
 
 
 @contextlib.contextmanager
-def open_file_with_encoding(file_path: Path | str | os.PathLike) -> Iterator[TextIOWrapper]:
+def open_file_with_encoding(file_path: Path | str | os.PathLike[str]) -> Iterator[TextIOWrapper]:
     """Open a file with automatic encoding detection.
 
     This context manager attempts to detect the file's encoding using chardet,

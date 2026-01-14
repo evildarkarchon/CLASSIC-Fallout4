@@ -182,7 +182,7 @@ class RecordScanner:
             "Named records should give extra info on involved game objects, record types or mod files.\n\n",
         ))
 
-        return ReportFragment.from_lines(lines)
+        return ReportFragment.from_lines(lines)  # pyright: ignore[reportUnknownArgumentType]
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
         """Extract records from a segment callstack based on specific matching criteria.

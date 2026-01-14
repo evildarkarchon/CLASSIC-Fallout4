@@ -78,7 +78,7 @@ class ParallelReportProcessor:
             return ParallelReportProcessor.process_batch(reports, None)
 
         # Python fallback - sequential processing
-        results = []
+        results: list[list[str]] = []
         for lines in reports:
             fragment = PyReportFragment.from_lines(lines)
             results.append(fragment.to_list())
@@ -108,14 +108,14 @@ class ParallelReportProcessor:
             rust_fragments = [f._fragment for f in fragments]  # type: ignore[misc]
             result_fragment = ParallelReportProcessor.combine_fragments(rust_fragments)  # type: ignore[arg-type]
 
-            result = object.__new__(RustAcceleratedReportFragment)
+            result = object.__new__(RustAcceleratedReportFragment)  # pyright: ignore[reportUnknownVariableType]
             result._use_rust = True
             result._fragment = result_fragment
-            return result
+            return result  # pyright: ignore[reportUnknownVariableType]
 
         # Python fallback - sequential combination
         if not fragments:
-            return RustAcceleratedReportFragment.empty()
+            return RustAcceleratedReportFragment.empty()  # pyright: ignore[reportUnknownVariableType]
 
         result = fragments[0]
         for fragment in fragments[1:]:

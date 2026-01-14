@@ -6,9 +6,10 @@ replacing the mutable list pattern with immutable fragment composition.
 
 import asyncio
 import threading
-from typing import ClassVar
+from typing import Any, ClassVar
 
 from ClassicLib.rust.report_rust import ReportFragment
+from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
 
 
 class FCXModeHandlerFragments:
@@ -31,7 +32,7 @@ class FCXModeHandlerFragments:
     _fcx_checks_run: ClassVar[bool] = False
     _main_files_result: ClassVar[str] = ""
     _game_files_result: ClassVar[str] = ""
-    _detected_issues: ClassVar[list] = []  # List of ConfigIssue objects
+    _detected_issues: ClassVar[list[ConfigIssue]] = []  # List of ConfigIssue objects
 
     def __init__(self, fcx_mode: bool | None) -> None:
         """Initialize the FCX mode handler.
@@ -63,13 +64,13 @@ class FCXModeHandlerFragments:
                 from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
             except ImportError:
                 # Fallback if the function doesn't exist
-                def scan_game_files() -> tuple[str, list]:
+                def scan_game_files() -> tuple[str, list[ConfigIssue]]:
                     return "Game files check not available\n", []
 
             from ClassicLib.SetupCoordinator import SetupCoordinator
 
             # Define sync function to run in thread pool
-            def run_fcx_checks() -> tuple[str, str, list]:
+            def run_fcx_checks() -> tuple[str, str, list[ConfigIssue]]:
                 """Run FCX checks synchronously in thread pool.
 
                 Returns:
@@ -122,7 +123,7 @@ class FCXModeHandlerFragments:
                 from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
             except ImportError:
                 # Fallback if the function doesn't exist
-                def scan_game_files() -> tuple[str, list]:
+                def scan_game_files() -> tuple[str, list[ConfigIssue]]:
                     return "Game files check not available\n", []
 
             from ClassicLib.SetupCoordinator import SetupCoordinator
@@ -176,7 +177,7 @@ class FCXModeHandlerFragments:
             detailing FCX mode status and its associated information.
 
         """
-        lines = []
+        lines: list[str] = []
 
         if self.fcx_mode:
             lines.extend([

@@ -13,9 +13,8 @@ import contextlib
 import platform
 from io import StringIO
 from pathlib import Path
-from typing import cast
 
-from iniparse import configparser
+from iniparse import configparser  # pyright: ignore[reportMissingTypeStubs]
 
 from ClassicLib import GlobalRegistry, msg_error, msg_info
 from ClassicLib.Constants import YAML
@@ -206,7 +205,7 @@ class DocumentsPathManager:
             pass  # We already initialized documents_path with the default value
 
         # Construct the full path to the game's documents folder
-        win_docs: str = str(documents_path / "My Games" / cast("str", self.docs_name))
+        win_docs: str = str(documents_path / "My Games" / self.docs_name)
 
         # Update the YAML settings with the documents path
         self._update_game_setting("Root_Folder_Docs", win_docs)
@@ -246,7 +245,7 @@ class DocumentsPathManager:
                     / "compatdata"
                     / str(game_sid)
                     / "pfx/drive_c/users/steamuser/My Documents/My Games"
-                    / cast("str", self.docs_name)
+                    / self.docs_name
                 )
                 self._update_game_setting("Root_Folder_Docs", str(linux_docs))
 
@@ -323,9 +322,9 @@ class DocumentsPathManager:
 
         folder_docs: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
 
-        if not isinstance(self.docs_name, str):
+        if not self.docs_name:
             raise TypeError("Invalid docs_name")
-        if not isinstance(folder_docs, str) or folder_docs is None:
+        if not folder_docs:
             raise TypeError("Invalid folder_docs type")
 
         docs_path: Path = Path(folder_docs)

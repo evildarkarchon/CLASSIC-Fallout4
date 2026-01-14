@@ -1,31 +1,41 @@
 {
-  "include": [
-    "ClassicLib/**/*.py",
-    "tests/**/*.py",
-    "tools/**/*.py",
-    "*.py"
-  ],
-  "extraPaths": [
-    ".",
-    "./ClassicLib",
-    "./tests"
-  ],
-  "pythonVersion": "3.12",
-  "typeCheckingMode": "standard",
-  "reportMissingImports": true,
-  "reportImportCycles": false,
-  "reportUnusedImport": false,
-  "reportAttributeAccessIssue": "warning",
-  "verboseOutput": false,
-  "executionEnvironments": [
-    {
-      "root": ".",
-      "pythonVersion": "3.12",
-      "extraPaths": [
+    "ignore": [
+        "**/_internal",
+        "**/dist",
+        "**/build",
+        ".venv",
+        "**/Release",
+        "**/PySide6",
+        "tests/**",
+    ],
+    "exclude": [
+        "**/_internal",
+        "**/dist",
+        "**/build",
+        ".venv",
+        "**/Release",
+        "**/PySide6",
+        "tests/**"
+    ],
+    "typeCheckingMode": "strict",
+    "extraPaths": [
         ".",
         "./ClassicLib",
         "./tests"
-      ]
-    }
-  ]
+    ],
+    "reportUnknownMemberType": false,
+    "reportWildcardImportFromLibrary": false,
+    "reportAssignmentType": false,
+    "reportMissingParameterType": false,
+    "reportReturnType": false,
+    "reportUndefinedVariable": false,
+    "reportUnusedImport": false,
+    "reportUnusedVariable": false,
+    "reportConstantRedefinition": false,
+    "reportUnknownLambdaType": "warning",
+    "reportUnknownParameterType": "warning",
+    "reportUnknownVariableType": "warning",
+    "reportUnknownArgumentType": "warning",
+    "reportUntypedFunctionDecorator": "warning",
+    "reportPrivateUsage": "warning"
 }

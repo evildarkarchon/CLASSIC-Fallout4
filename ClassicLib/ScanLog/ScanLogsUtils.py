@@ -240,26 +240,6 @@ def crashlogs_scan() -> ScanResult:
     return run_async(crashlogs_scan_async_pure(executor))
 
 
-# Legacy function names for backward compatibility
-def _complete_scan_with_summary(executor: "ScanLogsExecutor", scan_failed_list: list[str], yamldata: ClassicScanLogsInfo) -> None:
-    """Complete the scan process by consolidating scan results, statistics, and other relevant
-    data into a summarized format for further processing or reporting.
-
-    Args:
-        executor (ScanLogsExecutor): The executor managing the scan process and statistics.
-        scan_failed_list (list[str]): A list containing the identifiers of failed scan logs.
-        yamldata (ClassicScanLogsInfo): An object containing additional scan-related metadata.
-
-    """
-    # Convert executor state to ScanResult for new function
-    result = ScanResult()
-    result.stats = executor.statistics
-    result.failed_logs = scan_failed_list
-    result.scan_time = executor.statistics.get_scan_duration()
-
-    complete_scan_with_summary(result, yamldata, executor.statistics.scan_start_time)
-
-
 async def crashlogs_scan_async_pure_with_qt(executor: "ScanLogsExecutor") -> ScanResult:
     """Asynchronously scans crash logs using the provided executor.
 

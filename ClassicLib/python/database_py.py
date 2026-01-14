@@ -10,7 +10,7 @@ import logging
 import sqlite3
 from pathlib import Path
 from types import TracebackType
-from typing import Self
+from typing import Any, Self
 
 logger = logging.getLogger(__name__)
 
@@ -234,7 +234,7 @@ class PythonDatabasePool:
             await self._return_connection(conn)
 
     @staticmethod
-    def _execute_query_single(conn: sqlite3.Connection, query: str, params: tuple) -> str | None:
+    def _execute_query_single(conn: sqlite3.Connection, query: str, params: tuple[Any, ...]) -> str | None:
         """Execute a single query on a SQLite database and retrieves the description of the
         first row if available.
 
@@ -258,7 +258,7 @@ class PythonDatabasePool:
             return None
 
     @staticmethod
-    def _execute_query_batch(conn: sqlite3.Connection, query: str, params: list) -> list[dict]:
+    def _execute_query_batch(conn: sqlite3.Connection, query: str, params: list[Any]) -> list[dict[str, Any]]:
         """Execute a batch SQL query on the given SQLite connection.
 
         This method executes a query with provided parameters against a SQLite database connection,
@@ -268,7 +268,7 @@ class PythonDatabasePool:
         Args:
             conn (sqlite3.Connection): The SQLite database connection where the query will be executed.
             query (str): The SQL query to be executed.
-            params (list): A list of parameters to pass to the SQL query.
+            params (list[Any]): A list of parameters to pass to the SQL query.
 
         Returns:
             list[dict]: A list of dictionaries representing the rows returned by the query. If

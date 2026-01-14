@@ -144,7 +144,7 @@ def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
             # Try to determine batch size from result
             batch_size = 1
             if isinstance(result, (list, tuple)):
-                batch_size = len(result)
+                batch_size = len(result)  # pyright: ignore[reportUnknownArgumentType]
 
             avg_time = elapsed / batch_size if batch_size > 0 else 0
 
@@ -153,7 +153,7 @@ def batch_operation_monitor(operation_name: str) -> Callable[[F], F]:
             _store_metric(operation_name, elapsed)
             _store_metric(f"{operation_name}_per_item", avg_time)
 
-            return result
+            return result  # pyright: ignore[reportUnknownVariableType]
 
         return wrapper  # type: ignore[return-value]  # Decorator preserves function signature
 
@@ -196,7 +196,7 @@ def get_performance_summary() -> dict[str, dict[str, float]]:
         metrics ("count", "total", "average", "min", "max") for that operation.
 
     """
-    summary = {}
+    summary: dict[str, dict[str, float]] = {}
 
     for operation, times in _performance_metrics.items():
         if times:

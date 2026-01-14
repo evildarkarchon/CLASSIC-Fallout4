@@ -111,7 +111,7 @@ def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, 
 
         current_index += 1
 
-    return segments
+    return segments  # pyright: ignore[reportUnknownVariableType]
 
 
 def find_segments(
@@ -160,7 +160,7 @@ def find_segments(
     # Ensure all expected segments exist (add empty lists for missing segments)
     missing_segments_count = len(segment_boundaries) - len(processed_segments)
     if missing_segments_count > 0:
-        processed_segments.extend([[]] * missing_segments_count)
+        processed_segments.extend([[]] * missing_segments_count)  # pyright: ignore[reportUnknownArgumentType]
 
     return game_version, crashgen_version, main_error, processed_segments
 
@@ -183,8 +183,8 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
     if not module_texts:
         return set()
 
-    result = set()
-    for text in module_texts:
+    result: set[str] = set()
+    for text in module_texts:  # pyright: ignore[reportUnknownVariableType]
         text = text.strip()
         match = _MODULE_NAME_PATTERN.match(text)
         if match:
@@ -192,4 +192,4 @@ def extract_module_names(module_texts: set[str]) -> set[str]:
         else:
             result.add(text)
 
-    return result
+    return result  # pyright: ignore[reportUnknownVariableType]

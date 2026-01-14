@@ -77,7 +77,7 @@ def register(key: str, obj: Any) -> None:
         TypeError: If key is not a string
 
     """
-    if not isinstance(key, str):
+    if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         _registry[key] = obj
@@ -96,7 +96,7 @@ def get(key: str) -> Any:
         TypeError: If key is not a string
 
     """
-    if not isinstance(key, str):
+    if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         return _registry.get(key)
@@ -115,7 +115,7 @@ def is_registered(key: str) -> bool:
         TypeError: If key is not a string
 
     """
-    if not isinstance(key, str):
+    if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         return key in _registry
@@ -425,7 +425,7 @@ def unregister(key: str) -> bool:
         False
 
     """
-    if not isinstance(key, str):
+    if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
     with _registry_lock:
         if key in _registry:

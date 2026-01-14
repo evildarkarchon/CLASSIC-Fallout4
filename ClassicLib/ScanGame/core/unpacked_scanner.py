@@ -10,6 +10,7 @@ from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Any
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info
 from ClassicLib.ScanGame.Config import TEST_MODE
@@ -104,13 +105,13 @@ class UnpackedModsScanner:
         msg_info("✔️ MODS FOLDER PATH FOUND! PERFORMING ASYNC MOD FILES SCAN...", target=MessageTarget.CONSOLE)
 
         # Filter names for cleanup
-        filter_names: tuple = ("readme", "changes", "changelog", "change log")
+        filter_names: tuple[str, ...] = ("readme", "changes", "changelog", "change log")
 
         # Locks for thread-safe updates to shared collections
-        issue_locks = {issue_type: asyncio.Lock() for issue_type in issue_lists}
+        issue_locks: dict[str, asyncio.Lock] = {issue_type: asyncio.Lock() for issue_type in issue_lists}
 
         # Create context for file operations
-        context = {"mod_path": mod_path, "backup_path": backup_path, "issue_lists": issue_lists, "issue_locks": issue_locks}
+        context: dict[str, Any] = {"mod_path": mod_path, "backup_path": backup_path, "issue_lists": issue_lists, "issue_locks": issue_locks}
 
         # Collect all directories to process
         try:
@@ -175,10 +176,10 @@ class UnpackedModsScanner:
                 return []
 
             # Group paths by parent directory for efficient processing
-            dir_structure = defaultdict(lambda: {"dirs": [], "files": []})
+            dir_structure: defaultdict[Path, dict[str, list[str]]] = defaultdict(lambda: {"dirs": [], "files": []})  # pyright: ignore[reportUnknownReturnType]
 
             for p in all_paths:
-                parent = p.parent
+                parent: Path = p.parent
                 try:
                     if p.is_dir():
                         dir_structure[parent]["dirs"].append(p.name)
@@ -191,9 +192,9 @@ class UnpackedModsScanner:
             # Add the root directory if it has files or subdirs
             if path.is_dir():
                 try:
-                    direct_children = list(path.iterdir())
-                    root_dirs = [p.name for p in direct_children if p.is_dir()]
-                    root_files = [p.name for p in direct_children if p.is_file()]
+                    direct_children: list[Path] = list(path.iterdir())
+                    root_dirs: list[str] = [p.name for p in direct_children if p.is_dir()]
+                    root_files: list[str] = [p.name for p in direct_children if p.is_file()]
                     if root_files or root_dirs:
                         dir_structure[path] = {"dirs": root_dirs, "files": root_files}
                 except (OSError, PermissionError):
@@ -201,7 +202,7 @@ class UnpackedModsScanner:
 
             # Convert to expected format, maintaining bottom-up order for compatibility
             return [
-                (parent, data["dirs"], data["files"])
+                (parent, data["dirs"], data["files"])  # pyright: ignore[reportUnknownVariableType]
                 for parent, data in sorted(dir_structure.items(), key=lambda x: str(x[0]).count(os.sep), reverse=True)
             ]
 
@@ -213,10 +214,10 @@ class UnpackedModsScanner:
         root: Path,
         dirs: list[str],
         files: list[str],
-        context: dict,
+        context: dict[str, Any],
         _xse_acronym: str,
         xse_scriptfiles: dict[str, set[str]],
-        filter_names: tuple,
+        filter_names: tuple[str, ...],
         dds_check_callback: Callable[[list[tuple[Path, Path]], dict[str, set[str]], dict[str, asyncio.Lock]], Awaitable[None]],
     ) -> None:
         """Process a single directory for issues and cleanup operations.
@@ -269,11 +270,11 @@ class UnpackedModsScanner:
 
         # Execute directory operations concurrently
         if dir_tasks:
-            await asyncio.gather(*dir_tasks, return_exceptions=True)
+            await asyncio.gather(*dir_tasks, return_exceptions=True)  # pyright: ignore[reportUnknownArgumentType]
 
         # Process files concurrently
-        file_tasks = []
-        dds_files = []
+        file_tasks: list[Any] = []
+        dds_files: list[tuple[Path, Path]] = []
 
         for filename in files:
             file_path = root / filename
@@ -311,15 +312,15 @@ class UnpackedModsScanner:
         file_path: Path,
         relative_path: Path,
         file_ext: str,
-        context: dict,
-        file_tasks: list,
-        dds_files: list,
+        context: dict[str, Any],
+        file_tasks: list[Any],
+        dds_files: list[tuple[Path, Path]],
         has_xse_files: bool,
         has_previs_files: bool,
         root: Path,
         root_main: Path,
         xse_scriptfiles: dict[str, set[str]],
-        filter_names: tuple,
+        filter_names: tuple[str, ...],
     ) -> tuple[bool, bool]:
         """Process a single file based on its type.
 

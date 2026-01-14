@@ -7,6 +7,7 @@ coordination with BSArch.exe for archive inspection and validation.
 
 import asyncio
 import subprocess
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from itertools import starmap
 from pathlib import Path
@@ -72,7 +73,7 @@ class BA2ArchiveScanner:
                 list[tuple[Path, str]]: List of BA2 file paths and filenames.
 
             """
-            result = []
+            result: list[tuple[Path, str]] = []
             try:
                 # Use rglob to find all .ba2 files directly - much faster
                 for ba2_path in mod_path.rglob("*.ba2"):
@@ -473,7 +474,7 @@ class BA2ArchiveScanner:
                 continue
 
     @staticmethod
-    def merge_scan_results(results: list, target_issues: dict[str, set[str]]) -> None:
+    def merge_scan_results(results: Sequence[dict[str, set[str]] | Exception], target_issues: dict[str, set[str]]) -> None:
         """Merge scan results from multiple BA2 files into a target dictionary.
 
         This method consolidates results from concurrent BA2 processing, handling
@@ -481,7 +482,7 @@ class BA2ArchiveScanner:
         logged but don't stop the overall process.
 
         Args:
-            results: List of scan results from BA2 processing (dicts or Exceptions).
+            results: List of scan results from BA2 processing (dicts or exceptions).
             target_issues: Target dictionary to merge all results into.
 
         Example:
@@ -496,6 +497,6 @@ class BA2ArchiveScanner:
             if isinstance(result, Exception):
                 msg_error(f"Task failed with exception: {result}")
                 continue
-            if isinstance(result, dict):
+            if result:
                 for issue_type, items in result.items():
                     target_issues[issue_type].update(items)

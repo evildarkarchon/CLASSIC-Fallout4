@@ -318,7 +318,7 @@ class CustomErrorDialog(QDialog):
                 return
 
             clipboard = app.clipboard()
-            if clipboard is None:
+            if not clipboard:
                 logger.error("Cannot copy to clipboard: clipboard() returned None")
                 self._show_copy_feedback(success=False, error_msg="Clipboard not available")
                 return
@@ -382,7 +382,7 @@ class CustomErrorDialog(QDialog):
                 # Reset button text after a short delay
                 def reset_button() -> None:
                     try:
-                        if copy_button is not None:
+                        if copy_button:
                             copy_button.setText(original_text)
                             copy_button.setEnabled(True)
                     except RuntimeError:

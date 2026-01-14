@@ -80,7 +80,7 @@ async def read_file_async(file_path: Path) -> list[str]:
     try:
         # Try to use async encoding detection if available
         try:
-            from ClassicLib.FileIO.Async import read_lines_with_encoding_async
+            from ClassicLib.FileIO.Async import read_lines_with_encoding_async  # pyright: ignore[reportUnknownVariableType]
 
             return await read_lines_with_encoding_async(file_path)
         except ImportError:
@@ -158,7 +158,7 @@ async def load_crash_logs_async(crashlog_list: list[Path]) -> dict[str, list[str
     for result in results:
         if isinstance(result, BaseException):
             logger.error(f"Failed to load log: {result}")
-        elif isinstance(result, tuple):
+        elif result:
             name, log_lines = result
             cache[name] = log_lines
 

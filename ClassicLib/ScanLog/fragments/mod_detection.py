@@ -29,7 +29,7 @@ def detect_mods_single_fragment(
             warnings if any are found; otherwise, an empty report fragment.
 
     """
-    lines = []
+    lines: list[str] = []
     found_count = 0
 
     for mod_name, mod_description in yaml_dict.items():

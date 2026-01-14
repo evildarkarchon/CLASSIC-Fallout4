@@ -215,7 +215,7 @@ class DDSProcessor:
                 if header.width > 4096 or header.height > 4096:
                     issues.append(f"Very large texture dimensions: {header.width}x{header.height}")
 
-                return issues
+                return issues  # pyright: ignore[reportUnknownReturnType, reportUnknownVariableType]
 
         # Fall back to enhanced analyzer if available
         if self.analyzer:
@@ -232,7 +232,7 @@ class DDSProcessor:
                 issues.append(f"Non-even dimensions: {width}x{height}")
             if width > 4096 or height > 4096:
                 issues.append(f"Large texture dimensions: {width}x{height}")
-            return issues
+            return issues  # pyright: ignore[reportUnknownVariableType]
 
         return ["Unable to read DDS header"]
 
@@ -277,7 +277,7 @@ class DDSProcessor:
 
         return []
 
-    async def check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict, issue_locks: dict) -> None:
+    async def check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict[str, set[str]], issue_locks: dict[str, asyncio.Lock]) -> None:
         """Perform a batch check on DDS files asynchronously, analyzing texture dimensions and
         validating them for compatibility with "Fallout 4".
 
@@ -289,9 +289,9 @@ class DDSProcessor:
         Args:
             dds_files (list[tuple[Path, Path]]): List of tuples, each containing the path to
                 a DDS file and its associated mod directory.
-            issue_lists (dict): Dictionary for collecting issue descriptions organized by
+            issue_lists (dict[str, set[str]]): Dictionary for collecting issue descriptions organized by
                 issue category (e.g., texture dimensions).
-            issue_locks (dict): Dictionary containing asynchronous locks to ensure thread-safe
+            issue_locks (dict[str, asyncio.Lock]): Dictionary containing asynchronous locks to ensure thread-safe
                 updates to `issue_lists`.
 
         """
@@ -300,4 +300,4 @@ class DDSProcessor:
                 issues = await self._process_single_dds_file(dds_file, mod_dir)
                 if issues:
                     async with issue_locks["tex_dims"]:
-                        issue_lists["tex_dims"].extend(issues)
+                        issue_lists["tex_dims"].update(issues)

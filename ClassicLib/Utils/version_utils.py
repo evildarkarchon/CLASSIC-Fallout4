@@ -169,13 +169,13 @@ def get_version_with_pefile(exe_path: Path) -> Version:
             logger.debug("pefile not available")
             return Constants.NULL_VERSION
 
-        import pefile
+        import pefile  # pyright: ignore[reportMissingTypeStubs]
 
         pe = pefile.PE(str(exe_path))
 
         # Try to get version from VS_VERSIONINFO
         if hasattr(pe, "VS_VERSIONINFO") and pe.VS_VERSIONINFO:
-            for file_info in pe.VS_VERSIONINFO:
+            for file_info in pe.VS_VERSIONINFO:  # pyright: ignore[reportUnknownVariableType]
                 version = extract_version_from_file_info(file_info)
                 if version is not None:
                     pe.close()

@@ -276,7 +276,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
             "HotKey",
             str,
             "0x79",
-            lambda val: "; F10" in str(val),
+            lambda val: "; F10" in str(val),  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
             "Hotkey is commented out and won't work. Change to hex code 0x79 for F10.",
         )
         if issue is not None:
@@ -291,7 +291,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
             "iMaxDesired",
             int,
             5000,
-            lambda val: int(val) > 5000,
+            lambda val: int(val) > 5000,  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
             "High particle count can cause performance issues and crashes.",
         )
         if issue is not None:
@@ -307,7 +307,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
             "bUnlockHeadParts",
             int,
             1,
-            lambda val: int(val) == 0,
+            lambda val: int(val) == 0,  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
             "Head parts are locked. Set to 1 to unlock all head parts.",
         )
         if issue is not None:
@@ -321,7 +321,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
             "bUnlockTints",
             int,
             1,
-            lambda val: int(val) == 0,
+            lambda val: int(val) == 0,  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
             "Face tints are locked. Set to 1 to unlock all face tints.",
         )
         if issue is not None:
@@ -336,7 +336,7 @@ async def detect_all_ini_issues_async(config_files: ConfigFileCache) -> list[Any
             "LoadingScreenFPS",
             float,
             600.0,
-            lambda val: float(val) < 600.0,
+            lambda val: float(val) < 600.0,  # pyright: ignore[reportUnknownLambdaType, reportUnknownArgumentType]
             "Loading screen FPS is too low. Increase to 600.0 to prevent physics issues.",
         )
         if issue is not None:

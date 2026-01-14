@@ -102,7 +102,7 @@ class PluginAnalyzer:
                 - A `ReportFragment` object containing logs of the operation.
 
         """
-        lines = []
+        lines: list[str] = []
         loadorder_origin = "LO"  # Origin marker for plugins from loadorder.txt
         loadorder_path = Path("loadorder.txt")
 
@@ -112,7 +112,7 @@ class PluginAnalyzer:
             "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n",
         ))
 
-        loadorder_plugins: dict = {}
+        loadorder_plugins: dict[str, str] = {}
 
         try:
             with loadorder_path.open(encoding="utf-8", errors="ignore") as loadorder_file:
@@ -222,7 +222,7 @@ class PluginAnalyzer:
         plugin_status_unknown = "???"
 
         # Initialize plugin map
-        plugin_map: dict = {}
+        plugin_map: dict[str, str] = {}
 
         # Check plugin limits separately if version info provided
         plugin_limit_triggered = False
@@ -277,13 +277,13 @@ class PluginAnalyzer:
         """
         from collections import Counter
 
-        lines = []
+        lines: list[str] = []
 
         # Pre-filter call stack lines that won't match
         relevant_lines: list[str] = [line for line in segment_callstack_lower if "modified by:" not in line]
 
         # Filter out ignored plugins before pattern compilation
-        plugins_to_match = frozenset(plugin for plugin in crashlog_plugins_lower if plugin not in self.lower_plugins_ignore)
+        plugins_to_match: frozenset[str] = frozenset(plugin for plugin in crashlog_plugins_lower if plugin not in self.lower_plugins_ignore)
 
         # Early return if no plugins to match
         if not plugins_to_match:
@@ -291,7 +291,7 @@ class PluginAnalyzer:
             return ReportFragment.from_lines(lines)
 
         # Get cached compiled pattern for all plugins
-        plugin_pattern = _compile_plugin_pattern(plugins_to_match)
+        plugin_pattern: re.Pattern[str] = _compile_plugin_pattern(plugins_to_match)
 
         # Use Counter directly instead of list + Counter conversion
         plugins_matches: Counter[str] = Counter()
@@ -299,7 +299,7 @@ class PluginAnalyzer:
         # Optimized matching using single compiled regex pattern
         for line in relevant_lines:
             # Find all plugin matches in this line
-            matches = plugin_pattern.findall(line)
+            matches: list[str] = plugin_pattern.findall(line)
             # Count each unique match
             plugins_matches.update(match.lower() for match in matches)
 

@@ -101,8 +101,8 @@ async def cleanup_database_pools_async() -> None:
     try:
         from ClassicLib.ScanLog.Util import SyncDatabasePool
 
-        if SyncDatabasePool._instance is not None:
-            SyncDatabasePool._instance.close_all()
+        if SyncDatabasePool._instance is not None:  # pyright: ignore[reportPrivateUsage]
+            SyncDatabasePool._instance.close_all()  # pyright: ignore[reportPrivateUsage]
             logger.debug("Closed SyncDatabasePool connections")
     except Exception as e:  # noqa: BLE001 - Must not fail during cleanup
         logger.warning(f"Error closing SyncDatabasePool: {e}")
@@ -132,8 +132,8 @@ def cleanup_database_pools() -> None:
     try:
         from ClassicLib.ScanLog.Util import SyncDatabasePool
 
-        if SyncDatabasePool._instance is not None:
-            SyncDatabasePool._instance.close_all()
+        if SyncDatabasePool._instance is not None:  # pyright: ignore[reportPrivateUsage]
+            SyncDatabasePool._instance.close_all()  # pyright: ignore[reportPrivateUsage]
             logger.debug("Closed SyncDatabasePool connections")
     except Exception as e:  # noqa: BLE001 - Must not fail during cleanup
         # Use print during shutdown since logger may be unavailable
@@ -142,7 +142,7 @@ def cleanup_database_pools() -> None:
     # Try to close the async DatabasePoolManager pool
     try:
         manager = DatabasePoolManager()
-        if manager._pool is not None:
+        if manager._pool is not None:  # pyright: ignore[reportPrivateUsage]
             # Try to get an existing event loop
             try:
                 loop = asyncio.get_running_loop()

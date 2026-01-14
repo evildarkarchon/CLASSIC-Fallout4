@@ -101,6 +101,30 @@ class RustAcceleratedReportFragment:
         """
         return cls(lines, check_content)
 
+    @classmethod
+    def wrap_fragment(
+        cls,
+        fragment: RustReportFragment | PyReportFragment,  # type: ignore[name-defined]
+        use_rust: bool,
+    ) -> RustAcceleratedReportFragment:
+        """Create an instance from an existing internal fragment.
+
+        This factory method is for use by related classes like
+        RustAcceleratedReportGenerator that need to wrap pre-created fragments.
+
+        Args:
+            fragment: The underlying Rust or Python fragment to wrap.
+            use_rust: Whether the fragment is a Rust implementation.
+
+        Returns:
+            RustAcceleratedReportFragment: A new instance wrapping the provided fragment.
+
+        """
+        instance = cls.__new__(cls)
+        instance._use_rust = use_rust
+        instance._fragment = fragment
+        return instance
+
     def with_header(self, header_lines: list[str] | tuple[str, ...]) -> RustAcceleratedReportFragment:
         """Add headers to the current report fragment, either by using Rust acceleration
         or Python fallback depending on the internal configuration.

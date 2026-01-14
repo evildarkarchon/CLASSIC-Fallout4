@@ -61,7 +61,7 @@ class ScanConfig:
         expected constraints or default states.
         """
         # Ensure custom_paths is always a dict
-        if self.custom_paths is None:
+        if not self.custom_paths:
             self.custom_paths = {}
 
         # Validate max_concurrent

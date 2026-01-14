@@ -148,7 +148,7 @@ class FormIDAnalyzerCore:
         if not formids_matches:
             return ReportFragment.from_lines(["* COULDN'T FIND ANY FORM ID SUSPECTS *\n\n"])
 
-        lines = []
+        lines: list[str] = []
         formids_found: dict[str, int] = dict(Counter(sorted(formids_matches)))
 
         # Prepare all lookup tasks

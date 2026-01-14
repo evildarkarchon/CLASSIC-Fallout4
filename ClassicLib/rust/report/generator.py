@@ -81,17 +81,14 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = self._use_rust
-
         if self._use_rust:
             # Rust API only takes crashlog_filename (version configured at construction)
-            result._fragment = self._generator.generate_header(crashlog_filename)  # type: ignore[call-arg]
+            fragment = self._generator.generate_header(crashlog_filename)  # type: ignore[call-arg]
         else:
             # Python API takes both crashlog_filename and version
-            result._fragment = self._generator.generate_header(crashlog_filename, version)  # type: ignore[call-arg]
+            fragment = self._generator.generate_header(crashlog_filename, version)  # type: ignore[call-arg]
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, self._use_rust)  # pyright: ignore[reportUnknownArgumentType]
 
     def generate_error_section(
         self,
@@ -121,9 +118,6 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = self._use_rust
-
         if self._use_rust:
             assert RustReportGenerator is not None, "Rust should be available when _use_rust is True"
             # Rust implementation expects different signature - convert parameters
@@ -138,7 +132,7 @@ class RustAcceleratedReportGenerator:
             )
 
             # Rust API: generate_error_section(main_error, crashgen_version, is_outdated)
-            result._fragment = self._generator.generate_error_section(main_error, crashgen_version, not is_latest)  # type: ignore[call-arg]
+            fragment = self._generator.generate_error_section(main_error, crashgen_version, not is_latest)  # type: ignore[call-arg]
         else:
             # Python implementation uses the original signature with version comparison
             crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
@@ -154,9 +148,9 @@ class RustAcceleratedReportGenerator:
             from typing import cast
 
             py_gen = cast("PyReportGenerator", self._generator)
-            result._fragment = py_gen.generate_error_section(main_error, crashgen_version, crashgen_name, is_latest, warn_outdated)
+            fragment = py_gen.generate_error_section(main_error, crashgen_version, crashgen_name, is_latest, warn_outdated)
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, self._use_rust)  # pyright: ignore[reportUnknownArgumentType]
 
     def generate_suspect_section(self, found_suspects: list[str]) -> Any:
         """Generate a suspect section fragment using either the Rust or Python generator,
@@ -172,15 +166,9 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = self._use_rust
+        fragment = self._generator.generate_suspect_section(found_suspects)
 
-        if self._use_rust:
-            result._fragment = self._generator.generate_suspect_section(found_suspects)
-        else:
-            result._fragment = self._generator.generate_suspect_section(found_suspects)
-
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, self._use_rust)
 
     @staticmethod
     def generate_suspect_section_header() -> Any:
@@ -195,15 +183,12 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static header
-        result._fragment = PyReportFragment.from_lines([
+        fragment = PyReportFragment.from_lines([
             "### Checking for Known Crash Messages, Errors and Suspects\n\n",
         ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
     @staticmethod
     def generate_suspect_found_footer(found_suspect: bool) -> Any:
@@ -221,22 +206,19 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static footer
         if found_suspect:
-            result._fragment = PyReportFragment.from_lines([
+            fragment = PyReportFragment.from_lines([
                 "* **ONE OR MORE SUSPECTS DETECTED! CHECK LOG ABOVE FOR MORE INFORMATION!** *\n\n",
                 "---\n\n",
             ])
         else:
-            result._fragment = PyReportFragment.from_lines([
+            fragment = PyReportFragment.from_lines([
                 "* **NO SUSPECTS DETECTED** *\n\n",
                 "---\n\n",
             ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
     @staticmethod
     def generate_settings_section_header() -> Any:
@@ -251,15 +233,12 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static header
-        result._fragment = PyReportFragment.from_lines([
+        fragment = PyReportFragment.from_lines([
             "### Checking for Settings-related Issues\n\n",
         ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
     @staticmethod
     def generate_mod_check_header(check_type: str) -> Any:
@@ -277,15 +256,12 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static header
-        result._fragment = PyReportFragment.from_lines([
+        fragment = PyReportFragment.from_lines([
             f"### Checking For Mods That {check_type}\n\n",
         ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
     @staticmethod
     def generate_plugin_suspect_header() -> Any:
@@ -300,15 +276,12 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static header
-        result._fragment = PyReportFragment.from_lines([
+        fragment = PyReportFragment.from_lines([
             "### Checking for Plugin-related Errors\n\n",
         ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
     @staticmethod
     def generate_formid_section_header() -> Any:
@@ -323,15 +296,12 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static header
-        result._fragment = PyReportFragment.from_lines([
+        fragment = PyReportFragment.from_lines([
             "### Checking FormIDs\n\n",
         ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
     @staticmethod
     def generate_record_section_header() -> Any:
@@ -346,15 +316,12 @@ class RustAcceleratedReportGenerator:
         """
         RustAcceleratedReportFragment = _get_fragment_class()
 
-        result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = False  # Always use Python for this simple static method
-
         # Use Python implementation for static header
-        result._fragment = PyReportFragment.from_lines([
+        fragment = PyReportFragment.from_lines([
             "### Checking for Named Records\n\n",
         ])
 
-        return result
+        return RustAcceleratedReportFragment.wrap_fragment(fragment, use_rust=False)
 
 
 __all__ = [

@@ -162,7 +162,6 @@ class TestRustStringProcessor:
 
 @pytest.mark.rust
 @pytest.mark.integration
-@pytest.mark.skipif(LogProcessor is None, reason="LogProcessor not yet implemented in Rust")
 class TestRustLogProcessor:
     """Test the Rust LogProcessor utility from Python."""
 

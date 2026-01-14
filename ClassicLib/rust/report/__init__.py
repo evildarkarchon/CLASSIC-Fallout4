@@ -34,7 +34,7 @@ ReportGenerator = RustAcceleratedReportGenerator
 
 
 # Export the string pool if available
-if RUST_AVAILABLE and RustStringPool is not None:
+if RUST_AVAILABLE and RustStringPool:
     StringPool = RustStringPool  # type: ignore[assignment,misc]
 else:
     # Dummy implementation for Python fallback

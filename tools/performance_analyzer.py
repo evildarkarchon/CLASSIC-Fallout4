@@ -51,7 +51,7 @@ from typing import Any
 import psutil
 
 try:
-    from scipy import stats
+    from scipy import stats  # pyright: ignore[reportMissingTypeStubs]
 
     SCIPY_AVAILABLE = True
 except ImportError:
@@ -204,7 +204,7 @@ class StatisticalAnalyzer:
         if SCIPY_AVAILABLE and stats is not None:
             # Use scipy for proper Welch's t-test
             result = stats.ttest_ind(sample1, sample2, equal_var=False)
-            p_value = float(result.pvalue)  # pyright: ignore[reportAttributeAccessIssue]
+            p_value = float(result.pvalue)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownArgumentType]
             return p_value < alpha, p_value
         # Manual implementation of Welch's t-test
         n1, n2 = len(sample1), len(sample2)
@@ -289,7 +289,7 @@ class PerformanceBenchmark:
         self._process = psutil.Process()
 
     def benchmark_function(
-        self, func: Callable, test_data: list[Any], test_name: str = "", enable_ffi_profiling: bool = True
+        self, func: Callable[..., Any], test_data: list[Any], test_name: str = "", enable_ffi_profiling: bool = True
     ) -> PerformanceMetrics:
         """Benchmark a function with comprehensive performance measurements.
 
@@ -397,16 +397,16 @@ class PerformanceBenchmark:
             ffi_stats = ffi_profiler.analyze_performance()
 
         # Calculate final metrics
-        total_wall_time = sum(wall_times)
-        total_cpu_time = sum(cpu_times)
+        total_wall_time = sum(wall_times)  # pyright: ignore[reportUnknownArgumentType]
+        total_cpu_time = sum(cpu_times)  # pyright: ignore[reportUnknownArgumentType]
 
         # Get system CPU times for more detailed analysis
         # Note: First call initializes the counter, result intentionally discarded
         _ = self._process.cpu_percent()
 
         # Peak memory (approximate)
-        peak_memory = max(memory_readings) if memory_readings else initial_memory
-        final_memory = memory_readings[-1] if memory_readings else initial_memory
+        peak_memory = max(memory_readings) if memory_readings else initial_memory  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
+        final_memory = memory_readings[-1] if memory_readings else initial_memory  # pyright: ignore[reportUnknownVariableType]
 
         # Calculate rates
         items_per_second = total_items / total_wall_time if total_wall_time > 0 else 0
@@ -428,9 +428,9 @@ class PerformanceBenchmark:
             user_time=total_cpu_time,  # Approximation
             system_time=0.0,  # Would need more detailed measurement
             memory_start=initial_memory,
-            memory_peak=peak_memory,
-            memory_end=final_memory,
-            memory_delta=final_memory - initial_memory,
+            memory_peak=peak_memory,  # pyright: ignore[reportUnknownArgumentType]
+            memory_end=final_memory,  # pyright: ignore[reportUnknownArgumentType]
+            memory_delta=final_memory - initial_memory,  # pyright: ignore[reportUnknownArgumentType]
             items_processed=total_items,
             items_per_second=items_per_second,
             bytes_per_second=bytes_per_second,
@@ -446,7 +446,7 @@ class PerformanceBenchmark:
         )
 
     def benchmark_with_multiple_datasets(
-        self, func: Callable, datasets: dict[str, list[Any]], test_name: str = ""
+        self, func: Callable[..., Any], datasets: dict[str, list[Any]], test_name: str = ""
     ) -> dict[str, PerformanceMetrics]:
         """Benchmark a function with multiple different datasets.
 
@@ -459,7 +459,7 @@ class PerformanceBenchmark:
             Dictionary mapping dataset names to performance metrics
 
         """
-        results = {}
+        results: dict[str, PerformanceMetrics] = {}
 
         for dataset_name, test_data in datasets.items():
             full_test_name = f"{test_name}_{dataset_name}" if test_name else dataset_name
@@ -494,8 +494,8 @@ class PerformanceAnalyzer:
 
     def compare_implementations(
         self,
-        baseline_func: Callable,
-        optimized_func: Callable,
+        baseline_func: Callable[..., Any],
+        optimized_func: Callable[..., Any],
         test_data: list[Any],
         baseline_name: str = "Python",
         optimized_name: str = "Rust",
@@ -589,8 +589,8 @@ class PerformanceAnalyzer:
                 p_value=p_value,
                 sample_size=runs_per_implementation,
                 test_duration=baseline_metrics.wall_time + optimized_metrics.wall_time,
-                recommendations=recommendations,
-                warnings=warnings,
+                recommendations=recommendations,  # pyright: ignore[reportUnknownArgumentType]
+                warnings=warnings,  # pyright: ignore[reportUnknownArgumentType]
             )
 
             # Store result
@@ -603,7 +603,7 @@ class PerformanceAnalyzer:
             self.benchmark.measurement_runs = original_runs
 
     def analyze_scaling_behavior(
-        self, func: Callable, base_data: Any, scale_factors: list[int], func_name: str = "function"
+        self, func: Callable[..., Any], base_data: Any, scale_factors: list[int], func_name: str = "function"
     ) -> dict[str, Any]:
         """Analyze how function performance scales with input size.
 
@@ -619,12 +619,12 @@ class PerformanceAnalyzer:
         """
         logger.info(f"Analyzing scaling behavior for {func_name}")
 
-        scaling_results = {}
+        scaling_results: dict[int, dict[str, Any]] = {}
 
         for scale_factor in scale_factors:
             # Create scaled test data
             if isinstance(base_data, list):
-                scaled_data = base_data * scale_factor
+                scaled_data = base_data * scale_factor  # pyright: ignore[reportUnknownVariableType]
             elif isinstance(base_data, str):
                 scaled_data = [base_data * scale_factor]
             else:
@@ -632,7 +632,7 @@ class PerformanceAnalyzer:
 
             # Benchmark at this scale
             test_name = f"{func_name}_scale_{scale_factor}"
-            metrics = self.benchmark.benchmark_function(func, scaled_data, test_name)
+            metrics = self.benchmark.benchmark_function(func, scaled_data, test_name)  # pyright: ignore[reportUnknownArgumentType]
 
             scaling_results[scale_factor] = {
                 "metrics": metrics,
@@ -644,7 +644,7 @@ class PerformanceAnalyzer:
 
         # Analyze scaling characteristics
         scale_factors_sorted = sorted(scale_factors)
-        times = [scaling_results[sf]["metrics"].wall_time for sf in scale_factors_sorted]
+        times = [scaling_results[sf]["metrics"].wall_time for sf in scale_factors_sorted]  # pyright: ignore[reportUnknownArgumentType]
         # items_processed is available in scaling_results if needed for future analysis
 
         # Calculate complexity (rough estimate)
@@ -658,7 +658,7 @@ class PerformanceAnalyzer:
                 time_ratio = times[i] / times[i - 1]
                 time_ratios.append(time_ratio / sf_ratio)
 
-            avg_ratio = statistics.mean(time_ratios)
+            avg_ratio = statistics.mean(time_ratios)  # pyright: ignore[reportUnknownVariableType, reportUnknownArgumentType]
 
             if avg_ratio < 1.2:
                 complexity_estimate = "O(n) - Linear"
@@ -677,7 +677,7 @@ class PerformanceAnalyzer:
         }
 
     def regression_analysis(
-        self, func: Callable, test_data: list[Any], baseline_metrics: PerformanceMetrics, tolerance_pct: float = 5.0
+        self, func: Callable[..., Any], test_data: list[Any], baseline_metrics: PerformanceMetrics, tolerance_pct: float = 5.0
     ) -> dict[str, Any]:
         """Detect performance regressions by comparing current performance to baseline.
 
@@ -991,12 +991,12 @@ if __name__ == "__main__":
     print("Performance Analyzer - Test Mode")
 
     # Example functions for testing
-    def python_implementation(data):
+    def python_implementation(data: Any) -> str:  # pyright: ignore[reportUnknownParameterType, reportUnknownReturnType]
         """Simulate Python implementation."""
         time.sleep(0.001)  # Simulate processing time
         return f"python_processed_{len(str(data))}"
 
-    def rust_implementation(data):
+    def rust_implementation(data: Any) -> str:  # pyright: ignore[reportUnknownParameterType, reportUnknownReturnType]
         """Simulate Rust implementation (faster)."""
         time.sleep(0.0005)  # Simulate faster processing
         return f"rust_processed_{len(str(data))}"

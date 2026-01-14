@@ -10,6 +10,7 @@ import random
 from collections import Counter
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 from ClassicLib import GlobalRegistry, MessageTarget, msg_info, msg_progress_context
 from ClassicLib.AsyncBridge import create_sync_wrapper
@@ -224,7 +225,7 @@ class ScanLogsExecutor:
         max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
         total_logs = len(self.crashlog_list)
         log_iter = iter(self.crashlog_list)
-        active_tasks: set[asyncio.Task] = set()
+        active_tasks: set[asyncio.Task[Any]] = set()
 
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
             # Start initial batch of tasks
@@ -263,11 +264,11 @@ class ScanLogsExecutor:
 
     async def _handle_task_result(
         self,
-        task: asyncio.Task,
+        task: asyncio.Task[Any],
         result: ScanResult,
         progress: ProgressContext,
         log_iter: Iterator[Path],
-        active_tasks: set[asyncio.Task],
+        active_tasks: set[asyncio.Task[Any]],
         orchestrator: OrchestratorCore,
     ) -> None:
         """Handle the result of a completed task.
@@ -292,7 +293,7 @@ class ScanLogsExecutor:
 
             # Update statistics
             if isinstance(local_stats, Counter):
-                self.statistics.update_from_counter(local_stats)
+                self.statistics.update_from_counter(local_stats)  # pyright: ignore[reportUnknownArgumentType]
 
             # Add to processed files
             result.add_processed_file(crashlog_file)

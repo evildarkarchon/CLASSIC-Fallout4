@@ -32,7 +32,6 @@ from ClassicLib.Interface.UIHelpers import (
     CHECKBOX_STYLE,
     ENABLED_BUTTON_STYLE,
     MAIN_BUTTON_STYLE,
-    _create_button,
     add_bottom_button,
     add_main_button,
     create_checkbox,
@@ -373,48 +372,6 @@ class TestAddBottomButton:
         button.click()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
 
         callback.assert_called_once()
-
-
-@pytest.mark.unit
-@pytest.mark.gui
-class TestCreateButton:
-    """Test _create_button helper function."""
-
-    def test_create_button_regular(self, qt_application):
-        """Test creating a regular button."""
-        callback = Mock()
-
-        # _create_button in UIHelpers doesn't take self
-        button = _create_button("Regular", "Regular tooltip", callback)
-
-        assert isinstance(button, QPushButton)
-        assert button.text() == "Regular"
-        assert button.toolTip() == "Regular tooltip"
-        assert BOTTOM_BUTTON_STYLE in button.styleSheet()
-
-        # Verify callback connection
-        button.click()
-        callback.assert_called_once()
-
-    def test_create_button_toggle(self, qt_application):
-        """Test creating a toggle button."""
-        callback = Mock()
-
-        # Use a real subclass that is checkable to pass isinstance check
-        class CheckableButton(QPushButton):
-            def isCheckable(self):
-                return True
-
-        # Patch with the subclass
-        with patch("ClassicLib.Interface.UIHelpers.QPushButton", new=CheckableButton):
-            # _create_button in UIHelpers doesn't take self
-            btn = _create_button("Toggle", "Toggle tooltip", callback)
-
-            # Verify signal connection (toggled should be connected)
-            # Since we use real QObject, we can't check 'connect' call on signal easily without spying.
-            # But we can check if callback is invoked when toggled.
-            btn.toggled.emit(True)
-            callback.assert_called_once()
 
 
 @pytest.mark.unit

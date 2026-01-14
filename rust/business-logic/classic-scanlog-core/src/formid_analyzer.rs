@@ -657,6 +657,9 @@ pub fn extract_formids_batch(callstack_segments: Vec<Vec<String>>) -> Vec<Vec<St
 /// assert!(!is_valid_formid("123456789")); // Too long
 /// assert!(!is_valid_formid("GHIJKLMN")); // Invalid hex characters
 /// assert!(!is_valid_formid("12-34-56")); // Non-hex characters
+/// assert!(!is_valid_formid("")); // Empty string
+/// assert!(!is_valid_formid("0x")); // Empty hex
+/// assert!(!is_valid_formid("0x00000000")); // Null FormID (invalid in game)
 /// ```
 pub fn is_valid_formid(formid: &str) -> bool {
     // Remove potential "Form ID: " prefix and "0x" prefix
@@ -667,8 +670,21 @@ pub fn is_valid_formid(formid: &str) -> bool {
         .trim_start_matches("0x")
         .trim_start_matches("0X");
 
-    // Check if it's a valid 8-character hex string
-    cleaned.len() <= 8 && cleaned.chars().all(|c| c.is_ascii_hexdigit())
+    // Must have at least one hex digit and at most 8
+    if cleaned.is_empty() || cleaned.len() > 8 {
+        return false;
+    }
+
+    // Must be valid hex characters
+    if !cleaned.chars().all(|c| c.is_ascii_hexdigit()) {
+        return false;
+    }
+
+    // Parse and check for null FormID (0x00000000 is invalid in game)
+    match u32::from_str_radix(cleaned, 16) {
+        Ok(value) => value > 0, // Null FormID is invalid
+        Err(_) => false,
+    }
 }
 
 /// Validates multiple FormID strings in parallel using Rayon.

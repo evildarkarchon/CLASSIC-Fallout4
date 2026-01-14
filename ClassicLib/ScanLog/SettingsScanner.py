@@ -39,7 +39,7 @@ class SettingsScannerFragments:
             ReportFragment containing the scan results.
 
         """
-        lines = []
+        lines: list[str] = []
         crashgen_achievements = crashgen.get("Achievements")
 
         if crashgen_achievements and ("achievements.dll" in xsemodules or "unlimitedsurvivalmode.dll" in xsemodules):
@@ -71,7 +71,7 @@ class SettingsScannerFragments:
             ReportFragment containing the scan results.
 
         """
-        lines = []
+        lines: list[str] = []
         separator = "\n\n-----\n"
 
         def add_success(message: str) -> None:
@@ -112,10 +112,10 @@ class SettingsScannerFragments:
     ) -> None:
         """Validate memory manager configuration based on installed mods."""
         # Create configuration tuple for cleaner logic
-        config = (mem_enabled, has_xcell, has_baka)
+        config: tuple[bool, bool, bool] = (mem_enabled, has_xcell, has_baka)
 
         # Map configurations to their handlers
-        config_handlers = {
+        config_handlers: dict[tuple[bool, bool, bool], Callable[[], None]] = {
             (True, True, False): lambda: add_warning(
                 "X-Cell is installed, but MemoryManager parameter is set to TRUE",
                 f"Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.",
@@ -141,13 +141,13 @@ class SettingsScannerFragments:
         }
 
         # Execute the appropriate handler
-        handler = config_handlers.get(config)
+        handler: Callable[[], None] | None = config_handlers.get(config)
         if handler:
             handler()
 
     @staticmethod
     def _validate_xcell_settings(
-        crashgen: dict, crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
+        crashgen: dict[str, bool | int | str], crashgen_name: str, add_success: Callable[[str], None], add_warning: Callable[[str, str], None]
     ) -> None:
         """Validate X-Cell specific memory settings."""
         memory_settings = {
@@ -184,7 +184,7 @@ class SettingsScannerFragments:
         if crashgen_version and crashgen_version >= Version("1.29.0"):
             return ReportFragment.empty()
 
-        lines = []
+        lines: list[str] = []
         crashgen_archivelimit = crashgen.get("ArchiveLimit")
 
         if crashgen_archivelimit:
@@ -208,7 +208,7 @@ class SettingsScannerFragments:
             ReportFragment containing the scan results.
 
         """
-        lines = []
+        lines: list[str] = []
         crashgen_f4ee = crashgen.get("F4EE")
 
         if crashgen_f4ee is not None:
@@ -235,7 +235,7 @@ class SettingsScannerFragments:
             ReportFragment containing any notices about disabled settings.
 
         """
-        lines = []
+        lines: list[str] = []
 
         if crashgen:
             for setting_name, setting_value in crashgen.items():

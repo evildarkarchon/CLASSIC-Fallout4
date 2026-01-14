@@ -8,6 +8,7 @@ necessary resources during its instantiation.
 """
 
 from dataclasses import dataclass, field
+from typing import Any
 
 from packaging.version import Version
 
@@ -67,8 +68,8 @@ class ClassicScanLogsInfo:
     crashgen_name_vr: str = ""
     crashgen_latest_og: str = ""
     crashgen_latest_vr: str = ""
-    crashgen_ignore: set = field(default_factory=set)
-    crashgen_ignore_vr: set = field(default_factory=set)
+    crashgen_ignore: set[str] = field(default_factory=set)
+    crashgen_ignore_vr: set[str] = field(default_factory=set)
     warn_noplugins: str = ""
     warn_outdated: str = ""
     xse_acronym: str = ""
@@ -169,7 +170,7 @@ class ClassicScanLogsInfo:
             (str, YAML.Game, "GameVR_Info.Main_Root_Name"),  # game_root_name_vr [29] NEW
         ]
 
-    def _assign_values(self, values: list) -> None:
+    def _assign_values(self, values: list[Any | None]) -> None:
         """Assign values from batch_get_settings result to attributes.
 
         Args:
@@ -281,7 +282,7 @@ class ClassicScanLogsInfo:
         """Get crash generator name based on VR mode."""
         return self.crashgen_name_vr if is_vr else self.crashgen_name
 
-    def get_crashgen_ignore(self, is_vr: bool) -> set:
+    def get_crashgen_ignore(self, is_vr: bool) -> set[str]:
         """Get crash generator ignore set based on VR mode."""
         return self.crashgen_ignore_vr if is_vr else self.crashgen_ignore
 

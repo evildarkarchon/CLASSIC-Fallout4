@@ -89,7 +89,7 @@ class PythonParserWrapper:
             if in_section:
                 section.append(line)
 
-        return section or None
+        return section or None  # pyright: ignore[reportUnknownVariableType]
 
 
 def get_parser() -> Any:

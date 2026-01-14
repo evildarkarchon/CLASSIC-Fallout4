@@ -18,6 +18,56 @@ This directory contains comprehensive end-to-end integration tests for Phase 6 R
 - **`performance_fixtures.py`** - Performance testing utilities and benchmarking tools
 - **`validation_utilities.py`** - Validation and comparison utilities
 
+## Directory Structure
+
+### `api/` - API Compliance Tests
+
+Tests that verify Python wrapper APIs work correctly with Rust implementations.
+
+**What they test:**
+- Method names (e.g., `get_fcx_messages()` not `get_messages()`)
+- Return types (e.g., `ReportFragment` vs `list[str]`)
+- Function signatures (accepting both `str` and `Path`)
+- API contracts between Rust and Python
+
+**How they work:**
+- Use factory functions (`get_fcx_handler()`, `get_gpu_detector()`, etc.)
+- Skip if Rust module is not available
+- Test through Python wrappers, not direct Rust imports
+
+### `parity/` - Implementation Parity Tests
+
+Tests that compare Rust and Python implementations to ensure identical results.
+
+**What they test:**
+- Output equivalence between Rust and Python
+- Edge case handling consistency
+- Performance comparisons
+
+**How they work:**
+- Create both Rust and Python implementation instances
+- Run same inputs through both
+- Compare outputs for equality
+- Use `is_rust_accelerated()` to check availability
+
+### `orchestrator/` - Hybrid Orchestrator Tests
+
+Tests for the `HybridOrchestrator` which coordinates Rust and Python processing.
+
+**What they test:**
+- Automatic selection of Rust vs Python based on batch size
+- Fallback behavior when Rust initialization fails
+- Batch processing correctness
+
+### `fcx/` - FCX Mode Handler Tests
+
+Tests for the FCX (Fallout 4 Crash eXtended) mode integration.
+
+**What they test:**
+- FCX configuration detection
+- Message generation
+- Integration with report generation
+
 ## Test Categories
 
 ### 1. End-to-End Pipeline Tests (`test_e2e_pipeline.py`)
@@ -158,6 +208,49 @@ Tests automatically skip when:
 - Rust components are not available (`pytest.importorskip("classic_scanlog")`)
 - Specific Rust components are not accelerated (`is_rust_accelerated()` checks)
 - Real crash log data is not available (falls back to synthetic data)
+
+### Rust Availability Checking Patterns
+
+Tests use one of these patterns to handle Rust availability:
+
+```python
+# Pattern 1: Skip on ImportError
+try:
+    from ClassicLib.integration.factory import get_component
+    handler = get_component()
+except ImportError as e:
+    pytest.skip(f"Rust module not available: {e}")
+
+# Pattern 2: Check is_rust_accelerated()
+from ClassicLib.integration.status import is_rust_accelerated
+
+if not is_rust_accelerated("component_name"):
+    pytest.skip("Rust component not available")
+
+# Pattern 3: Fixture with autouse (recommended for test classes)
+@pytest.fixture(autouse=True)
+def require_rust(self):
+    if not is_rust_accelerated("component_name"):
+        pytest.skip("Rust component not available")
+```
+
+### Available Rust Components
+
+The following components can be checked via `is_rust_accelerated()`:
+
+- `parser` - Crash log parser
+- `formid_analyzer` - Form ID analysis
+- `plugin_analyzer` - Plugin analysis
+- `record_scanner` - Record scanning
+- `suspect_scanner` - Suspect detection
+- `settings_validator` - Settings validation
+- `gpu_detector` - GPU detection
+- `fcx_handler` - FCX mode handling
+- `orchestrator` - Log processing orchestration
+- `path_validator` - Path validation
+- `yaml` / `yaml_operations` - YAML processing
+- `database` / `database_pool` - Database operations
+- `file_io` / `file_io_core` - File I/O operations
 
 ## Test Data
 

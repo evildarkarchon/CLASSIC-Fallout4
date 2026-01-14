@@ -141,7 +141,7 @@ class TestAsyncBridgeFailureModes:
         """Test AsyncBridge behavior with long-running tasks."""
         bridge = AsyncBridge.get_instance()
 
-        async def long_task():
+        async def long_task():  # pyright: ignore[reportUnusedFunction]
             await asyncio.sleep(10)  # Simulate long operation
             return "completed"
 

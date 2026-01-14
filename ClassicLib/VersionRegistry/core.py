@@ -123,7 +123,7 @@ class VersionRegistry:
                 from ClassicLib.YamlSettings import yaml_settings
 
                 # Load version registry from YAML
-                versions_data = yaml_settings(list, YAML.Main, "Version_Registry.versions")
+                versions_data: list[dict[str, Any]] = yaml_settings(list, YAML.Main, "Version_Registry.versions")  # pyright: ignore[reportUnknownVariableType]
 
                 if not versions_data:
                     logger.warning("No versions found in Version_Registry, using defaults")
@@ -131,12 +131,12 @@ class VersionRegistry:
                     return
 
                 for v_data in versions_data:
-                    version_info = self._parse_version_data(v_data)
+                    version_info: VersionInfo = self._parse_version_data(v_data)
                     self._versions[version_info.id] = version_info
                     self._by_version[version_info.version_string] = version_info
 
                 # Load unknown version handling config
-                handling_data = yaml_settings(dict, YAML.Main, "Version_Registry.unknown_version_handling")
+                handling_data: dict[str, Any] | None = yaml_settings(dict, YAML.Main, "Version_Registry.unknown_version_handling")  # pyright: ignore[reportUnknownVariableType]
                 if handling_data:
                     self._unknown_handling = UnknownVersionHandling(
                         strategy=handling_data.get("strategy", "nearest_match"),

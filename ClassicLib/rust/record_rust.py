@@ -238,8 +238,8 @@ class RustRecordScanner:
 
         from collections import Counter
 
-        lines = []
-        records_found = dict(Counter(sorted(matches)))
+        lines: list[str] = []
+        records_found: dict[str, int] = dict(Counter(sorted(matches)))
 
         for record, count in records_found.items():
             lines.append(f"- {record} | {count}\n")
@@ -282,7 +282,7 @@ class RustRecordScanner:
                 matches_batch = classic_scanlog.scan_records_batch(segments, target_records, ignore_records)
 
                 # Format results to match Python API: list[tuple[ReportFragment, matches]]
-                results = []
+                results: list[tuple[ReportFragment, list[str]]] = []
                 for matches in matches_batch:
                     report_lines = self._generate_report_lines(matches)
                     results.append((ReportFragment.from_lines(report_lines), matches))

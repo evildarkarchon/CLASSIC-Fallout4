@@ -334,7 +334,7 @@ class YamlSettingsCache:
         for store in stores:
             path = core.file_ops.get_path_for_store(store)
             results[store] = await core.file_ops.load_yaml_file(path)
-        return results
+        return results  # pyright: ignore[reportUnknownVariableType]
 
     def load_multiple_stores(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """Load multiple YAML stores synchronously.
@@ -423,7 +423,7 @@ class YamlSettingsCache:
         return self._get_async_core().cache
 
     @property
-    def path_cache(self) -> dict:
+    def path_cache(self) -> dict[str, Path]:
         """Get the current path cache.
 
         Returns:
@@ -433,7 +433,7 @@ class YamlSettingsCache:
         return self._get_async_core().cache.path_cache
 
     @property
-    def settings_cache(self) -> dict:
+    def settings_cache(self) -> dict[tuple[type, YAML, str], Any]:
         """Get the current settings cache.
 
         Returns:
@@ -443,7 +443,7 @@ class YamlSettingsCache:
         return self._get_async_core().cache.settings_cache
 
     @property
-    def file_mod_times(self) -> dict:
+    def file_mod_times(self) -> dict[Path, float]:
         """Get file modification times from the cache.
 
         Returns:

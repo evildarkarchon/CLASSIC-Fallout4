@@ -202,19 +202,19 @@ class RustLogParser:
                     ]
 
                     # Use Rust extract_section for each segment
-                    segments = []
+                    segments: list[list[str]] = []
                     for start_marker, end_marker in segment_boundaries:
                         section = self._rust_parser.extract_section(crash_data, start_marker, end_marker)
                         segments.append(section or [])
                     logger.debug("⚠️  Using legacy multiple FFI calls (7+ crossings)")
 
                     # Process segments to strip whitespace (Legacy path only)
-                    processed_segments = [[line.strip() for line in segment] for segment in segments]
+                    processed_segments: list[list[str]] = [[line.strip() for line in segment] for segment in segments]
 
                 # Ensure all expected segments exist
-                missing_segments = len(segment_boundaries) - len(processed_segments)
+                missing_segments: int = len(segment_boundaries) - len(processed_segments)
                 if missing_segments > 0:
-                    processed_segments.extend([[]] * missing_segments)
+                    processed_segments.extend([[]] * missing_segments)  # pyright: ignore[reportUnknownArgumentType]
 
             except parse_errors as e:
                 logger.warning(f"Rust parse error, falling back to Python: {e}")
@@ -262,7 +262,7 @@ class RustLogParser:
                 logger.debug(f"Rust extract_section error: {e}")
 
         # Python fallback - extract section manually
-        section = []
+        section: list[str] = []
         in_section = False
 
         for line in crash_data:

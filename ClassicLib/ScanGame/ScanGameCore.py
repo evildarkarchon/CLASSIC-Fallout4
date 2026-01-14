@@ -247,12 +247,12 @@ class ScanGameCore:
         msg_info("✔️ ALL REQUIREMENTS SATISFIED! NOW ANALYZING ALL BA2 MOD ARCHIVES (ASYNC)...")
 
         # Find and process BA2 files
-        ba2_files = await self.ba2_scanner.find_ba2_files_async(mod_path)
+        ba2_files: list[tuple[Path, str]] = await self.ba2_scanner.find_ba2_files_async(mod_path)
         if not ba2_files:
             return self.report_builder.build_archived_report(issue_lists, xse_acronym)
 
         # Process all BA2 files concurrently
-        results = await self.ba2_scanner.process_ba2_files_async(ba2_files, bsarch_path, xse_scriptfiles)
+        results: list[dict[str, set[str]]] = await self.ba2_scanner.process_ba2_files_async(ba2_files, bsarch_path, xse_scriptfiles)
 
         # Merge results into issue lists
         BA2ArchiveScanner.merge_scan_results(results, issue_lists)
@@ -268,11 +268,11 @@ class ScanGameCore:
         """
         # Initialize sets for collecting different issue types
         issue_lists: dict[str, set[str]] = {
-            "ba2_frmt": set(),
-            "tex_dims": set(),
-            "tex_frmt": set(),
-            "snd_frmt": set(),
-            "xse_file": set(),
+            "ba2_frmt": set[str](),
+            "tex_dims": set[str](),
+            "tex_frmt": set[str](),
+            "snd_frmt": set[str](),
+            "xse_file": set[str](),
         }
 
         # Get settings
@@ -307,7 +307,9 @@ class ScanGameCore:
         return None
 
     # Helper methods for internal operations
-    async def _check_dds_batch_async(self, dds_files: list[tuple[Path, Path]], issue_lists: dict, issue_locks: dict) -> None:
+    async def _check_dds_batch_async(
+        self, dds_files: list[tuple[Path, Path]], issue_lists: dict[str, set[str]], issue_locks: dict[str, asyncio.Lock]
+    ) -> None:
         """Check a batch of DDS files asynchronously to validate their dimensions and adds issues
         to provided lists if any discrepancies are found.
 
@@ -353,7 +355,7 @@ class ScanGameCore:
                         width, height = header
                         if width % 2 != 0 or height % 2 != 0:
                             results.append((relative_path, width, height))
-                return results
+                return results  # pyright: ignore[reportUnknownVariableType]
 
             # Process entire chunk in one executor call with semaphore
             async with self.dds_read_semaphore:

@@ -135,7 +135,7 @@ class GameIntegrityOrchestratorCore:
 
             # Get mod path to verify it exists before running scans
             core = ScanGameCore()
-            _, _, mod_path = core.get_scan_settings()  # pyright: ignore[reportGeneralTypeIssues]
+            _, _, mod_path = core.get_scan_settings()  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
 
             if not mod_path:
                 return str(yaml_settings(str, YAML.Main, "Mods_Warn.Mods_Path_Missing"))
@@ -229,7 +229,7 @@ class GameIntegrityOrchestratorCore:
         return await loop.run_in_executor(None, check_xse_plugins)
 
     @staticmethod
-    async def _run_crashgen_check_async() -> tuple[str, list]:
+    async def _run_crashgen_check_async() -> tuple[str, list[ConfigIssue]]:
         """Asynchronously runs a crash generation configuration check (FCX read-only mode).
 
         This method uses an event loop to run a crash generation settings check in a

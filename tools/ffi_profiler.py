@@ -51,7 +51,7 @@ if TYPE_CHECKING:
 
 # Try to import memory profiler for advanced memory tracking
 try:
-    import memory_profiler  # noqa: F401
+    import memory_profiler  # noqa: F401  # pyright: ignore[reportMissingTypeStubs]
 
     MEMORY_PROFILER_AVAILABLE = True
 except ImportError:
@@ -246,18 +246,18 @@ class FFIProfiler:
 
             # Add recursive size for collections
             if isinstance(obj, (list, tuple)):
-                size += sum(self._get_data_size(item) for item in obj[:100])  # Limit to avoid deep recursion
+                size += sum(self._get_data_size(item) for item in obj[:100])  # Limit to avoid deep recursion # pyright: ignore[reportUnknownArgumentType, reportUnknownReturnType, reportUnknownVariableType]
             elif isinstance(obj, dict):
-                for k, v in list(obj.items())[:100]:  # Limit items
+                for k, v in list(obj.items())[:100]:  # Limit items # pyright: ignore[reportUnknownArgumentType, reportUnknownVariableType]
                     size += self._get_data_size(k) + self._get_data_size(v)
             elif isinstance(obj, str):
                 # String marshaling has specific overhead
-                size += len(obj.encode("utf-8", errors="ignore"))
+                size += len(obj.encode("utf-8", errors="ignore"))  # pyright: ignore[reportUnknownArgumentType]
 
             return size  # noqa: TRY300
         except (RecursionError, MemoryError):
             # Fallback for complex objects
-            return sys.getsizeof(obj)
+            return sys.getsizeof(obj)  # pyright: ignore[reportUnknownArgumentType]
 
     @staticmethod
     def _get_data_type(obj: Any) -> str:
@@ -266,14 +266,14 @@ class FFIProfiler:
 
         # Add size information for collections
         if isinstance(obj, (list, tuple)):
-            obj_type += f"[{len(obj)}]"
+            obj_type += f"[{len(obj)}]"  # pyright: ignore[reportUnknownArgumentType]
         elif isinstance(obj, dict):
-            obj_type += f"{{{len(obj)}}}"
+            obj_type += f"{{{len(obj)}}}"  # pyright: ignore[reportUnknownArgumentType]
         elif isinstance(obj, str):
-            obj_type += f"({len(obj)}chars)"
+            obj_type += f"({len(obj)}chars)"  # pyright: ignore[reportUnknownArgumentType]
         elif hasattr(obj, "__len__"):
             with contextlib.suppress(Exception):
-                obj_type += f"[{len(obj)}]"
+                obj_type += f"[{len(obj)}]"  # pyright: ignore[reportUnknownArgumentType]
 
         return obj_type
 
@@ -283,7 +283,7 @@ class FFIProfiler:
             while not self._stop_monitoring.wait(self.memory_sampling_interval):
                 try:
                     # Get current memory usage in MB
-                    memory_mb = self._process.memory_info().rss / 1024 / 1024
+                    memory_mb = self._process.memory_info().rss / 1024 / 1024  # pyright: ignore[reportUnknownReturnType]
                     timestamp = time.perf_counter()
 
                     with self._profile_lock:
@@ -347,7 +347,7 @@ class FFIProfiler:
                 call_start_cpu = time.process_time()
 
                 # Get memory usage before call
-                memory_before = self._process.memory_info().rss / 1024 / 1024
+                memory_before = self._process.memory_info().rss / 1024 / 1024  # pyright: ignore[reportUnknownReturnType]
 
                 # Extract call information
                 func_name = frame.f_code.co_name
@@ -385,7 +385,7 @@ class FFIProfiler:
                 # End of a Rust call
                 call_end = time.perf_counter()
                 call_end_cpu = time.process_time()
-                memory_after = self._process.memory_info().rss / 1024 / 1024
+                memory_after = self._process.memory_info().rss / 1024 / 1024  # pyright: ignore[reportUnknownReturnType]
 
                 # Retrieve call start info
                 profile_data = frame.ffi_profile_data
@@ -477,7 +477,7 @@ class FFIProfiler:
         self.is_profiling = True
 
         # Get baseline memory
-        self._baseline_memory = self._process.memory_info().rss / 1024 / 1024
+        self._baseline_memory = self._process.memory_info().rss / 1024 / 1024  # pyright: ignore[reportUnknownReturnType]
 
         # Set up tracing
         self._original_trace_func = sys.gettrace()
@@ -590,7 +590,7 @@ class FFIProfiler:
         # Expensive calls (>95th percentile in time)
         expensive_calls = []
         if p95_call_time > 0:
-            expensive_funcs = set()
+            expensive_funcs: set[str] = set()
             for call in self.ffi_calls:
                 if call.wall_time >= p95_call_time:
                     expensive_funcs.add(f"{call.module_name}.{call.function_name}")
@@ -598,7 +598,7 @@ class FFIProfiler:
 
         # Batch opportunities (functions called frequently with small data)
         batch_opportunities = []
-        func_call_patterns = defaultdict(list)
+        func_call_patterns: defaultdict[str, list[FFICall]] = defaultdict(list)
         for call in self.ffi_calls:
             func_key = f"{call.module_name}.{call.function_name}"
             func_call_patterns[func_key].append(call)
@@ -642,8 +642,8 @@ class FFIProfiler:
             memory_leaks_detected=memory_leaks_detected,
             high_frequency_calls=high_frequency_calls,
             expensive_calls=expensive_calls,
-            batch_opportunities=batch_opportunities,
-            inefficient_transfers=inefficient_transfers,
+            batch_opportunities=batch_opportunities,  # pyright: ignore[reportUnknownArgumentType]
+            inefficient_transfers=inefficient_transfers,  # pyright: ignore[reportUnknownArgumentType]
         )
 
     def print_report(self, detailed: bool = True) -> None:  # noqa: PLR0912
@@ -803,7 +803,7 @@ class FFIProfiler:
 
 
 # Convenience functions for quick profiling
-def profile_ffi_function(func: Callable) -> Callable:
+def profile_ffi_function(func: Callable[..., Any]) -> Callable[..., Any]:  # pyright: ignore[reportUnknownReturnType]
     """Decorate to profile a single function's FFI usage.
 
     Usage:

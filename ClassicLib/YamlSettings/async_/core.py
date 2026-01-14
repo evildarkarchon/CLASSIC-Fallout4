@@ -427,7 +427,7 @@ class AsyncYamlSettingsCore:
                 current[keys[-1]] = value
 
                 # Update cache
-                cache_key = (type(value), yaml_store, key)
+                cache_key: tuple[type, YAML, str] = (type(value), yaml_store, key)  # pyright: ignore[reportUnknownVariableType]
                 self.cache.settings_cache[cache_key] = value
 
             # Save once

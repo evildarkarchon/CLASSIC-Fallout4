@@ -11,7 +11,10 @@ except ImportError:
 from ClassicLib import msg_error, msg_info
 from ClassicLib.Constants import YAML
 from ClassicLib.Logger import logger
-from ClassicLib.ScanGame.core.utils import ASYNC_ENCODING_AVAILABLE, read_lines_with_encoding_async
+from ClassicLib.ScanGame.core.utils import (  # pyright: ignore[reportUnknownVariableType]
+    ASYNC_ENCODING_AVAILABLE,
+    read_lines_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
+)
 from ClassicLib.Utils.file_utils import open_file_with_encoding
 from ClassicLib.Utils.string_utils import normalize_list
 from ClassicLib.YamlSettings import yaml_settings_async  # pyright: ignore[reportAttributeAccessIssue]

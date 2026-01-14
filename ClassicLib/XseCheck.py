@@ -15,7 +15,7 @@ The primary purposes of this module are:
 import hashlib
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from ClassicLib.Constants import YAML
 from ClassicLib.FileIO import read_bytes_sync, read_lines_sync
@@ -83,7 +83,7 @@ def xse_check_integrity() -> str:
 
 
 # noinspection PyUnusedLocal
-def _load_xse_config(game_vr: str) -> dict:
+def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
     """Load the configuration related to a game's XSE (eXtensible Script Engine) details and
     various associated components from a YAML settings file.
 
@@ -177,7 +177,7 @@ def _check_xse_installation(
         messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
         return
 
-    log_path: Path = Path(cast("str", log_file))
+    log_path: Path = Path(log_file)
     if not log_path.exists():
         messages.extend([
             f"❌ CAUTION : *{acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",

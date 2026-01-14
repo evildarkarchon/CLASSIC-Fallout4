@@ -444,7 +444,7 @@ class EnhancedDDSAnalyzer:
             the specific problem.
 
         """
-        issues = []
+        issues: list[str] = []
 
         # Common validations
         if not info.is_power_of_2 and info.mipmap_count > 1:
@@ -486,7 +486,7 @@ def get_analyzer() -> EnhancedDDSAnalyzer:
     analyzer = EnhancedDDSAnalyzer()
 
     # Log available backends once
-    available_backends = []
+    available_backends: list[str] = []
     if HAS_PYFFI:
         available_backends.append("PyFFI")
     if HAS_PIL_DDS:

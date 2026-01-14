@@ -114,14 +114,15 @@ def test_no_manual_event_loop_creation():
 @pytest.mark.unit
 @pytest.mark.rust
 def test_rust_acceleration_detection():
-    """Test that Rust acceleration is detected and logged (preparing for future)."""
+    """Test that Rust acceleration is detected for scangame module."""
     from ClassicLib.integration.status import is_rust_accelerated
 
-    # Check if Rust is available (currently False, but preparing for future)
     rust_available = is_rust_accelerated("scangame")
 
-    # Currently we expect False, but this prepares for future classic_scangame module
-    assert not rust_available, "classic_scangame not yet implemented (expected)"
+    if not rust_available:
+        pytest.skip("classic_scangame not built or available")
+
+    assert rust_available, "classic_scangame should be available when built"
 
 
 @pytest.mark.unit

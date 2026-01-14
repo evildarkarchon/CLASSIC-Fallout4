@@ -136,7 +136,7 @@ def create_checkbox(label_text: str, setting: str, style: str = CHECKBOX_STYLE) 
     checkbox.setChecked(value)
 
     # Connect state change to settings update
-    checkbox.stateChanged.connect(lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))
+    checkbox.stateChanged.connect(lambda state: yaml_settings(bool, YAML.Settings, f"CLASSIC_Settings.{setting}", bool(state)))  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
 
     checkbox.setStyleSheet(style)
     return checkbox
@@ -269,40 +269,6 @@ def add_bottom_button(layout: QLayout, text: str, callback: Callable[[], None], 
         button.setToolTip(tooltip)
     button.clicked.connect(callback)
     layout.addWidget(button)
-
-
-def _create_button(text: str, tooltip: str, callback: Callable) -> QPushButton:
-    """Create and returns a styled QPushButton with given text, tooltip, and callback function.
-
-    The function initializes a QPushButton, sets its tooltip, and connects the appropriate
-    signal to the provided callback. If the button is checkable, the `toggled` signal is
-    connected; otherwise, the `clicked` signal is used. The button's appearance is styled
-    using a predefined stylesheet, and its size policy is set to preferred width with fixed
-    height.
-
-    Args:
-        text: The text label displayed on the button.
-        tooltip: The text displayed as a tooltip when hovering over the button.
-        callback: The callable function to be triggered by the button's interaction.
-
-    Returns:
-        QPushButton: A styled and configured QPushButton instance.
-
-    """
-    button: QPushButton = QPushButton(text)
-    button.setToolTip(tooltip)
-
-    # Connect appropriate signal based on whether it's a toggle button or regular
-    if isinstance(button, QPushButton) and button.isCheckable():
-        button.toggled.connect(callback)
-    else:
-        button.clicked.connect(callback)
-
-    # Apply common styling
-    button.setStyleSheet(BOTTOM_BUTTON_STYLE)
-    button.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-
-    return button
 
 
 def open_url(url: str) -> None:

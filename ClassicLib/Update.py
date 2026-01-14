@@ -93,14 +93,17 @@ async def get_github_latest_stable_version_from_endpoint(session: aiohttp.Client
         logger.error(f"Error fetching latest stable release from {url}: {e}")
         return None
 
-    if isinstance(response_json, dict):
-        if response_json.get("prerelease"):
-            logger.warning(f"{url} returned a prerelease. Expected a stable release.")
-            return None
+    if not isinstance(response_json, dict):
+        logger.warning(f"Expected a dict from {url}, got {type(response_json)}")
+        return None
 
-        release_name = response_json.get("name")
-        if release_name and isinstance(release_name, str):
-            return try_parse_version(release_name)
+    if response_json.get("prerelease"):
+        logger.warning(f"{url} returned a prerelease. Expected a stable release.")
+        return None
+
+    release_name: str | None = response_json.get("name")  # pyright: ignore[reportUnknownVariableType]
+    if isinstance(release_name, str):
+        return try_parse_version(release_name)
     return None
 
 
@@ -135,10 +138,12 @@ async def get_github_latest_prerelease_version_from_list(session: aiohttp.Client
         logger.warning(f"Expected a list of releases from {url}, got {type(releases_json)}")
         return None
 
-    for release_data in releases_json:  # Iterates from newest to oldest
-        if isinstance(release_data, dict) and release_data.get("prerelease") is True:
-            prerelease_name = release_data.get("name")
-            if prerelease_name and isinstance(prerelease_name, str):
+    for release_data in releases_json:  # Iterates from newest to oldest  # pyright: ignore[reportUnknownVariableType]
+        if not isinstance(release_data, dict):
+            continue
+        if release_data.get("prerelease") is True:
+            prerelease_name: str | None = release_data.get("name")  # pyright: ignore[reportUnknownVariableType]
+            if isinstance(prerelease_name, str):
                 parsed_version: Version | None = try_parse_version(prerelease_name)
                 if parsed_version:
                     return parsed_version
@@ -207,20 +212,21 @@ async def get_latest_and_top_release_details(session: aiohttp.ClientSession, own
         # 2. Get all releases and take the top one
         async with session.get(all_releases_url) as response:
             response.raise_for_status()
-            all_releases_json: list[dict[str, Any]] = await response.json()
+            all_releases_json: Any = await response.json()
 
-            if not all_releases_json or not isinstance(all_releases_json, list):
+            if not isinstance(all_releases_json, list) or not all_releases_json:
                 logger.warning(f"No releases found or unexpected format from {all_releases_url}")
             else:
-                top_release_json: dict[str, Any] = all_releases_json[0]
-                results["top_of_list_release"] = {
-                    "id": top_release_json.get("id"),
-                    "tag_name": top_release_json.get("tag_name"),
-                    "name": top_release_json.get("name"),
-                    "version": try_parse_version(top_release_json.get("name", "")),
-                    "prerelease": top_release_json.get("prerelease"),
-                    "published_at": top_release_json.get("published_at"),
-                }
+                top_release_json = all_releases_json[0]  # pyright: ignore[reportUnknownVariableType]
+                if isinstance(top_release_json, dict):
+                    results["top_of_list_release"] = {
+                        "id": top_release_json.get("id"),
+                        "tag_name": top_release_json.get("tag_name"),
+                        "name": top_release_json.get("name"),
+                        "version": try_parse_version(top_release_json.get("name", "")),  # pyright: ignore[reportUnknownArgumentType]
+                        "prerelease": top_release_json.get("prerelease"),
+                        "published_at": top_release_json.get("published_at"),
+                    }
 
         if results["latest_endpoint_release"] and results["top_of_list_release"]:
             results["are_same_release_by_id"] = results["latest_endpoint_release"]["id"] == results["top_of_list_release"]["id"]
@@ -449,14 +455,14 @@ class VersionChecker:
         if not github_details:
             return None
 
-        candidate_versions = []
+        candidate_versions: list[Version] = []
         for release_key in ["latest_endpoint_release", "top_of_list_release"]:
             release_info = github_details.get(release_key)
             if release_info and release_info.get("version") and not release_info.get("prerelease"):
                 candidate_versions.append(release_info["version"])
 
         if candidate_versions:
-            version = max(candidate_versions)
+            version: Version | None = max(candidate_versions)  # pyright: ignore[reportUnknownArgumentType]
             logger.info(f"Determined latest stable GitHub version: {version}")
             return version
         return None
@@ -631,6 +637,85 @@ class VersionChecker:
         message_parts.append("\n✔️ You have the latest version of CLASSIC!")
         return "\n".join(message_parts)
 
+    async def check(self) -> bool:
+        """Check if the currently installed version of CLASSIC is the latest version.
+
+        Compares the installed version against the latest releases from GitHub and Nexus.
+        The function supports GUI-based requests and logs the update-check results in detail.
+
+        Returns:
+            bool: True if the installed version is the latest; otherwise, False. For GUI-based
+                requests, this can raise an error instead of returning.
+
+        Raises:
+            UpdateCheckError: Raised under different circumstances, such as errors in fetching
+                version details from GitHub and Nexus, or when an update is available in response
+                to a GUI request.
+
+        """
+        logger.debug("- - - INITIATED UPDATE CHECK")
+
+        # Early exit if update check is disabled
+        if not await self._check_update_enabled():
+            return False
+
+        # Validate update source configuration
+        update_source = await classic_settings_async(str, "Update Source") or "Both"
+        if not self._validate_update_source(update_source):
+            return False
+
+        # Parse local version
+        version_local = await self._parse_local_version()
+
+        # Show checking message
+        self._log_if_not_quiet(
+            "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n"
+            "   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n"
+        )
+
+        # Determine which sources to check
+        use_github, use_nexus = await self._determine_update_sources(update_source)
+
+        # Fetch remote versions
+        version_github = None
+        version_nexus = None
+
+        try:
+            async with aiohttp.ClientSession() as session:
+                if use_github:
+                    version_github = await self._fetch_github_version(session)
+                if use_nexus:
+                    version_nexus = await self._fetch_nexus_version(session)
+
+                self._check_source_failures(use_github, use_nexus, version_github, version_nexus)
+
+        except (aiohttp.ClientError, UpdateCheckError) as e:
+            return await self._handle_error(e)
+        except Exception as e:  # noqa: BLE001
+            # Catch unexpected exceptions for proper error handling and graceful degradation
+            logger.error(f"Unexpected error during version fetch: {e}", exc_info=True)
+            return await self._handle_error(e)
+
+        # Check if outdated
+        is_outdated = self._check_if_outdated(version_local, version_github, version_nexus)
+
+        if is_outdated:
+            # Show update warning
+            if not self.quiet:
+                warning_msg = str(await yaml_settings_async(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
+                msg_warning(warning_msg)
+
+            if self.gui_request:
+                raise UpdateCheckError("A new version is available.")
+            return False
+
+        # Show success message
+        if not self.quiet:
+            success_msg = self._format_success_message(version_local, use_github, version_github, use_nexus, version_nexus)
+            msg_success(success_msg)
+
+        return True
+
 
 async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bool:
     """Asynchronously checks if the currently installed version of CLASSIC Fallout 4 is the latest
@@ -654,69 +739,7 @@ async def is_latest_version(quiet: bool = False, gui_request: bool = True) -> bo
 
     """
     checker = VersionChecker(quiet, gui_request)
-
-    logger.debug("- - - INITIATED UPDATE CHECK")
-
-    # Early exit if update check is disabled
-    if not await checker._check_update_enabled():
-        return False
-
-    # Validate update source configuration
-    update_source = await classic_settings_async(str, "Update Source") or "Both"
-    if not checker._validate_update_source(update_source):
-        return False
-
-    # Parse local version
-    version_local = await checker._parse_local_version()
-
-    # Show checking message
-    checker._log_if_not_quiet(
-        "❓ (Needs internet connection) CHECKING FOR NEW CLASSIC VERSIONS...\n"
-        "   (You can disable this check in the EXE or CLASSIC Settings.yaml) \n"
-    )
-
-    # Determine which sources to check
-    use_github, use_nexus = await checker._determine_update_sources(update_source)
-
-    # Fetch remote versions
-    version_github = None
-    version_nexus = None
-
-    try:
-        async with aiohttp.ClientSession() as session:
-            if use_github:
-                version_github = await checker._fetch_github_version(session)
-            if use_nexus:
-                version_nexus = await checker._fetch_nexus_version(session)
-
-            checker._check_source_failures(use_github, use_nexus, version_github, version_nexus)
-
-    except (aiohttp.ClientError, UpdateCheckError) as e:
-        return await checker._handle_error(e)
-    except Exception as e:  # noqa: BLE001
-        # Catch unexpected exceptions for proper error handling and graceful degradation
-        logger.error(f"Unexpected error during version fetch: {e}", exc_info=True)
-        return await checker._handle_error(e)
-
-    # Check if outdated
-    is_outdated = checker._check_if_outdated(version_local, version_github, version_nexus)
-
-    if is_outdated:
-        # Show update warning
-        if not quiet:
-            warning_msg = str(await yaml_settings_async(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
-            msg_warning(warning_msg)
-
-        if gui_request:
-            raise UpdateCheckError("A new version is available.")
-        return False
-
-    # Show success message
-    if not quiet:
-        success_msg = checker._format_success_message(version_local, use_github, version_github, use_nexus, version_nexus)
-        msg_success(success_msg)
-
-    return True
+    return await checker.check()
 
 
 class UpdateCheckError(Exception):

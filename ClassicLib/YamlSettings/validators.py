@@ -51,7 +51,7 @@ def validate_settings_structure(data: dict[str, Any], store_type: str) -> None:
         ValueError: Settings file missing 'CLASSIC_Settings' root key
 
     """
-    if not isinstance(data, dict):
+    if not isinstance(data, dict):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Invalid {store_type} structure: expected dict, got {type(data)}")
 
     # Store-specific validation
@@ -183,7 +183,7 @@ def coerce_setting_value(value: Any, expected_type: type) -> Any:
     except (ValueError, TypeError) as e:
         logger.debug(f"Failed to coerce {value} to {expected_type}: {e}")
 
-    return value
+    return value  # pyright: ignore[reportUnknownVariableType]
 
 
 __all__ = [

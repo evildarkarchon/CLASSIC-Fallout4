@@ -63,7 +63,7 @@ class RustAcceleratedSuspectScanner:
             suspects_stack_list = {}
             for k, v in raw_stack_list.items():
                 if isinstance(v, list):
-                    suspects_stack_list[k] = [json.dumps(item) if isinstance(item, dict) else str(item) for item in v]
+                    suspects_stack_list[k] = [json.dumps(item) if isinstance(item, dict) else str(item) for item in v]  # pyright: ignore[reportUnknownArgumentType, reportUnknownVariableType]
                 else:
                     suspects_stack_list[k] = v
 

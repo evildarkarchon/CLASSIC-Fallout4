@@ -153,8 +153,8 @@ class QtMessageHandler(MessageHandler, QObject):
             description: Optional new description.
 
         """
-        self._qt_progress._current = value
-        self._qt_progress._update_dialog(value, description)
+        self._qt_progress._current = value  # pyright: ignore[reportPrivateUsage]
+        self._qt_progress._update_dialog(value, description)  # pyright: ignore[reportPrivateUsage]
 
         # Check for cancellation
         if self._qt_progress.was_cancelled():

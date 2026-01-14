@@ -10,12 +10,16 @@ It also provides integration with Rust extensions through the rust_loader module
 import asyncio
 import os
 import sys
-from importlib.metadata import PackageNotFoundError, distribution
+from importlib.metadata import Distribution, PackageNotFoundError, distribution
 from importlib.resources import files
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from ClassicLib import GlobalRegistry
 from ClassicLib.Logger import logger
+
+if TYPE_CHECKING:
+    from importlib.resources.abc import Traversable
 
 
 class ResourceLoader:
@@ -59,8 +63,8 @@ class ResourceLoader:
         # Check if we're running as a PyInstaller frozen executable
         if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
             # PyInstaller extracts data files to sys._MEIPASS
-            bundle_dir = Path(sys._MEIPASS)  # pyright: ignore[reportAttributeAccessIssue]
-            data_dir = bundle_dir / "CLASSIC Data"
+            bundle_dir: Path = Path(sys._MEIPASS)  # pyright: ignore[reportAttributeAccessIssue, reportUnknownArgumentType]
+            data_dir: Path = bundle_dir / "CLASSIC Data"
 
             if data_dir.exists():
                 logger.debug(f"Using bundled CLASSIC Data from temp extraction: {data_dir}")
@@ -124,7 +128,7 @@ class ResourceLoader:
             return None
 
     @staticmethod
-    def _get_distribution() -> object | None:
+    def _get_distribution() -> Distribution | None:
         """Attempt to retrieve the distribution information for specific package names
         using the `importlib.metadata` library. It tries the package names
         "classic-fallout4", "classic_fallout4", and "classic" in order.
@@ -134,7 +138,7 @@ class ResourceLoader:
         is caught and logged before returning `None`.
 
         Returns:
-            object | None: The distribution object if found, otherwise `None`.
+            Distribution | None: The distribution object if found, otherwise `None`.
 
         """
         try:
@@ -153,7 +157,7 @@ class ResourceLoader:
             return None
 
     @staticmethod
-    def _check_package_location(dist) -> Path | None:  # noqa: ANN001
+    def _check_package_location(dist: Distribution) -> Path | None:
         """Check and retrieves the data directory for a package based on its distribution
         metadata. This method examines the attributes of the distribution object or uses
         alternative methods to locate the associated "CLASSIC Data" directory.
@@ -169,15 +173,12 @@ class ResourceLoader:
         try:
             # Get location from the distribution metadata
             # For wheel/installed packages, check the site-packages location
-            if hasattr(dist, "_path") and dist._path:
-                package_location = Path(dist._path).parent
-            elif hasattr(dist, "locate_file"):
-                # Alternative method for some distributions
-                package_location = Path(str(dist.locate_file("")))
-            else:
+            # Use locate_file("") to get the base path - this is the public API
+            package_location = Path(str(dist.locate_file("")))
+            if not package_location.exists():
                 # Fallback: try to find via files() API
                 try:
-                    pkg_files = files("classic")
+                    pkg_files: Traversable = files("classic")
                     if pkg_files:
                         package_location = Path(str(pkg_files)).parent
                     else:
@@ -233,9 +234,9 @@ class ResourceLoader:
                 return None
 
             # Extract to a stable location (not temp)
-            import appdirs
+            import appdirs  # pyright: ignore[reportMissingTypeStubs]
 
-            app_data_dir = Path(appdirs.user_data_dir("CLASSIC-Fallout4", "CLASSIC"))
+            app_data_dir: Path = Path(appdirs.user_data_dir("CLASSIC-Fallout4", "CLASSIC"))  # pyright: ignore[reportUnknownArgumentType]
             data_dir = app_data_dir / "CLASSIC Data"
 
             if not data_dir.exists():
@@ -302,9 +303,9 @@ class ResourceLoader:
 
         """
         try:
-            import appdirs
+            import appdirs  # pyright: ignore[reportMissingTypeStubs]
 
-            app_data_dir = Path(appdirs.user_data_dir("CLASSIC-Fallout4", "CLASSIC"))
+            app_data_dir = Path(appdirs.user_data_dir("CLASSIC-Fallout4", "CLASSIC"))  # pyright: ignore[reportUnknownArgumentType]
             data_dir = app_data_dir / "CLASSIC Data"
             if not data_dir.exists():
                 logger.warning(f"Creating CLASSIC Data directory in: {data_dir}")
@@ -349,7 +350,7 @@ class ResourceLoader:
         return ResourceLoader._create_in_app_data()
 
     @staticmethod
-    def _extract_bundled_data_importlib(target_dir: Path, package_files=None) -> None:  # noqa: ANN001
+    def _extract_bundled_data_importlib(target_dir: Path, package_files=None) -> None:  # noqa: ANN001  # pyright: ignore[reportUnknownParameterType]
         """Extract bundled essential data using the importlib resources API.
 
         This method extracts specific files (not databases) from bundled package resources
@@ -400,22 +401,24 @@ class ResourceLoader:
             for file_path in essential_files:
                 try:
                     # Navigate to the resource using the traversable interface
+                    # Use joinpath() to navigate through the Traversable hierarchy
+                    # Do NOT convert to Path - that breaks wheel-based installations
                     resource_parts = ["CLASSIC Data", *file_path.split("/")]
-                    resource = package_files
+                    resource: Traversable = package_files  # pyright: ignore[reportUnknownVariableType]
 
                     for part in resource_parts:
-                        resource /= part
+                        resource = resource.joinpath(part)  # pyright: ignore[reportUnknownVariableType]
 
                     if resource.is_file():
-                        # Read the resource
-                        data = resource.read_bytes()
+                        # Read the resource using Traversable API
+                        data: bytes = resource.read_bytes()  # pyright: ignore[reportUnknownVariableType]
 
                         # Write to target location
-                        target_file = target_dir / file_path
+                        target_file: Path = target_dir / file_path
                         target_file.parent.mkdir(parents=True, exist_ok=True)
 
                         # Write as binary to preserve exact content
-                        target_file.write_bytes(data)
+                        target_file.write_bytes(data)  # pyright: ignore[reportUnknownArgumentType]
                         logger.debug(f"Extracted {file_path} from package")
                     else:
                         logger.debug(f"Resource not found: {file_path}")
@@ -800,7 +803,7 @@ class ResourceLoader:
             return success
 
     @staticmethod
-    def get_rust_extension_info() -> dict:
+    def get_rust_extension_info() -> dict[str, Any]:
         """Retrieve information regarding the Rust extension module.
 
         This method attempts to import and retrieve information about the Rust extension

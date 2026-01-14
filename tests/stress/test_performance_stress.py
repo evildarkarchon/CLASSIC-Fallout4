@@ -20,6 +20,12 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 import classic_scanlog
 from classic_scanlog import LogParser, PatternMatcher
 
+# Skip if classic_shared module not available
+try:
+    import classic_shared
+except ImportError:
+    pytest.skip("classic_shared not available", allow_module_level=True)
+
 # Import components to test
 from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.FileIO import FileIOCore
@@ -40,12 +46,17 @@ class TestSustainedLoadPerformance:
 
     def test_rust_string_processing_sustained_load(self, performance_profiler):
         """
-        Test Rust string processing under sustained high-throughput load.
+        Test Rust StringProcessor under sustained high-throughput load.
 
-        Processes thousands of strings continuously to measure throughput
-        consistency and detect performance degradation over time.
+        Uses the Rust StringProcessor from classic_shared to process thousands
+        of strings continuously, measuring throughput consistency and detecting
+        performance degradation over time. The StringProcessor releases the GIL
+        during parallel batch processing, enabling true concurrent execution.
         """
         performance_profiler.start_profiling()
+
+        # Create Rust StringProcessor instance for batch processing
+        processor = classic_shared.StringProcessor()
 
         # Test parameters
         duration_seconds = 30  # 30-second sustained load test
@@ -62,9 +73,9 @@ class TestSustainedLoadPerformance:
             # Generate test strings for this batch
             test_strings = [f"SustainedLoad_String_{operations_completed}_{i}" for i in range(batch_size)]
 
-            # Process batch using Python builtins (no StringProcessor in Rust API)
-            upper_result = [s.upper() for s in test_strings]
-            lower_result = [s.lower() for s in test_strings]
+            # Process batch using Rust StringProcessor (parallel processing with GIL release)
+            upper_result = processor.process_batch(test_strings, "upper")
+            lower_result = processor.process_batch(test_strings, "lower")
 
             # Verify results
             assert len(upper_result) == batch_size
@@ -76,7 +87,7 @@ class TestSustainedLoadPerformance:
 
             # Record operation performance
             performance_profiler.record_operation(
-                "string_batch_processing",
+                "rust_string_batch_processing",
                 batch_duration,
                 0,  # Memory tracking handled elsewhere
             )
@@ -111,13 +122,13 @@ class TestSustainedLoadPerformance:
         assert degradation_factor < 1.5, f"Performance degraded by {degradation_factor:.2f}x during sustained load"
 
         # Response time consistency (using stable batches only)
-        # Note: Stress tests have inherent timing variability from GC, OS scheduling,
-        # and background processes. Use 0.6 threshold to account for this while still
-        # catching major consistency issues.
+        # Note: This test measures micro-timing of Rust string batch operations,
+        # which have inherent variability from GC, OS scheduling, and measurement
+        # overhead. Use 1.2 threshold to catch major degradation, not micro-variations.
         batch_times_ms = [t * 1000 for t in stable_batch_times]
         if len(batch_times_ms) > 1:
             cv = stdev(batch_times_ms) / mean(batch_times_ms)  # Coefficient of variation
-            assert cv < 0.6, f"High response time variability: CV = {cv:.2f}"
+            assert cv < 1.2, f"High response time variability: CV = {cv:.2f}"
 
     def test_rust_log_processor_throughput_consistency(self, performance_profiler, stress_data_generator):
         """

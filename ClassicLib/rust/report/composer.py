@@ -101,7 +101,7 @@ class RustAcceleratedReportComposer:
         if self._use_rust:
             # Convert Python fragment to Rust if needed
             if isinstance(fragment, RustAcceleratedReportFragment):
-                if fragment._use_rust:
+                if fragment._use_rust:  # pyright: ignore[reportPrivateUsage]
                     # Rust add() returns None, we return self for chaining
                     self._composer.add(fragment._fragment)  # type: ignore[union-attr]
                 else:
@@ -146,7 +146,7 @@ class RustAcceleratedReportComposer:
         RustAcceleratedReportFragment = _get_fragment_class()
 
         result = RustAcceleratedReportFragment.__new__(RustAcceleratedReportFragment)
-        result._use_rust = self._use_rust
+        result._use_rust = self._use_rust  # pyright: ignore[reportPrivateUsage]
 
         if self._use_rust:
             assert RustReportComposer is not None, "Rust should be available when _use_rust is True"
@@ -204,8 +204,8 @@ class RustAcceleratedReportComposer:
             return cast("RustReportComposer", self._composer).build_string()  # type: ignore[misc]
 
         # Python fallback
-        lines = self._composer.to_list()  # type: ignore[union-attr]
-        return "\n".join(lines)
+        lines: list[str] = self._composer.to_list()  # type: ignore[union-attr]
+        return "\n".join(lines)  # pyright: ignore[reportUnknownArgumentType]
 
     @property
     def pool_stats(self) -> tuple[int, int, int, int] | None:

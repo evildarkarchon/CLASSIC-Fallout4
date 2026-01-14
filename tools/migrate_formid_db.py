@@ -327,8 +327,8 @@ Examples:
     print(f"Indexes added: {total_modified}")
 
     if errors:
-        print(f"\nErrors encountered: {len(errors)}")
-        for path, error in errors:
+        print(f"\nErrors encountered: {len(errors)}")  # pyright: ignore[reportUnknownArgumentType]
+        for path, error in errors:  # pyright: ignore[reportUnknownVariableType]
             print(f"  - {path}: {error}")
         return 1
 

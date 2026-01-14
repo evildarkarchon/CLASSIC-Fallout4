@@ -73,7 +73,7 @@ class ManagedThread:
             bool: True if the thread is running, False otherwise.
 
         """
-        return self.thread is not None and self.thread.isRunning()
+        return bool(self.thread and self.thread.isRunning())
 
 
 class ThreadManager(QObject):

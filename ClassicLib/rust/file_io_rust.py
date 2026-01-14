@@ -217,7 +217,7 @@ class FileIOCore:
             try:
                 # Await Rust coroutine - true async, no blocking!
                 return await self._rust_core.read_file(str(path))
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_file, falling back: {e}")
 
         # Python fallback
@@ -248,7 +248,7 @@ class FileIOCore:
         if self._rust_core:
             try:
                 return await self._rust_core.read_lines(str(path))
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_lines, falling back: {e}")
 
         if self._python_core:
@@ -273,7 +273,7 @@ class FileIOCore:
                 streamer = await self._rust_core.stream_lines(str(path))
                 async for line in streamer:
                     yield line
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in stream_lines, falling back: {e}")
             else:
                 return
@@ -304,7 +304,7 @@ class FileIOCore:
                 # This returns a standard iterator (PySyncLineStreamer)
                 # The Rust method call is synchronous (blocks I/O)
                 yield from self._rust_core.stream_lines_sync(str(path))
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in stream_lines_sync, falling back: {e}")
             else:
                 return
@@ -336,7 +336,7 @@ class FileIOCore:
             try:
                 # Rust returns bytes directly - no wrapper needed
                 return await self._rust_core.read_bytes(str(path))
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_bytes, falling back: {e}")
 
         if self._python_core:
@@ -358,7 +358,7 @@ class FileIOCore:
         if self._rust_core:
             try:
                 return await self._rust_core.read_file_mmap(str(path))
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_file_mmap, falling back: {e}")
 
         # Fallback to regular read
@@ -378,7 +378,7 @@ class FileIOCore:
         if self._rust_core:
             try:
                 return await self._rust_core.read_file_with_encoding(str(path), encoding)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_file_with_encoding, falling back: {e}")
 
         # Fallback
@@ -402,7 +402,7 @@ class FileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.write_file(str(path), content)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in write_file, falling back: {e}")
             else:
                 return
@@ -428,7 +428,7 @@ class FileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.write_lines(str(path), lines)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in write_lines, falling back: {e}")
             else:
                 return
@@ -457,7 +457,7 @@ class FileIOCore:
             try:
                 # PyO3 converts bytes to Vec<u8> automatically
                 await self._rust_core.write_bytes(str(path), content)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in write_bytes, falling back: {e}")
             else:
                 return
@@ -486,7 +486,7 @@ class FileIOCore:
         if self._rust_core:
             try:
                 await self._rust_core.append_file(str(path), content)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in append_file, falling back: {e}")
             else:
                 return
@@ -528,7 +528,7 @@ class FileIOCore:
             try:
                 # Rust method is synchronous (blocks on Tokio runtime internally)
                 return self._rust_core.read_dds_header(str(path))
-            except all_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except all_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_dds_header: {e}")
                 return None
 
@@ -576,14 +576,14 @@ class FileIOCore:
                 str_paths = [str(p) for p in paths]
                 # Rust method is synchronous (blocks with parallel processing internally)
                 return self._rust_core.read_dds_headers_batch(str_paths)
-            except all_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except all_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_dds_headers_batch: {e}")
 
         # Python fallback - process sequentially
         results = {}
         for path in paths:
             results[str(path)] = self.read_dds_header(path)
-        return results
+        return results  # pyright: ignore[reportUnknownVariableType]
 
     def walk_directory(self, path: Path | str, pattern: str | None = None, max_depth: int | None = None) -> list[str]:
         """Recursively walks through a directory to collect the file paths, optionally filtering by
@@ -623,7 +623,7 @@ class FileIOCore:
             try:
                 # Rust method is synchronous (blocks with parallel processing internally)
                 return self._rust_core.py_walk_directory(str(path), pattern, max_depth)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in walk_directory: {e}")
 
         # Python fallback
@@ -647,7 +647,7 @@ class FileIOCore:
                 pass  # Skip inaccessible directories
 
         walk(path)
-        return results
+        return results  # pyright: ignore[reportUnknownVariableType]
 
     # ==========================================
     # Batch Operations
@@ -681,7 +681,7 @@ class FileIOCore:
                 result = await self._rust_core.py_read_multiple_files(str_paths)
                 # Convert paths to filenames for compatibility
                 return {Path(k).name: v for k, v in result.items()}
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in read_multiple_files: {e}")
 
         if self._python_core:
@@ -696,7 +696,7 @@ class FileIOCore:
             except OSError as e:
                 logger.error(f"Error reading {path}: {e}")
                 results[Path(path).name] = ""
-        return results
+        return results  # pyright: ignore[reportUnknownVariableType]
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
         """Write content to multiple files asynchronously.
@@ -717,7 +717,7 @@ class FileIOCore:
                 str_files = {str(k): v for k, v in files.items()}
                 # Rust method returns coroutine - must await
                 await self._rust_core.py_write_multiple_files(str_files)
-            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues]
+            except io_and_rust_errors as e:  # pyright: ignore[reportGeneralTypeIssues, reportUnknownVariableType]
                 logger.debug(f"Rust error in write_multiple_files: {e}")
             else:
                 return

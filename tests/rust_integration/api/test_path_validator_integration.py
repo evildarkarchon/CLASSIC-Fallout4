@@ -11,6 +11,11 @@ Test Coverage:
 - is_restricted_path() with various path types
 - Fallback behavior when Rust is unavailable
 - Edge cases and error handling
+
+Note:
+    These tests verify that Rust acceleration is active before running.
+    They will skip if the Rust path module (classic_path) is not available.
+    The component is registered as "path" in the detector.
 """
 
 from __future__ import annotations
@@ -22,13 +27,46 @@ from pathlib import Path
 
 import pytest
 
+from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.PathValidator import PathValidator
+
+
+def _skip_if_rust_unavailable() -> None:
+    """Skip the test if Rust path module is not available.
+
+    Raises:
+        pytest.skip: If Rust acceleration is not available for path operations.
+
+    Note:
+        The Rust module is registered as "path" (base component) and
+        "path_operations" (for PathValidator class) in the detector.
+    """
+    if not is_rust_accelerated("path"):
+        pytest.skip("Rust path module not available")
 
 
 @pytest.mark.rust
 @pytest.mark.integration
 class TestPathValidatorRustIntegration:
-    """Test PathValidator Rust acceleration integration."""
+    """Test PathValidator Rust acceleration integration.
+
+    These tests verify that the PathValidator class uses Rust acceleration
+    when available. Tests will skip if Rust path_validator is not installed.
+    """
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self) -> None:
+        """Require Rust path_validator to be available for all tests in this class."""
+        _skip_if_rust_unavailable()
+
+    def test_rust_acceleration_is_active(self) -> None:
+        """Verify that Rust acceleration is actually being used.
+
+        This test confirms that the PathValidator class is using Rust acceleration,
+        not falling back to Python. This ensures the other tests in this class
+        are actually testing Rust behavior.
+        """
+        assert is_rust_accelerated("path"), "Rust path module should be active"
 
     def test_is_valid_path_with_existing_file(self):
         """Test is_valid_path with an existing file (Python executable)."""
@@ -182,7 +220,16 @@ class TestPathValidatorYAMLIntegration:
 @pytest.mark.rust
 @pytest.mark.integration
 class TestPathValidatorAPICompatibility:
-    """Test API compatibility between Rust and Python implementations."""
+    """Test API compatibility between Rust and Python implementations.
+
+    These tests verify that the Rust implementation maintains API compatibility
+    with the Python implementation.
+    """
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self) -> None:
+        """Require Rust path_validator to be available for all tests in this class."""
+        _skip_if_rust_unavailable()
 
     def test_is_valid_path_signature(self):
         """Verify is_valid_path accepts both str and Path."""
@@ -219,7 +266,16 @@ class TestPathValidatorAPICompatibility:
 @pytest.mark.rust
 @pytest.mark.integration
 class TestPathValidatorEdgeCases:
-    """Test edge cases and error handling."""
+    """Test edge cases and error handling.
+
+    These tests verify that the Rust implementation handles edge cases
+    correctly and doesn't crash on unusual inputs.
+    """
+
+    @pytest.fixture(autouse=True)
+    def require_rust(self) -> None:
+        """Require Rust path_validator to be available for all tests in this class."""
+        _skip_if_rust_unavailable()
 
     def test_very_long_path(self):
         """Test with very long path name."""

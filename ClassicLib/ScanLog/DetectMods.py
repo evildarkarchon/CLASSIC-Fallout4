@@ -107,15 +107,15 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         ValueError: If a mod from the YAML dictionary has no warning defined.
 
     """
-    lines = []
+    lines: list[str] = []
     yaml_dict_lower = _convert_to_lowercase(yaml_dict)
     crashlog_plugins_lower = _convert_to_lowercase(crashlog_plugins)
 
     # Sort mod names by length (longest first) to find most specific matches first
-    mod_items = sorted(yaml_dict_lower.items(), key=lambda x: len(x[0]), reverse=True)
+    mod_items: list[tuple[str, str]] = sorted(yaml_dict_lower.items(), key=lambda x: len(x[0]), reverse=True)
 
     # Extract mod names for pattern compilation
-    mod_names = frozenset(name for name, _ in mod_items)
+    mod_names: frozenset[str] = frozenset(name for name, _ in mod_items)
     if not mod_names:
         return ReportFragment.empty()
 
@@ -123,11 +123,11 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     combined_pattern = _compile_mod_pattern(mod_names)
 
     # Create a lookup dictionary for O(1) access to mod warnings
-    mod_lookup = dict(mod_items)
+    mod_lookup: dict[str, str] = dict(mod_items)
 
     # Track matching plugins for each mod to consolidate output
     # Only store the first matching plugin ID for each mod
-    mod_matches: dict[str, str] = {}
+    mod_matches: dict[str, str] = {}  # pyright: ignore[reportUnknownVariableType]
 
     # Process each plugin once with the combined pattern
     for plugin_name, plugin_id in crashlog_plugins_lower.items():
@@ -183,7 +183,7 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
         ValueError: If a detected mod combination has no warning associated.
 
     """
-    lines = []
+    lines: list[str] = []
     yaml_dict_lower = _convert_to_lowercase(yaml_dict)
     crashlog_plugins_lower = _convert_to_lowercase(crashlog_plugins)
 

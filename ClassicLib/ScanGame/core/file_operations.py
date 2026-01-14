@@ -3,6 +3,7 @@
 import asyncio
 import shutil
 from pathlib import Path
+from typing import Any
 
 from ClassicLib import msg_error
 from ClassicLib.ScanGame.Config import TEST_MODE
@@ -36,7 +37,7 @@ class FileOperations:
         """
         self.file_ops_semaphore = file_ops_semaphore
 
-    async def move_fomod_async(self, context: dict, root: Path, dirname: str) -> None:
+    async def move_fomod_async(self, context: dict[str, Any], root: Path, dirname: str) -> None:
         """Move a specified folder asynchronously to a backup location while handling potential
         errors and updating issue tracking.
 
@@ -71,13 +72,13 @@ class FileOperations:
             async with context["issue_locks"]["cleanup"]:
                 context["issue_lists"]["cleanup"].add(f"  - {relative_path}\n")
 
-    async def move_file_async(self, context: dict, file_path: Path) -> None:
+    async def move_file_async(self, context: dict[str, Any], file_path: Path) -> None:
         """Asynchronously moves a file from the current location to a backup location specified
         in the context. Ensures that the backup directory structure is maintained. Handles
         possible exceptions during the file operation process and logs errors appropriately.
 
         Args:
-            context (dict): A dictionary containing configuration details, including
+            context (dict[str, Any]): A dictionary containing configuration details, including
                 paths and synchronization mechanisms required for file operations.
                 Keys include `mod_path`, `backup_path`, `issue_locks`, and `issue_lists`.
             file_path (Path): The path of the file to be moved.
