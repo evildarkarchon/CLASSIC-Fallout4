@@ -185,6 +185,9 @@ class VersionInfo:
         priority: Priority for ambiguous matching (higher = preferred).
         deprecated: Whether this version is deprecated.
         exe_hash: SHA-256 hash of the game executable for this version.
+        crashgen_versions: Tuple of valid crash generator versions for this game version.
+            For example, FO4_OG supports both "1.28.6" and "1.37.0", while FO4_NG only
+            supports "1.37.0". An empty tuple means no crash generator is supported yet.
 
     Example:
         >>> info = VersionInfo(
@@ -194,10 +197,13 @@ class VersionInfo:
         ...     version=Version("1.10.163.0"),
         ...     display_name="Fallout 4 Original",
         ...     short_name="OG",
-        ...     exe_hash="55f57947..."
+        ...     exe_hash="55f57947...",
+        ...     crashgen_versions=("1.28.6", "1.37.0")
         ... )
         >>> info.version_string
         '1.10.163.0'
+        >>> info.crashgen_versions
+        ('1.28.6', '1.37.0')
 
     """
 
@@ -214,6 +220,7 @@ class VersionInfo:
     priority: int = 100
     deprecated: bool = False
     exe_hash: str | None = None
+    crashgen_versions: tuple[str, ...] = field(default_factory=tuple)
 
     @property
     def version_string(self) -> str:

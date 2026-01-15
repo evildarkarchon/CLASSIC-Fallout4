@@ -7,6 +7,9 @@ populated from cached YAML settings, and the class verifies the initialization o
 necessary resources during its instantiation.
 """
 
+from __future__ import annotations
+
+import warnings
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -34,7 +37,11 @@ class ClassicScanLogsInfo:
         crashgen_name (str): Name of the crash generation log (Standard).
         crashgen_name_vr (str): Name of the crash generation log (VR).
         crashgen_latest_og (str): Latest version detail for the crash generation (original).
+            **Deprecated**: Use ``VersionRegistry.get_crashgen_versions()`` for list-based
+            version checking that supports multiple valid versions per game version.
         crashgen_latest_vr (str): Latest version detail for the crash generation (VR).
+            **Deprecated**: Use ``VersionRegistry.get_crashgen_versions()`` for list-based
+            version checking that supports multiple valid versions per game version.
         crashgen_ignore (set): Set of ignored crash generation logs (Standard).
         crashgen_ignore_vr (set): Set of ignored crash generation logs (VR).
         warn_noplugins (str): Warning message for missing plugins.
@@ -291,5 +298,25 @@ class ClassicScanLogsInfo:
         return self.game_root_name_vr if is_vr else self.game_root_name
 
     def get_crashgen_latest(self, is_vr: bool) -> str:
-        """Get latest crash generator version based on VR mode."""
+        """Get latest crash generator version based on VR mode.
+
+        .. deprecated::
+            Use ``VersionRegistry.get_crashgen_versions()`` for list-based version
+            checking that supports multiple valid versions per game version.
+            This method only returns a single version and doesn't handle cases
+            where multiple versions are valid (e.g., FO4_OG supports 1.28.6 and 1.37.0).
+
+        Args:
+            is_vr: Whether VR mode is active.
+
+        Returns:
+            The latest crash generator version string for the specified mode.
+
+        """
+        warnings.warn(
+            "get_crashgen_latest() is deprecated. Use VersionRegistry.get_crashgen_versions() "
+            "for list-based version checking with support for multiple valid versions.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return self.crashgen_latest_vr if is_vr else self.crashgen_latest_og

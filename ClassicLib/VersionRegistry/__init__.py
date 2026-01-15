@@ -62,6 +62,12 @@ from ClassicLib.VersionRegistry.core import (
     get_detected_version_info,
     get_version_registry,
 )
+from ClassicLib.VersionRegistry.crashgen_checker import (
+    CrashgenVersionResult,
+    CrashgenVersionStatus,
+    check_crashgen_version,
+    check_crashgen_version_for_detected_game,
+)
 from ClassicLib.VersionRegistry.matching import (
     MatchConfidence,
     MatchResult,
@@ -90,4 +96,9 @@ __all__ = [
     "VersionMatcher",
     "MatchResult",
     "MatchConfidence",
+    # Crashgen version checking
+    "CrashgenVersionStatus",
+    "CrashgenVersionResult",
+    "check_crashgen_version",
+    "check_crashgen_version_for_detected_game",
 ]

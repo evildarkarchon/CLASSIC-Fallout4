@@ -1222,6 +1222,12 @@ impl OrchestratorCore {
     /// # Returns
     ///
     /// A tuple of (parsed_version, is_outdated).
+    ///
+    /// # Note
+    ///
+    /// This method uses the legacy single-version comparison. For list-based version
+    /// checking that supports multiple valid versions, use `check_crashgen_version_list`.
+    #[allow(deprecated)]
     pub fn check_crashgen_version(&self, crashgen_version_str: &str) -> (CrashgenVersion, bool) {
         let current = crashgen_version_gen(crashgen_version_str);
         let latest = crashgen_version_gen(&self.config.crashgen_latest);
@@ -1230,6 +1236,30 @@ impl OrchestratorCore {
         let is_outdated = current.is_outdated(&latest, &latest_vr, self.config.vr_mode);
 
         (current, is_outdated)
+    }
+
+    /// Checks crashgen version against a list of valid versions.
+    ///
+    /// This is the new list-based version validation that supports multiple valid
+    /// versions per game version (e.g., FO4_OG supports both 1.28.6 and 1.37.0).
+    ///
+    /// # Arguments
+    ///
+    /// * `crashgen_version_str` - The crashgen version string from the crash log
+    /// * `valid_versions` - Slice of valid version strings for the game version
+    ///
+    /// # Returns
+    ///
+    /// A tuple of (parsed_version, CrashgenVersionStatus).
+    pub fn check_crashgen_version_list(
+        &self,
+        crashgen_version_str: &str,
+        valid_versions: &[&str],
+    ) -> (CrashgenVersion, crate::version::CrashgenVersionStatus) {
+        let current = crashgen_version_gen(crashgen_version_str);
+        let status =
+            crate::version::check_crashgen_version_status(crashgen_version_str, valid_versions);
+        (current, status)
     }
 
     /// Checks if the game is running FOLON (Fallout: London) based on plugins.

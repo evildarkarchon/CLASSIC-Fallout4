@@ -316,10 +316,23 @@ class OrchestratorCore:
         version_latest: Version = crashgen_version_gen(self.yamldata.crashgen_latest_og)
         version_latest_vr: Version = crashgen_version_gen(self.yamldata.crashgen_latest_vr)
 
-        # Generate error section
+        # Determine game version ID for list-based crashgen version checking
+        from ClassicLib.VersionRegistry.core import get_version_registry
+
+        registry = get_version_registry()
+        match_result = registry.match_version(game_version, "Fallout4", is_vr=is_vr_log)
+        game_version_id: str | None = match_result.version_info.id if match_result.version_info else None
+
+        # Generate error section with new list-based version checking
         composer.add(
             self.report_generator.generate_error_section(
-                crashlog_mainerror, crashlog_crashgen, version_current, version_latest, version_latest_vr, is_vr_log
+                crashlog_mainerror,
+                crashlog_crashgen,
+                version_current,
+                version_latest,
+                version_latest_vr,
+                is_vr_log,
+                game_version_id=game_version_id,
             )  # pyright: ignore[reportArgumentType]
         )
 

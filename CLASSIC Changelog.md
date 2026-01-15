@@ -4,6 +4,8 @@
 - Optimize the Form-ID database lookup code.
 - Fix database connections not being properly closed on application exit, which caused .db-wal and .db-shm files to persist.
 - Fix migration tool path casing to match codebase conventions (`databases` lowercase, `Main`/`Local` title case).
+- Simplify the update check code using the GitHub API.
+- Improve the version detection logic for the crashlog generator version check.
 
 ### 8.1.0 CHANGES
 

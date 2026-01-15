@@ -205,6 +205,10 @@ class VersionRegistry:
                 cr.get("max", "999.999.999"),
             )
 
+        # Parse crashgen_versions list - convert to immutable tuple for frozen dataclass compatibility
+        crashgen_versions_list = data.get("crashgen_versions", [])
+        crashgen_versions = tuple(crashgen_versions_list) if crashgen_versions_list else ()
+
         return VersionInfo(
             id=data.get("id", ""),
             game=data.get("game", ""),
@@ -219,6 +223,7 @@ class VersionRegistry:
             priority=data.get("priority", 100),
             deprecated=data.get("deprecated", False),
             exe_hash=data.get("exe_hash"),
+            crashgen_versions=crashgen_versions,
         )
 
     def _load_defaults(self) -> None:
@@ -256,6 +261,7 @@ class VersionRegistry:
             ),
             priority=100,
             exe_hash="55f57947db9e05575122fae1088f0b0247442f11e566b56036caa0ac93329c36",
+            crashgen_versions=("1.28.6", "1.37.0"),  # Both legacy and NG-compatible versions
         )
         self._versions[og.id] = og
         self._by_version[og.version_string] = og
@@ -289,6 +295,7 @@ class VersionRegistry:
             ),
             priority=200,
             exe_hash="bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2",
+            crashgen_versions=("1.37.0",),  # Only NG-compatible version
         )
         self._versions[ng.id] = ng
         self._by_version[ng.version_string] = ng
@@ -315,6 +322,7 @@ class VersionRegistry:
             ),
             priority=100,
             exe_hash=None,  # VR exe hash not yet available
+            crashgen_versions=("1.37.0",),  # Same as NG - VR uses NG-compatible version
         )
         self._versions[vr.id] = vr
         self._by_version[vr.version_string] = vr
@@ -594,6 +602,60 @@ class VersionRegistry:
         if result.version_info and result.version_info.address_library:
             return result.version_info.address_library.filename
         return None
+
+    def get_crashgen_versions(self, version_id: str) -> tuple[str, ...]:
+        """Get valid crash generator versions for a specific game version ID.
+
+        Args:
+            version_id: The version ID (e.g., "FO4_OG", "FO4_NG", "FO4_VR").
+
+        Returns:
+            Tuple of valid crash generator version strings. Empty tuple if the
+            version ID is not found or has no crash generator support.
+
+        Example:
+            >>> registry = get_version_registry()
+            >>> registry.get_crashgen_versions("FO4_OG")
+            ('1.28.6', '1.37.0')
+            >>> registry.get_crashgen_versions("FO4_AE")
+            ()
+
+        """
+        version_info = self.get_by_id(version_id)
+        if version_info is None:
+            return ()
+        return version_info.crashgen_versions
+
+    def get_crashgen_versions_for_detected(
+        self,
+        detected: Version,
+        game: str = "Fallout4",
+        is_vr: bool = False,
+    ) -> tuple[str, ...]:
+        """Get valid crash generator versions for a detected game version.
+
+        Uses version matching to find the best match for the detected version
+        and returns the valid crash generator versions for that match.
+
+        Args:
+            detected: The detected game version.
+            game: Game identifier.
+            is_vr: Whether VR mode is active.
+
+        Returns:
+            Tuple of valid crash generator version strings. Empty tuple if no
+            match found or the matched version has no crash generator support.
+
+        Example:
+            >>> registry = get_version_registry()
+            >>> registry.get_crashgen_versions_for_detected(Version("1.10.163.0"))
+            ('1.28.6', '1.37.0')
+
+        """
+        result = self.match_version(detected, game, is_vr)
+        if result.version_info is None:
+            return ()
+        return result.version_info.crashgen_versions
 
     @property
     def unknown_version_handling(self) -> UnknownVersionHandling:

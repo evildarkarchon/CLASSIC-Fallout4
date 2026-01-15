@@ -81,18 +81,26 @@ class ReportGeneratorFragments:
         version_latest: Any,
         version_latest_vr: Any,
         is_vr_log: bool = False,
+        *,
+        game_version_id: str | None = None,
     ) -> ReportFragment:
         """Generate an error section of a report indicating the current status of the Crashgen
         version and whether the version is outdated or up-to-date. This section also includes
         the main error information and relevant version statuses.
 
+        When game_version_id is provided, the new list-based version checking is used.
+        Otherwise, falls back to legacy single-version comparison for backward compatibility.
+
         Args:
             main_error: A string describing the primary error encountered.
             crashgen_version: A string representing the detected version of the Crashgen.
             version_current: The currently installed version of Crashgen.
-            version_latest: The latest available version of Crashgen.
-            version_latest_vr: The latest available version of Crashgen for VR.
+            version_latest: The latest available version of Crashgen (deprecated, use game_version_id).
+            version_latest_vr: The latest available version of Crashgen for VR (deprecated, use game_version_id).
             is_vr_log: Whether the log is from VR version.
+            game_version_id: The game version ID for list-based version checking (e.g., "FO4_OG").
+                When provided, uses the new VersionRegistry-based checking with support for
+                multiple valid versions. This is the preferred parameter.
 
         Returns:
             ReportFragment: A structured report fragment containing error and version
@@ -106,16 +114,38 @@ class ReportGeneratorFragments:
             f"**Detected {crashgen_name} Version:** {crashgen_version}\n\n",
         ]
 
-        # Add version status - always show whether current or outdated
-        # Use is_vr_log to determine which check to perform, falling back to global setting if not specified
-        game_is_vr = is_vr_log or (GlobalRegistry.get_vr() == "VR")
+        # Use new list-based version checking if game_version_id is provided
+        if game_version_id is not None:
+            from ClassicLib.VersionRegistry.crashgen_checker import (
+                CrashgenVersionStatus,
+                check_crashgen_version,
+            )
 
-        if (version_current < version_latest_vr and version_current != version_latest) or (
-            not game_is_vr and version_current < version_latest
-        ):
-            lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
+            result = check_crashgen_version(version_current, game_version_id, crashgen_name)
+
+            if result.status == CrashgenVersionStatus.VALID:
+                lines.append(f"✅ *You have a valid version of {crashgen_name}!*\n\n")
+            elif result.status == CrashgenVersionStatus.NEWER_THAN_KNOWN:
+                lines.append(f"✅ *Your {crashgen_name} version is newer than known versions.*\n\n")
+            elif result.status == CrashgenVersionStatus.OUTDATED:
+                lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n\n")
+            elif result.status == CrashgenVersionStatus.NO_SUPPORTED_VERSION:
+                lines.append(f"⚠️ *No supported crash log generator for this game version yet.*\n\n")
+            else:
+                # UNKNOWN_GAME_VERSION or other unexpected status
+                lines.append(f"⚠️ *Unable to verify {crashgen_name} version.*\n\n")
         else:
-            lines.append(f"✅ *You have the latest version of {crashgen_name}!*\n\n")
+            # Legacy single-version comparison for backward compatibility
+            # Add version status - always show whether current or outdated
+            # Use is_vr_log to determine which check to perform, falling back to global setting if not specified
+            game_is_vr = is_vr_log or (GlobalRegistry.get_vr() == "VR")
+
+            if (version_current < version_latest_vr and version_current != version_latest) or (
+                not game_is_vr and version_current < version_latest
+            ):
+                lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
+            else:
+                lines.append(f"✅ *You have the latest version of {crashgen_name}!*\n\n")
 
         lines.append("---\n\n")
 
