@@ -37,13 +37,10 @@ class TestSettingsApplication:
         """Test that update settings propagate correctly."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
         dialog.update_check_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        dialog.update_source_combo.setCurrentText("GitHub")  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.save_settings()
         dialog.close()
         update_enabled = yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Update Check")
-        update_source = yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source")
         assert update_enabled is True
-        assert update_source == "GitHub"
 
 
 class TestMultipleDialogs:

@@ -3,7 +3,7 @@ Unit tests for update checking logic and error handling in Update.py.
 
 This module tests the is_latest_version function and UpdateCheckError
 exception class, including various update scenarios, error handling,
-and edge cases.
+and edge cases. The update system uses GitHub as the sole source.
 """
 
 from unittest.mock import AsyncMock, patch
@@ -66,28 +66,12 @@ class TestUpdateChecking:
         # We're testing the result, not the message logging
 
     @pytest.mark.asyncio
-    async def test_is_latest_version_invalid_source(self, mock_dependencies):
-        """Test with invalid update source setting."""
-
-        async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "InvalidSource"}
-            return settings_map.get(key, default)
-
-        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
-
-        result = await is_latest_version(quiet=False, gui_request=False)
-
-        assert result is False
-        # Message would be logged via the real msg_info function
-        # We're testing the result, not the message logging
-
-    @pytest.mark.asyncio
     async def test_is_latest_version_up_to_date(self, mock_dependencies):
         """Test when local version is up to date."""
 
         # Configure settings - classic_settings_async takes type and key
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -96,7 +80,6 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Info.is_prerelease": False,
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
@@ -133,7 +116,7 @@ class TestUpdateChecking:
 
         # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -142,7 +125,6 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.0",
-                "CLASSIC_Info.is_prerelease": False,
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
@@ -167,7 +149,7 @@ class TestUpdateChecking:
 
         # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -176,7 +158,6 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.0",
-                "CLASSIC_Info.is_prerelease": False,
                 "CLASSIC_Interface.update_warning_fallout4": "Update warning message",
             }.get(key, default)
 
@@ -198,50 +179,12 @@ class TestUpdateChecking:
             # Warning message would be logged via the real msg_warning function
 
     @pytest.mark.asyncio
-    async def test_is_latest_version_both_sources(self, mock_dependencies):
-        """Test checking both GitHub and Nexus sources."""
-
-        # Configure settings for both sources
-        async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "Both"}
-            return settings_map.get(key, default)
-
-        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
-
-        # Mock local version
-        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
-            return {
-                "CLASSIC_Info.version": "CLASSIC v7.30.0",
-                "CLASSIC_Info.is_prerelease": False,
-            }.get(key, default)
-
-        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
-
-        # Mock registry
-        mock_dependencies["get_game"].return_value = "fallout4"
-
-        # Mock both sources
-        with (
-            patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github,
-            patch("ClassicLib.Update.get_nexus_version") as mock_nexus,
-        ):
-            mock_github.return_value = {
-                "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
-                "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
-            }
-            mock_nexus.return_value = Version("7.30.2")  # Newer on Nexus
-
-            result = await is_latest_version(quiet=False, gui_request=False)
-
-            assert result is False  # Outdated (Nexus has newer)
-
-    @pytest.mark.asyncio
     async def test_is_latest_version_network_error_handling(self, mock_dependencies):
         """Test handling of network errors."""
 
         # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -250,7 +193,6 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Info.is_prerelease": False,
                 "CLASSIC_Interface.update_unable_fallout4": "Unable to check updates",
             }.get(key, default)
 
@@ -273,40 +215,12 @@ class TestUpdateChecking:
             # Error message would be logged via the real msg_error function
 
     @pytest.mark.asyncio
-    async def test_is_latest_version_nexus_only_prerelease_skip(self, mock_dependencies):
-        """Test that Nexus is skipped for prerelease versions."""
-
-        # Configure settings for Nexus only
-        async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "Nexus"}
-            return settings_map.get(key, default)
-
-        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
-
-        # Mock prerelease version
-        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
-            return {
-                "CLASSIC_Info.version": "CLASSIC v7.31.0-beta",
-                "CLASSIC_Info.is_prerelease": True,  # Prerelease
-            }.get(key, default)
-
-        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
-
-        # Mock registry
-        mock_dependencies["get_game"].return_value = "fallout4"
-
-        result = await is_latest_version(quiet=False, gui_request=False)
-
-        # Should be treated as up to date since Nexus check is skipped for prereleases
-        assert result is True
-
-    @pytest.mark.asyncio
     async def test_is_latest_version_unknown_local_version(self, mock_dependencies):
         """Test when local version is unknown."""
 
         # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -315,7 +229,6 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": None,  # Unknown version
-                "CLASSIC_Info.is_prerelease": False,
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
@@ -359,12 +272,12 @@ class TestUpdateCheckErrorHandling:
             }
 
     @pytest.mark.asyncio
-    async def test_source_failure_github_only(self, mock_dependencies):
-        """Test error when GitHub-only source fails."""
+    async def test_source_failure_github(self, mock_dependencies):
+        """Test error when GitHub source fails."""
 
-        # Configure settings for GitHub only
+        # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -372,7 +285,6 @@ class TestUpdateCheckErrorHandling:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Info.is_prerelease": False,
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
@@ -388,113 +300,12 @@ class TestUpdateCheckErrorHandling:
                 await is_latest_version(quiet=True, gui_request=True)
 
     @pytest.mark.asyncio
-    async def test_source_failure_nexus_only(self, mock_dependencies):
-        """Test error when Nexus-only source fails."""
-
-        # Configure settings for Nexus only
-        async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "Nexus"}
-            return settings_map.get(key, default)
-
-        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
-
-        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
-            return {
-                "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Info.is_prerelease": False,
-            }.get(key, default)
-
-        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
-
-        mock_dependencies["get_game"].return_value = "fallout4"
-
-        # Mock Nexus failure
-        with patch("ClassicLib.Update.get_nexus_version") as mock_nexus:
-            mock_nexus.return_value = None  # Failed
-
-            # Should raise UpdateCheckError for GUI
-            with pytest.raises(UpdateCheckError, match="Unable to fetch version information from Nexus"):
-                await is_latest_version(quiet=True, gui_request=True)
-
-    @pytest.mark.asyncio
-    async def test_source_failure_both_sources(self, mock_dependencies):
-        """Test error when both sources fail."""
-
-        # Configure settings for both sources
-        async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "Both"}
-            return settings_map.get(key, default)
-
-        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
-
-        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
-            return {
-                "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Info.is_prerelease": False,
-            }.get(key, default)
-
-        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
-
-        mock_dependencies["get_game"].return_value = "fallout4"
-
-        # Mock both sources failing
-        with (
-            patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github,
-            patch("ClassicLib.Update.get_nexus_version") as mock_nexus,
-        ):
-            mock_github.return_value = None  # Failed
-            mock_nexus.return_value = None  # Failed
-
-            # Should raise UpdateCheckError for GUI
-            with pytest.raises(UpdateCheckError, match="Unable to fetch version information from both GitHub and Nexus"):
-                await is_latest_version(quiet=True, gui_request=True)
-
-    @pytest.mark.asyncio
-    async def test_partial_source_failure_both_sources(self, mock_dependencies):
-        """Test when one source fails but other succeeds (Both mode)."""
-
-        # Configure settings for both sources
-        async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "Both"}
-            return settings_map.get(key, default)
-
-        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
-
-        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
-            return {
-                "CLASSIC_Info.version": "CLASSIC v7.30.0",  # Older version
-                "CLASSIC_Info.is_prerelease": False,
-            }.get(key, default)
-
-        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
-
-        mock_dependencies["get_game"].return_value = "fallout4"
-
-        # Mock partial failure - GitHub succeeds, Nexus fails
-        with (
-            patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github,
-            patch("ClassicLib.Update.get_nexus_version") as mock_nexus,
-            patch("ClassicLib.Update.msg_warning"),
-        ):
-            mock_github.return_value = {
-                "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
-                "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
-            }
-            mock_nexus.return_value = None  # Failed
-
-            # Should continue with GitHub data and not raise error
-            result = await is_latest_version(quiet=True, gui_request=False)
-
-            # Should detect update based on GitHub
-            assert result is False
-
-    @pytest.mark.asyncio
     async def test_unexpected_exception_handling(self, mock_dependencies):
         """Test handling of unexpected exceptions."""
 
         # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
-            settings_map = {"Update Check": True, "Update Source": "GitHub"}
+            settings_map = {"Update Check": True}
             return settings_map.get(key, default)
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
@@ -502,7 +313,6 @@ class TestUpdateCheckErrorHandling:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Info.is_prerelease": False,
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect

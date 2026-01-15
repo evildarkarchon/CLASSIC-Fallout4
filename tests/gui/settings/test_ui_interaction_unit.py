@@ -38,42 +38,18 @@ class TestCheckboxInteraction:
 class TestComboBoxInteraction:
     """Test combo box interactions."""
 
-    def test_combobox_interaction(self, settings_dialog, app):
-        """Test that combo box selection works."""
-        combo = settings_dialog.update_source_combo
+    def test_game_version_combobox_interaction(self, settings_dialog, app):
+        """Test that game version combo box selection works."""
+        combo = settings_dialog.game_version_combo
+        # First item should be Auto-detect
         combo.setCurrentIndex(0)
-        assert combo.currentText() == "Nexus"
-        combo.setCurrentIndex(1)
-        assert combo.currentText() == "GitHub"
-        combo.setCurrentIndex(2)
-        assert combo.currentText() == "Both"
+        assert "Auto" in combo.currentText()
 
-    def test_combobox_selection_by_text(self, settings_dialog):
-        """Test combo box selection by text."""
-        combo = settings_dialog.update_source_combo
-        combo.setCurrentText("GitHub")
-        assert combo.currentText() == "GitHub"
-        assert combo.currentIndex() == 1
-        combo.setCurrentText("Nexus")
-        assert combo.currentText() == "Nexus"
-        assert combo.currentIndex() == 0
-        combo.setCurrentText("Both")
-        assert combo.currentText() == "Both"
-        assert combo.currentIndex() == 2
-
-    def test_combobox_invalid_selection(self, settings_dialog):
-        """Test combo box behavior with invalid selection."""
-        combo = settings_dialog.update_source_combo
-        combo.currentIndex()
-        combo.setCurrentText("InvalidOption")
-        assert combo.currentText() in ["Nexus", "GitHub", "Both"]
-
-    def test_combobox_item_count(self, settings_dialog):
-        """Test that combo box has expected items."""
-        combo = settings_dialog.update_source_combo
-        assert combo.count() == 3
-        items = [combo.itemText(i) for i in range(combo.count())]
-        assert items == ["Nexus", "GitHub", "Both"]
+    def test_game_version_combobox_item_count(self, settings_dialog):
+        """Test that game version combo box has expected items."""
+        combo = settings_dialog.game_version_combo
+        # Should have at least Auto-detect, Original, NextGen, VR
+        assert combo.count() >= 4
 
 
 class TestButtonInteraction:

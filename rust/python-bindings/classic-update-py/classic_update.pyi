@@ -1,15 +1,14 @@
 """Type stubs for classic_update.
 
 Python bindings for classic-update-core, providing Rust-accelerated update checking
-with GitHub API integration and Nexus Mods web scraping.
+with GitHub API integration.
 
 Architecture:
-    - classic-update-core: Business logic (GitHub API, Nexus scraping, version comparison)
+    - classic-update-core: Business logic (GitHub API, version comparison)
     - classic-update-py: Python bindings (this module - PyO3 adapters)
 
 Features:
     - GitHub API integration for release monitoring (5-10x faster)
-    - Nexus Mods web scraping for mod updates (3-5x faster)
     - Version comparison and change detection (20x faster)
     - Async I/O for concurrent checks
 
@@ -25,11 +24,6 @@ Usage:
             print(f"Update to {latest.tag_name} available!")
             for asset in latest.assets:
                 print(f"  - {asset.name} ({asset.size} bytes)")
-
-        # Check Nexus
-        nexus = classic_update.NexusClient()
-        info = await nexus.get_mod_info("fallout4", 1234)
-        print(f"Mod: {info.name} v{info.version}")
 
     asyncio.run(check_updates())
 """
@@ -216,103 +210,3 @@ class GithubClient:
 
         """
 
-class NexusModInfo:
-    """Nexus Mods mod information.
-
-    Contains basic information about a mod on Nexus Mods.
-
-    Attributes:
-        name: Mod name.
-        version: Current version string.
-        description: Mod description (truncated).
-        author: Author username.
-        endorsements: Number of endorsements (optional).
-        downloads: Number of downloads (optional).
-        last_updated: Last update date string.
-        url: Mod page URL.
-
-    Example:
-        >>> client = NexusClient()
-        >>> info = await client.get_mod_info("fallout4", 1234)
-        >>> print(f"{info.name} by {info.author}")
-        >>> print(f"Version: {info.version}")
-
-    """
-
-    name: str
-    version: str
-    description: str
-    author: str
-    endorsements: int | None
-    downloads: int | None
-    last_updated: str
-    url: str
-
-class NexusClient:
-    """Nexus Mods client for mod information.
-
-    Provides access to Nexus Mods via web scraping (3-5x faster than Python).
-
-    Warning:
-        Web scraping is fragile and may break if Nexus changes their site structure.
-        Use with caution and implement proper error handling.
-
-    Example:
-        >>> import asyncio
-        >>> async def check_mods():
-        ...     client = NexusClient()
-        ...     info = await client.get_mod_info("fallout4", 1234)
-        ...     print(f"Mod: {info.name}")
-        ...     print(f"Version: {info.version}")
-        ...     if await client.has_update("fallout4", 1234, "1.0"):
-        ...         print("Mod has been updated!")
-        >>> asyncio.run(check_mods())
-
-    """
-
-    def __init__(self) -> None:
-        """Create a new Nexus Mods client.
-
-        Example:
-            >>> client = NexusClient()
-
-        """
-
-    async def get_mod_info(self, game: str, mod_id: int) -> NexusModInfo:
-        """Get mod information from Nexus Mods.
-
-        Args:
-            game: Game identifier (e.g., "fallout4", "skyrimspecialedition").
-            mod_id: Nexus Mods mod ID.
-
-        Returns:
-            NexusModInfo containing mod details.
-
-        Raises:
-            IOError: If scraping fails or mod not found.
-
-        Example:
-            >>> info = await client.get_mod_info("fallout4", 1234)
-            >>> print(f"Mod: {info.name}")
-
-        """
-
-    async def has_update(self, game: str, mod_id: int, current_version: str) -> bool:
-        """Check if a mod has been updated.
-
-        Args:
-            game: Game identifier.
-            mod_id: Nexus Mods mod ID.
-            current_version: Current version string.
-
-        Returns:
-            True if the mod version on Nexus is newer.
-
-        Raises:
-            IOError: If scraping fails or mod not found.
-
-        Example:
-            >>> if await client.has_update("fallout4", 1234, "1.0"):
-            ...     print("Mod has been updated!")
-
-        """

@@ -13,10 +13,6 @@ pub enum UpdateError {
     #[error("JSON parsing error: {0}")]
     JsonError(#[from] serde_json::Error),
 
-    /// HTML scraping error
-    #[error("Scraping error: {0}")]
-    ScrapingError(String),
-
     /// Version comparison error
     #[error("Version error: {0}")]
     VersionError(#[from] semver::Error),
@@ -28,10 +24,6 @@ pub enum UpdateError {
     /// GitHub API error
     #[error("GitHub API error: {0}")]
     GithubError(String),
-
-    /// Nexus Mods error
-    #[error("Nexus Mods error: {0}")]
-    NexusError(String),
 
     /// Rate limit exceeded
     #[error("Rate limit exceeded. Retry after: {0:?}")]

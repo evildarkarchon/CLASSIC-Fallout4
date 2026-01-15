@@ -55,12 +55,12 @@ class TestDefaultValues:
         assert isinstance(dialog.game_version_combo.currentIndex(), int)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert dialog.game_version_combo.currentIndex() >= 0  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         assert isinstance(dialog.fcx_checkbox.isChecked(), bool)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
-        assert dialog.update_source_combo.currentText() in ["Nexus", "GitHub", "Both"]  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.close()
 
-    def test_invalid_combo_value_uses_default(self, app, reset_settings):
-        """Test that invalid combo box values use defaults."""
-        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", "InvalidSource")
+    def test_invalid_game_version_uses_default(self, app, reset_settings):
+        """Test that invalid game version value uses default."""
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", "InvalidVersion")
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog.update_source_combo.currentText() == "Both"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
+        # Should fall back to Auto-detect (index 0)
+        assert dialog.game_version_combo.currentIndex() == 0  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog.close()

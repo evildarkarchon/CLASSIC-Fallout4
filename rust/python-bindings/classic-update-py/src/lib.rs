@@ -36,26 +36,12 @@
 //!     for release in releases:
 //!         print(f"{release.tag_name}: {release.name}")
 //!
-//!     # Check Nexus Mods (3-5x faster than Python)
-//!     nexus = classic_update.NexusClient()
-//!
-//!     # Get mod info
-//!     mod_info = await nexus.get_mod_info("fallout4", 1234)
-//!     print(f"Mod: {mod_info.name}")
-//!     print(f"Version: {mod_info.version}")
-//!     print(f"Author: {mod_info.author}")
-//!
-//!     # Check for mod updates
-//!     if await nexus.has_update("fallout4", 1234, "1.0"):
-//!         print("Mod has been updated!")
-//!
 //! asyncio.run(main())
 //! ```
 //!
 //! ## Performance Characteristics
 //!
 //! - **GitHub API**: 5-10x faster than Python requests with native async
-//! - **Web Scraping**: 3-5x faster with native HTML parsing
 //! - **Version Comparison**: 20x faster with native semver
 //! - **Async I/O**: Non-blocking operations for concurrent checks
 //!
@@ -67,21 +53,17 @@
 use pyo3::prelude::*;
 
 mod github;
-mod nexus;
 
 /// Python module for CLASSIC update checking.
 ///
 /// This module provides Rust-accelerated update checking with:
 /// - GitHub API integration for release monitoring
-/// - Nexus Mods web scraping for mod updates
 /// - Version comparison and change detection
 ///
 /// Core Classes:
 ///     GithubClient: Client for GitHub API access
 ///     GithubRelease: GitHub release information
 ///     GithubAsset: GitHub release asset (downloadable file)
-///     NexusClient: Client for Nexus Mods scraping
-///     NexusModInfo: Nexus Mods mod information
 ///
 /// Example:
 ///     >>> import classic_update
@@ -93,11 +75,6 @@ mod nexus;
 ///     ...     latest = await github.get_latest_release()
 ///     ...     if github.has_update("v8.0.0", latest.tag_name):
 ///     ...         print(f"Update to {latest.tag_name} available!")
-///     ...
-///     ...     # Check Nexus
-///     ...     nexus = classic_update.NexusClient()
-///     ...     info = await nexus.get_mod_info("fallout4", 1234)
-///     ...     print(f"Mod: {info.name} v{info.version}")
 ///     >>>
 ///     >>> asyncio.run(check_updates())
 #[pymodule]
@@ -108,9 +85,6 @@ fn classic_update(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register GitHub components
     github::register(m)?;
-
-    // Register Nexus components
-    nexus::register(m)?;
 
     Ok(())
 }

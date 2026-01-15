@@ -115,9 +115,6 @@ class TestWidgetFocus:
         settings_dialog.game_version_combo.setFocus()
         QApplication.processEvents()
 
-        settings_dialog.update_source_combo.setFocus()
-        QApplication.processEvents()
-
         settings_dialog.check_now_button.setFocus()
         QApplication.processEvents()
 

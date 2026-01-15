@@ -59,11 +59,6 @@ class TestDialogStructure:
         """Test that Updates tab has correct widgets."""
         assert hasattr(settings_dialog, "update_check_checkbox")
         assert settings_dialog.update_check_checkbox.text() == "Check for Updates"
-        assert hasattr(settings_dialog, "update_source_combo")
-        assert settings_dialog.update_source_combo.count() == 3
-        assert settings_dialog.update_source_combo.itemText(0) == "Nexus"
-        assert settings_dialog.update_source_combo.itemText(1) == "GitHub"
-        assert settings_dialog.update_source_combo.itemText(2) == "Both"
         assert hasattr(settings_dialog, "check_now_button")
         assert settings_dialog.check_now_button.text() == "Check for Updates Now"
 
@@ -76,7 +71,7 @@ class TestDialogStructure:
 
     def test_settings_widgets_dictionary(self, settings_dialog):
         """Test that settings_widgets dictionary is properly populated."""
-        assert len(settings_dialog.settings_widgets) == 9
+        assert len(settings_dialog.settings_widgets) == 8
         expected_keys = [
             "game_version",
             "fcx_mode",
@@ -85,7 +80,6 @@ class TestDialogStructure:
             "move_invalid_logs",
             "auto_switch_results",
             "update_check",
-            "update_source",
             "ini_folder_path",
         ]
         for key in expected_keys:
@@ -103,7 +97,6 @@ class TestTooltips:
         assert settings_dialog.show_fid_checkbox.toolTip() != ""
         assert settings_dialog.move_invalid_checkbox.toolTip() != ""
         assert settings_dialog.update_check_checkbox.toolTip() != ""
-        assert settings_dialog.update_source_combo.toolTip() != ""
         assert settings_dialog.check_now_button.toolTip() != ""
 
     def test_tooltip_content_meaningful(self, settings_dialog):

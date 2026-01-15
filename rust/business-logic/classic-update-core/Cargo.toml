@@ -21,9 +21,8 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 tokio = { workspace = true, features = ["full"] }
 futures = { workspace = true }
 
-# HTTP client and scraping
+# HTTP client
 reqwest = { workspace = true, features = ["json"] }
-scraper = { workspace = true }
 
 # Serialization for GitHub API
 serde = { workspace = true }

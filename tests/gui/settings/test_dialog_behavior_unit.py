@@ -43,11 +43,11 @@ class TestDialogAcceptReject:
 
         set_game_version_by_value(settings_dialog.game_version_combo, "VR")
         settings_dialog.fcx_checkbox.setChecked(True)
-        settings_dialog.update_source_combo.setCurrentText("GitHub")
+        settings_dialog.update_check_checkbox.setChecked(True)
         settings_dialog.accept()
         assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version") == "VR"
         assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.FCX Mode")
-        assert yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source") == "GitHub"
+        assert yaml_settings(bool, YAML.TEST, "CLASSIC_Settings.Update Check")
 
 
 class TestDialogStates:

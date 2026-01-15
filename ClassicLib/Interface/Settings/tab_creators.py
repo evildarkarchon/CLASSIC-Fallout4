@@ -413,31 +413,9 @@ class TabCreator:
 
         # Update Check checkbox
         update_check_checkbox = QCheckBox("Check for Updates")
-        update_check_checkbox.setToolTip("Automatically check for CLASSIC updates on startup")
+        update_check_checkbox.setToolTip("Automatically check for CLASSIC updates on startup via GitHub")
         updates_layout.addWidget(update_check_checkbox)
         settings_widgets["update_check"] = update_check_checkbox
-
-        # Update Source selection
-        source_layout = QHBoxLayout()
-        source_layout.setSpacing(10)
-
-        source_label = QLabel("Update Source:")
-        source_label.setToolTip("Choose where to check for updates")
-        source_layout.addWidget(source_label)
-
-        update_source_combo = QComboBox()
-        update_source_combo.addItems(["Nexus", "GitHub", "Both"])
-        update_source_combo.setToolTip(
-            "Select which source to check for updates:\n"
-            "• Nexus - Check Nexus Mods for updates\n"
-            "• GitHub - Check GitHub releases for updates\n"
-            "• Both - Check both sources"
-        )
-        source_layout.addWidget(update_source_combo)
-        source_layout.addStretch()
-
-        updates_layout.addLayout(source_layout)
-        settings_widgets["update_source"] = update_source_combo
 
         # Check Now button
         check_now_button = QPushButton("Check for Updates Now")

@@ -1,11 +1,11 @@
 """
 Tests for classic_update Rust bindings, ensuring parity and correct functionality.
 
-This module tests the `GithubClient` and `NexusClient` classes from `classic_update`,
-verifying their async methods, error handling, and data structure correctness.
+This module tests the `GithubClient` class from `classic_update`,
+verifying its async methods, error handling, and data structure correctness.
 
 Note:
-    These tests hit real APIs (GitHub, Nexus Mods) and may be rate limited.
+    These tests hit the real GitHub API and may be rate limited.
     The GithubClient automatically uses the GITHUB_TOKEN environment variable
     if set, increasing the rate limit from 60/hour to 5,000/hour.
 """
@@ -192,48 +192,3 @@ class TestGithubClient:
         assert isinstance(releases[0], classic_update.GithubRelease)
 
 
-@pytest.mark.rust
-@pytest.mark.skipif(not RUST_UPDATE_AVAILABLE, reason="Rust update module not available")
-class TestNexusClient:
-    """Tests for the classic_update.NexusClient class."""
-
-    @pytest.mark.asyncio
-    async def test_get_mod_info_structure(self):
-        """
-        Test structure of returned NexusModInfo object.
-
-        Note: Hits real Nexus Mods website.
-        """
-        client = classic_update.NexusClient()
-
-        # Using a known stable mod ID (e.g., Unofficial Fallout 4 Patch)
-        # Game: fallout4, Mod ID: 4598
-        try:
-            info = await client.get_mod_info("fallout4", 4598)
-
-            assert isinstance(info, classic_update.NexusModInfo)
-            assert isinstance(info.name, str)
-            assert "Unofficial Fallout 4 Patch" in info.name
-            assert isinstance(info.version, str)
-            assert isinstance(info.author, str)
-            assert isinstance(info.url, str)
-
-        except (OSError, RuntimeError) as e:
-            pytest.skip(f"Network error or Nexus scraping failed: {e}")
-
-    @pytest.mark.asyncio
-    async def test_has_update(self):
-        """Test mod update check."""
-        client = classic_update.NexusClient()
-
-        try:
-            # Check with a very old version to ensure update is detected
-            has_update = await client.has_update("fallout4", 4598, "1.0.0")
-            assert has_update is True
-
-            # Check with a likely future version (or current if we knew it dynamically)
-            # Hard to guarantee 'False' without knowing current version, but can test type
-            # If we pass a nonsense version string, behavior depends on parsing logic
-
-        except (OSError, RuntimeError) as e:
-            pytest.skip(f"Network error or Nexus scraping failed: {e}")

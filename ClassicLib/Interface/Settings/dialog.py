@@ -56,7 +56,6 @@ class SettingsDialog(QDialog):
         "move_invalid_logs": "Move Unsolved Logs",  # Note: YAML uses "Unsolved" not "Invalid"
         "auto_switch_results": "Auto Switch After Scan",
         "update_check": "Update Check",
-        "update_source": "Update Source",
         "ini_folder_path": "INI Folder Path",
     }
 
@@ -163,7 +162,6 @@ class SettingsDialog(QDialog):
 
         # Store widget references for backwards compatibility
         self.update_check_checkbox = updates_widgets.get("update_check")
-        self.update_source_combo = updates_widgets.get("update_source")
         self.check_now_button = check_now_button
 
     # Backwards compatibility methods
@@ -215,25 +213,6 @@ class SettingsDialog(QDialog):
                 break
         game_version_widget.setCurrentIndex(target_index)
 
-    def _load_update_source_combo(self, update_source: str) -> None:
-        """Load update source value into the dropdown widget.
-
-        Args:
-            update_source: The source value to set ("Nexus", "GitHub", "Both").
-
-        """
-        if not isinstance(self.update_source_combo, QComboBox):
-            return
-
-        index = self.update_source_combo.findText(update_source)
-        if index != -1:
-            self.update_source_combo.setCurrentIndex(index)
-        else:
-            # Invalid value - use default "Both"
-            default_index = self.update_source_combo.findText("Both")
-            if default_index != -1:
-                self.update_source_combo.setCurrentIndex(default_index)
-
     def _load_ini_folder_path(self, ini_path: str) -> None:
         """Load INI folder path into the text input widget.
 
@@ -283,12 +262,11 @@ class SettingsDialog(QDialog):
             bool_requests = [
                 (bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}")
                 for key, setting_name in self.SETTINGS_MAP.items()
-                if key not in {"game_version", "update_source", "ini_folder_path"}
+                if key not in {"game_version", "ini_folder_path"}
             ]
             # String settings (includes game_version as string)
             str_requests = [
                 (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['game_version']}"),
-                (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}"),
                 (str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['ini_folder_path']}"),
                 # Also check for legacy VR Mode setting for migration
                 (bool, self.yaml_store, "CLASSIC_Settings.VR Mode"),
@@ -308,7 +286,6 @@ class SettingsDialog(QDialog):
 
             # Get string settings and legacy VR mode
             game_version_value = next(value_iter) or "auto"
-            update_source = next(value_iter) or "Nexus"
             ini_path = next(value_iter) or ""
             legacy_vr_mode = next(value_iter) or False
 
@@ -319,7 +296,6 @@ class SettingsDialog(QDialog):
 
             # Update UI widgets using helper methods
             self._load_game_version_combo(game_version_value)
-            self._load_update_source_combo(update_source)
             self._load_ini_folder_path(ini_path)
 
             logger.info("Loaded settings into dialog")
@@ -397,12 +373,6 @@ class SettingsDialog(QDialog):
 
                     # Clear legacy VR Mode setting to prevent confusion
                     yaml_settings(bool, self.yaml_store, "CLASSIC_Settings.VR Mode", False)
-
-            # Save Update Source combo box
-            if isinstance(self.update_source_combo, QComboBox):
-                yaml_settings(
-                    str, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['update_source']}", self.update_source_combo.currentText()
-                )
 
             # Save INI folder path
             if isinstance(self.ini_folder_input, QLineEdit):

@@ -39,7 +39,8 @@ class TestEdgeCases:
         """Test that default values are created for missing settings."""
         from ClassicLib.YamlSettings import yaml_settings
 
-        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Update Source", None)
+        yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", None)
         dialog = SettingsDialog(yaml_store=YAML.TEST)
-        assert dialog.update_source_combo.currentText() == "Both"  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
+        # Default should be "auto" (Auto-detect)
+        assert dialog.game_version_combo.currentIndex() == 0  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue, reportArgumentType]
         dialog.close()
