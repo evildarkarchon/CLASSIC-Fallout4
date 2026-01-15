@@ -130,7 +130,7 @@ class ReportGeneratorFragments:
             elif result.status == CrashgenVersionStatus.OUTDATED:
                 lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n\n")
             elif result.status == CrashgenVersionStatus.NO_SUPPORTED_VERSION:
-                lines.append(f"⚠️ *No supported crash log generator for this game version yet.*\n\n")
+                lines.append("⚠️ *No supported crash log generator for this game version yet.*\n\n")
             else:
                 # UNKNOWN_GAME_VERSION or other unexpected status
                 lines.append(f"⚠️ *Unable to verify {crashgen_name} version.*\n\n")

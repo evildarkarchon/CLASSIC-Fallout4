@@ -217,7 +217,7 @@ class ClassicScanLogsInfo:
         self.game_root_name_vr = values[29] or ""
 
     @classmethod
-    async def create_async(cls) -> "ClassicScanLogsInfo":
+    async def create_async(cls) -> ClassicScanLogsInfo:
         """Async factory method to create ClassicScanLogsInfo without blocking.
 
         This method should be used when creating ClassicScanLogsInfo in async contexts

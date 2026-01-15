@@ -219,7 +219,7 @@ class PerformanceReportGenerator:
 
                 # Analyze performance metrics
                 if "speedup" in component_results:
-                    speedup: float = component_results["speedup"]
+                    speedup: float = component_results["speedup"]  # pyright: ignore[reportUnknownVariableType]
 
                     if speedup >= 2.0:
                         performance_insights.append({
@@ -249,7 +249,7 @@ class PerformanceReportGenerator:
 
                 # Analyze memory efficiency
                 if "memory_reduction_percent" in component_results:
-                    reduction: float = component_results["memory_reduction_percent"]
+                    reduction: float = component_results["memory_reduction_percent"]  # pyright: ignore[reportUnknownVariableType]
                     if reduction >= 90:
                         performance_insights.append({
                             "component": component,

@@ -483,12 +483,15 @@ class VersionChecker:
         # Fetch GitHub version
         version_github = None
 
+        def _validate_version(version: Version | None) -> Version:
+            """Validate that version was fetched successfully."""
+            if version is None:
+                raise UpdateCheckError("Unable to fetch version information from GitHub.")
+            return version
+
         try:
             async with aiohttp.ClientSession() as session:
-                version_github = await self._fetch_github_version(session)
-
-                if version_github is None:
-                    raise UpdateCheckError("Unable to fetch version information from GitHub.")
+                version_github = _validate_version(await self._fetch_github_version(session))
 
         except (aiohttp.ClientError, UpdateCheckError) as e:
             return await self._handle_error(e)

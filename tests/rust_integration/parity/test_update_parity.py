@@ -190,5 +190,3 @@ class TestGithubClient:
         assert isinstance(releases, list)
         assert len(releases) > 0
         assert isinstance(releases[0], classic_update.GithubRelease)
-
-

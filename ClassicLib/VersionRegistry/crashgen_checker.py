@@ -80,10 +80,10 @@ class CrashgenVersionResult:
             True if the version is valid or newer than known.
 
         """
-        return self.status in (
+        return self.status in {
             CrashgenVersionStatus.VALID,
             CrashgenVersionStatus.NEWER_THAN_KNOWN,
-        )
+        }
 
     @property
     def needs_update(self) -> bool:

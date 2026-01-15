@@ -247,8 +247,9 @@ class FFIProfiler:
             # Add recursive size for collections
             if isinstance(obj, (list, tuple)):
                 size += sum(
-                    self._get_data_size(item) for item in obj[:100]# pyright: ignore[reportUnknownArgumentType, reportUnknownReturnType, reportUnknownVariableType]
-                )  # Limit to avoid deep recursion 
+                    self._get_data_size(item)
+                    for item in obj[:100]  # pyright: ignore[reportUnknownArgumentType, reportUnknownReturnType, reportUnknownVariableType]
+                )  # Limit to avoid deep recursion
             elif isinstance(obj, dict):
                 for k, v in list(obj.items())[:100]:  # Limit items # pyright: ignore[reportUnknownArgumentType, reportUnknownVariableType]
                     size += self._get_data_size(k) + self._get_data_size(v)
