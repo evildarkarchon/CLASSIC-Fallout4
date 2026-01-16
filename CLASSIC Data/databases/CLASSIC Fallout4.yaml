@@ -825,7 +825,7 @@ Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
           Switch to the DLC tab and uncheck / disable the High Resolution Texture Pack.
         -----
 
-  AAF: |
+  AAF.esm: |
     Advanced Animation Framework
         - Latest AAF version only available on Moddingham | AAF Tech Support: https://discord.gg/gWZuhMC
           Latest AAF Link (register / login to download): https://www.moddingham.com/viewtopic.php?t=2

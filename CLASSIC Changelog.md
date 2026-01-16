@@ -7,6 +7,7 @@
 - Simplify the update check code using the GitHub API.
 - Improve the version detection logic for the crashlog generator version check.
 - Add setting to manually set the concurrency limit for the scan pipeline, defaults to 0 (automatic).
+- Match only on AAF.esm for detecting AAF, the level of false positives due to doodlum's Frame Generation plugin was getting too high.
 
 ### 8.1.0 CHANGES
 
