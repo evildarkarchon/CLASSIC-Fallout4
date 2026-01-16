@@ -32,7 +32,9 @@ class ScanConfig:
         custom_paths (dict[str, Path]): User-defined mappings for custom paths
             related to scan operations. Defaults to an empty dictionary.
         max_concurrent (int): The maximum number of concurrent scan processes
-            allowed. Defaults to 10, with a permissible range of 1 to 50.
+            allowed. Defaults to 0 (automatic), with a permissible range of 0 to 32.
+            When set to 0, the Rust orchestrator determines optimal concurrency
+            based on CPU count.
 
     """
 
@@ -46,8 +48,9 @@ class ScanConfig:
     custom_paths: dict[str, Path] = field(default_factory=dict)
 
     # Performance settings
-    # Increased from 10 to 50 for true async Rust operations (no thread blocking)
-    max_concurrent: int = 50
+    # 0 = Automatic (Rust determines optimal concurrency based on CPU count)
+    # 1-32 = Explicit concurrency limit
+    max_concurrent: int = 0
 
     # Internal settings (typically set by system, not user)
     formid_db_exists: bool = True
@@ -64,11 +67,11 @@ class ScanConfig:
         if not self.custom_paths:
             self.custom_paths = {}
 
-        # Validate max_concurrent
-        if self.max_concurrent < 1:
-            self.max_concurrent = 1
-        elif self.max_concurrent > 50:  # Reasonable upper limit
-            self.max_concurrent = 50
+        # Validate max_concurrent (0 = auto, 1-32 = explicit)
+        if self.max_concurrent < 0:
+            self.max_concurrent = 0
+        elif self.max_concurrent > 32:  # Reasonable upper limit for most systems
+            self.max_concurrent = 32
 
 
 # Type alias for better code readability

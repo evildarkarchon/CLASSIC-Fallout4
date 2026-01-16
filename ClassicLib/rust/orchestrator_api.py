@@ -208,7 +208,7 @@ class ClassicOrchestrator:
     def process_crash_logs_batch(
         self,
         log_paths: list[Path],
-        max_concurrent: int = 10,  # noqa: ARG002
+        max_concurrent: int | None = None,
         progress_callback: Callable[[str], None] | None = None,  # noqa: ARG002
     ) -> BatchAnalysisResult:
         """Process a batch of crash log files in parallel and returns the analysis results.
@@ -219,19 +219,15 @@ class ClassicOrchestrator:
 
         Args:
             log_paths (List[Path]): A list of Path objects representing the paths to the crash logs.
-            max_concurrent (int): Reserved for future use. Currently, Rust Orchestrator determines
-                parallelism automatically based on CPU count.
+            max_concurrent (int | None): Maximum number of concurrent processing tasks.
+                If None, uses adaptive concurrency based on CPU count and batch size.
+                If specified, uses exactly that many concurrent tasks (minimum 1).
             progress_callback (Optional[Callable[[str], None]]): Reserved for future use. Progress
                 tracking will be implemented in a future version.
 
         Returns:
             BatchAnalysisResult: An object containing the processed results for each log, the total
             processing time (in milliseconds), and the parallelism factor.
-
-        Note:
-            The Rust Orchestrator currently handles parallelism internally based on available CPU cores.
-            The max_concurrent and progress_callback parameters are reserved for future enhancements
-            and are kept in the signature for API stability.
 
         """
         import time
@@ -241,9 +237,8 @@ class ClassicOrchestrator:
         # Convert Path objects to strings
         log_paths_str = [str(p) for p in log_paths]
 
-        # Process logs in parallel using Orchestrator
-        # Note: Rust Orchestrator handles parallelism internally based on CPU count
-        results = self.orchestrator.process_logs_batch(log_paths_str)
+        # Process logs in parallel using Orchestrator with user-specified concurrency
+        results = self.orchestrator.process_logs_batch(log_paths_str, max_concurrent)
 
         total_time_ms = int((time.perf_counter() - start) * 1000)
 
@@ -353,7 +348,7 @@ def process_crash_log(log_path: Path) -> AnalysisResult:
 
 def process_crash_logs_batch(
     log_paths: list[Path],
-    max_concurrent: int = 10,
+    max_concurrent: int | None = None,
     progress_callback: Callable[[str], None] | None = None,
 ) -> BatchAnalysisResult:
     """Process a batch of crash logs concurrently and provides the analysis result.
@@ -365,8 +360,9 @@ def process_crash_logs_batch(
 
     Args:
         log_paths: A list of file paths representing crash logs to be processed.
-        max_concurrent: The maximum number of concurrent crash log processing tasks
-            allowed. Default is 10.
+        max_concurrent: Maximum number of concurrent crash log processing tasks.
+            If None, uses adaptive concurrency based on CPU count and batch size.
+            If specified, uses exactly that many concurrent tasks (minimum 1).
         progress_callback: An optional callable that accepts a string argument to
             report progress updates during batch processing.
 

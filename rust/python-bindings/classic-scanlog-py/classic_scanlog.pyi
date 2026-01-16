@@ -594,18 +594,26 @@ class Orchestrator:
 
         """
 
-    def process_logs_batch(self, log_paths: list[str]) -> list[AnalysisResult]:
-        """Process multiple crash logs in batch mode.
+    def process_logs_batch(
+        self,
+        log_paths: list[str],
+        max_concurrent: int | None = None,
+    ) -> list[AnalysisResult]:
+        """Process multiple crash logs in batch mode with configurable parallelism.
 
-        Batch processes multiple crash logs with automatic parallelization
-        based on available CPU cores. This method handles parallelism
-        internally and does not accept max_concurrent or progress_callback.
+        Batch processes multiple crash logs with parallel execution. The level of
+        parallelism can be controlled via `max_concurrent`, or left to auto-detect
+        based on CPU cores and batch size.
 
         Args:
             log_paths: List of log file paths to process
+            max_concurrent: Optional maximum number of concurrent processing tasks.
+                If None, uses adaptive concurrency based on CPU count and batch size.
+                If specified, uses exactly that many concurrent tasks (minimum 1).
 
         Returns:
-            List of analysis results (one per log)
+            List of analysis results (one per log). Note that results may not be
+            in the same order as input due to parallel processing.
 
         Raises:
             IOError: If log files cannot be read

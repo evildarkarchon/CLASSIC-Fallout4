@@ -21,6 +21,7 @@ from typing import Any
 
 from ClassicLib.integration.status import is_rust_accelerated
 from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+from ClassicLib.YamlSettings import classic_settings
 
 logger = logging.getLogger(__name__)
 
@@ -215,12 +216,22 @@ class HybridOrchestrator:
             # Use Rust orchestrator for large batches (5+ logs)
             # Small batches (1-4 logs) use Python to avoid overhead
             try:
-                logger.debug(f"Using Rust orchestrator for batch of {len(crashlog_files)} logs (unbounded parallelism)")
+                # Read max concurrent setting (0 = automatic)
+                # Validate to match ScanConfig constraints (0-32) in case YAML was manually edited
+                max_concurrent_setting = classic_settings(int, "Max Concurrent Scans") or 0
+                validated_setting = max(0, min(max_concurrent_setting, 32))
+                # Convert 0 to None for automatic (Rust will determine optimal concurrency)
+                max_concurrent = None if validated_setting == 0 else validated_setting
+
+                logger.debug(
+                    f"Using Rust orchestrator for batch of {len(crashlog_files)} logs "
+                    f"(max_concurrent={'auto' if max_concurrent is None else max_concurrent})"
+                )
 
                 # Process logs with Rust (blocks but has internal parallelism)
                 # Use asyncio.to_thread() to run blocking Rust code without blocking the event loop
                 batch_result = await asyncio.to_thread(
-                    self._rust_orch.process_crash_logs_batch, crashlog_files, max_concurrent=len(crashlog_files)
+                    self._rust_orch.process_crash_logs_batch, crashlog_files, max_concurrent=max_concurrent
                 )
 
                 # Convert Rust results to Python format

@@ -6,6 +6,7 @@ underlying scanning infrastructure.
 """
 
 import asyncio
+import os
 import random
 from collections import Counter
 from collections.abc import Iterator
@@ -125,6 +126,7 @@ class ScanLogsExecutor:
             show_formid_values=classic_settings(bool, "Show FormID Values"),
             move_unsolved_logs=classic_settings(bool, "Move Unsolved Logs"),
             simplify_logs=classic_settings(bool, "Simplify Logs"),
+            max_concurrent=classic_settings(int, "Max Concurrent Scans") or 0,
         )
 
     async def execute_scan(self) -> ScanResult:
@@ -221,8 +223,19 @@ class ScanLogsExecutor:
             asyncio.CancelledError: If the operation is cancelled by the user.
 
         """
-        # Use semaphore to limit concurrent operations
-        max_concurrent = min(self.config.max_concurrent, len(self.crashlog_list))
+        # Calculate effective concurrency:
+        # 0 = automatic (use adaptive logic matching Rust orchestrator)
+        # 1-50 = explicit limit
+        batch_size = len(self.crashlog_list)
+        if self.config.max_concurrent == 0:
+            # Adaptive concurrency: match Rust orchestrator logic
+            num_cpus = os.cpu_count() or 4
+            if batch_size < num_cpus:
+                max_concurrent = max(batch_size, 1)  # Small batch: process all concurrently
+            else:
+                max_concurrent = max(num_cpus, 4)  # Large batch: use CPU count (min 4)
+        else:
+            max_concurrent = min(self.config.max_concurrent, batch_size)
         total_logs = len(self.crashlog_list)
         log_iter = iter(self.crashlog_list)
         active_tasks: set[asyncio.Task[Any]] = set()

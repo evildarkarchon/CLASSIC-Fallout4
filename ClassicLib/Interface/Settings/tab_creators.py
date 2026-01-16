@@ -8,6 +8,7 @@ preferences for the application.
 
 from __future__ import annotations
 
+import os
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
@@ -18,6 +19,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QVBoxLayout,
     QWidget,
 )
@@ -290,6 +292,37 @@ class TabCreator:
         settings_widgets["auto_switch_results"] = auto_switch_checkbox
 
         layout.addWidget(scanning_group)
+
+        # Create performance settings group
+        performance_group = QGroupBox("Performance")
+        performance_layout = QHBoxLayout(performance_group)
+        performance_layout.setSpacing(10)
+
+        # Max Concurrent Scans spinbox
+        max_concurrent_label = QLabel("Max Concurrent Scans (0 = Automatic):")
+
+        # Generate dynamic tooltip based on CPU count
+        cpu_count = os.cpu_count() or 4
+        recommended = max(cpu_count - 2, 2)
+        tooltip_text = (
+            f"Maximum parallel crash log scans.\n"
+            f"0 = Automatic (recommended for most systems)\n"
+            f"Recommended value for your system: {recommended} (based on {cpu_count} CPU cores)\n"
+            f"Higher values use more CPU but may speed up batch processing."
+        )
+        max_concurrent_label.setToolTip(tooltip_text)
+        performance_layout.addWidget(max_concurrent_label)
+
+        max_concurrent_spinbox = QSpinBox()
+        max_concurrent_spinbox.setRange(0, 32)
+        max_concurrent_spinbox.setValue(0)
+        max_concurrent_spinbox.setToolTip(tooltip_text)
+        max_concurrent_spinbox.setMinimumWidth(80)
+        performance_layout.addWidget(max_concurrent_spinbox)
+        performance_layout.addStretch()
+        settings_widgets["max_concurrent_scans"] = max_concurrent_spinbox
+
+        layout.addWidget(performance_group)
         layout.addStretch()
 
         return scanning_widget, settings_widgets

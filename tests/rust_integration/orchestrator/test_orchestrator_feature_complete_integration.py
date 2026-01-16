@@ -32,10 +32,15 @@ class TestFeatureCompleteMode:
 
     @pytest.fixture(autouse=True)
     def mock_settings(self):
-        """Mock async settings calls."""
+        """Mock async settings calls and HybridOrchestrator classic_settings.
+
+        The HybridOrchestrator calls classic_settings(int, "Max Concurrent Scans")
+        to determine concurrency. This is mocked to return 0 (automatic concurrency).
+        """
         with (
             patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
             patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+            patch("ClassicLib.ScanLog.HybridOrchestrator.classic_settings", return_value=0),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = None

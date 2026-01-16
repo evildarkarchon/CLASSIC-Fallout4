@@ -12,6 +12,7 @@ import tracemalloc
 from collections import Counter
 from pathlib import Path
 from typing import Any, AsyncGenerator
+from unittest.mock import patch
 
 import pytest
 
@@ -30,6 +31,17 @@ class TestOrchestratorPerformance:
     Tests single-log and batch processing performance comparing Rust-accelerated
     HybridOrchestrator against pure Python OrchestratorCore.
     """
+
+    @pytest.fixture(autouse=True)
+    def mock_hybrid_orchestrator_settings(self):
+        """Mock classic_settings for HybridOrchestrator.
+
+        The HybridOrchestrator calls classic_settings(int, "Max Concurrent Scans")
+        to determine concurrency. This fixture mocks it to return 0 (automatic
+        concurrency) to ensure consistent behavior during performance tests.
+        """
+        with patch("ClassicLib.ScanLog.HybridOrchestrator.classic_settings", return_value=0):
+            yield
 
     @pytest.fixture
     def sample_logs(self, tmp_path: Path) -> list[Path]:

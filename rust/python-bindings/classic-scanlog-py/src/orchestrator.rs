@@ -658,17 +658,26 @@ impl PyRustOrchestrator {
     /// # Arguments
     /// * `py` - Python GIL token
     /// * `log_paths` - Paths to crash log files to analyze
+    /// * `max_concurrent` - Optional maximum number of concurrent processing tasks.
+    ///   If `None`, uses adaptive concurrency based on CPU count and batch size.
+    ///   If `Some(n)`, uses exactly `n` concurrent tasks (minimum 1).
     ///
     /// # Returns
     /// Vector of analysis results for each log file
+    #[pyo3(signature = (log_paths, max_concurrent = None))]
     pub fn process_logs_batch(
         &self,
         py: Python<'_>,
         log_paths: Vec<String>,
+        max_concurrent: Option<usize>,
     ) -> PyResult<Vec<PyAnalysisResult>> {
         // Release GIL during parallel batch processing
         let results = without_gil(py, || {
-            get_runtime().block_on(async { self.inner.process_logs_batch(log_paths).await })
+            get_runtime().block_on(async {
+                self.inner
+                    .process_logs_batch(log_paths, max_concurrent)
+                    .await
+            })
         });
         Ok(results
             .into_iter()

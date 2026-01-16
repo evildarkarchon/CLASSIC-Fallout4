@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QDialogButtonBox,
     QLineEdit,
     QPushButton,
+    QSpinBox,
     QTabWidget,
     QVBoxLayout,
     QWidget,
@@ -57,6 +58,7 @@ class SettingsDialog(QDialog):
         "auto_switch_results": "Auto Switch After Scan",
         "update_check": "Update Check",
         "ini_folder_path": "INI Folder Path",
+        "max_concurrent_scans": "Max Concurrent Scans",
     }
 
     def __init__(
@@ -258,11 +260,11 @@ class SettingsDialog(QDialog):
         from ClassicLib.Logger import logger
 
         try:
-            # Get current settings - boolean settings (checkboxes only, not game_version)
+            # Get current settings - boolean settings (checkboxes only, not game_version, ini_folder_path, or max_concurrent_scans)
             bool_requests = [
                 (bool, self.yaml_store, f"CLASSIC_Settings.{setting_name}")
                 for key, setting_name in self.SETTINGS_MAP.items()
-                if key not in {"game_version", "ini_folder_path"}
+                if key not in {"game_version", "ini_folder_path", "max_concurrent_scans"}
             ]
             # String settings (includes game_version as string)
             str_requests = [
@@ -271,8 +273,12 @@ class SettingsDialog(QDialog):
                 # Also check for legacy VR Mode setting for migration
                 (bool, self.yaml_store, "CLASSIC_Settings.VR Mode"),
             ]
+            # Integer settings
+            int_requests = [
+                (int, self.yaml_store, f"CLASSIC_Settings.{self.SETTINGS_MAP['max_concurrent_scans']}"),
+            ]
             # Combine all requests
-            requests = bool_requests + str_requests
+            requests = bool_requests + str_requests + int_requests
 
             # Batch load all settings
             values = yaml_cache.batch_get_settings(requests)
@@ -289,6 +295,9 @@ class SettingsDialog(QDialog):
             ini_path = next(value_iter) or ""
             legacy_vr_mode = next(value_iter) or False
 
+            # Get integer settings
+            max_concurrent_value = next(value_iter) or 0
+
             # Handle migration from legacy VR Mode to Game Version
             if game_version_value == "auto" and legacy_vr_mode:
                 game_version_value = "VR"
@@ -297,6 +306,11 @@ class SettingsDialog(QDialog):
             # Update UI widgets using helper methods
             self._load_game_version_combo(game_version_value)
             self._load_ini_folder_path(ini_path)
+
+            # Update max concurrent spinbox
+            max_concurrent_widget = self.settings_widgets.get("max_concurrent_scans")
+            if isinstance(max_concurrent_widget, QSpinBox):
+                max_concurrent_widget.setValue(max_concurrent_value)
 
             logger.info("Loaded settings into dialog")
 
@@ -390,6 +404,16 @@ class SettingsDialog(QDialog):
                         yaml_settings(str, YAML.Game_Local, root_docs_key, ini_path)
                     except (ImportError, TypeError, ValueError):
                         pass  # Registry not initialized, skip Game_Local update
+
+            # Save Max Concurrent Scans spinbox
+            max_concurrent_widget = self.settings_widgets.get("max_concurrent_scans")
+            if isinstance(max_concurrent_widget, QSpinBox):
+                yaml_settings(
+                    int,
+                    self.yaml_store,
+                    f"CLASSIC_Settings.{self.SETTINGS_MAP['max_concurrent_scans']}",
+                    max_concurrent_widget.value(),
+                )
 
             logger.info("Saved settings from dialog")
             msg_success("Settings saved successfully!")

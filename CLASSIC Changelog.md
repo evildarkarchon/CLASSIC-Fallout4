@@ -6,6 +6,7 @@
 - Fix migration tool path casing to match codebase conventions (`databases` lowercase, `Main`/`Local` title case).
 - Simplify the update check code using the GitHub API.
 - Improve the version detection logic for the crashlog generator version check.
+- Add setting to manually set the concurrency limit for the scan pipeline, defaults to 0 (automatic).
 
 ### 8.1.0 CHANGES
 

@@ -11,6 +11,7 @@ The main() function is async and uses asyncio.run() only at the entry point.
 """
 
 import asyncio
+import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -19,7 +20,7 @@ from ClassicLib.Constants import YAML
 from ClassicLib.ScanLog.models import ScanConfig, ScanResult
 from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
 from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettings import classic_settings, yaml_settings
+from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
 
 if TYPE_CHECKING:
     import argparse
@@ -48,11 +49,26 @@ def parse_arguments() -> "argparse.Namespace":
         "--simplify-logs", action=argparse.BooleanOptionalAction, help="Simplify the logs (Warning: May remove important information)"
     )
 
+    # Add max-concurrent argument with CPU-based help text
+    cpu_count = os.cpu_count() or 4
+    recommended = max(cpu_count - 2, 2)
+    parser.add_argument(
+        "--max-concurrent",
+        type=int,
+        default=None,
+        metavar="N",
+        help=f"Maximum parallel crash log scans. 0 = Automatic (recommended). "
+        f"Suggested value for your system: {recommended} (based on {cpu_count} CPU cores)",
+    )
+
     return parser.parse_args()
 
 
-def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
-    """Create scan configuration from CLI arguments.
+async def create_config_from_args_async(args: "argparse.Namespace") -> ScanConfig:
+    """Create scan configuration from CLI arguments asynchronously.
+
+    This function uses async settings functions for efficient CLI operation,
+    avoiding AsyncBridge overhead that is only needed in GUI contexts.
 
     Args:
         args: Parsed command line arguments containing configuration options.
@@ -67,35 +83,35 @@ def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
     config = ScanConfig()
 
     # Handle command line arguments by updating settings
-    if isinstance(args.fcx_mode, bool) and args.fcx_mode != classic_settings(bool, "FCX Mode"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.FCX Mode", args.fcx_mode)
+    if isinstance(args.fcx_mode, bool) and args.fcx_mode != await classic_settings_async(bool, "FCX Mode"):
+        await yaml_settings_async(bool, YAML.Settings, "CLASSIC_Settings.FCX Mode", args.fcx_mode)
         config.fcx_mode = args.fcx_mode
 
-    if isinstance(args.show_fid_values, bool) and args.show_fid_values != classic_settings(bool, "Show FormID Values"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Show FormID Values", args.show_fid_values)
+    if isinstance(args.show_fid_values, bool) and args.show_fid_values != await classic_settings_async(bool, "Show FormID Values"):
+        await yaml_settings_async(bool, YAML.Settings, "CLASSIC_Settings.Show FormID Values", args.show_fid_values)
         config.show_formid_values = args.show_fid_values
 
-    if isinstance(args.move_unsolved, bool) and args.move_unsolved != classic_settings(bool, "Move Unsolved Logs"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs", args.move_unsolved)
+    if isinstance(args.move_unsolved, bool) and args.move_unsolved != await classic_settings_async(bool, "Move Unsolved Logs"):
+        await yaml_settings_async(bool, YAML.Settings, "CLASSIC_Settings.Move Unsolved Logs", args.move_unsolved)
         config.move_unsolved_logs = args.move_unsolved
 
     if (
         isinstance(args.ini_path, Path)
         and args.ini_path.resolve().is_dir()
-        and str(args.ini_path) != classic_settings(str, "INI Folder Path")
+        and str(args.ini_path) != await classic_settings_async(str, "INI Folder Path")
     ):
-        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", str(args.ini_path.resolve()))
+        await yaml_settings_async(str, YAML.Settings, "CLASSIC_Settings.INI Folder Path", str(args.ini_path.resolve()))
         config.custom_paths["ini_path"] = args.ini_path.resolve()
 
     if (
         isinstance(args.scan_path, Path)
         and args.scan_path.resolve().is_dir()
-        and str(args.scan_path) != classic_settings(str, "SCAN Custom Path")
+        and str(args.scan_path) != await classic_settings_async(str, "SCAN Custom Path")
     ):
         from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
 
         if is_valid_custom_scan_path(args.scan_path):
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
+            await yaml_settings_async(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))
             config.custom_paths["scan_path"] = args.scan_path.resolve()
         else:
             msg_error(
@@ -103,49 +119,57 @@ def create_config_from_args(args: "argparse.Namespace") -> ScanConfig:
                 "The 'Crash Logs' folder and its subfolders are managed by CLASSIC and cannot be set as custom scan directories.\n"
                 "Resetting custom scan path."
             )
-            yaml_settings(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
+            await yaml_settings_async(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", "")
 
     if (
         isinstance(args.mods_folder_path, Path)
         and args.mods_folder_path.resolve().is_dir()
-        and str(args.mods_folder_path) != classic_settings(str, "MODS Folder Path")
+        and str(args.mods_folder_path) != await classic_settings_async(str, "MODS Folder Path")
     ):
-        yaml_settings(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", str(args.mods_folder_path.resolve()))
+        await yaml_settings_async(str, YAML.Settings, "CLASSIC_Settings.MODS Folder Path", str(args.mods_folder_path.resolve()))
         config.custom_paths["mods_folder_path"] = args.mods_folder_path.resolve()
 
-    if isinstance(args.simplify_logs, bool) and args.simplify_logs != classic_settings(bool, "Simplify Logs"):
-        yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
+    if isinstance(args.simplify_logs, bool) and args.simplify_logs != await classic_settings_async(bool, "Simplify Logs"):
+        await yaml_settings_async(bool, YAML.Settings, "CLASSIC_Settings.Simplify Logs", args.simplify_logs)
         config.simplify_logs = args.simplify_logs
+
+    # Handle --max-concurrent argument
+    if args.max_concurrent is not None:
+        # Validate CLI argument to match ScanConfig.__post_init__ constraints (0-32)
+        # This is necessary because we assign to config.max_concurrent after construction,
+        # bypassing __post_init__ validation
+        validated_value = max(0, min(args.max_concurrent, 32))
+
+        # CLI argument provided - save to YAML if different and use it
+        current_setting = await classic_settings_async(int, "Max Concurrent Scans") or 0
+        if validated_value != current_setting:
+            await yaml_settings_async(int, YAML.Settings, "CLASSIC_Settings.Max Concurrent Scans", validated_value)
+        config.max_concurrent = validated_value
+    else:
+        # No CLI argument - load from saved YAML setting
+        # Validate to match ScanConfig constraints (0-32) in case YAML was manually edited
+        yaml_value = await classic_settings_async(int, "Max Concurrent Scans") or 0
+        config.max_concurrent = max(0, min(yaml_value, 32))
 
     return config
 
 
-async def main() -> None:
-    """Serve as main CLI entry point - Async-First (Phase 4).
+async def run_scan(args: "Namespace") -> None:
+    """Run the scan operation asynchronously.
 
-    This function is async and uses native await instead of AsyncBridge,
-    matching the TUI pattern. asyncio.run() is only used at the entry point.
+    This function contains the async portion of the CLI entry point.
+    It creates the config using async settings functions and executes the scan.
+
+    Args:
+        args: Parsed command line arguments.
+
     """
-    # Ensure UTF-8 encoding for Windows console
     from ClassicLib.MessageHandler import msg_info
 
-    if sys.platform == "win32":  # type: ignore[comparison-overlap]  # Platform type narrowing
-        import io
-
-        # noinspection PyTypeChecker
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
-        # noinspection PyTypeChecker
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True)
-
-    # Initialize application using SetupCoordinator
-    coordinator = SetupCoordinator()
-    coordinator.initialize_application(is_gui=False)
+    # Create configuration from arguments using async settings (inside event loop)
+    config = await create_config_from_args_async(args)
 
     try:
-        # Parse command line arguments and create configuration
-        args: Namespace = parse_arguments()
-        config: ScanConfig = create_config_from_args(args)
-
         # Create executor and run scan using native async
         executor = ScanLogsExecutor(config)
         result: ScanResult = await executor.execute_scan()  # ✅ Direct async, no AsyncBridge
@@ -164,6 +188,34 @@ async def main() -> None:
     sys.stderr.flush()
 
 
+def main() -> None:
+    """Serve as main CLI entry point - Async-First (Phase 4).
+
+    This function handles synchronous initialization (SetupCoordinator uses asyncio.run()
+    internally), then delegates to async run_scan() for the actual scan operation.
+    This structure prevents nested asyncio.run() calls.
+    """
+    # Ensure UTF-8 encoding for Windows console
+    if sys.platform == "win32":  # type: ignore[comparison-overlap]  # Platform type narrowing
+        import io
+
+        # noinspection PyTypeChecker
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+        # noinspection PyTypeChecker
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace", line_buffering=True)
+
+    # Parse command line arguments first (may exit for --help)
+    args: Namespace = parse_arguments()
+
+    # Initialize application using SetupCoordinator
+    # NOTE: This must happen BEFORE asyncio.run() because SetupCoordinator
+    # uses asyncio.run() internally for async operations
+    coordinator = SetupCoordinator()
+    coordinator.initialize_application(is_gui=False)
+
+    # Run the async scan operation (config creation happens inside async context)
+    asyncio.run(run_scan(args))
+
+
 if __name__ == "__main__":
-    # Single asyncio.run() at entry point only
-    asyncio.run(main())
+    main()

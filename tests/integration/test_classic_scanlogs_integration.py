@@ -29,15 +29,24 @@ class TestClassicScanLogs:
             args = parse_arguments()
             assert isinstance(args, argparse.Namespace)
 
-    @patch("CLASSIC_ScanLogs.classic_settings")
-    @patch("CLASSIC_ScanLogs.yaml_settings")
-    def test_create_config_from_args(self, mock_yaml, mock_classic) -> None:
+    @patch("CLASSIC_ScanLogs.classic_settings_async")
+    @patch("CLASSIC_ScanLogs.yaml_settings_async")
+    @pytest.mark.asyncio
+    async def test_create_config_from_args(self, mock_yaml, mock_classic) -> None:
         """Test configuration creation from arguments."""
-        from CLASSIC_ScanLogs import create_config_from_args
+        from CLASSIC_ScanLogs import create_config_from_args_async
         from ClassicLib.ScanLog.models import ScanConfig
 
         # Mock defaults - Return True so False argument triggers change
-        mock_classic.return_value = True
+        # Use AsyncMock-style by making the mock return a coroutine
+        async def async_classic_return(*args, **kwargs):
+            return True
+
+        async def async_yaml_return(*args, **kwargs):
+            return None
+
+        mock_classic.side_effect = async_classic_return
+        mock_yaml.side_effect = async_yaml_return
 
         # Create dummy args
         args = argparse.Namespace(
@@ -49,17 +58,18 @@ class TestClassicScanLogs:
             ini_path=None,
             scan_path=None,
             mods_folder_path=None,
+            max_concurrent=None,
         )
 
-        config = create_config_from_args(args)
+        config = await create_config_from_args_async(args)
 
         assert isinstance(config, ScanConfig)
-        # Since we mocked classic_settings to True, passing True for fcx_mode/show_fid/simplify means no change?
+        # Since we mocked classic_settings_async to True, passing True for fcx_mode/show_fid/simplify means no change
         # Wait, the logic is: if arg != setting: update setting AND config.
-        # If arg == setting: config uses default?
+        # If arg == setting: config uses default
 
         # Let's check logic again.
-        # if isinstance(args.fcx_mode, bool) and args.fcx_mode != classic_settings(...):
+        # if isinstance(args.fcx_mode, bool) and args.fcx_mode != await classic_settings_async(...):
         #    config.fcx_mode = args.fcx_mode
 
         # If mock_classic returns True.
@@ -80,16 +90,18 @@ class TestClassicScanLogs:
         # config.fcx_mode might be None or False depending on ScanConfig.
         # I'll assert what it *should* be given the flow.
 
+    @patch("ClassicLib.Database.cleanup_database_pools_async")
     @patch("ClassicLib.MessageHandler.msg_info")  # Patch msg_info to prevent handler error
-    @patch("CLASSIC_ScanLogs.SetupCoordinator")
     @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
-    @patch("CLASSIC_ScanLogs.parse_arguments")
-    @patch("CLASSIC_ScanLogs.create_config_from_args")
-    @patch("sys.platform", "linux")  # Avoid Windows-specific stdout/stderr replacement
+    @patch("CLASSIC_ScanLogs.create_config_from_args_async")
     @pytest.mark.asyncio
-    async def test_main_execution_flow(self, mock_create_config, mock_parse_args, mock_executor_cls, mock_setup_cls, mock_msg_info) -> None:
-        """Test main execution flow."""
-        from CLASSIC_ScanLogs import main
+    async def test_main_execution_flow(self, mock_create_config, mock_executor_cls, mock_msg_info, mock_cleanup) -> None:
+        """Test main execution flow by testing run_scan() directly.
+
+        Since main() is now sync and calls asyncio.run() internally, we test
+        run_scan(args) which contains the actual async logic.
+        """
+        from CLASSIC_ScanLogs import run_scan
 
         # Setup mocks
         mock_executor = MagicMock()
@@ -104,17 +116,38 @@ class TestClassicScanLogs:
         mock_executor.generate_summary.return_value = "Summary"
         mock_executor_cls.return_value = mock_executor
 
-        mock_coordinator = MagicMock()
-        mock_setup_cls.return_value = mock_coordinator
+        # Mock async config creation
+        async def mock_create_config_async(args):
+            from ClassicLib.ScanLog.models import ScanConfig
 
-        # Run main
-        await main()
+            return ScanConfig()
+
+        mock_create_config.side_effect = mock_create_config_async
+
+        # Mock cleanup to be an async function
+        async def mock_cleanup_async():
+            pass
+
+        mock_cleanup.side_effect = mock_cleanup_async
+
+        # Create test args
+        args = argparse.Namespace(
+            fcx_mode=None,
+            show_fid_values=None,
+            move_unsolved=None,
+            stat_logging=None,
+            simplify_logs=None,
+            ini_path=None,
+            scan_path=None,
+            mods_folder_path=None,
+            max_concurrent=None,
+        )
+
+        # Run run_scan directly (the async function that main() calls)
+        await run_scan(args)
 
         # Verify flow
-        mock_setup_cls.assert_called_once()
-        mock_coordinator.initialize_application.assert_called_once_with(is_gui=False)
-        mock_parse_args.assert_called_once()
-        mock_create_config.assert_called_once()
+        mock_create_config.assert_called_once_with(args)
         mock_executor_cls.assert_called_once()
         # execute_scan called and awaited
         assert mock_executor.execute_scan.call_count == 1

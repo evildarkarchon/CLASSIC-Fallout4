@@ -930,30 +930,31 @@ impl OrchestratorCore {
         Ok(result)
     }
 
-    /// Asynchronously processes multiple crash log files sequentially.
+    /// Asynchronously processes multiple crash log files in parallel.
     ///
-    /// This function processes a batch of crash logs one at a time, collecting all results
-    /// into a vector. Each log is analyzed independently, and failures don't stop processing
-    /// of remaining logs. Failed analyses are returned as `AnalysisResult` instances with
-    /// `success = false` and error messages.
-    ///
-    /// **Note**: Despite the name, this implementation currently processes logs sequentially.
-    /// Future versions may add true parallel processing using `tokio::spawn` or `futures::join_all`.
+    /// This function processes a batch of crash logs concurrently using bounded parallelism,
+    /// collecting all results into a vector. Each log is analyzed independently, and failures
+    /// don't stop processing of remaining logs. Failed analyses are returned as `AnalysisResult`
+    /// instances with `success = false` and error messages.
     ///
     /// # Arguments
     ///
     /// * `log_paths` - Vector of paths to crash log files to analyze
+    /// * `max_concurrent` - Optional maximum number of concurrent log processing tasks.
+    ///   If `None`, uses adaptive concurrency based on CPU count and batch size.
+    ///   If `Some(n)`, uses exactly `n` concurrent tasks (minimum 1).
     ///
     /// # Returns
     ///
-    /// Returns a `Vec<AnalysisResult>` with one result per input log path, in the same order.
+    /// Returns a `Vec<AnalysisResult>` with one result per input log path.
+    /// Note: Results may not be in the same order as input due to parallel processing.
     /// Failed analyses are included as failure results rather than being filtered out.
     ///
     /// # Performance
     ///
-    /// - Sequential processing: processes one log at a time
+    /// - Parallel processing with bounded concurrency
     /// - Each log: ~50-200ms (SIMD-optimized parsing)
-    /// - Future parallel version could achieve near-linear speedup with multiple CPU cores
+    /// - Near-linear speedup with multiple CPU cores when `max_concurrent` allows
     ///
     /// # Example
     ///
@@ -970,7 +971,11 @@ impl OrchestratorCore {
     ///     "crash-2024-01-03.log".to_string(),
     /// ];
     ///
-    /// let results = orchestrator.process_logs_batch(logs).await;
+    /// // Auto-detect optimal concurrency
+    /// let results = orchestrator.process_logs_batch(logs.clone(), None).await;
+    ///
+    /// // Or specify exact concurrency level
+    /// let results = orchestrator.process_logs_batch(logs, Some(4)).await;
     ///
     /// let successful = results.iter().filter(|r| r.success).count();
     /// let failed = results.iter().filter(|r| !r.success).count();
@@ -979,21 +984,29 @@ impl OrchestratorCore {
     /// # Ok(())
     /// # }
     /// ```
-    pub async fn process_logs_batch(&self, log_paths: Vec<String>) -> Vec<AnalysisResult> {
-        // Optimization 1.8: Bounded parallel processing instead of sequential
-        // Expected impact: 3-4x faster for multiple logs (CPU core count dependent)
+    pub async fn process_logs_batch(
+        &self,
+        log_paths: Vec<String>,
+        max_concurrent: Option<usize>,
+    ) -> Vec<AnalysisResult> {
         use futures::stream::{self, StreamExt};
 
         if log_paths.is_empty() {
             return Vec::new();
         }
 
-        // Adaptive concurrency: start with CPU count, scale based on batch size
-        let num_cpus = num_cpus::get();
-        let max_concurrent = if log_paths.len() < num_cpus {
-            log_paths.len().max(1) // Small batch: process all concurrently, min 1
-        } else {
-            num_cpus.max(4) // Large batch: use CPU count (min 4 for good throughput)
+        // Determine concurrency level
+        let concurrency = match max_concurrent {
+            Some(n) => n.max(1), // User-specified, minimum 1
+            None => {
+                // Adaptive concurrency: start with CPU count, scale based on batch size
+                let num_cpus = num_cpus::get();
+                if log_paths.len() < num_cpus {
+                    log_paths.len().max(1) // Small batch: process all concurrently, min 1
+                } else {
+                    num_cpus.max(4) // Large batch: use CPU count (min 4 for good throughput)
+                }
+            }
         };
 
         stream::iter(log_paths)
@@ -1006,7 +1019,7 @@ impl OrchestratorCore {
                     }
                 }
             })
-            .buffer_unordered(max_concurrent) // ✅ Bounded parallelism
+            .buffer_unordered(concurrency)
             .collect()
             .await
     }

@@ -71,7 +71,7 @@ class TestDialogStructure:
 
     def test_settings_widgets_dictionary(self, settings_dialog):
         """Test that settings_widgets dictionary is properly populated."""
-        assert len(settings_dialog.settings_widgets) == 8
+        assert len(settings_dialog.settings_widgets) == 9
         expected_keys = [
             "game_version",
             "fcx_mode",
@@ -81,6 +81,7 @@ class TestDialogStructure:
             "auto_switch_results",
             "update_check",
             "ini_folder_path",
+            "max_concurrent_scans",
         ]
         for key in expected_keys:
             assert key in settings_dialog.settings_widgets

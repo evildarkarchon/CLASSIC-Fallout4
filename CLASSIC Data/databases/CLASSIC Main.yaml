@@ -66,6 +66,10 @@ CLASSIC_Info:
     # This can be useful for cleaner output when running CLASSIC in scripts or automated environments.
       Disable CLI Progress: false
 
+    # Maximum number of concurrent crash log scans. 0 = Automatic (uses CPU-based detection).
+    # Recommended: Number of CPU cores minus 2, minimum 2.
+      Max Concurrent Scans: 0
+
   default_localyaml: |
     Game_Info:
       Root_Folder_Game:
