@@ -19,7 +19,7 @@ jobs:
     name: Python Formatting (Ruff)
     runs-on: windows-latest
     timeout-minutes: 10
-    continue-on-error: true  # Don't block CI on formatting issues
+    continue-on-error: true # Don't block CI on formatting issues
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +39,7 @@ jobs:
     name: Rust Formatting (rustfmt)
     runs-on: windows-latest
     timeout-minutes: 10
-    continue-on-error: true  # Don't block CI on formatting issues
+    continue-on-error: true # Don't block CI on formatting issues
     steps:
       - uses: actions/checkout@v4
 
@@ -120,7 +120,7 @@ jobs:
   build-rust:
     name: Build Rust Components
     runs-on: windows-latest
-    timeout-minutes: 60  # Prevent build from hanging
+    timeout-minutes: 60 # Prevent build from hanging
     env:
       RUST_BACKTRACE: full
     steps:
@@ -180,8 +180,8 @@ jobs:
   build-python-bindings:
     name: Build Python Bindings
     runs-on: windows-latest
-    needs: [build-rust]  # Only wait for Rust build, not linting
-    timeout-minutes: 30  # Maturin builds can be slow
+    needs: [build-rust] # Only wait for Rust build, not linting
+    timeout-minutes: 30 # Maturin builds can be slow
     steps:
       - uses: actions/checkout@v4
 
@@ -217,66 +217,7 @@ jobs:
         run: uv tool install maturin
 
       - name: Build all Python bindings
-        run: |
-          $ErrorActionPreference = "Stop"
-
-          # Map binding names to their directory paths
-          # Most are in python-bindings/, but classic-shared-py is in foundation/
-          $bindingPaths = @{
-            "classic-shared-py" = "rust/foundation/classic-shared-py"
-            "classic-yaml-py" = "rust/python-bindings/classic-yaml-py"
-            "classic-database-py" = "rust/python-bindings/classic-database-py"
-            "classic-file-io-py" = "rust/python-bindings/classic-file-io-py"
-            "classic-scanlog-py" = "rust/python-bindings/classic-scanlog-py"
-            "classic-config-py" = "rust/python-bindings/classic-config-py"
-            "classic-registry-py" = "rust/python-bindings/classic-registry-py"
-            "classic-perf-py" = "rust/python-bindings/classic-perf-py"
-            "classic-pybridge-py" = "rust/python-bindings/classic-pybridge-py"
-            "classic-settings-py" = "rust/python-bindings/classic-settings-py"
-            "classic-message-py" = "rust/python-bindings/classic-message-py"
-            "classic-path-py" = "rust/python-bindings/classic-path-py"
-            "classic-constants-py" = "rust/python-bindings/classic-constants-py"
-            "classic-version-py" = "rust/python-bindings/classic-version-py"
-            "classic-resource-py" = "rust/python-bindings/classic-resource-py"
-            "classic-xse-py" = "rust/python-bindings/classic-xse-py"
-            "classic-web-py" = "rust/python-bindings/classic-web-py"
-            "classic-scangame-py" = "rust/python-bindings/classic-scangame-py"
-            "classic-update-py" = "rust/python-bindings/classic-update-py"
-          }
-
-          # Build in dependency order (classic-shared-py first)
-          $buildOrder = @(
-            "classic-shared-py",
-            "classic-yaml-py",
-            "classic-database-py",
-            "classic-file-io-py",
-            "classic-scanlog-py",
-            "classic-config-py",
-            "classic-registry-py",
-            "classic-perf-py",
-            "classic-pybridge-py",
-            "classic-settings-py",
-            "classic-message-py",
-            "classic-path-py",
-            "classic-constants-py",
-            "classic-version-py",
-            "classic-resource-py",
-            "classic-xse-py",
-            "classic-web-py",
-            "classic-scangame-py",
-            "classic-update-py"
-          )
-
-          foreach ($binding in $buildOrder) {
-            $path = $bindingPaths[$binding]
-            Write-Host "Building $binding from $path..."
-            Set-Location $path
-            maturin build --release --out dist
-            if ($LASTEXITCODE -ne 0) {
-              throw "Failed to build $binding"
-            }
-            Set-Location $env:GITHUB_WORKSPACE
-          }
+        run: ./rebuild_rust.ps1 -BuildOnly
         shell: pwsh
 
       - name: Upload Python binding wheels
@@ -293,9 +234,9 @@ jobs:
     name: Python Tests
     runs-on: windows-latest
     needs: [build-python-bindings]
-    timeout-minutes: 30  # Kill job if tests hang for 30 minutes
+    timeout-minutes: 30 # Kill job if tests hang for 30 minutes
     env:
-      PYTHONTRACEMALLOC: "10"  # Enable tracemalloc with 10 frame depth for better error reporting
+      PYTHONTRACEMALLOC: "10" # Enable tracemalloc with 10 frame depth for better error reporting
     steps:
       - uses: actions/checkout@v4
 
@@ -342,15 +283,15 @@ jobs:
           uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 
       - name: Run pytest (unit tests)
-        run: uv run pytest -m "unit and not slow" --maxfail=5 --tb=short --timeout=300 --timeout-method=thread
+        run: uv run pytest -m "unit and not slow" --maxfail=5 --tb=short --timeout=300 --timeout-method=thread --junitxml=test-results/unit.xml
         timeout-minutes: 10
 
       - name: Run pytest (integration tests)
-        run: uv run pytest -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread
+        run: uv run pytest -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread --junitxml=test-results/integration.xml
         timeout-minutes: 15
 
       - name: Run pytest (Rust integration tests)
-        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread
+        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread --junitxml=test-results/rust-integration.xml
         timeout-minutes: 10
 
       - name: Upload test results
@@ -358,7 +299,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: pytest-results
-          path: |
-            .pytest_cache/
-            test-results/
+          path: test-results/
+          if-no-files-found: warn
           retention-days: 7

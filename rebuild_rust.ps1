@@ -6,7 +6,10 @@ param (
     [string[]]$Crates,
 
     [Parameter(Mandatory = $false)]
-    [switch]$Clean
+    [switch]$Clean,
+
+    [Parameter(Mandatory = $false)]
+    [switch]$BuildOnly  # Skip install and verification (useful for CI)
 )
 
 $ErrorActionPreference = "Stop"
@@ -34,9 +37,9 @@ function Get-RustModuleInfo {
 
     if ($packageName -and $libName -and $isPyO3) {
         return @{
-            WheelName = $packageName.Replace('-', '_')
-            Dir = $CargoPath | Split-Path -Parent
-            ImportName = $libName
+            WheelName   = $packageName.Replace('-', '_')
+            Dir         = $CargoPath | Split-Path -Parent
+            ImportName  = $libName
             PackageName = $packageName
         }
     }
@@ -80,7 +83,8 @@ if ($Crates) {
         }
         if ($match) {
             $filteredModules += $match
-        } else {
+        }
+        else {
             Write-Warning "Could not find module matching '$crate'"
         }
     }
@@ -109,12 +113,18 @@ if ($Clean) {
         Remove-Item -Path ".venv\Lib\site-packages\$($module.WheelName)*.dll" -ErrorAction SilentlyContinue
         Remove-Item -Path ".venv\Lib\site-packages\$($module.WheelName)-*.dist-info" -Recurse -ErrorAction SilentlyContinue
     }
-} else {
+}
+else {
     Write-Host "ℹ️  Skipping clean step (use -Clean to force)" -ForegroundColor Gray
 }
 
 Write-Host ""
-Write-Host "🔨 Building and installing..." -ForegroundColor Yellow
+if ($BuildOnly) {
+    Write-Host "🔨 Building wheels (install skipped)..." -ForegroundColor Yellow
+}
+else {
+    Write-Host "🔨 Building and installing..." -ForegroundColor Yellow
+}
 Write-Host ""
 
 foreach ($module in $RustModules) {
@@ -132,9 +142,16 @@ foreach ($module in $RustModules) {
         exit 1
     }
 
-    # Find and install the latest wheel
+    # Find the latest wheel
     $wheel = Get-ChildItem -Path "dist\$($module.WheelName)-*.whl" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if ($wheel) {
+    if (-not $wheel) {
+        Pop-Location
+        Write-Error "No wheel file found for $($module.WheelName)!"
+        exit 1
+    }
+
+    # Install unless BuildOnly mode
+    if (-not $BuildOnly) {
         Write-Host "📦 Installing $($module.WheelName)..." -ForegroundColor Green
         uv pip install $wheel.FullName --force-reinstall
         if ($LASTEXITCODE -ne 0) {
@@ -143,14 +160,15 @@ foreach ($module in $RustModules) {
             exit 1
         }
     }
-    else {
-        Pop-Location
-        Write-Error "No wheel file found for $($module.WheelName)!"
-        exit 1
-    }
 
     Pop-Location
     Write-Host ""
+}
+
+# Skip verification in BuildOnly mode
+if ($BuildOnly) {
+    Write-Host "✨ Build complete! (verification skipped)" -ForegroundColor Green
+    exit 0
 }
 
 Write-Host "✅ Verifying installations..." -ForegroundColor Green
