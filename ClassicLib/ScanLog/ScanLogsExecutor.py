@@ -230,10 +230,8 @@ class ScanLogsExecutor:
         if self.config.max_concurrent == 0:
             # Adaptive concurrency: match Rust orchestrator logic
             num_cpus = os.cpu_count() or 4
-            if batch_size < num_cpus:
-                max_concurrent = max(batch_size, 1)  # Small batch: process all concurrently
-            else:
-                max_concurrent = max(num_cpus, 4)  # Large batch: use CPU count (min 4)
+            # Small batch: process all concurrently; Large batch: use CPU count (min 4)
+            max_concurrent = max(batch_size, 1) if batch_size < num_cpus else max(num_cpus, 4)
         else:
             max_concurrent = min(self.config.max_concurrent, batch_size)
         total_logs = len(self.crashlog_list)
