@@ -132,3 +132,47 @@ sample_crash_logs_dir = perf_sample_crash_logs_dir
 performance_test_logs = perf_test_logs
 small_performance_test_logs = perf_small_test_logs
 minimal_performance_test_logs = perf_minimal_test_logs
+
+
+# ============================================================================
+# Benchmark Fixtures (Consolidated from test_rust_ffi_performance.py)
+# ============================================================================
+
+
+@pytest.fixture
+def complex_crash_log_path() -> Path:
+    """Return path to complex crash log for benchmarking.
+
+    Returns:
+        Path to the complex crash log test file.
+    """
+    return Path("tests/test_data/sample_crash_logs/complex_crash.log")
+
+
+@pytest.fixture
+def complex_crash_log_lines(complex_crash_log_path: Path) -> list[str]:
+    """Return lines of complex crash log for benchmarking.
+
+    Includes a [Compatibility] header for default parser boundaries.
+
+    Args:
+        complex_crash_log_path: Path to the complex crash log.
+
+    Returns:
+        List of lines from the crash log with compatibility header.
+    """
+    if not complex_crash_log_path.exists():
+        pytest.skip("Complex crash log not found")
+    lines = complex_crash_log_path.read_text(encoding="utf-8").splitlines()
+    # Ensure [Compatibility] exists for default parser boundaries
+    return ["[Compatibility]"] + lines
+
+
+@pytest.fixture
+def test_settings_yaml_path() -> Path:
+    """Return path to test settings yaml for benchmarking.
+
+    Returns:
+        Path to the test settings YAML file.
+    """
+    return Path("tests/test_data/sample_yaml/test_settings.yaml")

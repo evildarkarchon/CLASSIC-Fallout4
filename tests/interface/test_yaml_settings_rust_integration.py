@@ -14,31 +14,11 @@ from unittest.mock import patch
 
 import pytest
 
-# Fixtures
-
-
-@pytest.fixture
-def yaml_file_ops():
-    """Create YamlFileOperations instance for testing."""
-    from ClassicLib.YamlSettings.async_ import YamlFileOperations
-
-    return YamlFileOperations()
-
-
-@pytest.fixture
-def yaml_cache():
-    """Create YamlSettingsCache instance for testing."""
-    from ClassicLib.YamlSettings import YamlSettingsCache
-
-    return YamlSettingsCache()
-
-
-@pytest.fixture
-def temp_yaml_file(tmp_path):
-    """Create a temporary YAML file for testing."""
-    yaml_file = tmp_path / "test.yaml"
-    yaml_file.write_text("test_key: test_value\n# This is a comment\ntest_int: 42\n", encoding="utf-8")
-    return yaml_file
+# Note: yaml_file_ops, yaml_cache_instance, and yaml_simple_file fixtures are provided by
+# tests/fixtures/yaml_fixtures.py via the root conftest.py
+# - Use yaml_file_ops for YamlFileOperations
+# - Use yaml_cache_instance for YamlSettingsCache
+# - Use yaml_simple_file for simple YAML with comments (replaces yaml_simple_file)
 
 
 # Test Rust availability
@@ -107,10 +87,10 @@ def test_user_editable_files_use_python(yaml_file_ops):
 @pytest.mark.unit
 @pytest.mark.rust
 @pytest.mark.asyncio
-async def test_rust_yaml_parsing(yaml_file_ops, temp_yaml_file):
+async def test_rust_yaml_parsing(yaml_file_ops, yaml_simple_file):
     """Test Rust YAML parsing works correctly."""
     # Parse without preserving comments (should use Rust)
-    result = await yaml_file_ops.parse_yaml_content(temp_yaml_file.read_text(), preserve_comments=False)
+    result = await yaml_file_ops.parse_yaml_content(yaml_simple_file.read_text(), preserve_comments=False)
 
     assert isinstance(result, dict), "Should return dict"
     assert result.get("test_key") == "test_value", "Should parse key correctly"
@@ -119,10 +99,10 @@ async def test_rust_yaml_parsing(yaml_file_ops, temp_yaml_file):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_python_yaml_parsing_preserves_comments(yaml_file_ops, temp_yaml_file):
+async def test_python_yaml_parsing_preserves_comments(yaml_file_ops, yaml_simple_file):
     """Test Python YAML parsing preserves comments."""
     # Parse with preserving comments (should use Python)
-    result = await yaml_file_ops.parse_yaml_content(temp_yaml_file.read_text(), preserve_comments=True)
+    result = await yaml_file_ops.parse_yaml_content(yaml_simple_file.read_text(), preserve_comments=True)
 
     assert isinstance(result, dict), "Should return dict"
     assert result.get("test_key") == "test_value", "Should parse key correctly"
@@ -136,11 +116,11 @@ async def test_python_yaml_parsing_preserves_comments(yaml_file_ops, temp_yaml_f
 @pytest.mark.unit
 @pytest.mark.rust
 @pytest.mark.asyncio
-async def test_load_yaml_file_with_rust(yaml_file_ops, temp_yaml_file):
+async def test_load_yaml_file_with_rust(yaml_file_ops, yaml_simple_file):
     """Test loading YAML file with Rust acceleration."""
     # Mock _should_use_rust_for_file to force Rust usage
     with patch.object(yaml_file_ops, "_should_use_rust_for_file", return_value=True):
-        result = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
+        result = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=False)
 
         assert isinstance(result, dict), "Should return dict"
         assert result.get("test_key") == "test_value", "Should load content correctly"
@@ -148,11 +128,11 @@ async def test_load_yaml_file_with_rust(yaml_file_ops, temp_yaml_file):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_load_yaml_file_with_python(yaml_file_ops, temp_yaml_file):
+async def test_load_yaml_file_with_python(yaml_file_ops, yaml_simple_file):
     """Test loading YAML file with Python implementation."""
     # Mock _should_use_rust_for_file to force Python usage
     with patch.object(yaml_file_ops, "_should_use_rust_for_file", return_value=False):
-        result = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
+        result = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=False)
 
         assert isinstance(result, dict), "Should return dict"
         assert result.get("test_key") == "test_value", "Should load content correctly"
@@ -163,7 +143,7 @@ async def test_load_yaml_file_with_python(yaml_file_ops, temp_yaml_file):
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_python_works_without_rust(yaml_file_ops, temp_yaml_file):
+async def test_python_works_without_rust(yaml_file_ops, yaml_simple_file):
     """Test that Python YAML loading works when Rust is disabled."""
     # Disable Rust temporarily
     original_rust = yaml_file_ops.rust_yaml
@@ -171,7 +151,7 @@ async def test_python_works_without_rust(yaml_file_ops, temp_yaml_file):
 
     try:
         # Should use Python implementation
-        result = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
+        result = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=False)
 
         assert isinstance(result, dict), "Should return dict from Python"
         assert result.get("test_key") == "test_value", "Should load correctly with Python"
@@ -212,14 +192,14 @@ def test_operations_without_rust():
     # Test YamlSettingsCache integration
 
     @pytest.mark.unit
-    def test_yaml_settings_cache_has_async_core(yaml_cache):
+    def test_yaml_settings_cache_has_async_core(yaml_cache_instance):
         """Test that YamlSettingsCache has async core initialized."""
         # Trigger lazy initialization
-        yaml_cache._get_async_core()
+        yaml_cache_instance._get_async_core()
 
-        assert hasattr(yaml_cache, "_async_core"), "Should have async core"
-        assert hasattr(yaml_cache, "_bridge"), "Should have AsyncBridge"
-        assert yaml_cache._async_core is not None, "Async core should be initialized"
+        assert hasattr(yaml_cache_instance, "_async_core"), "Should have async core"
+        assert hasattr(yaml_cache_instance, "_bridge"), "Should have AsyncBridge"
+        assert yaml_cache_instance._async_core is not None, "Async core should be initialized"
 
 
 @pytest.mark.unit
@@ -321,34 +301,34 @@ def test_rust_can_be_disabled_via_env():
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_yaml_file_caching(yaml_file_ops, temp_yaml_file):
+async def test_yaml_file_caching(yaml_file_ops, yaml_simple_file):
     """Test that YAML file caching works correctly."""
     # First load - should hit disk
-    result1 = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=True)
+    result1 = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=True)
 
     # Second load - should use cache
-    result2 = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=True)
+    result2 = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=True)
 
     assert result1 == result2, "Cached result should match original"
-    assert str(temp_yaml_file) in yaml_file_ops._file_cache, "File should be in cache"
+    assert str(yaml_simple_file) in yaml_file_ops._file_cache, "File should be in cache"
 
 
 @pytest.mark.unit
 @pytest.mark.asyncio
-async def test_yaml_cache_bypass(yaml_file_ops, temp_yaml_file):
+async def test_yaml_cache_bypass(yaml_file_ops, yaml_simple_file):
     """Test that cache can be bypassed when needed."""
     # Load with cache
-    result1 = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=True)
+    result1 = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=True)
 
     # Modify file
-    temp_yaml_file.write_text("new_key: new_value\n", encoding="utf-8")
+    yaml_simple_file.write_text("new_key: new_value\n", encoding="utf-8")
 
     # Clear both FileIOCore cache and YAML cache to ensure fresh read
     yaml_file_ops.io_core.clear_cache()
     yaml_file_ops.clear_cache()
 
     # Load without cache - should see new content
-    result2 = await yaml_file_ops.load_yaml_file(temp_yaml_file, use_cache=False)
+    result2 = await yaml_file_ops.load_yaml_file(yaml_simple_file, use_cache=False)
 
     assert result1.get("test_key") == "test_value", "Cached result should have old content"
     assert result2.get("new_key") == "new_value", "Non-cached result should have new content"

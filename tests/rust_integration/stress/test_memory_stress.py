@@ -39,7 +39,7 @@ from ClassicLib.integration.status import (
 )
 from ClassicLib.rust.formid_rust import FormIDAnalyzer as RustFormIDAnalyzer
 from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
-from tests.rust_integration.stress.conftest import memory_monitor
+from tests.fixtures.stress_fixtures import memory_monitor
 
 logger = logging.getLogger(__name__)
 

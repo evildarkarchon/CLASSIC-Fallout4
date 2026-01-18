@@ -7,16 +7,9 @@ import pytest
 import ruamel.yaml
 
 from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
 
-
-@pytest.fixture
-async def async_yaml_core():
-    """Create a fresh AsyncYamlSettingsCore instance for testing."""
-    core = AsyncYamlSettingsCore()
-    yield core
-    # Cleanup if needed
-    await core.clear_cache()
+# Note: async_yaml_core fixture is provided by
+# tests/fixtures/yaml_fixtures.py via the root conftest.py
 
 
 class TestAsyncYamlErrorHandling:

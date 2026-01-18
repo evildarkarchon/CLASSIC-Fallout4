@@ -2,35 +2,12 @@
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, F841
 
 import time
-from pathlib import Path
 
 import pytest
 import ruamel.yaml
 
-from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
-
-
-@pytest.fixture
-async def async_yaml_core():
-    """Create a fresh AsyncYamlSettingsCore instance for testing."""
-    core = AsyncYamlSettingsCore()
-    yield core
-    # Cleanup if needed
-    await core.clear_cache()
-
-
-@pytest.fixture
-def temp_yaml_file(tmp_path):
-    """Create a temporary YAML file for testing."""
-    yaml_file = tmp_path / "test.yaml"
-    data = {"test_settings": {"string_value": "test", "bool_value": True, "int_value": 42, "nested": {"deep_value": "deep"}}}
-
-    yaml = ruamel.yaml.YAML()
-    yaml.indent(offset=2)
-    with Path(yaml_file).open("w") as f:
-        yaml.dump(data, f)
-
-    return yaml_file
+# Note: async_yaml_core and temp_yaml_file fixtures are provided by
+# tests/fixtures/yaml_fixtures.py via the root conftest.py
 
 
 class TestAsyncYamlCaching:

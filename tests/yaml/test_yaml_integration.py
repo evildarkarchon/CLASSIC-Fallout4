@@ -14,61 +14,8 @@ import pytest
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
 
-
-@pytest.fixture
-async def async_yaml_core():
-    """Create a fresh AsyncYamlSettingsCore instance for testing."""
-    core = AsyncYamlSettingsCore()
-    yield core
-    # Cleanup
-    await core.clear_cache()
-
-
-@pytest.fixture
-def create_yaml_files(tmp_path: Path) -> Path:
-    """Create temporary YAML files for testing."""
-    yaml_dir: Path = tmp_path / "yaml"
-    yaml_dir.mkdir(exist_ok=True)
-
-    # Create main settings file with proper structure
-    settings_file: Path = yaml_dir / "CLASSIC Settings.yaml"
-    settings_file.write_text("""
-CLASSIC_Settings:
-  Managed Game: "Fallout 4"
-
-Game_Info:
-  CRASHGEN_LogName: "Buffout 4"
-  XSE_Acronym: "F4SE"
-
-Mods_Alert_Single:
-  problematic_mod: "This mod causes crashes."
-  another_problem: "Another problematic mod."
-
-Mods_Alert_Double:
-  mod_conflict | mod_conflict2: "These mods conflict with each other."
-
-Mods_Alert_Important:
-  critical_mod | Critical Mod: "This mod is critical and incompatible with your GPU."
-
-Crashlog_Error_Check:
-  "HIGH | Access violation": "Access violation detected"
-  "MEDIUM | Null pointer": "Null pointer detected"
-
-Crashlog_Stack_Check:
-  "MEDIUM | Problematic stack":
-    - "required:BadFunction"
-    - "optional:OtherFunction"
-    """)
-
-    # Create local settings file
-    local_file: Path = yaml_dir / "CLASSIC Fallout4 Local.yaml"
-    local_file.write_text("""
-catch_log_records:
-  - "Record1"
-  - "Record2"
-    """)
-
-    return yaml_dir
+# Note: async_yaml_core and create_yaml_files fixtures are provided by
+# tests/fixtures/yaml_fixtures.py via the root conftest.py
 
 
 @pytest.mark.integration

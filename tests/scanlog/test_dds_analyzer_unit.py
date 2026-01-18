@@ -3,87 +3,19 @@
 import asyncio
 import struct
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 
 from ClassicLib.ScanGame.core.dds_analyzer import (
-    DDSFlags,
     DDSInfo,
-    DDSPixelFlags,
     EnhancedDDSAnalyzer,
     analyze_dds,
     get_analyzer,
 )
 
-
-@pytest.fixture
-def analyzer():
-    """Create analyzer instance without library dependencies."""
-    with patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PYFFI", False), patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PIL_DDS", False):
-        return EnhancedDDSAnalyzer(use_libraries=False)
-
-
-@pytest.fixture
-def valid_dds_data():
-    """Create valid DDS header data for testing."""
-    header = bytearray(128)
-
-    # Magic number "DDS "
-    header[0:4] = b"DDS "
-
-    # dwSize (124)
-    header[4:8] = struct.pack("<I", 124)
-
-    # dwFlags
-    flags = DDSFlags.CAPS | DDSFlags.HEIGHT | DDSFlags.WIDTH | DDSFlags.PIXELFORMAT
-    header[8:12] = struct.pack("<I", flags)
-
-    # dwHeight
-    header[12:16] = struct.pack("<I", 1024)
-
-    # dwWidth
-    header[16:20] = struct.pack("<I", 2048)
-
-    # dwPitchOrLinearSize
-    header[20:24] = struct.pack("<I", 0)
-
-    # dwDepth
-    header[24:28] = struct.pack("<I", 1)
-
-    # dwMipMapCount
-    header[28:32] = struct.pack("<I", 1)
-
-    # Pixel format at offset 76
-    pf_offset = 76
-    header[pf_offset : pf_offset + 4] = struct.pack("<I", 32)  # Size
-    header[pf_offset + 4 : pf_offset + 8] = struct.pack("<I", DDSPixelFlags.FOURCC)  # Flags
-    header[pf_offset + 8 : pf_offset + 12] = b"DXT5"  # FourCC
-
-    # Caps
-    header[108:112] = struct.pack("<I", 0x1000)  # DDSCAPS_TEXTURE
-    header[112:116] = struct.pack("<I", 0)  # Caps2
-
-    return bytes(header)
-
-
-@pytest.fixture
-def bc7_dds_data(valid_dds_data):
-    """Create DDS with BC7 format."""
-    data = bytearray(valid_dds_data)
-    # Change FourCC to DX10
-    data[84:88] = b"DX10"
-    return bytes(data)
-
-
-@pytest.fixture
-def odd_dimension_dds_data(valid_dds_data):
-    """Create DDS with odd dimensions."""
-    data = bytearray(valid_dds_data)
-    # Set odd dimensions
-    data[12:16] = struct.pack("<I", 1023)  # Height
-    data[16:20] = struct.pack("<I", 2047)  # Width
-    return bytes(data)
+# Note: DDS fixtures (dds_analyzer, valid_dds_data, bc7_dds_data, odd_dimension_dds_data)
+# are provided by tests/fixtures/scanlog_fixtures.py via the root conftest.py
+# Use dds_analyzer instead of analyzer fixture
 
 
 class TestDDSInfo:
@@ -138,12 +70,12 @@ class TestDDSInfo:
 class TestEnhancedDDSAnalyzer:
     """Test EnhancedDDSAnalyzer class."""
 
-    def test_analyze_manual_valid_dds(self, analyzer, valid_dds_data, tmp_path):
+    def test_analyze_manual_valid_dds(self, dds_analyzer, valid_dds_data, tmp_path):
         """Test manual parsing of valid DDS file."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
 
-        info = analyzer.analyze_file(dds_file)
+        info = dds_analyzer.analyze_file(dds_file)
 
         assert info is not None
         assert info.width == 2048
@@ -152,63 +84,63 @@ class TestEnhancedDDSAnalyzer:
         assert info.is_compressed is True
         assert info.pixel_format == "BC3/DXT5 (8bpp, interpolated alpha)"
 
-    def test_analyze_manual_dx10_dds(self, analyzer, bc7_dds_data, tmp_path):
+    def test_analyze_manual_dx10_dds(self, dds_analyzer, bc7_dds_data, tmp_path):
         """Test parsing of DX10 extended header DDS."""
         dds_file = tmp_path / "test_bc7.dds"
         dds_file.write_bytes(bc7_dds_data)
 
-        info = analyzer.analyze_file(dds_file)
+        info = dds_analyzer.analyze_file(dds_file)
 
         assert info is not None
         assert info.is_dx10 is True
         assert info.pixel_format == "DX10 Extended Format"
 
-    def test_analyze_invalid_file(self, analyzer, tmp_path):
+    def test_analyze_invalid_file(self, dds_analyzer, tmp_path):
         """Test handling of invalid DDS file."""
         # Too small file
         dds_file = tmp_path / "small.dds"
         dds_file.write_bytes(b"INVALID")
 
-        info = analyzer.analyze_file(dds_file)
+        info = dds_analyzer.analyze_file(dds_file)
         assert info is None
 
         # Wrong magic
         dds_file = tmp_path / "wrong_magic.dds"
         dds_file.write_bytes(b"WRONG" + b"\x00" * 124)
 
-        info = analyzer.analyze_file(dds_file)
+        info = dds_analyzer.analyze_file(dds_file)
         assert info is None
 
-    def test_validate_for_game_fallout4(self, analyzer):
+    def test_validate_for_game_fallout4(self, dds_analyzer):
         """Test Fallout 4 specific validation."""
         # Valid texture
         info = DDSInfo(width=2048, height=2048, format_fourcc="DXT5", is_compressed=True)
-        issues = analyzer.validate_for_game(info, "Fallout4")
+        issues = dds_analyzer.validate_for_game(info, "Fallout4")
         assert len(issues) == 0
 
         # Non-power-of-2 with mipmaps
         info = DDSInfo(width=1023, height=1023, mipmap_count=5, is_compressed=True)
-        issues = analyzer.validate_for_game(info, "Fallout4")
+        issues = dds_analyzer.validate_for_game(info, "Fallout4")
         assert any("Non-power-of-2" in issue for issue in issues)
         assert any("multiple of 4" in issue for issue in issues)
 
         # Too large for Fallout 4
         info = DDSInfo(width=8192, height=8192)
-        issues = analyzer.validate_for_game(info, "Fallout4")
+        issues = dds_analyzer.validate_for_game(info, "Fallout4")
         assert any("4096" in issue for issue in issues)
 
         # DXT1 with alpha warning
         info = DDSInfo(width=1024, height=1024, format_fourcc="DXT1", has_alpha=True, is_compressed=True)
-        issues = analyzer.validate_for_game(info, "Fallout4")
+        issues = dds_analyzer.validate_for_game(info, "Fallout4")
         assert any("DXT1 with alpha" in issue for issue in issues)
 
     @pytest.mark.asyncio
-    async def test_analyze_file_async(self, analyzer, valid_dds_data, tmp_path):
+    async def test_analyze_file_async(self, dds_analyzer, valid_dds_data, tmp_path):
         """Test async file analysis."""
         dds_file = tmp_path / "async_test.dds"
         dds_file.write_bytes(valid_dds_data)
 
-        info = await analyzer.analyze_file_async(dds_file)
+        info = await dds_analyzer.analyze_file_async(dds_file)
 
         assert info is not None
         assert info.width == 2048

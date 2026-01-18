@@ -21,6 +21,7 @@ Example:
 
 import asyncio
 import logging
+from collections.abc import Mapping
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
@@ -154,7 +155,7 @@ class AsyncYamlSettingsCore:
             if value is None:
                 # Read operation
                 for k in keys:
-                    if isinstance(current, dict) and k in current:
+                    if isinstance(current, Mapping) and k in current:
                         current = current[k]
                     else:
                         return None

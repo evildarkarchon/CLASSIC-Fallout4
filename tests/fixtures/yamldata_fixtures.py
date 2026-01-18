@@ -9,7 +9,9 @@ Use `mock_yamldata_with_data` for mod detection tests.
 
 Consolidated from:
 - Original yamldata_fixtures.py
-- tests/yaml/conftest.py (yaml_async_core, yaml_temp_file)
+- tests/yaml/conftest.py (yaml_async_core)
+
+Note: yaml_temp_file and temp_yaml_file are provided by yaml_fixtures.py
 """
 
 import math
@@ -324,35 +326,6 @@ async def yaml_async_core():
     return core
 
 
-@pytest.fixture
-def yaml_temp_file(tmp_path: Path) -> Path:
-    """Create a temporary YAML file with test data.
-
-    Args:
-        tmp_path: Pytest's temporary directory fixture.
-
-    Returns:
-        Path to the temporary YAML file containing test settings.
-    """
-    yaml_file = tmp_path / "test_settings.yaml"
-    data = {
-        "test_settings": {
-            "string_value": "test",
-            "bool_value": True,
-            "int_value": 42,
-            "float_value": math.pi,
-            "list_value": [1, 2, 3],
-            "dict_value": {"nested": "value"},
-        }
-    }
-
-    yaml = ruamel.yaml.YAML()
-    with Path(yaml_file).open("w") as f:
-        yaml.dump(data, f)
-
-    return yaml_file
-
-
 # Backward compatibility aliases (deprecated - use prefixed names)
+# Note: yaml_temp_file and temp_yaml_file are provided by yaml_fixtures.py
 async_yaml_core = yaml_async_core
-temp_yaml_file = yaml_temp_file

@@ -28,6 +28,7 @@ from tests.fixtures.rust_fixtures import *  # noqa: F403
 from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 from tests.fixtures.stress_fixtures import *  # noqa: F403
 from tests.fixtures.version_cache_fixtures import *  # noqa: F403
+from tests.fixtures.yaml_fixtures import *  # noqa: F403
 from tests.fixtures.yamldata_fixtures import *  # noqa: F403
 
 __all__ = [
@@ -35,6 +36,9 @@ __all__ = [
     "async_cleanup",
     "clean_event_loop",
     "event_loop_policy",
+    "AsyncResourceTracker",
+    "resource_tracker",
+    "async_resource_manager",
     # Backup fixtures
     "backup_manager",
     "backup_mock_config",
@@ -98,6 +102,9 @@ __all__ = [
     "perf_test_logs",
     "perf_small_test_logs",
     "perf_minimal_test_logs",
+    "complex_crash_log_path",
+    "complex_crash_log_lines",
+    "test_settings_yaml_path",
     # Qt fixtures
     "qt_application",
     "qt_parent_widget",
@@ -125,7 +132,53 @@ __all__ = [
     "mock_file_io",
     "mock_parser",
     "patch_scanlog_dependencies",
+    "mock_scan_yaml_settings",
+    "mock_orchestrator_settings",
+    "mock_orchestrator_settings_with_concurrency",
+    "mock_paths",
+    "mock_scan_settings",
+    "mock_issue_messages",
+    "scan_yaml_settings_context",
+    "DEFAULT_SCAN_SETTINGS_MAP",
+    # DDS fixtures
+    "dds_analyzer",
+    "valid_dds_data",
+    "bc7_dds_data",
+    "odd_dimension_dds_data",
+    # Stress fixtures
+    "StressTestMetrics",
+    "SyntheticWorkloadGenerator",
+    "MemoryTracker",
+    "ConcurrencyTestHelper",
+    "StressDataGenerator",
+    "PerformanceProfiler",
+    "ResourceExhaustionSimulator",
+    "FailingDatabasePool",
+    "memory_monitor",
+    "memory_monitor_fixture",
+    "stress_test_metrics",
+    "synthetic_workload_generator",
+    "cleanup_after_stress_test",
+    "memory_tracker",
+    "fresh_memory_tracker",
+    "concurrency_helper",
+    "stress_data_generator",
+    "performance_profiler",
+    "large_crash_log",
+    "massive_plugin_list",
+    "formid_dataset",
+    "temp_crash_logs_dir",
+    "failing_database_pool",
+    "resource_exhaustion_simulator",
     # YAML fixtures
     "yaml_async_core",
+    "async_yaml_core",
     "yaml_temp_file",
+    "temp_yaml_file",
+    "create_yaml_files",
+    "yaml_with_complex_data",
+    "yaml_simple_file",
+    "yaml_file_ops",
+    "yaml_cache_instance",
+    "mock_yaml_store_path",
 ]

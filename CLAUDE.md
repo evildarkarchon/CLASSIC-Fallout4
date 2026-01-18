@@ -42,9 +42,29 @@ uv run pytest -n auto -m "unit and not slow"
 
 ## Essential Rules
 
-1. **No print()** - Use MessageHandler
-2. **Use pathlib.Path** - Never string paths
-3. **Async-first** - Use AsyncBridge for sync contexts
-4. **Google-style docstrings** - All modules, classes, functions
-5. **ONE RUNTIME RULE** - Single global Tokio runtime
-6. **Business logic separation** - `-core` crates separate from `-py` crates
+1. **TDD Required** - Write failing tests first, then implement (see `.claude/skills/tdd/SKILL.md`)
+2. **No print()** - Use MessageHandler
+3. **Use pathlib.Path** - Never string paths
+4. **Async-first** - Use AsyncBridge for sync contexts
+5. **Google-style docstrings** - All modules, classes, functions
+6. **ONE RUNTIME RULE** - Single global Tokio runtime
+7. **Business logic separation** - `-core` crates separate from `-py` crates
+
+## Test-Driven Development
+
+**All new features and bug fixes MUST follow TDD.** AI agents should use the TDD skill.
+
+```bash
+# TDD Workflow: Red -> Green -> Refactor
+# 1. Write failing test
+# 2. Implement minimal code to pass
+# 3. Refactor with tests as safety net
+```
+
+See `.claude/skills/tdd/SKILL.md` for complete TDD patterns including async testing, Rust integration tests, and fixture organization.
+
+## Test Fixtures
+
+- **All fixtures in `tests/fixtures/`** - centralized, never in individual test files
+- **Exception**: Local `conftest.py` allowed ONLY for `autouse=True` fixtures needing directory scoping
+- Autouse wrappers call centralized implementations to avoid overhead on unrelated tests

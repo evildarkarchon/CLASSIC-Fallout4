@@ -15,7 +15,7 @@ from pathlib import Path
 import psutil
 import pytest
 
-from tests.stress.conftest import SyntheticWorkloadGenerator
+from tests.fixtures.stress_fixtures import SyntheticWorkloadGenerator
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.stress, pytest.mark.slow]

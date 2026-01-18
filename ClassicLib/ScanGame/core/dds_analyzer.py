@@ -26,6 +26,13 @@ if TYPE_CHECKING:
     HAS_PIL_DDS: bool = False
 else:
     try:
+        # Monkey-patch time.clock for pyffi compatibility with Python 3.8+
+        # time.clock was removed in Python 3.8, but pyffi still uses it
+        import time
+
+        if not hasattr(time, "clock"):
+            time.clock = time.perf_counter
+
         from pyffi.formats.dds import DdsFormat
 
         HAS_PYFFI = True

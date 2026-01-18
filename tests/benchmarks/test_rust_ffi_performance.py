@@ -1,6 +1,3 @@
-import os
-from pathlib import Path
-
 import pytest
 
 # Import the Rust modules when available
@@ -14,27 +11,8 @@ except ImportError:
     classic_yaml = None
     RUST_AVAILABLE = False
 
-
-@pytest.fixture
-def complex_crash_log_path():
-    """Return path to complex crash log."""
-    return Path("tests/test_data/sample_crash_logs/complex_crash.log")
-
-
-@pytest.fixture
-def complex_crash_log_lines(complex_crash_log_path):
-    """Return lines of complex crash log."""
-    if not complex_crash_log_path.exists():
-        pytest.skip("Complex crash log not found")
-    lines = complex_crash_log_path.read_text(encoding="utf-8").splitlines()
-    # Ensure [Compatibility] exists for default parser boundaries
-    return ["[Compatibility]"] + lines
-
-
-@pytest.fixture
-def test_settings_yaml_path():
-    """Return path to test settings yaml."""
-    return Path("tests/test_data/sample_yaml/test_settings.yaml")
+# Note: complex_crash_log_path, complex_crash_log_lines, and test_settings_yaml_path
+# fixtures are provided by tests/fixtures/performance_fixtures.py via the root conftest.py
 
 
 @pytest.mark.benchmark

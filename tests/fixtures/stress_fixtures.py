@@ -8,13 +8,19 @@ Includes:
 - Concurrency testing helpers
 - Data generators for large test datasets
 - Performance profiling tools
+- Domain-specific stress test classes (StressTestMetrics, SyntheticWorkloadGenerator)
+- Memory monitoring context managers and fixtures
 """
 
+import gc
+import os
+import random
 import threading
 import time
 import traceback
 import tracemalloc
 from collections.abc import Callable
+from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
@@ -22,6 +28,217 @@ from unittest.mock import Mock
 
 import psutil
 import pytest
+
+# ============================================================================
+# Domain-Specific Stress Test Classes
+# ============================================================================
+
+
+class StressTestMetrics:
+    """Track metrics during stress tests.
+
+    This class provides comprehensive tracking of performance metrics including
+    operation counts, response times, memory usage, thread counts, and error rates.
+
+    Attributes:
+        start_time: Time when tracking started.
+        operations_completed: Number of completed operations.
+        errors_encountered: List of error messages.
+        peak_memory_mb: Peak memory usage in megabytes.
+        thread_counts: List of thread count samples.
+        response_times: List of operation durations.
+        process: psutil Process object for resource monitoring.
+    """
+
+    def __init__(self) -> None:
+        """Initialize stress test metrics."""
+        self.start_time = time.time()
+        self.operations_completed = 0
+        self.errors_encountered: list[str] = []
+        self.peak_memory_mb = 0.0
+        self.thread_counts: list[int] = []
+        self.response_times: list[float] = []
+        self.process = psutil.Process()
+
+    def record_operation(self, duration: float) -> None:
+        """Record a completed operation.
+
+        Args:
+            duration: Duration of the operation in seconds.
+        """
+        self.operations_completed += 1
+        self.response_times.append(duration)
+
+    def record_error(self, error: Exception) -> None:
+        """Record an error.
+
+        Args:
+            error: The exception that occurred.
+        """
+        self.errors_encountered.append(str(error))
+
+    def update_memory(self) -> None:
+        """Update peak memory usage."""
+        current_mb = self.process.memory_info().rss / (1024 * 1024)
+        self.peak_memory_mb = max(self.peak_memory_mb, current_mb)
+
+    def update_threads(self) -> None:
+        """Update thread count."""
+        self.thread_counts.append(threading.active_count())
+
+    def get_summary(self) -> dict[str, Any]:
+        """Get test summary.
+
+        Returns:
+            Dict containing duration, operations count, ops/second,
+            error count/rate, peak memory, average response time,
+            and max thread count.
+        """
+        elapsed = time.time() - self.start_time
+        return {
+            "duration": elapsed,
+            "operations": self.operations_completed,
+            "ops_per_second": self.operations_completed / elapsed if elapsed > 0 else 0,
+            "errors": len(self.errors_encountered),
+            "error_rate": len(self.errors_encountered) / self.operations_completed if self.operations_completed > 0 else 0,
+            "peak_memory_mb": self.peak_memory_mb,
+            "avg_response_time": sum(self.response_times) / len(self.response_times) if self.response_times else 0,
+            "max_threads": max(self.thread_counts) if self.thread_counts else 0,
+        }
+
+
+class SyntheticWorkloadGenerator:
+    """Generate synthetic workloads for stress testing.
+
+    This class provides static methods to generate realistic crash logs
+    and user action sequences for stress testing scenarios.
+    """
+
+    @staticmethod
+    def generate_typical_crash_log() -> str:
+        """Generate a typical 1-2MB crash log.
+
+        Returns:
+            String containing a synthetic crash log with plugins,
+            stack trace, and FormIDs padded to ~1.5MB.
+        """
+        lines = []
+        lines.append("Fallout 4 v1.10.163")
+        lines.append("Buffout 4 v1.28.6")
+        lines.append("")
+        lines.append('Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512')
+        lines.append("")
+
+        # Add plugins (typical mod setup has 50-150 plugins)
+        lines.append("PLUGINS:")
+        for i in range(100):
+            if i < 10:
+                lines.append(f"\t[{i:02X}] Master_{i}.esm")
+            elif i < 50:
+                lines.append(f"\t[{i:02X}] Mod_{i}.esp")
+            else:
+                lines.append(f"\t[FE:{i - 50:03X}] Light_{i}.esl")
+
+        # Add stack trace
+        lines.append("\nSTACK TRACE:")
+        for i in range(50):
+            addr = 0x7FF600000000 + random.randint(0, 0xFFFFFFFF)
+            lines.append(f"\t[{i}] 0x{addr:016X} module.dll+{random.randint(0x1000, 0xFFFFFF):07X}")
+
+        # Add FormIDs
+        lines.append("\nFORMIDS:")
+        for i in range(200):
+            plugin_index = random.randint(0x00, 0xFE)
+            local_id = random.randint(0x000001, 0xFFFFFF)
+            lines.append(f"FormID: {plugin_index:02X}{local_id:06X}")
+
+        # Pad to ~1.5MB (typical size)
+        content = "\n".join(lines)
+        target_size = 1.5 * 1024 * 1024
+        padding_needed = int(target_size - len(content))
+        if padding_needed > 0:
+            padding = "x" * (padding_needed // 80) + "\n"
+            content += padding
+
+        return content
+
+    @staticmethod
+    def generate_user_action_sequence() -> list[str]:
+        """Generate a sequence of typical user actions.
+
+        Returns:
+            List of action type strings representing a typical user session.
+        """
+        actions = []
+        action_types = [
+            "scan_log",
+            "analyze_formids",
+            "check_plugins",
+            "generate_report",
+            "save_settings",
+            "load_settings",
+            "refresh_ui",
+            "search_mods",
+            "validate_game",
+        ]
+
+        # Typical user session has 10-50 actions
+        for _ in range(random.randint(10, 50)):
+            actions.append(random.choice(action_types))
+
+        return actions
+
+
+# ============================================================================
+# Memory Monitoring Context Manager and Fixture
+# ============================================================================
+
+
+@contextmanager
+def memory_monitor():
+    """Context manager to monitor memory usage during test execution.
+
+    Yields memory statistics before and after the test block,
+    allowing detection of memory leaks and excessive usage.
+
+    Yields:
+        Dict containing memory statistics including initial/final/peak values
+        and growth measurements in bytes and megabytes.
+    """
+    process = psutil.Process(os.getpid())
+
+    # Force garbage collection before measurement
+    gc.collect()
+    initial_memory = process.memory_info()
+    initial_rss = initial_memory.rss
+    initial_vms = initial_memory.vms
+
+    memory_stats: dict[str, Any] = {
+        "initial_rss": initial_rss,
+        "initial_vms": initial_vms,
+        "peak_rss": initial_rss,
+        "peak_vms": initial_vms,
+        "samples": [],
+    }
+
+    try:
+        yield memory_stats
+    finally:
+        # Final measurement
+        gc.collect()
+        final_memory = process.memory_info()
+        final_rss = final_memory.rss
+        final_vms = final_memory.vms
+
+        memory_stats.update({
+            "final_rss": final_rss,
+            "final_vms": final_vms,
+            "rss_growth": final_rss - initial_rss,
+            "vms_growth": final_vms - initial_vms,
+            "rss_growth_mb": (final_rss - initial_rss) / 1024 / 1024,
+            "vms_growth_mb": (final_vms - initial_vms) / 1024 / 1024,
+        })
+
 
 # ============================================================================
 # Memory Tracking
@@ -631,3 +848,75 @@ def failing_database_pool() -> FailingDatabasePool:
 def resource_exhaustion_simulator() -> ResourceExhaustionSimulator:
     """Simulator for resource exhaustion scenarios."""
     return ResourceExhaustionSimulator()
+
+
+@pytest.fixture
+def memory_monitor_fixture():
+    """Fixture wrapper for memory_monitor context manager.
+
+    Returns:
+        The memory_monitor context manager function.
+    """
+    return memory_monitor
+
+
+@pytest.fixture
+def stress_test_metrics() -> StressTestMetrics:
+    """Provide a fresh StressTestMetrics instance for each test.
+
+    Returns:
+        StressTestMetrics instance for tracking test metrics.
+    """
+    return StressTestMetrics()
+
+
+@pytest.fixture
+def synthetic_workload_generator() -> type[SyntheticWorkloadGenerator]:
+    """Provide the SyntheticWorkloadGenerator class for generating test workloads.
+
+    Returns:
+        SyntheticWorkloadGenerator class.
+    """
+    return SyntheticWorkloadGenerator
+
+
+@pytest.fixture
+def cleanup_after_stress_test():
+    """Cleanup fixture for stress tests to prevent pollution.
+
+    This fixture ensures proper cleanup of caches and resources
+    after stress tests, including garbage collection and cache clearing.
+
+    Note:
+        This fixture is NOT autouse at the global level. It is applied
+        as autouse only in stress test directories via their local
+        conftest.py files. This prevents the cleanup overhead from
+        affecting all tests in the suite.
+
+    Usage:
+        Applied automatically via conftest.py in:
+        - tests/stress/
+        - tests/rust_integration/stress/
+    """
+    yield
+
+    # Force garbage collection
+    gc.collect()
+
+    # Clear config/yaml caches if available
+    try:
+        import classic_config
+
+        if hasattr(classic_config, "clear_yaml_cache"):
+            classic_config.clear_yaml_cache()
+    except ImportError:
+        pass
+
+    # Clear registry caches if available
+    try:
+        import classic_registry
+
+        if hasattr(classic_registry, "clear_all"):
+            classic_registry.clear_all()
+    except ImportError:
+        pass

@@ -175,6 +175,34 @@ main_window.on_scan_crash_logs({
 
 ## Testing Standards
 
+### Test-Driven Development (TDD) - REQUIRED
+
+**All new features and bug fixes MUST follow TDD methodology.** Use the Red-Green-Refactor cycle:
+
+1. **Red**: Write a failing test first that defines the expected behavior
+2. **Green**: Write minimal code to make the test pass
+3. **Refactor**: Improve code quality while keeping tests green
+
+**AI Agents**: Use the TDD skill for comprehensive guidance.
+
+```python
+# Example TDD workflow
+# Step 1: Write failing test (Red)
+@pytest.mark.unit
+def test_parse_formid_extracts_plugin_index():
+    result = parse_formid("0A001234")
+    assert result.plugin_index == 0x0A
+
+# Step 2: Implement minimal code (Green)
+# Step 3: Refactor with tests as safety net
+```
+
+**TDD Checklist** (before marking feature complete):
+- [ ] Failing test written first
+- [ ] Minimal implementation passes test
+- [ ] Code refactored with tests still passing
+- [ ] Tests pass individually AND together (`-n auto`)
+
 ### Test Organization
 - **Structure**: Domain-driven directories in `tests/`
 - **File Naming**: `test_<component>_<type>.py` (unit/integration/e2e)
@@ -223,10 +251,26 @@ tests/fixtures/
 3. If creating a new module, add the import to `tests/conftest.py`
 4. Document the fixture with a docstring explaining its purpose
 
+**Exception: Local Autouse Fixtures**:
+Local `conftest.py` files are allowed ONLY for `autouse=True` fixtures that must be scoped to a specific directory. The fixture implementation should still live in `tests/fixtures/`, with the local conftest providing a thin autouse wrapper.
+
+```python
+# tests/stress/conftest.py - ALLOWED (autouse scoping)
+from tests.fixtures.stress_fixtures import cleanup_after_stress_test as _cleanup_impl
+
+@pytest.fixture(autouse=True)
+def cleanup_after_stress_test():
+    """Apply cleanup only to tests in this directory."""
+    yield from _cleanup_impl()
+```
+
+This pattern ensures cleanup fixtures don't add overhead to the entire test suite while keeping the implementation centralized.
+
 **Anti-Patterns**:
 - Fixtures in individual test files -> Move to `tests/fixtures/`
 - Duplicate fixtures across conftest files -> Consolidate in one fixture module
 - Fixtures in `tests/*/conftest.py` -> Move to central `tests/fixtures/`
+- Autouse fixtures in central fixtures (runs on ALL tests) -> Use local conftest wrapper
 
 ## Continuous Integration
 

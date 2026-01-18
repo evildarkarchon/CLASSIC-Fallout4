@@ -55,6 +55,7 @@ from tests.fixtures.rust_fixtures import *  # noqa: F403
 from tests.fixtures.scanlog_fixtures import *  # noqa: F403
 from tests.fixtures.stress_fixtures import *  # noqa: F403
 from tests.fixtures.version_cache_fixtures import *  # noqa: F403
+from tests.fixtures.yaml_fixtures import *  # noqa: F403
 from tests.fixtures.yamldata_fixtures import *  # noqa: F403
 
 

@@ -14,19 +14,8 @@ from ClassicLib.YamlSettings.async_ import (
     yaml_settings_async,
 )
 
-
-@pytest.fixture
-def temp_yaml_file(tmp_path):
-    """Create a temporary YAML file for testing."""
-    yaml_file = tmp_path / "test.yaml"
-    data = {"test_settings": {"string_value": "test", "bool_value": True, "int_value": 42, "nested": {"deep_value": "deep"}}}
-
-    yaml = ruamel.yaml.YAML()
-    yaml.indent(offset=2)
-    with Path(yaml_file).open("w") as f:
-        yaml.dump(data, f)
-
-    return yaml_file
+# Note: temp_yaml_file fixture is provided by
+# tests/fixtures/yaml_fixtures.py via the root conftest.py
 
 
 class TestAsyncConvenienceFunctions:
