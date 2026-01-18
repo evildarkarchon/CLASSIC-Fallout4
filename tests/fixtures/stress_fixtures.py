@@ -20,8 +20,8 @@ import time
 import traceback
 import tracemalloc
 from collections.abc import Callable
-from contextlib import contextmanager
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock
