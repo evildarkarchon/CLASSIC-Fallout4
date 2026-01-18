@@ -29,11 +29,12 @@ This file contains important historical decisions, bug fixes, and lessons learne
 - **Rust directory reorganization** (2025-11-01): All Rust crates moved to `rust/` directory with subdirectories: `foundation/`, `business-logic/`, `python-bindings/`, `ui-applications/`. ALL new Rust crates MUST be created in the appropriate subdirectory. Workspace manifest at `rust/Cargo.toml`. Build scripts (`rebuild_rust.ps1`, `build_all.ps1`) updated to reference new paths.
 
 ## AsyncBridge Usage
-- **AsyncBridge usage patterns** (2025-11-02, enforced 2025-12-14): AsyncBridge and `create_sync_wrapper()` are ONLY for GUI workers (Qt threads) and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point. **ENFORCEMENT**: Non-GUI production code using AsyncBridge is an architecture violation that must be refactored.
+- **AsyncBridge usage patterns** (2025-11-02, enforced 2025-12-14): AsyncBridge and `create_sync_wrapper()` are ONLY for same-thread GUI contexts and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point. **ENFORCEMENT**: Non-GUI production code using AsyncBridge is an architecture violation that must be refactored.
+- **AsyncBridge is thread-local**: AsyncBridge stores its event loop in a thread-local variable, so it CANNOT be used in GUI workers that cross threads (e.g., `QRunnable`, `QThread`). For cross-thread workers, use `asyncio.run()` instead to create a new event loop in the worker thread.
 - **Three-tier import classification**:
   - **Tier 1 (Core)**: `AsyncBridge.py`, `_async_utils/bridge_helpers.py` - Never refactor
-  - **Tier 2 (Legitimate)**: GUI workers (`Interface/Workers.py`), test files, sync adapters for GUI - Keep as-is
-  - **Tier 3 (Violation)**: Production CLI paths using AsyncBridge - Must be refactored to async-first
+  - **Tier 2 (Legitimate)**: Same-thread GUI callbacks, test files, sync adapters for GUI - Keep as-is
+  - **Tier 3 (Violation)**: Production CLI paths using AsyncBridge, cross-thread workers using AsyncBridge - Must be refactored
 - **Dual interface pattern**: Modules shared by GUI and CLI SHALL provide async methods as primary API (for CLI) and sync wrappers clearly documented as "GUI-only" (for Qt workers).
 - **Single event loop rule**: CLI applications SHALL use single `asyncio.run(main())` at entry point; no AsyncBridge or `create_sync_wrapper()` in CLI execution paths.
 

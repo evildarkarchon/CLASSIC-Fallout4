@@ -195,6 +195,39 @@ See `docs/` for detailed guides:
 - `testing/testing_yaml_cache.md` - Config testing
 - `testing/test_pollution_guide.md` - Master pollution prevention guide
 
+### Test Fixtures Standards
+
+**All pytest fixtures MUST be defined in `tests/fixtures/`** - Never create fixtures in individual test files or scattered conftest.py files.
+
+```
+tests/fixtures/
+├── __init__.py              # Re-exports for convenience
+├── async_fixtures.py        # Async test utilities, event loops
+├── crash_log_fixtures.py    # Crash log content and file creation
+├── data_fixtures.py         # General test data fixtures
+├── database_pool_fixtures.py # Database connection pool fixtures
+├── fcx_fixtures.py          # FCX mode testing fixtures
+├── mock_fixtures.py         # Common mock objects
+├── qt_fixtures.py           # Qt/PySide6 testing fixtures
+├── registry_fixtures.py     # GlobalRegistry fixtures
+├── rust_fixtures.py         # Rust FFI compatible mocks
+├── scanlog_fixtures.py      # Orchestrator, parser fixtures
+├── stress_fixtures.py       # Stress/load testing fixtures
+├── version_cache_fixtures.py # Version cache fixtures
+└── yamldata_fixtures.py     # YamlData mock fixtures
+```
+
+**Creating New Fixtures**:
+1. Identify the appropriate module based on the fixture's domain
+2. Add the fixture to the existing module, or create a new module if needed
+3. If creating a new module, add the import to `tests/conftest.py`
+4. Document the fixture with a docstring explaining its purpose
+
+**Anti-Patterns**:
+- Fixtures in individual test files -> Move to `tests/fixtures/`
+- Duplicate fixtures across conftest files -> Consolidate in one fixture module
+- Fixtures in `tests/*/conftest.py` -> Move to central `tests/fixtures/`
+
 ## Continuous Integration
 
 CLASSIC uses GitHub Actions for automated testing and validation on every PR and push.
@@ -508,7 +541,14 @@ All maintain backward compatibility through re-exports.
 - **Rust documentation requirement** (2025-10-23): ALL new Rust code MUST be fully documented. Missing documentation warnings are treated as errors.
 - **FCX mode read-only** (2025-10-29): FCX mode now operates in read-only mode - it detects configuration issues but never modifies files. All detected issues are reported with current vs. recommended values. Auto-fix functions (`apply_ini_fix_async`, `apply_all_ini_fixes_async`, `ConfigFileCache.set()`) have been removed. Use new detection functions (`detect_ini_issue_async`, `detect_all_ini_issues_async`, `ConfigFileCache.detect_issue()`) for read-only issue detection.
 - **Rust directory reorganization** (2025-11-01): All Rust crates moved to `rust/` directory with subdirectories: `foundation/`, `business-logic/`, `python-bindings/`, `ui-applications/`. ALL new Rust crates MUST be created in the appropriate subdirectory. Workspace manifest at `rust/Cargo.toml`. Build scripts (`rebuild_rust.ps1`, `build_all.ps1`) updated to reference new paths.
-- **AsyncBridge usage patterns** (2025-11-02): AsyncBridge and `create_sync_wrapper()` are ONLY for GUI workers (Qt threads) and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point (see CLASSIC_ScanLogs.py). The `asyncio.run()` fallback in `create_sync_wrapper()` is intentional for testing but creates new event loops (inefficient for production). Shared components should provide separate sync (GUI) and async (CLI) interfaces. YamlSettingsCache now uses lazy AsyncBridge initialization - only creates bridge when needed in GUI contexts.
+- **AsyncBridge usage patterns** (2025-11-02, enforced 2025-12-14): AsyncBridge and `create_sync_wrapper()` are ONLY for same-thread GUI contexts and testing. Production CLI code MUST use async-first pattern with single `asyncio.run()` at entry point. **ENFORCEMENT**: Non-GUI production code using AsyncBridge is an architecture violation that must be refactored.
+- **AsyncBridge is thread-local**: AsyncBridge stores its event loop in a thread-local variable, so it CANNOT be used in GUI workers that cross threads (e.g., `QRunnable`, `QThread`). For cross-thread workers, use `asyncio.run()` instead to create a new event loop in the worker thread.
+- **Three-tier import classification**:
+  - **Tier 1 (Core)**: `AsyncBridge.py`, `_async_utils/bridge_helpers.py` - Never refactor
+  - **Tier 2 (Legitimate)**: Same-thread GUI callbacks, test files, sync adapters for GUI - Keep as-is
+  - **Tier 3 (Violation)**: Production CLI paths using AsyncBridge, cross-thread workers using AsyncBridge - Must be refactored
+- **Dual interface pattern**: Modules shared by GUI and CLI SHALL provide async methods as primary API (for CLI) and sync wrappers clearly documented as "GUI-only" (for Qt workers).
+- **Single event loop rule**: CLI applications SHALL use single `asyncio.run(main())` at entry point; no AsyncBridge or `create_sync_wrapper()` in CLI execution paths.
 - **PyO3 type stubs requirement** (2025-11-04): ALL Python binding crates (`-py` crates) MUST have corresponding `.pyi` stub files for type hints and IDE support. When creating a new Python binding crate or modifying APIs (functions, classes, signatures), the `.pyi` file MUST be created or updated. Stub files are placed in the same directory as the crate (e.g., `rust/python-bindings/classic-yaml-py/classic_yaml.pyi`).
 - **Custom Rust exceptions** (2025-11-06): All Rust Python bindings now use custom exception hierarchies that map to Python `ClassicLib.integration.exceptions`. Each `-py` crate defines module-specific exceptions (e.g., `RustYamlError`, `RustYamlIOError`, `RustYamlParseError`) using PyO3's `create_exception!` macro. Error conversion functions (`to_pyerr`) map Rust error variants to appropriate Python exception types for better error handling and debugging. Implemented in: `classic-yaml-py`, `classic-scanlog-py`, `classic-file-io-py`, `classic-database-py`, `classic-config-py`.
 - **YAML helper methods fix** (2025-11-21): Fixed `get_string_value`, `get_vec_value`, and `get_hashmap_value` in `classic-yaml-core` to properly navigate YAML hash structures instead of using index notation which returns `BadValue` for missing keys. These methods now match the behavior of `get_setting` by checking if current node is a Hash, creating Yaml::String keys, and using `.get()` to safely retrieve values.
