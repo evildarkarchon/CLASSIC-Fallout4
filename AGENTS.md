@@ -22,9 +22,9 @@ uv run python CLASSIC_Interface.py  # GUI
 uv run python CLASSIC_ScanLogs.py   # CLI
 
 # Testing (use terminal, not VS Code test tool)
-uv run pytest -n auto               # All tests, parallel
-uv run pytest -n auto -m "unit and not slow"  # Quick unit tests
-uv run pytest -n auto -m "integration"        # Integration tests
+uv run pytest               # All tests, parallel
+uv run pytest -m "unit and not slow"  # Quick unit tests
+uv run pytest -m "integration"        # Integration tests
 uv run pytest tests/rust_integration/ -v   # Rust integration tests
 uv run pytest tests/path/to/test_file.py::test_function -v  # Single test
 
