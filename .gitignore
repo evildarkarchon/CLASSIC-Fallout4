@@ -86,6 +86,7 @@ performance_baselines/*.json
 *.zip
 *.7z
 Archive/
+!conductor/archive/
 Release/
 compile.py
 /package-lock.json
