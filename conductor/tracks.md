@@ -4,5 +4,5 @@ This file tracks all major tracks for the project. Each track has its own detail
 
 ---
 
-- [ ] **Track: Baseline Verification and Testing Infrastructure**
+- [x] **Track: Baseline Verification and Testing Infrastructure**
   *Link: [./tracks/baseline_verification/](./tracks/baseline_verification/)*

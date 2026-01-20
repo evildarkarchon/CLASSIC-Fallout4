@@ -7,14 +7,14 @@ affecting the entire test suite.
 
 import pytest
 
-from tests.fixtures.stress_fixtures import cleanup_after_stress_test as _cleanup_impl
+from tests.fixtures.stress_fixtures import cleanup_after_stress_test
 
 
 @pytest.fixture(autouse=True)
-def cleanup_after_stress_test():
+def _autouse_cleanup_after_stress_test(cleanup_after_stress_test):
     """Automatic cleanup after each stress test to prevent pollution.
 
-    This autouse fixture wraps the shared cleanup implementation and
-    applies it only to tests in tests/stress/.
+    This autouse fixture ensures the shared cleanup_after_stress_test fixture
+    is applied to all tests in tests/stress/.
     """
-    yield from _cleanup_impl()
+    pass
