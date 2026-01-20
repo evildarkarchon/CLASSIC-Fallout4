@@ -275,11 +275,11 @@ def my_local_fixture():
 ### Python Tests
 
 ```bash
-# Quick unit tests (parallel)
-uv run pytest -n auto -m "unit and not slow"
+# Quick unit tests
+uv run pytest -m "unit and not slow"
 
 # Integration tests
-uv run pytest -n auto -m "integration"
+uv run pytest -m "integration"
 
 # Specific test file
 uv run pytest tests/path/to/test_file.py -v
@@ -327,7 +327,6 @@ Before marking a feature complete:
 - [ ] No production YAML modifications
 - [ ] No `AsyncMock` for bridge-wrapped methods
 - [ ] Tests pass individually AND together
-- [ ] Tests pass with parallel execution (`-n auto`)
 
 ## References
 
@@ -335,5 +334,4 @@ For detailed patterns, consult:
 - `tests/TEST_WRITING_GUIDE.md` - Complete test writing guide
 - `docs/testing/async_test_patterns_guide.md` - Async testing patterns
 - `docs/testing/TESTING_GUIDE_INDEX.md` - All testing documentation
-- `.claude/rules/03-testing-standards.md` - Critical rules
-- `.claude/rules/09-test-fixtures.md` - Fixture organization
+- `.claude/rules/03-testing.md` - Testing standards and fixtures

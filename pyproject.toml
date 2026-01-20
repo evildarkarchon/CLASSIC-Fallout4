@@ -371,15 +371,42 @@ title = "CLASSIC Test Coverage Report"
 output = "coverage.xml"
 
 [tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"
+timeout = 300
 addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
 markers = [
-    "unit: marks tests as unit tests (fast, isolated)",
-    "integration: marks tests as integration tests (slower, system dependencies)",
-    "slow: marks tests as slow running (>1 second)",
-    "performance: marks tests as performance regression tests",
+    "unit: Unit tests that test a single function or class",
+    "integration: Tests that test the integration of multiple components",
+    "slow: Tests that take a long time to run",
+    "thread: Tests that focus on thread safety and concurrency",
+    "asyncio: Async tests using pytest-asyncio",
+    "performance: Performance and benchmark tests",
+    "ui: User interface and GUI-related tests",
     "gui: marks tests as GUI-dependent tests requiring Qt",
     "file_io: marks tests that perform file I/O operations",
-    "async_test: marks tests that use async/await patterns"
+    "async_test: marks tests that use async/await patterns",
+    "network: Tests that require network connectivity",
+    "error_handling: Tests focused on error handling and edge cases",
+    "cross_platform: Tests verifying cross-platform compatibility",
+    "e2e: End-to-end integration tests",
+    "regression: Regression tests for previously fixed bugs",
+    "rust: Tests that require or validate Rust integration",
+    "benchmark: Performance benchmark tests for measuring execution times",
+    "real_data: Tests that use real data files for validation",
+    "component: Tests for individual component functionality",
+    "filesystem: Tests that involve filesystem operations and permissions",
+    "edge_cases: Tests for edge cases and boundary conditions",
+    "stress: Stress tests for high-load scenarios",
+    "concurrency: Tests for concurrent and parallel operations",
+    "error_recovery: Tests for error recovery and resilience",
 ]
 
 [tool.black]
