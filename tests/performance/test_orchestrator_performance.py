@@ -31,6 +31,7 @@ class TestOrchestratorPerformance:
     """Test suite for OrchestratorCore performance optimizations."""
 
     @pytest.mark.performance
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_batch_database_queries(self):
         """Verify batch database queries are more efficient than individual queries."""
@@ -71,6 +72,7 @@ class TestOrchestratorPerformance:
         assert performance_ratio >= 3.0, f"Batch queries should be at least 3x faster, got {performance_ratio:.2f}x"
 
     @pytest.mark.performance
+    @pytest.mark.slow
     @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Timing sensitive test skipped when tracemalloc is enabled")
     def test_version_string_caching(self):
         """Verify version string parsing is cached effectively.
@@ -111,6 +113,7 @@ class TestOrchestratorPerformance:
         assert cache_info.hits >= 99, "Should have at least 99 cache hits"
 
     @pytest.mark.performance
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_singleton_database_pool(self):
         """Verify singleton database pool reuses connections.
@@ -166,6 +169,7 @@ class TestOrchestratorPerformance:
             assert init_count == 1, f"Pool should be initialized only once, but was initialized {init_count} times"
 
     @pytest.mark.performance
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_async_file_operations(self):
         """Verify async file operations improve concurrency."""
@@ -227,6 +231,7 @@ class TestOrchestratorPerformance:
             assert performance_ratio >= 1.2, f"Async should be at least 1.2x faster for concurrent ops, got {performance_ratio:.2f}x"
 
     @pytest.mark.performance
+    @pytest.mark.slow
     def test_regex_pattern_caching(self):
         """Verify regex patterns are cached at module level."""
         from ClassicLib.ScanLog.FormIDAnalyzerCore import _PATTERN_CACHE, FormIDAnalyzerCore
@@ -246,6 +251,7 @@ class TestOrchestratorPerformance:
             assert hasattr(pattern, "search"), f"Cached pattern {key} should be a compiled regex"
 
     @pytest.mark.performance
+    @pytest.mark.slow
     @pytest.mark.asyncio
     async def test_orchestrator_batch_processing(self):
         """Test overall performance improvement for batch log processing."""

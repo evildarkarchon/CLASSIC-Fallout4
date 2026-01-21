@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-pytestmark = pytest.mark.performance
+pytestmark = [pytest.mark.performance, pytest.mark.slow]
 
 
 class TestRealWorldBaselineManagement:

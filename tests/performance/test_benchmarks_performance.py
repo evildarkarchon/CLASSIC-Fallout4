@@ -31,6 +31,8 @@ class TestFileIOPerformance:
 
         return files
 
+    @pytest.mark.slow
+    @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_concurrent_file_reading(self, test_files):
         """Test that concurrent async reading is efficient for multiple files."""
@@ -61,6 +63,8 @@ class TestFileIOPerformance:
         # Just verify it completes successfully
         assert len(async_results) == len(test_files)
 
+    @pytest.mark.slow
+    @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_batch_file_writing(self, test_files, tmp_path):
         """Test that batch async writing is efficient."""
@@ -104,6 +108,8 @@ class TestFileIOPerformance:
 class TestFormIDAnalyzerPerformance:
     """Benchmark tests for FormID analysis."""
 
+    @pytest.mark.slow
+    @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_formid_lookup_performance(self):
         """Test FormID analyzer performance with multiple lookups."""
@@ -135,6 +141,8 @@ class TestOrchestratorPerformance:
         log_path.write_text("".join(content_lines))
         return log_path
 
+    @pytest.mark.slow
+    @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_orchestrator_pipeline(self, sample_crash_log):
         """Test the full orchestrator pipeline performance."""
@@ -154,6 +162,8 @@ class TestOrchestratorPerformance:
 class TestMemoryEfficiency:
     """Test memory efficiency of async operations."""
 
+    @pytest.mark.slow
+    @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_large_file_streaming(self, tmp_path):
         """Test that large files don't cause memory issues."""
@@ -179,6 +189,8 @@ class TestMemoryEfficiency:
 class TestConcurrencyLimits:
     """Test that concurrency limits are properly enforced."""
 
+    @pytest.mark.slow
+    @pytest.mark.performance
     @pytest.mark.asyncio
     async def test_semaphore_limiting(self, tmp_path):
         """Test that FileIOCore respects concurrency limits."""

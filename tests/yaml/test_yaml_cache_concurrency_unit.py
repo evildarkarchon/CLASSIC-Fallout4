@@ -1,16 +1,20 @@
 """
-Tests for YamlSettingsCache edge cases and stress scenarios.
+Consolidated tests for YamlSettingsCache concurrency and edge cases.
 
-This module validates YamlSettingsCache behavior in edge cases including
-singleton deletion, weak references, stress testing under high concurrency,
-event loop changes, and async operations.
+This module validates thread-safe behavior of YamlSettingsCache under concurrent
+access, edge cases, and stress scenarios including:
+- Parallel singleton access from multiple threads
+- Concurrent read/write operations without corruption
+- AsyncBridge interaction (thread-local vs singleton)
+- Singleton deletion and recovery
+- Weak reference handling
+- Stress testing under high concurrency
+- Event loop change handling
 
 Test Categories:
-- Singleton behavior after deletion
-- Weak reference handling
-- Stress testing with concurrent creation
+- Thread safety in parallel test execution
+- Edge cases and stress testing
 - Event loop change handling
-- Async operations integration
 """
 
 import asyncio
@@ -22,10 +26,153 @@ from unittest.mock import patch
 
 import pytest
 
+from ClassicLib.AsyncBridge import AsyncBridge
 from ClassicLib.Constants import YAML
 from ClassicLib.YamlSettings import YamlSettingsCache
 
 pytestmark = pytest.mark.unit
+
+
+# =============================================================================
+# Thread Safety Tests
+# =============================================================================
+
+
+class TestThreadSafetyParallel:
+    """Tests for thread safety in parallel test execution scenarios."""
+
+    def test_parallel_singleton_access(self) -> None:
+        """
+        Test singleton behavior under parallel access from multiple threads.
+
+        Simulates pytest-xdist parallel test execution where multiple worker
+        processes might access the singleton simultaneously.
+        """
+        results = {}
+        errors = []
+
+        def worker_thread(worker_id: int) -> None:
+            """Simulate a test worker accessing the singleton."""
+            try:
+                instance = YamlSettingsCache.get_instance()
+
+                core = instance._get_async_core()
+
+                cache_key = f"worker_{worker_id}_key"
+                core.cache.settings_cache[cache_key] = f"value_{worker_id}"  # pyright: ignore[reportArgumentType]
+
+                assert core.cache.settings_cache[cache_key] == f"value_{worker_id}"  # pyright: ignore[reportArgumentType]
+
+                results[worker_id] = id(instance)
+            except Exception as e:
+                errors.append((worker_id, e))
+
+        threads = []
+        for i in range(20):
+            thread = threading.Thread(target=worker_thread, args=(i,))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        assert len(errors) == 0, f"Errors in workers: {errors}"
+
+        instance_ids = list(results.values())
+        assert len(set(instance_ids)) == 1, "Multiple singleton instances created!"
+
+    def test_concurrent_cache_operations(self) -> None:
+        """
+        Test that concurrent cache operations don't cause corruption.
+
+        Multiple threads performing read/write operations on the cache
+        should not cause data corruption or race conditions.
+        """
+        cache = YamlSettingsCache.get_instance()
+        errors = []
+        iterations = 100
+
+        def read_write_thread(thread_id: int) -> None:
+            """Perform concurrent read/write operations."""
+            try:
+                for i in range(iterations):
+                    key = f"thread_{thread_id}_item_{i}"
+                    value = f"value_{thread_id}_{i}"
+
+                    core = cache._get_async_core()
+                    core.cache.settings_cache[key] = value  # pyright: ignore[reportArgumentType]
+
+                    read_value = core.cache.settings_cache.get(key)  # pyright: ignore[reportArgumentType]
+                    assert read_value == value, f"Data corruption: expected {value}, got {read_value}"
+
+                    other_key = f"thread_{(thread_id + 1) % 5}_item_{i}"
+                    _ = core.cache.settings_cache.get(other_key)  # pyright: ignore[reportArgumentType]
+
+            except Exception as e:
+                errors.append((thread_id, e))
+
+        threads = []
+        for i in range(5):
+            thread = threading.Thread(target=read_write_thread, args=(i,))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        assert len(errors) == 0, f"Errors during concurrent operations: {errors}"
+
+        core = cache._get_async_core()
+        for thread_id in range(5):
+            for i in range(iterations):
+                key = f"thread_{thread_id}_item_{i}"
+                expected_value = f"value_{thread_id}_{i}"
+                actual_value = core.cache.settings_cache.get(key)  # pyright: ignore[reportArgumentType]
+                assert actual_value == expected_value
+
+    def test_async_bridge_interaction(self) -> None:
+        """
+        Test that YamlSettingsCache correctly interacts with AsyncBridge singleton.
+
+        Both use singleton patterns and must not interfere with each other.
+        Note: AsyncBridge is thread-local, so each thread gets its own instance.
+        """
+        yaml_cache_instance = YamlSettingsCache.get_instance()
+        threading.get_ident()
+        bridge_instance = AsyncBridge.get_instance()
+
+        assert yaml_cache_instance is not None
+        assert bridge_instance is not None
+
+        assert yaml_cache_instance._get_bridge() is bridge_instance
+
+        results = []
+
+        def test_thread():
+            """Thread testing both singletons."""
+            cache = YamlSettingsCache.get_instance()
+            bridge = AsyncBridge.get_instance()
+
+            results.append({
+                "thread_id": threading.get_ident(),
+                "cache_id": id(cache),
+                "bridge_id": id(bridge),
+                "cache_bridge_id": id(cache._get_bridge()),
+            })
+
+        threads = [threading.Thread(target=test_thread) for _ in range(10)]
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        cache_ids = set(r["cache_id"] for r in results)
+        assert len(cache_ids) == 1, "YamlSettingsCache should be a true singleton"
+
+
+# =============================================================================
+# Edge Cases and Stress Tests
+# =============================================================================
 
 
 class TestEdgeCases:
@@ -38,20 +185,16 @@ class TestEdgeCases:
         If someone deletes the _instance, get_instance() should create
         a new one safely.
         """
-        # Get initial instance
         instance1 = YamlSettingsCache.get_instance()
         id(instance1)
 
-        # Force delete the instance
         YamlSettingsCache._instance = None
         del instance1
-        gc.collect()  # Force garbage collection
+        gc.collect()
 
-        # Get new instance - should create a new one
         instance2 = YamlSettingsCache.get_instance()
         id(instance2)
 
-        # Should be a new object (different memory address)
         assert instance2 is not None
         assert YamlSettingsCache._instance is instance2
 
@@ -64,17 +207,13 @@ class TestEdgeCases:
         """
         instance = YamlSettingsCache.get_instance()
 
-        # Create weak reference
         weak_ref = weakref.ref(instance)
 
-        # Weak reference should be valid
         assert weak_ref() is instance
 
-        # Even if we "delete" our reference, singleton keeps it alive
         del instance
         gc.collect()
 
-        # Weak reference should still be valid because singleton holds the instance
         assert weak_ref() is not None
         assert weak_ref() is YamlSettingsCache._instance
 
@@ -85,7 +224,6 @@ class TestEdgeCases:
         This tests the robustness of the double-check locking pattern under
         extreme concurrency.
         """
-        # Clear instance to test creation under stress
         YamlSettingsCache._instance = None
 
         num_threads = 100
@@ -103,7 +241,6 @@ class TestEdgeCases:
                 instances.append(instance)
                 creation_times.append(end_time - start_time)
 
-        # Create and start all threads at once
         threads = [threading.Thread(target=stress_thread) for _ in range(num_threads)]
 
         start = time.perf_counter()
@@ -113,11 +250,9 @@ class TestEdgeCases:
             t.join()
         total_time = time.perf_counter() - start
 
-        # All threads should get the same instance
         unique_instances = set(id(inst) for inst in instances)
         assert len(unique_instances) == 1, f"Created {len(unique_instances)} instances!"
 
-        # Performance check - should complete reasonably fast
         assert total_time < 2.0, f"Took too long: {total_time:.2f} seconds"
 
         print(f"Stress test completed in {total_time:.2f}s")
@@ -133,25 +268,25 @@ class TestEdgeCases:
         """
         cache = YamlSettingsCache.get_instance()
 
-        # Test batch operations (uses async internally)
         requests = [
             (str, YAML.TEST, "test.key1"),
             (int, YAML.TEST, "test.key2"),
             (bool, YAML.TEST, "test.key3"),
         ]
 
-        # Mock the async core to return test values
-        # Ensure initialized using async method
         core = await cache._ensure_async_core_async()
 
         async def mock_batch_get(reqs):
             return ["value1", 42, True]
 
-        # Mock the method on the core instance
         with patch.object(core, "batch_get_settings", side_effect=mock_batch_get):
-            # Use async method directly
             results = await cache.batch_get_settings_async(requests)
             assert results == ["value1", 42, True]
+
+
+# =============================================================================
+# Event Loop Change Handling Tests
+# =============================================================================
 
 
 class TestEventLoopChange:
@@ -171,11 +306,7 @@ class TestEventLoopChange:
         3. asyncio.run() completes, closing event loop A
         4. asyncio.run() is called again, creating event loop B
         5. The cached lock should be replaced with a new one for loop B
-
-        Before the fix, step 5 would raise:
-        RuntimeError: Lock object is bound to a different loop than the current one
         """
-        # Reset the async init lock to start fresh
         YamlSettingsCache._async_init_lock = None
 
         locks_and_loops: list[tuple[asyncio.Lock, asyncio.AbstractEventLoop]] = []
@@ -185,27 +316,18 @@ class TestEventLoopChange:
             lock = YamlSettingsCache._get_async_init_lock()
             loop = asyncio.get_running_loop()
             locks_and_loops.append((lock, loop))
-            # Actually use the lock to ensure it's bound
             async with lock:
                 pass
 
-        # First event loop
+        asyncio.run(capture_lock_and_loop())
+        asyncio.run(capture_lock_and_loop())
         asyncio.run(capture_lock_and_loop())
 
-        # Second event loop (simulates app restart or sequential asyncio.run() calls)
-        asyncio.run(capture_lock_and_loop())
-
-        # Third event loop for good measure
-        asyncio.run(capture_lock_and_loop())
-
-        # We should have 3 different event loops
         loops = [loop for _, loop in locks_and_loops]
         assert len(set(id(loop) for loop in loops)) == 3, "Should have 3 different event loops"
 
-        # The locks should be different for different event loops
         locks = [lock for lock, _ in locks_and_loops]
         lock_ids = [id(lock) for lock in locks]
-        # At least the locks for different loops should be different
         assert len(set(lock_ids)) == 3, (
             "Should create new locks for new event loops to avoid 'Lock object is bound to a different loop' error"
         )
@@ -216,7 +338,6 @@ class TestEventLoopChange:
         Multiple calls to _get_async_init_lock() within the same event loop
         should return the same lock instance for efficiency.
         """
-        # Reset the async init lock to start fresh
         YamlSettingsCache._async_init_lock = None
 
         locks: list[asyncio.Lock] = []
@@ -230,7 +351,6 @@ class TestEventLoopChange:
 
         asyncio.run(capture_locks())
 
-        # All locks should be the same within the same event loop
         assert locks[0] is locks[1] is locks[2], "Same lock should be reused within the same event loop"
 
     def test_async_init_lock_raises_without_event_loop(self) -> None:
@@ -238,19 +358,12 @@ class TestEventLoopChange:
 
         In Python 3.12+, creating asyncio.Lock() without a running event loop raises
         RuntimeError or DeprecationWarning. The _get_async_init_lock() method should
-        detect this condition and raise a clear error before attempting to create
-        the lock.
-
-        This ensures graceful failure with a helpful message instead of a cryptic
-        "There is no current event loop" error.
+        detect this condition and raise a clear error.
         """
-        # Reset the async init lock to start fresh
         YamlSettingsCache._async_init_lock = None
 
-        # Calling outside of async context should raise RuntimeError
         with pytest.raises(RuntimeError) as exc_info:
             YamlSettingsCache._get_async_init_lock()
 
-        # Verify the error message is helpful
         assert "_get_async_init_lock() must be called from an async context" in str(exc_info.value)
         assert "running event loop" in str(exc_info.value)

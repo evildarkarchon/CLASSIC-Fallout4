@@ -34,28 +34,21 @@ except ImportError:
 class TestPatternMatcherBasic:
     """Test basic PatternMatcher functionality."""
 
-    def test_creation_basic(self):
-        """Test basic PatternMatcher creation."""
-        patterns = ["error", "warning", "info"]
+    @pytest.mark.parametrize(
+        "patterns,expected_count",
+        [
+            (["error", "warning", "info"], 3),
+            ([], 0),
+            (["single_pattern"], 1),
+        ],
+        ids=["three_patterns", "empty", "single"],
+    )
+    def test_creation(self, patterns, expected_count):
+        """Test PatternMatcher creation with various pattern lists."""
         matcher = PatternMatcher(patterns)
-
         pattern_count, cache_size = matcher.get_stats()
-        assert pattern_count == 3
-        assert cache_size == 0  # Cache starts empty
-
-    def test_creation_empty(self):
-        """Test PatternMatcher with empty pattern list."""
-        matcher = PatternMatcher([])
-
-        pattern_count, _ = matcher.get_stats()
-        assert pattern_count == 0
-
-    def test_creation_single(self):
-        """Test PatternMatcher with single pattern."""
-        matcher = PatternMatcher(["single_pattern"])
-
-        pattern_count, _ = matcher.get_stats()
-        assert pattern_count == 1
+        assert pattern_count == expected_count
+        assert cache_size == 0  # Cache always starts empty
 
 
 @pytest.mark.rust
@@ -63,33 +56,38 @@ class TestPatternMatcherBasic:
 class TestHasMatch:
     """Test has_match functionality."""
 
-    def test_has_match_simple(self):
-        """Test simple pattern matching."""
-        matcher = PatternMatcher(["error", "warning"])
-
-        assert matcher.has_match("This is an error message")
-        assert matcher.has_match("Warning: something happened")
-        assert not matcher.has_match("This is just info")
-
-    def test_has_match_case_insensitive(self):
-        """Test case-insensitive matching."""
-        matcher = PatternMatcher(["error"])
-
-        # Should match regardless of case
-        assert matcher.has_match("ERROR")
-        assert matcher.has_match("Error")
-        assert matcher.has_match("eRrOr")
-        assert matcher.has_match("error")
-
-    def test_has_match_empty_text(self):
-        """Test matching against empty text."""
-        matcher = PatternMatcher(["error"])
-        assert not matcher.has_match("")
-
-    def test_has_match_no_patterns(self):
-        """Test matching with no patterns."""
-        matcher = PatternMatcher([])
-        assert not matcher.has_match("Any text here")
+    @pytest.mark.parametrize(
+        "patterns,text,expected",
+        [
+            # Simple matching
+            (["error", "warning"], "This is an error message", True),
+            (["error", "warning"], "Warning: something happened", True),
+            (["error", "warning"], "This is just info", False),
+            # Case insensitive
+            (["error"], "ERROR", True),
+            (["error"], "Error", True),
+            (["error"], "eRrOr", True),
+            (["error"], "error", True),
+            # Edge cases
+            (["error"], "", False),  # Empty text
+            ([], "Any text here", False),  # No patterns
+        ],
+        ids=[
+            "match_error",
+            "match_warning",
+            "no_match_info",
+            "case_upper",
+            "case_mixed",
+            "case_alternating",
+            "case_lower",
+            "empty_text",
+            "no_patterns",
+        ],
+    )
+    def test_has_match(self, patterns, text, expected):
+        """Test has_match with various patterns and texts."""
+        matcher = PatternMatcher(patterns)
+        assert matcher.has_match(text) is expected
 
 
 @pytest.mark.rust
@@ -210,49 +208,36 @@ class TestFindAll:
 class TestReplaceAll:
     """Test replace_all functionality."""
 
-    def test_replace_all_basic(self):
-        """Test basic replace_all operation."""
-        matcher = PatternMatcher(["error"])
-
-        result = matcher.replace_all("This is an error message", "SUCCESS")
-        assert result == "This is an SUCCESS message"
-
-    def test_replace_all_multiple_occurrences(self):
-        """Test replace_all with multiple occurrences."""
-        matcher = PatternMatcher(["test"])
-
-        result = matcher.replace_all("test test test", "PASS")
-        assert result == "PASS PASS PASS"
-
-    def test_replace_all_multiple_patterns(self):
-        """Test replace_all with multiple patterns."""
-        matcher = PatternMatcher(["error", "warning"])
-
-        # All patterns replaced with same string
-        result = matcher.replace_all("error and warning both replaced", "REDACTED")
-        assert result == "REDACTED and REDACTED both replaced"
-
-    def test_replace_all_case_insensitive(self):
-        """Test replace_all case-insensitive matching."""
-        matcher = PatternMatcher(["error"])
-
-        result = matcher.replace_all("ERROR and error both replaced", "OK")
-        assert result == "OK and OK both replaced"
-
-    def test_replace_all_no_matches(self):
-        """Test replace_all with no matches."""
-        matcher = PatternMatcher(["error"])
-
-        original = "Nothing to replace here"
-        result = matcher.replace_all(original, "REPLACEMENT")
-        assert result == original
-
-    def test_replace_all_empty_replacement(self):
-        """Test replace_all with empty replacement string."""
-        matcher = PatternMatcher(["test"])
-
-        result = matcher.replace_all("test this test", "")
-        assert result == " this "
+    @pytest.mark.parametrize(
+        "patterns,text,replacement,expected",
+        [
+            # Basic replacement
+            (["error"], "This is an error message", "SUCCESS", "This is an SUCCESS message"),
+            # Multiple occurrences
+            (["test"], "test test test", "PASS", "PASS PASS PASS"),
+            # Multiple patterns
+            (["error", "warning"], "error and warning both replaced", "REDACTED", "REDACTED and REDACTED both replaced"),
+            # Case insensitive
+            (["error"], "ERROR and error both replaced", "OK", "OK and OK both replaced"),
+            # No matches
+            (["error"], "Nothing to replace here", "REPLACEMENT", "Nothing to replace here"),
+            # Empty replacement
+            (["test"], "test this test", "", " this "),
+        ],
+        ids=[
+            "basic",
+            "multiple_occurrences",
+            "multiple_patterns",
+            "case_insensitive",
+            "no_matches",
+            "empty_replacement",
+        ],
+    )
+    def test_replace_all(self, patterns, text, replacement, expected):
+        """Test replace_all with various inputs."""
+        matcher = PatternMatcher(patterns)
+        result = matcher.replace_all(text, replacement)
+        assert result == expected
 
 
 @pytest.mark.rust
@@ -346,42 +331,38 @@ class TestCache:
 class TestEdgeCases:
     """Test edge cases and special scenarios."""
 
-    def test_special_characters_in_patterns(self):
-        """Test patterns with special regex characters (treated as literals)."""
-        # Aho-Corasick treats patterns as literal strings, not regex
-        matcher = PatternMatcher([
-            "error[0]",
-            "warning*",
-            "info+test",
-        ])
-
-        assert matcher.has_match("Found error[0] here")
-        assert matcher.has_match("Found warning* here")
-        assert matcher.has_match("Found info+test here")
-
-    def test_unicode_patterns(self):
-        """Test patterns with unicode characters."""
-        matcher = PatternMatcher([
-            "错误",  # Chinese for "error"
-            "エラー",  # Japanese for "error"
-            "ошибка",  # Russian for "error"
-        ])
-
-        assert matcher.has_match("Found 错误 in text")
-        assert matcher.has_match("Found エラー in text")
-        assert matcher.has_match("Found ошибка in text")
-
-    def test_whitespace_patterns(self):
-        """Test patterns with whitespace."""
-        matcher = PatternMatcher([
-            "error ",  # Pattern with trailing space
-            " warning",  # Pattern with leading space
-            "info\t",  # Pattern with tab
-        ])
-
-        assert matcher.has_match("This is error code")
-        assert matcher.has_match("This is warning message")
-        assert matcher.has_match("This is info\tdata")
+    @pytest.mark.parametrize(
+        "pattern,text",
+        [
+            # Special regex characters (treated as literals)
+            ("error[0]", "Found error[0] here"),
+            ("warning*", "Found warning* here"),
+            ("info+test", "Found info+test here"),
+            # Unicode characters
+            ("错误", "Found 错误 in text"),  # Chinese
+            ("エラー", "Found エラー in text"),  # Japanese
+            ("ошибка", "Found ошибка in text"),  # Russian
+            # Whitespace patterns
+            ("error ", "This is error code"),
+            (" warning", "This is warning message"),
+            ("info\t", "This is info\tdata"),
+        ],
+        ids=[
+            "special_brackets",
+            "special_asterisk",
+            "special_plus",
+            "unicode_chinese",
+            "unicode_japanese",
+            "unicode_russian",
+            "whitespace_trailing",
+            "whitespace_leading",
+            "whitespace_tab",
+        ],
+    )
+    def test_special_patterns(self, pattern, text):
+        """Test patterns with special characters, unicode, and whitespace."""
+        matcher = PatternMatcher([pattern])
+        assert matcher.has_match(text)
 
     def test_very_long_pattern(self):
         """Test with very long pattern."""

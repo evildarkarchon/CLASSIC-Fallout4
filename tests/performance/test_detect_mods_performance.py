@@ -9,6 +9,7 @@ from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_import
 
 
 @pytest.mark.performance
+@pytest.mark.slow
 def test_detect_mods_single_performance():
     """Test performance of detect_mods_single with large datasets."""
     # Create a large dataset of mods (100 mods)
@@ -39,6 +40,7 @@ def test_detect_mods_single_performance():
 
 
 @pytest.mark.performance
+@pytest.mark.slow
 def test_detect_mods_double_performance():
     """Test performance of detect_mods_double with large datasets."""
     # Create mod pairs (50 pairs)
@@ -74,6 +76,7 @@ def test_detect_mods_double_performance():
 
 
 @pytest.mark.performance
+@pytest.mark.slow
 def test_detect_mods_important_performance():
     """Test performance of detect_mods_important with large datasets."""
     # Create important mods (50 mods)
@@ -106,6 +109,7 @@ def test_detect_mods_important_performance():
 
 
 @pytest.mark.performance
+@pytest.mark.slow
 def test_detect_mods_scaling():
     """Test that performance scales linearly with input size."""
     times = []
