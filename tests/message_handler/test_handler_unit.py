@@ -132,9 +132,7 @@ class TestMessageHandlerShow:
         mock_log_backend.show.assert_called_once_with(message)
 
     @pytest.mark.unit
-    def test_show_routes_to_cli_backend_in_cli_mode(
-        self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock
-    ) -> None:
+    def test_show_routes_to_cli_backend_in_cli_mode(self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock) -> None:
         """show() should route to CLI backend when in CLI mode."""
         from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
         from ClassicLib.MessageHandler.core.message import Message
@@ -150,9 +148,7 @@ class TestMessageHandlerShow:
         mock_cli_backend.show.assert_called_once_with(message)
 
     @pytest.mark.unit
-    def test_show_skips_display_for_log_only_target(
-        self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock
-    ) -> None:
+    def test_show_skips_display_for_log_only_target(self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock) -> None:
         """show() should not display LOG_ONLY messages."""
         from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
         from ClassicLib.MessageHandler.core.message import Message
@@ -171,9 +167,7 @@ class TestMessageHandlerShow:
         mock_cli_backend.show.assert_not_called()
 
     @pytest.mark.unit
-    def test_show_skips_gui_target_in_cli_mode(
-        self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock
-    ) -> None:
+    def test_show_skips_gui_target_in_cli_mode(self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock) -> None:
         """show() should not display GUI-targeted messages in CLI mode."""
         from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
         from ClassicLib.MessageHandler.core.message import Message
@@ -358,9 +352,7 @@ class TestInitMessageHandler:
     """Tests for init_message_handler function."""
 
     @pytest.mark.unit
-    def test_init_creates_base_handler_for_cli_mode(
-        self, fresh_handler_state: None
-    ) -> None:
+    def test_init_creates_base_handler_for_cli_mode(self, fresh_handler_state: None) -> None:
         """init_message_handler should create base MessageHandler for CLI mode."""
         from ClassicLib.MessageHandler.handler import MessageHandler, init_message_handler
 
@@ -370,16 +362,12 @@ class TestInitMessageHandler:
         assert handler.is_gui_mode is False
 
     @pytest.mark.unit
-    def test_init_creates_qt_handler_for_gui_mode(
-        self, fresh_handler_state: None
-    ) -> None:
+    def test_init_creates_qt_handler_for_gui_mode(self, fresh_handler_state: None) -> None:
         """init_message_handler should create QtMessageHandler for GUI mode."""
         from ClassicLib.MessageHandler.handler import init_message_handler
 
         # Mock the QtMessageHandler import since it requires Qt
-        with patch(
-            "ClassicLib.MessageHandler.qt_handler.QtMessageHandler"
-        ) as mock_qt_handler:
+        with patch("ClassicLib.MessageHandler.qt_handler.QtMessageHandler") as mock_qt_handler:
             mock_instance = MagicMock()
             mock_qt_handler.return_value = mock_instance
 
@@ -393,9 +381,7 @@ class TestGetMessageHandler:
     """Tests for get_message_handler function."""
 
     @pytest.mark.unit
-    def test_get_handler_raises_when_not_initialized(
-        self, fresh_handler_state: None
-    ) -> None:
+    def test_get_handler_raises_when_not_initialized(self, fresh_handler_state: None) -> None:
         """get_message_handler should raise RuntimeError when not initialized."""
         from ClassicLib.MessageHandler.handler import get_message_handler
 
@@ -403,9 +389,7 @@ class TestGetMessageHandler:
             get_message_handler()
 
     @pytest.mark.unit
-    def test_get_handler_returns_initialized_handler(
-        self, fresh_handler_state: None
-    ) -> None:
+    def test_get_handler_returns_initialized_handler(self, fresh_handler_state: None) -> None:
         """get_message_handler should return the initialized handler."""
         from ClassicLib.MessageHandler.handler import (
             get_message_handler,
@@ -485,9 +469,7 @@ class TestGlobalConvenienceFunctions:
         handler.debug.assert_called_once_with("Test debug")
 
     @pytest.mark.unit
-    def test_msg_critical_calls_handler_critical(
-        self, fresh_handler_state: None
-    ) -> None:
+    def test_msg_critical_calls_handler_critical(self, fresh_handler_state: None) -> None:
         """msg_critical should call the handler's critical method."""
         from ClassicLib.MessageHandler.handler import (
             init_message_handler,
@@ -506,9 +488,7 @@ class TestMsgProgressContext:
     """Tests for msg_progress_context function."""
 
     @pytest.mark.unit
-    def test_msg_progress_context_yields_progress_context(
-        self, fresh_handler_state: None
-    ) -> None:
+    def test_msg_progress_context_yields_progress_context(self, fresh_handler_state: None) -> None:
         """msg_progress_context should yield a ProgressContext."""
         from ClassicLib.MessageHandler.handler import (
             init_message_handler,

@@ -23,9 +23,7 @@ class TestOutputBackendProtocol:
         """OutputBackend should be runtime checkable."""
         from ClassicLib.MessageHandler.output.base import OutputBackend
 
-        assert hasattr(OutputBackend, "__protocol_attrs__") or hasattr(
-            OutputBackend, "_is_runtime_protocol"
-        )
+        assert hasattr(OutputBackend, "__protocol_attrs__") or hasattr(OutputBackend, "_is_runtime_protocol")
 
     @pytest.mark.unit
     def test_cli_backend_implements_protocol(self) -> None:

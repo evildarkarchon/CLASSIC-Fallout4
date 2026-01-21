@@ -20,6 +20,7 @@ try:
     RESOURCE_AVAILABLE = True
 except ImportError:
     RESOURCE_AVAILABLE = False
+import multiprocessing
 import random
 import tracemalloc
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
@@ -27,6 +28,51 @@ from unittest.mock import MagicMock
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.stress, pytest.mark.rust, pytest.mark.slow]
+
+
+def _generate_large_log_for_process(size_mb: float) -> str:
+    """Generate a synthetic crash log of specified size (module-level for pickling)."""
+    size_bytes = int(size_mb * 1024 * 1024)
+    lines = []
+    current_size = 0
+    line_num = 0
+
+    while current_size < size_bytes:
+        pattern_type = random.randint(0, 4)
+        if pattern_type == 0:
+            line = f"ERROR: Synthetic memory allocation failed at 0x{random.randint(0, 0xFFFFFFFF):08X}"
+        elif pattern_type == 1:
+            line = f"STACK: [{random.randint(0, 0xFFFFFFFF):08X}] synthetic_module.dll+{random.randint(0, 0xFFFF):04X}"
+        elif pattern_type == 2:
+            line = f"FormID: {random.randint(0, 0xFFFFFFFF):08X} from SyntheticPlugin.esp"
+        elif pattern_type == 3:
+            line = "WARNING: Synthetic buffer overflow detected"
+        else:
+            line = f"DEBUG: Memory usage: {random.randint(0, 0xFFFFFFFF)} bytes allocated"
+        lines.append(f"{line_num:06d}: {line}")
+        current_size += len(lines[-1]) + 1
+        line_num += 1
+
+    return "\n".join(lines)
+
+
+def _worker_process_memory_isolation(size_mb: float) -> int:
+    """Worker process that allocates memory (module-level for Windows pickling).
+
+    Args:
+        size_mb: Size in megabytes of synthetic log to generate.
+
+    Returns:
+        Length of the result string, or 0 if no segments found.
+    """
+    from ClassicLib.integration.factory import get_parser
+
+    parser = get_parser()
+    log = _generate_large_log_for_process(size_mb)
+    lines = log.splitlines()
+    game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
+
+    return len(str(segments)) if segments else 0
 
 
 class MemoryMonitor:
@@ -472,34 +518,28 @@ class TestMemorySafetyStress:
         # Even with panics, should not leak excessively
         assert leak_mb < 100, f"Memory leak after panics: {leak_mb:.2f}MB"
 
-    @pytest.mark.skipif(sys.platform == "win32", reason="Process pools behave differently on Windows")
     def test_memory_isolation_across_processes(self):
-        """Test that memory is properly isolated across process boundaries."""
+        """Test that memory is properly isolated across process boundaries.
+
+        This test works on both Unix and Windows by using module-level worker
+        functions that can be properly pickled for the 'spawn' start method.
+        """
         if not self.rust_available:
             pytest.skip("Rust module not available")
-
-        def worker_process(size_mb):
-            """Worker process that allocates memory."""
-            from ClassicLib.integration.factory import get_parser
-
-            generator = SyntheticDataGenerator()
-
-            parser = get_parser()
-            log = generator.generate_large_log(size_mb)
-            lines = log.splitlines()
-            game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
-
-            # Return size of result
-            return len(str(segments)) if segments else 0
 
         # Monitor main process memory
         monitor = MemoryMonitor()
         monitor.start()
 
-        # Launch workers in separate processes
-        with ProcessPoolExecutor(max_workers=4) as executor:
-            futures = [executor.submit(worker_process, 10) for _ in range(20)]
+        # Use 'spawn' context explicitly for cross-platform consistency
+        # Windows only supports 'spawn', Unix supports 'fork', 'forkserver', and 'spawn'
+        mp_context = multiprocessing.get_context("spawn")
 
+        # Launch workers in separate processes using spawn context
+        with ProcessPoolExecutor(max_workers=4, mp_context=mp_context) as executor:
+            futures = [executor.submit(_worker_process_memory_isolation, 10) for _ in range(20)]
+
+            # Collect results
             [f.result() for f in as_completed(futures)]
 
         # Main process memory should not be affected

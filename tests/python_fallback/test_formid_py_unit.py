@@ -157,18 +157,14 @@ class TestExtractFormids:
     """Tests for PythonFormIDAnalyzer.extract_formids method."""
 
     @pytest.mark.unit
-    def test_extract_formids_from_empty_callstack(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_from_empty_callstack(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test extracting FormIDs from empty callstack returns empty list."""
         result = formid_analyzer.extract_formids([])
 
         assert result == []
 
     @pytest.mark.unit
-    def test_extract_formids_from_valid_line(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_from_valid_line(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test extracting FormID from valid line."""
         callstack = ["  Form ID: 0x0A001234"]
 
@@ -178,9 +174,7 @@ class TestExtractFormids:
         assert result[0] == "Form ID: 0A001234"
 
     @pytest.mark.unit
-    def test_extract_formids_skips_ff_prefix(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_skips_ff_prefix(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test extracting FormIDs skips those starting with FF."""
         callstack = [
             "  Form ID: 0xFF001234",  # Should be skipped
@@ -193,9 +187,7 @@ class TestExtractFormids:
         assert result[0] == "Form ID: 0A001234"
 
     @pytest.mark.unit
-    def test_extract_formids_keeps_null_formid(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_keeps_null_formid(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test extracting FormIDs keeps NULL FormID (00000000)."""
         callstack = ["  Form ID: 0x00000000"]
 
@@ -205,9 +197,7 @@ class TestExtractFormids:
         assert result[0] == "Form ID: 00000000"
 
     @pytest.mark.unit
-    def test_extract_formids_case_insensitive(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_case_insensitive(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test FormID extraction is case insensitive."""
         callstack = [
             "  Form ID: 0x0a001234",  # lowercase
@@ -222,9 +212,7 @@ class TestExtractFormids:
         assert "Form ID: 0B005678" in result
 
     @pytest.mark.unit
-    def test_extract_formids_multiple_lines(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_multiple_lines(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test extracting FormIDs from multiple lines."""
         callstack = [
             "Some random line",
@@ -240,9 +228,7 @@ class TestExtractFormids:
         assert result.count("Form ID: 0A001234") == 2
 
     @pytest.mark.unit
-    def test_extract_formids_no_matches(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_no_matches(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test extracting FormIDs when no matches found."""
         callstack = [
             "Random line 1",
@@ -265,9 +251,7 @@ class TestFormidMatch:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_formid_match_empty_matches(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    async def test_formid_match_empty_matches(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test formid_match with empty matches returns appropriate message."""
         result = await formid_analyzer.formid_match([], {})
 
@@ -277,9 +261,7 @@ class TestFormidMatch:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_formid_match_with_matching_plugin(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    async def test_formid_match_with_matching_plugin(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test formid_match with FormID matching a plugin."""
         formids = ["Form ID: 0A001234"]
         plugins = {"TestPlugin.esp": "0A"}
@@ -293,9 +275,7 @@ class TestFormidMatch:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_formid_match_counts_duplicates(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    async def test_formid_match_counts_duplicates(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test formid_match correctly counts duplicate FormIDs."""
         formids = ["Form ID: 0A001234", "Form ID: 0A001234", "Form ID: 0A001234"]
         plugins = {"TestPlugin.esp": "0A"}
@@ -309,9 +289,7 @@ class TestFormidMatch:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_formid_match_no_matching_plugin(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    async def test_formid_match_no_matching_plugin(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test formid_match when no plugin matches FormID prefix."""
         formids = ["Form ID: 0A001234"]
         plugins = {"OtherPlugin.esp": "0B"}  # Different prefix
@@ -325,9 +303,7 @@ class TestFormidMatch:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_formid_match_includes_footer_text(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    async def test_formid_match_includes_footer_text(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test formid_match includes explanatory footer."""
         formids = ["Form ID: 0A001234"]
         plugins = {"TestPlugin.esp": "0A"}
@@ -350,9 +326,7 @@ class TestFormidMatchWithDatabase:
         mock_db_pool: AsyncMock,
     ) -> None:
         """Test formid_match performs database lookup with pool."""
-        mock_db_pool.get_entries_batch.return_value = {
-            ("001234", "TestPlugin.esp"): "Test Description"
-        }
+        mock_db_pool.get_entries_batch.return_value = {("001234", "TestPlugin.esp"): "Test Description"}
 
         formids = ["Form ID: 0A001234"]
         plugins = {"TestPlugin.esp": "0A"}
@@ -394,9 +368,7 @@ class TestLookupFormidValue:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_lookup_formid_value_no_db(
-        self, mock_yamldata_formid: MagicMock
-    ) -> None:
+    async def test_lookup_formid_value_no_db(self, mock_yamldata_formid: MagicMock) -> None:
         """Test lookup returns None when database doesn't exist."""
         from ClassicLib.python.formid_py import PythonFormIDAnalyzer
 
@@ -428,9 +400,7 @@ class TestLookupFormidValue:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_lookup_formid_value_fallback_to_sync(
-        self, mock_yamldata_formid: MagicMock
-    ) -> None:
+    async def test_lookup_formid_value_fallback_to_sync(self, mock_yamldata_formid: MagicMock) -> None:
         """Test lookup falls back to sync lookup when no pool."""
         from ClassicLib.python.formid_py import PythonFormIDAnalyzer
 
@@ -460,9 +430,7 @@ class TestPerformAsyncLookups:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_perform_async_lookups_no_pool(
-        self, formid_analyzer: "PythonFormIDAnalyzer"
-    ) -> None:
+    async def test_perform_async_lookups_no_pool(self, formid_analyzer: "PythonFormIDAnalyzer") -> None:
         """Test async lookups fallback when no pool available."""
         lines: list[str] = []
         tasks = [("Form ID: 0A001234", "001234", "Test.esp", 1)]
@@ -481,9 +449,7 @@ class TestPerformAsyncLookups:
         mock_db_pool: AsyncMock,
     ) -> None:
         """Test async lookups with database pool."""
-        mock_db_pool.get_entries_batch.return_value = {
-            ("001234", "Test.esp"): "Description"
-        }
+        mock_db_pool.get_entries_batch.return_value = {("001234", "Test.esp"): "Description"}
 
         lines: list[str] = []
         tasks = [("Form ID: 0A001234", "001234", "Test.esp", 2)]

@@ -165,9 +165,7 @@ class TestRunInitialSetup:
 
         # Create a mock for yaml_cache with the batch_get_settings_async method
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("v8.0.0", "Fallout 4", None, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", "Fallout 4", None, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging") as mock_config_logging,
@@ -193,9 +191,7 @@ class TestRunInitialSetup:
         coordinator = SetupCoordinator()
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("v8.0.0", "Fallout 4", None, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", "Fallout 4", None, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -221,9 +217,7 @@ class TestRunInitialSetup:
         coordinator = SetupCoordinator()
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("v8.0.0", "Fallout 4", None, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", "Fallout 4", None, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -254,9 +248,7 @@ class TestRunInitialSetup:
         coordinator = SetupCoordinator()
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("v8.0.0", "Fallout 4", "C:/Games/Fallout4", False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", "Fallout 4", "C:/Games/Fallout4", False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -280,9 +272,7 @@ class TestRunInitialSetup:
         coordinator = SetupCoordinator()
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=(None, "Fallout 4", None, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=(None, "Fallout 4", None, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -302,9 +292,7 @@ class TestRunInitialSetup:
         coordinator = SetupCoordinator()
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("v8.0.0", None, None, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", None, None, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -324,9 +312,7 @@ class TestRunInitialSetup:
         coordinator = SetupCoordinator()
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("v8.0.0", "Fallout 4", "C:/Games", True)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", "Fallout 4", "C:/Games", True))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -362,9 +348,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("auto", False, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("auto", False, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging") as mock_config_logging,
@@ -389,9 +373,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("auto", False, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("auto", False, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -416,9 +398,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("auto", False, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("auto", False, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -444,9 +424,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("VR", False, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("VR", False, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -473,9 +451,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=(None, True, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=(None, True, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -503,9 +479,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=(None, False, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=(None, False, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -531,9 +505,7 @@ class TestInitializeApplication:
         settings_file.write_text("test: value")
 
         mock_yaml_cache = MagicMock()
-        mock_yaml_cache.batch_get_settings_async = AsyncMock(
-            return_value=("auto", False, "Fallout4", False, False)
-        )
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("auto", False, "Fallout4", False, False))
 
         with (
             patch("ClassicLib.SetupCoordinator.configure_logging"),
@@ -541,9 +513,7 @@ class TestInitializeApplication:
             patch("ClassicLib.SetupCoordinator.ResourceLoader"),
             patch("ClassicLib.YamlSettings.yaml_cache", mock_yaml_cache),
             patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
-            patch.object(
-                coordinator.path_validator, "validate_all_settings_paths"
-            ) as mock_validate,
+            patch.object(coordinator.path_validator, "validate_all_settings_paths") as mock_validate,
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
             patch("ClassicLib.SetupCoordinator.Path", return_value=settings_file),
@@ -649,9 +619,7 @@ class TestLogRustAccelerationStatus:
         with (
             patch("ClassicLib.YamlSettings.classic_settings", mock_classic_settings),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch(
-                "ClassicLib.integration.status.get_rust_component_status", return_value=mock_status
-            ),
+            patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
             patch.object(SetupCoordinator, "_log_active_acceleration") as mock_log_active,
             patch("ClassicLib.SetupCoordinator.logger"),
         ):
@@ -675,9 +643,7 @@ class TestLogRustAccelerationStatus:
         with (
             patch("ClassicLib.YamlSettings.classic_settings", mock_classic_settings),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch(
-                "ClassicLib.integration.status.get_rust_component_status", return_value=mock_status
-            ),
+            patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
             patch.object(SetupCoordinator, "_log_disabled_status") as mock_log_disabled,
             patch("ClassicLib.SetupCoordinator.logger"),
         ):
@@ -701,9 +667,7 @@ class TestLogRustAccelerationStatus:
         with (
             patch("ClassicLib.YamlSettings.classic_settings", mock_classic_settings),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch(
-                "ClassicLib.integration.status.get_rust_component_status", return_value=mock_status
-            ),
+            patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
             patch.object(SetupCoordinator, "_log_no_acceleration") as mock_log_none,
             patch("ClassicLib.SetupCoordinator.logger"),
         ):

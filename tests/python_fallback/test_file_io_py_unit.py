@@ -155,9 +155,7 @@ class TestReadFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_returns_content(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_returns_content(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_file returns file content."""
         content = await file_io.read_file(temp_text_file)
 
@@ -165,9 +163,7 @@ class TestReadFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_with_string_path(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_with_string_path(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_file works with string path."""
         content = await file_io.read_file(str(temp_text_file))
 
@@ -175,13 +171,9 @@ class TestReadFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_tries_encoding_detection(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_tries_encoding_detection(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_file attempts encoding detection first."""
-        with patch(
-            "ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False
-        ):
+        with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
             # Mock the encoding detection import to fail
             with patch.dict("sys.modules", {"ClassicLib.FileIO.Async": None}):
                 content = await file_io.read_file(temp_text_file)
@@ -199,9 +191,7 @@ class TestReadLines:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_lines_returns_list(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_read_lines_returns_list(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_lines returns list of lines."""
         lines = await file_io.read_lines(temp_text_file)
 
@@ -210,9 +200,7 @@ class TestReadLines:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_lines_empty_file(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_read_lines_empty_file(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test read_lines handles empty file."""
         empty_file = tmp_path / "empty.txt"
         empty_file.write_text("")
@@ -232,9 +220,7 @@ class TestReadBytes:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_bytes_returns_bytes(
-        self, file_io: "PythonFileIO", temp_binary_file: Path
-    ) -> None:
+    async def test_read_bytes_returns_bytes(self, file_io: "PythonFileIO", temp_binary_file: Path) -> None:
         """Test read_bytes returns bytes."""
         data = await file_io.read_bytes(temp_binary_file)
 
@@ -243,9 +229,7 @@ class TestReadBytes:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_bytes_with_string_path(
-        self, file_io: "PythonFileIO", temp_binary_file: Path
-    ) -> None:
+    async def test_read_bytes_with_string_path(self, file_io: "PythonFileIO", temp_binary_file: Path) -> None:
         """Test read_bytes works with string path."""
         data = await file_io.read_bytes(str(temp_binary_file))
 
@@ -262,9 +246,7 @@ class TestWriteFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_file_creates_file(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_file_creates_file(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_file creates new file."""
         file_path = tmp_path / "new_file.txt"
 
@@ -275,9 +257,7 @@ class TestWriteFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_file_overwrites_existing(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_write_file_overwrites_existing(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test write_file overwrites existing content."""
         await file_io.write_file(temp_text_file, "New content")
 
@@ -285,9 +265,7 @@ class TestWriteFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_file_creates_parent_dirs(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_file_creates_parent_dirs(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_file creates parent directories."""
         file_path = tmp_path / "subdir1" / "subdir2" / "file.txt"
 
@@ -307,9 +285,7 @@ class TestWriteLines:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_lines_joins_with_newlines(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_lines_joins_with_newlines(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_lines joins lines with newlines."""
         file_path = tmp_path / "lines.txt"
 
@@ -320,9 +296,7 @@ class TestWriteLines:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_lines_adds_trailing_newline(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_lines_adds_trailing_newline(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_lines adds trailing newline."""
         file_path = tmp_path / "lines.txt"
 
@@ -333,9 +307,7 @@ class TestWriteLines:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_lines_empty_list(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_lines_empty_list(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_lines handles empty list."""
         file_path = tmp_path / "empty.txt"
 
@@ -354,9 +326,7 @@ class TestWriteBytes:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_bytes_creates_file(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_bytes_creates_file(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_bytes creates binary file."""
         file_path = tmp_path / "binary.bin"
 
@@ -367,13 +337,11 @@ class TestWriteBytes:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_bytes_creates_parent_dirs(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_bytes_creates_parent_dirs(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_bytes creates parent directories."""
         file_path = tmp_path / "subdir" / "binary.bin"
 
-        await file_io.write_bytes(file_path, b"\xFF")
+        await file_io.write_bytes(file_path, b"\xff")
 
         assert file_path.exists()
 
@@ -388,9 +356,7 @@ class TestAppendFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_append_file_adds_content(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_append_file_adds_content(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test append_file adds to existing content."""
         await file_io.append_file(temp_text_file, "\nLine 4")
 
@@ -399,9 +365,7 @@ class TestAppendFile:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_append_file_creates_if_missing(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_append_file_creates_if_missing(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test append_file creates file if missing."""
         file_path = tmp_path / "new.txt"
 
@@ -421,9 +385,7 @@ class TestReadCrashLog:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_crash_log_strips_trailing_empty(
-        self, file_io: "PythonFileIO", temp_crash_log: Path
-    ) -> None:
+    async def test_read_crash_log_strips_trailing_empty(self, file_io: "PythonFileIO", temp_crash_log: Path) -> None:
         """Test read_crash_log strips trailing empty lines."""
         lines = await file_io.read_crash_log(temp_crash_log)
 
@@ -432,9 +394,7 @@ class TestReadCrashLog:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_crash_log_returns_list(
-        self, file_io: "PythonFileIO", temp_crash_log: Path
-    ) -> None:
+    async def test_read_crash_log_returns_list(self, file_io: "PythonFileIO", temp_crash_log: Path) -> None:
         """Test read_crash_log returns list of lines."""
         lines = await file_io.read_crash_log(temp_crash_log)
 
@@ -453,9 +413,7 @@ class TestWriteCrashReport:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_crash_report_creates_md_file(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_crash_report_creates_md_file(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_crash_report creates .md file."""
         log_path = tmp_path / "crash.log"
 
@@ -467,9 +425,7 @@ class TestWriteCrashReport:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_crash_report_joins_lines(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_crash_report_joins_lines(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_crash_report joins lines directly."""
         log_path = tmp_path / "test.log"
 
@@ -489,9 +445,7 @@ class TestReadMultipleFiles:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_multiple_files_returns_dict(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_read_multiple_files_returns_dict(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test read_multiple_files returns dictionary."""
         file1 = tmp_path / "file1.txt"
         file2 = tmp_path / "file2.txt"
@@ -506,9 +460,7 @@ class TestReadMultipleFiles:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_multiple_files_handles_errors(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_read_multiple_files_handles_errors(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test read_multiple_files handles missing files gracefully."""
         existing = tmp_path / "exists.txt"
         missing = tmp_path / "missing.txt"
@@ -521,9 +473,7 @@ class TestReadMultipleFiles:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_multiple_files_empty_list(
-        self, file_io: "PythonFileIO"
-    ) -> None:
+    async def test_read_multiple_files_empty_list(self, file_io: "PythonFileIO") -> None:
         """Test read_multiple_files handles empty list."""
         result = await file_io.read_multiple_files([])
 
@@ -540,9 +490,7 @@ class TestWriteMultipleFiles:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_multiple_files_creates_files(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_multiple_files_creates_files(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_multiple_files creates all files."""
         files = {
             tmp_path / "file1.txt": "Content 1",
@@ -556,9 +504,7 @@ class TestWriteMultipleFiles:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_multiple_files_empty_dict(
-        self, file_io: "PythonFileIO"
-    ) -> None:
+    async def test_write_multiple_files_empty_dict(self, file_io: "PythonFileIO") -> None:
         """Test write_multiple_files handles empty dict."""
         # Should not raise
         await file_io.write_multiple_files({})
@@ -573,23 +519,17 @@ class TestFileExists:
     """Tests for PythonFileIO.file_exists method."""
 
     @pytest.mark.unit
-    def test_file_exists_returns_true(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    def test_file_exists_returns_true(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test file_exists returns True for existing file."""
         assert file_io.file_exists(temp_text_file) is True
 
     @pytest.mark.unit
-    def test_file_exists_returns_false(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    def test_file_exists_returns_false(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test file_exists returns False for missing file."""
         assert file_io.file_exists(tmp_path / "nonexistent.txt") is False
 
     @pytest.mark.unit
-    def test_file_exists_with_string_path(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    def test_file_exists_with_string_path(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test file_exists works with string path."""
         assert file_io.file_exists(str(temp_text_file)) is True
 
@@ -603,27 +543,21 @@ class TestGetFileSize:
     """Tests for PythonFileIO.get_file_size method."""
 
     @pytest.mark.unit
-    def test_get_file_size_returns_size(
-        self, file_io: "PythonFileIO", temp_binary_file: Path
-    ) -> None:
+    def test_get_file_size_returns_size(self, file_io: "PythonFileIO", temp_binary_file: Path) -> None:
         """Test get_file_size returns correct size."""
         size = file_io.get_file_size(temp_binary_file)
 
         assert size == 5  # 5 bytes
 
     @pytest.mark.unit
-    def test_get_file_size_returns_negative_for_missing(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    def test_get_file_size_returns_negative_for_missing(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test get_file_size returns -1 for missing file."""
         size = file_io.get_file_size(tmp_path / "nonexistent.txt")
 
         assert size == -1
 
     @pytest.mark.unit
-    def test_get_file_size_with_string_path(
-        self, file_io: "PythonFileIO", temp_binary_file: Path
-    ) -> None:
+    def test_get_file_size_with_string_path(self, file_io: "PythonFileIO", temp_binary_file: Path) -> None:
         """Test get_file_size works with string path."""
         size = file_io.get_file_size(str(temp_binary_file))
 
@@ -656,9 +590,7 @@ class TestAiofilesFallback:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_without_aiofiles(
-        self, file_io: "PythonFileIO", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_without_aiofiles(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_file works without aiofiles."""
         with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
             content = await file_io.read_file(temp_text_file)
@@ -667,9 +599,7 @@ class TestAiofilesFallback:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_file_without_aiofiles(
-        self, file_io: "PythonFileIO", tmp_path: Path
-    ) -> None:
+    async def test_write_file_without_aiofiles(self, file_io: "PythonFileIO", tmp_path: Path) -> None:
         """Test write_file works without aiofiles."""
         file_path = tmp_path / "test.txt"
 
@@ -680,9 +610,7 @@ class TestAiofilesFallback:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_bytes_without_aiofiles(
-        self, file_io: "PythonFileIO", temp_binary_file: Path
-    ) -> None:
+    async def test_read_bytes_without_aiofiles(self, file_io: "PythonFileIO", temp_binary_file: Path) -> None:
         """Test read_bytes works without aiofiles."""
         with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
             data = await file_io.read_bytes(temp_binary_file)

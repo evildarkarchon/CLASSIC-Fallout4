@@ -53,9 +53,7 @@ class TestManualDocsPath:
         assert hasattr(manual_docs_path, "manual_docs_path_signal")
         assert hasattr(manual_docs_path, "game_path_signal")
 
-    def test_get_manual_docs_path_gui_valid_directory(
-        self, manual_docs_path, tmp_path, monkeypatch
-    ):
+    def test_get_manual_docs_path_gui_valid_directory(self, manual_docs_path, tmp_path, monkeypatch):
         """Test get_manual_docs_path_gui with a valid directory path."""
         # Create a real temporary directory
         valid_dir = tmp_path / "valid_docs"
@@ -87,9 +85,7 @@ class TestManualDocsPath:
                 # Fourth arg is the path value
                 assert call_args[3] == str(valid_dir)
 
-    def test_get_manual_docs_path_gui_valid_directory_vr_mode(
-        self, manual_docs_path, tmp_path
-    ):
+    def test_get_manual_docs_path_gui_valid_directory_vr_mode(self, manual_docs_path, tmp_path):
         """Test get_manual_docs_path_gui with VR mode enabled."""
         valid_dir = tmp_path / "valid_docs_vr"
         valid_dir.mkdir()
@@ -145,9 +141,7 @@ class TestManualDocsPath:
                     # The path should be "." (empty string stripped is empty, Path("") is ".")
                     assert call_args[3] == "."
 
-    def test_get_manual_docs_path_gui_file_instead_of_directory(
-        self, manual_docs_path, tmp_path
-    ):
+    def test_get_manual_docs_path_gui_file_instead_of_directory(self, manual_docs_path, tmp_path):
         """Test get_manual_docs_path_gui with a file path instead of directory."""
         # Create a file instead of directory
         file_path = tmp_path / "some_file.txt"
@@ -169,9 +163,7 @@ class TestManualDocsPath:
             # Signal should have been emitted
             assert len(signal_received) == 1
 
-    def test_get_manual_docs_path_gui_strips_whitespace(
-        self, manual_docs_path, tmp_path
-    ):
+    def test_get_manual_docs_path_gui_strips_whitespace(self, manual_docs_path, tmp_path):
         """Test that path whitespace is stripped before saving.
 
         Note: The implementation checks Path(path).is_dir() BEFORE stripping,
@@ -201,9 +193,7 @@ class TestManualDocsPath:
             # Signal should have been emitted (invalid path)
             assert len(signal_received) == 1
 
-    def test_get_game_path_gui_valid_directory(
-        self, manual_docs_path, tmp_path
-    ):
+    def test_get_game_path_gui_valid_directory(self, manual_docs_path, tmp_path):
         """Test get_game_path_gui with a valid directory path."""
         valid_dir = tmp_path / "game_folder"
         valid_dir.mkdir()
@@ -226,9 +216,7 @@ class TestManualDocsPath:
                 assert call_args[2] == "Game_Info.Root_Folder_Game"
                 assert call_args[3] == str(valid_dir)
 
-    def test_get_game_path_gui_valid_directory_vr_mode(
-        self, manual_docs_path, tmp_path
-    ):
+    def test_get_game_path_gui_valid_directory_vr_mode(self, manual_docs_path, tmp_path):
         """Test get_game_path_gui with VR mode enabled."""
         valid_dir = tmp_path / "game_folder_vr"
         valid_dir.mkdir()
@@ -280,9 +268,7 @@ class TestManualDocsPath:
                     call_args = mock_yaml_settings.call_args[0]
                     assert call_args[3] == "."
 
-    def test_get_game_path_gui_file_instead_of_directory(
-        self, manual_docs_path, tmp_path
-    ):
+    def test_get_game_path_gui_file_instead_of_directory(self, manual_docs_path, tmp_path):
         """Test get_game_path_gui with a file path instead of directory."""
         file_path = tmp_path / "some_game_file.exe"
         file_path.write_text("content")

@@ -112,9 +112,7 @@ class TestPythonRecordScannerInit:
         assert scanner.yamldata == mock_yamldata_records
 
     @pytest.mark.unit
-    def test_init_creates_lowercase_records_set(
-        self, mock_yamldata_records: MagicMock
-    ) -> None:
+    def test_init_creates_lowercase_records_set(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner creates lowercase set of records."""
         from ClassicLib.python.record_py import PythonRecordScanner
 
@@ -126,9 +124,7 @@ class TestPythonRecordScannerInit:
         assert "npc_" in scanner.lower_records
 
     @pytest.mark.unit
-    def test_init_creates_lowercase_ignore_set(
-        self, mock_yamldata_records: MagicMock
-    ) -> None:
+    def test_init_creates_lowercase_ignore_set(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner creates lowercase set of ignored records."""
         from ClassicLib.python.record_py import PythonRecordScanner
 
@@ -138,9 +134,7 @@ class TestPythonRecordScannerInit:
         assert "unknown" in scanner.lower_ignore
 
     @pytest.mark.unit
-    def test_init_handles_empty_lists(
-        self, mock_yamldata_empty_records: MagicMock
-    ) -> None:
+    def test_init_handles_empty_lists(self, mock_yamldata_empty_records: MagicMock) -> None:
         """Test scanner handles empty record lists."""
         from ClassicLib.python.record_py import PythonRecordScanner
 
@@ -159,9 +153,7 @@ class TestScanNamedRecords:
     """Tests for PythonRecordScanner.scan_named_records method."""
 
     @pytest.mark.unit
-    def test_scan_named_records_returns_tuple(
-        self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_scan_named_records_returns_tuple(self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]) -> None:
         """Test scan_named_records returns tuple of fragment and matches."""
         fragment, matches = record_scanner.scan_named_records(sample_callstack)
 
@@ -171,9 +163,7 @@ class TestScanNamedRecords:
         assert isinstance(matches, list)
 
     @pytest.mark.unit
-    def test_scan_named_records_finds_matching_records(
-        self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_scan_named_records_finds_matching_records(self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]) -> None:
         """Test scan_named_records finds matching records."""
         _, matches = record_scanner.scan_named_records(sample_callstack)
 
@@ -181,9 +171,7 @@ class TestScanNamedRecords:
         assert len(matches) >= 2
 
     @pytest.mark.unit
-    def test_scan_named_records_excludes_ignored(
-        self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_scan_named_records_excludes_ignored(self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]) -> None:
         """Test scan_named_records excludes ignored records."""
         _, matches = record_scanner.scan_named_records(sample_callstack)
 
@@ -192,9 +180,7 @@ class TestScanNamedRecords:
             assert "TESFileRecord" not in match
 
     @pytest.mark.unit
-    def test_scan_named_records_empty_callstack(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_scan_named_records_empty_callstack(self, record_scanner: "PythonRecordScanner") -> None:
         """Test scan_named_records handles empty callstack."""
         fragment, matches = record_scanner.scan_named_records([])
 
@@ -203,9 +189,7 @@ class TestScanNamedRecords:
         assert "COULDN'T FIND ANY NAMED RECORDS" in content
 
     @pytest.mark.unit
-    def test_scan_named_records_no_matches(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_scan_named_records_no_matches(self, record_scanner: "PythonRecordScanner") -> None:
         """Test scan_named_records handles no matching records."""
         callstack = [
             "Random line 1",
@@ -220,9 +204,7 @@ class TestScanNamedRecords:
         assert "COULDN'T FIND ANY NAMED RECORDS" in content
 
     @pytest.mark.unit
-    def test_scan_named_records_fragment_has_content(
-        self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_scan_named_records_fragment_has_content(self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]) -> None:
         """Test scan_named_records fragment has content when matches found."""
         fragment, matches = record_scanner.scan_named_records(sample_callstack)
 
@@ -239,9 +221,7 @@ class TestFindMatchingRecords:
     """Tests for PythonRecordScanner._find_matching_records method."""
 
     @pytest.mark.unit
-    def test_find_matching_records_appends_to_list(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_find_matching_records_appends_to_list(self, record_scanner: "PythonRecordScanner") -> None:
         """Test _find_matching_records appends found records to list."""
         callstack = ["0x1234 [RSP+10] Module.dll+1234 [TESForm]"]
         matches: list[str] = []
@@ -251,9 +231,7 @@ class TestFindMatchingRecords:
         assert len(matches) == 1
 
     @pytest.mark.unit
-    def test_find_matching_records_extracts_after_rsp_marker(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_find_matching_records_extracts_after_rsp_marker(self, record_scanner: "PythonRecordScanner") -> None:
         """Test _find_matching_records extracts content after RSP marker."""
         callstack = ["0x00000000DEADBEEF [RSP+10] SomeModule.dll+12345 [TESForm]"]
         matches: list[str] = []
@@ -266,9 +244,7 @@ class TestFindMatchingRecords:
         assert "TESForm" in matches[0]
 
     @pytest.mark.unit
-    def test_find_matching_records_without_rsp_marker(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_find_matching_records_without_rsp_marker(self, record_scanner: "PythonRecordScanner") -> None:
         """Test _find_matching_records handles lines without RSP marker."""
         callstack = ["SomeFunction [TESForm]"]
         matches: list[str] = []
@@ -279,9 +255,7 @@ class TestFindMatchingRecords:
         assert matches[0] == "SomeFunction [TESForm]"
 
     @pytest.mark.unit
-    def test_find_matching_records_case_insensitive(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_find_matching_records_case_insensitive(self, record_scanner: "PythonRecordScanner") -> None:
         """Test _find_matching_records is case insensitive."""
         callstack = [
             "Line with tesform lowercase",  # lowercase
@@ -295,9 +269,7 @@ class TestFindMatchingRecords:
         assert len(matches) == 3
 
     @pytest.mark.unit
-    def test_find_matching_records_ignores_excluded(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_find_matching_records_ignores_excluded(self, record_scanner: "PythonRecordScanner") -> None:
         """Test _find_matching_records ignores excluded records."""
         callstack = [
             "Line with TESForm",  # Should be found
@@ -321,9 +293,7 @@ class TestGenerateFoundRecordsFragment:
     """Tests for PythonRecordScanner._generate_found_records_fragment method."""
 
     @pytest.mark.unit
-    def test_generate_fragment_counts_duplicates(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_generate_fragment_counts_duplicates(self, record_scanner: "PythonRecordScanner") -> None:
         """Test fragment generation counts duplicate records."""
         matches = ["TESForm", "TESForm", "TESForm", "BGSKeyword"]
 
@@ -335,9 +305,7 @@ class TestGenerateFoundRecordsFragment:
         assert "BGSKeyword | 1" in content
 
     @pytest.mark.unit
-    def test_generate_fragment_sorts_records(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_generate_fragment_sorts_records(self, record_scanner: "PythonRecordScanner") -> None:
         """Test fragment generation sorts records."""
         matches = ["ZZZRecord", "AAARecord", "MMMRecord"]
 
@@ -352,9 +320,7 @@ class TestGenerateFoundRecordsFragment:
         assert aaa_pos < mmm_pos < zzz_pos
 
     @pytest.mark.unit
-    def test_generate_fragment_includes_footer(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_generate_fragment_includes_footer(self, record_scanner: "PythonRecordScanner") -> None:
         """Test fragment generation includes explanatory footer."""
         matches = ["TESForm"]
 
@@ -365,9 +331,7 @@ class TestGenerateFoundRecordsFragment:
         assert "Named Record" in content or "named record" in content.lower()
 
     @pytest.mark.unit
-    def test_generate_fragment_has_content(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_generate_fragment_has_content(self, record_scanner: "PythonRecordScanner") -> None:
         """Test generated fragment has_content is True."""
         matches = ["TESForm"]
 
@@ -385,18 +349,14 @@ class TestExtractRecords:
     """Tests for PythonRecordScanner.extract_records method."""
 
     @pytest.mark.unit
-    def test_extract_records_returns_list(
-        self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_extract_records_returns_list(self, record_scanner: "PythonRecordScanner", sample_callstack: list[str]) -> None:
         """Test extract_records returns list of matches."""
         result = record_scanner.extract_records(sample_callstack)
 
         assert isinstance(result, list)
 
     @pytest.mark.unit
-    def test_extract_records_finds_matching_records(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_extract_records_finds_matching_records(self, record_scanner: "PythonRecordScanner") -> None:
         """Test extract_records finds matching records."""
         callstack = [
             "Line with TESForm record",
@@ -408,18 +368,14 @@ class TestExtractRecords:
         assert len(result) == 2
 
     @pytest.mark.unit
-    def test_extract_records_empty_callstack(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_extract_records_empty_callstack(self, record_scanner: "PythonRecordScanner") -> None:
         """Test extract_records handles empty callstack."""
         result = record_scanner.extract_records([])
 
         assert result == []
 
     @pytest.mark.unit
-    def test_extract_records_no_matches(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_extract_records_no_matches(self, record_scanner: "PythonRecordScanner") -> None:
         """Test extract_records returns empty list when no matches."""
         callstack = ["No records here", "Just regular lines"]
 
@@ -437,9 +393,7 @@ class TestRecordScannerEdgeCases:
     """Tests for edge cases and special scenarios."""
 
     @pytest.mark.unit
-    def test_scanner_with_empty_configuration(
-        self, record_scanner_empty: "PythonRecordScanner"
-    ) -> None:
+    def test_scanner_with_empty_configuration(self, record_scanner_empty: "PythonRecordScanner") -> None:
         """Test scanner handles empty configuration gracefully."""
         callstack = ["Line with TESForm", "Line with BGSKeyword"]
 
@@ -451,9 +405,7 @@ class TestRecordScannerEdgeCases:
         assert "COULDN'T FIND ANY NAMED RECORDS" in content
 
     @pytest.mark.unit
-    def test_scanner_record_partially_in_ignore_list(
-        self, mock_yamldata_records: MagicMock
-    ) -> None:
+    def test_scanner_record_partially_in_ignore_list(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner doesn't match partial ignore patterns incorrectly."""
         from ClassicLib.python.record_py import PythonRecordScanner
 
@@ -467,9 +419,7 @@ class TestRecordScannerEdgeCases:
         assert "TESForm" in result[0]
 
     @pytest.mark.unit
-    def test_scanner_multiple_records_same_line(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_scanner_multiple_records_same_line(self, record_scanner: "PythonRecordScanner") -> None:
         """Test scanner handles line with multiple matching records."""
         # Line contains multiple record types
         callstack = ["Line with TESForm and BGSKeyword together"]
@@ -480,9 +430,7 @@ class TestRecordScannerEdgeCases:
         assert len(result) == 1
 
     @pytest.mark.unit
-    def test_scanner_unicode_content(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_scanner_unicode_content(self, record_scanner: "PythonRecordScanner") -> None:
         """Test scanner handles unicode content."""
         callstack = ["Unicode: 日本語 TESForm テスト"]
 
@@ -492,9 +440,7 @@ class TestRecordScannerEdgeCases:
         assert "TESForm" in result[0]
 
     @pytest.mark.unit
-    def test_scanner_very_long_line(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_scanner_very_long_line(self, record_scanner: "PythonRecordScanner") -> None:
         """Test scanner handles very long lines."""
         long_prefix = "A" * 1000
         callstack = [f"{long_prefix} TESForm {long_prefix}"]
@@ -529,9 +475,7 @@ class TestRecordScannerReportFragmentIntegration:
     """Tests for ReportFragment integration."""
 
     @pytest.mark.unit
-    def test_fragment_can_be_combined(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_fragment_can_be_combined(self, record_scanner: "PythonRecordScanner") -> None:
         """Test generated fragment can be combined with other fragments."""
         from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
 
@@ -546,9 +490,7 @@ class TestRecordScannerReportFragmentIntegration:
         assert combined.has_content is True
 
     @pytest.mark.unit
-    def test_fragment_can_add_header(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_fragment_can_add_header(self, record_scanner: "PythonRecordScanner") -> None:
         """Test generated fragment can have header added."""
         callstack = ["Line with TESForm"]
 
@@ -559,9 +501,7 @@ class TestRecordScannerReportFragmentIntegration:
         assert "# Named Records" in content
 
     @pytest.mark.unit
-    def test_fragment_to_list(
-        self, record_scanner: "PythonRecordScanner"
-    ) -> None:
+    def test_fragment_to_list(self, record_scanner: "PythonRecordScanner") -> None:
         """Test generated fragment can be converted to list."""
         callstack = ["Line with TESForm"]
 

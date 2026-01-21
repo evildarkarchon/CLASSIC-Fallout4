@@ -28,9 +28,7 @@ class TestProgressHandlerProtocol:
         """ProgressHandler should be runtime checkable."""
         from ClassicLib.MessageHandler.progress.base import ProgressHandler
 
-        assert hasattr(ProgressHandler, "__protocol_attrs__") or hasattr(
-            ProgressHandler, "_is_runtime_protocol"
-        )
+        assert hasattr(ProgressHandler, "__protocol_attrs__") or hasattr(ProgressHandler, "_is_runtime_protocol")
 
     @pytest.mark.unit
     def test_cli_progress_handler_implements_protocol(self) -> None:
