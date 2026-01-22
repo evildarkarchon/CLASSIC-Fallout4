@@ -55,8 +55,8 @@ mod version;
 pub use error::VersionRegistryError;
 pub use matching::{MatchConfidence, MatchResult, VersionMatcher};
 pub use models::{
-    AddressLibFormat, AddressLibraryConfig, CompatibleRange, UnknownVersionHandling,
-    UnknownVersionStrategy, VersionInfo, XseConfig,
+    AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig,
+    UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig,
 };
 pub use registry::{VersionRegistry, get_version_registry};
 pub use version::GameVersion;

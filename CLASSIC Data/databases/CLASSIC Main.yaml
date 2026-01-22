@@ -410,7 +410,18 @@ Version_Registry:
       short_name: OG
       description: Pre-Next-Gen Update version
       exe_hash: 55f57947db9e05575122fae1088f0b0247442f11e566b56036caa0ac93329c36
-      crashgen_versions: ["1.28.6", "1.37.0"] # Both legacy and NG-compatible versions are valid
+      crashgen_versions:
+        - version: "1.28.6"
+          name: "Buffout 4"
+          description: "Legacy version for OG"
+          download_url: "https://www.nexusmods.com/fallout4/mods/47359"
+          compatible_range:
+            min: "1.10.163.0"
+            max: "1.10.163.999"
+        - version: "1.37.0"
+          name: "Buffout 4"
+          description: "Buffout 4 NG"
+          download_url: "https://www.nexusmods.com/fallout4/mods/64880"
       address_library:
         filename: version-1-10-163-0.bin
         format: bin
@@ -463,7 +474,14 @@ Version_Registry:
       short_name: NG
       description: Next-Gen Update version
       exe_hash: bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2
-      crashgen_versions: ["1.37.0"] # Only NG-compatible version
+      crashgen_versions:
+        - version: "1.37.0"
+          name: "Buffout 4"
+          description: "Buffout 4 NG"
+          download_url: "https://www.nexusmods.com/fallout4/mods/64880"
+          compatible_range:
+            min: "1.10.984.0"
+            max: "1.10.999.999"
       address_library:
         filename: version-1-10-984-0.bin
         format: bin
@@ -501,12 +519,11 @@ Version_Registry:
           Utility.pex: 496aaa38ee6f850907d6172b996274109431d3fb8f2f459c0ab111bbbc01fe93
           WaterType.pex: 7a1d41e063bdd8179a72b97869d27e636469988d088420c85f5297dcb1488d7a
           Weapon.pex: e6eee491b5a59f285a1482eb625ffb18bc63ed398bf5f8a4babca0b7edac918c
-
       compatible_range:
         min: "1.10.984.0"
         max: "1.10.999.999"
       priority: 200
-      deprecated: false
+      deprecated: true
 
     # Fallout 4 Anniversary Edition (Active development branch)
     - id: FO4_AE
@@ -517,7 +534,14 @@ Version_Registry:
       short_name: AE
       description: Anniversary Edition version (active development branch)
       exe_hash: # Placeholder - hash not yet available for AE version
-      crashgen_versions: [] # No supported crash log generator yet for AE
+      crashgen_versions: 
+        - version: "1.4.0"
+          name: "MiniBuff AE Crash Logger"
+          description: "AE-compatible Crash Logger"
+          download_url: "https://www.nexusmods.com/fallout4/mods/99911"
+          compatible_range:
+            min: "1.11.137.0"
+            max: "1.11.999.999"
       address_library:
         filename: version-1-11-191-0.bin
         format: bin
@@ -541,7 +565,11 @@ Version_Registry:
       short_name: VR
       description: Virtual Reality version
       exe_hash: # Placeholder - hash not yet available for VR version
-      crashgen_versions: ["1.37.0"] # Same as NG - VR uses NG-compatible version
+      crashgen_versions:
+        - version: "1.37.0"
+          name: "Buffout 4"
+          description: "NG-compatible version for VR"
+          download_url: "https://www.nexusmods.com/fallout4/mods/64880"
       address_library:
         filename: version-1-2-72-0.csv
         format: csv

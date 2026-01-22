@@ -5,6 +5,7 @@ Tests verify thread safety, cache operations, and Rust acceleration.
 """
 
 import asyncio
+import tracemalloc
 from pathlib import Path
 from typing import Any
 
@@ -351,6 +352,8 @@ class TestPerformance:
     """Test performance characteristics."""
 
     @pytest.mark.slow
+    @pytest.mark.performance
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Performance test should not run under memory tracing")
     def test_cache_hit_performance(self, test_yaml):
         """Test that cache hits are fast."""
         import time

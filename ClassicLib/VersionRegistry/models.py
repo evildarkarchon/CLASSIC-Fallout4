@@ -163,6 +163,92 @@ class CompatibleRange:
         return cls(min_version=Version(min_str), max_version=Version(max_str))
 
 
+@dataclass(frozen=True)
+class CrashgenConfig:
+    """Crash generator configuration for a specific version.
+
+    Contains metadata about a crash generator (e.g., Buffout 4) including
+    its version, name, description, download URL, and optional compatible
+    game version range.
+
+    Attributes:
+        version: Version string of the crash generator (e.g., "1.28.6", "1.37.0").
+        name: Display name (e.g., "Buffout 4", "Buffout 4 NG").
+        description: Description of this crash generator version.
+        download_url: Nexus Mods or other download URL.
+        compatible_range: Optional game version range this crash generator
+            is compatible with. If None, the crash generator is valid for
+            any game version in the parent VersionInfo.
+
+    Example:
+        >>> config = CrashgenConfig(
+        ...     version="1.28.6",
+        ...     name="Buffout 4",
+        ...     description="Legacy version for OG",
+        ...     download_url="https://www.nexusmods.com/fallout4/mods/47359"
+        ... )
+        >>> config.version
+        '1.28.6'
+
+        >>> # With compatible range
+        >>> og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
+        >>> config_with_range = CrashgenConfig(
+        ...     version="1.28.6",
+        ...     name="Buffout 4",
+        ...     compatible_range=og_range
+        ... )
+        >>> config_with_range.is_compatible_with(Version("1.10.163.0"))
+        True
+
+    """
+
+    version: str
+    name: str = ""
+    description: str = ""
+    download_url: str = ""
+    compatible_range: CompatibleRange | None = None
+
+    def is_compatible_with(self, game_version: Version) -> bool:
+        """Check if this crash generator is compatible with a game version.
+
+        If no compatible_range is defined, returns True (compatible with any version).
+        Otherwise, checks if the game version falls within the compatible range.
+
+        Args:
+            game_version: The game version to check compatibility with.
+
+        Returns:
+            True if compatible, False otherwise.
+
+        """
+        if self.compatible_range is None:
+            return True
+        return self.compatible_range.contains(game_version)
+
+    @classmethod
+    def from_version_string(cls, version: str) -> CrashgenConfig:
+        """Create a CrashgenConfig from just a version string.
+
+        Convenience factory for backward compatibility when crash generator
+        versions are specified as simple strings in YAML.
+
+        Args:
+            version: The crash generator version string.
+
+        Returns:
+            A new CrashgenConfig with only the version field set.
+
+        Example:
+            >>> config = CrashgenConfig.from_version_string("1.37.0")
+            >>> config.version
+            '1.37.0'
+            >>> config.name
+            ''
+
+        """
+        return cls(version=version)
+
+
 @dataclass
 class VersionInfo:
     """Complete information about a game version.
@@ -185,11 +271,19 @@ class VersionInfo:
         priority: Priority for ambiguous matching (higher = preferred).
         deprecated: Whether this version is deprecated.
         exe_hash: SHA-256 hash of the game executable for this version.
-        crashgen_versions: Tuple of valid crash generator versions for this game version.
-            For example, FO4_OG supports both "1.28.6" and "1.37.0", while FO4_NG only
-            supports "1.37.0". An empty tuple means no crash generator is supported yet.
+        crashgen_versions: Tuple of CrashgenConfig objects for this game version.
+            Each CrashgenConfig contains version, name, description, download_url,
+            and optional compatible_range. For example, FO4_OG supports both
+            Buffout 4 (1.28.6) and Buffout 4 NG (1.37.0), while FO4_NG only
+            supports Buffout 4 NG (1.37.0). An empty tuple means no crash
+            generator is supported yet.
 
     Example:
+        >>> from ClassicLib.VersionRegistry.models import CrashgenConfig
+        >>> crashgens = (
+        ...     CrashgenConfig(version="1.28.6", name="Buffout 4"),
+        ...     CrashgenConfig(version="1.37.0", name="Buffout 4 NG"),
+        ... )
         >>> info = VersionInfo(
         ...     id="FO4_OG",
         ...     game="Fallout4",
@@ -198,11 +292,11 @@ class VersionInfo:
         ...     display_name="Fallout 4 Original",
         ...     short_name="OG",
         ...     exe_hash="55f57947...",
-        ...     crashgen_versions=("1.28.6", "1.37.0")
+        ...     crashgen_versions=crashgens
         ... )
         >>> info.version_string
         '1.10.163.0'
-        >>> info.crashgen_versions
+        >>> info.get_crashgen_version_strings()
         ('1.28.6', '1.37.0')
 
     """
@@ -220,7 +314,7 @@ class VersionInfo:
     priority: int = 100
     deprecated: bool = False
     exe_hash: str | None = None
-    crashgen_versions: tuple[str, ...] = field(default_factory=tuple)
+    crashgen_versions: tuple[CrashgenConfig, ...] = field(default_factory=tuple)
 
     @property
     def version_string(self) -> str:
@@ -231,6 +325,68 @@ class VersionInfo:
 
         """
         return str(self.version)
+
+    def get_crashgen_version_strings(self) -> tuple[str, ...]:
+        """Get crash generator versions as simple version strings.
+
+        Provides backward-compatible access to just the version strings
+        of the crash generators, without the additional metadata.
+
+        Returns:
+            Tuple of version strings from crashgen_versions.
+
+        Example:
+            >>> info.crashgen_versions
+            (CrashgenConfig(version='1.28.6', ...), CrashgenConfig(version='1.37.0', ...))
+            >>> info.get_crashgen_version_strings()
+            ('1.28.6', '1.37.0')
+
+        """
+        return tuple(config.version for config in self.crashgen_versions)
+
+    def get_crashgen_for_version(self, crashgen_version: str) -> CrashgenConfig | None:
+        """Get a specific CrashgenConfig by its version string.
+
+        Args:
+            crashgen_version: The crash generator version to look up.
+
+        Returns:
+            The CrashgenConfig with the matching version, or None if not found.
+
+        Example:
+            >>> config = info.get_crashgen_for_version("1.28.6")
+            >>> config.name
+            'Buffout 4'
+
+        """
+        for config in self.crashgen_versions:
+            if config.version == crashgen_version:
+                return config
+        return None
+
+    def get_compatible_crashgens(self, game_version: Version | None = None) -> tuple[CrashgenConfig, ...]:
+        """Get crash generators compatible with a specific game version.
+
+        Filters crashgen_versions by their compatible_range. If a crash generator
+        has no compatible_range defined, it is considered compatible with all
+        game versions.
+
+        Args:
+            game_version: The game version to check compatibility with.
+                If None, uses this VersionInfo's version.
+
+        Returns:
+            Tuple of CrashgenConfig objects compatible with the game version.
+
+        Example:
+            >>> compatible = info.get_compatible_crashgens()
+            >>> [c.version for c in compatible]
+            ['1.28.6', '1.37.0']
+
+        """
+        if game_version is None:
+            game_version = self.version
+        return tuple(config for config in self.crashgen_versions if config.is_compatible_with(game_version))
 
     def is_compatible_with(self, detected: Version) -> bool:
         """Check if detected version is compatible with this version info.

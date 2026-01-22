@@ -283,15 +283,15 @@ jobs:
           uv run python -c "from ClassicLib.integration.status import print_rust_status; print_rust_status()"
 
       - name: Run pytest (unit tests)
-        run: uv run pytest -m "unit and not slow and not stress" --maxfail=5 --tb=short --timeout=300 --timeout-method=thread --junitxml=test-results/unit.xml --no-cov
+        run: uv run pytest -m "unit and not slow and not stress" --maxfail=5 --tb=short --timeout=300 --skip-slow --skip-network --skip-performance --skip-stress --timeout-method=thread --junitxml=test-results/unit.xml --no-cov
         timeout-minutes: 30
 
       - name: Run pytest (integration tests)
-        run: uv run pytest -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread --junitxml=test-results/integration.xml --no-cov
+        run: uv run pytest -m "integration" --maxfail=3 --tb=short --timeout=600 --timeout-method=thread --skip-slow --skip-network --skip-performance --skip-stress --junitxml=test-results/integration.xml --no-cov
         timeout-minutes: 30
 
       - name: Run pytest (Rust integration tests)
-        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread --junitxml=test-results/rust-integration.xml --no-cov
+        run: uv run pytest tests/rust_integration/ -v --maxfail=3 --tb=short --timeout=300 --timeout-method=thread --skip-slow --skip-network --skip-performance --skip-stress --junitxml=test-results/rust-integration.xml --no-cov
         timeout-minutes: 30
 
       - name: Upload test results

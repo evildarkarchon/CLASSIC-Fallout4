@@ -32,6 +32,7 @@ from ClassicLib.VersionRegistry.matching import MatchResult, VersionMatcher
 from ClassicLib.VersionRegistry.models import (
     AddressLibraryConfig,
     CompatibleRange,
+    CrashgenConfig,
     UnknownVersionHandling,
     VersionInfo,
     XseConfig,
@@ -205,9 +206,41 @@ class VersionRegistry:
                 cr.get("max", "999.999.999"),
             )
 
-        # Parse crashgen_versions list - convert to immutable tuple for frozen dataclass compatibility
+        # Parse crashgen_versions - supports both simple list of strings and structured list of objects
         crashgen_versions_list = data.get("crashgen_versions", [])
-        crashgen_versions = tuple(crashgen_versions_list) if crashgen_versions_list else ()
+        crashgen_configs: list[CrashgenConfig] = []
+        for item in crashgen_versions_list:
+            if isinstance(item, str):
+                # Simple string format: "1.28.6" -> CrashgenConfig(version="1.28.6")
+                # Skip empty strings
+                if not item:
+                    continue
+                crashgen_configs.append(CrashgenConfig.from_version_string(item))
+            elif isinstance(item, dict):
+                # Structured format with full metadata
+                # Skip entries with empty or missing version (matches Rust behavior)
+                version = item.get("version", "")  # pyright: ignore[reportUnknownArgumentType, reportUnknownVariableType]
+                if not version:
+                    continue
+
+                # Parse compatible_range if present
+                cg_compat_range = None
+                if "compatible_range" in item:
+                    cr = item["compatible_range"]  # pyright: ignore[reportUnknownVariableType]
+                    cg_compat_range = CompatibleRange.from_strings(
+                        cr.get("min", "0.0.0"),  # pyright: ignore[reportUnknownArgumentType]
+                        cr.get("max", "999.999.999"),  # pyright: ignore[reportUnknownArgumentType]
+                    )
+                crashgen_configs.append(
+                    CrashgenConfig(
+                        version=version,  # pyright: ignore[reportUnknownArgumentType]
+                        name=item.get("name", ""),  # pyright: ignore[reportUnknownArgumentType]
+                        description=item.get("description", ""),  # pyright: ignore[reportUnknownArgumentType]
+                        download_url=item.get("download_url", ""),  # pyright: ignore[reportUnknownArgumentType]
+                        compatible_range=cg_compat_range,
+                    )
+                )
+        crashgen_versions = tuple(crashgen_configs)
 
         return VersionInfo(
             id=data.get("id", ""),
@@ -261,7 +294,20 @@ class VersionRegistry:
             ),
             priority=100,
             exe_hash="55f57947db9e05575122fae1088f0b0247442f11e566b56036caa0ac93329c36",
-            crashgen_versions=("1.28.6", "1.37.0"),  # Both legacy and NG-compatible versions
+            crashgen_versions=(
+                CrashgenConfig(
+                    version="1.28.6",
+                    name="Buffout 4",
+                    description="Legacy version for OG",
+                    download_url="https://www.nexusmods.com/fallout4/mods/47359",
+                ),
+                CrashgenConfig(
+                    version="1.37.0",
+                    name="Buffout 4",
+                    description="Buffout 4 NG",
+                    download_url="https://www.nexusmods.com/fallout4/mods/64880",
+                ),
+            ),
         )
         self._versions[og.id] = og
         self._by_version[og.version_string] = og
@@ -295,7 +341,14 @@ class VersionRegistry:
             ),
             priority=200,
             exe_hash="bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2",
-            crashgen_versions=("1.37.0",),  # Only NG-compatible version
+            crashgen_versions=(
+                CrashgenConfig(
+                    version="1.37.0",
+                    name="Buffout 4",
+                    description="Buffout 4 NG",
+                    download_url="https://www.nexusmods.com/fallout4/mods/64880",
+                ),
+            ),
         )
         self._versions[ng.id] = ng
         self._by_version[ng.version_string] = ng
@@ -322,7 +375,14 @@ class VersionRegistry:
             ),
             priority=100,
             exe_hash=None,  # VR exe hash not yet available
-            crashgen_versions=("1.37.0",),  # Same as NG - VR uses NG-compatible version
+            crashgen_versions=(
+                CrashgenConfig(
+                    version="1.37.0",
+                    name="Buffout 4",
+                    description="NG-compatible version for VR",
+                    download_url="https://www.nexusmods.com/fallout4/mods/64880",
+                ),
+            ),
         )
         self._versions[vr.id] = vr
         self._by_version[vr.version_string] = vr
@@ -606,6 +666,9 @@ class VersionRegistry:
     def get_crashgen_versions(self, version_id: str) -> tuple[str, ...]:
         """Get valid crash generator versions for a specific game version ID.
 
+        Returns just the version strings for backward compatibility.
+        Use get_crashgen_configs() for full metadata access.
+
         Args:
             version_id: The version ID (e.g., "FO4_OG", "FO4_NG", "FO4_VR").
 
@@ -618,7 +681,34 @@ class VersionRegistry:
             >>> registry.get_crashgen_versions("FO4_OG")
             ('1.28.6', '1.37.0')
             >>> registry.get_crashgen_versions("FO4_AE")
-            ()
+            ('1.4.0',)
+
+        """
+        version_info = self.get_by_id(version_id)
+        if version_info is None:
+            return ()
+        return version_info.get_crashgen_version_strings()
+
+    def get_crashgen_configs(self, version_id: str) -> tuple[CrashgenConfig, ...]:
+        """Get crash generator configurations for a specific game version ID.
+
+        Returns full CrashgenConfig objects with name, description, download_url,
+        and optional compatible_range.
+
+        Args:
+            version_id: The version ID (e.g., "FO4_OG", "FO4_NG", "FO4_VR").
+
+        Returns:
+            Tuple of CrashgenConfig objects. Empty tuple if the version ID is
+            not found or has no crash generator support.
+
+        Example:
+            >>> registry = get_version_registry()
+            >>> configs = registry.get_crashgen_configs("FO4_OG")
+            >>> configs[0].name
+            'Buffout 4'
+            >>> configs[0].download_url
+            'https://www.nexusmods.com/fallout4/mods/47359'
 
         """
         version_info = self.get_by_id(version_id)
@@ -636,6 +726,7 @@ class VersionRegistry:
 
         Uses version matching to find the best match for the detected version
         and returns the valid crash generator versions for that match.
+        Returns just the version strings for backward compatibility.
 
         Args:
             detected: The detected game version.
@@ -650,6 +741,38 @@ class VersionRegistry:
             >>> registry = get_version_registry()
             >>> registry.get_crashgen_versions_for_detected(Version("1.10.163.0"))
             ('1.28.6', '1.37.0')
+
+        """
+        result = self.match_version(detected, game, is_vr)
+        if result.version_info is None:
+            return ()
+        return result.version_info.get_crashgen_version_strings()
+
+    def get_crashgen_configs_for_detected(
+        self,
+        detected: Version,
+        game: str = "Fallout4",
+        is_vr: bool = False,
+    ) -> tuple[CrashgenConfig, ...]:
+        """Get crash generator configurations for a detected game version.
+
+        Uses version matching to find the best match for the detected version
+        and returns the full CrashgenConfig objects for that match.
+
+        Args:
+            detected: The detected game version.
+            game: Game identifier.
+            is_vr: Whether VR mode is active.
+
+        Returns:
+            Tuple of CrashgenConfig objects. Empty tuple if no match found or
+            the matched version has no crash generator support.
+
+        Example:
+            >>> registry = get_version_registry()
+            >>> configs = registry.get_crashgen_configs_for_detected(Version("1.10.163.0"))
+            >>> configs[0].name
+            'Buffout 4'
 
         """
         result = self.match_version(detected, game, is_vr)

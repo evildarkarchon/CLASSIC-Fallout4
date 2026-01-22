@@ -67,6 +67,7 @@ from ClassicLib.VersionRegistry.crashgen_checker import (
     CrashgenVersionStatus,
     check_crashgen_version,
     check_crashgen_version_for_detected_game,
+    get_matching_crashgen_config,
 )
 from ClassicLib.VersionRegistry.matching import (
     MatchConfidence,
@@ -76,6 +77,7 @@ from ClassicLib.VersionRegistry.matching import (
 from ClassicLib.VersionRegistry.models import (
     AddressLibraryConfig,
     CompatibleRange,
+    CrashgenConfig,
     UnknownVersionHandling,
     VersionInfo,
     XseConfig,
@@ -91,6 +93,7 @@ __all__ = [
     "AddressLibraryConfig",
     "XseConfig",
     "CompatibleRange",
+    "CrashgenConfig",
     "UnknownVersionHandling",
     # Matching
     "VersionMatcher",
@@ -101,4 +104,5 @@ __all__ = [
     "CrashgenVersionResult",
     "check_crashgen_version",
     "check_crashgen_version_for_detected_game",
+    "get_matching_crashgen_config",
 ]

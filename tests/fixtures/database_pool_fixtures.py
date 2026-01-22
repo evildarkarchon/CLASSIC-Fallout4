@@ -1,9 +1,9 @@
 """
-Test fixtures for DatabasePoolManager singleton isolation.
+Test fixtures for database pool singleton isolation.
 
-These fixtures ensure proper cleanup of the DatabasePoolManager singleton
-between tests to prevent test pollution, especially important for parallel
-test execution with pytest-xdist.
+These fixtures ensure proper cleanup of the DatabasePoolManager and
+SyncDatabasePool singletons between tests to prevent test pollution,
+especially important for parallel test execution with pytest-xdist.
 """
 
 import asyncio
@@ -67,6 +67,38 @@ async def _cleanup_pool_async() -> None:
         except Exception:
             # Ignore errors during cleanup
             pass
+
+
+@pytest.fixture(autouse=True)
+def clean_sync_database_pool() -> Generator[None, None, None]:
+    """Reset SyncDatabasePool singleton and related caches between tests.
+
+    This prevents ResourceWarnings about unclosed SQLite connections
+    and ensures test isolation for any code using FormID lookups.
+
+    Cleans up:
+        - SyncDatabasePool singleton instance and its connections
+        - query_cache module-level dict in Util.py
+        - _cached_formid_lookup LRU cache in formid_py.py
+    """
+    from ClassicLib.python.formid_py import _cached_formid_lookup
+    from ClassicLib.ScanLog.Util import query_cache, SyncDatabasePool
+
+    # Clear singleton and caches before test
+    if SyncDatabasePool._instance is not None:
+        SyncDatabasePool._instance.close_all()
+    SyncDatabasePool._instance = None
+    query_cache.clear()
+    _cached_formid_lookup.cache_clear()
+
+    yield
+
+    # Cleanup after test
+    if SyncDatabasePool._instance is not None:
+        SyncDatabasePool._instance.close_all()
+    SyncDatabasePool._instance = None
+    query_cache.clear()
+    _cached_formid_lookup.cache_clear()
 
 
 @pytest.fixture

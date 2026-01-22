@@ -386,10 +386,6 @@ python_functions = ["test_*"]
 asyncio_mode = "auto"
 timeout = 300
 addopts = "--cov --cov-report=lcov:lcov.info --cov-report=term"
-filterwarnings = [
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
-]
 markers = [
     "unit: Unit tests that test a single function or class",
     "integration: Tests that test the integration of multiple components",

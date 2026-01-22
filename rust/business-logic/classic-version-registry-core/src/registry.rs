@@ -13,7 +13,7 @@ use classic_yaml_core::YamlOperations;
 use crate::defaults;
 use crate::matching::{MatchResult, VersionMatcher};
 use crate::models::{
-    AddressLibraryConfig, CompatibleRange, LogLevel, UnknownVersionHandling,
+    AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel, UnknownVersionHandling,
     UnknownVersionStrategy, VersionInfo, XseConfig,
 };
 use crate::{GameVersion, VersionRegistryError};
@@ -221,6 +221,9 @@ impl VersionRegistry {
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
 
+        // Parse crashgen_versions (supports both simple strings and structured format)
+        let crashgen_versions = Self::parse_crashgen_versions_yaml(yaml, &yaml_ops);
+
         Ok(VersionInfo {
             id,
             game: yaml_ops.get_string_value(yaml, "game", "Fallout4"),
@@ -234,7 +237,76 @@ impl VersionRegistry {
             compatible_range,
             priority,
             deprecated,
+            crashgen_versions,
         })
+    }
+
+    /// Parse crashgen_versions from YAML.
+    ///
+    /// Supports two formats:
+    /// 1. Simple string list: `["1.28.6", "1.37.0"]`
+    /// 2. Structured format: `[{ version: "1.28.6", name: "Buffout 4", ... }]`
+    fn parse_crashgen_versions_yaml(
+        yaml: &yaml_rust2::Yaml,
+        yaml_ops: &YamlOperations,
+    ) -> Vec<CrashgenConfig> {
+        let crashgen_yaml = match yaml_ops.get_setting(yaml, "crashgen_versions") {
+            Some(v) => v,
+            None => return Vec::new(),
+        };
+
+        let array = match &crashgen_yaml {
+            yaml_rust2::Yaml::Array(arr) => arr,
+            _ => return Vec::new(),
+        };
+
+        array
+            .iter()
+            .filter_map(|item| Self::parse_single_crashgen_yaml(item, yaml_ops))
+            .collect()
+    }
+
+    /// Parse a single crashgen entry (either string or structured).
+    fn parse_single_crashgen_yaml(
+        yaml: &yaml_rust2::Yaml,
+        yaml_ops: &YamlOperations,
+    ) -> Option<CrashgenConfig> {
+        match yaml {
+            // Simple string format: "1.28.6"
+            yaml_rust2::Yaml::String(version) => {
+                Some(CrashgenConfig::from_version_string(version.clone()))
+            }
+            // Structured format: { version: "1.28.6", name: "Buffout 4", ... }
+            yaml_rust2::Yaml::Hash(_) => {
+                let version = yaml_ops.get_string_value(yaml, "version", "");
+                if version.is_empty() {
+                    return None;
+                }
+
+                let name = yaml_ops.get_string_value(yaml, "name", "");
+                let description = yaml_ops.get_string_value(yaml, "description", "");
+                let download_url = yaml_ops.get_string_value(yaml, "download_url", "");
+
+                // Parse optional compatible_range
+                let compatible_range =
+                    if let Some(cr_yaml) = yaml_ops.get_setting(yaml, "compatible_range") {
+                        let min_str = yaml_ops.get_string_value(&cr_yaml, "min", "");
+                        let max_str = yaml_ops.get_string_value(&cr_yaml, "max", "");
+                        CompatibleRange::from_strings(&min_str, &max_str).ok()
+                    } else {
+                        None
+                    };
+
+                Some(CrashgenConfig {
+                    version,
+                    name,
+                    description,
+                    download_url,
+                    compatible_range,
+                })
+            }
+            _ => None,
+        }
     }
 
     /// Parse unknown version handling from YAML.
@@ -446,6 +518,94 @@ impl VersionRegistry {
             .map(|al| al.filename.clone())
     }
 
+    // === Crashgen API ===
+
+    /// Get all crash generator configurations for a version ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The version ID (e.g., "FO4_OG", "FO4_NG")
+    ///
+    /// # Returns
+    ///
+    /// A vector of references to `CrashgenConfig` objects, or an empty vector if
+    /// the version ID is not found.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use classic_version_registry_core::get_version_registry;
+    ///
+    /// let registry = get_version_registry();
+    /// let configs = registry.get_crashgen_versions("FO4_OG");
+    /// for config in configs {
+    ///     println!("{}: {}", config.name, config.version);
+    /// }
+    /// ```
+    #[must_use]
+    pub fn get_crashgen_versions(&self, id: &str) -> Vec<&CrashgenConfig> {
+        self.versions
+            .get(id)
+            .map(|v| v.crashgen_versions.iter().collect())
+            .unwrap_or_default()
+    }
+
+    /// Get crash generator versions as simple version strings for a version ID.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The version ID (e.g., "FO4_OG", "FO4_NG")
+    ///
+    /// # Returns
+    ///
+    /// A vector of version strings, or an empty vector if the version ID is not found.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use classic_version_registry_core::get_version_registry;
+    ///
+    /// let registry = get_version_registry();
+    /// let versions = registry.get_crashgen_version_strings("FO4_OG");
+    /// // Returns ["1.28.6", "1.37.0"]
+    /// ```
+    #[must_use]
+    pub fn get_crashgen_version_strings(&self, id: &str) -> Vec<&str> {
+        self.versions
+            .get(id)
+            .map(|v| v.get_crashgen_version_strings())
+            .unwrap_or_default()
+    }
+
+    /// Get a specific crash generator configuration by version ID and crashgen version.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The version ID (e.g., "FO4_OG", "FO4_NG")
+    /// * `crashgen_version` - The crash generator version string (e.g., "1.28.6")
+    ///
+    /// # Returns
+    ///
+    /// The `CrashgenConfig` with the matching version, or `None` if not found.
+    ///
+    /// # Example
+    ///
+    /// ```rust,no_run
+    /// use classic_version_registry_core::get_version_registry;
+    ///
+    /// let registry = get_version_registry();
+    /// if let Some(config) = registry.get_crashgen_for_version("FO4_OG", "1.28.6") {
+    ///     println!("Name: {}", config.name);
+    ///     println!("Download: {}", config.download_url);
+    /// }
+    /// ```
+    #[must_use]
+    pub fn get_crashgen_for_version(&self, id: &str, crashgen_version: &str) -> Option<&CrashgenConfig> {
+        self.versions
+            .get(id)
+            .and_then(|v| v.get_crashgen_for_version(crashgen_version))
+    }
+
     /// Get the unknown version handling configuration.
     #[must_use]
     pub fn unknown_version_handling(&self) -> &UnknownVersionHandling {
@@ -579,5 +739,431 @@ mod tests {
             registry.get_address_library_filename(&GameVersion::new(1, 10, 163, 0), false);
 
         assert_eq!(filename, Some("version-1-10-163-0.bin".to_string()));
+    }
+
+    #[test]
+    fn test_get_crashgen_versions() {
+        let registry = create_test_registry();
+
+        // OG has two crashgen versions
+        let og_configs = registry.get_crashgen_versions("FO4_OG");
+        assert_eq!(og_configs.len(), 2);
+        assert_eq!(og_configs[0].version, "1.28.6");
+        assert_eq!(og_configs[1].version, "1.37.0");
+
+        // NG has one crashgen version
+        let ng_configs = registry.get_crashgen_versions("FO4_NG");
+        assert_eq!(ng_configs.len(), 1);
+        assert_eq!(ng_configs[0].version, "1.37.0");
+
+        // AE has MiniBuff AE Crash Logger
+        let ae_configs = registry.get_crashgen_versions("FO4_AE");
+        assert_eq!(ae_configs.len(), 1);
+        assert_eq!(ae_configs[0].version, "1.4.0");
+        assert_eq!(ae_configs[0].name, "MiniBuff AE Crash Logger");
+
+        // VR uses Buffout 4 (name matches log output)
+        let vr_configs = registry.get_crashgen_versions("FO4_VR");
+        assert_eq!(vr_configs.len(), 1);
+        assert_eq!(vr_configs[0].version, "1.37.0");
+        assert_eq!(vr_configs[0].name, "Buffout 4");
+
+        // Missing version returns empty vector
+        let missing = registry.get_crashgen_versions("FO4_MISSING");
+        assert!(missing.is_empty());
+    }
+
+    #[test]
+    fn test_get_crashgen_version_strings() {
+        let registry = create_test_registry();
+
+        let og_versions = registry.get_crashgen_version_strings("FO4_OG");
+        assert_eq!(og_versions, vec!["1.28.6", "1.37.0"]);
+
+        let ng_versions = registry.get_crashgen_version_strings("FO4_NG");
+        assert_eq!(ng_versions, vec!["1.37.0"]);
+
+        // AE has MiniBuff AE Crash Logger
+        let ae_versions = registry.get_crashgen_version_strings("FO4_AE");
+        assert_eq!(ae_versions, vec!["1.4.0"]);
+
+        // VR uses Buffout 4 NG
+        let vr_versions = registry.get_crashgen_version_strings("FO4_VR");
+        assert_eq!(vr_versions, vec!["1.37.0"]);
+
+        let missing = registry.get_crashgen_version_strings("FO4_MISSING");
+        assert!(missing.is_empty());
+    }
+
+    #[test]
+    fn test_get_crashgen_for_version() {
+        let registry = create_test_registry();
+
+        // Find existing crashgen
+        let og_buffout4 = registry.get_crashgen_for_version("FO4_OG", "1.28.6");
+        assert!(og_buffout4.is_some());
+        assert_eq!(og_buffout4.unwrap().name, "Buffout 4");
+
+        let og_buffout4ng = registry.get_crashgen_for_version("FO4_OG", "1.37.0");
+        assert!(og_buffout4ng.is_some());
+        assert_eq!(og_buffout4ng.unwrap().name, "Buffout 4"); // Name matches log output
+
+        // Missing crashgen version returns None
+        let missing_version = registry.get_crashgen_for_version("FO4_OG", "9.99.99");
+        assert!(missing_version.is_none());
+
+        // Missing version ID returns None
+        let missing_id = registry.get_crashgen_for_version("FO4_MISSING", "1.28.6");
+        assert!(missing_id.is_none());
+    }
+
+    // === YAML Parsing Tests for Crashgen ===
+
+    #[test]
+    fn test_parse_crashgen_versions_simple_string_list() {
+        let yaml_ops = YamlOperations::new();
+        
+        // Create YAML with simple string list format
+        let yaml_str = r#"
+crashgen_versions:
+  - "1.28.6"
+  - "1.37.0"
+  - "2.0.0"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert_eq!(parsed.len(), 3);
+        
+        // Check first version
+        assert_eq!(parsed[0].version, "1.28.6");
+        assert!(parsed[0].name.is_empty());
+        assert!(parsed[0].description.is_empty());
+        assert!(parsed[0].download_url.is_empty());
+        assert!(parsed[0].compatible_range.is_none());
+        
+        // Check other versions
+        assert_eq!(parsed[1].version, "1.37.0");
+        assert_eq!(parsed[2].version, "2.0.0");
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_structured_format() {
+        let yaml_ops = YamlOperations::new();
+        
+        // Create YAML with structured format
+        let yaml_str = r#"
+crashgen_versions:
+  - version: "1.28.6"
+    name: "Buffout 4"
+    description: "Legacy version for OG"
+    download_url: "https://www.nexusmods.com/fallout4/mods/47359"
+  - version: "1.37.0"
+    name: "Buffout 4 NG"
+    description: "NG-compatible version"
+    download_url: "https://www.nexusmods.com/fallout4/mods/64880"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert_eq!(parsed.len(), 2);
+        
+        // Check first crashgen (Buffout 4)
+        assert_eq!(parsed[0].version, "1.28.6");
+        assert_eq!(parsed[0].name, "Buffout 4");
+        assert_eq!(parsed[0].description, "Legacy version for OG");
+        assert_eq!(parsed[0].download_url, "https://www.nexusmods.com/fallout4/mods/47359");
+        assert!(parsed[0].compatible_range.is_none());
+        
+        // Check second crashgen (Buffout 4 NG)
+        assert_eq!(parsed[1].version, "1.37.0");
+        assert_eq!(parsed[1].name, "Buffout 4 NG");
+        assert_eq!(parsed[1].description, "NG-compatible version");
+        assert_eq!(parsed[1].download_url, "https://www.nexusmods.com/fallout4/mods/64880");
+        assert!(parsed[1].compatible_range.is_none());
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_structured_with_compatible_range() {
+        let yaml_ops = YamlOperations::new();
+        
+        // Create YAML with structured format including compatible_range
+        let yaml_str = r#"
+crashgen_versions:
+  - version: "1.28.6"
+    name: "Buffout 4"
+    description: "Legacy version for OG"
+    download_url: "https://www.nexusmods.com/fallout4/mods/47359"
+    compatible_range:
+      min: "1.10.163.0"
+      max: "1.10.163.999"
+  - version: "1.37.0"
+    name: "Buffout 4 NG"
+    description: "NG-compatible version"
+    download_url: "https://www.nexusmods.com/fallout4/mods/64880"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert_eq!(parsed.len(), 2);
+        
+        // Check first crashgen with compatible_range
+        assert_eq!(parsed[0].version, "1.28.6");
+        assert!(parsed[0].compatible_range.is_some());
+        let range = parsed[0].compatible_range.as_ref().unwrap();
+        assert_eq!(range.min_version, GameVersion::new(1, 10, 163, 0));
+        assert_eq!(range.max_version, GameVersion::new(1, 10, 163, 999));
+        
+        // Check second crashgen without compatible_range
+        assert!(parsed[1].compatible_range.is_none());
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_empty_array() {
+        let yaml_ops = YamlOperations::new();
+        
+        let yaml_str = r#"
+crashgen_versions: []
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert!(parsed.is_empty());
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_missing_field() {
+        let yaml_ops = YamlOperations::new();
+        
+        // No crashgen_versions field at all
+        let yaml_str = r#"
+id: "TEST"
+version: "1.0.0.0"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert!(parsed.is_empty());
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_mixed_format() {
+        let yaml_ops = YamlOperations::new();
+        
+        // Mixed format: some simple strings, some structured
+        // Note: This tests backward compatibility when migrating from simple to structured
+        let yaml_str = r#"
+crashgen_versions:
+  - "1.28.6"
+  - version: "1.37.0"
+    name: "Buffout 4 NG"
+    description: "NG-compatible version"
+    download_url: "https://www.nexusmods.com/fallout4/mods/64880"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert_eq!(parsed.len(), 2);
+        
+        // First is simple string
+        assert_eq!(parsed[0].version, "1.28.6");
+        assert!(parsed[0].name.is_empty());
+        
+        // Second is structured
+        assert_eq!(parsed[1].version, "1.37.0");
+        assert_eq!(parsed[1].name, "Buffout 4 NG");
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_structured_missing_version_skipped() {
+        let yaml_ops = YamlOperations::new();
+        
+        // Structured entry without version field should be skipped
+        let yaml_str = r#"
+crashgen_versions:
+  - version: "1.28.6"
+    name: "Buffout 4"
+  - name: "Invalid Entry"
+    description: "This has no version field"
+  - version: "1.37.0"
+    name: "Buffout 4 NG"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        // The entry without version should be skipped
+        assert_eq!(parsed.len(), 2);
+        assert_eq!(parsed[0].version, "1.28.6");
+        assert_eq!(parsed[1].version, "1.37.0");
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_structured_partial_fields() {
+        let yaml_ops = YamlOperations::new();
+        
+        // Structured entry with only some optional fields
+        let yaml_str = r#"
+crashgen_versions:
+  - version: "1.28.6"
+    name: "Buffout 4"
+  - version: "1.37.0"
+    download_url: "https://example.com"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert_eq!(parsed.len(), 2);
+        
+        // First has only name
+        assert_eq!(parsed[0].version, "1.28.6");
+        assert_eq!(parsed[0].name, "Buffout 4");
+        assert!(parsed[0].description.is_empty());
+        assert!(parsed[0].download_url.is_empty());
+        
+        // Second has only download_url
+        assert_eq!(parsed[1].version, "1.37.0");
+        assert!(parsed[1].name.is_empty());
+        assert_eq!(parsed[1].download_url, "https://example.com");
+    }
+
+    #[test]
+    fn test_parse_crashgen_invalid_yaml_types() {
+        let yaml_ops = YamlOperations::new();
+        
+        // crashgen_versions is not an array
+        let yaml_str = r#"
+crashgen_versions: "not an array"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        // Should return empty vec for invalid format
+        assert!(parsed.is_empty());
+    }
+
+    #[test]
+    fn test_parse_crashgen_versions_with_invalid_compatible_range() {
+        let yaml_ops = YamlOperations::new();
+        
+        // compatible_range with invalid version strings
+        let yaml_str = r#"
+crashgen_versions:
+  - version: "1.28.6"
+    name: "Buffout 4"
+    compatible_range:
+      min: "invalid"
+      max: "also_invalid"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let parsed = VersionRegistry::parse_crashgen_versions_yaml(&yaml, &yaml_ops);
+        
+        assert_eq!(parsed.len(), 1);
+        assert_eq!(parsed[0].version, "1.28.6");
+        // Invalid range parsing should result in None (using .ok())
+        assert!(parsed[0].compatible_range.is_none());
+    }
+
+    // === Full Version YAML Parsing with Crashgen ===
+
+    #[test]
+    fn test_parse_version_yaml_with_crashgen() {
+        let yaml_ops = YamlOperations::new();
+        
+        let yaml_str = r#"
+id: "FO4_TEST"
+game: "Fallout4"
+version: "1.10.163.0"
+display_name: "Test Version"
+short_name: "TEST"
+description: "Test version"
+crashgen_versions:
+  - version: "1.28.6"
+    name: "Buffout 4"
+    description: "Legacy version"
+    download_url: "https://example.com/buffout4"
+  - version: "1.37.0"
+    name: "Buffout 4 NG"
+    description: "NG version"
+    download_url: "https://example.com/buffout4ng"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let version_info = VersionRegistry::parse_version_yaml(&yaml).unwrap();
+        
+        assert_eq!(version_info.id, "FO4_TEST");
+        assert_eq!(version_info.crashgen_versions.len(), 2);
+        assert_eq!(version_info.crashgen_versions[0].version, "1.28.6");
+        assert_eq!(version_info.crashgen_versions[0].name, "Buffout 4");
+        assert_eq!(version_info.crashgen_versions[1].version, "1.37.0");
+        assert_eq!(version_info.crashgen_versions[1].name, "Buffout 4 NG");
+    }
+
+    #[test]
+    fn test_parse_version_yaml_without_crashgen() {
+        let yaml_ops = YamlOperations::new();
+        
+        let yaml_str = r#"
+id: "FO4_TEST"
+game: "Fallout4"
+version: "1.10.163.0"
+display_name: "Test Version"
+short_name: "TEST"
+description: "Test version"
+"#;
+        let yaml = yaml_ops.parse_yaml(yaml_str).unwrap();
+        let version_info = VersionRegistry::parse_version_yaml(&yaml).unwrap();
+        
+        assert_eq!(version_info.id, "FO4_TEST");
+        assert!(version_info.crashgen_versions.is_empty());
+    }
+
+    #[test]
+    fn test_crashgen_config_metadata_from_defaults() {
+        let registry = create_test_registry();
+        
+        // Verify OG crashgen configs have proper metadata
+        if let Some(og) = registry.get_by_id("FO4_OG") {
+            // Should have 2 crashgens
+            assert_eq!(og.crashgen_versions.len(), 2);
+            
+            // Buffout 4 (legacy)
+            let b4 = og.get_crashgen_for_version("1.28.6").unwrap();
+            assert_eq!(b4.name, "Buffout 4");
+            assert!(!b4.description.is_empty());
+            assert!(!b4.download_url.is_empty());
+            
+            // Buffout 4 NG (name matches log output, description identifies as NG)
+            let b4ng = og.get_crashgen_for_version("1.37.0").unwrap();
+            assert_eq!(b4ng.name, "Buffout 4"); // Name matches what appears in crash log
+            assert!(!b4ng.description.is_empty());
+            assert!(!b4ng.download_url.is_empty());
+        } else {
+            panic!("FO4_OG not found in registry");
+        }
+    }
+
+    #[test]
+    fn test_crashgen_config_download_urls() {
+        let registry = create_test_registry();
+        
+        // Verify download URLs are proper Nexus links
+        if let Some(og) = registry.get_by_id("FO4_OG") {
+            for config in &og.crashgen_versions {
+                assert!(
+                    config.download_url.starts_with("https://www.nexusmods.com/"),
+                    "Download URL should be a Nexus link: {}",
+                    config.download_url
+                );
+            }
+        }
+        
+        if let Some(vr) = registry.get_by_id("FO4_VR") {
+            for config in &vr.crashgen_versions {
+                assert!(
+                    config.download_url.starts_with("https://www.nexusmods.com/"),
+                    "VR Download URL should be a Nexus link: {}",
+                    config.download_url
+                );
+            }
+        }
     }
 }

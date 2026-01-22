@@ -8,8 +8,8 @@ use std::collections::HashMap;
 
 use crate::GameVersion;
 use crate::models::{
-    AddressLibFormat, AddressLibraryConfig, CompatibleRange, LogLevel, UnknownVersionHandling,
-    UnknownVersionStrategy, VersionInfo, XseConfig,
+    AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel,
+    UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig,
 };
 
 /// Create default Fallout 4 OG (Original) version info.
@@ -31,6 +31,20 @@ pub fn create_fo4_og() -> VersionInfo {
         compatible_range: None,
         priority: 100,
         deprecated: false,
+        crashgen_versions: vec![
+            CrashgenConfig::new(
+                "1.28.6",
+                "Buffout 4",
+                "Legacy version for OG",
+                "https://www.nexusmods.com/fallout4/mods/47359",
+            ),
+            CrashgenConfig::new(
+                "1.37.0",
+                "Buffout 4",
+                "Buffout 4 NG",
+                "https://www.nexusmods.com/fallout4/mods/64880",
+            ),
+        ],
     }
 }
 
@@ -53,6 +67,12 @@ pub fn create_fo4_ng() -> VersionInfo {
         compatible_range: None,
         priority: 200, // Higher priority - default for unknown versions
         deprecated: false,
+        crashgen_versions: vec![CrashgenConfig::new(
+            "1.37.0",
+            "Buffout 4",
+            "Buffout 4 NG",
+            "https://www.nexusmods.com/fallout4/mods/64880",
+        )],
     }
 }
 
@@ -83,6 +103,12 @@ pub fn create_fo4_ae() -> VersionInfo {
         )),
         priority: 300, // Highest priority - most recent version branch
         deprecated: false,
+        crashgen_versions: vec![CrashgenConfig::new(
+            "1.4.0",
+            "MiniBuff AE Crash Logger",
+            "AE-compatible Crash Logger",
+            "https://www.nexusmods.com/fallout4/mods/99911",
+        )],
     }
 }
 
@@ -105,6 +131,12 @@ pub fn create_fo4_vr() -> VersionInfo {
         compatible_range: None,
         priority: 100,
         deprecated: false,
+        crashgen_versions: vec![CrashgenConfig::new(
+            "1.37.0",
+            "Buffout 4",
+            "NG-compatible version for VR",
+            "https://www.nexusmods.com/fallout4/mods/64880",
+        )],
     }
 }
 
@@ -168,6 +200,13 @@ mod tests {
             og.address_library.as_ref().unwrap().format,
             AddressLibFormat::Bin
         );
+
+        // OG supports both Buffout 4 legacy and Buffout 4 NG
+        assert_eq!(og.crashgen_versions.len(), 2);
+        assert_eq!(og.crashgen_versions[0].version, "1.28.6");
+        assert_eq!(og.crashgen_versions[0].name, "Buffout 4");
+        assert_eq!(og.crashgen_versions[1].version, "1.37.0");
+        assert_eq!(og.crashgen_versions[1].name, "Buffout 4"); // Name matches log output
     }
 
     #[test]
@@ -179,6 +218,11 @@ mod tests {
         assert_eq!(ng.short_name, "NG");
         assert!(!ng.is_vr);
         assert_eq!(ng.priority, 200); // Higher priority than OG
+
+        // NG only supports Buffout 4 NG (name matches log output, description identifies as NG)
+        assert_eq!(ng.crashgen_versions.len(), 1);
+        assert_eq!(ng.crashgen_versions[0].version, "1.37.0");
+        assert_eq!(ng.crashgen_versions[0].name, "Buffout 4");
     }
 
     #[test]
@@ -200,6 +244,11 @@ mod tests {
         assert!(range.contains(&GameVersion::new(1, 11, 200, 0))); // Future version
         assert!(!range.contains(&GameVersion::new(1, 10, 984, 0))); // NG version
         assert!(!range.contains(&GameVersion::new(1, 12, 0, 0))); // Outside range
+
+        // AE supports MiniBuff AE Crash Logger
+        assert_eq!(ae.crashgen_versions.len(), 1);
+        assert_eq!(ae.crashgen_versions[0].version, "1.4.0");
+        assert_eq!(ae.crashgen_versions[0].name, "MiniBuff AE Crash Logger");
     }
 
     #[test]
@@ -215,6 +264,11 @@ mod tests {
             vr.address_library.as_ref().unwrap().format,
             AddressLibFormat::Csv
         );
+
+        // VR supports Buffout 4 NG (name matches log output)
+        assert_eq!(vr.crashgen_versions.len(), 1);
+        assert_eq!(vr.crashgen_versions[0].version, "1.37.0");
+        assert_eq!(vr.crashgen_versions[0].name, "Buffout 4");
     }
 
     #[test]

@@ -5,15 +5,21 @@ the valid versions defined in the VersionRegistry. It replaces the legacy
 single-version comparison with a list-based approach that handles multiple
 valid versions per game version (e.g., FO4_OG supports both 1.28.6 and 1.37.0).
 
+The module now works with CrashgenConfig objects which provide additional
+metadata like name, description, and download URLs for each crash generator.
+
 Example:
     >>> from ClassicLib.VersionRegistry.crashgen_checker import (
     ...     CrashgenVersionStatus,
     ...     check_crashgen_version,
+    ...     get_matching_crashgen_config,
     ... )
     >>> from packaging.version import Version
     >>> result = check_crashgen_version(Version("1.28.6"), "FO4_OG")
     >>> result.status
     <CrashgenVersionStatus.VALID: 'valid'>
+    >>> result.matched_config.name
+    'Buffout 4'
 
 """
 
@@ -21,8 +27,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
 
 from packaging.version import Version
+
+if TYPE_CHECKING:
+    from ClassicLib.VersionRegistry.models import CrashgenConfig
 
 
 class CrashgenVersionStatus(Enum):
@@ -51,18 +61,25 @@ class CrashgenVersionResult:
     Attributes:
         status: The validation status.
         detected_version: The detected crash generator version.
-        valid_versions: Tuple of valid versions for the game version.
+        valid_versions: Tuple of valid version strings for the game version.
         game_version_id: The game version ID used for validation.
         message: Human-readable message describing the result.
+        matched_config: The CrashgenConfig that matched the detected version,
+            or None if no match was found. Only populated when status is VALID.
 
     Example:
+        >>> from ClassicLib.VersionRegistry.models import CrashgenConfig
+        >>> config = CrashgenConfig(version="1.28.6", name="Buffout 4")
         >>> result = CrashgenVersionResult(
         ...     status=CrashgenVersionStatus.VALID,
         ...     detected_version=Version("1.28.6"),
         ...     valid_versions=("1.28.6", "1.37.0"),
         ...     game_version_id="FO4_OG",
-        ...     message="You have a valid version of Buffout 4!"
+        ...     message="You have a valid version of Buffout 4!",
+        ...     matched_config=config
         ... )
+        >>> result.matched_config.name
+        'Buffout 4'
 
     """
 
@@ -71,6 +88,7 @@ class CrashgenVersionResult:
     valid_versions: tuple[str, ...]
     game_version_id: str
     message: str
+    matched_config: CrashgenConfig | None = None
 
     @property
     def is_valid(self) -> bool:
@@ -112,13 +130,15 @@ def check_crashgen_version(
         crashgen_name: Name of the crash generator for messages (default: "Buffout 4").
 
     Returns:
-        CrashgenVersionResult with status, valid versions, and message.
+        CrashgenVersionResult with status, valid versions, matched_config, and message.
 
     Example:
         >>> from packaging.version import Version
         >>> result = check_crashgen_version(Version("1.28.6"), "FO4_OG")
         >>> result.status
         <CrashgenVersionStatus.VALID: 'valid'>
+        >>> result.matched_config.name
+        'Buffout 4'
         >>> result = check_crashgen_version(Version("1.26.0"), "FO4_OG")
         >>> result.status
         <CrashgenVersionStatus.OUTDATED: 'outdated'>
@@ -127,11 +147,11 @@ def check_crashgen_version(
     from ClassicLib.VersionRegistry.core import get_version_registry
 
     registry = get_version_registry()
-    valid_versions = registry.get_crashgen_versions(game_version_id)
+    crashgen_configs = registry.get_crashgen_configs(game_version_id)
 
-    return _check_version_against_list(
+    return _check_version_against_configs(
         detected_version=detected_version,
-        valid_versions=valid_versions,
+        crashgen_configs=crashgen_configs,
         game_version_id=game_version_id,
         crashgen_name=crashgen_name,
     )
@@ -156,7 +176,7 @@ def check_crashgen_version_for_detected_game(
         crashgen_name: Name of the crash generator for messages.
 
     Returns:
-        CrashgenVersionResult with status, valid versions, and message.
+        CrashgenVersionResult with status, valid versions, matched_config, and message.
 
     Example:
         >>> from packaging.version import Version
@@ -167,6 +187,8 @@ def check_crashgen_version_for_detected_game(
         ... )
         >>> result.status
         <CrashgenVersionStatus.VALID: 'valid'>
+        >>> result.matched_config.name
+        'Buffout 4'
 
     """
     from ClassicLib.VersionRegistry.core import get_version_registry
@@ -184,56 +206,122 @@ def check_crashgen_version_for_detected_game(
         )
 
     version_id = match_result.version_info.id
-    valid_versions = match_result.version_info.crashgen_versions
+    crashgen_configs = match_result.version_info.crashgen_versions
 
-    return _check_version_against_list(
+    return _check_version_against_configs(
         detected_version=detected_crashgen,
-        valid_versions=valid_versions,
+        crashgen_configs=crashgen_configs,
         game_version_id=version_id,
         crashgen_name=crashgen_name,
     )
 
 
-def _check_version_against_list(
+def get_matching_crashgen_config(
     detected_version: Version,
-    valid_versions: tuple[str, ...],
     game_version_id: str,
-    crashgen_name: str,
-) -> CrashgenVersionResult:
-    """Check a version against a list of valid versions.
+) -> CrashgenConfig | None:
+    """Get the CrashgenConfig matching the detected version.
+
+    Looks up the crash generator configurations for the given game version ID
+    and returns the one that matches the detected version.
+
+    Args:
+        detected_version: The detected crash generator version (parsed).
+        game_version_id: The game version ID (e.g., "FO4_OG", "FO4_NG", "FO4_VR").
+
+    Returns:
+        The matching CrashgenConfig, or None if no match found.
+
+    Example:
+        >>> from packaging.version import Version
+        >>> config = get_matching_crashgen_config(Version("1.28.6"), "FO4_OG")
+        >>> config.name
+        'Buffout 4'
+        >>> config.download_url
+        'https://www.nexusmods.com/fallout4/mods/47359'
+
+    """
+    from ClassicLib.VersionRegistry.core import get_version_registry
+    from ClassicLib.VersionRegistry.models import CrashgenConfig  # noqa: F401
+
+    registry = get_version_registry()
+    crashgen_configs: tuple[CrashgenConfig, ...] = registry.get_crashgen_configs(game_version_id)
+
+    return _find_matching_config(detected_version, crashgen_configs)
+
+
+def _find_matching_config(
+    detected_version: Version,
+    crashgen_configs: tuple[CrashgenConfig, ...],
+) -> CrashgenConfig | None:
+    """Find the CrashgenConfig matching a detected version.
 
     Args:
         detected_version: The detected crash generator version.
-        valid_versions: Tuple of valid version strings.
+        crashgen_configs: Tuple of CrashgenConfig objects to search.
+
+    Returns:
+        The matching CrashgenConfig, or None if no match found.
+
+    """
+    detected_str = str(detected_version)
+
+    for config in crashgen_configs:
+        if config.version == detected_str or Version(config.version) == detected_version:
+            return config
+
+    return None
+
+
+def _check_version_against_configs(
+    detected_version: Version,
+    crashgen_configs: tuple[CrashgenConfig, ...],
+    game_version_id: str,
+    crashgen_name: str,
+) -> CrashgenVersionResult:
+    """Check a version against a tuple of CrashgenConfig objects.
+
+    Args:
+        detected_version: The detected crash generator version.
+        crashgen_configs: Tuple of CrashgenConfig objects.
         game_version_id: The game version ID for the result.
         crashgen_name: Name of the crash generator for messages.
 
     Returns:
-        CrashgenVersionResult with appropriate status and message.
+        CrashgenVersionResult with appropriate status, message, and matched_config.
 
     """
+    # Extract version strings for backward compatibility
+    valid_versions = tuple(config.version for config in crashgen_configs)
+
     # Handle no supported version case
-    if not valid_versions:
+    if not crashgen_configs:
         return CrashgenVersionResult(
             status=CrashgenVersionStatus.NO_SUPPORTED_VERSION,
             detected_version=detected_version,
             valid_versions=valid_versions,
             game_version_id=game_version_id,
             message=f"No supported crash log generator for {game_version_id} yet.",
+            matched_config=None,
         )
 
     # Parse valid versions for comparison
-    parsed_valid_versions = [Version(v) for v in valid_versions]
-    detected_str = str(detected_version)
+    parsed_valid_versions = [Version(config.version) for config in crashgen_configs]
+
+    # Try to find a matching config
+    matched_config = _find_matching_config(detected_version, crashgen_configs)
 
     # Check if version is in the valid list (exact match)
-    if detected_str in valid_versions or detected_version in parsed_valid_versions:
+    if matched_config is not None:
+        # Use the matched config's name if available, otherwise use the provided name
+        display_name = matched_config.name or crashgen_name
         return CrashgenVersionResult(
             status=CrashgenVersionStatus.VALID,
             detected_version=detected_version,
             valid_versions=valid_versions,
             game_version_id=game_version_id,
-            message=f"You have a valid version of {crashgen_name}!",
+            message=f"You have a valid version of {display_name}!",
+            matched_config=matched_config,
         )
 
     # Check if version is newer than all known versions
@@ -245,6 +333,7 @@ def _check_version_against_list(
             valid_versions=valid_versions,
             game_version_id=game_version_id,
             message=f"Your {crashgen_name} version ({detected_version}) is newer than known versions.",
+            matched_config=None,
         )
 
     # Version is outdated (older than at least one valid version)
@@ -254,4 +343,5 @@ def _check_version_against_list(
         valid_versions=valid_versions,
         game_version_id=game_version_id,
         message=f"Your {crashgen_name} is outdated! Please update to a valid version.",
+        matched_config=None,
     )

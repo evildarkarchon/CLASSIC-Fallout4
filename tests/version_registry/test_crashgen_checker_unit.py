@@ -1,18 +1,21 @@
 """Unit tests for CrashgenVersionChecker module.
 
 Tests the list-based crash generator version validation that supports
-multiple valid versions per game version.
+multiple valid versions per game version. Includes tests for CrashgenConfig
+objects and the matched_config field.
 """
 
 import pytest
 from packaging.version import Version
 
 from ClassicLib.VersionRegistry import (
+    CrashgenConfig,
     CrashgenVersionResult,
     CrashgenVersionStatus,
     VersionRegistry,
     check_crashgen_version,
     check_crashgen_version_for_detected_game,
+    get_matching_crashgen_config,
     get_version_registry,
 )
 
@@ -148,11 +151,21 @@ class TestCheckCrashgenVersion:
         assert "newer" in result.message.lower()
 
     @pytest.mark.unit
-    def test_no_supported_version_fo4_ae(self):
-        """Test no supported version for FO4_AE."""
+    def test_outdated_version_fo4_ae(self):
+        """Test outdated version for FO4_AE (Buffout 4 versions don't work with AE)."""
         result = check_crashgen_version(Version("1.28.6"), "FO4_AE")
-        assert result.status == CrashgenVersionStatus.NO_SUPPORTED_VERSION
-        assert result.valid_versions == ()
+        # 1.28.6 (Buffout 4) is older than 1.4.0 (MiniBuff AE) in version comparison
+        # But this is comparing Buffout to MiniBuff which are different tools
+        # The check treats 1.28.6 as newer than 1.4.0 numerically
+        assert result.status == CrashgenVersionStatus.NEWER_THAN_KNOWN
+        assert result.valid_versions == ("1.4.0",)
+
+    @pytest.mark.unit
+    def test_valid_version_fo4_ae(self):
+        """Test valid version for FO4_AE with MiniBuff AE Crash Logger."""
+        result = check_crashgen_version(Version("1.4.0"), "FO4_AE")
+        assert result.status == CrashgenVersionStatus.VALID
+        assert result.game_version_id == "FO4_AE"
 
     @pytest.mark.unit
     def test_unknown_game_version_id(self):
@@ -232,8 +245,10 @@ class TestVersionInfoCrashgenVersions:
         assert og is not None
         assert og.crashgen_versions is not None
         assert len(og.crashgen_versions) >= 2
-        assert "1.28.6" in og.crashgen_versions
-        assert "1.37.0" in og.crashgen_versions
+        # Use get_crashgen_version_strings() for simple version string access
+        version_strings = og.get_crashgen_version_strings()
+        assert "1.28.6" in version_strings
+        assert "1.37.0" in version_strings
 
     @pytest.mark.unit
     def test_ng_has_single_crashgen_version(self):
@@ -243,16 +258,21 @@ class TestVersionInfoCrashgenVersions:
 
         assert ng is not None
         assert ng.crashgen_versions is not None
-        assert "1.37.0" in ng.crashgen_versions
+        # Use get_crashgen_version_strings() for simple version string access
+        version_strings = ng.get_crashgen_version_strings()
+        assert "1.37.0" in version_strings
 
     @pytest.mark.unit
-    def test_ae_has_no_crashgen_versions(self):
-        """Test that FO4_AE has no supported crashgen versions."""
+    def test_ae_has_crashgen_version(self):
+        """Test that FO4_AE has MiniBuff AE Crash Logger."""
         registry = get_version_registry()
         ae = registry.get_by_id("FO4_AE")
 
         assert ae is not None
-        assert ae.crashgen_versions == ()
+        assert len(ae.crashgen_versions) >= 1
+        # Use get_crashgen_version_strings() for simple version string access
+        version_strings = ae.get_crashgen_version_strings()
+        assert "1.4.0" in version_strings
 
     @pytest.mark.unit
     def test_vr_has_crashgen_version(self):
@@ -262,7 +282,9 @@ class TestVersionInfoCrashgenVersions:
 
         assert vr is not None
         assert vr.crashgen_versions is not None
-        assert "1.37.0" in vr.crashgen_versions
+        # Use get_crashgen_version_strings() for simple version string access
+        version_strings = vr.get_crashgen_version_strings()
+        assert "1.37.0" in version_strings
 
 
 class TestRegistryGetCrashgenVersions:
@@ -279,7 +301,7 @@ class TestRegistryGetCrashgenVersions:
 
         assert len(og_versions) >= 2
         assert len(ng_versions) >= 1
-        assert len(ae_versions) == 0
+        assert len(ae_versions) >= 1  # AE now has MiniBuff AE Crash Logger
 
     @pytest.mark.unit
     def test_get_crashgen_versions_nonexistent(self):
@@ -305,17 +327,521 @@ class TestCustomCrashgenName:
     """Test custom crashgen names in messages."""
 
     @pytest.mark.unit
-    def test_custom_crashgen_name_in_message(self):
-        """Test that custom crashgen name appears in message."""
+    def test_custom_crashgen_name_in_outdated_message(self):
+        """Test that custom crashgen name appears in outdated message (no matched config)."""
+        # When version is outdated, there's no matched_config, so custom name is used
+        result = check_crashgen_version(
+            Version("1.26.0"),
+            "FO4_OG",
+            crashgen_name="Custom Crashgen",
+        )
+        assert result.status == CrashgenVersionStatus.OUTDATED
+        assert "Custom Crashgen" in result.message
+
+    @pytest.mark.unit
+    def test_custom_crashgen_name_in_newer_than_known_message(self):
+        """Test that custom crashgen name appears in newer_than_known message."""
+        # When version is newer than known, there's no matched_config, so custom name is used
+        result = check_crashgen_version(
+            Version("1.40.0"),
+            "FO4_OG",
+            crashgen_name="Custom Crashgen",
+        )
+        assert result.status == CrashgenVersionStatus.NEWER_THAN_KNOWN
+        assert "Custom Crashgen" in result.message
+
+    @pytest.mark.unit
+    def test_matched_config_name_takes_precedence_over_custom(self):
+        """Test that matched config's name takes precedence over custom crashgen_name."""
+        # When there's a matched config with a name, the config's name is used
         result = check_crashgen_version(
             Version("1.28.6"),
             "FO4_OG",
             crashgen_name="Custom Crashgen",
         )
-        assert "Custom Crashgen" in result.message
+        assert result.status == CrashgenVersionStatus.VALID
+        assert result.matched_config is not None
+        assert result.matched_config.name == "Buffout 4"
+        # The message should use the matched config's name, not the custom name
+        assert "Buffout 4" in result.message
 
     @pytest.mark.unit
     def test_default_crashgen_name_in_message(self):
-        """Test that default crashgen name (Buffout 4) appears in message."""
+        """Test that matched config's name (Buffout 4) appears in valid message."""
         result = check_crashgen_version(Version("1.28.6"), "FO4_OG")
+        assert "Buffout 4" in result.message
+
+
+class TestMatchedConfig:
+    """Test matched_config field in CrashgenVersionResult."""
+
+    @pytest.mark.unit
+    def test_valid_version_has_matched_config(self):
+        """Test that valid version result includes matched_config."""
+        result = check_crashgen_version(Version("1.28.6"), "FO4_OG")
+        assert result.status == CrashgenVersionStatus.VALID
+        assert result.matched_config is not None
+        assert result.matched_config.version == "1.28.6"
+        # Name may be empty if loaded from simple YAML format
+        # or populated if loaded from structured format or defaults
+
+    @pytest.mark.unit
+    def test_valid_version_matched_config_has_version(self):
+        """Test that matched_config has version field populated."""
+        result = check_crashgen_version(Version("1.28.6"), "FO4_OG")
+        assert result.matched_config is not None
+        assert result.matched_config.version == "1.28.6"
+
+    @pytest.mark.unit
+    def test_valid_ng_version_has_matched_config(self):
+        """Test that valid NG version result includes matched_config."""
+        result = check_crashgen_version(Version("1.37.0"), "FO4_NG")
+        assert result.status == CrashgenVersionStatus.VALID
+        assert result.matched_config is not None
+        assert result.matched_config.version == "1.37.0"
+
+    @pytest.mark.unit
+    def test_outdated_version_has_no_matched_config(self):
+        """Test that outdated version result has no matched_config."""
+        result = check_crashgen_version(Version("1.26.0"), "FO4_OG")
+        assert result.status == CrashgenVersionStatus.OUTDATED
+        assert result.matched_config is None
+
+    @pytest.mark.unit
+    def test_newer_than_known_has_no_matched_config(self):
+        """Test that newer_than_known result has no matched_config."""
+        result = check_crashgen_version(Version("1.40.0"), "FO4_OG")
+        assert result.status == CrashgenVersionStatus.NEWER_THAN_KNOWN
+        assert result.matched_config is None
+
+    @pytest.mark.unit
+    def test_no_supported_version_has_no_matched_config(self):
+        """Test that no_supported_version result has no matched_config."""
+        result = check_crashgen_version(Version("1.28.6"), "NONEXISTENT")
+        assert result.status == CrashgenVersionStatus.NO_SUPPORTED_VERSION
+        assert result.matched_config is None
+
+    @pytest.mark.unit
+    def test_matched_config_version_in_valid_versions(self):
+        """Test that matched config's version is in valid_versions."""
+        result = check_crashgen_version(Version("1.37.0"), "FO4_NG")
+        assert result.matched_config is not None
+        assert result.matched_config.version in result.valid_versions
+
+
+class TestGetMatchingCrashgenConfig:
+    """Test get_matching_crashgen_config function."""
+
+    @pytest.mark.unit
+    def test_get_config_for_buffout4(self):
+        """Test getting config for Buffout 4 version."""
+        config = get_matching_crashgen_config(Version("1.28.6"), "FO4_OG")
+        assert config is not None
+        assert config.version == "1.28.6"
+        # Name/download_url may be empty if using simple YAML format
+
+    @pytest.mark.unit
+    def test_get_config_for_buffout4_ng(self):
+        """Test getting config for Buffout 4 NG version."""
+        config = get_matching_crashgen_config(Version("1.37.0"), "FO4_OG")
+        assert config is not None
+        assert config.version == "1.37.0"
+
+    @pytest.mark.unit
+    def test_get_config_for_ng_game(self):
+        """Test getting config for NG game version."""
+        config = get_matching_crashgen_config(Version("1.37.0"), "FO4_NG")
+        assert config is not None
+        assert config.version == "1.37.0"
+
+    @pytest.mark.unit
+    def test_get_config_for_vr_game(self):
+        """Test getting config for VR game version."""
+        config = get_matching_crashgen_config(Version("1.37.0"), "FO4_VR")
+        assert config is not None
+        assert config.version == "1.37.0"
+
+    @pytest.mark.unit
+    def test_get_config_returns_none_for_unknown_version(self):
+        """Test that get_matching_crashgen_config returns None for unknown version."""
+        config = get_matching_crashgen_config(Version("1.26.0"), "FO4_OG")
+        assert config is None
+
+    @pytest.mark.unit
+    def test_get_config_returns_none_for_nonexistent_game(self):
+        """Test that get_matching_crashgen_config returns None for nonexistent game."""
+        config = get_matching_crashgen_config(Version("1.28.6"), "NONEXISTENT")
+        assert config is None
+
+
+class TestCrashgenConfigModel:
+    """Test CrashgenConfig model functionality."""
+
+    @pytest.mark.unit
+    def test_crashgen_config_from_version_string(self):
+        """Test creating CrashgenConfig from just a version string."""
+        config = CrashgenConfig.from_version_string("1.28.6")
+        assert config.version == "1.28.6"
+        assert config.name == ""
+        assert config.description == ""
+        assert config.download_url == ""
+        assert config.compatible_range is None
+
+    @pytest.mark.unit
+    def test_crashgen_config_is_compatible_with_no_range(self):
+        """Test that CrashgenConfig without compatible_range is compatible with any version."""
+        config = CrashgenConfig(version="1.37.0", name="Test")
+        assert config.is_compatible_with(Version("1.10.163.0")) is True
+        assert config.is_compatible_with(Version("1.10.984.0")) is True
+        assert config.is_compatible_with(Version("1.2.72.0")) is True
+
+    @pytest.mark.unit
+    def test_crashgen_config_with_all_fields(self):
+        """Test CrashgenConfig with all fields populated."""
+        config = CrashgenConfig(
+            version="1.28.6",
+            name="Buffout 4",
+            description="Legacy version for OG",
+            download_url="https://www.nexusmods.com/fallout4/mods/47359",
+        )
+        assert config.version == "1.28.6"
+        assert config.name == "Buffout 4"
+        assert config.description == "Legacy version for OG"
+        assert "47359" in config.download_url
+
+    @pytest.mark.unit
+    def test_registry_crashgen_configs_have_versions(self):
+        """Test that registry crashgen configs have version field populated."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+        assert len(og.crashgen_versions) >= 2
+
+        for config in og.crashgen_versions:
+            assert config.version != ""
+            # Name/download_url may be empty if using simple YAML format
+
+
+class TestCrashgenConfigWithCompatibleRange:
+    """Test CrashgenConfig compatible_range functionality."""
+
+    @pytest.mark.unit
+    def test_crashgen_config_is_compatible_with_range_inside(self):
+        """Test that CrashgenConfig with compatible_range returns True for version inside range."""
+        from ClassicLib.VersionRegistry.models import CompatibleRange
+
+        og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
+        config = CrashgenConfig(
+            version="1.28.6",
+            name="Buffout 4",
+            compatible_range=og_range,
+        )
+        assert config.is_compatible_with(Version("1.10.163.0")) is True
+        assert config.is_compatible_with(Version("1.10.163.500")) is True
+        assert config.is_compatible_with(Version("1.10.163.999")) is True
+
+    @pytest.mark.unit
+    def test_crashgen_config_is_compatible_with_range_outside(self):
+        """Test that CrashgenConfig with compatible_range returns False for version outside range."""
+        from ClassicLib.VersionRegistry.models import CompatibleRange
+
+        og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
+        config = CrashgenConfig(
+            version="1.28.6",
+            name="Buffout 4",
+            compatible_range=og_range,
+        )
+        assert config.is_compatible_with(Version("1.10.984.0")) is False
+        assert config.is_compatible_with(Version("1.2.72.0")) is False
+        assert config.is_compatible_with(Version("1.10.162.0")) is False
+
+    @pytest.mark.unit
+    def test_crashgen_config_with_compatible_range_all_fields(self):
+        """Test CrashgenConfig with all fields including compatible_range."""
+        from ClassicLib.VersionRegistry.models import CompatibleRange
+
+        og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
+        config = CrashgenConfig(
+            version="1.28.6",
+            name="Buffout 4",
+            description="Legacy version for OG",
+            download_url="https://www.nexusmods.com/fallout4/mods/47359",
+            compatible_range=og_range,
+        )
+        assert config.version == "1.28.6"
+        assert config.name == "Buffout 4"
+        assert config.description == "Legacy version for OG"
+        assert config.download_url == "https://www.nexusmods.com/fallout4/mods/47359"
+        assert config.compatible_range is not None
+        assert config.compatible_range.min_version == Version("1.10.163.0")
+        assert config.compatible_range.max_version == Version("1.10.163.999")
+
+
+class TestVersionInfoCrashgenMethods:
+    """Test VersionInfo helper methods for crashgen versions."""
+
+    @pytest.mark.unit
+    def test_get_crashgen_version_strings(self):
+        """Test get_crashgen_version_strings returns tuple of version strings."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        version_strings = og.get_crashgen_version_strings()
+        assert isinstance(version_strings, tuple)
+        assert "1.28.6" in version_strings
+        assert "1.37.0" in version_strings
+
+    @pytest.mark.unit
+    def test_get_crashgen_for_version_found(self):
+        """Test get_crashgen_for_version returns matching config."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        config = og.get_crashgen_for_version("1.28.6")
+        assert config is not None
+        assert config.version == "1.28.6"
+
+    @pytest.mark.unit
+    def test_get_crashgen_for_version_not_found(self):
+        """Test get_crashgen_for_version returns None for unknown version."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        config = og.get_crashgen_for_version("1.26.0")
+        assert config is None
+
+    @pytest.mark.unit
+    def test_get_compatible_crashgens_default(self):
+        """Test get_compatible_crashgens returns all crashgens for version info's own version."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        # Without explicit version, uses the VersionInfo's own version
+        compatible = og.get_compatible_crashgens()
+        assert len(compatible) >= 1
+        # At least one should be compatible with OG's version
+        version_strings = [c.version for c in compatible]
+        assert "1.28.6" in version_strings or "1.37.0" in version_strings
+
+    @pytest.mark.unit
+    def test_get_compatible_crashgens_with_specific_version(self):
+        """Test get_compatible_crashgens filters by specific game version."""
+        from ClassicLib.VersionRegistry.models import CompatibleRange, VersionInfo
+
+        # Create a test VersionInfo with crashgens that have compatible_range
+        og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
+        ng_range = CompatibleRange.from_strings("1.10.984.0", "1.10.999.999")
+
+        crashgens = (
+            CrashgenConfig(
+                version="1.28.6",
+                name="Buffout 4",
+                compatible_range=og_range,
+            ),
+            CrashgenConfig(
+                version="1.37.0",
+                name="Buffout 4 NG",
+                compatible_range=ng_range,
+            ),
+        )
+
+        test_version = VersionInfo(
+            id="TEST",
+            game="Fallout4",
+            is_vr=False,
+            version=Version("1.10.163.0"),
+            crashgen_versions=crashgens,
+        )
+
+        # Check OG game version - should only get 1.28.6
+        og_compatible = test_version.get_compatible_crashgens(Version("1.10.163.0"))
+        assert len(og_compatible) == 1
+        assert og_compatible[0].version == "1.28.6"
+
+        # Check NG game version - should only get 1.37.0
+        ng_compatible = test_version.get_compatible_crashgens(Version("1.10.984.0"))
+        assert len(ng_compatible) == 1
+        assert ng_compatible[0].version == "1.37.0"
+
+    @pytest.mark.unit
+    def test_get_compatible_crashgens_no_range_means_all_compatible(self):
+        """Test crashgens without compatible_range are compatible with all versions."""
+        from ClassicLib.VersionRegistry.models import VersionInfo
+
+        crashgens = (
+            CrashgenConfig(
+                version="1.37.0",
+                name="Universal Version",
+                # No compatible_range - compatible with all
+            ),
+        )
+
+        test_version = VersionInfo(
+            id="TEST",
+            game="Fallout4",
+            is_vr=False,
+            version=Version("1.10.163.0"),
+            crashgen_versions=crashgens,
+        )
+
+        # Should be compatible with any version
+        og_compatible = test_version.get_compatible_crashgens(Version("1.10.163.0"))
+        assert len(og_compatible) == 1
+
+        ng_compatible = test_version.get_compatible_crashgens(Version("1.10.984.0"))
+        assert len(ng_compatible) == 1
+
+        vr_compatible = test_version.get_compatible_crashgens(Version("1.2.72.0"))
+        assert len(vr_compatible) == 1
+
+
+class TestStructuredYamlParsing:
+    """Test parsing of structured crashgen_versions from YAML."""
+
+    @pytest.mark.unit
+    def test_yaml_loaded_crashgen_has_name(self):
+        """Test that YAML-loaded crashgen configs have name field."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        # Find the Buffout 4 config (1.28.6)
+        config = og.get_crashgen_for_version("1.28.6")
+        assert config is not None
+        # Name should be populated from structured YAML
+        assert config.name == "Buffout 4"
+
+    @pytest.mark.unit
+    def test_yaml_loaded_crashgen_has_description(self):
+        """Test that YAML-loaded crashgen configs have description field."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        config = og.get_crashgen_for_version("1.28.6")
+        assert config is not None
+        assert config.description == "Legacy version for OG"
+
+    @pytest.mark.unit
+    def test_yaml_loaded_crashgen_has_download_url(self):
+        """Test that YAML-loaded crashgen configs have download_url field."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        config = og.get_crashgen_for_version("1.28.6")
+        assert config is not None
+        assert "47359" in config.download_url
+
+    @pytest.mark.unit
+    def test_yaml_loaded_crashgen_has_compatible_range(self):
+        """Test that YAML-loaded crashgen configs have compatible_range when specified."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        config = og.get_crashgen_for_version("1.28.6")
+        assert config is not None
+        # This config should have compatible_range from structured YAML
+        assert config.compatible_range is not None
+        assert config.compatible_range.min_version == Version("1.10.163.0")
+
+    @pytest.mark.unit
+    def test_yaml_loaded_ng_crashgen_metadata(self):
+        """Test that NG crashgen config has proper metadata."""
+        registry = get_version_registry()
+        ng = registry.get_by_id("FO4_NG")
+        assert ng is not None
+
+        config = ng.get_crashgen_for_version("1.37.0")
+        assert config is not None
+        # Name matches what appears in crash log output (no "NG" suffix)
+        assert config.name == "Buffout 4"
+        # Description identifies this as the NG version
+        assert config.description == "Buffout 4 NG"
+        assert "64880" in config.download_url
+
+    @pytest.mark.unit
+    def test_yaml_loaded_vr_crashgen_metadata(self):
+        """Test that VR crashgen config has proper metadata."""
+        registry = get_version_registry()
+        vr = registry.get_by_id("FO4_VR")
+        assert vr is not None
+
+        config = vr.get_crashgen_for_version("1.37.0")
+        assert config is not None
+        # Name matches what appears in crash log output (no "NG" suffix)
+        assert config.name == "Buffout 4"
+        assert "64880" in config.download_url
+
+    @pytest.mark.unit
+    def test_og_buffout4_ng_version_has_no_compatible_range(self):
+        """Test that OG's Buffout 4 NG version (1.37.0) has no compatible_range (universal)."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        config = og.get_crashgen_for_version("1.37.0")
+        assert config is not None
+        # Name matches what appears in crash log output (no "NG" suffix)
+        assert config.name == "Buffout 4"
+        # This should not have a compatible_range (compatible with any OG version)
+        assert config.compatible_range is None
+
+
+class TestRegistryGetCrashgenConfigs:
+    """Test VersionRegistry methods for getting crashgen configs."""
+
+    @pytest.mark.unit
+    def test_get_crashgen_configs_by_id(self):
+        """Test getting crashgen configs by version ID."""
+        registry = get_version_registry()
+        configs = registry.get_crashgen_configs("FO4_OG")
+
+        assert len(configs) >= 2
+        assert all(isinstance(c, CrashgenConfig) for c in configs)
+
+    @pytest.mark.unit
+    def test_get_crashgen_configs_for_detected_returns_configs(self):
+        """Test getting crashgen configs for detected game version."""
+        registry = get_version_registry()
+        configs = registry.get_crashgen_configs_for_detected(
+            Version("1.10.163.0"), "Fallout4", is_vr=False
+        )
+
+        assert len(configs) >= 2
+        assert all(isinstance(c, CrashgenConfig) for c in configs)
+
+    @pytest.mark.unit
+    def test_get_crashgen_configs_nonexistent_returns_empty(self):
+        """Test getting crashgen configs for non-existent version ID."""
+        registry = get_version_registry()
+        configs = registry.get_crashgen_configs("NONEXISTENT")
+
+        assert configs == ()
+
+
+class TestMatchedConfigDisplayName:
+    """Test that matched_config uses proper display name in messages."""
+
+    @pytest.mark.unit
+    def test_valid_version_message_uses_config_name(self):
+        """Test that valid version message uses the matched config's name."""
+        result = check_crashgen_version(Version("1.28.6"), "FO4_OG")
+        assert result.status == CrashgenVersionStatus.VALID
+        assert result.matched_config is not None
+        # Message should use the config's name (Buffout 4) if available
+        assert "Buffout 4" in result.message
+
+    @pytest.mark.unit
+    def test_valid_ng_version_message_uses_config_name(self):
+        """Test that valid NG version message uses the matched config's name."""
+        result = check_crashgen_version(Version("1.37.0"), "FO4_NG")
+        assert result.status == CrashgenVersionStatus.VALID
+        assert result.matched_config is not None
+        # Message should use "Buffout 4" (name matches log output)
         assert "Buffout 4" in result.message

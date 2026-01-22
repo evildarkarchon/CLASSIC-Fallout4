@@ -117,8 +117,10 @@ def pytest_collection_modifyitems(config, items):
 # Pytest configuration options
 def pytest_addoption(parser):
     """Add custom command line options."""
-    parser.addoption("--run-slow", action="store_true", default=False, help="Run slow tests")
-    parser.addoption("--run-network", action="store_true", default=False, help="Run tests that require network access")
+    parser.addoption("--skip-slow", action="store_true", default=False, help="Skip slow tests")
+    parser.addoption("--skip-network", action="store_true", default=False, help="Skip tests that require network access")
+    parser.addoption("--skip-performance", action="store_true", default=False, help="Skip performance and benchmark tests")
+    parser.addoption("--skip-stress", action="store_true", default=False, help="Skip stress tests")
 
 
 def pytest_runtest_setup(item):
@@ -129,10 +131,20 @@ def pytest_runtest_setup(item):
             if marker in item.keywords:
                 pytest.skip(f"Skipping {marker} test in CI environment")
 
-    # Skip slow tests unless --run-slow is specified
-    if "slow" in item.keywords and not item.config.getoption("--run-slow"):
-        pytest.skip("Need --run-slow option to run slow tests")
+    # Skip slow tests if --skip-slow is specified
+    if "slow" in item.keywords and item.config.getoption("--skip-slow"):
+        pytest.skip("Skipping slow test (--skip-slow specified)")
 
-    # Skip network tests unless --run-network is specified
-    if "network" in item.keywords and not item.config.getoption("--run-network"):
-        pytest.skip("Need --run-network option to run network tests")
+    # Skip network tests if --skip-network is specified
+    if "network" in item.keywords and item.config.getoption("--skip-network"):
+        pytest.skip("Skipping network test (--skip-network specified)")
+
+    # Skip performance tests if --skip-performance is specified
+    if item.config.getoption("--skip-performance"):
+        if any(marker in item.keywords for marker in ["performance", "benchmark", "timing"]):
+            pytest.skip("Skipping performance test (--skip-performance specified)")
+
+    # Skip stress tests if --skip-stress is specified
+    if item.config.getoption("--skip-stress"):
+        if any(marker in item.keywords for marker in ["stress", "memory", "concurrency", "error_recovery", "data_volume"]):
+            pytest.skip("Skipping stress test (--skip-stress specified)")
