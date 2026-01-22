@@ -649,3 +649,139 @@ class TestGetEntry:
             assert result is None
 
         Util.query_cache.clear()
+
+
+# ============================================================================
+# Additional Edge Case Tests for Coverage
+# ============================================================================
+
+
+@pytest.mark.unit
+class TestSyncDatabasePoolEdgeCases:
+    """Additional edge case tests for SyncDatabasePool."""
+
+    def test_get_connection_raises_on_sqlite_error(self, tmp_path: Path) -> None:
+        """get_connection should raise sqlite3.Error when connection fails."""
+        from ClassicLib.ScanLog.Util import SyncDatabasePool
+
+        pool = SyncDatabasePool()
+        # Use a path that cannot be connected to (directory instead of file)
+        invalid_path = tmp_path / "invalid_dir"
+        invalid_path.mkdir()
+
+        # This should raise because we're trying to connect to a directory
+        # SQLite will fail when trying to open a directory as a database
+        with pytest.raises(sqlite3.Error):
+            pool.get_connection(invalid_path)
+
+
+@pytest.mark.unit
+class TestIsValidCustomScanPathEdgeCases:
+    """Additional edge case tests for is_valid_custom_scan_path."""
+
+    def test_returns_false_for_path_with_oserror_on_resolve(self, tmp_path: Path) -> None:
+        """is_valid_custom_scan_path should return False if path.resolve() raises OSError."""
+        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+
+        # Create a mock path that raises OSError on resolve
+        mock_path = MagicMock(spec=Path)
+        mock_path.resolve.side_effect = OSError("Cannot resolve path")
+
+        result = is_valid_custom_scan_path(mock_path)
+
+        assert result is False
+
+    def test_handles_value_error_in_restricted_path_comparison(self, tmp_path: Path) -> None:
+        """is_valid_custom_scan_path should handle ValueError during restricted path comparison."""
+        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+
+        # Create a path that can be resolved
+        valid_path = tmp_path / "test_folder"
+        valid_path.mkdir()
+
+        # Mock restricted path that raises ValueError on resolve
+        mock_restricted = MagicMock(spec=Path)
+        mock_restricted.resolve.side_effect = ValueError("Different drives")
+
+        with (
+            patch("ClassicLib.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=mock_restricted),
+        ):
+            # Should not raise, should return True since the restricted path comparison fails gracefully
+            result = is_valid_custom_scan_path(valid_path)
+
+            assert result is True  # Path is valid since restricted comparison failed gracefully
+
+
+@pytest.mark.unit
+class TestCrashlogsGetFilesEdgeCases:
+    """Additional edge case tests for crashlogs_get_files."""
+
+    def test_crashlogs_get_files_falls_back_on_general_exception(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """crashlogs_get_files should fall back to Python on any exception from Rust."""
+        from ClassicLib.ScanLog.Util import crashlogs_get_files
+
+        monkeypatch.chdir(tmp_path)
+
+        crash_logs_dir = tmp_path / "Crash Logs"
+        crash_logs_dir.mkdir(parents=True)
+        (crash_logs_dir / "Pastebin").mkdir()
+        (crash_logs_dir / "crash-fallback.log").write_text("fallback test")
+
+        with (
+            patch(
+                "ClassicLib.ScanLog.Util._crashlogs_get_files_rust",
+                side_effect=RuntimeError("Rust operation failed"),
+            ),
+            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
+            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+        ):
+            result = crashlogs_get_files()
+
+            # Should have fallen back to Python and found the file
+            assert len(result) == 1
+            assert "crash-fallback.log" in str(result[0])
+
+    def test_rust_implementation_path_conversion(self, tmp_path: Path) -> None:
+        """_crashlogs_get_files_rust should convert string paths to Path objects."""
+        from ClassicLib.ScanLog.Util import _crashlogs_get_files_rust
+
+        mock_collector = MagicMock()
+        mock_collector.collect_all.return_value = [
+            str(tmp_path / "crash-1.log"),
+            str(tmp_path / "crash-2.log"),
+        ]
+
+        with (
+            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
+            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("classic_file_io.PyLogCollector", return_value=mock_collector),
+        ):
+            result = _crashlogs_get_files_rust()
+
+            assert len(result) == 2
+            assert all(isinstance(p, Path) for p in result)
+            mock_collector.collect_all.assert_called_once()
+
+
+@pytest.mark.unit
+class TestGetEntryEdgeCases:
+    """Additional edge case tests for get_entry."""
+
+    def test_skips_nonexistent_database_files(self, tmp_path: Path) -> None:
+        """get_entry should skip database paths that don't exist."""
+        from ClassicLib.ScanLog import Util
+
+        Util.query_cache.clear()
+
+        nonexistent_db = tmp_path / "nonexistent.db"
+
+        with patch("ClassicLib.ScanLog.Util.DB_PATHS", [nonexistent_db]):
+            result = Util.get_entry("12345", "Test.esp")
+
+            # Should return None without raising (db file doesn't exist)
+            assert result is None
+
+        Util.query_cache.clear()

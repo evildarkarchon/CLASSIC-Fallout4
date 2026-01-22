@@ -256,3 +256,167 @@ local_paths:
         ignore_path = Path("CLASSIC Ignore.yaml")
         assert ignore_path.exists()
         assert ignore_path.read_text(encoding="utf-8") == unicode_content
+
+
+@pytest.mark.asyncio
+class TestFileGeneratorAsync:
+    """Tests for the async methods of FileGenerator."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmp_path: Path, monkeypatch) -> None:
+        """Set up test environment with complete isolation."""
+        monkeypatch.chdir(tmp_path)
+        self.tmp_path = tmp_path
+
+    async def test_generate_ignore_file_async_creates_new_file(self) -> None:
+        """Test async generation of CLASSIC Ignore.yaml."""
+        from unittest.mock import AsyncMock
+
+        expected_content = "# Async Ignore File\n*.tmp"
+
+        # Mock async yaml_settings
+        mock_yaml_settings_async = AsyncMock(return_value=expected_content)
+        # Mock file I/O core
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+        mock_io_core.write_file = AsyncMock()
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+        ):
+            await FileGenerator.generate_ignore_file_async()
+
+            mock_io_core.file_exists.assert_called_once()
+            mock_yaml_settings_async.assert_called_once_with(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
+            mock_io_core.write_file.assert_called_once()
+
+    async def test_generate_ignore_file_async_skips_existing(self) -> None:
+        """Test that async generation skips existing file."""
+        from unittest.mock import AsyncMock
+
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = True
+
+        with patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core):
+            await FileGenerator.generate_ignore_file_async()
+
+            mock_io_core.file_exists.assert_called_once()
+            # write_file should not be called
+            assert not hasattr(mock_io_core.write_file, "assert_not_called") or not mock_io_core.write_file.called
+
+    async def test_generate_ignore_file_async_type_error(self) -> None:
+        """Test async generation raises TypeError for non-string content."""
+        from unittest.mock import AsyncMock
+
+        mock_yaml_settings_async = AsyncMock(return_value={"invalid": "type"})
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+            pytest.raises(TypeError, match="Default ignore file content must be a string"),
+        ):
+            await FileGenerator.generate_ignore_file_async()
+
+    async def test_generate_local_yaml_async_creates_new_file(self) -> None:
+        """Test async generation of local YAML file."""
+        from unittest.mock import AsyncMock
+
+        expected_content = "# Async Local Config"
+
+        mock_yaml_settings_async = AsyncMock(return_value=expected_content)
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+        mock_io_core.write_file = AsyncMock()
+
+        # Create parent directory so mkdir doesn't fail
+        data_dir = self.tmp_path / "CLASSIC Data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+            patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
+        ):
+            await FileGenerator.generate_local_yaml_async()
+
+            mock_io_core.file_exists.assert_called_once()
+            mock_yaml_settings_async.assert_called_once_with(str, YAML.Main, "CLASSIC_Info.default_localyaml")
+            mock_io_core.write_file.assert_called_once()
+
+    async def test_generate_local_yaml_async_type_error(self) -> None:
+        """Test async local YAML raises TypeError for non-string content."""
+        from unittest.mock import AsyncMock
+
+        mock_yaml_settings_async = AsyncMock(return_value=12345)
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+            patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
+            pytest.raises(TypeError, match="Default local YAML content must be a string"),
+        ):
+            await FileGenerator.generate_local_yaml_async()
+
+    async def test_generate_all_files_async_success(self) -> None:
+        """Test successful async generation of all files."""
+        from unittest.mock import AsyncMock
+
+        expected_content = "# Test Content"
+
+        mock_yaml_settings_async = AsyncMock(return_value=expected_content)
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+        mock_io_core.write_file = AsyncMock()
+
+        # Create parent directory
+        data_dir = self.tmp_path / "CLASSIC Data"
+        data_dir.mkdir(parents=True, exist_ok=True)
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+            patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
+        ):
+            await FileGenerator.generate_all_files_async()
+
+            # Both files should have been generated (2 yaml_settings calls, 2 write_file calls)
+            assert mock_yaml_settings_async.call_count == 2
+            assert mock_io_core.write_file.call_count == 2
+
+    async def test_generate_all_files_async_type_error_handling(self) -> None:
+        """Test that generate_all_files_async handles TypeError properly."""
+        from unittest.mock import AsyncMock
+
+        mock_yaml_settings_async = AsyncMock(return_value={"invalid": "type"})
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+            patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
+            pytest.raises(ExceptionGroup),
+        ):
+            await FileGenerator.generate_all_files_async()
+
+    async def test_generate_all_files_async_oserror_handling(self) -> None:
+        """Test that generate_all_files_async handles OSError properly."""
+        from unittest.mock import AsyncMock
+
+        mock_yaml_settings_async = AsyncMock(return_value="content")
+        mock_io_core = MagicMock()
+        mock_io_core.file_exists.return_value = False
+        mock_io_core.write_file = AsyncMock(side_effect=OSError("Disk full"))
+
+        with (
+            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
+            patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
+            pytest.raises(ExceptionGroup),
+        ):
+            await FileGenerator.generate_all_files_async()
