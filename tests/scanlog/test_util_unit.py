@@ -717,9 +717,7 @@ class TestIsValidCustomScanPathEdgeCases:
 class TestCrashlogsGetFilesEdgeCases:
     """Additional edge case tests for crashlogs_get_files."""
 
-    def test_crashlogs_get_files_falls_back_on_general_exception(
-        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-    ) -> None:
+    def test_crashlogs_get_files_falls_back_on_general_exception(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """crashlogs_get_files should fall back to Python on any exception from Rust."""
         from ClassicLib.ScanLog.Util import crashlogs_get_files
 

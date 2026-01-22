@@ -809,9 +809,7 @@ class TestRegistryGetCrashgenConfigs:
     def test_get_crashgen_configs_for_detected_returns_configs(self):
         """Test getting crashgen configs for detected game version."""
         registry = get_version_registry()
-        configs = registry.get_crashgen_configs_for_detected(
-            Version("1.10.163.0"), "Fallout4", is_vr=False
-        )
+        configs = registry.get_crashgen_configs_for_detected(Version("1.10.163.0"), "Fallout4", is_vr=False)
 
         assert len(configs) >= 2
         assert all(isinstance(c, CrashgenConfig) for c in configs)

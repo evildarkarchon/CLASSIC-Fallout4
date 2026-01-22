@@ -3,9 +3,10 @@
 This module tests the database module's cleanup functions and exports.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock, AsyncMock
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 
@@ -147,6 +148,7 @@ class TestAtexitHandler:
     def test_atexit_handler_registered(self) -> None:
         """Test that atexit handler is registered during module import."""
         import atexit
+
         from ClassicLib.Database import _atexit_cleanup
 
         # Verify the function exists and is callable

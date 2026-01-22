@@ -20,7 +20,9 @@ class TestPastebinFetchURLParsing:
 
     @patch("ClassicLib.Utils.web_utils.requests.get")
     @patch("ClassicLib.Utils.web_utils.msg_info")
-    def test_pastebin_com_url_converts_to_raw(self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_pastebin_com_url_converts_to_raw(
+        self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that pastebin.com URLs are converted to raw format."""
         mock_response = MagicMock()
         mock_response.text = "Test content"
@@ -36,7 +38,9 @@ class TestPastebinFetchURLParsing:
 
     @patch("ClassicLib.Utils.web_utils.requests.get")
     @patch("ClassicLib.Utils.web_utils.msg_info")
-    def test_paste_ee_url_converts_to_raw(self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_paste_ee_url_converts_to_raw(
+        self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that paste.ee URLs are converted to raw format."""
         mock_response = MagicMock()
         mock_response.text = "Test content"
@@ -52,7 +56,9 @@ class TestPastebinFetchURLParsing:
 
     @patch("ClassicLib.Utils.web_utils.requests.get")
     @patch("ClassicLib.Utils.web_utils.msg_info")
-    def test_hastebin_url_converts_to_raw(self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_hastebin_url_converts_to_raw(
+        self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that hastebin.com URLs are converted to raw format."""
         mock_response = MagicMock()
         mock_response.text = "Test content"
@@ -67,7 +73,9 @@ class TestPastebinFetchURLParsing:
 
     @patch("ClassicLib.Utils.web_utils.requests.get")
     @patch("ClassicLib.Utils.web_utils.msg_info")
-    def test_haste_zneix_url_converts_to_raw(self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_haste_zneix_url_converts_to_raw(
+        self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that haste.zneix.eu URLs are converted to raw format."""
         mock_response = MagicMock()
         mock_response.text = "Test content"
@@ -86,7 +94,9 @@ class TestPastebinFetchFileSaving:
 
     @patch("ClassicLib.Utils.web_utils.requests.get")
     @patch("ClassicLib.Utils.web_utils.msg_info")
-    def test_creates_directory_structure(self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_creates_directory_structure(
+        self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that Crash Logs/Pastebin directory is created."""
         mock_response = MagicMock()
         mock_response.text = "Test content"
@@ -101,7 +111,9 @@ class TestPastebinFetchFileSaving:
 
     @patch("ClassicLib.Utils.web_utils.requests.get")
     @patch("ClassicLib.Utils.web_utils.msg_info")
-    def test_saves_content_to_file(self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_saves_content_to_file(
+        self, mock_info: MagicMock, mock_get: MagicMock, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that fetched content is saved to file."""
         mock_response = MagicMock()
         mock_response.text = "Crash log content here"

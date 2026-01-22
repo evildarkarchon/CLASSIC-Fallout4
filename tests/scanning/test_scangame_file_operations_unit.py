@@ -4,9 +4,10 @@ This module tests the FileOperations class for async file moving operations.
 """
 
 import asyncio
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 
@@ -26,16 +27,7 @@ def file_ops_context(tmp_path: Path):
     mod_path.mkdir(parents=True)
     backup_path.mkdir(parents=True)
 
-    return {
-        "mod_path": mod_path,
-        "backup_path": backup_path,
-        "issue_locks": {
-            "cleanup": asyncio.Lock()
-        },
-        "issue_lists": {
-            "cleanup": set()
-        }
-    }
+    return {"mod_path": mod_path, "backup_path": backup_path, "issue_locks": {"cleanup": asyncio.Lock()}, "issue_lists": {"cleanup": set()}}
 
 
 class TestFileOperationsInit:

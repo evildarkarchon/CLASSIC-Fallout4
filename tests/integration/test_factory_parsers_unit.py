@@ -4,8 +4,9 @@ This module tests the parser factory and PythonParserWrapper class
 for log parsing functionality.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 pytestmark = [pytest.mark.unit]
 
@@ -25,9 +26,7 @@ class TestPythonParserWrapper:
         mock_result = ("1.10.163", "1.26.2", "EXCEPTION_ACCESS_VIOLATION", [["segment1"]])
 
         with patch("ClassicLib.python.parser_py.find_segments", return_value=mock_result) as mock_find:
-            result = PythonParserWrapper.find_segments(
-                crash_data, crashgen_name, xse_acronym, game_root_name
-            )
+            result = PythonParserWrapper.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
         mock_find.assert_called_once_with(crash_data, crashgen_name, xse_acronym, game_root_name)
         assert result == mock_result
@@ -112,7 +111,7 @@ class TestGetParser:
 
     def test_returns_python_wrapper_when_rust_disabled(self) -> None:
         """Test returns PythonParserWrapper when Rust is disabled."""
-        from ClassicLib.integration.factory.parsers import get_parser, PythonParserWrapper
+        from ClassicLib.integration.factory.parsers import PythonParserWrapper, get_parser
 
         with patch("ClassicLib.integration.factory.parsers.is_rust_disabled", return_value=True):
             result = get_parser()
@@ -121,7 +120,7 @@ class TestGetParser:
 
     def test_returns_python_wrapper_when_component_not_available(self) -> None:
         """Test returns PythonParserWrapper when parser component not available."""
-        from ClassicLib.integration.factory.parsers import get_parser, PythonParserWrapper
+        from ClassicLib.integration.factory.parsers import PythonParserWrapper, get_parser
 
         with (
             patch("ClassicLib.integration.factory.parsers.is_rust_disabled", return_value=False),
@@ -133,13 +132,14 @@ class TestGetParser:
 
     def test_returns_python_wrapper_on_import_error(self) -> None:
         """Test returns PythonParserWrapper when Rust import fails."""
-        from ClassicLib.integration.factory.parsers import get_parser, PythonParserWrapper
+        from ClassicLib.integration.factory.parsers import PythonParserWrapper, get_parser
 
         with (
             patch("ClassicLib.integration.factory.parsers.is_rust_disabled", return_value=False),
             patch("ClassicLib.integration.factory.parsers.get_components", return_value={"parser": True}),
         ):
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):

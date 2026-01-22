@@ -166,9 +166,7 @@ class TestDetectModsSingle:
     """Tests for detect_mods_single function."""
 
     @pytest.mark.unit
-    def test_detects_matching_mod(
-        self, sample_yaml_dict_single: dict[str, str], sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_detects_matching_mod(self, sample_yaml_dict_single: dict[str, str], sample_crashlog_plugins: dict[str, str]) -> None:
         """Test detection of a mod present in plugins."""
         from ClassicLib.python.mod_detector_py import detect_mods_single
 
@@ -181,9 +179,7 @@ class TestDetectModsSingle:
         assert "ProblemPlugin" in content or "problemplugin" in content.lower()
 
     @pytest.mark.unit
-    def test_returns_report_fragment(
-        self, sample_yaml_dict_single: dict[str, str], sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_returns_report_fragment(self, sample_yaml_dict_single: dict[str, str], sample_crashlog_plugins: dict[str, str]) -> None:
         """Test that function returns a ReportFragment."""
         from ClassicLib.python.mod_detector_py import detect_mods_single
 
@@ -205,9 +201,7 @@ class TestDetectModsSingle:
         assert len(lines) == 0 or not any("FOUND" in line for line in lines)
 
     @pytest.mark.unit
-    def test_returns_empty_for_empty_yaml(
-        self, sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_returns_empty_for_empty_yaml(self, sample_crashlog_plugins: dict[str, str]) -> None:
         """Test returns empty fragment for empty yaml dict."""
         from ClassicLib.python.mod_detector_py import detect_mods_single
 
@@ -232,9 +226,7 @@ class TestDetectModsSingle:
         assert "FOUND" in content
 
     @pytest.mark.unit
-    def test_includes_plugin_id_in_output(
-        self, sample_yaml_dict_single: dict[str, str], sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_includes_plugin_id_in_output(self, sample_yaml_dict_single: dict[str, str], sample_crashlog_plugins: dict[str, str]) -> None:
         """Test that plugin ID is included in output."""
         from ClassicLib.python.mod_detector_py import detect_mods_single
 
@@ -256,9 +248,7 @@ class TestDetectModsDouble:
     """Tests for detect_mods_double function."""
 
     @pytest.mark.unit
-    def test_detects_conflicting_mods(
-        self, sample_yaml_dict_double: dict[str, str], sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_detects_conflicting_mods(self, sample_yaml_dict_double: dict[str, str], sample_crashlog_plugins: dict[str, str]) -> None:
         """Test detection of conflicting mod pair."""
         from ClassicLib.python.mod_detector_py import detect_mods_double
 
@@ -271,9 +261,7 @@ class TestDetectModsDouble:
         assert "Conflicting mods" in content
 
     @pytest.mark.unit
-    def test_no_conflict_when_only_one_mod_present(
-        self, sample_yaml_dict_double: dict[str, str]
-    ) -> None:
+    def test_no_conflict_when_only_one_mod_present(self, sample_yaml_dict_double: dict[str, str]) -> None:
         """Test no conflict detected when only one mod of pair is present."""
         from ClassicLib.python.mod_detector_py import detect_mods_double
 
@@ -301,9 +289,7 @@ class TestDetectModsDouble:
         assert len(lines) == 0 or not any("CAUTION" in line for line in lines)
 
     @pytest.mark.unit
-    def test_returns_empty_for_empty_yaml(
-        self, sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_returns_empty_for_empty_yaml(self, sample_crashlog_plugins: dict[str, str]) -> None:
         """Test returns empty fragment for empty yaml dict."""
         from ClassicLib.python.mod_detector_py import detect_mods_double
 
@@ -405,9 +391,7 @@ class TestDetectModsImportant:
         assert "❓" in content or "DON'T HAVE AN" in content.upper() or "GPU Fix for AMD" in content
 
     @pytest.mark.unit
-    def test_gpu_compatible_mod_ok(
-        self, sample_yaml_dict_important: dict[str, str]
-    ) -> None:
+    def test_gpu_compatible_mod_ok(self, sample_yaml_dict_important: dict[str, str]) -> None:
         """Test no warning for GPU-compatible mod."""
         from ClassicLib.python.mod_detector_py import detect_mods_important
 
@@ -424,9 +408,7 @@ class TestDetectModsImportant:
         assert isinstance(content, str)
 
     @pytest.mark.unit
-    def test_returns_header(
-        self, sample_yaml_dict_important: dict[str, str], sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_returns_header(self, sample_yaml_dict_important: dict[str, str], sample_crashlog_plugins: dict[str, str]) -> None:
         """Test that output includes section header."""
         from ClassicLib.python.mod_detector_py import detect_mods_important
 
@@ -438,9 +420,7 @@ class TestDetectModsImportant:
         assert "Checking for Important Mods" in content
 
     @pytest.mark.unit
-    def test_handles_empty_yaml(
-        self, sample_crashlog_plugins: dict[str, str]
-    ) -> None:
+    def test_handles_empty_yaml(self, sample_crashlog_plugins: dict[str, str]) -> None:
         """Test handling of empty yaml dict."""
         from ClassicLib.python.mod_detector_py import detect_mods_important
 

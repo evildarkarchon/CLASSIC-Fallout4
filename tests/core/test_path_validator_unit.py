@@ -140,9 +140,7 @@ class TestPathValidatorValidation:
     @patch("ClassicLib.YamlSettings.classic_settings")
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_validate_custom_scan_path_nonexistent(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock
-    ) -> None:
+    def test_validate_custom_scan_path_nonexistent(self, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock) -> None:
         """Test validate_custom_scan_path with non-existent path."""
         mock_classic.return_value = "/nonexistent/path"
 
@@ -229,9 +227,7 @@ class TestPathValidatorValidation:
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.GlobalRegistry.get_vr")
     @patch("ClassicLib.GlobalRegistry.get_game")
-    def test_validate_game_root_path_none(
-        self, mock_game: MagicMock, mock_vr: MagicMock, mock_yaml: MagicMock
-    ) -> None:
+    def test_validate_game_root_path_none(self, mock_game: MagicMock, mock_vr: MagicMock, mock_yaml: MagicMock) -> None:
         """Test validate_game_root_path with no path set."""
         mock_vr.return_value = ""
         mock_game.return_value = "Fallout4"
@@ -243,9 +239,7 @@ class TestPathValidatorValidation:
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.GlobalRegistry.get_vr")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_validate_documents_path_valid(
-        self, mock_warning: MagicMock, mock_vr: MagicMock, mock_yaml: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_validate_documents_path_valid(self, mock_warning: MagicMock, mock_vr: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test validate_documents_path with valid path."""
         mock_vr.return_value = ""
 
@@ -261,9 +255,7 @@ class TestPathValidatorValidation:
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.GlobalRegistry.get_vr")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_validate_documents_path_nonexistent(
-        self, mock_warning: MagicMock, mock_vr: MagicMock, mock_yaml: MagicMock
-    ) -> None:
+    def test_validate_documents_path_nonexistent(self, mock_warning: MagicMock, mock_vr: MagicMock, mock_yaml: MagicMock) -> None:
         """Test validate_documents_path with non-existent path."""
         mock_vr.return_value = ""
         mock_yaml.return_value = Path("/nonexistent/docs")
@@ -291,9 +283,7 @@ class TestPathValidatorValidation:
     @patch("ClassicLib.YamlSettings.classic_settings")
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_validate_mods_folder_path_nonexistent(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock
-    ) -> None:
+    def test_validate_mods_folder_path_nonexistent(self, mock_warning: MagicMock, mock_yaml: MagicMock, mock_classic: MagicMock) -> None:
         """Test validate_mods_folder_path with non-existent path."""
         mock_classic.return_value = "/nonexistent/mods"
 
@@ -348,9 +338,7 @@ class TestValidatePathSetting:
 
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_validates_existing_directory(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_validates_existing_directory(self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test that valid directory path returns True."""
         from ClassicLib.Constants import YAML
 
@@ -369,9 +357,7 @@ class TestValidatePathSetting:
 
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_returns_false_for_nonexistent_path(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock
-    ) -> None:
+    def test_returns_false_for_nonexistent_path(self, mock_warning: MagicMock, mock_yaml: MagicMock) -> None:
         """Test that non-existent path returns False and clears setting."""
         from ClassicLib.Constants import YAML
 
@@ -388,9 +374,7 @@ class TestValidatePathSetting:
 
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_returns_false_for_file_when_dir_expected(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_returns_false_for_file_when_dir_expected(self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test that file path returns False when directory expected."""
         from ClassicLib.Constants import YAML
 
@@ -409,9 +393,7 @@ class TestValidatePathSetting:
 
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_checks_required_files(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_checks_required_files(self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test that missing required files returns False."""
         from ClassicLib.Constants import YAML
 
@@ -431,9 +413,7 @@ class TestValidatePathSetting:
 
     @patch("ClassicLib.YamlSettings.yaml_settings")
     @patch("ClassicLib.PathValidator.msg_warning")
-    def test_passes_with_required_files_present(
-        self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path
-    ) -> None:
+    def test_passes_with_required_files_present(self, mock_warning: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test that required files present returns True."""
         from ClassicLib.Constants import YAML
 

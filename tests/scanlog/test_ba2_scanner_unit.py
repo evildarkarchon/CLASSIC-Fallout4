@@ -142,9 +142,7 @@ class TestReadBa2HeaderAsync:
     @pytest.mark.unit
     async def test_read_header_dx10_format(self, sample_ba2_files):
         """Test reading DX10 format header."""
-        header = await BA2ArchiveScanner.read_ba2_header_async(
-            sample_ba2_files["texture"], "textures.ba2"
-        )
+        header = await BA2ArchiveScanner.read_ba2_header_async(sample_ba2_files["texture"], "textures.ba2")
 
         assert header is not None
         assert header[:4] == b"BTDX"
@@ -154,9 +152,7 @@ class TestReadBa2HeaderAsync:
     @pytest.mark.unit
     async def test_read_header_gnrl_format(self, sample_ba2_files):
         """Test reading GNRL format header."""
-        header = await BA2ArchiveScanner.read_ba2_header_async(
-            sample_ba2_files["general"], "main.ba2"
-        )
+        header = await BA2ArchiveScanner.read_ba2_header_async(sample_ba2_files["general"], "main.ba2")
 
         assert header is not None
         assert header[:4] == b"BTDX"
@@ -166,9 +162,7 @@ class TestReadBa2HeaderAsync:
     @pytest.mark.unit
     async def test_read_header_invalid_format(self, sample_ba2_files):
         """Test reading invalid format header."""
-        header = await BA2ArchiveScanner.read_ba2_header_async(
-            sample_ba2_files["invalid"], "invalid.ba2"
-        )
+        header = await BA2ArchiveScanner.read_ba2_header_async(sample_ba2_files["invalid"], "invalid.ba2")
 
         assert header is not None
         assert header[:4] != b"BTDX"
@@ -180,9 +174,7 @@ class TestReadBa2HeaderAsync:
         nonexistent = tmp_path / "nonexistent.ba2"
 
         with patch("ClassicLib.ScanGame.core.ba2_scanner.msg_warning") as mock_warning:
-            header = await BA2ArchiveScanner.read_ba2_header_async(
-                nonexistent, "nonexistent.ba2"
-            )
+            header = await BA2ArchiveScanner.read_ba2_header_async(nonexistent, "nonexistent.ba2")
 
             assert header is None
             mock_warning.assert_called_with("Failed to read file: nonexistent.ba2")
@@ -252,9 +244,7 @@ class TestProcessTextureBa2Async:
         mock_proc.communicate = AsyncMock(return_value=(bsarch_output, b""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await ba2_scanner.process_texture_ba2_async(
-                sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path
-            )
+            result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
         assert "tex_dims" in result
         assert "tex_frmt" in result
@@ -273,9 +263,7 @@ class TestProcessTextureBa2Async:
         mock_proc.communicate = AsyncMock(return_value=(bsarch_output, b""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await ba2_scanner.process_texture_ba2_async(
-                sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path
-            )
+            result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
         assert len(result["tex_dims"]) == 1
         assert "1023x512" in list(result["tex_dims"])[0]
@@ -292,9 +280,7 @@ class TestProcessTextureBa2Async:
         mock_proc.communicate = AsyncMock(return_value=(bsarch_output, b""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await ba2_scanner.process_texture_ba2_async(
-                sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path
-            )
+            result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
         assert len(result["tex_frmt"]) == 1
         assert "PNG" in list(result["tex_frmt"])[0]
@@ -311,9 +297,7 @@ class TestProcessTextureBa2Async:
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
             patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
         ):
-            result = await ba2_scanner.process_texture_ba2_async(
-                sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path
-            )
+            result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
             assert len(result["tex_dims"]) == 0
             assert len(result["tex_frmt"]) == 0
@@ -332,9 +316,7 @@ class TestProcessTextureBa2Async:
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
             patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
         ):
-            result = await ba2_scanner.process_texture_ba2_async(
-                sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path
-            )
+            result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
             mock_error.assert_called_with("BSArch command timed out processing textures.ba2")
             mock_proc.kill.assert_called()
@@ -352,14 +334,10 @@ class TestProcessGeneralBa2Async:
         mock_proc.returncode = 0
         # 15 lines of header then file list
         header_lines = "\n".join([f"header line {i}" for i in range(15)])
-        mock_proc.communicate = AsyncMock(
-            return_value=(f"{header_lines}\nscripts/test.pex\nmeshes/test.nif".encode(), b"")
-        )
+        mock_proc.communicate = AsyncMock(return_value=(f"{header_lines}\nscripts/test.pex\nmeshes/test.nif".encode(), b""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await ba2_scanner.process_general_ba2_async(
-                sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {}
-            )
+            result = await ba2_scanner.process_general_ba2_async(sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {})
 
         assert "snd_frmt" in result
         assert "xse_file" in result
@@ -372,14 +350,10 @@ class TestProcessGeneralBa2Async:
         mock_proc = AsyncMock()
         mock_proc.returncode = 0
         header_lines = "\n".join([f"header line {i}" for i in range(15)])
-        mock_proc.communicate = AsyncMock(
-            return_value=(f"{header_lines}\nsounds/music.mp3".encode(), b"")
-        )
+        mock_proc.communicate = AsyncMock(return_value=(f"{header_lines}\nsounds/music.mp3".encode(), b""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await ba2_scanner.process_general_ba2_async(
-                sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {}
-            )
+            result = await ba2_scanner.process_general_ba2_async(sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {})
 
         assert len(result["snd_frmt"]) == 1
         assert "MP3" in list(result["snd_frmt"])[0]
@@ -393,14 +367,10 @@ class TestProcessGeneralBa2Async:
         mock_proc = AsyncMock()
         mock_proc.returncode = 0
         header_lines = "\n".join([f"header line {i}" for i in range(15)])
-        mock_proc.communicate = AsyncMock(
-            return_value=(f"{header_lines}\nscripts\\f4se\\test_plugin.pex".encode(), b"")
-        )
+        mock_proc.communicate = AsyncMock(return_value=(f"{header_lines}\nscripts\\f4se\\test_plugin.pex".encode(), b""))
 
         with patch("asyncio.create_subprocess_exec", return_value=mock_proc):
-            result = await ba2_scanner.process_general_ba2_async(
-                sample_ba2_files["general"], "main.ba2", mock_bsarch_path, xse_scriptfiles
-            )
+            result = await ba2_scanner.process_general_ba2_async(sample_ba2_files["general"], "main.ba2", mock_bsarch_path, xse_scriptfiles)
 
         assert len(result["xse_file"]) == 1
         assert "main.ba2" in list(result["xse_file"])[0]
@@ -418,9 +388,7 @@ class TestProcessGeneralBa2Async:
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
             patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
         ):
-            result = await ba2_scanner.process_general_ba2_async(
-                sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {}
-            )
+            result = await ba2_scanner.process_general_ba2_async(sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {})
 
             mock_error.assert_called_with("BSArch command timed out processing main.ba2")
             mock_proc.kill.assert_called()
@@ -483,9 +451,7 @@ class TestAnalyzeGeneralFiles:
         files = ["sounds/music.mp3", "meshes/test.nif"]
         issues: dict[str, set[str]] = {"snd_frmt": set(), "xse_file": set()}
 
-        BA2ArchiveScanner.analyze_general_files(
-            files, "test.ba2", Path("/mods/test.ba2"), {}, issues
-        )
+        BA2ArchiveScanner.analyze_general_files(files, "test.ba2", Path("/mods/test.ba2"), {}, issues)
 
         assert len(issues["snd_frmt"]) == 1
         assert "MP3" in list(issues["snd_frmt"])[0]
@@ -496,9 +462,7 @@ class TestAnalyzeGeneralFiles:
         files = ["sounds/voice.m4a"]
         issues: dict[str, set[str]] = {"snd_frmt": set(), "xse_file": set()}
 
-        BA2ArchiveScanner.analyze_general_files(
-            files, "test.ba2", Path("/mods/test.ba2"), {}, issues
-        )
+        BA2ArchiveScanner.analyze_general_files(files, "test.ba2", Path("/mods/test.ba2"), {}, issues)
 
         assert len(issues["snd_frmt"]) == 1
         assert "M4A" in list(issues["snd_frmt"])[0]
@@ -510,9 +474,7 @@ class TestAnalyzeGeneralFiles:
         xse_scriptfiles = {"F4SE": set()}
         issues: dict[str, set[str]] = {"snd_frmt": set(), "xse_file": set()}
 
-        BA2ArchiveScanner.analyze_general_files(
-            files, "test.ba2", Path("/mods/test.ba2"), xse_scriptfiles, issues
-        )
+        BA2ArchiveScanner.analyze_general_files(files, "test.ba2", Path("/mods/test.ba2"), xse_scriptfiles, issues)
 
         assert len(issues["xse_file"]) == 1
         assert "test.ba2" in list(issues["xse_file"])[0]
@@ -596,9 +558,7 @@ class TestProcessBa2FilesAsync:
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_process_multiple_files_concurrently(
-        self, ba2_scanner, sample_ba2_files, mock_bsarch_path, message_handler
-    ):
+    async def test_process_multiple_files_concurrently(self, ba2_scanner, sample_ba2_files, mock_bsarch_path, message_handler):
         """Test processing multiple BA2 files concurrently."""
         ba2_files = [
             (sample_ba2_files["texture"], "textures.ba2"),
@@ -609,9 +569,7 @@ class TestProcessBa2FilesAsync:
         mock_proc = AsyncMock()
         mock_proc.returncode = 0
         header_lines = "\n".join([f"header line {i}" for i in range(15)])
-        mock_proc.communicate = AsyncMock(
-            return_value=(f"{header_lines}\nscripts/test.pex".encode(), b"")
-        )
+        mock_proc.communicate = AsyncMock(return_value=(f"{header_lines}\nscripts/test.pex".encode(), b""))
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
@@ -626,9 +584,7 @@ class TestProcessBa2FilesAsync:
 
             mock_read_header.side_effect = header_side_effect
 
-            results = await ba2_scanner.process_ba2_files_async(
-                ba2_files, mock_bsarch_path, {}
-            )
+            results = await ba2_scanner.process_ba2_files_async(ba2_files, mock_bsarch_path, {})
 
         assert len(results) == 2
 
@@ -638,28 +594,20 @@ class TestProcessBa2FilesAsync:
         """Test that exceptions during processing are handled."""
         ba2_files = [(Path("/nonexistent/file.ba2"), "file.ba2")]
 
-        with patch.object(
-            ba2_scanner, "read_ba2_header_async", side_effect=OSError("File not found")
-        ):
+        with patch.object(ba2_scanner, "read_ba2_header_async", side_effect=OSError("File not found")):
             with patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error"):
-                results = await ba2_scanner.process_ba2_files_async(
-                    ba2_files, mock_bsarch_path, {}
-                )
+                results = await ba2_scanner.process_ba2_files_async(ba2_files, mock_bsarch_path, {})
 
             # Exception should be caught and logged, empty results returned
             assert len(results) == 0
 
     @pytest.mark.asyncio
     @pytest.mark.unit
-    async def test_process_returns_empty_for_invalid_header(
-        self, ba2_scanner, sample_ba2_files, mock_bsarch_path, message_handler
-    ):
+    async def test_process_returns_empty_for_invalid_header(self, ba2_scanner, sample_ba2_files, mock_bsarch_path, message_handler):
         """Test that invalid headers return empty issues dict."""
         ba2_files = [(sample_ba2_files["invalid"], "invalid.ba2")]
 
-        results = await ba2_scanner.process_ba2_files_async(
-            ba2_files, mock_bsarch_path, {}
-        )
+        results = await ba2_scanner.process_ba2_files_async(ba2_files, mock_bsarch_path, {})
 
         # Should return one result dict with format error
         assert len(results) == 1

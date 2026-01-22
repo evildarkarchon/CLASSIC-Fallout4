@@ -32,6 +32,7 @@ class TestGamePathFinderCreateAsync:
         message_handler,
     ) -> None:
         """Test create_async returns a properly initialized GamePathFinder."""
+
         # Create async mock that returns different values per call
         async def yaml_side_effect(*args, **kwargs):
             key = args[2] if len(args) > 2 else ""
@@ -67,6 +68,7 @@ class TestGamePathFinderCreateAsync:
         message_handler,
     ) -> None:
         """Test create_async handles VR mode correctly."""
+
         async def yaml_side_effect(*args, **kwargs):
             key = args[2] if len(args) > 2 else ""
             if "Docs_File_XSE" in key:
@@ -99,6 +101,7 @@ class TestGamePathFinderCreateAsync:
         message_handler,
     ) -> None:
         """Test create_async raises TypeError when YAML settings have invalid types."""
+
         async def yaml_side_effect(*args, **kwargs):
             key = args[2] if len(args) > 2 else ""
             if "Docs_File_XSE" in key:
@@ -427,6 +430,7 @@ class TestGameGeneratePathsAsync:
         message_handler,
     ) -> None:
         """Test game_generate_paths_async raises TypeError with missing path."""
+
         async def yaml_side_effect(*args, **kwargs):
             return None
 

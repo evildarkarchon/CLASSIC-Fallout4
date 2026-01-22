@@ -4,9 +4,10 @@ This module tests the Rust runtime diagnostics and health monitoring
 functions.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 import io
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 
@@ -20,6 +21,7 @@ class TestGetRuntimeStats:
 
         with patch.dict("sys.modules", {"classic_shared": None}):
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
@@ -72,6 +74,7 @@ class TestIsRuntimeHealthy:
 
         with patch.dict("sys.modules", {"classic_shared": None}):
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):

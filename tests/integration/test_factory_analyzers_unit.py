@@ -3,8 +3,9 @@
 This module tests the factory functions for analyzer components.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 pytestmark = [pytest.mark.unit]
 

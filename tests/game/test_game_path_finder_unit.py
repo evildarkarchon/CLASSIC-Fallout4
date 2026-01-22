@@ -180,12 +180,14 @@ class TestParseXseLogForPath:
 
         # Mock file content with plugin directory line
         mock_file = MagicMock()
-        mock_file.__enter__ = MagicMock(return_value=iter([
-            "f4se loader log\n",
-            "version = 0.6.21\n",
-            "plugin directory = C:\\Games\\Fallout4\\Data\\F4SE\\Plugins\n",
-            "checking plugin C:\\Games\\Fallout4\\Data\\F4SE\\Plugins\\test.dll\n",
-        ]))
+        mock_file.__enter__ = MagicMock(
+            return_value=iter([
+                "f4se loader log\n",
+                "version = 0.6.21\n",
+                "plugin directory = C:\\Games\\Fallout4\\Data\\F4SE\\Plugins\n",
+                "checking plugin C:\\Games\\Fallout4\\Data\\F4SE\\Plugins\\test.dll\n",
+            ])
+        )
         mock_file.__exit__ = MagicMock(return_value=False)
         mock_open.return_value = mock_file
 
@@ -217,11 +219,13 @@ class TestParseXseLogForPath:
 
         # Mock file content without plugin directory line
         mock_file = MagicMock()
-        mock_file.__enter__ = MagicMock(return_value=iter([
-            "f4se loader log\n",
-            "version = 0.6.21\n",
-            "some other content\n",
-        ]))
+        mock_file.__enter__ = MagicMock(
+            return_value=iter([
+                "f4se loader log\n",
+                "version = 0.6.21\n",
+                "some other content\n",
+            ])
+        )
         mock_file.__exit__ = MagicMock(return_value=False)
         mock_open.return_value = mock_file
 
@@ -617,9 +621,7 @@ class TestGamePathFinderInit:
     @patch("ClassicLib.GamePath.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
-    def test_init_vr_mode(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, message_handler
-    ) -> None:
+    def test_init_vr_mode(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, message_handler) -> None:
         """Test __init__ handles VR mode correctly."""
         mock_yaml.side_effect = [
             "C:/Docs/Fallout4VR/F4SEVR/f4sevr.log",

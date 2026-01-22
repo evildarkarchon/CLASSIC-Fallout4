@@ -4,10 +4,11 @@ This module tests the rust module's utility functions for checking
 component availability and reporting Rust acceleration status.
 """
 
-import pytest
-from unittest.mock import patch, MagicMock
 import io
 import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 
@@ -57,7 +58,7 @@ class TestGetRustComponentSummary:
 
     def test_parser_component_status(self) -> None:
         """Test parser component availability status."""
-        from ClassicLib.rust import get_rust_component_summary, RustLogParser
+        from ClassicLib.rust import RustLogParser, get_rust_component_summary
 
         result = get_rust_component_summary()
 
@@ -66,7 +67,7 @@ class TestGetRustComponentSummary:
 
     def test_file_io_component_status(self) -> None:
         """Test file_io component availability status."""
-        from ClassicLib.rust import get_rust_component_summary, FileIOCore
+        from ClassicLib.rust import FileIOCore, get_rust_component_summary
 
         result = get_rust_component_summary()
 
@@ -74,7 +75,7 @@ class TestGetRustComponentSummary:
 
     def test_database_component_status(self) -> None:
         """Test database component availability status."""
-        from ClassicLib.rust import get_rust_component_summary, RustAsyncDatabasePool
+        from ClassicLib.rust import RustAsyncDatabasePool, get_rust_component_summary
 
         result = get_rust_component_summary()
 

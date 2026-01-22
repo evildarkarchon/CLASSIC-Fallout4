@@ -237,9 +237,7 @@ class TestQtProgressHandlerCreateDialog:
 
     @pytest.mark.unit
     @pytest.mark.gui
-    def test_create_dialog_sets_indeterminate_for_zero_total(
-        self, qt_parent_widget
-    ) -> None:
+    def test_create_dialog_sets_indeterminate_for_zero_total(self, qt_parent_widget) -> None:
         """_create_dialog should set indeterminate mode when total is 0."""
         from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
 
@@ -385,9 +383,7 @@ class TestQtProgressHandlerUpdateDialog:
 
     @pytest.mark.unit
     @pytest.mark.gui
-    def test_update_dialog_sets_label_text_when_provided(
-        self, qt_parent_widget
-    ) -> None:
+    def test_update_dialog_sets_label_text_when_provided(self, qt_parent_widget) -> None:
         """_update_dialog should set label text when description provided."""
         from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
 
@@ -522,9 +518,7 @@ class TestQtProgressHandlerWasCancelled:
 
     @pytest.mark.unit
     @pytest.mark.gui
-    def test_was_cancelled_checks_dialog_on_main_thread(
-        self, qt_parent_widget
-    ) -> None:
+    def test_was_cancelled_checks_dialog_on_main_thread(self, qt_parent_widget) -> None:
         """was_cancelled should check dialog directly on main thread."""
         from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
 

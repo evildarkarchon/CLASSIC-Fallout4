@@ -297,9 +297,7 @@ class TestResultsViewerController:
     @patch("ClassicLib.Interface.controllers.results_viewer.read_file_sync")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_warning")
-    def test_load_report_oserror_fallback_to_plain_text(
-        self, mock_warning, mock_error, mock_read, mock_context, qt_application
-    ):
+    def test_load_report_oserror_fallback_to_plain_text(self, mock_warning, mock_error, mock_read, mock_context, qt_application):
         """Test load_report falls back to plain text on OSError."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
 
@@ -331,9 +329,7 @@ class TestResultsViewerController:
     @patch("ClassicLib.Interface.controllers.results_viewer.QTimer")
     @patch("ClassicLib.Interface.controllers.results_viewer.read_file_sync")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
-    def test_load_report_oserror_fallback_also_fails(
-        self, mock_error, mock_read, mock_timer, mock_context
-    ):
+    def test_load_report_oserror_fallback_also_fails(self, mock_error, mock_read, mock_timer, mock_context):
         """Test load_report returns False when both markdown and plain text fail."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
 
@@ -695,9 +691,7 @@ class TestResultsViewerDeleteCopy:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.results_viewer.QMessageBox")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_info")
-    def test_delete_selected_report_also_deletes_crash_log(
-        self, mock_info, mock_msgbox, mock_context
-    ):
+    def test_delete_selected_report_also_deletes_crash_log(self, mock_info, mock_msgbox, mock_context):
         """Test _delete_selected_report also deletes associated crash log."""
         from PySide6.QtWidgets import QMessageBox as RealQMessageBox
 
@@ -1091,9 +1085,7 @@ class TestResultsViewerOpenFolder:
     @patch("ClassicLib.Interface.controllers.results_viewer.GlobalRegistry")
     @patch("PySide6.QtGui.QDesktopServices")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
-    def test_open_reports_folder_error(
-        self, mock_error, mock_desktop, mock_registry, qt_application
-    ):
+    def test_open_reports_folder_error(self, mock_error, mock_desktop, mock_registry, qt_application):
         """Test _open_reports_folder handles errors."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
 

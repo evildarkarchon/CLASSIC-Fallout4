@@ -114,9 +114,7 @@ class TestLoadorderScanLog:
     """Tests for RustPluginAnalyzer.loadorder_scan_log method."""
 
     @pytest.mark.unit
-    def test_loadorder_scan_log_returns_tuple(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_segment_plugins: list[str]
-    ) -> None:
+    def test_loadorder_scan_log_returns_tuple(self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_segment_plugins: list[str]) -> None:
         """Test loadorder_scan_log returns tuple."""
         plugins, triggered, disabled = rust_plugin_analyzer.loadorder_scan_log(sample_segment_plugins)
 
@@ -135,9 +133,7 @@ class TestLoadorderScanLog:
         assert "TestMod.esp" in plugins
 
     @pytest.mark.unit
-    def test_loadorder_scan_log_empty_input(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_loadorder_scan_log_empty_input(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test with empty input."""
         plugins, triggered, disabled = rust_plugin_analyzer.loadorder_scan_log([])
 
@@ -146,9 +142,7 @@ class TestLoadorderScanLog:
         assert disabled is False
 
     @pytest.mark.unit
-    def test_loadorder_scan_log_with_version(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_segment_plugins: list[str]
-    ) -> None:
+    def test_loadorder_scan_log_with_version(self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_segment_plugins: list[str]) -> None:
         """Test with version parameters."""
         from packaging.version import Version
 
@@ -170,9 +164,7 @@ class TestCheckPluginLimit:
     """Tests for RustPluginAnalyzer.check_plugin_limit method."""
 
     @pytest.mark.unit
-    def test_check_plugin_limit_returns_tuple(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_segment_plugins: list[str]
-    ) -> None:
+    def test_check_plugin_limit_returns_tuple(self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_segment_plugins: list[str]) -> None:
         """Test check_plugin_limit returns tuple of bools."""
         triggered, disabled = rust_plugin_analyzer.check_plugin_limit(sample_segment_plugins)
 
@@ -180,9 +172,7 @@ class TestCheckPluginLimit:
         assert isinstance(disabled, bool)
 
     @pytest.mark.unit
-    def test_check_plugin_limit_with_versions(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_check_plugin_limit_with_versions(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test with version parameters."""
         from packaging.version import Version
 
@@ -207,9 +197,7 @@ class TestPluginMatch:
     """Tests for RustPluginAnalyzer.plugin_match method."""
 
     @pytest.mark.unit
-    def test_plugin_match_returns_fragment(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_callstack_lower: list[str]
-    ) -> None:
+    def test_plugin_match_returns_fragment(self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_callstack_lower: list[str]) -> None:
         """Test plugin_match returns ReportFragment."""
         crashlog_plugins = {"testmod.esp", "lightmod.esl"}
 
@@ -218,9 +206,7 @@ class TestPluginMatch:
         assert hasattr(fragment, "to_list")
 
     @pytest.mark.unit
-    def test_plugin_match_finds_plugins(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_callstack_lower: list[str]
-    ) -> None:
+    def test_plugin_match_finds_plugins(self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_callstack_lower: list[str]) -> None:
         """Test that plugins are found in callstack."""
         crashlog_plugins = {"testmod.esp"}
 
@@ -233,9 +219,7 @@ class TestPluginMatch:
         assert "testmod.esp" in content or "COULDN'T FIND" in content
 
     @pytest.mark.unit
-    def test_plugin_match_empty_callstack(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_plugin_match_empty_callstack(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test with empty callstack."""
         fragment = rust_plugin_analyzer.plugin_match([], {"testmod.esp"})
 
@@ -245,9 +229,7 @@ class TestPluginMatch:
         assert "COULDN'T FIND" in content
 
     @pytest.mark.unit
-    def test_plugin_match_empty_plugins(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_callstack_lower: list[str]
-    ) -> None:
+    def test_plugin_match_empty_plugins(self, rust_plugin_analyzer: "RustPluginAnalyzer", sample_callstack_lower: list[str]) -> None:
         """Test with empty plugins set."""
         fragment = rust_plugin_analyzer.plugin_match(sample_callstack_lower, set())
 
@@ -266,9 +248,7 @@ class TestFilterIgnoredPlugins:
     """Tests for RustPluginAnalyzer.filter_ignored_plugins method."""
 
     @pytest.mark.unit
-    def test_filter_ignored_plugins_removes_ignored(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_filter_ignored_plugins_removes_ignored(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test that ignored plugins are removed."""
         crashlog_plugins = {
             "TestMod.esp": "0A",
@@ -281,9 +261,7 @@ class TestFilterIgnoredPlugins:
         assert "Ignored_Mod.esp" not in result
 
     @pytest.mark.unit
-    def test_filter_ignored_plugins_preserves_non_ignored(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_filter_ignored_plugins_preserves_non_ignored(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test that non-ignored plugins are preserved."""
         crashlog_plugins = {
             "Mod1.esp": "0A",
@@ -352,9 +330,7 @@ class TestRustPluginAnalyzerFallback:
     """Tests for Python fallback behavior."""
 
     @pytest.mark.unit
-    def test_uses_python_when_rust_unavailable(
-        self, mock_yamldata_for_rust_plugin: MagicMock
-    ) -> None:
+    def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_rust_plugin: MagicMock) -> None:
         """Test Python implementation is used when Rust unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
             from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
@@ -365,9 +341,7 @@ class TestRustPluginAnalyzerFallback:
             assert isinstance(analyzer.is_rust_accelerated, bool)
 
     @pytest.mark.unit
-    def test_fallback_loadorder_scan(
-        self, mock_yamldata_for_rust_plugin: MagicMock, sample_segment_plugins: list[str]
-    ) -> None:
+    def test_fallback_loadorder_scan(self, mock_yamldata_for_rust_plugin: MagicMock, sample_segment_plugins: list[str]) -> None:
         """Test loadorder_scan_log works with fallback."""
         from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
 
@@ -392,9 +366,7 @@ class TestRustPluginAnalyzerEdgeCases:
     """Tests for edge cases and special scenarios."""
 
     @pytest.mark.unit
-    def test_handles_special_characters(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_handles_special_characters(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test handling of special characters in plugin names."""
         segment = ["  [0A] Special~!@#$%.esp"]
 
@@ -404,9 +376,7 @@ class TestRustPluginAnalyzerEdgeCases:
         assert isinstance(plugins, dict)
 
     @pytest.mark.unit
-    def test_handles_unicode_plugin_names(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_handles_unicode_plugin_names(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test handling of unicode in plugin names."""
         segment = ["  [0A] 日本語モッド.esp"]
 
@@ -415,9 +385,7 @@ class TestRustPluginAnalyzerEdgeCases:
         assert isinstance(plugins, dict)
 
     @pytest.mark.unit
-    def test_handles_very_long_plugin_list(
-        self, rust_plugin_analyzer: "RustPluginAnalyzer"
-    ) -> None:
+    def test_handles_very_long_plugin_list(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
         """Test handling of very long plugin list."""
         segment = [f"  [{i:02X}] Plugin{i}.esp" for i in range(255)]
 

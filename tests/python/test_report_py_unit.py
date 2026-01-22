@@ -4,8 +4,9 @@ This module tests the PythonReportGenerator class for generating
 crash analysis reports as a fallback when Rust is not available.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 
@@ -354,6 +355,6 @@ class TestReportGeneratorAlias:
 
     def test_alias_is_same_class(self) -> None:
         """Test ReportGenerator is same as PythonReportGenerator."""
-        from ClassicLib.python.report_py import ReportGenerator, PythonReportGenerator
+        from ClassicLib.python.report_py import PythonReportGenerator, ReportGenerator
 
         assert ReportGenerator is PythonReportGenerator

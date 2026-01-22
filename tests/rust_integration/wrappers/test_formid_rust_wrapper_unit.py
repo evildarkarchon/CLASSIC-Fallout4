@@ -136,18 +136,14 @@ class TestExtractFormids:
     """Tests for FormIDAnalyzer.extract_formids method."""
 
     @pytest.mark.unit
-    def test_extract_formids_returns_list(
-        self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]
-    ) -> None:
+    def test_extract_formids_returns_list(self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]) -> None:
         """Test extract_formids returns list."""
         result = formid_analyzer.extract_formids(sample_callstack_with_formids)
 
         assert isinstance(result, list)
 
     @pytest.mark.unit
-    def test_extract_formids_finds_formids(
-        self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]
-    ) -> None:
+    def test_extract_formids_finds_formids(self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]) -> None:
         """Test FormIDs are extracted from callstack."""
         result = formid_analyzer.extract_formids(sample_callstack_with_formids)
 
@@ -156,18 +152,14 @@ class TestExtractFormids:
         assert isinstance(result, list)
 
     @pytest.mark.unit
-    def test_extract_formids_empty_callstack(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_empty_callstack(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test extraction from empty callstack."""
         result = formid_analyzer.extract_formids([])
 
         assert result == []
 
     @pytest.mark.unit
-    def test_extract_formids_no_formids(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_no_formids(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test extraction when no FormIDs present."""
         callstack = ["No formids here", "Just regular lines"]
 
@@ -185,9 +177,7 @@ class TestFormidMatch:
     """Tests for FormIDAnalyzer.formid_match method."""
 
     @pytest.mark.unit
-    def test_formid_match_adds_to_report(
-        self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]
-    ) -> None:
+    def test_formid_match_adds_to_report(self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]) -> None:
         """Test formid_match adds fragment to report."""
         from ClassicLib.ScanLog.fragments import ReportFragment
 
@@ -207,10 +197,9 @@ class TestFormidMatch:
         assert isinstance(report.fragments, list)
 
     @pytest.mark.unit
-    def test_formid_match_empty_formids(
-        self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]
-    ) -> None:
+    def test_formid_match_empty_formids(self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]) -> None:
         """Test formid_match with empty formid list."""
+
         class MockReport:
             def __init__(self) -> None:
                 self.fragments: list[Any] = []
@@ -224,10 +213,9 @@ class TestFormidMatch:
         formid_analyzer.formid_match([], sample_plugins, report)
 
     @pytest.mark.unit
-    def test_formid_match_empty_plugins(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_formid_match_empty_plugins(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test formid_match with empty plugins dict."""
+
         class MockReport:
             def __init__(self) -> None:
                 self.fragments: list[Any] = []
@@ -251,9 +239,7 @@ class TestExtractFormidsBatch:
     """Tests for FormIDAnalyzer.extract_formids_batch method."""
 
     @pytest.mark.unit
-    def test_extract_formids_batch_returns_list(
-        self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]
-    ) -> None:
+    def test_extract_formids_batch_returns_list(self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]) -> None:
         """Test batch extraction returns list of lists."""
         segments = [sample_callstack_with_formids, ["Other line"]]
 
@@ -263,9 +249,7 @@ class TestExtractFormidsBatch:
         assert len(result) == 2
 
     @pytest.mark.unit
-    def test_extract_formids_batch_each_segment(
-        self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]
-    ) -> None:
+    def test_extract_formids_batch_each_segment(self, formid_analyzer: "FormIDAnalyzer", sample_callstack_with_formids: list[str]) -> None:
         """Test each segment is processed."""
         segments = [sample_callstack_with_formids]
 
@@ -275,9 +259,7 @@ class TestExtractFormidsBatch:
         assert isinstance(result[0], list)
 
     @pytest.mark.unit
-    def test_extract_formids_batch_empty_segments(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_extract_formids_batch_empty_segments(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test batch extraction with empty segments."""
         result = formid_analyzer.extract_formids_batch([])
 
@@ -293,17 +275,14 @@ class TestPluginCaching:
     """Tests for plugin caching behavior."""
 
     @pytest.mark.unit
-    def test_plugin_cache_key_initialized_none(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_plugin_cache_key_initialized_none(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test plugin cache key is initialized to None."""
         assert formid_analyzer._plugin_cache_key is None
 
     @pytest.mark.unit
-    def test_formid_match_updates_cache(
-        self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]
-    ) -> None:
+    def test_formid_match_updates_cache(self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]) -> None:
         """Test formid_match may update plugin cache."""
+
         class MockReport:
             def __init__(self) -> None:
                 self.fragments: list[Any] = []
@@ -330,9 +309,7 @@ class TestFormIDAnalyzerFallback:
     """Tests for Python fallback behavior."""
 
     @pytest.mark.unit
-    def test_uses_python_when_rust_unavailable(
-        self, mock_yamldata_for_formid: MagicMock
-    ) -> None:
+    def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test Python implementation is used when Rust unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
             from ClassicLib.rust.formid_rust import FormIDAnalyzer
@@ -343,9 +320,7 @@ class TestFormIDAnalyzerFallback:
             assert isinstance(analyzer.is_rust_accelerated, bool)
 
     @pytest.mark.unit
-    def test_fallback_extract_formids(
-        self, mock_yamldata_for_formid: MagicMock
-    ) -> None:
+    def test_fallback_extract_formids(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test extraction works with fallback."""
         from ClassicLib.rust.formid_rust import FormIDAnalyzer
 
@@ -375,9 +350,7 @@ class TestFormIDAnalyzerEdgeCases:
     """Tests for edge cases and special scenarios."""
 
     @pytest.mark.unit
-    def test_handles_malformed_formids(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_handles_malformed_formids(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test handling of malformed FormID strings."""
         callstack = ["FormID=not_a_hex", "0xGGGGGGGG", "Normal line"]
 
@@ -387,9 +360,7 @@ class TestFormIDAnalyzerEdgeCases:
         assert isinstance(result, list)
 
     @pytest.mark.unit
-    def test_handles_very_long_callstack(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_handles_very_long_callstack(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test handling of very long callstack."""
         callstack = [f"Line {i} FormID=0x{i:08X}" for i in range(1000)]
 
@@ -398,9 +369,7 @@ class TestFormIDAnalyzerEdgeCases:
         assert isinstance(result, list)
 
     @pytest.mark.unit
-    def test_handles_unicode_in_callstack(
-        self, formid_analyzer: "FormIDAnalyzer"
-    ) -> None:
+    def test_handles_unicode_in_callstack(self, formid_analyzer: "FormIDAnalyzer") -> None:
         """Test handling of unicode characters in callstack."""
         callstack = ["日本語 FormID=00000014", "Ñoño 0x00001234"]
 

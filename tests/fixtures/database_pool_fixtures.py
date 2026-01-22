@@ -82,7 +82,7 @@ def clean_sync_database_pool() -> Generator[None, None, None]:
         - _cached_formid_lookup LRU cache in formid_py.py
     """
     from ClassicLib.python.formid_py import _cached_formid_lookup
-    from ClassicLib.ScanLog.Util import query_cache, SyncDatabasePool
+    from ClassicLib.ScanLog.Util import SyncDatabasePool, query_cache
 
     # Clear singleton and caches before test
     if SyncDatabasePool._instance is not None:

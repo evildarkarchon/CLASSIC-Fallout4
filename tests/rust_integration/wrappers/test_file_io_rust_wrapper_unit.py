@@ -183,9 +183,7 @@ class TestAsyncReadOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_returns_content(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_returns_content(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test read_file returns file content."""
         content = await file_io_core.read_file(temp_text_file)
 
@@ -195,9 +193,7 @@ class TestAsyncReadOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_with_string_path(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_with_string_path(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test read_file works with string path."""
         content = await file_io_core.read_file(str(temp_text_file))
 
@@ -207,9 +203,7 @@ class TestAsyncReadOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_lines_returns_list(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_read_lines_returns_list(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test read_lines returns list of lines."""
         lines = await file_io_core.read_lines(temp_text_file)
 
@@ -218,9 +212,7 @@ class TestAsyncReadOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_bytes_returns_bytes(
-        self, file_io_core: "FileIOCore", temp_binary_file: Path
-    ) -> None:
+    async def test_read_bytes_returns_bytes(self, file_io_core: "FileIOCore", temp_binary_file: Path) -> None:
         """Test read_bytes returns bytes."""
         data = await file_io_core.read_bytes(temp_binary_file)
 
@@ -229,9 +221,7 @@ class TestAsyncReadOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_mmap(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_mmap(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test read_file_mmap returns content."""
         content = await file_io_core.read_file_mmap(temp_text_file)
 
@@ -239,9 +229,7 @@ class TestAsyncReadOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_file_with_encoding(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_read_file_with_encoding(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test read_file_with_encoding works."""
         content = await file_io_core.read_file_with_encoding(temp_text_file, "utf-8")
 
@@ -260,9 +248,7 @@ class TestAsyncWriteOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_file_creates_file(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_write_file_creates_file(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test write_file creates new file."""
         file_path = tmp_path / "new_file.txt"
 
@@ -273,9 +259,7 @@ class TestAsyncWriteOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_lines_creates_file(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_write_lines_creates_file(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test write_lines creates file with lines."""
         file_path = tmp_path / "lines.txt"
 
@@ -287,9 +271,7 @@ class TestAsyncWriteOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_bytes_creates_file(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_write_bytes_creates_file(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test write_bytes creates binary file."""
         file_path = tmp_path / "binary.bin"
 
@@ -300,9 +282,7 @@ class TestAsyncWriteOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_append_file_adds_content(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_append_file_adds_content(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test append_file adds to existing content."""
         await file_io_core.append_file(temp_text_file, "\nLine 4")
 
@@ -320,9 +300,7 @@ class TestStreamLines:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_stream_lines_yields_lines(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    async def test_stream_lines_yields_lines(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test stream_lines yields lines."""
         lines = []
         async for line in file_io_core.stream_lines(temp_text_file):
@@ -332,9 +310,7 @@ class TestStreamLines:
         assert len(lines) == 3
 
     @pytest.mark.unit
-    def test_stream_lines_sync_yields_lines(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    def test_stream_lines_sync_yields_lines(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test stream_lines_sync yields lines synchronously."""
         lines = list(file_io_core.stream_lines_sync(temp_text_file))
 
@@ -350,9 +326,7 @@ class TestDDSOperations:
     """Tests for DDS header operations."""
 
     @pytest.mark.unit
-    def test_read_dds_header_returns_tuple_or_none(
-        self, file_io_core: "FileIOCore", temp_dds_file: Path
-    ) -> None:
+    def test_read_dds_header_returns_tuple_or_none(self, file_io_core: "FileIOCore", temp_dds_file: Path) -> None:
         """Test read_dds_header returns dimensions or None."""
         result = file_io_core.read_dds_header(temp_dds_file)
 
@@ -360,9 +334,7 @@ class TestDDSOperations:
         assert result is None or (isinstance(result, tuple) and len(result) == 2)
 
     @pytest.mark.unit
-    def test_read_dds_headers_batch_returns_dict(
-        self, file_io_core: "FileIOCore", temp_dds_file: Path
-    ) -> None:
+    def test_read_dds_headers_batch_returns_dict(self, file_io_core: "FileIOCore", temp_dds_file: Path) -> None:
         """Test read_dds_headers_batch returns dictionary."""
         result = file_io_core.read_dds_headers_batch([temp_dds_file])
 
@@ -379,9 +351,7 @@ class TestWalkDirectory:
     """Tests for walk_directory operation."""
 
     @pytest.mark.unit
-    def test_walk_directory_returns_list(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    def test_walk_directory_returns_list(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test walk_directory returns list of file paths."""
         # Create some test files
         (tmp_path / "file1.txt").write_text("content")
@@ -393,9 +363,7 @@ class TestWalkDirectory:
         assert len(result) >= 2
 
     @pytest.mark.unit
-    def test_walk_directory_with_pattern(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    def test_walk_directory_with_pattern(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test walk_directory with file pattern filter."""
         (tmp_path / "file1.txt").write_text("content")
         (tmp_path / "file2.dds").write_text("content")
@@ -406,9 +374,7 @@ class TestWalkDirectory:
         assert all(".txt" in path for path in result)
 
     @pytest.mark.unit
-    def test_walk_directory_with_max_depth(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    def test_walk_directory_with_max_depth(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test walk_directory respects max_depth."""
         (tmp_path / "file1.txt").write_text("content")
         subdir = tmp_path / "subdir"
@@ -433,9 +399,7 @@ class TestBatchOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_multiple_files_returns_dict(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_read_multiple_files_returns_dict(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test read_multiple_files returns dictionary."""
         file1 = tmp_path / "file1.txt"
         file2 = tmp_path / "file2.txt"
@@ -450,9 +414,7 @@ class TestBatchOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_multiple_files_creates_files(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_write_multiple_files_creates_files(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test write_multiple_files creates all files."""
         files = {
             tmp_path / "file1.txt": "Content 1",
@@ -474,41 +436,31 @@ class TestUtilityOperations:
     """Tests for utility operations."""
 
     @pytest.mark.unit
-    def test_file_exists_returns_true(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    def test_file_exists_returns_true(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test file_exists returns True for existing file."""
         assert file_io_core.file_exists(temp_text_file) is True
 
     @pytest.mark.unit
-    def test_file_exists_returns_false(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    def test_file_exists_returns_false(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test file_exists returns False for missing file."""
         assert file_io_core.file_exists(tmp_path / "nonexistent.txt") is False
 
     @pytest.mark.unit
-    def test_get_file_size_returns_size(
-        self, file_io_core: "FileIOCore", temp_binary_file: Path
-    ) -> None:
+    def test_get_file_size_returns_size(self, file_io_core: "FileIOCore", temp_binary_file: Path) -> None:
         """Test get_file_size returns correct size."""
         size = file_io_core.get_file_size(temp_binary_file)
 
         assert size == 5  # 5 bytes
 
     @pytest.mark.unit
-    def test_get_file_size_returns_negative_for_missing(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    def test_get_file_size_returns_negative_for_missing(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test get_file_size returns -1 for missing file."""
         size = file_io_core.get_file_size(tmp_path / "nonexistent.txt")
 
         assert size == -1
 
     @pytest.mark.unit
-    def test_get_file_info_returns_dict(
-        self, file_io_core: "FileIOCore", temp_text_file: Path
-    ) -> None:
+    def test_get_file_info_returns_dict(self, file_io_core: "FileIOCore", temp_text_file: Path) -> None:
         """Test get_file_info returns dictionary with info."""
         info = file_io_core.get_file_info(temp_text_file)
 
@@ -516,9 +468,7 @@ class TestUtilityOperations:
         assert "size" in info or "error" in info
 
     @pytest.mark.unit
-    def test_clear_cache_runs_without_error(
-        self, file_io_core: "FileIOCore"
-    ) -> None:
+    def test_clear_cache_runs_without_error(self, file_io_core: "FileIOCore") -> None:
         """Test clear_cache runs without error."""
         # Should not raise
         file_io_core.clear_cache()
@@ -534,9 +484,7 @@ class TestCrashLogOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_read_crash_log_strips_trailing_empty(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_read_crash_log_strips_trailing_empty(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test read_crash_log strips trailing empty lines."""
         crash_log = tmp_path / "crash.log"
         crash_log.write_text("Line 1\nLine 2\n\n\n")
@@ -547,9 +495,7 @@ class TestCrashLogOperations:
 
     @pytest.mark.unit
     @pytest.mark.asyncio
-    async def test_write_crash_report_creates_md_file(
-        self, file_io_core: "FileIOCore", tmp_path: Path
-    ) -> None:
+    async def test_write_crash_report_creates_md_file(self, file_io_core: "FileIOCore", tmp_path: Path) -> None:
         """Test write_crash_report creates .md file."""
         log_path = tmp_path / "crash.log"
 

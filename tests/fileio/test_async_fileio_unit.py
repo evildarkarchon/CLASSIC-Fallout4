@@ -4,9 +4,10 @@ This module tests the async file I/O utilities including encoding detection
 and async file reading functions.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 

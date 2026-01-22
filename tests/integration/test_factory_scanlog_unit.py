@@ -4,8 +4,9 @@ This module tests the scanlog factory functions for report generation,
 mod detection, and orchestrator creation.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 pytestmark = [pytest.mark.unit]
 
@@ -46,6 +47,7 @@ class TestGetReportGenerator:
             patch("ClassicLib.integration.factory.scanlog.get_components", return_value={"report_generation": True}),
         ):
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):

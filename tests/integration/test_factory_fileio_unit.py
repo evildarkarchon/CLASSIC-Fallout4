@@ -4,8 +4,9 @@ This module tests the factory functions for file I/O and YAML operations,
 including singleton behavior and fallback to Python implementations.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 pytestmark = [pytest.mark.unit]
 
@@ -17,6 +18,7 @@ class TestGetFileIO:
         """Test returns a FileIOCore instance."""
         # Reset the singleton for this test
         import ClassicLib.integration.factory.file_io as module
+
         original = module._file_io_instance
         module._file_io_instance = None
 
@@ -32,6 +34,7 @@ class TestGetFileIO:
     def test_returns_same_instance_on_multiple_calls(self) -> None:
         """Test returns same singleton instance on multiple calls."""
         import ClassicLib.integration.factory.file_io as module
+
         original = module._file_io_instance
         module._file_io_instance = None
 
@@ -48,6 +51,7 @@ class TestGetFileIO:
     def test_accepts_encoding_parameter(self) -> None:
         """Test accepts encoding parameter."""
         import ClassicLib.integration.factory.file_io as module
+
         original = module._file_io_instance
         module._file_io_instance = None
 
@@ -63,6 +67,7 @@ class TestGetFileIO:
     def test_accepts_errors_parameter(self) -> None:
         """Test accepts errors parameter."""
         import ClassicLib.integration.factory.file_io as module
+
         original = module._file_io_instance
         module._file_io_instance = None
 
@@ -78,6 +83,7 @@ class TestGetFileIO:
     def test_returns_python_implementation_when_rust_disabled(self) -> None:
         """Test returns Python implementation when Rust is disabled."""
         import ClassicLib.integration.factory.file_io as module
+
         original = module._file_io_instance
         module._file_io_instance = None
 
@@ -125,6 +131,7 @@ class TestGetYamlOperations:
             patch("ClassicLib.integration.factory.file_io.get_components", return_value={"yaml_operations": True}),
         ):
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
@@ -151,8 +158,9 @@ class TestModuleCaching:
 
     def test_file_io_lock_exists(self) -> None:
         """Test _file_io_lock exists for thread safety."""
-        import ClassicLib.integration.factory.file_io as module
         import threading
+
+        import ClassicLib.integration.factory.file_io as module
 
         assert hasattr(module, "_file_io_lock")
         assert isinstance(module._file_io_lock, type(threading.Lock()))

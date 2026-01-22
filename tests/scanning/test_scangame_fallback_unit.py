@@ -89,10 +89,7 @@ class TestLogProcessorProcessLogs:
         processor = LogProcessor(["error", "exception"], [], [])
         log_file = tmp_path / "game.log"
         log_file.write_text(
-            "Starting game...\n"
-            "ERROR: Failed to load texture\n"
-            "Warning: Low memory\n"
-            "EXCEPTION: Access violation\n",
+            "Starting game...\nERROR: Failed to load texture\nWarning: Low memory\nEXCEPTION: Access violation\n",
             encoding="utf-8",
         )
 
@@ -134,9 +131,7 @@ class TestLogProcessorProcessLogs:
         processor = LogProcessor(["error"], [], ["benign", "expected"])
         log_file = tmp_path / "game.log"
         log_file.write_text(
-            "ERROR: Critical failure\n"
-            "ERROR: Benign warning (expected)\n"
-            "ERROR: Another benign issue\n",
+            "ERROR: Critical failure\nERROR: Benign warning (expected)\nERROR: Another benign issue\n",
             encoding="utf-8",
         )
 
@@ -154,10 +149,7 @@ class TestLogProcessorProcessSingleLog:
         processor = LogProcessor(["error"], [], [])
         log_file = tmp_path / "test.log"
         log_file.write_text(
-            "Info: Starting\n"
-            "ERROR: First error\n"
-            "Debug: Details\n"
-            "error: Second error\n",  # lowercase should also match
+            "Info: Starting\nERROR: First error\nDebug: Details\nerror: Second error\n",  # lowercase should also match
             encoding="utf-8",
         )
 

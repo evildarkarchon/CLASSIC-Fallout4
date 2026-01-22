@@ -241,9 +241,7 @@ class TestCheckPluginLimit:
         assert disabled is False
 
     @pytest.mark.unit
-    def test_check_plugin_limit_returns_false_no_ff_marker(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_check_plugin_limit_returns_false_no_ff_marker(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test returns False when no [FF] marker present."""
         from packaging.version import Version
 
@@ -257,9 +255,7 @@ class TestCheckPluginLimit:
         assert disabled is False
 
     @pytest.mark.unit
-    def test_check_plugin_limit_triggered_original_game(
-        self, mock_yamldata_for_plugin: MagicMock
-    ) -> None:
+    def test_check_plugin_limit_triggered_original_game(self, mock_yamldata_for_plugin: MagicMock) -> None:
         """Test plugin limit triggered for original game version."""
         from packaging.version import Version
 
@@ -291,9 +287,7 @@ class TestLoadorderScanLog:
     """Tests for PythonPluginAnalyzer.loadorder_scan_log method."""
 
     @pytest.mark.unit
-    def test_loadorder_scan_log_returns_empty_for_empty_input(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_loadorder_scan_log_returns_empty_for_empty_input(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test returns empty dict for empty segment."""
         plugins, triggered, disabled = plugin_analyzer.loadorder_scan_log([])
 
@@ -324,9 +318,7 @@ class TestLoadorderScanLog:
         assert plugins["LightMod.esl"] == "FE001"
 
     @pytest.mark.unit
-    def test_loadorder_scan_log_skips_duplicates(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_loadorder_scan_log_skips_duplicates(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that duplicate plugin names are skipped."""
         plugins_segment = [
             "  [00] Mod.esp",
@@ -338,9 +330,7 @@ class TestLoadorderScanLog:
         assert plugins["Mod.esp"] == "00"  # First occurrence
 
     @pytest.mark.unit
-    def test_loadorder_scan_log_skips_empty_names(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_loadorder_scan_log_skips_empty_names(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that entries with empty plugin names are skipped."""
         plugins_segment = [
             "  [00] Valid.esp",
@@ -377,9 +367,7 @@ class TestPluginMatch:
         assert "testmod.esp" in content
 
     @pytest.mark.unit
-    def test_plugin_match_filters_modified_by_lines(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_plugin_match_filters_modified_by_lines(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that 'modified by:' lines are filtered out."""
         callstack = [
             "normal line with testmod.esp",
@@ -397,9 +385,7 @@ class TestPluginMatch:
         assert "| 1" in content
 
     @pytest.mark.unit
-    def test_plugin_match_skips_ignored_plugins(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_plugin_match_skips_ignored_plugins(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that plugins in ignore list are skipped."""
         callstack = [
             "line with fallout4.esm",
@@ -417,9 +403,7 @@ class TestPluginMatch:
         assert "testmod.esp" in content
 
     @pytest.mark.unit
-    def test_plugin_match_counts_occurrences(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_plugin_match_counts_occurrences(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that plugin occurrences are counted."""
         callstack = [
             "testmod.esp first occurrence",
@@ -436,9 +420,7 @@ class TestPluginMatch:
         assert "testmod.esp | 3" in content
 
     @pytest.mark.unit
-    def test_plugin_match_no_matches_message(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_plugin_match_no_matches_message(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test message when no plugins found."""
         callstack = ["no plugins here"]
         crashlog_plugins = {"testmod.esp"}
@@ -460,9 +442,7 @@ class TestFilterIgnoredPlugins:
     """Tests for PythonPluginAnalyzer.filter_ignored_plugins method."""
 
     @pytest.mark.unit
-    def test_filter_ignored_plugins_removes_ignored(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_filter_ignored_plugins_removes_ignored(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that ignored plugins are removed."""
         crashlog_plugins = {
             "TestMod.esp": "0A",
@@ -477,9 +457,7 @@ class TestFilterIgnoredPlugins:
         assert "AnotherMod.esp" in result
 
     @pytest.mark.unit
-    def test_filter_ignored_plugins_case_insensitive(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_filter_ignored_plugins_case_insensitive(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that filtering is case-insensitive."""
         crashlog_plugins = {
             "IGNORED_MOD.ESP": "0A",  # Uppercase version
@@ -490,9 +468,7 @@ class TestFilterIgnoredPlugins:
         assert "IGNORED_MOD.ESP" not in result
 
     @pytest.mark.unit
-    def test_filter_ignored_plugins_empty_ignore_list(
-        self, mock_yamldata_for_plugin: MagicMock
-    ) -> None:
+    def test_filter_ignored_plugins_empty_ignore_list(self, mock_yamldata_for_plugin: MagicMock) -> None:
         """Test that empty ignore list returns plugins unchanged."""
         from ClassicLib.python.plugin_py import PythonPluginAnalyzer
 
@@ -506,9 +482,7 @@ class TestFilterIgnoredPlugins:
         assert result == crashlog_plugins
 
     @pytest.mark.unit
-    def test_filter_ignored_plugins_preserves_original_case(
-        self, plugin_analyzer: "PythonPluginAnalyzer"
-    ) -> None:
+    def test_filter_ignored_plugins_preserves_original_case(self, plugin_analyzer: "PythonPluginAnalyzer") -> None:
         """Test that original key casing is preserved."""
         crashlog_plugins = {
             "TestMod.ESP": "0A",

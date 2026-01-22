@@ -3,9 +3,10 @@
 This module tests the ScanValidators class for validation utilities.
 """
 
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 

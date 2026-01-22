@@ -41,6 +41,7 @@ def make_run_async_handler(return_value=None, side_effect=None):
 
     return handler
 
+
 # Skip Qt-dependent tests in parallel workers
 pytestmark = pytest.mark.skipif(
     os.environ.get("PYTEST_XDIST_WORKER") is not None,
@@ -199,9 +200,7 @@ class TestPastebinFetchWorkerErrors:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
             # Use handler to close coroutine and raise error
-            mock_bridge.run_async.side_effect = make_run_async_handler(
-                side_effect=aiohttp.ClientError("Connection failed")
-            )
+            mock_bridge.run_async.side_effect = make_run_async_handler(side_effect=aiohttp.ClientError("Connection failed"))
 
             worker.run()
 
@@ -338,9 +337,7 @@ class TestPastebinFetchWorkerErrors:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
             # Use handler to close coroutine and raise error
-            mock_bridge.run_async.side_effect = make_run_async_handler(
-                side_effect=RuntimeError("Unexpected failure")
-            )
+            mock_bridge.run_async.side_effect = make_run_async_handler(side_effect=RuntimeError("Unexpected failure"))
 
             worker.run()
 
@@ -399,9 +396,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.side_effect = make_run_async_handler(
-                side_effect=aiohttp.ClientError("Network error")
-            )
+            mock_bridge.run_async.side_effect = make_run_async_handler(side_effect=aiohttp.ClientError("Network error"))
 
             worker.run()
 
@@ -444,9 +439,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
             # Use handler to close coroutine and raise exception
-            mock_bridge.run_async.side_effect = make_run_async_handler(
-                side_effect=RecursionError("Unexpected depth")
-            )
+            mock_bridge.run_async.side_effect = make_run_async_handler(side_effect=RecursionError("Unexpected depth"))
 
             worker.run()
 
@@ -492,9 +485,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.side_effect = make_run_async_handler(
-                side_effect=RuntimeError("Error")
-            )
+            mock_bridge.run_async.side_effect = make_run_async_handler(side_effect=RuntimeError("Error"))
 
             worker_error.run()
 

@@ -4,11 +4,12 @@ This module tests the YamlCache class for YAML file caching with
 modification detection, metrics tracking, and thread safety.
 """
 
-import pytest
 import asyncio
 import time
 from pathlib import Path
-from unittest.mock import MagicMock, patch, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 

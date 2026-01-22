@@ -34,9 +34,7 @@ class TestParseCrashHeaderPy:
             'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6EF4C3512|Details',
         ]
 
-        game_version, crashgen_version, main_error = parse_crash_header(
-            crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4"
-        )
+        game_version, crashgen_version, main_error = parse_crash_header(crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4")
 
         assert game_version == "Fallout 4 v1.10.163"
         assert crashgen_version == "Buffout 4 v1.28.6"
@@ -67,9 +65,7 @@ class TestParseCrashHeaderPy:
             "Some random line",
         ]
 
-        game_version, crashgen_version, main_error = parse_crash_header(
-            crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4"
-        )
+        game_version, crashgen_version, main_error = parse_crash_header(crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4")
 
         assert game_version == "UNKNOWN"
         assert crashgen_version == "Buffout 4 v1.28.6"
@@ -81,9 +77,7 @@ class TestParseCrashHeaderPy:
             "Some other line",
         ]
 
-        game_version, crashgen_version, main_error = parse_crash_header(
-            crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4"
-        )
+        game_version, crashgen_version, main_error = parse_crash_header(crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4")
 
         assert game_version == "Fallout 4 v1.10.163"
         assert crashgen_version == "UNKNOWN"
@@ -95,17 +89,13 @@ class TestParseCrashHeaderPy:
             "Buffout 4 v1.28.6",
         ]
 
-        _, _, main_error = parse_crash_header(
-            crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4"
-        )
+        _, _, main_error = parse_crash_header(crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4")
 
         assert main_error == "UNKNOWN"
 
     def test_parse_header_handles_empty_data(self) -> None:
         """Test parsing empty crash data returns all UNKNOWN."""
-        game_version, crashgen_version, main_error = parse_crash_header(
-            [], crashgen_name="Buffout 4", game_root_name="Fallout 4"
-        )
+        game_version, crashgen_version, main_error = parse_crash_header([], crashgen_name="Buffout 4", game_root_name="Fallout 4")
 
         assert game_version == "UNKNOWN"
         assert crashgen_version == "UNKNOWN"
@@ -118,9 +108,7 @@ class TestParseCrashHeaderPy:
             "Buffout 4 v1.28.6",
         ]
 
-        game_version, crashgen_version, _ = parse_crash_header(
-            crash_data, crashgen_name="Buffout 4", game_root_name=""
-        )
+        game_version, crashgen_version, _ = parse_crash_header(crash_data, crashgen_name="Buffout 4", game_root_name="")
 
         # Empty game_root_name means line.startswith("") is always True
         # but the conditional checks "if game_root_name and..."
@@ -136,9 +124,7 @@ class TestParseCrashHeaderPy:
             "Buffout 4 v1.28.6",  # Later version should be used
         ]
 
-        game_version, crashgen_version, _ = parse_crash_header(
-            crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4"
-        )
+        game_version, crashgen_version, _ = parse_crash_header(crash_data, crashgen_name="Buffout 4", game_root_name="Fallout 4")
 
         assert game_version == "Fallout 4 v1.10.163"
         assert crashgen_version == "Buffout 4 v1.28.6"

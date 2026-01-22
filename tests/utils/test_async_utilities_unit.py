@@ -12,11 +12,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from ClassicLib.Utils.Async import (
+    FAST_PATH_OPERATIONS,
+    SIZE_DEPENDENT_OPERATIONS,
     AsyncLazyLoader,
     AsyncTimer,
     ExecutorDecisionMaker,
-    FAST_PATH_OPERATIONS,
-    SIZE_DEPENDENT_OPERATIONS,
     async_filter,
     async_filter_smart,
     async_map,
@@ -679,7 +679,7 @@ class TestExecutorDecisionMaker:
         """Should run function directly without executor."""
 
         def direct_func(x: int) -> int:
-            return x ** 2
+            return x**2
 
         decision_maker = ExecutorDecisionMaker(
             direct_func,
@@ -715,9 +715,7 @@ class TestExecutorDecisionMaker:
         def io_func() -> None:
             pass
 
-        decision_maker = ExecutorDecisionMaker(
-            io_func, args=(), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(io_func, args=(), kwargs={}, threshold_bytes=1024)
 
         result = decision_maker._should_use_executor_for_io()
         assert result is True
@@ -729,9 +727,7 @@ class TestExecutorDecisionMaker:
         def io_func(data: int) -> None:
             pass
 
-        decision_maker = ExecutorDecisionMaker(
-            io_func, args=(42,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(io_func, args=(42,), kwargs={}, threshold_bytes=1024)
 
         result = decision_maker._should_use_executor_for_io()
         assert result is True
@@ -746,9 +742,7 @@ class TestExecutorDecisionMaker:
         mock_func = MagicMock()
         mock_func.__name__ = "read_text"
 
-        decision_maker = ExecutorDecisionMaker(
-            mock_func, args=(small_file,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(mock_func, args=(small_file,), kwargs={}, threshold_bytes=1024)
 
         result = decision_maker._should_use_executor_for_io()
         assert result is False  # Small file, run directly
@@ -762,9 +756,7 @@ class TestExecutorDecisionMaker:
         mock_func = MagicMock()
         mock_func.__name__ = "read_text"
 
-        decision_maker = ExecutorDecisionMaker(
-            mock_func, args=(large_file,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(mock_func, args=(large_file,), kwargs={}, threshold_bytes=1024)
 
         result = decision_maker._should_use_executor_for_io()
         assert result is True  # Large file, use executor
@@ -778,9 +770,7 @@ class TestExecutorDecisionMaker:
         mock_func = MagicMock()
         mock_func.__name__ = "write_text"
 
-        decision_maker = ExecutorDecisionMaker(
-            mock_func, args=(target_file, small_content), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(mock_func, args=(target_file, small_content), kwargs={}, threshold_bytes=1024)
 
         result = decision_maker._should_use_executor_for_io()
         assert result is False  # Small content, run directly
@@ -794,9 +784,7 @@ class TestExecutorDecisionMaker:
         mock_func = MagicMock()
         mock_func.__name__ = "write_text"
 
-        decision_maker = ExecutorDecisionMaker(
-            mock_func, args=(target_file, large_content), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(mock_func, args=(target_file, large_content), kwargs={}, threshold_bytes=1024)
 
         result = decision_maker._should_use_executor_for_io()
         assert result is True  # Large content, use executor
@@ -809,9 +797,7 @@ class TestExecutorDecisionMaker:
         mock_func = MagicMock()
         mock_func.__name__ = "read_text"
 
-        decision_maker = ExecutorDecisionMaker(
-            mock_func, args=(nonexistent,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(mock_func, args=(nonexistent,), kwargs={}, threshold_bytes=1024)
 
         # File doesn't exist, so path.stat() would fail
         # But exists() returns False, so it should go to else branch and return True
@@ -825,9 +811,7 @@ class TestExecutorDecisionMaker:
         def simple_func(x: int) -> int:
             return x * 2
 
-        decision_maker = ExecutorDecisionMaker(
-            simple_func, args=(5,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(simple_func, args=(5,), kwargs={}, threshold_bytes=1024)
 
         result = await decision_maker.execute(force_executor=True)
         assert result == 10
@@ -839,9 +823,7 @@ class TestExecutorDecisionMaker:
         def simple_func(x: int) -> int:
             return x * 2
 
-        decision_maker = ExecutorDecisionMaker(
-            simple_func, args=(5,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(simple_func, args=(5,), kwargs={}, threshold_bytes=1024)
 
         result = await decision_maker.execute(force_executor=False)
         assert result == 10
@@ -856,9 +838,7 @@ class TestExecutorDecisionMaker:
         # Name the function to match a fast path operation
         exists_mock.__name__ = "exists"
 
-        decision_maker = ExecutorDecisionMaker(
-            exists_mock, args=("/some/path",), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(exists_mock, args=("/some/path",), kwargs={}, threshold_bytes=1024)
 
         result = await decision_maker.execute(force_executor=None)
         assert result is True
@@ -870,9 +850,7 @@ class TestExecutorDecisionMaker:
         def custom_operation(x: int) -> int:
             return x + 1
 
-        decision_maker = ExecutorDecisionMaker(
-            custom_operation, args=(10,), kwargs={}, threshold_bytes=1024
-        )
+        decision_maker = ExecutorDecisionMaker(custom_operation, args=(10,), kwargs={}, threshold_bytes=1024)
 
         result = await decision_maker.execute(force_executor=None)
         assert result == 11
@@ -934,14 +912,10 @@ class TestSmartRunInExecutor:
 
         # With threshold 250, 500 byte file should use executor
         # With threshold 1000, should run directly
-        result_high = await smart_run_in_executor(
-            read_text, test_file, threshold_bytes=1000
-        )
+        result_high = await smart_run_in_executor(read_text, test_file, threshold_bytes=1000)
         assert result_high == "x" * 500
 
-        result_low = await smart_run_in_executor(
-            read_text, test_file, threshold_bytes=250
-        )
+        result_low = await smart_run_in_executor(read_text, test_file, threshold_bytes=250)
         assert result_low == "x" * 500
 
 
@@ -1024,9 +998,7 @@ class TestAsyncMapSmart:
         items = list(range(5))
 
         with patch("ClassicLib.Logger.logger") as mock_logger:
-            results = await async_map_smart(
-                fast_operation, items, use_executor="profile"
-            )
+            results = await async_map_smart(fast_operation, items, use_executor="profile")
             assert results == [0, 2, 4, 6, 8]
             # Logger should have been called with profiling results
             # (may not be called if profiling is skipped)
@@ -1049,9 +1021,7 @@ class TestAsyncMapSmart:
             return x * 2
 
         items = [1, 2, 3]
-        results = await async_map_smart(
-            double, items, max_concurrent=None, use_executor="never"
-        )
+        results = await async_map_smart(double, items, max_concurrent=None, use_executor="never")
         assert results == [2, 4, 6]
 
     @pytest.mark.asyncio
@@ -1062,9 +1032,7 @@ class TestAsyncMapSmart:
             return x * 2
 
         items = [1, 2, 3]
-        results = await async_map_smart(
-            double, items, max_concurrent=None, use_executor="auto"
-        )
+        results = await async_map_smart(double, items, max_concurrent=None, use_executor="auto")
         assert results == [2, 4, 6]
 
 
@@ -1092,9 +1060,7 @@ class TestBatchProcessSmart:
             return item * 3
 
         items = [1, 2, 3, 4, 5]
-        results = await batch_process_smart(
-            items, triple, batch_size=2, use_executor="always"
-        )
+        results = await batch_process_smart(items, triple, batch_size=2, use_executor="always")
         assert results == [3, 6, 9, 12, 15]
 
     @pytest.mark.asyncio
@@ -1105,9 +1071,7 @@ class TestBatchProcessSmart:
             return item * 4
 
         items = [1, 2, 3, 4, 5]
-        results = await batch_process_smart(
-            items, quadruple, batch_size=2, use_executor="never"
-        )
+        results = await batch_process_smart(items, quadruple, batch_size=2, use_executor="never")
         assert results == [4, 8, 12, 16, 20]
 
     @pytest.mark.asyncio
@@ -1118,9 +1082,7 @@ class TestBatchProcessSmart:
             return item * 5
 
         items = [1, 2, 3, 4, 5]
-        results = await batch_process_smart(
-            items, quintuple, batch_size=2, use_executor="auto"
-        )
+        results = await batch_process_smart(items, quintuple, batch_size=2, use_executor="auto")
         assert results == [5, 10, 15, 20, 25]
 
     @pytest.mark.asyncio
@@ -1148,9 +1110,7 @@ class TestBatchProcessSmart:
             return item
 
         items = list(range(10))
-        await batch_process_smart(
-            items, track_concurrency, batch_size=5, max_concurrent=2
-        )
+        await batch_process_smart(items, track_concurrency, batch_size=5, max_concurrent=2)
 
         # Max concurrent should not exceed 2
         assert max_seen <= 2
@@ -1165,9 +1125,7 @@ class TestBatchProcessSmart:
             return item * 2
 
         items = list(range(6))
-        results = await batch_process_smart(
-            items, track_processor, batch_size=2, use_executor="never"
-        )
+        results = await batch_process_smart(items, track_processor, batch_size=2, use_executor="never")
 
         assert results == [0, 2, 4, 6, 8, 10]
         assert processed == [0, 1, 2, 3, 4, 5]
@@ -1198,9 +1156,7 @@ class TestAsyncFilterSmart:
             return x > 0
 
         items = [-2, -1, 0, 1, 2, 3]
-        results = await async_filter_smart(
-            is_positive, items, use_executor="never"
-        )
+        results = await async_filter_smart(is_positive, items, use_executor="never")
         assert results == [1, 2, 3]
 
     @pytest.mark.asyncio
@@ -1222,9 +1178,7 @@ class TestAsyncFilterSmart:
             return x % 3 == 0
 
         items = [1, 2, 3, 4, 5, 6, 9]
-        results = await async_filter_smart(
-            is_divisible_by_3, items, use_executor="auto"
-        )
+        results = await async_filter_smart(is_divisible_by_3, items, use_executor="auto")
         assert results == [3, 6, 9]
 
     @pytest.mark.asyncio
@@ -1277,9 +1231,7 @@ class TestAsyncFilterSmart:
             return x > 0
 
         items = [-1, 0, 1, 2]
-        results = await async_filter_smart(
-            is_positive, items, max_concurrent=None, use_executor="never"
-        )
+        results = await async_filter_smart(is_positive, items, max_concurrent=None, use_executor="never")
         assert results == [1, 2]
 
     @pytest.mark.asyncio
@@ -1290,9 +1242,7 @@ class TestAsyncFilterSmart:
             return x > 0
 
         items = [-1, 0, 1, 2]
-        results = await async_filter_smart(
-            is_positive, items, max_concurrent=None, use_executor="auto"
-        )
+        results = await async_filter_smart(is_positive, items, max_concurrent=None, use_executor="auto")
         assert results == [1, 2]
 
 

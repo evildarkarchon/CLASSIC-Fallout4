@@ -683,4 +683,3 @@ class TestCheckXsePlugins:
 
         assert "NOTICE" in result
         assert "not found" in result
-

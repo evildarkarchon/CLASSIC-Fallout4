@@ -111,9 +111,7 @@ class TestScanNamedRecords:
     """Tests for RustRecordScanner.scan_named_records method."""
 
     @pytest.mark.unit
-    def test_scan_named_records_returns_tuple(
-        self, record_scanner: "RustRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_scan_named_records_returns_tuple(self, record_scanner: "RustRecordScanner", sample_callstack: list[str]) -> None:
         """Test scan_named_records returns tuple of (ReportFragment, matches)."""
         fragment, matches = record_scanner.scan_named_records(sample_callstack)
 
@@ -121,9 +119,7 @@ class TestScanNamedRecords:
         assert isinstance(matches, list)
 
     @pytest.mark.unit
-    def test_scan_named_records_finds_matches(
-        self, record_scanner: "RustRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_scan_named_records_finds_matches(self, record_scanner: "RustRecordScanner", sample_callstack: list[str]) -> None:
         """Test that matching records are found."""
         fragment, matches = record_scanner.scan_named_records(sample_callstack)
 
@@ -131,9 +127,7 @@ class TestScanNamedRecords:
         assert len(matches) >= 0  # May not find matches depending on implementation
 
     @pytest.mark.unit
-    def test_scan_named_records_empty_callstack(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_scan_named_records_empty_callstack(self, record_scanner: "RustRecordScanner") -> None:
         """Test scan with empty callstack."""
         fragment, matches = record_scanner.scan_named_records([])
 
@@ -141,9 +135,7 @@ class TestScanNamedRecords:
         assert len(matches) == 0
 
     @pytest.mark.unit
-    def test_scan_named_records_no_matches(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_scan_named_records_no_matches(self, record_scanner: "RustRecordScanner") -> None:
         """Test scan with no matching records."""
         callstack = ["NoRecordsHere", "JustSomeText"]
 
@@ -165,18 +157,14 @@ class TestExtractRecords:
     """Tests for RustRecordScanner.extract_records method."""
 
     @pytest.mark.unit
-    def test_extract_records_returns_list(
-        self, record_scanner: "RustRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_extract_records_returns_list(self, record_scanner: "RustRecordScanner", sample_callstack: list[str]) -> None:
         """Test extract_records returns list of matches."""
         result = record_scanner.extract_records(sample_callstack)
 
         assert isinstance(result, list)
 
     @pytest.mark.unit
-    def test_extract_records_empty_callstack(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_extract_records_empty_callstack(self, record_scanner: "RustRecordScanner") -> None:
         """Test extract with empty callstack."""
         result = record_scanner.extract_records([])
 
@@ -192,9 +180,7 @@ class TestBatchScanRecords:
     """Tests for RustRecordScanner.batch_scan_records method."""
 
     @pytest.mark.unit
-    def test_batch_scan_records_returns_list(
-        self, record_scanner: "RustRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_batch_scan_records_returns_list(self, record_scanner: "RustRecordScanner", sample_callstack: list[str]) -> None:
         """Test batch_scan_records returns list of results."""
         segments = [sample_callstack, ["OtherLine"]]
 
@@ -204,9 +190,7 @@ class TestBatchScanRecords:
         assert len(results) == 2
 
     @pytest.mark.unit
-    def test_batch_scan_records_tuple_format(
-        self, record_scanner: "RustRecordScanner", sample_callstack: list[str]
-    ) -> None:
+    def test_batch_scan_records_tuple_format(self, record_scanner: "RustRecordScanner", sample_callstack: list[str]) -> None:
         """Test each result is a tuple of (ReportFragment, matches)."""
         segments = [sample_callstack]
 
@@ -218,9 +202,7 @@ class TestBatchScanRecords:
         assert isinstance(matches, list)
 
     @pytest.mark.unit
-    def test_batch_scan_records_empty_segments(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_batch_scan_records_empty_segments(self, record_scanner: "RustRecordScanner") -> None:
         """Test batch scan with empty segments list."""
         results = record_scanner.batch_scan_records([])
 
@@ -236,9 +218,7 @@ class TestClearCache:
     """Tests for RustRecordScanner.clear_cache method."""
 
     @pytest.mark.unit
-    def test_clear_cache_runs_without_error(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_clear_cache_runs_without_error(self, record_scanner: "RustRecordScanner") -> None:
         """Test clear_cache runs without error."""
         # Should not raise
         record_scanner.clear_cache()
@@ -306,9 +286,7 @@ class TestGenerateReportLines:
     """Tests for RustRecordScanner._generate_report_lines method."""
 
     @pytest.mark.unit
-    def test_generate_report_lines_with_matches(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_generate_report_lines_with_matches(self, record_scanner: "RustRecordScanner") -> None:
         """Test report generation with matches."""
         matches = ["Actor", "Actor", "TESObjectREFR"]
 
@@ -320,9 +298,7 @@ class TestGenerateReportLines:
         assert "Actor" in content
 
     @pytest.mark.unit
-    def test_generate_report_lines_no_matches(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_generate_report_lines_no_matches(self, record_scanner: "RustRecordScanner") -> None:
         """Test report generation with no matches."""
         lines = record_scanner._generate_report_lines([])
 
@@ -330,9 +306,7 @@ class TestGenerateReportLines:
         assert "COULDN'T FIND" in content
 
     @pytest.mark.unit
-    def test_generate_report_lines_counts_occurrences(
-        self, record_scanner: "RustRecordScanner"
-    ) -> None:
+    def test_generate_report_lines_counts_occurrences(self, record_scanner: "RustRecordScanner") -> None:
         """Test that occurrences are counted."""
         matches = ["Actor", "Actor", "Actor"]
 
@@ -351,9 +325,7 @@ class TestRustRecordScannerFallback:
     """Tests for Python fallback behavior."""
 
     @pytest.mark.unit
-    def test_fallback_to_python_on_rust_error(
-        self, mock_yamldata_for_record: MagicMock
-    ) -> None:
+    def test_fallback_to_python_on_rust_error(self, mock_yamldata_for_record: MagicMock) -> None:
         """Test fallback to Python when Rust unavailable."""
         from ClassicLib.rust.record_rust import RustRecordScanner
 
@@ -370,9 +342,7 @@ class TestRustRecordScannerFallback:
         assert hasattr(fragment, "to_list")
 
     @pytest.mark.unit
-    def test_uses_python_when_rust_unavailable(
-        self, mock_yamldata_for_record: MagicMock
-    ) -> None:
+    def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_record: MagicMock) -> None:
         """Test Python implementation is used when Rust unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
             from ClassicLib.rust.record_rust import RustRecordScanner

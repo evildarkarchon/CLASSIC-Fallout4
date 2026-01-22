@@ -89,9 +89,7 @@ class TestPathManagerBrowse:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
     @patch("ClassicLib.GlobalRegistry.get_game")
-    def test_browse_sets_selected_folder(
-        self, mock_get_game, mock_dialog, manager_with_input
-    ):
+    def test_browse_sets_selected_folder(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder sets selected folder to input widget."""
         mock_get_game.return_value = "Fallout4"
         mock_dialog.getExistingDirectory.return_value = "/new/selected/path"
@@ -99,16 +97,12 @@ class TestPathManagerBrowse:
 
         manager_with_input.browse_ini_folder()
 
-        manager_with_input.ini_folder_input.setText.assert_called_once_with(
-            "/new/selected/path"
-        )
+        manager_with_input.ini_folder_input.setText.assert_called_once_with("/new/selected/path")
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
     @patch("ClassicLib.GlobalRegistry.get_game")
-    def test_browse_handles_cancelled_dialog(
-        self, mock_get_game, mock_dialog, manager_with_input
-    ):
+    def test_browse_handles_cancelled_dialog(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder handles cancelled dialog (empty string)."""
         mock_get_game.return_value = "Fallout4"
         mock_dialog.getExistingDirectory.return_value = ""  # User cancelled
@@ -120,9 +114,7 @@ class TestPathManagerBrowse:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
     @patch("ClassicLib.GlobalRegistry.get_game")
-    def test_browse_uses_game_name_from_registry(
-        self, mock_get_game, mock_dialog, manager_with_input
-    ):
+    def test_browse_uses_game_name_from_registry(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder uses game name from GlobalRegistry for dialog title."""
         mock_get_game.return_value = "Skyrim"
         mock_dialog.getExistingDirectory.return_value = ""
@@ -137,9 +129,7 @@ class TestPathManagerBrowse:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
     @patch("ClassicLib.GlobalRegistry.get_game")
-    def test_browse_fallback_to_game_on_registry_error(
-        self, mock_get_game, mock_dialog, manager_with_input
-    ):
+    def test_browse_fallback_to_game_on_registry_error(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder falls back to 'Game' when registry raises."""
         mock_get_game.side_effect = ValueError("No game configured")
         mock_dialog.getExistingDirectory.return_value = ""
@@ -193,9 +183,7 @@ class TestPathManagerReset:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    def test_reset_handles_import_error(
-        self, mock_yaml, mock_msg_error, manager_with_mock_input
-    ):
+    def test_reset_handles_import_error(self, mock_yaml, mock_msg_error, manager_with_mock_input):
         """Test reset_ini_folder handles ImportError gracefully."""
         mock_yaml.side_effect = ImportError("Module not found")
 
@@ -206,9 +194,7 @@ class TestPathManagerReset:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    def test_reset_handles_os_error(
-        self, mock_yaml, mock_msg_error, manager_with_mock_input
-    ):
+    def test_reset_handles_os_error(self, mock_yaml, mock_msg_error, manager_with_mock_input):
         """Test reset_ini_folder handles OSError gracefully."""
         mock_yaml.side_effect = OSError("File system error")
 
@@ -261,9 +247,7 @@ class TestPathManagerAutodetect:
 
         manager_with_mock_input.autodetect_ini_folder()
 
-        manager_with_mock_input.ini_folder_input.setText.assert_called_once_with(
-            "/detected/ini/folder"
-        )
+        manager_with_mock_input.ini_folder_input.setText.assert_called_once_with("/detected/ini/folder")
         mock_msg_success.assert_called_once()
 
     @pytest.mark.unit

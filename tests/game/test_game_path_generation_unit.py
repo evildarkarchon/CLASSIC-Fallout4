@@ -130,9 +130,7 @@ class TestGamePathFind:
     """Tests for game_path_find() top-level function."""
 
     @patch("ClassicLib.GamePath.GamePathFinder")
-    def test_game_path_find_creates_finder_and_calls_find(
-        self, mock_finder_class: MagicMock, message_handler
-    ) -> None:
+    def test_game_path_find_creates_finder_and_calls_find(self, mock_finder_class: MagicMock, message_handler) -> None:
         """Test game_path_find creates finder and calls find_game_path."""
         mock_finder = MagicMock()
         mock_finder_class.return_value = mock_finder
@@ -147,9 +145,7 @@ class TestVersionWarningLogging:
     """Tests for _log_version_warning helper function."""
 
     @patch("ClassicLib.GamePath.get_version_registry")
-    def test_log_version_warning_logs_only_once(
-        self, mock_registry: MagicMock, message_handler
-    ) -> None:
+    def test_log_version_warning_logs_only_once(self, mock_registry: MagicMock, message_handler) -> None:
         """Test _log_version_warning only logs once per session."""
         import ClassicLib.GamePath as gp
 

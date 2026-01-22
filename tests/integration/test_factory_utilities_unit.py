@@ -4,8 +4,9 @@ This module tests the factory functions for Rust utility modules,
 verifying fallback behavior and component detection.
 """
 
+from unittest.mock import MagicMock, patch
+
 import pytest
-from unittest.mock import patch, MagicMock
 
 pytestmark = [pytest.mark.unit]
 
@@ -45,6 +46,7 @@ class TestGetConstants:
         ):
             # Force ImportError by making import fail
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
@@ -191,6 +193,7 @@ class TestGetPathOperations:
             patch("ClassicLib.integration.factory.utilities.get_components", return_value={"path_operations": True}),
         ):
             import builtins
+
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):

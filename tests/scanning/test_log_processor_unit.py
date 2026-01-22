@@ -4,9 +4,10 @@ This module tests the LogProcessor class for log file error detection.
 """
 
 import asyncio
-import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 

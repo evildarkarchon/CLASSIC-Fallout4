@@ -176,9 +176,7 @@ class TestWindowGeometryManagerTabChanged:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_handle_tab_changed_saves_previous_geometry(
-        self, mock_yaml, mock_context
-    ):
+    def test_handle_tab_changed_saves_previous_geometry(self, mock_yaml, mock_context):
         """Test handle_tab_changed saves geometry for previous tab."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,
@@ -215,9 +213,7 @@ class TestWindowGeometryManagerTabChanged:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_on_tab_changed_signal_requests_refresh_for_results_tab(
-        self, mock_yaml, mock_context
-    ):
+    def test_on_tab_changed_signal_requests_refresh_for_results_tab(self, mock_yaml, mock_context):
         """Test _on_tab_changed_signal requests refresh when switching to results tab."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,
@@ -230,9 +226,7 @@ class TestWindowGeometryManagerTabChanged:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_on_tab_changed_signal_no_refresh_for_other_tabs(
-        self, mock_yaml, mock_context
-    ):
+    def test_on_tab_changed_signal_no_refresh_for_other_tabs(self, mock_yaml, mock_context):
         """Test _on_tab_changed_signal does not request refresh for non-results tabs."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,
@@ -305,9 +299,7 @@ class TestWindowGeometryManagerSaveRestore:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_save_tab_geometry_handles_maximized_window(
-        self, mock_yaml, mock_context_with_qt
-    ):
+    def test_save_tab_geometry_handles_maximized_window(self, mock_yaml, mock_context_with_qt):
         """Test save_tab_geometry saves normal geometry when maximized."""
         from PySide6.QtCore import Qt
 
@@ -316,9 +308,7 @@ class TestWindowGeometryManagerSaveRestore:
         )
 
         # Set window to maximized state
-        mock_context_with_qt.main_window.windowState.return_value = (
-            Qt.WindowState.WindowMaximized
-        )
+        mock_context_with_qt.main_window.windowState.return_value = Qt.WindowState.WindowMaximized
 
         manager = WindowGeometryManager(mock_context_with_qt)
         manager.save_tab_geometry(0)
@@ -330,9 +320,7 @@ class TestWindowGeometryManagerSaveRestore:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_restore_tab_geometry_uses_saved_size(
-        self, mock_yaml, mock_context_with_qt
-    ):
+    def test_restore_tab_geometry_uses_saved_size(self, mock_yaml, mock_context_with_qt):
         """Test restore_tab_geometry uses saved size from YAML."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,
@@ -347,9 +335,7 @@ class TestWindowGeometryManagerSaveRestore:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_restore_tab_geometry_uses_default_when_no_saved_size(
-        self, mock_yaml, mock_context_with_qt
-    ):
+    def test_restore_tab_geometry_uses_default_when_no_saved_size(self, mock_yaml, mock_context_with_qt):
         """Test restore_tab_geometry uses default min size when no saved size."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,
@@ -378,9 +364,7 @@ class TestWindowGeometryManagerSaveRestore:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_restore_tab_geometry_enforces_minimum_size(
-        self, mock_yaml, mock_context_with_qt
-    ):
+    def test_restore_tab_geometry_enforces_minimum_size(self, mock_yaml, mock_context_with_qt):
         """Test restore_tab_geometry enforces minimum size constraints."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,
@@ -397,9 +381,7 @@ class TestWindowGeometryManagerSaveRestore:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings")
-    def test_restore_tab_geometry_restores_maximized_state(
-        self, mock_yaml, mock_context_with_qt
-    ):
+    def test_restore_tab_geometry_restores_maximized_state(self, mock_yaml, mock_context_with_qt):
         """Test restore_tab_geometry restores maximized state."""
         from ClassicLib.Interface.controllers.window_geometry import (
             WindowGeometryManager,

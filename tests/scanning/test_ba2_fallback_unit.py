@@ -4,9 +4,10 @@ This module tests the BA2Issues container and BA2Scanner fallback implementation
 for scanning BA2 archives.
 """
 
-import pytest
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 pytestmark = [pytest.mark.unit]
 
@@ -120,7 +121,7 @@ class TestBA2Scanner:
 
     def test_scan_archive_valid_ba2_file(self, tmp_path: Path) -> None:
         """Test scanning a valid .ba2 file returns BA2Issues object."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner, BA2Issues
+        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
 
         # Create a mock .ba2 file
         ba2_file = tmp_path / "test.ba2"
@@ -132,7 +133,7 @@ class TestBA2Scanner:
 
     def test_scan_archive_case_insensitive_extension(self, tmp_path: Path) -> None:
         """Test scanning works with different case extensions."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner, BA2Issues
+        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
 
         # Create .BA2 with uppercase extension
         ba2_file = tmp_path / "test.BA2"
@@ -156,7 +157,7 @@ class TestBA2ScannerBatch:
 
     def test_scan_single_archive_batch(self, tmp_path: Path) -> None:
         """Test scanning a batch with single archive."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner, BA2Issues
+        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
 
         ba2_file = tmp_path / "test.ba2"
         ba2_file.write_bytes(b"BA2\x00test")
@@ -169,7 +170,7 @@ class TestBA2ScannerBatch:
 
     def test_scan_multiple_archives_batch(self, tmp_path: Path) -> None:
         """Test scanning a batch with multiple archives."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner, BA2Issues
+        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
 
         ba2_files = []
         for i in range(3):
@@ -225,8 +226,9 @@ class TestBA2ScannerStaticMethods:
 
     def test_scan_archive_is_static(self) -> None:
         """Test that scan_archive can be called without instance."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner, BA2Issues
         from pathlib import Path
+
+        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
 
         # Call directly on class without instance
         result = BA2Scanner.scan_archive(Path("nonexistent.ba2"))

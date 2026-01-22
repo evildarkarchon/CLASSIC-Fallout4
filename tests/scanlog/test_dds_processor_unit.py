@@ -107,9 +107,7 @@ class TestReadDDSHeaderMmap:
 
         assert result is None
 
-    def test_read_odd_dimensions(
-        self, odd_dimension_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_read_odd_dimensions(self, odd_dimension_dds_data: bytes, tmp_path: Path) -> None:
         """Test reading DDS with odd dimensions."""
         dds_file = tmp_path / "odd.dds"
         dds_file.write_bytes(odd_dimension_dds_data)
@@ -138,9 +136,7 @@ class TestReadDDSHeaderRust:
 
         assert result is None
 
-    def test_read_rust_available_valid_file(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_read_rust_available_valid_file(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test Rust DDS reading with valid file when Rust is available."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -172,9 +168,7 @@ class TestReadDDSHeaderRust:
 
         assert result is None
 
-    def test_read_rust_parse_error(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_read_rust_parse_error(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test Rust DDS reading when parsing fails."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -196,9 +190,7 @@ class TestReadDDSHeaderRust:
 class TestValidateDDSForGame:
     """Test multi-strategy DDS validation."""
 
-    def test_validate_with_rust_valid_texture(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_with_rust_valid_texture(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation using Rust parser with valid texture."""
         dds_file = tmp_path / "valid.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -217,16 +209,12 @@ class TestValidateDDSForGame:
         processor = DDSProcessor(semaphore)
 
         with patch("ClassicLib.ScanGame.core.dds_processor.HAS_RUST_DDS", True):
-            with patch.object(
-                DDSProcessor, "read_dds_header_rust", return_value=mock_header
-            ):
+            with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
         assert issues == []
 
-    def test_validate_with_rust_unusual_size(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_with_rust_unusual_size(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation detects unusual texture size."""
         dds_file = tmp_path / "unusual.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -243,17 +231,13 @@ class TestValidateDDSForGame:
         processor = DDSProcessor(semaphore)
 
         with patch("ClassicLib.ScanGame.core.dds_processor.HAS_RUST_DDS", True):
-            with patch.object(
-                DDSProcessor, "read_dds_header_rust", return_value=mock_header
-            ):
+            with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
         assert any("Unusual texture size" in issue for issue in issues)
         assert any("Non-power-of-2" in issue for issue in issues)
 
-    def test_validate_with_rust_bc_invalid_dimensions(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_with_rust_bc_invalid_dimensions(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation detects BC compression with invalid dimensions."""
         dds_file = tmp_path / "bc_invalid.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -271,16 +255,12 @@ class TestValidateDDSForGame:
         processor = DDSProcessor(semaphore)
 
         with patch("ClassicLib.ScanGame.core.dds_processor.HAS_RUST_DDS", True):
-            with patch.object(
-                DDSProcessor, "read_dds_header_rust", return_value=mock_header
-            ):
+            with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
         assert any("BC-compressed texture has invalid dimensions" in issue for issue in issues)
 
-    def test_validate_with_rust_no_mipmaps(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_with_rust_no_mipmaps(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation detects missing mipmaps."""
         dds_file = tmp_path / "no_mipmaps.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -297,16 +277,12 @@ class TestValidateDDSForGame:
         processor = DDSProcessor(semaphore)
 
         with patch("ClassicLib.ScanGame.core.dds_processor.HAS_RUST_DDS", True):
-            with patch.object(
-                DDSProcessor, "read_dds_header_rust", return_value=mock_header
-            ):
+            with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
         assert any("No mipmaps" in issue for issue in issues)
 
-    def test_validate_with_rust_very_large(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_with_rust_very_large(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation detects very large textures."""
         dds_file = tmp_path / "large.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -323,16 +299,12 @@ class TestValidateDDSForGame:
         processor = DDSProcessor(semaphore)
 
         with patch("ClassicLib.ScanGame.core.dds_processor.HAS_RUST_DDS", True):
-            with patch.object(
-                DDSProcessor, "read_dds_header_rust", return_value=mock_header
-            ):
+            with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
         assert any("Very large texture" in issue for issue in issues)
 
-    def test_validate_fallback_to_analyzer(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_fallback_to_analyzer(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation falls back to enhanced analyzer."""
         dds_file = tmp_path / "analyzer.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -353,9 +325,7 @@ class TestValidateDDSForGame:
         mock_analyzer.analyze_file.assert_called_once_with(dds_file)
         mock_analyzer.validate_for_game.assert_called_once_with(mock_info, "Fallout4")
 
-    def test_validate_fallback_to_mmap(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_fallback_to_mmap(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test validation falls back to mmap-based validation."""
         dds_file = tmp_path / "mmap.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -369,9 +339,7 @@ class TestValidateDDSForGame:
         # valid_dds_data has 1024x2048 which are both even and ≤4096
         assert issues == []
 
-    def test_validate_mmap_odd_dimensions(
-        self, odd_dimension_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_validate_mmap_odd_dimensions(self, odd_dimension_dds_data: bytes, tmp_path: Path) -> None:
         """Test mmap validation detects odd dimensions."""
         dds_file = tmp_path / "odd.dds"
         dds_file.write_bytes(odd_dimension_dds_data)
@@ -422,9 +390,7 @@ class TestValidateDDSForGame:
 class TestGetDetailedInfo:
     """Test detailed DDS info retrieval."""
 
-    def test_get_detailed_info_with_analyzer(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_get_detailed_info_with_analyzer(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test getting detailed info when analyzer is available."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -442,9 +408,7 @@ class TestGetDetailedInfo:
         assert result is mock_info
         mock_analyzer.analyze_file.assert_called_once_with(dds_file)
 
-    def test_get_detailed_info_without_analyzer(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    def test_get_detailed_info_without_analyzer(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test getting detailed info when analyzer is not available."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -462,9 +426,7 @@ class TestGetDetailedInfo:
 class TestGetDetailedInfoAsync:
     """Test async detailed DDS info retrieval."""
 
-    async def test_get_detailed_info_async_with_analyzer(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_get_detailed_info_async_with_analyzer(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test async detailed info retrieval with analyzer."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -485,9 +447,7 @@ class TestGetDetailedInfoAsync:
 
         assert result is mock_info
 
-    async def test_get_detailed_info_async_without_analyzer(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_get_detailed_info_async_without_analyzer(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test async detailed info retrieval without analyzer."""
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
@@ -505,9 +465,7 @@ class TestGetDetailedInfoAsync:
 class TestProcessSingleDDSFile:
     """Test single DDS file processing."""
 
-    async def test_process_valid_file_no_issues(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_process_valid_file_no_issues(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test processing a valid DDS file with no issues."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
@@ -525,9 +483,7 @@ class TestProcessSingleDDSFile:
 
         assert issues == []
 
-    async def test_process_file_with_rust_issues(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_process_file_with_rust_issues(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test processing a DDS file that has issues detected by Rust."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
@@ -550,9 +506,7 @@ class TestProcessSingleDDSFile:
         assert all("TestMod" in issue for issue in issues)
         assert all("textures\\test.dds" in issue for issue in issues)
 
-    async def test_process_file_with_mmap_fallback(
-        self, odd_dimension_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_process_file_with_mmap_fallback(self, odd_dimension_dds_data: bytes, tmp_path: Path) -> None:
         """Test processing falls back to mmap when Rust unavailable."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
@@ -576,9 +530,7 @@ class TestProcessSingleDDSFile:
 class TestCheckDDSBatchAsync:
     """Test batch DDS checking."""
 
-    async def test_batch_check_no_issues(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_batch_check_no_issues(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test batch check with valid files produces no issues."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
@@ -598,9 +550,7 @@ class TestCheckDDSBatchAsync:
 
         assert len(issue_lists["tex_dims"]) == 0
 
-    async def test_batch_check_with_issues(
-        self, odd_dimension_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_batch_check_with_issues(self, odd_dimension_dds_data: bytes, tmp_path: Path) -> None:
         """Test batch check collects issues from files."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
@@ -620,9 +570,7 @@ class TestCheckDDSBatchAsync:
         assert len(issue_lists["tex_dims"]) > 0
         assert any("TestMod" in issue for issue in issue_lists["tex_dims"])
 
-    async def test_batch_check_multiple_files(
-        self, valid_dds_data: bytes, odd_dimension_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_batch_check_multiple_files(self, valid_dds_data: bytes, odd_dimension_dds_data: bytes, tmp_path: Path) -> None:
         """Test batch check processes multiple files."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
@@ -646,9 +594,7 @@ class TestCheckDDSBatchAsync:
         # Only the odd file should have issues
         assert any("odd.dds" in issue for issue in issue_lists["tex_dims"])
 
-    async def test_batch_check_respects_semaphore(
-        self, valid_dds_data: bytes, tmp_path: Path
-    ) -> None:
+    async def test_batch_check_respects_semaphore(self, valid_dds_data: bytes, tmp_path: Path) -> None:
         """Test that batch check respects semaphore for concurrency control."""
         mod_dir = tmp_path / "TestMod"
         mod_dir.mkdir()
