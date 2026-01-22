@@ -9,7 +9,7 @@ import socket
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -145,6 +145,8 @@ class TestUpdateManagerNetworkResilience:
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 mock_response.json = AsyncMock(side_effect=simulator.simulate_partial_response)
+                # raise_for_status is a sync method in aiohttp, must use MagicMock not AsyncMock
+                mock_response.raise_for_status = MagicMock()
                 mock_get.return_value.__aenter__.return_value = mock_response
 
                 # Should handle partial response gracefully
@@ -164,6 +166,8 @@ class TestUpdateManagerNetworkResilience:
                 mock_response = AsyncMock()
                 # VersionChecker calls .json()
                 mock_response.json = AsyncMock(side_effect=json.JSONDecodeError("Expecting value", "", 0))
+                # raise_for_status is a sync method in aiohttp, must use MagicMock not AsyncMock
+                mock_response.raise_for_status = MagicMock()
                 mock_get.return_value.__aenter__.return_value = mock_response
 
                 # Should handle corrupted JSON gracefully

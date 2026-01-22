@@ -477,6 +477,8 @@ class TestManageGameFilesSync:
     def test_manage_game_files_uses_async_bridge(self, mock_async_func: MagicMock, mock_bridge_class: MagicMock) -> None:
         """manage_game_files should use AsyncBridge to run async version."""
         mock_bridge = MagicMock()
+        # Make run_async close the coroutine to prevent "never awaited" warning
+        mock_bridge.run_async.side_effect = lambda coro: coro.close()
         mock_bridge_class.get_instance.return_value = mock_bridge
 
         manage_game_files("TestList", "REMOVE")
@@ -487,13 +489,14 @@ class TestManageGameFilesSync:
     def test_manage_game_files_defaults_to_backup_mode(self, mock_bridge_class: MagicMock) -> None:
         """manage_game_files should default to BACKUP mode."""
         mock_bridge = MagicMock()
+        # Make run_async close the coroutine to prevent "never awaited" warning
+        mock_bridge.run_async.side_effect = lambda coro: coro.close()
         mock_bridge_class.get_instance.return_value = mock_bridge
 
         manage_game_files("TestList")
 
         # The async function should be called with BACKUP mode
-        call_args = mock_bridge.run_async.call_args[0][0]
-        # Can't directly check coroutine args, but test doesn't raise
+        mock_bridge.run_async.assert_called_once()
 
 
 # ==============================================================================

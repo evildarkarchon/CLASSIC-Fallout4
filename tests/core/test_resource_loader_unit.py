@@ -787,9 +787,14 @@ class TestSavePathToCache:
 
         mock_loop = MagicMock()
 
+        def close_coroutine(coro):
+            """Close the coroutine to prevent 'never awaited' warning."""
+            coro.close()
+            return MagicMock()
+
         with (
             patch("asyncio.get_running_loop", return_value=mock_loop),
-            patch("asyncio.create_task") as mock_create_task,
+            patch("asyncio.create_task", side_effect=close_coroutine) as mock_create_task,
         ):
             ResourceLoader.save_path_to_cache(tmp_path, "GamePath", "Fallout4", "")
             mock_create_task.assert_called_once()

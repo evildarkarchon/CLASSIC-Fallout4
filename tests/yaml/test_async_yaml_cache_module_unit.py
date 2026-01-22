@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from unittest.mock import MagicMock, patch, AsyncMock
 
-pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
+pytestmark = [pytest.mark.unit]
 
 
 class TestYamlCacheInitialization:
@@ -69,6 +69,7 @@ class TestYamlCacheInitialization:
         assert metrics["total_reads"] == 0
 
 
+@pytest.mark.asyncio
 class TestYamlCacheGetFileLock:
     """Tests for get_file_lock method."""
 
@@ -106,6 +107,7 @@ class TestYamlCacheGetFileLock:
         assert lock1 is not lock2
 
 
+@pytest.mark.asyncio
 class TestYamlCacheCheckFileModification:
     """Tests for check_file_modification method."""
 

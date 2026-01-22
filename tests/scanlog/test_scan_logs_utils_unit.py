@@ -462,9 +462,14 @@ class TestCrashlogsScan:
             failed_logs=[],
         )
 
+        def close_and_return(coro):
+            """Close coroutine to prevent 'never awaited' warning and return value."""
+            coro.close()
+            return expected_result
+
         with (
             patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor") as mock_executor_class,
-            patch("ClassicLib.AsyncBridge.run_async", return_value=expected_result) as mock_run,
+            patch("ClassicLib.AsyncBridge.run_async", side_effect=close_and_return) as mock_run,
         ):
             mock_executor = MagicMock()
             mock_executor_class.return_value = mock_executor

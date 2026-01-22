@@ -470,7 +470,13 @@ class TestSyncAdapters:
     def test_generate_game_combined_result_uses_asyncbridge(self, mock_async_bridge_class: MagicMock) -> None:
         """generate_game_combined_result should use AsyncBridge for sync execution."""
         mock_bridge = MagicMock()
-        mock_bridge.run_async.return_value = ("Result", [])
+
+        def close_and_return(coro):
+            """Close coroutine to prevent 'never awaited' warning and return value."""
+            coro.close()
+            return ("Result", [])
+
+        mock_bridge.run_async.side_effect = close_and_return
         mock_async_bridge_class.get_instance.return_value = mock_bridge
 
         result, issues = generate_game_combined_result()
@@ -484,7 +490,13 @@ class TestSyncAdapters:
     def test_generate_mods_combined_result_uses_asyncbridge(self, mock_async_bridge_class: MagicMock) -> None:
         """generate_mods_combined_result should use AsyncBridge for sync execution."""
         mock_bridge = MagicMock()
-        mock_bridge.run_async.return_value = "Mods Result"
+
+        def close_and_return(coro):
+            """Close coroutine to prevent 'never awaited' warning and return value."""
+            coro.close()
+            return "Mods Result"
+
+        mock_bridge.run_async.side_effect = close_and_return
         mock_async_bridge_class.get_instance.return_value = mock_bridge
 
         result = generate_mods_combined_result()
@@ -497,6 +509,13 @@ class TestSyncAdapters:
     def test_write_combined_results_uses_asyncbridge(self, mock_async_bridge_class: MagicMock) -> None:
         """write_combined_results should use AsyncBridge for sync execution."""
         mock_bridge = MagicMock()
+
+        def close_and_return(coro):
+            """Close coroutine to prevent 'never awaited' warning."""
+            coro.close()
+            return None
+
+        mock_bridge.run_async.side_effect = close_and_return
         mock_async_bridge_class.get_instance.return_value = mock_bridge
 
         write_combined_results()

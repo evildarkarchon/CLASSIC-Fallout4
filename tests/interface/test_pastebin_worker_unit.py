@@ -16,9 +16,30 @@ All tests in this module require Qt and cannot run in parallel workers.
 from __future__ import annotations
 
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
+
+def make_run_async_handler(return_value=None, side_effect=None):
+    """Create a side_effect for run_async that properly closes coroutines.
+
+    Args:
+        return_value: Value to return after closing the coroutine.
+        side_effect: Exception to raise after closing the coroutine.
+
+    Returns:
+        A function that closes the coroutine and returns/raises appropriately.
+    """
+
+    def handler(coro):
+        # Close the coroutine to prevent "never awaited" warning
+        coro.close()
+        if side_effect is not None:
+            raise side_effect
+        return return_value
+
+    return handler
 
 # Skip Qt-dependent tests in parallel workers
 pytestmark = pytest.mark.skipif(
@@ -100,16 +121,14 @@ class TestPastebinFetchWorkerSuccess:
         worker.finished.connect(finished_spy)
         worker.error.connect(error_spy)
 
-        # Mock at the source modules where imports come from
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch(
-                "ClassicLib.Utils.web_utils.async_pastebin_fetch"
-            ) as mock_fetch,
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.return_value = "content"
+            # Use handler to close coroutine and return value
+            mock_bridge.run_async.side_effect = make_run_async_handler(return_value="content")
 
             worker.run()
 
@@ -129,12 +148,12 @@ class TestPastebinFetchWorkerSuccess:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch(
-                "ClassicLib.Utils.web_utils.async_pastebin_fetch"
-            ) as mock_fetch,
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock) as mock_fetch,
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
+            # Use handler to close coroutine
+            mock_bridge.run_async.side_effect = make_run_async_handler()
 
             worker.run()
 
@@ -175,11 +194,14 @@ class TestPastebinFetchWorkerErrors:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.side_effect = aiohttp.ClientError("Connection failed")
+            # Use handler to close coroutine and raise error
+            mock_bridge.run_async.side_effect = make_run_async_handler(
+                side_effect=aiohttp.ClientError("Connection failed")
+            )
 
             worker.run()
 
@@ -208,11 +230,11 @@ class TestPastebinFetchWorkerErrors:
         worker.error.connect(error_spy)
         worker.finished.connect(finished_spy)
 
-        # Simulate OSError by having AsyncBridge raise it
+        # Simulate OSError by having AsyncBridge.get_instance raise it
         # The OSError is caught in the outer try/except block
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge_class.get_instance.side_effect = OSError("File system error")
 
@@ -239,12 +261,11 @@ class TestPastebinFetchWorkerErrors:
         worker.error.connect(error_spy)
         worker.finished.connect(finished_spy)
 
-        # Simulate ValueError
+        # Simulate ValueError by having AsyncBridge.get_instance raise it
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
-            mock_bridge = MagicMock()
             mock_bridge_class.get_instance.side_effect = ValueError("Invalid config")
 
             worker.run()
@@ -312,11 +333,14 @@ class TestPastebinFetchWorkerErrors:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.side_effect = RuntimeError("Unexpected failure")
+            # Use handler to close coroutine and raise error
+            mock_bridge.run_async.side_effect = make_run_async_handler(
+                side_effect=RuntimeError("Unexpected failure")
+            )
 
             worker.run()
 
@@ -347,10 +371,11 @@ class TestPastebinFetchWorkerSignalGuarantees:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
+            mock_bridge.run_async.side_effect = make_run_async_handler()
 
             worker.run()
 
@@ -370,11 +395,13 @@ class TestPastebinFetchWorkerSignalGuarantees:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.side_effect = aiohttp.ClientError("Network error")
+            mock_bridge.run_async.side_effect = make_run_async_handler(
+                side_effect=aiohttp.ClientError("Network error")
+            )
 
             worker.run()
 
@@ -392,7 +419,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge_class.get_instance.side_effect = ValueError("Bad value")
 
@@ -412,12 +439,14 @@ class TestPastebinFetchWorkerSignalGuarantees:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            # Use a standard exception that will be caught by except Exception
-            mock_bridge.run_async.side_effect = RecursionError("Unexpected depth")
+            # Use handler to close coroutine and raise exception
+            mock_bridge.run_async.side_effect = make_run_async_handler(
+                side_effect=RecursionError("Unexpected depth")
+            )
 
             worker.run()
 
@@ -439,10 +468,11 @@ class TestPastebinFetchWorkerSignalGuarantees:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
+            mock_bridge.run_async.side_effect = make_run_async_handler()
 
             worker_success.run()
 
@@ -458,11 +488,13 @@ class TestPastebinFetchWorkerSignalGuarantees:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch"),
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
-            mock_bridge.run_async.side_effect = RuntimeError("Error")
+            mock_bridge.run_async.side_effect = make_run_async_handler(
+                side_effect=RuntimeError("Error")
+            )
 
             worker_error.run()
 
@@ -504,12 +536,11 @@ class TestPastebinFetchWorkerURLHandling:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch(
-                "ClassicLib.Utils.web_utils.async_pastebin_fetch"
-            ) as mock_fetch,
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock) as mock_fetch,
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
+            mock_bridge.run_async.side_effect = make_run_async_handler()
 
             worker.run()
 
@@ -531,12 +562,11 @@ class TestPastebinFetchWorkerURLHandling:
 
         with (
             patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
-            patch(
-                "ClassicLib.Utils.web_utils.async_pastebin_fetch"
-            ) as mock_fetch,
+            patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock) as mock_fetch,
         ):
             mock_bridge = MagicMock()
             mock_bridge_class.get_instance.return_value = mock_bridge
+            mock_bridge.run_async.side_effect = make_run_async_handler()
 
             worker.run()
 

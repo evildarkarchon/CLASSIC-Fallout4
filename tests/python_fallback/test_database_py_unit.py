@@ -148,11 +148,14 @@ class TestPythonDatabasePoolInitialize:
         from ClassicLib.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path, pool_size=5)
-        await pool.initialize()
+        try:
+            await pool.initialize()
 
-        assert pool._initialized is True
-        assert len(pool.connections) > 0
-        assert len(pool.connections) <= 3  # Initial connections capped at 3
+            assert pool._initialized is True
+            assert len(pool.connections) > 0
+            assert len(pool.connections) <= 3  # Initial connections capped at 3
+        finally:
+            await pool.close()
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -172,13 +175,16 @@ class TestPythonDatabasePoolInitialize:
         from ClassicLib.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
-        await pool.initialize()
-        initial_conn_count = len(pool.connections)
+        try:
+            await pool.initialize()
+            initial_conn_count = len(pool.connections)
 
-        # Call again
-        await pool.initialize()
+            # Call again
+            await pool.initialize()
 
-        assert len(pool.connections) == initial_conn_count
+            assert len(pool.connections) == initial_conn_count
+        finally:
+            await pool.close()
 
 
 # ============================================================================
