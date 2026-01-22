@@ -523,7 +523,7 @@ Version_Registry:
         min: "1.10.984.0"
         max: "1.10.999.999"
       priority: 200
-      deprecated: true
+      deprecated: false
 
     # Fallout 4 Anniversary Edition (Active development branch)
     - id: FO4_AE
