@@ -146,6 +146,10 @@ def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[MockSe
     is a class with a class-level _instance attribute (singleton pattern),
     and yaml_cache is a proxy object in the convenience module.
 
+    Also resets the GAME_VERSION_OPTIONS global and VersionRegistry to ensure
+    test isolation. This is necessary because these globals are lazily populated
+    and cached, and tests may run in different orders in CI.
+
     Args:
         monkeypatch: Pytest's monkeypatch fixture.
 
@@ -166,9 +170,26 @@ def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[MockSe
     # Mock the get_instance class method to return our mock cache
     monkeypatch.setattr(YamlSettingsCache, "get_instance", lambda: mock_cache)
 
+    # Reset GAME_VERSION_OPTIONS global to ensure fresh population
+    # This is necessary for test isolation when tests run in parallel
+    import ClassicLib.Interface.Settings.tab_creators as tab_creators_module
+
+    original_version_options = tab_creators_module.GAME_VERSION_OPTIONS
+    tab_creators_module.GAME_VERSION_OPTIONS = []
+
+    # Also reset VersionRegistry to ensure fresh version data
+    # The registry uses YAML settings during initialization, so it needs
+    # to be reset when the YAML cache is mocked
+    from ClassicLib.VersionRegistry.core import VersionRegistry
+
+    original_registry_instance = VersionRegistry._instance
+    VersionRegistry._instance = None
+
     yield mock_cache
 
-    # Restore original instance after test (cleanup)
+    # Restore original states after test (cleanup)
+    VersionRegistry._instance = original_registry_instance
+    tab_creators_module.GAME_VERSION_OPTIONS = original_version_options
     YamlSettingsCache._instance = original_instance
 
 
