@@ -393,7 +393,10 @@ impl VersionInfo {
     /// ```
     #[must_use]
     pub fn get_crashgen_version_strings(&self) -> Vec<&str> {
-        self.crashgen_versions.iter().map(|c| c.version.as_str()).collect()
+        self.crashgen_versions
+            .iter()
+            .map(|c| c.version.as_str())
+            .collect()
     }
 
     /// Get a specific `CrashgenConfig` by its version string.
@@ -420,7 +423,9 @@ impl VersionInfo {
     /// ```
     #[must_use]
     pub fn get_crashgen_for_version(&self, crashgen_version: &str) -> Option<&CrashgenConfig> {
-        self.crashgen_versions.iter().find(|c| c.version == crashgen_version)
+        self.crashgen_versions
+            .iter()
+            .find(|c| c.version == crashgen_version)
     }
 
     /// Get crash generators compatible with a specific game version.
@@ -452,7 +457,10 @@ impl VersionInfo {
     /// }
     /// ```
     #[must_use]
-    pub fn get_compatible_crashgens(&self, game_version: Option<&GameVersion>) -> Vec<&CrashgenConfig> {
+    pub fn get_compatible_crashgens(
+        &self,
+        game_version: Option<&GameVersion>,
+    ) -> Vec<&CrashgenConfig> {
         let check_version = game_version.unwrap_or(&self.version);
         self.crashgen_versions
             .iter()
@@ -616,7 +624,10 @@ mod tests {
         assert_eq!(config.version, "1.28.6");
         assert_eq!(config.name, "Buffout 4");
         assert_eq!(config.description, "Legacy version for OG");
-        assert_eq!(config.download_url, "https://www.nexusmods.com/fallout4/mods/47359");
+        assert_eq!(
+            config.download_url,
+            "https://www.nexusmods.com/fallout4/mods/47359"
+        );
         assert!(config.compatible_range.is_none());
     }
 
@@ -681,7 +692,7 @@ mod tests {
 
     fn create_test_version_info_with_crashgens() -> VersionInfo {
         let og_range = CompatibleRange::from_strings("1.10.163.0", "1.10.163.999").unwrap();
-        
+
         VersionInfo {
             id: "TEST_VERSION".to_string(),
             game: "Fallout4".to_string(),
@@ -716,9 +727,9 @@ mod tests {
     #[test]
     fn test_version_info_get_crashgen_version_strings() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         let version_strings = version_info.get_crashgen_version_strings();
-        
+
         assert_eq!(version_strings.len(), 2);
         assert_eq!(version_strings[0], "1.28.6");
         assert_eq!(version_strings[1], "1.37.0");
@@ -728,16 +739,16 @@ mod tests {
     fn test_version_info_get_crashgen_version_strings_empty() {
         let mut version_info = create_test_version_info_with_crashgens();
         version_info.crashgen_versions = vec![];
-        
+
         let version_strings = version_info.get_crashgen_version_strings();
-        
+
         assert!(version_strings.is_empty());
     }
 
     #[test]
     fn test_version_info_get_crashgen_for_version_found() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         // Find first crashgen
         let config = version_info.get_crashgen_for_version("1.28.6");
         assert!(config.is_some());
@@ -745,7 +756,7 @@ mod tests {
         assert_eq!(config.version, "1.28.6");
         assert_eq!(config.name, "Buffout 4");
         assert!(config.compatible_range.is_some());
-        
+
         // Find second crashgen
         let config = version_info.get_crashgen_for_version("1.37.0");
         assert!(config.is_some());
@@ -758,7 +769,7 @@ mod tests {
     #[test]
     fn test_version_info_get_crashgen_for_version_not_found() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         let config = version_info.get_crashgen_for_version("9.99.99");
         assert!(config.is_none());
     }
@@ -766,13 +777,13 @@ mod tests {
     #[test]
     fn test_version_info_get_compatible_crashgens_with_own_version() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         // Use the version_info's own version (1.10.163.0)
         // Both crashgens should be compatible:
         // - Buffout 4 (1.28.6) has range 1.10.163.0 - 1.10.163.999, which includes 1.10.163.0
         // - Buffout 4 NG (1.37.0) has no range, so it's compatible with all versions
         let compatible = version_info.get_compatible_crashgens(None);
-        
+
         assert_eq!(compatible.len(), 2);
         assert_eq!(compatible[0].version, "1.28.6");
         assert_eq!(compatible[1].version, "1.37.0");
@@ -781,23 +792,23 @@ mod tests {
     #[test]
     fn test_version_info_get_compatible_crashgens_with_og_version() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         // Use OG version 1.10.163.0 - both crashgens should be compatible
         let og_version = GameVersion::parse("1.10.163.0").unwrap();
         let compatible = version_info.get_compatible_crashgens(Some(&og_version));
-        
+
         assert_eq!(compatible.len(), 2);
     }
 
     #[test]
     fn test_version_info_get_compatible_crashgens_with_ng_version() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         // Use NG version 1.10.984.0 - only Buffout 4 NG should be compatible
         // (Buffout 4 1.28.6 has a range that excludes this version)
         let ng_version = GameVersion::parse("1.10.984.0").unwrap();
         let compatible = version_info.get_compatible_crashgens(Some(&ng_version));
-        
+
         assert_eq!(compatible.len(), 1);
         assert_eq!(compatible[0].version, "1.37.0");
         assert_eq!(compatible[0].name, "Buffout 4"); // Name matches log output
@@ -806,11 +817,11 @@ mod tests {
     #[test]
     fn test_version_info_get_compatible_crashgens_with_future_version() {
         let version_info = create_test_version_info_with_crashgens();
-        
+
         // Use a future version outside the OG range - only Buffout 4 NG should be compatible
         let future_version = GameVersion::parse("1.11.200.0").unwrap();
         let compatible = version_info.get_compatible_crashgens(Some(&future_version));
-        
+
         assert_eq!(compatible.len(), 1);
         assert_eq!(compatible[0].version, "1.37.0");
     }
@@ -819,9 +830,9 @@ mod tests {
     fn test_version_info_get_compatible_crashgens_empty() {
         let mut version_info = create_test_version_info_with_crashgens();
         version_info.crashgen_versions = vec![];
-        
+
         let compatible = version_info.get_compatible_crashgens(None);
-        
+
         assert!(compatible.is_empty());
     }
 
@@ -830,7 +841,7 @@ mod tests {
         // Test when all crashgens have ranges and none match the version
         let range1 = CompatibleRange::from_strings("1.10.100.0", "1.10.150.0").unwrap();
         let range2 = CompatibleRange::from_strings("1.10.200.0", "1.10.250.0").unwrap();
-        
+
         let version_info = VersionInfo {
             id: "TEST_VERSION".to_string(),
             game: "Fallout4".to_string(),
@@ -849,17 +860,17 @@ mod tests {
                 CrashgenConfig::with_range("2.0.0", "Config 2", "", "", range2),
             ],
         };
-        
+
         // Version 1.10.163.0 is outside both ranges
         let compatible = version_info.get_compatible_crashgens(None);
         assert!(compatible.is_empty());
-        
+
         // Version 1.10.120.0 is inside range1
         let in_range1 = GameVersion::parse("1.10.120.0").unwrap();
         let compatible = version_info.get_compatible_crashgens(Some(&in_range1));
         assert_eq!(compatible.len(), 1);
         assert_eq!(compatible[0].version, "1.0.0");
-        
+
         // Version 1.10.220.0 is inside range2
         let in_range2 = GameVersion::parse("1.10.220.0").unwrap();
         let compatible = version_info.get_compatible_crashgens(Some(&in_range2));
