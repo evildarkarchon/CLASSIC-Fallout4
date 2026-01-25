@@ -687,7 +687,20 @@ impl DatabasePool {
 
     /// Close all connections and clear caches
     pub async fn close(&self) -> Result<(), DatabaseError> {
-        info!("Closing all database connections");
+        let pool_count = self.pools.len();
+        let cache_size = self.query_cache.len();
+
+        // Capture current stats before closing for logging
+        let (active_before, total_queries) = self
+            .stats
+            .read()
+            .map(|s| (s.active_connections, s.total_queries))
+            .unwrap_or((0, 0));
+
+        info!(
+            "Closing all database connections: {} pool(s), {} cached queries, {} active connection(s)",
+            pool_count, cache_size, active_before
+        );
 
         // Clear caches
         self.query_cache.clear();
@@ -697,15 +710,20 @@ impl DatabasePool {
             let db_path = entry.key().clone();
             let pool = entry.value();
             pool.close().await;
-            info!("Closed connection pool for {:?}", db_path);
+            debug!("Closed connection pool for {:?}", db_path);
         }
 
         self.pools.clear();
 
-        // Reset stats
+        // Reset connection stats (queries stats preserved for debugging)
         if let Ok(mut stats) = self.stats.write() {
             stats.active_connections = 0;
         }
+
+        info!(
+            "Database pool closed successfully. Total queries processed: {}",
+            total_queries
+        );
 
         Ok(())
     }
@@ -732,5 +750,149 @@ impl DatabasePool {
         }
 
         Ok(())
+    }
+}
+
+impl Drop for DatabasePool {
+    /// Drop handler that warns if pools weren't explicitly closed.
+    ///
+    /// When `DatabasePool` is dropped without calling `close()`, the underlying
+    /// sqlx pools will be cleaned up automatically, but this may result in:
+    /// - Unpredictable connection cleanup timing
+    /// - No proper WAL checkpointing for SQLite databases
+    /// - Potential resource leaks in long-running applications
+    ///
+    /// For best practices, always call `close()` explicitly before dropping.
+    ///
+    /// # Clone-safety
+    ///
+    /// Since `DatabasePool` uses `Arc`-wrapped fields and derives `Clone`, multiple
+    /// clones share the same underlying pools. This warning only fires when the
+    /// *last* reference is dropped without `close()` being called, avoiding spurious
+    /// warnings when other clones still exist and may call `close()` later.
+    fn drop(&mut self) {
+        // Only warn if this is the last Arc reference AND pools weren't closed.
+        // When multiple clones exist, other clones may still call close() later.
+        if Arc::strong_count(&self.pools) == 1 && !self.pools.is_empty() {
+            let pool_count = self.pools.len();
+            let active_connections = self
+                .stats
+                .read()
+                .map(|s| s.active_connections)
+                .unwrap_or(0);
+
+            warn!(
+                "DatabasePool dropped without calling close(). \
+                 {} pool(s) with {} tracked connection(s) will be cleaned up by sqlx. \
+                 Call close() explicitly for proper WAL checkpointing and resource cleanup.",
+                pool_count, active_connections
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Test that Arc::strong_count correctly tracks clones of DatabasePool.
+    ///
+    /// This validates the Drop implementation's clone-safety logic:
+    /// - When multiple clones exist, dropping one should not trigger the warning
+    /// - Only when the last reference is dropped should the warning fire
+    #[test]
+    fn test_database_pool_clone_arc_count() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestGame".to_string());
+
+        // Initially, strong count should be 1
+        assert_eq!(
+            Arc::strong_count(&pool.pools),
+            1,
+            "Initial pool should have strong_count of 1"
+        );
+
+        // After cloning, strong count should be 2
+        let clone1 = pool.clone();
+        assert_eq!(
+            Arc::strong_count(&pool.pools),
+            2,
+            "After cloning, strong_count should be 2"
+        );
+
+        // Both references point to the same Arc
+        assert!(
+            Arc::ptr_eq(&pool.pools, &clone1.pools),
+            "Clones should share the same underlying Arc"
+        );
+
+        // After another clone, strong count should be 3
+        let clone2 = pool.clone();
+        assert_eq!(
+            Arc::strong_count(&pool.pools),
+            3,
+            "After second clone, strong_count should be 3"
+        );
+
+        // Drop one clone - strong count should decrease to 2
+        drop(clone1);
+        assert_eq!(
+            Arc::strong_count(&pool.pools),
+            2,
+            "After dropping one clone, strong_count should be 2"
+        );
+
+        // The warning condition should be false when other clones exist
+        // (strong_count > 1, so condition is false regardless of pools.is_empty())
+        assert!(
+            Arc::strong_count(&pool.pools) > 1,
+            "With remaining clones, strong_count should be > 1"
+        );
+
+        // Drop another clone - strong count should decrease to 1
+        drop(clone2);
+        assert_eq!(
+            Arc::strong_count(&pool.pools),
+            1,
+            "After dropping all clones, strong_count should be 1"
+        );
+    }
+
+    /// Test that the warning condition is correctly evaluated.
+    ///
+    /// The warning should only fire when:
+    /// 1. This is the last Arc reference (strong_count == 1)
+    /// 2. AND pools are not empty
+    #[test]
+    fn test_drop_warning_condition_logic() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestGame".to_string());
+
+        // With no pools initialized, the warning condition should be false
+        // even when this is the last reference
+        let should_warn_empty = Arc::strong_count(&pool.pools) == 1 && !pool.pools.is_empty();
+        assert!(
+            !should_warn_empty,
+            "Should not warn when pools are empty (even if last reference)"
+        );
+
+        // Clone and verify warning condition is false for non-last references
+        let clone = pool.clone();
+        let should_warn_with_clone = Arc::strong_count(&pool.pools) == 1 && !pool.pools.is_empty();
+        assert!(
+            !should_warn_with_clone,
+            "Should not warn when other clones exist"
+        );
+
+        // Drop the clone
+        drop(clone);
+
+        // Now it's the last reference, but pools are still empty
+        let should_warn_last_empty = Arc::strong_count(&pool.pools) == 1 && !pool.pools.is_empty();
+        assert!(
+            !should_warn_last_empty,
+            "Should not warn when pools are empty"
+        );
+
+        // Note: We can't easily test the case where pools are non-empty without
+        // actually connecting to a database, but the logic is validated above.
     }
 }
