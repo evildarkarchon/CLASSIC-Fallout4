@@ -775,11 +775,7 @@ impl Drop for DatabasePool {
         // When multiple clones exist, other clones may still call close() later.
         if Arc::strong_count(&self.pools) == 1 && !self.pools.is_empty() {
             let pool_count = self.pools.len();
-            let active_connections = self
-                .stats
-                .read()
-                .map(|s| s.active_connections)
-                .unwrap_or(0);
+            let active_connections = self.stats.read().map(|s| s.active_connections).unwrap_or(0);
 
             warn!(
                 "DatabasePool dropped without calling close(). \
@@ -794,6 +790,67 @@ impl Drop for DatabasePool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::NamedTempFile;
+
+    // =========================================================================
+    // Test Helper Functions
+    // =========================================================================
+
+    /// Create a temporary SQLite database with test table and sample data.
+    ///
+    /// Returns the temp file handle (which keeps the file alive) and the path.
+    async fn create_test_database(
+        table_name: &str,
+        entries: &[(&str, &str, &str)], // (formid, plugin, entry)
+    ) -> Result<(NamedTempFile, PathBuf), DatabaseError> {
+        let temp_file = NamedTempFile::with_suffix(".db").map_err(|e| DatabaseError::IoError(e))?;
+        let db_path = temp_file.path().to_path_buf();
+
+        // Create database with test table
+        let conn_str = format!("sqlite://{}?mode=rwc", db_path.display());
+        let pool = SqlitePoolOptions::new()
+            .max_connections(1)
+            .connect(&conn_str)
+            .await
+            .map_err(|e| DatabaseError::OpenError(e.to_string()))?;
+
+        // Create table
+        let create_table_sql = format!(
+            "CREATE TABLE IF NOT EXISTS {} (
+                formid TEXT NOT NULL,
+                plugin TEXT NOT NULL,
+                entry TEXT NOT NULL,
+                PRIMARY KEY (formid, plugin)
+            )",
+            table_name
+        );
+        sqlx::query(&create_table_sql)
+            .execute(&pool)
+            .await
+            .map_err(|e| DatabaseError::QueryError(e.to_string()))?;
+
+        // Insert test data
+        for (formid, plugin, entry) in entries {
+            let insert_sql = format!(
+                "INSERT OR REPLACE INTO {} (formid, plugin, entry) VALUES (?, ?, ?)",
+                table_name
+            );
+            sqlx::query(&insert_sql)
+                .bind(*formid)
+                .bind(*plugin)
+                .bind(*entry)
+                .execute(&pool)
+                .await
+                .map_err(|e| DatabaseError::QueryError(e.to_string()))?;
+        }
+
+        pool.close().await;
+        Ok((temp_file, db_path))
+    }
+
+    // =========================================================================
+    // Pool Lifecycle Tests
+    // =========================================================================
 
     /// Test that Arc::strong_count correctly tracks clones of DatabasePool.
     ///
@@ -894,5 +951,724 @@ mod tests {
 
         // Note: We can't easily test the case where pools are non-empty without
         // actually connecting to a database, but the logic is validated above.
+    }
+
+    /// Test pool creation with default max connections.
+    #[test]
+    fn test_pool_creation_default_connections() {
+        let pool = DatabasePool::new(None, Duration::from_secs(300), "Fallout4".to_string());
+
+        // Should use calculated max connections (based on CPU cores)
+        let max_conn = pool.get_max_connections();
+        assert!(max_conn.is_some(), "max_connections should be set");
+        let value = max_conn.unwrap();
+        assert!(
+            value >= 8 && value <= 64,
+            "max_connections should be clamped between 8 and 64, got {}",
+            value
+        );
+    }
+
+    /// Test pool creation with custom max connections.
+    #[test]
+    fn test_pool_creation_custom_connections() {
+        let pool = DatabasePool::new(Some(16), Duration::from_secs(600), "Skyrim".to_string());
+
+        assert_eq!(pool.get_max_connections(), Some(16));
+        assert_eq!(pool.get_game_table(), "Skyrim");
+    }
+
+    /// Test pool creation with in-memory cache initialization.
+    #[test]
+    fn test_pool_creation_cache_initialized() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestGame".to_string());
+
+        // Cache should be empty initially
+        assert_eq!(pool.cache_size(), 0, "Cache should be empty on creation");
+        assert!(
+            !pool.is_available(),
+            "Pool should have no connections initially"
+        );
+    }
+
+    /// Test pool initialization with valid database file.
+    #[tokio::test]
+    async fn test_pool_initialization_with_file() {
+        let table_name = "TestTable";
+        let entries = [("12345678", "TestPlugin.esp", "Test Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        let result = pool.initialize(vec![db_path]).await;
+
+        assert!(
+            result.is_ok(),
+            "Initialization should succeed: {:?}",
+            result.err()
+        );
+        assert!(
+            pool.is_available(),
+            "Pool should be available after initialization"
+        );
+    }
+
+    /// Test pool statistics tracking.
+    #[tokio::test]
+    async fn test_pool_statistics_tracking() {
+        let table_name = "StatsTable";
+        let entries = [("AABBCCDD", "Stats.esp", "Stats Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Initial stats
+        let stats = pool.get_stats().unwrap();
+        assert_eq!(stats.total_queries, 0, "Initial queries should be 0");
+        assert_eq!(stats.cache_hits, 0, "Initial cache hits should be 0");
+        assert_eq!(stats.cache_misses, 0, "Initial cache misses should be 0");
+
+        // Perform a query
+        let _ = pool.get_entry("AABBCCDD", "Stats.esp", None).await;
+
+        // Stats should be updated
+        let stats_after = pool.get_stats().unwrap();
+        assert_eq!(stats_after.total_queries, 1, "Should have 1 query");
+        assert_eq!(
+            stats_after.cache_misses, 1,
+            "First query should be a cache miss"
+        );
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test pool close and cleanup.
+    #[tokio::test]
+    async fn test_pool_close_and_cleanup() {
+        let table_name = "CloseTable";
+        let entries = [("11111111", "Close.esp", "Close Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Add something to cache
+        let _ = pool.get_entry("11111111", "Close.esp", None).await;
+        assert!(pool.cache_size() > 0, "Cache should have entries");
+
+        // Close the pool
+        let result = pool.close().await;
+        assert!(result.is_ok(), "Close should succeed");
+        assert!(
+            !pool.is_available(),
+            "Pool should not be available after close"
+        );
+        assert_eq!(pool.cache_size(), 0, "Cache should be cleared after close");
+    }
+
+    /// Test max connections recalculation.
+    #[test]
+    fn test_recalculate_max_connections() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestGame".to_string());
+        assert_eq!(pool.get_max_connections(), Some(4));
+
+        pool.recalculate_max_connections();
+
+        let new_max = pool.get_max_connections().unwrap();
+        // Should be recalculated based on CPU cores (clamped 8-64)
+        assert!(
+            new_max >= 8 && new_max <= 64,
+            "Recalculated max should be clamped"
+        );
+    }
+
+    /// Test set_max_connections updates the value.
+    #[test]
+    fn test_set_max_connections() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestGame".to_string());
+        assert_eq!(pool.get_max_connections(), Some(4));
+
+        pool.set_max_connections(32);
+        assert_eq!(pool.get_max_connections(), Some(32));
+    }
+
+    // =========================================================================
+    // Caching Tests
+    // =========================================================================
+
+    /// Test CacheEntry creation and expiration.
+    #[test]
+    fn test_cache_entry_creation() {
+        let entry = CacheEntry::new("test_value".to_string(), Duration::from_secs(60));
+        assert_eq!(entry.value, "test_value");
+        assert!(!entry.is_expired(), "Fresh entry should not be expired");
+    }
+
+    /// Test CacheEntry expiration after TTL.
+    #[test]
+    fn test_cache_entry_expiration() {
+        // Create entry with very short TTL
+        let entry = CacheEntry::new("test_value".to_string(), Duration::from_millis(1));
+
+        // Wait for expiration
+        std::thread::sleep(Duration::from_millis(10));
+
+        assert!(entry.is_expired(), "Entry should be expired after TTL");
+    }
+
+    /// Test CacheKey creation and hashing.
+    #[test]
+    fn test_cache_key_creation() {
+        let key = CacheKey::new("Fallout4", "12345678", "TestMod.esp");
+
+        assert_eq!(key.game_table, "Fallout4");
+        assert_eq!(key.formid, "12345678");
+        assert_eq!(key.plugin, "testmod.esp"); // Should be lowercase
+    }
+
+    /// Test CacheKey case-insensitive plugin matching.
+    #[test]
+    fn test_cache_key_case_insensitive_plugin() {
+        let key1 = CacheKey::new("Fallout4", "12345678", "TestMod.ESP");
+        let key2 = CacheKey::new("Fallout4", "12345678", "testmod.esp");
+        let key3 = CacheKey::new("Fallout4", "12345678", "TESTMOD.ESP");
+
+        // All should have same plugin (lowercase)
+        assert_eq!(key1.plugin, key2.plugin);
+        assert_eq!(key2.plugin, key3.plugin);
+
+        // All should have same hash
+        assert_eq!(key1.hash, key2.hash);
+        assert_eq!(key2.hash, key3.hash);
+    }
+
+    /// Test cache hit on second lookup.
+    #[tokio::test]
+    async fn test_cache_hit_on_second_lookup() {
+        let table_name = "CacheHitTable";
+        let entries = [("DEADBEEF", "CacheTest.esp", "Cache Test Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // First lookup - cache miss
+        let result1 = pool
+            .get_entry("DEADBEEF", "CacheTest.esp", None)
+            .await
+            .unwrap();
+        assert_eq!(result1, Some("Cache Test Entry".to_string()));
+
+        let stats1 = pool.get_stats().unwrap();
+        assert_eq!(stats1.cache_misses, 1);
+        assert_eq!(stats1.cache_hits, 0);
+
+        // Second lookup - cache hit
+        let result2 = pool
+            .get_entry("DEADBEEF", "CacheTest.esp", None)
+            .await
+            .unwrap();
+        assert_eq!(result2, Some("Cache Test Entry".to_string()));
+
+        let stats2 = pool.get_stats().unwrap();
+        assert_eq!(stats2.cache_hits, 1);
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test cache clear with expired_only=false.
+    #[tokio::test]
+    async fn test_cache_clear_all() {
+        let table_name = "ClearAllTable";
+        let entries = [
+            ("00000001", "Test1.esp", "Entry 1"),
+            ("00000002", "Test2.esp", "Entry 2"),
+        ];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Populate cache
+        let _ = pool.get_entry("00000001", "Test1.esp", None).await;
+        let _ = pool.get_entry("00000002", "Test2.esp", None).await;
+        assert!(pool.cache_size() >= 2, "Cache should have entries");
+
+        // Clear all
+        let removed = pool.clear_cache(false);
+        assert!(removed >= 2, "Should have removed at least 2 entries");
+        assert_eq!(pool.cache_size(), 0, "Cache should be empty");
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test cache clear with expired_only=true.
+    #[tokio::test]
+    async fn test_cache_clear_expired_only() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), "TestTable".to_string());
+
+        // Manually insert entries with different TTLs
+        let expired_key = "TestTable:expired:plugin";
+        let fresh_key = "TestTable:fresh:plugin";
+
+        pool.query_cache.insert(
+            expired_key.to_string(),
+            CacheEntry::new("expired_value".to_string(), Duration::from_millis(1)),
+        );
+        pool.query_cache.insert(
+            fresh_key.to_string(),
+            CacheEntry::new("fresh_value".to_string(), Duration::from_secs(300)),
+        );
+
+        // Wait for expiration
+        std::thread::sleep(Duration::from_millis(10));
+
+        assert_eq!(pool.cache_size(), 2, "Should have 2 entries before clear");
+
+        // Clear expired only
+        let removed = pool.clear_cache(true);
+        assert_eq!(removed, 1, "Should have removed 1 expired entry");
+        assert_eq!(pool.cache_size(), 1, "Should have 1 entry remaining");
+
+        // Verify fresh entry is still there
+        assert!(
+            pool.query_cache.contains_key(fresh_key),
+            "Fresh entry should remain"
+        );
+    }
+
+    /// Test set_cache_ttl updates TTL for new entries.
+    #[tokio::test]
+    async fn test_set_cache_ttl() {
+        let table_name = "TtlTable";
+        let entries = [("TTLTEST1", "Ttl.esp", "TTL Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Change TTL to very short
+        pool.set_cache_ttl(Duration::from_millis(10));
+
+        // Lookup to populate cache
+        let _ = pool.get_entry("TTLTEST1", "Ttl.esp", None).await;
+        assert_eq!(pool.cache_size(), 1);
+
+        // Wait for expiration
+        std::thread::sleep(Duration::from_millis(20));
+
+        // Clear expired
+        let removed = pool.clear_cache(true);
+        assert_eq!(removed, 1, "Entry should have expired with new TTL");
+
+        pool.close().await.unwrap();
+    }
+
+    // =========================================================================
+    // Query Tests
+    // =========================================================================
+
+    /// Test get_entry returns correct value for existing FormID.
+    #[tokio::test]
+    async fn test_formid_lookup_hit() {
+        let table_name = "LookupTable";
+        let entries = [(
+            "ABCD1234",
+            "TestMod.esp",
+            "This is a test entry for FormID lookup",
+        )];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        let result = pool
+            .get_entry("ABCD1234", "TestMod.esp", None)
+            .await
+            .unwrap();
+        assert_eq!(
+            result,
+            Some("This is a test entry for FormID lookup".to_string())
+        );
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test get_entry returns None for non-existent FormID.
+    #[tokio::test]
+    async fn test_formid_lookup_miss() {
+        let table_name = "MissTable";
+        let entries = [("11111111", "Existing.esp", "Existing Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        let result = pool
+            .get_entry("99999999", "NonExistent.esp", None)
+            .await
+            .unwrap();
+        assert_eq!(result, None);
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test get_entry with table override.
+    #[tokio::test]
+    async fn test_get_entry_with_table_override() {
+        let table_name = "OverrideTable";
+        let entries = [("OVERRIDE1", "Override.esp", "Override Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        // Create pool with different default table
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "WrongTable".to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Use table override to query correct table
+        let result = pool
+            .get_entry("OVERRIDE1", "Override.esp", Some(table_name))
+            .await
+            .unwrap();
+        assert_eq!(result, Some("Override Entry".to_string()));
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test batch FormID query.
+    #[tokio::test]
+    async fn test_batch_formid_query() {
+        let table_name = "BatchTable";
+        let entries = [
+            ("BATCH001", "Batch.esp", "Entry 1"),
+            ("BATCH002", "Batch.esp", "Entry 2"),
+            ("BATCH003", "Batch.esp", "Entry 3"),
+            ("BATCH004", "OtherMod.esp", "Entry 4"),
+        ];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        let pairs = vec![
+            ("BATCH001".to_string(), "Batch.esp".to_string()),
+            ("BATCH002".to_string(), "Batch.esp".to_string()),
+            ("BATCH003".to_string(), "Batch.esp".to_string()),
+            ("BATCH004".to_string(), "OtherMod.esp".to_string()),
+            ("NOTEXIST".to_string(), "Missing.esp".to_string()),
+        ];
+
+        let results = pool.get_entries_batch(pairs, None, 100).await.unwrap();
+
+        assert_eq!(results.len(), 4, "Should find 4 entries");
+        assert_eq!(
+            results.get("BATCH001:Batch.esp"),
+            Some(&"Entry 1".to_string())
+        );
+        assert_eq!(
+            results.get("BATCH002:Batch.esp"),
+            Some(&"Entry 2".to_string())
+        );
+        assert_eq!(
+            results.get("BATCH003:Batch.esp"),
+            Some(&"Entry 3".to_string())
+        );
+        assert_eq!(
+            results.get("BATCH004:OtherMod.esp"),
+            Some(&"Entry 4".to_string())
+        );
+        assert_eq!(results.get("NOTEXIST:Missing.esp"), None);
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test batch query with case-insensitive plugin matching.
+    #[tokio::test]
+    async fn test_batch_query_case_insensitive_plugin() {
+        let table_name = "CaseTable";
+        let entries = [("CASE0001", "TestMod.esp", "Case Test Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Query with different case
+        let pairs = vec![("CASE0001".to_string(), "TESTMOD.ESP".to_string())];
+
+        let results = pool.get_entries_batch(pairs, None, 100).await.unwrap();
+
+        // Should find entry despite case difference
+        assert_eq!(results.len(), 1, "Should find entry with different case");
+        assert_eq!(
+            results.get("CASE0001:TESTMOD.ESP"),
+            Some(&"Case Test Entry".to_string())
+        );
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test batch query with empty input.
+    #[tokio::test]
+    async fn test_batch_query_empty_input() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestTable".to_string());
+
+        let results = pool.get_entries_batch(vec![], None, 100).await.unwrap();
+        assert!(
+            results.is_empty(),
+            "Empty input should return empty results"
+        );
+    }
+
+    /// Test batch query adaptive batch sizing.
+    #[tokio::test]
+    async fn test_batch_query_adaptive_sizing() {
+        let table_name = "AdaptiveTable";
+        let mut entries = Vec::new();
+        for i in 0..10 {
+            entries.push((
+                format!("ADAPT{:03}", i),
+                "Adaptive.esp".to_string(),
+                format!("Entry {}", i),
+            ));
+        }
+
+        let entries_refs: Vec<(&str, &str, &str)> = entries
+            .iter()
+            .map(|(a, b, c)| (a.as_str(), b.as_str(), c.as_str()))
+            .collect();
+        let (_temp_file, db_path) = create_test_database(table_name, &entries_refs)
+            .await
+            .unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Small batch - should use adaptive sizing
+        let pairs: Vec<(String, String)> = entries
+            .iter()
+            .map(|(f, p, _)| (f.clone(), p.clone()))
+            .collect();
+
+        let results = pool.get_entries_batch(pairs, None, 100).await.unwrap();
+        assert_eq!(results.len(), 10, "Should find all 10 entries");
+
+        pool.close().await.unwrap();
+    }
+
+    /// Test UNION ALL query builder.
+    #[test]
+    fn test_build_union_all_query() {
+        // Empty batch
+        let query_empty = DatabasePool::build_union_all_query("TestTable", 0);
+        assert!(
+            query_empty.is_empty(),
+            "Empty batch should produce empty query"
+        );
+
+        // Single item
+        let query_single = DatabasePool::build_union_all_query("Fallout4", 1);
+        assert!(query_single.contains("SELECT formid, plugin, entry FROM Fallout4"));
+        assert!(
+            !query_single.contains("UNION ALL"),
+            "Single item should not have UNION ALL"
+        );
+
+        // Multiple items
+        let query_multi = DatabasePool::build_union_all_query("Skyrim", 3);
+        let union_count = query_multi.matches("UNION ALL").count();
+        assert_eq!(union_count, 2, "3 items should have 2 UNION ALL clauses");
+        assert!(query_multi.contains("SELECT formid, plugin, entry FROM Skyrim"));
+    }
+
+    // =========================================================================
+    // Error Handling Tests
+    // =========================================================================
+
+    /// Test initialization with missing database file.
+    #[tokio::test]
+    async fn test_init_missing_database_file() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestTable".to_string());
+        let result = pool
+            .initialize(vec![PathBuf::from("/nonexistent/path/database.db")])
+            .await;
+
+        // Should succeed but with no pools added (missing file is warned, not errored)
+        assert!(result.is_ok(), "Should not error on missing file");
+        assert!(
+            !pool.is_available(),
+            "Pool should not be available with missing file"
+        );
+    }
+
+    /// Test get_entry on uninitialized pool.
+    #[tokio::test]
+    async fn test_query_on_uninitialized_pool() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "TestTable".to_string());
+
+        // Query without initialization
+        let result = pool.get_entry("12345678", "Test.esp", None).await;
+
+        // Should return Ok(None) - no pools to query
+        assert!(result.is_ok(), "Should not error on uninitialized pool");
+        assert_eq!(result.unwrap(), None, "Should return None");
+    }
+
+    /// Test query after pool close.
+    #[tokio::test]
+    async fn test_query_on_closed_pool() {
+        let table_name = "ClosedTable";
+        let entries = [("CLOSED01", "Closed.esp", "Closed Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Close the pool
+        pool.close().await.unwrap();
+
+        // Query after close - should return None (no pools available)
+        let result = pool.get_entry("CLOSED01", "Closed.esp", None).await;
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), None);
+    }
+
+    // =========================================================================
+    // Game Table Tests
+    // =========================================================================
+
+    /// Test set_game_table and get_game_table.
+    #[test]
+    fn test_set_get_game_table() {
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), "Fallout4".to_string());
+        assert_eq!(pool.get_game_table(), "Fallout4");
+
+        pool.set_game_table("Skyrim");
+        assert_eq!(pool.get_game_table(), "Skyrim");
+
+        pool.set_game_table("FalloutNewVegas");
+        assert_eq!(pool.get_game_table(), "FalloutNewVegas");
+    }
+
+    // =========================================================================
+    // Database Optimization Tests
+    // =========================================================================
+
+    /// Test optimize on database.
+    #[tokio::test]
+    async fn test_database_optimize() {
+        let table_name = "OptTable";
+        let entries = [("OPT00001", "Optimize.esp", "Optimize Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path]).await.unwrap();
+
+        // Optimize should succeed (runs ANALYZE)
+        let result = pool.optimize().await;
+        assert!(
+            result.is_ok(),
+            "Optimize should succeed: {:?}",
+            result.err()
+        );
+
+        pool.close().await.unwrap();
+    }
+
+    // =========================================================================
+    // TTL Constants Tests
+    // =========================================================================
+
+    /// Test TTL constant values.
+    #[test]
+    fn test_ttl_constants() {
+        assert_eq!(
+            DEFAULT_CACHE_TTL_SECS, 300,
+            "Default TTL should be 5 minutes"
+        );
+        assert_eq!(BATCH_CACHE_TTL_SECS, 1800, "Batch TTL should be 30 minutes");
+        assert_eq!(MAX_CACHE_TTL_SECS, 3600, "Max TTL should be 60 minutes");
+
+        // Verify ordering
+        assert!(DEFAULT_CACHE_TTL_SECS < BATCH_CACHE_TTL_SECS);
+        assert!(BATCH_CACHE_TTL_SECS < MAX_CACHE_TTL_SECS);
+    }
+
+    // =========================================================================
+    // Error Type Tests
+    // =========================================================================
+
+    /// Test DatabaseError variants.
+    #[test]
+    fn test_database_error_display() {
+        let open_err = DatabaseError::OpenError("connection failed".to_string());
+        assert!(open_err.to_string().contains("Failed to open database"));
+
+        let query_err = DatabaseError::QueryError("syntax error".to_string());
+        assert!(query_err.to_string().contains("Query execution failed"));
+
+        let not_found = DatabaseError::NotFound("/path/to/db.sqlite".to_string());
+        assert!(not_found.to_string().contains("Database file not found"));
+    }
+
+    // =========================================================================
+    // PoolStatistics Tests
+    // =========================================================================
+
+    /// Test PoolStatistics default values.
+    #[test]
+    fn test_pool_statistics_default() {
+        let stats = PoolStatistics::default();
+        assert_eq!(stats.total_queries, 0);
+        assert_eq!(stats.cache_hits, 0);
+        assert_eq!(stats.cache_misses, 0);
+        assert_eq!(stats.total_connections, 0);
+        assert_eq!(stats.active_connections, 0);
+    }
+
+    /// Test PoolStatistics clone.
+    #[test]
+    fn test_pool_statistics_clone() {
+        let mut stats = PoolStatistics::default();
+        stats.total_queries = 100;
+        stats.cache_hits = 75;
+
+        let cloned = stats.clone();
+        assert_eq!(cloned.total_queries, 100);
+        assert_eq!(cloned.cache_hits, 75);
+    }
+
+    // =========================================================================
+    // Multi-Database Tests
+    // =========================================================================
+
+    /// Test querying across multiple database files.
+    #[tokio::test]
+    async fn test_multi_database_query() {
+        let table_name = "MultiTable";
+
+        // Create first database with some entries
+        let entries1 = [
+            ("MULTI001", "Multi.esp", "Entry from DB1"),
+            ("MULTI002", "Multi.esp", "Entry 2 from DB1"),
+        ];
+        let (_temp_file1, db_path1) = create_test_database(table_name, &entries1).await.unwrap();
+
+        // Create second database with different entries
+        let entries2 = [
+            ("MULTI003", "Multi.esp", "Entry from DB2"),
+            ("MULTI004", "Multi.esp", "Entry 2 from DB2"),
+        ];
+        let (_temp_file2, db_path2) = create_test_database(table_name, &entries2).await.unwrap();
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(60), table_name.to_string());
+        pool.initialize(vec![db_path1, db_path2]).await.unwrap();
+
+        // Should find entries from both databases
+        let result1 = pool.get_entry("MULTI001", "Multi.esp", None).await.unwrap();
+        assert_eq!(result1, Some("Entry from DB1".to_string()));
+
+        let result2 = pool.get_entry("MULTI003", "Multi.esp", None).await.unwrap();
+        assert_eq!(result2, Some("Entry from DB2".to_string()));
+
+        pool.close().await.unwrap();
     }
 }

@@ -164,9 +164,6 @@ jobs:
       - name: Build all Rust workspace
         run: cargo build --workspace --release --manifest-path rust/Cargo.toml
 
-      - name: Run Rust tests
-        run: cargo test --workspace --release --manifest-path rust/Cargo.toml
-
       - name: Upload Rust build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -175,6 +172,55 @@ jobs:
             rust/target/release/*.dll
             rust/target/release/*.pdb
           retention-days: 1
+
+  # Run Rust tests (independent of Python tests)
+  test-rust:
+    name: Rust Tests
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-test-
+
+      - name: Run Rust tests
+        run: cargo test --workspace --release --manifest-path rust/Cargo.toml -- --nocapture
+
+      - name: Run Rust tests with all features
+        run: cargo test --workspace --release --all-features --manifest-path rust/Cargo.toml -- --nocapture
 
   # Build Python bindings with maturin
   build-python-bindings:

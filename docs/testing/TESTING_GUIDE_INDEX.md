@@ -6,7 +6,24 @@ This index provides a comprehensive guide to testing practices in the CLASSIC co
 
 ## 📚 Testing Guides
 
-### 1. [Testing AsyncBridge](./testing_async_bridge.md)
+### 1. [Rust Testing Guide](./rust_testing_guide.md)
+**Purpose**: Comprehensive guide for testing Rust crates including patterns, fixtures, and coverage requirements.
+
+**Key Concepts**:
+- Test organization for business-logic (`-core`) crates
+- Using `tempfile`, `serial_test`, and `#[tokio::test]`
+- Coverage requirements and running `cargo-llvm-cov`
+- Integration test patterns
+
+**When to Use**:
+- Writing tests for Rust crates
+- Understanding coverage targets
+- Setting up test fixtures for database or file operations
+- Debugging test failures in Rust code
+
+---
+
+### 2. [Testing AsyncBridge](./testing_async_bridge.md)
 **Purpose**: Avoid `RuntimeWarning: coroutine was never awaited` errors when testing sync/async bridge code.
 
 **Key Concepts**:
@@ -21,7 +38,7 @@ This index provides a comprehensive guide to testing practices in the CLASSIC co
 
 ---
 
-### 2. [Testing GlobalRegistry](./testing_global_registry.md)
+### 3. [Testing GlobalRegistry](./testing_global_registry.md)
 **Purpose**: Prevent test pollution and race conditions from singleton instances.
 
 **Key Concepts**:
@@ -38,7 +55,7 @@ This index provides a comprehensive guide to testing practices in the CLASSIC co
 
 ---
 
-### 3. [Testing YamlSettingsCache](./testing_yaml_cache.md)
+### 4. [Testing YamlSettingsCache](./testing_yaml_cache.md)
 **Purpose**: Test configuration-dependent code without modifying production YAML files.
 
 **Key Concepts**:

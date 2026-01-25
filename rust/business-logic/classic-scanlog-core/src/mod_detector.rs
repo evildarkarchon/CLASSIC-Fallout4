@@ -555,3 +555,408 @@ pub fn detect_mods_batch(
 
     Ok(results)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ============================================
+    // Helper function tests
+    // ============================================
+
+    #[test]
+    fn test_convert_to_lowercase_empty() {
+        let data: HashMap<String, String> = HashMap::new();
+        let result = convert_to_lowercase(&data);
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_convert_to_lowercase_keys() {
+        let mut data = HashMap::new();
+        data.insert("KEY".to_string(), "value".to_string());
+        data.insert("AnotherKey".to_string(), "anotherValue".to_string());
+
+        let result = convert_to_lowercase(&data);
+        assert!(result.contains_key("key"));
+        assert!(result.contains_key("anotherkey"));
+        assert!(!result.contains_key("KEY"));
+    }
+
+    #[test]
+    fn test_validate_warning_valid() {
+        let result = validate_warning("TestMod", "This is a warning");
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_validate_warning_empty() {
+        let result = validate_warning("TestMod", "");
+        assert!(result.is_err());
+    }
+
+    // ============================================
+    // detect_mods_single tests
+    // ============================================
+
+    #[test]
+    fn test_detect_mods_single_empty_yaml() {
+        let yaml_dict: HashMap<String, String> = HashMap::new();
+        let plugins: HashMap<String, String> = HashMap::new();
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_single_empty_plugins() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "testmod".to_string(),
+            "Test Mod\nThis is a test.".to_string(),
+        );
+
+        let plugins: HashMap<String, String> = HashMap::new();
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_single_match() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "problematicmod".to_string(),
+            "Problematic Mod\nThis mod causes crashes.".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("ProblematicMod.esp".to_string(), "12".to_string());
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        assert!(!result.is_empty());
+        // Should contain FOUND marker
+        let output = result.join("");
+        assert!(output.contains("FOUND"));
+        assert!(output.contains("[12]"));
+    }
+
+    #[test]
+    fn test_detect_mods_single_no_match() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "problematicmod".to_string(),
+            "Problematic Mod\nThis mod causes crashes.".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("DifferentMod.esp".to_string(), "12".to_string());
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_single_case_insensitive() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert("testmod".to_string(), "Test Mod\nWarning text.".to_string());
+
+        let mut plugins = HashMap::new();
+        plugins.insert("TESTMOD.esp".to_string(), "05".to_string());
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_single_substring_match() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "partial".to_string(),
+            "Partial Match\nMatch found.".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("MyPartialMod.esp".to_string(), "10".to_string());
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_single_longest_match_priority() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert("mod".to_string(), "Mod\nShort match.".to_string());
+        yaml_dict.insert(
+            "modextended".to_string(),
+            "Mod Extended\nLong match.".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("ModExtended.esp".to_string(), "15".to_string());
+
+        let result = detect_mods_single(yaml_dict, plugins).unwrap();
+        let output = result.join("");
+        // The longer pattern should match
+        assert!(output.contains("Mod Extended") || output.contains("modextended"));
+    }
+
+    // ============================================
+    // detect_mods_double tests
+    // ============================================
+
+    #[test]
+    fn test_detect_mods_double_empty() {
+        let yaml_dict: HashMap<String, String> = HashMap::new();
+        let plugins: HashMap<String, String> = HashMap::new();
+
+        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_double_no_conflict() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "moda | modb".to_string(),
+            "These mods conflict!".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("ModA.esp".to_string(), "10".to_string());
+        // ModB is NOT present
+
+        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_double_conflict_detected() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "moda | modb".to_string(),
+            "These mods conflict and cause crashes!".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("ModA.esp".to_string(), "10".to_string());
+        plugins.insert("ModB.esp".to_string(), "11".to_string());
+
+        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        assert!(!result.is_empty());
+        let output = result.join("");
+        assert!(output.contains("CAUTION"));
+        assert!(output.contains("conflict"));
+    }
+
+    #[test]
+    fn test_detect_mods_double_case_insensitive() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert("moda | modb".to_string(), "Conflict warning.".to_string());
+
+        let mut plugins = HashMap::new();
+        plugins.insert("MODA.esp".to_string(), "10".to_string());
+        plugins.insert("MODB.esp".to_string(), "11".to_string());
+
+        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        assert!(!result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_double_invalid_format() {
+        let mut yaml_dict = HashMap::new();
+        // Invalid format (no " | " separator)
+        yaml_dict.insert("modamodB".to_string(), "Invalid format.".to_string());
+
+        let mut plugins = HashMap::new();
+        plugins.insert("ModA.esp".to_string(), "10".to_string());
+
+        let result = detect_mods_double(yaml_dict, plugins).unwrap();
+        // Should not detect anything with invalid format
+        assert!(result.is_empty());
+    }
+
+    // ============================================
+    // detect_mods_important tests
+    // ============================================
+
+    #[test]
+    fn test_detect_mods_important_empty() {
+        let yaml_dict: HashMap<String, String> = HashMap::new();
+        let plugins: HashMap<String, String> = HashMap::new();
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        assert!(!result.is_empty()); // Should have header
+        let output = result.join("");
+        assert!(output.contains("Checking for Important Mods"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_installed() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "enginefixes | Engine Fixes".to_string(),
+            "Highly recommended for stability.".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
+
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("✔️"));
+        assert!(output.contains("Engine Fixes"));
+        assert!(output.contains("installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_not_installed() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "enginefixes | Engine Fixes".to_string(),
+            "Highly recommended for stability.".to_string(),
+        );
+
+        let plugins: HashMap<String, String> = HashMap::new();
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        // Without gpu_rival, missing mods are only reported if gpu_rival is Some
+        let result =
+            detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("❌"));
+        assert!(output.contains("Engine Fixes"));
+        assert!(output.contains("not installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_gpu_mismatch() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "nvidiapatch | NVIDIA Patch".to_string(),
+            "For NVIDIA GPUs only!".to_string(),
+        );
+
+        let mut plugins = HashMap::new();
+        plugins.insert("NvidiaPatch.esp".to_string(), "10".to_string());
+
+        let xse_modules: HashSet<String> = HashSet::new();
+
+        // User has AMD but NVIDIA mod is installed
+        let result =
+            detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("❓"));
+        assert!(output.contains("UNINSTALL"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_xse_module() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "addresslib | Address Library".to_string(),
+            "Required for many F4SE plugins.".to_string(),
+        );
+
+        let plugins: HashMap<String, String> = HashMap::new();
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("AddressLibrary.dll".to_string());
+
+        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let output = result.join("");
+        assert!(output.contains("✔️"));
+        assert!(output.contains("Address Library"));
+    }
+
+    // ============================================
+    // detect_mods_batch tests
+    // ============================================
+
+    #[test]
+    fn test_detect_mods_batch_empty() {
+        let yaml_dict: HashMap<String, String> = HashMap::new();
+        let logs: Vec<HashMap<String, String>> = vec![];
+
+        let result = detect_mods_batch(yaml_dict, logs).unwrap();
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_batch_empty_yaml() {
+        let yaml_dict: HashMap<String, String> = HashMap::new();
+        let mut log1 = HashMap::new();
+        log1.insert("Mod.esp".to_string(), "01".to_string());
+
+        let result = detect_mods_batch(yaml_dict, vec![log1]).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(result[0].is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_batch_single_log() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "testmod".to_string(),
+            "Test Mod\nWarning message.".to_string(),
+        );
+
+        let mut log1 = HashMap::new();
+        log1.insert("TestMod.esp".to_string(), "10".to_string());
+
+        let result = detect_mods_batch(yaml_dict, vec![log1]).unwrap();
+        assert_eq!(result.len(), 1);
+        assert!(!result[0].is_empty());
+    }
+
+    #[test]
+    fn test_detect_mods_batch_multiple_logs() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert(
+            "badmod".to_string(),
+            "Bad Mod\nThis is problematic.".to_string(),
+        );
+
+        let mut log1 = HashMap::new();
+        log1.insert("BadMod.esp".to_string(), "10".to_string());
+
+        let mut log2 = HashMap::new();
+        log2.insert("GoodMod.esp".to_string(), "05".to_string());
+
+        let mut log3 = HashMap::new();
+        log3.insert("BadMod.esp".to_string(), "12".to_string());
+
+        let result = detect_mods_batch(yaml_dict, vec![log1, log2, log3]).unwrap();
+        assert_eq!(result.len(), 3);
+        assert!(!result[0].is_empty()); // Has BadMod
+        assert!(result[1].is_empty()); // No BadMod
+        assert!(!result[2].is_empty()); // Has BadMod
+    }
+
+    #[test]
+    fn test_detect_mods_batch_preserves_order() {
+        let mut yaml_dict = HashMap::new();
+        yaml_dict.insert("mod1".to_string(), "Mod 1\nWarning 1.".to_string());
+        yaml_dict.insert("mod2".to_string(), "Mod 2\nWarning 2.".to_string());
+
+        let mut log1 = HashMap::new();
+        log1.insert("Mod1.esp".to_string(), "01".to_string());
+
+        let mut log2 = HashMap::new();
+        log2.insert("Mod2.esp".to_string(), "02".to_string());
+
+        let result = detect_mods_batch(yaml_dict, vec![log1, log2]).unwrap();
+        assert_eq!(result.len(), 2);
+
+        // First result should be about Mod1
+        let output1 = result[0].join("");
+        assert!(output1.contains("[01]") || output1.contains("Mod 1"));
+
+        // Second result should be about Mod2
+        let output2 = result[1].join("");
+        assert!(output2.contains("[02]") || output2.contains("Mod 2"));
+    }
+}
