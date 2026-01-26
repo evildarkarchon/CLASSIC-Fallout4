@@ -803,7 +803,7 @@ mod tests {
         table_name: &str,
         entries: &[(&str, &str, &str)], // (formid, plugin, entry)
     ) -> Result<(NamedTempFile, PathBuf), DatabaseError> {
-        let temp_file = NamedTempFile::with_suffix(".db").map_err(|e| DatabaseError::IoError(e))?;
+        let temp_file = NamedTempFile::with_suffix(".db").map_err(DatabaseError::IoError)?;
         let db_path = temp_file.path().to_path_buf();
 
         // Create database with test table
@@ -963,7 +963,7 @@ mod tests {
         assert!(max_conn.is_some(), "max_connections should be set");
         let value = max_conn.unwrap();
         assert!(
-            value >= 8 && value <= 64,
+            (8..=64).contains(&value),
             "max_connections should be clamped between 8 and 64, got {}",
             value
         );
@@ -1077,7 +1077,7 @@ mod tests {
         let new_max = pool.get_max_connections().unwrap();
         // Should be recalculated based on CPU cores (clamped 8-64)
         assert!(
-            new_max >= 8 && new_max <= 64,
+            (8..=64).contains(&new_max),
             "Recalculated max should be clamped"
         );
     }
@@ -1587,9 +1587,9 @@ mod tests {
         assert_eq!(BATCH_CACHE_TTL_SECS, 1800, "Batch TTL should be 30 minutes");
         assert_eq!(MAX_CACHE_TTL_SECS, 3600, "Max TTL should be 60 minutes");
 
-        // Verify ordering
-        assert!(DEFAULT_CACHE_TTL_SECS < BATCH_CACHE_TTL_SECS);
-        assert!(BATCH_CACHE_TTL_SECS < MAX_CACHE_TTL_SECS);
+        // Verify ordering (compile-time assertions)
+        const _: () = assert!(DEFAULT_CACHE_TTL_SECS < BATCH_CACHE_TTL_SECS);
+        const _: () = assert!(BATCH_CACHE_TTL_SECS < MAX_CACHE_TTL_SECS);
     }
 
     // =========================================================================
@@ -1627,9 +1627,11 @@ mod tests {
     /// Test PoolStatistics clone.
     #[test]
     fn test_pool_statistics_clone() {
-        let mut stats = PoolStatistics::default();
-        stats.total_queries = 100;
-        stats.cache_hits = 75;
+        let stats = PoolStatistics {
+            total_queries: 100,
+            cache_hits: 75,
+            ..Default::default()
+        };
 
         let cloned = stats.clone();
         assert_eq!(cloned.total_queries, 100);

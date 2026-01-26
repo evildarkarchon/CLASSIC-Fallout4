@@ -1714,7 +1714,7 @@ mod tests {
         let core = FileIOCore::default();
         let lines = core.stream_lines_sync(&file_path).unwrap();
 
-        let collected: Vec<String> = lines.filter_map(|l| l.ok()).collect();
+        let collected: Vec<String> = lines.map_while(Result::ok).collect();
         assert_eq!(collected, vec!["Sync A", "Sync B"]);
     }
 
@@ -2101,7 +2101,7 @@ mod tests {
         let file_path = temp.path().join("windows1252.txt");
 
         // Write Windows-1252 specific characters (copyright symbol = 0xA9)
-        std::fs::write(&file_path, &[0xA9, 0x20, 0x32, 0x30, 0x32, 0x34]).unwrap();
+        std::fs::write(&file_path, [0xA9, 0x20, 0x32, 0x30, 0x32, 0x34]).unwrap();
 
         let core = FileIOCore::default();
         let result = core.read_file(&file_path).await;

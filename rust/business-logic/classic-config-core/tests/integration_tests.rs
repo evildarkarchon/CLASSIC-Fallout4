@@ -158,8 +158,11 @@ mod config_loading_workflows {
             .expect("Failed to write main YAML");
         fs::write(game_dir.join("CLASSIC Fallout4.yaml"), minimal_game_yaml())
             .expect("Failed to write game YAML");
-        fs::write(ignore_dir.join("CLASSIC Ignore.yaml"), minimal_ignore_yaml())
-            .expect("Failed to write ignore YAML");
+        fs::write(
+            ignore_dir.join("CLASSIC Ignore.yaml"),
+            minimal_ignore_yaml(),
+        )
+        .expect("Failed to write ignore YAML");
 
         // Load using 3-element API
         let yaml_dirs = vec![main_dir, game_dir, ignore_dir];

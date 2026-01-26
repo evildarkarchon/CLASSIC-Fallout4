@@ -162,7 +162,7 @@ mod database_workflows {
             results.get("BATCH004:Other.esp"),
             Some(&"Entry 4".to_string())
         );
-        assert!(results.get("NOTEXIST:Missing.esp").is_none());
+        assert!(!results.contains_key("NOTEXIST:Missing.esp"));
 
         pool.close().await.expect("Close should succeed");
     }
@@ -504,9 +504,11 @@ mod concurrent_access {
             .await
             .expect("Failed to create test database");
 
-        let pool = Arc::new(
-            DatabasePool::new(Some(8), Duration::from_secs(300), table_name.to_string()),
-        );
+        let pool = Arc::new(DatabasePool::new(
+            Some(8),
+            Duration::from_secs(300),
+            table_name.to_string(),
+        ));
         pool.initialize(vec![db_path])
             .await
             .expect("Initialize should succeed");
@@ -561,9 +563,11 @@ mod concurrent_access {
             .await
             .expect("Failed to create test database");
 
-        let pool = Arc::new(
-            DatabasePool::new(Some(8), Duration::from_secs(300), table_name.to_string()),
-        );
+        let pool = Arc::new(DatabasePool::new(
+            Some(8),
+            Duration::from_secs(300),
+            table_name.to_string(),
+        ));
         pool.initialize(vec![db_path])
             .await
             .expect("Initialize should succeed");
@@ -639,7 +643,10 @@ mod pool_cloning {
 
         // Stats should reflect both queries (shared state)
         let stats = pool1.get_stats().expect("Stats should be available");
-        assert_eq!(stats.total_queries, 2, "Should see queries from both clones");
+        assert_eq!(
+            stats.total_queries, 2,
+            "Should see queries from both clones"
+        );
         assert!(stats.cache_hits >= 1, "Second query should hit cache");
 
         // Close from either clone should close the shared pool

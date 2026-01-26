@@ -3,14 +3,14 @@
 //! These tests verify cross-component workflows and file I/O operations
 //! that involve multiple YAML operations working together.
 
-use classic_yaml_core::{clear_global_yaml_cache, YamlError, YamlFormatConfig, YamlOperations};
+use classic_yaml_core::{YamlError, YamlFormatConfig, YamlOperations, clear_global_yaml_cache};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
-use tempfile::{tempdir, NamedTempFile};
+use tempfile::{NamedTempFile, tempdir};
 use yaml_rust2::Yaml;
 
 // ============================================================================
@@ -40,7 +40,9 @@ settings:
         fs::write(&config_path, initial_yaml).expect("Failed to write initial file");
 
         // Load
-        let yaml = ops.load_yaml_file(&config_path).expect("Load should succeed");
+        let yaml = ops
+            .load_yaml_file(&config_path)
+            .expect("Load should succeed");
         assert_eq!(
             ops.get_setting(&yaml, "settings.debug"),
             Some(Yaml::Boolean(false))
@@ -68,7 +70,9 @@ settings:
         // Clear cache and reload to verify persistence
         clear_global_yaml_cache();
 
-        let reloaded = ops.load_yaml_file(&config_path).expect("Reload should succeed");
+        let reloaded = ops
+            .load_yaml_file(&config_path)
+            .expect("Reload should succeed");
         assert_eq!(
             ops.get_setting(&reloaded, "settings.debug"),
             Some(Yaml::Boolean(true))
@@ -91,7 +95,7 @@ settings:
         let temp_dir = tempdir().expect("Failed to create temp dir");
 
         // Create multiple config files
-        let configs = vec![
+        let configs = [
             ("main.yaml", "version: 1.0\nname: main"),
             ("game.yaml", "game: Fallout4\nlevel: hard"),
             ("mods.yaml", "mods:\n  - mod1\n  - mod2"),
@@ -131,10 +135,7 @@ settings:
 
         // Create initial file
         let mut hash = yaml_rust2::yaml::Hash::new();
-        hash.insert(
-            Yaml::String("counter".to_string()),
-            Yaml::Integer(0),
-        );
+        hash.insert(Yaml::String("counter".to_string()), Yaml::Integer(0));
         let yaml = Yaml::Hash(hash);
         ops.save_yaml_file(&config_path, &yaml)
             .expect("Initial save should succeed");
@@ -157,10 +158,7 @@ settings:
                             Yaml::String("counter".to_string()),
                             Yaml::Integer((id * 10 + i) as i64),
                         );
-                        hash.insert(
-                            Yaml::String("thread".to_string()),
-                            Yaml::Integer(id as i64),
-                        );
+                        hash.insert(Yaml::String("thread".to_string()), Yaml::Integer(id as i64));
                         let new_yaml = Yaml::Hash(hash);
 
                         // Write (atomic)
@@ -182,7 +180,7 @@ settings:
         let final_yaml = ops
             .load_yaml_file(&config_path)
             .expect("Final file should be valid YAML");
-        
+
         // Should have counter and thread fields
         assert!(ops.get_setting(&final_yaml, "counter").is_some());
         assert!(ops.get_setting(&final_yaml, "thread").is_some());
@@ -214,7 +212,9 @@ mod cache_workflows {
 
         // Second load - should hit cache
         let start2 = std::time::Instant::now();
-        let yaml2 = ops.load_yaml_file(path).expect("Second load should succeed");
+        let yaml2 = ops
+            .load_yaml_file(path)
+            .expect("Second load should succeed");
         let elapsed2 = start2.elapsed();
 
         // Verify same content
@@ -243,7 +243,9 @@ mod cache_workflows {
         fs::write(&config_path, "version: 1").expect("Failed to write");
 
         // Load to populate cache
-        let yaml1 = ops.load_yaml_file(&config_path).expect("First load should succeed");
+        let yaml1 = ops
+            .load_yaml_file(&config_path)
+            .expect("First load should succeed");
         assert_eq!(ops.get_setting(&yaml1, "version"), Some(Yaml::Integer(1)));
 
         // Wait a bit to ensure different mtime
@@ -253,7 +255,9 @@ mod cache_workflows {
         fs::write(&config_path, "version: 2").expect("Failed to overwrite");
 
         // Load again - should detect modification and reload
-        let yaml2 = ops.load_yaml_file(&config_path).expect("Second load should succeed");
+        let yaml2 = ops
+            .load_yaml_file(&config_path)
+            .expect("Second load should succeed");
         assert_eq!(
             ops.get_setting(&yaml2, "version"),
             Some(Yaml::Integer(2)),
@@ -276,14 +280,18 @@ mod cache_workflows {
         fs::write(&config_path, "value: 1").expect("Failed to write");
 
         // Load
-        let yaml1 = ops.load_yaml_file(&config_path).expect("First load should succeed");
+        let yaml1 = ops
+            .load_yaml_file(&config_path)
+            .expect("First load should succeed");
         assert_eq!(ops.get_setting(&yaml1, "value"), Some(Yaml::Integer(1)));
 
         // Modify file
         fs::write(&config_path, "value: 2").expect("Failed to overwrite");
 
         // Load again - should always read from file when cache disabled
-        let yaml2 = ops.load_yaml_file(&config_path).expect("Second load should succeed");
+        let yaml2 = ops
+            .load_yaml_file(&config_path)
+            .expect("Second load should succeed");
         assert_eq!(
             ops.get_setting(&yaml2, "value"),
             Some(Yaml::Integer(2)),
@@ -343,15 +351,9 @@ Features:
             results.get("Game_Config.name"),
             Some(&Yaml::String("Fallout4".to_string()))
         );
-        assert_eq!(
-            results.get("Game_Config.debug"),
-            Some(&Yaml::Boolean(true))
-        );
-        assert_eq!(
-            results.get("Features.fcx_mode"),
-            Some(&Yaml::Boolean(true))
-        );
-        assert!(results.get("NonExistent.key").is_none());
+        assert_eq!(results.get("Game_Config.debug"), Some(&Yaml::Boolean(true)));
+        assert_eq!(results.get("Features.fcx_mode"), Some(&Yaml::Boolean(true)));
+        assert!(!results.contains_key("NonExistent.key"));
     }
 
     /// Test updating multiple settings in a workflow
@@ -412,7 +414,7 @@ mod error_recovery {
     fn test_malformed_yaml_handling() {
         let ops = YamlOperations::new();
 
-        let malformed_cases = vec![
+        let malformed_cases = [
             "{ invalid: yaml: content: }}}",
             "key: [unclosed",
             "  - indentation\n- error",
@@ -454,7 +456,7 @@ mod error_recovery {
         clear_global_yaml_cache();
 
         let temp_dir = tempdir().expect("Failed to create temp dir");
-        
+
         // Create one valid file
         let valid_path = temp_dir.path().join("valid.yaml");
         fs::write(&valid_path, "key: value").expect("Failed to write");
@@ -497,9 +499,7 @@ mod format_config {
         assert!(ops.is_cache_enabled(), "Cache should be enabled by default");
 
         // Basic operations should still work
-        let yaml = ops
-            .parse_yaml("key: value")
-            .expect("Parse should succeed");
+        let yaml = ops.parse_yaml("key: value").expect("Parse should succeed");
         assert!(ops.get_setting(&yaml, "key").is_some());
     }
 }

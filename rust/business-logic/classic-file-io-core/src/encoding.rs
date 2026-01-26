@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn test_encoding_detector_default() {
-        let detector = EncodingDetector::default();
+        let detector = EncodingDetector;
         // Verify default trait works
         let _ = detector;
     }
@@ -194,7 +194,7 @@ mod tests {
         let detector = EncodingDetector::new();
 
         // Valid UTF-8 single byte (ASCII)
-        let encoding = detector.detect(&[b'A']);
+        let encoding = detector.detect(b"A");
         assert_eq!(encoding.name(), "UTF-8");
     }
 

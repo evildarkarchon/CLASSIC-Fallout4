@@ -465,11 +465,14 @@ mod tests {
     // Additional Tests for Improved Coverage
     // ========================================================================
 
+    // Compile-time assertions for version string validity
+    const _: () = assert!(!CLASSIC_VERSION.is_empty());
+    const _: () =
+        assert!(CLASSIC_VERSION.as_bytes()[1] == b'.' || CLASSIC_VERSION.as_bytes()[3] == b'.');
+
     #[test]
     fn test_user_agent_constants() {
         assert_eq!(USER_AGENT_PREFIX, "CLASSIC");
-        assert!(!CLASSIC_VERSION.is_empty());
-        assert!(CLASSIC_VERSION.contains('.'));
     }
 
     #[test]
@@ -620,7 +623,7 @@ mod tests {
     #[test]
     fn test_mod_site_clone_copy() {
         let site = ModSite::NexusMods;
-        let cloned = site.clone();
+        let cloned = site;
         let copied = site;
 
         assert_eq!(site, cloned);
