@@ -606,6 +606,7 @@ impl FileIOCore {
             .await?;
 
         file.write_all(content.as_bytes()).await?;
+        file.flush().await?;
         Ok(())
     }
 
