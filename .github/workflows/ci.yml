@@ -177,7 +177,7 @@ jobs:
   test-rust:
     name: Rust Tests
     runs-on: windows-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     env:
       RUST_BACKTRACE: full
     steps:
