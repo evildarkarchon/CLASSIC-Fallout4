@@ -12,8 +12,8 @@
 //!
 //! # Pattern
 //!
-//! ```rust,no_run
-//! use classic_shared::AsyncBridge;
+//! ```rust,ignore
+//! use classic_shared_core::AsyncBridge;
 //!
 //! // In a Slint button callback:
 //! AsyncBridge::run_with_ui_update(
@@ -74,8 +74,8 @@ static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
 /// # Examples
 ///
 /// ## Basic Usage
-/// ```rust,no_run
-/// use classic_shared::AsyncBridge;
+/// ```rust,ignore
+/// use classic_shared_core::AsyncBridge;
 ///
 /// AsyncBridge::run_with_ui_update(
 ///     perform_backup(category),
@@ -90,8 +90,8 @@ static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
 /// ```
 ///
 /// ## Fire-and-Forget
-/// ```rust,no_run
-/// use classic_shared::AsyncBridge;
+/// ```rust,ignore
+/// use classic_shared_core::AsyncBridge;
 ///
 /// AsyncBridge::spawn_background(async {
 ///     log_event("User clicked button").await;
@@ -136,7 +136,7 @@ impl AsyncBridge {
     /// ✅ **DO** use `Arc` (is Send):
     /// ```rust,no_run
     /// use std::sync::Arc;
-    /// use classic_shared::AsyncBridge;
+    /// use classic_shared_core::AsyncBridge;
     ///
     /// let data = Arc::new(vec![1, 2, 3]);  // Arc IS Send
     /// let data_clone = Arc::clone(&data);
@@ -159,8 +159,8 @@ impl AsyncBridge {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// use classic_shared::AsyncBridge;
+    /// ```rust,ignore
+    /// use classic_shared_core::AsyncBridge;
     ///
     /// // In a Slint button callback:
     /// let window = window_weak.clone();
@@ -236,8 +236,8 @@ impl AsyncBridge {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// use classic_shared::AsyncBridge;
+    /// ```rust,ignore
+    /// use classic_shared_core::AsyncBridge;
     ///
     /// AsyncBridge::spawn_background(async {
     ///     // Background logging or cleanup
@@ -269,8 +269,8 @@ impl AsyncBridge {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// use classic_shared::AsyncBridge;
+    /// ```rust,ignore
+    /// use classic_shared_core::AsyncBridge;
     ///
     /// // From a background thread:
     /// AsyncBridge::invoke_on_ui_thread(move || {
@@ -298,8 +298,8 @@ impl AsyncBridge {
     ///
     /// # Examples
     ///
-    /// ```rust,no_run
-    /// use classic_shared::AsyncBridge;
+    /// ```rust,ignore
+    /// use classic_shared_core::AsyncBridge;
     ///
     /// let window = window_weak.clone();
     /// AsyncBridge::run_with_loading(
