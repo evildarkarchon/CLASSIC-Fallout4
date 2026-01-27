@@ -14,8 +14,9 @@ pytestmark = [pytest.mark.unit]
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
-from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
+from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
+
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
 
 
 @pytest.fixture
@@ -55,8 +56,8 @@ class TestFCXModeHandlerReadOnly:
 
         # Mock the necessary components - patch in the correct module
         with (
-            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
-            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+            patch("ClassicLib.support.setup.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_game_result,
         ):
             # Configure mocks
             mock_coordinator = MagicMock()
@@ -80,8 +81,9 @@ class TestFCXModeHandlerReadOnly:
         Tests that FCX mode correctly detects commented-out hotkey
         configuration and generates appropriate recommendations.
         """
-        from ClassicLib.ScanGame.Config import ConfigFileCache
-        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+        from ClassicLib.scanning.game.ScanModInis import detect_all_ini_issues_async
+
+        from ClassicLib.scanning.game.Config import ConfigFileCache
 
         # Create test configuration
         espexplorer_ini = tmp_path / "espexplorer.ini"
@@ -89,7 +91,10 @@ class TestFCXModeHandlerReadOnly:
 
         # Create ConfigFileCache with test file
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
+        with (
+            patch("ClassicLib.scanning.game.Config.yaml_settings", return_value=Path()),
+            patch("ClassicLib.scanning.game.Config.msg_error"),
+        ):
             cache = ConfigFileCache()
             cache._config_files = {"espexplorer.ini": espexplorer_ini}
 
@@ -113,15 +118,19 @@ class TestFCXModeHandlerReadOnly:
         Tests that FCX mode correctly detects excessive particle counts
         that can cause performance issues.
         """
-        from ClassicLib.ScanGame.Config import ConfigFileCache
-        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+        from ClassicLib.scanning.game.ScanModInis import detect_all_ini_issues_async
+
+        from ClassicLib.scanning.game.Config import ConfigFileCache
 
         # Create test configuration with high particle count
         epo_ini = tmp_path / "epo.ini"
         epo_ini.write_text("[Particles]\niMaxDesired = 7500\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
+        with (
+            patch("ClassicLib.scanning.game.Config.yaml_settings", return_value=Path()),
+            patch("ClassicLib.scanning.game.Config.msg_error"),
+        ):
             cache = ConfigFileCache()
             cache._config_files = {"epo.ini": epo_ini}
 
@@ -145,15 +154,19 @@ class TestFCXModeHandlerReadOnly:
         Tests that FCX mode correctly detects locked head parts settings
         and generates unlock recommendations.
         """
-        from ClassicLib.ScanGame.Config import ConfigFileCache
-        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+        from ClassicLib.scanning.game.ScanModInis import detect_all_ini_issues_async
+
+        from ClassicLib.scanning.game.Config import ConfigFileCache
 
         # Create test configuration with locked head parts
         f4ee_ini = tmp_path / "f4ee.ini"
         f4ee_ini.write_text("[CharGen]\nbUnlockHeadParts = 0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
+        with (
+            patch("ClassicLib.scanning.game.Config.yaml_settings", return_value=Path()),
+            patch("ClassicLib.scanning.game.Config.msg_error"),
+        ):
             cache = ConfigFileCache()
             cache._config_files = {"f4ee.ini": f4ee_ini}
 
@@ -177,15 +190,19 @@ class TestFCXModeHandlerReadOnly:
         Tests that FCX mode correctly detects locked face tints settings
         and generates unlock recommendations.
         """
-        from ClassicLib.ScanGame.Config import ConfigFileCache
-        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+        from ClassicLib.scanning.game.ScanModInis import detect_all_ini_issues_async
+
+        from ClassicLib.scanning.game.Config import ConfigFileCache
 
         # Create test configuration with locked face tints
         f4ee_ini = tmp_path / "f4ee.ini"
         f4ee_ini.write_text("[CharGen]\nbUnlockTints = 0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
+        with (
+            patch("ClassicLib.scanning.game.Config.yaml_settings", return_value=Path()),
+            patch("ClassicLib.scanning.game.Config.msg_error"),
+        ):
             cache = ConfigFileCache()
             cache._config_files = {"f4ee.ini": f4ee_ini}
 
@@ -209,15 +226,19 @@ class TestFCXModeHandlerReadOnly:
         Tests that FCX mode correctly detects low loading screen FPS
         settings that may cause physics issues.
         """
-        from ClassicLib.ScanGame.Config import ConfigFileCache
-        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+        from ClassicLib.scanning.game.ScanModInis import detect_all_ini_issues_async
+
+        from ClassicLib.scanning.game.Config import ConfigFileCache
 
         # Create test configuration with low loading screen FPS
         highfps_ini = tmp_path / "highfpsphysicsfix.ini"
         highfps_ini.write_text("[Limiter]\nLoadingScreenFPS = 60.0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
+        with (
+            patch("ClassicLib.scanning.game.Config.yaml_settings", return_value=Path()),
+            patch("ClassicLib.scanning.game.Config.msg_error"),
+        ):
             cache = ConfigFileCache()
             cache._config_files = {"highfpsphysicsfix.ini": highfps_ini}
 
@@ -262,8 +283,8 @@ class TestFCXModeHandlerReadOnly:
         Tests that reset_fcx_checks() properly clears state between scans.
         """
         with (
-            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
-            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+            patch("ClassicLib.support.setup.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_game_result,
         ):
             # Configure mocks
             mock_coordinator = MagicMock()
@@ -310,8 +331,8 @@ class TestFCXModeHandlerReadOnly:
         appropriate notice messages about requiring original user execution.
         """
         with (
-            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
-            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+            patch("ClassicLib.support.setup.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_game_result,
         ):
             # Configure mocks
             mock_coordinator = MagicMock()
@@ -339,8 +360,9 @@ class TestFCXModeHandlerReadOnly:
         Tests that all issue types are detected simultaneously when
         multiple configuration problems exist.
         """
-        from ClassicLib.ScanGame.Config import ConfigFileCache
-        from ClassicLib.ScanGame.ScanModInis import detect_all_ini_issues_async
+        from ClassicLib.scanning.game.ScanModInis import detect_all_ini_issues_async
+
+        from ClassicLib.scanning.game.Config import ConfigFileCache
 
         # Create multiple test configurations with issues
         espexplorer_ini = tmp_path / "espexplorer.ini"
@@ -353,7 +375,10 @@ class TestFCXModeHandlerReadOnly:
         f4ee_ini.write_text("[CharGen]\nbUnlockHeadParts = 0\nbUnlockTints = 0\n", encoding="utf-8")
 
         # Mock yaml_settings to avoid async context error during ConfigFileCache init
-        with patch("ClassicLib.ScanGame.Config.yaml_settings", return_value=Path()), patch("ClassicLib.ScanGame.Config.msg_error"):
+        with (
+            patch("ClassicLib.scanning.game.Config.yaml_settings", return_value=Path()),
+            patch("ClassicLib.scanning.game.Config.msg_error"),
+        ):
             cache = ConfigFileCache()
             cache._config_files = {
                 "espexplorer.ini": espexplorer_ini,
@@ -383,8 +408,8 @@ class TestFCXModeHandlerReadOnly:
         configuration files are correctly configured.
         """
         with (
-            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as MockSetup,
-            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_game_result,
+            patch("ClassicLib.support.setup.SetupCoordinator") as MockSetup,
+            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_game_result,
         ):
             # Configure mocks
             mock_coordinator = MagicMock()

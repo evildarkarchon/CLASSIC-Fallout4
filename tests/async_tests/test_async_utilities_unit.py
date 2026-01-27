@@ -20,9 +20,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
-from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
-from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
+from ClassicLib.scanning.logs.AsyncReformat import crashlogs_reformat_async
+from ClassicLib.scanning.logs.AsyncUtil import load_crash_logs_async
 
 
 @pytest.fixture
@@ -109,7 +108,7 @@ class TestAsyncUtilityFunctions:
         remove_list = ("test_remove",)
 
         # Mock the reformat logic
-        with patch("ClassicLib.ScanLog.AsyncReformat.reformat_single_log_async") as mock_process:
+        with patch("ClassicLib.scanning.logs.AsyncReformat.reformat_single_log_async") as mock_process:
             mock_process.return_value = None
 
             await crashlogs_reformat_async(sample_crash_logs, remove_list)
@@ -133,7 +132,7 @@ class TestAsyncUtilityFunctions:
         files = [keep_log, remove_log]
         remove_list = ("remove",)  # Should match "remove-this.log"
 
-        with patch("ClassicLib.ScanLog.AsyncReformat.reformat_single_log_async") as mock_process:
+        with patch("ClassicLib.scanning.logs.AsyncReformat.reformat_single_log_async") as mock_process:
             mock_process.return_value = None
 
             await crashlogs_reformat_async(files, remove_list)

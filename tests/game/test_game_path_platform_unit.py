@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.GamePath import game_path_find
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.game_path import game_path_find
 
 pytestmark = pytest.mark.unit
 
@@ -21,7 +21,7 @@ class TestMultiPlatformSupport:
     """Tests for cross-platform compatibility."""
 
     @patch("platform.system", return_value="Linux")
-    @patch("ClassicLib.GamePath._game_path_find_registry")
+    @patch("ClassicLib.support.game_path._game_path_find_registry")
     def test_linux_skips_registry(
         self,
         mock_registry: MagicMock,
@@ -39,8 +39,8 @@ class TestMultiPlatformSupport:
             "Game_Info.Main_Root_Name": "Fallout 4",
             "Game_VR_Info.Main_Root_Name": "Fallout 4 VR",
         }
-        with patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path", return_value=None):
-            with patch("ClassicLib.GamePath.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
+        with patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path", return_value=None):
+            with patch("ClassicLib.support.game_path.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
                 with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file")):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
                         with patch(
@@ -52,7 +52,7 @@ class TestMultiPlatformSupport:
         mock_registry.assert_not_called()
 
     @patch("platform.system", return_value="Windows")
-    @patch("ClassicLib.GamePath._game_path_find_registry", return_value=None)
+    @patch("ClassicLib.support.game_path._game_path_find_registry", return_value=None)
     def test_windows_uses_registry(
         self,
         mock_registry: MagicMock,
@@ -70,8 +70,8 @@ class TestMultiPlatformSupport:
             "Game_Info.Main_Root_Name": "Fallout 4",
             "Game_VR_Info.Main_Root_Name": "Fallout 4 VR",
         }
-        with patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path", return_value=None):
-            with patch("ClassicLib.GamePath.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
+        with patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path", return_value=None):
+            with patch("ClassicLib.support.game_path.yaml_settings", side_effect=lambda t, s, k, *args: yaml_values.get(k)):  # noqa: SIM117
                 with patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file")):
                     with patch.object(GlobalRegistry, "is_gui_mode", return_value=True):
                         with patch(

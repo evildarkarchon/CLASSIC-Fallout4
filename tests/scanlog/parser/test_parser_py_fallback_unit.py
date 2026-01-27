@@ -14,7 +14,7 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 # Direct import of Python fallback implementation (not the high-level Parser)
-from ClassicLib.python.parser_py import (
+from ClassicLib.integration.python.parser_py import (
     extract_module_names,
     extract_segments,
     find_segments,

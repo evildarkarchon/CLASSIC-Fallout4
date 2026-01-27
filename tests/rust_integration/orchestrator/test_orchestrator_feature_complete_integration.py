@@ -13,10 +13,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from ClassicLib.scanning.logs.HybridOrchestrator import HybridOrchestrator
 
 from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.HybridOrchestrator import HybridOrchestrator
 
 
 @pytest.mark.rust
@@ -38,9 +38,9 @@ class TestFeatureCompleteMode:
         to determine concurrency. This is mocked to return 0 (automatic concurrency).
         """
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
-            patch("ClassicLib.ScanLog.HybridOrchestrator.classic_settings", return_value=0),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
+            patch("ClassicLib.scanning.logs.HybridOrchestrator.classic_settings", return_value=0),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = None
@@ -54,7 +54,7 @@ class TestFeatureCompleteMode:
         The ClassicOrchestrator uses get_yamldata() from the factory to load configuration.
         This fixture mocks that function to return our populated test data.
         """
-        with patch("ClassicLib.rust.orchestrator_api.get_yamldata", return_value=yamldata_feature_complete):
+        with patch("ClassicLib.integration.rust.orchestrator_api.get_yamldata", return_value=yamldata_feature_complete):
             yield yamldata_feature_complete
 
     @pytest.fixture

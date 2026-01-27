@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanLog.fragments.mod_detection module.
+"""Unit tests for ClassicLib.scanning.logs.reporting.mod_detection module.
 
 This module tests the mod detection fragment generation utilities:
 - detect_mods_single_fragment
@@ -9,7 +9,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit]
 
-from ClassicLib.ScanLog.fragments.mod_detection import (
+from ClassicLib.scanning.logs.reporting.mod_detection import (
     detect_mods_single_fragment,
     generate_mod_check_header_fragment,
 )

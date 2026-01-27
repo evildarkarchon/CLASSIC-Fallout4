@@ -66,9 +66,9 @@ class TestGUIToRustIntegration:
     @pytest.mark.asyncio
     async def test_gui_scan_with_rust_parser(self):
         """Test GUI initiating scan that uses Rust parser."""
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
         from ClassicLib.integration.factory import get_parser
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         # Clear AsyncBridge singleton instances properly
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
@@ -109,7 +109,7 @@ class TestGUIToRustIntegration:
     @pytest.mark.asyncio
     async def test_gui_concurrent_operations(self):
         """Test GUI handling multiple concurrent operations."""
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
         from ClassicLib.integration.factory import get_parser
 
         bridge = AsyncBridge.get_instance()
@@ -149,8 +149,8 @@ class TestTUIAsyncIntegration:
     @pytest.mark.asyncio
     async def test_tui_async_file_operations(self, tmp_path):
         """Test TUI performing async file operations (without launching interactive UI)."""
-        from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.core.async_bridge import AsyncBridge
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
         AsyncBridge.get_instance()
@@ -173,7 +173,7 @@ class TestTUIAsyncIntegration:
     @pytest.mark.asyncio
     async def test_tui_live_log_monitoring(self, tmp_path):
         """Test TUI monitoring log file for changes."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         FileIOCore()
 
@@ -215,7 +215,7 @@ class TestTUIAsyncIntegration:
     @pytest.mark.asyncio
     async def test_tui_async_ui_updates(self):
         """Test TUI updating UI components asynchronously."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
 
@@ -257,7 +257,7 @@ class TestCLIBatchProcessing:
     @pytest.mark.asyncio
     async def test_cli_batch_log_processing(self, tmp_path):
         """Test CLI processing multiple logs in batch."""
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
         from ClassicLib.integration.factory import get_parser
 
         AsyncBridge.get_instance()
@@ -334,8 +334,8 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_message_passing_between_components(self):
         """Test message passing between GUI, backend, and report components."""
-        from ClassicLib import GlobalRegistry
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.core.registry import GlobalRegistry
+        from ClassicLib.messaging.handler import MessageHandler
 
         # Note: MessageHandler is not a singleton anymore, no cleanup needed
         # Note: GlobalRegistry is module-level now, no cleanup needed
@@ -386,8 +386,8 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_error_propagation_across_components(self):
         """Test error propagation from backend to UI components."""
-        from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.core.async_bridge import AsyncBridge
+        from ClassicLib.messaging.handler import MessageHandler
 
         bridge = AsyncBridge.get_instance()
 
@@ -420,7 +420,7 @@ class TestComponentCommunication:
     @pytest.mark.asyncio
     async def test_async_sync_boundary_crossing(self):
         """Test data passing across async/sync boundaries."""
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
 
         bridge = AsyncBridge.get_instance()
 
@@ -496,7 +496,7 @@ class TestResourceManagement:
     @pytest.mark.asyncio
     async def test_file_handle_cleanup(self, tmp_path):
         """Test proper file handle cleanup across operations."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 

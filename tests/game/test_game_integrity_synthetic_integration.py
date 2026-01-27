@@ -195,14 +195,14 @@ class TestGameIntegritySynthetic:
         """Test validation of game directory structure."""
         from unittest.mock import AsyncMock, patch
 
-        from ClassicLib.GameIntegrity import GameIntegrityChecker
+        from ClassicLib.support.integrity import GameIntegrityChecker
 
         # Mock dependencies for load_configuration_async
         with (
-            patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
-            patch("ClassicLib.VersionRegistry.core.VersionRegistry.get_all_exe_hashes", return_value={"some_old_hash", "some_new_hash"}),
-            patch("ClassicLib.YamlSettings.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
-            patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
+            patch("ClassicLib.support.versions.core.VersionRegistry.get_all_exe_hashes", return_value={"some_old_hash", "some_new_hash"}),
+            patch("ClassicLib.io.yaml.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
+            patch("ClassicLib.support.integrity.calculate_file_hash", return_value="some_new_hash"),
         ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
             mock_yaml_settings_async.side_effect = [
@@ -225,17 +225,17 @@ class TestGameIntegritySynthetic:
         """Test detection of missing master files."""
         from unittest.mock import AsyncMock, patch
 
-        from ClassicLib.GameIntegrity import GameIntegrityChecker
+        from ClassicLib.support.integrity import GameIntegrityChecker
 
         # Create directory with missing masters - now this means the mocked config will point to non-existent files
         (synthetic_game_dir / "Data").mkdir(exist_ok=True)
 
         # Mock dependencies for load_configuration_async
         with (
-            patch("ClassicLib.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
-            patch("ClassicLib.VersionRegistry.core.VersionRegistry.get_all_exe_hashes", return_value={"some_old_hash", "some_new_hash"}),
-            patch("ClassicLib.YamlSettings.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
-            patch("ClassicLib.GameIntegrity.calculate_file_hash", return_value="some_new_hash"),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value="") as _mock_get_vr,
+            patch("ClassicLib.support.versions.core.VersionRegistry.get_all_exe_hashes", return_value={"some_old_hash", "some_new_hash"}),
+            patch("ClassicLib.io.yaml.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_settings_async,
+            patch("ClassicLib.support.integrity.calculate_file_hash", return_value="some_new_hash"),
         ):  # Mock file hash calc
             # Configure mock_yaml_settings_async to return values expected by load_configuration_async
             mock_yaml_settings_async.side_effect = [

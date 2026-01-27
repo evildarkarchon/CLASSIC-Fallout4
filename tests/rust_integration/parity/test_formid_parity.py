@@ -31,14 +31,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from ClassicLib.scanning.logs.FormIDAnalyzerCore import FormIDAnalyzerCore
 
-from ClassicLib.Database import AsyncDatabasePool
 from ClassicLib.integration.factory import get_formid_analyzer
 from ClassicLib.integration.status import (
     is_rust_accelerated,
 )
-from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+from ClassicLib.io.database import AsyncDatabasePool
+from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from tests.fixtures.parity_fixtures import (
     ParityResult,
     ParityTestCase,

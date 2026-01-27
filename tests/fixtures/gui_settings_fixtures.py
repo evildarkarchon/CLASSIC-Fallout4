@@ -17,10 +17,10 @@ from unittest.mock import MagicMock
 import pytest
 from PySide6.QtWidgets import QComboBox, QWidget
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
-from ClassicLib.MessageHandler import init_message_handler
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.io.yaml import yaml_settings
+from ClassicLib.messaging import init_message_handler
 
 
 def set_game_version_by_value(combo: QComboBox, value: str) -> bool:
@@ -159,7 +159,7 @@ def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[MockSe
     mock_cache = MockSettingsCache()
 
     # Import the class to patch
-    from ClassicLib.YamlSettings import YamlSettingsCache
+    from ClassicLib.io.yaml import YamlSettingsCache
 
     # Save original instance for cleanup
     original_instance = YamlSettingsCache._instance
@@ -180,7 +180,7 @@ def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[MockSe
     # Also reset VersionRegistry to ensure fresh version data
     # The registry uses YAML settings during initialization, so it needs
     # to be reset when the YAML cache is mocked
-    from ClassicLib.VersionRegistry.core import VersionRegistry
+    from ClassicLib.support.versions.core import VersionRegistry
 
     original_registry_instance = VersionRegistry._instance
     VersionRegistry._instance = None

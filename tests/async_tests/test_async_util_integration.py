@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIO.Async import (
+from ClassicLib.io.files.Async import (
     detect_encoding_async,
     open_file_with_encoding_async,
     read_file_with_encoding_async,

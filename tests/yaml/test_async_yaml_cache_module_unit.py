@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.YamlSettings.async_.cache module.
+"""Unit tests for ClassicLib.io.yaml.async_.cache module.
 
 This module tests the YamlCache class for YAML file caching with
 modification detection, metrics tracking, and thread safety.
@@ -19,7 +19,7 @@ class TestYamlCacheInitialization:
 
     def test_initializes_empty_cache(self) -> None:
         """Test that YamlCache initializes with empty cache."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -27,7 +27,7 @@ class TestYamlCacheInitialization:
 
     def test_initializes_empty_file_mod_times(self) -> None:
         """Test that file modification times dict is empty initially."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -35,7 +35,7 @@ class TestYamlCacheInitialization:
 
     def test_initializes_empty_path_cache(self) -> None:
         """Test that path cache dict is empty initially."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -43,7 +43,7 @@ class TestYamlCacheInitialization:
 
     def test_initializes_empty_settings_cache(self) -> None:
         """Test that settings cache dict is empty initially."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -51,7 +51,7 @@ class TestYamlCacheInitialization:
 
     def test_initializes_last_check_time_to_zero(self) -> None:
         """Test that last check time is initialized to zero."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -59,7 +59,7 @@ class TestYamlCacheInitialization:
 
     def test_initializes_metrics(self) -> None:
         """Test that metrics are initialized with correct keys."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         metrics = cache.get_metrics()
@@ -76,7 +76,7 @@ class TestYamlCacheGetFileLock:
 
     async def test_returns_asyncio_lock(self) -> None:
         """Test that get_file_lock returns an asyncio.Lock."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -86,7 +86,7 @@ class TestYamlCacheGetFileLock:
 
     async def test_returns_same_lock_for_same_path(self) -> None:
         """Test that same path gets same lock."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         file_path = "/path/to/file.yaml"
@@ -98,7 +98,7 @@ class TestYamlCacheGetFileLock:
 
     async def test_returns_different_locks_for_different_paths(self) -> None:
         """Test that different paths get different locks."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -114,7 +114,7 @@ class TestYamlCacheCheckFileModification:
 
     async def test_returns_true_for_nonexistent_file(self, tmp_path: Path) -> None:
         """Test that nonexistent file returns True (needs reload)."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         nonexistent = tmp_path / "nonexistent.yaml"
@@ -125,7 +125,7 @@ class TestYamlCacheCheckFileModification:
 
     async def test_returns_true_for_new_file(self, tmp_path: Path) -> None:
         """Test that a new file (not in cache) returns True."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         test_file = tmp_path / "test.yaml"
@@ -137,7 +137,7 @@ class TestYamlCacheCheckFileModification:
 
     async def test_returns_false_for_unmodified_file(self, tmp_path: Path) -> None:
         """Test that unmodified file returns False on second check."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         test_file = tmp_path / "test.yaml"
@@ -155,7 +155,7 @@ class TestYamlCacheCheckFileModification:
 
     async def test_returns_true_for_modified_file(self, tmp_path: Path) -> None:
         """Test that modified file returns True."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         test_file = tmp_path / "test.yaml"
@@ -175,7 +175,7 @@ class TestYamlCacheCheckFileModification:
 
     async def test_returns_true_when_ttl_expired(self, tmp_path: Path) -> None:
         """Test that returns True when cache TTL has expired."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         # Set a very short TTL for testing
@@ -205,7 +205,7 @@ class TestYamlCacheGetMetrics:
 
     def test_returns_dict(self) -> None:
         """Test that get_metrics returns a dictionary."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -215,7 +215,7 @@ class TestYamlCacheGetMetrics:
 
     def test_returns_copy(self) -> None:
         """Test that get_metrics returns a copy, not the original."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -228,7 +228,7 @@ class TestYamlCacheGetMetrics:
 
     def test_contains_expected_keys(self) -> None:
         """Test that metrics contain all expected keys."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -243,7 +243,7 @@ class TestYamlCacheUpdateMetrics:
 
     def test_increments_cache_hits(self) -> None:
         """Test incrementing cache_hits metric."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -253,7 +253,7 @@ class TestYamlCacheUpdateMetrics:
 
     def test_increments_cache_misses(self) -> None:
         """Test incrementing cache_misses metric."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -263,7 +263,7 @@ class TestYamlCacheUpdateMetrics:
 
     def test_increments_by_custom_value(self) -> None:
         """Test incrementing by custom value."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -273,7 +273,7 @@ class TestYamlCacheUpdateMetrics:
 
     def test_ignores_unknown_metric(self) -> None:
         """Test that unknown metric names are ignored."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
 
@@ -290,7 +290,7 @@ class TestYamlCacheClearCache:
 
     def test_clears_all_caches_when_no_store(self) -> None:
         """Test clearing all caches when no store specified."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         cache.cache["test_store"] = {"key": "value"}
@@ -309,7 +309,7 @@ class TestYamlCacheClearCache:
 
     def test_clears_specific_store(self) -> None:
         """Test clearing only specific store."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         cache.cache["store1"] = {"key": "value1"}
@@ -322,7 +322,7 @@ class TestYamlCacheClearCache:
 
     def test_preserves_other_caches_when_clearing_store(self) -> None:
         """Test that other caches are preserved when clearing specific store."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         cache = YamlCache()
         cache.cache["store1"] = {"key": "value"}
@@ -341,13 +341,13 @@ class TestYamlCacheClassVariables:
 
     def test_cache_ttl_default(self) -> None:
         """Test default CACHE_TTL value."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         assert YamlCache.CACHE_TTL == 300.0  # 5 minutes
 
     def test_cache_ttl_can_be_modified(self) -> None:
         """Test that CACHE_TTL can be modified."""
-        from ClassicLib.YamlSettings.async_.cache import YamlCache
+        from ClassicLib.io.yaml.async_.cache import YamlCache
 
         original = YamlCache.CACHE_TTL
         try:

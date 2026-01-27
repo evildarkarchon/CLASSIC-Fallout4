@@ -19,12 +19,12 @@ from PySide6.QtCore import QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QDialog, QFileDialog, QMessageBox
 
-from ClassicLib.Constants import YAML
-from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
-from ClassicLib.YamlSettings import classic_settings, yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import classic_settings, yaml_settings
+from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class FolderManager:

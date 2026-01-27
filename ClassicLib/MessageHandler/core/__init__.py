@@ -1,19 +1,18 @@
-"""Core message handling types and routing logic.
+"""Backward compatibility module for MessageHandler.core.
 
-This module provides the fundamental types for the message handling system:
-- MessageType: Enumeration of message categories
-- MessageTarget: Enumeration of message routing targets
-- Message: Data structure for message content and metadata
-- MessageRouter: Logic for determining message display based on mode and target
+This package has been moved to ClassicLib.messaging.core.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.messaging.core instead.
 """
 
-from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
-from ClassicLib.MessageHandler.core.message import Message
-from ClassicLib.MessageHandler.core.router import MessageRouter
+import warnings
 
-__all__ = [
-    "Message",
-    "MessageRouter",
-    "MessageTarget",
-    "MessageType",
-]
+warnings.warn(
+    "ClassicLib.MessageHandler.core is deprecated, import from ClassicLib.messaging.core instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.messaging.core import *  # noqa: F403, E402

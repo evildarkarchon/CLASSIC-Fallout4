@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.MessageHandler.qt_handler import QtMessageHandler
+    from ClassicLib.messaging.qt_handler import QtMessageHandler
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -71,8 +71,8 @@ def qt_application(qt_application_session):
             import threading
 
             # Only try to import if it might have been used
-            if "ClassicLib.AsyncBridge" in sys.modules:
-                from ClassicLib.AsyncBridge import AsyncBridge
+            if "ClassicLib.core.async_bridge" in sys.modules or "ClassicLib.AsyncBridge" in sys.modules:
+                from ClassicLib.core.async_bridge import AsyncBridge
 
                 thread_id = threading.get_ident()
                 # We need to be careful about accessing the lock if it might be held
@@ -122,8 +122,8 @@ def gui_message_handler(qt_parent_widget):
     which affects how messages are displayed (dialogs vs console).
     Messages are mocked to prevent blocking dialogs during tests.
     """
-    from ClassicLib.MessageHandler import handler as _handler_module
-    from ClassicLib.MessageHandler import init_message_handler
+    from ClassicLib.messaging import handler as _handler_module
+    from ClassicLib.messaging import init_message_handler
 
     # Store any existing handler from the actual module where it's defined
     old_handler = getattr(_handler_module, "_message_handler", None)

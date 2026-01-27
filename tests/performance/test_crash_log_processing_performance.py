@@ -14,32 +14,11 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
-from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
-from ClassicLib.ScanLog.pipeline.async_performance_monitor import AsyncPerformanceMonitor
+from ClassicLib.scanning.logs.AsyncUtil import load_crash_logs_async
+from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
+from ClassicLib.scanning.logs.pipeline.async_performance_monitor import AsyncPerformanceMonitor
 
 pytestmark = pytest.mark.performance
-
-
-@pytest.fixture
-def mock_yamldata() -> MagicMock:
-    """Mock ClassicScanLogsInfo for testing."""
-    yamldata: MagicMock = MagicMock()
-    yamldata.fallout4_crashlog_scan_exclusions = ["test_exclusion"]
-    yamldata.fallout4_crashlog_mods_single = {"test_mod": "Test mod message"}
-    yamldata.game_ignore_plugins = []
-    yamldata.game_ignore_records = []
-    yamldata.ignore_list = []
-    yamldata.classic_records_list = []
-    yamldata.fallout4_crashlog_mods_top = {}
-    yamldata.fallout4_crashlog_mods_groups = {}
-    yamldata.fallout4_crashlog_stack_check = {}
-    yamldata.fallout4_crashlog_error_check = {}
-    yamldata.formid_analyzer_enabled = True
-    yamldata.record_scanner_enabled = True
-    yamldata.plugin_analyzer_enabled = True
-    return yamldata
 
 
 @pytest.mark.slow
@@ -140,9 +119,11 @@ class TestRealWorldCrashLogProcessing:
         # Process with mocked orchestrator for consistent timing
         # Note: load_crash_logs_async was removed from pipeline - it now uses direct file I/O
         with (
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock) as mock_reformat,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock) as mock_write,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
+            patch(
+                "ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock
+            ) as mock_reformat,
+            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock) as mock_write,
+            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Return actual loaded data
             mock_reformat.return_value = None

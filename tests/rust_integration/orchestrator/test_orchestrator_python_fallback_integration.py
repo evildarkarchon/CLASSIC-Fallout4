@@ -13,11 +13,11 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from ClassicLib.scanning.logs.HybridOrchestrator import HybridOrchestrator
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
 from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.HybridOrchestrator import HybridOrchestrator
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
 
 @pytest.mark.rust
@@ -36,8 +36,8 @@ class TestPythonFallback:
     def mock_settings(self):
         """Mock async settings calls."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = None
@@ -56,9 +56,9 @@ class TestPythonFallback:
         empty_data_dir.mkdir(parents=True)
 
         with (
-            patch("ClassicLib.ResourceLoader.ResourceLoader.get_data_directory", return_value=empty_data_dir),
-            patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"),
-            patch("ClassicLib.GlobalRegistry.get_vr", return_value=""),
+            patch("ClassicLib.support.resources.ResourceLoader.get_data_directory", return_value=empty_data_dir),
+            patch("ClassicLib.core.registry.get_game", return_value="Fallout4"),
+            patch("ClassicLib.core.registry.get_vr", return_value=""),
         ):
             yield
 
@@ -67,7 +67,7 @@ class TestPythonFallback:
         """Load mocked YAML configuration."""
         from unittest.mock import MagicMock
 
-        from ClassicLib.Constants import NULL_VERSION
+        from ClassicLib.core.constants import NULL_VERSION
 
         mock_data = MagicMock()
 

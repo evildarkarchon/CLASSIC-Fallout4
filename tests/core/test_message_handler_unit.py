@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.MessageHandler import (
+from ClassicLib.messaging import (
     CLIProgressBar,
     MessageHandler,
     MessageTarget,
@@ -35,7 +35,7 @@ class TestMessageHandler:
 
     @pytest.mark.unit
     @pytest.mark.gui
-    @patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True)
+    @patch("ClassicLib.messaging.qt_compat.HAS_QT", True)
     def test_init_gui_mode(self) -> None:
         """Test initialization in GUI mode."""
         mock_parent: MagicMock = MagicMock()
@@ -55,7 +55,7 @@ class TestMessageHandler:
         assert cli_handler._router.should_display(MessageTarget.LOG_ONLY) is False
 
         # GUI mode handler (mocked)
-        with patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True):
+        with patch("ClassicLib.messaging.qt_compat.HAS_QT", True):
             gui_handler: MessageHandler = MessageHandler(is_gui_mode=True)
             assert gui_handler._router.should_display(MessageTarget.ALL) is True
             assert gui_handler._router.should_display(MessageTarget.CONSOLE) is False
@@ -208,7 +208,7 @@ class TestGlobalFunctions:
         init_message_handler(parent=None, is_gui_mode=False)
 
         # Mock the classic_settings to ensure CLI progress is not disabled
-        with patch("ClassicLib.YamlSettings.classic_settings") as mock_settings:
+        with patch("ClassicLib.io.yaml.classic_settings") as mock_settings:
             mock_settings.return_value = False  # Disable CLI Progress = False
 
             old_stdout: TextIO | Any = sys.stdout
@@ -229,12 +229,12 @@ class TestGlobalFunctions:
 class TestThreadSafety:
     """Test thread safety of message handler."""
 
-    @patch("ClassicLib.MessageHandler.qt_compat.HAS_QT", True)
+    @patch("ClassicLib.messaging.qt_compat.HAS_QT", True)
     def test_gui_signal_emission(self) -> None:
         """Test that GUI mode uses signals for thread safety."""
-        from ClassicLib.MessageHandler.qt_handler import QtMessageHandler
+        from ClassicLib.messaging.qt_handler import QtMessageHandler
 
-        with patch("ClassicLib.MessageHandler.qt_compat.QMessageBox") as mock_msgbox:  # noqa: F841
+        with patch("ClassicLib.messaging.qt_compat.QMessageBox") as mock_msgbox:  # noqa: F841
             # Create handler without mocking QObject init
             # This requires PySide6 to be working in the environment
             handler = QtMessageHandler()

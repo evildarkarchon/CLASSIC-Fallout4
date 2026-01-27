@@ -14,8 +14,8 @@ pytestmark = [pytest.mark.unit]
 
 from pathlib import Path
 
-from ClassicLib.ScanGame.Config import ConfigFileCache
-from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+from ClassicLib.scanning.game.Config import ConfigFileCache
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
 
 
 @pytest.mark.unit
@@ -27,7 +27,7 @@ class TestConfigFileCacheReadOnly:
         """Initialize MessageHandler for tests."""
         import importlib
 
-        handler_mod = importlib.import_module("ClassicLib.MessageHandler.handler")
+        handler_mod = importlib.import_module("ClassicLib.messaging.handler")
 
         handler_mod.init_message_handler(parent=None, is_gui_mode=False)
         yield
@@ -39,7 +39,7 @@ class TestConfigFileCacheReadOnly:
         from unittest.mock import patch
 
         # Mock yaml_settings to avoid async context error and filesystem access
-        with patch("ClassicLib.ScanGame.Config.yaml_settings") as mock_settings:
+        with patch("ClassicLib.scanning.game.Config.yaml_settings") as mock_settings:
             # Return tmp_path as game root
             mock_settings.return_value = tmp_path
             yield mock_settings

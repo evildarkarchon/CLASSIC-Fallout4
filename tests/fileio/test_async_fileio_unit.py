@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.FileIO.Async module.
+"""Unit tests for ClassicLib.io.files.Async module.
 
 This module tests the async file I/O utilities including encoding detection
 and async file reading functions.
@@ -18,19 +18,19 @@ class TestDetectEncodingAsync:
     @pytest.mark.asyncio
     async def test_raises_import_error_when_dependencies_unavailable(self, tmp_path: Path) -> None:
         """Test raises ImportError when aiofiles/chardet unavailable."""
-        from ClassicLib.FileIO.Async import detect_encoding_async
+        from ClassicLib.io.files.Async import detect_encoding_async
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content")
 
-        with patch("ClassicLib.FileIO.Async.AIOFILES_AVAILABLE", False):
+        with patch("ClassicLib.io.files.Async.AIOFILES_AVAILABLE", False):
             with pytest.raises(ImportError):
                 await detect_encoding_async(test_file)
 
     @pytest.mark.asyncio
     async def test_raises_file_not_found_for_missing_file(self, tmp_path: Path) -> None:
         """Test raises FileNotFoundError for non-existent file."""
-        from ClassicLib.FileIO.Async import detect_encoding_async
+        from ClassicLib.io.files.Async import detect_encoding_async
 
         nonexistent = tmp_path / "nonexistent.txt"
 
@@ -40,7 +40,7 @@ class TestDetectEncodingAsync:
     @pytest.mark.asyncio
     async def test_converts_string_path_to_path_object(self, tmp_path: Path) -> None:
         """Test accepts string paths and converts to Path."""
-        from ClassicLib.FileIO.Async import detect_encoding_async
+        from ClassicLib.io.files.Async import detect_encoding_async
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("test content", encoding="utf-8")
@@ -53,7 +53,7 @@ class TestDetectEncodingAsync:
     @pytest.mark.asyncio
     async def test_returns_encoding_string(self, tmp_path: Path) -> None:
         """Test returns encoding as a string."""
-        from ClassicLib.FileIO.Async import detect_encoding_async
+        from ClassicLib.io.files.Async import detect_encoding_async
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("Hello World", encoding="utf-8")
@@ -65,7 +65,7 @@ class TestDetectEncodingAsync:
     @pytest.mark.asyncio
     async def test_detects_utf8_encoding(self, tmp_path: Path) -> None:
         """Test detects UTF-8 encoding correctly."""
-        from ClassicLib.FileIO.Async import detect_encoding_async
+        from ClassicLib.io.files.Async import detect_encoding_async
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("Hello World with Unicode: café", encoding="utf-8")
@@ -81,7 +81,7 @@ class TestGetEncodingDetectionAvailable:
 
     def test_returns_boolean(self) -> None:
         """Test returns a boolean value."""
-        from ClassicLib.FileIO.Async import get_encoding_detection_available
+        from ClassicLib.io.files.Async import get_encoding_detection_available
 
         result = get_encoding_detection_available()
 
@@ -89,9 +89,9 @@ class TestGetEncodingDetectionAvailable:
 
     def test_returns_true_when_aiofiles_available(self) -> None:
         """Test returns True when aiofiles is available."""
-        from ClassicLib.FileIO.Async import get_encoding_detection_available
+        from ClassicLib.io.files.Async import get_encoding_detection_available
 
-        with patch("ClassicLib.FileIO.Async.AIOFILES_AVAILABLE", True):
+        with patch("ClassicLib.io.files.Async.AIOFILES_AVAILABLE", True):
             # Import the function fresh to get the patched value
             result = get_encoding_detection_available()
 
@@ -105,7 +105,7 @@ class TestFallbackToSyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_returns_encoding_string(self, tmp_path: Path) -> None:
         """Test returns encoding as string."""
-        from ClassicLib.FileIO.Async import fallback_to_sync_encoding_detection
+        from ClassicLib.io.files.Async import fallback_to_sync_encoding_detection
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("Test content", encoding="utf-8")
@@ -117,7 +117,7 @@ class TestFallbackToSyncEncodingDetection:
     @pytest.mark.asyncio
     async def test_accepts_string_path(self, tmp_path: Path) -> None:
         """Test accepts string paths."""
-        from ClassicLib.FileIO.Async import fallback_to_sync_encoding_detection
+        from ClassicLib.io.files.Async import fallback_to_sync_encoding_detection
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("Test content", encoding="utf-8")
@@ -134,7 +134,7 @@ class TestReadFileWithEncodingAsync:
     @pytest.mark.asyncio
     async def test_reads_file_content(self, tmp_path: Path) -> None:
         """Test reads complete file content."""
-        from ClassicLib.FileIO.Async import read_file_with_encoding_async
+        from ClassicLib.io.files.Async import read_file_with_encoding_async
 
         test_file = tmp_path / "test.txt"
         expected_content = "Hello World\nLine 2"
@@ -151,7 +151,7 @@ class TestReadLinesWithEncodingAsync:
     @pytest.mark.asyncio
     async def test_reads_file_lines(self, tmp_path: Path) -> None:
         """Test reads file as list of lines."""
-        from ClassicLib.FileIO.Async import read_lines_with_encoding_async
+        from ClassicLib.io.files.Async import read_lines_with_encoding_async
 
         test_file = tmp_path / "test.txt"
         test_file.write_text("Line 1\nLine 2\nLine 3", encoding="utf-8")
@@ -167,6 +167,6 @@ class TestModuleConstants:
 
     def test_aiofiles_available_constant_exists(self) -> None:
         """Test AIOFILES_AVAILABLE constant exists."""
-        from ClassicLib.FileIO.Async import AIOFILES_AVAILABLE
+        from ClassicLib.io.files.Async import AIOFILES_AVAILABLE
 
         assert isinstance(AIOFILES_AVAILABLE, bool)

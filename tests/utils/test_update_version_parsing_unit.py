@@ -8,7 +8,7 @@ GitHub release names, and complex version identifiers.
 
 import pytest
 
-from ClassicLib.Update import try_parse_version
+from ClassicLib.support.update import try_parse_version
 
 
 @pytest.mark.unit

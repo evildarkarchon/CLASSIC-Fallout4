@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.GameIntegrity import GameIntegrityChecker
+from ClassicLib.support.integrity import GameIntegrityChecker
 
 
 class TestFullIntegrityCheck:
@@ -14,7 +14,7 @@ class TestFullIntegrityCheck:
     @patch.object(GameIntegrityChecker, "check_installation_location")
     @patch.object(GameIntegrityChecker, "check_executable_version")
     @patch.object(GameIntegrityChecker, "load_configuration")
-    @patch("ClassicLib.GameIntegrity.logger")
+    @patch("ClassicLib.support.integrity.logger")
     def test_run_full_check_all_messages(
         self,
         mock_logger: MagicMock,
@@ -81,7 +81,7 @@ class TestFullIntegrityCheck:
         # Should return empty string
         assert result == ""
 
-    @patch("ClassicLib.GameIntegrity.logger")
+    @patch("ClassicLib.support.integrity.logger")
     def test_run_full_check_logging(self, mock_logger: MagicMock, checker: GameIntegrityChecker) -> None:
         """Test that run_full_check logs debug message."""
         # Set dummy config

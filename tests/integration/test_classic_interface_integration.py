@@ -31,14 +31,14 @@ class TestClassicInterface:
                 Using this fixture ensures proper Qt lifecycle management and
                 AsyncBridge cleanup between tests.
         """
-        from ClassicLib.MessageHandler.handler import _message_handler_lock
+        from ClassicLib.messaging.handler import _message_handler_lock
 
         # Shutdown any existing AsyncBridge instances BEFORE patching.
         # This is critical because patching the class doesn't stop already-running
         # background threads, which can cause access violations on Windows.
         try:
             if "ClassicLib.AsyncBridge" in sys.modules:
-                from ClassicLib.AsyncBridge import AsyncBridge
+                from ClassicLib.core.async_bridge import AsyncBridge
 
                 # Shutdown all existing instances
                 if hasattr(AsyncBridge, "_instances") and AsyncBridge._instances:
@@ -53,11 +53,11 @@ class TestClassicInterface:
             pass  # Ignore if AsyncBridge not available
 
         # Patch AsyncBridge to prevent new background threads from starting
-        patcher = patch("ClassicLib.AsyncBridge.AsyncBridge")
+        patcher = patch("ClassicLib.core.async_bridge.AsyncBridge")
         patcher.start()
 
         # Reset MessageHandler singleton to prevent dangling parent references
-        from ClassicLib.MessageHandler import handler as msg_handler_module
+        from ClassicLib.messaging import handler as msg_handler_module
 
         with _message_handler_lock:
             msg_handler_module._message_handler = None

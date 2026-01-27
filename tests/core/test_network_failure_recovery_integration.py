@@ -70,14 +70,14 @@ class TestUpdateManagerNetworkResilience:
     @pytest.mark.asyncio
     async def test_update_check_timeout_recovery(self):
         """Test recovery from update check timeout."""
-        from ClassicLib.Update import is_latest_version
+        from ClassicLib.support.update import is_latest_version
 
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
+        with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             # Patch _fetch_github_version to timeout
-            with patch("ClassicLib.Update.VersionChecker._fetch_github_version", side_effect=simulator.simulate_timeout):
+            with patch("ClassicLib.support.update.VersionChecker._fetch_github_version", side_effect=simulator.simulate_timeout):
                 # Should handle timeout gracefully (return False)
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False
@@ -85,10 +85,10 @@ class TestUpdateManagerNetworkResilience:
     @pytest.mark.asyncio
     async def test_update_check_connection_refused(self):
         """Test handling of connection refused errors."""
-        from ClassicLib.Update import is_latest_version
+        from ClassicLib.support.update import is_latest_version
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
+        with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_get.side_effect = aiohttp.ClientConnectionError("Connection refused")
 
@@ -99,12 +99,12 @@ class TestUpdateManagerNetworkResilience:
     @pytest.mark.asyncio
     async def test_update_check_dns_failure(self):
         """Test handling of DNS resolution failures."""
-        from ClassicLib.Update import is_latest_version
+        from ClassicLib.support.update import is_latest_version
 
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
+        with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_get.side_effect = simulator.simulate_dns_failure
 
@@ -115,12 +115,12 @@ class TestUpdateManagerNetworkResilience:
     @pytest.mark.asyncio
     async def test_slow_network_timeout(self):
         """Test timeout handling for slow network responses."""
-        from ClassicLib.Update import is_latest_version
+        from ClassicLib.support.update import is_latest_version
 
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
+        with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 mock_response.json = AsyncMock(side_effect=lambda: simulator.simulate_slow_response(10.0))
@@ -136,12 +136,12 @@ class TestUpdateManagerNetworkResilience:
     @pytest.mark.asyncio
     async def test_partial_response_handling(self):
         """Test handling of partial responses before connection drop."""
-        from ClassicLib.Update import is_latest_version
+        from ClassicLib.support.update import is_latest_version
 
         simulator = NetworkFailureSimulator()
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
+        with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 mock_response.json = AsyncMock(side_effect=simulator.simulate_partial_response)
@@ -158,10 +158,10 @@ class TestUpdateManagerNetworkResilience:
         """Test handling of corrupted response data."""
         import json
 
-        from ClassicLib.Update import is_latest_version
+        from ClassicLib.support.update import is_latest_version
 
         # Mock settings to enable update check
-        with patch("ClassicLib.Update.classic_settings_async", new_callable=AsyncMock, return_value=True):
+        with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
             with patch("aiohttp.ClientSession.get") as mock_get:
                 mock_response = AsyncMock()
                 # VersionChecker calls .json()
@@ -181,7 +181,7 @@ class TestDownloadResilience:
     @pytest.mark.asyncio
     async def test_download_resume_capability(self, tmp_path):
         """Test ability to resume interrupted downloads."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         FileIOCore()
 
@@ -293,8 +293,8 @@ class TestCacheNetworkFallback:
     @pytest.mark.asyncio
     async def test_cache_fallback_on_network_failure(self):
         """Test falling back to cached data when network fails."""
-        from ClassicLib.Constants import YAML
-        from ClassicLib.YamlSettings.async_.core import get_async_yaml_core
+        from ClassicLib.core.constants import YAML
+        from ClassicLib.io.yaml.async_.core import get_async_yaml_core
 
         core = await get_async_yaml_core()
 
@@ -315,8 +315,8 @@ class TestCacheNetworkFallback:
     @pytest.mark.asyncio
     async def test_cache_expiry_during_network_outage(self):
         """Test cache behavior when expired during network outage."""
-        from ClassicLib.Constants import YAML
-        from ClassicLib.YamlSettings.async_.core import get_async_yaml_core
+        from ClassicLib.core.constants import YAML
+        from ClassicLib.io.yaml.async_.core import get_async_yaml_core
 
         core = await get_async_yaml_core()
 
@@ -337,8 +337,8 @@ class TestCacheNetworkFallback:
     @pytest.mark.asyncio
     async def test_cache_write_during_network_failure(self):
         """Test cache write operations during network failures."""
-        from ClassicLib.Constants import YAML
-        from ClassicLib.YamlSettings.async_.core import get_async_yaml_core
+        from ClassicLib.core.constants import YAML
+        from ClassicLib.io.yaml.async_.core import get_async_yaml_core
 
         core = await get_async_yaml_core()
 

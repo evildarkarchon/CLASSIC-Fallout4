@@ -16,13 +16,13 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QDialog, QMessageBox
 
-from ClassicLib.Constants import YAML
-from ClassicLib.Interface.Dialogs import CustomAboutDialog
+from ClassicLib.core.constants import YAML
+from ClassicLib.Interface.dialogs.Dialogs import CustomAboutDialog
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.io.yaml import yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class HelpAboutController:

@@ -11,7 +11,7 @@ import aiohttp
 import pytest
 from packaging.version import Version
 
-from ClassicLib.Update import (
+from ClassicLib.support.update import (
     get_github_latest_prerelease_version_from_list,
     get_github_latest_stable_version_from_endpoint,
     get_latest_and_top_release_details,
@@ -79,7 +79,7 @@ class TestGitHubLatestStableVersion:
         # Configure 404 response
         mock_response.status = 404
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
             assert result is None
@@ -102,7 +102,7 @@ class TestGitHubLatestStableVersion:
             side_effect=create_async_json_mock({"name": "CLASSIC v2.1.0-beta", "prerelease": True, "tag_name": "v2.1.0-beta"})
         )
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
             assert result is None
@@ -115,7 +115,7 @@ class TestGitHubLatestStableVersion:
         # Configure the session.get to raise an exception directly
         mock_session.get.side_effect = aiohttp.ClientError("Network error")
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "testowner", "testrepo")
 
             assert result is None
@@ -239,7 +239,7 @@ class TestGitHubLatestPrereleaseVersion:
         # Configure the session.get to raise an exception directly
         mock_session.get.side_effect = aiohttp.ClientConnectionError("Connection failed")
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
             assert result is None
@@ -256,7 +256,7 @@ class TestGitHubLatestPrereleaseVersion:
         mock_response.raise_for_status = MagicMock()
         mock_response.json = AsyncMock(side_effect=create_async_json_mock({"error": "Not Found"}))
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_prerelease_version_from_list(mock_session, "testowner", "testrepo")
 
             assert result is None
@@ -397,7 +397,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].raise_for_status = MagicMock()
         responses[1].json = create_async_json_mock([top_release])
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             assert result is not None
@@ -419,7 +419,7 @@ class TestGetLatestAndTopReleaseDetails:
 
         responses[1].raise_for_status = MagicMock(side_effect=aiohttp.ClientError("Releases endpoint failed"))
 
-        with patch("ClassicLib.Update.logger"):
+        with patch("ClassicLib.support.update.logger"):
             result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             # When both endpoints fail, the function returns a structure with None values
@@ -472,7 +472,7 @@ class TestGetLatestAndTopReleaseDetails:
         responses[1].raise_for_status = MagicMock()
         responses[1].json = create_async_json_mock({"error": "Not Found"})
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_latest_and_top_release_details(mock_session, "testowner", "testrepo")
 
             assert result is not None

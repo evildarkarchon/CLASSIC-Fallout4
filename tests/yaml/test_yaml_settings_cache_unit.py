@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 import ruamel.yaml
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:

@@ -29,7 +29,7 @@ from PySide6.QtCore import QObject, QThread
 @pytest.mark.unit
 def test_game_files_worker_exists():
     """Test that GameFilesScanWorker can be imported."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     assert GameFilesScanWorker is not None, "GameFilesScanWorker should be importable"
     assert hasattr(GameFilesScanWorker, "run"), "Should have run method"
@@ -39,7 +39,7 @@ def test_game_files_worker_exists():
 @pytest.mark.unit
 def test_worker_signals():
     """Test that worker has all required signals."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -59,7 +59,7 @@ def test_worker_uses_asyncio_run():
     AsyncBridge is a main-thread singleton and cannot be used from worker threads
     without causing cross-thread QObject parenting errors.
     """
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     # Create worker
     worker = GameFilesScanWorker()
@@ -87,7 +87,7 @@ def test_no_manual_event_loop_creation():
     Workers should use asyncio.run() which manages its own event loop internally.
     They should NOT manually call asyncio.new_event_loop() or asyncio.set_event_loop().
     """
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -128,8 +128,8 @@ def test_rust_acceleration_detection():
 @pytest.mark.unit
 def test_rust_status_logging():
     """Test that Rust acceleration status is logged."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
-    from ClassicLib.Logger import logger
+    from ClassicLib.core.logger import logger
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -161,7 +161,7 @@ def test_rust_status_logging():
 @pytest.mark.unit
 def test_success_signal_emission():
     """Test that finished signal is emitted on successful scan."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -181,7 +181,7 @@ def test_success_signal_emission():
 @pytest.mark.unit
 def test_error_signal_emission():
     """Test that error signals are emitted on scan failure."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -212,7 +212,7 @@ def test_error_signal_emission():
 @pytest.mark.unit
 def test_finished_signal_always_emitted():
     """Test that finished signal is always emitted, even on error."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -239,8 +239,8 @@ def test_finished_signal_always_emitted():
 @pytest.mark.unit
 def test_performance_metrics_logged():
     """Test that performance metrics are logged."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
-    from ClassicLib.Logger import logger
+    from ClassicLib.core.logger import logger
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 
@@ -275,7 +275,7 @@ def test_performance_metrics_logged():
 @pytest.mark.unit
 def test_worker_is_qobject():
     """Test that worker is a QObject and can be moved to thread."""
-    from ClassicLib.Interface.Workers import GameFilesScanWorker
+    from ClassicLib.Interface.workers.Workers import GameFilesScanWorker
 
     worker = GameFilesScanWorker()
 

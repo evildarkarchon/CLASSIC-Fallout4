@@ -523,6 +523,7 @@ def process_segments(data: str) -> list[str]:
 - ❌ Manual event loops → ✅ AsyncBridge
 - ❌ Deprecated APIs (Python/Rust) → ✅ Use current APIs immediately
 - ❌ Multiple Tokio runtimes → ✅ `classic_shared::get_runtime()`
+- ❌ Module-level YAML settings imports → ✅ Import `yaml_settings`, `yaml_settings_async`, `classic_settings`, `classic_settings_async` inside functions to avoid circular imports
 
 ## File Structure
 

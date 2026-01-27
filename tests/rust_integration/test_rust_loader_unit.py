@@ -84,7 +84,7 @@ def fresh_rust_loader() -> Generator[None, None, None]:
     Yields:
         None - resets the global loader after test.
     """
-    from ClassicLib import rust_loader
+    from ClassicLib.core import rust_loader
 
     # Store original
     original_loader = rust_loader._rust_loader
@@ -109,7 +109,7 @@ class TestRustExtensionLoaderInit:
     @pytest.mark.unit
     def test_default_initialization(self) -> None:
         """Test RustExtensionLoader initializes with default values."""
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
 
@@ -122,7 +122,7 @@ class TestRustExtensionLoaderIsLoaded:
     """Tests for RustExtensionLoader.is_loaded method."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_is_loaded_returns_true_when_components_available(
         self,
         mock_detect: MagicMock,
@@ -131,14 +131,14 @@ class TestRustExtensionLoaderIsLoaded:
         """Test is_loaded returns True when Rust components are available."""
         mock_detect.return_value = mock_rust_components_all_available
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
 
         assert loader.is_loaded() is True
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_is_loaded_returns_false_when_no_components(
         self,
         mock_detect: MagicMock,
@@ -147,14 +147,14 @@ class TestRustExtensionLoaderIsLoaded:
         """Test is_loaded returns False when no components available."""
         mock_detect.return_value = mock_rust_components_none_available
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
 
         assert loader.is_loaded() is False
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_is_loaded_returns_true_with_partial_components(
         self,
         mock_detect: MagicMock,
@@ -166,7 +166,7 @@ class TestRustExtensionLoaderIsLoaded:
             "plugin_analyzer": False,
         }
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
 
@@ -177,8 +177,8 @@ class TestRustExtensionLoaderGetLoadInfo:
     """Tests for RustExtensionLoader.get_load_info method."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.get_available_components")
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_get_load_info_returns_complete_info(
         self,
         mock_detect: MagicMock,
@@ -190,7 +190,7 @@ class TestRustExtensionLoaderGetLoadInfo:
         mock_detect.return_value = mock_rust_components_all_available
         mock_get_available.return_value = mock_available_components_info
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
         info = loader.get_load_info()
@@ -204,8 +204,8 @@ class TestRustExtensionLoaderGetLoadInfo:
         assert "versions" in info
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.get_available_components")
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_get_load_info_loaded_status_matches_is_loaded(
         self,
         mock_detect: MagicMock,
@@ -217,7 +217,7 @@ class TestRustExtensionLoaderGetLoadInfo:
         mock_detect.return_value = mock_rust_components_all_available
         mock_get_available.return_value = mock_available_components_info
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
         info = loader.get_load_info()
@@ -225,8 +225,8 @@ class TestRustExtensionLoaderGetLoadInfo:
         assert info["loaded"] == loader.is_loaded()
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.get_available_components")
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_get_load_info_path_is_modular_packages(
         self,
         mock_detect: MagicMock,
@@ -238,7 +238,7 @@ class TestRustExtensionLoaderGetLoadInfo:
         mock_detect.return_value = mock_rust_components_none_available
         mock_get_available.return_value = mock_available_components_info
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
         info = loader.get_load_info()
@@ -246,8 +246,8 @@ class TestRustExtensionLoaderGetLoadInfo:
         assert info["path"] == "modular_packages"
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.get_available_components")
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_get_load_info_includes_component_versions(
         self,
         mock_detect: MagicMock,
@@ -262,7 +262,7 @@ class TestRustExtensionLoaderGetLoadInfo:
             "disabled": False,
         }
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
         info = loader.get_load_info()
@@ -275,7 +275,7 @@ class TestRustExtensionLoaderLoadExtension:
     """Tests for RustExtensionLoader.load_extension method."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_load_extension_returns_true_when_loaded(
         self,
         mock_detect: MagicMock,
@@ -284,7 +284,7 @@ class TestRustExtensionLoaderLoadExtension:
         """Test load_extension returns True when components available."""
         mock_detect.return_value = mock_rust_components_all_available
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
         result = loader.load_extension()
@@ -292,7 +292,7 @@ class TestRustExtensionLoaderLoadExtension:
         assert result is True
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_load_extension_returns_none_when_not_loaded(
         self,
         mock_detect: MagicMock,
@@ -301,7 +301,7 @@ class TestRustExtensionLoaderLoadExtension:
         """Test load_extension returns None when no components available."""
         mock_detect.return_value = mock_rust_components_none_available
 
-        from ClassicLib.rust_loader import RustExtensionLoader
+        from ClassicLib.core.rust_loader import RustExtensionLoader
 
         loader = RustExtensionLoader()
         result = loader.load_extension()
@@ -318,7 +318,7 @@ class TestLoadRustExtensions:
     """Tests for load_rust_extensions function."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_load_rust_extensions_returns_true_when_available(
         self,
         mock_detect: MagicMock,
@@ -328,14 +328,14 @@ class TestLoadRustExtensions:
         """Test load_rust_extensions returns True when components available."""
         mock_detect.return_value = mock_rust_components_all_available
 
-        from ClassicLib.rust_loader import load_rust_extensions
+        from ClassicLib.core.rust_loader import load_rust_extensions
 
         result = load_rust_extensions()
 
         assert result is True
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_load_rust_extensions_returns_false_when_unavailable(
         self,
         mock_detect: MagicMock,
@@ -345,7 +345,7 @@ class TestLoadRustExtensions:
         """Test load_rust_extensions returns False when no components."""
         mock_detect.return_value = mock_rust_components_none_available
 
-        from ClassicLib.rust_loader import load_rust_extensions
+        from ClassicLib.core.rust_loader import load_rust_extensions
 
         result = load_rust_extensions()
 
@@ -356,7 +356,7 @@ class TestIsRustAvailable:
     """Tests for is_rust_available function."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_is_rust_available_returns_true(
         self,
         mock_detect: MagicMock,
@@ -366,12 +366,12 @@ class TestIsRustAvailable:
         """Test is_rust_available returns True when Rust available."""
         mock_detect.return_value = mock_rust_components_all_available
 
-        from ClassicLib.rust_loader import is_rust_available
+        from ClassicLib.core.rust_loader import is_rust_available
 
         assert is_rust_available() is True
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_is_rust_available_returns_false(
         self,
         mock_detect: MagicMock,
@@ -381,7 +381,7 @@ class TestIsRustAvailable:
         """Test is_rust_available returns False when Rust unavailable."""
         mock_detect.return_value = mock_rust_components_none_available
 
-        from ClassicLib.rust_loader import is_rust_available
+        from ClassicLib.core.rust_loader import is_rust_available
 
         assert is_rust_available() is False
 
@@ -390,8 +390,8 @@ class TestGetRustInfo:
     """Tests for get_rust_info function."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.get_available_components")
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_get_rust_info_returns_load_info(
         self,
         mock_detect: MagicMock,
@@ -404,7 +404,7 @@ class TestGetRustInfo:
         mock_detect.return_value = mock_rust_components_all_available
         mock_get_available.return_value = mock_available_components_info
 
-        from ClassicLib.rust_loader import get_rust_info
+        from ClassicLib.core.rust_loader import get_rust_info
 
         info = get_rust_info()
 
@@ -414,8 +414,8 @@ class TestGetRustInfo:
         assert "versions" in info
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.get_available_components")
-    @patch("ClassicLib.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
     def test_get_rust_info_components_match_available(
         self,
         mock_detect: MagicMock,
@@ -430,7 +430,7 @@ class TestGetRustInfo:
             "disabled": False,
         }
 
-        from ClassicLib.rust_loader import get_rust_info
+        from ClassicLib.core.rust_loader import get_rust_info
 
         info = get_rust_info()
 
@@ -449,7 +449,7 @@ class TestRustLoaderIntegration:
     @pytest.mark.unit
     def test_module_exports_expected_functions(self) -> None:
         """Test module exports expected public API."""
-        from ClassicLib import rust_loader
+        from ClassicLib.core import rust_loader
 
         # Check class is exported
         assert hasattr(rust_loader, "RustExtensionLoader")
@@ -462,14 +462,14 @@ class TestRustLoaderIntegration:
     @pytest.mark.unit
     def test_global_loader_is_initialized(self) -> None:
         """Test global loader instance exists."""
-        from ClassicLib import rust_loader
+        from ClassicLib.core import rust_loader
 
         assert hasattr(rust_loader, "_rust_loader")
         assert isinstance(rust_loader._rust_loader, rust_loader.RustExtensionLoader)
 
     @pytest.mark.unit
-    @patch("ClassicLib.rust_loader.detect_rust_components")
-    @patch("ClassicLib.rust_loader.get_available_components")
+    @patch("ClassicLib.core.rust_loader.detect_rust_components")
+    @patch("ClassicLib.core.rust_loader.get_available_components")
     def test_consistent_state_across_calls(
         self,
         mock_get_available: MagicMock,
@@ -485,7 +485,7 @@ class TestRustLoaderIntegration:
             "disabled": False,
         }
 
-        from ClassicLib.rust_loader import get_rust_info, is_rust_available
+        from ClassicLib.core.rust_loader import get_rust_info, is_rust_available
 
         # Multiple calls should be consistent
         assert is_rust_available() is True

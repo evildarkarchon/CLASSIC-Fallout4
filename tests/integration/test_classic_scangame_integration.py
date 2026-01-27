@@ -36,7 +36,7 @@ class TestClassicScanGame:
         assert core2 == mock_instance
 
     @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
-    @patch("ClassicLib.AsyncBridge.AsyncBridge")
+    @patch("ClassicLib.core.async_bridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
     def test_check_log_errors_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test check_log_errors sync adapter for async operation."""
@@ -117,7 +117,7 @@ class TestClassicScanGame:
         mock_core.get_issue_messages.assert_called_once_with(xse_acronym, mode)
 
     @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
-    @patch("ClassicLib.AsyncBridge.AsyncBridge")
+    @patch("ClassicLib.core.async_bridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
     def test_scan_mods_unpacked_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test scan_mods_unpacked sync adapter for async operation."""
@@ -151,17 +151,18 @@ class TestClassicScanGame:
     def test_module_imports(self) -> None:
         """Test that all required modules can be imported."""
         try:
+            from ClassicLib.scanning.game.ScanGameCore import ScanGameCore
+
             from ClassicLib import msg_info
-            from ClassicLib.AsyncBridge import AsyncBridge
-            from ClassicLib.ScanGame import (
+            from ClassicLib.core.async_bridge import AsyncBridge
+            from ClassicLib.scanning.game import (
                 generate_game_combined_result,
                 generate_mods_combined_result,
                 manage_game_files,
                 write_combined_results,
             )
-            from ClassicLib.ScanGame.Config import TEST_MODE
-            from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
-            from ClassicLib.SetupCoordinator import SetupCoordinator
+            from ClassicLib.scanning.game.Config import TEST_MODE
+            from ClassicLib.support.setup import SetupCoordinator
         except ImportError as e:
             pytest.fail(f"Failed to import required modules: {e}")
 
@@ -177,7 +178,7 @@ class TestClassicScanGame:
         assert SetupCoordinator is not None
 
     @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
-    @patch("ClassicLib.AsyncBridge.AsyncBridge")
+    @patch("ClassicLib.core.async_bridge.AsyncBridge")
     @patch("CLASSIC_ScanGame.get_scan_game_core")
     def test_check_log_errors_with_string_path(self, mock_get_core: Mock, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test check_log_errors accepts string paths as well as Path objects."""
@@ -231,7 +232,7 @@ class TestClassicScanGame:
         assert mods_path is None
 
     @patch("ClassicLib._async_utils.bridge_helpers._is_gui_mode")
-    @patch("ClassicLib.AsyncBridge.AsyncBridge")
+    @patch("ClassicLib.core.async_bridge.AsyncBridge")
     def test_async_bridge_singleton_usage(self, mock_async_bridge: Mock, mock_gui_mode: Mock) -> None:
         """Test that AsyncBridge singleton is used consistently."""
         from CLASSIC_ScanGame import check_log_errors, scan_mods_unpacked
@@ -313,7 +314,7 @@ class TestClassicScanGame:
 
     def test_test_mode_constant(self) -> None:
         """Test that TEST_MODE constant is available."""
-        from ClassicLib.ScanGame.Config import TEST_MODE
+        from ClassicLib.scanning.game.Config import TEST_MODE
 
         # TEST_MODE should be a boolean
         assert isinstance(TEST_MODE, bool)

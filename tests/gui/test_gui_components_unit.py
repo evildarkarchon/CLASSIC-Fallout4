@@ -26,8 +26,8 @@ class TestManualDocsPath:
     @pytest.fixture(autouse=True)
     def init_message_handler(self):
         """Initialize MessageHandler for tests that use msg_info/msg_error."""
-        from ClassicLib.MessageHandler import handler as handler_module
-        from ClassicLib.MessageHandler import init_message_handler
+        from ClassicLib.messaging import handler as handler_module
+        from ClassicLib.messaging import init_message_handler
 
         # Initialize message handler for non-GUI mode
         init_message_handler(parent=None, is_gui_mode=False)
@@ -38,7 +38,7 @@ class TestManualDocsPath:
     @pytest.fixture
     def manual_docs_path(self, qt_application):
         """Create a ManualDocsPath instance for testing."""
-        from ClassicLib.GuiComponents import ManualDocsPath
+        from ClassicLib.support.gui_components import ManualDocsPath
 
         return ManualDocsPath()
 
@@ -60,9 +60,9 @@ class TestManualDocsPath:
         valid_dir.mkdir()
 
         # Mock yaml_settings to capture the call
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             # Mock GlobalRegistry.get_vr() to return empty string (non-VR)
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = ""
 
                 manual_docs_path.get_manual_docs_path_gui(str(valid_dir))
@@ -75,7 +75,7 @@ class TestManualDocsPath:
                 assert call_args[0] is str
 
                 # Second arg is YAML store (Game_Local)
-                from ClassicLib.Constants import YAML
+                from ClassicLib.core.constants import YAML
 
                 assert call_args[1] == YAML.Game_Local
 
@@ -90,8 +90,8 @@ class TestManualDocsPath:
         valid_dir = tmp_path / "valid_docs_vr"
         valid_dir.mkdir()
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = "VR"
 
                 manual_docs_path.get_manual_docs_path_gui(str(valid_dir))
@@ -112,7 +112,7 @@ class TestManualDocsPath:
 
         manual_docs_path.manual_docs_path_signal.connect(signal_handler)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             manual_docs_path.get_manual_docs_path_gui(invalid_path)
 
             # yaml_settings should NOT be called for invalid path
@@ -128,8 +128,8 @@ class TestManualDocsPath:
         resolves to current directory (.), so the implementation treats "" as valid.
         This test verifies that behavior matches the implementation.
         """
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = ""
 
                 manual_docs_path.get_manual_docs_path_gui("")
@@ -154,7 +154,7 @@ class TestManualDocsPath:
 
         manual_docs_path.manual_docs_path_signal.connect(signal_handler)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             manual_docs_path.get_manual_docs_path_gui(str(file_path))
 
             # yaml_settings should NOT be called (it's a file, not directory)
@@ -183,7 +183,7 @@ class TestManualDocsPath:
 
         manual_docs_path.manual_docs_path_signal.connect(signal_handler)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             manual_docs_path.get_manual_docs_path_gui(path_with_whitespace)
 
             # Path with whitespace doesn't exist, so validation fails
@@ -198,8 +198,8 @@ class TestManualDocsPath:
         valid_dir = tmp_path / "game_folder"
         valid_dir.mkdir()
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = ""
 
                 manual_docs_path.get_game_path_gui(str(valid_dir))
@@ -210,7 +210,7 @@ class TestManualDocsPath:
 
                 assert call_args[0] is str
 
-                from ClassicLib.Constants import YAML
+                from ClassicLib.core.constants import YAML
 
                 assert call_args[1] == YAML.Game_Local
                 assert call_args[2] == "Game_Info.Root_Folder_Game"
@@ -221,8 +221,8 @@ class TestManualDocsPath:
         valid_dir = tmp_path / "game_folder_vr"
         valid_dir.mkdir()
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = "VR"
 
                 manual_docs_path.get_game_path_gui(str(valid_dir))
@@ -242,7 +242,7 @@ class TestManualDocsPath:
 
         manual_docs_path.game_path_signal.connect(signal_handler)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             manual_docs_path.get_game_path_gui(invalid_path)
 
             # yaml_settings should NOT be called for invalid path
@@ -257,8 +257,8 @@ class TestManualDocsPath:
         Note: Path("").is_dir() returns True on most systems because empty string
         resolves to current directory (.), so the implementation treats "" as valid.
         """
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = ""
 
                 manual_docs_path.get_game_path_gui("")
@@ -280,7 +280,7 @@ class TestManualDocsPath:
 
         manual_docs_path.game_path_signal.connect(signal_handler)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             manual_docs_path.get_game_path_gui(str(file_path))
 
             # yaml_settings should NOT be called
@@ -307,7 +307,7 @@ class TestManualDocsPath:
 
         manual_docs_path.game_path_signal.connect(signal_handler)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
             manual_docs_path.get_game_path_gui(path_with_whitespace)
 
             # Path with whitespace doesn't exist, so validation fails
@@ -331,7 +331,7 @@ class TestManualDocsPath:
         manual_docs_path.game_path_signal.connect(game_handler)
 
         # Trigger docs signal only
-        with patch("ClassicLib.GuiComponents.yaml_settings"):
+        with patch("ClassicLib.support.gui_components.yaml_settings"):
             manual_docs_path.get_manual_docs_path_gui("/invalid/path")
 
         assert len(docs_signal_received) == 1
@@ -341,7 +341,7 @@ class TestManualDocsPath:
         docs_signal_received.clear()
 
         # Trigger game signal only
-        with patch("ClassicLib.GuiComponents.yaml_settings"):
+        with patch("ClassicLib.support.gui_components.yaml_settings"):
             manual_docs_path.get_game_path_gui("/another/invalid/path")
 
         assert len(docs_signal_received) == 0
@@ -354,8 +354,8 @@ class TestManualDocsPath:
         dir1.mkdir()
         dir2.mkdir()
 
-        with patch("ClassicLib.GuiComponents.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.GuiComponents.GlobalRegistry") as mock_registry:
+        with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
+            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
                 mock_registry.get_vr.return_value = ""
 
                 manual_docs_path.get_manual_docs_path_gui(str(dir1))
@@ -378,8 +378,8 @@ class TestManualDocsPathSignals:
     @pytest.fixture(autouse=True)
     def init_message_handler(self):
         """Initialize MessageHandler for tests."""
-        from ClassicLib.MessageHandler import handler as handler_module
-        from ClassicLib.MessageHandler import init_message_handler
+        from ClassicLib.messaging import handler as handler_module
+        from ClassicLib.messaging import init_message_handler
 
         init_message_handler(parent=None, is_gui_mode=False)
         yield
@@ -388,7 +388,7 @@ class TestManualDocsPathSignals:
     @pytest.fixture
     def manual_docs_path(self, qt_application):
         """Create a ManualDocsPath instance for testing."""
-        from ClassicLib.GuiComponents import ManualDocsPath
+        from ClassicLib.support.gui_components import ManualDocsPath
 
         return ManualDocsPath()
 
@@ -405,7 +405,7 @@ class TestManualDocsPathSignals:
         manual_docs_path.manual_docs_path_signal.connect(handler1)
         manual_docs_path.manual_docs_path_signal.connect(handler2)
 
-        with patch("ClassicLib.GuiComponents.yaml_settings"):
+        with patch("ClassicLib.support.gui_components.yaml_settings"):
             manual_docs_path.get_manual_docs_path_gui("/invalid/path")
 
         assert handlers_called["handler1"] == 1
@@ -421,7 +421,7 @@ class TestManualDocsPathSignals:
         manual_docs_path.manual_docs_path_signal.connect(handler)
 
         # First call - signal connected
-        with patch("ClassicLib.GuiComponents.yaml_settings"):
+        with patch("ClassicLib.support.gui_components.yaml_settings"):
             manual_docs_path.get_manual_docs_path_gui("/invalid/path1")
 
         assert len(signal_count) == 1
@@ -430,7 +430,7 @@ class TestManualDocsPathSignals:
         manual_docs_path.manual_docs_path_signal.disconnect(handler)
 
         # Second call - signal disconnected
-        with patch("ClassicLib.GuiComponents.yaml_settings"):
+        with patch("ClassicLib.support.gui_components.yaml_settings"):
             manual_docs_path.get_manual_docs_path_gui("/invalid/path2")
 
         # Count should still be 1 (handler was disconnected)

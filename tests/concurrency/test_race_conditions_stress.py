@@ -15,7 +15,7 @@ pytestmark = [
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from ClassicLib.Interface.ThreadManager import ThreadManager, ThreadType
+from ClassicLib.Interface.workers.ThreadManager import ThreadManager, ThreadType
 
 
 class TestRaceConditionPrevention:
@@ -31,10 +31,10 @@ class TestRaceConditionPrevention:
 
     def test_scan_mutex_protection(self, app: QApplication) -> None:
         """Test that scan operations are protected by mutex in ScanController."""
-        from ClassicLib.Interface.context import FeatureContext
         from ClassicLib.Interface.controllers.scan_controller import ScanController
-        from ClassicLib.Interface.signal_hub import SignalHub
-        from ClassicLib.Interface.ThreadManager import get_thread_manager
+        from ClassicLib.Interface.shared.context import FeatureContext
+        from ClassicLib.Interface.shared.signal_hub import SignalHub
+        from ClassicLib.Interface.workers.ThreadManager import get_thread_manager
 
         # Create a minimal main window for the context
         main_window = QMainWindow()
@@ -62,10 +62,10 @@ class TestRaceConditionPrevention:
 
     def test_game_files_mutex_protection(self, app: QApplication) -> None:
         """Test that game files scan operations are protected by mutex."""
-        from ClassicLib.Interface.context import FeatureContext
         from ClassicLib.Interface.controllers.scan_controller import ScanController
-        from ClassicLib.Interface.signal_hub import SignalHub
-        from ClassicLib.Interface.ThreadManager import get_thread_manager
+        from ClassicLib.Interface.shared.context import FeatureContext
+        from ClassicLib.Interface.shared.signal_hub import SignalHub
+        from ClassicLib.Interface.workers.ThreadManager import get_thread_manager
 
         # Create a minimal main window for the context
         main_window = QMainWindow()

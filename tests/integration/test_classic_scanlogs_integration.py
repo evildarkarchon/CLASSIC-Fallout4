@@ -35,7 +35,7 @@ class TestClassicScanLogs:
     async def test_create_config_from_args(self, mock_yaml, mock_classic) -> None:
         """Test configuration creation from arguments."""
         from CLASSIC_ScanLogs import create_config_from_args_async
-        from ClassicLib.ScanLog.models import ScanConfig
+        from ClassicLib.scanning.logs.models import ScanConfig
 
         # Mock defaults - Return True so False argument triggers change
         # Use AsyncMock-style by making the mock return a coroutine
@@ -90,8 +90,8 @@ class TestClassicScanLogs:
         # config.fcx_mode might be None or False depending on ScanConfig.
         # I'll assert what it *should* be given the flow.
 
-    @patch("ClassicLib.Database.cleanup_database_pools_async")
-    @patch("ClassicLib.MessageHandler.msg_info")  # Patch msg_info to prevent handler error
+    @patch("ClassicLib.io.database.cleanup_database_pools_async")
+    @patch("ClassicLib.messaging.msg_info")  # Patch msg_info to prevent handler error
     @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
     @patch("CLASSIC_ScanLogs.create_config_from_args_async")
     @pytest.mark.asyncio
@@ -118,7 +118,7 @@ class TestClassicScanLogs:
 
         # Mock async config creation
         async def mock_create_config_async(args):
-            from ClassicLib.ScanLog.models import ScanConfig
+            from ClassicLib.scanning.logs.models import ScanConfig
 
             return ScanConfig()
 

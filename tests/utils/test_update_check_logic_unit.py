@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib.Update import (
+from ClassicLib.support.update import (
     UpdateCheckError,
     is_latest_version,
 )
@@ -29,10 +29,10 @@ class TestUpdateChecking:
         preventing RuntimeError about uninitialized message handler.
         """
         with (
-            patch("ClassicLib.Update.yaml_settings_async") as mock_yaml_settings_async,
-            patch("ClassicLib.Update.classic_settings_async") as mock_classic_settings_async,
-            patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game,
-            patch("ClassicLib.Update.logger") as mock_logger,
+            patch("ClassicLib.support.update.yaml_settings_async") as mock_yaml_settings_async,
+            patch("ClassicLib.support.update.classic_settings_async") as mock_classic_settings_async,
+            patch("ClassicLib.core.registry.GlobalRegistry.get_game") as mock_get_game,
+            patch("ClassicLib.support.update.logger") as mock_logger,
         ):
             # Don't mock the message functions since MessageHandler is initialized
             from ClassicLib import msg_error, msg_success, msg_warning
@@ -89,13 +89,13 @@ class TestUpdateChecking:
 
         # Mock GitHub returning same version
         # We need to patch aiohttp.ClientSession to control the network calls
-        with patch("ClassicLib.Update.aiohttp.ClientSession") as mock_session_class:
+        with patch("ClassicLib.support.update.aiohttp.ClientSession") as mock_session_class:
             mock_session = AsyncMock()
             mock_session_class.return_value.__aenter__ = AsyncMock(return_value=mock_session)
             mock_session_class.return_value.__aexit__ = AsyncMock()
 
             # Mock the get_latest_and_top_release_details function
-            with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
+            with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
                 # Create a coroutine for the async function
                 async def mock_get_details(*args, **kwargs):
                     return {
@@ -133,7 +133,7 @@ class TestUpdateChecking:
         mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning newer version
-        with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
+        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
             mock_github.return_value = {
                 "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
                 "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
@@ -167,7 +167,7 @@ class TestUpdateChecking:
         mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning newer version
-        with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
+        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
             mock_github.return_value = {
                 "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
                 "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
@@ -202,7 +202,7 @@ class TestUpdateChecking:
         mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock get_latest_and_top_release_details to return None (simulating network failure)
-        with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
+        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
             # Return None to simulate network failure
             async def mock_get_details(*args, **kwargs):
                 return None
@@ -237,7 +237,7 @@ class TestUpdateChecking:
         mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub returning a version
-        with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
+        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
             mock_github.return_value = {
                 "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
                 "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
@@ -261,9 +261,9 @@ class TestUpdateCheckErrorHandling:
         preventing RuntimeError about uninitialized message handler.
         """
         with (
-            patch("ClassicLib.Update.yaml_settings_async") as mock_yaml_settings_async,
-            patch("ClassicLib.Update.classic_settings_async") as mock_classic_settings_async,
-            patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game,
+            patch("ClassicLib.support.update.yaml_settings_async") as mock_yaml_settings_async,
+            patch("ClassicLib.support.update.classic_settings_async") as mock_classic_settings_async,
+            patch("ClassicLib.core.registry.GlobalRegistry.get_game") as mock_get_game,
         ):
             yield {
                 "yaml_settings_async": mock_yaml_settings_async,
@@ -292,7 +292,7 @@ class TestUpdateCheckErrorHandling:
         mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock GitHub failure
-        with patch("ClassicLib.Update.get_latest_and_top_release_details") as mock_github:
+        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
             mock_github.return_value = None  # Failed
 
             # Should raise UpdateCheckError for GUI
@@ -320,7 +320,7 @@ class TestUpdateCheckErrorHandling:
         mock_dependencies["get_game"].return_value = "fallout4"
 
         # Mock unexpected exception
-        with patch("ClassicLib.Update.aiohttp.ClientSession") as mock_session_class:
+        with patch("ClassicLib.support.update.aiohttp.ClientSession") as mock_session_class:
             mock_session_class.side_effect = RuntimeError("Unexpected error")
 
             # Should raise UpdateCheckError for GUI

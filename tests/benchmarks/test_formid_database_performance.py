@@ -35,7 +35,7 @@ from typing import TYPE_CHECKING, Any
 import pytest
 
 # Import Python fallback implementation
-from ClassicLib.Database.async_pool import (
+from ClassicLib.io.database.async_pool import (
     BATCH_CACHE_TTL_SECS,
     DEFAULT_CACHE_TTL_SECS,
     AsyncDatabasePool,

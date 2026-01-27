@@ -8,7 +8,7 @@ import pytest
 
 from ClassicLib.integration.factory import get_parser
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.Parser import (
+from ClassicLib.scanning.logs.parser import (
     extract_segments,
     find_segments,
     parse_crash_header,

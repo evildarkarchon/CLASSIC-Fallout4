@@ -13,9 +13,9 @@ import pytest
 
 pytestmark = [pytest.mark.unit]
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
-from ClassicLib.FileGeneration import FileGenerator
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.file_gen import FileGenerator
 
 
 class TestFileGenerator:
@@ -28,7 +28,7 @@ class TestFileGenerator:
         monkeypatch.chdir(tmp_path)
         self.tmp_path = tmp_path
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_ignore_file_creates_new_file(self, mock_yaml_settings: MagicMock) -> None:
         """Test generating CLASSIC Ignore.yaml when it doesn't exist."""
         # Mock yaml_settings to return default content
@@ -53,7 +53,7 @@ class TestFileGenerator:
         # Verify yaml_settings was called correctly
         mock_yaml_settings.assert_called_once_with(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_ignore_file_skips_existing(self, mock_yaml_settings: MagicMock) -> None:
         """Test that existing CLASSIC Ignore.yaml is not overwritten."""
         # Create existing file
@@ -70,7 +70,7 @@ class TestFileGenerator:
         # Verify yaml_settings wasn't called
         mock_yaml_settings.assert_not_called()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_ignore_file_type_error(self, mock_yaml_settings: MagicMock) -> None:
         """Test that TypeError is raised when default content is not a string."""
         # Mock yaml_settings to return non-string
@@ -80,7 +80,7 @@ class TestFileGenerator:
         with pytest.raises(TypeError, match="Default ignore file content must be a string"):
             FileGenerator.generate_ignore_file()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_local_yaml_creates_new_file(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test generating local YAML file when it doesn't exist."""
@@ -111,7 +111,7 @@ local_paths:
         # Verify yaml_settings was called correctly
         mock_yaml_settings.assert_called_once_with(str, YAML.Main, "CLASSIC_Info.default_localyaml")
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="SkyrimSE")
     def test_generate_local_yaml_different_game(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test generating local YAML for different game."""
@@ -130,7 +130,7 @@ local_paths:
         assert local_path.exists()
         assert local_path.read_text(encoding="utf-8") == expected_content
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_local_yaml_skips_existing(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that existing local YAML is not overwritten."""
@@ -150,7 +150,7 @@ local_paths:
         # Verify yaml_settings wasn't called
         mock_yaml_settings.assert_not_called()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_local_yaml_type_error(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that TypeError is raised when default content is not a string."""
@@ -165,7 +165,7 @@ local_paths:
         with pytest.raises(TypeError, match="Default local YAML content must be a string"):
             FileGenerator.generate_local_yaml()
 
-    @patch("ClassicLib.AsyncBridge.AsyncBridge.get_instance")
+    @patch("ClassicLib.core.async_bridge.AsyncBridge.get_instance")
     @patch.object(FileGenerator, "generate_all_files_async")
     def test_generate_all_files(self, mock_generate_async: MagicMock, mock_bridge_get_instance: MagicMock) -> None:
         """Test that generate_all_files calls the async implementation."""
@@ -193,8 +193,8 @@ local_paths:
         mock_generate_async.assert_called_once()
         mock_bridge.run_async.assert_called_once()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
-    @patch("ClassicLib.FileGeneration.logger")
+    @patch("ClassicLib.io.yaml.yaml_settings")
+    @patch("ClassicLib.support.file_gen.logger")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_files_with_logging(self, mock_get_game: MagicMock, mock_logger: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that file generation logs debug messages."""
@@ -217,7 +217,7 @@ local_paths:
         assert mock_logger.debug.call_count == 2
         mock_logger.debug.assert_any_call("Generated CLASSIC Ignore.yaml at CLASSIC Ignore.yaml")
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_local_yaml_creates_parent_directory(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that parent directory is created if it doesn't exist."""
@@ -235,14 +235,14 @@ local_paths:
         local_path = data_dir / "CLASSIC Fallout4 Local.yaml"
         assert local_path.exists()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings", side_effect=Exception("YAML error"))
+    @patch("ClassicLib.io.yaml.yaml_settings", side_effect=Exception("YAML error"))
     def test_generate_ignore_file_yaml_error(self, mock_yaml_settings: MagicMock) -> None:
         """Test that exceptions from yaml_settings are propagated."""
         # Should raise the exception from yaml_settings
         with pytest.raises(Exception, match="YAML error"):
             FileGenerator.generate_ignore_file()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_ignore_file_unicode_content(self, mock_yaml_settings: MagicMock) -> None:
         """Test generating file with Unicode content."""
         # Mock yaml_settings to return Unicode content
@@ -282,7 +282,7 @@ class TestFileGeneratorAsync:
         mock_io_core.write_file = AsyncMock()
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
         ):
             await FileGenerator.generate_ignore_file_async()
@@ -314,7 +314,7 @@ class TestFileGeneratorAsync:
         mock_io_core.file_exists.return_value = False
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
             pytest.raises(TypeError, match="Default ignore file content must be a string"),
         ):
@@ -336,7 +336,7 @@ class TestFileGeneratorAsync:
         data_dir.mkdir(parents=True, exist_ok=True)
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
             patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
         ):
@@ -355,7 +355,7 @@ class TestFileGeneratorAsync:
         mock_io_core.file_exists.return_value = False
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
             patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
             pytest.raises(TypeError, match="Default local YAML content must be a string"),
@@ -378,7 +378,7 @@ class TestFileGeneratorAsync:
         data_dir.mkdir(parents=True, exist_ok=True)
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
             patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
         ):
@@ -397,7 +397,7 @@ class TestFileGeneratorAsync:
         mock_io_core.file_exists.return_value = False
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
             patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
             pytest.raises(ExceptionGroup),
@@ -414,7 +414,7 @@ class TestFileGeneratorAsync:
         mock_io_core.write_file = AsyncMock(side_effect=OSError("Disk full"))
 
         with (
-            patch("ClassicLib.YamlSettings.yaml_settings_async", mock_yaml_settings_async),
+            patch("ClassicLib.io.yaml.yaml_settings_async", mock_yaml_settings_async),
             patch("ClassicLib.integration.factory.get_file_io", return_value=mock_io_core),
             patch.object(GlobalRegistry, "get_game", return_value="Fallout4"),
             pytest.raises(ExceptionGroup),

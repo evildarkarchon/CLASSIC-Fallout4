@@ -11,7 +11,7 @@ import logging
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.core.async_bridge import AsyncBridge
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ class TestAsyncBridgeBehavior:
         import asyncio
         import threading
 
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
 
         results = []
         errors = []

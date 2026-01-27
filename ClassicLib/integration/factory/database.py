@@ -39,7 +39,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
 
     if not is_rust_disabled() and components.get("database_pool", False):
         try:
-            from ClassicLib.Database.rust_pool import RustAsyncDatabasePool
+            from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
             logger.debug("Using Rust DatabasePool (25x speedup)")
             return RustAsyncDatabasePool(max_connections, cache_ttl_seconds)
@@ -47,7 +47,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
             logger.warning(f"Failed to import Rust DatabasePool: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.Database.async_pool import AsyncDatabasePool
+    from ClassicLib.io.database.async_pool import AsyncDatabasePool
 
     logger.debug("Using Python AsyncDatabasePool implementation")
     return AsyncDatabasePool(max_connections)

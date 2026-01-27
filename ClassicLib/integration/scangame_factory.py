@@ -47,7 +47,7 @@ def get_ba2_scanner() -> Any:
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
         return _classic_scangame.BA2Scanner()
-    from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+    from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
     return BA2Scanner()
 
@@ -62,7 +62,7 @@ def get_config_duplicate_detector() -> Any:
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
         return _classic_scangame.ConfigDuplicateDetector()
-    from ClassicLib.ScanGame.core.config_duplicate_fallback import ConfigDuplicateDetector
+    from ClassicLib.scanning.game.checks.config_duplicate_fallback import ConfigDuplicateDetector
 
     return ConfigDuplicateDetector()
 
@@ -77,7 +77,7 @@ def get_unpacked_scanner() -> Any:
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
         return _classic_scangame.UnpackedScanner()
-    from ClassicLib.ScanGame.core.unpacked_fallback import UnpackedScanner
+    from ClassicLib.scanning.game.checks.unpacked_fallback import UnpackedScanner
 
     return UnpackedScanner()
 
@@ -97,7 +97,7 @@ def get_log_processor(catch_errors: list[str], ignore_files: list[str], ignore_e
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
         return _classic_scangame.LogProcessor(catch_errors, ignore_files, ignore_errors)
-    from ClassicLib.ScanGame.core.log_fallback import LogProcessor
+    from ClassicLib.scanning.game.checks.log_fallback import LogProcessor
 
     return LogProcessor(catch_errors, ignore_files, ignore_errors)
 
@@ -115,7 +115,7 @@ def get_ini_validator(game_name: str) -> Any:
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
         return _classic_scangame.IniValidator(game_name)
-    from ClassicLib.ScanGame.core.ini_fallback import IniValidator
+    from ClassicLib.scanning.game.checks.ini_fallback import IniValidator
 
     return IniValidator(game_name)
 
@@ -138,7 +138,7 @@ def get_crashgen_checker(plugins_path: Path, crashgen_name: str) -> Any:
     if _RUST_AVAILABLE:
         assert _classic_scangame is not None
         return _classic_scangame.CrashgenChecker(plugins_path, crashgen_name)
-    from ClassicLib.ScanGame.CheckCrashgen import CrashgenChecker
+    from ClassicLib.scanning.game.check_crashgen import CrashgenChecker
 
     # Python implementation gets these from settings, ignores arguments
     return CrashgenChecker()
@@ -161,7 +161,7 @@ def get_xse_checker(plugins_path: Path, is_vr_mode: bool = False, game_version: 
         if game_version is None:
             game_version = _classic_scangame.GameVersion.Original
         return _classic_scangame.XseChecker(plugins_path, is_vr_mode, game_version)
-    from ClassicLib.ScanGame.core.xse_fallback import GameVersion, XseChecker
+    from ClassicLib.scanning.game.checks.xse_fallback import GameVersion, XseChecker
 
     if game_version is None:
         game_version = GameVersion.Original

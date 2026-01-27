@@ -12,8 +12,8 @@ from typing import Any
 import pytest
 import ruamel.yaml
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml.async_ import AsyncYamlSettingsCore
 
 
 @pytest.fixture
@@ -241,7 +241,7 @@ def yaml_file_ops():
     Returns:
         YamlFileOperations instance.
     """
-    from ClassicLib.YamlSettings.async_ import YamlFileOperations
+    from ClassicLib.io.yaml.async_ import YamlFileOperations
 
     return YamlFileOperations()
 
@@ -253,7 +253,7 @@ def yaml_cache_instance():
     Returns:
         YamlSettingsCache instance.
     """
-    from ClassicLib.YamlSettings import YamlSettingsCache
+    from ClassicLib.io.yaml import YamlSettingsCache
 
     return YamlSettingsCache()
 

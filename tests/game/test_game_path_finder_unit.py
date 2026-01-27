@@ -14,8 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.GamePath import GamePathFinder
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.game_path import GamePathFinder
 
 pytestmark = pytest.mark.unit
 
@@ -23,7 +23,7 @@ pytestmark = pytest.mark.unit
 class TestValidateXseFile:
     """Tests for GamePathFinder._validate_xse_file() method."""
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_validate_xse_file_missing_path(
@@ -37,13 +37,13 @@ class TestValidateXseFile:
             "Fallout 4",
         ]
 
-        with patch("ClassicLib.GamePath.msg_error"):
+        with patch("ClassicLib.support.game_path.msg_error"):
             finder = GamePathFinder()
             result = finder._validate_xse_file()
 
         assert result is False
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch("ClassicLib.Utils.path_utils.validate_path")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -64,13 +64,13 @@ class TestValidateXseFile:
         ]
         mock_validate.return_value = (False, "Path does not exist")
 
-        with patch("ClassicLib.GamePath.msg_error"):
+        with patch("ClassicLib.support.game_path.msg_error"):
             finder = GamePathFinder()
             result = finder._validate_xse_file()
 
         assert result is False
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch("ClassicLib.Utils.path_utils.validate_path")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -100,8 +100,8 @@ class TestValidateXseFile:
 class TestReportXseError:
     """Tests for GamePathFinder._report_xse_error() method."""
 
-    @patch("ClassicLib.GamePath.msg_error")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.msg_error")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_report_xse_error_file_not_exist(
@@ -127,8 +127,8 @@ class TestReportXseError:
         call_args = mock_msg_error.call_args[0][0]
         assert "MISSING" in call_args
 
-    @patch("ClassicLib.GamePath.msg_error")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.msg_error")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_report_xse_error_access_denied(
@@ -158,8 +158,8 @@ class TestReportXseError:
 class TestParseXseLogForPath:
     """Tests for GamePathFinder._parse_xse_log_for_path() method."""
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.open_file_with_encoding")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.open_file_with_encoding")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_parse_xse_log_extracts_path(
@@ -197,8 +197,8 @@ class TestParseXseLogForPath:
         assert result is not None
         assert "Fallout4" in str(result)
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.open_file_with_encoding")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.open_file_with_encoding")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_parse_xse_log_no_plugin_directory(
@@ -239,7 +239,7 @@ class TestValidateGamePath:
     """Tests for GamePathFinder._validate_game_path() method."""
 
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_validate_game_path_invalid_path(
@@ -265,7 +265,7 @@ class TestValidateGamePath:
         assert result is False
 
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_validate_game_path_not_directory(
@@ -296,7 +296,7 @@ class TestValidateGamePath:
         assert result is False
 
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_validate_game_path_missing_exe(
@@ -327,7 +327,7 @@ class TestValidateGamePath:
         assert result is False
 
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_validate_game_path_valid(
@@ -363,8 +363,8 @@ class TestValidateGamePath:
 class TestSaveGamePath:
     """Tests for GamePathFinder._save_game_path() method."""
 
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_save_game_path_saves_and_registers(
@@ -397,8 +397,8 @@ class TestSaveGamePath:
 class TestGetPathFromUserGui:
     """Tests for GamePathFinder._get_path_from_user_gui() method."""
 
-    @patch("ClassicLib.GamePath.show_game_path_dialog_static")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.show_game_path_dialog_static")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_get_path_from_user_gui_returns_path(
@@ -427,8 +427,8 @@ class TestGetPathFromUserGui:
         assert result == expected_path
         mock_dialog.assert_called_once()
 
-    @patch("ClassicLib.GamePath.show_game_path_dialog_static")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.show_game_path_dialog_static")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_get_path_from_user_gui_cancelled_raises_error(
@@ -460,8 +460,8 @@ class TestGetPathFromUserConsole:
 
     @patch("builtins.input")
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.msg_info")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.msg_info")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_get_path_from_user_console_valid_input(
@@ -498,9 +498,9 @@ class TestGetPathFromUserConsole:
 
     @patch("builtins.input")
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.msg_error")
-    @patch("ClassicLib.GamePath.msg_info")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.msg_error")
+    @patch("ClassicLib.support.game_path.msg_info")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_get_path_from_user_console_retry_on_invalid(
@@ -547,9 +547,9 @@ class TestGetPathFromUserConsole:
 
     @patch("builtins.input")
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.GamePath.msg_error")
-    @patch("ClassicLib.GamePath.msg_info")
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.msg_error")
+    @patch("ClassicLib.support.game_path.msg_info")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_get_path_from_user_console_retry_on_missing_exe(
@@ -596,7 +596,7 @@ class TestGetPathFromUserConsole:
 class TestGamePathFinderInit:
     """Tests for GamePathFinder.__init__() constructor."""
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_init_sets_all_attributes(
@@ -618,7 +618,7 @@ class TestGamePathFinderInit:
         assert finder.xse_acronym_base == "F4SE"
         assert finder.game_name == "Fallout 4"
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_init_vr_mode(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, message_handler) -> None:
@@ -635,7 +635,7 @@ class TestGamePathFinderInit:
         assert finder.exe_name == "Fallout4VR.exe"
         assert finder.xse_acronym == "F4SEVR"
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_init_invalid_types_raises_error(

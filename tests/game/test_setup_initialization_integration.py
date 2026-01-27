@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.SetupCoordinator import SetupCoordinator
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.setup import SetupCoordinator
 
 pytestmark = [pytest.mark.unit]
 
@@ -39,10 +39,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_gui_mode(
         self,
         mock_prefetch: MagicMock,
@@ -78,10 +78,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_gui_mode_with_parent(
         self,
         mock_prefetch: MagicMock,
@@ -117,10 +117,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_cli_mode(
         self,
         mock_prefetch: MagicMock,
@@ -158,10 +158,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_frozen_executable(
         self,
         mock_prefetch: MagicMock,
@@ -195,10 +195,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_source_mode(
         self,
         mock_prefetch: MagicMock,
@@ -234,10 +234,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_none_game_setting(
         self,
         mock_prefetch: MagicMock,
@@ -269,10 +269,10 @@ class TestSetupInitialization:
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")
-    @patch("ClassicLib.PathValidator.PathValidator.validate_all_settings_paths")
-    @patch("ClassicLib.SetupCoordinator.init_message_handler")
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
-    @patch("ClassicLib.YamlSettings.YamlSettingsCache.prefetch_all_settings")
+    @patch("ClassicLib.support.path_validator.PathValidator.validate_all_settings_paths")
+    @patch("ClassicLib.support.setup.init_message_handler")
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.batch_get_settings_async", new_callable=AsyncMock)
+    @patch("ClassicLib.io.yaml.YamlSettingsCache.prefetch_all_settings")
     def test_initialize_application_yaml_preload(
         self,
         mock_prefetch: MagicMock,

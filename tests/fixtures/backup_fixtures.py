@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.BackupManager import BackupManager
+from ClassicLib.support.backup import BackupManager
 
 
 @pytest.fixture

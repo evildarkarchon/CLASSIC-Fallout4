@@ -21,7 +21,7 @@ pytest.importorskip("classic_config")
 # Skip if pytest-benchmark is not installed
 pytest.importorskip("pytest_benchmark")
 
-from ClassicLib.rust.orchestrator_api import ClassicOrchestrator
+from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
 
 
 @pytest.fixture

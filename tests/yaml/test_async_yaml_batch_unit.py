@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 import ruamel.yaml
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 
 pytestmark = pytest.mark.unit
 
@@ -60,7 +60,7 @@ class TestAsyncYamlBatchOperations:
     @pytest.mark.asyncio
     async def test_file_lock_concurrency(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test per-file locking for concurrent access."""
-        from ClassicLib.Constants import YAML
+        from ClassicLib.core.constants import YAML
 
         def mock_get_path(store):
             return temp_yaml_file

@@ -8,7 +8,7 @@ import pytest
 
 pytestmark = [pytest.mark.gui, pytest.mark.e2e]
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
 
 
@@ -37,7 +37,7 @@ class TestEdgeCases:
 
     def test_default_values_created(self, app):
         """Test that default values are created for missing settings."""
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         yaml_settings(str, YAML.TEST, "CLASSIC_Settings.Game Version", None)
         dialog = SettingsDialog(yaml_store=YAML.TEST)

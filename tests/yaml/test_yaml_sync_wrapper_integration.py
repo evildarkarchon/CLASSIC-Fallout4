@@ -7,8 +7,8 @@ This file contains integration tests that test interactions between components.
 import pytest
 import ruamel.yaml
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import YamlSettingsCache, classic_settings, yaml_cache
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import YamlSettingsCache, classic_settings, yaml_cache
 
 pytestmark = pytest.mark.integration
 

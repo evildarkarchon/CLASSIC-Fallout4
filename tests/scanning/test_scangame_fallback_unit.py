@@ -1,6 +1,6 @@
 """Unit tests for ScanGame fallback modules.
 
-This module tests the pure Python fallback implementations in ClassicLib/ScanGame/core/:
+This module tests the pure Python fallback implementations in ClassicLib/scanning/game/checks/:
 - LogProcessor (log_fallback.py) - Log file scanning and error detection
 - UnpackedScanner (unpacked_fallback.py) - Detection of improperly unpacked files
 - ConfigDuplicateDetector (config_duplicate_fallback.py) - Configuration file duplicate detection
@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.unit]
 # LogProcessor Tests (log_fallback.py)
 # ============================================================================
 
-from ClassicLib.ScanGame.core.log_fallback import LogProcessor
+from ClassicLib.scanning.game.checks.log_fallback import LogProcessor
 
 
 class TestLogProcessorInit:
@@ -224,7 +224,7 @@ class TestLogProcessorFormatErrorReport:
 # UnpackedScanner Tests (unpacked_fallback.py)
 # ============================================================================
 
-from ClassicLib.ScanGame.core.unpacked_fallback import UnpackedIssues, UnpackedScanner
+from ClassicLib.scanning.game.checks.unpacked_fallback import UnpackedIssues, UnpackedScanner
 
 
 class TestUnpackedIssuesInit:
@@ -432,7 +432,7 @@ class TestUnpackedScannerScanDirectory:
 # ConfigDuplicateDetector Tests (config_duplicate_fallback.py)
 # ============================================================================
 
-from ClassicLib.ScanGame.core.config_duplicate_fallback import ConfigDuplicateDetector, DuplicateGroup
+from ClassicLib.scanning.game.checks.config_duplicate_fallback import ConfigDuplicateDetector, DuplicateGroup
 
 
 class TestDuplicateGroupInit:

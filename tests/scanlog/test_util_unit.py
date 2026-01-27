@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanLog.Util module.
+"""Unit tests for ClassicLib.scanning.logs.util_legacy module.
 
 This module tests the utility functions for managing SQLite database connections,
 file operations, and directory path handling used in crash log scanning.
@@ -32,7 +32,7 @@ class TestSyncDatabasePool:
 
     def test_get_instance_returns_singleton(self) -> None:
         """SyncDatabasePool should return the same instance on repeated calls."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         # Reset singleton for testing
         SyncDatabasePool._instance = None
@@ -45,7 +45,7 @@ class TestSyncDatabasePool:
 
     def test_get_instance_thread_safe(self) -> None:
         """SyncDatabasePool singleton should be thread-safe."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         # Reset singleton for testing
         SyncDatabasePool._instance = None
@@ -66,7 +66,7 @@ class TestSyncDatabasePool:
 
     def test_get_connection_creates_new_connection(self, tmp_path: Path) -> None:
         """get_connection should create a new connection for a new database path."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         db_path = tmp_path / "test.db"
         # Create the database file
@@ -84,7 +84,7 @@ class TestSyncDatabasePool:
 
     def test_get_connection_reuses_existing_connection(self, tmp_path: Path) -> None:
         """get_connection should reuse an existing connection for the same path."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(db_path)
@@ -100,7 +100,7 @@ class TestSyncDatabasePool:
 
     def test_get_connection_recreates_dead_connection(self, tmp_path: Path) -> None:
         """get_connection should create a new connection if the existing one is dead."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(db_path)
@@ -122,7 +122,7 @@ class TestSyncDatabasePool:
 
     def test_is_connection_alive_returns_true_for_alive(self, tmp_path: Path) -> None:
         """_is_connection_alive should return True for a healthy connection."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(db_path)
@@ -134,7 +134,7 @@ class TestSyncDatabasePool:
 
     def test_is_connection_alive_returns_false_for_closed(self, tmp_path: Path) -> None:
         """_is_connection_alive should return False for a closed connection."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         db_path = tmp_path / "test.db"
         conn = sqlite3.connect(db_path)
@@ -146,7 +146,7 @@ class TestSyncDatabasePool:
 
     def test_close_all_closes_all_connections(self, tmp_path: Path) -> None:
         """close_all should close all connections in the pool."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         db1 = tmp_path / "test1.db"
         db2 = tmp_path / "test2.db"
@@ -178,7 +178,7 @@ class TestEnsureDirectoryExists:
 
     def test_creates_directory_if_not_exists(self, tmp_path: Path) -> None:
         """ensure_directory_exists should create directory if it doesn't exist."""
-        from ClassicLib.ScanLog.Util import ensure_directory_exists
+        from ClassicLib.scanning.logs.util_legacy import ensure_directory_exists
 
         new_dir = tmp_path / "new_directory"
         assert not new_dir.exists()
@@ -190,7 +190,7 @@ class TestEnsureDirectoryExists:
 
     def test_creates_nested_directories(self, tmp_path: Path) -> None:
         """ensure_directory_exists should create nested directories."""
-        from ClassicLib.ScanLog.Util import ensure_directory_exists
+        from ClassicLib.scanning.logs.util_legacy import ensure_directory_exists
 
         nested_dir = tmp_path / "level1" / "level2" / "level3"
         assert not nested_dir.exists()
@@ -202,7 +202,7 @@ class TestEnsureDirectoryExists:
 
     def test_no_error_if_directory_exists(self, tmp_path: Path) -> None:
         """ensure_directory_exists should not raise if directory already exists."""
-        from ClassicLib.ScanLog.Util import ensure_directory_exists
+        from ClassicLib.scanning.logs.util_legacy import ensure_directory_exists
 
         existing_dir = tmp_path / "existing"
         existing_dir.mkdir()
@@ -220,7 +220,7 @@ class TestMoveFiles:
 
     def test_moves_matching_files(self, tmp_path: Path) -> None:
         """move_files should move files matching the pattern."""
-        from ClassicLib.ScanLog.Util import move_files
+        from ClassicLib.scanning.logs.util_legacy import move_files
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -242,7 +242,7 @@ class TestMoveFiles:
 
     def test_does_not_overwrite_existing_files(self, tmp_path: Path) -> None:
         """move_files should not overwrite existing files in target."""
-        from ClassicLib.ScanLog.Util import move_files
+        from ClassicLib.scanning.logs.util_legacy import move_files
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -267,7 +267,7 @@ class TestCopyFiles:
 
     def test_copies_matching_files(self, tmp_path: Path) -> None:
         """copy_files should copy files matching the pattern."""
-        from ClassicLib.ScanLog.Util import copy_files
+        from ClassicLib.scanning.logs.util_legacy import copy_files
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -285,7 +285,7 @@ class TestCopyFiles:
 
     def test_does_not_overwrite_existing_files(self, tmp_path: Path) -> None:
         """copy_files should not overwrite existing files in target."""
-        from ClassicLib.ScanLog.Util import copy_files
+        from ClassicLib.scanning.logs.util_legacy import copy_files
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -301,7 +301,7 @@ class TestCopyFiles:
 
     def test_handles_none_source_dir(self, tmp_path: Path) -> None:
         """copy_files should do nothing if source_dir is None."""
-        from ClassicLib.ScanLog.Util import copy_files
+        from ClassicLib.scanning.logs.util_legacy import copy_files
 
         target_dir = tmp_path / "target"
         target_dir.mkdir()
@@ -311,7 +311,7 @@ class TestCopyFiles:
 
     def test_handles_nonexistent_source_dir(self, tmp_path: Path) -> None:
         """copy_files should do nothing if source_dir doesn't exist."""
-        from ClassicLib.ScanLog.Util import copy_files
+        from ClassicLib.scanning.logs.util_legacy import copy_files
 
         source_dir = tmp_path / "nonexistent"
         target_dir = tmp_path / "target"
@@ -332,7 +332,7 @@ class TestGetPathFromSetting:
 
     def test_converts_string_to_path(self) -> None:
         """get_path_from_setting should convert string to Path."""
-        from ClassicLib.ScanLog.Util import get_path_from_setting
+        from ClassicLib.scanning.logs.util_legacy import get_path_from_setting
 
         result = get_path_from_setting("/some/path")
 
@@ -341,7 +341,7 @@ class TestGetPathFromSetting:
 
     def test_returns_none_for_none(self) -> None:
         """get_path_from_setting should return None for None input."""
-        from ClassicLib.ScanLog.Util import get_path_from_setting
+        from ClassicLib.scanning.logs.util_legacy import get_path_from_setting
 
         result = get_path_from_setting(None)
 
@@ -349,7 +349,7 @@ class TestGetPathFromSetting:
 
     def test_returns_none_for_non_string(self) -> None:
         """get_path_from_setting should return None for non-string input."""
-        from ClassicLib.ScanLog.Util import get_path_from_setting
+        from ClassicLib.scanning.logs.util_legacy import get_path_from_setting
 
         result = get_path_from_setting(123)  # type: ignore
 
@@ -362,7 +362,7 @@ class TestIsValidCustomScanPath:
 
     def test_returns_false_for_none(self) -> None:
         """is_valid_custom_scan_path should return False for None."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         result = is_valid_custom_scan_path(None)
 
@@ -370,7 +370,7 @@ class TestIsValidCustomScanPath:
 
     def test_returns_false_for_empty_string(self) -> None:
         """is_valid_custom_scan_path should return False for empty string."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         result = is_valid_custom_scan_path("")
 
@@ -378,7 +378,7 @@ class TestIsValidCustomScanPath:
 
     def test_returns_false_for_whitespace_only(self) -> None:
         """is_valid_custom_scan_path should return False for whitespace-only string."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         result = is_valid_custom_scan_path("   ")
 
@@ -386,11 +386,11 @@ class TestIsValidCustomScanPath:
 
     def test_returns_false_for_crash_logs_dir(self, tmp_path: Path) -> None:
         """is_valid_custom_scan_path should return False for Crash Logs directory."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         with (
-            patch("ClassicLib.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             crash_logs_dir = tmp_path / "Crash Logs"
             crash_logs_dir.mkdir()
@@ -401,11 +401,11 @@ class TestIsValidCustomScanPath:
 
     def test_returns_false_for_pastebin_dir(self, tmp_path: Path) -> None:
         """is_valid_custom_scan_path should return False for Pastebin directory."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         with (
-            patch("ClassicLib.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             pastebin_dir = tmp_path / "Crash Logs" / "Pastebin"
             pastebin_dir.mkdir(parents=True)
@@ -417,11 +417,11 @@ class TestIsValidCustomScanPath:
     @pytest.mark.skipif(platform.system() != "Windows", reason="Windows-specific test")
     def test_returns_false_for_windows_system_dirs(self) -> None:
         """is_valid_custom_scan_path should return False for Windows system directories."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         with (
-            patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="C:\\Users\\Test"),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value="C:\\Users\\Test"),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             system_root = os.environ.get("SystemRoot", r"C:\Windows")
 
@@ -431,14 +431,14 @@ class TestIsValidCustomScanPath:
 
     def test_returns_true_for_valid_path(self, tmp_path: Path) -> None:
         """is_valid_custom_scan_path should return True for a valid path."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         valid_path = tmp_path / "custom_scans"
         valid_path.mkdir()
 
         with (
-            patch("ClassicLib.GlobalRegistry.get_local_dir", return_value=str(tmp_path / "app")),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value=str(tmp_path / "app")),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             result = is_valid_custom_scan_path(valid_path)
 
@@ -456,13 +456,13 @@ class TestCrashlogsGetFiles:
 
     def test_python_fallback_creates_directories(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_crashlogs_get_files_python should create required directories."""
-        from ClassicLib.ScanLog.Util import _crashlogs_get_files_python
+        from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_python
 
         monkeypatch.chdir(tmp_path)
 
         with (
-            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             _crashlogs_get_files_python()
 
@@ -471,7 +471,7 @@ class TestCrashlogsGetFiles:
 
     def test_python_fallback_finds_crash_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_crashlogs_get_files_python should find crash log files."""
-        from ClassicLib.ScanLog.Util import _crashlogs_get_files_python
+        from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_python
 
         monkeypatch.chdir(tmp_path)
 
@@ -482,8 +482,8 @@ class TestCrashlogsGetFiles:
         (crash_logs_dir / "Pastebin").mkdir()
 
         with (
-            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             result = _crashlogs_get_files_python()
 
@@ -492,7 +492,7 @@ class TestCrashlogsGetFiles:
 
     def test_python_fallback_includes_custom_folder(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_crashlogs_get_files_python should include files from custom folder."""
-        from ClassicLib.ScanLog.Util import _crashlogs_get_files_python
+        from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_python
 
         monkeypatch.chdir(tmp_path)
 
@@ -505,8 +505,8 @@ class TestCrashlogsGetFiles:
         (custom_dir / "crash-custom.log").write_text("custom log")
 
         with (
-            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=str(custom_dir)),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=str(custom_dir)),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             result = _crashlogs_get_files_python()
 
@@ -514,7 +514,7 @@ class TestCrashlogsGetFiles:
 
     def test_crashlogs_get_files_falls_back_to_python(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """crashlogs_get_files should fall back to Python if Rust unavailable."""
-        from ClassicLib.ScanLog.Util import crashlogs_get_files
+        from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
         monkeypatch.chdir(tmp_path)
 
@@ -524,9 +524,9 @@ class TestCrashlogsGetFiles:
         (crash_logs_dir / "crash-test.log").write_text("test")
 
         with (
-            patch("ClassicLib.ScanLog.Util._crashlogs_get_files_rust", side_effect=ImportError("No Rust")),
-            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy._crashlogs_get_files_rust", side_effect=ImportError("No Rust")),
+            patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             result = crashlogs_get_files()
 
@@ -535,11 +535,11 @@ class TestCrashlogsGetFiles:
 
     def test_crashlogs_get_files_uses_rust_when_available(self, tmp_path: Path) -> None:
         """crashlogs_get_files should use Rust implementation when available."""
-        from ClassicLib.ScanLog.Util import crashlogs_get_files
+        from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
         mock_paths = [str(tmp_path / "crash-1.log"), str(tmp_path / "crash-2.log")]
 
-        with patch("ClassicLib.ScanLog.Util._crashlogs_get_files_rust", return_value=[Path(p) for p in mock_paths]):
+        with patch("ClassicLib.scanning.logs.util_legacy._crashlogs_get_files_rust", return_value=[Path(p) for p in mock_paths]):
             result = crashlogs_get_files()
 
             assert len(result) == 2
@@ -557,7 +557,7 @@ class TestGetEntry:
 
     def test_returns_cached_entry(self) -> None:
         """get_entry should return cached entry if available."""
-        from ClassicLib.ScanLog import Util
+        from ClassicLib.scanning.logs import util_legacy as Util
 
         # Set up cache
         Util.query_cache[("test_formid", "test_plugin")] = "cached_entry"
@@ -572,7 +572,7 @@ class TestGetEntry:
 
     def test_queries_database_if_not_cached(self, tmp_path: Path) -> None:
         """get_entry should query database if entry not in cache."""
-        from ClassicLib.ScanLog import Util
+        from ClassicLib.scanning.logs import util_legacy as Util
 
         # Clear cache
         Util.query_cache.clear()
@@ -589,9 +589,9 @@ class TestGetEntry:
         mock_pool.get_connection.return_value = mock_conn
 
         with (
-            patch("ClassicLib.ScanLog.Util.DB_PATHS", [db_path]),
-            patch("ClassicLib.ScanLog.Util.SyncDatabasePool.get_instance", return_value=mock_pool),
-            patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"),
+            patch("ClassicLib.scanning.logs.util_legacy.DB_PATHS", [db_path]),
+            patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool.get_instance", return_value=mock_pool),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
             result = Util.get_entry("12345", "Test.esp")
 
@@ -604,7 +604,7 @@ class TestGetEntry:
 
     def test_returns_none_if_not_found(self, tmp_path: Path) -> None:
         """get_entry should return None if entry not found in database."""
-        from ClassicLib.ScanLog import Util
+        from ClassicLib.scanning.logs import util_legacy as Util
 
         Util.query_cache.clear()
 
@@ -619,9 +619,9 @@ class TestGetEntry:
         mock_pool.get_connection.return_value = mock_conn
 
         with (
-            patch("ClassicLib.ScanLog.Util.DB_PATHS", [db_path]),
-            patch("ClassicLib.ScanLog.Util.SyncDatabasePool.get_instance", return_value=mock_pool),
-            patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"),
+            patch("ClassicLib.scanning.logs.util_legacy.DB_PATHS", [db_path]),
+            patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool.get_instance", return_value=mock_pool),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
             result = Util.get_entry("nonexistent", "Unknown.esp")
 
@@ -632,7 +632,7 @@ class TestGetEntry:
 
     def test_handles_database_error(self, tmp_path: Path) -> None:
         """get_entry should handle database errors gracefully."""
-        from ClassicLib.ScanLog import Util
+        from ClassicLib.scanning.logs import util_legacy as Util
 
         Util.query_cache.clear()
 
@@ -640,8 +640,8 @@ class TestGetEntry:
         db_path.write_text("invalid database content")
 
         with (
-            patch("ClassicLib.ScanLog.Util.DB_PATHS", [db_path]),
-            patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"),
+            patch("ClassicLib.scanning.logs.util_legacy.DB_PATHS", [db_path]),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
             result = Util.get_entry("12345", "Test.esp")
 
@@ -662,7 +662,7 @@ class TestSyncDatabasePoolEdgeCases:
 
     def test_get_connection_raises_on_sqlite_error(self, tmp_path: Path) -> None:
         """get_connection should raise sqlite3.Error when connection fails."""
-        from ClassicLib.ScanLog.Util import SyncDatabasePool
+        from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool
 
         pool = SyncDatabasePool()
         # Use a path that cannot be connected to (directory instead of file)
@@ -681,7 +681,7 @@ class TestIsValidCustomScanPathEdgeCases:
 
     def test_returns_false_for_path_with_oserror_on_resolve(self, tmp_path: Path) -> None:
         """is_valid_custom_scan_path should return False if path.resolve() raises OSError."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         # Create a mock path that raises OSError on resolve
         mock_path = MagicMock(spec=Path)
@@ -693,7 +693,7 @@ class TestIsValidCustomScanPathEdgeCases:
 
     def test_handles_value_error_in_restricted_path_comparison(self, tmp_path: Path) -> None:
         """is_valid_custom_scan_path should handle ValueError during restricted path comparison."""
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         # Create a path that can be resolved
         valid_path = tmp_path / "test_folder"
@@ -704,8 +704,8 @@ class TestIsValidCustomScanPathEdgeCases:
         mock_restricted.resolve.side_effect = ValueError("Different drives")
 
         with (
-            patch("ClassicLib.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=mock_restricted),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value=str(tmp_path)),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=mock_restricted),
         ):
             # Should not raise, should return True since the restricted path comparison fails gracefully
             result = is_valid_custom_scan_path(valid_path)
@@ -719,7 +719,7 @@ class TestCrashlogsGetFilesEdgeCases:
 
     def test_crashlogs_get_files_falls_back_on_general_exception(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """crashlogs_get_files should fall back to Python on any exception from Rust."""
-        from ClassicLib.ScanLog.Util import crashlogs_get_files
+        from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
         monkeypatch.chdir(tmp_path)
 
@@ -733,8 +733,8 @@ class TestCrashlogsGetFilesEdgeCases:
                 "ClassicLib.ScanLog.Util._crashlogs_get_files_rust",
                 side_effect=RuntimeError("Rust operation failed"),
             ),
-            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
             result = crashlogs_get_files()
 
@@ -744,7 +744,7 @@ class TestCrashlogsGetFilesEdgeCases:
 
     def test_rust_implementation_path_conversion(self, tmp_path: Path) -> None:
         """_crashlogs_get_files_rust should convert string paths to Path objects."""
-        from ClassicLib.ScanLog.Util import _crashlogs_get_files_rust
+        from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_rust
 
         mock_collector = MagicMock()
         mock_collector.collect_all.return_value = [
@@ -753,8 +753,8 @@ class TestCrashlogsGetFilesEdgeCases:
         ]
 
         with (
-            patch("ClassicLib.ScanLog.Util.classic_settings", return_value=None),
-            patch("ClassicLib.ScanLog.Util.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
             patch("classic_file_io.PyLogCollector", return_value=mock_collector),
         ):
             result = _crashlogs_get_files_rust()
@@ -770,13 +770,13 @@ class TestGetEntryEdgeCases:
 
     def test_skips_nonexistent_database_files(self, tmp_path: Path) -> None:
         """get_entry should skip database paths that don't exist."""
-        from ClassicLib.ScanLog import Util
+        from ClassicLib.scanning.logs import util_legacy as Util
 
         Util.query_cache.clear()
 
         nonexistent_db = tmp_path / "nonexistent.db"
 
-        with patch("ClassicLib.ScanLog.Util.DB_PATHS", [nonexistent_db]):
+        with patch("ClassicLib.scanning.logs.util_legacy.DB_PATHS", [nonexistent_db]):
             result = Util.get_entry("12345", "Test.esp")
 
             # Should return None without raising (db file doesn't exist)

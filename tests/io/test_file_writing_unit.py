@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIO import FileIOCore, write_bytes_sync, write_crash_report_sync, write_file_sync, write_lines_sync
+from ClassicLib.io.files import FileIOCore, write_bytes_sync, write_crash_report_sync, write_file_sync, write_lines_sync
 
 
 class TestAsyncFileWriting:

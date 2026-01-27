@@ -12,8 +12,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtTest import QTest
 from PySide6.QtWidgets import QDialog, QDialogButtonBox
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import yaml_settings
 
 
 class TestButtonInteractions:

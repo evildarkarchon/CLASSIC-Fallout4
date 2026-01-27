@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIO import FileIOCore, stream_lines_sync
+from ClassicLib.io.files import FileIOCore, stream_lines_sync
 
 
 class TestAsyncFileStreaming:

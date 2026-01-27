@@ -16,7 +16,7 @@ class TestPythonReportGeneratorInitialization:
 
     def test_initializes_with_yamldata(self) -> None:
         """Test initialization stores yamldata."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.classic_version = "CLASSIC v8.0.0"
@@ -31,7 +31,7 @@ class TestGenerateHeader:
 
     def test_generates_header_with_filename(self) -> None:
         """Test header includes crash log filename."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.classic_version = "CLASSIC v8.0.0"
@@ -44,7 +44,7 @@ class TestGenerateHeader:
 
     def test_generates_header_with_version(self) -> None:
         """Test header includes classic version."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.classic_version = "CLASSIC v8.0.0"
@@ -57,7 +57,7 @@ class TestGenerateHeader:
 
     def test_header_uses_default_when_no_yamldata(self) -> None:
         """Test header uses default version when yamldata is None."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         generator = PythonReportGenerator(None)
 
@@ -68,7 +68,7 @@ class TestGenerateHeader:
 
     def test_header_includes_viewing_instructions(self) -> None:
         """Test header includes viewing instructions."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         generator = PythonReportGenerator(mock_yamldata)
@@ -80,8 +80,8 @@ class TestGenerateHeader:
 
     def test_header_returns_report_fragment(self) -> None:
         """Test that generate_header returns a ReportFragment."""
-        from ClassicLib.python.report_py import PythonReportGenerator
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         mock_yamldata = MagicMock()
         generator = PythonReportGenerator(mock_yamldata)
@@ -96,13 +96,13 @@ class TestGenerateErrorSection:
 
     def test_includes_main_error(self) -> None:
         """Test error section includes main error message."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"
         generator = PythonReportGenerator(mock_yamldata)
 
-        with patch("ClassicLib.GlobalRegistry.get_vr", return_value=""):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value=""):
             result = generator.generate_error_section(
                 "EXCEPTION_ACCESS_VIOLATION",
                 "1.26.2",
@@ -116,13 +116,13 @@ class TestGenerateErrorSection:
 
     def test_includes_crashgen_version(self) -> None:
         """Test error section includes crashgen version."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"
         generator = PythonReportGenerator(mock_yamldata)
 
-        with patch("ClassicLib.GlobalRegistry.get_vr", return_value=""):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value=""):
             result = generator.generate_error_section(
                 "ERROR",
                 "1.26.2",
@@ -136,13 +136,13 @@ class TestGenerateErrorSection:
 
     def test_shows_outdated_warning_when_version_old(self) -> None:
         """Test error section shows warning when version is outdated."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"
         generator = PythonReportGenerator(mock_yamldata)
 
-        with patch("ClassicLib.GlobalRegistry.get_vr", return_value=""):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value=""):
             result = generator.generate_error_section(
                 "ERROR",
                 "1.20.0",
@@ -156,13 +156,13 @@ class TestGenerateErrorSection:
 
     def test_shows_latest_message_when_current(self) -> None:
         """Test error section shows 'latest version' when current."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"
         generator = PythonReportGenerator(mock_yamldata)
 
-        with patch("ClassicLib.GlobalRegistry.get_vr", return_value=""):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value=""):
             result = generator.generate_error_section(
                 "ERROR",
                 "1.26.2",
@@ -180,8 +180,8 @@ class TestGenerateStaticHeaders:
 
     def test_generate_suspect_section_header(self) -> None:
         """Test suspect section header generation."""
-        from ClassicLib.python.report_py import PythonReportGenerator
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         result = PythonReportGenerator.generate_suspect_section_header()
 
@@ -191,8 +191,8 @@ class TestGenerateStaticHeaders:
 
     def test_generate_settings_section_header(self) -> None:
         """Test settings section header generation."""
-        from ClassicLib.python.report_py import PythonReportGenerator
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         result = PythonReportGenerator.generate_settings_section_header()
 
@@ -202,8 +202,8 @@ class TestGenerateStaticHeaders:
 
     def test_generate_plugin_suspect_header(self) -> None:
         """Test plugin suspect header generation."""
-        from ClassicLib.python.report_py import PythonReportGenerator
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         result = PythonReportGenerator.generate_plugin_suspect_header()
 
@@ -213,8 +213,8 @@ class TestGenerateStaticHeaders:
 
     def test_generate_formid_section_header(self) -> None:
         """Test FormID section header generation."""
-        from ClassicLib.python.report_py import PythonReportGenerator
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         result = PythonReportGenerator.generate_formid_section_header()
 
@@ -224,8 +224,8 @@ class TestGenerateStaticHeaders:
 
     def test_generate_record_section_header(self) -> None:
         """Test record section header generation."""
-        from ClassicLib.python.report_py import PythonReportGenerator
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         result = PythonReportGenerator.generate_record_section_header()
 
@@ -239,7 +239,7 @@ class TestGenerateSuspectFoundFooter:
 
     def test_footer_when_suspect_found(self) -> None:
         """Test footer message when suspects were found."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         result = PythonReportGenerator.generate_suspect_found_footer(True)
 
@@ -248,7 +248,7 @@ class TestGenerateSuspectFoundFooter:
 
     def test_footer_when_no_suspect(self) -> None:
         """Test footer message when no suspects found."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         result = PythonReportGenerator.generate_suspect_found_footer(False)
 
@@ -261,7 +261,7 @@ class TestGenerateModCheckHeader:
 
     def test_includes_check_type(self) -> None:
         """Test mod check header includes the check type."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         result = PythonReportGenerator.generate_mod_check_header("Cause Crashes")
 
@@ -270,7 +270,7 @@ class TestGenerateModCheckHeader:
 
     def test_different_check_types(self) -> None:
         """Test various check types."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         check_types = ["Have Issues", "Need Updates", "Are Incompatible"]
 
@@ -285,7 +285,7 @@ class TestGenerateFooter:
 
     def test_footer_includes_version(self) -> None:
         """Test footer includes version information."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         mock_yamldata.classic_version = "CLASSIC v8.0.0"
@@ -298,7 +298,7 @@ class TestGenerateFooter:
 
     def test_footer_includes_credits(self) -> None:
         """Test footer includes author credits."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         generator = PythonReportGenerator(mock_yamldata)
@@ -310,7 +310,7 @@ class TestGenerateFooter:
 
     def test_footer_includes_contributors(self) -> None:
         """Test footer includes contributors list."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         generator = PythonReportGenerator(mock_yamldata)
@@ -322,7 +322,7 @@ class TestGenerateFooter:
 
     def test_footer_includes_nexusmods_link(self) -> None:
         """Test footer includes NexusMods link."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         mock_yamldata = MagicMock()
         generator = PythonReportGenerator(mock_yamldata)
@@ -334,7 +334,7 @@ class TestGenerateFooter:
 
     def test_footer_uses_default_when_no_yamldata(self) -> None:
         """Test footer uses default when yamldata is None."""
-        from ClassicLib.python.report_py import PythonReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator
 
         generator = PythonReportGenerator(None)
 
@@ -349,12 +349,12 @@ class TestReportGeneratorAlias:
 
     def test_alias_exists(self) -> None:
         """Test ReportGenerator alias exists."""
-        from ClassicLib.python.report_py import ReportGenerator
+        from ClassicLib.integration.python.report_py import ReportGenerator
 
         assert ReportGenerator is not None
 
     def test_alias_is_same_class(self) -> None:
         """Test ReportGenerator is same as PythonReportGenerator."""
-        from ClassicLib.python.report_py import PythonReportGenerator, ReportGenerator
+        from ClassicLib.integration.python.report_py import PythonReportGenerator, ReportGenerator
 
         assert ReportGenerator is PythonReportGenerator

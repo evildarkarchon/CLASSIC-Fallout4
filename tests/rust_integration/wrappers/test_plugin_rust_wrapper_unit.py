@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+    from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
 
 # ============================================================================
@@ -47,7 +47,7 @@ def rust_plugin_analyzer(mock_yamldata_for_rust_plugin: MagicMock) -> "RustPlugi
     Returns:
         RustPluginAnalyzer instance.
     """
-    from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+    from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
     return RustPluginAnalyzer(mock_yamldata_for_rust_plugin)
 
@@ -93,7 +93,7 @@ class TestRustPluginAnalyzerInit:
     @pytest.mark.unit
     def test_init_stores_yamldata(self, mock_yamldata_for_rust_plugin: MagicMock) -> None:
         """Test that yamldata is stored on initialization."""
-        from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
         analyzer = RustPluginAnalyzer(mock_yamldata_for_rust_plugin)
 
@@ -284,7 +284,7 @@ class TestParsePluginLine:
     @pytest.mark.unit
     def test_parse_plugin_line_valid(self) -> None:
         """Test parsing valid plugin line."""
-        from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
         result = RustPluginAnalyzer.parse_plugin_line("  [0A] TestMod.esp")
 
@@ -295,7 +295,7 @@ class TestParsePluginLine:
     @pytest.mark.unit
     def test_parse_plugin_line_lowercase_hex(self) -> None:
         """Test parsing with lowercase hex."""
-        from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
         result = RustPluginAnalyzer.parse_plugin_line("  [0a] TestMod.esp")
 
@@ -305,7 +305,7 @@ class TestParsePluginLine:
     @pytest.mark.unit
     def test_parse_plugin_line_invalid(self) -> None:
         """Test parsing invalid plugin line."""
-        from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
         result = RustPluginAnalyzer.parse_plugin_line("Invalid line without brackets")
 
@@ -314,7 +314,7 @@ class TestParsePluginLine:
     @pytest.mark.unit
     def test_parse_plugin_line_empty(self) -> None:
         """Test parsing empty line."""
-        from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
         result = RustPluginAnalyzer.parse_plugin_line("")
 
@@ -333,7 +333,7 @@ class TestRustPluginAnalyzerFallback:
     def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_rust_plugin: MagicMock) -> None:
         """Test Python implementation is used when Rust unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
-            from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+            from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
             analyzer = RustPluginAnalyzer(mock_yamldata_for_rust_plugin)
 
@@ -343,7 +343,7 @@ class TestRustPluginAnalyzerFallback:
     @pytest.mark.unit
     def test_fallback_loadorder_scan(self, mock_yamldata_for_rust_plugin: MagicMock, sample_segment_plugins: list[str]) -> None:
         """Test loadorder_scan_log works with fallback."""
-        from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
         analyzer = RustPluginAnalyzer.__new__(RustPluginAnalyzer)
         analyzer._rust_analyzer = None

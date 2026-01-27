@@ -17,10 +17,10 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 from packaging.version import Version
 
-from ClassicLib.Database import DatabasePoolManager
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+from ClassicLib.io.database import DatabasePoolManager
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
 if TYPE_CHECKING:
@@ -148,9 +148,9 @@ class TestOrchestratorPerformance:
 
         # Also mock the Rust acceleration check to force use of Python fallback
         # This ensures we test the Python AsyncDatabasePool path
-        # Note: DatabasePoolManager imports from ClassicLib.Database.async_pool
+        # Note: DatabasePoolManager imports from ClassicLib.io.database.async_pool
         with (
-            patch("ClassicLib.Database.async_pool.AsyncDatabasePool", MockAsyncDatabasePool),
+            patch("ClassicLib.io.database.async_pool.AsyncDatabasePool", MockAsyncDatabasePool),
             patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False),
         ):
             # Clear any existing pool and reset using_rust flag
@@ -234,7 +234,7 @@ class TestOrchestratorPerformance:
     @pytest.mark.slow
     def test_regex_pattern_caching(self):
         """Verify regex patterns are cached at module level."""
-        from ClassicLib.ScanLog.FormIDAnalyzerCore import _PATTERN_CACHE, FormIDAnalyzerCore
+        from ClassicLib.scanning.logs.FormIDAnalyzerCore import _PATTERN_CACHE, FormIDAnalyzerCore
 
         # Create an instance to ensure pattern gets cached
         mock_yamldata = MagicMock()
@@ -279,7 +279,7 @@ class TestOrchestratorPerformance:
 
         # Mock the slow operations to measure optimization impact
         # Note: find_segments is in ClassicLib.ScanLog.Parser, not OrchestratorCore
-        with patch("ClassicLib.ScanLog.Parser.find_segments") as mock_find:
+        with patch("ClassicLib.scanning.logs.Parser.find_segments") as mock_find:
             mock_find.return_value = (
                 "1.10.163",  # gameversion
                 "1.28.6",  # crashgen version

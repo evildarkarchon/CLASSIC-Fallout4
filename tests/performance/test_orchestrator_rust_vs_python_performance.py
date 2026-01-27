@@ -15,13 +15,13 @@ from typing import Any, AsyncGenerator
 from unittest.mock import patch
 
 import pytest
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
-from ClassicLib import GlobalRegistry
+from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.ScanLog.scanloginfo.classic_scan_logs_info import ClassicScanLogsInfo
-from ClassicLib.YamlSettings import YamlSettingsCache
+from ClassicLib.io.yaml import YamlSettingsCache
+from ClassicLib.scanning.logs.scanloginfo.classic_scan_logs_info import ClassicScanLogsInfo
 
 
 class TestOrchestratorPerformance:
@@ -40,7 +40,7 @@ class TestOrchestratorPerformance:
         to determine concurrency. This fixture mocks it to return 0 (automatic
         concurrency) to ensure consistent behavior during performance tests.
         """
-        with patch("ClassicLib.ScanLog.HybridOrchestrator.classic_settings", return_value=0):
+        with patch("ClassicLib.scanning.logs.HybridOrchestrator.classic_settings", return_value=0):
             yield
 
     @pytest.fixture

@@ -88,7 +88,7 @@ class TestButtonInteraction:
         assert button.isEnabled()
 
         # Mock the UpdateCheckWorker that would be created on button click
-        with patch("ClassicLib.Interface.Workers.UpdateCheckWorker") as mock_worker_class:
+        with patch("ClassicLib.Interface.workers.Workers.UpdateCheckWorker") as mock_worker_class:
             mock_worker = MagicMock()
             mock_worker_class.return_value = mock_worker
 

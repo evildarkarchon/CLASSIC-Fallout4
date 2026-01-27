@@ -26,15 +26,15 @@ class TestProgressHandlerProtocol:
     @pytest.mark.unit
     def test_protocol_is_runtime_checkable(self) -> None:
         """ProgressHandler should be runtime checkable."""
-        from ClassicLib.MessageHandler.progress.base import ProgressHandler
+        from ClassicLib.messaging.progress.base import ProgressHandler
 
         assert hasattr(ProgressHandler, "__protocol_attrs__") or hasattr(ProgressHandler, "_is_runtime_protocol")
 
     @pytest.mark.unit
     def test_cli_progress_handler_implements_protocol(self) -> None:
         """CLIProgressHandler should implement ProgressHandler protocol."""
-        from ClassicLib.MessageHandler.progress.base import ProgressHandler
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.base import ProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -50,7 +50,7 @@ class TestCLIProgressBarInit:
     @pytest.mark.unit
     def test_initializes_with_description(self) -> None:
         """CLIProgressBar should store description."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Loading files")
@@ -60,7 +60,7 @@ class TestCLIProgressBarInit:
     @pytest.mark.unit
     def test_initializes_with_total(self) -> None:
         """CLIProgressBar should store total."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Processing", total=100)
@@ -70,7 +70,7 @@ class TestCLIProgressBarInit:
     @pytest.mark.unit
     def test_initializes_with_none_total_for_indeterminate(self) -> None:
         """CLIProgressBar should accept None total for indeterminate progress."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Scanning", total=None)
@@ -80,7 +80,7 @@ class TestCLIProgressBarInit:
     @pytest.mark.unit
     def test_initializes_current_to_zero(self) -> None:
         """CLIProgressBar should start with current = 0."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Test")
@@ -90,7 +90,7 @@ class TestCLIProgressBarInit:
     @pytest.mark.unit
     def test_prints_initial_state_on_creation(self) -> None:
         """CLIProgressBar should print initial state on creation."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print") as mock_print:
             CLIProgressBar("Initial", total=10)
@@ -104,7 +104,7 @@ class TestCLIProgressBarUpdate:
     @pytest.mark.unit
     def test_update_increments_current(self) -> None:
         """update should increment current by n."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Test", total=100)
@@ -116,7 +116,7 @@ class TestCLIProgressBarUpdate:
     @pytest.mark.unit
     def test_update_increments_by_one_by_default(self) -> None:
         """update should increment by 1 when n not specified."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Test", total=100)
@@ -128,7 +128,7 @@ class TestCLIProgressBarUpdate:
     @pytest.mark.unit
     def test_update_does_nothing_when_closed(self) -> None:
         """update should do nothing when bar is closed."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Test", total=100)
@@ -141,7 +141,7 @@ class TestCLIProgressBarUpdate:
     @pytest.mark.unit
     def test_update_throttles_printing(self) -> None:
         """update should throttle printing for performance."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print") as mock_print:
             bar = CLIProgressBar("Test", total=1000)
@@ -157,7 +157,7 @@ class TestCLIProgressBarUpdate:
     @pytest.mark.unit
     def test_update_always_prints_final_state(self) -> None:
         """update should always print when reaching total."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print") as mock_print:
             bar = CLIProgressBar("Test", total=10)
@@ -177,7 +177,7 @@ class TestCLIProgressBarSetDescription:
     @pytest.mark.unit
     def test_set_description_updates_desc(self) -> None:
         """set_description should update the description."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Original")
@@ -193,7 +193,7 @@ class TestCLIProgressBarClose:
     @pytest.mark.unit
     def test_close_sets_closed_flag(self) -> None:
         """close should set the closed flag."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Test")
@@ -205,7 +205,7 @@ class TestCLIProgressBarClose:
     @pytest.mark.unit
     def test_close_prints_newline(self) -> None:
         """close should print a newline."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print") as mock_print:
             bar = CLIProgressBar("Test")
@@ -220,7 +220,7 @@ class TestCLIProgressBarClose:
     @pytest.mark.unit
     def test_close_is_idempotent(self) -> None:
         """close should be safe to call multiple times."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         with patch("builtins.print"):
             bar = CLIProgressBar("Test")
@@ -237,7 +237,7 @@ class TestCLIProgressBarPrintProgress:
     @pytest.mark.unit
     def test_prints_percentage_for_determinate_progress(self) -> None:
         """_print_progress should print percentage for determinate progress."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         captured = StringIO()
         with patch("builtins.print", side_effect=lambda *args, **kwargs: captured.write(str(args))):
@@ -251,7 +251,7 @@ class TestCLIProgressBarPrintProgress:
     @pytest.mark.unit
     def test_prints_spinner_for_indeterminate_progress(self) -> None:
         """_print_progress should print spinner for indeterminate progress."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressBar
 
         captured = StringIO()
         with patch("builtins.print", side_effect=lambda *args, **kwargs: captured.write(str(args))):
@@ -272,7 +272,7 @@ class TestCLIProgressHandlerInit:
     @pytest.mark.unit
     def test_initializes_with_no_progress_bar(self) -> None:
         """CLIProgressHandler should start with no progress bar."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -281,7 +281,7 @@ class TestCLIProgressHandlerInit:
     @pytest.mark.unit
     def test_is_available_returns_true(self) -> None:
         """is_available should always return True for CLI."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -294,7 +294,7 @@ class TestCLIProgressHandlerStart:
     @pytest.mark.unit
     def test_start_creates_progress_bar(self) -> None:
         """start should create a CLIProgressBar."""
-        from ClassicLib.MessageHandler.progress.cli_progress import (
+        from ClassicLib.messaging.progress.cli_progress import (
             CLIProgressBar,
             CLIProgressHandler,
         )
@@ -309,7 +309,7 @@ class TestCLIProgressHandlerStart:
     @pytest.mark.unit
     def test_start_resets_cancelled_flag(self) -> None:
         """start should reset the cancelled flag."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
         handler._cancelled = True
@@ -326,7 +326,7 @@ class TestCLIProgressHandlerUpdate:
     @pytest.mark.unit
     def test_update_does_nothing_without_start(self) -> None:
         """update should do nothing if start wasn't called."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -338,7 +338,7 @@ class TestCLIProgressHandlerUpdate:
     @pytest.mark.unit
     def test_update_updates_progress_bar(self) -> None:
         """update should update the progress bar."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -353,7 +353,7 @@ class TestCLIProgressHandlerUpdate:
     @pytest.mark.unit
     def test_update_changes_description(self) -> None:
         """update should update description if provided."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -368,7 +368,7 @@ class TestCLIProgressHandlerUpdate:
     @pytest.mark.unit
     def test_update_throttles_visual_updates(self) -> None:
         """update should throttle visual updates but track count."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -390,7 +390,7 @@ class TestCLIProgressHandlerClose:
     @pytest.mark.unit
     def test_close_closes_progress_bar(self) -> None:
         """close should close the progress bar."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -403,7 +403,7 @@ class TestCLIProgressHandlerClose:
     @pytest.mark.unit
     def test_close_does_nothing_without_start(self) -> None:
         """close should do nothing if start wasn't called."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -419,7 +419,7 @@ class TestCLIProgressHandlerWasCancelled:
     @pytest.mark.unit
     def test_was_cancelled_returns_false_by_default(self) -> None:
         """was_cancelled should return False by default."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
 
@@ -428,7 +428,7 @@ class TestCLIProgressHandlerWasCancelled:
     @pytest.mark.unit
     def test_was_cancelled_returns_internal_flag(self) -> None:
         """was_cancelled should return the internal cancelled flag."""
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = CLIProgressHandler()
         handler._cancelled = True
@@ -445,8 +445,8 @@ class TestProgressContextInit:
     @pytest.mark.unit
     def test_stores_handler_reference(self) -> None:
         """ProgressContext should store handler reference."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test", total=100)
@@ -456,8 +456,8 @@ class TestProgressContextInit:
     @pytest.mark.unit
     def test_stores_description(self) -> None:
         """ProgressContext should store description."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Processing files", total=50)
@@ -467,8 +467,8 @@ class TestProgressContextInit:
     @pytest.mark.unit
     def test_stores_total(self) -> None:
         """ProgressContext should store total."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test", total=200)
@@ -478,8 +478,8 @@ class TestProgressContextInit:
     @pytest.mark.unit
     def test_initializes_current_to_zero(self) -> None:
         """ProgressContext should initialize current to 0."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test")
@@ -493,8 +493,8 @@ class TestProgressContextEnterExit:
     @pytest.mark.unit
     def test_enter_returns_self(self) -> None:
         """__enter__ should return self."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test")
@@ -507,8 +507,8 @@ class TestProgressContextEnterExit:
     @pytest.mark.unit
     def test_enter_starts_progress_handler(self) -> None:
         """__enter__ should start the progress handler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         mock_progress_handler = MagicMock()
@@ -525,8 +525,8 @@ class TestProgressContextEnterExit:
     @pytest.mark.unit
     def test_exit_closes_progress_handler(self) -> None:
         """__exit__ should close the progress handler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         mock_progress_handler = MagicMock()
@@ -544,8 +544,8 @@ class TestProgressContextEnterExit:
     @pytest.mark.unit
     def test_exit_handles_no_progress_handler(self) -> None:
         """__exit__ should handle case where no progress handler was created."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test")
@@ -562,8 +562,8 @@ class TestProgressContextUpdate:
     @pytest.mark.unit
     def test_update_increments_current(self) -> None:
         """update should increment current counter."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test")
@@ -575,8 +575,8 @@ class TestProgressContextUpdate:
     @pytest.mark.unit
     def test_update_delegates_to_progress_handler(self) -> None:
         """update should delegate to progress handler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         mock_progress_handler = MagicMock()
@@ -598,8 +598,8 @@ class TestProgressContextWasCancelled:
     @pytest.mark.unit
     def test_was_cancelled_returns_false_without_handler(self) -> None:
         """was_cancelled should return False when no progress handler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         context = ProgressContext(handler, "Test")
@@ -609,8 +609,8 @@ class TestProgressContextWasCancelled:
     @pytest.mark.unit
     def test_was_cancelled_delegates_to_progress_handler(self) -> None:
         """was_cancelled should delegate to progress handler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
         mock_progress_handler = MagicMock()
@@ -633,8 +633,8 @@ class TestProgressContextCLIDisabled:
     @pytest.mark.unit
     def test_skips_progress_when_cli_disabled(self) -> None:
         """Progress should be skipped when CLI progress is disabled."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler(is_gui_mode=False)
         mock_create = MagicMock()
@@ -651,10 +651,10 @@ class TestProgressContextCLIDisabled:
     @pytest.mark.unit
     def test_check_cli_progress_disabled_handles_import_error(self) -> None:
         """_check_cli_progress_disabled should handle ImportError."""
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         with patch(
-            "ClassicLib.MessageHandler.progress.context.ProgressContext._check_cli_progress_disabled",
+            "ClassicLib.messaging.progress.context.ProgressContext._check_cli_progress_disabled",
             return_value=False,
         ):
             # Original function handles import errors
@@ -666,10 +666,10 @@ class TestProgressContextCLIDisabled:
     @pytest.mark.unit
     def test_check_cli_progress_disabled_returns_setting(self) -> None:
         """_check_cli_progress_disabled should return setting value."""
-        with patch("ClassicLib.YamlSettings.classic_settings") as mock_settings:
+        with patch("ClassicLib.io.yaml.classic_settings") as mock_settings:
             mock_settings.return_value = True
 
-            from ClassicLib.MessageHandler.progress.context import ProgressContext
+            from ClassicLib.messaging.progress.context import ProgressContext
 
             result = ProgressContext._check_cli_progress_disabled()
 
@@ -686,13 +686,13 @@ class TestProgressIntegration:
     @pytest.mark.unit
     def test_context_manager_works_with_handler(self) -> None:
         """Progress context should work as context manager with handler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
         with patch("builtins.print"):
             with patch(
-                "ClassicLib.MessageHandler.progress.context.ProgressContext._check_cli_progress_disabled",
+                "ClassicLib.messaging.progress.context.ProgressContext._check_cli_progress_disabled",
                 return_value=True,
             ):
                 with handler.progress_context("Test", total=10) as progress:
@@ -704,13 +704,13 @@ class TestProgressIntegration:
     @pytest.mark.unit
     def test_progress_tracks_cumulative_updates(self) -> None:
         """Progress should track cumulative updates."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
         with patch("builtins.print"):
             with patch(
-                "ClassicLib.MessageHandler.progress.context.ProgressContext._check_cli_progress_disabled",
+                "ClassicLib.messaging.progress.context.ProgressContext._check_cli_progress_disabled",
                 return_value=True,
             ):
                 with handler.progress_context("Processing", total=100) as progress:

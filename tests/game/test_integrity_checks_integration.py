@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.SetupCoordinator import SetupCoordinator
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.setup import SetupCoordinator
 
 pytestmark = [pytest.mark.unit]
 
@@ -26,10 +26,10 @@ class TestIntegrityChecks:
         # Reset registry state
         GlobalRegistry._registry = {}
 
-    @patch("ClassicLib.GameIntegrity.GameIntegrityChecker.run_full_check")
-    @patch("ClassicLib.SetupCoordinator.xse_check_integrity")
-    @patch("ClassicLib.SetupCoordinator.xse_check_hashes")
-    @patch("ClassicLib.DocumentsChecker.DocumentsChecker.run_all_checks")
+    @patch("ClassicLib.support.integrity.GameIntegrityChecker.run_full_check")
+    @patch("ClassicLib.support.setup.xse_check_integrity")
+    @patch("ClassicLib.support.setup.xse_check_hashes")
+    @patch("ClassicLib.support.documents.DocumentsChecker.run_all_checks")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_combined_results(
         self,
@@ -62,10 +62,10 @@ class TestIntegrityChecks:
         assert "Hashes OK" in result
         assert "Docs OK" in result
 
-    @patch("ClassicLib.GameIntegrity.GameIntegrityChecker.run_full_check")
-    @patch("ClassicLib.SetupCoordinator.xse_check_integrity")
-    @patch("ClassicLib.SetupCoordinator.xse_check_hashes")
-    @patch("ClassicLib.DocumentsChecker.DocumentsChecker.run_all_checks")
+    @patch("ClassicLib.support.integrity.GameIntegrityChecker.run_full_check")
+    @patch("ClassicLib.support.setup.xse_check_integrity")
+    @patch("ClassicLib.support.setup.xse_check_hashes")
+    @patch("ClassicLib.support.documents.DocumentsChecker.run_all_checks")
     @patch.object(GlobalRegistry, "get_game", return_value="SkyrimSE")
     def test_generate_combined_results_different_game(
         self,
@@ -90,10 +90,10 @@ class TestIntegrityChecks:
         mock_get_game.assert_called_once()
         assert "Skyrim OK" in result
 
-    @patch("ClassicLib.GameIntegrity.GameIntegrityChecker.run_full_check", side_effect=Exception("Check failed"))
-    @patch("ClassicLib.SetupCoordinator.xse_check_integrity")
-    @patch("ClassicLib.SetupCoordinator.xse_check_hashes")
-    @patch("ClassicLib.DocumentsChecker.DocumentsChecker.run_all_checks")
+    @patch("ClassicLib.support.integrity.GameIntegrityChecker.run_full_check", side_effect=Exception("Check failed"))
+    @patch("ClassicLib.support.setup.xse_check_integrity")
+    @patch("ClassicLib.support.setup.xse_check_hashes")
+    @patch("ClassicLib.support.documents.DocumentsChecker.run_all_checks")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_combined_results_exception(
         self,

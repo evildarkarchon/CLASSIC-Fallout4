@@ -120,31 +120,6 @@ class TestPerformanceBenchmarks:
 
         return datasets
 
-    @pytest.fixture
-    def mock_yamldata(self) -> Mock:
-        """Mock YAML data optimized for performance testing."""
-        mock_yaml = Mock()
-        mock_yaml.game_type = "fallout4"
-        mock_yaml.crashgen_name = "Buffout 4"
-        mock_yaml.xse_acronym = "F4SE"
-        mock_yaml.game_root_name = "Fallout 4"
-        mock_yaml.problematic_plugins = {}  # Keep empty for performance focus
-        mock_yaml.formid_database_enabled = True
-        mock_yaml.show_formid_values = True
-        mock_yaml.record_patterns = ["TESForm", "BGSKeyword"]  # Minimal for performance
-
-        # Initialize list attributes
-        mock_yaml.game_ignore_plugins = []
-        mock_yaml.game_ignore_records = []
-        mock_yaml.ignore_list = []
-        mock_yaml.classic_records_list = []
-        mock_yaml.plugins_mods_to_check = {}
-        mock_yaml.classic_version = "7.31.0"
-        mock_yaml.crashgen_latest_og = "1.28.6"
-        mock_yaml.crashgen_latest_vr = "1.28.6"
-
-        return mock_yaml
-
     def test_parser_performance_scaling(self, performance_test_data, mock_yamldata):
         """
         Test parser performance scaling across different data sizes.

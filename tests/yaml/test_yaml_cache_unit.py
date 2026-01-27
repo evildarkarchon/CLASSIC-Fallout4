@@ -27,9 +27,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from _pytest.fixtures import SubRequest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import YamlSettingsCache
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.io.yaml import YamlSettingsCache
 
 pytestmark = pytest.mark.unit
 
@@ -136,17 +136,17 @@ class TestSingletonBehavior:
         This ensures backward compatibility with code that imports yaml_cache directly.
         Note: The module-level yaml_cache is created at import time using get_instance().
         """
-        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
         print(f"DEBUG: YamlSettingsCacheModule type: {type(YamlSettingsCacheModule)}")
-        print(f"DEBUG: sys.modules['ClassicLib.YamlSettings']: {sys.modules.get('ClassicLib.YamlSettings')}")
+        print(f"DEBUG: sys.modules['ClassicLib.io.yaml']: {sys.modules.get('ClassicLib.io.yaml')}")
 
         # Get the singleton instance AFTER import
         singleton_instance = YamlSettingsCache.get_instance()
 
         # Handle case where it might resolve to class (though it shouldn't)
         if isinstance(YamlSettingsCacheModule, type):
-            pytest.fail(f"ClassicLib.YamlSettings resolved to a class: {YamlSettingsCacheModule}")
+            pytest.fail(f"ClassicLib.io.yaml resolved to a class: {YamlSettingsCacheModule}")
 
         module_cache = getattr(YamlSettingsCacheModule, "yaml_cache", None)
         assert module_cache is not None, "yaml_cache not found in module"
@@ -219,7 +219,7 @@ class TestFixtureIsolation:
         outer_instance = clean_yaml_cache_singleton
 
         # Simulate nested fixture usage
-        with patch("ClassicLib.YamlSettings.YamlSettingsCache._instance", None):
+        with patch("ClassicLib.io.yaml.YamlSettingsCache._instance", None):
             nested_instance = YamlSettingsCache.get_instance()
             assert nested_instance is not outer_instance
 
@@ -275,9 +275,9 @@ class TestBackwardCompatibility:
 
         mock_cache.async_yaml_settings = mock_async_yaml_settings
 
-        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
-        with patch("ClassicLib.YamlSettings.sync.convenience._get_yaml_cache", return_value=mock_cache):
+        with patch("ClassicLib.io.yaml.sync.convenience._get_yaml_cache", return_value=mock_cache):
             result = YamlSettingsCacheModule.yaml_settings(str, YAML.TEST, "test.key")
             assert result == "value"
 
@@ -291,7 +291,7 @@ class TestBackwardCompatibility:
         The singleton should be properly registered in GlobalRegistry for
         other components to access.
         """
-        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
         # Accessing an attribute on the proxy triggers _get_yaml_cache() which registers
         _ = getattr(YamlSettingsCacheModule.yaml_cache, "any_attribute", None)
@@ -309,7 +309,7 @@ class TestBackwardCompatibility:
         """
         mock_yaml_settings.return_value = "mocked_value"
 
-        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
         result = YamlSettingsCacheModule.yaml_settings(str, YAML.TEST, "any.key")
         assert result == "mocked_value"
@@ -368,9 +368,9 @@ class TestRegressionScenarios:
         """
         Test that import order doesn't affect singleton behavior.
         """
-        import ClassicLib.YamlSettings
-        from ClassicLib.YamlSettings import YamlSettingsCache as Cache1
-        from ClassicLib.YamlSettings import YamlSettingsCache as Cache2
+        import ClassicLib.io.yaml
+        from ClassicLib.io.yaml import YamlSettingsCache as Cache1
+        from ClassicLib.io.yaml import YamlSettingsCache as Cache2
 
         assert Cache1 is Cache2
 
@@ -379,7 +379,7 @@ class TestRegressionScenarios:
 
         assert instance1 is instance2
 
-        proxy = ClassicLib.YamlSettings.yaml_cache
+        proxy = ClassicLib.io.yaml.yaml_cache
         assert proxy._get_bridge() is instance1._get_bridge()
 
     def test_fixture_interaction_with_real_async(self, clean_yaml_cache_singleton) -> None:

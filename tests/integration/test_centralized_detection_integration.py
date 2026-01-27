@@ -115,16 +115,16 @@ def test_runtime_diagnostics_print(capsys):
 def test_wrapper_modules_use_centralized_detection():
     """Verify wrapper modules use centralized detection."""
     # Import all wrapper modules and check they work
-    from ClassicLib.Database.rust_pool import RUST_AVAILABLE as database_avail
-    from ClassicLib.rust.fcx_rust import RUST_AVAILABLE as fcx_avail
-    from ClassicLib.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
-    from ClassicLib.rust.gpu_rust import RUST_AVAILABLE as gpu_avail
-    from ClassicLib.rust.mod_detector_rust import RUST_AVAILABLE as mod_avail
-    from ClassicLib.rust.orchestrator_api import RUST_AVAILABLE as orch_avail
-    from ClassicLib.rust.parser_rust import RustLogParser
-    from ClassicLib.rust.report_rust import RUST_AVAILABLE as report_avail
-    from ClassicLib.rust.settings_rust import RUST_AVAILABLE as settings_avail
-    from ClassicLib.rust.suspect_rust import RUST_AVAILABLE as suspect_avail
+    from ClassicLib.integration.rust.fcx_rust import RUST_AVAILABLE as fcx_avail
+    from ClassicLib.integration.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
+    from ClassicLib.integration.rust.gpu_rust import RUST_AVAILABLE as gpu_avail
+    from ClassicLib.integration.rust.mod_detector_rust import RUST_AVAILABLE as mod_avail
+    from ClassicLib.integration.rust.orchestrator_api import RUST_AVAILABLE as orch_avail
+    from ClassicLib.integration.rust.parser_rust import RustLogParser
+    from ClassicLib.integration.rust.report_rust import RUST_AVAILABLE as report_avail
+    from ClassicLib.integration.rust.settings_rust import RUST_AVAILABLE as settings_avail
+    from ClassicLib.integration.rust.suspect_rust import RUST_AVAILABLE as suspect_avail
+    from ClassicLib.io.database.rust_pool import RUST_AVAILABLE as database_avail
 
     # All should be True in test environment with Rust built
     assert file_io_avail is True

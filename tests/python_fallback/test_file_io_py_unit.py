@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.python.file_io_py import PythonFileIO
+    from ClassicLib.integration.python.file_io_py import PythonFileIO
 
 # ============================================================================
 # Fixtures
@@ -28,7 +28,7 @@ def file_io() -> "PythonFileIO":
     Returns:
         PythonFileIO instance with default settings.
     """
-    from ClassicLib.python.file_io_py import PythonFileIO
+    from ClassicLib.integration.python.file_io_py import PythonFileIO
 
     return PythonFileIO()
 
@@ -40,7 +40,7 @@ def file_io_custom_encoding() -> "PythonFileIO":
     Returns:
         PythonFileIO instance with custom encoding settings.
     """
-    from ClassicLib.python.file_io_py import PythonFileIO
+    from ClassicLib.integration.python.file_io_py import PythonFileIO
 
     return PythonFileIO(encoding="latin-1", errors="replace")
 
@@ -102,7 +102,7 @@ class TestPythonFileIOInit:
     @pytest.mark.unit
     def test_init_default_encoding(self) -> None:
         """Test default encoding is UTF-8."""
-        from ClassicLib.python.file_io_py import PythonFileIO
+        from ClassicLib.integration.python.file_io_py import PythonFileIO
 
         io = PythonFileIO()
 
@@ -112,7 +112,7 @@ class TestPythonFileIOInit:
     @pytest.mark.unit
     def test_init_custom_encoding(self) -> None:
         """Test custom encoding can be specified."""
-        from ClassicLib.python.file_io_py import PythonFileIO
+        from ClassicLib.integration.python.file_io_py import PythonFileIO
 
         io = PythonFileIO(encoding="latin-1", errors="replace")
 
@@ -173,9 +173,9 @@ class TestReadFile:
     @pytest.mark.asyncio
     async def test_read_file_tries_encoding_detection(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_file attempts encoding detection first."""
-        with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
+        with patch("ClassicLib.integration.python.file_io_py.AIOFILES_AVAILABLE", False):
             # Mock the encoding detection import to fail
-            with patch.dict("sys.modules", {"ClassicLib.FileIO.Async": None}):
+            with patch.dict("sys.modules", {"ClassicLib.io.files.Async": None}):
                 content = await file_io.read_file(temp_text_file)
 
         assert "Line 1" in content
@@ -575,7 +575,7 @@ class TestFileIOCoreAlias:
     @pytest.mark.unit
     def test_file_io_core_alias_exists(self) -> None:
         """Test FileIOCore is an alias for PythonFileIO."""
-        from ClassicLib.python.file_io_py import FileIOCore, PythonFileIO
+        from ClassicLib.integration.python.file_io_py import FileIOCore, PythonFileIO
 
         assert FileIOCore is PythonFileIO
 
@@ -592,7 +592,7 @@ class TestAiofilesFallback:
     @pytest.mark.asyncio
     async def test_read_file_without_aiofiles(self, file_io: "PythonFileIO", temp_text_file: Path) -> None:
         """Test read_file works without aiofiles."""
-        with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
+        with patch("ClassicLib.integration.python.file_io_py.AIOFILES_AVAILABLE", False):
             content = await file_io.read_file(temp_text_file)
 
         assert "Line 1" in content
@@ -603,7 +603,7 @@ class TestAiofilesFallback:
         """Test write_file works without aiofiles."""
         file_path = tmp_path / "test.txt"
 
-        with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
+        with patch("ClassicLib.integration.python.file_io_py.AIOFILES_AVAILABLE", False):
             await file_io.write_file(file_path, "Test content")
 
         assert file_path.read_text() == "Test content"
@@ -612,7 +612,7 @@ class TestAiofilesFallback:
     @pytest.mark.asyncio
     async def test_read_bytes_without_aiofiles(self, file_io: "PythonFileIO", temp_binary_file: Path) -> None:
         """Test read_bytes works without aiofiles."""
-        with patch("ClassicLib.python.file_io_py.AIOFILES_AVAILABLE", False):
+        with patch("ClassicLib.integration.python.file_io_py.AIOFILES_AVAILABLE", False):
             data = await file_io.read_bytes(temp_binary_file)
 
         assert data == b"\x00\x01\x02\x03\x04"

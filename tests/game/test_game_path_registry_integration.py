@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.GamePath import _game_path_find_registry
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.game_path import _game_path_find_registry
 
 pytestmark = pytest.mark.integration
 
@@ -21,7 +21,7 @@ class TestRegistryDetection:
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx")
     @patch("winreg.CloseKey")
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache")
+    @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "register")
@@ -53,7 +53,7 @@ class TestRegistryDetection:
     @patch("winreg.OpenKey", side_effect=[FileNotFoundError, MagicMock()])
     @patch("winreg.QueryValueEx")
     @patch("winreg.CloseKey")
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache")
+    @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "register")

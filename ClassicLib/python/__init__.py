@@ -1,47 +1,18 @@
-"""Pure Python implementations serving as fallbacks.
+"""Backward compatibility module for python.
 
-This module contains pure Python implementations that serve as fallbacks
-when Rust acceleration is not available. These implementations maintain
-full API compatibility with their Rust counterparts and ensure the
-application works in all environments.
+This package has been moved to ClassicLib.integration.python.
+All imports are re-exported for backward compatibility.
 
-These components are also used for development and testing scenarios
-where deterministic Python behavior is required.
+.. deprecated::
+    Import from ClassicLib.integration.python instead.
 """
 
-from ClassicLib.python.database_py import PythonDatabasePool
-from ClassicLib.python.file_io_py import PythonFileIO
-from ClassicLib.python.formid_py import PythonFormIDAnalyzer
-from ClassicLib.python.mod_detector_py import (
-    detect_mods_double,
-    detect_mods_important,
-    detect_mods_single,
-)
-from ClassicLib.python.parser_py import (
-    extract_module_names,
-    extract_segments,
-    find_segments,
-    parse_crash_header,
-)
-from ClassicLib.python.plugin_py import PythonPluginAnalyzer
-from ClassicLib.python.record_py import PythonRecordScanner
-from ClassicLib.python.report_py import PythonReportGenerator
+import warnings
 
-__all__ = [
-    # Core classes
-    "PythonDatabasePool",
-    "PythonFileIO",
-    "PythonFormIDAnalyzer",
-    "PythonPluginAnalyzer",
-    "PythonRecordScanner",
-    "PythonReportGenerator",
-    # Parser functions
-    "parse_crash_header",
-    "extract_segments",
-    "find_segments",
-    "extract_module_names",
-    # Mod detector functions
-    "detect_mods_single",
-    "detect_mods_double",
-    "detect_mods_important",
-]
+warnings.warn(
+    "ClassicLib.python is deprecated, import from ClassicLib.integration.python instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.integration.python import *  # noqa: F403, E402

@@ -34,7 +34,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_creation(self, qtbot):
         """Test ReportListWidget can be created."""
-        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -46,7 +46,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_populate(self, qtbot):
         """Test populating the report list."""
-        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -70,7 +70,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_filter(self, qtbot):
         """Test filtering reports by search text."""
-        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -96,7 +96,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_get_report_path(self, qtbot):
         """Test getting report path from list item."""
-        from ClassicLib.Interface.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -125,7 +125,7 @@ class TestMarkdownViewerQt:
     @pytest.mark.unit
     def test_markdown_viewer_creation(self, qtbot):
         """Test MarkdownViewer can be created."""
-        from ClassicLib.Interface.ResultsViewer import MarkdownViewer
+        from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 
         viewer = MarkdownViewer()
         qtbot.addWidget(viewer)
@@ -136,7 +136,7 @@ class TestMarkdownViewerQt:
     @pytest.mark.unit
     def test_markdown_viewer_set_markdown(self, qtbot):
         """Test setting markdown content."""
-        from ClassicLib.Interface.ResultsViewer import MarkdownViewer
+        from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 
         viewer = MarkdownViewer()
         qtbot.addWidget(viewer)
@@ -149,7 +149,7 @@ class TestMarkdownViewerQt:
     @pytest.mark.unit
     def test_markdown_viewer_zoom_in(self, qtbot):
         """Test zoom in functionality."""
-        from ClassicLib.Interface.ResultsViewer import MarkdownViewer
+        from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 
         viewer = MarkdownViewer()
         qtbot.addWidget(viewer)
@@ -162,7 +162,7 @@ class TestMarkdownViewerQt:
     @pytest.mark.unit
     def test_markdown_viewer_zoom_out(self, qtbot):
         """Test zoom out functionality."""
-        from ClassicLib.Interface.ResultsViewer import MarkdownViewer
+        from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 
         viewer = MarkdownViewer()
         qtbot.addWidget(viewer)
@@ -175,7 +175,7 @@ class TestMarkdownViewerQt:
     @pytest.mark.unit
     def test_markdown_viewer_zoom_reset(self, qtbot):
         """Test zoom reset functionality."""
-        from ClassicLib.Interface.ResultsViewer import MarkdownViewer
+        from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 
         viewer = MarkdownViewer()
         qtbot.addWidget(viewer)
@@ -189,7 +189,7 @@ class TestMarkdownViewerQt:
     @pytest.mark.unit
     def test_markdown_viewer_zoom_limits(self, qtbot):
         """Test zoom level limits."""
-        from ClassicLib.Interface.ResultsViewer import MarkdownViewer
+        from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 
         viewer = MarkdownViewer()
         qtbot.addWidget(viewer)
@@ -217,7 +217,7 @@ class TestReportMetadataWidgetQt:
     @pytest.mark.unit
     def test_metadata_widget_creation(self, qtbot):
         """Test ReportMetadataWidget can be created."""
-        from ClassicLib.Interface.ResultsViewer import ReportMetadataWidget
+        from ClassicLib.Interface.widgets.metadata_widget import ReportMetadataWidget
 
         widget = ReportMetadataWidget()
         qtbot.addWidget(widget)
@@ -230,7 +230,7 @@ class TestReportMetadataWidgetQt:
     @pytest.mark.unit
     def test_metadata_widget_update(self, qtbot):
         """Test updating metadata display."""
-        from ClassicLib.Interface.ResultsViewer import ReportMetadataWidget
+        from ClassicLib.Interface.widgets.metadata_widget import ReportMetadataWidget
 
         widget = ReportMetadataWidget()
         qtbot.addWidget(widget)
@@ -255,7 +255,7 @@ class TestReportMetadataWidgetQt:
     @pytest.mark.unit
     def test_metadata_widget_clear(self, qtbot):
         """Test clearing metadata display."""
-        from ClassicLib.Interface.ResultsViewer import ReportMetadataWidget
+        from ClassicLib.Interface.widgets.metadata_widget import ReportMetadataWidget
 
         widget = ReportMetadataWidget()
         qtbot.addWidget(widget)

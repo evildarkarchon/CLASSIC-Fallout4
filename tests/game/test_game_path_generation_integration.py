@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.GamePath import game_generate_paths
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.game_path import game_generate_paths
 
 pytestmark = pytest.mark.integration
 
@@ -19,8 +19,8 @@ pytestmark = pytest.mark.integration
 class TestGamePathGeneration:
     """Tests for game path generation functionality."""
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_generate_paths_fallout4_vr(

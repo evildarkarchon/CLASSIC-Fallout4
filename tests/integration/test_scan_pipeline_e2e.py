@@ -179,10 +179,11 @@ class TestScanPipelineE2E:
     @pytest.fixture
     async def setup_pipeline(self):
         """Setup the complete pipeline with all components."""
-        from ClassicLib.AsyncBridge import AsyncBridge
-        from ClassicLib.FileIO import FileIOCore
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+        from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+
+        from ClassicLib.core.async_bridge import AsyncBridge
+        from ClassicLib.io.files import FileIOCore
+        from ClassicLib.messaging.handler import MessageHandler
 
         # Clear AsyncBridge singleton instances properly
         # Note: MessageHandler is not a singleton anymore, no cleanup needed

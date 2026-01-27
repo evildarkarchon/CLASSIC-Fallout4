@@ -18,12 +18,12 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
 from classic_scanlog import FormIDAnalyzer, LogParser, PatternMatcher
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
 # Import components to test
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.FileIO import FileIOCore
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.YamlSettings import yaml_cache
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.io.files import FileIOCore
+from ClassicLib.io.yaml import yaml_cache
 
 
 @pytest.mark.stress
@@ -178,7 +178,7 @@ class TestMemoryLeakDetection:
         fresh_memory_tracker.start_tracking()
 
         # Reset singleton to start fresh
-        from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache as YSC
+        from ClassicLib.io.yaml.sync.cache import YamlSettingsCache as YSC
 
         YSC._instance = None
         fresh_memory_tracker.take_measurement("cache_cleared")

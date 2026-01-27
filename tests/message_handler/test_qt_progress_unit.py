@@ -26,7 +26,7 @@ class TestQtProgressHandlerInit:
     @pytest.mark.gui
     def test_initializes_with_no_parent(self, qt_application) -> None:
         """QtProgressHandler should initialize without a parent widget."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -40,7 +40,7 @@ class TestQtProgressHandlerInit:
     @pytest.mark.gui
     def test_initializes_with_parent_widget(self, qt_parent_widget) -> None:
         """QtProgressHandler should store parent widget reference."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
 
@@ -50,7 +50,7 @@ class TestQtProgressHandlerInit:
     @pytest.mark.gui
     def test_connects_signals_on_init(self, qt_application) -> None:
         """QtProgressHandler should connect signals to slots on init."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -75,7 +75,7 @@ class TestQtProgressHandlerIsMainThread:
     @pytest.mark.gui
     def test_returns_true_on_main_thread(self, qt_application) -> None:
         """_is_main_thread should return True when on main Qt thread."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -86,7 +86,7 @@ class TestQtProgressHandlerIsMainThread:
     @pytest.mark.gui
     def test_returns_false_when_no_app(self, qt_application) -> None:
         """_is_main_thread should return False when QApplication is None."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -97,7 +97,7 @@ class TestQtProgressHandlerIsMainThread:
     @pytest.mark.gui
     def test_handles_import_error(self, qt_application) -> None:
         """_is_main_thread should return False on ImportError."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -111,7 +111,7 @@ class TestQtProgressHandlerIsMainThread:
     @pytest.mark.gui
     def test_handles_runtime_error(self, qt_application) -> None:
         """_is_main_thread should return False on RuntimeError."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -132,7 +132,7 @@ class TestQtProgressHandlerStart:
     @pytest.mark.gui
     def test_start_resets_cancelled_flag(self, qt_application) -> None:
         """start should reset the cancelled flag."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._cancelled = True
@@ -145,7 +145,7 @@ class TestQtProgressHandlerStart:
     @pytest.mark.gui
     def test_start_resets_current_to_zero(self, qt_application) -> None:
         """start should reset current counter to zero."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._current = 50
@@ -158,7 +158,7 @@ class TestQtProgressHandlerStart:
     @pytest.mark.gui
     def test_start_stores_total(self, qt_application) -> None:
         """start should store the total value."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -170,7 +170,7 @@ class TestQtProgressHandlerStart:
     @pytest.mark.gui
     def test_start_handles_none_total_for_indeterminate(self, qt_application) -> None:
         """start should handle None total for indeterminate progress."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -182,7 +182,7 @@ class TestQtProgressHandlerStart:
     @pytest.mark.gui
     def test_start_emits_create_signal(self, qt_application) -> None:
         """start should emit progress_create_signal."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         signal_spy = MagicMock()
@@ -208,7 +208,7 @@ class TestQtProgressHandlerCreateDialog:
         """_create_dialog should create a QProgressDialog."""
         from PySide6.QtWidgets import QProgressDialog
 
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test Operation", 100)
@@ -223,7 +223,7 @@ class TestQtProgressHandlerCreateDialog:
     @pytest.mark.gui
     def test_create_dialog_resets_cancelled_flag(self, qt_parent_widget) -> None:
         """_create_dialog should reset cancelled flag."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._cancelled = True
@@ -239,7 +239,7 @@ class TestQtProgressHandlerCreateDialog:
     @pytest.mark.gui
     def test_create_dialog_sets_indeterminate_for_zero_total(self, qt_parent_widget) -> None:
         """_create_dialog should set indeterminate mode when total is 0."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Scanning", 0)
@@ -256,7 +256,7 @@ class TestQtProgressHandlerCreateDialog:
     @pytest.mark.gui
     def test_create_dialog_sets_window_title(self, qt_parent_widget) -> None:
         """_create_dialog should set window title to 'Progress'."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test", 100)
@@ -277,7 +277,7 @@ class TestQtProgressHandlerUpdate:
     @pytest.mark.gui
     def test_update_increments_current(self, qt_application) -> None:
         """update should increment current by n."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._total = 100
@@ -291,7 +291,7 @@ class TestQtProgressHandlerUpdate:
     @pytest.mark.gui
     def test_update_increments_by_one_by_default(self, qt_application) -> None:
         """update should increment by 1 when n not specified."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._total = 100
@@ -305,7 +305,7 @@ class TestQtProgressHandlerUpdate:
     @pytest.mark.gui
     def test_update_throttles_signal_emission(self, qt_application) -> None:
         """update should throttle signal emission for performance."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._total = 1000
@@ -330,7 +330,7 @@ class TestQtProgressHandlerUpdate:
     @pytest.mark.gui
     def test_update_always_emits_for_final_item(self, qt_application) -> None:
         """update should always emit signal for final item."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._total = 10
@@ -358,7 +358,7 @@ class TestQtProgressHandlerUpdateDialog:
     @pytest.mark.gui
     def test_update_dialog_does_nothing_when_no_dialog(self, qt_application) -> None:
         """_update_dialog should do nothing when dialog is None."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -369,7 +369,7 @@ class TestQtProgressHandlerUpdateDialog:
     @pytest.mark.gui
     def test_update_dialog_sets_value(self, qt_parent_widget) -> None:
         """_update_dialog should set dialog value."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test", 100)
@@ -385,7 +385,7 @@ class TestQtProgressHandlerUpdateDialog:
     @pytest.mark.gui
     def test_update_dialog_sets_label_text_when_provided(self, qt_parent_widget) -> None:
         """_update_dialog should set label text when description provided."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Initial", 100)
@@ -401,7 +401,7 @@ class TestQtProgressHandlerUpdateDialog:
     @pytest.mark.gui
     def test_update_dialog_detects_cancellation(self, qt_parent_widget) -> None:
         """_update_dialog should detect user cancellation."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test", 100)
@@ -427,7 +427,7 @@ class TestQtProgressHandlerClose:
     @pytest.mark.gui
     def test_close_emits_close_signal(self, qt_application) -> None:
         """close should emit progress_close_signal."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         signal_spy = MagicMock()
@@ -450,7 +450,7 @@ class TestQtProgressHandlerCloseDialog:
     @pytest.mark.gui
     def test_close_dialog_hides_and_clears_dialog(self, qt_parent_widget) -> None:
         """_close_dialog should hide and clear the dialog."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test", 100)
@@ -463,7 +463,7 @@ class TestQtProgressHandlerCloseDialog:
     @pytest.mark.gui
     def test_close_dialog_resets_state(self, qt_parent_widget) -> None:
         """_close_dialog should reset cancelled and current state."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test", 100)
@@ -479,7 +479,7 @@ class TestQtProgressHandlerCloseDialog:
     @pytest.mark.gui
     def test_close_dialog_does_nothing_when_no_dialog(self, qt_application) -> None:
         """_close_dialog should do nothing when dialog is None."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -499,7 +499,7 @@ class TestQtProgressHandlerWasCancelled:
     @pytest.mark.gui
     def test_was_cancelled_returns_false_by_default(self, qt_application) -> None:
         """was_cancelled should return False by default."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -509,7 +509,7 @@ class TestQtProgressHandlerWasCancelled:
     @pytest.mark.gui
     def test_was_cancelled_returns_internal_flag(self, qt_application) -> None:
         """was_cancelled should return the internal cancelled flag."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._cancelled = True
@@ -520,7 +520,7 @@ class TestQtProgressHandlerWasCancelled:
     @pytest.mark.gui
     def test_was_cancelled_checks_dialog_on_main_thread(self, qt_parent_widget) -> None:
         """was_cancelled should check dialog directly on main thread."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler(parent=qt_parent_widget)
         handler._create_dialog("Test", 100)
@@ -546,7 +546,7 @@ class TestQtProgressHandlerIsAvailable:
     @pytest.mark.gui
     def test_is_available_returns_true_with_app(self, qt_application) -> None:
         """is_available should return True when QApplication exists."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -556,7 +556,7 @@ class TestQtProgressHandlerIsAvailable:
     @pytest.mark.gui
     def test_is_available_returns_false_without_app(self, qt_application) -> None:
         """is_available should return False when QApplication is None."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -567,7 +567,7 @@ class TestQtProgressHandlerIsAvailable:
     @pytest.mark.gui
     def test_is_available_handles_import_error(self, qt_application) -> None:
         """is_available should return False on ImportError."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -588,7 +588,7 @@ class TestQtProgressHandlerSetParent:
     @pytest.mark.gui
     def test_set_parent_updates_parent_widget(self, qt_parent_widget) -> None:
         """set_parent should update the parent widget."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         assert handler._parent is None
@@ -603,7 +603,7 @@ class TestQtProgressHandlerSetParent:
         """set_parent should accept None."""
         from PySide6.QtWidgets import QWidget
 
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         widget = QWidget()
         handler = QtProgressHandler(parent=widget)
@@ -627,8 +627,8 @@ class TestQtProgressHandlerProtocol:
     @pytest.mark.gui
     def test_implements_progress_handler_protocol(self, qt_application) -> None:
         """QtProgressHandler should implement ProgressHandler protocol."""
-        from ClassicLib.MessageHandler.progress.base import ProgressHandler
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.base import ProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -639,7 +639,7 @@ class TestQtProgressHandlerProtocol:
     @pytest.mark.gui
     def test_has_required_methods(self, qt_application) -> None:
         """QtProgressHandler should have all required protocol methods."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -665,7 +665,7 @@ class TestQtProgressHandlerThrottling:
     @pytest.mark.gui
     def test_throttle_interval_is_configured(self, qt_application) -> None:
         """QtProgressHandler should have configurable throttle interval."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
 
@@ -676,7 +676,7 @@ class TestQtProgressHandlerThrottling:
     @pytest.mark.gui
     def test_updates_last_update_time(self, qt_application) -> None:
         """update should update last_update_time when emitting."""
-        from ClassicLib.MessageHandler.progress.qt_progress import QtProgressHandler
+        from ClassicLib.messaging.progress.qt_progress import QtProgressHandler
 
         handler = QtProgressHandler()
         handler._total = 100

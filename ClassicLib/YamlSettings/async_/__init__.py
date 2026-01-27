@@ -1,46 +1,18 @@
-"""Async YAML settings submodule.
+"""Backward compatibility module for YamlSettings.async_.
 
-This submodule provides asynchronous YAML settings management with caching,
-file operations, and Rust acceleration support.
+This package has been moved to ClassicLib.io.yaml.async_.
+All imports are re-exported for backward compatibility.
 
-Classes:
-    AsyncYamlSettingsCore: Main class for async YAML settings operations.
-    YamlCache: Cache manager with TTL and modification detection.
-    YamlFileOperations: File I/O with optional Rust acceleration.
-
-Functions:
-    get_async_yaml_core: Get the singleton AsyncYamlSettingsCore instance.
-    yaml_settings_async: Convenience function for async settings access.
-    classic_settings_async: Convenience function for CLASSIC_Settings access.
-
-Usage:
-    # Direct async usage
-    >>> from ClassicLib.YamlSettings.async_ import yaml_settings_async
-    >>> value = await yaml_settings_async(str, YAML.Main, "key.path")
-
-    # Using the core class
-    >>> from ClassicLib.YamlSettings.async_ import get_async_yaml_core
-    >>> core = await get_async_yaml_core()
-    >>> value = await core.async_yaml_settings(str, YAML.Main, "key.path")
+.. deprecated::
+    Import from ClassicLib.io.yaml.async_ instead.
 """
 
-from ClassicLib.YamlSettings.async_.cache import YamlCache
-from ClassicLib.YamlSettings.async_.core import (
-    AsyncYamlSettingsCore,
-    classic_settings_async,
-    get_async_yaml_core,
-    yaml_settings_async,
-)
-from ClassicLib.YamlSettings.async_.file_operations import YamlFileOperations
+import warnings
 
-__all__ = [
-    # Core class
-    "AsyncYamlSettingsCore",
-    # Helper classes
-    "YamlCache",
-    "YamlFileOperations",
-    # Convenience functions
-    "classic_settings_async",
-    "get_async_yaml_core",
-    "yaml_settings_async",
-]
+warnings.warn(
+    "ClassicLib.YamlSettings.async_ is deprecated, import from ClassicLib.io.yaml.async_ instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.io.yaml.async_ import *  # noqa: F403, E402

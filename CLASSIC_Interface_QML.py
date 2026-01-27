@@ -21,14 +21,14 @@ from PySide6.QtWidgets import QApplication
 sys.path.append(str(Path(Path(__file__).resolve()).parent))
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.Constants import YAML
-from ClassicLib.Logger import logger
-from ClassicLib.PapyrusLog import papyrus_logging
-from ClassicLib.ScanGame import manage_game_files, write_combined_results_async
-from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
-from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettings import classic_settings, yaml_settings
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
+from ClassicLib.io.yaml import classic_settings, yaml_settings
+from ClassicLib.scanning.game import manage_game_files, write_combined_results_async
+from ClassicLib.scanning.logs.executor import ScanLogsExecutor
+from ClassicLib.support.papyrus import papyrus_logging
+from ClassicLib.support.setup import SetupCoordinator
 
 
 class ScanWorker(QObject):

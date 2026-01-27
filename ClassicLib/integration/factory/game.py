@@ -36,8 +36,8 @@ def get_yamldata() -> Any:
         try:
             from classic_config import YamlData
 
-            from ClassicLib import GlobalRegistry
-            from ClassicLib.ResourceLoader import ResourceLoader
+            from ClassicLib.core.registry import get_game, get_vr
+            from ClassicLib.support.resources import ResourceLoader
 
             logger.debug("Using Rust YamlData (15-30x faster YAML loading)")
 
@@ -51,16 +51,16 @@ def get_yamldata() -> Any:
                 str(data_dir),  # CLASSIC Data directory
             ]
 
-            # Get game and VR mode from GlobalRegistry
-            game = GlobalRegistry.get_game()
-            vr_mode = GlobalRegistry.get_vr() == "VR"
+            # Get game and VR mode from registry
+            game = get_game()
+            vr_mode = get_vr() == "VR"
 
             return YamlData(yaml_dirs=yaml_dirs, game=game, vr_mode=vr_mode)
         except (ImportError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Failed to initialize Rust YamlData: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
     logger.debug("Using Python ClassicScanLogsInfo implementation")
     return ClassicScanLogsInfo()
@@ -83,7 +83,7 @@ def get_fcx_handler(fcx_mode: bool | None) -> Any:
 
     """
     # Use wrapper that handles Rust/Python automatically
-    from ClassicLib.rust.fcx_rust import RUST_AVAILABLE, FCXModeHandler
+    from ClassicLib.integration.rust.fcx_rust import RUST_AVAILABLE, FCXModeHandler
 
     if RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated FcxModeHandler")

@@ -17,8 +17,9 @@ from typing import TYPE_CHECKING
 import pytest
 
 # Import Python implementations (always available)
-from ClassicLib.ScanLog.fragments.report_composer import ReportComposer as PyReportComposer
-from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyReportFragment
+from ClassicLib.scanning.logs.reporting.report_composer import ReportComposer as PyReportComposer
+
+from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment as PyReportFragment
 
 # Try to import Rust implementation
 try:

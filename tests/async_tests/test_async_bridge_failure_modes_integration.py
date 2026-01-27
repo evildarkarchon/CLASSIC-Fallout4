@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.core.async_bridge import AsyncBridge
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]

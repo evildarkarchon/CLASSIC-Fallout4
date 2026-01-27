@@ -222,7 +222,7 @@ async def test_network_operation(mock_get):
 @pytest.fixture(autouse=True)
 def clear_singletons():
     """Clear singleton instances between tests."""
-    from ClassicLib.GlobalRegistry import GlobalRegistry
+    from ClassicLib.core.registry import GlobalRegistry
     from ClassicLib.MessageHandler.MessageHandler import MessageHandler
 
     for cls in [GlobalRegistry, MessageHandler]:
@@ -285,7 +285,7 @@ def test_operation_success_and_failure():
 ```python
 def test_async_bridge_pattern():
     """Test AsyncBridge usage pattern."""
-    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.core.async_bridge import AsyncBridge
 
     bridge = AsyncBridge.get_instance()
 

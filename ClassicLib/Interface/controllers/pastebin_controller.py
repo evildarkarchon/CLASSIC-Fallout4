@@ -25,12 +25,12 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
 )
 
-from ClassicLib.Interface.Pastebin import PastebinFetchWorker
-from ClassicLib.Interface.ThreadManager import ThreadType
-from ClassicLib.Logger import logger
+from ClassicLib.core.logger import logger
+from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
+from ClassicLib.Interface.workers.ThreadManager import ThreadType
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class PastebinController:

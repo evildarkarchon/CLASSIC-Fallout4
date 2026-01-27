@@ -45,7 +45,7 @@ else:
     RustReportFragment = None
 
 # Import Python implementations
-from ClassicLib.ScanLog.fragments import ReportFragment as PythonReportFragment  # noqa: E402
+from ClassicLib.scanning.logs.reporting import ReportFragment as PythonReportFragment  # noqa: E402
 
 logger = logging.getLogger(__name__)
 

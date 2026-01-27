@@ -253,7 +253,7 @@ class TestPrintRustStatus:
         # Should not raise - may return early if debug disabled
         print_rust_status()
 
-    @patch("ClassicLib.YamlSettings.classic_settings")
+    @patch("ClassicLib.io.yaml.classic_settings")
     def test_print_rust_status_with_debug_enabled(self, mock_settings) -> None:
         """Test print_rust_status when debug is enabled."""
         from ClassicLib.integration.status import print_rust_status
@@ -263,7 +263,7 @@ class TestPrintRustStatus:
         # Should not raise
         print_rust_status()
 
-    @patch("ClassicLib.YamlSettings.classic_settings")
+    @patch("ClassicLib.io.yaml.classic_settings")
     def test_print_rust_status_with_debug_disabled(self, mock_settings) -> None:
         """Test print_rust_status returns early when debug disabled."""
         from ClassicLib.integration.status import print_rust_status

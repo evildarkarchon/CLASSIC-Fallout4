@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib import init_message_handler
-from ClassicLib.Interface.UIHelpers import (
+from ClassicLib.Interface.widgets.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
     CHECKBOX_STYLE,
     ENABLED_BUTTON_STYLE,
@@ -49,9 +49,9 @@ def init_message_handler_fixture():
     init_message_handler(parent=None, is_gui_mode=False)
     yield
     # Clean up the global message handler after tests
-    import ClassicLib.MessageHandler
+    import ClassicLib.messaging
 
-    ClassicLib.MessageHandler._message_handler = None  # pyright: ignore[reportAttributeAccessIssue]
+    ClassicLib.messaging._message_handler = None  # pyright: ignore[reportAttributeAccessIssue]
 
 
 @pytest.mark.unit
@@ -99,8 +99,8 @@ class TestCreateCheckbox:
     def mock_settings(self):
         """Mock settings functions."""
         with (
-            patch("ClassicLib.Interface.UIHelpers.classic_settings") as mock_classic,
-            patch("ClassicLib.Interface.UIHelpers.yaml_settings") as mock_yaml,
+            patch("ClassicLib.Interface.widgets.UIHelpers.classic_settings") as mock_classic,
+            patch("ClassicLib.Interface.widgets.UIHelpers.yaml_settings") as mock_yaml,
         ):
             yield mock_classic, mock_yaml
 
@@ -270,8 +270,8 @@ class TestSetupFolderSection:
         callback = Mock()
 
         with (
-            patch("ClassicLib.Interface.UIHelpers.isinstance", return_value=False),
-            patch("ClassicLib.Interface.UIHelpers.msg_warning") as mock_warning,
+            patch("ClassicLib.Interface.widgets.UIHelpers.isinstance", return_value=False),
+            patch("ClassicLib.Interface.widgets.UIHelpers.msg_warning") as mock_warning,
         ):
             result = setup_folder_section(mock_layout, "Test:", "test", callback)
 
@@ -381,7 +381,7 @@ class TestOpenUrl:
 
     def test_open_url_calls_desktop_services(self):
         """Test that open_url properly calls QDesktopServices."""
-        with patch("ClassicLib.Interface.UIHelpers.QDesktopServices.openUrl") as mock_open:
+        with patch("ClassicLib.Interface.widgets.UIHelpers.QDesktopServices.openUrl") as mock_open:
             test_url = "https://example.com"
             open_url(test_url)
 
@@ -396,7 +396,7 @@ class TestOpenUrl:
 
     def test_open_url_various_protocols(self):
         """Test opening URLs with various protocols."""
-        with patch("ClassicLib.Interface.UIHelpers.QDesktopServices.openUrl") as mock_open:
+        with patch("ClassicLib.Interface.widgets.UIHelpers.QDesktopServices.openUrl") as mock_open:
             urls = ["http://example.com", "https://secure.example.com", "file:///C:/path/to/file.txt", "mailto:test@example.com"]
 
             for url in urls:
@@ -430,7 +430,7 @@ class TestIntegrationScenarios:
         main_layout.addWidget(separator2)
 
         # Add checkbox
-        with patch("ClassicLib.Interface.UIHelpers.classic_settings", return_value=True):
+        with patch("ClassicLib.Interface.widgets.UIHelpers.classic_settings", return_value=True):
             checkbox = create_checkbox("Enable Feature", "feature_enabled")
             main_layout.addWidget(checkbox)
 

@@ -34,11 +34,11 @@ from ClassicLib.integration.factory import (
     get_parser,
     get_plugin_analyzer,
 )
+from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer as RustFormIDAnalyzer
+from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 from ClassicLib.integration.status import (
     is_rust_accelerated,
 )
-from ClassicLib.rust.formid_rust import FormIDAnalyzer as RustFormIDAnalyzer
-from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
 from tests.fixtures.stress_fixtures import memory_monitor
 
 logger = logging.getLogger(__name__)
@@ -74,31 +74,6 @@ class TestMemoryPerformance:
         data.extend(f"\t[{i:02X}] LargePlugin{i:04d}.esp" for i in range(300))
 
         return data
-
-    @pytest.fixture
-    def mock_yamldata(self) -> Mock:
-        """Mock YAML data for memory testing."""
-        mock_yaml = Mock()
-        mock_yaml.game_type = "fallout4"
-        mock_yaml.crashgen_name = "Buffout 4"
-        mock_yaml.xse_acronym = "F4SE"
-        mock_yaml.game_root_name = "Fallout 4"
-        mock_yaml.problematic_plugins = {}
-        mock_yaml.formid_database_enabled = True
-        mock_yaml.show_formid_values = True
-        mock_yaml.record_patterns = ["TESForm"]
-
-        # Initialize list attributes
-        mock_yaml.game_ignore_plugins = []
-        mock_yaml.game_ignore_records = []
-        mock_yaml.ignore_list = []
-        mock_yaml.classic_records_list = []
-        mock_yaml.plugins_mods_to_check = {}
-        mock_yaml.classic_version = "7.31.0"
-        mock_yaml.crashgen_latest_og = "1.28.6"
-        mock_yaml.crashgen_latest_vr = "1.28.6"
-
-        return mock_yaml
 
     def test_memory_usage_stability(self, large_test_data, mock_yamldata):
         """

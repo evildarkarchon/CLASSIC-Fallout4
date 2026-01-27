@@ -4,8 +4,7 @@
 import time
 
 import pytest
-
-from ClassicLib.ScanLog.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
+from ClassicLib.scanning.logs.DetectMods import detect_mods_double, detect_mods_important, detect_mods_single
 
 
 @pytest.mark.performance

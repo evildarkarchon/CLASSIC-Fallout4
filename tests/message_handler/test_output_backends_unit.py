@@ -21,15 +21,15 @@ class TestOutputBackendProtocol:
     @pytest.mark.unit
     def test_protocol_is_runtime_checkable(self) -> None:
         """OutputBackend should be runtime checkable."""
-        from ClassicLib.MessageHandler.output.base import OutputBackend
+        from ClassicLib.messaging.backends.base import OutputBackend
 
         assert hasattr(OutputBackend, "__protocol_attrs__") or hasattr(OutputBackend, "_is_runtime_protocol")
 
     @pytest.mark.unit
     def test_cli_backend_implements_protocol(self) -> None:
         """CLIBackend should implement OutputBackend protocol."""
-        from ClassicLib.MessageHandler.output.base import OutputBackend
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.base import OutputBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
 
         backend = CLIBackend()
 
@@ -38,8 +38,8 @@ class TestOutputBackendProtocol:
     @pytest.mark.unit
     def test_log_backend_implements_protocol(self) -> None:
         """LogBackend should implement OutputBackend protocol."""
-        from ClassicLib.MessageHandler.output.base import OutputBackend
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.base import OutputBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
 
         backend = LogBackend()
 
@@ -55,7 +55,7 @@ class TestCLIBackendInit:
     @pytest.mark.unit
     def test_cli_backend_has_prefix_map(self) -> None:
         """CLIBackend should have PREFIX_MAP class attribute."""
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
 
         assert hasattr(CLIBackend, "PREFIX_MAP")
         assert isinstance(CLIBackend.PREFIX_MAP, dict)
@@ -63,8 +63,8 @@ class TestCLIBackendInit:
     @pytest.mark.unit
     def test_prefix_map_contains_all_message_types(self) -> None:
         """PREFIX_MAP should contain entries for all message types."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
 
         for msg_type in MessageType:
             assert msg_type in CLIBackend.PREFIX_MAP
@@ -72,7 +72,7 @@ class TestCLIBackendInit:
     @pytest.mark.unit
     def test_is_available_returns_true(self) -> None:
         """is_available should always return True for CLI."""
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
 
         backend = CLIBackend()
 
@@ -85,9 +85,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_prints_message_content(self) -> None:
         """show should print message content to stdout."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Test message content", MessageType.INFO)
@@ -102,9 +102,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_appends_details_when_present(self) -> None:
         """show should append details with indentation."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Main content", MessageType.INFO, details="Extra details")
@@ -120,9 +120,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_uses_stderr_for_errors(self) -> None:
         """show should use stderr for ERROR messages."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Error occurred", MessageType.ERROR)
@@ -137,9 +137,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_uses_stderr_for_warnings(self) -> None:
         """show should use stderr for WARNING messages."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Warning issued", MessageType.WARNING)
@@ -153,9 +153,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_uses_stderr_for_critical(self) -> None:
         """show should use stderr for CRITICAL messages."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Critical failure", MessageType.CRITICAL)
@@ -169,9 +169,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_uses_stdout_for_success(self) -> None:
         """show should use stdout for SUCCESS messages."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Operation succeeded", MessageType.SUCCESS)
@@ -186,9 +186,9 @@ class TestCLIBackendShow:
     @pytest.mark.unit
     def test_show_falls_back_to_stdout_on_stderr_error(self) -> None:
         """show should fall back to stdout if stderr fails."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Error message", MessageType.ERROR)
@@ -214,9 +214,9 @@ class TestCLIBackendEmojiHandling:
     @pytest.mark.unit
     def test_strips_emojis_on_windows(self) -> None:
         """show should strip emojis on Windows platform."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Test 🎉 message", MessageType.INFO)
@@ -232,9 +232,9 @@ class TestCLIBackendEmojiHandling:
     @pytest.mark.unit
     def test_preserves_emojis_on_non_windows(self) -> None:
         """show should preserve emojis on non-Windows platforms."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
+        from ClassicLib.messaging.backends.cli_backend import CLIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         backend = CLIBackend()
         message = Message("Test 🎉 message", MessageType.INFO)
@@ -257,7 +257,7 @@ class TestLogBackendInit:
     @pytest.mark.unit
     def test_uses_default_logger(self) -> None:
         """LogBackend should use CLASSIC.MessageHandler logger by default."""
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
 
         backend = LogBackend()
 
@@ -266,7 +266,7 @@ class TestLogBackendInit:
     @pytest.mark.unit
     def test_accepts_custom_logger(self) -> None:
         """LogBackend should accept custom logger."""
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
 
         custom_logger = logging.getLogger("Custom.Logger")
         backend = LogBackend(logger=custom_logger)
@@ -276,7 +276,7 @@ class TestLogBackendInit:
     @pytest.mark.unit
     def test_has_level_map(self) -> None:
         """LogBackend should have LEVEL_MAP class attribute."""
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
 
         assert hasattr(LogBackend, "LEVEL_MAP")
         assert isinstance(LogBackend.LEVEL_MAP, dict)
@@ -284,8 +284,8 @@ class TestLogBackendInit:
     @pytest.mark.unit
     def test_level_map_contains_all_message_types(self) -> None:
         """LEVEL_MAP should contain entries for all message types."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
 
         for msg_type in MessageType:
             assert msg_type in LogBackend.LEVEL_MAP
@@ -293,7 +293,7 @@ class TestLogBackendInit:
     @pytest.mark.unit
     def test_is_available_returns_true(self) -> None:
         """is_available should always return True for logging."""
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
 
         backend = LogBackend()
 
@@ -306,9 +306,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_logs_info_at_info_level(self) -> None:
         """show should log INFO messages at INFO level."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -323,9 +323,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_logs_warning_at_warning_level(self) -> None:
         """show should log WARNING messages at WARNING level."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -339,9 +339,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_logs_error_at_error_level(self) -> None:
         """show should log ERROR messages at ERROR level."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -355,9 +355,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_logs_critical_at_critical_level(self) -> None:
         """show should log CRITICAL messages at CRITICAL level."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -371,9 +371,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_logs_debug_at_debug_level(self) -> None:
         """show should log DEBUG messages at DEBUG level."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -387,9 +387,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_logs_success_at_info_level(self) -> None:
         """show should log SUCCESS messages at INFO level."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -403,9 +403,9 @@ class TestLogBackendShow:
     @pytest.mark.unit
     def test_show_formats_message_with_details(self) -> None:
         """show should format message with details."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         mock_logger = MagicMock()
         backend = LogBackend(logger=mock_logger)
@@ -425,7 +425,7 @@ class TestLogBackendSetLogger:
     @pytest.mark.unit
     def test_set_logger_updates_logger(self) -> None:
         """set_logger should update the internal logger."""
-        from ClassicLib.MessageHandler.output.log_backend import LogBackend
+        from ClassicLib.messaging.backends.log_backend import LogBackend
 
         backend = LogBackend()
         new_logger = logging.getLogger("New.Logger")
@@ -445,14 +445,14 @@ class TestGUIBackendInit:
     def test_gui_backend_requires_qt(self) -> None:
         """GUIBackend should import PySide6."""
         # This test verifies the import exists
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
 
         assert GUIBackend is not None
 
     @pytest.mark.unit
     def test_has_icon_map(self) -> None:
         """GUIBackend should have ICON_MAP class attribute."""
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
 
         assert hasattr(GUIBackend, "ICON_MAP")
         assert isinstance(GUIBackend.ICON_MAP, dict)
@@ -460,8 +460,8 @@ class TestGUIBackendInit:
     @pytest.mark.unit
     def test_icon_map_contains_all_message_types(self) -> None:
         """ICON_MAP should contain entries for all message types."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
+        from ClassicLib.messaging.core.enums import MessageType
 
         for msg_type in MessageType:
             assert msg_type in GUIBackend.ICON_MAP
@@ -473,9 +473,9 @@ class TestGUIBackendShow:
     @pytest.mark.unit
     def test_show_emits_message_signal(self) -> None:
         """show should emit message_signal."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.core.message import Message
 
         # Create backend with mocked signal
         backend = GUIBackend()
@@ -493,7 +493,7 @@ class TestGUIBackendIsAvailable:
     @pytest.mark.unit
     def test_is_available_true_when_qapp_exists(self) -> None:
         """is_available should return True when QApplication exists."""
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
 
         backend = GUIBackend()
 
@@ -508,7 +508,7 @@ class TestGUIBackendIsAvailable:
     @pytest.mark.unit
     def test_is_available_false_when_no_qapp(self) -> None:
         """is_available should return False when no QApplication."""
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
 
         backend = GUIBackend()
 
@@ -526,7 +526,7 @@ class TestGUIBackendSetParent:
     @pytest.mark.unit
     def test_set_parent_updates_parent(self) -> None:
         """set_parent should update the parent widget."""
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
 
         backend = GUIBackend()
         mock_parent = MagicMock()
@@ -538,7 +538,7 @@ class TestGUIBackendSetParent:
     @pytest.mark.unit
     def test_set_parent_accepts_none(self) -> None:
         """set_parent should accept None."""
-        from ClassicLib.MessageHandler.output.gui_backend import GUIBackend
+        from ClassicLib.messaging.backends.gui_backend import GUIBackend
 
         backend = GUIBackend()
         backend._parent = MagicMock()
@@ -557,7 +557,7 @@ class TestMessageRouter:
     @pytest.mark.unit
     def test_router_initializes_in_cli_mode_by_default(self) -> None:
         """MessageRouter should default to CLI mode."""
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.router import MessageRouter
 
         router = MessageRouter()
 
@@ -566,7 +566,7 @@ class TestMessageRouter:
     @pytest.mark.unit
     def test_router_initializes_in_gui_mode_when_specified(self) -> None:
         """MessageRouter should accept GUI mode flag."""
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.router import MessageRouter
 
         router = MessageRouter(is_gui_mode=True)
 
@@ -579,8 +579,8 @@ class TestMessageRouterShouldDisplay:
     @pytest.mark.unit
     def test_log_only_never_displays(self) -> None:
         """LOG_ONLY should never display."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         cli_router = MessageRouter(is_gui_mode=False)
         gui_router = MessageRouter(is_gui_mode=True)
@@ -591,8 +591,8 @@ class TestMessageRouterShouldDisplay:
     @pytest.mark.unit
     def test_gui_target_displays_in_gui_mode_only(self) -> None:
         """GUI target should only display in GUI mode."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         cli_router = MessageRouter(is_gui_mode=False)
         gui_router = MessageRouter(is_gui_mode=True)
@@ -603,8 +603,8 @@ class TestMessageRouterShouldDisplay:
     @pytest.mark.unit
     def test_console_target_displays_in_cli_mode_only(self) -> None:
         """CONSOLE target should only display in CLI mode."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         cli_router = MessageRouter(is_gui_mode=False)
         gui_router = MessageRouter(is_gui_mode=True)
@@ -615,8 +615,8 @@ class TestMessageRouterShouldDisplay:
     @pytest.mark.unit
     def test_all_target_displays_in_both_modes(self) -> None:
         """ALL target should display in both modes."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         cli_router = MessageRouter(is_gui_mode=False)
         gui_router = MessageRouter(is_gui_mode=True)
@@ -631,8 +631,8 @@ class TestMessageRouterGetDisplayMode:
     @pytest.mark.unit
     def test_log_only_returns_none(self) -> None:
         """LOG_ONLY should return None."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         router = MessageRouter()
 
@@ -641,8 +641,8 @@ class TestMessageRouterGetDisplayMode:
     @pytest.mark.unit
     def test_gui_returns_gui(self) -> None:
         """GUI should return 'gui'."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         router = MessageRouter()
 
@@ -651,8 +651,8 @@ class TestMessageRouterGetDisplayMode:
     @pytest.mark.unit
     def test_console_returns_cli(self) -> None:
         """CONSOLE should return 'cli'."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         router = MessageRouter()
 
@@ -661,8 +661,8 @@ class TestMessageRouterGetDisplayMode:
     @pytest.mark.unit
     def test_all_returns_both(self) -> None:
         """ALL should return 'both'."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.core.router import MessageRouter
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.core.router import MessageRouter
 
         router = MessageRouter()
 

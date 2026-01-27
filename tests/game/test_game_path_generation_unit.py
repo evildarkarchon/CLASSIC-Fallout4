@@ -9,9 +9,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib import Constants, GlobalRegistry
-from ClassicLib.Constants import NULL_VERSION
-from ClassicLib.GamePath import game_generate_paths, game_path_find
+from ClassicLib.core.constants import NULL_VERSION, Constants
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.game_path import game_generate_paths, game_path_find
 
 pytestmark = pytest.mark.unit
 
@@ -19,8 +19,8 @@ pytestmark = pytest.mark.unit
 class TestGamePathGeneration:
     """Tests for game path generation functionality."""
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_fallout4_og_version(
@@ -34,8 +34,8 @@ class TestGamePathGeneration:
         assert mock_yaml.call_count >= 6
         mock_get_version.assert_called_once()
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_fallout4_ng_version(
@@ -49,7 +49,7 @@ class TestGamePathGeneration:
         assert mock_yaml.call_count >= 6
         mock_get_version.assert_called_once()
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_missing_game_path(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock) -> None:
@@ -58,7 +58,7 @@ class TestGamePathGeneration:
         with pytest.raises(TypeError):
             game_generate_paths()
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_missing_xse_acronym(
@@ -70,8 +70,8 @@ class TestGamePathGeneration:
         with pytest.raises(TypeError):
             game_generate_paths()
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_null_version_uses_default(
@@ -86,8 +86,8 @@ class TestGamePathGeneration:
 
         assert mock_yaml.call_count >= 6
 
-    @patch("ClassicLib.GamePath.yaml_settings")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.support.game_path.yaml_settings")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Starfield")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_unsupported_game_raises_error(
@@ -101,7 +101,7 @@ class TestGamePathGeneration:
         with pytest.raises(ValueError, match="Unsupported game"):
             game_generate_paths()
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_empty_game_path_raises_error(
@@ -113,7 +113,7 @@ class TestGamePathGeneration:
         with pytest.raises(TypeError):
             game_generate_paths()
 
-    @patch("ClassicLib.GamePath.yaml_settings")
+    @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_whitespace_game_path_raises_error(
@@ -129,7 +129,7 @@ class TestGamePathGeneration:
 class TestGamePathFind:
     """Tests for game_path_find() top-level function."""
 
-    @patch("ClassicLib.GamePath.GamePathFinder")
+    @patch("ClassicLib.support.game_path.GamePathFinder")
     def test_game_path_find_creates_finder_and_calls_find(self, mock_finder_class: MagicMock, message_handler) -> None:
         """Test game_path_find creates finder and calls find_game_path."""
         mock_finder = MagicMock()
@@ -144,10 +144,10 @@ class TestGamePathFind:
 class TestVersionWarningLogging:
     """Tests for _log_version_warning helper function."""
 
-    @patch("ClassicLib.GamePath.get_version_registry")
+    @patch("ClassicLib.support.game_path.get_version_registry")
     def test_log_version_warning_logs_only_once(self, mock_registry: MagicMock, message_handler) -> None:
         """Test _log_version_warning only logs once per session."""
-        import ClassicLib.GamePath as gp
+        import ClassicLib.support.game_path as gp
 
         # Reset the flag
         gp._VERSION_WARNING_LOGGED = False

@@ -19,10 +19,10 @@ import time
 from typing import Any
 
 import pytest
+from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
 
 from ClassicLib.integration.factory import get_fcx_handler
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
 from tests.fixtures.parity_fixtures import (
     ParityResult,
     ParityTestCase,

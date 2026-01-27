@@ -11,8 +11,8 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml.async_ import AsyncYamlSettingsCore
 
 # Note: async_yaml_core and create_yaml_files fixtures are provided by
 # tests/fixtures/yaml_fixtures.py via the root conftest.py

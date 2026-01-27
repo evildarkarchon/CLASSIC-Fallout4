@@ -1,6 +1,6 @@
 import pytest
 
-from ClassicLib.ScanLog.Parser import detect_vr_log
+from ClassicLib.scanning.logs.parser import detect_vr_log
 
 
 class TestVRDetection:

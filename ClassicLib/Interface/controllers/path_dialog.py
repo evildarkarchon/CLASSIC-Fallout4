@@ -18,12 +18,12 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QDialog, QMessageBox
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Interface.PathDialog import ManualPathDialog
-from ClassicLib.MessageHandler import msg_info
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.Interface.dialogs.PathDialog import ManualPathDialog
+from ClassicLib.messaging import msg_info
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class PathDialogController:

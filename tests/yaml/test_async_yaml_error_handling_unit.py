@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import ruamel.yaml
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 
 # Note: async_yaml_core fixture is provided by
 # tests/fixtures/yaml_fixtures.py via the root conftest.py

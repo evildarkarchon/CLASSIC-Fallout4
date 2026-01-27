@@ -12,8 +12,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from ClassicLib.ScanGame.core.ba2_scanner import BA2ArchiveScanner
+from ClassicLib.scanning.game.core.ba2_scanner import BA2ArchiveScanner
 
 
 @pytest.fixture
@@ -173,7 +172,7 @@ class TestReadBa2HeaderAsync:
         """Test reading header from nonexistent file."""
         nonexistent = tmp_path / "nonexistent.ba2"
 
-        with patch("ClassicLib.ScanGame.core.ba2_scanner.msg_warning") as mock_warning:
+        with patch("ClassicLib.scanning.game.core.ba2_scanner.msg_warning") as mock_warning:
             header = await BA2ArchiveScanner.read_ba2_header_async(nonexistent, "nonexistent.ba2")
 
             assert header is None
@@ -295,7 +294,7 @@ class TestProcessTextureBa2Async:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
+            patch("ClassicLib.scanning.game.core.ba2_scanner.msg_error") as mock_error,
         ):
             result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
@@ -314,7 +313,7 @@ class TestProcessTextureBa2Async:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
+            patch("ClassicLib.scanning.game.core.ba2_scanner.msg_error") as mock_error,
         ):
             result = await ba2_scanner.process_texture_ba2_async(sample_ba2_files["texture"], "textures.ba2", mock_bsarch_path)
 
@@ -386,7 +385,7 @@ class TestProcessGeneralBa2Async:
 
         with (
             patch("asyncio.create_subprocess_exec", return_value=mock_proc),
-            patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error,
+            patch("ClassicLib.scanning.game.core.ba2_scanner.msg_error") as mock_error,
         ):
             result = await ba2_scanner.process_general_ba2_async(sample_ba2_files["general"], "main.ba2", mock_bsarch_path, {})
 
@@ -535,7 +534,7 @@ class TestMergeScanResults:
         ]
         target: dict[str, set[str]] = {"tex_frmt": set(), "tex_dims": set()}
 
-        with patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error") as mock_error:
+        with patch("ClassicLib.scanning.game.core.ba2_scanner.msg_error") as mock_error:
             BA2ArchiveScanner.merge_scan_results(results, target)  # type: ignore[arg-type]
 
             mock_error.assert_called()
@@ -595,7 +594,7 @@ class TestProcessBa2FilesAsync:
         ba2_files = [(Path("/nonexistent/file.ba2"), "file.ba2")]
 
         with patch.object(ba2_scanner, "read_ba2_header_async", side_effect=OSError("File not found")):
-            with patch("ClassicLib.ScanGame.core.ba2_scanner.msg_error"):
+            with patch("ClassicLib.scanning.game.core.ba2_scanner.msg_error"):
                 results = await ba2_scanner.process_ba2_files_async(ba2_files, mock_bsarch_path, {})
 
             # Exception should be caught and logged, empty results returned

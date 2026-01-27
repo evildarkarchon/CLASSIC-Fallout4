@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanGame.CheckXsePlugins module.
+"""Unit tests for ClassicLib.scanning.game.CheckXsePlugins module.
 
 This module tests the XSE plugins checking functionality including Address Library
 validation, version detection, and compatibility verification between VR and non-VR modes.
@@ -10,9 +10,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from packaging.version import Version
-
-from ClassicLib.ScanGame.CheckXsePlugins import (
+from ClassicLib.scanning.game.CheckXsePlugins import (
     AddressLibVersionInfo,
     _determine_relevant_versions,
     _format_address_lib_not_found_message,
@@ -24,6 +22,7 @@ from ClassicLib.ScanGame.CheckXsePlugins import (
     check_xse_plugins,
     get_all_address_lib_info,
 )
+from packaging.version import Version
 
 pytestmark = pytest.mark.unit
 
@@ -36,7 +35,7 @@ pytestmark = pytest.mark.unit
 class TestFormatGameVersionNotDetectedMessage:
     """Tests for the _format_game_version_not_detected_message function."""
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_returns_list_of_strings(self, mock_get_registry: MagicMock) -> None:
         """_format_game_version_not_detected_message should return a list of strings."""
         mock_og_info = MagicMock()
@@ -53,7 +52,7 @@ class TestFormatGameVersionNotDetectedMessage:
         assert isinstance(result, list)
         assert all(isinstance(s, str) for s in result)
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_contains_notice_message(self, mock_get_registry: MagicMock) -> None:
         """_format_game_version_not_detected_message should contain notice about Address Library."""
         mock_og_info = MagicMock()
@@ -71,7 +70,7 @@ class TestFormatGameVersionNotDetectedMessage:
         assert "NOTICE" in combined
         assert "Address Library" in combined
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_includes_nexus_urls(self, mock_get_registry: MagicMock) -> None:
         """_format_game_version_not_detected_message should include Nexus URLs for OG and VR."""
         mock_og_info = MagicMock()
@@ -305,7 +304,7 @@ class TestVersionInfoToAddressLibInfo:
 class TestGetAllAddressLibInfo:
     """Tests for the get_all_address_lib_info function."""
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_returns_dict(self, mock_get_registry: MagicMock) -> None:
         """get_all_address_lib_info should return a dictionary."""
         mock_version = MagicMock()
@@ -324,7 +323,7 @@ class TestGetAllAddressLibInfo:
 
         assert isinstance(result, dict)
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_filters_versions_without_address_library(self, mock_get_registry: MagicMock) -> None:
         """get_all_address_lib_info should filter out versions without address_library."""
         mock_version_with = MagicMock()
@@ -357,7 +356,7 @@ class TestGetAllAddressLibInfo:
 class TestDetermineRelevantVersions:
     """Tests for the _determine_relevant_versions function."""
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_returns_tuple_of_two_lists(self, mock_get_registry: MagicMock) -> None:
         """_determine_relevant_versions should return tuple of two lists."""
         mock_correct = MagicMock()
@@ -384,7 +383,7 @@ class TestDetermineRelevantVersions:
         assert isinstance(correct, list)
         assert isinstance(wrong, list)
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_calls_registry_with_vr_mode_parameter(self, mock_get_registry: MagicMock) -> None:
         """_determine_relevant_versions should call registry with is_vr_mode parameter."""
         mock_version = MagicMock()
@@ -404,7 +403,7 @@ class TestDetermineRelevantVersions:
         mock_registry.get_correct_versions.assert_called_once_with(False)
         assert len(correct) == 1
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_filters_versions_without_address_library(self, mock_get_registry: MagicMock) -> None:
         """_determine_relevant_versions should filter out versions without address_library."""
         mock_with_lib = MagicMock()
@@ -435,10 +434,10 @@ class TestDetermineRelevantVersions:
 class TestCheckXsePlugins:
     """Tests for the check_xse_plugins function."""
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
     def test_returns_string(
         self,
         mock_registry: MagicMock,
@@ -454,10 +453,10 @@ class TestCheckXsePlugins:
 
         assert isinstance(result, str)
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
     def test_returns_version_not_detected_when_exe_path_not_found(
         self,
         mock_registry: MagicMock,
@@ -474,11 +473,11 @@ class TestCheckXsePlugins:
         assert "NOTICE" in result
         assert "Address Library" in result
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_returns_version_not_detected_when_null_version(
         self,
         mock_get_registry: MagicMock,
@@ -488,7 +487,7 @@ class TestCheckXsePlugins:
         mock_classic_settings: MagicMock,
     ) -> None:
         """check_xse_plugins should return version not detected message when version is NULL."""
-        from ClassicLib.Constants import NULL_VERSION
+        from ClassicLib.core.constants import NULL_VERSION
 
         mock_global_registry.get_vr.return_value = ""
 
@@ -513,11 +512,11 @@ class TestCheckXsePlugins:
 
         assert "NOTICE" in result
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_version_registry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_version_registry")
     def test_returns_plugins_path_not_found_when_plugins_path_none(
         self,
         mock_get_registry: MagicMock,
@@ -544,11 +543,11 @@ class TestCheckXsePlugins:
         assert "ERROR" in result
         assert "plugins folder" in result
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins._determine_relevant_versions")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins._determine_relevant_versions")
     def test_returns_correct_message_when_correct_version_exists(
         self,
         mock_determine: MagicMock,
@@ -589,11 +588,11 @@ class TestCheckXsePlugins:
         assert "✔️" in result
         assert "correct version" in result
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins._determine_relevant_versions")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins._determine_relevant_versions")
     def test_returns_wrong_message_when_wrong_version_exists(
         self,
         mock_determine: MagicMock,
@@ -640,11 +639,11 @@ class TestCheckXsePlugins:
         assert "CAUTION" in result
         assert "wrong version" in result
 
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.classic_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.get_game_version")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins.GlobalRegistry")
-    @patch("ClassicLib.ScanGame.CheckXsePlugins._determine_relevant_versions")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.classic_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.get_game_version")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckXsePlugins._determine_relevant_versions")
     def test_returns_not_found_message_when_no_version_exists(
         self,
         mock_determine: MagicMock,

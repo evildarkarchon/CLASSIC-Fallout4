@@ -1,15 +1,18 @@
-"""Provide a logger instance for centralized logging functionality.
+"""Backward compatibility module for Logger.
 
-This module initializes and provides a configured instance of a logger
-using Python's built-in `logging` module. The logger instance is named
-'CLASSIC' and can be used across different parts of the application to
-log messages consistently and adhere to centralized logging practices.
+This module has been moved to ClassicLib.core.logger.
+All imports are re-exported for backward compatibility.
 
-Attributes:
-    logger (logging.Logger): A configured logger instance named 'CLASSIC'.
-
+.. deprecated::
+    Import from ClassicLib.core.logger instead.
 """
 
-import logging
+import warnings
 
-logger: logging.Logger = logging.getLogger("CLASSIC")
+warnings.warn(
+    "ClassicLib.Logger is deprecated, import from ClassicLib.core.logger instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.core.logger import *  # noqa: F403, E402

@@ -17,9 +17,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.RustAcceleration.metrics import ComponentMetrics
-from ClassicLib.RustAcceleration.types import ComponentType
-from ClassicLib.RustAcceleration.workload import OptimizationLevel, WorkloadCharacteristics
+from ClassicLib.acceleration.metrics import ComponentMetrics
+from ClassicLib.acceleration.types import ComponentType
+from ClassicLib.acceleration.workload import OptimizationLevel, WorkloadCharacteristics
 
 if TYPE_CHECKING:
     from collections.abc import Generator
@@ -72,7 +72,7 @@ def isolated_rust_acceleration() -> Generator[None, None, None]:
         None - Resets the singleton after the test.
     """
     # Import here to avoid module-level side effects
-    from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+    from ClassicLib.acceleration.coordinator import RustAcceleration
 
     # Ensure clean state before test
     old_instance = RustAcceleration._instance
@@ -520,7 +520,7 @@ class TestRustAccelerationSingleton:
     @pytest.mark.unit
     def test_singleton_returns_same_instance(self, isolated_rust_acceleration: None) -> None:
         """Test RustAcceleration returns the same instance."""
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         instance1 = RustAcceleration()
         instance2 = RustAcceleration()
@@ -530,7 +530,7 @@ class TestRustAccelerationSingleton:
     @pytest.mark.unit
     def test_get_instance_returns_same_instance(self, isolated_rust_acceleration: None) -> None:
         """Test get_instance returns the singleton."""
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         instance1 = RustAcceleration.get_instance()
         instance2 = RustAcceleration.get_instance()
@@ -540,7 +540,7 @@ class TestRustAccelerationSingleton:
     @pytest.mark.unit
     def test_reset_instance_requires_test_context(self, isolated_rust_acceleration: None) -> None:
         """Test reset_instance only works in pytest context."""
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         # Save and clear the test environment variable
         original = os.environ.pop("PYTEST_CURRENT_TEST", None)
@@ -556,7 +556,7 @@ class TestRustAccelerationSingleton:
     @pytest.mark.unit
     def test_singleton_thread_safety(self, isolated_rust_acceleration: None) -> None:
         """Test singleton is thread-safe."""
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         instances: list[RustAcceleration] = []
         errors: list[Exception] = []
@@ -582,8 +582,8 @@ class TestRustAccelerationInitialization:
     """Tests for RustAcceleration initialization."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_initialization_sets_defaults(
         self,
         mock_status: MagicMock,
@@ -593,7 +593,7 @@ class TestRustAccelerationInitialization:
         """Test initialization sets correct default values."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -603,8 +603,8 @@ class TestRustAccelerationInitialization:
         assert len(accel.metrics) == len(ComponentType)
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_initialization_creates_metrics_for_all_components(
         self,
         mock_status: MagicMock,
@@ -614,7 +614,7 @@ class TestRustAccelerationInitialization:
         """Test initialization creates metrics for all component types."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -627,9 +627,9 @@ class TestRustAccelerationGetComponent:
     """Tests for RustAcceleration.get_component method."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
-    @patch("ClassicLib.RustAcceleration.coordinator.get_parser")
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_parser")
     def test_get_component_caches_result(
         self,
         mock_get_parser: MagicMock,
@@ -642,7 +642,7 @@ class TestRustAccelerationGetComponent:
         mock_parser = MagicMock()
         mock_get_parser.return_value = mock_parser
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -656,9 +656,9 @@ class TestRustAccelerationGetComponent:
         mock_get_parser.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
-    @patch("ClassicLib.RustAcceleration.coordinator.get_parser")
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_parser")
     def test_get_component_records_metrics(
         self,
         mock_get_parser: MagicMock,
@@ -670,7 +670,7 @@ class TestRustAccelerationGetComponent:
         mock_status.return_value = mock_rust_component_status
         mock_get_parser.return_value = MagicMock()
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         accel.get_component(ComponentType.PARSER)
@@ -678,9 +678,9 @@ class TestRustAccelerationGetComponent:
         assert accel.metrics[ComponentType.PARSER].calls == 1
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
-    @patch("ClassicLib.RustAcceleration.coordinator.get_parser")
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_parser")
     def test_get_component_records_errors(
         self,
         mock_get_parser: MagicMock,
@@ -692,7 +692,7 @@ class TestRustAccelerationGetComponent:
         mock_status.return_value = mock_rust_component_status
         mock_get_parser.side_effect = RuntimeError("Failed to load parser")
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         accel.get_component(ComponentType.PARSER)
@@ -705,8 +705,8 @@ class TestRustAccelerationWorkload:
     """Tests for RustAcceleration workload management."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_update_workload_characteristics(
         self,
         mock_status: MagicMock,
@@ -716,7 +716,7 @@ class TestRustAccelerationWorkload:
         """Test update_workload_characteristics updates workload."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         accel.update_workload_characteristics(
@@ -732,8 +732,8 @@ class TestRustAccelerationWorkload:
         assert accel.workload.is_batch_operation is True
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_update_workload_with_extended_metrics(
         self,
         mock_status: MagicMock,
@@ -743,7 +743,7 @@ class TestRustAccelerationWorkload:
         """Test update_workload_characteristics with extended metrics."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         accel.update_workload_characteristics(
@@ -762,8 +762,8 @@ class TestRustAccelerationOptimization:
     """Tests for RustAcceleration optimization level management."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_set_optimization_level(
         self,
         mock_status: MagicMock,
@@ -773,7 +773,7 @@ class TestRustAccelerationOptimization:
         """Test set_optimization_level updates the level."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         accel.set_optimization_level(OptimizationLevel.AGGRESSIVE)
@@ -781,8 +781,8 @@ class TestRustAccelerationOptimization:
         assert accel.optimization_level == OptimizationLevel.AGGRESSIVE
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_set_all_optimization_levels(
         self,
         mock_status: MagicMock,
@@ -792,7 +792,7 @@ class TestRustAccelerationOptimization:
         """Test all optimization levels can be set."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -805,9 +805,9 @@ class TestRustAccelerationPerformanceReport:
     """Tests for RustAcceleration performance reporting."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
-    @patch("ClassicLib.RustAcceleration.coordinator.is_rust_accelerated")
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.is_rust_accelerated")
     def test_get_performance_report_structure(
         self,
         mock_is_rust: MagicMock,
@@ -819,7 +819,7 @@ class TestRustAccelerationPerformanceReport:
         mock_status.return_value = mock_rust_component_status
         mock_is_rust.return_value = False
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         report = accel.get_performance_report()
@@ -837,9 +837,9 @@ class TestRustAccelerationPerformanceReport:
         assert "workload_characteristics" in report
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
-    @patch("ClassicLib.RustAcceleration.coordinator.is_rust_accelerated")
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.is_rust_accelerated")
     def test_get_performance_report_calculates_error_rate(
         self,
         mock_is_rust: MagicMock,
@@ -851,7 +851,7 @@ class TestRustAccelerationPerformanceReport:
         mock_status.return_value = mock_rust_component_status
         mock_is_rust.return_value = False
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -869,8 +869,8 @@ class TestRustAccelerationHealthCheck:
     """Tests for RustAcceleration health check."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_health_check_healthy_when_no_issues(
         self,
         mock_status: MagicMock,
@@ -882,7 +882,7 @@ class TestRustAccelerationHealthCheck:
             "total_count": 8,
         }
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         is_healthy, issues = accel.health_check()
@@ -891,8 +891,8 @@ class TestRustAccelerationHealthCheck:
         assert issues == []
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {"parser": False})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {"parser": False})
     def test_health_check_reports_missing_components(
         self,
         mock_status: MagicMock,
@@ -904,7 +904,7 @@ class TestRustAccelerationHealthCheck:
             "total_count": 8,
         }
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
         is_healthy, issues = accel.health_check()
@@ -913,8 +913,8 @@ class TestRustAccelerationHealthCheck:
         assert any("Missing components" in issue for issue in issues)
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_health_check_reports_high_error_rate(
         self,
         mock_status: MagicMock,
@@ -926,7 +926,7 @@ class TestRustAccelerationHealthCheck:
             "total_count": 8,
         }
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -940,8 +940,8 @@ class TestRustAccelerationHealthCheck:
         assert any("High error rate" in issue for issue in issues)
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_health_check_reports_slow_performance(
         self,
         mock_status: MagicMock,
@@ -953,7 +953,7 @@ class TestRustAccelerationHealthCheck:
             "total_count": 8,
         }
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -971,8 +971,8 @@ class TestRustAccelerationResetMetrics:
     """Tests for RustAcceleration.reset_metrics method."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_reset_metrics_clears_all_metrics(
         self,
         mock_status: MagicMock,
@@ -982,7 +982,7 @@ class TestRustAccelerationResetMetrics:
         """Test reset_metrics clears all component metrics."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import RustAcceleration
+        from ClassicLib.acceleration.coordinator import RustAcceleration
 
         accel = RustAcceleration()
 
@@ -1005,8 +1005,8 @@ class TestConvenienceFunctions:
     """Tests for module-level convenience functions."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_get_rust_acceleration_returns_instance(
         self,
         mock_status: MagicMock,
@@ -1016,7 +1016,7 @@ class TestConvenienceFunctions:
         """Test get_rust_acceleration returns singleton."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import (
+        from ClassicLib.acceleration.coordinator import (
             RustAcceleration,
             get_rust_acceleration,
         )
@@ -1026,8 +1026,8 @@ class TestConvenienceFunctions:
         assert isinstance(accel, RustAcceleration)
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_configure_for_batch_processing_sets_aggressive(
         self,
         mock_status: MagicMock,
@@ -1037,7 +1037,7 @@ class TestConvenienceFunctions:
         """Test configure_for_batch_processing sets aggressive for large batches."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import (
+        from ClassicLib.acceleration.coordinator import (
             configure_for_batch_processing,
             get_rust_acceleration,
         )
@@ -1050,8 +1050,8 @@ class TestConvenienceFunctions:
         assert accel.workload.is_batch_operation is True
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_configure_for_batch_processing_sets_balanced_for_small_batch(
         self,
         mock_status: MagicMock,
@@ -1061,7 +1061,7 @@ class TestConvenienceFunctions:
         """Test configure_for_batch_processing sets balanced for small batches."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import (
+        from ClassicLib.acceleration.coordinator import (
             configure_for_batch_processing,
             get_rust_acceleration,
         )
@@ -1072,8 +1072,8 @@ class TestConvenienceFunctions:
         assert accel.optimization_level == OptimizationLevel.BALANCED
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_configure_for_single_file(
         self,
         mock_status: MagicMock,
@@ -1083,7 +1083,7 @@ class TestConvenienceFunctions:
         """Test configure_for_single_file sets correct configuration."""
         mock_status.return_value = mock_rust_component_status
 
-        from ClassicLib.RustAcceleration.coordinator import (
+        from ClassicLib.acceleration.coordinator import (
             configure_for_single_file,
             get_rust_acceleration,
         )
@@ -1096,8 +1096,8 @@ class TestConvenienceFunctions:
         assert accel.optimization_level == OptimizationLevel.BALANCED
 
     @pytest.mark.unit
-    @patch("ClassicLib.RustAcceleration.coordinator.get_rust_component_status")
-    @patch("ClassicLib.RustAcceleration.coordinator.RUST_AVAILABLE", {})
+    @patch("ClassicLib.acceleration.coordinator.get_rust_component_status")
+    @patch("ClassicLib.acceleration.coordinator.RUST_AVAILABLE", {})
     def test_perform_health_check_returns_bool(
         self,
         mock_status: MagicMock,
@@ -1109,7 +1109,7 @@ class TestConvenienceFunctions:
             "total_count": 8,
         }
 
-        from ClassicLib.RustAcceleration.coordinator import perform_health_check
+        from ClassicLib.acceleration.coordinator import perform_health_check
 
         result = perform_health_check()
 

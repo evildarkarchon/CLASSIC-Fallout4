@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
 
 
 @pytest.mark.unit
@@ -174,12 +174,12 @@ class TestGenerateGameCombinedResultTuple:
         """Test that generate_game_combined_result_async returns tuple[str, list[ConfigIssue]]."""
         from unittest.mock import patch
 
-        from ClassicLib.ScanGame import generate_game_combined_result_async
+        from ClassicLib.scanning.game import generate_game_combined_result_async
 
         # Mock settings to return None (early return path)
         with (
-            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
+            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
+            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
         ):
             mock_yaml_settings.return_value = None
             mock_global_registry.get_vr.return_value = ""
@@ -199,12 +199,12 @@ class TestGenerateGameCombinedResultTuple:
         """Test that generate_game_combined_result sync adapter returns tuple[str, list[ConfigIssue]]."""
         from unittest.mock import patch
 
-        from ClassicLib.ScanGame import generate_game_combined_result
+        from ClassicLib.scanning.game import generate_game_combined_result
 
         # Mock settings to return None (early return path)
         with (
-            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.ScanGame.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
+            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
+            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
         ):
             mock_yaml_settings.return_value = None
             mock_global_registry.get_vr.return_value = ""
@@ -247,15 +247,15 @@ class TestFCXModeHandlerPhase5Integration:
         """Test that FCXModeHandler properly unpacks tuple from scan_game_files()."""
         from unittest.mock import Mock, patch
 
-        from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
+        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
 
         # Reset state
         FCXModeHandlerFragments.reset_fcx_checks()
 
         # Mock coordinator (patching at the import location inside the method)
         with (
-            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as mock_coordinator_class,
-            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_generate,
+            patch("ClassicLib.support.setup.SetupCoordinator") as mock_coordinator_class,
+            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_generate,
         ):
             mock_coordinator = Mock()
             mock_coordinator.generate_combined_results.return_value = "Main files OK\n"
@@ -294,14 +294,14 @@ class TestFCXModeHandlerPhase5Integration:
         """Test that FCXModeHandler handles empty issues list correctly."""
         from unittest.mock import Mock, patch
 
-        from ClassicLib.ScanLog.FCXModeHandler import FCXModeHandlerFragments
+        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
 
         # Reset state
         FCXModeHandlerFragments.reset_fcx_checks()
 
         with (
-            patch("ClassicLib.SetupCoordinator.SetupCoordinator") as mock_coordinator_class,
-            patch("ClassicLib.ScanGame.generate_game_combined_result") as mock_generate,
+            patch("ClassicLib.support.setup.SetupCoordinator") as mock_coordinator_class,
+            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_generate,
         ):
             mock_coordinator = Mock()
             mock_coordinator.generate_combined_results.return_value = "Main files OK\n"

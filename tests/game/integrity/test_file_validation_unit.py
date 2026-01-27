@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ClassicLib.GameIntegrity import GameIntegrityChecker
+from ClassicLib.support.integrity import GameIntegrityChecker
 
 
 class TestInstallationLocation:

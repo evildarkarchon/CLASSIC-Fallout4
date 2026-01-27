@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.PathValidator import PathValidator
+from ClassicLib.support.path_validator import PathValidator
 
 pytestmark = pytest.mark.integration
 

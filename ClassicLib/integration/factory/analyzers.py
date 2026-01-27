@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Any
 from ClassicLib.integration.factory.core import get_components, is_rust_disabled
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exi
 
     if not is_rust_disabled() and components.get("formid_analyzer", False):
         try:
-            from ClassicLib.rust.formid_rust import FormIDAnalyzer
+            from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
             logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
             return FormIDAnalyzer(yamldata, show_values, db_exists)
@@ -58,7 +58,7 @@ def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exi
             logger.warning(f"Failed to import Rust FormIDAnalyzer: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.python.formid_py import FormIDAnalyzer
+    from ClassicLib.integration.python.formid_py import FormIDAnalyzer
 
     logger.debug("Using Python FormIDAnalyzer implementation")
     return FormIDAnalyzer(yamldata, show_values, db_exists)
@@ -85,7 +85,7 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
 
     if not is_rust_disabled() and components.get("plugin_analyzer", False):
         try:
-            from ClassicLib.rust.plugin_rust import RustPluginAnalyzer
+            from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
             logger.debug("Using RustPluginAnalyzer wrapper (30x speedup potential)")
             return RustPluginAnalyzer(yamldata)
@@ -93,7 +93,7 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
             logger.warning(f"Failed to import RustPluginAnalyzer: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.python.plugin_py import PluginAnalyzer
+    from ClassicLib.integration.python.plugin_py import PluginAnalyzer
 
     logger.debug("Using Python PluginAnalyzer implementation")
     return PluginAnalyzer(yamldata)
@@ -122,7 +122,7 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
 
     if not is_rust_disabled() and components.get("record_scanner", False):
         try:
-            from ClassicLib.rust.record_rust import RustRecordScanner
+            from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
             logger.debug("Using RustRecordScanner wrapper (40x speedup potential)")
             return RustRecordScanner(yamldata)
@@ -130,7 +130,7 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
             logger.warning(f"Failed to import RustRecordScanner: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.python.record_py import RecordScanner
+    from ClassicLib.integration.python.record_py import RecordScanner
 
     logger.debug("Using Python RecordScanner implementation")
     return RecordScanner(yamldata)
@@ -154,7 +154,7 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
 
     """
     # Use wrapper that handles Rust/Python automatically
-    from ClassicLib.rust.suspect_rust import RUST_AVAILABLE, SuspectScanner
+    from ClassicLib.integration.rust.suspect_rust import RUST_AVAILABLE, SuspectScanner
 
     if RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated SuspectScanner (40x speedup potential)")
@@ -182,7 +182,7 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
 
     """
     # Use wrapper that handles Rust/Python automatically
-    from ClassicLib.rust.settings_rust import RUST_AVAILABLE, SettingsValidator
+    from ClassicLib.integration.rust.settings_rust import RUST_AVAILABLE, SettingsValidator
 
     if RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated SettingsValidator")
@@ -207,7 +207,7 @@ def get_gpu_detector() -> Any:
 
     """
     # Use wrapper that provides get_gpu_info function with automatic Rust/Python fallback
-    from ClassicLib.rust import gpu_rust
+    from ClassicLib.integration.rust import gpu_rust
 
     if gpu_rust.RUST_AVAILABLE:
         logger.debug("Using Rust-accelerated GpuDetector")

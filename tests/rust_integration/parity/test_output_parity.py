@@ -28,7 +28,7 @@ from typing import Any
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.integration.detector import get_available_components
 from ClassicLib.integration.factory import (
     get_formid_analyzer,
@@ -41,10 +41,11 @@ from ClassicLib.integration.status import (
 )
 
 RUST_AVAILABLE = get_available_components()["components"]
-from ClassicLib.ScanLog.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.ScanLog.Parser import find_segments
-from ClassicLib.ScanLog.PluginAnalyzer import PluginAnalyzer
-from ClassicLib.ScanLog.RecordScanner import RecordScanner
+from ClassicLib.scanning.logs.FormIDAnalyzerCore import FormIDAnalyzerCore
+from ClassicLib.scanning.logs.PluginAnalyzer import PluginAnalyzer
+from ClassicLib.scanning.logs.RecordScanner import RecordScanner
+
+from ClassicLib.scanning.logs.parser import find_segments
 from tests.fixtures.parity_fixtures import (
     ParityResult,
     ParityValidator,

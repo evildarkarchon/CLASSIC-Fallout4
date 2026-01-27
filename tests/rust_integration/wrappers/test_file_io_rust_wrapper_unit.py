@@ -14,7 +14,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.rust.file_io_rust import FileIOCore
+    from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
 
 # ============================================================================
@@ -29,7 +29,7 @@ def file_io_core() -> "FileIOCore":
     Returns:
         FileIOCore instance with default settings.
     """
-    from ClassicLib.rust.file_io_rust import FileIOCore
+    from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
     return FileIOCore()
 
@@ -41,7 +41,7 @@ def file_io_core_custom_encoding() -> "FileIOCore":
     Returns:
         FileIOCore instance with custom encoding settings.
     """
-    from ClassicLib.rust.file_io_rust import FileIOCore
+    from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
     return FileIOCore(encoding="latin-1", errors="replace")
 
@@ -110,7 +110,7 @@ class TestFileIOCoreInit:
     @pytest.mark.unit
     def test_init_default_encoding(self) -> None:
         """Test default encoding is UTF-8."""
-        from ClassicLib.rust.file_io_rust import FileIOCore
+        from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
         io = FileIOCore()
 
@@ -120,7 +120,7 @@ class TestFileIOCoreInit:
     @pytest.mark.unit
     def test_init_custom_encoding(self) -> None:
         """Test custom encoding can be specified."""
-        from ClassicLib.rust.file_io_rust import FileIOCore
+        from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
         io = FileIOCore(encoding="latin-1", errors="replace")
 
@@ -136,9 +136,9 @@ class TestFileIOCoreInit:
     @pytest.mark.unit
     def test_init_fallback_when_rust_unavailable(self) -> None:
         """Test Python fallback is created when Rust unavailable."""
-        with patch("ClassicLib.rust.file_io_rust.RUST_AVAILABLE", False):
-            with patch("ClassicLib.rust.file_io_rust._rust_io", None):
-                from ClassicLib.rust.file_io_rust import FileIOCore
+        with patch("ClassicLib.integration.rust.file_io_rust.RUST_AVAILABLE", False):
+            with patch("ClassicLib.integration.rust.file_io_rust._rust_io", None):
+                from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
                 io = FileIOCore.__new__(FileIOCore)
                 io.default_encoding = "utf-8"
@@ -516,7 +516,7 @@ class TestSyncWrapper:
     @pytest.mark.unit
     def test_create_file_io_sync_returns_wrapper(self) -> None:
         """Test create_file_io_sync returns SyncWrapper."""
-        from ClassicLib.rust.file_io_rust import create_file_io_sync
+        from ClassicLib.integration.rust.file_io_rust import create_file_io_sync
 
         wrapper = create_file_io_sync()
 
@@ -527,7 +527,7 @@ class TestSyncWrapper:
     @pytest.mark.unit
     def test_sync_wrapper_file_exists(self, temp_text_file: Path) -> None:
         """Test SyncWrapper.file_exists works."""
-        from ClassicLib.rust.file_io_rust import create_file_io_sync
+        from ClassicLib.integration.rust.file_io_rust import create_file_io_sync
 
         wrapper = create_file_io_sync()
 
@@ -536,7 +536,7 @@ class TestSyncWrapper:
     @pytest.mark.unit
     def test_sync_wrapper_get_file_size(self, temp_binary_file: Path) -> None:
         """Test SyncWrapper.get_file_size works."""
-        from ClassicLib.rust.file_io_rust import create_file_io_sync
+        from ClassicLib.integration.rust.file_io_rust import create_file_io_sync
 
         wrapper = create_file_io_sync()
 
@@ -554,12 +554,12 @@ class TestGetRustFileIO:
     @pytest.mark.unit
     def test_get_rust_file_io_returns_instance_or_none(self) -> None:
         """Test get_rust_file_io returns FileIOCore or None."""
-        from ClassicLib.rust.file_io_rust import get_rust_file_io
+        from ClassicLib.integration.rust.file_io_rust import get_rust_file_io
 
         result = get_rust_file_io()
 
         # Should return FileIOCore if Rust available, None otherwise
         if result is not None:
-            from ClassicLib.rust.file_io_rust import FileIOCore
+            from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
             assert isinstance(result, FileIOCore)

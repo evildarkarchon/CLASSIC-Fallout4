@@ -18,14 +18,14 @@ from PySide6.QtCore import Qt, QThread, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QMessageBox
 
-from ClassicLib.Constants import YAML
-from ClassicLib.Interface.ThreadManager import ThreadType
-from ClassicLib.Interface.Workers import UpdateCheckWorker
-from ClassicLib.Logger import logger
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
+from ClassicLib.Interface.workers.ThreadManager import ThreadType
+from ClassicLib.Interface.workers.Workers import UpdateCheckWorker
+from ClassicLib.io.yaml import yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class UpdateManager:

@@ -13,7 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+    from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
 # ============================================================================
 # Fixtures
@@ -55,7 +55,7 @@ def formid_analyzer(mock_yamldata_formid: MagicMock) -> "PythonFormIDAnalyzer":
     Returns:
         PythonFormIDAnalyzer instance configured for testing.
     """
-    from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+    from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
     return PythonFormIDAnalyzer(
         yamldata=mock_yamldata_formid,
@@ -79,7 +79,7 @@ def formid_analyzer_with_pool(
     Returns:
         PythonFormIDAnalyzer instance with database pool.
     """
-    from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+    from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
     return PythonFormIDAnalyzer(
         yamldata=mock_yamldata_formid,
@@ -100,7 +100,7 @@ class TestPythonFormIDAnalyzerInit:
     @pytest.mark.unit
     def test_init_with_all_parameters(self, mock_yamldata_formid: MagicMock) -> None:
         """Test analyzer initializes with all required parameters."""
-        from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
         analyzer = PythonFormIDAnalyzer(
             yamldata=mock_yamldata_formid,
@@ -117,7 +117,7 @@ class TestPythonFormIDAnalyzerInit:
     @pytest.mark.unit
     def test_init_with_disabled_formid_values(self, mock_yamldata_formid: MagicMock) -> None:
         """Test analyzer initializes with FormID values disabled."""
-        from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
         analyzer = PythonFormIDAnalyzer(
             yamldata=mock_yamldata_formid,
@@ -132,7 +132,7 @@ class TestPythonFormIDAnalyzerInit:
     @pytest.mark.unit
     def test_init_creates_formid_pattern(self, mock_yamldata_formid: MagicMock) -> None:
         """Test analyzer creates regex pattern for FormID matching."""
-        from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
         analyzer = PythonFormIDAnalyzer(
             yamldata=mock_yamldata_formid,
@@ -370,7 +370,7 @@ class TestLookupFormidValue:
     @pytest.mark.asyncio
     async def test_lookup_formid_value_no_db(self, mock_yamldata_formid: MagicMock) -> None:
         """Test lookup returns None when database doesn't exist."""
-        from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
         analyzer = PythonFormIDAnalyzer(
             yamldata=mock_yamldata_formid,
@@ -402,7 +402,7 @@ class TestLookupFormidValue:
     @pytest.mark.asyncio
     async def test_lookup_formid_value_fallback_to_sync(self, mock_yamldata_formid: MagicMock) -> None:
         """Test lookup falls back to sync lookup when no pool."""
-        from ClassicLib.python.formid_py import PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import PythonFormIDAnalyzer
 
         analyzer = PythonFormIDAnalyzer(
             yamldata=mock_yamldata_formid,
@@ -411,7 +411,7 @@ class TestLookupFormidValue:
             db_pool=None,
         )
 
-        with patch("ClassicLib.python.formid_py._cached_formid_lookup") as mock_lookup:
+        with patch("ClassicLib.integration.python.formid_py._cached_formid_lookup") as mock_lookup:
             mock_lookup.return_value = "Cached Result"
 
             result = await analyzer.lookup_formid_value("001234", "Test.esp")
@@ -472,7 +472,7 @@ class TestFormIDAnalyzerAlias:
     @pytest.mark.unit
     def test_formid_analyzer_alias_exists(self) -> None:
         """Test FormIDAnalyzer is an alias for PythonFormIDAnalyzer."""
-        from ClassicLib.python.formid_py import FormIDAnalyzer, PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import FormIDAnalyzer, PythonFormIDAnalyzer
 
         assert FormIDAnalyzer is PythonFormIDAnalyzer
 
@@ -488,7 +488,7 @@ class TestPatternCache:
     @pytest.mark.unit
     def test_pattern_cache_reused(self, mock_yamldata_formid: MagicMock) -> None:
         """Test that pattern cache is reused across instances."""
-        from ClassicLib.python.formid_py import _PATTERN_CACHE, PythonFormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import _PATTERN_CACHE, PythonFormIDAnalyzer
 
         # Create first analyzer
         analyzer1 = PythonFormIDAnalyzer(

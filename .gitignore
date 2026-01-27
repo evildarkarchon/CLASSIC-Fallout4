@@ -292,3 +292,4 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 PowerShellEditorServices.json
+!ClassicLib/scanning/logs/

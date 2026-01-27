@@ -12,8 +12,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import NULL_VERSION, YAML
+from ClassicLib.core.constants import NULL_VERSION, YAML
+from ClassicLib.core.registry import GlobalRegistry
 
 pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
 
@@ -21,7 +21,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
 class TestGamePathFinderCreateAsync:
     """Tests for GamePathFinder.create_async() factory method."""
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_create_async_returns_instance(
@@ -46,7 +46,7 @@ class TestGamePathFinderCreateAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
 
@@ -57,7 +57,7 @@ class TestGamePathFinderCreateAsync:
         assert finder.xse_acronym_base == "F4SE"
         assert finder.game_name == "Fallout 4"
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     async def test_create_async_vr_mode(
@@ -83,14 +83,14 @@ class TestGamePathFinderCreateAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
 
         assert finder.exe_name == "Fallout4VR.exe"
         assert finder.xse_acronym == "F4SEVR"
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_create_async_invalid_types_raises_typeerror(
@@ -114,7 +114,7 @@ class TestGamePathFinderCreateAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         with pytest.raises(TypeError):
             await GamePathFinder.create_async()
@@ -123,8 +123,8 @@ class TestGamePathFinderCreateAsync:
 class TestFindGamePathAsync:
     """Tests for GamePathFinder.find_game_path_async() method."""
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_find_game_path_async_uses_cached_path(
@@ -163,7 +163,7 @@ class TestFindGamePathAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
         await finder.find_game_path_async()
@@ -171,9 +171,9 @@ class TestFindGamePathAsync:
         assert GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH) == game_path
 
     @patch("platform.system", return_value="Windows")
-    @patch("ClassicLib.GamePath._game_path_find_registry")
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path_async")
+    @patch("ClassicLib.support.game_path._game_path_find_registry")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_find_game_path_async_uses_registry_on_windows(
@@ -207,7 +207,7 @@ class TestFindGamePathAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
         await finder.find_game_path_async()
@@ -215,9 +215,9 @@ class TestFindGamePathAsync:
         mock_registry.assert_called_once_with("Fallout4.exe")
 
     @patch("platform.system", return_value="Linux")
-    @patch("ClassicLib.GamePath._game_path_find_registry")
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path_async")
+    @patch("ClassicLib.support.game_path._game_path_find_registry")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
     @patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file"))
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -250,19 +250,19 @@ class TestFindGamePathAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
-        with patch("ClassicLib.GamePath.msg_error"):
+        with patch("ClassicLib.support.game_path.msg_error"):
             finder = await GamePathFinder.create_async()
             # Should not raise and should skip registry
             await finder.find_game_path_async()
 
         mock_registry.assert_not_called()
 
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache_async")
     @patch("platform.system", return_value="Linux")
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "is_gui_mode", return_value=False)
@@ -300,7 +300,7 @@ class TestFindGamePathAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
 
@@ -316,7 +316,7 @@ class TestFindGamePathAsync:
 class TestGamePathFindAsync:
     """Tests for game_path_find_async() top-level function."""
 
-    @patch("ClassicLib.GamePath.GamePathFinder.create_async")
+    @patch("ClassicLib.support.game_path.GamePathFinder.create_async")
     async def test_game_path_find_async_calls_finder(
         self,
         mock_create: AsyncMock,
@@ -326,7 +326,7 @@ class TestGamePathFindAsync:
         mock_finder = AsyncMock()
         mock_create.return_value = mock_finder
 
-        from ClassicLib.GamePath import game_path_find_async
+        from ClassicLib.support.game_path import game_path_find_async
 
         await game_path_find_async()
 
@@ -337,8 +337,8 @@ class TestGamePathFindAsync:
 class TestGameGeneratePathsAsync:
     """Tests for game_generate_paths_async() function."""
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_fallout4_og(
@@ -373,14 +373,14 @@ class TestGameGeneratePathsAsync:
 
         mock_get_version.return_value = Version("1.10.163.0")
 
-        from ClassicLib.GamePath import game_generate_paths_async
+        from ClassicLib.support.game_path import game_generate_paths_async
 
         await game_generate_paths_async()
 
         assert call_count >= 6
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     async def test_generate_paths_async_fallout4_vr(
@@ -413,13 +413,13 @@ class TestGameGeneratePathsAsync:
 
         mock_get_version.return_value = Version("1.2.72.0")
 
-        from ClassicLib.GamePath import game_generate_paths_async
+        from ClassicLib.support.game_path import game_generate_paths_async
 
         await game_generate_paths_async()
 
         assert mock_yaml_async.call_count >= 6
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_missing_game_path(
@@ -436,12 +436,12 @@ class TestGameGeneratePathsAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import game_generate_paths_async
+        from ClassicLib.support.game_path import game_generate_paths_async
 
         with pytest.raises(TypeError):
             await game_generate_paths_async()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_missing_xse_acronym(
@@ -465,13 +465,13 @@ class TestGameGeneratePathsAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import game_generate_paths_async
+        from ClassicLib.support.game_path import game_generate_paths_async
 
         with pytest.raises(TypeError):
             await game_generate_paths_async()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_null_version_uses_default(
@@ -499,15 +499,15 @@ class TestGameGeneratePathsAsync:
         mock_yaml_async.side_effect = yaml_side_effect
         mock_get_version.return_value = NULL_VERSION
 
-        from ClassicLib.GamePath import game_generate_paths_async
+        from ClassicLib.support.game_path import game_generate_paths_async
 
         await game_generate_paths_async()
 
         # Should complete without error using default version
         assert mock_yaml_async.call_count >= 6
 
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
-    @patch("ClassicLib.GamePath.get_game_version")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
+    @patch("ClassicLib.support.game_path.get_game_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Starfield")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_unsupported_game(
@@ -538,7 +538,7 @@ class TestGameGeneratePathsAsync:
 
         mock_get_version.return_value = Version("1.0.0")
 
-        from ClassicLib.GamePath import game_generate_paths_async
+        from ClassicLib.support.game_path import game_generate_paths_async
 
         with pytest.raises(ValueError, match="Unsupported game"):
             await game_generate_paths_async()
@@ -547,8 +547,8 @@ class TestGameGeneratePathsAsync:
 class TestSaveGamePathAsync:
     """Tests for _save_game_path_async method."""
 
-    @patch("ClassicLib.ResourceLoader.ResourceLoader.save_path_to_cache_async")
-    @patch("ClassicLib.YamlSettings.yaml_settings_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache_async")
+    @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_save_game_path_async_saves_and_registers(
@@ -576,7 +576,7 @@ class TestSaveGamePathAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
-        from ClassicLib.GamePath import GamePathFinder
+        from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
         await finder._save_game_path_async(game_path)

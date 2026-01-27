@@ -5,9 +5,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.BackupManager import BackupManager
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.backup import BackupManager
 
 pytestmark = [pytest.mark.unit]
 
@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.unit]
 class TestBackupConfiguration:
     """Tests for backup configuration loading."""
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_backup_configuration_success(self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, manager: BackupManager) -> None:
         """Test successful loading of backup configuration."""
@@ -39,7 +39,7 @@ class TestBackupConfiguration:
         # Verify yaml_settings was called correctly
         assert mock_yaml_settings.call_count == 4
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_load_backup_configuration_vr_mode(self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, manager: BackupManager) -> None:
         """Test loading configuration in VR mode."""
@@ -55,7 +55,7 @@ class TestBackupConfiguration:
         assert calls[2][0] == (str, YAML.Game_Local, "GameVR_Info.Docs_File_XSE")
         assert calls[3][0] == (str, YAML.Game, "GameVR_Info.XSE_Ver_Latest")
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_backup_configuration_type_error_list(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, manager: BackupManager
@@ -73,7 +73,7 @@ class TestBackupConfiguration:
         with pytest.raises(TypeError, match="Backup list must be a list of strings"):
             manager.load_backup_configuration()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_backup_configuration_type_error_xse_log(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, manager: BackupManager
@@ -91,7 +91,7 @@ class TestBackupConfiguration:
         with pytest.raises(TypeError, match="XSE log file path must be a string"):
             manager.load_backup_configuration()
 
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_backup_configuration_type_error_xse_version(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, manager: BackupManager
@@ -109,8 +109,8 @@ class TestBackupConfiguration:
         with pytest.raises(TypeError, match="Latest XSE version must be a string"):
             manager.load_backup_configuration()
 
-    @patch("ClassicLib.BackupManager.logger")
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.support.backup.logger")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_backup_configuration_with_logging(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, mock_logger: MagicMock, manager: BackupManager

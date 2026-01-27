@@ -30,7 +30,9 @@ from tests.test_infra.performance_utils import PerformanceTimer
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import core components
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+
+from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.integration.factory import (
     get_formid_analyzer,
     get_parser,
@@ -41,7 +43,6 @@ from ClassicLib.integration.status import (
     get_rust_component_status,
     is_rust_accelerated,
 )
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
 
 logger = logging.getLogger(__name__)
 
@@ -99,68 +100,6 @@ class TestE2EPipeline:
             samples["synthetic"] = synthetic_log
 
         return samples
-
-    @pytest.fixture
-    def mock_yamldata(self) -> Mock:
-        """
-        Create a mock YAML data object for testing.
-
-        Returns a mock object that simulates the ClassicScanLogsInfo
-        structure with all necessary attributes for testing.
-        """
-        mock_yaml = Mock()
-
-        # Mock game configuration
-        mock_yaml.game_type = "fallout4"
-        mock_yaml.crashgen_name = "Buffout 4"
-        mock_yaml.crashgen_name_vr = "Buffout 4 NG"
-        mock_yaml.xse_acronym = "F4SE"
-        mock_yaml.game_root_name = "Fallout 4"
-        mock_yaml.game_root_name_vr = "Fallout 4 VR"
-        mock_yaml.crashgen_latest_og = "1.28.6"
-        mock_yaml.crashgen_latest_vr = "1.28.6"
-        mock_yaml.classic_version = "7.31.0"
-
-        # Method to get crashgen name based on VR status
-        def get_crashgen_name(is_vr: bool) -> str:
-            return mock_yaml.crashgen_name_vr if is_vr else mock_yaml.crashgen_name
-
-        mock_yaml.get_crashgen_name = get_crashgen_name
-
-        # Method to get game root name based on VR status
-        def get_game_root_name(is_vr: bool) -> str:
-            return mock_yaml.game_root_name_vr if is_vr else mock_yaml.game_root_name
-
-        mock_yaml.get_game_root_name = get_game_root_name
-
-        # Mock problematic plugins list
-        mock_yaml.problematic_plugins = {"test_plugin.esp": "Test problematic plugin", "broken_mod.esp": "Known broken mod"}
-
-        # Mock FormID database configuration
-        mock_yaml.formid_database_enabled = True
-        mock_yaml.show_formid_values = True
-
-        # Mock record patterns for scanning
-        mock_yaml.record_patterns = ["TESForm", "BGSKeyword", "TESObjectSTAT"]
-
-        # Initialize list attributes
-        mock_yaml.game_ignore_plugins = []
-        mock_yaml.game_ignore_records = []
-        mock_yaml.ignore_list = []
-        mock_yaml.classic_records_list = []
-        mock_yaml.plugins_mods_to_check = {}
-
-        # Initialize dict attributes
-        mock_yaml.game_mods_core = {}
-        mock_yaml.game_mods_core_folon = {}
-        mock_yaml.game_mods_conf = {}
-        mock_yaml.game_mods_freq = {}
-        mock_yaml.game_mods_solu = {}
-        mock_yaml.game_mods_opc2 = {}
-        mock_yaml.suspects_error_list = {}
-        mock_yaml.suspects_stack_list = {}
-
-        return mock_yaml
 
     @pytest.fixture
     def orchestrator(self, mock_yamldata) -> OrchestratorCore:

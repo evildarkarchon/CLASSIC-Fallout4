@@ -31,6 +31,7 @@ uv run pytest -m "unit and not slow"
 5. **Google-style docstrings** - Use `/python-docstrings` skill
 6. **ONE RUNTIME** - Single global Tokio runtime
 7. **Separate crates** - Business logic in `-core`, PyO3 in `-py`
+8. **Lazy YAML imports** - Import `yaml_settings`, `classic_settings` inside functions to avoid circular imports
 
 ## Skills
 

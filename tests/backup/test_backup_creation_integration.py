@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.BackupManager import BackupManager
+from ClassicLib.support.backup import BackupManager
 
 pytestmark = pytest.mark.integration
 
@@ -19,7 +19,7 @@ class TestBackupFilesOperation:
 
     @patch("ClassicLib.Utils.path_utils.validate_path")
     @patch("shutil.copy2")
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.logger")
     def test_backup_files_skip_existing(
         self, mock_logger: MagicMock, mock_copy: MagicMock, mock_validate: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch
     ) -> None:

@@ -1,18 +1,18 @@
-"""Formatting utilities for message handling.
+"""Backward compatibility module for MessageHandler.formatting.
 
-This module provides Rust-accelerated text formatting functions including
-emoji stripping and log message formatting. Falls back to Python implementations
-when Rust acceleration is unavailable.
+This package has been moved to ClassicLib.messaging.formatting.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.messaging.formatting instead.
 """
 
-from ClassicLib.MessageHandler.formatting.formatter import (
-    RUST_AVAILABLE,
-    format_log_message,
-    strip_emoji,
+import warnings
+
+warnings.warn(
+    "ClassicLib.MessageHandler.formatting is deprecated, import from ClassicLib.messaging.formatting instead",
+    DeprecationWarning,
+    stacklevel=2,
 )
 
-__all__ = [
-    "RUST_AVAILABLE",
-    "format_log_message",
-    "strip_emoji",
-]
+from ClassicLib.messaging.formatting import *  # noqa: F403, E402

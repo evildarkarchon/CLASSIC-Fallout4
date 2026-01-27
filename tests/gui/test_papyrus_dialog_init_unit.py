@@ -12,8 +12,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Interface.Papyrus import PapyrusStats
-from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
+from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
 
 is_xdist = os.environ.get("PYTEST_XDIST_WORKER") is not None
 skip_xdist = pytest.mark.skipif(is_xdist, reason="Qt GUI tests unstable in xdist workers on Windows")
@@ -39,13 +39,13 @@ class TestPapyrusMonitorDialog:
     def mock_dialog(self, mock_parent_widget, qt_application):
         """Create a PapyrusMonitorDialog with mocked dependencies."""
         with (
-            patch("ClassicLib.Interface.PapyrusDialog.QDialog.__init__") as mock_init,
-            patch("ClassicLib.Interface.PapyrusDialog.QVBoxLayout") as mock_vlayout,
-            patch("ClassicLib.Interface.PapyrusDialog.QHBoxLayout") as mock_hlayout,
-            patch("ClassicLib.Interface.PapyrusDialog.QGridLayout") as mock_gridlayout,
-            patch("ClassicLib.Interface.PapyrusDialog.QLabel") as mock_label,
-            patch("ClassicLib.Interface.PapyrusDialog.QPushButton") as mock_button,
-            patch("ClassicLib.Interface.PapyrusDialog.QFont") as mock_font,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QDialog.__init__") as mock_init,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QVBoxLayout") as mock_vlayout,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QHBoxLayout") as mock_hlayout,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QGridLayout") as mock_gridlayout,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QLabel") as mock_label,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QPushButton") as mock_button,
+            patch("ClassicLib.Interface.dialogs.PapyrusDialog.QFont") as mock_font,
         ):
             # Configure mocks
             mock_layout_instance = MagicMock()

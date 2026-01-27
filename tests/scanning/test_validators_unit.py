@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanGame.core.validators module.
+"""Unit tests for ClassicLib.scanning.game.checks.validators module.
 
 This module tests the ScanValidators class for validation utilities.
 """
@@ -16,7 +16,7 @@ class TestScanValidatorsInit:
 
     def test_init_creates_empty_scan_settings_cache(self) -> None:
         """Test __init__ creates empty scan settings cache."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -24,7 +24,7 @@ class TestScanValidatorsInit:
 
     def test_init_creates_empty_issue_messages_cache(self) -> None:
         """Test __init__ creates empty issue messages cache."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -37,20 +37,20 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_returns_tuple(self) -> None:
         """Test returns a tuple with expected structure."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = {"script1.pex": {"hash1", "hash2"}}
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = Path("C:/mods")
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = ""
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
         assert isinstance(result, tuple)
@@ -59,20 +59,20 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_returns_xse_acronym(self) -> None:
         """Test returns XSE acronym as first element."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = ""
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
         assert result[0] == "F4SE"
@@ -80,20 +80,20 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_returns_default_xse_acronym_when_none(self) -> None:
         """Test returns 'XSE' when yaml returns None."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = None  # Return None
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = ""
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
         assert result[0] == "XSE"
@@ -101,7 +101,7 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_returns_script_hashes_dict(self) -> None:
         """Test returns script hashes dictionary as second element."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -109,13 +109,13 @@ class TestGetScanSettings:
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = expected_hashes
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = ""
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
         assert result[1] == expected_hashes
@@ -123,7 +123,7 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_returns_mod_path(self) -> None:
         """Test returns mod path as third element."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
         expected_path = Path("C:/Games/Fallout4/Mods")
@@ -131,13 +131,13 @@ class TestGetScanSettings:
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = expected_path
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = ""
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
         assert result[2] == expected_path
@@ -145,20 +145,20 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_caches_result(self) -> None:
         """Test caches result after first call."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = ""
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         # First call
                         result1 = await validators.get_scan_settings()
                         # Second call should use cache
@@ -170,20 +170,20 @@ class TestGetScanSettings:
     @pytest.mark.asyncio
     async def test_uses_vr_mode_correctly(self) -> None:
         """Test passes VR mode to version registry correctly."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
         mock_registry = MagicMock()
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.ScanGame.core.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.ScanGame.core.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.ScanGame.core.validators.GlobalRegistry") as mock_global:
+                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
                     mock_global.get_vr.return_value = "VR"
-                    with patch("ClassicLib.VersionRegistry.get_version_registry", return_value=mock_registry):
+                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         await validators.get_scan_settings()
 
         # Should pass is_vr=True when VR mode
@@ -195,7 +195,7 @@ class TestGetIssueMessages:
 
     def test_returns_dict(self) -> None:
         """Test returns a dictionary."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -205,7 +205,7 @@ class TestGetIssueMessages:
 
     def test_unpacked_mode_contains_base_messages(self) -> None:
         """Test unpacked mode contains base message keys."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -217,7 +217,7 @@ class TestGetIssueMessages:
 
     def test_unpacked_mode_contains_unpacked_specific_messages(self) -> None:
         """Test unpacked mode contains unpacked-specific keys."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -230,7 +230,7 @@ class TestGetIssueMessages:
 
     def test_archived_mode_contains_base_messages(self) -> None:
         """Test archived mode contains base message keys."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -242,7 +242,7 @@ class TestGetIssueMessages:
 
     def test_archived_mode_contains_archived_specific_messages(self) -> None:
         """Test archived mode contains archived-specific keys."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -253,7 +253,7 @@ class TestGetIssueMessages:
 
     def test_archived_mode_does_not_contain_unpacked_messages(self) -> None:
         """Test archived mode does not contain unpacked-specific keys."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -265,7 +265,7 @@ class TestGetIssueMessages:
 
     def test_xse_acronym_appears_in_messages(self) -> None:
         """Test XSE acronym appears in relevant messages."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -276,7 +276,7 @@ class TestGetIssueMessages:
 
     def test_different_xse_acronym_used_correctly(self) -> None:
         """Test different XSE acronym is used in messages."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -287,7 +287,7 @@ class TestGetIssueMessages:
 
     def test_caches_result(self) -> None:
         """Test caches result after first call."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -299,7 +299,7 @@ class TestGetIssueMessages:
 
     def test_different_keys_get_separate_cache_entries(self) -> None:
         """Test different mode/acronym combinations are cached separately."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -311,7 +311,7 @@ class TestGetIssueMessages:
 
     def test_message_values_are_lists(self) -> None:
         """Test all message values are lists."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -322,7 +322,7 @@ class TestGetIssueMessages:
 
     def test_message_list_items_are_strings(self) -> None:
         """Test all items in message lists are strings."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
@@ -338,6 +338,6 @@ class TestModuleImports:
 
     def test_scan_validators_class_exists(self) -> None:
         """Test ScanValidators class can be imported."""
-        from ClassicLib.ScanGame.core.validators import ScanValidators
+        from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         assert ScanValidators is not None

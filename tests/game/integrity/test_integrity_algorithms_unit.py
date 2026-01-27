@@ -6,13 +6,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.GameIntegrity import GameIntegrityChecker
+from ClassicLib.support.integrity import GameIntegrityChecker
 
 
 class TestHashVerification:
     """Tests for file hash verification and version detection."""
 
-    @patch("ClassicLib.GameIntegrity.calculate_file_hash")
+    @patch("ClassicLib.support.integrity.calculate_file_hash")
     def test_check_executable_version_latest(
         self, mock_hash: MagicMock, checker: GameIntegrityChecker, mock_config: dict[str, str], test_game_exe: Path
     ) -> None:
@@ -35,7 +35,7 @@ class TestHashVerification:
         assert "✔️ You have the latest version" in message
         assert "Fallout4" in message
 
-    @patch("ClassicLib.GameIntegrity.calculate_file_hash")
+    @patch("ClassicLib.support.integrity.calculate_file_hash")
     def test_check_executable_version_outdated_with_steam_ini(
         self,
         mock_hash: MagicMock,
@@ -61,7 +61,7 @@ class TestHashVerification:
         assert "💀 CAUTION" in message
         assert "OUT OF DATE" in message
 
-    @patch("ClassicLib.GameIntegrity.calculate_file_hash")
+    @patch("ClassicLib.support.integrity.calculate_file_hash")
     def test_check_executable_version_outdated_no_steam_ini(
         self, mock_hash: MagicMock, checker: GameIntegrityChecker, mock_config: dict[str, str], test_game_exe: Path
     ) -> None:
@@ -82,7 +82,7 @@ class TestHashVerification:
         assert "❌ CAUTION" in message
         assert "OUT OF DATE" in message
 
-    @patch("ClassicLib.GameIntegrity.calculate_file_hash")
+    @patch("ClassicLib.support.integrity.calculate_file_hash")
     def test_check_executable_version_old_but_expected(
         self, mock_hash: MagicMock, checker: GameIntegrityChecker, mock_config: dict[str, str], test_game_exe: Path
     ) -> None:

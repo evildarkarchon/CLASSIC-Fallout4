@@ -14,7 +14,7 @@ import asyncio
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.core.async_bridge import AsyncBridge
 
 pytestmark = pytest.mark.unit
 

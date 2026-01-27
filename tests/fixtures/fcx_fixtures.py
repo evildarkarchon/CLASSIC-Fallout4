@@ -13,8 +13,8 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.ScanGame.Config import ConfigFileCache
-from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+from ClassicLib.scanning.game.config import ConfigFileCache
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
 
 
 @pytest.fixture

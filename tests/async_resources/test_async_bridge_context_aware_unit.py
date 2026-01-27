@@ -10,12 +10,12 @@ from unittest.mock import patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.AsyncBridge import (
+from ClassicLib.core.async_bridge import (
     context_aware_sync,
     create_sync_wrapper,
     smart_await,
 )
+from ClassicLib.core.registry import GlobalRegistry
 
 pytestmark = pytest.mark.unit
 
@@ -270,7 +270,7 @@ class TestRealWorldScenarios:
 
             def method(self):
                 """Always uses AsyncBridge."""
-                from ClassicLib.AsyncBridge import run_async
+                from ClassicLib.core.async_bridge import run_async
 
                 return run_async(self._async_method())
 
@@ -309,7 +309,7 @@ class TestRealWorldScenarios:
                 """Adapts based on context."""
                 if GlobalRegistry.is_gui_mode():
                     # GUI mode - use bridge
-                    from ClassicLib.AsyncBridge import run_async
+                    from ClassicLib.core.async_bridge import run_async
 
                     return run_async(self._async_implementation(data))
 

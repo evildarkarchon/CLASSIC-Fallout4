@@ -17,15 +17,15 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QMutex, QThread, Slot
 from PySide6.QtWidgets import QMessageBox
 
-from ClassicLib.Constants import YAML
-from ClassicLib.Interface.Dialogs import CustomErrorDialog
-from ClassicLib.Interface.ThreadManager import ThreadType
-from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
-from ClassicLib.Logger import logger
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
+from ClassicLib.Interface.dialogs.Dialogs import CustomErrorDialog
+from ClassicLib.Interface.workers.ThreadManager import ThreadType
+from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker, GameFilesScanWorker
+from ClassicLib.io.yaml import yaml_settings
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class ScanController:
@@ -85,18 +85,24 @@ class ScanController:
         Emits signals for pausing file watching and refreshing reports on completion.
         """
         # Thread-safe check and update
+        # IMPORTANT: Release mutex BEFORE showing QMessageBox to avoid deadlock
+        # (QMessageBox pumps the Qt event loop which can cause cross-thread issues)
         self._scan_mutex.lock()
         try:
-            if "crash_logs" in self._running_scans or self._ctx.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN):
-                QMessageBox.warning(
-                    self._ctx.main_window,
-                    "Scan in Progress",
-                    "A crash logs scan is already in progress.",
-                )
-                return
-            self._running_scans.add("crash_logs")
+            already_running = "crash_logs" in self._running_scans or self._ctx.thread_manager.is_thread_running(ThreadType.CRASH_LOGS_SCAN)
+            if not already_running:
+                self._running_scans.add("crash_logs")
         finally:
             self._scan_mutex.unlock()
+
+        # Show warning OUTSIDE the lock to avoid deadlock
+        if already_running:
+            QMessageBox.warning(
+                self._ctx.main_window,
+                "Scan in Progress",
+                "A crash logs scan is already in progress.",
+            )
+            return
 
         # Create thread and worker
         self._crash_logs_thread = QThread()
@@ -145,18 +151,24 @@ class ScanController:
         On completion, starts or stops Papyrus monitoring based on button state.
         """
         # Thread-safe check and update
+        # IMPORTANT: Release mutex BEFORE showing QMessageBox to avoid deadlock
+        # (QMessageBox pumps the Qt event loop which can cause cross-thread issues)
         self._scan_mutex.lock()
         try:
-            if "game_files" in self._running_scans or self._ctx.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN):
-                QMessageBox.warning(
-                    self._ctx.main_window,
-                    "Scan in Progress",
-                    "A game files scan is already in progress.",
-                )
-                return
-            self._running_scans.add("game_files")
+            already_running = "game_files" in self._running_scans or self._ctx.thread_manager.is_thread_running(ThreadType.GAME_FILES_SCAN)
+            if not already_running:
+                self._running_scans.add("game_files")
         finally:
             self._scan_mutex.unlock()
+
+        # Show warning OUTSIDE the lock to avoid deadlock
+        if already_running:
+            QMessageBox.warning(
+                self._ctx.main_window,
+                "Scan in Progress",
+                "A game files scan is already in progress.",
+            )
+            return
 
         # Create thread and worker
         self._game_files_thread = QThread()

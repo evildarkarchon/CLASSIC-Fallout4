@@ -56,7 +56,7 @@ def test_yaml_operations_detects_rust(yaml_file_ops):
 @pytest.mark.rust
 def test_static_files_use_rust(yaml_file_ops):
     """Test that static YAML files are identified for Rust acceleration."""
-    from ClassicLib.Constants import YAML
+    from ClassicLib.core.constants import YAML
 
     # Main.yaml is static - should use Rust
     main_path = yaml_file_ops.get_path_for_store(YAML.Main)
@@ -70,7 +70,7 @@ def test_static_files_use_rust(yaml_file_ops):
 @pytest.mark.unit
 def test_user_editable_files_use_python(yaml_file_ops):
     """Test that user-editable files use Python (to preserve comments)."""
-    from ClassicLib.Constants import YAML
+    from ClassicLib.core.constants import YAML
 
     # Settings.yaml is user-editable - should NOT use Rust
     settings_path = yaml_file_ops.get_path_for_store(YAML.Settings)
@@ -164,7 +164,7 @@ async def test_python_works_without_rust(yaml_file_ops, yaml_simple_file):
 @pytest.mark.unit
 def test_operations_without_rust():
     """Test that operations work when Rust is not available."""
-    from ClassicLib.YamlSettings.async_ import YamlFileOperations
+    from ClassicLib.io.yaml.async_ import YamlFileOperations
 
     # Create instance and then patch rust_yaml to None
     ops = YamlFileOperations()
@@ -178,7 +178,7 @@ def test_operations_without_rust():
         assert ops.io_core is not None, "Python IO should still work"
 
         # Test that operations still work without Rust
-        from ClassicLib.Constants import YAML
+        from ClassicLib.core.constants import YAML
 
         # Get a settings path (user-editable, so won't use Rust anyway)
         settings_path = ops.get_path_for_store(YAML.Settings)
@@ -205,7 +205,7 @@ def test_operations_without_rust():
 @pytest.mark.unit
 def test_yaml_settings_cache_singleton():
     """Test that YamlSettingsCache follows singleton pattern."""
-    from ClassicLib.YamlSettings import YamlSettingsCache
+    from ClassicLib.io.yaml import YamlSettingsCache
 
     instance1 = YamlSettingsCache.get_instance()
     instance2 = YamlSettingsCache.get_instance()
@@ -216,7 +216,7 @@ def test_yaml_settings_cache_singleton():
     @pytest.mark.rust
     def test_yaml_cache_file_ops_has_rust():
         """Test that YamlSettingsCache's file operations have Rust available."""
-        from ClassicLib.YamlSettings import yaml_cache
+        from ClassicLib.io.yaml import yaml_cache
 
         cache = yaml_cache()
         # Trigger lazy initialization

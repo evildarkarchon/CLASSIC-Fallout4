@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.BackupManager import BackupManager
+from ClassicLib.support.backup import BackupManager
 
 pytestmark = pytest.mark.unit
 
@@ -26,7 +26,7 @@ class TestBackupDirectoryCreation:
         assert backup_path.exists()
         assert backup_path.is_dir()
 
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.logger")
     def test_create_backup_directory_with_logging(
         self, mock_logger: MagicMock, manager: BackupManager, tmp_path: Path, monkeypatch
     ) -> None:
@@ -52,7 +52,7 @@ class TestBackupFilesOperation:
         assert mock_copy.call_count == 3
 
     @patch("ClassicLib.Utils.path_utils.validate_path")
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.logger")
     def test_backup_files_invalid_source(self, mock_logger: MagicMock, mock_validate: MagicMock, manager: BackupManager) -> None:
         """Test backup when source directory is invalid."""
         mock_validate.return_value = (False, "Directory doesn't exist")

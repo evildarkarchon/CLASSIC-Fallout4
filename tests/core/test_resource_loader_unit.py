@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ResourceLoader module.
+"""Unit tests for ClassicLib.support.resources module.
 
 This module provides comprehensive tests for the ResourceLoader class,
 covering all path detection strategies, frozen executable detection,
@@ -14,8 +14,8 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.ResourceLoader import ResourceLoader, get_resource_path, is_frozen
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.resources import ResourceLoader, get_resource_path, is_frozen
 
 # ============================================================================
 # Frozen Executable Detection Tests
@@ -161,7 +161,7 @@ class TestGetDistribution:
         """Should return distribution when package is installed."""
         mock_dist = MagicMock()
 
-        with patch("ClassicLib.ResourceLoader.distribution", return_value=mock_dist) as mock_distribution:
+        with patch("ClassicLib.support.resources.distribution", return_value=mock_dist) as mock_distribution:
             result = ResourceLoader._get_distribution()
             assert result == mock_dist
             # Check it tried classic-fallout4 first
@@ -170,7 +170,7 @@ class TestGetDistribution:
     def test_returns_none_when_package_not_found(self) -> None:
         """Should return None when no package variant is found."""
         with patch(
-            "ClassicLib.ResourceLoader.distribution",
+            "ClassicLib.support.resources.distribution",
             side_effect=PackageNotFoundError("not found"),
         ):
             result = ResourceLoader._get_distribution()
@@ -178,7 +178,7 @@ class TestGetDistribution:
 
     def test_handles_import_error(self) -> None:
         """Should return None gracefully on ImportError."""
-        with patch("ClassicLib.ResourceLoader.distribution", side_effect=ImportError("error")):
+        with patch("ClassicLib.support.resources.distribution", side_effect=ImportError("error")):
             result = ResourceLoader._get_distribution()
             assert result is None
 
@@ -194,7 +194,7 @@ class TestGetDistribution:
                 return mock_dist
             raise PackageNotFoundError(name)
 
-        with patch("ClassicLib.ResourceLoader.distribution", side_effect=side_effect):
+        with patch("ClassicLib.support.resources.distribution", side_effect=side_effect):
             result = ResourceLoader._get_distribution()
             assert result == mock_dist
             assert call_count == 3  # Tried all three variants
@@ -291,7 +291,7 @@ class TestCheckSourceInstallation:
         data_dir.mkdir()
 
         # Mock __file__ to point to our temp location
-        with patch("ClassicLib.ResourceLoader.__file__", str(module_dir / "ResourceLoader.py")):
+        with patch("ClassicLib.support.resources.__file__", str(module_dir / "ResourceLoader.py")):
             result = ResourceLoader._check_source_installation()
             assert result == data_dir
 
@@ -300,7 +300,7 @@ class TestCheckSourceInstallation:
         module_dir = tmp_path / "ClassicLib"
         module_dir.mkdir()
 
-        with patch("ClassicLib.ResourceLoader.__file__", str(module_dir / "ResourceLoader.py")):
+        with patch("ClassicLib.support.resources.__file__", str(module_dir / "ResourceLoader.py")):
             result = ResourceLoader._check_source_installation()
             assert result is None
 
@@ -424,7 +424,7 @@ class TestExtractFromPackage:
 
     def test_returns_none_when_package_files_unavailable(self) -> None:
         """Should return None when package files cannot be accessed."""
-        with patch("ClassicLib.ResourceLoader.files", side_effect=ModuleNotFoundError()):
+        with patch("ClassicLib.support.resources.files", side_effect=ModuleNotFoundError()):
             result = ResourceLoader._extract_from_package()
             assert result is None
 
@@ -435,7 +435,7 @@ class TestExtractFromPackage:
         mock_classic_data.is_dir.return_value = False
         mock_files.__truediv__ = MagicMock(return_value=mock_classic_data)
 
-        with patch("ClassicLib.ResourceLoader.files", return_value=mock_files):
+        with patch("ClassicLib.support.resources.files", return_value=mock_files):
             result = ResourceLoader._extract_from_package()
             assert result is None
 
@@ -450,7 +450,7 @@ class TestExtractFromPackage:
         data_dir.mkdir()
 
         with (
-            patch("ClassicLib.ResourceLoader.files", return_value=mock_files),
+            patch("ClassicLib.support.resources.files", return_value=mock_files),
             patch("appdirs.user_data_dir", return_value=str(tmp_path)),
             patch.object(ResourceLoader, "_extract_bundled_data_importlib"),
         ):
@@ -524,7 +524,7 @@ class TestEnsureDataFilesExist:
         """Should log warning when essential files are missing."""
         with (
             patch.object(ResourceLoader, "get_data_directory", return_value=tmp_path),
-            patch("ClassicLib.ResourceLoader.logger") as mock_logger,
+            patch("ClassicLib.support.resources.logger") as mock_logger,
         ):
             ResourceLoader.ensure_data_files_exist()
             mock_logger.warning.assert_called()
@@ -539,7 +539,7 @@ class TestEnsureDataFilesExist:
 
         with (
             patch.object(ResourceLoader, "get_data_directory", return_value=tmp_path),
-            patch("ClassicLib.ResourceLoader.logger") as mock_logger,
+            patch("ClassicLib.support.resources.logger") as mock_logger,
         ):
             ResourceLoader.ensure_data_files_exist()
             mock_logger.warning.assert_not_called()
@@ -571,7 +571,7 @@ class TestGetCachedGamePath:
 
         with (
             patch.dict("os.environ", {"CLASSIC_FALLOUT4_PATH": "/nonexistent/path"}, clear=True),
-            patch("ClassicLib.YamlSettings.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
             assert result is None
@@ -583,7 +583,7 @@ class TestGetCachedGamePath:
 
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.YamlSettings.yaml_settings", return_value=str(tmp_path)),
+            patch("ClassicLib.io.yaml.yaml_settings", return_value=str(tmp_path)),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
             assert result == tmp_path
@@ -606,7 +606,7 @@ class TestGetCachedGamePath:
 
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.YamlSettings.yaml_settings", side_effect=yaml_side_effect),
+            patch("ClassicLib.io.yaml.yaml_settings", side_effect=yaml_side_effect),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
             assert result == tmp_path
@@ -618,7 +618,7 @@ class TestGetCachedGamePath:
 
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.YamlSettings.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
             assert result is None
@@ -630,7 +630,7 @@ class TestGetCachedGamePath:
 
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.YamlSettings.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             ResourceLoader.get_cached_game_path(None, "")
             # Should have tried to read Skyrim path
@@ -712,7 +712,7 @@ class TestGetCachedDocsPath:
         with (
             patch.dict("os.environ", {}, clear=True),
             patch("asyncio.get_running_loop", side_effect=RuntimeError("no loop")),
-            patch("ClassicLib.YamlSettings.yaml_settings", return_value=str(tmp_path)),
+            patch("ClassicLib.io.yaml.yaml_settings", return_value=str(tmp_path)),
         ):
             result = ResourceLoader.get_cached_docs_path("Fallout4", "")
             assert result == tmp_path
@@ -775,7 +775,7 @@ class TestSavePathToCache:
 
         with (
             patch("asyncio.get_running_loop", side_effect=RuntimeError("no loop")),
-            patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml,
+            patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml,
         ):
             ResourceLoader.save_path_to_cache(tmp_path, "GamePath", "Fallout4", "")
             assert mock_yaml.called
@@ -815,15 +815,15 @@ class TestLoadRustExtension:
         mock_rust_loader.is_rust_available.return_value = True
         mock_rust_loader.load_rust_extensions.return_value = True
 
-        with patch.dict("sys.modules", {"ClassicLib.rust_loader": mock_rust_loader}):
+        with patch.dict("sys.modules", {"ClassicLib.core.rust_loader": mock_rust_loader}):
             result = ResourceLoader.load_rust_extension()
             assert result is True
 
     def test_loads_rust_extensions_when_not_loaded(self) -> None:
         """Should load Rust extensions when not already loaded."""
         with (
-            patch("ClassicLib.rust_loader.is_rust_available", return_value=False),
-            patch("ClassicLib.rust_loader.load_rust_extensions", return_value=True),
+            patch("ClassicLib.core.rust_loader.is_rust_available", return_value=False),
+            patch("ClassicLib.core.rust_loader.load_rust_extensions", return_value=True),
         ):
             result = ResourceLoader.load_rust_extension()
             assert result is True
@@ -833,26 +833,26 @@ class TestLoadRustExtension:
         # Save original module
         import sys as sys_module
 
-        original = sys_module.modules.get("ClassicLib.rust_loader")
+        original = sys_module.modules.get("ClassicLib.core.rust_loader")
 
         try:
             # Remove the module to force import error
-            sys_module.modules["ClassicLib.rust_loader"] = None  # type: ignore
+            sys_module.modules["ClassicLib.core.rust_loader"] = None  # type: ignore
             # This should trigger an ImportError when trying to import
             result = ResourceLoader.load_rust_extension()
             assert result is False
         finally:
             # Restore original module
             if original is not None:
-                sys_module.modules["ClassicLib.rust_loader"] = original
+                sys_module.modules["ClassicLib.core.rust_loader"] = original
             else:
-                sys_module.modules.pop("ClassicLib.rust_loader", None)
+                sys_module.modules.pop("ClassicLib.core.rust_loader", None)
 
     def test_returns_false_when_loading_fails(self) -> None:
         """Should return False when Rust loading fails."""
         with (
-            patch("ClassicLib.rust_loader.is_rust_available", return_value=False),
-            patch("ClassicLib.rust_loader.load_rust_extensions", return_value=False),
+            patch("ClassicLib.core.rust_loader.is_rust_available", return_value=False),
+            patch("ClassicLib.core.rust_loader.load_rust_extensions", return_value=False),
         ):
             result = ResourceLoader.load_rust_extension()
             assert result is False
@@ -871,13 +871,13 @@ class TestGetRustExtensionInfo:
             "in_pyinstaller": False,
         }
 
-        with patch("ClassicLib.rust_loader.get_rust_info", return_value=expected_info):
+        with patch("ClassicLib.core.rust_loader.get_rust_info", return_value=expected_info):
             result = ResourceLoader.get_rust_extension_info()
             assert result == expected_info
 
     def test_returns_fallback_info_on_import_error(self) -> None:
         """Should return fallback info when rust_loader can't be imported."""
-        with patch.dict("sys.modules", {"ClassicLib.rust_loader": None}):
+        with patch.dict("sys.modules", {"ClassicLib.core.rust_loader": None}):
             with patch(
                 "builtins.__import__",
                 side_effect=ImportError("no module"),

@@ -12,8 +12,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ClassicLib.Interface.Papyrus import PapyrusStats
-from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
+from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
 
 is_xdist = os.environ.get("PYTEST_XDIST_WORKER") is not None
 skip_xdist = pytest.mark.skipif(is_xdist, reason="Qt GUI tests unstable in xdist workers on Windows")

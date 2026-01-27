@@ -13,30 +13,9 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-
-from ClassicLib.ScanLog.AsyncUtil import load_crash_logs_async
+from ClassicLib.scanning.logs.AsyncUtil import load_crash_logs_async
 
 pytestmark = pytest.mark.performance
-
-
-@pytest.fixture
-def mock_yamldata() -> MagicMock:
-    """Mock ClassicScanLogsInfo for testing."""
-    yamldata: MagicMock = MagicMock()
-    yamldata.fallout4_crashlog_scan_exclusions = ["test_exclusion"]
-    yamldata.fallout4_crashlog_mods_single = {"test_mod": "Test mod message"}
-    yamldata.game_ignore_plugins = []
-    yamldata.game_ignore_records = []
-    yamldata.ignore_list = []
-    yamldata.classic_records_list = []
-    yamldata.fallout4_crashlog_mods_top = {}
-    yamldata.fallout4_crashlog_mods_groups = {}
-    yamldata.fallout4_crashlog_stack_check = {}
-    yamldata.fallout4_crashlog_error_check = {}
-    yamldata.formid_analyzer_enabled = True
-    yamldata.record_scanner_enabled = True
-    yamldata.plugin_analyzer_enabled = True
-    return yamldata
 
 
 @pytest.mark.slow

@@ -7,7 +7,7 @@ and caches between test runs to prevent test pollution.
 
 import pytest
 
-from ClassicLib.Database import DatabasePoolManager
+from ClassicLib.io.database import DatabasePoolManager
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
 

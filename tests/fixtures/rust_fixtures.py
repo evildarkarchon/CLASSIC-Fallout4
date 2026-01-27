@@ -147,9 +147,9 @@ def mock_rust_yaml_environment(rust_yaml_files: dict[str, Path]) -> Generator[di
     data_dir = rust_yaml_files["data_dir"]
 
     with (
-        patch("ClassicLib.ResourceLoader.ResourceLoader.get_data_directory", return_value=data_dir),
-        patch("ClassicLib.GlobalRegistry.get_game", return_value="Fallout4"),
-        patch("ClassicLib.GlobalRegistry.get_vr", return_value=""),
+        patch("ClassicLib.support.resources.ResourceLoader.get_data_directory", return_value=data_dir),
+        patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
+        patch("ClassicLib.core.registry.GlobalRegistry.get_vr", return_value=""),
     ):
         yield rust_yaml_files
 
@@ -282,7 +282,7 @@ async def initialized_database_pool(tmp_path: Path):
             await pool.initialize([str(db_path)])
         else:
             # Python version uses global DB_PATHS
-            with patch("ClassicLib.Constants.get_db_paths", return_value=(db_path,)):
+            with patch("ClassicLib.core.constants.get_db_paths", return_value=(db_path,)):
                 await pool.initialize()
 
     yield pool

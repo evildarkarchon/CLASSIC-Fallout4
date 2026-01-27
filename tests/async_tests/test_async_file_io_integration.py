@@ -7,8 +7,7 @@ This file contains integration tests that test interactions between components.
 from pathlib import Path
 
 import pytest
-
-from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import write_reports_batch
+from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import write_reports_batch
 
 pytestmark = pytest.mark.integration
 

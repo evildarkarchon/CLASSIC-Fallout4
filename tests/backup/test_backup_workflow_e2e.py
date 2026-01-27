@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.BackupManager import BackupManager
+from ClassicLib.support.backup import BackupManager
 
 pytestmark = [pytest.mark.unit]
 
@@ -51,7 +51,7 @@ class TestBackupWorkflow:
         # Verify configuration was loaded
         mock_load.assert_called_once()
 
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.logger")
     def test_run_backup_no_xse_log_configured(self, mock_logger: MagicMock, manager: BackupManager) -> None:
         """Test run_backup when no XSE log file is configured."""
         manager._backup_config = {"xse_log_file": None}
@@ -63,7 +63,7 @@ class TestBackupWorkflow:
         mock_logger.warning.assert_called_with("No XSE log file configured, skipping backup")
 
     @patch.object(BackupManager, "extract_xse_version")
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.logger")
     def test_run_backup_no_xse_version(self, mock_logger: MagicMock, mock_extract: MagicMock, manager: BackupManager) -> None:
         """Test run_backup when no XSE version can be extracted."""
         manager._backup_config = {"xse_log_file": "C:/xse.log"}
@@ -76,7 +76,7 @@ class TestBackupWorkflow:
         mock_logger.debug.assert_called_with("No XSE version found, skipping backup")
 
     @patch.object(BackupManager, "extract_xse_version")
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.logger")
     def test_run_backup_missing_config(self, mock_logger: MagicMock, mock_extract: MagicMock, manager: BackupManager) -> None:
         """Test run_backup with missing game path or backup list."""
         manager._backup_config = {"xse_log_file": "C:/xse.log", "game_path": None, "backup_list": None}

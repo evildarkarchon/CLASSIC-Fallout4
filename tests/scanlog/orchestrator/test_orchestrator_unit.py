@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit]
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
 
 @pytest.mark.unit
@@ -116,9 +116,9 @@ class TestOrchestratorCoreAsyncContextManager:
     async def test_aenter_initializes_lock(self, mock_yamldata: MagicMock) -> None:
         """Test __aenter__ initializes the asyncio lock."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -139,9 +139,9 @@ class TestOrchestratorCoreAsyncContextManager:
     async def test_aenter_loads_yaml_settings(self, mock_yamldata: MagicMock) -> None:
         """Test __aenter__ loads YAML settings asynchronously."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
         ):
             mock_yaml.return_value = ("record1", "record2")
             mock_classic.return_value = True
@@ -164,9 +164,9 @@ class TestOrchestratorCoreAsyncContextManager:
         mock_pool = MagicMock()
 
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -188,9 +188,9 @@ class TestOrchestratorCoreAsyncContextManager:
     async def test_aenter_skips_db_pool_when_not_exists(self, mock_yamldata: MagicMock) -> None:
         """Test __aenter__ skips database pool when FormID DB doesn't exist."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -211,9 +211,9 @@ class TestOrchestratorCoreAsyncContextManager:
     async def test_aexit_completes_without_error(self, mock_yamldata: MagicMock) -> None:
         """Test __aexit__ completes without raising exceptions."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -232,9 +232,9 @@ class TestOrchestratorCoreAsyncContextManager:
     async def test_context_manager_full_lifecycle(self, mock_yamldata: MagicMock) -> None:
         """Test complete async context manager lifecycle."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -386,9 +386,9 @@ class TestOrchestratorCoreBatchProcessing:
     async def test_process_crash_logs_batch_empty(self, mock_yamldata: MagicMock) -> None:
         """Test batch processing with empty list."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -418,7 +418,7 @@ class TestOrchestratorCoreBatchProcessing:
             (crash_file, ["# Report\n", "Test content\n"], False),
         ]
 
-        with patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io:
+        with patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io:
             mock_io = MagicMock()
             mock_io.write_file = AsyncMock()
             mock_get_io.return_value = mock_io
@@ -437,9 +437,9 @@ class TestOrchestratorCoreErrorHandling:
     async def test_handles_missing_yaml_gracefully(self, mock_yamldata: MagicMock) -> None:
         """Test that missing YAML settings are handled gracefully."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
         ):
             # Return None for all YAML lookups
             mock_yaml.return_value = None
@@ -459,9 +459,9 @@ class TestOrchestratorCoreErrorHandling:
     async def test_handles_db_pool_error_gracefully(self, mock_yamldata: MagicMock) -> None:
         """Test that database pool errors are handled gracefully."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager") as mock_pool_manager,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False

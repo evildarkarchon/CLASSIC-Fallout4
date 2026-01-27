@@ -49,7 +49,7 @@ class PythonParserWrapper:
             crashgen_version, main_error, and processed_segments.
 
         """
-        from ClassicLib.python.parser_py import find_segments
+        from ClassicLib.integration.python.parser_py import find_segments
 
         return find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
@@ -114,7 +114,7 @@ def get_parser() -> Any:
     if not is_rust_disabled() and components.get("parser", False):
         try:
             # Import the wrapper that handles both Rust and Python
-            from ClassicLib.rust.parser_rust import RustLogParser
+            from ClassicLib.integration.rust.parser_rust import RustLogParser
 
             logger.debug("Using RustLogParser wrapper (150x speedup potential)")
             return RustLogParser()

@@ -17,7 +17,7 @@ class TestGetReportGenerator:
     def test_returns_python_generator_when_rust_disabled(self) -> None:
         """Test returns Python ReportGenerator when Rust is disabled."""
         from ClassicLib.integration.factory.scanlog import get_report_generator
-        from ClassicLib.python.report_py import ReportGenerator
+        from ClassicLib.integration.python.report_py import ReportGenerator
 
         with patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=True):
             result = get_report_generator(None)
@@ -27,7 +27,7 @@ class TestGetReportGenerator:
     def test_returns_python_generator_when_component_not_available(self) -> None:
         """Test returns Python ReportGenerator when component not available."""
         from ClassicLib.integration.factory.scanlog import get_report_generator
-        from ClassicLib.python.report_py import ReportGenerator
+        from ClassicLib.integration.python.report_py import ReportGenerator
 
         with (
             patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=False),
@@ -40,7 +40,7 @@ class TestGetReportGenerator:
     def test_returns_python_generator_on_import_error(self) -> None:
         """Test returns Python ReportGenerator when Rust import fails."""
         from ClassicLib.integration.factory.scanlog import get_report_generator
-        from ClassicLib.python.report_py import ReportGenerator
+        from ClassicLib.integration.python.report_py import ReportGenerator
 
         with (
             patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=False),
@@ -51,7 +51,7 @@ class TestGetReportGenerator:
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
-                if "report_rust" in str(args) or name == "ClassicLib.rust.report_rust":
+                if "report_rust" in str(args) or name == "ClassicLib.integration.rust.report_rust":
                     raise ImportError("No module")
                 return original_import(name, *args, **kwargs)
 

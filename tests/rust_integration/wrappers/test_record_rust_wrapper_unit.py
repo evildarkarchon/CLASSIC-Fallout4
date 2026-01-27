@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.rust.record_rust import RustRecordScanner
+    from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
 
 # ============================================================================
@@ -44,7 +44,7 @@ def record_scanner(mock_yamldata_for_record: MagicMock) -> "RustRecordScanner":
     Returns:
         RustRecordScanner instance.
     """
-    from ClassicLib.rust.record_rust import RustRecordScanner
+    from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
     return RustRecordScanner(mock_yamldata_for_record)
 
@@ -76,7 +76,7 @@ class TestRustRecordScannerInit:
     @pytest.mark.unit
     def test_init_stores_yamldata(self, mock_yamldata_for_record: MagicMock) -> None:
         """Test that yamldata is stored on initialization."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         scanner = RustRecordScanner(mock_yamldata_for_record)
 
@@ -90,7 +90,7 @@ class TestRustRecordScannerInit:
     @pytest.mark.unit
     def test_init_with_empty_records_list(self) -> None:
         """Test initialization with empty records list."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         mock = MagicMock()
         mock.classic_records_list = []
@@ -235,7 +235,7 @@ class TestScanForPattern:
     @pytest.mark.unit
     def test_scan_for_pattern_returns_matches(self) -> None:
         """Test scan_for_pattern finds matching lines."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         lines = ["Actor::Process()", "TESForm::Update()", "SomeOther()"]
 
@@ -246,7 +246,7 @@ class TestScanForPattern:
     @pytest.mark.unit
     def test_scan_for_pattern_case_insensitive(self) -> None:
         """Test pattern matching is case-insensitive."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         lines = ["ACTOR::Process()", "actor::update()"]
 
@@ -257,7 +257,7 @@ class TestScanForPattern:
     @pytest.mark.unit
     def test_scan_for_pattern_regex(self) -> None:
         """Test regex patterns work."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         lines = ["Actor123", "Actor456", "NoMatch"]
 
@@ -268,7 +268,7 @@ class TestScanForPattern:
     @pytest.mark.unit
     def test_scan_for_pattern_no_matches(self) -> None:
         """Test when pattern has no matches."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         lines = ["NoMatch1", "NoMatch2"]
 
@@ -327,7 +327,7 @@ class TestRustRecordScannerFallback:
     @pytest.mark.unit
     def test_fallback_to_python_on_rust_error(self, mock_yamldata_for_record: MagicMock) -> None:
         """Test fallback to Python when Rust unavailable."""
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         # Force Python fallback by manually creating scanner without Rust
         scanner = RustRecordScanner.__new__(RustRecordScanner)
@@ -345,7 +345,7 @@ class TestRustRecordScannerFallback:
     def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_record: MagicMock) -> None:
         """Test Python implementation is used when Rust unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
-            from ClassicLib.rust.record_rust import RustRecordScanner
+            from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
             scanner = RustRecordScanner(mock_yamldata_for_record)
 

@@ -44,7 +44,7 @@ def test_fcx_handler_get_fcx_messages() -> None:
     """
     try:
         from ClassicLib.integration.factory import get_fcx_handler
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         # Get the handler through the factory (respects Rust availability)
         # fcx_mode parameter is required (bool or None)
@@ -118,8 +118,8 @@ def test_fcx_handler_integration_scenario() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.rust.fcx_rust import RustAcceleratedFcxModeHandler
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.rust.fcx_rust import RustAcceleratedFcxModeHandler
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         # Create handler instance directly (not through factory)
         handler = RustAcceleratedFcxModeHandler(fcx_mode=False)
@@ -162,8 +162,8 @@ def test_fcx_handler_empty_messages() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.rust.fcx_rust import RustAcceleratedFcxModeHandler
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.integration.rust.fcx_rust import RustAcceleratedFcxModeHandler
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         # Create fresh handler
         handler = RustAcceleratedFcxModeHandler(fcx_mode=False)
@@ -214,7 +214,7 @@ def test_fcx_handler_factory_consistency() -> None:
         assert not hasattr(handler2, "get_messages"), "Factory handler should not have get_messages()"
 
         # Both should be callable and return ReportFragments
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         messages1 = handler1.get_fcx_messages()
         messages2 = handler2.get_fcx_messages()

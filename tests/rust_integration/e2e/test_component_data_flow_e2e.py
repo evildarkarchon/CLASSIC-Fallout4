@@ -101,47 +101,6 @@ class TestComponentDataFlow:
             "\t[07] ProblematicPlugin.esp",
         ]
 
-    @pytest.fixture
-    def mock_yamldata(self) -> Mock:
-        """Create comprehensive mock YAML data for component integration testing."""
-        mock_yaml = Mock()
-
-        # Game configuration
-        mock_yaml.game_type = "fallout4"
-        mock_yaml.crashgen_name = "Buffout 4"
-        mock_yaml.xse_acronym = "F4SE"
-        mock_yaml.game_root_name = "Fallout 4"
-
-        # Problematic plugins for testing plugin matching
-        mock_yaml.problematic_plugins = {
-            "ProblematicPlugin.esp": "Known to cause crashes",
-            "OldMod.esp": "Outdated mod that conflicts",
-            "BrokenMesh.esp": "Contains broken meshes",
-        }
-
-        # FormID database configuration
-        mock_yaml.formid_database_enabled = True
-        mock_yaml.show_formid_values = True
-
-        # Record patterns for named record scanning
-        mock_yaml.record_patterns = ["TESForm", "BGSKeyword", "TESObjectSTAT", "TESObjectREFR", "BGSConstructibleObject"]
-
-        # Plugin limit configuration
-        mock_yaml.plugin_limits = {"esp_limit": 255, "esl_limit": 2048}
-
-        # Initialize list attributes to empty lists
-        mock_yaml.game_ignore_plugins = []
-        mock_yaml.game_ignore_records = []
-        mock_yaml.ignore_list = []
-        mock_yaml.classic_records_list = ["TESForm", "BGSKeyword", "TESObjectSTAT", "TESObjectREFR", "BGSConstructibleObject"]
-
-        # Initialize dict attributes to empty dicts
-        mock_yaml.mods_single = {}
-        mock_yaml.mods_double = {}
-        mock_yaml.mods_important = {}
-
-        return mock_yaml
-
     def test_parser_to_formid_analyzer_flow(self, sample_crash_data, mock_yamldata):
         """
         Test data flow from LogParser to FormIDAnalyzer.

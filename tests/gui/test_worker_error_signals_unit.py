@@ -14,7 +14,7 @@ import pytest
 # Skip all tests in this module when running in xdist worker (parallel execution)
 pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests cannot run in parallel workers")
 
-from ClassicLib.Interface.Workers import CrashLogsScanWorker, GameFilesScanWorker
+from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker, GameFilesScanWorker
 
 
 @pytest.mark.unit

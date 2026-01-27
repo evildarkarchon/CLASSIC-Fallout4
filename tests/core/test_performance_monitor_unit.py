@@ -15,7 +15,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit]
 
-from ClassicLib.PerformanceMonitor import (
+from ClassicLib.core.performance import (
     TimedBlock,
     _performance_metrics,
     _store_metric,

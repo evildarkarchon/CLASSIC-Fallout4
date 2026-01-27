@@ -9,7 +9,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ClassicLib import GlobalRegistry
+from ClassicLib.core.registry import GlobalRegistry
 
 pytestmark = pytest.mark.unit
 

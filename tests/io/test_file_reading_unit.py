@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIO import FileIOCore, read_bytes_sync, read_crash_log_sync, read_file_sync, read_lines_sync
+from ClassicLib.io.files import FileIOCore, read_bytes_sync, read_crash_log_sync, read_file_sync, read_lines_sync
 
 
 class TestAsyncFileReading:

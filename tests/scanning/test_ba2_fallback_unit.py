@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanGame.core.ba2_fallback module.
+"""Unit tests for ClassicLib.scanning.game.checks.ba2_fallback module.
 
 This module tests the BA2Issues container and BA2Scanner fallback implementation
 for scanning BA2 archives.
@@ -17,7 +17,7 @@ class TestBA2Issues:
 
     def test_default_initialization(self) -> None:
         """Test BA2Issues initializes with empty lists by default."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues
 
         issues = BA2Issues()
 
@@ -28,7 +28,7 @@ class TestBA2Issues:
 
     def test_initialization_with_values(self) -> None:
         """Test BA2Issues initializes with provided values."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues
 
         tex_dims = ["odd_texture1.dds", "odd_texture2.dds"]
         tex_frmt = ["wrong_format.png"]
@@ -49,7 +49,7 @@ class TestBA2Issues:
 
     def test_partial_initialization(self) -> None:
         """Test BA2Issues with partial initialization."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues
 
         issues = BA2Issues(tex_dims=["texture.dds"])
 
@@ -60,7 +60,7 @@ class TestBA2Issues:
 
     def test_none_values_become_empty_lists(self) -> None:
         """Test that None values are converted to empty lists."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues
 
         issues = BA2Issues(tex_dims=None, tex_frmt=None, snd_frmt=None, xse_file=None)
 
@@ -71,7 +71,7 @@ class TestBA2Issues:
 
     def test_lists_are_independent(self) -> None:
         """Test that issue lists are independent instances."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues
 
         issues1 = BA2Issues()
         issues2 = BA2Issues()
@@ -87,7 +87,7 @@ class TestBA2Scanner:
 
     def test_initialization(self) -> None:
         """Test BA2Scanner initializes successfully."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         scanner = BA2Scanner()
 
@@ -95,7 +95,7 @@ class TestBA2Scanner:
 
     def test_scan_archive_nonexistent_file(self, tmp_path: Path) -> None:
         """Test scanning a nonexistent file returns empty issues."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         result = BA2Scanner.scan_archive(tmp_path / "nonexistent.ba2")
 
@@ -106,7 +106,7 @@ class TestBA2Scanner:
 
     def test_scan_archive_non_ba2_extension(self, tmp_path: Path) -> None:
         """Test scanning a file with wrong extension returns empty issues."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         # Create a file with wrong extension
         wrong_file = tmp_path / "test.zip"
@@ -121,7 +121,7 @@ class TestBA2Scanner:
 
     def test_scan_archive_valid_ba2_file(self, tmp_path: Path) -> None:
         """Test scanning a valid .ba2 file returns BA2Issues object."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues, BA2Scanner
 
         # Create a mock .ba2 file
         ba2_file = tmp_path / "test.ba2"
@@ -133,7 +133,7 @@ class TestBA2Scanner:
 
     def test_scan_archive_case_insensitive_extension(self, tmp_path: Path) -> None:
         """Test scanning works with different case extensions."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues, BA2Scanner
 
         # Create .BA2 with uppercase extension
         ba2_file = tmp_path / "test.BA2"
@@ -149,7 +149,7 @@ class TestBA2ScannerBatch:
 
     def test_scan_empty_batch(self) -> None:
         """Test scanning an empty batch returns empty results."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         results = BA2Scanner.scan_archives_batch([])
 
@@ -157,7 +157,7 @@ class TestBA2ScannerBatch:
 
     def test_scan_single_archive_batch(self, tmp_path: Path) -> None:
         """Test scanning a batch with single archive."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues, BA2Scanner
 
         ba2_file = tmp_path / "test.ba2"
         ba2_file.write_bytes(b"BA2\x00test")
@@ -170,7 +170,7 @@ class TestBA2ScannerBatch:
 
     def test_scan_multiple_archives_batch(self, tmp_path: Path) -> None:
         """Test scanning a batch with multiple archives."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues, BA2Scanner
 
         ba2_files = []
         for i in range(3):
@@ -187,7 +187,7 @@ class TestBA2ScannerBatch:
 
     def test_scan_mixed_batch(self, tmp_path: Path) -> None:
         """Test scanning a batch with mix of valid and invalid archives."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         # Create valid .ba2
         valid_ba2 = tmp_path / "valid.ba2"
@@ -207,7 +207,7 @@ class TestBA2ScannerBatch:
 
     def test_batch_preserves_order(self, tmp_path: Path) -> None:
         """Test that batch scanning preserves input order."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         paths = []
         for name in ["first.ba2", "second.ba2", "third.ba2"]:
@@ -228,7 +228,7 @@ class TestBA2ScannerStaticMethods:
         """Test that scan_archive can be called without instance."""
         from pathlib import Path
 
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Issues, BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Issues, BA2Scanner
 
         # Call directly on class without instance
         result = BA2Scanner.scan_archive(Path("nonexistent.ba2"))
@@ -237,7 +237,7 @@ class TestBA2ScannerStaticMethods:
 
     def test_scan_archives_batch_is_static(self) -> None:
         """Test that scan_archives_batch can be called without instance."""
-        from ClassicLib.ScanGame.core.ba2_fallback import BA2Scanner
+        from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
 
         # Call directly on class without instance
         result = BA2Scanner.scan_archives_batch([])

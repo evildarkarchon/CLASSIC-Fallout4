@@ -11,7 +11,7 @@ import aiohttp
 import pytest
 from packaging.version import Version
 
-from ClassicLib.Update import (
+from ClassicLib.support.update import (
     get_github_latest_prerelease_version_from_list,
     get_github_latest_stable_version_from_endpoint,
     try_parse_version,
@@ -144,7 +144,7 @@ class TestGetGithubLatestStableVersion:
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
@@ -156,7 +156,7 @@ class TestGetGithubLatestStableVersion:
         mock_response.status = 404
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
@@ -172,7 +172,7 @@ class TestGetGithubLatestStableVersion:
         )
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
@@ -183,7 +183,7 @@ class TestGetGithubLatestStableVersion:
         """Test handling client connection errors."""
         mock_session.get.side_effect = aiohttp.ClientError("Connection failed")
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
@@ -276,7 +276,7 @@ class TestGetGithubLatestPrerelease:
         mock_response.json = create_async_json_mock(response_data)
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger"):
+        with patch("ClassicLib.support.update.logger"):
             result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
@@ -291,7 +291,7 @@ class TestGetGithubLatestPrerelease:
         mock_response.json = create_async_json_mock([])
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger"):
+        with patch("ClassicLib.support.update.logger"):
             result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
@@ -308,7 +308,7 @@ class TestGetGithubLatestPrerelease:
         )
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
@@ -319,7 +319,7 @@ class TestGetGithubLatestPrerelease:
         """Test handling client connection errors."""
         mock_session.get.side_effect = aiohttp.ClientError("Network error")
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_prerelease_version_from_list(mock_session, "owner", "repo")
 
             assert result is None
@@ -442,7 +442,7 @@ class TestUpdateIntegrationScenarios:
         # Simulate timeout
         mock_session.get.side_effect = aiohttp.ServerTimeoutError("Request timeout")
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None
@@ -459,7 +459,7 @@ class TestUpdateIntegrationScenarios:
         )
         mock_session.get.return_value.__aenter__ = AsyncMock(return_value=mock_response)
 
-        with patch("ClassicLib.Update.logger") as mock_logger:
+        with patch("ClassicLib.support.update.logger") as mock_logger:
             result = await get_github_latest_stable_version_from_endpoint(mock_session, "owner", "repo")
 
             assert result is None

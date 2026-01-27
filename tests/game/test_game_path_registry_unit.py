@@ -9,8 +9,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.GamePath import _game_path_find_registry
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.game_path import _game_path_find_registry
 
 pytestmark = pytest.mark.unit
 
@@ -47,11 +47,11 @@ class TestRegistryDetection:
         result = _game_path_find_registry("Fallout4.exe")
         assert result is None
 
-    @patch("ClassicLib.GamePath.msg_info")
+    @patch("ClassicLib.support.game_path.msg_info")
     @patch("platform.system", return_value="Windows")
     def test_game_path_find_windows_registry_success(self, mock_platform: MagicMock, mock_msg_info: MagicMock, message_handler) -> None:
         """Test successful Windows registry-based game path detection."""
-        with patch("ClassicLib.GamePath.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.game_path.yaml_settings") as mock_yaml:
             mock_yaml.side_effect = lambda type_hint, store, key, *args: {
                 "Game_Info.XSE_Acronym": "f4se",
                 "Game_VR_Info.XSE_Acronym": "f4sevr",
@@ -60,10 +60,10 @@ class TestRegistryDetection:
                 "Game_Info.Docs_File_XSE": None,
                 "Game_VR_Info.Docs_File_XSE": None,
             }.get(key)
-            with patch("ClassicLib.ResourceLoader.ResourceLoader.get_cached_game_path", return_value=None):
-                with patch("ClassicLib.GamePath._game_path_find_registry") as mock_registry:
+            with patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path", return_value=None):
+                with patch("ClassicLib.support.game_path._game_path_find_registry") as mock_registry:
                     mock_registry.return_value = Path("C:/Program Files/Fallout4")
-                    from ClassicLib.GamePath import game_path_find
+                    from ClassicLib.support.game_path import game_path_find
 
                     game_path_find()
                     mock_registry.assert_called_once_with("Fallout4.exe")

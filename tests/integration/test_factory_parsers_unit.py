@@ -25,7 +25,7 @@ class TestPythonParserWrapper:
 
         mock_result = ("1.10.163", "1.26.2", "EXCEPTION_ACCESS_VIOLATION", [["segment1"]])
 
-        with patch("ClassicLib.python.parser_py.find_segments", return_value=mock_result) as mock_find:
+        with patch("ClassicLib.integration.python.parser_py.find_segments", return_value=mock_result) as mock_find:
             result = PythonParserWrapper.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
 
         mock_find.assert_called_once_with(crash_data, crashgen_name, xse_acronym, game_root_name)
@@ -143,7 +143,7 @@ class TestGetParser:
             original_import = builtins.__import__
 
             def mock_import(name, *args, **kwargs):
-                if "parser_rust" in str(args) or name == "ClassicLib.rust.parser_rust":
+                if "parser_rust" in str(args) or name == "ClassicLib.integration.rust.parser_rust":
                     raise ImportError("No module")
                 return original_import(name, *args, **kwargs)
 

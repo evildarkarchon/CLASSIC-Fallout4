@@ -13,8 +13,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ClassicLib import GlobalRegistry, Keys
-from ClassicLib.GlobalRegistry import _registry, _registry_lock  # Import internal registry
+from ClassicLib.core.registry import GlobalRegistry, Keys, _registry, _registry_lock  # Import internal registry
 
 if TYPE_CHECKING:
     import classic_config

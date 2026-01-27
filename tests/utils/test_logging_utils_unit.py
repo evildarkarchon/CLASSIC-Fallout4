@@ -25,7 +25,7 @@ class TestLoggingUtilities:
         # Ensure logger starts clean
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):  # Mock to use current dir
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value="."):  # Mock to use current dir
             configure_logging(test_logger)
 
         assert test_logger.level == logging.DEBUG  # Updated to match implementation
@@ -43,13 +43,13 @@ class TestLoggingUtilities:
         existing_handler = logging.StreamHandler()
         test_logger.addHandler(existing_handler)
 
-        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value="."):
             configure_logging(test_logger)
 
         # Should replace existing handlers (implementation clears them)
         assert len(test_logger.handlers) == 2  # New file and console handlers
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     def test_configure_logging_creates_log_directory(self, mock_get_local_dir: MagicMock) -> None:
         """Test configure_logging creates log directory structure."""
         test_logger = logging.getLogger("test_classic_logger_logdir")
@@ -62,7 +62,7 @@ class TestLoggingUtilities:
             # Verify log directory creation was attempted
             mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     def test_configure_logging_file_handler_format(self, mock_get_local_dir: MagicMock) -> None:
         """Test configure_logging sets correct file handler format."""
         test_logger = logging.getLogger("test_classic_logger_file_format")
@@ -87,7 +87,7 @@ class TestLoggingUtilities:
         assert "%(asctime)s" in fmt
         assert "%(levelname)s" in fmt
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     def test_configure_logging_console_handler_level(self, mock_get_local_dir: MagicMock) -> None:
         """Test configure_logging sets correct console handler level."""
         test_logger = logging.getLogger("test_classic_logger_console_level")
@@ -106,7 +106,7 @@ class TestLoggingUtilities:
         assert console_handler is not None
         assert console_handler.level == logging.WARNING
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     @patch("sys.stderr")
     def test_configure_logging_handles_file_creation_error(self, mock_stderr: MagicMock, mock_get_local_dir: MagicMock) -> None:
         """Test configure_logging handles file creation errors gracefully."""
@@ -128,7 +128,7 @@ class TestLoggingUtilities:
         test_logger = logging.getLogger("test_classic_logger_formatter")
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value="."):
             configure_logging(test_logger)
 
         # Check both handlers have formatters
@@ -149,7 +149,7 @@ class TestLoggingUtilities:
         test_logger = logging.getLogger("test_classic_logger_multiple")
         test_logger.handlers.clear()
 
-        with patch("ClassicLib.GlobalRegistry.get_local_dir", return_value="."):
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir", return_value="."):
             configure_logging(test_logger)
             first_call_count = len(test_logger.handlers)
 
@@ -159,7 +159,7 @@ class TestLoggingUtilities:
             # Should have same number of handlers (clears and recreates)
             assert len(test_logger.handlers) == first_call_count
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     def test_enable_debug_logging(self, mock_get_local_dir: MagicMock) -> None:
         """Test enable_debug_logging switches file handler from INFO to DEBUG."""
         test_logger = logging.getLogger("test_classic_logger_debug")
@@ -184,7 +184,7 @@ class TestLoggingUtilities:
         # Verify file handler is now at DEBUG level
         assert file_handler.level == logging.DEBUG
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     def test_enable_debug_logging_no_file_handler(self, mock_get_local_dir: MagicMock) -> None:
         """Test enable_debug_logging handles logger with no file handlers gracefully."""
         test_logger = logging.getLogger("test_classic_logger_no_file")
@@ -201,7 +201,7 @@ class TestLoggingUtilities:
         # Console handler should still be at WARNING level (unaffected)
         assert console_handler.level == logging.WARNING
 
-    @patch("ClassicLib.GlobalRegistry.get_local_dir")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_local_dir")
     def test_enable_debug_logging_also_updates_root_logger(self, mock_get_local_dir: MagicMock) -> None:
         """Test enable_debug_logging also updates root logger file handlers."""
         test_logger = logging.getLogger("test_classic_logger_root")

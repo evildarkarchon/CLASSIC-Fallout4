@@ -76,8 +76,10 @@ __all__ = [
     "io_empty_file",
     # Mock fixtures
     "mock_yaml_settings",
+    "mock_yaml_settings_patch",
     "mock_network_responses",
     "mock_registry_entries",
+    "disable_rust_acceleration",
     # Mods fixtures
     "mods_empty_fragment",
     "mods_sample_yaml_dict",

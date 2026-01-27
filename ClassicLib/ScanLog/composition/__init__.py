@@ -1,14 +1,18 @@
-"""Report composition utilities for combining fragments with conditional headers.
+"""Backward compatibility module for ScanLog.composition.
 
-This module provides utilities for the common pattern of adding headers
-only when content exists, replacing the retroactive header insertion pattern.
+This package has been moved to ClassicLib.scanning.logs.reporting.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.scanning.logs.reporting instead.
 """
 
-from ClassicLib.ScanLog.composition.conditional_section import ConditionalSection, conditional_mod_section
-from ClassicLib.ScanLog.composition.report_composer import ReportComposer
+import warnings
 
-__all__ = [
-    "ConditionalSection",
-    "ReportComposer",
-    "conditional_mod_section",
-]
+warnings.warn(
+    "ClassicLib.ScanLog.composition is deprecated, import from ClassicLib.scanning.logs.reporting instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.scanning.logs.reporting import ConditionalSection, ReportComposer  # noqa: F401, E402

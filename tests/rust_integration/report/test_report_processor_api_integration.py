@@ -160,7 +160,7 @@ def test_report_processor_wrapper_integration() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.rust.report_rust import (
+        from ClassicLib.integration.rust.report_rust import (
             ParallelReportProcessor,
             RustAcceleratedReportFragment,
         )
@@ -350,7 +350,7 @@ def test_wrapper_process_reports_realistic() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.rust.report_rust import ParallelReportProcessor
+        from ClassicLib.integration.rust.report_rust import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
 
@@ -398,7 +398,7 @@ def test_wrapper_combine_fragments_realistic() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.rust.report_rust import (
+        from ClassicLib.integration.rust.report_rust import (
             ParallelReportProcessor,
             RustAcceleratedReportFragment,
         )

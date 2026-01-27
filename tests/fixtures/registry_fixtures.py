@@ -15,10 +15,10 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler import MessageHandler, init_message_handler
-from ClassicLib.YamlSettings import YamlSettingsCache
+from ClassicLib.core.logger import logger
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.io.yaml import YamlSettingsCache
+from ClassicLib.messaging import MessageHandler, init_message_handler
 
 # Thread-local storage for singleton state tracking
 _handler_lock = threading.Lock()
@@ -40,14 +40,14 @@ def init_message_handler_fixture() -> Generator[MessageHandler, None, None]:
     Usage:
         def test_something(init_message_handler_fixture):
             # MessageHandler is automatically initialized and cleaned up
-            from ClassicLib.MessageHandler import msg_info
+            from ClassicLib.messaging import msg_info
             msg_info("Test message")
     """
-    import ClassicLib.MessageHandler
+    import ClassicLib.messaging
 
     with _handler_lock:
         # Store any existing handler (for nested fixtures)
-        old_handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+        old_handler = getattr(ClassicLib.messaging, "_message_handler", None)
 
         # Track if this thread already has a handler to prevent double initialization
         if not hasattr(_handler_states, "handler_stack"):
@@ -63,13 +63,13 @@ def init_message_handler_fixture() -> Generator[MessageHandler, None, None]:
             # Restore previous state or clean up completely
             if _handler_states.handler_stack:
                 previous = _handler_states.handler_stack.pop()
-                ClassicLib.MessageHandler._message_handler = previous  # type: ignore
+                ClassicLib.messaging._message_handler = previous  # type: ignore
             else:
-                ClassicLib.MessageHandler._message_handler = None  # type: ignore
+                ClassicLib.messaging._message_handler = None  # type: ignore
 
             # Clear any cached references
-            if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
-                delattr(ClassicLib.MessageHandler, "_cached_handler")
+            if hasattr(ClassicLib.messaging, "_cached_handler"):
+                delattr(ClassicLib.messaging, "_cached_handler")
 
             # Force garbage collection to ensure cleanup
             gc.collect()
@@ -97,17 +97,17 @@ def ensure_message_handler_cleanup() -> Generator[None, None, None]:
 
     # Post-test cleanup - only if MessageHandler module was used
     try:
-        import ClassicLib.MessageHandler
+        import ClassicLib.messaging
 
         # Check if the module has the singleton attribute
-        handler = getattr(ClassicLib.MessageHandler, "_message_handler", None)
+        handler = getattr(ClassicLib.messaging, "_message_handler", None)
         # Only clean up if not managed by another fixture
         if handler is not None and (not hasattr(_handler_states, "handler_stack") or not _handler_states.handler_stack):
-            ClassicLib.MessageHandler._message_handler = None  # type: ignore
+            ClassicLib.messaging._message_handler = None  # type: ignore
 
             # Clear cached references
-            if hasattr(ClassicLib.MessageHandler, "_cached_handler"):
-                delattr(ClassicLib.MessageHandler, "_cached_handler")
+            if hasattr(ClassicLib.messaging, "_cached_handler"):
+                delattr(ClassicLib.messaging, "_cached_handler")
     except (ImportError, AttributeError):
         # Module not imported or attribute doesn't exist - nothing to clean
         pass
@@ -133,7 +133,7 @@ def async_bridge() -> Generator[Any, None, None]:
             result = async_bridge.run_async(some_async_function())
             assert result == expected
     """
-    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.core.async_bridge import AsyncBridge
 
     with _bridge_lock:
         # Store current thread's instance if it exists
@@ -175,7 +175,7 @@ def async_bridge() -> Generator[Any, None, None]:
 def _cleanup_lingering_threads() -> None:
     """Cleanup any lingering AsyncBridge threads."""
 
-    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.core.async_bridge import AsyncBridge
 
     # Call _cleanup_all to ensure all instances are shutdown
 
@@ -223,7 +223,7 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
     # Post-test cleanup - only if AsyncBridge was imported
 
     try:
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
 
         # Quick check: if no instances exist, skip expensive cleanup
 
@@ -308,7 +308,7 @@ def mock_async_bridge(monkeypatch: pytest.MonkeyPatch) -> Generator[Any, None, N
 
     # Mock the get_instance method
     with monkeypatch.context() as m:
-        m.setattr("ClassicLib.AsyncBridge.AsyncBridge.get_instance", lambda: mock_bridge)
+        m.setattr("ClassicLib.core.async_bridge.AsyncBridge.get_instance", lambda: mock_bridge)
         yield mock_bridge
 
         # Ensure cleanup
@@ -413,7 +413,7 @@ def setup_global_registry_session() -> Generator[None, None, None]:
         # Initialize YAML cache (many components depend on this)
         # Check if yaml_cache already exists in the module to avoid re-initialization issues
         try:
-            from ClassicLib.YamlSettings import yaml_cache
+            from ClassicLib.io.yaml import yaml_cache
 
             # Re-register the existing instance
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
@@ -462,7 +462,7 @@ def setup_global_registry() -> None:
     # This is critical for parallel test execution where each worker needs initialization
     if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
         try:
-            from ClassicLib.YamlSettings import yaml_cache
+            from ClassicLib.io.yaml import yaml_cache
 
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
         except (ImportError, TypeError):
@@ -501,13 +501,13 @@ def clean_yaml_cache_singleton() -> Generator[Any, None, None]:
 
     Usage:
         def test_yaml_operations(clean_yaml_cache_singleton):
-            from ClassicLib.YamlSettings import yaml_settings
+            from ClassicLib.io.yaml import yaml_settings
             result = yaml_settings(str, YAML.TEST, "test.key")
     """
     import importlib
 
-    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
-    from ClassicLib.YamlSettings import YamlSettingsCache
+    YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
+    from ClassicLib.io.yaml import YamlSettingsCache
 
     with _yaml_cache_lock:
         # Store the original singleton instance if it exists
@@ -575,13 +575,13 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
     Usage:
         def test_something(yaml_cache_fixture):
             # YAML cache is automatically initialized and cleaned up
-            from ClassicLib.YamlSettings import yaml_settings
+            from ClassicLib.io.yaml import yaml_settings
             result = yaml_settings(str, YAML.TEST, "test.key")
     """
     import importlib
     from unittest.mock import MagicMock, patch
 
-    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+    YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
     # Save the original yaml_cache if it exists
     original_cache = getattr(YamlSettingsCacheModule, "yaml_cache", None)
@@ -593,7 +593,7 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
     mock_async_core.cache.file_mod_times = {}
 
     # Create a mock YamlSettingsCache that doesn't initialize AsyncBridge
-    with patch("ClassicLib.YamlSettings.AsyncBridge") as mock_bridge_class:
+    with patch("ClassicLib.io.yaml.AsyncBridge") as mock_bridge_class:
         mock_bridge = MagicMock()
         mock_bridge_class.get_instance.return_value = mock_bridge
 
@@ -608,7 +608,7 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
         mock_bridge.run_async.side_effect = run_async_side_effect
 
         # Create a new cache instance
-        from ClassicLib.YamlSettings import YamlSettingsCache
+        from ClassicLib.io.yaml import YamlSettingsCache
 
         test_cache = YamlSettingsCache()
         test_cache._async_core = mock_async_core
@@ -683,7 +683,7 @@ def mock_yaml_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Any, None, 
     # Use importlib to ensure we get the module, not the class (if shadowed)
     import importlib
 
-    YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
+    YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
     with monkeypatch.context() as m:
         m.setattr(YamlSettingsCacheModule, "yaml_settings", mock)
@@ -703,8 +703,8 @@ def ensure_yaml_cache_cleanup() -> Generator[None, None, None]:
     try:
         import importlib
 
-        YamlSettingsCacheModule = importlib.import_module("ClassicLib.YamlSettings")
-        from ClassicLib.YamlSettings import YamlSettingsCache
+        YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
+        from ClassicLib.io.yaml import YamlSettingsCache
 
         # Clear caches BEFORE clearing singleton reference
         # This ensures we access cache data while the instance is still valid

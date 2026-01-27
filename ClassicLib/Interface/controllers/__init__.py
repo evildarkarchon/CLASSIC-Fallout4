@@ -26,9 +26,6 @@ Example:
 
 from __future__ import annotations
 
-# Infrastructure imports
-from ClassicLib.Interface.context import FeatureContext, UIWidgets
-
 # Controller imports
 from ClassicLib.Interface.controllers.backup_manager import BackupManager
 from ClassicLib.Interface.controllers.folder_manager import FolderManager
@@ -40,7 +37,10 @@ from ClassicLib.Interface.controllers.results_viewer import ResultsViewerControl
 from ClassicLib.Interface.controllers.scan_controller import ScanController
 from ClassicLib.Interface.controllers.update_manager import UpdateManager
 from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
-from ClassicLib.Interface.signal_hub import SignalHub
+
+# Infrastructure imports
+from ClassicLib.Interface.shared.context import FeatureContext, UIWidgets
+from ClassicLib.Interface.shared.signal_hub import SignalHub
 
 # UISetupController is imported separately to avoid circular imports
 # from ClassicLib.Interface.controllers.ui_setup import UISetupController

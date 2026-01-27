@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.rust.formid_rust import FormIDAnalyzer
+    from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
 
 # ============================================================================
@@ -51,7 +51,7 @@ def formid_analyzer(mock_yamldata_for_formid: MagicMock) -> "FormIDAnalyzer":
     Returns:
         FormIDAnalyzer instance.
     """
-    from ClassicLib.rust.formid_rust import FormIDAnalyzer
+    from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
     return FormIDAnalyzer(mock_yamldata_for_formid, show_formid_values=True, formid_db_exists=False)
 
@@ -97,7 +97,7 @@ class TestFormIDAnalyzerInit:
     @pytest.mark.unit
     def test_init_stores_yamldata(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test that yamldata is stored on initialization."""
-        from ClassicLib.rust.formid_rust import FormIDAnalyzer
+        from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
         analyzer = FormIDAnalyzer(mock_yamldata_for_formid, True, False)
 
@@ -106,7 +106,7 @@ class TestFormIDAnalyzerInit:
     @pytest.mark.unit
     def test_init_stores_show_formid_values(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test show_formid_values is stored."""
-        from ClassicLib.rust.formid_rust import FormIDAnalyzer
+        from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
         analyzer = FormIDAnalyzer(mock_yamldata_for_formid, show_formid_values=True, formid_db_exists=False)
 
@@ -115,7 +115,7 @@ class TestFormIDAnalyzerInit:
     @pytest.mark.unit
     def test_init_stores_formid_db_exists(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test formid_db_exists is stored."""
-        from ClassicLib.rust.formid_rust import FormIDAnalyzer
+        from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
         analyzer = FormIDAnalyzer(mock_yamldata_for_formid, show_formid_values=False, formid_db_exists=True)
 
@@ -179,7 +179,7 @@ class TestFormidMatch:
     @pytest.mark.unit
     def test_formid_match_adds_to_report(self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]) -> None:
         """Test formid_match adds fragment to report."""
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         class MockReport:
             def __init__(self) -> None:
@@ -312,7 +312,7 @@ class TestFormIDAnalyzerFallback:
     def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test Python implementation is used when Rust unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
-            from ClassicLib.rust.formid_rust import FormIDAnalyzer
+            from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
             analyzer = FormIDAnalyzer(mock_yamldata_for_formid, True, False)
 
@@ -322,7 +322,7 @@ class TestFormIDAnalyzerFallback:
     @pytest.mark.unit
     def test_fallback_extract_formids(self, mock_yamldata_for_formid: MagicMock) -> None:
         """Test extraction works with fallback."""
-        from ClassicLib.rust.formid_rust import FormIDAnalyzer
+        from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
         analyzer = FormIDAnalyzer.__new__(FormIDAnalyzer)
         analyzer._rust_analyzer = None

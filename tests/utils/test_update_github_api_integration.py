@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, Mock
 import aiohttp
 import pytest
 
-from ClassicLib.Update import (
+from ClassicLib.support.update import (
     get_github_latest_prerelease_version_from_list,
     get_github_latest_stable_version_from_endpoint,
     get_latest_and_top_release_details,

@@ -22,8 +22,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from ClassicLib.ScanGame.core.dds_analyzer import (
+from ClassicLib.scanning.game.core.dds_analyzer import (
     DDSFlags,
     DDSPixelFlags,
     EnhancedDDSAnalyzer,
@@ -182,7 +181,7 @@ def patch_scanlog_dependencies(
         "file_io": patch("ClassicLib.integration.factory.get_file_io", return_value=mock_file_io),
         "parser": patch("ClassicLib.integration.factory.get_parser", return_value=mock_parser),
         "yamldata": patch(
-            "ClassicLib.ScanLog.scanloginfo.ClassicScanLogsInfo.create_async",
+            "ClassicLib.scanning.logs.scanloginfo.ClassicScanLogsInfo.create_async",
             new_callable=AsyncMock,
             return_value=mock_yamldata,
         ),
@@ -211,13 +210,13 @@ DEFAULT_SCAN_SETTINGS_MAP: dict[str, Any] = {
 def mock_scan_yaml_settings() -> Generator[MagicMock, None, None]:
     """Mock YAML settings for ScanGame tests.
 
-    Patches ClassicLib.YamlSettings.yaml_settings with a function that
+    Patches ClassicLib.io.yaml.yaml_settings with a function that
     returns values from a default settings map for common scan operations.
 
     Yields:
         MagicMock: The mock yaml_settings function.
     """
-    with patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml_cache:
+    with patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_cache:
 
         def yaml_side_effect(type_: type, yaml_key: Any, setting_path: str, default: Any = None) -> Any:
             return DEFAULT_SCAN_SETTINGS_MAP.get(setting_path, default)
@@ -237,8 +236,8 @@ def mock_orchestrator_settings() -> Generator[tuple[MagicMock, MagicMock], None,
         Tuple of (mock_yaml_settings_async, mock_classic_settings_async).
     """
     with (
-        patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
-        patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+        patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
+        patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
     ):
         mock_yaml.return_value = None
         mock_classic.return_value = None
@@ -256,9 +255,9 @@ def mock_orchestrator_settings_with_concurrency() -> Generator[tuple[MagicMock, 
         Tuple of (mock_yaml_settings_async, mock_classic_settings_async, hybrid_patch).
     """
     with (
-        patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
-        patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
-        patch("ClassicLib.ScanLog.HybridOrchestrator.classic_settings", return_value=0) as hybrid_mock,
+        patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
+        patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
+        patch("ClassicLib.scanning.logs.HybridOrchestrator.classic_settings", return_value=0) as hybrid_mock,
     ):
         mock_yaml.return_value = None
         mock_classic.return_value = None
@@ -344,7 +343,7 @@ def scan_yaml_settings_context(settings_map: dict[str, Any] | None = None) -> Ge
     """
     effective_map = settings_map if settings_map is not None else DEFAULT_SCAN_SETTINGS_MAP
 
-    with patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml_cache:
+    with patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_cache:
 
         def yaml_side_effect(type_: type, yaml_key: Any, setting_path: str, default: Any = None) -> Any:
             return effective_map.get(setting_path, default)
@@ -369,8 +368,8 @@ def dds_analyzer() -> EnhancedDDSAnalyzer:
         EnhancedDDSAnalyzer: Analyzer instance configured for testing.
     """
     with (
-        patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PYFFI", False),
-        patch("ClassicLib.ScanGame.core.dds_analyzer.HAS_PIL_DDS", False),
+        patch("ClassicLib.scanning.game.core.dds_analyzer.HAS_PYFFI", False),
+        patch("ClassicLib.scanning.game.core.dds_analyzer.HAS_PIL_DDS", False),
     ):
         return EnhancedDDSAnalyzer(use_libraries=False)
 

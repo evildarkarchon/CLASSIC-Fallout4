@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.GameIntegrity import GameIntegrityChecker
+from ClassicLib.support.integrity import GameIntegrityChecker
 
 
 @pytest.fixture

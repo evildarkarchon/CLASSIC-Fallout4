@@ -60,7 +60,7 @@ class TestPastebinFetchWorkerInit:
     @pytest.mark.unit
     def test_worker_creation(self, qt_application):
         """Test PastebinFetchWorker can be created with URL."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -71,7 +71,7 @@ class TestPastebinFetchWorkerInit:
     @pytest.mark.unit
     def test_worker_stores_url(self, qt_application):
         """Test PastebinFetchWorker stores the provided URL."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         test_urls = [
             "https://pastebin.com/raw/abc123",
@@ -86,7 +86,7 @@ class TestPastebinFetchWorkerInit:
     @pytest.mark.unit
     def test_worker_has_signals(self, qt_application):
         """Test PastebinFetchWorker has required signals."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker("https://pastebin.com/test")
 
@@ -108,7 +108,7 @@ class TestPastebinFetchWorkerSuccess:
     @pytest.mark.gui
     def test_run_success_emits_signals(self, qt_application):
         """Test run() emits success and finished signals on successful fetch."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -123,7 +123,7 @@ class TestPastebinFetchWorkerSuccess:
         worker.error.connect(error_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -142,13 +142,13 @@ class TestPastebinFetchWorkerSuccess:
     @pytest.mark.gui
     def test_run_calls_async_bridge(self, qt_application):
         """Test run() uses AsyncBridge to run the async fetch function."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock) as mock_fetch,
         ):
             mock_bridge = MagicMock()
@@ -179,7 +179,7 @@ class TestPastebinFetchWorkerErrors:
         """Test run() emits error signal on network errors."""
         import aiohttp
 
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -194,7 +194,7 @@ class TestPastebinFetchWorkerErrors:
         worker.error.connect(error_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -218,7 +218,7 @@ class TestPastebinFetchWorkerErrors:
     @pytest.mark.gui
     def test_run_oserror_emits_error_signal(self, qt_application):
         """Test run() emits error signal on OSError."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -232,7 +232,7 @@ class TestPastebinFetchWorkerErrors:
         # Simulate OSError by having AsyncBridge.get_instance raise it
         # The OSError is caught in the outer try/except block
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge_class.get_instance.side_effect = OSError("File system error")
@@ -249,7 +249,7 @@ class TestPastebinFetchWorkerErrors:
     @pytest.mark.gui
     def test_run_valueerror_emits_error_signal(self, qt_application):
         """Test run() emits error signal on ValueError."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -262,7 +262,7 @@ class TestPastebinFetchWorkerErrors:
 
         # Simulate ValueError by having AsyncBridge.get_instance raise it
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge_class.get_instance.side_effect = ValueError("Invalid config")
@@ -279,7 +279,7 @@ class TestPastebinFetchWorkerErrors:
     @pytest.mark.gui
     def test_run_importerror_emits_error_signal(self, qt_application):
         """Test run() emits error signal on ImportError."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -319,7 +319,7 @@ class TestPastebinFetchWorkerErrors:
     @pytest.mark.gui
     def test_run_unexpected_exception_emits_error_signal(self, qt_application):
         """Test run() emits error signal on unexpected exceptions."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         url = "https://pastebin.com/abc123"
         worker = PastebinFetchWorker(url)
@@ -331,7 +331,7 @@ class TestPastebinFetchWorkerErrors:
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -360,14 +360,14 @@ class TestPastebinFetchWorkerSignalGuarantees:
     @pytest.mark.gui
     def test_finished_signal_always_emitted_on_success(self, qt_application):
         """Test finished signal is always emitted on success."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker("https://pastebin.com/test")
         finished_spy = MagicMock()
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -384,14 +384,14 @@ class TestPastebinFetchWorkerSignalGuarantees:
         """Test finished signal is always emitted on network error."""
         import aiohttp
 
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker("https://pastebin.com/test")
         finished_spy = MagicMock()
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -406,14 +406,14 @@ class TestPastebinFetchWorkerSignalGuarantees:
     @pytest.mark.gui
     def test_finished_signal_always_emitted_on_value_error(self, qt_application):
         """Test finished signal is always emitted on ValueError."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker("https://pastebin.com/test")
         finished_spy = MagicMock()
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge_class.get_instance.side_effect = ValueError("Bad value")
@@ -426,14 +426,14 @@ class TestPastebinFetchWorkerSignalGuarantees:
     @pytest.mark.gui
     def test_finished_signal_always_emitted_on_unexpected_error(self, qt_application):
         """Test finished signal is always emitted on unexpected error."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker("https://pastebin.com/test")
         finished_spy = MagicMock()
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -450,7 +450,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
     @pytest.mark.gui
     def test_mutually_exclusive_success_error_signals(self, qt_application):
         """Test that success and error signals are mutually exclusive."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         # Test success case - only success signal emitted
         worker_success = PastebinFetchWorker("https://pastebin.com/test")
@@ -460,7 +460,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
         worker_success.error.connect(error_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -480,7 +480,7 @@ class TestPastebinFetchWorkerSignalGuarantees:
         worker_error.error.connect(error_spy2)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock),
         ):
             mock_bridge = MagicMock()
@@ -516,7 +516,7 @@ class TestPastebinFetchWorkerURLHandling:
     )
     def test_run_with_various_pastebin_urls(self, url, qt_application):
         """Test run() works with various pastebin URL formats."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker(url)
         success_spy = MagicMock()
@@ -526,7 +526,7 @@ class TestPastebinFetchWorkerURLHandling:
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock) as mock_fetch,
         ):
             mock_bridge = MagicMock()
@@ -545,14 +545,14 @@ class TestPastebinFetchWorkerURLHandling:
     @pytest.mark.gui
     def test_run_with_empty_url(self, qt_application):
         """Test run() handles empty URL (passes it to the fetch function)."""
-        from ClassicLib.Interface.Pastebin import PastebinFetchWorker
+        from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
 
         worker = PastebinFetchWorker("")
         finished_spy = MagicMock()
         worker.finished.connect(finished_spy)
 
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("ClassicLib.Utils.web_utils.async_pastebin_fetch", new_callable=AsyncMock) as mock_fetch,
         ):
             mock_bridge = MagicMock()

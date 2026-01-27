@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.XseCheck module.
+"""Unit tests for ClassicLib.support.xse module.
 
 This module tests the XSE (Script Extender) integrity checking functionality
 including Address Library validation, XSE installation verification, log file
@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.XseCheck import (
+from ClassicLib.support.xse import (
     Tokens,
     _calculate_script_hashes,
     _check_address_library,
@@ -53,7 +53,7 @@ class TestTokens:
 class TestLoadXseConfig:
     """Tests for the _load_xse_config function."""
 
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_load_xse_config_returns_dict_with_expected_keys(self, mock_yaml_settings: MagicMock) -> None:
         """_load_xse_config should return a dict with all expected keys."""
         mock_yaml_settings.return_value = "test_value"
@@ -67,7 +67,7 @@ class TestLoadXseConfig:
         assert "log_file" in result
         assert "adlib_file" in result
 
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_load_xse_config_uses_game_vr_in_key_paths(self, mock_yaml_settings: MagicMock) -> None:
         """_load_xse_config should use game_vr suffix in YAML key paths."""
         mock_yaml_settings.return_value = None
@@ -82,7 +82,7 @@ class TestLoadXseConfig:
         assert any("GameVR_Info.XSE_Acronym" in key for key in key_paths)
         assert any("GameVR_Info.XSE_FullName" in key for key in key_paths)
 
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_load_xse_config_converts_adlib_file_to_path(self, mock_yaml_settings: MagicMock) -> None:
         """_load_xse_config should convert adlib_file string to Path."""
 
@@ -98,7 +98,7 @@ class TestLoadXseConfig:
         assert isinstance(result["adlib_file"], Path)
         assert result["adlib_file"] == Path(r"C:\Game\Data\AddressLib.bin")
 
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_load_xse_config_returns_none_adlib_when_not_configured(self, mock_yaml_settings: MagicMock) -> None:
         """_load_xse_config should return None for adlib_file when not configured."""
         mock_yaml_settings.return_value = None
@@ -133,7 +133,7 @@ class TestCheckAddressLibrary:
         adlib_file = tmp_path / "nonexistent.bin"
         messages: list[str] = []
 
-        with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
             mock_yaml.return_value = "⚠️ Address Library Warning Message"
 
             _check_address_library(adlib_file, "Fallout4", messages)
@@ -146,7 +146,7 @@ class TestCheckAddressLibrary:
         adlib_file = tmp_path / "nonexistent.bin"
         messages: list[str] = []
 
-        with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
             mock_yaml.return_value = 123  # Not a string
 
             with pytest.raises(TypeError, match="must be a string"):
@@ -177,7 +177,7 @@ class TestCheckXseInstallation:
         messages: list[str] = []
 
         # Need to patch at the source module since import is done inside the function
-        with patch("ClassicLib.GlobalRegistry.get_game") as mock_get_game:
+        with patch("ClassicLib.core.registry.GlobalRegistry.get_game") as mock_get_game:
             mock_get_game.return_value = "Fallout4"
 
             _check_xse_installation(
@@ -218,7 +218,7 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.23 loaded\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.XseCheck.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
             mock_read.return_value = ["F4SE version 0.6.23 loaded", "No errors"]
 
             _check_xse_installation(
@@ -239,10 +239,10 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.20 loaded\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.XseCheck.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
             mock_read.return_value = ["F4SE version 0.6.20 loaded", "No errors"]
 
-            with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+            with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
                 mock_yaml.return_value = "⚠️ XSE is outdated!"
 
                 _check_xse_installation(
@@ -262,10 +262,10 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.20 loaded\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.XseCheck.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
             mock_read.return_value = ["F4SE version 0.6.20 loaded"]
 
-            with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+            with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
                 mock_yaml.return_value = None  # Not a string
 
                 with pytest.raises(TypeError, match="must be a string"):
@@ -284,7 +284,7 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.23\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.XseCheck.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
             mock_read.return_value = [
                 "F4SE version 0.6.23 loaded",
                 "ERROR: Plugin failed to load",
@@ -313,12 +313,12 @@ class TestCheckXseInstallation:
 class TestXseCheckIntegrity:
     """Tests for the xse_check_integrity function."""
 
-    @patch("ClassicLib.XseCheck.get_vr")
-    @patch("ClassicLib.XseCheck.get_game")
-    @patch("ClassicLib.XseCheck.yaml_settings")
-    @patch("ClassicLib.XseCheck._load_xse_config")
-    @patch("ClassicLib.XseCheck._check_address_library")
-    @patch("ClassicLib.XseCheck._check_xse_installation")
+    @patch("ClassicLib.support.xse.get_vr")
+    @patch("ClassicLib.support.xse.get_game")
+    @patch("ClassicLib.support.xse.yaml_settings")
+    @patch("ClassicLib.support.xse._load_xse_config")
+    @patch("ClassicLib.support.xse._check_address_library")
+    @patch("ClassicLib.support.xse._check_xse_installation")
     def test_xse_check_integrity_returns_string(
         self,
         mock_check_xse: MagicMock,
@@ -344,9 +344,9 @@ class TestXseCheckIntegrity:
 
         assert isinstance(result, str)
 
-    @patch("ClassicLib.XseCheck.get_vr")
-    @patch("ClassicLib.XseCheck.get_game")
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.get_vr")
+    @patch("ClassicLib.support.xse.get_game")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_xse_check_integrity_raises_type_error_when_patterns_not_list(
         self,
         mock_yaml: MagicMock,
@@ -381,8 +381,8 @@ class TestGetExpectedScriptHashes:
 
         # Patch both the core module and the __init__ re-exports
         with (
-            patch("ClassicLib.VersionRegistry.get_detected_version_info") as mock_get_version_info,
-            patch("ClassicLib.VersionRegistry.get_version_registry") as mock_get_registry_func,
+            patch("ClassicLib.support.versions.get_detected_version_info") as mock_get_version_info,
+            patch("ClassicLib.support.versions.get_version_registry") as mock_get_registry_func,
         ):
             mock_get_version_info.return_value = mock_version_info
             mock_get_registry_func.return_value = mock_registry
@@ -399,9 +399,9 @@ class TestGetExpectedScriptHashes:
         mock_registry = MagicMock()
 
         with (
-            patch("ClassicLib.VersionRegistry.get_detected_version_info") as mock_get_version_info,
-            patch("ClassicLib.VersionRegistry.get_version_registry") as mock_get_registry_func,
-            patch("ClassicLib.XseCheck.logger"),
+            patch("ClassicLib.support.versions.get_detected_version_info") as mock_get_version_info,
+            patch("ClassicLib.support.versions.get_version_registry") as mock_get_registry_func,
+            patch("ClassicLib.support.xse.logger"),
         ):
             mock_get_version_info.return_value = None
             mock_get_registry_func.return_value = mock_registry
@@ -410,7 +410,7 @@ class TestGetExpectedScriptHashes:
 
         assert result == {}
 
-    @patch("ClassicLib.XseCheck.logger")
+    @patch("ClassicLib.support.xse.logger")
     def test_get_expected_script_hashes_logs_warning_on_failure(
         self,
         mock_logger: MagicMock,
@@ -419,8 +419,8 @@ class TestGetExpectedScriptHashes:
         mock_registry = MagicMock()
 
         with (
-            patch("ClassicLib.VersionRegistry.get_detected_version_info") as mock_get_version_info,
-            patch("ClassicLib.VersionRegistry.get_version_registry") as mock_get_registry_func,
+            patch("ClassicLib.support.versions.get_detected_version_info") as mock_get_version_info,
+            patch("ClassicLib.support.versions.get_version_registry") as mock_get_registry_func,
         ):
             mock_get_version_info.return_value = None
             mock_get_registry_func.return_value = mock_registry
@@ -439,8 +439,8 @@ class TestGetExpectedScriptHashes:
 class TestGetScriptsFolderPath:
     """Tests for the _get_scripts_folder_path function."""
 
-    @patch("ClassicLib.XseCheck.get_vr")
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.get_vr")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_get_scripts_folder_path_returns_string(
         self,
         mock_yaml: MagicMock,
@@ -454,8 +454,8 @@ class TestGetScriptsFolderPath:
 
         assert result == r"C:\Game\Data\Scripts"
 
-    @patch("ClassicLib.XseCheck.get_vr")
-    @patch("ClassicLib.XseCheck.yaml_settings")
+    @patch("ClassicLib.support.xse.get_vr")
+    @patch("ClassicLib.support.xse.yaml_settings")
     def test_get_scripts_folder_path_raises_value_error_when_none(
         self,
         mock_yaml: MagicMock,
@@ -488,7 +488,7 @@ class TestCalculateScriptHashes:
         script_file = tmp_path / "test_script.pex"
         script_file.write_bytes(b"test content")
 
-        with patch("ClassicLib.XseCheck.read_bytes_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_bytes_sync") as mock_read:
             mock_read.return_value = b"test content"
 
             result = _calculate_script_hashes(["test_script.pex"], str(tmp_path))
@@ -510,10 +510,10 @@ class TestCalculateScriptHashes:
         script_file = tmp_path / "test_script.pex"
         script_file.touch()
 
-        with patch("ClassicLib.XseCheck.read_bytes_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_bytes_sync") as mock_read:
             mock_read.side_effect = OSError("Permission denied")
 
-            with patch("ClassicLib.XseCheck.msg_warning"):
+            with patch("ClassicLib.support.xse.msg_warning"):
                 result = _calculate_script_hashes(["test_script.pex"], str(tmp_path))
 
         assert result["test_script.pex"] is None
@@ -524,7 +524,7 @@ class TestCalculateScriptHashes:
         (tmp_path / "script1.pex").touch()
         (tmp_path / "script2.pex").touch()
 
-        with patch("ClassicLib.XseCheck.read_bytes_sync") as mock_read:
+        with patch("ClassicLib.support.xse.read_bytes_sync") as mock_read:
             mock_read.return_value = b"content"
 
             result = _calculate_script_hashes(
@@ -561,7 +561,7 @@ class TestGenerateResultMessage:
         expected_hashes = {"script1.pex": "abc123"}
         actual_hashes = {"script1.pex": None}
 
-        with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
             mock_yaml.return_value = "⚠️ Missing warning"
 
             result = _generate_result_message(expected_hashes, actual_hashes)
@@ -574,7 +574,7 @@ class TestGenerateResultMessage:
         expected_hashes = {"script1.pex": "abc123"}
         actual_hashes = {"script1.pex": "xyz789"}
 
-        with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
             mock_yaml.return_value = "⚠️ Mismatch warning"
 
             result = _generate_result_message(expected_hashes, actual_hashes)
@@ -589,7 +589,7 @@ class TestGenerateResultMessage:
         expected_hashes = {"script1.pex": "abc123"}
         actual_hashes = {"script1.pex": None}
 
-        with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
             mock_yaml.return_value = 123  # Invalid type
 
             with pytest.raises(TypeError, match="must be a string"):
@@ -602,7 +602,7 @@ class TestGenerateResultMessage:
         expected_hashes = {"script1.pex": "abc123"}
         actual_hashes = {"script1.pex": "xyz789"}
 
-        with patch("ClassicLib.XseCheck.yaml_settings") as mock_yaml:
+        with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
             mock_yaml.return_value = None  # Invalid type
 
             with pytest.raises(TypeError, match="must be a string"):
@@ -624,10 +624,10 @@ class TestGenerateResultMessage:
 class TestXseCheckHashes:
     """Tests for the xse_check_hashes function."""
 
-    @patch("ClassicLib.XseCheck._get_expected_script_hashes")
-    @patch("ClassicLib.XseCheck._get_scripts_folder_path")
-    @patch("ClassicLib.XseCheck._calculate_script_hashes")
-    @patch("ClassicLib.XseCheck._generate_result_message")
+    @patch("ClassicLib.support.xse._get_expected_script_hashes")
+    @patch("ClassicLib.support.xse._get_scripts_folder_path")
+    @patch("ClassicLib.support.xse._calculate_script_hashes")
+    @patch("ClassicLib.support.xse._generate_result_message")
     def test_xse_check_hashes_returns_string(
         self,
         mock_generate: MagicMock,
@@ -646,10 +646,10 @@ class TestXseCheckHashes:
         assert isinstance(result, str)
         assert result == "✔️ All good!"
 
-    @patch("ClassicLib.XseCheck._get_expected_script_hashes")
-    @patch("ClassicLib.XseCheck._get_scripts_folder_path")
-    @patch("ClassicLib.XseCheck._calculate_script_hashes")
-    @patch("ClassicLib.XseCheck._generate_result_message")
+    @patch("ClassicLib.support.xse._get_expected_script_hashes")
+    @patch("ClassicLib.support.xse._get_scripts_folder_path")
+    @patch("ClassicLib.support.xse._calculate_script_hashes")
+    @patch("ClassicLib.support.xse._generate_result_message")
     def test_xse_check_hashes_calls_functions_in_order(
         self,
         mock_generate: MagicMock,
@@ -674,10 +674,10 @@ class TestXseCheckHashes:
         mock_calculate.assert_called_once_with(expected_hashes.keys(), scripts_folder)
         mock_generate.assert_called_once_with(expected_hashes, actual_hashes)
 
-    @patch("ClassicLib.XseCheck._get_expected_script_hashes")
-    @patch("ClassicLib.XseCheck._get_scripts_folder_path")
-    @patch("ClassicLib.XseCheck._calculate_script_hashes")
-    @patch("ClassicLib.XseCheck._generate_result_message")
+    @patch("ClassicLib.support.xse._get_expected_script_hashes")
+    @patch("ClassicLib.support.xse._get_scripts_folder_path")
+    @patch("ClassicLib.support.xse._calculate_script_hashes")
+    @patch("ClassicLib.support.xse._generate_result_message")
     def test_xse_check_hashes_handles_empty_expected_hashes(
         self,
         mock_generate: MagicMock,

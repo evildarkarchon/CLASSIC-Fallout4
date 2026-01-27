@@ -29,19 +29,18 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.Interface.UIHelpers import (
+from ClassicLib.core.logger import logger
+from ClassicLib.Interface.widgets.UIHelpers import (
     BOTTOM_BUTTON_STYLE,
     add_main_button,
     create_separator,
     setup_folder_section,
     supports_add_layout,
 )
-from ClassicLib.Logger import logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-    from ClassicLib.Interface.context import FeatureContext
     from ClassicLib.Interface.controllers.backup_manager import BackupManager
     from ClassicLib.Interface.controllers.folder_manager import FolderManager
     from ClassicLib.Interface.controllers.help_about import HelpAboutController
@@ -50,6 +49,7 @@ if TYPE_CHECKING:
     from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
     from ClassicLib.Interface.controllers.scan_controller import ScanController
     from ClassicLib.Interface.controllers.update_manager import UpdateManager
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class UISetupController:

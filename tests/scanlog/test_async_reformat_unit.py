@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanLog.AsyncReformat module.
+"""Unit tests for ClassicLib.scanning.logs.AsyncReformat module.
 
 This module tests the asynchronous utilities for log file reformatting,
 batch file operations, and crash log processing.
@@ -28,7 +28,7 @@ class TestReformatSingleLogAsync:
 
     async def test_reformats_plugin_section_brackets(self, tmp_path: Path) -> None:
         """reformat_single_log_async should replace spaces with 0s in plugin brackets."""
-        from ClassicLib.ScanLog.AsyncReformat import reformat_single_log_async
+        from ClassicLib.scanning.logs.AsyncReformat import reformat_single_log_async
 
         log_file = tmp_path / "crash-test.log"
         log_content = """PLUGINS:
@@ -47,7 +47,7 @@ class TestReformatSingleLogAsync:
 
     async def test_removes_lines_when_simplify_enabled(self, tmp_path: Path) -> None:
         """reformat_single_log_async should remove matching lines when simplify_logs is True."""
-        from ClassicLib.ScanLog.AsyncReformat import reformat_single_log_async
+        from ClassicLib.scanning.logs.AsyncReformat import reformat_single_log_async
 
         log_file = tmp_path / "crash-test.log"
         log_content = """Header line
@@ -73,7 +73,7 @@ PLUGINS:
 
     async def test_preserves_lines_when_simplify_disabled(self, tmp_path: Path) -> None:
         """reformat_single_log_async should preserve all lines when simplify_logs is False."""
-        from ClassicLib.ScanLog.AsyncReformat import reformat_single_log_async
+        from ClassicLib.scanning.logs.AsyncReformat import reformat_single_log_async
 
         log_file = tmp_path / "crash-test.log"
         original_content = """Header line
@@ -93,7 +93,7 @@ PLUGINS:
 
     async def test_handles_malformed_bracket_lines(self, tmp_path: Path) -> None:
         """reformat_single_log_async should handle malformed bracket lines gracefully."""
-        from ClassicLib.ScanLog.AsyncReformat import reformat_single_log_async
+        from ClassicLib.scanning.logs.AsyncReformat import reformat_single_log_async
 
         log_file = tmp_path / "crash-test.log"
         # Line with '[' but no ']' - should be preserved
@@ -114,7 +114,7 @@ PLUGINS:
 
     async def test_handles_io_error(self, tmp_path: Path) -> None:
         """reformat_single_log_async should handle IO errors gracefully."""
-        from ClassicLib.ScanLog.AsyncReformat import reformat_single_log_async
+        from ClassicLib.scanning.logs.AsyncReformat import reformat_single_log_async
 
         non_existent_file = tmp_path / "nonexistent.log"
 
@@ -123,7 +123,7 @@ PLUGINS:
 
     async def test_preserves_non_plugin_lines(self, tmp_path: Path) -> None:
         """reformat_single_log_async should not modify lines outside PLUGINS section."""
-        from ClassicLib.ScanLog.AsyncReformat import reformat_single_log_async
+        from ClassicLib.scanning.logs.AsyncReformat import reformat_single_log_async
 
         log_file = tmp_path / "crash-test.log"
         log_content = """SYSTEM SPECS:
@@ -155,7 +155,7 @@ class TestCrashlogsReformatAsync:
 
     async def test_processes_all_logs_in_list(self, tmp_path: Path) -> None:
         """crashlogs_reformat_async should process all logs in the list."""
-        from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
+        from ClassicLib.scanning.logs.AsyncReformat import crashlogs_reformat_async
 
         # Create multiple log files
         log_files = []
@@ -164,7 +164,7 @@ class TestCrashlogsReformatAsync:
             log_file.write_text(f"PLUGINS:\n\t[ {i}] Plugin.esm\n", encoding="utf-8")
             log_files.append(log_file)
 
-        with patch("ClassicLib.ScanLog.AsyncReformat.classic_settings_async", return_value=False):
+        with patch("ClassicLib.scanning.logs.AsyncReformat.classic_settings_async", return_value=False):
             await crashlogs_reformat_async(log_files, ())
 
         # All files should be reformatted
@@ -174,12 +174,12 @@ class TestCrashlogsReformatAsync:
 
     async def test_respects_simplify_logs_setting(self, tmp_path: Path) -> None:
         """crashlogs_reformat_async should respect simplify_logs setting."""
-        from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
+        from ClassicLib.scanning.logs.AsyncReformat import crashlogs_reformat_async
 
         log_file = tmp_path / "crash-test.log"
         log_file.write_text("PLUGINS:\n\t[00] Plugin.esm\nRemove this\n", encoding="utf-8")
 
-        with patch("ClassicLib.ScanLog.AsyncReformat.classic_settings_async", return_value=True):
+        with patch("ClassicLib.scanning.logs.AsyncReformat.classic_settings_async", return_value=True):
             await crashlogs_reformat_async([log_file], ("Remove this",))
 
         content = log_file.read_text(encoding="utf-8")
@@ -187,7 +187,7 @@ class TestCrashlogsReformatAsync:
 
     async def test_processes_in_batches(self, tmp_path: Path) -> None:
         """crashlogs_reformat_async should process logs in batches."""
-        from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
+        from ClassicLib.scanning.logs.AsyncReformat import crashlogs_reformat_async
 
         # Create more logs than batch size (20)
         log_files = []
@@ -196,7 +196,7 @@ class TestCrashlogsReformatAsync:
             log_file.write_text(f"PLUGINS:\n\t[{i:02d}] Plugin.esm\n", encoding="utf-8")
             log_files.append(log_file)
 
-        with patch("ClassicLib.ScanLog.AsyncReformat.classic_settings_async", return_value=False):
+        with patch("ClassicLib.scanning.logs.AsyncReformat.classic_settings_async", return_value=False):
             await crashlogs_reformat_async(log_files, ())
 
         # All files should still be processed
@@ -205,9 +205,9 @@ class TestCrashlogsReformatAsync:
 
     async def test_handles_empty_list(self) -> None:
         """crashlogs_reformat_async should handle empty list gracefully."""
-        from ClassicLib.ScanLog.AsyncReformat import crashlogs_reformat_async
+        from ClassicLib.scanning.logs.AsyncReformat import crashlogs_reformat_async
 
-        with patch("ClassicLib.ScanLog.AsyncReformat.classic_settings_async", return_value=False):
+        with patch("ClassicLib.scanning.logs.AsyncReformat.classic_settings_async", return_value=False):
             # Should not raise
             await crashlogs_reformat_async([], ())
 
@@ -224,7 +224,7 @@ class TestBatchFileMoveAsync:
 
     async def test_moves_all_files(self, tmp_path: Path) -> None:
         """batch_file_move_async should move all files in operations list."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_move_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_move_async
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -251,7 +251,7 @@ class TestBatchFileMoveAsync:
 
     async def test_handles_move_error(self, tmp_path: Path) -> None:
         """batch_file_move_async should handle move errors gracefully."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_move_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_move_async
 
         source_file = tmp_path / "nonexistent.log"
         target_file = tmp_path / "target.log"
@@ -263,7 +263,7 @@ class TestBatchFileMoveAsync:
 
     async def test_concurrent_moves(self, tmp_path: Path) -> None:
         """batch_file_move_async should move files concurrently."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_move_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_move_async
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -286,7 +286,7 @@ class TestBatchFileMoveAsync:
 
     async def test_handles_empty_operations(self) -> None:
         """batch_file_move_async should handle empty operations list."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_move_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_move_async
 
         # Should not raise
         await batch_file_move_async([])
@@ -304,7 +304,7 @@ class TestBatchFileCopyAsync:
 
     async def test_copies_all_files(self, tmp_path: Path) -> None:
         """batch_file_copy_async should copy all files in operations list."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_copy_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_copy_async
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -336,7 +336,7 @@ class TestBatchFileCopyAsync:
 
     async def test_preserves_file_metadata(self, tmp_path: Path) -> None:
         """batch_file_copy_async should preserve file metadata (uses shutil.copy2)."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_copy_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_copy_async
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -365,7 +365,7 @@ class TestBatchFileCopyAsync:
 
     async def test_handles_copy_error(self, tmp_path: Path) -> None:
         """batch_file_copy_async should handle copy errors gracefully."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_copy_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_copy_async
 
         source_file = tmp_path / "nonexistent.log"
         target_file = tmp_path / "target.log"
@@ -377,7 +377,7 @@ class TestBatchFileCopyAsync:
 
     async def test_concurrent_copies(self, tmp_path: Path) -> None:
         """batch_file_copy_async should copy files concurrently."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_copy_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_copy_async
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"
@@ -400,14 +400,14 @@ class TestBatchFileCopyAsync:
 
     async def test_handles_empty_operations(self) -> None:
         """batch_file_copy_async should handle empty operations list."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_copy_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_copy_async
 
         # Should not raise
         await batch_file_copy_async([])
 
     async def test_handles_mixed_success_and_failure(self, tmp_path: Path) -> None:
         """batch_file_copy_async should continue with other copies if one fails."""
-        from ClassicLib.ScanLog.AsyncReformat import batch_file_copy_async
+        from ClassicLib.scanning.logs.AsyncReformat import batch_file_copy_async
 
         source_dir = tmp_path / "source"
         target_dir = tmp_path / "target"

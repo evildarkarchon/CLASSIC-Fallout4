@@ -14,7 +14,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.python.plugin_py import PythonPluginAnalyzer
+    from ClassicLib.integration.python.plugin_py import PythonPluginAnalyzer
 
 # ============================================================================
 # Fixtures
@@ -60,7 +60,7 @@ def plugin_analyzer(mock_yamldata_for_plugin: MagicMock) -> "PythonPluginAnalyze
     Returns:
         PythonPluginAnalyzer instance.
     """
-    from ClassicLib.python.plugin_py import PythonPluginAnalyzer
+    from ClassicLib.integration.python.plugin_py import PythonPluginAnalyzer
 
     return PythonPluginAnalyzer(mock_yamldata_for_plugin)
 
@@ -110,7 +110,7 @@ class TestPythonPluginAnalyzerInit:
     @pytest.mark.unit
     def test_init_stores_yamldata(self, mock_yamldata_for_plugin: MagicMock) -> None:
         """Test that yamldata is stored on initialization."""
-        from ClassicLib.python.plugin_py import PythonPluginAnalyzer
+        from ClassicLib.integration.python.plugin_py import PythonPluginAnalyzer
 
         analyzer = PythonPluginAnalyzer(mock_yamldata_for_plugin)
 
@@ -137,7 +137,7 @@ class TestPythonPluginAnalyzerInit:
     @pytest.mark.unit
     def test_init_handles_none_ignore_list(self, mock_yamldata_for_plugin: MagicMock) -> None:
         """Test that None ignore_list is handled gracefully."""
-        from ClassicLib.python.plugin_py import PythonPluginAnalyzer
+        from ClassicLib.integration.python.plugin_py import PythonPluginAnalyzer
 
         mock_yamldata_for_plugin.ignore_list = None
         analyzer = PythonPluginAnalyzer(mock_yamldata_for_plugin)
@@ -259,7 +259,7 @@ class TestCheckPluginLimit:
         """Test plugin limit triggered for original game version."""
         from packaging.version import Version
 
-        from ClassicLib.python.plugin_py import PythonPluginAnalyzer
+        from ClassicLib.integration.python.plugin_py import PythonPluginAnalyzer
 
         # Set up yamldata with proper Version objects for comparison
         mock_yamldata_for_plugin.game_version = Version("1.10.163")
@@ -470,7 +470,7 @@ class TestFilterIgnoredPlugins:
     @pytest.mark.unit
     def test_filter_ignored_plugins_empty_ignore_list(self, mock_yamldata_for_plugin: MagicMock) -> None:
         """Test that empty ignore list returns plugins unchanged."""
-        from ClassicLib.python.plugin_py import PythonPluginAnalyzer
+        from ClassicLib.integration.python.plugin_py import PythonPluginAnalyzer
 
         mock_yamldata_for_plugin.ignore_list = []
         analyzer = PythonPluginAnalyzer(mock_yamldata_for_plugin)
@@ -507,6 +507,6 @@ class TestPluginAnalyzerAlias:
     @pytest.mark.unit
     def test_plugin_analyzer_alias_exists(self) -> None:
         """Test PluginAnalyzer is an alias for PythonPluginAnalyzer."""
-        from ClassicLib.python.plugin_py import PluginAnalyzer, PythonPluginAnalyzer
+        from ClassicLib.integration.python.plugin_py import PluginAnalyzer, PythonPluginAnalyzer
 
         assert PluginAnalyzer is PythonPluginAnalyzer

@@ -10,7 +10,7 @@ Consolidated from:
 
 import pytest
 
-from ClassicLib.ScanLog.fragments import ReportFragment
+from ClassicLib.scanning.logs.reporting import ReportFragment
 
 
 @pytest.fixture

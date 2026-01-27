@@ -23,10 +23,10 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 # Import Rust components directly
 import classic_scanlog
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.FileIO import FileIOCore
-from ClassicLib.MessageHandler import MessageHandler
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.io.files import FileIOCore
+from ClassicLib.messaging import MessageHandler
 
 
 @pytest.mark.stress
@@ -214,7 +214,7 @@ class TestThreadSafetyValidation:
         Multiple threads simultaneously access the YAML cache to ensure
         cache consistency and thread safety under high contention.
         """
-        from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache as YSC
+        from ClassicLib.io.yaml.sync.cache import YamlSettingsCache as YSC
 
         # Reset singleton to start fresh
         YSC._instance = None

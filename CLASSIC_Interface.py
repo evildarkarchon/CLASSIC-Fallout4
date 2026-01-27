@@ -22,8 +22,8 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
-from ClassicLib.Interface.context import FeatureContext
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
 from ClassicLib.Interface.controllers.backup_manager import BackupManager
 from ClassicLib.Interface.controllers.folder_manager import FolderManager
 from ClassicLib.Interface.controllers.help_about import HelpAboutController
@@ -34,13 +34,13 @@ from ClassicLib.Interface.controllers.scan_controller import ScanController
 from ClassicLib.Interface.controllers.ui_setup import UISetupController
 from ClassicLib.Interface.controllers.update_manager import UpdateManager
 from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
-from ClassicLib.Interface.signal_hub import SignalHub
-from ClassicLib.Interface.StyleSheets import DARK_MODE
-from ClassicLib.Interface.ThreadManager import get_thread_manager
-from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler import init_message_handler, msg_error
-from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettings import classic_settings, yaml_settings
+from ClassicLib.Interface.shared.context import FeatureContext
+from ClassicLib.Interface.shared.signal_hub import SignalHub
+from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
+from ClassicLib.Interface.workers.ThreadManager import get_thread_manager
+from ClassicLib.io.yaml import classic_settings, yaml_settings
+from ClassicLib.messaging import init_message_handler, msg_error
+from ClassicLib.support.setup import SetupCoordinator
 
 
 class MainWindow(QMainWindow):

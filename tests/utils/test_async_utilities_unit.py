@@ -997,7 +997,7 @@ class TestAsyncMapSmart:
 
         items = list(range(5))
 
-        with patch("ClassicLib.Logger.logger") as mock_logger:
+        with patch("ClassicLib.core.logger.logger") as mock_logger:
             results = await async_map_smart(fast_operation, items, use_executor="profile")
             assert results == [0, 2, 4, 6, 8]
             # Logger should have been called with profiling results

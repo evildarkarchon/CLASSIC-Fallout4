@@ -13,10 +13,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from ClassicLib.scanning.logs.HybridOrchestrator import HybridOrchestrator
 
 from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.HybridOrchestrator import HybridOrchestrator
 
 
 @pytest.mark.rust
@@ -34,8 +34,8 @@ class TestBatchOnlyMode:
     def mock_settings(self):
         """Mock async settings calls."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async") as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async") as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = None
@@ -49,7 +49,7 @@ class TestBatchOnlyMode:
         The ClassicOrchestrator uses get_yamldata() from the factory to load configuration.
         This fixture mocks that function to return our empty test data (batch-only mode).
         """
-        with patch("ClassicLib.rust.orchestrator_api.get_yamldata", return_value=yamldata_batch_only):
+        with patch("ClassicLib.integration.rust.orchestrator_api.get_yamldata", return_value=yamldata_batch_only):
             yield yamldata_batch_only
 
     @pytest.fixture

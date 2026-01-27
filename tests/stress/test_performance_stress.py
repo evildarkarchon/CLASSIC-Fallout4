@@ -27,10 +27,11 @@ except ImportError:
     pytest.skip("classic_shared not available", allow_module_level=True)
 
 # Import components to test
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.FileIO import FileIOCore
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
-from ClassicLib.YamlSettings import yaml_cache
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.io.files import FileIOCore
+from ClassicLib.io.yaml import yaml_cache
 
 
 @pytest.mark.stress
@@ -287,7 +288,7 @@ class TestSustainedLoadPerformance:
         Continuously accesses cache with various patterns to measure
         sustained cache performance and hit rate consistency.
         """
-        from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache
+        from ClassicLib.io.yaml.sync.cache import YamlSettingsCache
 
         performance_profiler.start_profiling()
 
@@ -710,7 +711,7 @@ class TestPerformanceDegradation:
         Creates cache pressure scenarios to test performance characteristics
         when cache hit rates vary and memory pressure increases.
         """
-        from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache
+        from ClassicLib.io.yaml.sync.cache import YamlSettingsCache
 
         performance_profiler.start_profiling()
 

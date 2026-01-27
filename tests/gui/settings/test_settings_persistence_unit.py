@@ -8,8 +8,8 @@ import pytest
 
 pytestmark = [pytest.mark.gui, pytest.mark.unit]
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import yaml_settings
 
 
 class TestSettingsLoading:

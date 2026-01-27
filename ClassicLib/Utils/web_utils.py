@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 import aiohttp
 import requests
 
-from ClassicLib import msg_error, msg_info
+from ClassicLib.messaging import msg_error, msg_info
 
 
 def pastebin_fetch(url: str) -> None:

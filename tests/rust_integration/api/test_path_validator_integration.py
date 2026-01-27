@@ -28,7 +28,7 @@ from pathlib import Path
 import pytest
 
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.PathValidator import PathValidator
+from ClassicLib.support.path_validator import PathValidator
 
 
 def _skip_if_rust_unavailable() -> None:

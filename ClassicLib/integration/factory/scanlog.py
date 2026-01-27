@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING, Any
 from ClassicLib.integration.factory.core import get_components, is_rust_disabled
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
     if not is_rust_disabled() and components.get("report_generation", False):
         try:
             # Try to import Rust report generator wrapper
-            from ClassicLib.rust.report_rust import RustAcceleratedReportGenerator
+            from ClassicLib.integration.rust.report_rust import RustAcceleratedReportGenerator
 
             logger.debug("Using Rust ReportGenerator (75x speedup potential)")
             return RustAcceleratedReportGenerator(yamldata)
@@ -53,7 +53,7 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
             logger.warning(f"Failed to get Rust ReportGenerator: {e}")
 
     # Fall back to Python implementation
-    from ClassicLib.python.report_py import ReportGenerator
+    from ClassicLib.integration.python.report_py import ReportGenerator
 
     logger.debug("Using Python report generator implementation")
     return ReportGenerator(yamldata)  # type: ignore[arg-type]
@@ -82,7 +82,7 @@ def get_mod_detector() -> dict[str, Any]:
 
     if not is_rust_disabled() and components.get("mod_detector", False):
         try:
-            from ClassicLib.rust.mod_detector_rust import (
+            from ClassicLib.integration.rust.mod_detector_rust import (
                 detect_mods_double,
                 detect_mods_important,
                 detect_mods_single,
@@ -97,7 +97,7 @@ def get_mod_detector() -> dict[str, Any]:
                 "detect_mods_important": detect_mods_important,
             }
     # Fall back to Python implementation
-    from ClassicLib.python.mod_detector_py import (
+    from ClassicLib.integration.python.mod_detector_py import (
         detect_mods_double,
         detect_mods_important,
         detect_mods_single,
@@ -179,7 +179,7 @@ def get_orchestrator(
     # Check if Rust orchestrator is available for batch processing
     if not is_rust_disabled() and components.get("orchestrator", False):
         try:
-            from ClassicLib.ScanLog.HybridOrchestrator import HybridOrchestrator
+            from ClassicLib.scanning.logs.hybrid_orchestrator import HybridOrchestrator
 
             logger.debug("Using HybridOrchestrator (Rust-accelerated batch processing, 10-20x speedup)")
             return HybridOrchestrator(
@@ -193,7 +193,7 @@ def get_orchestrator(
             logger.warning(f"Failed to import HybridOrchestrator: {e}")
 
     # Fall back to pure Python orchestrator
-    from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+    from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
     logger.debug("Using Python OrchestratorCore implementation")
     return OrchestratorCore(

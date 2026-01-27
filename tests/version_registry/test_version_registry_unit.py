@@ -6,7 +6,7 @@ Tests the data-driven version registry that manages game version metadata.
 import pytest
 from packaging.version import Version
 
-from ClassicLib.VersionRegistry import (
+from ClassicLib.support.versions import (
     AddressLibraryConfig,
     CompatibleRange,
     MatchConfidence,

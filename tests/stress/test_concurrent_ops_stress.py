@@ -81,8 +81,8 @@ class TestConcurrentOperationsStress:
     @pytest.mark.timeout(30)
     async def test_mixed_operations_stress(self, metrics, generator, mock_yamldata_python_only):
         """Stress test with mixed operation types."""
-        from ClassicLib.FileIO import FileIOCore
         from ClassicLib.integration.factory import get_formid_analyzer, get_parser
+        from ClassicLib.io.files import FileIOCore
 
         parser = get_parser()
         analyzer = get_formid_analyzer(mock_yamldata_python_only, True, False)

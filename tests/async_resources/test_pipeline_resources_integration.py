@@ -20,7 +20,7 @@ class TestAsyncPipelineResourceManagement:
 
     async def test_pipeline_cleanup_on_exception(self, message_handler):
         """Test that pipeline properly cleans up resources on exception."""
-        from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
+        from ClassicLib.scanning.logs.pipeline import AsyncCrashLogPipeline
 
         mock_yamldata = MagicMock()
         pipeline = AsyncCrashLogPipeline(
@@ -31,7 +31,7 @@ class TestAsyncPipelineResourceManagement:
         )
 
         # Mock to make processing fail
-        with patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat:
+        with patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat:
             # Make reformat raise an exception
             mock_reformat.side_effect = Exception("Simulated error")
 
@@ -51,7 +51,7 @@ class TestAsyncPipelineResourceManagement:
         Note: ThreadSafeLogCache was removed for performance reasons.
         OrchestratorCore no longer requires crashlogs parameter and reads files directly.
         """
-        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+        from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
         mock_yamldata = MagicMock()
         # Provide actual string values for attributes that may be passed to Rust
@@ -95,7 +95,7 @@ class TestAsyncPipelineResourceManagement:
 
     async def test_pipeline_state_management(self, message_handler):
         """Test that pipeline maintains proper state throughout lifecycle."""
-        from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline
+        from ClassicLib.scanning.logs.pipeline import AsyncCrashLogPipeline
 
         mock_yamldata = MagicMock()
         pipeline = AsyncCrashLogPipeline(
@@ -122,7 +122,7 @@ class TestAsyncPipelineResourceManagement:
         Note: ThreadSafeLogCache was removed for performance reasons.
         OrchestratorCore no longer requires crashlogs parameter and reads files directly.
         """
-        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+        from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
         mock_yamldata = MagicMock()
         # Provide actual string values for attributes that may be passed to Rust
@@ -130,7 +130,7 @@ class TestAsyncPipelineResourceManagement:
         mock_yamldata.xse_acronym = "F4SE"
 
         # Patch DatabasePoolManager instead of AsyncDatabasePool directly
-        with patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager") as mock_pool_manager_class:
+        with patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager") as mock_pool_manager_class:
             mock_pool_manager = MagicMock()
             mock_pool = AsyncMock()
             mock_pool.initialize = AsyncMock()

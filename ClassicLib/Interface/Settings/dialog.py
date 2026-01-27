@@ -24,12 +24,12 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 from ClassicLib.Interface.Settings.path_manager import PathManager
 from ClassicLib.Interface.Settings.tab_creators import TabCreator, ensure_game_version_options
-from ClassicLib.Interface.StyleSheets import DARK_MODE
-from ClassicLib.MessageHandler import msg_error, msg_success
-from ClassicLib.YamlSettings import yaml_cache, yaml_settings
+from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
+from ClassicLib.io.yaml import yaml_cache, yaml_settings
+from ClassicLib.messaging import msg_error, msg_success
 
 
 class SettingsDialog(QDialog):

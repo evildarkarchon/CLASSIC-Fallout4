@@ -9,8 +9,8 @@ from typing import Any
 
 from packaging.version import Version
 
-from ClassicLib import Constants
-from ClassicLib.Logger import logger
+from ClassicLib.core.constants import NULL_VERSION
+from ClassicLib.core.logger import logger
 
 # Pre-compiled regex patterns for version detection performance optimization
 VERSION_PATTERNS = [
@@ -88,7 +88,7 @@ def get_version_windows_api(game_exe_path: Path) -> Version:
         win32api_spec = util.find_spec("win32api")
         if win32api_spec is None:
             logger.debug("win32api not available")
-            return Constants.NULL_VERSION
+            return NULL_VERSION
 
         import win32api
 
@@ -100,7 +100,7 @@ def get_version_windows_api(game_exe_path: Path) -> Version:
     except Exception as e:  # noqa: BLE001
         logger.warning(f"Windows API version detection failed: {e}")
 
-    return Constants.NULL_VERSION
+    return NULL_VERSION
 
 
 def extract_version_from_string_table(string_table: Any) -> Version | None:
@@ -167,7 +167,7 @@ def get_version_with_pefile(exe_path: Path) -> Version:
         pefile_spec = util.find_spec("pefile")
         if pefile_spec is None:
             logger.debug("pefile not available")
-            return Constants.NULL_VERSION
+            return NULL_VERSION
 
         import pefile  # pyright: ignore[reportMissingTypeStubs]
 
@@ -188,7 +188,7 @@ def get_version_with_pefile(exe_path: Path) -> Version:
     except Exception as e:  # noqa: BLE001
         logger.debug(f"pefile version detection failed: {e}")
 
-    return Constants.NULL_VERSION
+    return NULL_VERSION
 
 
 def get_version_fallback(exe_path: Path) -> Version:
@@ -223,7 +223,7 @@ def get_version_fallback(exe_path: Path) -> Version:
     except OSError as e:
         logger.warning(f"Failed to read executable for version detection: {e}")
 
-    return Constants.NULL_VERSION
+    return NULL_VERSION
 
 
 def get_version_from_pe_header(exe_path: Path) -> Version:
@@ -238,7 +238,7 @@ def get_version_from_pe_header(exe_path: Path) -> Version:
     """
     # Try pefile first if available
     version = get_version_with_pefile(exe_path)
-    if version != Constants.NULL_VERSION:
+    if version != NULL_VERSION:
         return version
 
     # Fallback to manual PE parsing
@@ -263,12 +263,12 @@ def get_game_version(game_exe_path: Path) -> Version:
     # Early return for invalid path
     if not is_valid_executable_path(game_exe_path):
         logger.warning("Game executable not found or path is invalid")
-        return Constants.NULL_VERSION
+        return NULL_VERSION
 
     # Try Windows API first if on Windows
     if platform.system() == "Windows":
         version = get_version_windows_api(game_exe_path)
-        if version != Constants.NULL_VERSION:
+        if version != NULL_VERSION:
             return version
         logger.debug("Windows API failed, trying PE header parsing")
 
@@ -314,4 +314,4 @@ def crashgen_version_gen(input_string: str) -> Version:
 
     # If no match found or parsing failed
     logger.debug(f"Could not extract version from: {input_string[:100]}")  # Log first 100 chars
-    return Constants.NULL_VERSION
+    return NULL_VERSION

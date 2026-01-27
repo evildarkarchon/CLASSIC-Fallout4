@@ -1,20 +1,18 @@
-"""Progress tracking handlers for GUI and CLI modes.
+"""Backward compatibility module for MessageHandler.progress.
 
-This module provides the ProgressHandler protocol and concrete implementations:
-- CLIProgressHandler: Text-based progress bar for CLI
-- QtProgressHandler: Qt QProgressDialog for GUI (separate module)
-- ProgressContext: Context manager for progress tracking
+This package has been moved to ClassicLib.messaging.progress.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.messaging.progress instead.
 """
 
-from ClassicLib.MessageHandler.progress.base import ProgressHandler
-from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressBar, CLIProgressHandler
-from ClassicLib.MessageHandler.progress.context import ProgressContext
+import warnings
 
-# QtProgressHandler is imported conditionally to avoid Qt dependency
+warnings.warn(
+    "ClassicLib.MessageHandler.progress is deprecated, import from ClassicLib.messaging.progress instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-__all__ = [
-    "CLIProgressBar",
-    "CLIProgressHandler",
-    "ProgressContext",
-    "ProgressHandler",
-]
+from ClassicLib.messaging.progress import *  # noqa: F403, E402

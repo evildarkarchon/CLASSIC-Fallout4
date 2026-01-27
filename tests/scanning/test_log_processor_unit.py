@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanGame.core.log_processor module.
+"""Unit tests for ClassicLib.scanning.game.checks.log_processor module.
 
 This module tests the LogProcessor class for log file error detection.
 """
@@ -15,8 +15,8 @@ pytestmark = [pytest.mark.unit]
 @pytest.fixture(autouse=True)
 def mock_message_handler():
     """Mock message handler for all tests."""
-    with patch("ClassicLib.ScanGame.core.log_processor.msg_info"):
-        with patch("ClassicLib.ScanGame.core.log_processor.msg_error"):
+    with patch("ClassicLib.scanning.game.checks.log_processor.msg_info"):
+        with patch("ClassicLib.scanning.game.checks.log_processor.msg_error"):
             yield
 
 
@@ -25,7 +25,7 @@ class TestLogProcessorInit:
 
     def test_init_stores_semaphore(self) -> None:
         """Test __init__ stores the semaphore."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         semaphore = asyncio.Semaphore(5)
         processor = LogProcessor(semaphore)
@@ -34,7 +34,7 @@ class TestLogProcessorInit:
 
     def test_init_accepts_any_semaphore_value(self) -> None:
         """Test __init__ accepts semaphores with any value."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         semaphore = asyncio.Semaphore(1)
         processor = LogProcessor(semaphore)
@@ -48,12 +48,12 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_returns_string(self, tmp_path: Path) -> None:
         """Test returns a string result."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         semaphore = asyncio.Semaphore(5)
         processor = LogProcessor(semaphore)
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = []
 
             result = await processor.check_log_errors(tmp_path)
@@ -63,12 +63,12 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_returns_empty_when_no_log_files(self, tmp_path: Path) -> None:
         """Test returns empty string when no log files exist."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         semaphore = asyncio.Semaphore(5)
         processor = LogProcessor(semaphore)
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = []
 
             result = await processor.check_log_errors(tmp_path)
@@ -78,12 +78,12 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_accepts_string_path(self, tmp_path: Path) -> None:
         """Test accepts string path and converts to Path."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         semaphore = asyncio.Semaphore(5)
         processor = LogProcessor(semaphore)
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = []
 
             # Pass as string
@@ -94,7 +94,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_excludes_crash_log_files(self, tmp_path: Path) -> None:
         """Test excludes files containing 'crash-' in name."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create a crash log file
         crash_log = tmp_path / "crash-2024-01-01.log"
@@ -103,7 +103,7 @@ class TestCheckLogErrors:
         semaphore = asyncio.Semaphore(5)
         processor = LogProcessor(semaphore)
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
             mock_yaml.return_value = ["error"]
 
             result = await processor.check_log_errors(tmp_path)
@@ -114,7 +114,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_detects_errors_in_log_files(self, tmp_path: Path) -> None:
         """Test detects errors matching catch_log_errors patterns."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create a log file with an error
         log_file = tmp_path / "test.log"
@@ -129,9 +129,9 @@ class TestCheckLogErrors:
                 return ["error"]
             return []
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
                     result = await processor.check_log_errors(tmp_path)
 
         assert "CAUTION" in result
@@ -140,7 +140,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_excludes_ignored_files(self, tmp_path: Path) -> None:
         """Test excludes files matching exclude_log_files patterns."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create log files - one that should be excluded
         included_log = tmp_path / "game.log"
@@ -159,9 +159,9 @@ class TestCheckLogErrors:
                 return ["debug"]
             return []
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
                     result = await processor.check_log_errors(tmp_path)
 
         # Only game.log should be processed, not debug.log
@@ -170,7 +170,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_excludes_ignored_errors(self, tmp_path: Path) -> None:
         """Test excludes errors matching exclude_log_errors patterns."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create a log file with errors, one that should be excluded
         log_file = tmp_path / "test.log"
@@ -186,9 +186,9 @@ class TestCheckLogErrors:
                 return ["ignored"]
             return []
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
                     result = await processor.check_log_errors(tmp_path)
 
         assert "critical issue" in result.lower()
@@ -197,7 +197,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_handles_read_error_gracefully(self, tmp_path: Path) -> None:
         """Test handles OSError when reading file."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create a log file
         log_file = tmp_path / "test.log"
@@ -212,10 +212,10 @@ class TestCheckLogErrors:
             return []
 
         # Mock to raise OSError when reading
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
-                    with patch("ClassicLib.ScanGame.core.log_processor.open_file_with_encoding", side_effect=OSError("Cannot read")):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
+                    with patch("ClassicLib.scanning.game.checks.log_processor.open_file_with_encoding", side_effect=OSError("Cannot read")):
                         result = await processor.check_log_errors(tmp_path)
 
         assert "ERROR" in result or "Unable to scan" in result
@@ -223,7 +223,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_truncates_to_last_50_errors(self, tmp_path: Path) -> None:
         """Test truncates error list to last 50 when more than 50 errors."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create a log file with many errors
         log_lines = [f"error: line {i}\n" for i in range(100)]
@@ -238,9 +238,9 @@ class TestCheckLogErrors:
                 return ["error"]
             return []
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
                     result = await processor.check_log_errors(tmp_path)
 
         # Should show truncation notice
@@ -249,7 +249,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_processes_multiple_files_concurrently(self, tmp_path: Path) -> None:
         """Test processes multiple log files."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create multiple log files
         for i in range(3):
@@ -264,9 +264,9 @@ class TestCheckLogErrors:
                 return ["error"]
             return []
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
                     result = await processor.check_log_errors(tmp_path)
 
         # Should process all files
@@ -275,7 +275,7 @@ class TestCheckLogErrors:
     @pytest.mark.asyncio
     async def test_returns_empty_for_files_without_errors(self, tmp_path: Path) -> None:
         """Test returns empty string when log files have no matching errors."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         # Create a log file without matching errors
         log_file = tmp_path / "test.log"
@@ -289,9 +289,9 @@ class TestCheckLogErrors:
                 return ["error"]  # Pattern won't match our file content
             return []
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", None):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", None):
                     result = await processor.check_log_errors(tmp_path)
 
         assert result == ""
@@ -303,7 +303,7 @@ class TestLogProcessorWithAsyncEncoding:
     @pytest.mark.asyncio
     async def test_uses_async_encoding_when_available(self, tmp_path: Path) -> None:
         """Test uses async encoding detection when available."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         log_file = tmp_path / "test.log"
         log_file.write_text("error: test error")
@@ -318,9 +318,9 @@ class TestLogProcessorWithAsyncEncoding:
 
         mock_read_lines = AsyncMock(return_value=["error: test error"])
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", True):
-                with patch("ClassicLib.ScanGame.core.log_processor.read_lines_with_encoding_async", mock_read_lines):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", True):
+                with patch("ClassicLib.scanning.game.checks.log_processor.read_lines_with_encoding_async", mock_read_lines):
                     result = await processor.check_log_errors(tmp_path)
 
         mock_read_lines.assert_called()
@@ -332,7 +332,7 @@ class TestLogProcessorWithAiofiles:
     @pytest.mark.asyncio
     async def test_uses_aiofiles_when_async_encoding_unavailable(self, tmp_path: Path) -> None:
         """Test uses aiofiles when async encoding not available."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         log_file = tmp_path / "test.log"
         log_file.write_text("error: test error")
@@ -355,9 +355,9 @@ class TestLogProcessorWithAiofiles:
         mock_aiofiles = MagicMock()
         mock_aiofiles.open = MagicMock(return_value=mock_context)
 
-        with patch("ClassicLib.ScanGame.core.log_processor.yaml_settings_async", side_effect=mock_yaml):
-            with patch("ClassicLib.ScanGame.core.log_processor.ASYNC_ENCODING_AVAILABLE", False):
-                with patch("ClassicLib.ScanGame.core.log_processor.aiofiles", mock_aiofiles):
+        with patch("ClassicLib.scanning.game.checks.log_processor.yaml_settings_async", side_effect=mock_yaml):
+            with patch("ClassicLib.scanning.game.checks.log_processor.ASYNC_ENCODING_AVAILABLE", False):
+                with patch("ClassicLib.scanning.game.checks.log_processor.aiofiles", mock_aiofiles):
                     result = await processor.check_log_errors(tmp_path)
 
         mock_aiofiles.open.assert_called()
@@ -368,12 +368,12 @@ class TestModuleImports:
 
     def test_logger_exists(self) -> None:
         """Test logger is imported."""
-        from ClassicLib.ScanGame.core.log_processor import logger
+        from ClassicLib.scanning.game.checks.log_processor import logger
 
         assert logger is not None
 
     def test_logprocessor_class_exists(self) -> None:
         """Test LogProcessor class can be imported."""
-        from ClassicLib.ScanGame.core.log_processor import LogProcessor
+        from ClassicLib.scanning.game.checks.log_processor import LogProcessor
 
         assert LogProcessor is not None

@@ -9,9 +9,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import YamlSettingsCache
-from ClassicLib.YamlSettings.async_ import AsyncYamlSettingsCore
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import YamlSettingsCache
+from ClassicLib.io.yaml.async_ import AsyncYamlSettingsCore
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit, pytest.mark.performance]
@@ -44,12 +44,12 @@ class TestYamlBatchOperations:
         self.mock_file_ops.save_yaml_file.side_effect = lambda *args, **kwargs: async_return(None)
 
         # Patch the get_async_yaml_core function used by YamlSettingsCache
-        # Note: sync/cache.py imports it from ClassicLib.YamlSettings.async_.core
+        # Note: sync/cache.py imports it from ClassicLib.io.yaml.async_.core
         # We need side_effect to return a NEW coroutine each time it's called
         async def get_core():
             return self.real_core
 
-        self.patcher = patch("ClassicLib.YamlSettings.sync.cache.get_async_yaml_core", side_effect=get_core)
+        self.patcher = patch("ClassicLib.io.yaml.sync.cache.get_async_yaml_core", side_effect=get_core)
         self.patcher.start()
 
     def teardown(self):

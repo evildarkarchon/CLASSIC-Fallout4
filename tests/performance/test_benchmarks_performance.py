@@ -10,7 +10,7 @@ import time
 
 import pytest
 
-from ClassicLib.FileIO import FileIOCore
+from ClassicLib.io.files import FileIOCore
 
 
 class TestFileIOPerformance:

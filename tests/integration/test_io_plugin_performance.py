@@ -198,8 +198,8 @@ class TestFileIOPerformance:
     @pytest.mark.asyncio
     async def test_file_read_performance(self, metrics):
         """Test file reading performance (target: 10x speedup with Rust)."""
-        from ClassicLib.FileIO import FileIOCore
         from ClassicLib.integration.status import is_rust_accelerated
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
         using_rust = is_rust_accelerated("file_io")
@@ -240,7 +240,7 @@ class TestFileIOPerformance:
     @pytest.mark.asyncio
     async def test_concurrent_file_operations(self, metrics):
         """Test concurrent file operations performance."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 

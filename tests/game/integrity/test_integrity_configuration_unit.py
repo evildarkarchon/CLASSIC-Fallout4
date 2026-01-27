@@ -5,16 +5,16 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
-from ClassicLib.GameIntegrity import GameIntegrityChecker
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.integrity import GameIntegrityChecker
 
 
 class TestConfigurationLoading:
     """Tests for configuration loading and validation."""
 
-    @patch("ClassicLib.VersionRegistry.get_version_registry")
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_configuration_success(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock, checker: GameIntegrityChecker
@@ -47,8 +47,8 @@ class TestConfigurationLoading:
         # Verify yaml_settings was called correctly (4 calls now, not 6)
         assert mock_yaml_settings.call_count == 4
 
-    @patch("ClassicLib.VersionRegistry.get_version_registry")
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_load_configuration_vr_mode(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock, checker: GameIntegrityChecker
@@ -75,8 +75,8 @@ class TestConfigurationLoading:
         assert calls[1][0] == (str, YAML.Game_Local, "GameVR_Info.Game_File_EXE")
         assert calls[2][0] == (str, YAML.Game, "GameVR_Info.Main_Root_Name")
 
-    @patch("ClassicLib.VersionRegistry.get_version_registry")
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_configuration_type_error(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock, checker: GameIntegrityChecker
@@ -98,9 +98,9 @@ class TestConfigurationLoading:
         with pytest.raises(TypeError, match="Expected string for game_exe_path"):
             checker.load_configuration()
 
-    @patch("ClassicLib.GameIntegrity.logger")
-    @patch("ClassicLib.VersionRegistry.get_version_registry")
-    @patch("ClassicLib.YamlSettings.yaml_settings")
+    @patch("ClassicLib.support.integrity.logger")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_load_configuration_with_logging(
         self,

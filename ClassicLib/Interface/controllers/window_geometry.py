@@ -14,9 +14,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, ClassVar
 
-from ClassicLib.Constants import YAML
-from ClassicLib.Logger import logger
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
+from ClassicLib.io.yaml import yaml_settings
 
 try:
     from PySide6.QtCore import Qt
@@ -24,7 +24,7 @@ except ImportError:
     Qt = None  # type: ignore[assignment]
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class WindowGeometryManager:

@@ -62,7 +62,7 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
 
         if not is_rust_disabled() and components.get("file_io_core", False):
             try:
-                from ClassicLib.rust.file_io_rust import FileIOCore
+                from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
                 logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
                 _file_io_instance = FileIOCore(encoding, errors)
@@ -72,7 +72,7 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
                 return _file_io_instance
 
         # Fall back to Python implementation
-        from ClassicLib.python.file_io_py import FileIOCore
+        from ClassicLib.integration.python.file_io_py import FileIOCore
 
         logger.debug("Using Python FileIOCore implementation")
         _file_io_instance = FileIOCore(encoding, errors)

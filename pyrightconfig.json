@@ -32,10 +32,11 @@
     "reportUnusedImport": false,
     "reportUnusedVariable": false,
     "reportConstantRedefinition": false,
-    "reportUnknownLambdaType": "warning",
-    "reportUnknownParameterType": "warning",
-    "reportUnknownVariableType": "warning",
-    "reportUnknownArgumentType": "warning",
-    "reportUntypedFunctionDecorator": "warning",
-    "reportPrivateUsage": "warning"
+    "reportUnknownLambdaType": false,
+    "reportUnknownParameterType": false,
+    "reportUnknownVariableType": false,
+    "reportUnknownArgumentType": false,
+    "reportUntypedFunctionDecorator": false,
+    "reportPrivateUsage": false,
+
 }

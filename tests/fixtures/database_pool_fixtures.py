@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import pytest
 
-from ClassicLib.Database import DatabasePoolManager
+from ClassicLib.io.database import DatabasePoolManager
 
 
 @pytest.fixture(autouse=True)
@@ -81,8 +81,8 @@ def clean_sync_database_pool() -> Generator[None, None, None]:
         - query_cache module-level dict in Util.py
         - _cached_formid_lookup LRU cache in formid_py.py
     """
-    from ClassicLib.python.formid_py import _cached_formid_lookup
-    from ClassicLib.ScanLog.Util import SyncDatabasePool, query_cache
+    from ClassicLib.integration.python.formid_py import _cached_formid_lookup
+    from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool, query_cache
 
     # Clear singleton and caches before test
     if SyncDatabasePool._instance is not None:
@@ -124,7 +124,7 @@ def mock_database_pool_manager():
     mock_manager.get_pool = AsyncMock(return_value=mock_pool)
     mock_manager.close_pool = AsyncMock()
 
-    with patch("ClassicLib.ScanLog.AsyncUtil.DatabasePoolManager", return_value=mock_manager):
+    with patch("ClassicLib.scanning.logs.AsyncUtil.DatabasePoolManager", return_value=mock_manager):
         yield mock_manager
 
 
@@ -148,7 +148,7 @@ async def database_pool_manager_with_mock_pool():
     mock_pool.initialize = AsyncMock()
     mock_pool.close = AsyncMock()
 
-    with patch("ClassicLib.ScanLog.AsyncUtil.AsyncDatabasePool", return_value=mock_pool):
+    with patch("ClassicLib.scanning.logs.AsyncUtil.AsyncDatabasePool", return_value=mock_pool):
         manager = DatabasePoolManager()
         yield manager
 

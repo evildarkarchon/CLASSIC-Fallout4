@@ -8,7 +8,7 @@ objects and the matched_config field.
 import pytest
 from packaging.version import Version
 
-from ClassicLib.VersionRegistry import (
+from ClassicLib.support.versions import (
     CrashgenConfig,
     CrashgenVersionResult,
     CrashgenVersionStatus,
@@ -528,7 +528,7 @@ class TestCrashgenConfigWithCompatibleRange:
     @pytest.mark.unit
     def test_crashgen_config_is_compatible_with_range_inside(self):
         """Test that CrashgenConfig with compatible_range returns True for version inside range."""
-        from ClassicLib.VersionRegistry.models import CompatibleRange
+        from ClassicLib.support.versions.models import CompatibleRange
 
         og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
         config = CrashgenConfig(
@@ -543,7 +543,7 @@ class TestCrashgenConfigWithCompatibleRange:
     @pytest.mark.unit
     def test_crashgen_config_is_compatible_with_range_outside(self):
         """Test that CrashgenConfig with compatible_range returns False for version outside range."""
-        from ClassicLib.VersionRegistry.models import CompatibleRange
+        from ClassicLib.support.versions.models import CompatibleRange
 
         og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
         config = CrashgenConfig(
@@ -558,7 +558,7 @@ class TestCrashgenConfigWithCompatibleRange:
     @pytest.mark.unit
     def test_crashgen_config_with_compatible_range_all_fields(self):
         """Test CrashgenConfig with all fields including compatible_range."""
-        from ClassicLib.VersionRegistry.models import CompatibleRange
+        from ClassicLib.support.versions.models import CompatibleRange
 
         og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
         config = CrashgenConfig(
@@ -630,7 +630,7 @@ class TestVersionInfoCrashgenMethods:
     @pytest.mark.unit
     def test_get_compatible_crashgens_with_specific_version(self):
         """Test get_compatible_crashgens filters by specific game version."""
-        from ClassicLib.VersionRegistry.models import CompatibleRange, VersionInfo
+        from ClassicLib.support.versions.models import CompatibleRange, VersionInfo
 
         # Create a test VersionInfo with crashgens that have compatible_range
         og_range = CompatibleRange.from_strings("1.10.163.0", "1.10.163.999")
@@ -670,7 +670,7 @@ class TestVersionInfoCrashgenMethods:
     @pytest.mark.unit
     def test_get_compatible_crashgens_no_range_means_all_compatible(self):
         """Test crashgens without compatible_range are compatible with all versions."""
-        from ClassicLib.VersionRegistry.models import VersionInfo
+        from ClassicLib.support.versions.models import VersionInfo
 
         crashgens = (
             CrashgenConfig(

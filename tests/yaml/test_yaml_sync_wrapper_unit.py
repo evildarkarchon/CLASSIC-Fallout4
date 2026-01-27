@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 import ruamel.yaml
 
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import YamlSettingsCache, classic_settings, yaml_cache, yaml_settings
 
 pytestmark = pytest.mark.unit
 
@@ -42,7 +42,7 @@ class TestSyncWrapperCompatibility:
 
         assert hasattr(cache, "_async_core")
         assert hasattr(cache, "_bridge")
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
 
         # Mock load_yaml_file for unit testing logic
         async def mock_load(*args, **kwargs):
@@ -94,7 +94,7 @@ class TestModuleLevelFunctions:
             return mock_core
 
         # We must patch where it is imported in sync/cache.py
-        with patch("ClassicLib.YamlSettings.sync.cache.get_async_yaml_core", side_effect=get_mock_core):
+        with patch("ClassicLib.io.yaml.sync.cache.get_async_yaml_core", side_effect=get_mock_core):
             # Reset singleton to ensure it uses patched get_async_yaml_core
             YamlSettingsCache._instance = None
 
@@ -106,16 +106,16 @@ class TestModuleLevelFunctions:
         # We need to patch the async_yaml_settings method on the SINGLETON instance
         # or patch the class method
 
-        with patch("ClassicLib.YamlSettings.YamlSettingsCache.async_yaml_settings", return_value="/some/path"):
+        with patch("ClassicLib.io.yaml.YamlSettingsCache.async_yaml_settings", return_value="/some/path"):
             path_value = yaml_settings(Path, YAML.TEST, "some.path")
             assert isinstance(path_value, Path)
             assert path_value == Path("/some/path")
 
-        with patch("ClassicLib.YamlSettings.YamlSettingsCache.async_yaml_settings", return_value=None):
+        with patch("ClassicLib.io.yaml.YamlSettingsCache.async_yaml_settings", return_value=None):
             path_value = yaml_settings(Path, YAML.TEST, "nonexistent.path")
             assert path_value is None
 
-        with patch("ClassicLib.YamlSettings.YamlSettingsCache.async_yaml_settings", return_value=123):
+        with patch("ClassicLib.io.yaml.YamlSettingsCache.async_yaml_settings", return_value=123):
             path_value = yaml_settings(Path, YAML.TEST, "numeric.value")
             assert path_value is None
 

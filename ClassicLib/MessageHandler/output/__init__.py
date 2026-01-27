@@ -1,20 +1,18 @@
-"""Output backends for message display.
+"""Backward compatibility module for MessageHandler.output.
 
-This module provides the OutputBackend protocol and concrete implementations
-for different output targets:
-- CLIBackend: Command-line output with emoji prefixes
-- GUIBackend: Qt-based GUI output with QMessageBox dialogs
-- LogBackend: Python logging integration
+This package has been moved to ClassicLib.messaging.backends.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.messaging.backends instead.
 """
 
-from ClassicLib.MessageHandler.output.base import OutputBackend
-from ClassicLib.MessageHandler.output.cli_backend import CLIBackend
-from ClassicLib.MessageHandler.output.log_backend import LogBackend
+import warnings
 
-# GUIBackend is imported conditionally to avoid Qt dependency
+warnings.warn(
+    "ClassicLib.MessageHandler.output is deprecated, import from ClassicLib.messaging.backends instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
 
-__all__ = [
-    "CLIBackend",
-    "LogBackend",
-    "OutputBackend",
-]
+from ClassicLib.messaging.backends import *  # noqa: F403, E402

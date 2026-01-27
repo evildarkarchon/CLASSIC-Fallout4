@@ -25,21 +25,9 @@ from ClassicLib.integration.factory import (
 from ClassicLib.integration.status import is_rust_accelerated
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
-
-
-@pytest.fixture
-def mock_yamldata() -> MagicMock:
-    """Create mock yamldata for factory testing."""
-    mock = MagicMock()
-    mock.crashgen_name = "Buffout 4"
-    mock.xse_acronym = "F4SE"
-    mock.game_root_name = "Fallout 4"
-    mock.classic_records_list = ["TESForm", "BGSKeyword"]
-    mock.game_ignore_records = []
-    return mock
 
 
 @pytest.fixture(autouse=True)
@@ -54,12 +42,12 @@ class TestOrchestratorUsesRecordScannerFactory:
 
     def test_orchestrator_init_uses_get_record_scanner(self, mock_yamldata: MagicMock) -> None:
         """Verify OrchestratorCore calls get_record_scanner() in __init__."""
-        with patch("ClassicLib.ScanLog.OrchestratorCore.get_record_scanner") as mock_factory:
+        with patch("ClassicLib.scanning.logs.OrchestratorCore.get_record_scanner") as mock_factory:
             mock_scanner = MagicMock()
             mock_factory.return_value = mock_scanner
 
             # Import here to apply patch
-            from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+            from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
             # Create orchestrator
             orch = OrchestratorCore(
@@ -77,7 +65,7 @@ class TestOrchestratorUsesRecordScannerFactory:
 
     def test_orchestrator_record_scanner_not_none(self, mock_yamldata: MagicMock) -> None:
         """Verify OrchestratorCore's record_scanner is never None."""
-        from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+        from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
         orch = OrchestratorCore(
             yamldata=mock_yamldata,
@@ -112,7 +100,7 @@ class TestRecordScannerFactory:
         scanner = get_record_scanner(mock_yamldata)
 
         # Should be the Rust wrapper class
-        from ClassicLib.rust.record_rust import RustRecordScanner
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
         assert isinstance(scanner, RustRecordScanner)
 
@@ -125,7 +113,7 @@ class TestRecordScannerFactory:
             scanner = get_record_scanner(mock_yamldata)
 
             # Should be Python implementation
-            from ClassicLib.python.record_py import RecordScanner as PythonRecordScanner
+            from ClassicLib.integration.python.record_py import RecordScanner as PythonRecordScanner
 
             assert isinstance(scanner, PythonRecordScanner)
 
@@ -162,7 +150,7 @@ class TestFileIOFactory:
         io_core = get_file_io()
 
         # Should be the Rust implementation
-        from ClassicLib.rust.file_io_rust import FileIOCore as RustFileIOCore
+        from ClassicLib.integration.rust.file_io_rust import FileIOCore as RustFileIOCore
 
         assert isinstance(io_core, RustFileIOCore)
 

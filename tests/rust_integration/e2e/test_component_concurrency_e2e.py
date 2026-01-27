@@ -63,32 +63,6 @@ class TestComponentConcurrency:
             "\t[01] TestPlugin.esp",
         ]
 
-    @pytest.fixture
-    def mock_yamldata(self) -> Mock:
-        """Mock YAML data for concurrency testing."""
-        mock_yaml = Mock()
-        mock_yaml.game_type = "fallout4"
-        mock_yaml.crashgen_name = "Buffout 4"
-        mock_yaml.xse_acronym = "F4SE"
-        mock_yaml.game_root_name = "Fallout 4"
-        mock_yaml.problematic_plugins = {}
-        mock_yaml.formid_database_enabled = True
-        mock_yaml.show_formid_values = True
-        mock_yaml.record_patterns = ["TESForm"]
-
-        # Initialize list attributes to empty lists
-        mock_yaml.game_ignore_plugins = []
-        mock_yaml.game_ignore_records = []
-        mock_yaml.ignore_list = []
-        mock_yaml.classic_records_list = []
-
-        # Initialize dict attributes to empty dicts
-        mock_yaml.mods_single = {}
-        mock_yaml.mods_double = {}
-        mock_yaml.mods_important = {}
-
-        return mock_yaml
-
     def test_concurrent_parser_usage(self, sample_crash_data, mock_yamldata):
         """
         Test that multiple parsers can run concurrently.

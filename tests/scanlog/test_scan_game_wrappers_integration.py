@@ -18,7 +18,7 @@ class TestSyncWrappers:
         # Patch the specific async method on the global _scan_game_core instance
         with (
             patch("CLASSIC_ScanGame.scan_mods_archived", return_value="Test result") as mock_wrapper_func,
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
         ):
             mock_bridge_class.get_instance.return_value = MagicMock()  # Ensure a bridge is available
 
@@ -31,7 +31,7 @@ class TestSyncWrappers:
         mock_path = MagicMock()
         with (
             patch("CLASSIC_ScanGame.check_log_errors", return_value="Test log result") as mock_wrapper_func,
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
         ):
             mock_bridge_class.get_instance.return_value = MagicMock()  # Ensure a bridge is available
 
@@ -43,7 +43,7 @@ class TestSyncWrappers:
         """Test synchronous wrapper for scan_mods_unpacked."""
         with (
             patch("CLASSIC_ScanGame.scan_mods_unpacked", return_value="Test unpacked result") as mock_wrapper_func,
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
         ):
             mock_bridge_class.get_instance.return_value = MagicMock()  # Ensure a bridge is available
 
@@ -54,7 +54,7 @@ class TestSyncWrappers:
     def test_sync_adapter_integration(self):
         """Test that sync adapters correctly delegate to ScanGameCore."""
         with (
-            patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_class,
+            patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_class,
             patch("CLASSIC_ScanGame.scan_mods_archived", return_value="Async result") as mock_wrapper_func,
         ):
             mock_bridge_class.get_instance.return_value = MagicMock()  # Ensure a bridge is available

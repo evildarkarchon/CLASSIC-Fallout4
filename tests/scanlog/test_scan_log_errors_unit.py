@@ -12,8 +12,7 @@ from unittest.mock import patch
 
 import aiofiles
 import pytest
-
-from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
+from ClassicLib.scanning.game.ScanGameCore import ScanGameCore
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
@@ -36,7 +35,7 @@ def mock_settings():
     validators.get_scan_settings() async method. We mock the YamlSettingsCache
     module-level function instead.
     """
-    with patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml_cache:
+    with patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_cache:
 
         def yaml_side_effect(type_, yaml_key, setting_path, default=None):
             settings_map = {
@@ -116,7 +115,7 @@ class TestCheckLogErrors:
 
         # Mock both possible file reading methods to raise OSError
         with (
-            patch("ClassicLib.ScanGame.core.log_processor.open_file_with_encoding", side_effect=OSError("Permission denied")),
+            patch("ClassicLib.scanning.game.core.log_processor.open_file_with_encoding", side_effect=OSError("Permission denied")),
             patch("aiofiles.open", side_effect=OSError("Permission denied")) if "aiofiles" in str(sys.modules) else nullcontext(),
         ):
             core = ScanGameCore()

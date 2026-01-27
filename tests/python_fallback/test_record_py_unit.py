@@ -13,7 +13,7 @@ from unittest.mock import MagicMock
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.python.record_py import PythonRecordScanner
+    from ClassicLib.integration.python.record_py import PythonRecordScanner
 
 # ============================================================================
 # Fixtures
@@ -58,7 +58,7 @@ def record_scanner(mock_yamldata_records: MagicMock) -> "PythonRecordScanner":
     Returns:
         PythonRecordScanner instance configured for testing.
     """
-    from ClassicLib.python.record_py import PythonRecordScanner
+    from ClassicLib.integration.python.record_py import PythonRecordScanner
 
     return PythonRecordScanner(mock_yamldata_records)
 
@@ -73,7 +73,7 @@ def record_scanner_empty(mock_yamldata_empty_records: MagicMock) -> "PythonRecor
     Returns:
         PythonRecordScanner instance with empty configuration.
     """
-    from ClassicLib.python.record_py import PythonRecordScanner
+    from ClassicLib.integration.python.record_py import PythonRecordScanner
 
     return PythonRecordScanner(mock_yamldata_empty_records)
 
@@ -105,7 +105,7 @@ class TestPythonRecordScannerInit:
     @pytest.mark.unit
     def test_init_stores_yamldata(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner stores yamldata reference."""
-        from ClassicLib.python.record_py import PythonRecordScanner
+        from ClassicLib.integration.python.record_py import PythonRecordScanner
 
         scanner = PythonRecordScanner(mock_yamldata_records)
 
@@ -114,7 +114,7 @@ class TestPythonRecordScannerInit:
     @pytest.mark.unit
     def test_init_creates_lowercase_records_set(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner creates lowercase set of records."""
-        from ClassicLib.python.record_py import PythonRecordScanner
+        from ClassicLib.integration.python.record_py import PythonRecordScanner
 
         scanner = PythonRecordScanner(mock_yamldata_records)
 
@@ -126,7 +126,7 @@ class TestPythonRecordScannerInit:
     @pytest.mark.unit
     def test_init_creates_lowercase_ignore_set(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner creates lowercase set of ignored records."""
-        from ClassicLib.python.record_py import PythonRecordScanner
+        from ClassicLib.integration.python.record_py import PythonRecordScanner
 
         scanner = PythonRecordScanner(mock_yamldata_records)
 
@@ -136,7 +136,7 @@ class TestPythonRecordScannerInit:
     @pytest.mark.unit
     def test_init_handles_empty_lists(self, mock_yamldata_empty_records: MagicMock) -> None:
         """Test scanner handles empty record lists."""
-        from ClassicLib.python.record_py import PythonRecordScanner
+        from ClassicLib.integration.python.record_py import PythonRecordScanner
 
         scanner = PythonRecordScanner(mock_yamldata_empty_records)
 
@@ -157,7 +157,7 @@ class TestScanNamedRecords:
         """Test scan_named_records returns tuple of fragment and matches."""
         fragment, matches = record_scanner.scan_named_records(sample_callstack)
 
-        from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
+        from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment
 
         assert isinstance(fragment, ReportFragment)
         assert isinstance(matches, list)
@@ -407,7 +407,7 @@ class TestRecordScannerEdgeCases:
     @pytest.mark.unit
     def test_scanner_record_partially_in_ignore_list(self, mock_yamldata_records: MagicMock) -> None:
         """Test scanner doesn't match partial ignore patterns incorrectly."""
-        from ClassicLib.python.record_py import PythonRecordScanner
+        from ClassicLib.integration.python.record_py import PythonRecordScanner
 
         # TESForm should not be blocked by TESFileRecord in ignore list
         scanner = PythonRecordScanner(mock_yamldata_records)
@@ -461,7 +461,7 @@ class TestRecordScannerAlias:
     @pytest.mark.unit
     def test_record_scanner_alias_exists(self) -> None:
         """Test RecordScanner is an alias for PythonRecordScanner."""
-        from ClassicLib.python.record_py import PythonRecordScanner, RecordScanner
+        from ClassicLib.integration.python.record_py import PythonRecordScanner, RecordScanner
 
         assert RecordScanner is PythonRecordScanner
 
@@ -477,7 +477,7 @@ class TestRecordScannerReportFragmentIntegration:
     @pytest.mark.unit
     def test_fragment_can_be_combined(self, record_scanner: "PythonRecordScanner") -> None:
         """Test generated fragment can be combined with other fragments."""
-        from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
+        from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment
 
         callstack1 = ["Line with TESForm"]
         callstack2 = ["Line with BGSKeyword"]

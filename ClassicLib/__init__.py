@@ -26,9 +26,9 @@ Usage:
     ...     from ClassicLib.GlobalRegistry import GlobalRegistry
 """
 
-# Core components
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.Constants import (
+# Core components (from core/ package)
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.constants import (
     DB_PATHS,
     F4SE_VERSIONS,
     FO4_VERSIONS,
@@ -42,8 +42,9 @@ from ClassicLib.Constants import (
     YAML,
     GameID,
 )
-from ClassicLib.FileIO import FileIOCore, read_file_sync, write_file_sync
-from ClassicLib.GlobalRegistry import (
+from ClassicLib.core.logger import logger
+from ClassicLib.core.performance import TimedBlock, async_timed_operation, timed_operation
+from ClassicLib.core.registry import (
     Keys,
     get,
     get_game,
@@ -56,9 +57,21 @@ from ClassicLib.GlobalRegistry import (
     is_registered,
     register,
 )
+
+# Integration components
 from ClassicLib.integration.detector import detect_component
-from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler import (
+
+# I/O components
+from ClassicLib.io.files import FileIOCore, read_file_sync, write_file_sync
+from ClassicLib.io.yaml import (
+    YamlSettingsCache,
+    classic_settings,
+    yaml_cache,
+    yaml_settings,
+)
+
+# Message handling
+from ClassicLib.messaging import (
     Message,
     MessageHandler,
     MessageTarget,
@@ -74,7 +87,7 @@ from ClassicLib.MessageHandler import (
     msg_success,
     msg_warning,
 )
-from ClassicLib.PerformanceMonitor import TimedBlock, async_timed_operation, timed_operation
+from ClassicLib.support.xse import xse_check_hashes, xse_check_integrity
 
 # NOTE: Update module is temporarily excluded due to external dependency issues
 # from ClassicLib.Update import (
@@ -92,13 +105,6 @@ from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
 from ClassicLib.Utils.version_utils import crashgen_version_gen, get_game_version
 from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 from ClassicLib.Utils.web_utils import pastebin_fetch
-from ClassicLib.XseCheck import xse_check_hashes, xse_check_integrity
-from ClassicLib.YamlSettings import (
-    YamlSettingsCache,
-    classic_settings,
-    yaml_cache,
-    yaml_settings,
-)
 
 # Rust-Accelerated Phase 1 Components (with automatic fallback)
 # These modules provide significant performance improvements when available

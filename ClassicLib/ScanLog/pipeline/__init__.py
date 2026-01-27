@@ -1,15 +1,18 @@
-"""Async crash log processing pipeline components.
+"""Backward compatibility module for ScanLog.pipeline.
 
-This module provides high-performance async processing capabilities
-for crash log analysis.
+This package has been moved to ClassicLib.scanning.logs.reporting.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.scanning.logs.reporting instead.
 """
 
-from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline, run_async_crash_log_scan
-from ClassicLib.ScanLog.pipeline.async_performance_monitor import AsyncPerformanceMonitor, benchmark_async_pipeline
+import warnings
 
-__all__ = [
-    "AsyncCrashLogPipeline",
-    "AsyncPerformanceMonitor",
-    "benchmark_async_pipeline",
-    "run_async_crash_log_scan",
-]
+warnings.warn(
+    "ClassicLib.ScanLog.pipeline is deprecated, import from ClassicLib.scanning.logs.reporting instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.scanning.logs.reporting import AsyncCrashLogPipeline, AsyncPerformanceMonitor  # noqa: F401, E402

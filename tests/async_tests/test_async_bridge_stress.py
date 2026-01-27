@@ -20,7 +20,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
+from ClassicLib.core.async_bridge import AsyncBridge
 
 
 @pytest.mark.unit

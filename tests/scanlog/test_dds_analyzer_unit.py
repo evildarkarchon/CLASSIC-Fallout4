@@ -5,8 +5,7 @@ import struct
 from pathlib import Path
 
 import pytest
-
-from ClassicLib.ScanGame.core.dds_analyzer import (
+from ClassicLib.scanning.game.core.dds_analyzer import (
     DDSInfo,
     EnhancedDDSAnalyzer,
     analyze_dds,
@@ -153,7 +152,7 @@ class TestIntegration:
     @pytest.mark.asyncio
     async def test_processor_with_enhanced_analyzer(self, valid_dds_data, tmp_path):
         """Test DDSProcessor using enhanced analyzer."""
-        from ClassicLib.ScanGame.core import DDSProcessor
+        from ClassicLib.scanning.game.core import DDSProcessor
 
         # Create test files
         mod_dir = tmp_path / "TestMod"

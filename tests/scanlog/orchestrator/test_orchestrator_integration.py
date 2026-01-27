@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ClassicLib.ScanLog.OrchestratorCore import OrchestratorCore
+from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
 
 @pytest.mark.integration
@@ -28,11 +28,11 @@ class TestOrchestratorCoreProcessing:
     ) -> None:
         """Test that process_crash_log returns the expected structure."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -89,11 +89,11 @@ class TestOrchestratorCoreProcessing:
     ) -> None:
         """Test that processing generates meaningful report content."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -143,11 +143,11 @@ class TestOrchestratorCoreProcessing:
     ) -> None:
         """Test that malformed crash logs are handled gracefully."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -192,11 +192,11 @@ class TestOrchestratorCoreProcessing:
     ) -> None:
         """Test that processing updates statistics correctly."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -244,11 +244,11 @@ class TestOrchestratorCoreBatchProcessing:
         crash_files = list(crash_logs_directory.glob("*.log"))
 
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -304,11 +304,11 @@ class TestOrchestratorCoreBatchProcessing:
         valid_file.write_text("Valid content")
 
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -356,11 +356,11 @@ class TestOrchestratorCoreReportGeneration:
     ) -> None:
         """Test that generated report contains a header."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -402,11 +402,11 @@ class TestOrchestratorCoreReportGeneration:
     ) -> None:
         """Test that generated report contains a footer."""
         with (
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False

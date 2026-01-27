@@ -20,7 +20,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_removes_basic_emoticons(self) -> None:
         """strip_emoji should remove basic emoticons."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("Hello 😀 World 😊")
 
@@ -32,7 +32,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_removes_symbols_and_pictographs(self) -> None:
         """strip_emoji should remove symbols and pictographs."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("Test 🌟 message 🎉")
 
@@ -44,7 +44,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_removes_transport_symbols(self) -> None:
         """strip_emoji should remove transport and map symbols."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("Travel 🚗 by 🚀")
 
@@ -54,7 +54,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_preserves_regular_text(self) -> None:
         """strip_emoji should not modify regular text."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         text = "Hello, World! This is a test message."
         result = strip_emoji(text)
@@ -64,7 +64,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_handles_empty_string(self) -> None:
         """strip_emoji should handle empty string."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("")
 
@@ -73,7 +73,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_handles_only_emojis(self) -> None:
         """strip_emoji should return empty string for emoji-only input."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("😀🎉🚀")
 
@@ -82,7 +82,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_trims_whitespace(self) -> None:
         """strip_emoji should trim leading/trailing whitespace."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("  Hello 😀  ")
 
@@ -91,7 +91,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_handles_accented_unicode_text(self) -> None:
         """strip_emoji should preserve accented unicode characters."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("Café résumé naïve")
 
@@ -102,7 +102,7 @@ class TestStripEmoji:
     @pytest.mark.unit
     def test_strip_emoji_handles_mixed_content(self) -> None:
         """strip_emoji should handle mixed content correctly."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("Error: 🚨 File not found ❌")
 
@@ -118,7 +118,7 @@ class TestStripEmojiPythonFallback:
     @pytest.mark.unit
     def test_python_fallback_removes_emojis(self) -> None:
         """Python fallback should remove emojis."""
-        from ClassicLib.MessageHandler.formatting.formatter import _python_strip_emoji
+        from ClassicLib.messaging.formatting.formatter import _python_strip_emoji
 
         result = _python_strip_emoji("Test 😀 message")
 
@@ -128,7 +128,7 @@ class TestStripEmojiPythonFallback:
     @pytest.mark.unit
     def test_python_fallback_strips_whitespace(self) -> None:
         """Python fallback should strip whitespace."""
-        from ClassicLib.MessageHandler.formatting.formatter import _python_strip_emoji
+        from ClassicLib.messaging.formatting.formatter import _python_strip_emoji
 
         result = _python_strip_emoji("  Hello  ")
 
@@ -137,7 +137,7 @@ class TestStripEmojiPythonFallback:
     @pytest.mark.unit
     def test_emoji_pattern_is_cached(self) -> None:
         """Emoji pattern should be compiled once and cached."""
-        from ClassicLib.MessageHandler.formatting import formatter
+        from ClassicLib.messaging.formatting import formatter
 
         # Reset the pattern
         formatter._EMOJI_PATTERN = None
@@ -156,7 +156,7 @@ class TestStripEmojiRustIntegration:
     @pytest.mark.unit
     def test_uses_rust_when_available(self) -> None:
         """strip_emoji should use Rust when available."""
-        from ClassicLib.MessageHandler.formatting import formatter
+        from ClassicLib.messaging.formatting import formatter
 
         mock_rust = MagicMock()
         mock_rust.strip_emoji.return_value = "Result from Rust"
@@ -171,7 +171,7 @@ class TestStripEmojiRustIntegration:
     @pytest.mark.unit
     def test_falls_back_to_python_when_rust_unavailable(self) -> None:
         """strip_emoji should fall back to Python when Rust unavailable."""
-        from ClassicLib.MessageHandler.formatting import formatter
+        from ClassicLib.messaging.formatting import formatter
 
         with patch.object(formatter, "RUST_AVAILABLE", False):
             result = formatter.strip_emoji("Test 😀 message")
@@ -189,7 +189,7 @@ class TestFormatLogMessage:
     @pytest.mark.unit
     def test_format_basic_message(self) -> None:
         """format_log_message should format basic message."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Test content")
 
@@ -198,7 +198,7 @@ class TestFormatLogMessage:
     @pytest.mark.unit
     def test_format_message_with_details(self) -> None:
         """format_log_message should append details."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Main message", "Additional details")
 
@@ -209,7 +209,7 @@ class TestFormatLogMessage:
     @pytest.mark.unit
     def test_format_strips_emojis_from_content(self) -> None:
         """format_log_message should strip emojis from content."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Success 🎉 Complete")
 
@@ -220,7 +220,7 @@ class TestFormatLogMessage:
     @pytest.mark.unit
     def test_format_strips_emojis_from_details(self) -> None:
         """format_log_message should strip emojis from details."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Message", "Details 🚀 here")
 
@@ -230,7 +230,7 @@ class TestFormatLogMessage:
     @pytest.mark.unit
     def test_format_with_none_details(self) -> None:
         """format_log_message should handle None details."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Message only", None)
 
@@ -245,7 +245,7 @@ class TestFormatLogMessage:
         while Python version treats empty string as falsy. The test verifies
         the message content is present regardless.
         """
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Message", "")
 
@@ -260,7 +260,7 @@ class TestFormatLogMessagePythonFallback:
     @pytest.mark.unit
     def test_python_fallback_formats_content(self) -> None:
         """Python fallback should format content."""
-        from ClassicLib.MessageHandler.formatting.formatter import (
+        from ClassicLib.messaging.formatting.formatter import (
             _python_format_log_message,
         )
 
@@ -272,7 +272,7 @@ class TestFormatLogMessagePythonFallback:
     @pytest.mark.unit
     def test_python_fallback_appends_details(self) -> None:
         """Python fallback should append details with newline."""
-        from ClassicLib.MessageHandler.formatting.formatter import (
+        from ClassicLib.messaging.formatting.formatter import (
             _python_format_log_message,
         )
 
@@ -291,7 +291,7 @@ class TestFormatLogMessageRustIntegration:
     @pytest.mark.unit
     def test_uses_rust_when_available(self) -> None:
         """format_log_message should use Rust when available."""
-        from ClassicLib.MessageHandler.formatting import formatter
+        from ClassicLib.messaging.formatting import formatter
 
         mock_rust = MagicMock()
         mock_rust.format_log_message.return_value = "Rust formatted"
@@ -306,7 +306,7 @@ class TestFormatLogMessageRustIntegration:
     @pytest.mark.unit
     def test_falls_back_to_python_when_rust_unavailable(self) -> None:
         """format_log_message should fall back to Python when Rust unavailable."""
-        from ClassicLib.MessageHandler.formatting import formatter
+        from ClassicLib.messaging.formatting import formatter
 
         with patch.object(formatter, "RUST_AVAILABLE", False):
             result = formatter.format_log_message("Content 😀", "Details 🎉")
@@ -326,14 +326,14 @@ class TestFormatterModuleState:
     @pytest.mark.unit
     def test_rust_available_is_boolean(self) -> None:
         """RUST_AVAILABLE should be a boolean."""
-        from ClassicLib.MessageHandler.formatting.formatter import RUST_AVAILABLE
+        from ClassicLib.messaging.formatting.formatter import RUST_AVAILABLE
 
         assert isinstance(RUST_AVAILABLE, bool)
 
     @pytest.mark.unit
     def test_module_exports_main_functions(self) -> None:
         """Module should export main functions."""
-        from ClassicLib.MessageHandler.formatting import formatter
+        from ClassicLib.messaging.formatting import formatter
 
         assert hasattr(formatter, "strip_emoji")
         assert hasattr(formatter, "format_log_message")
@@ -350,7 +350,7 @@ class TestFormattingEdgeCases:
     @pytest.mark.unit
     def test_strip_emoji_very_long_string(self) -> None:
         """strip_emoji should handle very long strings."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         long_text = "Test 😀 " * 1000
         result = strip_emoji(long_text)
@@ -361,7 +361,7 @@ class TestFormattingEdgeCases:
     @pytest.mark.unit
     def test_strip_emoji_consecutive_emojis(self) -> None:
         """strip_emoji should handle consecutive emojis."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         result = strip_emoji("Before😀😊😎After")
 
@@ -370,7 +370,7 @@ class TestFormattingEdgeCases:
     @pytest.mark.unit
     def test_strip_emoji_special_characters(self) -> None:
         """strip_emoji should preserve special characters."""
-        from ClassicLib.MessageHandler.formatting.formatter import strip_emoji
+        from ClassicLib.messaging.formatting.formatter import strip_emoji
 
         text = "Path: C:\\Users\\test\\file.txt"
         result = strip_emoji(text)
@@ -380,7 +380,7 @@ class TestFormattingEdgeCases:
     @pytest.mark.unit
     def test_format_message_with_newlines(self) -> None:
         """format_log_message should handle content with newlines."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Line 1\nLine 2", "Detail 1\nDetail 2")
 
@@ -392,7 +392,7 @@ class TestFormattingEdgeCases:
     @pytest.mark.unit
     def test_format_message_with_tabs(self) -> None:
         """format_log_message should handle content with tabs."""
-        from ClassicLib.MessageHandler.formatting.formatter import format_log_message
+        from ClassicLib.messaging.formatting.formatter import format_log_message
 
         result = format_log_message("Column1\tColumn2", None)
 

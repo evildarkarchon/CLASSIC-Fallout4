@@ -15,8 +15,7 @@ This file contains unit tests that test individual functions with mocked depende
 from pathlib import Path
 
 import pytest
-
-from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import write_reports_batch
+from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import write_reports_batch
 
 pytestmark = pytest.mark.unit
 

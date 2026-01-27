@@ -13,8 +13,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ClassicLib.ScanLog.models import ScanConfig, ScanResult
-from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
+from ClassicLib.scanning.logs.ScanLogsExecutor import ScanLogsExecutor
+
+from ClassicLib.scanning.logs.models import ScanConfig, ScanResult
 
 
 def create_rust_compatible_yamldata() -> MagicMock:
@@ -73,25 +74,25 @@ class TestScanLogsExecutorExecuteScan:
         mock_yamldata = create_rust_compatible_yamldata()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[crash_log_file]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[crash_log_file]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
                 return_value=mock_yamldata,
             ),
-            patch("ClassicLib.GamePath.game_path_find_async", new_callable=AsyncMock),
-            patch("ClassicLib.GamePath.game_generate_paths_async", new_callable=AsyncMock),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_info"),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_progress_context") as mock_progress,
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_async,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic_async,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
-            patch("ClassicLib.ScanLog.ScanLogsUtils.write_report_to_file_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_info"),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_async,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic_async,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.ScanLogsUtils.write_report_to_file_async", new_callable=AsyncMock),
         ):
             mock_yaml_async.return_value = None
             mock_classic_async.return_value = False
@@ -130,18 +131,18 @@ class TestScanLogsExecutorExecuteScan:
     async def test_execute_scan_raises_without_yamldata(self) -> None:
         """Test execute_scan raises if yamldata initialization fails."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
                 return_value=None,  # Fail to create yamldata
             ),
-            patch("ClassicLib.GamePath.game_path_find_async", new_callable=AsyncMock),
-            patch("ClassicLib.GamePath.game_generate_paths_async", new_callable=AsyncMock),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_info"),
+            patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_info"),
         ):
             executor = ScanLogsExecutor()
 
@@ -163,24 +164,24 @@ class TestScanLogsExecutorErrorRecovery:
         mock_yamldata = create_rust_compatible_yamldata()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[crash_file]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[crash_file]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
                 return_value=mock_yamldata,
             ),
-            patch("ClassicLib.GamePath.game_path_find_async", new_callable=AsyncMock),
-            patch("ClassicLib.GamePath.game_generate_paths_async", new_callable=AsyncMock),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_info"),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_progress_context") as mock_progress,
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_async,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic_async,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_info"),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_async,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic_async,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
         ):
             mock_yaml_async.return_value = None
             mock_classic_async.return_value = False
@@ -221,25 +222,25 @@ class TestScanLogsExecutorCancellation:
         mock_yamldata = create_rust_compatible_yamldata()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=crash_files),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=crash_files),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
                 return_value=mock_yamldata,
             ),
-            patch("ClassicLib.GamePath.game_path_find_async", new_callable=AsyncMock),
-            patch("ClassicLib.GamePath.game_generate_paths_async", new_callable=AsyncMock),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_info"),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_progress_context") as mock_progress,
-            patch("ClassicLib.ScanLog.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_async,
-            patch("ClassicLib.ScanLog.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic_async,
-            patch("ClassicLib.ScanLog.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.ScanLog.OrchestratorCore.get_parser") as mock_get_parser,
-            patch("ClassicLib.ScanLog.ScanLogsUtils.write_report_to_file_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_info"),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml_async,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic_async,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.ScanLogsUtils.write_report_to_file_async", new_callable=AsyncMock),
         ):
             mock_yaml_async.return_value = None
             mock_classic_async.return_value = False
@@ -295,26 +296,26 @@ class TestScanLogsExecutorResourceManagement:
             init_order.append("path_generate")
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
                 side_effect=track_yamldata_init,
             ),
             patch(
-                "ClassicLib.GamePath.game_path_find_async",
+                "ClassicLib.support.game_path.game_path_find_async",
                 new_callable=AsyncMock,
                 side_effect=track_path_find,
             ),
             patch(
-                "ClassicLib.GamePath.game_generate_paths_async",
+                "ClassicLib.support.game_path.game_generate_paths_async",
                 new_callable=AsyncMock,
                 side_effect=track_path_generate,
             ),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.msg_info"),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.msg_info"),
         ):
             executor = ScanLogsExecutor()
 

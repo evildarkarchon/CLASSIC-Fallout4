@@ -47,7 +47,7 @@ class TestAsyncYamlCaching:
     @pytest.mark.performance
     async def test_cache_hit_performance(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test performance of cache hits."""
-        from ClassicLib.Constants import YAML
+        from ClassicLib.core.constants import YAML
 
         # Mock get_path_for_store to return our test file
         def mock_get_path(store):

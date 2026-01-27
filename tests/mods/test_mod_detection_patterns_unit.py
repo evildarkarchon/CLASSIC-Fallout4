@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch  # Add import patch, MagicMock
 
 import pytest
 
-from ClassicLib.YamlSettings import AsyncYamlSettingsCore
+from ClassicLib.io.yaml import AsyncYamlSettingsCore
 
 # Mark all tests in this module
 pytestmark = [pytest.mark.unit]
@@ -89,7 +89,7 @@ class TestModDetectionPatterns:
     def test_plugin_list_parsing(self):
         """Test parsing of plugin list from crash log."""
         from ClassicLib.integration.factory import get_plugin_analyzer
-        from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+        from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
         # Generate synthetic plugin list like in real logs
         plugin_lines = []
@@ -123,7 +123,7 @@ class TestModDetectionPatterns:
     def test_mod_conflict_detection_from_log(self):
         """Test detecting mod conflicts from crash log data."""
         from ClassicLib.integration.factory import get_mod_detector
-        from ClassicLib.YamlSettings import yaml_cache
+        from ClassicLib.io.yaml import yaml_cache
 
         config_data = {"MODS": {"CONFLICTING_MODS": {"ModA.esp | ModB.esp": "Conflict Warning: ModA and ModB are incompatible"}}}
 
@@ -261,7 +261,7 @@ class TestModDetectionPatterns:
     def test_prp_compatibility_detection(self):
         """Test detection of PRP (Previsibines Repair Pack) compatibility."""
         from ClassicLib.integration.factory import get_mod_detector
-        from ClassicLib.YamlSettings import yaml_cache
+        from ClassicLib.io.yaml import yaml_cache
 
         # Mock YamlSettingsCache._async_core.load_yaml_file_async to provide a dummy config
         class MockYamlCorePRP(AsyncYamlSettingsCore):

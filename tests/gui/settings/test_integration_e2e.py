@@ -8,9 +8,9 @@ import pytest
 
 pytestmark = [pytest.mark.gui, pytest.mark.e2e]
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 from ClassicLib.Interface.Settings.dialog import SettingsDialog
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.io.yaml import yaml_settings
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:

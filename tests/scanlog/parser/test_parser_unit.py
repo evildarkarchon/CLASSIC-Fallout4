@@ -11,7 +11,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit]
 
-from ClassicLib.ScanLog.Parser import (
+from ClassicLib.scanning.logs.parser import (
     extract_module_names,
     extract_segments,
     find_segments,

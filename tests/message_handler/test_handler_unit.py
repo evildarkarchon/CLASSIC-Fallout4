@@ -28,7 +28,7 @@ def fresh_handler_state() -> Generator[None, None, None]:
         None after resetting the global handler state.
 
     """
-    from ClassicLib.MessageHandler import handler as handler_module
+    from ClassicLib.messaging import handler as handler_module
 
     # Reset before test
     with handler_module._message_handler_lock:
@@ -78,7 +78,7 @@ class TestMessageHandlerInit:
     @pytest.mark.unit
     def test_handler_initializes_in_cli_mode_by_default(self) -> None:
         """MessageHandler should initialize in CLI mode by default."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
@@ -88,7 +88,7 @@ class TestMessageHandlerInit:
     @pytest.mark.unit
     def test_handler_initializes_in_gui_mode_when_specified(self) -> None:
         """MessageHandler should set gui mode flag when requested."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler(is_gui_mode=True)
 
@@ -97,7 +97,7 @@ class TestMessageHandlerInit:
     @pytest.mark.unit
     def test_handler_stores_main_thread_reference(self) -> None:
         """MessageHandler should store reference to current thread."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
@@ -106,7 +106,7 @@ class TestMessageHandlerInit:
     @pytest.mark.unit
     def test_handler_creates_internal_logger(self) -> None:
         """MessageHandler should create CLASSIC.MessageHandler logger."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
@@ -119,9 +119,9 @@ class TestMessageHandlerShow:
     @pytest.mark.unit
     def test_show_logs_message_always(self, mock_log_backend: MagicMock) -> None:
         """show() should always log messages regardless of target."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageTarget, MessageType
+        from ClassicLib.messaging.core.message import Message
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler._log_backend = mock_log_backend
@@ -134,9 +134,9 @@ class TestMessageHandlerShow:
     @pytest.mark.unit
     def test_show_routes_to_cli_backend_in_cli_mode(self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock) -> None:
         """show() should route to CLI backend when in CLI mode."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageTarget, MessageType
+        from ClassicLib.messaging.core.message import Message
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler(is_gui_mode=False)
         handler._log_backend = mock_log_backend
@@ -150,9 +150,9 @@ class TestMessageHandlerShow:
     @pytest.mark.unit
     def test_show_skips_display_for_log_only_target(self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock) -> None:
         """show() should not display LOG_ONLY messages."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageTarget, MessageType
+        from ClassicLib.messaging.core.message import Message
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler._log_backend = mock_log_backend
@@ -169,9 +169,9 @@ class TestMessageHandlerShow:
     @pytest.mark.unit
     def test_show_skips_gui_target_in_cli_mode(self, mock_log_backend: MagicMock, mock_cli_backend: MagicMock) -> None:
         """show() should not display GUI-targeted messages in CLI mode."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget, MessageType
-        from ClassicLib.MessageHandler.core.message import Message
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageTarget, MessageType
+        from ClassicLib.messaging.core.message import Message
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler(is_gui_mode=False)
         handler._log_backend = mock_log_backend
@@ -190,8 +190,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_info_creates_info_message(self) -> None:
         """info() should create and show INFO message."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -206,8 +206,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_warning_creates_warning_message(self) -> None:
         """warning() should create and show WARNING message."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -220,8 +220,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_error_creates_error_message(self) -> None:
         """error() should create and show ERROR message."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -234,8 +234,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_success_creates_success_message(self) -> None:
         """success() should create and show SUCCESS message."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -248,8 +248,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_debug_creates_debug_message(self) -> None:
         """debug() should create and show DEBUG message."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -262,8 +262,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_critical_creates_critical_message(self) -> None:
         """critical() should create and show CRITICAL message."""
-        from ClassicLib.MessageHandler.core.enums import MessageType
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageType
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -276,8 +276,8 @@ class TestMessageHandlerConvenienceMethods:
     @pytest.mark.unit
     def test_convenience_methods_pass_kwargs_to_message(self) -> None:
         """Convenience methods should pass kwargs to Message."""
-        from ClassicLib.MessageHandler.core.enums import MessageTarget
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.core.enums import MessageTarget
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
         handler.show = MagicMock()  # type: ignore[method-assign]
@@ -295,7 +295,7 @@ class TestMessageHandlerCancellation:
     @pytest.mark.unit
     def test_is_cancelled_returns_false_by_default(self) -> None:
         """is_cancelled() should return False initially."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
@@ -304,7 +304,7 @@ class TestMessageHandlerCancellation:
     @pytest.mark.unit
     def test_set_cancelled_updates_state(self) -> None:
         """_set_cancelled() should update the cancellation state."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         handler = MessageHandler()
 
@@ -321,8 +321,8 @@ class TestMessageHandlerProgressContext:
     @pytest.mark.unit
     def test_progress_context_returns_progress_context_instance(self) -> None:
         """progress_context() should return a ProgressContext instance."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         handler = MessageHandler()
 
@@ -335,8 +335,8 @@ class TestMessageHandlerProgressContext:
     @pytest.mark.unit
     def test_create_progress_handler_returns_cli_handler(self) -> None:
         """create_progress_handler() should return CLIProgressHandler."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
-        from ClassicLib.MessageHandler.progress.cli_progress import CLIProgressHandler
+        from ClassicLib.messaging.handler import MessageHandler
+        from ClassicLib.messaging.progress.cli_progress import CLIProgressHandler
 
         handler = MessageHandler()
 
@@ -354,7 +354,7 @@ class TestInitMessageHandler:
     @pytest.mark.unit
     def test_init_creates_base_handler_for_cli_mode(self, fresh_handler_state: None) -> None:
         """init_message_handler should create base MessageHandler for CLI mode."""
-        from ClassicLib.MessageHandler.handler import MessageHandler, init_message_handler
+        from ClassicLib.messaging.handler import MessageHandler, init_message_handler
 
         handler = init_message_handler(is_gui_mode=False)
 
@@ -364,10 +364,10 @@ class TestInitMessageHandler:
     @pytest.mark.unit
     def test_init_creates_qt_handler_for_gui_mode(self, fresh_handler_state: None) -> None:
         """init_message_handler should create QtMessageHandler for GUI mode."""
-        from ClassicLib.MessageHandler.handler import init_message_handler
+        from ClassicLib.messaging.handler import init_message_handler
 
         # Mock the QtMessageHandler import since it requires Qt
-        with patch("ClassicLib.MessageHandler.qt_handler.QtMessageHandler") as mock_qt_handler:
+        with patch("ClassicLib.messaging.qt_handler.QtMessageHandler") as mock_qt_handler:
             mock_instance = MagicMock()
             mock_qt_handler.return_value = mock_instance
 
@@ -383,7 +383,7 @@ class TestGetMessageHandler:
     @pytest.mark.unit
     def test_get_handler_raises_when_not_initialized(self, fresh_handler_state: None) -> None:
         """get_message_handler should raise RuntimeError when not initialized."""
-        from ClassicLib.MessageHandler.handler import get_message_handler
+        from ClassicLib.messaging.handler import get_message_handler
 
         with pytest.raises(RuntimeError, match="Message handler not initialized"):
             get_message_handler()
@@ -391,7 +391,7 @@ class TestGetMessageHandler:
     @pytest.mark.unit
     def test_get_handler_returns_initialized_handler(self, fresh_handler_state: None) -> None:
         """get_message_handler should return the initialized handler."""
-        from ClassicLib.MessageHandler.handler import (
+        from ClassicLib.messaging.handler import (
             get_message_handler,
             init_message_handler,
         )
@@ -411,7 +411,7 @@ class TestGlobalConvenienceFunctions:
     @pytest.mark.unit
     def test_msg_info_calls_handler_info(self, fresh_handler_state: None) -> None:
         """msg_info should call the handler's info method."""
-        from ClassicLib.MessageHandler.handler import init_message_handler, msg_info
+        from ClassicLib.messaging.handler import init_message_handler, msg_info
 
         handler = init_message_handler(is_gui_mode=False)
         handler.info = MagicMock()  # type: ignore[method-assign]
@@ -423,7 +423,7 @@ class TestGlobalConvenienceFunctions:
     @pytest.mark.unit
     def test_msg_warning_calls_handler_warning(self, fresh_handler_state: None) -> None:
         """msg_warning should call the handler's warning method."""
-        from ClassicLib.MessageHandler.handler import init_message_handler, msg_warning
+        from ClassicLib.messaging.handler import init_message_handler, msg_warning
 
         handler = init_message_handler(is_gui_mode=False)
         handler.warning = MagicMock()  # type: ignore[method-assign]
@@ -435,7 +435,7 @@ class TestGlobalConvenienceFunctions:
     @pytest.mark.unit
     def test_msg_error_calls_handler_error(self, fresh_handler_state: None) -> None:
         """msg_error should call the handler's error method."""
-        from ClassicLib.MessageHandler.handler import init_message_handler, msg_error
+        from ClassicLib.messaging.handler import init_message_handler, msg_error
 
         handler = init_message_handler(is_gui_mode=False)
         handler.error = MagicMock()  # type: ignore[method-assign]
@@ -447,7 +447,7 @@ class TestGlobalConvenienceFunctions:
     @pytest.mark.unit
     def test_msg_success_calls_handler_success(self, fresh_handler_state: None) -> None:
         """msg_success should call the handler's success method."""
-        from ClassicLib.MessageHandler.handler import init_message_handler, msg_success
+        from ClassicLib.messaging.handler import init_message_handler, msg_success
 
         handler = init_message_handler(is_gui_mode=False)
         handler.success = MagicMock()  # type: ignore[method-assign]
@@ -459,7 +459,7 @@ class TestGlobalConvenienceFunctions:
     @pytest.mark.unit
     def test_msg_debug_calls_handler_debug(self, fresh_handler_state: None) -> None:
         """msg_debug should call the handler's debug method."""
-        from ClassicLib.MessageHandler.handler import init_message_handler, msg_debug
+        from ClassicLib.messaging.handler import init_message_handler, msg_debug
 
         handler = init_message_handler(is_gui_mode=False)
         handler.debug = MagicMock()  # type: ignore[method-assign]
@@ -471,7 +471,7 @@ class TestGlobalConvenienceFunctions:
     @pytest.mark.unit
     def test_msg_critical_calls_handler_critical(self, fresh_handler_state: None) -> None:
         """msg_critical should call the handler's critical method."""
-        from ClassicLib.MessageHandler.handler import (
+        from ClassicLib.messaging.handler import (
             init_message_handler,
             msg_critical,
         )
@@ -490,17 +490,17 @@ class TestMsgProgressContext:
     @pytest.mark.unit
     def test_msg_progress_context_yields_progress_context(self, fresh_handler_state: None) -> None:
         """msg_progress_context should yield a ProgressContext."""
-        from ClassicLib.MessageHandler.handler import (
+        from ClassicLib.messaging.handler import (
             init_message_handler,
             msg_progress_context,
         )
-        from ClassicLib.MessageHandler.progress.context import ProgressContext
+        from ClassicLib.messaging.progress.context import ProgressContext
 
         init_message_handler(is_gui_mode=False)
 
         # Mock settings to avoid file access
         with patch(
-            "ClassicLib.MessageHandler.progress.context.ProgressContext._check_cli_progress_disabled",
+            "ClassicLib.messaging.progress.context.ProgressContext._check_cli_progress_disabled",
             return_value=True,
         ):
             with msg_progress_context("Testing", total=50) as progress:
@@ -518,7 +518,7 @@ class TestMessageHandlerThreadSafety:
     @pytest.mark.unit
     def test_init_handler_is_thread_safe(self, fresh_handler_state: None) -> None:
         """init_message_handler should be thread-safe."""
-        from ClassicLib.MessageHandler.handler import (
+        from ClassicLib.messaging.handler import (
             get_message_handler,
             init_message_handler,
         )

@@ -15,10 +15,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-    from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
-    from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
-    from ClassicLib.rust.report.parallel import ParallelReportProcessor
+    from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+    from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
+    from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
+    from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
 
 # ============================================================================
@@ -64,7 +64,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_init_with_lines(self, sample_lines: list[str]) -> None:
         """Test initialization with lines."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
 
@@ -73,7 +73,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_init_with_tuple(self) -> None:
         """Test initialization with tuple of lines."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         lines = ("Line 1\n", "Line 2\n")
         fragment = RustAcceleratedReportFragment(lines)
@@ -85,7 +85,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_init_with_none(self) -> None:
         """Test initialization with None creates empty fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(None)
 
@@ -94,7 +94,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_empty_class_method(self) -> None:
         """Test empty() class method creates empty fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment.empty()
 
@@ -104,7 +104,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_from_lines_class_method(self, sample_lines: list[str]) -> None:
         """Test from_lines() class method."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment.from_lines(sample_lines)
 
@@ -113,7 +113,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_to_list_returns_list(self, sample_lines: list[str]) -> None:
         """Test to_list() returns list of strings."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
 
@@ -124,7 +124,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_content_property(self, sample_lines: list[str]) -> None:
         """Test content property returns tuple."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
 
@@ -135,7 +135,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_has_content_property_true(self, sample_lines: list[str]) -> None:
         """Test has_content is True for non-empty fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
 
@@ -144,7 +144,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_has_content_property_false(self) -> None:
         """Test has_content is False for empty fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment.empty()
 
@@ -153,7 +153,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_len_returns_line_count(self, sample_lines: list[str]) -> None:
         """Test __len__ returns number of lines."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
 
@@ -162,7 +162,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_bool_true_for_non_empty(self, sample_lines: list[str]) -> None:
         """Test bool is True for non-empty fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
 
@@ -171,7 +171,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_bool_false_for_empty(self) -> None:
         """Test bool is False for empty fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment.empty()
 
@@ -180,7 +180,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_add_combines_fragments(self) -> None:
         """Test __add__ combines two fragments."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         frag1 = RustAcceleratedReportFragment(["Line 1\n"])
         frag2 = RustAcceleratedReportFragment(["Line 2\n"])
@@ -194,7 +194,7 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_with_header_prepends_header(self, sample_lines: list[str]) -> None:
         """Test with_header prepends header lines."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         fragment = RustAcceleratedReportFragment(sample_lines)
         header = ["=== HEADER ===\n"]
@@ -207,8 +207,8 @@ class TestRustAcceleratedReportFragment:
     @pytest.mark.unit
     def test_wrap_fragment_class_method(self, sample_lines: list[str]) -> None:
         """Test wrap_fragment wraps existing fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
-        from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment as PyReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment as PyReportFragment
 
         py_fragment = PyReportFragment.from_lines(sample_lines)
 
@@ -229,7 +229,7 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_init_creates_composer(self) -> None:
         """Test initialization creates composer."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
 
         composer = RustAcceleratedReportComposer()
 
@@ -238,8 +238,8 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_add_returns_self_for_chaining(self, sample_lines: list[str]) -> None:
         """Test add() returns self for method chaining."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         composer = RustAcceleratedReportComposer()
         fragment = RustAcceleratedReportFragment(sample_lines)
@@ -251,8 +251,8 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_add_multiple_fragments(self) -> None:
         """Test adding multiple fragments."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         composer = RustAcceleratedReportComposer()
         frag1 = RustAcceleratedReportFragment(["Line 1\n"])
@@ -267,8 +267,8 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_compose_returns_fragment(self, sample_lines: list[str]) -> None:
         """Test compose() returns RustAcceleratedReportFragment."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         composer = RustAcceleratedReportComposer()
         fragment = RustAcceleratedReportFragment(sample_lines)
@@ -281,8 +281,8 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_build_returns_fragment(self, sample_lines: list[str]) -> None:
         """Test build() is alias for compose()."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         composer = RustAcceleratedReportComposer()
         fragment = RustAcceleratedReportFragment(sample_lines)
@@ -295,8 +295,8 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_to_list_returns_combined_lines(self) -> None:
         """Test to_list() returns all lines."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         composer = RustAcceleratedReportComposer()
         composer.add(RustAcceleratedReportFragment(["A\n"]))
@@ -311,8 +311,8 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_build_string_returns_str(self, sample_lines: list[str]) -> None:
         """Test build_string() returns string."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         composer = RustAcceleratedReportComposer()
         composer.add(RustAcceleratedReportFragment(sample_lines))
@@ -324,7 +324,7 @@ class TestRustAcceleratedReportComposer:
     @pytest.mark.unit
     def test_pool_stats_returns_tuple_or_none(self) -> None:
         """Test pool_stats returns stats or None."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
 
         composer = RustAcceleratedReportComposer()
 
@@ -345,7 +345,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_init_without_yamldata(self) -> None:
         """Test initialization without yamldata."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         generator = RustAcceleratedReportGenerator()
 
@@ -354,7 +354,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_init_with_yamldata(self, mock_yamldata_for_report: MagicMock) -> None:
         """Test initialization with yamldata."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         generator = RustAcceleratedReportGenerator(mock_yamldata_for_report)
 
@@ -363,7 +363,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_header(self) -> None:
         """Test generate_header returns fragment."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         generator = RustAcceleratedReportGenerator()
 
@@ -374,7 +374,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_suspect_section(self) -> None:
         """Test generate_suspect_section returns fragment."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         generator = RustAcceleratedReportGenerator()
 
@@ -385,7 +385,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_suspect_section_header(self) -> None:
         """Test generate_suspect_section_header static method."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_suspect_section_header()
 
@@ -397,7 +397,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_suspect_found_footer_true(self) -> None:
         """Test generate_suspect_found_footer with suspects found."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_suspect_found_footer(True)
 
@@ -409,7 +409,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_suspect_found_footer_false(self) -> None:
         """Test generate_suspect_found_footer with no suspects."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_suspect_found_footer(False)
 
@@ -421,7 +421,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_settings_section_header(self) -> None:
         """Test generate_settings_section_header static method."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_settings_section_header()
 
@@ -433,7 +433,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_mod_check_header(self) -> None:
         """Test generate_mod_check_header static method."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_mod_check_header("Cause Issues")
 
@@ -445,7 +445,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_plugin_suspect_header(self) -> None:
         """Test generate_plugin_suspect_header static method."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_plugin_suspect_header()
 
@@ -457,7 +457,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_formid_section_header(self) -> None:
         """Test generate_formid_section_header static method."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_formid_section_header()
 
@@ -469,7 +469,7 @@ class TestRustAcceleratedReportGenerator:
     @pytest.mark.unit
     def test_generate_record_section_header(self) -> None:
         """Test generate_record_section_header static method."""
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         result = RustAcceleratedReportGenerator.generate_record_section_header()
 
@@ -490,7 +490,7 @@ class TestParallelReportProcessor:
     @pytest.mark.unit
     def test_init_creates_processor(self) -> None:
         """Test initialization creates processor."""
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
 
@@ -499,7 +499,7 @@ class TestParallelReportProcessor:
     @pytest.mark.unit
     def test_process_reports_returns_list(self) -> None:
         """Test process_reports returns list of processed reports."""
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
         reports = [["Line 1\n", "Line 2\n"], ["Report 2\n"]]
@@ -512,7 +512,7 @@ class TestParallelReportProcessor:
     @pytest.mark.unit
     def test_process_reports_empty_list(self) -> None:
         """Test process_reports with empty list."""
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
 
@@ -523,8 +523,8 @@ class TestParallelReportProcessor:
     @pytest.mark.unit
     def test_combine_fragments_parallel(self, sample_lines: list[str]) -> None:
         """Test combine_fragments_parallel combines fragments."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
         frag1 = RustAcceleratedReportFragment(["A\n"])
@@ -540,7 +540,7 @@ class TestParallelReportProcessor:
     @pytest.mark.unit
     def test_combine_fragments_parallel_empty(self) -> None:
         """Test combine_fragments_parallel with empty list."""
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
 
@@ -551,8 +551,8 @@ class TestParallelReportProcessor:
     @pytest.mark.unit
     def test_combine_fragments_parallel_single(self, sample_lines: list[str]) -> None:
         """Test combine_fragments_parallel with single fragment."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
         frag = RustAcceleratedReportFragment(sample_lines)
@@ -573,28 +573,28 @@ class TestRustAvailableExport:
     @pytest.mark.unit
     def test_fragment_rust_available_is_bool(self) -> None:
         """Test fragment module exports RUST_AVAILABLE."""
-        from ClassicLib.rust.report.fragment import RUST_AVAILABLE
+        from ClassicLib.integration.rust.report.fragment import RUST_AVAILABLE
 
         assert isinstance(RUST_AVAILABLE, bool)
 
     @pytest.mark.unit
     def test_composer_rust_available_is_bool(self) -> None:
         """Test composer module exports RUST_AVAILABLE."""
-        from ClassicLib.rust.report.composer import RUST_AVAILABLE
+        from ClassicLib.integration.rust.report.composer import RUST_AVAILABLE
 
         assert isinstance(RUST_AVAILABLE, bool)
 
     @pytest.mark.unit
     def test_generator_rust_available_is_bool(self) -> None:
         """Test generator module exports RUST_AVAILABLE."""
-        from ClassicLib.rust.report.generator import RUST_AVAILABLE
+        from ClassicLib.integration.rust.report.generator import RUST_AVAILABLE
 
         assert isinstance(RUST_AVAILABLE, bool)
 
     @pytest.mark.unit
     def test_parallel_rust_available_is_bool(self) -> None:
         """Test parallel module exports RUST_AVAILABLE."""
-        from ClassicLib.rust.report.parallel import RUST_AVAILABLE
+        from ClassicLib.integration.rust.report.parallel import RUST_AVAILABLE
 
         assert isinstance(RUST_AVAILABLE, bool)
 
@@ -610,8 +610,8 @@ class TestReportIntegration:
     @pytest.mark.unit
     def test_compose_multiple_section_fragments(self) -> None:
         """Test composing a complete report from multiple sections."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.generator import RustAcceleratedReportGenerator
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
         generator = RustAcceleratedReportGenerator()
         composer = RustAcceleratedReportComposer()
@@ -629,7 +629,7 @@ class TestReportIntegration:
     @pytest.mark.unit
     def test_fragment_addition_chain(self) -> None:
         """Test chaining fragment additions."""
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
 
         frag1 = RustAcceleratedReportFragment(["A\n"])
         frag2 = RustAcceleratedReportFragment(["B\n"])
@@ -645,9 +645,9 @@ class TestReportIntegration:
     @pytest.mark.unit
     def test_parallel_processor_with_composer(self) -> None:
         """Test using parallel processor with composer."""
-        from ClassicLib.rust.report.composer import RustAcceleratedReportComposer
-        from ClassicLib.rust.report.fragment import RustAcceleratedReportFragment
-        from ClassicLib.rust.report.parallel import ParallelReportProcessor
+        from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
+        from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
+        from ClassicLib.integration.rust.report.parallel import ParallelReportProcessor
 
         processor = ParallelReportProcessor()
 

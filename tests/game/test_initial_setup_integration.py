@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.SetupCoordinator import SetupCoordinator
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.support.setup import SetupCoordinator
 
 pytestmark = [pytest.mark.unit]
 
@@ -26,19 +26,19 @@ class TestInitialSetup:
         # Reset registry state
         GlobalRegistry._registry = {}
 
-    @patch("ClassicLib.SetupCoordinator.configure_logging")
-    @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.BackupManager.BackupManager.run_backup")
-    @patch("ClassicLib.YamlSettings.yaml_cache")
-    @patch("ClassicLib.SetupCoordinator.msg_info")
-    @patch("ClassicLib.SetupCoordinator.msg_success")
-    @patch("ClassicLib.SetupCoordinator.docs_path_find")
-    @patch("ClassicLib.SetupCoordinator.docs_generate_paths")
-    @patch("ClassicLib.SetupCoordinator.game_path_find")
-    @patch("ClassicLib.SetupCoordinator.game_generate_paths")
+    @patch("ClassicLib.support.setup.configure_logging")
+    @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
+    @patch("ClassicLib.support.backup.BackupManager.run_backup")
+    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.msg_info")
+    @patch("ClassicLib.support.setup.msg_success")
+    @patch("ClassicLib.support.setup.docs_path_find")
+    @patch("ClassicLib.support.setup.docs_generate_paths")
+    @patch("ClassicLib.support.setup.game_path_find")
+    @patch("ClassicLib.support.setup.game_generate_paths")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "is_gui_mode", return_value=False)
-    @patch("ClassicLib.SetupCoordinator.logger")
+    @patch("ClassicLib.support.setup.logger")
     def test_run_initial_setup_no_game_path(
         self,
         mock_logger: MagicMock,
@@ -92,12 +92,12 @@ class TestInitialSetup:
         # Verify logging
         mock_logger.debug.assert_called_with("> > > STARTED 7.31.0")
 
-    @patch("ClassicLib.SetupCoordinator.configure_logging")
-    @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.BackupManager.BackupManager.run_backup")
-    @patch("ClassicLib.YamlSettings.yaml_cache")
-    @patch("ClassicLib.SetupCoordinator.msg_info")
-    @patch("ClassicLib.SetupCoordinator.msg_success")
+    @patch("ClassicLib.support.setup.configure_logging")
+    @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
+    @patch("ClassicLib.support.backup.BackupManager.run_backup")
+    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.msg_info")
+    @patch("ClassicLib.support.setup.msg_success")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_with_game_path(
         self,
@@ -131,15 +131,15 @@ class TestInitialSetup:
         mock_file_gen.assert_called_once()
 
         # Path generation should NOT be called
-        with patch("ClassicLib.SetupCoordinator.docs_path_find") as mock_docs_find:
-            with patch("ClassicLib.SetupCoordinator.game_path_find") as mock_game_find:
+        with patch("ClassicLib.support.setup.docs_path_find") as mock_docs_find:
+            with patch("ClassicLib.support.setup.game_path_find") as mock_game_find:
                 mock_docs_find.assert_not_called()
                 mock_game_find.assert_not_called()
 
-    @patch("ClassicLib.SetupCoordinator.configure_logging")
-    @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettings.yaml_cache")
-    @patch("ClassicLib.SetupCoordinator.msg_info")
+    @patch("ClassicLib.support.setup.configure_logging")
+    @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
+    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_version(
         self,
@@ -168,10 +168,10 @@ class TestInitialSetup:
         with pytest.raises(TypeError):
             coordinator.run_initial_setup()
 
-    @patch("ClassicLib.SetupCoordinator.configure_logging")
-    @patch("ClassicLib.FileGeneration.FileGenerator.generate_all_files")
-    @patch("ClassicLib.YamlSettings.yaml_cache")
-    @patch("ClassicLib.SetupCoordinator.msg_info")
+    @patch("ClassicLib.support.setup.configure_logging")
+    @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
+    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_game_name(
         self,

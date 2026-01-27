@@ -22,11 +22,11 @@ import time
 from typing import Any
 
 import pytest
+from ClassicLib.scanning.logs.SettingsScanner import SettingsScannerFragments
 
 from ClassicLib.integration.factory import get_settings_validator
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
-from ClassicLib.ScanLog.SettingsScanner import SettingsScannerFragments
+from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from tests.fixtures.parity_fixtures import (
     ParityResult,
     ParityValidator,

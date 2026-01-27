@@ -26,7 +26,7 @@ class TestGetFormidAnalyzer:
     def test_returns_python_analyzer_when_rust_disabled(self) -> None:
         """Test returns Python analyzer when Rust is disabled."""
         from ClassicLib.integration.factory.analyzers import get_formid_analyzer
-        from ClassicLib.python.formid_py import FormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import FormIDAnalyzer
 
         mock_yamldata = MagicMock()
 
@@ -38,7 +38,7 @@ class TestGetFormidAnalyzer:
     def test_returns_python_analyzer_when_component_not_available(self) -> None:
         """Test returns Python analyzer when component not available."""
         from ClassicLib.integration.factory.analyzers import get_formid_analyzer
-        from ClassicLib.python.formid_py import FormIDAnalyzer
+        from ClassicLib.integration.python.formid_py import FormIDAnalyzer
 
         mock_yamldata = MagicMock()
 
@@ -67,7 +67,7 @@ class TestGetPluginAnalyzer:
     def test_returns_python_analyzer_when_rust_disabled(self) -> None:
         """Test returns Python analyzer when Rust is disabled."""
         from ClassicLib.integration.factory.analyzers import get_plugin_analyzer
-        from ClassicLib.python.plugin_py import PluginAnalyzer
+        from ClassicLib.integration.python.plugin_py import PluginAnalyzer
 
         mock_yamldata = MagicMock()
 
@@ -95,7 +95,7 @@ class TestGetRecordScanner:
     def test_returns_python_scanner_when_rust_disabled(self) -> None:
         """Test returns Python scanner when Rust is disabled."""
         from ClassicLib.integration.factory.analyzers import get_record_scanner
-        from ClassicLib.python.record_py import RecordScanner
+        from ClassicLib.integration.python.record_py import RecordScanner
 
         mock_yamldata = MagicMock()
 

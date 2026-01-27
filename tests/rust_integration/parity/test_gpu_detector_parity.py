@@ -20,10 +20,10 @@ import time
 from typing import Any
 
 import pytest
+from ClassicLib.scanning.logs.GPUDetector import get_gpu_info
 
 from ClassicLib.integration.factory import get_gpu_detector
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.ScanLog.GPUDetector import get_gpu_info
 from tests.fixtures.parity_fixtures import (
     ParityResult,
     ParityTestCase,

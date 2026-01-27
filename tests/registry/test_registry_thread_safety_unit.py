@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pytest
 
-from ClassicLib import GlobalRegistry
+from ClassicLib.core.registry import GlobalRegistry
 
 pytestmark = [pytest.mark.unit]
 

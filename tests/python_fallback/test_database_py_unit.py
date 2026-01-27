@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 if TYPE_CHECKING:
-    from ClassicLib.python.database_py import PythonDatabasePool
+    from ClassicLib.integration.python.database_py import PythonDatabasePool
 
 # ============================================================================
 # Fixtures
@@ -102,7 +102,7 @@ class TestPythonDatabasePoolInit:
     @pytest.mark.unit
     def test_init_with_path_string(self, tmp_path: Path) -> None:
         """Test pool initializes with string path."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         db_path = str(tmp_path / "test.db")
         pool = PythonDatabasePool(db_path, pool_size=3)
@@ -115,7 +115,7 @@ class TestPythonDatabasePoolInit:
     @pytest.mark.unit
     def test_init_with_path_object(self, tmp_path: Path) -> None:
         """Test pool initializes with Path object."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         db_path = tmp_path / "test.db"
         pool = PythonDatabasePool(db_path)
@@ -126,7 +126,7 @@ class TestPythonDatabasePoolInit:
     @pytest.mark.unit
     def test_init_default_pool_size(self, tmp_path: Path) -> None:
         """Test pool uses default pool size of 5."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(tmp_path / "test.db")
 
@@ -145,7 +145,7 @@ class TestPythonDatabasePoolInitialize:
     @pytest.mark.asyncio
     async def test_initialize_creates_connections(self, temp_db_path: Path) -> None:
         """Test initialize creates database connections."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path, pool_size=5)
         try:
@@ -161,7 +161,7 @@ class TestPythonDatabasePoolInitialize:
     @pytest.mark.asyncio
     async def test_initialize_raises_on_missing_db(self, tmp_path: Path) -> None:
         """Test initialize raises FileNotFoundError for missing database."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(tmp_path / "nonexistent.db")
 
@@ -172,7 +172,7 @@ class TestPythonDatabasePoolInitialize:
     @pytest.mark.asyncio
     async def test_initialize_idempotent(self, temp_db_path: Path) -> None:
         """Test initialize is idempotent (safe to call multiple times)."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         try:
@@ -199,7 +199,7 @@ class TestPythonDatabasePoolGetEntry:
     @pytest.mark.asyncio
     async def test_get_entry_returns_description(self, temp_db_path: Path) -> None:
         """Test get_entry returns correct description."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         async with PythonDatabasePool(temp_db_path) as pool:
             result = await pool.get_entry("001234", "TestPlugin.esp")
@@ -210,7 +210,7 @@ class TestPythonDatabasePoolGetEntry:
     @pytest.mark.asyncio
     async def test_get_entry_returns_none_for_missing(self, temp_db_path: Path) -> None:
         """Test get_entry returns None for non-existent entry."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         async with PythonDatabasePool(temp_db_path) as pool:
             result = await pool.get_entry("999999", "MissingPlugin.esp")
@@ -221,7 +221,7 @@ class TestPythonDatabasePoolGetEntry:
     @pytest.mark.asyncio
     async def test_get_entry_auto_initializes(self, temp_db_path: Path) -> None:
         """Test get_entry auto-initializes pool if needed."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         assert pool._initialized is False
@@ -237,7 +237,7 @@ class TestPythonDatabasePoolGetEntry:
     @pytest.mark.asyncio
     async def test_get_entry_same_formid_different_plugin(self, temp_db_path: Path) -> None:
         """Test get_entry distinguishes same FormID in different plugins."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         async with PythonDatabasePool(temp_db_path) as pool:
             result1 = await pool.get_entry("001234", "TestPlugin.esp")
@@ -259,7 +259,7 @@ class TestPythonDatabasePoolGetEntriesBatch:
     @pytest.mark.asyncio
     async def test_get_entries_batch_returns_dict(self, temp_db_path: Path) -> None:
         """Test get_entries_batch returns dictionary of results."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         async with PythonDatabasePool(temp_db_path) as pool:
             pairs = [
@@ -276,7 +276,7 @@ class TestPythonDatabasePoolGetEntriesBatch:
     @pytest.mark.asyncio
     async def test_get_entries_batch_empty_list(self, temp_db_path: Path) -> None:
         """Test get_entries_batch with empty list returns empty dict."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         async with PythonDatabasePool(temp_db_path) as pool:
             results = await pool.get_entries_batch([])
@@ -287,7 +287,7 @@ class TestPythonDatabasePoolGetEntriesBatch:
     @pytest.mark.asyncio
     async def test_get_entries_batch_partial_results(self, temp_db_path: Path) -> None:
         """Test get_entries_batch with mix of existing and missing entries."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         async with PythonDatabasePool(temp_db_path) as pool:
             pairs = [
@@ -312,7 +312,7 @@ class TestPythonDatabasePoolConnectionManagement:
     @pytest.mark.asyncio
     async def test_connection_returned_to_pool(self, temp_db_path: Path) -> None:
         """Test connections are returned to pool after use."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path, pool_size=3)
         await pool.initialize()
@@ -330,7 +330,7 @@ class TestPythonDatabasePoolConnectionManagement:
     @pytest.mark.asyncio
     async def test_excess_connections_closed(self, temp_db_path: Path) -> None:
         """Test excess connections are closed when returned."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path, pool_size=1)
         await pool.initialize()
@@ -364,7 +364,7 @@ class TestPythonDatabasePoolCreateConnection:
     @pytest.mark.unit
     def test_create_connection_sets_wal_mode(self, temp_db_path: Path) -> None:
         """Test created connection has WAL mode enabled."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         conn = pool._create_connection()
@@ -382,7 +382,7 @@ class TestPythonDatabasePoolCreateConnection:
     @pytest.mark.unit
     def test_create_connection_sets_row_factory(self, temp_db_path: Path) -> None:
         """Test created connection has Row factory enabled."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         conn = pool._create_connection()
@@ -395,7 +395,7 @@ class TestPythonDatabasePoolCreateConnection:
     @pytest.mark.unit
     def test_create_connection_returns_none_on_error(self, tmp_path: Path) -> None:
         """Test _create_connection returns None on error."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         # Use invalid path that will fail
         pool = PythonDatabasePool(tmp_path / "nonexistent_dir" / "test.db")
@@ -418,7 +418,7 @@ class TestPythonDatabasePoolClose:
     @pytest.mark.asyncio
     async def test_close_closes_all_connections(self, temp_db_path: Path) -> None:
         """Test close closes all pooled connections."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         await pool.initialize()
@@ -433,7 +433,7 @@ class TestPythonDatabasePoolClose:
     @pytest.mark.asyncio
     async def test_close_idempotent(self, temp_db_path: Path) -> None:
         """Test close is safe to call multiple times."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         await pool.initialize()
@@ -456,7 +456,7 @@ class TestPythonDatabasePoolContextManager:
     @pytest.mark.asyncio
     async def test_async_context_manager_initializes(self, temp_db_path: Path) -> None:
         """Test async context manager initializes pool on enter."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
         assert pool._initialized is False
@@ -468,7 +468,7 @@ class TestPythonDatabasePoolContextManager:
     @pytest.mark.asyncio
     async def test_async_context_manager_closes_on_exit(self, temp_db_path: Path) -> None:
         """Test async context manager closes pool on exit."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
 
@@ -481,7 +481,7 @@ class TestPythonDatabasePoolContextManager:
     @pytest.mark.asyncio
     async def test_async_context_manager_returns_pool(self, temp_db_path: Path) -> None:
         """Test async context manager returns pool instance."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         pool = PythonDatabasePool(temp_db_path)
 
@@ -500,7 +500,7 @@ class TestPythonDatabasePoolStaticMethods:
     @pytest.mark.unit
     def test_execute_query_single_returns_description(self, temp_db_path: Path) -> None:
         """Test _execute_query_single returns description."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         conn = sqlite3.connect(str(temp_db_path))
         conn.row_factory = sqlite3.Row
@@ -517,7 +517,7 @@ class TestPythonDatabasePoolStaticMethods:
     @pytest.mark.unit
     def test_execute_query_single_returns_none_for_missing(self, temp_db_path: Path) -> None:
         """Test _execute_query_single returns None for missing entry."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         conn = sqlite3.connect(str(temp_db_path))
         conn.row_factory = sqlite3.Row
@@ -534,7 +534,7 @@ class TestPythonDatabasePoolStaticMethods:
     @pytest.mark.unit
     def test_execute_query_batch_returns_list(self, temp_db_path: Path) -> None:
         """Test _execute_query_batch returns list of dicts."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         conn = sqlite3.connect(str(temp_db_path))
         conn.row_factory = sqlite3.Row
@@ -553,7 +553,7 @@ class TestPythonDatabasePoolStaticMethods:
     @pytest.mark.unit
     def test_execute_query_batch_returns_empty_on_error(self, temp_db_path: Path) -> None:
         """Test _execute_query_batch returns empty list on error."""
-        from ClassicLib.python.database_py import PythonDatabasePool
+        from ClassicLib.integration.python.database_py import PythonDatabasePool
 
         conn = sqlite3.connect(str(temp_db_path))
 
@@ -579,6 +579,6 @@ class TestAsyncDatabasePoolAlias:
     @pytest.mark.unit
     def test_async_database_pool_alias_exists(self) -> None:
         """Test AsyncDatabasePool is an alias for PythonDatabasePool."""
-        from ClassicLib.python.database_py import AsyncDatabasePool, PythonDatabasePool
+        from ClassicLib.integration.python.database_py import AsyncDatabasePool, PythonDatabasePool
 
         assert AsyncDatabasePool is PythonDatabasePool

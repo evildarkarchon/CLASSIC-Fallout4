@@ -27,7 +27,7 @@ class TestPathManagerInit:
     @pytest.mark.unit
     def test_init_with_default_yaml_store(self, qt_parent_widget):
         """Test PathManager initializes with default YAML.Settings store."""
-        from ClassicLib.Constants import YAML
+        from ClassicLib.core.constants import YAML
         from ClassicLib.Interface.Settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
@@ -39,7 +39,7 @@ class TestPathManagerInit:
     @pytest.mark.unit
     def test_init_with_custom_yaml_store(self, qt_parent_widget):
         """Test PathManager initializes with custom YAML store."""
-        from ClassicLib.Constants import YAML
+        from ClassicLib.core.constants import YAML
         from ClassicLib.Interface.Settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget, yaml_store=YAML.Game_Local)
@@ -88,7 +88,7 @@ class TestPathManagerBrowse:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
-    @patch("ClassicLib.GlobalRegistry.get_game")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_sets_selected_folder(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder sets selected folder to input widget."""
         mock_get_game.return_value = "Fallout4"
@@ -101,7 +101,7 @@ class TestPathManagerBrowse:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
-    @patch("ClassicLib.GlobalRegistry.get_game")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_handles_cancelled_dialog(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder handles cancelled dialog (empty string)."""
         mock_get_game.return_value = "Fallout4"
@@ -113,7 +113,7 @@ class TestPathManagerBrowse:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
-    @patch("ClassicLib.GlobalRegistry.get_game")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_uses_game_name_from_registry(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder uses game name from GlobalRegistry for dialog title."""
         mock_get_game.return_value = "Skyrim"
@@ -128,7 +128,7 @@ class TestPathManagerBrowse:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
-    @patch("ClassicLib.GlobalRegistry.get_game")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_fallback_to_game_on_registry_error(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder falls back to 'Game' when registry raises."""
         mock_get_game.side_effect = ValueError("No game configured")
@@ -157,9 +157,9 @@ class TestPathManagerReset:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_success")
-    @patch("ClassicLib.DocsPath.docs_path_find")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_reset_clears_settings_and_runs_autodetect(
         self,
         mock_get_vr,
@@ -231,8 +231,8 @@ class TestPathManagerAutodetect:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_success")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    @patch("ClassicLib.DocsPath.docs_path_find")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_updates_input_on_success(
         self,
         mock_get_vr,
@@ -253,8 +253,8 @@ class TestPathManagerAutodetect:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_warning")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    @patch("ClassicLib.DocsPath.docs_path_find")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_clears_input_when_detection_fails(
         self,
         mock_get_vr,
@@ -275,8 +275,8 @@ class TestPathManagerAutodetect:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_warning")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    @patch("ClassicLib.DocsPath.docs_path_find")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_clears_input_when_detection_returns_none(
         self,
         mock_get_vr,
@@ -296,8 +296,8 @@ class TestPathManagerAutodetect:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
-    @patch("ClassicLib.DocsPath.docs_path_find")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_handles_type_error(
         self,
         mock_get_vr,
@@ -315,8 +315,8 @@ class TestPathManagerAutodetect:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
-    @patch("ClassicLib.DocsPath.docs_path_find")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_handles_value_error(
         self,
         mock_get_vr,
@@ -334,8 +334,8 @@ class TestPathManagerAutodetect:
     @pytest.mark.unit
     @patch("ClassicLib.Interface.Settings.path_manager.msg_success")
     @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
-    @patch("ClassicLib.DocsPath.docs_path_find")
-    @patch("ClassicLib.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find")
+    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_handles_vr_suffix(
         self,
         mock_get_vr,

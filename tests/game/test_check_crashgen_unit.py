@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.ScanGame.CheckCrashgen module.
+"""Unit tests for ClassicLib.scanning.game.CheckCrashgen module.
 
 This module tests the Crash Generator (Buffout4) configuration checking
 functionality including plugin detection, TOML settings validation,
@@ -12,12 +12,12 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
-
-from ClassicLib.ScanGame.CheckCrashgen import (
+from ClassicLib.scanning.game.CheckCrashgen import (
     CrashgenChecker,
     check_crashgen_settings,
 )
-from ClassicLib.ScanGame.models.fcx_issue import ConfigIssue
+
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
 
 pytestmark = pytest.mark.unit
 
@@ -30,8 +30,8 @@ pytestmark = pytest.mark.unit
 class TestGetPluginsPath:
     """Tests for the _get_plugins_path static method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_plugins_path_returns_path_from_yaml(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """_get_plugins_path should return Path from YAML settings."""
         mock_registry.get_vr.return_value = ""
@@ -41,8 +41,8 @@ class TestGetPluginsPath:
 
         assert result == tmp_path / "plugins"
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_plugins_path_returns_none_when_not_configured(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_plugins_path should return None when not configured."""
         mock_registry.get_vr.return_value = ""
@@ -61,8 +61,8 @@ class TestGetPluginsPath:
 class TestGetCrashgenName:
     """Tests for the _get_crashgen_name static method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_crashgen_name_returns_name_from_yaml(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_crashgen_name should return name from YAML settings."""
         mock_registry.get_vr.return_value = ""
@@ -72,8 +72,8 @@ class TestGetCrashgenName:
 
         assert result == "Custom Crashgen"
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_crashgen_name_defaults_to_buffout4(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_crashgen_name should default to Buffout4 when not configured."""
         mock_registry.get_vr.return_value = ""
@@ -92,8 +92,8 @@ class TestGetCrashgenName:
 class TestFindConfigFile:
     """Tests for the _find_config_file method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_find_config_file_returns_none_when_no_plugins_path(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_find_config_file should return None when plugins_path is None."""
         mock_registry.get_vr.return_value = ""
@@ -104,8 +104,8 @@ class TestFindConfigFile:
 
         assert checker.config_file is None
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_find_config_file_finds_og_config(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """_find_config_file should find Buffout4/config.toml."""
         plugins_path = tmp_path / "plugins"
@@ -128,8 +128,8 @@ class TestFindConfigFile:
 
         assert checker.config_file == config_file
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_find_config_file_finds_vr_config(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """_find_config_file should find Buffout4.toml (VR style)."""
         plugins_path = tmp_path / "plugins"
@@ -151,8 +151,8 @@ class TestFindConfigFile:
 
         assert checker.config_file == config_file
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_find_config_file_warns_about_duplicate_configs(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """_find_config_file should warn when both config files exist."""
         plugins_path = tmp_path / "plugins"
@@ -189,8 +189,8 @@ class TestFindConfigFile:
 class TestDetectInstalledPlugins:
     """Tests for the _detect_installed_plugins method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_detect_installed_plugins_returns_set(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """_detect_installed_plugins should return a set of plugin names."""
         plugins_path = tmp_path / "plugins"
@@ -214,8 +214,8 @@ class TestDetectInstalledPlugins:
         assert "plugin1.dll" in checker.installed_plugins
         assert "plugin2.dll" in checker.installed_plugins
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_detect_installed_plugins_lowercases_names(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """_detect_installed_plugins should lowercase all plugin names."""
         plugins_path = tmp_path / "plugins"
@@ -236,8 +236,8 @@ class TestDetectInstalledPlugins:
 
         assert "uppercase.dll" in checker.installed_plugins
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_detect_installed_plugins_returns_empty_when_no_path(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_detect_installed_plugins should return empty set when path is None."""
         mock_registry.get_vr.return_value = ""
@@ -257,8 +257,8 @@ class TestDetectInstalledPlugins:
 class TestHasPlugin:
     """Tests for the has_plugin method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_has_plugin_returns_true_when_found(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """has_plugin should return True when plugin is installed."""
         plugins_path = tmp_path / "plugins"
@@ -279,8 +279,8 @@ class TestHasPlugin:
 
         assert checker.has_plugin(["x-cell-fo4.dll"]) is True
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_has_plugin_returns_false_when_not_found(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """has_plugin should return False when plugin is not installed."""
         mock_registry.get_vr.return_value = ""
@@ -291,8 +291,8 @@ class TestHasPlugin:
 
         assert checker.has_plugin(["x-cell-fo4.dll"]) is False
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_has_plugin_checks_multiple_names(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """has_plugin should return True if any plugin from list is found."""
         plugins_path = tmp_path / "plugins"
@@ -323,8 +323,8 @@ class TestHasPlugin:
 class TestGetSettingsToCheck:
     """Tests for the _get_settings_to_check method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_settings_to_check_returns_empty_for_non_fallout4(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_settings_to_check should return empty list for non-Fallout4 games."""
         mock_registry.get_vr.return_value = ""
@@ -336,8 +336,8 @@ class TestGetSettingsToCheck:
 
         assert result == []
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_settings_to_check_returns_list_for_fallout4(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_settings_to_check should return settings list for Fallout4."""
         mock_registry.get_vr.return_value = ""
@@ -350,8 +350,8 @@ class TestGetSettingsToCheck:
         assert isinstance(result, list)
         assert len(result) > 0
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_settings_to_check_includes_achievements_setting(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_settings_to_check should include Achievements setting."""
         mock_registry.get_vr.return_value = ""
@@ -364,8 +364,8 @@ class TestGetSettingsToCheck:
         achievement_settings = [s for s in result if s.get("key") == "Achievements"]
         assert len(achievement_settings) == 1
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_get_settings_to_check_includes_f4ee_setting(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """_get_settings_to_check should include F4EE setting."""
         mock_registry.get_vr.return_value = ""
@@ -431,8 +431,8 @@ class TestDetectTomlIssue:
 class TestCheck:
     """Tests for the check method."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_check_returns_tuple(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """check should return a tuple of (string, list)."""
         mock_registry.get_vr.return_value = ""
@@ -447,8 +447,8 @@ class TestCheck:
         assert isinstance(result[0], str)
         assert isinstance(result[1], list)
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_check_returns_notice_when_no_config_file(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """check should return notice message when config file not found."""
         mock_registry.get_vr.return_value = ""
@@ -462,9 +462,9 @@ class TestCheck:
         assert "settings check will be skipped" in message
         assert issues == []
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.mod_toml_config")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.mod_toml_config")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_check_detects_issues_without_modifying_files(
         self, mock_registry: MagicMock, mock_yaml: MagicMock, mock_toml: MagicMock, tmp_path: Path
     ) -> None:
@@ -505,8 +505,8 @@ class TestCheck:
 class TestCheckCrashgenSettings:
     """Tests for the check_crashgen_settings module-level function."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_check_crashgen_settings_returns_tuple(self, mock_registry: MagicMock, mock_yaml: MagicMock) -> None:
         """check_crashgen_settings should return a tuple."""
         mock_registry.get_vr.return_value = ""
@@ -518,7 +518,7 @@ class TestCheckCrashgenSettings:
         assert isinstance(result, tuple)
         assert len(result) == 2
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.CrashgenChecker")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.CrashgenChecker")
     def test_check_crashgen_settings_creates_checker_instance(self, mock_checker_class: MagicMock) -> None:
         """check_crashgen_settings should create a CrashgenChecker instance."""
         mock_instance = MagicMock()
@@ -625,9 +625,9 @@ class TestConfigIssueIntegration:
 class TestFCXReadOnlyCompliance:
     """Tests to verify FCX read-only mode compliance."""
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.mod_toml_config")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.mod_toml_config")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_check_never_calls_mod_toml_config_with_new_value(
         self, mock_registry: MagicMock, mock_yaml: MagicMock, mock_toml: MagicMock, tmp_path: Path
     ) -> None:
@@ -659,8 +659,8 @@ class TestFCXReadOnlyCompliance:
             # If new_value is passed, it would be the 4th positional arg
             assert len(args) <= 3, "mod_toml_config should not be called with new_value"
 
-    @patch("ClassicLib.ScanGame.CheckCrashgen.yaml_settings")
-    @patch("ClassicLib.ScanGame.CheckCrashgen.GlobalRegistry")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.CheckCrashgen.GlobalRegistry")
     def test_check_only_detects_issues_never_fixes(self, mock_registry: MagicMock, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """check should only detect and report issues, never fix them."""
         plugins_path = tmp_path / "plugins"

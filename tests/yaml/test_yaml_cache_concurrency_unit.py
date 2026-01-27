@@ -26,9 +26,9 @@ from unittest.mock import patch
 
 import pytest
 
-from ClassicLib.AsyncBridge import AsyncBridge
-from ClassicLib.Constants import YAML
-from ClassicLib.YamlSettings import YamlSettingsCache
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import YamlSettingsCache
 
 pytestmark = pytest.mark.unit
 

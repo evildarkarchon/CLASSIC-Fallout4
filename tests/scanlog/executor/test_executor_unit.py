@@ -14,8 +14,9 @@ pytestmark = [pytest.mark.unit]
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ClassicLib.ScanLog.models import ScanConfig
-from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
+from ClassicLib.scanning.logs.ScanLogsExecutor import ScanLogsExecutor
+
+from ClassicLib.scanning.logs.models import ScanConfig
 
 
 @pytest.mark.unit
@@ -25,10 +26,10 @@ class TestScanLogsExecutorInit:
     def test_init_with_default_config(self) -> None:
         """Test initialization with default configuration."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
@@ -47,9 +48,9 @@ class TestScanLogsExecutorInit:
         )
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor(config=config)
 
@@ -68,10 +69,10 @@ class TestScanLogsExecutorInit:
             f.touch()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=crash_files),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=crash_files),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
@@ -84,10 +85,10 @@ class TestScanLogsExecutorInit:
         db_file.touch()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", [db_file]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", [db_file]),
         ):
             executor = ScanLogsExecutor()
 
@@ -96,10 +97,10 @@ class TestScanLogsExecutorInit:
     def test_init_with_eager_load_flag(self) -> None:
         """Test initialization with eager_load parameter."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor(eager_load=True)
 
@@ -110,10 +111,10 @@ class TestScanLogsExecutorInit:
         remove_list = ("record1", "record2")
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=remove_list),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=remove_list),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
@@ -126,7 +127,7 @@ class TestScanLogsExecutorLoadConfig:
 
     def test_load_config_defaults(self) -> None:
         """Test config loading with default values."""
-        with patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=None):
+        with patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=None):
             config = ScanLogsExecutor._load_config_from_settings()
 
             assert isinstance(config, ScanConfig)
@@ -139,7 +140,7 @@ class TestScanLogsExecutorLoadConfig:
                 return True
             return None
 
-        with patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", side_effect=mock_settings):
+        with patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", side_effect=mock_settings):
             config = ScanLogsExecutor._load_config_from_settings()
 
             assert config.fcx_mode is True
@@ -150,7 +151,7 @@ class TestScanLogsExecutorLoadConfig:
         def mock_settings(type_arg, key: str) -> bool:
             return True  # All settings enabled
 
-        with patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", side_effect=mock_settings):
+        with patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", side_effect=mock_settings):
             config = ScanLogsExecutor._load_config_from_settings()
 
             assert config.fcx_mode is True
@@ -169,10 +170,10 @@ class TestScanLogsExecutorWarmUp:
         mock_yamldata = MagicMock()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -191,10 +192,10 @@ class TestScanLogsExecutorWarmUp:
         mock_yamldata = MagicMock()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -216,16 +217,16 @@ class TestScanLogsExecutorWarmUp:
         mock_yamldata = MagicMock()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", [db_file]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", [db_file]),
             patch(
                 "ClassicLib.ScanLog.ScanLogsExecutor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
                 return_value=mock_yamldata,
             ),
-            patch("ClassicLib.Database.DatabasePoolManager") as mock_pool_manager,
+            patch("ClassicLib.io.database.DatabasePoolManager") as mock_pool_manager,
         ):
             mock_pool = MagicMock()
             mock_pool_manager.return_value.get_pool = AsyncMock(return_value=mock_pool)
@@ -244,10 +245,10 @@ class TestScanLogsExecutorStatistics:
     def test_statistics_initialized(self) -> None:
         """Test statistics are properly initialized."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
@@ -263,10 +264,10 @@ class TestScanLogsExecutorStatistics:
             f.touch()
 
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=crash_files),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=crash_files),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
@@ -280,15 +281,15 @@ class TestScanLogsExecutorGenerateSummary:
     def test_generate_summary_no_scans(self) -> None:
         """Test summary generation with no scanned logs."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
             # Create mock result with zero scans
-            from ClassicLib.ScanLog.models import ScanResult
+            from ClassicLib.scanning.logs.models import ScanResult
 
             result = ScanResult(stats=executor.statistics)
             summary = executor.generate_summary(result)
@@ -298,17 +299,17 @@ class TestScanLogsExecutorGenerateSummary:
     def test_generate_summary_with_scans(self) -> None:
         """Test summary generation with scanned logs."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
             executor.statistics.scanned = 5
             executor.statistics.incomplete = 1
             executor.statistics.failed = 0
 
-            from ClassicLib.ScanLog.models import ScanResult
+            from ClassicLib.scanning.logs.models import ScanResult
 
             result = ScanResult(stats=executor.statistics)
             result.scan_time = 2.5
@@ -327,11 +328,11 @@ class TestScanLogsExecutorSyncWrapper:
     def test_scan_sync_creates_wrapper(self) -> None:
         """Test that scan_sync creates a sync wrapper."""
         with (
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.yaml_settings", return_value=None),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.classic_settings", return_value=False),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.DB_PATHS", []),
-            patch("ClassicLib.ScanLog.ScanLogsExecutor.create_sync_wrapper") as mock_wrapper,
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.ScanLogsExecutor.create_sync_wrapper") as mock_wrapper,
         ):
             mock_wrapper.return_value = MagicMock(return_value=MagicMock())
 
@@ -353,6 +354,6 @@ class TestScanLogsExecutorBackwardCompatibility:
 
     def test_classiccanlogs_alias_exists(self) -> None:
         """Test that ClassicScanLogs alias exists for backward compatibility."""
-        from ClassicLib.ScanLog.ScanLogsExecutor import ClassicScanLogs
+        from ClassicLib.scanning.logs.ScanLogsExecutor import ClassicScanLogs
 
         assert ClassicScanLogs is ScanLogsExecutor

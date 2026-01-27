@@ -16,13 +16,13 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QThread
 
-from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker
-from ClassicLib.Interface.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.ThreadManager import ThreadType
-from ClassicLib.Logger import logger
+from ClassicLib.core.logger import logger
+from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+from ClassicLib.Interface.workers.ThreadManager import ThreadType
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class PapyrusManager:

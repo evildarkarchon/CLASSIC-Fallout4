@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIO import FileIOCore
+from ClassicLib.io.files import FileIOCore
 
 
 class TestEncodingSupport:

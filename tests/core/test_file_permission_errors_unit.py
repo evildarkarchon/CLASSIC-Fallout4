@@ -77,7 +77,7 @@ class TestReadPermissionErrors:
     @pytest.mark.asyncio
     async def test_read_readonly_file(self, simulator, tmp_path):
         """Test reading a read-only file (should succeed)."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -98,7 +98,7 @@ class TestReadPermissionErrors:
     @pytest.mark.skipif(sys.platform == "win32", reason="Write-only not supported on Windows")
     async def test_read_writeonly_file(self, simulator, tmp_path):
         """Test reading a write-only file (should fail)."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -118,7 +118,7 @@ class TestReadPermissionErrors:
     @pytest.mark.asyncio
     async def test_read_no_access_file(self, simulator, tmp_path):
         """Test reading a file with no permissions."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -151,7 +151,7 @@ class TestWritePermissionErrors:
     @pytest.mark.asyncio
     async def test_write_to_readonly_file(self, simulator, tmp_path):
         """Test writing to a read-only file."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -176,7 +176,7 @@ class TestWritePermissionErrors:
     @pytest.mark.asyncio
     async def test_write_to_readonly_directory(self, tmp_path):
         """Test creating a file in a read-only directory."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -212,7 +212,7 @@ class TestDirectoryPermissionErrors:
     @pytest.mark.asyncio
     async def test_list_directory_no_permissions(self, tmp_path):
         """Test listing a directory without read permissions."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         FileIOCore()
 
@@ -244,7 +244,7 @@ class TestDirectoryPermissionErrors:
     @pytest.mark.asyncio
     async def test_create_directory_in_protected_location(self):
         """Test creating directories in protected system locations."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         FileIOCore()
 
@@ -283,7 +283,7 @@ class TestFileLockingScenarios:
     @pytest.mark.asyncio
     async def test_read_locked_file(self, tmp_path):
         """Test reading a file that's locked by another process."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -308,7 +308,7 @@ class TestFileLockingScenarios:
     @pytest.mark.asyncio
     async def test_concurrent_write_attempts(self, tmp_path):
         """Test handling concurrent write attempts to the same file."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -347,7 +347,7 @@ class TestQuotaAndSpaceErrors:
     @pytest.mark.asyncio
     async def test_disk_full_error(self, tmp_path):
         """Test handling of disk full errors."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
         temp_file = tmp_path / "disk_full_test.log"
@@ -367,7 +367,7 @@ class TestQuotaAndSpaceErrors:
     @pytest.mark.asyncio
     async def test_quota_exceeded_error(self, tmp_path):
         """Test handling of quota exceeded errors."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
         temp_file = tmp_path / "quota_test.log"
@@ -392,7 +392,7 @@ class TestSymbolicLinkPermissions:
     @pytest.mark.asyncio
     async def test_broken_symlink_handling(self, tmp_path):
         """Test handling of broken symbolic links."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -409,7 +409,7 @@ class TestSymbolicLinkPermissions:
     @pytest.mark.asyncio
     async def test_symlink_permission_traversal(self, tmp_path):
         """Test permission issues when following symlinks."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
         simulator = PermissionErrorSimulator()
@@ -437,7 +437,7 @@ class TestPermissionRecoveryStrategies:
     @pytest.mark.asyncio
     async def test_fallback_to_temp_directory(self):
         """Test falling back to temp directory when primary fails."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
 
@@ -481,7 +481,7 @@ class TestPermissionRecoveryStrategies:
     @pytest.mark.asyncio
     async def test_retry_with_elevated_permissions(self):
         """Test retry logic with permission elevation (mock)."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         FileIOCore()
         attempt_count = 0
@@ -511,7 +511,7 @@ class TestPermissionRecoveryStrategies:
     @pytest.mark.asyncio
     async def test_permission_error_user_notification(self):
         """Test that permission errors are properly reported to users."""
-        from ClassicLib.MessageHandler.handler import MessageHandler
+        from ClassicLib.messaging.handler import MessageHandler
 
         # Clear singleton
         if hasattr(MessageHandler, "_instance"):

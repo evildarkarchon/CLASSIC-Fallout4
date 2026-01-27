@@ -27,21 +27,21 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
-from ClassicLib.FileIO import read_file_sync
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
+from ClassicLib.core.registry import get_local_dir
 from ClassicLib.integration.status import is_rust_accelerated
-from ClassicLib.Interface.ResultsViewerWidgets import (
+from ClassicLib.Interface.widgets.ResultsViewerWidgets import (
     MarkdownViewer,
     ReportListWidget,
     ReportMetadataWidget,
 )
-from ClassicLib.Logger import logger
-from ClassicLib.MessageHandler import msg_error, msg_info, msg_warning
-from ClassicLib.YamlSettings import classic_settings, yaml_settings
+from ClassicLib.io.files import read_file_sync
+from ClassicLib.io.yaml import classic_settings, yaml_settings
+from ClassicLib.messaging import msg_error, msg_info, msg_warning
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class ResultsViewerController:
@@ -520,7 +520,7 @@ class ResultsViewerController:
     @staticmethod
     def _open_reports_folder() -> None:
         """Open the Crash Logs folder in the file explorer."""
-        local_dir = GlobalRegistry.get_local_dir()
+        local_dir = get_local_dir()
         if not local_dir:
             msg_warning("Local directory not configured")
             return

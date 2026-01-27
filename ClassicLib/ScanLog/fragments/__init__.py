@@ -1,25 +1,18 @@
-"""Report fragment system for functional report generation.
+"""Backward compatibility module for ScanLog.fragments.
 
-This module provides a functional approach to report generation where each
-component returns its contribution as a fragment, eliminating the need for
-shared mutable state while maintaining identical output format.
+This package has been moved to ClassicLib.scanning.logs.reporting.
+All imports are re-exported for backward compatibility.
 
-**IMPORTANT**: This module exports Python-only implementations.
-For Rust-accelerated versions (recommended), import from ClassicLib.rust.report_rust:
-    from ClassicLib.rust.report_rust import ReportFragment, ReportComposer, ReportGenerator
+.. deprecated::
+    Import from ClassicLib.scanning.logs.reporting instead.
 """
 
-from ClassicLib.ScanLog.fragments.fragment_collector import FragmentCollector
-from ClassicLib.ScanLog.fragments.mod_detection import detect_mods_single_fragment, generate_mod_check_header_fragment
-from ClassicLib.ScanLog.fragments.report_composer import ReportComposer
-from ClassicLib.ScanLog.fragments.report_fragment import ReportFragment
-from ClassicLib.ScanLog.fragments.report_generator_functional import ReportGeneratorFunctional
+import warnings
 
-__all__ = [
-    "FragmentCollector",
-    "ReportComposer",
-    "ReportFragment",
-    "ReportGeneratorFunctional",
-    "detect_mods_single_fragment",
-    "generate_mod_check_header_fragment",
-]
+warnings.warn(
+    "ClassicLib.ScanLog.fragments is deprecated, import from ClassicLib.scanning.logs.reporting instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.scanning.logs.reporting import *  # noqa: F403, E402

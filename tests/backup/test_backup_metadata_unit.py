@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.BackupManager import BackupManager
+from ClassicLib.support.backup import BackupManager
 
 pytestmark = [pytest.mark.unit]
 
@@ -13,8 +13,8 @@ pytestmark = [pytest.mark.unit]
 class TestXSEVersionExtraction:
     """Tests for XSE version extraction from log files."""
 
-    @patch("ClassicLib.BackupManager.open_file_with_encoding")
-    @patch("ClassicLib.BackupManager.normalize_list")
+    @patch("ClassicLib.support.backup.open_file_with_encoding")
+    @patch("ClassicLib.support.backup.normalize_list")
     def test_extract_xse_version_success(self, mock_normalize: MagicMock, mock_open_file: MagicMock, manager: BackupManager) -> None:
         """Test successful extraction of XSE version from log file."""
         # Setup mock log content
@@ -40,8 +40,8 @@ class TestXSEVersionExtraction:
         # Should extract version from log
         assert version == "0.6.21"
 
-    @patch("ClassicLib.BackupManager.open_file_with_encoding", side_effect=FileNotFoundError)
-    @patch("ClassicLib.BackupManager.logger")
+    @patch("ClassicLib.support.backup.open_file_with_encoding", side_effect=FileNotFoundError)
+    @patch("ClassicLib.support.backup.logger")
     def test_extract_xse_version_file_not_found(self, mock_logger: MagicMock, mock_open: MagicMock, manager: BackupManager) -> None:
         """Test extracting version when log file doesn't exist."""
         manager._backup_config = {"xse_ver_latest": "0.6.23"}
@@ -55,8 +55,8 @@ class TestXSEVersionExtraction:
         # Verify logging
         mock_logger.debug.assert_called_with("XSE log file not found: nonexistent.log")
 
-    @patch("ClassicLib.BackupManager.open_file_with_encoding")
-    @patch("ClassicLib.BackupManager.normalize_list")
+    @patch("ClassicLib.support.backup.open_file_with_encoding")
+    @patch("ClassicLib.support.backup.normalize_list")
     def test_extract_xse_version_no_version_in_log(
         self, mock_normalize: MagicMock, mock_open_file: MagicMock, manager: BackupManager
     ) -> None:
@@ -77,8 +77,8 @@ class TestXSEVersionExtraction:
         # Should return default version
         assert version == "0.6.23"
 
-    @patch("ClassicLib.BackupManager.open_file_with_encoding")
-    @patch("ClassicLib.BackupManager.normalize_list")
+    @patch("ClassicLib.support.backup.open_file_with_encoding")
+    @patch("ClassicLib.support.backup.normalize_list")
     def test_extract_xse_version_empty_log(self, mock_normalize: MagicMock, mock_open_file: MagicMock, manager: BackupManager) -> None:
         """Test extracting version from empty log file."""
         mock_file = MagicMock()

@@ -25,7 +25,7 @@ from PySide6.QtCore import QObject, QThread
 @pytest.mark.unit
 def test_crash_logs_worker_exists():
     """Test that CrashLogsScanWorker can be imported."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     assert CrashLogsScanWorker is not None, "CrashLogsScanWorker should be importable"
     assert hasattr(CrashLogsScanWorker, "run"), "Should have run method"
@@ -35,7 +35,7 @@ def test_crash_logs_worker_exists():
 @pytest.mark.unit
 def test_worker_signals():
     """Test that worker has all required signals."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -55,7 +55,7 @@ def test_worker_uses_asyncio_run():
     AsyncBridge because AsyncBridge is a main-thread singleton, and accessing it from
     worker threads causes cross-thread QObject parenting errors.
     """
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     # Create worker
     worker = CrashLogsScanWorker()
@@ -78,12 +78,12 @@ def test_worker_uses_asyncio_run():
         return None
 
     # Patch the imports at the point they're used (inside the method)
-    with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor") as mock_executor_cls:
+    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor") as mock_executor_cls:
         mock_executor_cls.return_value = mock_scanner
 
-        with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", mock_async_func):
+        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", mock_async_func):
             # Import FCXModeHandler and patch it directly
-            from ClassicLib.ScanLog import FCXModeHandler
+            from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
@@ -103,7 +103,7 @@ def test_worker_uses_asyncio_run():
 def test_no_manual_event_loop_creation():
     """Test that worker doesn't create manual event loops."""
 
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -113,13 +113,13 @@ def test_no_manual_event_loop_creation():
         return None
 
     # Mock everything to prevent actual execution
-    with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
-        with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
-            from ClassicLib.ScanLog import FCXModeHandler
+    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor"):
+        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
+            from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
-                    with patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+                    with patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
                         # Configure mock to close coroutines to avoid warnings
                         mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
 
@@ -156,8 +156,8 @@ def test_rust_acceleration_detection():
 @pytest.mark.unit
 def test_rust_status_logging():
     """Test that Rust acceleration status is logged."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
-    from ClassicLib.Logger import logger
+    from ClassicLib.core.logger import logger
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -167,11 +167,11 @@ def test_rust_status_logging():
         return None
 
     # Mock dependencies
-    with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
-        with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
-            from ClassicLib.ScanLog import FCXModeHandler
+    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor"):
+        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
+            from ClassicLib.scanning.logs import FCXModeHandler
 
-            with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.AsyncBridge.AsyncBridge") as mock_bridge_cls:
+            with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
                 # Configure mock to close coroutines
                 mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
 
@@ -201,7 +201,7 @@ def test_rust_status_logging():
 @pytest.mark.unit
 def test_success_signal_emission():
     """Test that finished signal is emitted on successful scan."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -221,7 +221,7 @@ def test_success_signal_emission():
 @pytest.mark.unit
 def test_error_signal_emission():
     """Test that error signals are emitted on scan failure."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -252,7 +252,7 @@ def test_error_signal_emission():
 @pytest.mark.unit
 def test_finished_signal_always_emitted():
     """Test that finished signal is always emitted, even on error."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -279,8 +279,8 @@ def test_finished_signal_always_emitted():
 @pytest.mark.unit
 def test_performance_metrics_logged():
     """Test that performance metrics are logged."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
-    from ClassicLib.Logger import logger
+    from ClassicLib.core.logger import logger
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -290,9 +290,9 @@ def test_performance_metrics_logged():
         return None
 
     # Mock dependencies
-    with patch("ClassicLib.ScanLog.ScanLogsExecutor.ScanLogsExecutor"):
-        with patch("ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
-            from ClassicLib.ScanLog import FCXModeHandler
+    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor"):
+        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
+            from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
@@ -324,7 +324,7 @@ def test_performance_metrics_logged():
 @pytest.mark.unit
 def test_worker_is_qobject():
     """Test that worker is a QObject and can be moved to thread."""
-    from ClassicLib.Interface.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 

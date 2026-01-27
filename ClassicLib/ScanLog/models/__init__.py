@@ -1,18 +1,18 @@
-"""Data models for scan log operations.
+"""Backward compatibility module for ScanLog.models.
 
-This module contains data classes that define the configuration and results
-for crash log scanning operations, providing a clean interface between
-the CLI and business logic components.
+This package has been moved to ClassicLib.scanning.logs.models.
+All imports are re-exported for backward compatibility.
+
+.. deprecated::
+    Import from ClassicLib.scanning.logs.models instead.
 """
 
-from ClassicLib.ScanLog.models.scan_config import ScanConfig, ScanConfigDict
-from ClassicLib.ScanLog.models.scan_result import ScanResult, ScanResultDict
-from ClassicLib.ScanLog.models.scan_statistics import ScanStatistics
+import warnings
 
-__all__ = [
-    "ScanConfig",
-    "ScanConfigDict",
-    "ScanResult",
-    "ScanResultDict",
-    "ScanStatistics",
-]
+warnings.warn(
+    "ClassicLib.ScanLog.models is deprecated, import from ClassicLib.scanning.logs.models instead",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
+from ClassicLib.scanning.logs.models import *  # noqa: F403, E402

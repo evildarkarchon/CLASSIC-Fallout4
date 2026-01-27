@@ -16,7 +16,7 @@ from typing import Any, TypeVar
 
 import pytest
 
-from ClassicLib.Logger import logger
+from ClassicLib.core.logger import logger
 
 T = TypeVar("T")
 

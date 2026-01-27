@@ -7,21 +7,15 @@ IMPORTANT: Use `mock_yamldata` for Rust integration tests.
 Use `mock_yamldata_simple` for unit tests that don't call Rust.
 Use `mock_yamldata_with_data` for mod detection tests.
 
-Consolidated from:
-- Original yamldata_fixtures.py
-- tests/yaml/conftest.py (yaml_async_core)
-
+Note: yaml_async_core and async_yaml_core fixtures are provided by yaml_fixtures.py
 Note: yaml_temp_file and temp_yaml_file are provided by yaml_fixtures.py
 """
 
-import math
 import os
-from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
 import pytest
-import ruamel.yaml
 
 
 def _create_vr_methods(mock: MagicMock) -> None:
@@ -302,30 +296,5 @@ def mock_scanlog_info() -> Any:
     return MockScanLogInfo()
 
 
-# ============================================================================
-# YAML Settings Fixtures (from tests/yaml/conftest.py)
-# ============================================================================
-
-
-@pytest.fixture
-async def yaml_async_core():
-    """Get the AsyncYamlSettingsCore singleton instance for testing.
-
-    This fixture provides access to the async YAML settings core for
-    testing async YAML operations.
-
-    Returns:
-        The AsyncYamlSettingsCore singleton instance.
-
-    Note:
-        Since it's a singleton, the instance is not disposed after the test.
-    """
-    from ClassicLib.YamlSettings.async_ import get_async_yaml_core
-
-    core = await get_async_yaml_core()
-    return core
-
-
-# Backward compatibility aliases (deprecated - use prefixed names)
+# Note: yaml_async_core and async_yaml_core fixtures are provided by yaml_fixtures.py
 # Note: yaml_temp_file and temp_yaml_file are provided by yaml_fixtures.py
-async_yaml_core = yaml_async_core

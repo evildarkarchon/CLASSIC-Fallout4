@@ -13,9 +13,9 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import QFileDialog, QLineEdit
 
-from ClassicLib.Constants import YAML
-from ClassicLib.MessageHandler import msg_error, msg_success, msg_warning
-from ClassicLib.YamlSettings import yaml_settings
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import yaml_settings
+from ClassicLib.messaging import msg_error, msg_success, msg_warning
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget

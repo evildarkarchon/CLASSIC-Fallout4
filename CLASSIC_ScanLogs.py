@@ -16,11 +16,10 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ClassicLib.Constants import YAML
-from ClassicLib.ScanLog.models import ScanConfig, ScanResult
-from ClassicLib.ScanLog.ScanLogsExecutor import ScanLogsExecutor
-from ClassicLib.SetupCoordinator import SetupCoordinator
-from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
+from ClassicLib.core.constants import YAML
+from ClassicLib.io.yaml import classic_settings_async, yaml_settings_async
+from ClassicLib.scanning.logs import ScanConfig, ScanLogsExecutor, ScanResult
+from ClassicLib.support.setup import SetupCoordinator
 
 if TYPE_CHECKING:
     import argparse
@@ -108,7 +107,7 @@ async def create_config_from_args_async(args: "argparse.Namespace") -> ScanConfi
         and args.scan_path.resolve().is_dir()
         and str(args.scan_path) != await classic_settings_async(str, "SCAN Custom Path")
     ):
-        from ClassicLib.ScanLog.Util import is_valid_custom_scan_path
+        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
 
         if is_valid_custom_scan_path(args.scan_path):
             await yaml_settings_async(str, YAML.Settings, "CLASSIC_Settings.SCAN Custom Path", str(args.scan_path.resolve()))

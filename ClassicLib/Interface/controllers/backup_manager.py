@@ -28,11 +28,11 @@ from PySide6.QtWidgets import (
     QSizePolicy,
 )
 
-from ClassicLib.Interface.UIHelpers import ENABLED_BUTTON_STYLE, create_separator
-from ClassicLib.ScanGame import manage_game_files
+from ClassicLib.Interface.widgets.UIHelpers import ENABLED_BUTTON_STYLE, create_separator
+from ClassicLib.scanning.game import manage_game_files
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.context import FeatureContext
+    from ClassicLib.Interface.shared.context import FeatureContext
 
 
 class BackupManager:

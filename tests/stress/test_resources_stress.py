@@ -22,7 +22,7 @@ class TestResourceExhaustion:
     @pytest.mark.timeout(30)
     async def test_file_handle_exhaustion(self):
         """Test behavior when file handles are exhausted."""
-        from ClassicLib.FileIO import FileIOCore
+        from ClassicLib.io.files import FileIOCore
 
         io_core = FileIOCore()
         open_files = []

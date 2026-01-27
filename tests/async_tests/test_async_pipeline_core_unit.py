@@ -19,8 +19,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from ClassicLib.ScanLog.pipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
+from ClassicLib.scanning.logs.pipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
 
 
 @pytest.fixture
@@ -73,26 +72,6 @@ def crash_log_files(tmp_path: Path, sample_crash_log_content: str) -> list[Path]
     return files
 
 
-@pytest.fixture
-def mock_yamldata() -> MagicMock:
-    """Mock ClassicScanLogsInfo for testing."""
-    yamldata: MagicMock = MagicMock()
-    yamldata.fallout4_crashlog_scan_exclusions = ["test_exclusion"]
-    yamldata.fallout4_crashlog_mods_single = {"test_mod": "Test mod message"}
-    yamldata.game_ignore_plugins = ["plugin1.esp", "plugin2.esp"]
-    yamldata.game_ignore_records = ["record1", "record2"]
-    yamldata.ignore_list = ["ignore1.esp", "ignore2.esp"]
-    yamldata.classic_records_list = ["record1", "record2"]
-    yamldata.fallout4_crashlog_mods_top = {"top_mod": "Top mod message"}
-    yamldata.fallout4_crashlog_mods_groups = {"group_mod": "Group mod message"}
-    yamldata.fallout4_crashlog_stack_check = {"test_stack": "Test stack message"}
-    yamldata.fallout4_crashlog_error_check = {"test_error": "Test error message"}
-    yamldata.formid_analyzer_enabled = True
-    yamldata.record_scanner_enabled = True
-    yamldata.plugin_analyzer_enabled = True
-    return yamldata
-
-
 @pytest.mark.integration
 @pytest.mark.asyncio
 class TestAsyncPipeline:
@@ -124,9 +103,9 @@ class TestAsyncPipeline:
         )
 
         with (
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
+            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch") as mock_write,
+            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Setup mocks - use AsyncMock for async functions
             # Note: load_crash_logs_async was removed - pipeline now uses direct file I/O

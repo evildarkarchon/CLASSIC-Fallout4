@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.FileIO import FileIOCore
+from ClassicLib.io.files import FileIOCore
 
 # ============================================================================
 # FileIOCore Fixtures (from tests/io/conftest.py)

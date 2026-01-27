@@ -11,8 +11,7 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-
-from ClassicLib.ScanLog.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
+from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
 
 pytestmark = pytest.mark.performance
 
@@ -68,26 +67,6 @@ PROBABLE CALL STACK:
     return files
 
 
-@pytest.fixture
-def mock_yamldata() -> MagicMock:
-    """Mock ClassicScanLogsInfo for testing."""
-    yamldata: MagicMock = MagicMock()
-    yamldata.fallout4_crashlog_scan_exclusions = ["test_exclusion"]
-    yamldata.fallout4_crashlog_mods_single = {"test_mod": "Test mod message"}
-    yamldata.game_ignore_plugins = []
-    yamldata.game_ignore_records = []
-    yamldata.ignore_list = []
-    yamldata.classic_records_list = []
-    yamldata.fallout4_crashlog_mods_top = {}
-    yamldata.fallout4_crashlog_mods_groups = {}
-    yamldata.fallout4_crashlog_stack_check = {}
-    yamldata.fallout4_crashlog_error_check = {}
-    yamldata.formid_analyzer_enabled = True
-    yamldata.record_scanner_enabled = True
-    yamldata.plugin_analyzer_enabled = True
-    return yamldata
-
-
 class TestAsyncPerformancePipeline:
     """Performance baseline tests for pipeline scalability."""
 
@@ -113,9 +92,9 @@ class TestAsyncPerformancePipeline:
             # Mock pipeline components - updated for current API
             # Note: load_crash_logs_async was removed, pipeline now uses direct file I/O
             with (
-                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock),
-                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-                patch("ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orch,
+                patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock),
+                patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+                patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orch,
             ):
                 mock_orchestrator = AsyncMock()
                 mock_orchestrator.process_crash_logs_batch.return_value = [(f, ["report"], False, Counter()) for f in test_files]

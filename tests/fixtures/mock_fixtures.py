@@ -6,13 +6,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Constants import YAML
+from ClassicLib.core.constants import YAML
 
 
 @pytest.fixture
-def mock_yaml_settings() -> Generator[MagicMock, None, None]:
-    """Mock YAML settings for testing."""
-    with patch("ClassicLib.YamlSettings.yaml_settings") as mock_yaml:
+def mock_yaml_settings_patch() -> Generator[MagicMock, None, None]:
+    """Mock YAML settings for testing using patch context manager.
+
+    Note: This fixture uses unittest.mock.patch on the exact module path.
+    For tests using monkeypatch, prefer mock_yaml_settings from registry_fixtures.
+    """
+    with patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml:
 
         def side_effect(_type_arg: Any, yaml_store: Any, key_path: str, new_value: Any = None) -> Any:  # noqa: ARG001
             if key_path == "catch_log_records":
@@ -157,7 +161,7 @@ def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
         yield mock_entries
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def disable_rust_acceleration(monkeypatch: pytest.MonkeyPatch) -> None:
     """Force tests to use Python implementations by disabling Rust acceleration.
 

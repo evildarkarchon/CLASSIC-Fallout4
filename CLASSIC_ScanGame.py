@@ -23,8 +23,8 @@ from pathlib import Path
 from typing import Literal
 
 from ClassicLib import msg_info
-from ClassicLib.AsyncBridge import create_sync_wrapper
-from ClassicLib.ScanGame import (
+from ClassicLib.core.async_bridge import create_sync_wrapper
+from ClassicLib.scanning.game import (
     generate_game_combined_result,
     generate_game_combined_result_async,
     generate_mods_combined_result,
@@ -33,9 +33,9 @@ from ClassicLib.ScanGame import (
     manage_game_files_async,
     write_combined_results_async,
 )
-from ClassicLib.ScanGame.Config import TEST_MODE
-from ClassicLib.ScanGame.ScanGameCore import ScanGameCore
-from ClassicLib.SetupCoordinator import SetupCoordinator
+from ClassicLib.scanning.game.config import TEST_MODE
+from ClassicLib.scanning.game.core import ScanGameCore
+from ClassicLib.support.setup import SetupCoordinator
 
 
 # ================================================

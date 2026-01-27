@@ -22,7 +22,7 @@ class TestQtCompatibility:
         """Test that HAS_QT is True when PySide6 is available."""
         # Clear the module from cache to force reimport
         modules_to_clear = [
-            "ClassicLib.MessageHandler.qt_compat",
+            "ClassicLib.messaging.qt_compat",
         ]
         for mod in modules_to_clear:
             if mod in sys.modules:
@@ -43,7 +43,7 @@ class TestQtCompatibility:
             "sys.modules", {"PySide6": MagicMock(), "PySide6.QtCore": mock_pyside_core, "PySide6.QtWidgets": mock_pyside_widgets}
         ):
             # Import the module (this will trigger the try/except block)
-            from ClassicLib.MessageHandler.qt_compat import HAS_QT, QObject, QWidget
+            from ClassicLib.messaging.qt_compat import HAS_QT, QObject, QWidget
 
             # Verify HAS_QT is True and we get real Qt classes
             assert HAS_QT is True
@@ -55,7 +55,7 @@ class TestQtCompatibility:
         # This test verifies the behavior when PySide6 is not available.
         # Since we can't reliably force HAS_QT to be False when real Qt is installed,
         # we'll skip this test if real Qt is available.
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT
+        from ClassicLib.messaging.qt_compat import HAS_QT
 
         if HAS_QT:
             pytest.skip("Cannot test dummy Qt behavior when real PySide6 is installed")
@@ -66,7 +66,7 @@ class TestQtCompatibility:
     def test_dummy_qobject_creation(self):
         """Test creation of dummy QObject when Qt is not available."""
         # Import the dummy class directly
-        from ClassicLib.MessageHandler.qt_compat import QObject
+        from ClassicLib.messaging.qt_compat import QObject
 
         # Should be able to create instances without error
         obj = QObject()
@@ -74,14 +74,14 @@ class TestQtCompatibility:
 
     def test_dummy_qwidget_creation(self):
         """Test creation of dummy QWidget when Qt is not available."""
-        from ClassicLib.MessageHandler.qt_compat import QWidget
+        from ClassicLib.messaging.qt_compat import QWidget
 
         widget = QWidget()
         assert widget is not None
 
     def test_dummy_qthread_current_thread(self):
         """Test dummy QThread.currentThread method."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QThread
+        from ClassicLib.messaging.qt_compat import HAS_QT, QThread
 
         QThread()
         current = QThread.currentThread()
@@ -97,7 +97,7 @@ class TestQtCompatibility:
 
     def test_dummy_qmessagebox_creation_and_methods(self):
         """Test dummy QMessageBox creation and method calls."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox
+        from ClassicLib.messaging.qt_compat import HAS_QT, QMessageBox
 
         # Skip this test if real Qt is available to prevent dialog display
         if HAS_QT:
@@ -129,7 +129,7 @@ class TestQtCompatibility:
 
     def test_dummy_qprogressdialog_creation_and_methods(self):
         """Test dummy QProgressDialog creation and method calls."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QProgressDialog
+        from ClassicLib.messaging.qt_compat import HAS_QT, QProgressDialog
 
         # Skip this test if real Qt is available to prevent dialog display
         if HAS_QT:
@@ -160,7 +160,7 @@ class TestQtCompatibility:
 
     def test_dummy_signal_creation_and_methods(self):
         """Test dummy Signal creation and method calls."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, Signal
+        from ClassicLib.messaging.qt_compat import HAS_QT, Signal
 
         # Test creation with no args
         signal = Signal()
@@ -188,7 +188,7 @@ class TestQtCompatibility:
 
     def test_all_exports_available(self):
         """Test that all expected exports are available."""
-        from ClassicLib.MessageHandler import qt_compat
+        from ClassicLib.messaging import qt_compat
 
         expected_exports = [
             "HAS_QT",
@@ -206,7 +206,7 @@ class TestQtCompatibility:
 
     def test_qmessagebox_icon_enum_values(self):
         """Test QMessageBox.Icon enum has correct integer values."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox
+        from ClassicLib.messaging.qt_compat import HAS_QT, QMessageBox
 
         if HAS_QT:
             # Real Qt has different enum values
@@ -222,7 +222,7 @@ class TestQtCompatibility:
 
     def test_dummy_classes_handle_arbitrary_args(self):
         """Test that dummy classes handle arbitrary arguments gracefully."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox, QProgressDialog, Signal
+        from ClassicLib.messaging.qt_compat import HAS_QT, QMessageBox, QProgressDialog, Signal
 
         if HAS_QT:
             # Real Qt classes have strict argument requirements
@@ -248,7 +248,7 @@ class TestQtCompatibility:
 
     def test_compatibility_layer_isolation(self):
         """Test that dummy classes don't interfere with each other."""
-        from ClassicLib.MessageHandler.qt_compat import HAS_QT, QMessageBox, QObject, QWidget
+        from ClassicLib.messaging.qt_compat import HAS_QT, QMessageBox, QObject, QWidget
 
         # Skip this test if real Qt is available to prevent dialog display
         if HAS_QT:
@@ -352,10 +352,10 @@ class TestQtCompatibility:
         mock_progress_class.side_effect = create_mock_progress
 
         with (
-            patch("ClassicLib.MessageHandler.qt_compat.QMessageBox", mock_msgbox_class),
-            patch("ClassicLib.MessageHandler.qt_compat.QProgressDialog", mock_progress_class),
+            patch("ClassicLib.messaging.qt_compat.QMessageBox", mock_msgbox_class),
+            patch("ClassicLib.messaging.qt_compat.QProgressDialog", mock_progress_class),
         ):
-            from ClassicLib.MessageHandler.qt_compat import QMessageBox, QProgressDialog
+            from ClassicLib.messaging.qt_compat import QMessageBox, QProgressDialog
 
             # Create many instances to test memory efficiency
             instances = []

@@ -136,7 +136,7 @@ class TestFFIErrorConditions:
         mock_rust_analyzer = MagicMock()
         mock_rust_analyzer.extract_formids.side_effect = TypeError("Mocked type error")
 
-        with patch("ClassicLib.rust.formid_rust.FormIDAnalyzer", return_value=mock_rust_analyzer):
+        with patch("ClassicLib.integration.rust.formid_rust.FormIDAnalyzer", return_value=mock_rust_analyzer):
             analyzer = get_formid_analyzer(mock_yamldata, True, False)  # This now returns the mock_rust_analyzer
 
             # Test with wrong types
@@ -300,8 +300,14 @@ class TestFFIErrorConditions:
             # Mock loadorder_scan_log which is called internally by analyze_all
             mock_loadorder_scan_log_return = (corrupt_data, False, False)  # Expected tuple return
             with (
-                patch("ClassicLib.python.plugin_py.PythonPluginAnalyzer.loadorder_scan_log", return_value=mock_loadorder_scan_log_return),
-                patch("ClassicLib.rust.plugin_rust.RustPluginAnalyzer.loadorder_scan_log", return_value=mock_loadorder_scan_log_return),
+                patch(
+                    "ClassicLib.integration.python.plugin_py.PythonPluginAnalyzer.loadorder_scan_log",
+                    return_value=mock_loadorder_scan_log_return,
+                ),
+                patch(
+                    "ClassicLib.integration.rust.plugin_rust.RustPluginAnalyzer.loadorder_scan_log",
+                    return_value=mock_loadorder_scan_log_return,
+                ),
             ):
                 try:
                     result = analyzer.analyze_all()

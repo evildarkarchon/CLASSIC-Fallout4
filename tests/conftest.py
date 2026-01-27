@@ -40,6 +40,7 @@ from tests.fixtures.concurrency_fixtures import *  # noqa: F403
 from tests.fixtures.crash_log_fixtures import *  # noqa: F403
 from tests.fixtures.data_fixtures import *  # noqa: F403
 from tests.fixtures.database_pool_fixtures import *  # noqa: F403
+from tests.fixtures.fcx_fixtures import *  # noqa: F403
 from tests.fixtures.game_fixtures import *  # noqa: F403
 from tests.fixtures.gui_settings_fixtures import *  # noqa: F403
 from tests.fixtures.io_fixtures import *  # noqa: F403

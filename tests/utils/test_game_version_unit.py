@@ -12,7 +12,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib import Constants
+from ClassicLib.core import constants as Constants
 from ClassicLib.Utils.version_utils import get_game_version
 
 pytestmark = [pytest.mark.unit]
