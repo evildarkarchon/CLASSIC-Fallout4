@@ -12,6 +12,7 @@ from ClassicLib.Utils.version_utils import crashgen_version_gen
 
 pytest.skip("Deprecated, the test suite no longer uses xdist", allow_module_level=True)
 
+
 @pytest.mark.xdist_group("singleton_isolation")
 class TestSingletonIsolation:
     """Test suite to verify singleton and cache isolation."""

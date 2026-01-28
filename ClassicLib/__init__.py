@@ -30,15 +30,8 @@ Usage:
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import (
     DB_PATHS,
-    F4SE_VERSIONS,
-    FO4_VERSIONS,
-    NG_F4SE_VERSION,
-    NG_VERSION,
     NULL_VERSION,
-    OG_F4SE_VERSION,
-    OG_VERSION,
     SETTINGS_IGNORE_NONE,
-    VR_VERSION,
     YAML,
     GameID,
 )
@@ -87,6 +80,10 @@ from ClassicLib.messaging import (
     msg_success,
     msg_warning,
 )
+from ClassicLib.support.versions import (
+    VersionRegistry,
+    get_version_registry,
+)
 from ClassicLib.support.xse import xse_check_hashes, xse_check_integrity
 
 # NOTE: Update module is temporarily excluded due to external dependency issues
@@ -120,17 +117,13 @@ __all__ = [
     "AsyncBridge",
     # Constants
     "DB_PATHS",
-    "F4SE_VERSIONS",
-    "FO4_VERSIONS",
     "GameID",
-    "NG_F4SE_VERSION",
-    "NG_VERSION",
     "NULL_VERSION",
-    "OG_F4SE_VERSION",
-    "OG_VERSION",
     "SETTINGS_IGNORE_NONE",
-    "VR_VERSION",
     "YAML",
+    # VersionRegistry (replaces deprecated version constants)
+    "VersionRegistry",
+    "get_version_registry",
     # FileIOCore
     "FileIOCore",
     "read_file_sync",

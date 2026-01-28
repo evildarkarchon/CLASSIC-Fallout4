@@ -54,110 +54,11 @@ pub use classic_version_registry_core::{
 };
 
 // ============================================================================
-// Version Constants (DEPRECATED - Use VersionRegistry instead)
+// Version Constants
 // ============================================================================
 
 /// Null/invalid version identifier (0.0.0).
 pub const NULL_VERSION: Version = Version::new(0, 0, 0);
-
-/// Fallout 4 Original/OG version (1.10.163.0).
-///
-/// This is the final pre-Next-Gen update version.
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_by_id("FO4_OG")`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_by_id(\"FO4_OG\") instead"
-)]
-pub const FALLOUT4_OG_VERSION: Version = Version::new(1, 10, 163);
-
-/// Fallout 4 Next-Gen version (1.10.984.0).
-///
-/// This is the Next-Gen update version with updated engine features.
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_by_id("FO4_NG")`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_by_id(\"FO4_NG\") instead"
-)]
-pub const FALLOUT4_NG_VERSION: Version = Version::new(1, 10, 984);
-
-/// Fallout 4 VR version (1.2.72.0).
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_by_id("FO4_VR")`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_by_id(\"FO4_VR\") instead"
-)]
-pub const FALLOUT4_VR_VERSION: Version = Version::new(1, 2, 72);
-
-/// F4SE version for Original/OG Fallout 4 (0.6.23).
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_by_id("FO4_OG")?.xse`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_by_id(\"FO4_OG\")?.xse instead"
-)]
-pub const F4SE_OG_VERSION: Version = Version::new(0, 6, 23);
-
-/// F4SE version for Next-Gen Fallout 4 (0.7.2).
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_by_id("FO4_NG")?.xse`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_by_id(\"FO4_NG\")?.xse instead"
-)]
-pub const F4SE_NG_VERSION: Version = Version::new(0, 7, 2);
-
-/// All supported Fallout 4 game versions (OG and NG).
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_all_for_game("Fallout4", Some(false))`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_all_for_game(\"Fallout4\", Some(false)) instead"
-)]
-#[allow(deprecated)]
-pub const FALLOUT4_VERSIONS: [Version; 2] = [FALLOUT4_OG_VERSION, FALLOUT4_NG_VERSION];
-
-/// All supported Fallout 4 game versions including VR (OG, NG, and VR).
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry().get_all_for_game("Fallout4", None)`](get_version_registry) instead.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry().get_all_for_game(\"Fallout4\", None) instead"
-)]
-#[allow(deprecated)]
-pub const FALLOUT4_ALL_VERSIONS: [Version; 3] = [
-    FALLOUT4_OG_VERSION,
-    FALLOUT4_NG_VERSION,
-    FALLOUT4_VR_VERSION,
-];
-
-/// All supported F4SE versions (OG and NG).
-///
-/// # Deprecated
-///
-/// Use [`get_version_registry()`](get_version_registry) to get XSE version info per game version.
-#[deprecated(
-    since = "8.0.0",
-    note = "Use get_version_registry() to get XSE version info per game version"
-)]
-#[allow(deprecated)]
-pub const F4SE_VERSIONS: [Version; 2] = [F4SE_OG_VERSION, F4SE_NG_VERSION];
 
 // ============================================================================
 // Fallout 4 Version Variants
@@ -1040,23 +941,8 @@ mod tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
-    fn test_version_constants() {
+    fn test_null_version() {
         assert_eq!(NULL_VERSION, Version::new(0, 0, 0));
-        assert_eq!(FALLOUT4_OG_VERSION, Version::new(1, 10, 163));
-        assert_eq!(FALLOUT4_NG_VERSION, Version::new(1, 10, 984));
-        assert_eq!(FALLOUT4_VR_VERSION, Version::new(1, 2, 72));
-        assert_eq!(F4SE_OG_VERSION, Version::new(0, 6, 23));
-        assert_eq!(F4SE_NG_VERSION, Version::new(0, 7, 2));
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_version_arrays() {
-        assert_eq!(FALLOUT4_VERSIONS.len(), 2);
-        assert_eq!(F4SE_VERSIONS.len(), 2);
-        assert!(FALLOUT4_VERSIONS.contains(&FALLOUT4_OG_VERSION));
-        assert!(FALLOUT4_VERSIONS.contains(&FALLOUT4_NG_VERSION));
     }
 
     #[test]
@@ -1389,14 +1275,5 @@ mod tests {
         let json = serde_json::to_string(&version).unwrap();
         let deserialized: Fallout4Version = serde_json::from_str(&json).unwrap();
         assert_eq!(version, deserialized);
-    }
-
-    #[test]
-    #[allow(deprecated)]
-    fn test_fallout4_all_versions_array() {
-        assert_eq!(FALLOUT4_ALL_VERSIONS.len(), 3);
-        assert!(FALLOUT4_ALL_VERSIONS.contains(&FALLOUT4_OG_VERSION));
-        assert!(FALLOUT4_ALL_VERSIONS.contains(&FALLOUT4_NG_VERSION));
-        assert!(FALLOUT4_ALL_VERSIONS.contains(&FALLOUT4_VR_VERSION));
     }
 }

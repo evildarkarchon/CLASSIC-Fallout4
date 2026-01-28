@@ -8,17 +8,15 @@ Architecture:
     - classic-constants-py: Python bindings (this module - PyO3 adapters)
 
 Features:
-    - Version constants for Fallout 4 and F4SE
     - YAML file enumeration for type-safe file references
     - Game identifiers for supported Bethesda games
+    - Fallout 4 version variants enumeration
     - Settings validation constants
+
+For version detection and parsing, use the `classic_version` module instead.
 
 Usage:
     import classic_constants
-
-    # Access version constants
-    print(f"OG Version: {classic_constants.FALLOUT4_OG_VERSION}")
-    print(f"NG Version: {classic_constants.FALLOUT4_NG_VERSION}")
 
     # Use YAML file enumeration
     settings = classic_constants.YamlFile.Settings
@@ -30,28 +28,25 @@ Usage:
     print(game.exe_name())  # "Fallout4.exe"
     print(game.is_vr())  # False
 
+    # Use Fallout 4 version variants
+    version = classic_constants.Fallout4Version.NextGen
+    print(version.display_name())  # "Fallout 4 Next-Gen"
+
     # Check settings validation
     if classic_constants.must_not_be_none("Root_Folder_Game"):
         print("This setting must have a value")
+
+    # For version constants, use classic_version module
+    import classic_version
+    print(classic_version.is_known_fallout4_version((1, 10, 163)))
 """
 
 from __future__ import annotations
 
 __version__: str
 
-# Version Constants
+# Null version constant
 NULL_VERSION: str
-FALLOUT4_OG_VERSION: str
-FALLOUT4_NG_VERSION: str
-FALLOUT4_AE_VERSION: str
-FALLOUT4_VR_VERSION: str
-F4SE_OG_VERSION: str
-F4SE_NG_VERSION: str
-F4SE_AE_VERSION: str
-
-# Version Arrays
-FALLOUT4_VERSIONS: list[str]
-F4SE_VERSIONS: list[str]
 
 # Settings Constants
 SETTINGS_IGNORE_NONE: list[str]

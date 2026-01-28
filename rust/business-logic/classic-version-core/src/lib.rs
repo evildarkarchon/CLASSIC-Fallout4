@@ -37,18 +37,13 @@ use semver::Version;
 use std::cmp::Ordering;
 use thiserror::Error;
 
-// Re-export version constants from classic-constants-core
-// These are deprecated - use get_version_registry() instead
-#[allow(deprecated)]
-pub use classic_constants_core::{
-    F4SE_NG_VERSION, F4SE_OG_VERSION, F4SE_VERSIONS, FALLOUT4_NG_VERSION, FALLOUT4_OG_VERSION,
-    FALLOUT4_VERSIONS, FALLOUT4_VR_VERSION, NULL_VERSION,
-};
-
-// Re-export VersionRegistry for new code
+// Re-export VersionRegistry for version information
 pub use classic_constants_core::{
     VersionInfo, VersionRegistry, VersionRegistryError, get_version_registry,
 };
+
+// Re-export NULL_VERSION for convenience
+pub use classic_constants_core::NULL_VERSION;
 
 /// Version parsing and comparison errors.
 #[derive(Error, Debug)]
@@ -507,18 +502,58 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_is_known_fallout4_version() {
-        assert!(is_known_fallout4_version(&FALLOUT4_OG_VERSION));
-        assert!(is_known_fallout4_version(&FALLOUT4_NG_VERSION));
+        // Use VersionRegistry to get known versions
+        let registry = get_version_registry();
+
+        // Get OG version from registry
+        if let Some(og_info) = registry.get_by_id("FO4_OG") {
+            let og_version = Version::new(
+                u64::from(og_info.version.major),
+                u64::from(og_info.version.minor),
+                u64::from(og_info.version.patch),
+            );
+            assert!(is_known_fallout4_version(&og_version));
+        }
+
+        // Get NG version from registry
+        if let Some(ng_info) = registry.get_by_id("FO4_NG") {
+            let ng_version = Version::new(
+                u64::from(ng_info.version.major),
+                u64::from(ng_info.version.minor),
+                u64::from(ng_info.version.patch),
+            );
+            assert!(is_known_fallout4_version(&ng_version));
+        }
+
+        // Unknown version should not be known
         assert!(!is_known_fallout4_version(&Version::new(9, 9, 9)));
     }
 
     #[test]
-    #[allow(deprecated)]
     fn test_is_known_f4se_version() {
-        assert!(is_known_f4se_version(&F4SE_OG_VERSION));
-        assert!(is_known_f4se_version(&F4SE_NG_VERSION));
+        // Use VersionRegistry to get known F4SE versions
+        let registry = get_version_registry();
+
+        // Get OG F4SE version from registry
+        if let Some(og_info) = registry.get_by_id("FO4_OG") {
+            if let Some(xse) = &og_info.xse {
+                if let Some(parsed) = try_parse_version(&xse.compatible_version) {
+                    assert!(is_known_f4se_version(&parsed));
+                }
+            }
+        }
+
+        // Get NG F4SE version from registry
+        if let Some(ng_info) = registry.get_by_id("FO4_NG") {
+            if let Some(xse) = &ng_info.xse {
+                if let Some(parsed) = try_parse_version(&xse.compatible_version) {
+                    assert!(is_known_f4se_version(&parsed));
+                }
+            }
+        }
+
+        // Unknown version should not be known
         assert!(!is_known_f4se_version(&Version::new(9, 9, 9)));
     }
 

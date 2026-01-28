@@ -12,15 +12,8 @@ This module provides the fundamental infrastructure used throughout CLASSIC:
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import (
     DB_PATHS,
-    F4SE_VERSIONS,
-    FO4_VERSIONS,
-    NG_F4SE_VERSION,
-    NG_VERSION,
     NULL_VERSION,
-    OG_F4SE_VERSION,
-    OG_VERSION,
     SETTINGS_IGNORE_NONE,
-    VR_VERSION,
     YAML,
     GameID,
 )
@@ -40,23 +33,23 @@ from ClassicLib.core.registry import (
     is_registered,
     register,
 )
+from ClassicLib.support.versions import (
+    VersionRegistry,
+    get_version_registry,
+)
 
 __all__ = [
     # AsyncBridge
     "AsyncBridge",
     # Constants
     "DB_PATHS",
-    "F4SE_VERSIONS",
-    "FO4_VERSIONS",
     "GameID",
-    "NG_F4SE_VERSION",
-    "NG_VERSION",
     "NULL_VERSION",
-    "OG_F4SE_VERSION",
-    "OG_VERSION",
     "SETTINGS_IGNORE_NONE",
-    "VR_VERSION",
     "YAML",
+    # VersionRegistry (replaces deprecated version constants)
+    "VersionRegistry",
+    "get_version_registry",
     # Logger
     "logger",
     # PerformanceMonitor

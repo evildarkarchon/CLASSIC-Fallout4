@@ -1,20 +1,18 @@
 //! Python bindings for classic-constants-core.
 //!
-//! This module provides Python access to all application constants, version
-//! identifiers, YAML file enumerations, game identifiers, and Fallout 4 version
+//! This module provides Python access to all application constants,
+//! YAML file enumerations, game identifiers, and Fallout 4 version
 //! variants defined in the core constants crate.
+//!
+//! For version information, use the `classic_version` module instead.
 //!
 //! # Python Usage
 //!
 //! ```python
 //! from classic_constants import (
 //!     YamlFile, GameId, Fallout4Version,
-//!     FALLOUT4_OG_VERSION, FALLOUT4_NG_VERSION,
 //!     SETTINGS_IGNORE_NONE, must_not_be_none
 //! )
-//!
-//! # Use version constants
-//! print(f"OG Version: {FALLOUT4_OG_VERSION}")
 //!
 //! # Use YAML file enumeration
 //! settings_file = YamlFile.Settings
@@ -28,6 +26,10 @@
 //! version = Fallout4Version.NextGen
 //! print(version.display_name())  # "Next-Gen"
 //! print(version.is_vr())  # False
+//!
+//! # For version constants, use classic_version instead
+//! import classic_version
+//! print(classic_version.is_known_fallout4_version((1, 10, 163)))
 //! ```
 
 use pyo3::prelude::*;
@@ -757,19 +759,17 @@ fn must_not_be_none(key: &str) -> bool {
 /// This module provides zero-cost compile-time constants and type-safe enumerations
 /// used throughout CLASSIC:
 ///
-/// - Version constants (FALLOUT4_OG_VERSION, FALLOUT4_NG_VERSION, etc.)
 /// - YAML file enumeration (YamlFile)
 /// - Game identifiers (GameId)
+/// - Fallout 4 version variants (Fallout4Version)
 /// - Settings constants (SETTINGS_IGNORE_NONE)
+///
+/// For version detection and parsing, use the `classic_version` module.
 ///
 /// # Examples
 ///
 /// ```python
 /// import classic_constants
-///
-/// # Access version constants
-/// print(f"OG Version: {classic_constants.FALLOUT4_OG_VERSION}")
-/// print(f"NG Version: {classic_constants.FALLOUT4_NG_VERSION}")
 ///
 /// # Use YAML file enumeration
 /// settings = classic_constants.YamlFile.Settings
@@ -778,6 +778,10 @@ fn must_not_be_none(key: &str) -> bool {
 /// # Use game identifiers
 /// game = classic_constants.GameId.Fallout4
 /// print(game.exe_name())
+///
+/// # Use Fallout 4 version variants
+/// version = classic_constants.Fallout4Version.NextGen
+/// print(version.display_name())
 ///
 /// # Check settings validation
 /// if classic_constants.must_not_be_none("Root_Folder_Game"):
@@ -790,76 +794,8 @@ fn classic_constants(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyGameId>()?;
     m.add_class::<PyFallout4Version>()?; // New in v8.0
 
-    // Add version constants from VersionRegistry
-    // These are deprecated - use Fallout4Version.Original.version() etc. instead
-    let registry = classic_constants_core::get_version_registry();
-
-    // Helper function to get version string or fallback
-    let get_game_version = |id: &str, fallback: &str| -> String {
-        registry
-            .get_by_id(id)
-            .map(|info| info.version.to_string())
-            .unwrap_or_else(|| fallback.to_string())
-    };
-
-    // Helper function to get XSE version string or fallback
-    let get_xse_version = |id: &str, fallback: &str| -> String {
-        registry
-            .get_by_id(id)
-            .and_then(|info| info.xse.as_ref())
-            .map(|xse| xse.compatible_version.clone())
-            .unwrap_or_else(|| fallback.to_string())
-    };
-
-    // Add version constants from VersionRegistry (with hardcoded fallbacks)
-    // DEPRECATED: Use Fallout4Version.Original.version() etc. instead
+    // Add NULL_VERSION constant
     m.add("NULL_VERSION", "0.0.0")?;
-    m.add(
-        "FALLOUT4_OG_VERSION",
-        get_game_version("FO4_OG", "1.10.163.0"),
-    )?;
-    m.add(
-        "FALLOUT4_NG_VERSION",
-        get_game_version("FO4_NG", "1.10.984.0"),
-    )?;
-    m.add(
-        "FALLOUT4_VR_VERSION",
-        get_game_version("FO4_VR", "1.2.72.0"),
-    )?;
-    m.add("F4SE_OG_VERSION", get_xse_version("FO4_OG", "0.6.23"))?;
-    m.add("F4SE_NG_VERSION", get_xse_version("FO4_NG", "0.7.2"))?;
-    m.add(
-        "FALLOUT4_AE_VERSION",
-        get_game_version("FO4_AE", "1.11.191.0"),
-    )?;
-    m.add("F4SE_AE_VERSION", get_xse_version("FO4_AE", "0.7.3"))?;
-
-    // Add version arrays from VersionRegistry
-    // DEPRECATED: Use get_version_registry().get_all_for_game() instead
-    let fo4_versions: Vec<String> = registry
-        .get_all_for_game("Fallout4", Some(false))
-        .iter()
-        .map(|info| info.version.to_string())
-        .collect();
-    let fo4_versions = if fo4_versions.is_empty() {
-        vec!["1.10.163.0".to_string(), "1.10.984.0".to_string()]
-    } else {
-        fo4_versions
-    };
-    m.add("FALLOUT4_VERSIONS", fo4_versions)?;
-
-    let f4se_versions: Vec<String> = registry
-        .get_all_for_game("Fallout4", Some(false))
-        .iter()
-        .filter_map(|info| info.xse.as_ref())
-        .map(|xse| xse.compatible_version.clone())
-        .collect();
-    let f4se_versions = if f4se_versions.is_empty() {
-        vec!["0.6.23".to_string(), "0.7.2".to_string()]
-    } else {
-        f4se_versions
-    };
-    m.add("F4SE_VERSIONS", f4se_versions)?;
 
     // Add settings constants
     m.add(

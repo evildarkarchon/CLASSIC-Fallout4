@@ -136,37 +136,6 @@ class _DeprecatedVersion:
         return self._value
 
 
-# Create deprecated version constants with runtime warnings
-OG_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
-    Version("1.10.163.0"),
-    "OG_VERSION",
-    "get_version_registry().get_by_id('FO4_OG').version",
-)
-NG_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
-    Version("1.10.984.0"),
-    "NG_VERSION",
-    "get_version_registry().get_by_id('FO4_NG').version",
-)
-VR_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
-    Version("1.2.72.0"),
-    "VR_VERSION",
-    "get_version_registry().get_by_id('FO4_VR').version",
-)
-OG_F4SE_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
-    Version("0.6.23"),
-    "OG_F4SE_VERSION",
-    "get_version_registry().get_by_id('FO4_OG').xse.compatible_version",
-)
-NG_F4SE_VERSION: Version = _DeprecatedVersion(  # type: ignore[assignment]
-    Version("0.7.2"),
-    "NG_F4SE_VERSION",
-    "get_version_registry().get_by_id('FO4_NG').xse.compatible_version",
-)
-
-# These tuples still use the deprecated constants but don't emit warnings themselves
-# (warning is emitted when accessing the tuple elements)
-FO4_VERSIONS: tuple[Version, Version] = (OG_VERSION, NG_VERSION)  # type: ignore[assignment]
-F4SE_VERSIONS: tuple[Version, Version] = (OG_F4SE_VERSION, NG_F4SE_VERSION)  # type: ignore[assignment]
 type GameID = (
     Literal["Fallout4", "Fallout4VR", "Skyrim", "Starfield"] | str
 )  # Entries must correspond to the game's Main ESM or EXE file name.
