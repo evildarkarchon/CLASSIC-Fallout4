@@ -1,6 +1,6 @@
 [package]
 name = "classic-message-py"
-version = "8.1.0"
+version = "8.2.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["CLASSIC Development Team"]

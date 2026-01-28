@@ -1,6 +1,6 @@
 [package]
 name = "classic-ui-shared"
-version = "8.1.0"
+version = "8.2.0"
 edition = "2024"
 authors = ["CLASSIC Team"]
 description = "Shared UI coordination logic for CLASSIC CLI, TUI, and GUI interfaces"

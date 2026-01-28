@@ -300,3 +300,7 @@ test_*.txt
 *_errors*.txt
 *_result.txt
 Classic Data/cache.yaml
+*.backup.*
+
+# Version Script Backups
+version_backups/
