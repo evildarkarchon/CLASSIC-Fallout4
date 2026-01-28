@@ -92,6 +92,8 @@ class TestInitialSetup:
         # Verify logging
         mock_logger.debug.assert_called_with("> > > STARTED 7.31.0")
 
+    @patch("ClassicLib.support.setup.docs_path_find")
+    @patch("ClassicLib.support.setup.game_path_find")
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
     @patch("ClassicLib.support.backup.BackupManager.run_backup")
@@ -108,6 +110,8 @@ class TestInitialSetup:
         mock_backup: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure_logging: MagicMock,
+        mock_game_find: MagicMock,
+        mock_docs_find: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test initial setup when game path is already configured."""
@@ -130,12 +134,12 @@ class TestInitialSetup:
         mock_backup.assert_called_once()
         mock_file_gen.assert_called_once()
 
-        # Path generation should NOT be called
-        with patch("ClassicLib.support.setup.docs_path_find") as mock_docs_find:
-            with patch("ClassicLib.support.setup.game_path_find") as mock_game_find:
-                mock_docs_find.assert_not_called()
-                mock_game_find.assert_not_called()
+        # Path generation should NOT be called when game_path is configured
+        mock_docs_find.assert_not_called()
+        mock_game_find.assert_not_called()
 
+    @patch("ClassicLib.support.setup.docs_path_find")
+    @patch("ClassicLib.support.setup.game_path_find")
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
     @patch("ClassicLib.io.yaml.yaml_cache")
@@ -148,6 +152,8 @@ class TestInitialSetup:
         mock_yaml_cache: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure: MagicMock,
+        mock_game_find: MagicMock,
+        mock_docs_find: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test that TypeError is raised when classic_ver is not a string."""
@@ -168,6 +174,8 @@ class TestInitialSetup:
         with pytest.raises(TypeError):
             coordinator.run_initial_setup()
 
+    @patch("ClassicLib.support.setup.docs_path_find")
+    @patch("ClassicLib.support.setup.game_path_find")
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
     @patch("ClassicLib.io.yaml.yaml_cache")
@@ -180,6 +188,8 @@ class TestInitialSetup:
         mock_yaml_cache: MagicMock,
         mock_file_gen: MagicMock,
         mock_configure: MagicMock,
+        mock_game_find: MagicMock,
+        mock_docs_find: MagicMock,
         coordinator: SetupCoordinator,
     ) -> None:
         """Test that TypeError is raised when game_name is not a string."""
