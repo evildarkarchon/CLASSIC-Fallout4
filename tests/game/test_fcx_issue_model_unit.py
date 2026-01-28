@@ -178,11 +178,10 @@ class TestGenerateGameCombinedResultTuple:
 
         # Mock settings to return None (early return path)
         with (
-            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
+            patch("ClassicLib.scanning.game.orchestrator.yaml_settings") as mock_yaml_settings,
+            patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value=""),
         ):
             mock_yaml_settings.return_value = None
-            mock_global_registry.get_vr.return_value = ""
 
             # Call async function
             result = await generate_game_combined_result_async()
@@ -203,11 +202,10 @@ class TestGenerateGameCombinedResultTuple:
 
         # Mock settings to return None (early return path)
         with (
-            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry") as mock_global_registry,
+            patch("ClassicLib.scanning.game.orchestrator.yaml_settings") as mock_yaml_settings,
+            patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value=""),
         ):
             mock_yaml_settings.return_value = None
-            mock_global_registry.get_vr.return_value = ""
 
             # Call sync function
             result = generate_game_combined_result()
@@ -247,7 +245,7 @@ class TestFCXModeHandlerPhase5Integration:
         """Test that FCXModeHandler properly unpacks tuple from scan_game_files()."""
         from unittest.mock import Mock, patch
 
-        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
+        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
 
         # Reset state
         FCXModeHandlerFragments.reset_fcx_checks()
@@ -294,7 +292,7 @@ class TestFCXModeHandlerPhase5Integration:
         """Test that FCXModeHandler handles empty issues list correctly."""
         from unittest.mock import Mock, patch
 
-        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
+        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
 
         # Reset state
         FCXModeHandlerFragments.reset_fcx_checks()

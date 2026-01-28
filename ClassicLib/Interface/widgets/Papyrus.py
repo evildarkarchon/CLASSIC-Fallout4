@@ -16,7 +16,7 @@ from datetime import datetime
 
 from PySide6.QtCore import QMutex, QObject, QThread, Signal, Slot
 
-from ClassicLib.PapyrusLog import papyrus_logging
+from ClassicLib.support.papyrus import papyrus_logging
 
 
 @dataclass

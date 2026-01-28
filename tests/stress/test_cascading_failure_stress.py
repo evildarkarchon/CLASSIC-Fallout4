@@ -238,8 +238,24 @@ Error injection point: {error_point}
 
                     except Exception as e:
                         # Categorize error as contained vs system error
+                        # Include domain-specific keywords AND common I/O error terms
+                        # since validate_path() raises "Path does not exist: ..." messages
                         error_message = str(e).lower()
-                        if any(keyword in error_message for keyword in ["file", "formid", "plugin", "pattern"]):
+                        contained_keywords = [
+                            "file",
+                            "formid",
+                            "plugin",
+                            "pattern",
+                            "path",
+                            "exist",
+                            "not found",
+                            "no such",
+                            "permission",
+                            "access",
+                            "encoding",
+                            "decode",
+                        ]
+                        if any(keyword in error_message for keyword in contained_keywords):
                             test_result["contained_errors"] += 1
                         else:
                             test_result["system_errors"] += 1

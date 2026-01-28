@@ -33,7 +33,7 @@ def cleanup_registry():
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, original_gui_mode)
     elif GlobalRegistry.is_registered(GlobalRegistry.Keys.IS_GUI_MODE):
         # Remove the key if it wasn't there originally
-        GlobalRegistry._registry.pop(GlobalRegistry.Keys.IS_GUI_MODE, None)
+        GlobalRegistry.unregister(GlobalRegistry.Keys.IS_GUI_MODE)
 
 
 @pytest.mark.unit

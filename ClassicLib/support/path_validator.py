@@ -140,8 +140,8 @@ class PathValidator:
             path scenarios internally.
 
         """
+        from ClassicLib.io.yaml import classic_settings, yaml_settings
         from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
-        from ClassicLib.YamlSettings import classic_settings, yaml_settings
 
         # Get the custom scan path from settings
         custom_scan_path: str | None = classic_settings(str, "SCAN Custom Path")
@@ -195,7 +195,7 @@ class PathValidator:
                 returns False.
 
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         # Handle None and empty strings
         if path is None or (isinstance(path, str) and not path.strip()):
@@ -244,7 +244,7 @@ class PathValidator:
         correctly configured. If the path is invalid or the required executable
         is missing, the setting is cleared and a warning is logged.
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         vr_suffix = get_vr()
         game_name = get_game()
@@ -274,7 +274,7 @@ class PathValidator:
         cleared and a warning is logged. INI files are not required to exist
         as the game may not have been run yet.
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         vr_suffix = get_vr()
 
@@ -302,7 +302,7 @@ class PathValidator:
         internal utilities, including checks against provided settings and descriptions.
         The mods folder can be empty, so no required files are enforced during validation.
         """
-        from ClassicLib.YamlSettings import classic_settings
+        from ClassicLib.io.yaml import classic_settings
 
         # Get the mods folder path from settings
         mods_path: str | None = classic_settings(str, "MODS Folder Path")
@@ -326,7 +326,7 @@ class PathValidator:
         and a warning is logged. INI files are not required to exist as they
         may not have been created yet.
         """
-        from ClassicLib.YamlSettings import classic_settings
+        from ClassicLib.io.yaml import classic_settings
 
         # Get the INI folder path from settings
         ini_path: str | None = classic_settings(str, "INI Folder Path")

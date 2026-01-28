@@ -46,8 +46,8 @@ def get_game_version_options() -> list[tuple[str, str]]:
         >>> # Subsequent options come from VersionRegistry
 
     """
-    from ClassicLib.Logger import logger
-    from ClassicLib.VersionRegistry import get_version_registry
+    from ClassicLib.core.logger import logger
+    from ClassicLib.support.versions import get_version_registry
 
     # Always start with Auto-detect option
     options: list[tuple[str, str]] = [("Auto-detect", "auto")]
@@ -98,8 +98,8 @@ def get_version_tooltip() -> str:
         Formatted tooltip string for the Game Version dropdown.
 
     """
-    from ClassicLib.Logger import logger
-    from ClassicLib.VersionRegistry import get_version_registry
+    from ClassicLib.core.logger import logger
+    from ClassicLib.support.versions import get_version_registry
 
     # Build tooltip dynamically
     tooltip_lines = ["Select your Fallout 4 version:", "• Auto-detect - Automatically determine version from game files"]

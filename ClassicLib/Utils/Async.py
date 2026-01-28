@@ -11,6 +11,7 @@ This replaces the legacy ClassicLib.AsyncUtilities and ClassicLib.AsyncUtilities
 
 import asyncio
 import contextlib
+import inspect
 import time
 from collections.abc import Awaitable, Callable, Iterable
 from concurrent.futures import Executor
@@ -351,7 +352,7 @@ async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent
 
         async def bounded_func(item: T) -> Any:
             async with semaphore:
-                if asyncio.iscoroutinefunction(func):
+                if inspect.iscoroutinefunction(func):
                     return await func(item)
                 loop = asyncio.get_running_loop()
                 return await loop.run_in_executor(None, func, item)
@@ -359,7 +360,7 @@ async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent
     else:
 
         async def bounded_func(item: T) -> Any:
-            if asyncio.iscoroutinefunction(func):
+            if inspect.iscoroutinefunction(func):
                 return await func(item)
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(None, func, item)
@@ -389,7 +390,7 @@ async def async_map_smart(
 
         # Time with executor
         start = time.perf_counter()
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
             await func(sample_item)
         else:
             loop = asyncio.get_running_loop()
@@ -398,7 +399,7 @@ async def async_map_smart(
 
         # Time without executor (if not async)
         without_executor_time = float("inf")
-        if not asyncio.iscoroutinefunction(func):
+        if not inspect.iscoroutinefunction(func):
             start = time.perf_counter()
             func(sample_item)
             without_executor_time = time.perf_counter() - start
@@ -408,7 +409,7 @@ async def async_map_smart(
         use_executor = "never" if without_executor_time * 2 < with_executor_time else "always"
 
         # Log the decision for debugging
-        from ClassicLib.Logger import logger
+        from ClassicLib.core.logger import logger
 
         logger.debug(
             f"Profiled {func.__name__ if hasattr(func, '__name__') else 'function'}: "
@@ -422,7 +423,7 @@ async def async_map_smart(
 
         async def bounded_func(item: T) -> Any:
             async with semaphore:
-                if asyncio.iscoroutinefunction(func):
+                if inspect.iscoroutinefunction(func):
                     return await func(item)
                 if use_executor == "never":
                     # Direct execution for fast operations
@@ -437,7 +438,7 @@ async def async_map_smart(
     else:
 
         async def bounded_func(item: T) -> Any:
-            if asyncio.iscoroutinefunction(func):
+            if inspect.iscoroutinefunction(func):
                 return await func(item)
             if use_executor == "never":
                 return func(item)
@@ -469,7 +470,7 @@ async def batch_process(items: list[T], processor: Callable[[T], Any], batch_siz
     for i in range(0, len(items), batch_size):
         batch = items[i : i + batch_size]
 
-        if asyncio.iscoroutinefunction(processor):
+        if inspect.iscoroutinefunction(processor):
             batch_coros = [processor(item) for item in batch]
         else:
             # If processor is not async, run it in executor
@@ -503,7 +504,7 @@ async def batch_process_smart(
     for i in range(0, len(items), batch_size):
         batch = items[i : i + batch_size]
 
-        if asyncio.iscoroutinefunction(processor):
+        if inspect.iscoroutinefunction(processor):
             batch_coros = [processor(item) for item in batch]
         elif use_executor == "never":
             # Fast path - run directly without executor
@@ -543,7 +544,7 @@ async def async_filter_smart(
 
     """
     items_list = list(items)
-    is_async_predicate = asyncio.iscoroutinefunction(predicate)
+    is_async_predicate = inspect.iscoroutinefunction(predicate)
 
     if max_concurrent:
         semaphore = asyncio.Semaphore(max_concurrent)
@@ -808,7 +809,7 @@ class AsyncLazyLoader:
             return self._data
 
     async def _load_data(self) -> Any:
-        if asyncio.iscoroutinefunction(self._loader_func):
+        if inspect.iscoroutinefunction(self._loader_func):
             return await self._loader_func()
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, self._loader_func)

@@ -58,7 +58,7 @@ def calculate_file_hash(file_path: Path) -> str:
                 sha256_hash.update(byte_block)
         return sha256_hash.hexdigest()
     except OSError as e:
-        from ClassicLib.Logger import logger
+        from ClassicLib.core.logger import logger
 
         logger.error(f"Failed to calculate hash for {file_path}: {e}")
         return ""

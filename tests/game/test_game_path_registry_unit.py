@@ -18,6 +18,7 @@ pytestmark = pytest.mark.unit
 class TestRegistryDetection:
     """Tests for Windows registry-based game path detection."""
 
+    @patch("ClassicLib.support.game_path._HAS_RUST_PATH", False)
     @patch("winreg.OpenKey", side_effect=FileNotFoundError)
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -29,6 +30,7 @@ class TestRegistryDetection:
         assert result is None
         assert mock_open.call_count == 2
 
+    @patch("ClassicLib.support.game_path._HAS_RUST_PATH", False)
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx", return_value=(None, None))
     @patch("winreg.CloseKey")

@@ -158,6 +158,7 @@ class TestReportXseError:
 class TestParseXseLogForPath:
     """Tests for GamePathFinder._parse_xse_log_for_path() method."""
 
+    @patch("ClassicLib.support.game_path._HAS_RUST_PATH", False)
     @patch("ClassicLib.support.game_path.yaml_settings")
     @patch("ClassicLib.support.game_path.open_file_with_encoding")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")

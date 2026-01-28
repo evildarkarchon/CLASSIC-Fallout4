@@ -6,7 +6,7 @@ replacing the mutable list pattern with immutable fragment composition.
 
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib import GlobalRegistry
+from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.rust.report_rust import ReportFragment
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 

@@ -132,8 +132,8 @@ class PythonPluginAnalyzer:
         limit_check_disabled = False
 
         # Determine game version characteristics
-        is_original_game = game_version in {self.yamldata.game_version, self.yamldata.game_version_vr}
-        is_new_game_crashgen_pre_137 = game_version >= self.yamldata.game_version_new and version_current < Version("1.37.0")
+        is_original_game = game_version in {Version(str(self.yamldata.game_version)), Version(str(self.yamldata.game_version_vr))}
+        is_new_game_crashgen_pre_137 = game_version >= Version(str(self.yamldata.game_version_new)) and version_current < Version("1.37.0")
 
         # Check for plugin limit markers
         for entry in segment_plugins:

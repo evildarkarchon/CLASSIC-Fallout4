@@ -110,7 +110,9 @@ class TestCheckLocalDir:
 
     def test_returns_none_when_local_dir_not_set(self) -> None:
         """Should return None when LOCAL_DIR is not set in GlobalRegistry."""
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=None):
+        # Patch the module-level function that was imported into resources.py,
+        # not the class method on GlobalRegistry (which the production code doesn't use).
+        with patch("ClassicLib.support.resources.get_local_dir", return_value=None):
             result = ResourceLoader._check_local_dir()
             assert result is None
 
@@ -120,7 +122,8 @@ class TestCheckLocalDir:
         data_dir = tmp_path / "CLASSIC Data"
         data_dir.mkdir()
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=tmp_path):
+        # Patch the module-level function imported into resources.py
+        with patch("ClassicLib.support.resources.get_local_dir", return_value=tmp_path):
             result = ResourceLoader._check_local_dir()
             assert result == data_dir
 
@@ -134,7 +137,8 @@ class TestCheckLocalDir:
         empty_dir = tmp_path / "empty_dir"
         empty_dir.mkdir()
 
-        with patch.object(GlobalRegistry, "get_local_dir", return_value=empty_dir):
+        # Patch the module-level function imported into resources.py
+        with patch("ClassicLib.support.resources.get_local_dir", return_value=empty_dir):
             result = ResourceLoader._check_local_dir()
             # Method returns the path even if it doesn't exist
             assert result == empty_dir / "CLASSIC Data"
@@ -142,7 +146,8 @@ class TestCheckLocalDir:
 
     def test_returns_none_on_oserror(self) -> None:
         """Should return None when OSError is raised during path operations."""
-        with patch.object(GlobalRegistry, "get_local_dir", return_value="/some/path"):
+        # Patch the module-level function imported into resources.py
+        with patch("ClassicLib.support.resources.get_local_dir", return_value="/some/path"):
             with patch("pathlib.Path.exists", side_effect=OSError("permission denied")):
                 result = ResourceLoader._check_local_dir()
                 assert result is None
@@ -569,8 +574,12 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
+        # Patch yaml_settings at both import locations used by get_cached_game_path:
+        # Strategy 2 imports from ClassicLib.io.yaml.sync.convenience
+        # Strategy 3 imports from ClassicLib.io.yaml
         with (
             patch.dict("os.environ", {"CLASSIC_FALLOUT4_PATH": "/nonexistent/path"}, clear=True),
+            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -581,8 +590,12 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
+        # Strategy 2 uses ClassicLib.io.yaml.sync.convenience.yaml_settings
+        # Strategy 3 uses ClassicLib.io.yaml.yaml_settings
+        # Patch both to ensure consistent behavior
         with (
             patch.dict("os.environ", {}, clear=True),
+            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=str(tmp_path)),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=str(tmp_path)),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -593,20 +606,15 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
-        call_count = 0
-
-        def yaml_side_effect(*args: Any, **kwargs: Any) -> Any:
-            nonlocal call_count
-            call_count += 1
-            if call_count == 1:
-                # First call (cache.yaml) returns None
-                return None
-            # Second call (Local.yaml) returns path
-            return str(tmp_path)
-
+        # Strategy 2 imports yaml_settings from ClassicLib.io.yaml.sync.convenience
+        # Strategy 3 imports yaml_settings from ClassicLib.io.yaml
+        # We want Strategy 2 (cache.yaml) to return None and Strategy 3 (Local.yaml)
+        # to return the path. Since they import from different modules, we can patch
+        # each independently.
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.io.yaml.yaml_settings", side_effect=yaml_side_effect),
+            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.yaml_settings", return_value=str(tmp_path)),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
             assert result == tmp_path
@@ -616,8 +624,10 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
+        # Patch yaml_settings at both import locations used by get_cached_game_path
         with (
             patch.dict("os.environ", {}, clear=True),
+            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -628,8 +638,10 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Skyrim")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
+        # Patch yaml_settings at both import locations used by get_cached_game_path
         with (
             patch.dict("os.environ", {}, clear=True),
+            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             ResourceLoader.get_cached_game_path(None, "")
@@ -661,7 +673,7 @@ class TestGetCachedGamePathAsync:
         with (
             patch.dict("os.environ", {}, clear=True),
             patch(
-                "ClassicLib.YamlSettings.yaml_settings_async",
+                "ClassicLib.io.yaml.yaml_settings_async",
                 side_effect=mock_yaml_async,
             ),
         ):
@@ -739,7 +751,7 @@ class TestSavePathToCacheAsync:
             calls.append(args)
 
         with patch(
-            "ClassicLib.YamlSettings.yaml_settings_async",
+            "ClassicLib.io.yaml.yaml_settings_async",
             side_effect=mock_yaml_async,
         ):
             await ResourceLoader.save_path_to_cache_async(tmp_path, "GamePath", "Fallout4", "")
@@ -756,7 +768,7 @@ class TestSavePathToCacheAsync:
             calls.append(args)
 
         with patch(
-            "ClassicLib.YamlSettings.yaml_settings_async",
+            "ClassicLib.io.yaml.yaml_settings_async",
             side_effect=mock_yaml_async,
         ):
             await ResourceLoader.save_path_to_cache_async(tmp_path, "DocsPath", "Fallout4", "")

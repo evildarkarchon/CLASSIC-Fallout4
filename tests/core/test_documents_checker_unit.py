@@ -68,7 +68,7 @@ class TestDocumentsChecker:
         )
 
     @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="VR")
+    @patch("ClassicLib.support.documents.get_vr", return_value="VR")
     def test_check_folder_configuration_vr_mode(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
     ) -> None:
@@ -181,7 +181,7 @@ class TestDocumentsChecker:
 
     @patch.object(DocumentsChecker, "check_folder_configuration")
     @patch.object(DocumentsChecker, "validate_ini_file")
-    @patch.object(GlobalRegistry, "get_game", return_value="SkyrimSE")
+    @patch("ClassicLib.support.documents.get_game", return_value="SkyrimSE")
     def test_run_all_checks_different_game(
         self, mock_get_game: MagicMock, mock_validate_ini: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker
     ) -> None:

@@ -12,11 +12,12 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, cast
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import YAML
-from ClassicLib.Database import DatabasePoolManager
+from ClassicLib.core.constants import YAML
+from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer, get_record_scanner
 from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.io.database import DatabasePoolManager
+from ClassicLib.io.yaml import classic_settings_async, yaml_settings_async
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.scanning.logs.analyzers.GPUDetector import get_gpu_info
@@ -27,7 +28,6 @@ from ClassicLib.scanning.logs.parser import extract_module_names
 from ClassicLib.scanning.logs.report_generator import ReportGeneratorFragments
 from ClassicLib.scanning.logs.reporting import ConditionalSection, ReportComposer
 from ClassicLib.Utils.version_utils import crashgen_version_gen
-from ClassicLib.YamlSettings import classic_settings_async, yaml_settings_async
 
 if TYPE_CHECKING:
     from packaging.version import Version

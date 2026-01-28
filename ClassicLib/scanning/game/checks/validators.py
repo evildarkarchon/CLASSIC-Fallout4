@@ -51,7 +51,7 @@ class ScanValidators:
         xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
 
         # Get script hashes from VersionRegistry
-        from ClassicLib.VersionRegistry import get_version_registry
+        from ClassicLib.support.versions import get_version_registry
 
         registry = get_version_registry()
         is_vr = get_vr() == "VR"

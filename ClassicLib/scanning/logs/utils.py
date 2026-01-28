@@ -12,8 +12,9 @@ from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
-from ClassicLib import GlobalRegistry, MessageTarget, msg_error, msg_info
-from ClassicLib.Logger import logger
+from ClassicLib.core.logger import logger
+from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.messaging import MessageTarget, msg_error, msg_info
 from ClassicLib.scanning.logs.models import ScanResult
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
@@ -231,7 +232,7 @@ def crashlogs_scan() -> ScanResult:
         ScanResult: The result of the crash log scan.
 
     """
-    from ClassicLib.AsyncBridge import run_async
+    from ClassicLib.core.async_bridge import run_async
     from ClassicLib.scanning.logs.executor import ScanLogsExecutor
 
     executor = ScanLogsExecutor()

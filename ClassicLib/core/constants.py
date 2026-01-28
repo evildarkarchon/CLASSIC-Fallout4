@@ -229,8 +229,8 @@ def get_db_paths() -> tuple[Path, Path, Path]:
         A tuple containing (main_db_path, local_db_path, and FOLON db path) as Path objects.
 
     """
-    from ClassicLib import GlobalRegistry
-    from ClassicLib.ResourceLoader import ResourceLoader
+    from ClassicLib.core.registry import GlobalRegistry
+    from ClassicLib.support.resources import ResourceLoader
 
     # Get the CLASSIC Data directory (handles all installation types)
     data_dir = ResourceLoader.get_data_directory()

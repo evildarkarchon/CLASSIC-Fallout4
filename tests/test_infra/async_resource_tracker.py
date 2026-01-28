@@ -9,6 +9,7 @@ helping to prevent resource leaks and ensure proper cleanup.
 import asyncio
 import functools
 import gc
+import inspect
 import weakref
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -158,7 +159,7 @@ async def safe_async_cleanup(*resources: Any) -> None:
         if hasattr(resource, "aclose"):
             cleanup_tasks.append(resource.aclose())
         elif hasattr(resource, "close"):
-            if asyncio.iscoroutinefunction(resource.close):
+            if inspect.iscoroutinefunction(resource.close):
                 cleanup_tasks.append(resource.close())
             else:
                 # Sync close - run in executor

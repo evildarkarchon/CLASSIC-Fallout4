@@ -84,9 +84,28 @@ def mock_yamldata() -> MagicMock:
     mock.crashlog_error_check = {}
     mock.crashlog_stack_check = {}
 
+    # Record scanning attributes (required by PythonRecordScanner via get_record_scanner)
+    # Include common Bethesda record types for e2e component data flow tests
+    mock.classic_records_list = [
+        "BGSKeyword",
+        "TESForm",
+        "TESObjectREFR",
+        "BGSMod",
+        "TESQuest",
+        "Actor",
+        "NiNode",
+        "BSFadeNode",
+        "TESNPC",
+        "TESObjectCELL",
+    ]
+    mock.game_ignore_records = []
+
     # Game hints
     mock.classic_game_hints = []
     mock.autoscan_text = ""
+
+    # Problematic plugins (for e2e correlation tests)
+    mock.problematic_plugins = []
 
     # Path attributes (for stress tests)
     mock.game_path = "C:\\Games\\Fallout4"
@@ -181,6 +200,21 @@ def mock_yamldata_with_data() -> MagicMock:
     mock.crashlog_error_check = {"HIGH | Test Error": "error_signal"}
     mock.crashlog_stack_check = {"MEDIUM | Stack Error": ["required:signal1", "optional:signal2"]}
 
+    # Record scanning attributes (required by PythonRecordScanner via get_record_scanner)
+    mock.classic_records_list = [
+        "BGSKeyword",
+        "TESForm",
+        "TESObjectREFR",
+        "BGSMod",
+        "TESQuest",
+        "Actor",
+        "NiNode",
+        "BSFadeNode",
+        "TESNPC",
+        "TESObjectCELL",
+    ]
+    mock.game_ignore_records = []
+
     # Game hints
     mock.classic_game_hints = ["Test hint 1", "Test hint 2"]
     mock.autoscan_text = "Additional scan information"
@@ -271,7 +305,18 @@ def mock_scanlog_info() -> Any:
             self.game_ignore_plugins = []
             self.game_ignore_records = []
             self.ignore_list = []
-            self.classic_records_list = []
+            self.classic_records_list = [
+                "BGSKeyword",
+                "TESForm",
+                "TESObjectREFR",
+                "BGSMod",
+                "TESQuest",
+                "Actor",
+                "NiNode",
+                "BSFadeNode",
+                "TESNPC",
+                "TESObjectCELL",
+            ]
 
             # Problematic plugins
             self.problematic_plugins = {

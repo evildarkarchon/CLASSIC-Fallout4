@@ -11,8 +11,8 @@ from collections import Counter
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ClassicLib.core.logger import logger
 from ClassicLib.integration.factory import get_file_io
-from ClassicLib.Logger import logger
 from ClassicLib.messaging import msg_progress_context
 from ClassicLib.scanning.logs.async_reformat import crashlogs_reformat_async
 

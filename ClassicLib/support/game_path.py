@@ -31,7 +31,7 @@ from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.messaging import msg_error, msg_info
 from ClassicLib.support.versions import get_version_registry
 from ClassicLib.Utils.file_utils import open_file_with_encoding
-from ClassicLib.Utils.version_utils import get_game_version
+from ClassicLib.Utils.version_utils import read_game_exe_version
 
 # Get Rust module if available, None otherwise
 classic_path = get_path_operations()
@@ -99,7 +99,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
             logger.debug(f"Rust registry lookup error: {e}, falling back to Python implementation")
         else:
             game_path = Path(path_str)
-            from ClassicLib.ResourceLoader import ResourceLoader
+            from ClassicLib.support.resources import ResourceLoader
 
             ResourceLoader.save_path_to_cache(game_path, "GamePath")
             GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
@@ -132,7 +132,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
         game_path = Path(path) if path else None
 
     if game_path and game_path.is_dir() and game_path.joinpath(exe_name).is_file():
-        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.support.resources import ResourceLoader
 
         # Save to all cache locations for uvx compatibility
         ResourceLoader.save_path_to_cache(game_path, "GamePath")
@@ -202,7 +202,7 @@ class GamePathFinder:
             >>> finder.find_game_path()
 
         """
-        from ClassicLib.YamlSettings import yaml_settings_async
+        from ClassicLib.io.yaml import yaml_settings_async
 
         # Create instance without calling __init__
         instance = cls.__new__(cls)
@@ -336,7 +336,7 @@ class GamePathFinder:
             game_path (Path): The path to the game directory to be saved.
 
         """
-        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.support.resources import ResourceLoader
 
         # Save to all cache locations (cache.yaml, Local.yaml)
         await ResourceLoader.save_path_to_cache_async(game_path, "GamePath")
@@ -352,7 +352,7 @@ class GamePathFinder:
             game_path (Path): The path to the game directory to be saved.
 
         """
-        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.support.resources import ResourceLoader
 
         # Save to all cache locations (cache.yaml, Local.yaml, and suggest env var)
         ResourceLoader.save_path_to_cache(game_path, "GamePath")
@@ -423,8 +423,8 @@ class GamePathFinder:
 
         """
         # First, check if we have a cached path (for uvx compatibility)
-        from ClassicLib.ResourceLoader import ResourceLoader
-        from ClassicLib.YamlSettings import yaml_settings_async
+        from ClassicLib.io.yaml import yaml_settings_async
+        from ClassicLib.support.resources import ResourceLoader
 
         cached_path = await ResourceLoader.get_cached_game_path_async()
         if cached_path and cached_path.joinpath(self.exe_name).is_file():
@@ -471,7 +471,7 @@ class GamePathFinder:
 
         """
         # First, check if we have a cached path (for uvx compatibility)
-        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.support.resources import ResourceLoader
 
         cached_path = ResourceLoader.get_cached_game_path()
         if cached_path and cached_path.joinpath(self.exe_name).is_file():
@@ -574,7 +574,7 @@ def game_generate_paths() -> None:
         f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
         rf"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe",
     )
-    game_version: Version = get_game_version(
+    game_version: Version = read_game_exe_version(
         Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
     )
     match GlobalRegistry.get_game():
@@ -630,7 +630,7 @@ async def game_generate_paths_async() -> None:
         >>> await game_generate_paths_async()
 
     """
-    from ClassicLib.YamlSettings import yaml_settings_async
+    from ClassicLib.io.yaml import yaml_settings_async
 
     logger.debug("- - - INITIATED GAME PATH GENERATION (ASYNC)")
 
@@ -652,7 +652,7 @@ async def game_generate_paths_async() -> None:
         f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
         rf"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe",
     )
-    game_version: Version = get_game_version(
+    game_version: Version = read_game_exe_version(
         Path(cast("str", await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
     )
     match GlobalRegistry.get_game():

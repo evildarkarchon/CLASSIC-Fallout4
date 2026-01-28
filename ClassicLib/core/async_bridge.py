@@ -10,7 +10,7 @@ Phase 1: Direct AsyncBridge Usage (STABLE - Recommended for GUI contexts)
 Use AsyncBridge directly for synchronous GUI code that needs to call async functions.
 
 Basic Usage:
-    from ClassicLib.AsyncBridge import AsyncBridge, run_async
+    from ClassicLib.core.async_bridge import AsyncBridge, run_async
 
     # Method 1: Get instance and use directly
     bridge = AsyncBridge.get_instance()
@@ -60,7 +60,7 @@ Explicit GUI-Only Sync Wrapper:
         process_data_sync = create_sync_wrapper(process_data)
 
 Mode Detection:
-    from ClassicLib import GlobalRegistry
+    from ClassicLib.core.registry import GlobalRegistry
 
     if GlobalRegistry.is_gui_mode():
         # GUI mode - use sync wrappers
@@ -127,7 +127,7 @@ class AsyncBridge:
     Example:
         Basic usage in a sync context (e.g., Qt GUI worker):
 
-        >>> from ClassicLib.AsyncBridge import AsyncBridge
+        >>> from ClassicLib.core.async_bridge import AsyncBridge
         >>> bridge = AsyncBridge.get_instance()
         >>> result = bridge.run_async(some_async_function())
 

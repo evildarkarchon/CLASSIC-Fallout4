@@ -122,7 +122,11 @@ class TestFormIDDatabaseFixture:
             db_path = Path(tmpdir) / "test_formids.db"
 
             # Create database with test data
-            with sqlite3.connect(db_path) as conn:
+            # Note: sqlite3's context manager only handles transactions
+            # (commit/rollback), NOT connection lifecycle. We must close
+            # explicitly to avoid ResourceWarning about unclosed databases.
+            conn = sqlite3.connect(db_path)
+            try:
                 cursor = conn.cursor()
 
                 # Create table
@@ -154,6 +158,8 @@ class TestFormIDDatabaseFixture:
                 # Run ANALYZE for query optimizer
                 cursor.execute(f"ANALYZE {TEST_GAME_TABLE}")
                 conn.commit()
+            finally:
+                conn.close()
 
             yield db_path
 
@@ -226,13 +232,16 @@ class TestFormIDDatabaseFixture:
             List of (formid, plugin) tuples that exist in the database.
 
         """
-        with sqlite3.connect(db_path) as conn:
+        conn = sqlite3.connect(db_path)
+        try:
             cursor = conn.cursor()
             cursor.execute(
                 f"SELECT formid, plugin FROM {TEST_GAME_TABLE} ORDER BY RANDOM() LIMIT ?",
                 (count,),
             )
             return [(row[0], row[1]) for row in cursor.fetchall()]
+        finally:
+            conn.close()
 
 
 @pytest.mark.benchmark

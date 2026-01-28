@@ -14,9 +14,10 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.logs.AsyncUtil import load_crash_logs_async
-from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
-from ClassicLib.scanning.logs.pipeline.async_performance_monitor import AsyncPerformanceMonitor
+
+from ClassicLib.scanning.logs.async_util import load_crash_logs_async
+from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import AsyncCrashLogPipeline
+from ClassicLib.scanning.logs.reporting.async_performance_monitor import AsyncPerformanceMonitor
 
 pytestmark = pytest.mark.performance
 
@@ -120,10 +121,10 @@ class TestRealWorldCrashLogProcessing:
         # Note: load_crash_logs_async was removed from pipeline - it now uses direct file I/O
         with (
             patch(
-                "ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock
             ) as mock_reformat,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock) as mock_write,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock) as mock_write,
+            patch("ClassicLib.scanning.logs.orchestrator_core.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Return actual loaded data
             mock_reformat.return_value = None

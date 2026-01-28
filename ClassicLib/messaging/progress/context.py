@@ -81,7 +81,7 @@ class ProgressContext:
 
         """
         try:
-            from ClassicLib.YamlSettings import classic_settings
+            from ClassicLib.io.yaml import classic_settings
 
             return classic_settings(bool, "Disable CLI Progress") or False
         except (ImportError, FileNotFoundError, KeyError, TypeError, RuntimeError):

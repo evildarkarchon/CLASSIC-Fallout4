@@ -21,9 +21,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib import GlobalRegistry
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
+from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.Interface.controllers.backup_manager import BackupManager
 from ClassicLib.Interface.controllers.folder_manager import FolderManager
 from ClassicLib.Interface.controllers.help_about import HelpAboutController
@@ -199,7 +199,7 @@ class MainWindow(QMainWindow):
         # Close database connections to ensure WAL files are properly checkpointed
         # This prevents .db-wal and .db-shm files from persisting after exit
         logger.debug("Closing database connections...")
-        from ClassicLib.Database import cleanup_database_pools
+        from ClassicLib.io.database import cleanup_database_pools
 
         cleanup_database_pools()
 

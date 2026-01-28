@@ -9,8 +9,8 @@ This module provides:
 import asyncio
 import contextlib
 import gc
+import inspect
 import logging
-import sys
 import weakref
 from collections.abc import AsyncIterator
 from typing import Any
@@ -97,7 +97,7 @@ async def async_cleanup() -> AsyncIterator[list[Any]]:
             if hasattr(resource, "aclose"):
                 cleanup_tasks.append(resource.aclose())
             elif hasattr(resource, "close"):
-                if asyncio.iscoroutinefunction(resource.close):
+                if inspect.iscoroutinefunction(resource.close):
                     cleanup_tasks.append(resource.close())
                 else:
                     # Run sync close in executor
@@ -118,11 +118,13 @@ def event_loop_policy():
     This is session-scoped because the event loop policy only needs to be set
     once for the entire test session. This also allows module-scoped async
     fixtures to work correctly with pytest-asyncio 1.0+.
+
+    Note:
+        Since Python 3.10+, ProactorEventLoop is already the default on
+        Windows, so no explicit policy configuration is needed. Returning
+        None tells pytest-asyncio to use the default event loop policy.
     """
-    if sys.platform == "win32":
-        # Windows requires ProactorEventLoop for subprocess support
-        asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
-    return asyncio.get_event_loop_policy()
+    return None
 
 
 @pytest.fixture
@@ -212,7 +214,7 @@ async def async_resource_manager() -> AsyncIterator[callable]:
             if hasattr(resource, "aclose"):
                 await resource.aclose()
             elif hasattr(resource, "close"):
-                if asyncio.iscoroutinefunction(resource.close):
+                if inspect.iscoroutinefunction(resource.close):
                     await resource.close()
                 else:
                     resource.close()

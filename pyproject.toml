@@ -9,7 +9,7 @@ authors = [
 ]
 readme = "README.md"
 license = { file = "LICENSE.md" }
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 dependencies = [
     "beautifulsoup4>=4.12.3",
     "requests>=2.32.3",

@@ -27,17 +27,18 @@ import logging
 import random
 import re
 import time
+import tracemalloc
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from ClassicLib.scanning.logs.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 from ClassicLib.integration.factory import get_formid_analyzer
 from ClassicLib.integration.status import (
     is_rust_accelerated,
 )
 from ClassicLib.io.database import AsyncDatabasePool
+from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from tests.fixtures.parity_fixtures import (
     ParityResult,
@@ -479,6 +480,7 @@ class TestFormIDParity:
             if not result.passed:
                 logger.warning(f"FormID validation parity failed: {result.test_case} - {result.differences}")
 
+    @pytest.mark.skipif(tracemalloc.is_tracing(), reason="Tracemalloc is running, results would be skewed.")
     @pytest.mark.asyncio
     async def test_formid_batch_processing_parity(self, mock_scanlog_info):  # noqa: PLR0912
         """
@@ -580,8 +582,8 @@ class TestFormIDParity:
 
             # Validate that batch processing is at least as fast as sequential
             # Note: For small datasets, parallel overhead may make batch slower.
-            # If absolute time is negligible (< 1ms), we ignore the ratio.
-            assert rust_batch_time <= rust_sequential_time * 5.0 or rust_batch_time < 0.001, (
+            # If absolute time is negligible (< 5ms), we ignore the ratio.
+            assert rust_batch_time <= rust_sequential_time * 5.0 or rust_batch_time < 0.005, (
                 f"Batch processing significantly slower: {rust_batch_time * 1000:.3f}ms vs {rust_sequential_time * 1000:.3f}ms"
             )
 

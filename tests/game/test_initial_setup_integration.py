@@ -29,7 +29,7 @@ class TestInitialSetup:
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
     @patch("ClassicLib.support.backup.BackupManager.run_backup")
-    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.yaml_cache")
     @patch("ClassicLib.support.setup.msg_info")
     @patch("ClassicLib.support.setup.msg_success")
     @patch("ClassicLib.support.setup.docs_path_find")

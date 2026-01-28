@@ -124,7 +124,10 @@ def mock_database_pool_manager():
     mock_manager.get_pool = AsyncMock(return_value=mock_pool)
     mock_manager.close_pool = AsyncMock()
 
-    with patch("ClassicLib.scanning.logs.AsyncUtil.DatabasePoolManager", return_value=mock_manager):
+    with (
+        patch("ClassicLib.io.database.DatabasePoolManager", return_value=mock_manager),
+        patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager", return_value=mock_manager),
+    ):
         yield mock_manager
 
 
@@ -148,7 +151,7 @@ async def database_pool_manager_with_mock_pool():
     mock_pool.initialize = AsyncMock()
     mock_pool.close = AsyncMock()
 
-    with patch("ClassicLib.scanning.logs.AsyncUtil.AsyncDatabasePool", return_value=mock_pool):
+    with patch("ClassicLib.io.database.async_pool.AsyncDatabasePool", return_value=mock_pool):
         manager = DatabasePoolManager()
         yield manager
 

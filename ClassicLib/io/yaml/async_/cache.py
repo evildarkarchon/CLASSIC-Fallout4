@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
-    from ClassicLib.Constants import YAML
+    from ClassicLib.core.constants import YAML
 
 
 class YamlCache:

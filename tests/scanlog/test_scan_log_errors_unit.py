@@ -12,7 +12,8 @@ from unittest.mock import patch
 
 import aiofiles
 import pytest
-from ClassicLib.scanning.game.ScanGameCore import ScanGameCore
+
+from ClassicLib.scanning.game.core import ScanGameCore
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
@@ -115,7 +116,7 @@ class TestCheckLogErrors:
 
         # Mock both possible file reading methods to raise OSError
         with (
-            patch("ClassicLib.scanning.game.core.log_processor.open_file_with_encoding", side_effect=OSError("Permission denied")),
+            patch("ClassicLib.scanning.game.checks.log_processor.open_file_with_encoding", side_effect=OSError("Permission denied")),
             patch("aiofiles.open", side_effect=OSError("Permission denied")) if "aiofiles" in str(sys.modules) else nullcontext(),
         ):
             core = ScanGameCore()

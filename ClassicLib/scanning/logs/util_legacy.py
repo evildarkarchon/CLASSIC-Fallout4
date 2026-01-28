@@ -5,27 +5,6 @@ and functions to validate and handle paths used for application configuration, e
 logs and custom scan directories.
 """
 
-# #region agent log
-import json as _dbg_json
-from pathlib import Path as _DbgPath
-
-try:
-    with _DbgPath(r"j:\CLASSIC-Fallout4\.cursor\debug.log").open("a", encoding="utf-8") as f:
-        f.write(
-            _dbg_json.dumps({
-                "location": "util_legacy.py:module_level",
-                "message": "util_legacy.py import STARTED",
-                "data": {},
-                "hypothesisId": "D",
-                "timestamp": __import__("time").time(),
-            })
-            + "\n"
-        )
-except OSError:
-    # File I/O errors (permission denied, disk full, etc.)
-    pass
-# #endregion
-
 import contextlib
 import shutil
 import sqlite3
@@ -36,24 +15,6 @@ from ClassicLib.core.constants import DB_PATHS, YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import classic_settings, yaml_settings
-
-# #region agent log
-try:
-    with _DbgPath(r"j:\CLASSIC-Fallout4\.cursor\debug.log").open("a", encoding="utf-8") as f:
-        f.write(
-            _dbg_json.dumps({
-                "location": "util_legacy.py:module_level",
-                "message": "util_legacy.py imports COMPLETED",
-                "data": {},
-                "hypothesisId": "D",
-                "timestamp": __import__("time").time(),
-            })
-            + "\n"
-        )
-except OSError:
-    # File I/O errors (permission denied, disk full, etc.)
-    pass
-# #endregion
 
 # Constants for file patterns
 CRASH_LOG_PATTERN = "crash-*.log"

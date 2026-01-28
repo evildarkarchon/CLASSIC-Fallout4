@@ -230,7 +230,7 @@ def print_rust_status() -> None:
 
     # Check if debug messages are enabled
     try:
-        from ClassicLib.YamlSettings import classic_settings
+        from ClassicLib.io.yaml import classic_settings
 
         debug_enabled = classic_settings(bool, "Debug Messages")
         if not debug_enabled:

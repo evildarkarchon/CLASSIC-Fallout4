@@ -816,12 +816,12 @@ remove_readonly(Path("readonly_file.txt"))
 
 ```python
 from ClassicLib.Utils.version_utils import (
-    get_game_version,     # Get game version from exe
-    crashgen_version_gen, # Parse crashgen version
+    read_game_exe_version,  # Read game version from exe
+    crashgen_version_gen,   # Parse crashgen version
 )
 
-# Get game version
-version = get_game_version(Path("C:/Games/Fallout4"))
+# Read game executable version
+version = read_game_exe_version(Path("C:/Games/Fallout4"))
 ```
 
 ### Web Utilities

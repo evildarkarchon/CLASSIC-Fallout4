@@ -134,7 +134,7 @@ class DocumentsPathManager:
         logger.debug("- - - INITIATED DOCS PATH CHECK")
 
         from ClassicLib.io.yaml import classic_settings, yaml_settings
-        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.support.resources import ResourceLoader
         from ClassicLib.Utils.path_utils import validate_path
 
         # First, check if we have a cached docs path (for uvx compatibility)

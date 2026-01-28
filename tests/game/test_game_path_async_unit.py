@@ -338,7 +338,7 @@ class TestGameGeneratePathsAsync:
     """Tests for game_generate_paths_async() function."""
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_fallout4_og(
@@ -380,7 +380,7 @@ class TestGameGeneratePathsAsync:
         assert call_count >= 6
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     async def test_generate_paths_async_fallout4_vr(
@@ -471,7 +471,7 @@ class TestGameGeneratePathsAsync:
             await game_generate_paths_async()
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_null_version_uses_default(
@@ -507,7 +507,7 @@ class TestGameGeneratePathsAsync:
         assert mock_yaml_async.call_count >= 6
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Starfield")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_unsupported_game(

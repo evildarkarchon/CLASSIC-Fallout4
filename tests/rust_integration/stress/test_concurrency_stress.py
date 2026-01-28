@@ -18,6 +18,7 @@ Key Testing Areas:
 import logging
 import statistics
 import time
+import tracemalloc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 from unittest.mock import Mock
@@ -26,6 +27,9 @@ import pytest
 
 # Skip entire module if Rust extensions not available
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
+
+if tracemalloc.is_tracing():
+    pytest.skip("Tracemalloc is running, results would be skewed.", allow_module_level=True)
 
 # Import core components
 from ClassicLib.integration.factory import (

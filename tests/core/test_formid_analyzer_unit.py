@@ -12,9 +12,9 @@ The clean_database_pool_manager fixture ensures proper singleton isolation.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-from ClassicLib.scanning.logs.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 from ClassicLib.io.database import AsyncDatabasePool
+from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 
 @pytest.mark.integration

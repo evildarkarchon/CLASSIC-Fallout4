@@ -291,5 +291,12 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
 PowerShellEditorServices.json
 !ClassicLib/scanning/logs/
+scripts/update_imports.py
+scripts/update_imports2.py
+test_*.txt
+*_errors*.txt
+*_result.txt
+Classic Data/cache.yaml

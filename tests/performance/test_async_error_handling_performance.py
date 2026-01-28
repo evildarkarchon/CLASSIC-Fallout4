@@ -10,9 +10,9 @@ import time
 from pathlib import Path
 
 import pytest
-from ClassicLib.scanning.logs.AsyncUtil import load_crash_logs_async
 
 from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.scanning.logs.async_util import load_crash_logs_async
 
 pytestmark = pytest.mark.performance
 

@@ -171,7 +171,7 @@ def _check_xse_installation(
 
     """
     if not isinstance(log_file, str | Path):
-        from ClassicLib import GlobalRegistry
+        from ClassicLib.core.registry import GlobalRegistry
 
         game_name = GlobalRegistry.get_game()
         messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
@@ -251,7 +251,7 @@ def _get_expected_script_hashes() -> dict[str, str]:
                     hashes are available.
 
     """
-    from ClassicLib.VersionRegistry import get_detected_version_info, get_version_registry
+    from ClassicLib.support.versions import get_detected_version_info, get_version_registry
 
     # Get the detected game version
     version_info = get_detected_version_info()

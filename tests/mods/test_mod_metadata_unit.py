@@ -4,9 +4,9 @@
 from typing import Any
 
 import pytest
-from ClassicLib.scanning.logs.DetectMods import detect_mods_important
 
 from ClassicLib.integration.rust.report_rust import ReportFragment
+from ClassicLib.scanning.logs.detect_mods import detect_mods_important
 
 pytestmark = [pytest.mark.unit]
 

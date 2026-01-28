@@ -227,7 +227,7 @@ class SettingsDialog(QDialog):
 
         if not ini_path:
             # Try to get from Game_Local YAML if not set in settings
-            from ClassicLib import GlobalRegistry
+            from ClassicLib.core.registry import GlobalRegistry
 
             try:
                 # Use VersionRegistry-based config suffix
@@ -257,7 +257,7 @@ class SettingsDialog(QDialog):
             KeyError: If a specified key is not found in the settings map.
 
         """
-        from ClassicLib.Logger import logger
+        from ClassicLib.core.logger import logger
 
         try:
             # Get current settings - boolean settings (checkboxes only, not game_version, ini_folder_path, or max_concurrent_scans)
@@ -341,7 +341,7 @@ class SettingsDialog(QDialog):
                 permissions or invalid paths.
 
         """
-        from ClassicLib.Logger import logger
+        from ClassicLib.core.logger import logger
 
         try:
             # Save checkboxes (excluding removed vr_mode)
@@ -374,7 +374,7 @@ class SettingsDialog(QDialog):
                     )
 
                     # Update GlobalRegistry with the new version
-                    from ClassicLib import GlobalRegistry
+                    from ClassicLib.core.registry import GlobalRegistry
 
                     # Set GAME_VERSION key for the new system
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME_VERSION, game_version_value)
@@ -395,7 +395,7 @@ class SettingsDialog(QDialog):
 
                 # Also update Game_Local YAML if path is set
                 if ini_path:
-                    from ClassicLib import GlobalRegistry
+                    from ClassicLib.core.registry import GlobalRegistry
 
                     try:
                         # Use VersionRegistry-based config suffix
@@ -438,10 +438,10 @@ class SettingsDialog(QDialog):
             OSError: If there is an operating system-related error during the process.
 
         """
-        from ClassicLib.DocsPath import docs_path_find
-        from ClassicLib.GamePath import game_path_find
-        from ClassicLib.Logger import logger
-        from ClassicLib.PathValidator import PathValidator
+        from ClassicLib.core.logger import logger
+        from ClassicLib.support.docs_path import docs_path_find
+        from ClassicLib.support.game_path import game_path_find
+        from ClassicLib.support.path_validator import PathValidator
 
         try:
             # Recalculate document paths if INI folder was changed

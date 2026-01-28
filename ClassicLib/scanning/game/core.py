@@ -10,9 +10,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import cast
 
-from ClassicLib import GlobalRegistry
 from ClassicLib.core.constants import YAML
-from ClassicLib.core.registry import get, register
+from ClassicLib.core.registry import GlobalRegistry, get, register
 from ClassicLib.io.yaml import yaml_settings_async
 from ClassicLib.messaging import msg_info
 

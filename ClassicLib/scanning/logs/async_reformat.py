@@ -14,8 +14,8 @@ from pathlib import Path
 
 import aiofiles
 
-from ClassicLib.Logger import logger
-from ClassicLib.YamlSettings import classic_settings_async
+from ClassicLib.core.logger import logger
+from ClassicLib.io.yaml import classic_settings_async
 
 
 async def reformat_single_log_async(file_path: Path, remove_list: tuple[str, ...], simplify_logs: bool) -> None:

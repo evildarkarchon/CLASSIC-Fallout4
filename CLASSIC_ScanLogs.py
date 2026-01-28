@@ -163,7 +163,7 @@ async def run_scan(args: "Namespace") -> None:
         args: Parsed command line arguments.
 
     """
-    from ClassicLib.MessageHandler import msg_info
+    from ClassicLib.messaging import msg_info
 
     # Create configuration from arguments using async settings (inside event loop)
     config = await create_config_from_args_async(args)
@@ -178,7 +178,7 @@ async def run_scan(args: "Namespace") -> None:
     finally:
         # Close database connections to ensure WAL files are properly checkpointed
         # This prevents .db-wal and .db-shm files from persisting after exit
-        from ClassicLib.Database import cleanup_database_pools_async
+        from ClassicLib.io.database import cleanup_database_pools_async
 
         await cleanup_database_pools_async()
 

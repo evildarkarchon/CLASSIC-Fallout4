@@ -17,7 +17,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+
+from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
 pytestmark = pytest.mark.e2e
 
@@ -34,7 +35,7 @@ class TestOrchestratorCore:
         OrchestratorCore no longer requires crashlogs parameter and reads files directly.
         """
         # Mock DatabasePoolManager to avoid actual database connections in tests
-        with patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager") as mock_pool_manager_class:
+        with patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager") as mock_pool_manager_class:
             mock_pool_manager: MagicMock = MagicMock()
             mock_pool: AsyncMock = AsyncMock()
             mock_pool.initialize = AsyncMock()

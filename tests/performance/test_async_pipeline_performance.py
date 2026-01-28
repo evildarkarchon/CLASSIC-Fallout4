@@ -11,7 +11,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import AsyncCrashLogPipeline
+
+from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import AsyncCrashLogPipeline
 
 pytestmark = pytest.mark.performance
 
@@ -92,9 +93,9 @@ class TestAsyncPerformancePipeline:
             # Mock pipeline components - updated for current API
             # Note: load_crash_logs_async was removed, pipeline now uses direct file I/O
             with (
-                patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock),
-                patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-                patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orch,
+                patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock),
+                patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+                patch("ClassicLib.scanning.logs.orchestrator_core.OrchestratorCore") as mock_orch,
             ):
                 mock_orchestrator = AsyncMock()
                 mock_orchestrator.process_crash_logs_batch.return_value = [(f, ["report"], False, Counter()) for f in test_files]

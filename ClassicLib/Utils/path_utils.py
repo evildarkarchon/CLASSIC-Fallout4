@@ -145,6 +145,6 @@ def remove_readonly(file_path: Path) -> None:
             file_path.chmod(file_path.stat().st_mode | stat.S_IWRITE)
         except (OSError, PermissionError) as e:
             # Log error but don't raise - this is a best-effort operation
-            from ClassicLib.Logger import logger
+            from ClassicLib.core.logger import logger
 
             logger.warning(f"Could not remove read-only attribute from {file_path}: {e}")

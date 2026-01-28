@@ -145,7 +145,7 @@ class RustAcceleratedReportGenerator:
         if self._use_rust:
             assert RustReportGenerator is not None, "Rust should be available when _use_rust is True"
             # Rust implementation expects different signature - convert parameters
-            from ClassicLib import GlobalRegistry
+            from ClassicLib.core.registry import GlobalRegistry
 
             game_is_vr = GlobalRegistry.get_vr() == "VR"
 
@@ -160,7 +160,7 @@ class RustAcceleratedReportGenerator:
         else:
             # Python implementation uses the original signature with version comparison
             crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"
-            from ClassicLib import GlobalRegistry
+            from ClassicLib.core.registry import GlobalRegistry
 
             game_is_vr = GlobalRegistry.get_vr() == "VR"
             is_latest = not (

@@ -50,7 +50,7 @@ class BackupManager:
             TypeError: If any of the settings have invalid types.
 
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         game_vr: str = GlobalRegistry.get_vr()
 

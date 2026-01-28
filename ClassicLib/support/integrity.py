@@ -49,8 +49,8 @@ class GameIntegrityChecker:
                 files is not of the expected type.
 
         """
-        from ClassicLib.VersionRegistry import get_version_registry
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.versions import get_version_registry
 
         vr_suffix: str = GlobalRegistry.get_vr()
         is_vr: bool = vr_suffix == "VR"
@@ -84,8 +84,8 @@ class GameIntegrityChecker:
             TypeError: If any of the loaded settings are not strings.
 
         """
-        from ClassicLib.VersionRegistry import get_version_registry
-        from ClassicLib.YamlSettings import yaml_settings_async
+        from ClassicLib.io.yaml import yaml_settings_async
+        from ClassicLib.support.versions import get_version_registry
 
         vr_suffix: str = GlobalRegistry.get_vr()
         is_vr: bool = vr_suffix == "VR"

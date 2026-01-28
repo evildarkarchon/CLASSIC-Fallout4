@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import inspect
 import json
 import logging
 from abc import ABC, abstractmethod
@@ -735,7 +736,7 @@ class ParityTestRunner:
         """Execute implementation with timeout protection."""
         # This is a placeholder - actual implementation would depend on
         # the specific interface of each component
-        if asyncio.iscoroutinefunction(getattr(impl, "execute", None)):
+        if inspect.iscoroutinefunction(getattr(impl, "execute", None)):
             return await asyncio.wait_for(impl.execute(**inputs), timeout=timeout_duration)
         if hasattr(impl, "execute"):
             return impl.execute(**inputs)

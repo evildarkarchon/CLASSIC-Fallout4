@@ -30,8 +30,6 @@ from tests.test_infra.performance_utils import PerformanceTimer
 pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 # Import core components
-from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
-
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.integration.factory import (
     get_formid_analyzer,
@@ -43,6 +41,7 @@ from ClassicLib.integration.status import (
     get_rust_component_status,
     is_rust_accelerated,
 )
+from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
 logger = logging.getLogger(__name__)
 

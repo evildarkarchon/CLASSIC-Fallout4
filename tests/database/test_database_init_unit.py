@@ -28,7 +28,7 @@ class TestCleanupDatabasePools:
         mock_instance = MagicMock()
         mock_instance.close_all.side_effect = RuntimeError("Test error")
 
-        with patch("ClassicLib.scanning.logs.Util.SyncDatabasePool") as mock_class:
+        with patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool") as mock_class:
             mock_class._instance = mock_instance
             # Should not raise
             cleanup_database_pools()
@@ -37,7 +37,7 @@ class TestCleanupDatabasePools:
         """Test handles errors when closing DatabasePoolManager."""
         from ClassicLib.io.database import cleanup_database_pools
 
-        with patch("ClassicLib.scanning.logs.Util.SyncDatabasePool") as mock_sync:
+        with patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool") as mock_sync:
             mock_sync._instance = None
             # Should not raise
             cleanup_database_pools()
@@ -48,7 +48,7 @@ class TestCleanupDatabasePools:
 
         mock_instance = MagicMock()
 
-        with patch("ClassicLib.scanning.logs.Util.SyncDatabasePool") as mock_class:
+        with patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool") as mock_class:
             mock_class._instance = mock_instance
             cleanup_database_pools()
 
@@ -87,7 +87,7 @@ class TestCleanupDatabasePoolsAsync:
         mock_instance = MagicMock()
         mock_instance.close_all.side_effect = RuntimeError("Test error")
 
-        with patch("ClassicLib.scanning.logs.Util.SyncDatabasePool") as mock_class:
+        with patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool") as mock_class:
             mock_class._instance = mock_instance
             # Should not raise
             await cleanup_database_pools_async()

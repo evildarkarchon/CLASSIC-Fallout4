@@ -10,7 +10,8 @@ from unittest.mock import patch
 
 import aiofiles
 import pytest
-from ClassicLib.scanning.game.ScanGameCore import ScanGameCore
+
+from ClassicLib.scanning.game.core import ScanGameCore
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
@@ -74,7 +75,7 @@ def mock_scan_settings(mock_paths):
 
     with (
         patch("CLASSIC_ScanGame.get_scan_settings", return_value=return_val) as mock_get,
-        patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore.get_scan_settings", side_effect=async_get_settings) as mock_core_get,
+        patch("ClassicLib.scanning.game.core.ScanGameCore.get_scan_settings", side_effect=async_get_settings) as mock_core_get,
     ):
         yield mock_core_get
 
@@ -84,7 +85,7 @@ def mock_issue_messages():
     """Mock get_issue_messages function."""
     with (
         patch("CLASSIC_ScanGame.get_issue_messages") as mock_get,
-        patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore.get_issue_messages") as mock_core_get,
+        patch("ClassicLib.scanning.game.core.ScanGameCore.get_issue_messages") as mock_core_get,
     ):
         return_val = {
             "ba2_frmt": ["[!] BA2 FORMAT ERRORS FOUND:\n"],
@@ -104,7 +105,7 @@ def mock_issue_messages():
 @pytest.fixture
 def mock_global_registry(mock_paths):
     """Mock GlobalRegistry."""
-    with patch("ClassicLib.scanning.game.ScanGameCore.GlobalRegistry") as mock_gr_core:
+    with patch("ClassicLib.scanning.game.core.GlobalRegistry") as mock_gr_core:
         mock_gr_core.get_local_dir.return_value = mock_paths["tmp"]
         mock_gr_core.get_vr.return_value = ""
         yield mock_gr_core
@@ -209,7 +210,7 @@ class TestScanModsUnpacked:
             await core.scan_mods_unpacked()
 
         # Verify concurrency was limited
-        from ClassicLib.scanning.game.ScanGameCore import get_optimal_limits
+        from ClassicLib.scanning.game.core import get_optimal_limits
 
         ACTUAL_LIMIT = get_optimal_limits()["dds_reads"]
         assert max_concurrent_reads <= ACTUAL_LIMIT
@@ -265,7 +266,7 @@ class TestScanModsUnpacked:
             moved_files.append((src, dst))
             # Don't actually move in test
 
-        with patch("shutil.move", side_effect=track_move), patch("ClassicLib.scanning.game.Config.TEST_MODE", False):
+        with patch("shutil.move", side_effect=track_move), patch("ClassicLib.scanning.game.config.TEST_MODE", False):
             core = ScanGameCore()
             _result = await core.scan_mods_unpacked()
 

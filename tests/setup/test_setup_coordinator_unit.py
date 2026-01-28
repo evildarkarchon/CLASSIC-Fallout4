@@ -163,7 +163,8 @@ class TestRunInitialSetup:
         """run_initial_setup should configure logging."""
         coordinator = SetupCoordinator()
 
-        # Create a mock for yaml_cache with the batch_get_settings_async method
+        # Create a mock for yaml_cache with the batch_get_settings_async method.
+        # Patch on the setup module namespace since yaml_cache is imported at top level.
         mock_yaml_cache = MagicMock()
         mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("v8.0.0", "Fallout 4", None, False))
 
@@ -171,8 +172,7 @@ class TestRunInitialSetup:
             patch("ClassicLib.support.setup.configure_logging") as mock_config_logging,
             patch.object(coordinator.file_generator, "generate_all_files"),
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.msg_info"),
             patch("ClassicLib.support.setup.msg_success"),
             patch("ClassicLib.support.setup.docs_path_find"),
@@ -197,8 +197,7 @@ class TestRunInitialSetup:
             patch("ClassicLib.support.setup.configure_logging"),
             patch.object(coordinator.file_generator, "generate_all_files") as mock_gen_files,
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.msg_info"),
             patch("ClassicLib.support.setup.msg_success"),
             patch("ClassicLib.support.setup.docs_path_find"),
@@ -224,8 +223,7 @@ class TestRunInitialSetup:
             patch.object(coordinator.file_generator, "generate_all_files"),
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.msg_info"),
             patch("ClassicLib.support.setup.msg_success"),
             patch("ClassicLib.support.setup.docs_path_find") as mock_docs_find,
@@ -254,8 +252,7 @@ class TestRunInitialSetup:
             patch("ClassicLib.support.setup.configure_logging"),
             patch.object(coordinator.file_generator, "generate_all_files"),
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.msg_info"),
             patch("ClassicLib.support.setup.msg_success"),
             patch.object(coordinator.backup_manager, "run_backup") as mock_backup,
@@ -278,11 +275,10 @@ class TestRunInitialSetup:
             patch("ClassicLib.support.setup.configure_logging"),
             patch.object(coordinator.file_generator, "generate_all_files"),
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.logger"),
         ):
-            # classic_ver is not a string
+            # classic_ver is not a string - TypeError raised before msg_info is called
             with pytest.raises(TypeError, match="Classic version and game name must be strings"):
                 coordinator.run_initial_setup()
 
@@ -298,11 +294,10 @@ class TestRunInitialSetup:
             patch("ClassicLib.support.setup.configure_logging"),
             patch.object(coordinator.file_generator, "generate_all_files"),
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.logger"),
         ):
-            # game_name is not a string
+            # game_name is not a string - TypeError raised before msg_info is called
             with pytest.raises(TypeError, match="Classic version and game name must be strings"):
                 coordinator.run_initial_setup()
 
@@ -319,8 +314,7 @@ class TestRunInitialSetup:
             patch("ClassicLib.support.setup.enable_debug_logging") as mock_enable_debug,
             patch.object(coordinator.file_generator, "generate_all_files"),
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache, yaml_settings=MagicMock())}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch("ClassicLib.support.setup.msg_info"),
             patch("ClassicLib.support.setup.msg_success"),
             patch.object(coordinator.backup_manager, "run_backup"),
@@ -347,6 +341,7 @@ class TestInitializeApplication:
         settings_file = tmp_path / "CLASSIC Settings.yaml"
         settings_file.write_text("test: value")
 
+        # Mock yaml_cache at the setup module namespace where it is imported.
         mock_yaml_cache = MagicMock()
         mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("auto", False, "Fallout4", False, False))
 
@@ -354,8 +349,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging") as mock_config_logging,
             patch("ClassicLib.support.setup.init_message_handler"),
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths"),
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -379,8 +373,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging"),
             patch("ClassicLib.support.setup.init_message_handler") as mock_init_handler,
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths"),
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -404,8 +397,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging"),
             patch("ClassicLib.support.setup.init_message_handler"),
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths"),
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -423,6 +415,7 @@ class TestInitializeApplication:
         settings_file = tmp_path / "CLASSIC Settings.yaml"
         settings_file.write_text("test: value")
 
+        # batch_get_settings_async returns: (game_version, legacy_vr_mode, managed_game, is_prerelease, debug)
         mock_yaml_cache = MagicMock()
         mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("VR", False, "Fallout4", False, False))
 
@@ -430,8 +423,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging"),
             patch("ClassicLib.support.setup.init_message_handler"),
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths"),
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -450,6 +442,7 @@ class TestInitializeApplication:
         settings_file = tmp_path / "CLASSIC Settings.yaml"
         settings_file.write_text("test: value")
 
+        # game_version is None (not set), legacy_vr_mode is True -> should migrate to VR
         mock_yaml_cache = MagicMock()
         mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=(None, True, "Fallout4", False, False))
 
@@ -457,8 +450,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging"),
             patch("ClassicLib.support.setup.init_message_handler"),
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths"),
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -485,8 +477,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging"),
             patch("ClassicLib.support.setup.init_message_handler"),
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths"),
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -511,8 +502,7 @@ class TestInitializeApplication:
             patch("ClassicLib.support.setup.configure_logging"),
             patch("ClassicLib.support.setup.init_message_handler"),
             patch("ClassicLib.support.setup.ResourceLoader"),
-            patch("ClassicLib.io.yaml.yaml_cache", mock_yaml_cache),
-            patch.dict("sys.modules", {"ClassicLib.YamlSettings": MagicMock(yaml_cache=mock_yaml_cache)}),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
             patch.object(coordinator.path_validator, "validate_all_settings_paths") as mock_validate,
             patch.object(SetupCoordinator, "_ensure_paths_configured"),
             patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
@@ -534,11 +524,12 @@ class TestEnsurePathsConfigured:
     @pytest.mark.unit
     def test_ensure_paths_configured_detects_missing_game_path(self) -> None:
         """_ensure_paths_configured should detect game path when missing."""
+        # Patch yaml_settings on the setup module namespace where it is imported
         mock_yaml_settings = MagicMock(return_value=None)
 
         with (
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_settings", mock_yaml_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings),
             patch("ClassicLib.support.setup.docs_path_find") as mock_docs_find,
             patch("ClassicLib.support.setup.docs_generate_paths"),
             patch("ClassicLib.support.setup.game_path_find") as mock_game_find,
@@ -558,7 +549,7 @@ class TestEnsurePathsConfigured:
 
         with (
             patch.object(GlobalRegistry, "get_config_suffix", return_value=""),
-            patch("ClassicLib.io.yaml.yaml_settings", mock_yaml_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings),
             patch("ClassicLib.support.setup.docs_path_find") as mock_docs_find,
             patch("ClassicLib.support.setup.game_path_find") as mock_game_find,
             patch("ClassicLib.support.setup.logger"),
@@ -576,7 +567,7 @@ class TestEnsurePathsConfigured:
 
         with (
             patch.object(GlobalRegistry, "get_config_suffix", return_value="VR"),
-            patch("ClassicLib.io.yaml.yaml_settings", mock_yaml_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings),
             patch("ClassicLib.support.setup.docs_path_find"),
             patch("ClassicLib.support.setup.docs_generate_paths"),
             patch("ClassicLib.support.setup.game_path_find"),
@@ -614,10 +605,12 @@ class TestLogRustAccelerationStatus:
             "version": "1.0.0",
         }
 
-        mock_classic_settings = MagicMock(return_value=True)
+        # Production code now uses yaml_settings(bool, YAML.Settings, ...) for debug check.
+        # Patch yaml_settings on the setup module namespace where it is imported.
+        mock_yaml_settings_fn = MagicMock(return_value=True)
 
         with (
-            patch("ClassicLib.io.yaml.classic_settings", mock_classic_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
             patch.object(SetupCoordinator, "_log_active_acceleration") as mock_log_active,
@@ -638,10 +631,10 @@ class TestLogRustAccelerationStatus:
             "total_count": 8,
         }
 
-        mock_classic_settings = MagicMock(return_value=True)
+        mock_yaml_settings_fn = MagicMock(return_value=True)
 
         with (
-            patch("ClassicLib.io.yaml.classic_settings", mock_classic_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
             patch.object(SetupCoordinator, "_log_disabled_status") as mock_log_disabled,
@@ -662,10 +655,10 @@ class TestLogRustAccelerationStatus:
             "total_count": 8,
         }
 
-        mock_classic_settings = MagicMock(return_value=True)
+        mock_yaml_settings_fn = MagicMock(return_value=True)
 
         with (
-            patch("ClassicLib.io.yaml.classic_settings", mock_classic_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
             patch.object(SetupCoordinator, "_log_no_acceleration") as mock_log_none,
@@ -680,10 +673,10 @@ class TestLogRustAccelerationStatus:
         """_log_rust_acceleration_status should handle ImportError gracefully."""
         coordinator = SetupCoordinator()
 
-        mock_classic_settings = MagicMock(return_value=True)
+        mock_yaml_settings_fn = MagicMock(return_value=True)
 
         with (
-            patch("ClassicLib.io.yaml.classic_settings", mock_classic_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch(
                 "ClassicLib.integration.status.get_rust_component_status",
@@ -700,10 +693,10 @@ class TestLogRustAccelerationStatus:
         """_log_rust_acceleration_status should handle unexpected exceptions."""
         coordinator = SetupCoordinator()
 
-        mock_classic_settings = MagicMock(return_value=True)
+        mock_yaml_settings_fn = MagicMock(return_value=True)
 
         with (
-            patch("ClassicLib.io.yaml.classic_settings", mock_classic_settings),
+            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch(
                 "ClassicLib.integration.status.get_rust_component_status",

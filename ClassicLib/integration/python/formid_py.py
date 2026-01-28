@@ -13,8 +13,8 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ClassicLib.io.database import AsyncDatabasePool
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
     from ClassicLib.scanning.logs.reporting import ReportFragment
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 # Module-level regex pattern cache to avoid recompilation
 _PATTERN_CACHE: dict[str, re.Pattern[str]] = {}

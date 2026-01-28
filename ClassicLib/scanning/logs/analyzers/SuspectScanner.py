@@ -9,8 +9,8 @@ This module scans for known crash patterns and suspects including:
 
 from typing import TYPE_CHECKING
 
+from ClassicLib.core.logger import logger
 from ClassicLib.integration.rust.report_rust import ReportFragment
-from ClassicLib.Logger import logger
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 if TYPE_CHECKING:

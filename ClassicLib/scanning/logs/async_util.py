@@ -22,7 +22,7 @@ from typing import Any
 
 import aiofiles
 
-from ClassicLib.Logger import logger
+from ClassicLib.core.logger import logger
 
 # Backward compatibility re-exports with deprecation warnings
 # These will be removed in a future version

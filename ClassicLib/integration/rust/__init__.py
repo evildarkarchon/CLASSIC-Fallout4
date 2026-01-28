@@ -23,11 +23,7 @@ logger = logging.getLogger(__name__)
 
 # Import all Rust wrapper components
 try:
-    # Database imports from new canonical location
     from ClassicLib.integration.rust import gpu_rust
-
-    # Legacy function (deprecated)
-    from ClassicLib.integration.rust.database_rust import get_database_pool_implementation
     from ClassicLib.integration.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
     from ClassicLib.integration.rust.file_io_rust import FileIOCore, create_file_io_sync, get_rust_file_io
     from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
@@ -111,7 +107,6 @@ __all__ = [
     "RustAsyncDatabasePool",
     "AsyncDatabasePool",
     "DatabasePoolManager",
-    "get_database_pool_implementation",
     # Mod Detector
     "detect_mods_single",
     "detect_mods_double",

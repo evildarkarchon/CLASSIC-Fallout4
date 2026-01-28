@@ -16,7 +16,7 @@ from ClassicLib.core.constants import NULL_VERSION, YAML, Version
 from ClassicLib.core.registry import get_vr
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 from ClassicLib.support.versions import VersionInfo, get_version_registry
-from ClassicLib.Utils.version_utils import get_game_version
+from ClassicLib.Utils.version_utils import read_game_exe_version
 
 
 class AddressLibVersionInfo(TypedDict):
@@ -275,7 +275,7 @@ def check_xse_plugins() -> str:
         message_list = _format_game_version_not_detected_message()  # Or a more specific error
         return "".join(message_list)
 
-    game_version: Version = get_game_version(Path(game_exe_path_str))
+    game_version: Version = read_game_exe_version(Path(game_exe_path_str))
 
     if game_version == NULL_VERSION:
         message_list = _format_game_version_not_detected_message()

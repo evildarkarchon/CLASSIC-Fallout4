@@ -245,7 +245,7 @@ def get_version_from_pe_header(exe_path: Path) -> Version:
     return get_version_fallback(exe_path)
 
 
-def get_game_version(game_exe_path: Path) -> Version:
+def read_game_exe_version(game_exe_path: Path) -> Version:
     """Retrieve the version information of a game executable.
 
     This function attempts to detect the version of a given game executable

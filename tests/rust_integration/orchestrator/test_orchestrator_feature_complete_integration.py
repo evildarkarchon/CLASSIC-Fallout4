@@ -13,10 +13,10 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from ClassicLib.scanning.logs.HybridOrchestrator import HybridOrchestrator
 
 from ClassicLib.integration.factory import get_orchestrator
 from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.scanning.logs.hybrid_orchestrator import HybridOrchestrator
 
 
 @pytest.mark.rust
@@ -38,9 +38,9 @@ class TestFeatureCompleteMode:
         to determine concurrency. This is mocked to return 0 (automatic concurrency).
         """
         with (
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
-            patch("ClassicLib.scanning.logs.HybridOrchestrator.classic_settings", return_value=0),
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async") as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async") as mock_classic,
+            patch("ClassicLib.scanning.logs.hybrid_orchestrator.classic_settings", return_value=0),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = None

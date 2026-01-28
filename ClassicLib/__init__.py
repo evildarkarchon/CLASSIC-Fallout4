@@ -102,7 +102,7 @@ from ClassicLib.Utils.file_utils import calculate_file_hash, calculate_similarit
 from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
 from ClassicLib.Utils.path_utils import remove_readonly
 from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
-from ClassicLib.Utils.version_utils import crashgen_version_gen, get_game_version
+from ClassicLib.Utils.version_utils import crashgen_version_gen, read_game_exe_version
 from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 from ClassicLib.Utils.web_utils import pastebin_fetch
 
@@ -175,7 +175,7 @@ __all__ = [
     "configure_logging",
     "enable_debug_logging",
     "crashgen_version_gen",
-    "get_game_version",
+    "read_game_exe_version",
     "normalize_list",
     "open_file_with_encoding",
     "pastebin_fetch",

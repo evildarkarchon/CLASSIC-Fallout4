@@ -22,7 +22,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.game.core.dds_analyzer import (
+
+from ClassicLib.scanning.game.checks.dds_analyzer import (
     DDSFlags,
     DDSPixelFlags,
     EnhancedDDSAnalyzer,
@@ -236,8 +237,8 @@ def mock_orchestrator_settings() -> Generator[tuple[MagicMock, MagicMock], None,
         Tuple of (mock_yaml_settings_async, mock_classic_settings_async).
     """
     with (
-        patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
-        patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
+        patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async") as mock_yaml,
+        patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async") as mock_classic,
     ):
         mock_yaml.return_value = None
         mock_classic.return_value = None
@@ -255,9 +256,9 @@ def mock_orchestrator_settings_with_concurrency() -> Generator[tuple[MagicMock, 
         Tuple of (mock_yaml_settings_async, mock_classic_settings_async, hybrid_patch).
     """
     with (
-        patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async") as mock_yaml,
-        patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async") as mock_classic,
-        patch("ClassicLib.scanning.logs.HybridOrchestrator.classic_settings", return_value=0) as hybrid_mock,
+        patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async") as mock_yaml,
+        patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async") as mock_classic,
+        patch("ClassicLib.scanning.logs.hybrid_orchestrator.classic_settings", return_value=0) as hybrid_mock,
     ):
         mock_yaml.return_value = None
         mock_classic.return_value = None
@@ -368,8 +369,8 @@ def dds_analyzer() -> EnhancedDDSAnalyzer:
         EnhancedDDSAnalyzer: Analyzer instance configured for testing.
     """
     with (
-        patch("ClassicLib.scanning.game.core.dds_analyzer.HAS_PYFFI", False),
-        patch("ClassicLib.scanning.game.core.dds_analyzer.HAS_PIL_DDS", False),
+        patch("ClassicLib.scanning.game.checks.dds_analyzer.HAS_PYFFI", False),
+        patch("ClassicLib.scanning.game.checks.dds_analyzer.HAS_PIL_DDS", False),
     ):
         return EnhancedDDSAnalyzer(use_libraries=False)
 

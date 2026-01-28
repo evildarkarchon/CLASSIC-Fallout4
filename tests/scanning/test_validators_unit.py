@@ -48,8 +48,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = "F4SE"
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = Path("C:/mods")
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = ""
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
@@ -70,8 +69,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = "F4SE"
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = ""
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
@@ -91,8 +89,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = None  # Return None
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = ""
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
@@ -113,8 +110,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = "F4SE"
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = ""
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
@@ -135,8 +131,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = "F4SE"
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = expected_path
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = ""
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         result = await validators.get_scan_settings()
 
@@ -156,8 +151,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = "F4SE"
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = ""
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         # First call
                         result1 = await validators.get_scan_settings()
@@ -181,8 +175,7 @@ class TestGetScanSettings:
             mock_yaml.return_value = "F4SE"
             with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
                 mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.GlobalRegistry") as mock_global:
-                    mock_global.get_vr.return_value = "VR"
+                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value="VR"):
                     with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
                         await validators.get_scan_settings()
 

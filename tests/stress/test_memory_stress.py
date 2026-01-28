@@ -18,12 +18,12 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 
 import classic_scanlog
 from classic_scanlog import FormIDAnalyzer, LogParser, PatternMatcher
-from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 
 # Import components to test
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.io.files import FileIOCore
 from ClassicLib.io.yaml import yaml_cache
+from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
 
 @pytest.mark.stress

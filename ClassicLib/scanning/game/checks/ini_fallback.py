@@ -88,7 +88,7 @@ class IniValidator:
         config_cache = ConfigFileCache()
 
         # Use existing async detection logic
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
         from ClassicLib.scanning.game.scan_mod_inis import detect_all_ini_issues_async
 
         bridge = AsyncBridge.get_instance()

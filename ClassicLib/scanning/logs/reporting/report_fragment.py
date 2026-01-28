@@ -109,6 +109,24 @@ class ReportFragment:
 
         return ReportFragment(content=self.content + other.content, has_content=self.has_content or other.has_content)
 
+    def __len__(self) -> int:
+        """Return the number of lines in this fragment.
+
+        Returns:
+            int: The number of content lines.
+
+        """
+        return len(self.content)
+
+    def __bool__(self) -> bool:
+        """Return whether this fragment has meaningful content.
+
+        Returns:
+            bool: True if the fragment has content.
+
+        """
+        return self.has_content
+
     def to_list(self) -> list[str]:
         """Convert the content of the object into a list of strings.
 

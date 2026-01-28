@@ -299,7 +299,7 @@ class FormIDAnalyzerCore:
             ReportFragment containing the FormID analysis results
 
         """
-        from ClassicLib.AsyncBridge import run_async
+        from ClassicLib.core.async_bridge import run_async
 
         return run_async(self.formid_match(formids_matches, crashlog_plugins))
 
@@ -320,6 +320,6 @@ class FormIDAnalyzerCore:
             None if no value is found.
 
         """
-        from ClassicLib.AsyncBridge import run_async
+        from ClassicLib.core.async_bridge import run_async
 
         return run_async(self.lookup_formid_value(formid, plugin))

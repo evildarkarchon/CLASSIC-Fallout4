@@ -99,8 +99,8 @@ class TestCreateCheckbox:
     def mock_settings(self):
         """Mock settings functions."""
         with (
-            patch("ClassicLib.Interface.widgets.UIHelpers.classic_settings") as mock_classic,
-            patch("ClassicLib.Interface.widgets.UIHelpers.yaml_settings") as mock_yaml,
+            patch("ClassicLib.io.yaml.classic_settings") as mock_classic,
+            patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml,
         ):
             yield mock_classic, mock_yaml
 
@@ -430,7 +430,7 @@ class TestIntegrationScenarios:
         main_layout.addWidget(separator2)
 
         # Add checkbox
-        with patch("ClassicLib.Interface.widgets.UIHelpers.classic_settings", return_value=True):
+        with patch("ClassicLib.io.yaml.classic_settings", return_value=True):
             checkbox = create_checkbox("Enable Feature", "feature_enabled")
             main_layout.addWidget(checkbox)
 

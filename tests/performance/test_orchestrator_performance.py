@@ -17,10 +17,10 @@ from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
 from packaging.version import Version
 
 from ClassicLib.io.database import DatabasePoolManager
+from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 from ClassicLib.Utils.version_utils import crashgen_version_gen
 
 if TYPE_CHECKING:
@@ -234,7 +234,7 @@ class TestOrchestratorPerformance:
     @pytest.mark.slow
     def test_regex_pattern_caching(self):
         """Verify regex patterns are cached at module level."""
-        from ClassicLib.scanning.logs.FormIDAnalyzerCore import _PATTERN_CACHE, FormIDAnalyzerCore
+        from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import _PATTERN_CACHE, FormIDAnalyzerCore
 
         # Create an instance to ensure pattern gets cached
         mock_yamldata = MagicMock()
@@ -279,7 +279,7 @@ class TestOrchestratorPerformance:
 
         # Mock the slow operations to measure optimization impact
         # Note: find_segments is in ClassicLib.ScanLog.Parser, not OrchestratorCore
-        with patch("ClassicLib.scanning.logs.Parser.find_segments") as mock_find:
+        with patch("ClassicLib.scanning.logs.parser.find_segments") as mock_find:
             mock_find.return_value = (
                 "1.10.163",  # gameversion
                 "1.28.6",  # crashgen version

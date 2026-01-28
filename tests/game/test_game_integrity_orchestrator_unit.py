@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.scanning.game.GameIntegrityOrchestrator module.
+"""Unit tests for ClassicLib.scanning.game.orchestrator module.
 
 This module tests the async-first game integrity checking orchestration
 functionality including concurrent checks, exception group handling,
@@ -11,7 +11,9 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.game.GameIntegrityOrchestrator import (
+
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
+from ClassicLib.scanning.game.orchestrator import (
     GameIntegrityOrchestratorCore,
     generate_game_combined_result,
     generate_game_combined_result_async,
@@ -21,8 +23,6 @@ from ClassicLib.scanning.game.GameIntegrityOrchestrator import (
     write_combined_results,
     write_combined_results_async,
 )
-
-from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
 
 pytestmark = pytest.mark.unit
 
@@ -35,7 +35,7 @@ pytestmark = pytest.mark.unit
 class TestGameIntegrityOrchestratorCoreInit:
     """Tests for the GameIntegrityOrchestratorCore initialization."""
 
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
     def test_init_creates_file_io_instance(self, mock_get_file_io: MagicMock) -> None:
         """__init__ should create file_io instance using factory."""
         mock_file_io = MagicMock()
@@ -56,8 +56,8 @@ class TestGenerateGameCombinedResultAsync:
     """Tests for the generate_game_combined_result_async method."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_returns_empty_when_game_path_missing(self, mock_yaml: MagicMock, mock_get_file_io: MagicMock) -> None:
         """generate_game_combined_result_async should return empty when game_path is None."""
         mock_yaml.return_value = None  # Neither docs nor game path configured
@@ -69,8 +69,8 @@ class TestGenerateGameCombinedResultAsync:
         assert issues == []
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_returns_empty_when_docs_path_missing(self, mock_yaml: MagicMock, mock_get_file_io: MagicMock, tmp_path: Path) -> None:
         """generate_game_combined_result_async should return empty when docs_path is None."""
 
@@ -90,20 +90,20 @@ class TestGenerateGameCombinedResultAsync:
         assert issues == []
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanModInis.detect_all_ini_issues_async")
-    @patch("ClassicLib.scanning.game.Config.ConfigFileCache")
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.scan_mod_inis_async")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.scan_wryecheck")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.check_crashgen_settings")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.check_xse_plugins")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.scan_mod_inis.detect_all_ini_issues_async")
+    @patch("ClassicLib.scanning.game.config.ConfigFileCache")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
+    @patch("ClassicLib.scanning.game.orchestrator.scan_mod_inis_async")
+    @patch("ClassicLib.scanning.game.orchestrator.scan_wryecheck")
+    @patch("ClassicLib.scanning.game.orchestrator.check_crashgen_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.check_xse_plugins")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_runs_all_checks_concurrently(
         self,
         mock_yaml: MagicMock,
-        mock_registry: MagicMock,
+        mock_get_vr: MagicMock,
         mock_get_file_io: MagicMock,
         mock_xse: MagicMock,
         mock_crashgen: MagicMock,
@@ -120,8 +120,6 @@ class TestGenerateGameCombinedResultAsync:
         game_path = tmp_path / "game"
         docs_path.mkdir()
         game_path.mkdir()
-
-        mock_registry.get_vr.return_value = ""
 
         def yaml_side_effect(type_arg, _store, key_path, *args):
             if "Root_Folder_Docs" in key_path:
@@ -160,20 +158,20 @@ class TestGenerateGameCombinedResultAsync:
         assert "Mod INIs Result" in result
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanModInis.detect_all_ini_issues_async")
-    @patch("ClassicLib.scanning.game.Config.ConfigFileCache")
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.scan_mod_inis_async")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.scan_wryecheck")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.check_crashgen_settings")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.check_xse_plugins")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.scan_mod_inis.detect_all_ini_issues_async")
+    @patch("ClassicLib.scanning.game.config.ConfigFileCache")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
+    @patch("ClassicLib.scanning.game.orchestrator.scan_mod_inis_async")
+    @patch("ClassicLib.scanning.game.orchestrator.scan_wryecheck")
+    @patch("ClassicLib.scanning.game.orchestrator.check_crashgen_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.check_xse_plugins")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_returns_combined_config_issues(
         self,
         mock_yaml: MagicMock,
-        mock_registry: MagicMock,
+        mock_get_vr: MagicMock,
         mock_get_file_io: MagicMock,
         mock_xse: MagicMock,
         mock_crashgen: MagicMock,
@@ -189,8 +187,6 @@ class TestGenerateGameCombinedResultAsync:
         game_path = tmp_path / "game"
         docs_path.mkdir()
         game_path.mkdir()
-
-        mock_registry.get_vr.return_value = ""
 
         def yaml_side_effect(type_arg, _store, key_path, *args):
             if "Root_Folder_Docs" in key_path:
@@ -241,10 +237,10 @@ class TestGenerateGameCombinedResultAsync:
         assert ini_issue in issues
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
-    async def test_returns_tuple_type(self, mock_yaml: MagicMock, mock_registry: MagicMock, mock_get_file_io: MagicMock) -> None:
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
+    async def test_returns_tuple_type(self, mock_yaml: MagicMock, mock_get_vr: MagicMock, mock_get_file_io: MagicMock) -> None:
         """generate_game_combined_result_async should return tuple[str, list[ConfigIssue]]."""
         mock_yaml.return_value = None
 
@@ -266,8 +262,8 @@ class TestGenerateModsCombinedResultAsync:
     """Tests for the generate_mods_combined_result_async method."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_returns_warning_when_mod_path_missing(self, mock_yaml: MagicMock, mock_scan_game_core: MagicMock) -> None:
         """generate_mods_combined_result_async should return warning when mod path is None."""
         mock_core_instance = MagicMock()
@@ -281,7 +277,7 @@ class TestGenerateModsCombinedResultAsync:
         assert result == "Mod path not configured warning"
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_runs_both_scans_concurrently(self, mock_scan_game_core: MagicMock, tmp_path: Path) -> None:
         """generate_mods_combined_result_async should run unpacked and archived scans concurrently."""
         mock_core_instance = MagicMock()
@@ -298,7 +294,7 @@ class TestGenerateModsCombinedResultAsync:
         assert "Archived mods result" in result
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_handles_unpacked_scan_exception(self, mock_scan_game_core: MagicMock, tmp_path: Path) -> None:
         """generate_mods_combined_result_async should handle exceptions from unpacked scan."""
         mock_core_instance = MagicMock()
@@ -313,7 +309,7 @@ class TestGenerateModsCombinedResultAsync:
         assert "Archived result" in result
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_handles_archived_scan_exception(self, mock_scan_game_core: MagicMock, tmp_path: Path) -> None:
         """generate_mods_combined_result_async should handle exceptions from archived scan."""
         mock_core_instance = MagicMock()
@@ -328,7 +324,7 @@ class TestGenerateModsCombinedResultAsync:
         assert "Unpacked result" in result
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_returns_empty_when_both_scans_fail(self, mock_scan_game_core: MagicMock, tmp_path: Path) -> None:
         """generate_mods_combined_result_async should return empty when both scans fail."""
         mock_core_instance = MagicMock()
@@ -351,7 +347,7 @@ class TestWriteCombinedResultsAsync:
     """Tests for the write_combined_results_async method."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
     async def test_writes_combined_results_to_file(self, mock_get_file_io: MagicMock) -> None:
         """write_combined_results_async should write combined game and mods results."""
         mock_file_io = MagicMock()
@@ -377,7 +373,7 @@ class TestWriteCombinedResultsAsync:
         assert "Mods results" in call_args[0][1]
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
     async def test_runs_game_and_mods_concurrently(self, mock_get_file_io: MagicMock) -> None:
         """write_combined_results_async should run game and mods generation concurrently."""
         mock_file_io = MagicMock()
@@ -408,8 +404,8 @@ class TestWriteCombinedResultsAsync:
 class TestSingletonAndModuleFunctions:
     """Tests for the singleton accessor and module-level functions."""
 
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator._game_integrity_orchestrator_core", None)
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator._game_integrity_orchestrator_core", None)
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
     def test_get_game_integrity_orchestrator_core_creates_singleton(self, mock_get_file_io: MagicMock) -> None:
         """get_game_integrity_orchestrator_core should create singleton instance."""
         core1 = get_game_integrity_orchestrator_core()
@@ -419,7 +415,7 @@ class TestSingletonAndModuleFunctions:
         assert isinstance(core1, GameIntegrityOrchestratorCore)
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_game_integrity_orchestrator_core")
+    @patch("ClassicLib.scanning.game.orchestrator.get_game_integrity_orchestrator_core")
     async def test_module_generate_game_combined_result_async(self, mock_get_core: MagicMock) -> None:
         """Module-level generate_game_combined_result_async should delegate to core."""
         mock_core = MagicMock()
@@ -433,7 +429,7 @@ class TestSingletonAndModuleFunctions:
         assert issues == []
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_game_integrity_orchestrator_core")
+    @patch("ClassicLib.scanning.game.orchestrator.get_game_integrity_orchestrator_core")
     async def test_module_generate_mods_combined_result_async(self, mock_get_core: MagicMock) -> None:
         """Module-level generate_mods_combined_result_async should delegate to core."""
         mock_core = MagicMock()
@@ -446,7 +442,7 @@ class TestSingletonAndModuleFunctions:
         assert result == "Mods Result"
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_game_integrity_orchestrator_core")
+    @patch("ClassicLib.scanning.game.orchestrator.get_game_integrity_orchestrator_core")
     async def test_module_write_combined_results_async(self, mock_get_core: MagicMock) -> None:
         """Module-level write_combined_results_async should delegate to core."""
         mock_core = MagicMock()
@@ -466,7 +462,7 @@ class TestSingletonAndModuleFunctions:
 class TestSyncAdapters:
     """Tests for the sync adapter functions."""
 
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.AsyncBridge")
+    @patch("ClassicLib.scanning.game.orchestrator.AsyncBridge")
     def test_generate_game_combined_result_uses_asyncbridge(self, mock_async_bridge_class: MagicMock) -> None:
         """generate_game_combined_result should use AsyncBridge for sync execution."""
         mock_bridge = MagicMock()
@@ -486,7 +482,7 @@ class TestSyncAdapters:
         assert result == "Result"
         assert issues == []
 
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.AsyncBridge")
+    @patch("ClassicLib.scanning.game.orchestrator.AsyncBridge")
     def test_generate_mods_combined_result_uses_asyncbridge(self, mock_async_bridge_class: MagicMock) -> None:
         """generate_mods_combined_result should use AsyncBridge for sync execution."""
         mock_bridge = MagicMock()
@@ -505,7 +501,7 @@ class TestSyncAdapters:
         mock_bridge.run_async.assert_called_once()
         assert result == "Mods Result"
 
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.AsyncBridge")
+    @patch("ClassicLib.scanning.game.orchestrator.AsyncBridge")
     def test_write_combined_results_uses_asyncbridge(self, mock_async_bridge_class: MagicMock) -> None:
         """write_combined_results should use AsyncBridge for sync execution."""
         mock_bridge = MagicMock()
@@ -533,7 +529,7 @@ class TestPrivateHelperMethods:
     """Tests for the private helper methods."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.check_xse_plugins")
+    @patch("ClassicLib.scanning.game.orchestrator.check_xse_plugins")
     async def test_run_xse_plugins_check_async(self, mock_check_xse: MagicMock) -> None:
         """_run_xse_plugins_check_async should run check_xse_plugins in executor."""
         mock_check_xse.return_value = "XSE result"
@@ -544,7 +540,7 @@ class TestPrivateHelperMethods:
         assert result == "XSE result"
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.check_crashgen_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.check_crashgen_settings")
     async def test_run_crashgen_check_async(self, mock_crashgen: MagicMock, tmp_path: Path) -> None:
         """_run_crashgen_check_async should run check_crashgen_settings in executor."""
         issue = ConfigIssue(
@@ -565,7 +561,7 @@ class TestPrivateHelperMethods:
         assert issues == [issue]
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.scan_wryecheck")
+    @patch("ClassicLib.scanning.game.orchestrator.scan_wryecheck")
     async def test_run_wryecheck_async(self, mock_wrye: MagicMock) -> None:
         """_run_wryecheck_async should run scan_wryecheck in executor."""
         mock_wrye.return_value = "Wrye result"
@@ -576,7 +572,7 @@ class TestPrivateHelperMethods:
         assert result == "Wrye result"
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.scan_mod_inis_async")
+    @patch("ClassicLib.scanning.game.orchestrator.scan_mod_inis_async")
     async def test_run_mod_inis_scan_async(self, mock_mod_inis: AsyncMock) -> None:
         """_run_mod_inis_scan_async should call scan_mod_inis_async directly."""
         mock_mod_inis.return_value = "Mod INIs result"
@@ -587,7 +583,7 @@ class TestPrivateHelperMethods:
         assert result == "Mod INIs result"
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_check_log_errors_async(self, mock_scan_game_core: MagicMock, tmp_path: Path) -> None:
         """_check_log_errors_async should delegate to ScanGameCore.check_log_errors."""
         mock_core_instance = MagicMock()
@@ -609,11 +605,11 @@ class TestErrorHandling:
     """Tests for error handling in the orchestrator."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_generate_game_returns_empty_on_os_error(
-        self, mock_yaml: MagicMock, mock_registry: MagicMock, mock_get_file_io: MagicMock
+        self, mock_yaml: MagicMock, mock_get_vr: MagicMock, mock_get_file_io: MagicMock
     ) -> None:
         """generate_game_combined_result_async should return empty on OSError."""
         mock_yaml.side_effect = OSError("File system error")
@@ -625,11 +621,11 @@ class TestErrorHandling:
         assert issues == []
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.GameIntegrityOrchestrator.yaml_settings")
+    @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
+    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
+    @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_generate_game_returns_empty_on_runtime_error(
-        self, mock_yaml: MagicMock, mock_registry: MagicMock, mock_get_file_io: MagicMock
+        self, mock_yaml: MagicMock, mock_get_vr: MagicMock, mock_get_file_io: MagicMock
     ) -> None:
         """generate_game_combined_result_async should return empty on RuntimeError."""
         mock_yaml.side_effect = RuntimeError("Runtime error")
@@ -641,7 +637,7 @@ class TestErrorHandling:
         assert issues == []
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_generate_mods_returns_empty_on_os_error(self, mock_scan_game_core: MagicMock) -> None:
         """generate_mods_combined_result_async should return empty on OSError."""
         mock_scan_game_core.side_effect = OSError("File system error")
@@ -651,7 +647,7 @@ class TestErrorHandling:
         assert result == ""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore")
+    @patch("ClassicLib.scanning.game.core.ScanGameCore")
     async def test_generate_mods_returns_empty_on_runtime_error(self, mock_scan_game_core: MagicMock) -> None:
         """generate_mods_combined_result_async should return empty on RuntimeError."""
         mock_scan_game_core.side_effect = RuntimeError("Runtime error")

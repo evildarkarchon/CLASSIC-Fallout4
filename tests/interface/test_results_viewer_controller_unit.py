@@ -1037,37 +1037,33 @@ class TestResultsViewerOpenFolder:
     """Tests for ResultsViewerController open folder functionality."""
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.GlobalRegistry")
+    @patch("ClassicLib.Interface.controllers.results_viewer.get_local_dir", return_value=None)
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_warning")
-    def test_open_reports_folder_no_local_dir(self, mock_warning, mock_registry):
+    def test_open_reports_folder_no_local_dir(self, mock_warning, mock_get_local_dir):
         """Test _open_reports_folder warns when local dir not configured."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
-
-        mock_registry.get_local_dir.return_value = None
 
         ResultsViewerController._open_reports_folder()
 
         mock_warning.assert_called_once_with("Local directory not configured")
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.GlobalRegistry")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_warning")
-    def test_open_reports_folder_no_crash_logs_dir(self, mock_warning, mock_registry):
+    def test_open_reports_folder_no_crash_logs_dir(self, mock_warning):
         """Test _open_reports_folder warns when Crash Logs folder doesn't exist."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            mock_registry.get_local_dir.return_value = tmpdir
-            # Note: Crash Logs folder is not created
+            with patch("ClassicLib.Interface.controllers.results_viewer.get_local_dir", return_value=tmpdir):
+                # Note: Crash Logs folder is not created
 
-            ResultsViewerController._open_reports_folder()
+                ResultsViewerController._open_reports_folder()
 
-            mock_warning.assert_called_once_with("Crash Logs folder does not exist")
+                mock_warning.assert_called_once_with("Crash Logs folder does not exist")
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.GlobalRegistry")
     @patch("PySide6.QtGui.QDesktopServices")
-    def test_open_reports_folder_success(self, mock_desktop, mock_registry, qt_application):
+    def test_open_reports_folder_success(self, mock_desktop, qt_application):
         """Test _open_reports_folder opens folder in file explorer."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
 
@@ -1075,17 +1071,15 @@ class TestResultsViewerOpenFolder:
             crash_logs = Path(tmpdir) / "Crash Logs"
             crash_logs.mkdir()
 
-            mock_registry.get_local_dir.return_value = tmpdir
+            with patch("ClassicLib.Interface.controllers.results_viewer.get_local_dir", return_value=tmpdir):
+                ResultsViewerController._open_reports_folder()
 
-            ResultsViewerController._open_reports_folder()
-
-            mock_desktop.openUrl.assert_called_once()
+                mock_desktop.openUrl.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.GlobalRegistry")
     @patch("PySide6.QtGui.QDesktopServices")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
-    def test_open_reports_folder_error(self, mock_error, mock_desktop, mock_registry, qt_application):
+    def test_open_reports_folder_error(self, mock_error, mock_desktop, qt_application):
         """Test _open_reports_folder handles errors."""
         from ClassicLib.Interface.controllers.results_viewer import ResultsViewerController
 
@@ -1093,9 +1087,9 @@ class TestResultsViewerOpenFolder:
             crash_logs = Path(tmpdir) / "Crash Logs"
             crash_logs.mkdir()
 
-            mock_registry.get_local_dir.return_value = tmpdir
             mock_desktop.openUrl.side_effect = RuntimeError("Desktop error")
 
-            ResultsViewerController._open_reports_folder()
+            with patch("ClassicLib.Interface.controllers.results_viewer.get_local_dir", return_value=tmpdir):
+                ResultsViewerController._open_reports_folder()
 
-            mock_error.assert_called_once()
+                mock_error.assert_called_once()

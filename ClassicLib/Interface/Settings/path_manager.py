@@ -75,7 +75,7 @@ class PathManager:
             AttributeError: Raised if an attribute is missing during game information retrieval.
 
         """
-        from ClassicLib import GlobalRegistry
+        from ClassicLib.core.registry import GlobalRegistry
 
         if not self.ini_folder_input:
             return
@@ -116,8 +116,8 @@ class PathManager:
             OSError: On operating system-related failures.
 
         """
-        from ClassicLib import GlobalRegistry
-        from ClassicLib.Logger import logger
+        from ClassicLib.core.logger import logger
+        from ClassicLib.core.registry import GlobalRegistry
 
         try:
             # Clear the INI Folder Path setting in CLASSIC Settings.yaml
@@ -153,9 +153,9 @@ class PathManager:
             OSError: If a system-related error occurs, like file-related issues.
 
         """
-        from ClassicLib import GlobalRegistry
-        from ClassicLib.DocsPath import docs_path_find
-        from ClassicLib.Logger import logger
+        from ClassicLib.core.logger import logger
+        from ClassicLib.core.registry import GlobalRegistry
+        from ClassicLib.support.docs_path import docs_path_find
 
         if not self.ini_folder_input:
             return

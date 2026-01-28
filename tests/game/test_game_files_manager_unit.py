@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.scanning.game.GameFilesManager module.
+"""Unit tests for ClassicLib.scanning.game.game_files_manager module.
 
 This module tests the game file management functionality including backup,
 restore, and remove operations with async support.
@@ -11,7 +11,8 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.game.GameFilesManager import (
+
+from ClassicLib.scanning.game.game_files_manager import (
     GameFilesManagerCore,
     get_game_files_manager_core,
     manage_game_files,
@@ -69,7 +70,7 @@ class TestMatchesManagedFile:
 class TestHandlePermissionError:
     """Tests for the _handle_permission_error static method."""
 
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_error")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_error")
     def test_handle_permission_error_calls_msg_error(self, mock_msg_error: MagicMock) -> None:
         """_handle_permission_error should call msg_error with appropriate message."""
         GameFilesManagerCore._handle_permission_error("BACKUP", "DLL Files")
@@ -80,7 +81,7 @@ class TestHandlePermissionError:
         assert "DLL Files" in call_args
         assert "PERMISSIONS" in call_args
 
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_error")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_error")
     def test_handle_permission_error_suggests_admin_mode(self, mock_msg_error: MagicMock) -> None:
         """_handle_permission_error should suggest running in admin mode."""
         GameFilesManagerCore._handle_permission_error("REMOVE", "Test Files")
@@ -295,7 +296,7 @@ class TestManageGameFilesAsync:
     """Tests for the manage_game_files_async method."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.yaml_settings")
+    @patch("ClassicLib.scanning.game.game_files_manager.yaml_settings")
     async def test_manage_game_files_async_raises_when_game_path_missing(self, mock_yaml: MagicMock) -> None:
         """manage_game_files_async should raise FileNotFoundError when game path is None."""
         mock_yaml.return_value = None  # No game path
@@ -306,9 +307,9 @@ class TestManageGameFilesAsync:
             await core.manage_game_files_async("Manage_DLLs")
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_success")
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_info")
-    @patch("ClassicLib.scanning.game.GameFilesManager.yaml_settings")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_success")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_info")
+    @patch("ClassicLib.scanning.game.game_files_manager.yaml_settings")
     async def test_manage_game_files_async_backup_mode(
         self, mock_yaml: MagicMock, mock_info: MagicMock, mock_success: MagicMock, tmp_path: Path
     ) -> None:
@@ -336,9 +337,9 @@ class TestManageGameFilesAsync:
         assert backup_path.exists() or True  # Backup dir is created
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_success")
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_info")
-    @patch("ClassicLib.scanning.game.GameFilesManager.yaml_settings")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_success")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_info")
+    @patch("ClassicLib.scanning.game.game_files_manager.yaml_settings")
     async def test_manage_game_files_async_remove_mode(
         self, mock_yaml: MagicMock, mock_info: MagicMock, mock_success: MagicMock, tmp_path: Path
     ) -> None:
@@ -363,9 +364,9 @@ class TestManageGameFilesAsync:
         assert not test_file.exists()
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_success")
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_info")
-    @patch("ClassicLib.scanning.game.GameFilesManager.yaml_settings")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_success")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_info")
+    @patch("ClassicLib.scanning.game.game_files_manager.yaml_settings")
     async def test_manage_game_files_async_handles_empty_manage_list(
         self, mock_yaml: MagicMock, mock_info: MagicMock, mock_success: MagicMock, tmp_path: Path
     ) -> None:
@@ -387,8 +388,8 @@ class TestManageGameFilesAsync:
         await core.manage_game_files_async("Manage_Empty", "BACKUP")
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_error")
-    @patch("ClassicLib.scanning.game.GameFilesManager.yaml_settings")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_error")
+    @patch("ClassicLib.scanning.game.game_files_manager.yaml_settings")
     async def test_manage_game_files_async_handles_permission_error(
         self, mock_yaml: MagicMock, mock_error: MagicMock, tmp_path: Path
     ) -> None:
@@ -426,7 +427,7 @@ class TestGetGameFilesManagerCore:
     def test_get_game_files_manager_core_returns_instance(self) -> None:
         """get_game_files_manager_core should return a GameFilesManagerCore instance."""
         # Reset the singleton for clean test
-        import ClassicLib.scanning.game.GameFilesManager as gfm
+        import ClassicLib.scanning.game.game_files_manager as gfm
 
         gfm._game_files_manager_core = None
 
@@ -451,7 +452,7 @@ class TestManageGameFilesAsyncFunction:
     """Tests for the manage_game_files_async module-level function."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.get_game_files_manager_core")
+    @patch("ClassicLib.scanning.game.game_files_manager.get_game_files_manager_core")
     async def test_manage_game_files_async_calls_core_method(self, mock_get_core: MagicMock) -> None:
         """manage_game_files_async should call the core's method."""
         mock_core = MagicMock()
@@ -471,8 +472,8 @@ class TestManageGameFilesAsyncFunction:
 class TestManageGameFilesSync:
     """Tests for the manage_game_files sync wrapper function."""
 
-    @patch("ClassicLib.scanning.game.GameFilesManager.AsyncBridge")
-    @patch("ClassicLib.scanning.game.GameFilesManager.manage_game_files_async")
+    @patch("ClassicLib.scanning.game.game_files_manager.AsyncBridge")
+    @patch("ClassicLib.scanning.game.game_files_manager.manage_game_files_async")
     def test_manage_game_files_uses_async_bridge(self, mock_async_func: MagicMock, mock_bridge_class: MagicMock) -> None:
         """manage_game_files should use AsyncBridge to run async version."""
         mock_bridge = MagicMock()
@@ -484,7 +485,7 @@ class TestManageGameFilesSync:
 
         mock_bridge.run_async.assert_called_once()
 
-    @patch("ClassicLib.scanning.game.GameFilesManager.AsyncBridge")
+    @patch("ClassicLib.scanning.game.game_files_manager.AsyncBridge")
     def test_manage_game_files_defaults_to_backup_mode(self, mock_bridge_class: MagicMock) -> None:
         """manage_game_files should default to BACKUP mode."""
         mock_bridge = MagicMock()
@@ -507,9 +508,9 @@ class TestBackupRestoreIntegration:
     """Integration-style tests for backup and restore operations."""
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_success")
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_info")
-    @patch("ClassicLib.scanning.game.GameFilesManager.yaml_settings")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_success")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_info")
+    @patch("ClassicLib.scanning.game.game_files_manager.yaml_settings")
     async def test_backup_creates_files_in_backup_directory(
         self, mock_yaml: MagicMock, mock_info: MagicMock, mock_success: MagicMock, tmp_path: Path
     ) -> None:
@@ -536,8 +537,8 @@ class TestBackupRestoreIntegration:
             await core.manage_game_files_async("Manage_Important", "BACKUP")
 
     @pytest.mark.asyncio
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_success")
-    @patch("ClassicLib.scanning.game.GameFilesManager.msg_info")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_success")
+    @patch("ClassicLib.scanning.game.game_files_manager.msg_info")
     async def test_file_matching_with_complex_patterns(self, mock_info: MagicMock, mock_success: MagicMock, tmp_path: Path) -> None:
         """File matching should work with complex patterns."""
         core = GameFilesManagerCore()

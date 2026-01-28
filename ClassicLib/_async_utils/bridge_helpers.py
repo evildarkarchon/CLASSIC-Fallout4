@@ -24,7 +24,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Callable, Coroutine
 
-    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.core.async_bridge import AsyncBridge
 
 
 def _get_bridge() -> AsyncBridge:
@@ -34,7 +34,7 @@ def _get_bridge() -> AsyncBridge:
         The singleton AsyncBridge instance.
 
     """
-    from ClassicLib.AsyncBridge import AsyncBridge
+    from ClassicLib.core.async_bridge import AsyncBridge
 
     return AsyncBridge.get_instance()
 
@@ -46,7 +46,7 @@ def _is_gui_mode() -> bool:
         True if running in GUI mode, False otherwise.
 
     """
-    from ClassicLib import GlobalRegistry
+    from ClassicLib.core.registry import GlobalRegistry
 
     return GlobalRegistry.is_gui_mode()
 

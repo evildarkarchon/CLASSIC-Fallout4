@@ -189,6 +189,6 @@ class FeatureContext:
             Path to the local directory, or None if not configured.
 
         """
-        from ClassicLib import GlobalRegistry
+        from ClassicLib.core.registry import GlobalRegistry
 
         return GlobalRegistry.get_local_dir()

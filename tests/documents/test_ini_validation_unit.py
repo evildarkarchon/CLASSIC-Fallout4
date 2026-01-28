@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.unit]
 class TestIniValidation:
     """Tests for INI file validation and checking."""
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_check_ini_existing_file_success(self, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test check_ini with existing, valid INI file."""
         # Setup mock YAML settings
@@ -39,7 +39,7 @@ iSize W=1920
         assert "✔️" in result
         assert "No obvious corruption detected" in result
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_check_ini_missing_file(self, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test check_ini with missing INI file."""
         mock_yaml.return_value = str(tmp_path)
@@ -52,7 +52,7 @@ iSize W=1920
         assert "❌ CAUTION" in result
         assert "MISSING" in result
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_check_ini_custom_ini_creation(self, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test check_ini creates custom INI file when missing."""
         manager = DocumentsPathManager()
@@ -70,7 +70,7 @@ iSize W=1920
         # Should create the file and return appropriate message
         assert "WARNING" in result or "Archive Invalidation" in result
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_check_ini_corrupted_file(self, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test check_ini handles corrupted INI files."""
         manager = DocumentsPathManager()
@@ -97,7 +97,7 @@ iSize W=1920
         with pytest.raises(TypeError):
             manager.check_ini("test.ini")
 
-    @patch("ClassicLib.support.docs_path.yaml_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
     def test_check_ini_invalid_folder_docs_type(self, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test check_ini raises TypeError for invalid folder_docs."""
         manager = DocumentsPathManager()
@@ -106,7 +106,7 @@ iSize W=1920
         with pytest.raises(TypeError):
             manager.check_ini("test.ini")
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_paths_success(self, mock_yaml: MagicMock, tmp_path: Path) -> None:
         """Test generate_paths creates correct paths from settings."""
         manager = DocumentsPathManager()
@@ -125,7 +125,7 @@ iSize W=1920
             # Verify paths are updated correctly
             mock_update.assert_called()
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_paths_missing_settings(self, mock_yaml: MagicMock) -> None:
         """Test generate_paths raises TypeError for missing settings."""
         mock_yaml.return_value = None  # Simulate missing settings

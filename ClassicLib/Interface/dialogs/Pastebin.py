@@ -72,7 +72,7 @@ class PastebinFetchWorker(QObject):
             # Make sure pastebin_fetch_async is properly imported
             import aiohttp
 
-            from ClassicLib.AsyncBridge import AsyncBridge
+            from ClassicLib.core.async_bridge import AsyncBridge
             from ClassicLib.Utils.web_utils import async_pastebin_fetch as pastebin_fetch_async
 
             # Use AsyncBridge for consistent async handling in GUI workers

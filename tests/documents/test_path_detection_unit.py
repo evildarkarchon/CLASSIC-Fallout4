@@ -27,7 +27,7 @@ class TestPathDetection:
     """Tests for document path detection functionality."""
 
     @patch("ClassicLib.support.docs_path.msg_info")
-    @patch("ClassicLib.support.docs_path.classic_settings")
+    @patch("ClassicLib.io.yaml.classic_settings")
     def test_find_docs_path_with_ini_folder_setting(self, mock_classic_settings: MagicMock, mock_msg_info: MagicMock) -> None:  # noqa: ARG002
         """Test find_docs_path when INI folder setting is present in YAML."""
         manager = DocumentsPathManager()
@@ -49,7 +49,7 @@ class TestPathDetection:
                         mock_update.assert_called_once_with("Root_Folder_Docs", "C:/Custom/Documents/Folder")
 
     @patch("ClassicLib.support.docs_path.msg_info")
-    @patch("ClassicLib.support.docs_path.classic_settings")
+    @patch("ClassicLib.io.yaml.classic_settings")
     @patch("platform.system", return_value="Windows")
     def test_find_docs_path_windows_detection(
         self,
@@ -68,7 +68,7 @@ class TestPathDetection:
             mock_resource_loader.get_cached_docs_path.return_value = None
             mock_resource_loader.save_path_to_cache.return_value = None
 
-            with patch("ClassicLib.support.docs_path.yaml_settings", return_value=None):  # noqa: SIM117
+            with patch("ClassicLib.io.yaml.yaml_settings", return_value=None):  # noqa: SIM117
                 with patch.object(manager, "_find_windows_docs_path") as mock_windows:
                     with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
                         manager.find_docs_path()
@@ -77,7 +77,7 @@ class TestPathDetection:
                         mock_windows.assert_called_once()
 
     @patch("ClassicLib.support.docs_path.msg_info")
-    @patch("ClassicLib.support.docs_path.classic_settings")
+    @patch("ClassicLib.io.yaml.classic_settings")
     @patch("platform.system", return_value="Linux")
     def test_find_docs_path_linux_detection(
         self,
@@ -96,7 +96,7 @@ class TestPathDetection:
             mock_resource_loader.get_cached_docs_path.return_value = None
             mock_resource_loader.save_path_to_cache.return_value = None
 
-            with patch("ClassicLib.support.docs_path.yaml_settings", return_value=None):  # noqa: SIM117
+            with patch("ClassicLib.io.yaml.yaml_settings", return_value=None):  # noqa: SIM117
                 with patch.object(manager, "_find_linux_docs_path") as mock_linux:
                     with patch.object(manager, "_get_manual_docs_path") as mock_manual:  # noqa: F841
                         manager.find_docs_path()
@@ -104,8 +104,8 @@ class TestPathDetection:
                         # Should call Linux detection method
                         mock_linux.assert_called_once()
 
-    @patch("ClassicLib.support.docs_path.classic_settings", return_value=None)
-    @patch("ClassicLib.support.docs_path.yaml_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.classic_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
     @patch("ClassicLib.support.docs_path.msg_error")
     @patch("ClassicLib.support.docs_path.msg_info")
     @patch("builtins.input", side_effect=["C:/Valid/Path", ""])
@@ -134,6 +134,7 @@ class TestPathDetection:
                         # it should call manual input method
                         assert mock_input.called
 
+    @patch("ClassicLib.support.docs_path._HAS_RUST_PATH", False)
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx")
     def test_find_windows_docs_path_success(self, mock_query: MagicMock, mock_open: MagicMock) -> None:  # noqa: ARG002
@@ -166,7 +167,7 @@ class TestPathDetection:
             assert "My Games" in args[1]
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     @patch("pathlib.Path.is_file", return_value=True)
     @patch("pathlib.Path.open")
     def test_find_linux_docs_path_success(self, mock_open_file: MagicMock, mock_is_file: MagicMock, mock_yaml: MagicMock) -> None:  # noqa: ARG002
@@ -202,7 +203,7 @@ class TestPathDetection:
             assert "377160" in args[1]
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
-    @patch("ClassicLib.support.docs_path.yaml_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
     def test_find_linux_docs_path_invalid_steam_id(self, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test _find_linux_docs_path handles invalid Steam ID."""
         manager = DocumentsPathManager()
@@ -212,7 +213,7 @@ class TestPathDetection:
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
     @patch("pathlib.Path.is_file", return_value=False)
-    @patch("ClassicLib.support.docs_path.yaml_settings", return_value=377160)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=377160)
     def test_find_linux_docs_path_no_steam_file(self, mock_yaml: MagicMock, mock_is_file: MagicMock) -> None:  # noqa: ARG002
         """Test _find_linux_docs_path handles missing Steam library file."""
         manager = DocumentsPathManager()

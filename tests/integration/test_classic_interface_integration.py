@@ -37,7 +37,7 @@ class TestClassicInterface:
         # This is critical because patching the class doesn't stop already-running
         # background threads, which can cause access violations on Windows.
         try:
-            if "ClassicLib.AsyncBridge" in sys.modules:
+            if "ClassicLib.core.async_bridge" in sys.modules:
                 from ClassicLib.core.async_bridge import AsyncBridge
 
                 # Shutdown all existing instances

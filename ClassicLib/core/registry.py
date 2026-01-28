@@ -232,7 +232,7 @@ def get_game_version() -> GameVersionValue:
         GameVersionValue: The current game version setting. Defaults to "auto" if not set.
 
     Example:
-        >>> from ClassicLib import GlobalRegistry
+        >>> from ClassicLib.core.registry import GlobalRegistry
         >>> version = GlobalRegistry.get_game_version()
         >>> if version == "VR":
         ...     print("VR mode enabled")
@@ -267,7 +267,7 @@ def get_vr() -> str:
         str: "VR" if game version is VR, otherwise empty string "".
 
     Example:
-        >>> from ClassicLib import GlobalRegistry
+        >>> from ClassicLib.core.registry import GlobalRegistry
         >>> # Old way (deprecated):
         >>> vr_suffix = GlobalRegistry.get_vr()
         >>> config_key = f"Game{vr_suffix}_Info.Setting"
@@ -374,7 +374,7 @@ def clear() -> None:
         In test fixtures::
 
             import pytest
-            from ClassicLib import GlobalRegistry
+            from ClassicLib.core.registry import GlobalRegistry
 
             @pytest.fixture(autouse=True)
             def clean_registry():
@@ -417,7 +417,7 @@ def unregister(key: str) -> bool:
         TypeError: If key is not a string.
 
     Example:
-        >>> from ClassicLib import GlobalRegistry
+        >>> from ClassicLib.core.registry import GlobalRegistry
         >>> GlobalRegistry.register("temp_key", "temp_value")
         >>> GlobalRegistry.unregister("temp_key")
         True
@@ -446,7 +446,7 @@ def get_version_info() -> VersionInfo | None:
             the version could not be found in the registry.
 
     Example:
-        >>> from ClassicLib import GlobalRegistry
+        >>> from ClassicLib.core.registry import GlobalRegistry
         >>> info = GlobalRegistry.get_version_info()
         >>> if info:
         ...     print(f"Game version: {info.display_name}")
@@ -457,7 +457,7 @@ def get_version_info() -> VersionInfo | None:
         Uses the VersionRegistry for data-driven version metadata.
 
     """
-    from ClassicLib.VersionRegistry import get_version_registry
+    from ClassicLib.support.versions import get_version_registry
 
     game_version = get_game_version()
 
@@ -496,7 +496,7 @@ def get_config_suffix() -> str:
         str: "VR" if the current game version is VR, otherwise empty string "".
 
     Example:
-        >>> from ClassicLib import GlobalRegistry
+        >>> from ClassicLib.core.registry import GlobalRegistry
         >>> suffix = GlobalRegistry.get_config_suffix()
         >>> config_key = f"Game{suffix}_Info.Root_Folder_Game"
         >>> # For VR: "GameVR_Info.Root_Folder_Game"
@@ -532,7 +532,7 @@ def is_vr_version() -> bool:
         bool: True if the current game version is VR, False otherwise.
 
     Example:
-        >>> from ClassicLib import GlobalRegistry
+        >>> from ClassicLib.core.registry import GlobalRegistry
         >>> if GlobalRegistry.is_vr_version():
         ...     print("VR mode is active")
         >>> else:

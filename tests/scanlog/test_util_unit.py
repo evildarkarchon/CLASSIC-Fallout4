@@ -730,7 +730,7 @@ class TestCrashlogsGetFilesEdgeCases:
 
         with (
             patch(
-                "ClassicLib.ScanLog.Util._crashlogs_get_files_rust",
+                "ClassicLib.scanning.logs.util_legacy._crashlogs_get_files_rust",
                 side_effect=RuntimeError("Rust operation failed"),
             ),
             patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),

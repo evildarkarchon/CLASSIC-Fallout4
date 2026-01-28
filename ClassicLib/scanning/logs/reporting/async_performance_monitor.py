@@ -6,7 +6,7 @@ and comparing async vs sync performance metrics.
 
 from typing import TYPE_CHECKING
 
-from ClassicLib.Logger import logger
+from ClassicLib.core.logger import logger
 from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import run_async_crash_log_scan
 
 if TYPE_CHECKING:

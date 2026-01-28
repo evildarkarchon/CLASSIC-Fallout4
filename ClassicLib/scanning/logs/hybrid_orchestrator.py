@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import Any
 
 from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.io.yaml import classic_settings
 from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
-from ClassicLib.YamlSettings import classic_settings
 
 logger = logging.getLogger(__name__)
 

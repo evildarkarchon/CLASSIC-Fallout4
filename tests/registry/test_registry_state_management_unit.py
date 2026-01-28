@@ -53,8 +53,8 @@ class TestStateManagement:
         assert GlobalRegistry.is_registered("key1")
         assert GlobalRegistry.is_registered("key2")
 
-        # Clear the registry
-        GlobalRegistry._registry.clear()
+        # Clear the registry using the public API
+        GlobalRegistry.clear()
 
         # Verify they're gone
         assert not GlobalRegistry.is_registered("key1")

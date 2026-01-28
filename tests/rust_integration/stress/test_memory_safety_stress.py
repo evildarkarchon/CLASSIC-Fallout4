@@ -29,6 +29,9 @@ from unittest.mock import MagicMock
 # Mark all tests in this module
 pytestmark = [pytest.mark.stress, pytest.mark.rust, pytest.mark.slow]
 
+if tracemalloc.is_tracing():
+    pytest.skip("Tracemalloc is running, results would be skewed.", allow_module_level=True)
+
 
 def _generate_large_log_for_process(size_mb: float) -> str:
     """Generate a synthetic crash log of specified size (module-level for pickling)."""

@@ -41,10 +41,9 @@ from ClassicLib.integration.status import (
 )
 
 RUST_AVAILABLE = get_available_components()["components"]
-from ClassicLib.scanning.logs.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.scanning.logs.PluginAnalyzer import PluginAnalyzer
-from ClassicLib.scanning.logs.RecordScanner import RecordScanner
-
+from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
+from ClassicLib.scanning.logs.analyzers.PluginAnalyzer import PluginAnalyzer
+from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner
 from ClassicLib.scanning.logs.parser import find_segments
 from tests.fixtures.parity_fixtures import (
     ParityResult,

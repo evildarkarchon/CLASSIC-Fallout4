@@ -19,7 +19,9 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.logs.pipeline import AsyncCrashLogPipeline, AsyncPerformanceMonitor
+
+from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import AsyncCrashLogPipeline
+from ClassicLib.scanning.logs.reporting.async_performance_monitor import AsyncPerformanceMonitor
 
 
 @pytest.fixture
@@ -103,9 +105,9 @@ class TestAsyncPipeline:
         )
 
         with (
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch") as mock_write,
+            patch("ClassicLib.scanning.logs.orchestrator_core.OrchestratorCore") as mock_orchestrator_class,
         ):
             # Setup mocks - use AsyncMock for async functions
             # Note: load_crash_logs_async was removed - pipeline now uses direct file I/O

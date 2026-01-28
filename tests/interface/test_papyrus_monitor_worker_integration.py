@@ -86,7 +86,7 @@ def test_rust_acceleration_detection():
 
         # Mock dependencies
         with (
-            patch("ClassicLib.support.papyrus.yaml_settings") as mock_settings,
+            patch("ClassicLib.io.yaml.yaml_settings") as mock_settings,
             patch("ClassicLib.support.papyrus.stream_lines_sync") as mock_stream,
         ):
             mock_settings.return_value = Path("test.log")
@@ -127,7 +127,7 @@ def test_rust_acceleration_detection():
 
         # Mock dependencies
         with (
-            patch("ClassicLib.support.papyrus.yaml_settings") as mock_settings,
+            patch("ClassicLib.io.yaml.yaml_settings") as mock_settings,
             patch("ClassicLib.support.papyrus.stream_lines_sync") as mock_stream,
         ):
             mock_settings.return_value = mock_path
@@ -159,7 +159,7 @@ def test_papyrus_logging_handles_missing_file():
     mock_path = MagicMock(spec=Path)
     mock_path.exists.return_value = False
 
-    with patch("ClassicLib.support.papyrus.yaml_settings") as mock_settings:
+    with patch("ClassicLib.io.yaml.yaml_settings") as mock_settings:
         mock_settings.return_value = mock_path
 
         # Clear the logged flag if it exists
@@ -178,7 +178,7 @@ def test_papyrus_logging_handles_none_path():
     """Test that papyrus_logging handles None path gracefully."""
     from ClassicLib.support.papyrus import papyrus_logging
 
-    with patch("ClassicLib.support.papyrus.yaml_settings") as mock_settings:
+    with patch("ClassicLib.io.yaml.yaml_settings") as mock_settings:
         mock_settings.return_value = None
 
         # Clear the logged flag if it exists

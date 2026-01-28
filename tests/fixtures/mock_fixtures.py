@@ -169,12 +169,12 @@ def disable_rust_acceleration(monkeypatch: pytest.MonkeyPatch) -> None:
     they expect to be using mocked Python logic (e.g., for registry checks).
     """
     # Patch for GamePath
-    monkeypatch.setattr("ClassicLib.GamePath._HAS_RUST_PATH", False)
-    monkeypatch.setattr("ClassicLib.GamePath.classic_path", None)
+    monkeypatch.setattr("ClassicLib.support.game_path._HAS_RUST_PATH", False)
+    monkeypatch.setattr("ClassicLib.support.game_path.classic_path", None)
 
     # Patch for DocsPath
-    monkeypatch.setattr("ClassicLib.DocsPath._HAS_RUST_PATH", False)
-    monkeypatch.setattr("ClassicLib.DocsPath.classic_path", None)
+    monkeypatch.setattr("ClassicLib.support.docs_path._HAS_RUST_PATH", False)
+    monkeypatch.setattr("ClassicLib.support.docs_path.classic_path", None)
 
     # Patch for factory if needed (to be safe)
     monkeypatch.setattr("ClassicLib.integration.factory.get_path_operations", lambda: None)

@@ -21,12 +21,12 @@ from ClassicLib.Utils.version_utils import (
     crashgen_version_gen,
     create_version_from_info,
     extract_windows_version_info,
-    get_game_version,
     get_version_fallback,
     get_version_from_pe_header,
     get_version_windows_api,
     get_version_with_pefile,
     is_valid_executable_path,
+    read_game_exe_version,
 )
 
 # Web utilities
@@ -44,7 +44,7 @@ __all__ = [
     "calculate_file_hash",
     "open_file_with_encoding",
     # Version utilities
-    "get_game_version",
+    "read_game_exe_version",
     "crashgen_version_gen",
     "get_version_windows_api",
     "get_version_from_pe_header",

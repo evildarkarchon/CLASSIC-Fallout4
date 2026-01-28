@@ -78,10 +78,10 @@ def test_worker_uses_asyncio_run():
         return None
 
     # Patch the imports at the point they're used (inside the method)
-    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor") as mock_executor_cls:
+    with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor") as mock_executor_cls:
         mock_executor_cls.return_value = mock_scanner
 
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", mock_async_func):
+        with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", mock_async_func):
             # Import FCXModeHandler and patch it directly
             from ClassicLib.scanning.logs import FCXModeHandler
 
@@ -113,8 +113,8 @@ def test_no_manual_event_loop_creation():
         return None
 
     # Mock everything to prevent actual execution
-    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor"):
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
+    with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor"):
+        with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
@@ -167,8 +167,8 @@ def test_rust_status_logging():
         return None
 
     # Mock dependencies
-    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor"):
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
+    with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor"):
+        with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
@@ -290,8 +290,8 @@ def test_performance_metrics_logged():
         return None
 
     # Mock dependencies
-    with patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor"):
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.crashlogs_scan_async_pure", AsyncMock()):
+    with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor"):
+        with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", AsyncMock()):
             from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):

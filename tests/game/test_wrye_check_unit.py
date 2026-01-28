@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.scanning.game.WryeCheck module.
+"""Unit tests for ClassicLib.scanning.game.wrye_check module.
 
 This module tests the Wrye Bash plugin checker report parsing functionality,
 including HTML parsing, section extraction, and message formatting.
@@ -11,7 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from bs4 import BeautifulSoup
-from ClassicLib.scanning.game.WryeCheck import (
+
+from ClassicLib.scanning.game.wrye_check import (
     extract_plugins_from_section,
     format_section_header,
     parse_wrye_report,
@@ -236,7 +237,7 @@ class TestExtractPluginsFromSection:
 class TestParseWryeReport:
     """Tests for the parse_wrye_report function."""
 
-    @patch("ClassicLib.scanning.game.WryeCheck.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
     def test_parse_wrye_report_returns_list(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should return a list of strings."""
         report_path = tmp_path / "report.html"
@@ -247,7 +248,7 @@ class TestParseWryeReport:
 
         assert isinstance(result, list)
 
-    @patch("ClassicLib.scanning.game.WryeCheck.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
     def test_parse_wrye_report_processes_h3_sections(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should process h3 sections."""
         report_path = tmp_path / "report.html"
@@ -264,7 +265,7 @@ class TestParseWryeReport:
         assert "Test Section" in result_text
         assert "TestMod.esp" in result_text
 
-    @patch("ClassicLib.scanning.game.WryeCheck.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
     def test_parse_wrye_report_skips_active_plugins_section(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should skip the Active Plugins section header."""
         report_path = tmp_path / "report.html"
@@ -281,7 +282,7 @@ class TestParseWryeReport:
         # The section header should be skipped, but we shouldn't have the formatted header
         assert "=" not in result_text or "Active Plugins" not in result_text
 
-    @patch("ClassicLib.scanning.game.WryeCheck.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
     def test_parse_wrye_report_handles_esl_capable_section(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should add special message for ESL Capable section."""
         report_path = tmp_path / "report.html"
@@ -299,7 +300,7 @@ class TestParseWryeReport:
         assert "SimpleESLify" in result_text
         assert "2" in result_text  # Number of plugins
 
-    @patch("ClassicLib.scanning.game.WryeCheck.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
     def test_parse_wrye_report_includes_matching_warnings(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should include warnings that match section titles."""
         report_path = tmp_path / "report.html"
@@ -315,7 +316,7 @@ class TestParseWryeReport:
         result_text = "".join(result)
         assert "Warning about merged patches!" in result_text
 
-    @patch("ClassicLib.scanning.game.WryeCheck.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
     def test_parse_wrye_report_lists_plugins_in_non_special_sections(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should list plugins in non-special sections."""
         report_path = tmp_path / "report.html"
@@ -341,12 +342,11 @@ class TestParseWryeReport:
 class TestScanWryecheck:
     """Tests for the scan_wryecheck function."""
 
-    @patch("ClassicLib.scanning.game.WryeCheck.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.WryeCheck.yaml_settings")
-    def test_scan_wryecheck_returns_string(self, mock_yaml: MagicMock, mock_registry: MagicMock) -> None:
+    @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
+    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
+    def test_scan_wryecheck_returns_string(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock) -> None:
         """scan_wryecheck should return a string."""
-        mock_registry.get_vr.return_value = ""
-        mock_registry.get_game.return_value = "Fallout4"
 
         def yaml_side_effect(type_arg, _store, key_path, *args):
             if "Warn_WRYE_MissingHTML" in key_path:
@@ -363,12 +363,13 @@ class TestScanWryecheck:
 
         assert isinstance(result, str)
 
-    @patch("ClassicLib.scanning.game.WryeCheck.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.WryeCheck.yaml_settings")
-    def test_scan_wryecheck_returns_warning_when_report_missing(self, mock_yaml: MagicMock, mock_registry: MagicMock) -> None:
+    @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
+    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
+    def test_scan_wryecheck_returns_warning_when_report_missing(
+        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock
+    ) -> None:
         """scan_wryecheck should return warning when report file is missing."""
-        mock_registry.get_vr.return_value = ""
-        mock_registry.get_game.return_value = "Fallout4"
 
         def yaml_side_effect(type_arg, _store, key_path, *args):
             if "Warn_WRYE_MissingHTML" in key_path:
@@ -385,7 +386,7 @@ class TestScanWryecheck:
 
         assert "not found" in result
 
-    @patch("ClassicLib.scanning.game.WryeCheck.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     def test_scan_wryecheck_raises_value_error_when_warning_missing(self, mock_yaml: MagicMock) -> None:
         """scan_wryecheck should raise ValueError when warning setting is missing."""
 
@@ -403,8 +404,8 @@ class TestScanWryecheck:
         with pytest.raises(ValueError, match="Warnings_WRYE missing"):
             scan_wryecheck()
 
-    @patch("ClassicLib.scanning.game.WryeCheck.parse_wrye_report")
-    @patch("ClassicLib.scanning.game.WryeCheck.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.parse_wrye_report")
+    @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     def test_scan_wryecheck_analyzes_report_when_found(self, mock_yaml: MagicMock, mock_parse: MagicMock, tmp_path: Path) -> None:
         """scan_wryecheck should analyze the report when it exists."""
         report_path = tmp_path / "ModChecker.html"
@@ -427,8 +428,8 @@ class TestScanWryecheck:
         mock_parse.assert_called_once()
         assert "WRYE BASH PLUGIN CHECKER REPORT WAS FOUND" in result
 
-    @patch("ClassicLib.scanning.game.WryeCheck.parse_wrye_report")
-    @patch("ClassicLib.scanning.game.WryeCheck.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.parse_wrye_report")
+    @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     def test_scan_wryecheck_includes_resource_links(self, mock_yaml: MagicMock, mock_parse: MagicMock, tmp_path: Path) -> None:
         """scan_wryecheck should include resource links in output."""
         report_path = tmp_path / "ModChecker.html"
@@ -451,17 +452,16 @@ class TestScanWryecheck:
         assert "nexusmods.com" in result
         assert "wrye-bash.github.io" in result
 
-    @patch("ClassicLib.scanning.game.WryeCheck.GlobalRegistry")
-    @patch("ClassicLib.scanning.game.WryeCheck.parse_wrye_report")
-    @patch("ClassicLib.scanning.game.WryeCheck.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.parse_wrye_report")
+    @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
+    @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
+    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
     def test_scan_wryecheck_includes_game_name_in_message(
-        self, mock_yaml: MagicMock, mock_parse: MagicMock, mock_registry: MagicMock, tmp_path: Path
+        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, mock_parse: MagicMock, tmp_path: Path
     ) -> None:
         """scan_wryecheck should include game name in output message."""
         report_path = tmp_path / "ModChecker.html"
         report_path.write_text("<html></html>")
-        mock_registry.get_game.return_value = "Fallout4"
-        mock_registry.get_vr.return_value = ""
 
         def yaml_side_effect(type_arg, _store, key_path, *args):
             if "Warn_WRYE_MissingHTML" in key_path:

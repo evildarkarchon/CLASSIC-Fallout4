@@ -18,7 +18,7 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 from classic_scanlog import LogParser
 
 # Import components to test
-from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
 
 @pytest.mark.stress

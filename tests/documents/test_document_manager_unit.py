@@ -32,34 +32,34 @@ class TestDocumentPathManager:
         assert manager.manual_docs_gui is None
         assert isinstance(manager.docs_name, str)
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_get_docs_name_from_settings(self, mock_yaml_settings: MagicMock) -> None:
         """Test _get_docs_name retrieves from YAML settings."""
         mock_yaml_settings.return_value = "Fallout4Custom"
         result = DocumentsPathManager._get_docs_name()
         assert result == "Fallout4Custom"
 
-    @patch("ClassicLib.support.docs_path.yaml_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_get_docs_name_fallback(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test _get_docs_name falls back to GlobalRegistry game name."""
         result = DocumentsPathManager._get_docs_name()
         assert result == "Fallout4"
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_get_game_setting_path_success(self, mock_yaml_settings: MagicMock) -> None:
         """Test _get_game_setting_path with valid string return."""
         mock_yaml_settings.return_value = "C:/Games/Fallout4"
         result = DocumentsPathManager._get_game_setting_path("Root_Folder_Game")
         assert result == "C:/Games/Fallout4"
 
-    @patch("ClassicLib.support.docs_path.yaml_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
     def test_get_game_setting_path_invalid_type(self, mock_yaml_settings: MagicMock) -> None:
         """Test _get_game_setting_path raises TypeError for non-string."""
         with pytest.raises(TypeError):
             DocumentsPathManager._get_game_setting_path("Root_Folder_Game")
 
-    @patch("ClassicLib.support.docs_path.yaml_settings")
+    @patch("ClassicLib.io.yaml.yaml_settings")
     def test_update_game_setting(self, mock_yaml_settings: MagicMock) -> None:
         """Test _update_game_setting calls yaml_settings with correct parameters."""
         DocumentsPathManager._update_game_setting("Root_Folder_Docs", "/path/to/docs")

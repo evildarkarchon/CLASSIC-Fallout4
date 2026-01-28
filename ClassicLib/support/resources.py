@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import get_game, get_local_dir, get_vr
+from ClassicLib.core.registry import get_game, get_game_version, get_local_dir
 
 if TYPE_CHECKING:
     from importlib.resources.abc import Traversable
@@ -489,7 +489,7 @@ class ResourceLoader:
         if game_name is None:
             game_name = get_game()
         if not vr_suffix:
-            vr_suffix = get_vr()
+            vr_suffix = "VR" if get_game_version() == "VR" else ""
 
         # Strategy 1: Check environment variable (fastest for uvx)
         env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_PATH"
@@ -503,7 +503,7 @@ class ResourceLoader:
         # Strategy 2: Check persistent cache.yaml
         try:
             from ClassicLib.core.constants import YAML
-            from ClassicLib.YamlSettings import yaml_settings
+            from ClassicLib.io.yaml.sync.convenience import yaml_settings
 
             cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.GamePath")
             if cached_path:
@@ -517,7 +517,7 @@ class ResourceLoader:
         # Strategy 3: Check traditional Local.yaml
         try:
             from ClassicLib.core.constants import YAML
-            from ClassicLib.YamlSettings import yaml_settings
+            from ClassicLib.io.yaml import yaml_settings
 
             local_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
             if local_path:
@@ -552,7 +552,7 @@ class ResourceLoader:
         if game_name is None:
             game_name = get_game()
         if not vr_suffix:
-            vr_suffix = get_vr()
+            vr_suffix = "VR" if get_game_version() == "VR" else ""
 
         # Strategy 1: Check environment variable (fastest for uvx)
         env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_PATH"
@@ -607,7 +607,7 @@ class ResourceLoader:
         if game_name is None:
             game_name = get_game()
         if not vr_suffix:
-            vr_suffix = get_vr()
+            vr_suffix = "VR" if get_game_version() == "VR" else ""
 
         # Strategy 1: Check environment variable
         env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_DOCS"
@@ -636,7 +636,7 @@ class ResourceLoader:
             # Strategy 2: Check persistent cache.yaml
             try:
                 from ClassicLib.core.constants import YAML
-                from ClassicLib.YamlSettings import yaml_settings
+                from ClassicLib.io.yaml import yaml_settings
 
                 cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.DocsPath")
                 if cached_path:
@@ -650,7 +650,7 @@ class ResourceLoader:
             # Strategy 3: Check traditional Local.yaml
             try:
                 from ClassicLib.core.constants import YAML
-                from ClassicLib.YamlSettings import yaml_settings
+                from ClassicLib.io.yaml import yaml_settings
 
                 local_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs")
                 if local_path:
@@ -680,7 +680,7 @@ class ResourceLoader:
         if game_name is None:
             game_name = get_game()
         if not vr_suffix:
-            vr_suffix = get_vr()
+            vr_suffix = "VR" if get_game_version() == "VR" else ""
 
         from ClassicLib.core.constants import YAML
         from ClassicLib.io.yaml import yaml_settings_async
@@ -734,10 +734,10 @@ class ResourceLoader:
         if game_name is None:
             game_name = get_game()
         if not vr_suffix:
-            vr_suffix = get_vr()
+            vr_suffix = "VR" if get_game_version() == "VR" else ""
 
         from ClassicLib.core.constants import YAML
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         # Save to persistent cache.yaml
         try:
@@ -782,7 +782,7 @@ class ResourceLoader:
 
         """
         try:
-            from ClassicLib.rust_loader import is_rust_available, load_rust_extensions
+            from ClassicLib.core.rust_loader import is_rust_available, load_rust_extensions
 
             if is_rust_available():
                 logger.debug("Rust extensions already loaded")

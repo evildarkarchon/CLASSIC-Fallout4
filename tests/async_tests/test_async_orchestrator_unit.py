@@ -19,7 +19,8 @@ Mock fixtures are used to avoid actual database connections during unit tests.
 from unittest.mock import MagicMock
 
 import pytest
-from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+
+from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
 pytestmark = pytest.mark.unit
 

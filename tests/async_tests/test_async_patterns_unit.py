@@ -13,6 +13,7 @@ This file contains unit tests that test individual functions with mocked depende
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
 import asyncio
+import inspect
 from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock
 
@@ -47,7 +48,7 @@ class TestAsyncContextPattern:
             async def cleanup(self):
                 for resource in self.resources:
                     if hasattr(resource, "close"):
-                        if asyncio.iscoroutinefunction(resource.close):
+                        if inspect.iscoroutinefunction(resource.close):
                             await resource.close()
                         else:
                             resource.close()
@@ -184,7 +185,7 @@ class TestAsyncUtilityPatterns:
                 async with self.locks[key]:
                     if key in self.cache:
                         return self.cache[key]
-                    if asyncio.iscoroutinefunction(compute_func):
+                    if inspect.iscoroutinefunction(compute_func):
                         value = await compute_func()
                     else:
                         value = compute_func()

@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.scanning.logs.ScanLogsUtils module.
+"""Unit tests for ClassicLib.scanning.logs.utils module.
 
 This module tests the utility functions for crash log scanning operations,
 including report writing, file management, and scan completion tasks.
@@ -30,7 +30,7 @@ class TestWriteReportToFile:
 
     def test_writes_autoscan_report(self, tmp_path: Path) -> None:
         """write_report_to_file should write the autoscan report to a file."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import write_report_to_file
+        from ClassicLib.scanning.logs.utils import write_report_to_file
 
         crashlog_file = tmp_path / "crash-2024-01-15.log"
         crashlog_file.write_text("crash content")
@@ -48,7 +48,7 @@ class TestWriteReportToFile:
 
     def test_triggers_move_unsolved_when_failed(self, tmp_path: Path) -> None:
         """write_report_to_file should move unsolved logs when scan failed."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import write_report_to_file
+        from ClassicLib.scanning.logs.utils import write_report_to_file
 
         crashlog_file = tmp_path / "crash-unsolved.log"
         crashlog_file.write_text("crash content")
@@ -56,14 +56,14 @@ class TestWriteReportToFile:
         mock_executor = MagicMock()
         mock_executor.config.move_unsolved_logs = True
 
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.move_unsolved_logs") as mock_move:
+        with patch("ClassicLib.scanning.logs.utils.move_unsolved_logs") as mock_move:
             write_report_to_file(crashlog_file, ["report"], True, mock_executor)
 
             mock_move.assert_called_once_with(crashlog_file)
 
     def test_does_not_move_when_disabled(self, tmp_path: Path) -> None:
         """write_report_to_file should not move logs when move_unsolved_logs is False."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import write_report_to_file
+        from ClassicLib.scanning.logs.utils import write_report_to_file
 
         crashlog_file = tmp_path / "crash-unsolved.log"
         crashlog_file.write_text("crash content")
@@ -71,7 +71,7 @@ class TestWriteReportToFile:
         mock_executor = MagicMock()
         mock_executor.config.move_unsolved_logs = False
 
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.move_unsolved_logs") as mock_move:
+        with patch("ClassicLib.scanning.logs.utils.move_unsolved_logs") as mock_move:
             write_report_to_file(crashlog_file, ["report"], True, mock_executor)
 
             mock_move.assert_not_called()
@@ -89,7 +89,7 @@ class TestWriteReportToFileAsync:
 
     async def test_writes_autoscan_report_async(self, tmp_path: Path) -> None:
         """write_report_to_file_async should write the autoscan report asynchronously."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import write_report_to_file_async
+        from ClassicLib.scanning.logs.utils import write_report_to_file_async
 
         crashlog_file = tmp_path / "crash-2024-01-15.log"
         crashlog_file.write_text("crash content")
@@ -107,7 +107,7 @@ class TestWriteReportToFileAsync:
 
     async def test_triggers_move_unsolved_async_when_failed(self, tmp_path: Path) -> None:
         """write_report_to_file_async should move unsolved logs when scan failed."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import write_report_to_file_async
+        from ClassicLib.scanning.logs.utils import write_report_to_file_async
 
         crashlog_file = tmp_path / "crash-unsolved.log"
         crashlog_file.write_text("crash content")
@@ -115,14 +115,14 @@ class TestWriteReportToFileAsync:
         mock_executor = MagicMock()
         mock_executor.config.move_unsolved_logs = True
 
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.move_unsolved_logs") as mock_move:
+        with patch("ClassicLib.scanning.logs.utils.move_unsolved_logs") as mock_move:
             await write_report_to_file_async(crashlog_file, ["report"], True, mock_executor)
 
             mock_move.assert_called_once_with(crashlog_file)
 
     async def test_falls_back_to_sync_when_aiofiles_unavailable(self, tmp_path: Path) -> None:
         """write_report_to_file_async should fall back to sync write if aiofiles not available."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import write_report_to_file_async
+        from ClassicLib.scanning.logs.utils import write_report_to_file_async
 
         crashlog_file = tmp_path / "crash-fallback.log"
         crashlog_file.write_text("crash content")
@@ -132,7 +132,7 @@ class TestWriteReportToFileAsync:
 
         # Simulate aiofiles not being available by mocking the import
         with patch.dict("sys.modules", {"aiofiles": None}):
-            with patch("ClassicLib.scanning.logs.ScanLogsUtils.write_report_to_file") as mock_sync:
+            with patch("ClassicLib.scanning.logs.utils.write_report_to_file") as mock_sync:
                 # Force the ImportError path
                 import builtins
 
@@ -160,7 +160,7 @@ class TestMoveUnsolvedLogs:
 
     def test_moves_crashlog_to_backup(self, tmp_path: Path) -> None:
         """move_unsolved_logs should move crash log to backup directory."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import move_unsolved_logs
+        from ClassicLib.scanning.logs.utils import move_unsolved_logs
 
         crashlog_file = tmp_path / "crash-unsolved.log"
         crashlog_file.write_text("unsolved crash")
@@ -174,7 +174,7 @@ class TestMoveUnsolvedLogs:
 
     def test_moves_autoscan_report_to_backup(self, tmp_path: Path) -> None:
         """move_unsolved_logs should move autoscan report to backup directory."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import move_unsolved_logs
+        from ClassicLib.scanning.logs.utils import move_unsolved_logs
 
         crashlog_file = tmp_path / "crash-unsolved.log"
         crashlog_file.write_text("unsolved crash")
@@ -190,7 +190,7 @@ class TestMoveUnsolvedLogs:
 
     def test_creates_backup_directory(self, tmp_path: Path) -> None:
         """move_unsolved_logs should create backup directory if it doesn't exist."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import move_unsolved_logs
+        from ClassicLib.scanning.logs.utils import move_unsolved_logs
 
         crashlog_file = tmp_path / "crash-unsolved.log"
         crashlog_file.write_text("unsolved crash")
@@ -204,7 +204,7 @@ class TestMoveUnsolvedLogs:
 
     def test_handles_missing_crashlog(self, tmp_path: Path) -> None:
         """move_unsolved_logs should handle case where crash log doesn't exist."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import move_unsolved_logs
+        from ClassicLib.scanning.logs.utils import move_unsolved_logs
 
         crashlog_file = tmp_path / "nonexistent.log"
 
@@ -224,9 +224,8 @@ class TestCompleteScanWithSummary:
 
     def test_displays_error_for_failed_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """complete_scan_with_summary should display error message for failed logs."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import complete_scan_with_summary
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import complete_scan_with_summary
 
         monkeypatch.chdir(tmp_path)
 
@@ -240,8 +239,8 @@ class TestCompleteScanWithSummary:
         mock_yamldata.classic_game_hints = []
 
         with (
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.msg_error") as mock_error,
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.msg_info"),
+            patch("ClassicLib.scanning.logs.utils.msg_error") as mock_error,
+            patch("ClassicLib.scanning.logs.utils.msg_info"),
         ):
             complete_scan_with_summary(result, mock_yamldata, time.perf_counter())
 
@@ -252,9 +251,8 @@ class TestCompleteScanWithSummary:
 
     def test_displays_success_message_for_scanned_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """complete_scan_with_summary should display success message for scanned logs."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import complete_scan_with_summary
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import complete_scan_with_summary
 
         monkeypatch.chdir(tmp_path)
 
@@ -266,7 +264,7 @@ class TestCompleteScanWithSummary:
         mock_yamldata = MagicMock()
         mock_yamldata.classic_game_hints = []
 
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.msg_info") as mock_info:
+        with patch("ClassicLib.scanning.logs.utils.msg_info") as mock_info:
             complete_scan_with_summary(result, mock_yamldata, time.perf_counter() - 1.0)
 
             mock_info.assert_called()
@@ -276,9 +274,8 @@ class TestCompleteScanWithSummary:
 
     def test_displays_no_logs_error_when_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """complete_scan_with_summary should display error when no logs scanned."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import complete_scan_with_summary
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import complete_scan_with_summary
 
         monkeypatch.chdir(tmp_path)
 
@@ -289,7 +286,7 @@ class TestCompleteScanWithSummary:
         )
         mock_yamldata = MagicMock()
 
-        with patch("ClassicLib.scanning.logs.ScanLogsUtils.msg_error") as mock_error:
+        with patch("ClassicLib.scanning.logs.utils.msg_error") as mock_error:
             complete_scan_with_summary(result, mock_yamldata, time.perf_counter())
 
             mock_error.assert_called()
@@ -298,9 +295,8 @@ class TestCompleteScanWithSummary:
 
     def test_displays_random_hint(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """complete_scan_with_summary should display a random hint from yamldata."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import complete_scan_with_summary
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import complete_scan_with_summary
 
         monkeypatch.chdir(tmp_path)
 
@@ -313,8 +309,8 @@ class TestCompleteScanWithSummary:
         mock_yamldata.classic_game_hints = ["Hint 1", "Hint 2", "Hint 3"]
 
         with (
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.msg_info") as mock_info,
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.random.choice", return_value="Hint 2"),
+            patch("ClassicLib.scanning.logs.utils.msg_info") as mock_info,
+            patch("ClassicLib.scanning.logs.utils.random.choice", return_value="Hint 2"),
         ):
             complete_scan_with_summary(result, mock_yamldata, time.perf_counter())
 
@@ -324,9 +320,8 @@ class TestCompleteScanWithSummary:
 
     def test_displays_fallout4_specific_info(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """complete_scan_with_summary should display Fallout4-specific info."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import complete_scan_with_summary
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import complete_scan_with_summary
 
         monkeypatch.chdir(tmp_path)
 
@@ -340,7 +335,7 @@ class TestCompleteScanWithSummary:
         mock_yamldata.autoscan_text = "Fallout 4 specific information"
 
         with (
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.msg_info") as mock_info,
+            patch("ClassicLib.scanning.logs.utils.msg_info") as mock_info,
             patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
             complete_scan_with_summary(result, mock_yamldata, time.perf_counter())
@@ -362,7 +357,7 @@ class TestCrashlogsScanAsyncPure:
 
     async def test_resets_fcx_checks_before_scan(self) -> None:
         """crashlogs_scan_async_pure should reset FCX checks before scanning."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import crashlogs_scan_async_pure
+        from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure
 
         mock_executor = MagicMock()
         mock_result = MagicMock()
@@ -376,8 +371,8 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.statistics.scan_start_time = time.perf_counter()
 
         with (
-            patch("ClassicLib.scanning.logs.FCXModeHandler.FCXModeHandlerFragments") as mock_fcx,
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.complete_scan_with_summary"),
+            patch("ClassicLib.scanning.logs.fcx_mode_handler.FCXModeHandlerFragments") as mock_fcx,
+            patch("ClassicLib.scanning.logs.utils.complete_scan_with_summary"),
         ):
             await crashlogs_scan_async_pure(mock_executor)
 
@@ -385,9 +380,8 @@ class TestCrashlogsScanAsyncPure:
 
     async def test_executes_scan_and_returns_result(self) -> None:
         """crashlogs_scan_async_pure should execute scan and return result."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import crashlogs_scan_async_pure
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure
 
         mock_executor = MagicMock()
         stats = ScanStatistics(scanned=1, incomplete=0, failed=0)
@@ -401,8 +395,8 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.statistics.scan_start_time = time.perf_counter()
 
         with (
-            patch("ClassicLib.scanning.logs.FCXModeHandler.FCXModeHandlerFragments"),
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.complete_scan_with_summary"),
+            patch("ClassicLib.scanning.logs.fcx_mode_handler.FCXModeHandlerFragments"),
+            patch("ClassicLib.scanning.logs.utils.complete_scan_with_summary"),
         ):
             result = await crashlogs_scan_async_pure(mock_executor)
 
@@ -411,23 +405,22 @@ class TestCrashlogsScanAsyncPure:
 
     async def test_raises_if_yamldata_not_initialized(self) -> None:
         """crashlogs_scan_async_pure should raise if yamldata not initialized."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import crashlogs_scan_async_pure
+        from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure
 
         mock_executor = MagicMock()
         mock_executor.execute_scan = AsyncMock(return_value=MagicMock())
         mock_executor.yamldata = None  # Simulate uninitialized
 
         with (
-            patch("ClassicLib.scanning.logs.FCXModeHandler.FCXModeHandlerFragments"),
+            patch("ClassicLib.scanning.logs.fcx_mode_handler.FCXModeHandlerFragments"),
             pytest.raises(RuntimeError, match="YAML data should be initialized"),
         ):
             await crashlogs_scan_async_pure(mock_executor)
 
     async def test_calls_complete_scan_with_summary(self) -> None:
         """crashlogs_scan_async_pure should call complete_scan_with_summary."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import crashlogs_scan_async_pure
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure
 
         mock_executor = MagicMock()
         stats = ScanStatistics(scanned=0, incomplete=0, failed=0)
@@ -441,8 +434,8 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.statistics.scan_start_time = 12345.0
 
         with (
-            patch("ClassicLib.scanning.logs.FCXModeHandler.FCXModeHandlerFragments"),
-            patch("ClassicLib.scanning.logs.ScanLogsUtils.complete_scan_with_summary") as mock_complete,
+            patch("ClassicLib.scanning.logs.fcx_mode_handler.FCXModeHandlerFragments"),
+            patch("ClassicLib.scanning.logs.utils.complete_scan_with_summary") as mock_complete,
         ):
             await crashlogs_scan_async_pure(mock_executor)
 
@@ -460,9 +453,8 @@ class TestCrashlogsScan:
 
     def test_creates_executor_and_runs_async(self) -> None:
         """crashlogs_scan should create executor and run async function."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import crashlogs_scan
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import crashlogs_scan
 
         stats = ScanStatistics(scanned=0, incomplete=0, failed=0)
         expected_result = ScanResult(
@@ -476,7 +468,7 @@ class TestCrashlogsScan:
             return expected_result
 
         with (
-            patch("ClassicLib.scanning.logs.ScanLogsExecutor.ScanLogsExecutor") as mock_executor_class,
+            patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor") as mock_executor_class,
             patch("ClassicLib.core.async_bridge.run_async", side_effect=close_and_return) as mock_run,
         ):
             mock_executor = MagicMock()
@@ -501,9 +493,8 @@ class TestCrashlogsScanAsyncPureWithQt:
 
     async def test_delegates_to_main_function(self) -> None:
         """crashlogs_scan_async_pure_with_qt should delegate to crashlogs_scan_async_pure."""
-        from ClassicLib.scanning.logs.ScanLogsUtils import crashlogs_scan_async_pure_with_qt
-
         from ClassicLib.scanning.logs.models import ScanResult, ScanStatistics
+        from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure_with_qt
 
         mock_executor = MagicMock()
         stats = ScanStatistics(scanned=1, incomplete=0, failed=0)
@@ -513,7 +504,7 @@ class TestCrashlogsScanAsyncPureWithQt:
         )
 
         with patch(
-            "ClassicLib.ScanLog.ScanLogsUtils.crashlogs_scan_async_pure",
+            "ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure",
             new_callable=AsyncMock,
             return_value=expected_result,
         ) as mock_pure:

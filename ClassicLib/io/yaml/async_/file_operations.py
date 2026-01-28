@@ -164,7 +164,7 @@ class YamlFileOperations:
 
         """
         # Lazy import to avoid circular imports
-        from ClassicLib.ResourceLoader import ResourceLoader
+        from ClassicLib.support.resources import ResourceLoader
 
         # Use ResourceLoader to get the data directory
         # This handles both development and installed package scenarios
@@ -474,7 +474,7 @@ class YamlFileOperations:
 
         # Import file generation module
         try:
-            from ClassicLib.FileGeneration import FileGenerator
+            from ClassicLib.support.file_gen import FileGenerator
 
             # Determine which file to regenerate
             # Only user-specific files can be regenerated

@@ -42,12 +42,12 @@ class TestOrchestratorUsesRecordScannerFactory:
 
     def test_orchestrator_init_uses_get_record_scanner(self, mock_yamldata: MagicMock) -> None:
         """Verify OrchestratorCore calls get_record_scanner() in __init__."""
-        with patch("ClassicLib.scanning.logs.OrchestratorCore.get_record_scanner") as mock_factory:
+        with patch("ClassicLib.scanning.logs.orchestrator_core.get_record_scanner") as mock_factory:
             mock_scanner = MagicMock()
             mock_factory.return_value = mock_scanner
 
             # Import here to apply patch
-            from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+            from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
             # Create orchestrator
             orch = OrchestratorCore(
@@ -65,7 +65,7 @@ class TestOrchestratorUsesRecordScannerFactory:
 
     def test_orchestrator_record_scanner_not_none(self, mock_yamldata: MagicMock) -> None:
         """Verify OrchestratorCore's record_scanner is never None."""
-        from ClassicLib.scanning.logs.OrchestratorCore import OrchestratorCore
+        from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
         orch = OrchestratorCore(
             yamldata=mock_yamldata,

@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from packaging.version import Version
 
-from ClassicLib.core.constants import NULL_VERSION, Constants
+from ClassicLib.core.constants import NULL_VERSION
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.support.game_path import game_generate_paths, game_path_find
 
@@ -20,7 +20,7 @@ class TestGamePathGeneration:
     """Tests for game path generation functionality."""
 
     @patch("ClassicLib.support.game_path.yaml_settings")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_fallout4_og_version(
@@ -29,13 +29,13 @@ class TestGamePathGeneration:
         """Test game_generate_paths for Fallout 4 OG version."""
         game_path = str(tmp_path / "Fallout4")
         mock_yaml.side_effect = [game_path, "F4SE", "F4SE", None, None, None, None, None, f"{game_path}\\Fallout4.exe", None]
-        mock_get_version.return_value = Constants.OG_VERSION
+        mock_get_version.return_value = Version("1.10.163.0")
         game_generate_paths()
         assert mock_yaml.call_count >= 6
         mock_get_version.assert_called_once()
 
     @patch("ClassicLib.support.game_path.yaml_settings")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_fallout4_ng_version(
@@ -44,7 +44,7 @@ class TestGamePathGeneration:
         """Test game_generate_paths for Fallout 4 NG version."""
         game_path = str(tmp_path / "Fallout4")
         mock_yaml.side_effect = [game_path, "F4SE", "F4SE", None, None, None, None, None, f"{game_path}\\Fallout4.exe", None]
-        mock_get_version.return_value = Constants.NG_VERSION
+        mock_get_version.return_value = Version("1.10.984.0")
         game_generate_paths()
         assert mock_yaml.call_count >= 6
         mock_get_version.assert_called_once()
@@ -71,7 +71,7 @@ class TestGamePathGeneration:
             game_generate_paths()
 
     @patch("ClassicLib.support.game_path.yaml_settings")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_null_version_uses_default(
@@ -87,7 +87,7 @@ class TestGamePathGeneration:
         assert mock_yaml.call_count >= 6
 
     @patch("ClassicLib.support.game_path.yaml_settings")
-    @patch("ClassicLib.support.game_path.get_game_version")
+    @patch("ClassicLib.support.game_path.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Starfield")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_unsupported_game_raises_error(

@@ -13,6 +13,7 @@ This file contains unit tests that test individual functions with mocked depende
 # 4. See docs/async_test_patterns_guide.md for comprehensive patterns
 
 import asyncio
+import inspect
 import logging
 from contextlib import asynccontextmanager
 
@@ -54,7 +55,7 @@ class TestStandardErrorHandling:
 
             async def handle_error(self, error: Exception, context: dict | None = None):
                 for callback in self.callbacks:
-                    if asyncio.iscoroutinefunction(callback):
+                    if inspect.iscoroutinefunction(callback):
                         await callback(error, context)
                     else:
                         callback(error, context)
@@ -88,7 +89,7 @@ class TestRetryPatterns:
             current_delay = delay
             for attempt in range(max_attempts):
                 try:
-                    if asyncio.iscoroutinefunction(func):
+                    if inspect.iscoroutinefunction(func):
                         return await func()
                     return await func
                 except Exception as e:

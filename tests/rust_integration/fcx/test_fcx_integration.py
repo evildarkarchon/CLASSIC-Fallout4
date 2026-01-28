@@ -118,9 +118,8 @@ class TestRustFCXIntegration:
         if not RUST_AVAILABLE:
             pytest.skip("Rust FCX handler not available")
 
-        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
-
         from ClassicLib.integration.factory import get_fcx_handler
+        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
 
         # Create test configurations with known issues
         espexplorer_ini = tmp_path / "espexplorer.ini"
@@ -153,9 +152,8 @@ class TestRustFCXIntegration:
         if not RUST_AVAILABLE:
             pytest.skip("Rust FCX handler not available")
 
-        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
-
         from ClassicLib.integration.factory import get_fcx_handler
+        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
 
         iterations = 1000
 
@@ -195,9 +193,8 @@ class TestRustFCXIntegration:
         if not RUST_AVAILABLE:
             pytest.skip("Rust FCX handler not available")
 
-        from ClassicLib.scanning.logs.FCXModeHandler import FCXModeHandlerFragments
-
         from ClassicLib.integration.factory import get_fcx_handler
+        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
 
         # Test both enabled and disabled states
         for fcx_mode in [True, False]:

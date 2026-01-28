@@ -9,11 +9,13 @@ application state across components of the system.
 import asyncio
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
+from ClassicLib.core.performance import TimedBlock
 from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.io.yaml import yaml_cache, yaml_settings, yaml_settings_async
 from ClassicLib.messaging import MessageTarget, init_message_handler, msg_info, msg_success
 from ClassicLib.support.backup import BackupManager
 from ClassicLib.support.docs_path import docs_generate_paths, docs_path_find
@@ -25,9 +27,6 @@ from ClassicLib.support.path_validator import PathValidator
 from ClassicLib.support.resources import ResourceLoader
 from ClassicLib.support.xse import xse_check_hashes, xse_check_integrity
 from ClassicLib.Utils.logging_utils import configure_logging, enable_debug_logging
-
-if TYPE_CHECKING:
-    from ClassicLib.YamlSettings import YamlSettingsCache  # noqa: F401
 
 
 class SetupCoordinator:
@@ -67,9 +66,6 @@ class SetupCoordinator:
             TypeError: If the classic version or game name settings are not of type str.
 
         """
-        from ClassicLib.PerformanceMonitor import TimedBlock
-        from ClassicLib.YamlSettings import yaml_cache, yaml_settings  # noqa: F401
-
         # Configure logging
         configure_logging(logger)
 
@@ -176,8 +172,6 @@ class SetupCoordinator:
                 message handler to ensure proper dialog parenting in GUI applications.
 
         """
-        from ClassicLib.YamlSettings import yaml_cache
-
         # Configure logging first - required for both CLI and GUI modes
         configure_logging(logger)
 
@@ -202,7 +196,6 @@ class SetupCoordinator:
         settings_path = Path("CLASSIC Settings.yaml")
         if not settings_path.exists():
             from ClassicLib.integration.factory import get_file_io
-            from ClassicLib.YamlSettings import yaml_settings_async
 
             async def _create_default_settings() -> None:
                 default_settings = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_settings")
@@ -283,8 +276,6 @@ class SetupCoordinator:
             is_gui: Whether running in GUI mode (affects path detection UI).
 
         """
-        from ClassicLib.YamlSettings import yaml_settings
-
         # Get config suffix using VersionRegistry-based function
         vr_suffix = GlobalRegistry.get_config_suffix()
 
@@ -313,9 +304,7 @@ class SetupCoordinator:
         Logger calls always execute for diagnostics.
         MessageHandler calls only execute when Debug Messages setting is enabled.
         """
-        from ClassicLib.YamlSettings import classic_settings
-
-        debug_enabled = bool(classic_settings(bool, "Debug Messages"))
+        debug_enabled = bool(yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"))
         is_gui = GlobalRegistry.is_gui_mode()
 
         try:

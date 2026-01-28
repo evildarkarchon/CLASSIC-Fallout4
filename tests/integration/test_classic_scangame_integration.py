@@ -151,8 +151,6 @@ class TestClassicScanGame:
     def test_module_imports(self) -> None:
         """Test that all required modules can be imported."""
         try:
-            from ClassicLib.scanning.game.ScanGameCore import ScanGameCore
-
             from ClassicLib import msg_info
             from ClassicLib.core.async_bridge import AsyncBridge
             from ClassicLib.scanning.game import (
@@ -161,7 +159,8 @@ class TestClassicScanGame:
                 manage_game_files,
                 write_combined_results,
             )
-            from ClassicLib.scanning.game.Config import TEST_MODE
+            from ClassicLib.scanning.game.config import TEST_MODE
+            from ClassicLib.scanning.game.core import ScanGameCore
             from ClassicLib.support.setup import SetupCoordinator
         except ImportError as e:
             pytest.fail(f"Failed to import required modules: {e}")
@@ -314,7 +313,7 @@ class TestClassicScanGame:
 
     def test_test_mode_constant(self) -> None:
         """Test that TEST_MODE constant is available."""
-        from ClassicLib.scanning.game.Config import TEST_MODE
+        from ClassicLib.scanning.game.config import TEST_MODE
 
         # TEST_MODE should be a boolean
         assert isinstance(TEST_MODE, bool)

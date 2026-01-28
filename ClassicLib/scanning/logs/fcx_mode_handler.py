@@ -61,13 +61,13 @@ class FCXModeHandlerFragments:
         """
         if self.fcx_mode:
             try:
-                from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
+                from ClassicLib.scanning.game import generate_game_combined_result as scan_game_files
             except ImportError:
                 # Fallback if the function doesn't exist
                 def scan_game_files() -> tuple[str, list[ConfigIssue]]:
                     return "Game files check not available\n", []
 
-            from ClassicLib.SetupCoordinator import SetupCoordinator
+            from ClassicLib.support.setup import SetupCoordinator
 
             # Define sync function to run in thread pool
             def run_fcx_checks() -> tuple[str, str, list[ConfigIssue]]:
@@ -120,13 +120,13 @@ class FCXModeHandlerFragments:
         """
         if self.fcx_mode:
             try:
-                from ClassicLib.ScanGame import generate_game_combined_result as scan_game_files
+                from ClassicLib.scanning.game import generate_game_combined_result as scan_game_files
             except ImportError:
                 # Fallback if the function doesn't exist
                 def scan_game_files() -> tuple[str, list[ConfigIssue]]:
                     return "Game files check not available\n", []
 
-            from ClassicLib.SetupCoordinator import SetupCoordinator
+            from ClassicLib.support.setup import SetupCoordinator
 
             # Use class-level lock to ensure thread safety
             with FCXModeHandlerFragments._fcx_lock:

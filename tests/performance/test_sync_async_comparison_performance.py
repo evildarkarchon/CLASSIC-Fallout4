@@ -13,7 +13,8 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from ClassicLib.scanning.logs.AsyncUtil import load_crash_logs_async
+
+from ClassicLib.scanning.logs.async_util import load_crash_logs_async
 
 pytestmark = pytest.mark.performance
 

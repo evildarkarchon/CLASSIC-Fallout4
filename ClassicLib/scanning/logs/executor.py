@@ -105,7 +105,7 @@ class ScanLogsExecutor:
 
         # Warm up database pool if database exists
         if self.config.formid_db_exists:
-            from ClassicLib.Database import DatabasePoolManager
+            from ClassicLib.io.database import DatabasePoolManager
 
             pool_manager = DatabasePoolManager()
             await pool_manager.get_pool()
@@ -211,7 +211,7 @@ class ScanLogsExecutor:
 
         # Ensure game paths are generated before creating orchestrator
         # This is required for FCX mode checks which need Game_Folder_Scripts and other inferred paths
-        from ClassicLib.GamePath import game_generate_paths_async, game_path_find_async
+        from ClassicLib.support.game_path import game_generate_paths_async, game_path_find_async
 
         await game_path_find_async()
         await game_generate_paths_async()

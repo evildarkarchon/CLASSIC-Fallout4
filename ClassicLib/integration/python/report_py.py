@@ -87,7 +87,7 @@ class PythonReportGenerator:
             ReportFragment: A ReportFragment object containing the constructed error section.
 
         """
-        from ClassicLib import GlobalRegistry
+        from ClassicLib.core.registry import GlobalRegistry
         from ClassicLib.scanning.logs.reporting import ReportFragment
 
         crashgen_name = self.yamldata.crashgen_name if self.yamldata else "Crashgen"

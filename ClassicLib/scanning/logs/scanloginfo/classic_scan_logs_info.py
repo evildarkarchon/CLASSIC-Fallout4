@@ -15,8 +15,8 @@ from typing import Any
 
 from packaging.version import Version
 
-from ClassicLib import GlobalRegistry
-from ClassicLib.Constants import NULL_VERSION, YAML
+from ClassicLib.core.constants import NULL_VERSION, YAML
+from ClassicLib.core.registry import GlobalRegistry
 
 
 # noinspection PyUnresolvedReferences
@@ -122,8 +122,8 @@ class ClassicScanLogsInfo:
         if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
             raise TypeError("YAML Cache is not initialized.")
 
-        from ClassicLib.PerformanceMonitor import TimedBlock
-        from ClassicLib.YamlSettings import yaml_cache
+        from ClassicLib.core.performance import TimedBlock
+        from ClassicLib.io.yaml import yaml_cache
 
         # Batch load all settings in a single operation
         with TimedBlock("ScanLogInfo Settings Load", log_level="debug"):
@@ -237,8 +237,8 @@ class ClassicScanLogsInfo:
         if not GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
             raise TypeError("YAML Cache is not initialized.")
 
-        from ClassicLib.PerformanceMonitor import TimedBlock
-        from ClassicLib.YamlSettings import yaml_cache
+        from ClassicLib.core.performance import TimedBlock
+        from ClassicLib.io.yaml import yaml_cache
 
         # Create instance without loading (skip __post_init__ logic)
         instance = cls.__new__(cls)

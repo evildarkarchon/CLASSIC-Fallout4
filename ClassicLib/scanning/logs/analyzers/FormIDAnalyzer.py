@@ -32,7 +32,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ClassicLib.AsyncBridge import create_sync_wrapper
+from ClassicLib.core.async_bridge import create_sync_wrapper
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 
 if TYPE_CHECKING:

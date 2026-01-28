@@ -26,7 +26,7 @@ class DocumentsChecker:
             no warnings are applicable.
 
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         message_list: list[str] = []
         docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{get_vr()}_Info.Main_Docs_Name")

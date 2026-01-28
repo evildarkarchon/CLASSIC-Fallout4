@@ -121,7 +121,7 @@ class VersionRegistry:
                 return
 
             try:
-                from ClassicLib.YamlSettings import yaml_settings
+                from ClassicLib.io.yaml import yaml_settings
 
                 # Load version registry from YAML
                 versions_data: list[dict[str, Any]] = yaml_settings(list, YAML.Main, "Version_Registry.versions")  # pyright: ignore[reportUnknownVariableType]
@@ -830,10 +830,10 @@ def get_detected_version_info() -> VersionInfo | None:
     """
     from pathlib import Path
 
-    from ClassicLib import GlobalRegistry
-    from ClassicLib.Constants import NULL_VERSION, YAML
-    from ClassicLib.Utils.version_utils import get_game_version
-    from ClassicLib.YamlSettings import yaml_settings
+    from ClassicLib.core.constants import NULL_VERSION, YAML
+    from ClassicLib.core.registry import GlobalRegistry
+    from ClassicLib.io.yaml import yaml_settings
+    from ClassicLib.Utils.version_utils import read_game_exe_version
 
     # First check if user has explicitly set a version
     version_info = GlobalRegistry.get_version_info()
@@ -855,7 +855,7 @@ def get_detected_version_info() -> VersionInfo | None:
         return None
 
     # Get version from executable
-    game_version = get_game_version(exe_path)
+    game_version = read_game_exe_version(exe_path)
     if game_version == NULL_VERSION:
         return None
 

@@ -11,7 +11,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
-from ClassicLib.scanning.game.core.dds_processor import DDSProcessor
+
+from ClassicLib.scanning.game.checks.dds_processor import DDSProcessor
 
 # Note: DDS fixtures (valid_dds_data, bc7_dds_data, odd_dimension_dds_data)
 # are provided by tests/fixtures/scanlog_fixtures.py via the root conftest.py
@@ -40,12 +41,12 @@ class TestDDSProcessorInit:
 
     def test_init_with_enhanced_enabled_and_available(self) -> None:
         """Test initialization with enhanced mode when analyzer is available."""
-        from ClassicLib.scanning.game.core.dds_analyzer import EnhancedDDSAnalyzer
+        from ClassicLib.scanning.game.checks.dds_analyzer import EnhancedDDSAnalyzer
 
         semaphore = asyncio.Semaphore(1)
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_ANALYZER", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_ANALYZER", True):
             with patch(
-                "ClassicLib.scanning.game.core.dds_processor._RuntimeEnhancedDDSAnalyzer",
+                "ClassicLib.scanning.game.checks.dds_processor._RuntimeEnhancedDDSAnalyzer",
                 EnhancedDDSAnalyzer,
             ):
                 processor = DDSProcessor(semaphore, use_enhanced=True)
@@ -56,7 +57,7 @@ class TestDDSProcessorInit:
     def test_init_with_enhanced_enabled_but_unavailable(self) -> None:
         """Test initialization with enhanced mode when analyzer is unavailable."""
         semaphore = asyncio.Semaphore(1)
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_ANALYZER", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_ANALYZER", False):
             processor = DDSProcessor(semaphore, use_enhanced=True)
 
         assert processor.use_enhanced is False
@@ -130,7 +131,7 @@ class TestReadDDSHeaderRust:
         dds_file = tmp_path / "test.dds"
         dds_file.write_bytes(valid_dds_data)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             result = DDSProcessor.read_dds_header_rust(dds_file)
 
         assert result is None
@@ -148,9 +149,9 @@ class TestReadDDSHeaderRust:
         mock_dds_header_class = MagicMock()
         mock_dds_header_class.from_bytes.return_value = mock_header
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch(
-                "ClassicLib.scanning.game.core.dds_processor._RuntimeRustDDSHeader",
+                "ClassicLib.scanning.game.checks.dds_processor._RuntimeRustDDSHeader",
                 mock_dds_header_class,
             ):
                 result = DDSProcessor.read_dds_header_rust(dds_file)
@@ -162,7 +163,7 @@ class TestReadDDSHeaderRust:
         """Test Rust DDS reading when file cannot be read."""
         nonexistent = tmp_path / "nonexistent.dds"
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             result = DDSProcessor.read_dds_header_rust(nonexistent)
 
         assert result is None
@@ -175,9 +176,9 @@ class TestReadDDSHeaderRust:
         mock_dds_header_class = MagicMock()
         mock_dds_header_class.from_bytes.side_effect = ValueError("Parse error")
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch(
-                "ClassicLib.scanning.game.core.dds_processor._RuntimeRustDDSHeader",
+                "ClassicLib.scanning.game.checks.dds_processor._RuntimeRustDDSHeader",
                 mock_dds_header_class,
             ):
                 result = DDSProcessor.read_dds_header_rust(dds_file)
@@ -207,7 +208,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
@@ -229,7 +230,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
@@ -253,7 +254,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
@@ -275,7 +276,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
@@ -297,7 +298,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(DDSProcessor, "read_dds_header_rust", return_value=mock_header):
                 issues = processor.validate_dds_for_game(dds_file)
 
@@ -317,7 +318,7 @@ class TestValidateDDSForGame:
         processor = DDSProcessor(semaphore)
         processor.analyzer = mock_analyzer
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             issues = processor.validate_dds_for_game(dds_file)
 
         assert issues == ["Test issue from analyzer"]
@@ -332,7 +333,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             issues = processor.validate_dds_for_game(dds_file)
 
         # valid_dds_data has 1024x2048 which are both even and ≤4096
@@ -346,7 +347,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             issues = processor.validate_dds_for_game(dds_file)
 
         assert any("Non-even dimensions" in issue for issue in issues)
@@ -366,7 +367,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             issues = processor.validate_dds_for_game(dds_file)
 
         assert any("Large texture dimensions" in issue for issue in issues)
@@ -379,7 +380,7 @@ class TestValidateDDSForGame:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             issues = processor.validate_dds_for_game(invalid_file)
 
         assert issues == ["Unable to read DDS header"]
@@ -476,7 +477,7 @@ class TestProcessSingleDDSFile:
         processor = DDSProcessor(semaphore)
 
         # Mock Rust validation returning no issues
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(processor, "validate_dds_for_game", return_value=[]):
                 issues = await processor._process_single_dds_file(dds_file, mod_dir)
 
@@ -493,7 +494,7 @@ class TestProcessSingleDDSFile:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(
                 processor,
                 "validate_dds_for_game",
@@ -516,7 +517,7 @@ class TestProcessSingleDDSFile:
         semaphore = asyncio.Semaphore(1)
         processor = DDSProcessor(semaphore)
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             issues = await processor._process_single_dds_file(dds_file, mod_dir)
 
         # Odd dimensions should be detected via mmap fallback
@@ -543,7 +544,7 @@ class TestCheckDDSBatchAsync:
         issue_lists: dict[str, set[str]] = {"tex_dims": set()}
         issue_locks = {"tex_dims": asyncio.Lock()}
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(processor, "validate_dds_for_game", return_value=[]):
                 await processor.check_dds_batch_async(dds_files, issue_lists, issue_locks)
 
@@ -563,7 +564,7 @@ class TestCheckDDSBatchAsync:
         issue_lists: dict[str, set[str]] = {"tex_dims": set()}
         issue_locks = {"tex_dims": asyncio.Lock()}
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             await processor.check_dds_batch_async(dds_files, issue_lists, issue_locks)
 
         assert len(issue_lists["tex_dims"]) > 0
@@ -587,7 +588,7 @@ class TestCheckDDSBatchAsync:
         issue_lists: dict[str, set[str]] = {"tex_dims": set()}
         issue_locks = {"tex_dims": asyncio.Lock()}
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", False):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", False):
             await processor.check_dds_batch_async(dds_files, issue_lists, issue_locks)
 
         # Only the odd file should have issues
@@ -612,7 +613,7 @@ class TestCheckDDSBatchAsync:
         acquired = semaphore.locked()
         assert not acquired  # Semaphore should be free initially
 
-        with patch("ClassicLib.scanning.game.core.dds_processor.HAS_RUST_DDS", True):
+        with patch("ClassicLib.scanning.game.checks.dds_processor.HAS_RUST_DDS", True):
             with patch.object(processor, "validate_dds_for_game", return_value=[]):
                 await processor.check_dds_batch_async(dds_files, issue_lists, issue_locks)
 

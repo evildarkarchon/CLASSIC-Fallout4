@@ -9,7 +9,8 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from ClassicLib.scanning.game.core.xse_fallback import (
+
+from ClassicLib.scanning.game.checks.xse_fallback import (
     AddressLibInfo,
     GameVersion,
     ValidationResult,
@@ -333,42 +334,42 @@ class TestXseCheckerCheck:
 
     def test_check_returns_correct_version_on_success(self):
         """XseChecker.check() should return CorrectVersion when correct version found."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "✔️ You have the correct version of the Address Library file!"
             result = XseChecker.check()
             assert result == ValidationResult.CorrectVersion
 
     def test_check_returns_wrong_version_on_mismatch(self):
         """XseChecker.check() should return WrongVersion when wrong version detected."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "❌ CAUTION: You have installed the wrong version of the Address Library file!"
             result = XseChecker.check()
             assert result == ValidationResult.WrongVersion
 
     def test_check_returns_not_found_when_library_missing(self):
         """XseChecker.check() should return NotFound when library not found."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "❓ NOTICE: Address Library file not found"
             result = XseChecker.check()
             assert result == ValidationResult.NotFound
 
     def test_check_returns_version_not_detected_when_unable_to_locate(self):
         """XseChecker.check() should return VersionNotDetected when unable to locate."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "❓ NOTICE : Unable to locate Address Library"
             result = XseChecker.check()
             assert result == ValidationResult.VersionNotDetected
 
     def test_check_returns_plugins_path_not_found_when_no_plugins_folder(self):
         """XseChecker.check() should return PluginsPathNotFound when plugins folder missing."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "❌ ERROR: Could not locate plugins folder path in settings"
             result = XseChecker.check()
             assert result == ValidationResult.PluginsPathNotFound
 
     def test_check_returns_version_not_detected_for_unexpected_message(self):
         """XseChecker.check() should return VersionNotDetected for unexpected messages."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "Some unexpected message format"
             result = XseChecker.check()
             assert result == ValidationResult.VersionNotDetected
@@ -380,7 +381,7 @@ class TestXseCheckerValidate:
 
     def test_validate_returns_string(self):
         """XseChecker.validate() should return a string message."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "Test validation message"
             result = XseChecker.validate()
             assert isinstance(result, str)
@@ -388,14 +389,14 @@ class TestXseCheckerValidate:
     def test_validate_returns_message_from_check_xse_plugins(self):
         """XseChecker.validate() should return the message from check_xse_plugins()."""
         expected_message = "✔️ You have the correct version of the Address Library file!\n-----\n"
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = expected_message
             result = XseChecker.validate()
             assert result == expected_message
 
     def test_validate_calls_check_xse_plugins_once(self):
         """XseChecker.validate() should call check_xse_plugins exactly once."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "Test message"
             XseChecker.validate()
             mock_check.assert_called_once()
@@ -407,42 +408,42 @@ class TestXseCheckerCheckMessageParsing:
 
     def test_check_handles_correct_version_case_insensitive(self):
         """XseChecker.check() should handle 'correct version' case-insensitively."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "✔️ You have the CORRECT VERSION of the Address Library!"
             result = XseChecker.check()
             assert result == ValidationResult.CorrectVersion
 
     def test_check_handles_wrong_version_case_insensitive(self):
         """XseChecker.check() should handle 'wrong version' case-insensitively."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "You have the WRONG VERSION installed"
             result = XseChecker.check()
             assert result == ValidationResult.WrongVersion
 
     def test_check_handles_not_found_case_insensitive(self):
         """XseChecker.check() should handle 'not found' case-insensitively."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "Address Library NOT FOUND"
             result = XseChecker.check()
             assert result == ValidationResult.NotFound
 
     def test_check_handles_unable_to_locate_case_insensitive(self):
         """XseChecker.check() should handle 'unable to locate' case-insensitively."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "UNABLE TO LOCATE Address Library"
             result = XseChecker.check()
             assert result == ValidationResult.VersionNotDetected
 
     def test_check_handles_plugins_folder_path_case_insensitive(self):
         """XseChecker.check() should handle 'plugins folder path' case-insensitively."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "Could not find PLUGINS FOLDER PATH"
             result = XseChecker.check()
             assert result == ValidationResult.PluginsPathNotFound
 
     def test_check_handles_empty_message(self):
         """XseChecker.check() should handle empty message gracefully."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = ""
             result = XseChecker.check()
             assert result == ValidationResult.VersionNotDetected
@@ -455,7 +456,7 @@ class TestXseCheckerIsStaticMethod:
     def test_check_is_static_method(self):
         """XseChecker.check should be callable without an instance."""
         # Should be callable as a class method
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "✔️ correct version"
             # Call on class, not instance
             result = XseChecker.check()
@@ -463,7 +464,7 @@ class TestXseCheckerIsStaticMethod:
 
     def test_validate_is_static_method(self):
         """XseChecker.validate should be callable without an instance."""
-        with patch("ClassicLib.scanning.game.CheckXsePlugins.check_xse_plugins") as mock_check:
+        with patch("ClassicLib.scanning.game.check_xse_plugins.check_xse_plugins") as mock_check:
             mock_check.return_value = "Test message"
             # Call on class, not instance
             result = XseChecker.validate()

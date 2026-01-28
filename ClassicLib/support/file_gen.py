@@ -31,7 +31,7 @@ class FileGenerator:
                 is not of type str.
 
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         ignore_path = Path("CLASSIC Ignore.yaml")
         if not ignore_path.exists():
@@ -54,7 +54,7 @@ class FileGenerator:
                 is not of type str.
 
         """
-        from ClassicLib.YamlSettings import yaml_settings
+        from ClassicLib.io.yaml import yaml_settings
 
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
         if not local_path.exists():
@@ -81,7 +81,7 @@ class FileGenerator:
 
         """
         from ClassicLib.integration.factory import get_file_io
-        from ClassicLib.YamlSettings import yaml_settings_async
+        from ClassicLib.io.yaml import yaml_settings_async
 
         ignore_path = Path("CLASSIC Ignore.yaml")
         io_core = get_file_io()  # Use factory for Rust acceleration
@@ -107,7 +107,7 @@ class FileGenerator:
 
         """
         from ClassicLib.integration.factory import get_file_io
-        from ClassicLib.YamlSettings import yaml_settings_async
+        from ClassicLib.io.yaml import yaml_settings_async
 
         local_path = Path(f"CLASSIC Data/CLASSIC {GlobalRegistry.get_game()} Local.yaml")
         io_core = get_file_io()  # Use factory for Rust acceleration
@@ -181,7 +181,7 @@ class FileGenerator:
 
         For CLI usage, use generate_all_files_async() directly with await.
         """
-        from ClassicLib.AsyncBridge import AsyncBridge
+        from ClassicLib.core.async_bridge import AsyncBridge
 
         bridge = AsyncBridge.get_instance()
         bridge.run_async(FileGenerator.generate_all_files_async())

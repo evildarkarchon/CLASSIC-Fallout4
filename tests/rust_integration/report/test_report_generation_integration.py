@@ -16,10 +16,10 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-# Import Python implementations (always available)
-from ClassicLib.scanning.logs.reporting.report_composer import ReportComposer as PyReportComposer
-
 from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment as PyReportFragment
+
+# Import Python implementations (always available)
+from ClassicLib.scanning.logs.reporting.section_composer import ReportComposer as PyReportComposer
 
 # Try to import Rust implementation
 try:
@@ -116,7 +116,9 @@ class TestPythonReportComposer:
         """Test composing a single fragment."""
         fragment = PyReportFragment.from_lines(["Line 1", "Line 2"])
 
-        result = PyReportComposer.compose(fragment)
+        composer = PyReportComposer()
+        composer.add(fragment)
+        result = composer.compose()
 
         assert result.to_list() == ["Line 1", "Line 2"]
 
@@ -124,7 +126,10 @@ class TestPythonReportComposer:
         """Test composing multiple fragments."""
         fragments = [PyReportFragment.from_lines([f"Fragment {i} - Line 1", f"Fragment {i} - Line 2"]) for i in range(5)]
 
-        result = PyReportComposer.compose(*fragments)
+        composer = PyReportComposer()
+        for frag in fragments:
+            composer.add(frag)
+        result = composer.compose()
         lines = result.to_list()
 
         assert len(lines) == 10  # 5 fragments * 2 lines each
@@ -133,7 +138,8 @@ class TestPythonReportComposer:
 
     def test_empty_compose(self):
         """Test composing with no fragments."""
-        result = PyReportComposer.compose()
+        composer = PyReportComposer()
+        result = composer.compose()
 
         assert not result.has_content
         assert result.to_list() == []
@@ -455,8 +461,10 @@ class TestPerformanceComparison:
 
         # Test Python implementation
         py_start = time.perf_counter()
-        py_fragments = [PyReportFragment.from_lines(lines) for lines in data]
-        py_result = PyReportComposer.compose(*py_fragments)
+        py_composer = PyReportComposer()
+        for lines in data:
+            py_composer.add(PyReportFragment.from_lines(lines))
+        py_result = py_composer.compose()
         py_time = time.perf_counter() - py_start
 
         # Verify similar output size

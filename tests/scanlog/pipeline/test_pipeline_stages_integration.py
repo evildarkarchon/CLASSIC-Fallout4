@@ -15,7 +15,7 @@ from collections import Counter
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline import (
+from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import (
     AsyncCrashLogPipeline,
     run_async_crash_log_scan,
     write_reports_batch,
@@ -74,7 +74,7 @@ class TestWriteReportsBatch:
 
     async def test_write_reports_batch_empty(self) -> None:
         """Test batch writing with empty list."""
-        with patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.get_file_io") as mock_get_io:
+        with patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.get_file_io") as mock_get_io:
             mock_io = MagicMock()
             mock_io.write_file = AsyncMock()
             mock_get_io.return_value = mock_io
@@ -94,7 +94,7 @@ class TestWriteReportsBatch:
             (crash_file, ["# Report\n", "Content\n"], False),
         ]
 
-        with patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.get_file_io") as mock_get_io:
+        with patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.get_file_io") as mock_get_io:
             mock_io = MagicMock()
             mock_io.write_file = AsyncMock()
             mock_get_io.return_value = mock_io
@@ -117,7 +117,7 @@ class TestWriteReportsBatch:
             crash_file.write_text(f"test {i}")
             reports.append((crash_file, [f"# Report {i}\n"], False))
 
-        with patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.get_file_io") as mock_get_io:
+        with patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.get_file_io") as mock_get_io:
             mock_io = MagicMock()
             mock_io.write_file = AsyncMock()
             mock_get_io.return_value = mock_io
@@ -136,7 +136,7 @@ class TestWriteReportsBatch:
             (crash_file, ["# Report\n"], False),
         ]
 
-        with patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.get_file_io") as mock_get_io:
+        with patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.get_file_io") as mock_get_io:
             mock_io = MagicMock()
             mock_io.write_file = AsyncMock(side_effect=OSError("Write failed"))
             mock_get_io.return_value = mock_io
@@ -154,13 +154,13 @@ class TestAsyncCrashLogPipelineProcessing:
         """Test processing empty crash log list."""
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -188,16 +188,16 @@ class TestAsyncCrashLogPipelineProcessing:
         """Test that processing tracks performance statistics."""
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -245,13 +245,13 @@ class TestRunAsyncCrashLogScan:
         """Test that run_async_crash_log_scan creates and uses a pipeline."""
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -282,16 +282,16 @@ class TestRunAsyncCrashLogScan:
 
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager", mock_pool_manager),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager", mock_pool_manager),
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -332,7 +332,7 @@ class TestPipelineErrorHandling:
         """Test pipeline handles reformatting errors."""
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
                 side_effect=RuntimeError("Reformat failed"),
             ),
@@ -354,16 +354,16 @@ class TestPipelineErrorHandling:
 
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
         ):
             mock_yaml.return_value = None
             mock_classic.return_value = False
@@ -422,16 +422,16 @@ class TestPipelineBatchSizing:
 
         with (
             patch(
-                "ClassicLib.ScanLog.pipeline.async_crash_log_pipeline.crashlogs_reformat_async",
+                "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.pipeline.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.DatabasePoolManager"),
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.OrchestratorCore.get_parser") as mock_get_parser,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
+            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
+            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
+            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
             patch("os.cpu_count", return_value=4),
         ):
             mock_yaml.return_value = None

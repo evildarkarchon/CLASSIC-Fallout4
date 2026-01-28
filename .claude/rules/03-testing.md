@@ -55,15 +55,6 @@ def cleanup():
 4. **Use proper async mocking** - Mock AsyncBridge, not async functions directly
 5. **Tests are exempt from API stability** - Always use current APIs
 
-## Commands
-
-```bash
-uv run pytest -m "unit and not slow"        # Quick unit tests
-uv run pytest -m "integration"              # Integration tests
-uv run pytest tests/rust_integration/ -v    # Rust integration
-uv run pytest tests/path/test.py::test_fn -v   # Single test
-```
-
 ## References
 
 - `/tdd` skill - Complete TDD patterns

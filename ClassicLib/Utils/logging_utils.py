@@ -58,7 +58,7 @@ def configure_logging(classic_logger: Logger) -> None:
 
     # Create file handler for debug logs
     try:
-        from ClassicLib import GlobalRegistry
+        from ClassicLib.core.registry import GlobalRegistry
 
         log_dir = Path(GlobalRegistry.get_local_dir()) / "logs"
         log_dir.mkdir(parents=True, exist_ok=True)
@@ -107,7 +107,7 @@ def enable_debug_logging(classic_logger: Logger) -> None:
         classic_logger: The logger instance to modify.
 
     Example:
-        >>> from ClassicLib.Logger import logger
+        >>> from ClassicLib.core.logger import logger
         >>> from ClassicLib.Utils.logging_utils import enable_debug_logging
         >>> # After loading settings and determining debug mode is enabled:
         >>> enable_debug_logging(logger)

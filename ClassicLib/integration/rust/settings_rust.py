@@ -20,7 +20,7 @@ from ClassicLib.scanning.logs.reporting import ReportFragment
 if TYPE_CHECKING:
     from packaging.version import Version
 
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 # Centralized detection of Rust SettingsValidator
 RUST_AVAILABLE, RustSettingsValidator = detect_component("classic_scanlog", "SettingsValidator")

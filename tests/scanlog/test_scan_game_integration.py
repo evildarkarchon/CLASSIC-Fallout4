@@ -12,7 +12,8 @@ from unittest.mock import AsyncMock, patch
 
 import aiofiles
 import pytest
-from ClassicLib.scanning.game.ScanGameCore import ScanGameCore
+
+from ClassicLib.scanning.game.core import ScanGameCore
 
 # Note: MessageHandler initialization is now handled by standardized
 # fixtures in tests/fixtures/registry_fixtures.py which provide:
@@ -64,7 +65,7 @@ def mock_scan_settings(mock_paths):
     """Mock get_scan_settings function."""
     with (
         patch("CLASSIC_ScanGame.get_scan_settings") as mock_get,
-        patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore.get_scan_settings") as mock_core_get,
+        patch("ClassicLib.scanning.game.core.ScanGameCore.get_scan_settings") as mock_core_get,
     ):
         return_val = (
             "F4SE",
@@ -81,7 +82,7 @@ def mock_issue_messages():
     """Mock get_issue_messages function."""
     with (
         patch("CLASSIC_ScanGame.get_issue_messages") as mock_get,
-        patch("ClassicLib.scanning.game.ScanGameCore.ScanGameCore.get_issue_messages") as mock_core_get,
+        patch("ClassicLib.scanning.game.core.ScanGameCore.get_issue_messages") as mock_core_get,
     ):
         return_val = {
             "ba2_frmt": ["[!] BA2 FORMAT ERRORS FOUND:\n"],
@@ -101,7 +102,7 @@ def mock_issue_messages():
 @pytest.fixture
 def mock_global_registry(mock_paths):
     """Mock GlobalRegistry."""
-    with patch("ClassicLib.scanning.game.ScanGameCore.GlobalRegistry") as mock_gr_core:
+    with patch("ClassicLib.scanning.game.core.GlobalRegistry") as mock_gr_core:
         mock_gr_core.get_local_dir.return_value = mock_paths["tmp"]
         mock_gr_core.get_vr.return_value = ""
         yield mock_gr_core

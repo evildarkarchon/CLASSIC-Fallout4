@@ -51,7 +51,7 @@ rust_errors: tuple[type[BaseException], ...]
 parse_errors, rust_errors = _get_rust_exception_types()
 
 if TYPE_CHECKING:
-    from ClassicLib.ScanLog.scanloginfo import ClassicScanLogsInfo
+    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
 
@@ -220,7 +220,7 @@ class RustPluginAnalyzer:
             ReportFragment with plugin match results
 
         """
-        from ClassicLib.ScanLog.fragments import ReportFragment
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         if self._use_rust and self._rust_analyzer:
             try:

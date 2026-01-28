@@ -18,6 +18,7 @@ pytestmark = pytest.mark.integration
 class TestRegistryDetection:
     """Tests for Windows registry-based game path detection."""
 
+    @patch("ClassicLib.support.game_path._HAS_RUST_PATH", False)
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx")
     @patch("winreg.CloseKey")
@@ -50,6 +51,7 @@ class TestRegistryDetection:
         mock_save_cache.assert_called_once_with(game_dir, "GamePath")
         mock_register.assert_called_once_with(GlobalRegistry.Keys.GAME_PATH, game_dir)
 
+    @patch("ClassicLib.support.game_path._HAS_RUST_PATH", False)
     @patch("winreg.OpenKey", side_effect=[FileNotFoundError, MagicMock()])
     @patch("winreg.QueryValueEx")
     @patch("winreg.CloseKey")
@@ -80,6 +82,7 @@ class TestRegistryDetection:
         mock_save_cache.assert_called_once_with(game_dir, "GamePath")
         mock_register.assert_called_once_with(GlobalRegistry.Keys.GAME_PATH, game_dir)
 
+    @patch("ClassicLib.support.game_path._HAS_RUST_PATH", False)
     @patch("winreg.OpenKey")
     @patch("winreg.QueryValueEx")
     @patch("winreg.CloseKey")
