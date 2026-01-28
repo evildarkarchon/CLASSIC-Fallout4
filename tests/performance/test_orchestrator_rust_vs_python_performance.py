@@ -330,45 +330,50 @@ PLUGINS:
             hybrid_orchestrator: Hybrid orchestrator
             sample_logs: Sample crash log files
         """
-        try:
-            import os
-
-            import psutil
-        except ImportError:
-            pytest.skip("psutil not installed - cannot measure memory usage")
-            return
-
-        process = psutil.Process(os.getpid())
-
-        # Batch processing with Python
-        initial_mem = process.memory_info().rss / 1024 / 1024  # MB
-        await python_orchestrator.process_crash_logs_batch(sample_logs)
-        python_mem = process.memory_info().rss / 1024 / 1024 - initial_mem
-
-        # Force garbage collection
         import gc
 
+        # Use tracemalloc for Python-side memory tracking (more reliable than RSS)
+        tracemalloc.start()
+
+        # Batch processing with Python
+        tracemalloc.clear_traces()
+        snapshot_before = tracemalloc.take_snapshot()
+        await python_orchestrator.process_crash_logs_batch(sample_logs)
+        snapshot_after = tracemalloc.take_snapshot()
+        python_stats = snapshot_after.compare_to(snapshot_before, "lineno")
+        python_mem_bytes = sum(stat.size_diff for stat in python_stats if stat.size_diff > 0)
+        python_mem = python_mem_bytes / 1024 / 1024  # MB
+
+        # Force garbage collection between measurements
         gc.collect()
         await asyncio.sleep(0.1)
 
-        # Batch processing with Rust
-        initial_mem = process.memory_info().rss / 1024 / 1024
+        # Batch processing with hybrid orchestrator
+        tracemalloc.clear_traces()
+        snapshot_before = tracemalloc.take_snapshot()
         await hybrid_orchestrator.process_crash_logs_batch(sample_logs)
-        hybrid_mem = process.memory_info().rss / 1024 / 1024 - initial_mem
+        snapshot_after = tracemalloc.take_snapshot()
+        hybrid_stats = snapshot_after.compare_to(snapshot_before, "lineno")
+        hybrid_mem_bytes = sum(stat.size_diff for stat in hybrid_stats if stat.size_diff > 0)
+        hybrid_mem = hybrid_mem_bytes / 1024 / 1024  # MB
+
+        tracemalloc.stop()
 
         print(f"\n{'=' * 60}")
         print("MEMORY USAGE COMPARISON (20 logs):")
         print(f"  Python memory : {python_mem:.2f} MB")
         print(f"  Hybrid memory : {hybrid_mem:.2f} MB")
-        if hybrid_mem > 0:
+        if hybrid_mem > 0 and python_mem > 0:
             reduction = python_mem / hybrid_mem
             print(f"  Reduction     : {reduction:.2f}x")
         print(f"{'=' * 60}\n")
 
-        # Note: Memory comparison is informational only
-        # Actual reduction depends on GC timing and system state
-        assert python_mem > 0, "Python should use some memory"
-        assert hybrid_mem > 0, "Hybrid should use some memory"
+        # Note: Memory comparison is informational — tracemalloc only tracks
+        # Python-side allocations (Rust-side memory is invisible to it).
+        # We verify Python orchestrator allocates measurable memory, but the
+        # hybrid orchestrator may show near-zero Python allocations if most
+        # work happens in Rust.
+        assert python_mem > 0, "Python orchestrator should allocate measurable memory"
 
     @pytest.mark.performance
     @pytest.mark.slow
