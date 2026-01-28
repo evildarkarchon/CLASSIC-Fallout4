@@ -15,6 +15,7 @@ if not hasattr(time, "clock"):
 
 import sys
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -82,6 +83,37 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "concurrency: Thread safety and race condition tests")
     config.addinivalue_line("markers", "error_recovery: Error handling and recovery tests")
     config.addinivalue_line("markers", "data_volume: Large dataset and scalability tests")
+
+
+@pytest.fixture(autouse=True)
+def prevent_manual_input(request):
+    """Prevent manual input from hanging in CI environments.
+
+    This fixture automatically mocks `builtins.input` for all tests to prevent
+    accidental manual directory input prompts that would hang in CI environments.
+    Tests that specifically test manual input functionality can override this
+    fixture by using `@patch("builtins.input", ...)` decorator.
+
+    Raises:
+        RuntimeError: If input() is called unexpectedly in a test.
+
+    """
+    # Skip mocking if the test already patches builtins.input
+    if any("builtins.input" in str(fixture) for fixture in request.fixturenames):
+        yield
+        return
+
+    with patch(
+        "builtins.input",
+        side_effect=RuntimeError(
+            "Unexpected manual input detected in test. "
+            "Tests calling find_docs_path() or game_path_find() must either:\n"
+            "1. Mock the detection methods to return valid paths\n"
+            "2. Mock _get_manual_docs_path or _get_path_from_user_console\n"
+            "3. Use @patch('builtins.input', ...) for manual input tests"
+        ),
+    ):
+        yield
 
 
 # Test collection configuration
