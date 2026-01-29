@@ -146,6 +146,14 @@ def pytest_collection_modifyitems(config, items):
             if "data_volume" in item.nodeid.lower():
                 item.add_marker(pytest.mark.data_volume)
 
+        # Auto-mark TUI tests
+        if "tui" in item.nodeid.lower():
+            item.add_marker(pytest.mark.tui)
+
+        # Auto-mark snapshot tests
+        if "snapshot" in item.nodeid.lower():
+            item.add_marker(pytest.mark.snapshot)
+
 
 # Pytest configuration options
 def pytest_addoption(parser):

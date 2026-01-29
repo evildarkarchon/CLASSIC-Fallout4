@@ -51,6 +51,8 @@ You can run the application directly from the source using `uv`.
     uv run classic-scan
     ```
 
+* always use `uv run` to run Python scripts so that it uses the virtual environment properly.
+
 ### Rebuilding Rust Extensions
 If you modify code in the `rust/` directory, you must rebuild the Python bindings.
 
@@ -94,3 +96,7 @@ To create a standalone `.exe` for distribution, use the `build_all.ps1` script.
 *   `README.md`: General user usage and installation.
 *   `pyproject.toml`: Dependencies and tool configurations.
 *   `rebuild_rust.ps1`: Understanding the Rust-Python bridge build process.
+
+## Testing
+*   When not running the full test suite, use the `--no-cov` flag to avoid unnecessary coverage calculations and prevent "exit 1" errors due to "missing coverage" for files that are not being tested.
+*   After modifying the TUI, use `uv run pytest --snapshot-update` to update the snapshots and `uv run pytest` to run the tests.

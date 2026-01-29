@@ -5,7 +5,7 @@ description = "Crash Log Auto-Scanner for Buffout 4."
 authors = [
     { name = "Poet" },
     { name = "evildarkarchon" },
-    { name = "wxMichael" }
+    { name = "wxMichael" },
 ]
 readme = "README.md"
 license = { file = "LICENSE.md" }
@@ -39,13 +39,25 @@ dependencies = [
 [project.optional-dependencies]
 cli = ["tqdm>=4.67.1"]
 windows = ["pywin32>=310; sys_platform == 'win32'"]
-full = ["tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
-all = ["tqdm>=4.67.1", "pywin32>=310; sys_platform == 'win32'"]
+tui = ["textual>=0.50.0", "pyclip>=0.7.0"]
+full = [
+    "tqdm>=4.67.1",
+    "pywin32>=310; sys_platform == 'win32'",
+    "textual>=0.50.0",
+    "pyclip>=0.7.0",
+]
+all = [
+    "tqdm>=4.67.1",
+    "pywin32>=310; sys_platform == 'win32'",
+    "textual>=0.50.0",
+    "pyclip>=0.7.0",
+]
 
 [project.scripts]
 # Entry points are in the root directory, not in src/
 classic = "CLASSIC_Interface:main"
 classic-gui = "CLASSIC_Interface:main"
+classic-tui = "ClassicLib.TUI:main"
 classic-cli = "CLASSIC_ScanLogs:main"
 classic-scan = "CLASSIC_ScanGame:main"
 
@@ -73,6 +85,7 @@ dev = [
     "python-memory-profiler>=0.4.4",
     "scipy>=1.16.3",
     "debugpy>=1.8.19",
+    "pytest-textual-snapshot>=1.0.0",
 ]
 
 [tool.uv]
@@ -90,14 +103,14 @@ build-backend = "setuptools.build_meta"
 [tool.mypy]
 enable_incomplete_feature = ["NewGenericSyntax"]
 disable_error_code = [
-	"import-untyped",
-	"index",          # Redundant with Pyright reportIndexIssue
-	"name-defined",   # Redundant with Ruff F821
-	"operator",       # Redundant with Pyright reportOperatorIssue
-	"attr-defined",	 # Redundant with reportAttributeAccessIssue
-	"no-redef",
-	"empty-body",
-	"annotation-unchecked"
+    "import-untyped",
+    "index",                # Redundant with Pyright reportIndexIssue
+    "name-defined",         # Redundant with Ruff F821
+    "operator",             # Redundant with Pyright reportOperatorIssue
+    "attr-defined",         # Redundant with reportAttributeAccessIssue
+    "no-redef",
+    "empty-body",
+    "annotation-unchecked",
 ]
 
 [tool.pyright]
@@ -105,40 +118,68 @@ typeCheckingMode = "strict"
 extraPaths = [".", "./ClassicLib", "./tests"]
 reportUnknownMemberType = false
 reportWildcardImportFromLibrary = false
-reportAssignmentType = false            # Redundant with Mypy assignment
-reportMissingParameterType = false      # Redundant with Ruff ANN001
-reportReturnType = false                # Redundant with Mypy return-type
-reportUndefinedVariable = false         # Redundant with Ruff F821
-reportUnusedImport = false              # Redundant with Ruff F401
-reportUnusedVariable = false            # Redundant with Ruff F841
+reportAssignmentType = false # Redundant with Mypy assignment
+reportMissingParameterType = false # Redundant with Ruff ANN001
+reportReturnType = false # Redundant with Mypy return-type
+reportUndefinedVariable = false # Redundant with Ruff F821
+reportUnusedImport = false # Redundant with Ruff F401
+reportUnusedVariable = false # Redundant with Ruff F841
 reportUnknownLambdaType = "warning"
 reportUnknownParameterType = "warning"
 reportUnknownVariableType = "warning"
 reportUnknownArgumentType = "warning"
 reportUntypedFunctionDecorator = "warning"
 reportPrivateUsage = "warning"
-exclude = [ "**/_internal", "**/dist", "**/build", ".venv", "**/Release", "**/PySide6" ]
-ignore = [ "**/_internal", "**/dist", "**/build", ".venv", "**/Release", "**/PySide6" ]
+exclude = [
+    "**/_internal",
+    "**/dist",
+    "**/build",
+    ".venv",
+    "**/Release",
+    "**/PySide6",
+]
+ignore = [
+    "**/_internal",
+    "**/dist",
+    "**/build",
+    ".venv",
+    "**/Release",
+    "**/PySide6",
+]
 
 [tool.basedpyright]
 typeCheckingMode = "strict"
 extraPaths = [".", "./ClassicLib", "./tests"]
 reportUnknownMemberType = false
 reportWildcardImportFromLibrary = false
-reportAssignmentType = false            # Redundant with Mypy assignment
-reportMissingParameterType = false      # Redundant with Ruff ANN001
-reportReturnType = false                # Redundant with Mypy return-type
-reportUndefinedVariable = false         # Redundant with Ruff F821
-reportUnusedImport = false              # Redundant with Ruff F401
-reportUnusedVariable = false            # Redundant with Ruff F841
+reportAssignmentType = false # Redundant with Mypy assignment
+reportMissingParameterType = false # Redundant with Ruff ANN001
+reportReturnType = false # Redundant with Mypy return-type
+reportUndefinedVariable = false # Redundant with Ruff F821
+reportUnusedImport = false # Redundant with Ruff F401
+reportUnusedVariable = false # Redundant with Ruff F841
 reportUnknownLambdaType = "warning"
 reportUnknownParameterType = "warning"
 reportUnknownVariableType = "warning"
 reportUnknownArgumentType = "warning"
 reportUntypedFunctionDecorator = "warning"
 reportPrivateUsage = "warning"
-exclude = [ "**/_internal/**/*.py", "**/dist/**/*.py", "**/build/**/*.py", ".venv/**/*.py", "**/Release/**/*.py", "**/PySide6/**/*.py" ]
-ignore = [ "**/_internal/**/*.py", "**/dist/**/*.py", "**/build/**/*.py", ".venv/**/*.py", "**/Release/**/*.py", "**/PySide6/**/*.py" ]
+exclude = [
+    "**/_internal/**/*.py",
+    "**/dist/**/*.py",
+    "**/build/**/*.py",
+    ".venv/**/*.py",
+    "**/Release/**/*.py",
+    "**/PySide6/**/*.py",
+]
+ignore = [
+    "**/_internal/**/*.py",
+    "**/dist/**/*.py",
+    "**/build/**/*.py",
+    ".venv/**/*.py",
+    "**/Release/**/*.py",
+    "**/PySide6/**/*.py",
+]
 
 [tool.ruff]
 indent-width = 4
@@ -154,80 +195,80 @@ skip-magic-trailing-comma = false
 [tool.ruff.lint]
 preview = true
 ignore = [
-	"ANN401",  # Allow use of typing.Any
-	"D102",    # Missing docstring in public method (Protocol stubs)
-	"D105",    # Missing docstring in magic method
-	"D107",    # Missing docstring in __init__
-	"D205",    # Blank line between summary and description (many multi-line summaries)
+    "ANN401",  # Allow use of typing.Any
+    "D102",    # Missing docstring in public method (Protocol stubs)
+    "D105",    # Missing docstring in magic method
+    "D107",    # Missing docstring in __init__
+    "D205",    # Blank line between summary and description (many multi-line summaries)
     "D211",
     "D213",
     "D203",
-	"E501",    # Duplicate of B950 line-too-long
-	"E722",    # Duplicate of B001 bare-except
-	"PLR0904", # too-many-public-methods
-	"PLR0911", # too-many-return-statements
-	# "PLR0912", # too-many-branches
-	"PLR0913",
-	"PLR0914", # too-many-local-variables
-	"PLR0915", # too-many-statements
-	"PLR0917",
-	"TRY003",  # Allow custom exception messages
-	"TRY400",  # Use `logging.exception` instead of `logging.error`
-	"PLR2004", # Allow magic values in comparisons
-	"PLW2901", # Allow overwriting loop variables
-	"SLF001",
-	"PLC0415",
-	"DOC502",
-	"Q000",
-	"RUF022",
+    "E501",    # Duplicate of B950 line-too-long
+    "E722",    # Duplicate of B001 bare-except
+    "PLR0904", # too-many-public-methods
+    "PLR0911", # too-many-return-statements
+    # "PLR0912", # too-many-branches
+    "PLR0913",
+    "PLR0914", # too-many-local-variables
+    "PLR0915", # too-many-statements
+    "PLR0917",
+    "TRY003",  # Allow custom exception messages
+    "TRY400",  # Use `logging.exception` instead of `logging.error`
+    "PLR2004", # Allow magic values in comparisons
+    "PLW2901", # Allow overwriting loop variables
+    "SLF001",
+    "PLC0415",
+    "DOC502",
+    "Q000",
+    "RUF022",
     "RUF067",
 ]
 
 extend-select = [
-	"A",     # Builtin Shadowing
-	"ANN",   # Type Annotations
-	"ASYNC", # Async Suggestions
-	"ARG",   # Unused Arguments
-	"B",     # Bugs/Design Problems
-	"BLE",   # Blind Except
-	"C4",    # Comprehensions
-	"FA",    # Future Annotations
-	"FLY",   # F-Strings
-	"FURB",  # Modernization
-	"I",     # Import Sorting
-	"ICN",   # Import Naming Conventions
-	"ISC",   # Implicit String Concatenation
-	"LOG",   # Logging
-	"PERF",  # Performance Anti-Patterns
-	"PIE",   # Misc Lints
-	"PL",    # Pylint
-	"PT",    # PyTest
-	"PTH",   # Prefer Pathlib
-	"RET",   # Return
-	"RSE",   # Raise
-	"RUF",   # Ruff
-	"SIM",   # Simplify
-	"SLF",   # Self
-	"TCH",   # Type Checking
-	"TID",   # Tidy Imports
-	"TRY",   # Exception Anti-Patterns
-	"UP",    # pyupgrade (New Syntax Suggestions)
-	"FIX",
-	"FA",
-	"Q",
-	"TID252",
+    "A",      # Builtin Shadowing
+    "ANN",    # Type Annotations
+    "ASYNC",  # Async Suggestions
+    "ARG",    # Unused Arguments
+    "B",      # Bugs/Design Problems
+    "BLE",    # Blind Except
+    "C4",     # Comprehensions
+    "FA",     # Future Annotations
+    "FLY",    # F-Strings
+    "FURB",   # Modernization
+    "I",      # Import Sorting
+    "ICN",    # Import Naming Conventions
+    "ISC",    # Implicit String Concatenation
+    "LOG",    # Logging
+    "PERF",   # Performance Anti-Patterns
+    "PIE",    # Misc Lints
+    "PL",     # Pylint
+    "PT",     # PyTest
+    "PTH",    # Prefer Pathlib
+    "RET",    # Return
+    "RSE",    # Raise
+    "RUF",    # Ruff
+    "SIM",    # Simplify
+    "SLF",    # Self
+    "TCH",    # Type Checking
+    "TID",    # Tidy Imports
+    "TRY",    # Exception Anti-Patterns
+    "UP",     # pyupgrade (New Syntax Suggestions)
+    "FIX",
+    "FA",
+    "Q",
+    "TID252",
 
-	"D",     # pydocstyle
-	# "C901",  # Complex Structures
-	# "COM",   # Commas
-	# "DTZ",   # Unsafe/Naive Datetimes
-	# "EM",    # Exception Messages
-	# "FBT",   # Boolean Traps
-	# "G",     # Logging Formatting
-	# "N",     # PEP8 Naming Conventions
-	# "PGH",   # PyGrep Hooks
-	# "PYI",   # Stub Files
-	# "S",     # Security Testing
+    "D", # pydocstyle
+    # "C901",  # Complex Structures
+    # "COM",   # Commas
+    # "DTZ",   # Unsafe/Naive Datetimes
+    # "EM",    # Exception Messages
+    # "FBT",   # Boolean Traps
+    # "G",     # Logging Formatting
+    # "N",     # PEP8 Naming Conventions
+    # "PGH",   # PyGrep Hooks
+    # "PYI",   # Stub Files
+    # "S",     # Security Testing
 ]
 [tool.ruff.lint.flake8-tidy-imports]
 # Disallow all relative imports.
@@ -254,7 +295,11 @@ ban-relative-imports = "all"
     # Variable names - tests may use short names intentionally
     "E741",
     # Unused imports/variables - common in test fixtures
-    "F401", "F405", "F601", "F811", "F841",
+    "F401",
+    "F405",
+    "F601",
+    "F811",
+    "F841",
     # FURB - test clarity over micro-optimizations
     "FURB",
     # Logging - tests may use root logger
@@ -264,7 +309,9 @@ ban-relative-imports = "all"
     # PIE - misc lints, tests have different patterns
     "PIE",
     # Pylint complexity - tests can be complex
-    "PLC", "PLR", "PLW",
+    "PLC",
+    "PLR",
+    "PLW",
     # Pytest - allow flexible test patterns
     "PT",
     # Return statements - tests have different patterns
@@ -283,39 +330,39 @@ ban-relative-imports = "all"
     "TRY",
     # Upgrade suggestions - not critical for tests
     "UP",
-    "D"
+    "D",
 ]
 "tests/conftest.py" = ["ANN001", "ANN201", "ANN202"]
 "tests/fixtures/**/*.py" = ["ANN001", "ANN201", "ANN202"]
-"install_requirements.py" = ["PLR0912"]  # Utility script with many branches
+"install_requirements.py" = ["PLR0912"] # Utility script with many branches
 "tools/**/*.py" = [
-    "PLR6301",  # Method could be static - dev tools
-    "ANN001",   # Missing type annotation for argument
-    "ANN002",   # Missing type annotation for *args
-    "ANN003",   # Missing type annotation for **kwargs
-    "ANN201",   # Missing return type annotation
-    "ANN202",   # Missing return type for private function
-    "ANN204",   # Missing return type for special method
-    "PLR1702",  # Too many nested blocks - complex analysis tools
-    "PLR0912",  # Too many branches - complex analysis tools
-    "PLR1714",  # Merge multiple comparisons
-    "PLR6201",  # Use set literal for membership - dev tools
-    "PERF401",  # Use list comprehension - dev tools, clarity over perf
-    "BLE001",   # Blind exception - dev tools need robust error handling
-    "B905",     # zip without strict - dev tools
-    "SIM105",   # contextlib.suppress - dev tools
-    "SIM108",   # Ternary operator - dev tools, clarity over brevity
-    "TC003",    # Type checking imports
-    "RUF013",   # Implicit Optional
-    "RET504",   # Unnecessary assignment
-    "RUF059",   # Unused variable
-    "RUF100",   # Unused noqa
-    "F401",     # Unused import - conditional imports in dev tools
-    "ARG002",   # Unused argument - dev tool APIs
-    "TRY300",   # Return in try block - dev tools
-    "PLW1514",  # Missing encoding - dev tools
-    "FURB171",  # Single-item membership test - dev tools
-    "FURB122",  # f.write in loop - dev tools
+    "PLR6301", # Method could be static - dev tools
+    "ANN001",  # Missing type annotation for argument
+    "ANN002",  # Missing type annotation for *args
+    "ANN003",  # Missing type annotation for **kwargs
+    "ANN201",  # Missing return type annotation
+    "ANN202",  # Missing return type for private function
+    "ANN204",  # Missing return type for special method
+    "PLR1702", # Too many nested blocks - complex analysis tools
+    "PLR0912", # Too many branches - complex analysis tools
+    "PLR1714", # Merge multiple comparisons
+    "PLR6201", # Use set literal for membership - dev tools
+    "PERF401", # Use list comprehension - dev tools, clarity over perf
+    "BLE001",  # Blind exception - dev tools need robust error handling
+    "B905",    # zip without strict - dev tools
+    "SIM105",  # contextlib.suppress - dev tools
+    "SIM108",  # Ternary operator - dev tools, clarity over brevity
+    "TC003",   # Type checking imports
+    "RUF013",  # Implicit Optional
+    "RET504",  # Unnecessary assignment
+    "RUF059",  # Unused variable
+    "RUF100",  # Unused noqa
+    "F401",    # Unused import - conditional imports in dev tools
+    "ARG002",  # Unused argument - dev tool APIs
+    "TRY300",  # Return in try block - dev tools
+    "PLW1514", # Missing encoding - dev tools
+    "FURB171", # Single-item membership test - dev tools
+    "FURB122", # f.write in loop - dev tools
 ]
 
 [tool.coverage.run]
@@ -345,7 +392,7 @@ omit = [
     # PySide6 generated files and internal modules
     "pyscript",
     "shibokensupport/*",
-    "signature_bootstrap.py"
+    "signature_bootstrap.py",
 ]
 branch = true
 
@@ -368,7 +415,7 @@ exclude_lines = [
     "@app.route",
     "app.run",
     "logger\\.debug",
-    "logger\\.trace"
+    "logger\\.trace",
 ]
 
 [tool.coverage.html]
@@ -411,6 +458,8 @@ markers = [
     "stress: Stress tests for high-load scenarios",
     "concurrency: Tests for concurrent and parallel operations",
     "error_recovery: Tests for error recovery and resilience",
+    "tui: Tests for the Textual TUI interface",
+    "snapshot: Visual snapshot regression tests",
 ]
 
 [tool.black]

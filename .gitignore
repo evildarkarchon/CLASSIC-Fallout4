@@ -304,3 +304,6 @@ Classic Data/cache.yaml
 
 # Version Script Backups
 version_backups/
+snapshot_report.html
+docs/CLASSIC_TUI_PRD.md
+TestAppSnapshots*.raw
