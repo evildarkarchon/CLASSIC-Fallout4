@@ -35,9 +35,6 @@ members = [
     # Version Registry (Game version detection and matching)
     "business-logic/classic-version-registry-core",
 
-    # UI Coordination (Shared across CLI/TUI/GUI)
-    "ui-applications/classic-ui-shared",
-
     # Python Bindings (PyO3 adapters)
     "python-bindings/classic-yaml-py",
     "python-bindings/classic-database-py",
@@ -65,10 +62,6 @@ members = [
 
     # Phase 5 - Application Coordination (Python Bindings)
     "python-bindings/classic-update-py",
-
-    # Native Applications
-    "ui-applications/classic-cli",
-    "ui-applications/classic-tui",
 ]
 resolver = "2"
 
