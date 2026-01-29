@@ -97,7 +97,7 @@ class TestInitialSetup:
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
     @patch("ClassicLib.support.backup.BackupManager.run_backup")
-    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.yaml_cache")
     @patch("ClassicLib.support.setup.msg_info")
     @patch("ClassicLib.support.setup.msg_success")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -142,7 +142,7 @@ class TestInitialSetup:
     @patch("ClassicLib.support.setup.game_path_find")
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
-    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.yaml_cache")
     @patch("ClassicLib.support.setup.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_version(
@@ -178,7 +178,7 @@ class TestInitialSetup:
     @patch("ClassicLib.support.setup.game_path_find")
     @patch("ClassicLib.support.setup.configure_logging")
     @patch("ClassicLib.support.file_gen.FileGenerator.generate_all_files")
-    @patch("ClassicLib.io.yaml.yaml_cache")
+    @patch("ClassicLib.support.setup.yaml_cache")
     @patch("ClassicLib.support.setup.msg_info")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_run_initial_setup_type_error_game_name(
