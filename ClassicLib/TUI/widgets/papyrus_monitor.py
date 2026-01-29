@@ -54,14 +54,14 @@ class PapyrusMonitor(Static):
 
     stats: reactive[PapyrusStats] = reactive(PapyrusStats, init=False)
 
-    def __init__(self, widget_id: str | None = None) -> None:
+    def __init__(self, id: str | None = None) -> None:  # noqa: A002
         """Initialize the Papyrus monitor widget.
 
         Args:
-            widget_id: Optional widget ID.
+            id: Optional widget ID.
 
         """
-        super().__init__(id=widget_id)
+        super().__init__(id=id)
         self.stats = PapyrusStats()
         self._monitoring = False
         self._timer = None
