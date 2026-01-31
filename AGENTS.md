@@ -525,19 +525,6 @@ def process_segments(data: str) -> list[str]:
 - ❌ Multiple Tokio runtimes → ✅ `classic_shared::get_runtime()`
 - ❌ Module-level YAML settings imports → ✅ Import `yaml_settings`, `yaml_settings_async`, `classic_settings`, `classic_settings_async` inside functions to avoid circular imports
 
-## File Structure
-
-### ClassicLib Organization (Refactored)
-Modular one-class-per-file structure with subdirectories:
-- **MessageHandler/** - Messaging components
-- **Utils/** - Utility functions by category
-- **FileIO/** - File operations and encoding
-- **ScanLog/** - Log scanning with fragments/, models/, pipeline/
-- **TUI/** - Terminal UI with screens/, widgets/, handlers/
-- **Interface/** - GUI components and settings
-
-All maintain backward compatibility through re-exports.
-
 ## Rust Development Guides
 
 ### Core Guides

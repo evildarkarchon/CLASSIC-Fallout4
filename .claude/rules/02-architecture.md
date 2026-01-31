@@ -52,15 +52,6 @@ from ClassicLib.ScanLog.Parser import find_segments
 from ClassicLib.integration.factory import get_parser  # Auto fallback
 ```
 
-## ClassicLib Organization
-
-Modular one-class-per-file structure:
-- **MessageHandler/** - Messaging components
-- **Utils/** - Utility functions by category
-- **FileIO/** - File operations and encoding
-- **ScanLog/** - Log scanning (fragments/, models/, pipeline/)
-- **Interface/** - GUI components
-
 ## References
 
 - `docs/development/rust_workspace_architecture.md` - Crate hierarchy
