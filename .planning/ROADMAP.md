@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. `cargo build --workspace` succeeds with no stub/empty crates remaining (all audited, stubs removed)
   4. `uv run pytest --cov=ClassicLib --cov-report=term` produces a baseline report and all 0%-coverage modules have been evaluated for deletion
   5. No `global _*` mutable flags remain in ClassicLib/ -- all replaced with instance variables, lru_cache, or singletons with reset() methods; `reset_all_singletons()` autouse fixture exists and passes
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: Dead code removal (DEAD-01, DEAD-03, DEAD-04 -- remove deprecated files, audit Rust crates, establish coverage baseline)
-- [ ] 01-02: CI tooling setup (DEAD-02 -- install vulture, add to CI pipeline)
-- [ ] 01-03: Global state cleanup (GLOB-01, GLOB-02, GLOB-03 -- replace mutable flags, audit globals, add reset fixture)
+- [ ] 01-01-PLAN.md -- Dead code removal (remove deprecated files, verify Rust crates, establish coverage baseline)
+- [ ] 01-02-PLAN.md -- CI tooling setup (install vulture, curate whitelist, add to CI pipeline)
+- [ ] 01-03-PLAN.md -- Global state cleanup (replace mutable flags, audit globals, add reset fixture)
 
 ### Phase 2: Integration Layer Simplification
 **Goal**: The Python-Rust integration boundary uses a single-layer factory with direct try-import, no redundant detection/caching layers
