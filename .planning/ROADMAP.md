@@ -47,11 +47,11 @@ Plans:
   2. `ClassicLib/acceleration/` directory does not exist (coordinator, metrics, types, workload removed after usage audit)
   3. All factory function return types are specific Rust types (no `Any` annotations remain in factory signatures); `uv run pyright ClassicLib/integration/factory.py` passes with 0 errors
   4. `uv run pytest -n auto` passes with no regressions from integration layer changes
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: Factory flattening (ARCH-01 -- collapse factory/detector/status to single-layer, document interfaces with Protocol classes first)
-- [ ] 02-02: Acceleration removal and type narrowing (ARCH-02, ARCH-03 -- audit and remove acceleration package, narrow factory return types)
+- [ ] 02-01-PLAN.md -- Factory flattening (collapse factory/ subpackage + detector.py + status.py into single flat factory.py, update all caller import paths)
+- [ ] 02-02-PLAN.md -- Acceleration removal and type narrowing (delete acceleration/ package, create Protocol types, narrow factory return types, pass pyright)
 
 ### Phase 3: Wrapper Thinning
 **Goal**: Python wrappers in ClassicLib/integration/rust/ are thin adapters (type conversion only), with business logic living in Rust -core crates
