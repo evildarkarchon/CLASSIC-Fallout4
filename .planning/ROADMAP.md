@@ -62,11 +62,11 @@ Plans:
   2. `parser` and `formid` Rust wrappers are each under 150 lines, with business logic moved to corresponding Rust `-core` crates
   3. `cargo test --workspace` passes with expanded Rust test coverage for migrated logic
   4. `uv run pytest -n auto` passes with no regressions; application behavior identical
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03-01: FileIO wrapper thinning (largest wrapper -- 39KB file_io_rust.py)
-- [ ] 03-02: Parser and FormID wrapper thinning (15KB and 16KB respectively)
+- [ ] 03-01-PLAN.md -- FileIO wrapper thinning (937 lines -> under 200, remove SyncWrapper and convenience functions)
+- [ ] 03-02-PLAN.md -- Parser and FormID wrapper thinning (320 + 325 lines -> under 150 each, remove hasattr/legacy patterns)
 
 ### Phase 4: Interface Consolidation
 **Goal**: The codebase has exactly two async patterns -- native async (CLI/TUI) and AsyncBridge (GUI) -- with no deprecated sync wrappers
