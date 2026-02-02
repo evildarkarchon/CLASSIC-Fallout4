@@ -36,7 +36,7 @@ Plans:
 - [x] 01-01-PLAN.md -- Dead code removal (remove deprecated files, verify Rust crates, establish coverage baseline)
 - [x] 01-02-PLAN.md -- CI tooling setup (install vulture, curate whitelist, add to CI pipeline)
 - [x] 01-03-PLAN.md -- Global state cleanup (replace mutable flags, audit globals, add reset fixture)
-- [ ] 01-04-PLAN.md -- Gap closure (fix test MessageHandler init, refine DEPRECATED criterion scope)
+- [x] 01-04-PLAN.md -- Gap closure (fix test MessageHandler init, refine DEPRECATED criterion scope)
 
 ### Phase 2: Integration Layer Simplification
 **Goal**: The Python-Rust integration boundary uses a single-layer factory with direct try-import, no redundant detection/caching layers
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Cleanup | 3/4 | Gap closure pending | - |
+| 1. Foundation Cleanup | 4/4 | Complete | 2026-02-02 |
 | 2. Integration Layer Simplification | 0/2 | Not started | - |
 | 3. Wrapper Thinning | 0/2 | Not started | - |
 | 4. Interface Consolidation | 0/3 | Not started | - |
