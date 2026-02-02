@@ -12,25 +12,25 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 Phase: 1 of 5 (Foundation Cleanup)
 Plan: 1 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-02 -- Completed 01-02-PLAN.md
+Last activity: 2026-02-02 -- Completed 01-01-PLAN.md
 
-Progress: [█░░░░░░░░░] 7%
+Progress: [██░░░░░░░░] 13%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 5m 11s
-- Total execution time: ~0.1 hours
+- Total plans completed: 2
+- Average duration: 9m 6s
+- Total execution time: ~0.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-foundation-cleanup | 1/3 | 5m 11s | 5m 11s |
+| 01-foundation-cleanup | 2/3 | 18m 11s | 9m 6s |
 
 **Recent Trend:**
-- Last 5 plans: 01-02 (5m 11s)
+- Last 5 plans: 01-02 (5m 11s), 01-01 (13m)
 - Trend: -
 
 *Updated after each plan completion*
@@ -46,6 +46,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Phase 1 combines DEAD and GLOB requirements (both are foundation, no dependencies between them)
 - [01-02]: vulture min-confidence 80 as detection threshold
 - [01-02]: Separate whitelist file over inline comments for auditability
+- [01-01]: 4 messaging re-export shims identified as dead code candidates (zero callers)
+- [01-01]: TUI 0% coverage is expected (UI-specific testing), not dead code
+- [01-01]: ini_fallback.py is Phase 5 candidate for fallback pruning
 
 ### Pending Todos
 
@@ -59,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 01-02-PLAN.md
+Stopped at: Completed 01-01-PLAN.md
 Resume file: None
