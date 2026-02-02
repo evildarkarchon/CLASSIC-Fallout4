@@ -65,8 +65,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 03-01-PLAN.md -- FileIO wrapper thinning (937 lines -> under 200, remove SyncWrapper and convenience functions)
-- [ ] 03-02-PLAN.md -- Parser and FormID wrapper thinning (320 + 325 lines -> under 150 each, remove hasattr/legacy patterns)
+- [x] 03-01-PLAN.md -- FileIO wrapper thinning (937 lines -> 230, removed SyncWrapper and convenience functions)
+- [x] 03-02-PLAN.md -- Parser and FormID wrapper thinning (321 + 326 lines -> 122 + 128, removed hasattr/legacy patterns)
 
 ### Phase 4: Interface Consolidation
 **Goal**: The codebase has exactly two async patterns -- native async (CLI/TUI) and AsyncBridge (GUI) -- with no deprecated sync wrappers
@@ -107,6 +107,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 4/4 | Complete | 2026-02-02 |
 | 2. Integration Layer Simplification | 2/2 | Complete | 2026-02-02 |
-| 3. Wrapper Thinning | 0/2 | Not started | - |
+| 3. Wrapper Thinning | 2/2 | Gaps found | 2026-02-02 |
 | 4. Interface Consolidation | 0/3 | Not started | - |
 | 5. Fallback Pruning | 0/1 | Not started | - |

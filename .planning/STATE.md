@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 3 - Wrapper Thinning (complete)
+**Current focus:** Phase 3 - Wrapper Thinning (gaps found, pending closure)
 
 ## Current Position
 
 Phase: 3 of 5 (Wrapper Thinning)
 Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-02 -- Completed 03-02-PLAN.md (Parser + FormID wrapper thinning)
+Status: Gaps found — verification identified 2 gaps (file_io 30 lines over target, pre-existing yaml-core test failure)
+Last activity: 2026-02-02 -- Verification complete, gaps found, pending closure
 
 Progress: [██████░░░░] 62%
 
@@ -76,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 03-02-PLAN.md. Phase 3 complete. Ready for Phase 4.
+Stopped at: Verification found 2 gaps. User chose gap closure. Ready for /gsd:plan-phase 3 --gaps.
 Resume file: None
