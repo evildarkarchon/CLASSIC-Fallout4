@@ -90,10 +90,9 @@ class ResourceLoader:
                 data_dir = Path(local_dir) / "CLASSIC Data"
                 if data_dir.exists():
                     logger.debug(f"Using CLASSIC Data from LOCAL_DIR: {data_dir}")
+                    return data_dir
             except (OSError, ValueError, TypeError):
                 return None
-            else:
-                return data_dir
         return None
 
     @staticmethod

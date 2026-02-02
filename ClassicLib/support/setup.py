@@ -254,7 +254,7 @@ class SetupCoordinator:
             if getattr(sys, "frozen", False):
                 GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(sys.executable).parent)
             else:
-                GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent.parent)
+                GlobalRegistry.register(GlobalRegistry.Keys.LOCAL_DIR, Path(__file__).parent.parent.parent)
 
         # Validate settings paths after initialization
         self.path_validator.validate_all_settings_paths()

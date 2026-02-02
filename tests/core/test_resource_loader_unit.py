@@ -127,11 +127,12 @@ class TestCheckLocalDir:
             result = ResourceLoader._check_local_dir()
             assert result == data_dir
 
-    def test_returns_path_even_when_data_not_exists(self, tmp_path: Path) -> None:
-        """Should return constructed path even when CLASSIC Data doesn't exist.
+    def test_returns_none_when_data_not_exists(self, tmp_path: Path) -> None:
+        """Should return None when CLASSIC Data directory doesn't exist.
 
-        Note: The method returns the potential path for the caller to check/create.
-        The exists() check is only for logging purposes.
+        The method must validate that CLASSIC Data exists before returning.
+        Returning a non-existent path breaks get_data_directory() which trusts
+        non-None returns without checking existence.
         """
         # Use a path that doesn't have CLASSIC Data
         empty_dir = tmp_path / "empty_dir"
@@ -140,9 +141,7 @@ class TestCheckLocalDir:
         # Patch the module-level function imported into resources.py
         with patch("ClassicLib.support.resources.get_local_dir", return_value=empty_dir):
             result = ResourceLoader._check_local_dir()
-            # Method returns the path even if it doesn't exist
-            assert result == empty_dir / "CLASSIC Data"
-            assert not result.exists()
+            assert result is None
 
     def test_returns_none_on_oserror(self) -> None:
         """Should return None when OSError is raised during path operations."""
