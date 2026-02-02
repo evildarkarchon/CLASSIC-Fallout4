@@ -25,17 +25,18 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Depends on**: Nothing (first phase)
 **Requirements**: DEAD-01, DEAD-02, DEAD-03, DEAD-04, GLOB-01, GLOB-02, GLOB-03
 **Success Criteria** (what must be TRUE):
-  1. `grep -r "DEPRECATED" ClassicLib/ --include="*.py" -l` returns 0 files (all deprecated modules removed)
+  1. `grep -r "DEPRECATED" ClassicLib/ --include="*.py" -l` returns only files with Phase 4+ deprecation notices (FormIDAnalyzer.py sync wrappers); no Phase 1 deprecated modules (database_rust.py, _DeprecatedVersion) remain
   2. `uv run vulture ClassicLib/` runs in CI and reports 0 violations (dead code detection enforced)
   3. `cargo build --workspace` succeeds with no stub/empty crates remaining (all audited, stubs removed)
   4. `uv run pytest --cov=ClassicLib --cov-report=term` produces a baseline report and all 0%-coverage modules have been evaluated for deletion
   5. No `global _*` mutable flags remain in ClassicLib/ -- all replaced with instance variables, lru_cache, or singletons with reset() methods; `reset_all_singletons()` autouse fixture exists and passes
-**Plans**: 3 plans
+**Plans**: 4 plans
 
 Plans:
 - [x] 01-01-PLAN.md -- Dead code removal (remove deprecated files, verify Rust crates, establish coverage baseline)
 - [x] 01-02-PLAN.md -- CI tooling setup (install vulture, curate whitelist, add to CI pipeline)
 - [x] 01-03-PLAN.md -- Global state cleanup (replace mutable flags, audit globals, add reset fixture)
+- [ ] 01-04-PLAN.md -- Gap closure (fix test MessageHandler init, refine DEPRECATED criterion scope)
 
 ### Phase 2: Integration Layer Simplification
 **Goal**: The Python-Rust integration boundary uses a single-layer factory with direct try-import, no redundant detection/caching layers
@@ -104,7 +105,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Cleanup | 3/3 | Complete | 2026-02-01 |
+| 1. Foundation Cleanup | 3/4 | Gap closure pending | - |
 | 2. Integration Layer Simplification | 0/2 | Not started | - |
 | 3. Wrapper Thinning | 0/2 | Not started | - |
 | 4. Interface Consolidation | 0/3 | Not started | - |
