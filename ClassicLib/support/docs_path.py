@@ -22,9 +22,49 @@ from ClassicLib.core.registry import GlobalRegistry
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
-from ClassicLib.io.files import append_file_sync, read_lines_sync, write_file_sync
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.messaging import msg_error, msg_info
 from ClassicLib.Utils.path_utils import remove_readonly
+
+
+def _read_lines(path: Path) -> list[str]:
+    """Read file lines synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to read.
+
+    Returns:
+        List of lines from the file.
+
+    """
+    io_core = get_file_io()
+    return AsyncBridge.get_instance().run_async(io_core.read_lines(path))
+
+
+def _write_file(path: Path, content: str) -> None:
+    """Write file synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to write.
+        content: Content to write.
+
+    """
+    io_core = get_file_io()
+    AsyncBridge.get_instance().run_async(io_core.write_file(path, content))
+
+
+def _append_file(path: Path, content: str) -> None:
+    """Append to file synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to append to.
+        content: Content to append.
+
+    """
+    io_core = get_file_io()
+    AsyncBridge.get_instance().run_async(io_core.append_file(path, content))
+
 
 # Lazy imports for yaml functions to avoid circular imports
 # These are imported inside functions that use them
@@ -244,7 +284,7 @@ class DocumentsPathManager:
             return
 
         library_path: Path = Path()
-        steam_library: list[str] = read_lines_sync(libraryfolders_path)
+        steam_library: list[str] = _read_lines(libraryfolders_path)
 
         for library_line in steam_library:
             if "path" in library_line:
@@ -418,7 +458,7 @@ class DocumentsPathManager:
         # Write the config back to file
         output = StringIO()
         ini_config.write(output, space_around_delimiters=False)
-        write_file_sync(ini_path, output.getvalue())
+        _write_file(ini_path, output.getvalue())
 
         return message_list
 
@@ -457,7 +497,7 @@ class DocumentsPathManager:
             customini_config: str | None = yaml_settings(str, YAML.Game, "Default_CustomINI")
             if not isinstance(customini_config, str):
                 raise TypeError("Invalid customINI config")
-            append_file_sync(ini_path, customini_config)
+            _append_file(ini_path, customini_config)
 
         return message_list
 

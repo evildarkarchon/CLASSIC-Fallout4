@@ -36,12 +36,27 @@ from ClassicLib.Interface.widgets.ResultsViewerWidgets import (
     ReportListWidget,
     ReportMetadataWidget,
 )
-from ClassicLib.io.files import read_file_sync
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 from ClassicLib.messaging import msg_error, msg_info, msg_warning
 
 if TYPE_CHECKING:
     from ClassicLib.Interface.shared.context import FeatureContext
+
+
+def _read_file(path: Path) -> str:
+    """Read a file synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to read.
+
+    Returns:
+        The file contents as a string.
+
+    """
+    io_core = get_file_io()
+    return AsyncBridge.get_instance().run_async(io_core.read_file(path))
 
 
 class ResultsViewerController:
@@ -389,7 +404,7 @@ class ResultsViewerController:
                 return False
 
             # Read report content with Rust-accelerated file I/O
-            content = read_file_sync(report_path)
+            content = _read_file(report_path)
 
             # Display in viewer
             self._markdown_viewer.setMarkdown(content)
@@ -412,7 +427,7 @@ class ResultsViewerController:
 
             # Try displaying as plain text
             try:
-                content = read_file_sync(report_path)
+                content = _read_file(report_path)
                 self._markdown_viewer.setPlainText(content)
                 QTimer.singleShot(0, lambda: msg_warning("Displayed report as plain text due to markdown error"))
             except OSError as fallback_e:
@@ -509,7 +524,7 @@ class ResultsViewerController:
         try:
             from PySide6.QtWidgets import QApplication
 
-            content = read_file_sync(self._current_report_path)
+            content = _read_file(self._current_report_path)
             QApplication.clipboard().setText(content)
             msg_info("Report copied to clipboard")
 

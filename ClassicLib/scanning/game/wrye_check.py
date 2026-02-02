@@ -12,8 +12,23 @@ from bs4 import BeautifulSoup, PageElement
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_game, get_vr
-from ClassicLib.io.files import read_file_sync
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
+
+
+def _read_file(path: Path) -> str:
+    """Read a file synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to read.
+
+    Returns:
+        The file contents as a string.
+
+    """
+    io_core = get_file_io()
+    return AsyncBridge.get_instance().run_async(io_core.read_file(path))
 
 
 def scan_wryecheck() -> str:
@@ -96,7 +111,7 @@ def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[
     message_parts: list[str] = []
 
     # Read and parse HTML file
-    html_content = read_file_sync(report_path)
+    html_content = _read_file(report_path)
     soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
 
     # Process each section (h3 element)

@@ -201,9 +201,11 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
             raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
 
         # Use FileIOCore for consistency
-        from ClassicLib.io.files import write_file_sync
+        from ClassicLib.core.async_bridge import AsyncBridge
+        from ClassicLib.integration.factory import get_file_io
 
-        write_file_sync(settings_path, default_settings)
+        io_core = get_file_io()
+        AsyncBridge.get_instance().run_async(io_core.write_file(settings_path, default_settings))
 
     return yaml_settings(_type, YAML.Settings, f"CLASSIC_Settings.{setting}")
 

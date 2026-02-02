@@ -20,9 +20,38 @@ from typing import Any
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import get_game, get_vr
-from ClassicLib.io.files import read_bytes_sync, read_lines_sync
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.messaging import msg_warning
+
+
+def _read_bytes(path: Path) -> bytes:
+    """Read file bytes synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to read.
+
+    Returns:
+        The file contents as bytes.
+
+    """
+    io_core = get_file_io()
+    return AsyncBridge.get_instance().run_async(io_core.read_bytes(path))
+
+
+def _read_lines(path: Path) -> list[str]:
+    """Read file lines synchronously via AsyncBridge (GUI-only helper).
+
+    Args:
+        path: Path to the file to read.
+
+    Returns:
+        List of lines from the file.
+
+    """
+    io_core = get_file_io()
+    return AsyncBridge.get_instance().run_async(io_core.read_lines(path))
 
 
 class Tokens:
@@ -190,7 +219,7 @@ def _check_xse_installation(
     messages.append(f"✔️ REQUIRED: *{full_name}* is installed! \n-----\n")
 
     # Check XSE version and log for errors
-    log_contents: list[str] = read_lines_sync(log_path)
+    log_contents: list[str] = _read_lines(log_path)
 
     # Check version
     if str(latest_version) in log_contents[0]:
@@ -316,7 +345,7 @@ def _calculate_script_hashes(script_filenames: Iterable[str], scripts_folder: st
 
         if script_path.is_file():
             try:
-                file_contents = read_bytes_sync(script_path)
+                file_contents = _read_bytes(script_path)
                 # Algo should match the one used for Database YAML!
                 # noinspection PyTypeChecker
                 file_hash = hashlib.sha256(file_contents).hexdigest()

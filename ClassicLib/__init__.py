@@ -55,7 +55,7 @@ from ClassicLib.core.registry import (
 from ClassicLib.integration.factory import detect_component
 
 # I/O components
-from ClassicLib.io.files import FileIOCore, read_file_sync, write_file_sync
+from ClassicLib.io.files import FileIOCore
 from ClassicLib.io.yaml import (
     YamlSettingsCache,
     classic_settings,
@@ -126,8 +126,6 @@ __all__ = [
     "get_version_registry",
     # FileIOCore
     "FileIOCore",
-    "read_file_sync",
-    "write_file_sync",
     # GlobalRegistry
     "Keys",
     "get",
