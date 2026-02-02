@@ -5,33 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 2 - Integration Layer Simplification
+**Current focus:** Phase 3 - Wrapper Thinning (pending research)
 
 ## Current Position
 
 Phase: 2 of 5 (Integration Layer Simplification)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-02 -- Completed 02-01-PLAN.md (Factory collapse)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-02 -- Completed 02-02-PLAN.md (Acceleration removal + type narrowing)
 
-Progress: [████░░░░░░] 38%
+Progress: [████░░░░░░] 46%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 8m 50s
-- Total execution time: ~0.7 hours
+- Total plans completed: 6
+- Average duration: 9m 22s
+- Total execution time: ~0.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-cleanup | 4/4 | 42m 11s | 10m 33s |
-| 02-integration-layer-simplification | 1/2 | 8m | 8m |
+| 02-integration-layer-simplification | 2/2 | 20m | 10m |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (8m), 01-04 (3m), 01-03 (21m), 01-02 (5m 11s), 01-01 (13m)
+- Last 5 plans: 02-02 (12m), 02-01 (8m), 01-04 (3m), 01-03 (21m), 01-02 (5m 11s)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -56,6 +56,9 @@ Recent decisions affecting current work:
 - [02-01]: is_rust_accelerated() kept as compat shim for coordinator (removed in 02-02)
 - [02-01]: DISABLE_RUST_ENV_VAR inlined from config.py into factory.py
 - [02-01]: get_rust_component_status()/print_rust_status() added to factory.py as status.py replacements
+- [02-02]: get_yamldata keeps Any (Rust/Python interfaces incompatible)
+- [02-02]: Utility module factories keep Any | None (return raw modules)
+- [02-02]: Protocols are static-only (no @runtime_checkable)
 
 ### Pending Todos
 
@@ -69,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 02-01-PLAN.md. Ready for 02-02 (acceleration coordinator removal).
+Stopped at: Completed 02-02-PLAN.md. Phase 2 complete. Ready for Phase 3 research.
 Resume file: None
