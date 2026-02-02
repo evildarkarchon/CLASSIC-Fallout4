@@ -33,6 +33,9 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 # Core fixtures
 from tests.fixtures.async_fixtures import *  # noqa: F403
 
+# Singleton reset (autouse fixture for test isolation)
+from tests.fixtures.singleton_fixtures import reset_all_singletons_impl
+
 # Phase 2 consolidated fixtures (fixture consolidation task)
 from tests.fixtures.backup_fixtures import *  # noqa: F403
 from tests.fixtures.concurrency_fixtures import *  # noqa: F403
@@ -83,6 +86,17 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "concurrency: Thread safety and race condition tests")
     config.addinivalue_line("markers", "error_recovery: Error handling and recovery tests")
     config.addinivalue_line("markers", "data_volume: Large dataset and scalability tests")
+
+
+@pytest.fixture(autouse=True)
+def reset_all_singletons():
+    """Reset all singleton state between tests for isolation.
+
+    This fixture runs after every test to clear all known singletons,
+    caches, and module-level state. This prevents state leakage between
+    tests that could cause flaky or order-dependent test failures.
+    """
+    yield from reset_all_singletons_impl()
 
 
 @pytest.fixture(autouse=True)
