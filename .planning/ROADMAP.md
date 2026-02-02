@@ -13,7 +13,7 @@ This cleanup milestone proceeds bottom-up through dependency layers: remove dead
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation Cleanup** - Remove dead code, fix global state, establish tooling baselines
-- [ ] **Phase 2: Integration Layer Simplification** - Flatten factory/detector/status indirection and remove acceleration coordinator
+- [x] **Phase 2: Integration Layer Simplification** - Flatten factory/detector/status indirection and remove acceleration coordinator
 - [ ] **Phase 3: Wrapper Thinning** - Move business logic from fat Python wrappers into Rust -core crates
 - [ ] **Phase 4: Interface Consolidation** - Remove sync wrappers and dual-interface patterns
 - [ ] **Phase 5: Fallback Pruning** - Remove Python fallback implementations and type-narrow factory returns
@@ -50,8 +50,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md -- Factory flattening (collapse factory/ subpackage + detector.py + status.py into single flat factory.py, update all caller import paths)
-- [ ] 02-02-PLAN.md -- Acceleration removal and type narrowing (delete acceleration/ package, create Protocol types, narrow factory return types, pass pyright)
+- [x] 02-01-PLAN.md -- Factory flattening (collapse factory/ subpackage + detector.py + status.py into single flat factory.py, update all caller import paths)
+- [x] 02-02-PLAN.md -- Acceleration removal and type narrowing (delete acceleration/ package, create Protocol types, narrow factory return types, pass pyright)
 
 ### Phase 3: Wrapper Thinning
 **Goal**: Python wrappers in ClassicLib/integration/rust/ are thin adapters (type conversion only), with business logic living in Rust -core crates
@@ -106,7 +106,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 4/4 | Complete | 2026-02-02 |
-| 2. Integration Layer Simplification | 0/2 | Not started | - |
+| 2. Integration Layer Simplification | 2/2 | Complete | 2026-02-02 |
 | 3. Wrapper Thinning | 0/2 | Not started | - |
 | 4. Interface Consolidation | 0/3 | Not started | - |
 | 5. Fallback Pruning | 0/1 | Not started | - |

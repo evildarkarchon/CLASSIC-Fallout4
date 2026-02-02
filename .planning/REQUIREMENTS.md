@@ -29,9 +29,9 @@ Requirements for the cleanup milestone. Each maps to roadmap phases.
 
 ### Architecture Simplification
 
-- [ ] **ARCH-01**: Simplify factory/detector/status three-layer indirection -- collapse to single-layer factory with try-import pattern, remove duplicate caching between _components_cache and _detection_cache
-- [ ] **ARCH-02**: Remove or simplify RustAcceleration coordinator package (ClassicLib/acceleration/ -- coordinator.py, metrics.py, types.py, workload.py, ~400 lines) after auditing runtime usage
-- [ ] **ARCH-03**: Type-narrow all factory function returns from Any to specific Rust types (~8 factory functions), enabling Pyright strict mode to catch errors
+- [x] **ARCH-01**: Simplify factory/detector/status three-layer indirection -- collapse to single-layer factory with try-import pattern, remove duplicate caching between _components_cache and _detection_cache
+- [x] **ARCH-02**: Remove or simplify RustAcceleration coordinator package (ClassicLib/acceleration/ -- coordinator.py, metrics.py, types.py, workload.py, ~400 lines) after auditing runtime usage
+- [x] **ARCH-03**: Type-narrow all factory function returns from Any to specific Rust types (~8 factory functions), enabling Pyright strict mode to catch errors
 - [ ] **ARCH-04**: Thin out fat Python wrappers by moving business logic from ClassicLib/integration/rust/ wrappers into Rust -core crates (file_io_rust.py 39KB, parser 15KB, formid 16KB)
 
 ## v2 Requirements
@@ -80,9 +80,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REDN-02 | Phase 4 | Pending |
 | REDN-03 | Phase 5 | Pending |
 | REDN-04 | Phase 4 | Pending |
-| ARCH-01 | Phase 2 | Pending |
-| ARCH-02 | Phase 2 | Pending |
-| ARCH-03 | Phase 2 | Pending |
+| ARCH-01 | Phase 2 | Complete |
+| ARCH-02 | Phase 2 | Complete |
+| ARCH-03 | Phase 2 | Complete |
 | ARCH-04 | Phase 3 | Pending |
 
 **Coverage:**
@@ -92,4 +92,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-01*
-*Last updated: 2026-02-01 after Phase 1 completion*
+*Last updated: 2026-02-02 after Phase 2 completion*
