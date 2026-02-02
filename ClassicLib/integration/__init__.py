@@ -12,8 +12,8 @@ The integration layer handles:
 
 from __future__ import annotations
 
-# Centralized component detection (Phase 3)
-from ClassicLib.integration.detector import (
+# Centralized component detection
+from ClassicLib.integration.factory import (
     detect_component,
     get_component,
     is_component_available,
@@ -40,8 +40,6 @@ from ClassicLib.integration.exceptions import (
 # Note: We don't import other submodules here to avoid circular dependencies.
 # Users should import directly from the submodules:
 #   from ClassicLib.integration.factory import get_parser
-#   from ClassicLib.integration.status import is_rust_accelerated
-#   from ClassicLib.integration.config import ALL_COMPONENTS
 
 __all__ = [
     # Exception types
