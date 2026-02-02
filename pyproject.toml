@@ -467,5 +467,10 @@ markers = [
 line-length = 140
 target-version = ['py312', 'py313']
 
+[tool.vulture]
+paths = ["ClassicLib/"]
+exclude = ["**/tests/*", "**/.venv/*", "**/dist/*", "**/build/*"]
+min_confidence = 80
+
 [tool.pyrefly]
 use_untyped_imports = true
