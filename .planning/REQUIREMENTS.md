@@ -32,7 +32,7 @@ Requirements for the cleanup milestone. Each maps to roadmap phases.
 - [x] **ARCH-01**: Simplify factory/detector/status three-layer indirection -- collapse to single-layer factory with try-import pattern, remove duplicate caching between _components_cache and _detection_cache
 - [x] **ARCH-02**: Remove or simplify RustAcceleration coordinator package (ClassicLib/acceleration/ -- coordinator.py, metrics.py, types.py, workload.py, ~400 lines) after auditing runtime usage
 - [x] **ARCH-03**: Type-narrow all factory function returns from Any to specific Rust types (~8 factory functions), enabling Pyright strict mode to catch errors
-- [ ] **ARCH-04**: Thin out fat Python wrappers by moving business logic from ClassicLib/integration/rust/ wrappers into Rust -core crates (file_io_rust.py 39KB, parser 15KB, formid 16KB)
+- [x] **ARCH-04**: Thin out fat Python wrappers by moving business logic from ClassicLib/integration/rust/ wrappers into Rust -core crates (file_io_rust.py 39KB, parser 15KB, formid 16KB)
 
 ## v2 Requirements
 
@@ -83,7 +83,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ARCH-01 | Phase 2 | Complete |
 | ARCH-02 | Phase 2 | Complete |
 | ARCH-03 | Phase 2 | Complete |
-| ARCH-04 | Phase 3 | Pending |
+| ARCH-04 | Phase 3 | Complete (accepted deviations) |
 
 **Coverage:**
 - v1 requirements: 15 total

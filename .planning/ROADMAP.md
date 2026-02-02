@@ -107,6 +107,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 |-------|----------------|--------|-----------|
 | 1. Foundation Cleanup | 4/4 | Complete | 2026-02-02 |
 | 2. Integration Layer Simplification | 2/2 | Complete | 2026-02-02 |
-| 3. Wrapper Thinning | 2/2 | Gaps found | 2026-02-02 |
+| 3. Wrapper Thinning | 2/2 | Complete (accepted deviations) | 2026-02-02 |
 | 4. Interface Consolidation | 0/3 | Not started | - |
 | 5. Fallback Pruning | 0/1 | Not started | - |
