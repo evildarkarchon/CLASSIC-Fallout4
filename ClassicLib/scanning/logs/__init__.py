@@ -10,7 +10,7 @@ the factory module instead:
 
 ```python
 # ❌ Python-only (no Rust acceleration)
-from ClassicLib.scanning.logs import FormIDAnalyzer, SuspectScanner
+from ClassicLib.scanning.logs import SuspectScanner
 
 # ✅ Automatic Rust acceleration when available
 from ClassicLib.integration.factory import get_formid_analyzer, get_suspect_scanner
@@ -26,7 +26,6 @@ Subpackages:
 from ClassicLib.io.database import AsyncDatabasePool
 
 # Analyzers
-from ClassicLib.scanning.logs.analyzers.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.scanning.logs.analyzers.GPUDetector import get_gpu_info
 from ClassicLib.scanning.logs.analyzers.PluginAnalyzer import PluginAnalyzer
@@ -112,7 +111,6 @@ __all__ = [
     # Core scanner components
     "ClassicScanLogsInfo",
     "FCXModeHandler",
-    "FormIDAnalyzer",
     "PluginAnalyzer",
     "RecordScanner",
     "ReportGenerator",

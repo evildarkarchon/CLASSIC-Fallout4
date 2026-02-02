@@ -66,7 +66,7 @@ class FormIDAnalyzer:
 
     def _init_python_analyzer(self) -> None:
         """Initialize Python fallback analyzer."""
-        from ClassicLib.scanning.logs.analyzers.FormIDAnalyzer import FormIDAnalyzer as PyFormIDAnalyzer
+        from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore as PyFormIDAnalyzer
 
         self._python_analyzer = PyFormIDAnalyzer(self.yamldata, self.show_formid_values, self.formid_db_exists)
 
@@ -99,7 +99,7 @@ class FormIDAnalyzer:
 
         """
         assert self._python_analyzer is not None  # noqa: S101
-        fragment = self._python_analyzer.formid_match(formids, plugins)
+        fragment = self._python_analyzer.formid_match_sync(formids, plugins)
         report.add_fragment(fragment)
 
     def extract_formids_batch(self, segments: list[list[str]]) -> list[list[str]]:

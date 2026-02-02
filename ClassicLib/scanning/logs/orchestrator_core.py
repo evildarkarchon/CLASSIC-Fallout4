@@ -18,7 +18,6 @@ from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_pa
 from ClassicLib.integration.factory import is_component_available
 from ClassicLib.io.database import DatabasePoolManager
 from ClassicLib.io.yaml import classic_settings_async, yaml_settings_async
-from ClassicLib.scanning.logs.analyzers.FormIDAnalyzer import FormIDAnalyzer
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.scanning.logs.analyzers.GPUDetector import get_gpu_info
 from ClassicLib.scanning.logs.analyzers.SettingsScanner import SettingsScannerFragments
@@ -55,8 +54,6 @@ class OrchestratorCore:
             values in reports.
         formid_db_exists (bool): Indicates whether the FormID database is available.
         plugin_analyzer (PluginAnalyzer): Module responsible for analyzing plugins.
-        formid_analyzer (FormIDAnalyzer): FormID analysis module with support for
-            configuration-controlled display.
         suspect_scanner (SuspectScanner): Module for scanning crash logs for suspect
             metadata.
         record_scanner (RecordScanner): Module for scanning specific record data in
@@ -109,7 +106,6 @@ class OrchestratorCore:
 
         # Initialize modules - use Rust acceleration via factory pattern (10-40x speedup)
         self.plugin_analyzer = get_plugin_analyzer(yamldata)  # Rust accelerated (30x speedup)
-        self.formid_analyzer = FormIDAnalyzer(yamldata, show_formid_values or False, formid_db_exists)
         self.suspect_scanner = SuspectScanner(yamldata)
         self.record_scanner = get_record_scanner(yamldata)  # Rust accelerated (40x speedup)
         self.settings_scanner = SettingsScannerFragments(yamldata)
