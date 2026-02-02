@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.rust.formid_rust module.
+"""Unit tests for ClassicLib.integration.rust.formid_rust module.
 
 This module tests the FormIDAnalyzer wrapper class, which provides
 high-performance FormID extraction with automatic fallback to Python.
@@ -126,6 +126,11 @@ class TestFormIDAnalyzerInit:
         """Test is_rust_accelerated property works."""
         assert isinstance(formid_analyzer.is_rust_accelerated, bool)
 
+    @pytest.mark.unit
+    def test_python_analyzer_always_initialized(self, formid_analyzer: "FormIDAnalyzer") -> None:
+        """Test Python analyzer is always created (needed for formid_match)."""
+        assert formid_analyzer._python_analyzer is not None
+
 
 # ============================================================================
 # extract_formids Tests
@@ -148,7 +153,6 @@ class TestExtractFormids:
         result = formid_analyzer.extract_formids(sample_callstack_with_formids)
 
         # Should find at least some FormIDs
-        # Note: exact results depend on regex pattern in implementation
         assert isinstance(result, list)
 
     @pytest.mark.unit
@@ -179,7 +183,6 @@ class TestFormidMatch:
     @pytest.mark.unit
     def test_formid_match_adds_to_report(self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]) -> None:
         """Test formid_match adds fragment to report."""
-        from ClassicLib.scanning.logs.reporting import ReportFragment
 
         class MockReport:
             def __init__(self) -> None:
@@ -267,40 +270,6 @@ class TestExtractFormidsBatch:
 
 
 # ============================================================================
-# Plugin Caching Tests
-# ============================================================================
-
-
-class TestPluginCaching:
-    """Tests for plugin caching behavior."""
-
-    @pytest.mark.unit
-    def test_plugin_cache_key_initialized_none(self, formid_analyzer: "FormIDAnalyzer") -> None:
-        """Test plugin cache key is initialized to None."""
-        assert formid_analyzer._plugin_cache_key is None
-
-    @pytest.mark.unit
-    def test_formid_match_updates_cache(self, formid_analyzer: "FormIDAnalyzer", sample_plugins: dict[str, str]) -> None:
-        """Test formid_match may update plugin cache."""
-
-        class MockReport:
-            def __init__(self) -> None:
-                self.fragments: list[Any] = []
-
-            def add_fragment(self, fragment: Any) -> None:
-                self.fragments.append(fragment)
-
-        report = MockReport()
-        formids = ["00000014"]
-
-        # Call formid_match
-        formid_analyzer.formid_match(formids, sample_plugins, report)
-
-        # Cache key may or may not be updated depending on Rust availability
-        # Just verify the call completed without error
-
-
-# ============================================================================
 # Fallback Tests
 # ============================================================================
 
@@ -321,21 +290,18 @@ class TestFormIDAnalyzerFallback:
 
     @pytest.mark.unit
     def test_fallback_extract_formids(self, mock_yamldata_for_formid: MagicMock) -> None:
-        """Test extraction works with fallback."""
+        """Test extraction works with Python fallback."""
         from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
         analyzer = FormIDAnalyzer.__new__(FormIDAnalyzer)
         analyzer._rust_analyzer = None
-        analyzer._rust_core_analyzer = None
         analyzer._use_rust = False
-        analyzer._use_rust_core = False
         analyzer._python_analyzer = None
-        analyzer._plugin_cache_key = None
         analyzer.yamldata = mock_yamldata_for_formid
         analyzer.show_formid_values = True
         analyzer.formid_db_exists = False
+        analyzer._init_python_analyzer()
 
-        # Should create Python analyzer on demand
         result = analyzer.extract_formids(["line with 00000014"])
 
         assert isinstance(result, list)
