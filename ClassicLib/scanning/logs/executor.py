@@ -13,7 +13,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from ClassicLib.core.async_bridge import create_sync_wrapper
+from ClassicLib.core.async_bridge import AsyncBridge
 
 if TYPE_CHECKING:
     from ClassicLib.scanning.logs.executor import ScanLogsExecutor as ScanLogsExecutorType
@@ -421,9 +421,9 @@ class ScanLogsExecutor:
             RuntimeError: If called in CLI/TUI mode (use async methods)
 
         """
-        # Create wrapper per call for proper instance method binding
-        wrapper = create_sync_wrapper(self.execute_scan, strict=True)
-        return wrapper()
+        # Use AsyncBridge directly for GUI sync contexts
+        bridge = AsyncBridge.get_instance()
+        return bridge.run_async(self.execute_scan())
 
 
 # Backward compatibility alias

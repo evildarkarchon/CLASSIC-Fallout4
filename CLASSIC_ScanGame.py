@@ -14,7 +14,7 @@ IMPORTANT Usage Patterns:
 - CLI production: Use async methods directly (see main() for reference pattern)
 - Testing/benchmarking: Sync wrappers work via asyncio.run() fallback
 
-Phase 4: Refactored to use create_sync_wrapper() for context awareness.
+Phase 4: Uses AsyncBridge.run_async() directly for GUI sync wrappers.
 Phase 5: CLI entry point converted to async-first pattern (following CLASSIC_ScanLogs.py).
 """
 
@@ -23,7 +23,7 @@ from pathlib import Path
 from typing import Literal
 
 from ClassicLib import msg_info
-from ClassicLib.core.async_bridge import create_sync_wrapper
+from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.scanning.game import (
     generate_game_combined_result,
     generate_game_combined_result_async,
@@ -61,7 +61,18 @@ _scan_game_core = get_scan_game_core()
 # Created once at module load, reused for all calls
 # Work in GUI mode, error in CLI/TUI mode
 
-check_log_errors = create_sync_wrapper(_scan_game_core.check_log_errors)
+def check_log_errors(*args, **kwargs):
+    """Check for log errors synchronously via AsyncBridge (GUI-only).
+
+    Args:
+        *args: Positional arguments forwarded to ScanGameCore.check_log_errors.
+        **kwargs: Keyword arguments forwarded to ScanGameCore.check_log_errors.
+
+    Returns:
+        The result of the async check_log_errors call.
+
+    """
+    return AsyncBridge.get_instance().run_async(_scan_game_core.check_log_errors(*args, **kwargs))
 
 
 async def get_scan_settings() -> tuple[str, dict[str, set[str]], Path | None]:
@@ -94,8 +105,32 @@ def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
     return core.get_issue_messages(xse_acronym, mode)
 
 
-scan_mods_unpacked = create_sync_wrapper(_scan_game_core.scan_mods_unpacked)
-scan_mods_archived = create_sync_wrapper(_scan_game_core.scan_mods_archived)
+def scan_mods_unpacked(*args, **kwargs):
+    """Scan unpacked mods synchronously via AsyncBridge (GUI-only).
+
+    Args:
+        *args: Positional arguments forwarded to ScanGameCore.scan_mods_unpacked.
+        **kwargs: Keyword arguments forwarded to ScanGameCore.scan_mods_unpacked.
+
+    Returns:
+        The result of the async scan_mods_unpacked call.
+
+    """
+    return AsyncBridge.get_instance().run_async(_scan_game_core.scan_mods_unpacked(*args, **kwargs))
+
+
+def scan_mods_archived(*args, **kwargs):
+    """Scan archived mods synchronously via AsyncBridge (GUI-only).
+
+    Args:
+        *args: Positional arguments forwarded to ScanGameCore.scan_mods_archived.
+        **kwargs: Keyword arguments forwarded to ScanGameCore.scan_mods_archived.
+
+    Returns:
+        The result of the async scan_mods_archived call.
+
+    """
+    return AsyncBridge.get_instance().run_async(_scan_game_core.scan_mods_archived(*args, **kwargs))
 
 
 # ================================================
