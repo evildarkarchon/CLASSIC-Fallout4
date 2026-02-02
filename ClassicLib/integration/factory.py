@@ -780,11 +780,125 @@ def get_path_operations() -> Any | None:
 
 
 # ---------------------------------------------------------------------------
-# Backward compatibility aliases
+# Backward compatibility
 # ---------------------------------------------------------------------------
 
-# These were previously exported from factory/__init__.py
+# Alias previously exported from factory/__init__.py
 is_rust_disabled = _is_rust_disabled
+
+# Component key -> (module_name, class_name) mapping for is_rust_accelerated shim
+_COMPONENT_KEY_MAP: dict[str, tuple[str, str | None]] = {
+    "parser": ("classic_scanlog", "LogParser"),
+    "formid_analyzer": ("classic_scanlog", "FormIDAnalyzer"),
+    "plugin_analyzer": ("classic_scanlog", "PluginAnalyzer"),
+    "record_scanner": ("classic_scanlog", "RecordScanner"),
+    "report_generation": ("classic_scanlog", "ReportGenerator"),
+    "suspect_scanner": ("classic_scanlog", "SuspectScanner"),
+    "settings_validator": ("classic_scanlog", "SettingsValidator"),
+    "gpu_detector": ("classic_scanlog", "GpuDetector"),
+    "fcx_handler": ("classic_scanlog", "FcxModeHandler"),
+    "orchestrator": ("classic_scanlog", "Orchestrator"),
+    "mod_detector": ("classic_scanlog", "detect_mods_batch"),
+    "database": ("classic_database", None),
+    "database_pool": ("classic_database", "DatabasePool"),
+    "file_io": ("classic_file_io", None),
+    "file_io_core": ("classic_file_io", "FileIOCore"),
+    "yaml": ("classic_yaml", None),
+    "yaml_operations": ("classic_yaml", "YamlOperations"),
+    "path": ("classic_path", None),
+    "path_operations": ("classic_path", "PathValidator"),
+    "yamldata": ("classic_config", "YamlData"),
+    "constants": ("classic_constants", None),
+    "version_utils": ("classic_version", None),
+    "resource_mgmt": ("classic_resource", None),
+    "xse_utils": ("classic_xse", None),
+    "web_utils": ("classic_web", None),
+    "scangame": ("classic_scangame", None),
+    "ba2_scanner": ("classic_scangame", "BA2Scanner"),
+    "config_duplicates": ("classic_scangame", "ConfigDuplicateDetector"),
+    "unpacked_scanner": ("classic_scangame", "UnpackedScanner"),
+    "log_processor": ("classic_scangame", "LogProcessor"),
+    "ini_validator": ("classic_scangame", "IniValidator"),
+    "crashgen_checker": ("classic_scangame", "CrashgenChecker"),
+    "xse_checker": ("classic_scangame", "XseChecker"),
+    "integrity_checker": ("classic_scangame", "GameIntegrityChecker"),
+}
+
+
+def is_rust_accelerated(component_name: str) -> bool:
+    """Check if a Rust component is available by legacy component key.
+
+    This bridges the old status.py API (keyed by component names like
+    "parser") to the new detect_component API. Used by tests and the
+    acceleration coordinator (both removed in 02-02).
+
+    Args:
+        component_name: Legacy component key (e.g. "parser", "file_io").
+
+    Returns:
+        True if the component is available, False otherwise.
+
+    """
+    if _is_rust_disabled():
+        return False
+    mapping = _COMPONENT_KEY_MAP.get(component_name)
+    if mapping is None:
+        return False
+    module_name, class_name = mapping
+    return is_component_available(module_name, class_name)
+
+
+def get_rust_component_status() -> dict[str, Any]:
+    """Get a summary of Rust component availability.
+
+    Provides a compatible replacement for the deleted status.py function.
+    Returns a dict with component availability, counts, and acceleration level.
+
+    Returns:
+        dict[str, Any]: Status dictionary with availability info.
+
+    """
+    components = {key: is_rust_accelerated(key) for key in _COMPONENT_KEY_MAP}
+    active_count = sum(1 for v in components.values() if v)
+    total_count = len(components)
+    percentage = (active_count / total_count * 100) if total_count > 0 else 0
+
+    if percentage >= 90:
+        level = "FULLY ACCELERATED"
+    elif percentage >= 70:
+        level = "HIGHLY ACCELERATED"
+    elif percentage >= 30:
+        level = "PARTIALLY ACCELERATED"
+    elif active_count > 0:
+        level = "MINIMAL ACCELERATION"
+    else:
+        level = "NO ACCELERATION"
+
+    return {
+        "available": components,
+        "initialized": {},
+        "failed": {},
+        "performance_gains": {},
+        "active_count": active_count,
+        "total_count": total_count,
+        "percentage": percentage,
+        "acceleration_active": active_count > 0,
+        "acceleration_level": level,
+        "versions": {},
+        "disabled": _is_rust_disabled(),
+    }
+
+
+def print_rust_status() -> None:
+    """Print a summary of Rust acceleration status.
+
+    Simplified replacement for the deleted status.py function.
+    """
+    status = get_rust_component_status()
+    active = [k for k, v in status["available"].items() if v]
+    print(f"Rust acceleration: {len(active)}/{status['total_count']} components ({status['acceleration_level']})")
+    if active:
+        print(f"  Active: {', '.join(active)}")
 
 
 __all__ = [
@@ -826,4 +940,8 @@ __all__ = [
     "get_xse_utils",
     "get_web_utils",
     "get_path_operations",
+    # Backward compatibility (status.py replacements)
+    "is_rust_accelerated",
+    "get_rust_component_status",
+    "print_rust_status",
 ]
