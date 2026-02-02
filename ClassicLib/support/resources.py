@@ -263,8 +263,10 @@ class ResourceLoader:
             otherwise None.
 
         """  # noqa: RUF002
-        module_dir = Path(__file__).parent.parent
-        data_dir = module_dir / "CLASSIC Data"
+        # resources.py is at ClassicLib/support/resources.py
+        # Need 3 levels up to reach project root: support/ -> ClassicLib/ -> project root
+        project_root = Path(__file__).parent.parent.parent
+        data_dir = project_root / "CLASSIC Data"
         if data_dir.exists():
             logger.debug(f"Using CLASSIC Data from module directory: {data_dir}")
             return data_dir
