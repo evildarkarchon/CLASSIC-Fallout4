@@ -613,7 +613,7 @@ class TestDatabasePoolPerformance:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.integration.rust.database_rust.DB_PATHS", (db_path,)):
+        with patch("ClassicLib.io.database.rust_pool.DB_PATHS", (db_path,)):
             pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 

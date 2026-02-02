@@ -146,11 +146,11 @@ class TestVersionWarningLogging:
 
     @patch("ClassicLib.support.game_path.get_version_registry")
     def test_log_version_warning_logs_only_once(self, mock_registry: MagicMock, message_handler) -> None:
-        """Test _log_version_warning only logs once per session."""
+        """Test _log_version_warning only logs once per unique arguments (lru_cache)."""
         import ClassicLib.support.game_path as gp
 
-        # Reset the flag
-        gp._VERSION_WARNING_LOGGED = False
+        # Clear the lru_cache before testing
+        gp._log_version_warning.cache_clear()
 
         mock_version_registry = MagicMock()
         mock_version_registry.get_all_for_game.return_value = [
@@ -160,13 +160,13 @@ class TestVersionWarningLogging:
         mock_registry.return_value = mock_version_registry
 
         # First call should log
-        gp._log_version_warning(Version("9.9.9.9"))
-        assert gp._VERSION_WARNING_LOGGED is True
+        result = gp._log_version_warning(Version("9.9.9.9"))
+        assert result is True
 
-        # Second call should not log again (flag is already True)
-        gp._log_version_warning(Version("8.8.8.8"))
-        # Registry should only be called once
+        # Second call with same args should be cached (not call registry again)
+        gp._log_version_warning(Version("9.9.9.9"))
+        # Registry should only be called once for same args
         assert mock_registry.call_count == 1
 
-        # Reset for other tests
-        gp._VERSION_WARNING_LOGGED = False
+        # Clear cache for other tests
+        gp._log_version_warning.cache_clear()

@@ -16,6 +16,7 @@ Functions:
     game_generate_paths: Configures game paths and files necessary for the current game version.
 """
 
+import functools
 import platform
 from pathlib import Path
 from typing import TYPE_CHECKING, cast
@@ -37,25 +38,26 @@ from ClassicLib.Utils.version_utils import read_game_exe_version
 classic_path = get_path_operations()
 _HAS_RUST_PATH = classic_path is not None
 
-_VERSION_WARNING_LOGGED = False
-
-
-def _log_version_warning(game_version: "Version", match_message: str = "") -> None:
+@functools.lru_cache(maxsize=1)
+def _log_version_warning(game_version: "Version", match_message: str = "") -> bool:
     """Log a warning about unsupported or unknown game versions.
 
     Uses the VersionRegistry to get the list of supported versions dynamically.
+    This function is decorated with lru_cache so it only runs once per unique
+    (game_version, match_message) combination.
 
     Args:
         game_version: The detected game version.
         match_message: Optional message from VersionRegistry matching.
 
+    Returns:
+        True (cached -- function runs only once per unique arguments).
+
     """
-    global _VERSION_WARNING_LOGGED  # noqa: PLW0603
-    if not _VERSION_WARNING_LOGGED:
-        registry = get_version_registry()
-        supported = [str(v.version) for v in registry.get_all_for_game("Fallout4")]
-        logger.warning(f"Unknown game version detected: {game_version}. Supported versions: {', '.join(supported)}. {match_message}")
-        _VERSION_WARNING_LOGGED = True
+    registry = get_version_registry()
+    supported = [str(v.version) for v in registry.get_all_for_game("Fallout4")]
+    logger.warning(f"Unknown game version detected: {game_version}. Supported versions: {', '.join(supported)}. {match_message}")
+    return True
 
 
 if TYPE_CHECKING:
