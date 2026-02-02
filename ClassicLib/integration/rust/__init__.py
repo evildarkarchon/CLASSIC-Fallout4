@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 try:
     from ClassicLib.integration.rust import gpu_rust
     from ClassicLib.integration.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
-    from ClassicLib.integration.rust.file_io_rust import FileIOCore, create_file_io_sync, get_rust_file_io
+    from ClassicLib.integration.rust.file_io_rust import FileIOCore
     from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
     from ClassicLib.integration.rust.mod_detector_rust import (
         detect_mods_double,
@@ -101,8 +101,6 @@ __all__ = [
     "RustRecordScanner",
     # File I/O
     "FileIOCore",
-    "get_rust_file_io",
-    "create_file_io_sync",
     # Database
     "RustAsyncDatabasePool",
     "AsyncDatabasePool",
