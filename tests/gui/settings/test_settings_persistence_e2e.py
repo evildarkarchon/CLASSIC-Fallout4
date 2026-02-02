@@ -16,7 +16,7 @@ from ClassicLib.io.yaml import yaml_settings
 class TestPersistenceAcrossInstances:
     """Test that settings persist across dialog instances."""
 
-    def test_settings_persistence_across_instances(self, app, reset_settings):
+    def test_settings_persistence_across_instances(self, app, reset_settings, gui_message_handler):
         """Test that settings persist across dialog instances."""
         from tests.fixtures.gui_settings_fixtures import get_game_version_value, set_game_version_by_value
 
@@ -30,7 +30,7 @@ class TestPersistenceAcrossInstances:
         assert not dialog2.fcx_checkbox.isChecked()  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]
         dialog2.close()
 
-    def test_settings_reload_after_save(self, app, reset_settings):
+    def test_settings_reload_after_save(self, app, reset_settings, gui_message_handler):
         """Test that settings can be reloaded after saving."""
         dialog = SettingsDialog(yaml_store=YAML.TEST)
         dialog.fcx_checkbox.setChecked(True)  # pyright: ignore[reportOptionalMemberAccess, reportAttributeAccessIssue]

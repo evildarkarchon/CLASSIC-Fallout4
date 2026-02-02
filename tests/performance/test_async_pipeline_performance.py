@@ -73,7 +73,7 @@ class TestAsyncPerformancePipeline:
 
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock) -> None:
+    async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture) -> None:
         """Baseline: Async pipeline scalability with different log counts."""
         from collections import Counter
 

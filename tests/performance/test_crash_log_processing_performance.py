@@ -27,7 +27,7 @@ pytestmark = pytest.mark.performance
 class TestRealWorldCrashLogProcessing:
     """Real-world crash log processing performance tests."""
 
-    async def test_real_world_crash_logs_performance(self, mock_yamldata: MagicMock, performance_test_logs: list[Path]) -> None:
+    async def test_real_world_crash_logs_performance(self, mock_yamldata: MagicMock, performance_test_logs: list[Path], init_message_handler_fixture) -> None:
         """Real-world performance test: Process crash logs using test fixtures.
 
         This test uses sample crash logs from test_data directory to ensure
