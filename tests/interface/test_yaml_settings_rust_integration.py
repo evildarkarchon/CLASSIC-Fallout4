@@ -268,7 +268,7 @@ async def test_rust_faster_than_python(yaml_file_ops, tmp_path):
 @pytest.mark.unit
 def test_rust_can_be_disabled_via_env():
     """Test that Rust can be disabled via environment variable."""
-    from ClassicLib.integration.config import DISABLE_RUST_ENV_VAR
+    from ClassicLib.integration.factory import _DISABLE_RUST_ENV_VAR as DISABLE_RUST_ENV_VAR
     from ClassicLib.integration.factory import _is_rust_disabled
 
     # Save original value
