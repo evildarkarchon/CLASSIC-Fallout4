@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 3 - Wrapper Thinning (in progress)
+**Current focus:** Phase 3 - Wrapper Thinning (complete)
 
 ## Current Position
 
 Phase: 3 of 5 (Wrapper Thinning)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-02 -- Completed 03-01-PLAN.md (FileIOCore wrapper thinning)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-02 -- Completed 03-02-PLAN.md (Parser + FormID wrapper thinning)
 
-Progress: [█████░░░░░] 54%
+Progress: [██████░░░░] 62%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 9m 10s
-- Total execution time: ~1.1 hours
+- Total plans completed: 8
+- Average duration: 9m 15s
+- Total execution time: ~1.2 hours
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [█████░░░░░] 54%
 |-------|-------|-------|----------|
 | 01-foundation-cleanup | 4/4 | 42m 11s | 10m 33s |
 | 02-integration-layer-simplification | 2/2 | 20m | 10m |
-| 03-wrapper-thinning | 1/2 | 8m | 8m |
+| 03-wrapper-thinning | 2/2 | 18m | 9m |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (8m), 02-02 (12m), 02-01 (8m), 01-04 (3m), 01-03 (21m)
+- Last 5 plans: 03-02 (10m), 03-01 (8m), 02-02 (12m), 02-01 (8m), 01-04 (3m)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -62,6 +62,8 @@ Recent decisions affecting current work:
 - [02-02]: Protocols are static-only (no @runtime_checkable)
 - [03-01]: 230 lines (30 over target) due to irreducible Python fallback paths for walk_directory and read_dds_header
 - [03-01]: Thin delegation pattern: convert args -> call Rust -> convert return (established for all wrappers)
+- [03-02]: formid_match always delegates to Python (no Rust PyO3 binding for async formid_match)
+- [03-02]: Python analyzer always initialized in formid wrapper (needed for formid_match)
 
 ### Pending Todos
 
@@ -74,5 +76,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 03-01-PLAN.md. Ready for 03-02 execution.
+Stopped at: Completed 03-02-PLAN.md. Phase 3 complete. Ready for Phase 4.
 Resume file: None
