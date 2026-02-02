@@ -9,16 +9,16 @@ Requirements for the cleanup milestone. Each maps to roadmap phases.
 
 ### Dead Code Removal
 
-- [ ] **DEAD-01**: Remove all files with DEPRECATED markers (11 files identified across ClassicLib/)
-- [ ] **DEAD-02**: Add vulture dead code detection to CI pipeline to prevent regression
-- [ ] **DEAD-03**: Audit all 39 Rust crates (21 business-logic + 18 python-bindings) and remove stub/empty crates
-- [ ] **DEAD-04**: Establish test coverage baseline with pytest --cov and identify 0% coverage modules as deletion candidates
+- [x] **DEAD-01**: Remove all files with DEPRECATED markers (11 files identified across ClassicLib/)
+- [x] **DEAD-02**: Add vulture dead code detection to CI pipeline to prevent regression
+- [x] **DEAD-03**: Audit all 39 Rust crates (21 business-logic + 18 python-bindings) and remove stub/empty crates
+- [x] **DEAD-04**: Establish test coverage baseline with pytest --cov and identify 0% coverage modules as deletion candidates
 
 ### Global State Cleanup
 
-- [ ] **GLOB-01**: Replace mutable global flags (_VERSION_WARNING_LOGGED and similar) with instance variables or functools.lru_cache with cache_clear()
-- [ ] **GLOB-02**: Audit and categorize all 19 `global _*` instances: lazy-init caches (keep), mutable flags (replace with instance state), test-hostile (add reset methods)
-- [ ] **GLOB-03**: Add reset_all_singletons() autouse fixture for comprehensive test isolation across all singleton state
+- [x] **GLOB-01**: Replace mutable global flags (_VERSION_WARNING_LOGGED and similar) with instance variables or functools.lru_cache with cache_clear()
+- [x] **GLOB-02**: Audit and categorize all 19 `global _*` instances: lazy-init caches (keep), mutable flags (replace with instance state), test-hostile (add reset methods)
+- [x] **GLOB-03**: Add reset_all_singletons() autouse fixture for comprehensive test isolation across all singleton state
 
 ### Redundancy Removal
 
@@ -69,13 +69,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DEAD-01 | Phase 1 | Pending |
-| DEAD-02 | Phase 1 | Pending |
-| DEAD-03 | Phase 1 | Pending |
-| DEAD-04 | Phase 1 | Pending |
-| GLOB-01 | Phase 1 | Pending |
-| GLOB-02 | Phase 1 | Pending |
-| GLOB-03 | Phase 1 | Pending |
+| DEAD-01 | Phase 1 | Complete |
+| DEAD-02 | Phase 1 | Complete |
+| DEAD-03 | Phase 1 | Complete |
+| DEAD-04 | Phase 1 | Complete |
+| GLOB-01 | Phase 1 | Complete |
+| GLOB-02 | Phase 1 | Complete |
+| GLOB-03 | Phase 1 | Complete |
 | REDN-01 | Phase 4 | Pending |
 | REDN-02 | Phase 4 | Pending |
 | REDN-03 | Phase 5 | Pending |
@@ -92,4 +92,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-01*
-*Last updated: 2026-02-01 after roadmap creation*
+*Last updated: 2026-02-01 after Phase 1 completion*

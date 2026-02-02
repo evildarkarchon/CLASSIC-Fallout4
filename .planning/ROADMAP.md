@@ -12,7 +12,7 @@ This cleanup milestone proceeds bottom-up through dependency layers: remove dead
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation Cleanup** - Remove dead code, fix global state, establish tooling baselines
+- [x] **Phase 1: Foundation Cleanup** - Remove dead code, fix global state, establish tooling baselines
 - [ ] **Phase 2: Integration Layer Simplification** - Flatten factory/detector/status indirection and remove acceleration coordinator
 - [ ] **Phase 3: Wrapper Thinning** - Move business logic from fat Python wrappers into Rust -core crates
 - [ ] **Phase 4: Interface Consolidation** - Remove sync wrappers and dual-interface patterns
@@ -33,9 +33,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md -- Dead code removal (remove deprecated files, verify Rust crates, establish coverage baseline)
-- [ ] 01-02-PLAN.md -- CI tooling setup (install vulture, curate whitelist, add to CI pipeline)
-- [ ] 01-03-PLAN.md -- Global state cleanup (replace mutable flags, audit globals, add reset fixture)
+- [x] 01-01-PLAN.md -- Dead code removal (remove deprecated files, verify Rust crates, establish coverage baseline)
+- [x] 01-02-PLAN.md -- CI tooling setup (install vulture, curate whitelist, add to CI pipeline)
+- [x] 01-03-PLAN.md -- Global state cleanup (replace mutable flags, audit globals, add reset fixture)
 
 ### Phase 2: Integration Layer Simplification
 **Goal**: The Python-Rust integration boundary uses a single-layer factory with direct try-import, no redundant detection/caching layers
@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation Cleanup | 0/3 | Not started | - |
+| 1. Foundation Cleanup | 3/3 | Complete | 2026-02-01 |
 | 2. Integration Layer Simplification | 0/2 | Not started | - |
 | 3. Wrapper Thinning | 0/2 | Not started | - |
 | 4. Interface Consolidation | 0/3 | Not started | - |
