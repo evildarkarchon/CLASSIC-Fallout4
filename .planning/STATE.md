@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 3 - Wrapper Thinning (pending research)
+**Current focus:** Phase 3 - Wrapper Thinning (in progress)
 
 ## Current Position
 
-Phase: 2 of 5 (Integration Layer Simplification)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-02 -- Completed 02-02-PLAN.md (Acceleration removal + type narrowing)
+Phase: 3 of 5 (Wrapper Thinning)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-02 -- Completed 03-01-PLAN.md (FileIOCore wrapper thinning)
 
-Progress: [████░░░░░░] 46%
+Progress: [█████░░░░░] 54%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 9m 22s
-- Total execution time: ~0.9 hours
+- Total plans completed: 7
+- Average duration: 9m 10s
+- Total execution time: ~1.1 hours
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [████░░░░░░] 46%
 |-------|-------|-------|----------|
 | 01-foundation-cleanup | 4/4 | 42m 11s | 10m 33s |
 | 02-integration-layer-simplification | 2/2 | 20m | 10m |
+| 03-wrapper-thinning | 1/2 | 8m | 8m |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (12m), 02-01 (8m), 01-04 (3m), 01-03 (21m), 01-02 (5m 11s)
+- Last 5 plans: 03-01 (8m), 02-02 (12m), 02-01 (8m), 01-04 (3m), 01-03 (21m)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -59,6 +60,8 @@ Recent decisions affecting current work:
 - [02-02]: get_yamldata keeps Any (Rust/Python interfaces incompatible)
 - [02-02]: Utility module factories keep Any | None (return raw modules)
 - [02-02]: Protocols are static-only (no @runtime_checkable)
+- [03-01]: 230 lines (30 over target) due to irreducible Python fallback paths for walk_directory and read_dds_header
+- [03-01]: Thin delegation pattern: convert args -> call Rust -> convert return (established for all wrappers)
 
 ### Pending Todos
 
@@ -66,11 +69,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 3 (Wrapper Thinning) flagged HIGH research need -- Python-to-Rust migration patterns per component
 - Phase 5 (Fallback Pruning) requires PyInstaller build verification before and after
 
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 02-02-PLAN.md. Phase 2 complete. Ready for Phase 3 research.
+Stopped at: Completed 03-01-PLAN.md. Ready for 03-02 execution.
 Resume file: None
