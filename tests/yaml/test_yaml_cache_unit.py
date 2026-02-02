@@ -277,7 +277,7 @@ class TestBackwardCompatibility:
 
         YamlSettingsCacheModule = importlib.import_module("ClassicLib.io.yaml")
 
-        with patch("ClassicLib.io.yaml.sync.convenience._get_yaml_cache", return_value=mock_cache):
+        with patch("ClassicLib.io.yaml.convenience._get_yaml_cache", return_value=mock_cache):
             result = YamlSettingsCacheModule.yaml_settings(str, YAML.TEST, "test.key")
             assert result == "value"
 

@@ -52,7 +52,7 @@ def _reset_class_singletons() -> None:
 
     # YamlSettingsCache
     try:
-        from ClassicLib.io.yaml.sync.cache import YamlSettingsCache
+        from ClassicLib.io.yaml.cache import YamlSettingsCache
 
         YamlSettingsCache.reset_instance()
     except (ImportError, RuntimeError):

@@ -49,7 +49,7 @@ class TestYamlBatchOperations:
         async def get_core():
             return self.real_core
 
-        self.patcher = patch("ClassicLib.io.yaml.sync.cache.get_async_yaml_core", side_effect=get_core)
+        self.patcher = patch("ClassicLib.io.yaml.cache.get_async_yaml_core", side_effect=get_core)
         self.patcher.start()
 
     def teardown(self):

@@ -12,7 +12,7 @@ Objects:
     yaml_cache: Proxy object for lazy singleton access.
 
 Example:
-    >>> from ClassicLib.YamlSettings.sync.convenience import yaml_settings, classic_settings
+    >>> from ClassicLib.io.yaml.convenience import yaml_settings, classic_settings
     >>> # Read a setting
     >>> value = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
     >>> # Read a CLASSIC_Settings value
@@ -26,7 +26,7 @@ from typing import Any, TypeVar
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import Keys, is_registered, register
-from ClassicLib.io.yaml.sync.cache import YamlSettingsCache
+from ClassicLib.io.yaml.cache import YamlSettingsCache
 
 T = TypeVar("T")
 

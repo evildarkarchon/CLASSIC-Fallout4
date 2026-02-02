@@ -8,7 +8,7 @@ Classes:
     YamlSettingsCache: Singleton sync wrapper for YAML settings.
 
 Example:
-    >>> from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache
+    >>> from ClassicLib.io.yaml.cache import YamlSettingsCache
     >>> cache = YamlSettingsCache.get_instance()
     >>> value = cache.get(str, "CLASSIC_Settings.VR Mode")
 
@@ -57,13 +57,13 @@ class YamlSettingsCache:
     Example:
         Using the singleton instance:
 
-        >>> from ClassicLib.YamlSettings.sync.cache import YamlSettingsCache
+        >>> from ClassicLib.io.yaml.cache import YamlSettingsCache
         >>> cache = YamlSettingsCache.get_instance()
         >>> value = cache.async_yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
 
         Using with yaml_cache proxy:
 
-        >>> from ClassicLib.YamlSettings import yaml_cache
+        >>> from ClassicLib.io.yaml import yaml_cache
         >>> cache = yaml_cache()
         >>> value = cache.async_yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
 

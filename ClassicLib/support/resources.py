@@ -503,7 +503,7 @@ class ResourceLoader:
         # Strategy 2: Check persistent cache.yaml
         try:
             from ClassicLib.core.constants import YAML
-            from ClassicLib.io.yaml.sync.convenience import yaml_settings
+            from ClassicLib.io.yaml.convenience import yaml_settings
 
             cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.GamePath")
             if cached_path:

@@ -575,11 +575,11 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
         # Patch yaml_settings at both import locations used by get_cached_game_path:
-        # Strategy 2 imports from ClassicLib.io.yaml.sync.convenience
+        # Strategy 2 imports from ClassicLib.io.yaml.convenience
         # Strategy 3 imports from ClassicLib.io.yaml
         with (
             patch.dict("os.environ", {"CLASSIC_FALLOUT4_PATH": "/nonexistent/path"}, clear=True),
-            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -590,12 +590,12 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
-        # Strategy 2 uses ClassicLib.io.yaml.sync.convenience.yaml_settings
+        # Strategy 2 uses ClassicLib.io.yaml.convenience.yaml_settings
         # Strategy 3 uses ClassicLib.io.yaml.yaml_settings
         # Patch both to ensure consistent behavior
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=str(tmp_path)),
+            patch("ClassicLib.io.yaml.convenience.yaml_settings", return_value=str(tmp_path)),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=str(tmp_path)),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -606,14 +606,14 @@ class TestGetCachedGamePath:
         GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
         GlobalRegistry.register(GlobalRegistry.Keys.VR, "")
 
-        # Strategy 2 imports yaml_settings from ClassicLib.io.yaml.sync.convenience
+        # Strategy 2 imports yaml_settings from ClassicLib.io.yaml.convenience
         # Strategy 3 imports yaml_settings from ClassicLib.io.yaml
         # We want Strategy 2 (cache.yaml) to return None and Strategy 3 (Local.yaml)
         # to return the path. Since they import from different modules, we can patch
         # each independently.
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=str(tmp_path)),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -627,7 +627,7 @@ class TestGetCachedGamePath:
         # Patch yaml_settings at both import locations used by get_cached_game_path
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             result = ResourceLoader.get_cached_game_path("Fallout4", "")
@@ -641,7 +641,7 @@ class TestGetCachedGamePath:
         # Patch yaml_settings at both import locations used by get_cached_game_path
         with (
             patch.dict("os.environ", {}, clear=True),
-            patch("ClassicLib.io.yaml.sync.convenience.yaml_settings", return_value=None),
+            patch("ClassicLib.io.yaml.convenience.yaml_settings", return_value=None),
             patch("ClassicLib.io.yaml.yaml_settings", return_value=None),
         ):
             ResourceLoader.get_cached_game_path(None, "")

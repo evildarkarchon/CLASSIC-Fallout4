@@ -3,22 +3,23 @@
 This module provides both synchronous and asynchronous interfaces for YAML
 settings management with caching, file operations, and optional Rust acceleration.
 
-Submodules:
+Modules:
     async_: Async-first YAML settings (AsyncYamlSettingsCore, YamlCache, etc.)
-    sync: Synchronous wrappers (YamlSettingsCache, yaml_settings, etc.)
+    cache: Synchronous cache singleton (YamlSettingsCache)
+    convenience: Synchronous convenience functions (yaml_settings, classic_settings)
 
 Usage Patterns:
     # GUI context (Qt workers, GUI initialization) - use sync
-    >>> from ClassicLib.YamlSettings import yaml_cache, yaml_settings
+    >>> from ClassicLib.io.yaml import yaml_cache, yaml_settings
     >>> result = yaml_cache().batch_get_settings(requests)
     >>> value = yaml_settings(str, YAML.Main, "key")
 
-    # CLI/TUI async context (production async code) - use async_
-    >>> from ClassicLib.YamlSettings import yaml_settings_async, classic_settings_async
+    # CLI/TUI async context (production async code) - use async
+    >>> from ClassicLib.io.yaml import yaml_settings_async, classic_settings_async
     >>> value = await yaml_settings_async(str, YAML.Main, "key")
 
     # Direct async access
-    >>> from ClassicLib.YamlSettings.async_ import get_async_yaml_core
+    >>> from ClassicLib.io.yaml.async_ import get_async_yaml_core
     >>> core = await get_async_yaml_core()
     >>> value = await core.async_yaml_settings(str, YAML.Main, "key")
 
@@ -29,12 +30,12 @@ Performance Notes:
 
 Example:
     # Sync access (GUI)
-    >>> from ClassicLib.YamlSettings import yaml_settings, classic_settings
+    >>> from ClassicLib.io.yaml import yaml_settings, classic_settings
     >>> version = yaml_settings(str, YAML.Main, "CLASSIC_Info.version")
     >>> vr_mode = classic_settings(bool, "VR Mode")
 
     # Async access (CLI)
-    >>> from ClassicLib.YamlSettings import yaml_settings_async, classic_settings_async
+    >>> from ClassicLib.io.yaml import yaml_settings_async, classic_settings_async
     >>> version = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.version")
     >>> vr_mode = await classic_settings_async(bool, "VR Mode", False)
 
@@ -56,10 +57,10 @@ from ClassicLib.io.yaml.async_ import (
 )
 
 # ==========================================
-# Sync submodule exports
+# Sync module exports
 # ==========================================
-from ClassicLib.io.yaml.sync import (
-    YamlSettingsCache,
+from ClassicLib.io.yaml.cache import YamlSettingsCache
+from ClassicLib.io.yaml.convenience import (
     classic_settings,
     yaml_cache,
     yaml_settings,

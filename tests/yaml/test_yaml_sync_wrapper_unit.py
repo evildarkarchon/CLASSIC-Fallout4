@@ -94,7 +94,7 @@ class TestModuleLevelFunctions:
             return mock_core
 
         # We must patch where it is imported in sync/cache.py
-        with patch("ClassicLib.io.yaml.sync.cache.get_async_yaml_core", side_effect=get_mock_core):
+        with patch("ClassicLib.io.yaml.cache.get_async_yaml_core", side_effect=get_mock_core):
             # Reset singleton to ensure it uses patched get_async_yaml_core
             YamlSettingsCache._instance = None
 
