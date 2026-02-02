@@ -93,10 +93,12 @@ Plans:
   2. Factory functions that previously returned fallback Python implementations now raise clear errors (not silent fallback) when Rust is unavailable
   3. PyInstaller build succeeds and the resulting executable runs crash log scan correctly (no ModuleNotFoundError from removed fallbacks)
   4. `CLASSIC.spec` hiddenimports list is updated to remove references to deleted Python fallback modules
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 05-01: Fallback pruning and factory finalization (REDN-03 -- verify Rust stability, remove fallbacks, update factory error handling, update PyInstaller spec)
+- [ ] 05-01-PLAN.md -- Remove 5 easy fallbacks (database, file_io, formid, record, report) + remove CLASSIC_DISABLE_RUST mechanism
+- [ ] 05-02-PLAN.md -- Remove 3 hard fallbacks (parser, mod_detector, plugin) with rust wrapper cleanup + delete integration/python/ directory
+- [ ] 05-03-PLAN.md -- Add startup Rust validation, clean spec files, PyInstaller build verification
 
 ## Progress
 
@@ -109,4 +111,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Integration Layer Simplification | 2/2 | Complete | 2026-02-02 |
 | 3. Wrapper Thinning | 2/2 | Complete (accepted deviations) | 2026-02-02 |
 | 4. Interface Consolidation | 3/3 | Complete | 2026-02-02 |
-| 5. Fallback Pruning | 0/1 | Not started | - |
+| 5. Fallback Pruning | 0/3 | Not started | - |
