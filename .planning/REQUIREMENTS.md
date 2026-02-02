@@ -22,10 +22,10 @@ Requirements for the cleanup milestone. Each maps to roadmap phases.
 
 ### Redundancy Removal
 
-- [ ] **REDN-01**: Remove FormIDAnalyzer sync wrapper (156 lines wrapping FormIDAnalyzerCore with deprecated create_sync_wrapper)
-- [ ] **REDN-02**: Consolidate YAML sync/async split -- merge parallel sync/ and async_/ cache implementations into async-only with sync wrappers at GUI entry points only
+- [x] **REDN-01**: Remove FormIDAnalyzer sync wrapper (156 lines wrapping FormIDAnalyzerCore with deprecated create_sync_wrapper)
+- [x] **REDN-02**: Consolidate YAML sync/async split -- merge parallel sync/ and async_/ cache implementations into async-only with sync wrappers at GUI entry points only
 - [ ] **REDN-03**: Remove Python fallback implementations (8 files in ClassicLib/integration/python/) after verifying Rust wheel bundling and test coverage equivalence
-- [ ] **REDN-04**: Remove all create_sync_wrapper usage and transitional bridge helpers (_async_utils/bridge_helpers.py, io/files/sync_adapters.py)
+- [x] **REDN-04**: Remove all create_sync_wrapper usage and transitional bridge helpers (_async_utils/bridge_helpers.py, io/files/sync_adapters.py)
 
 ### Architecture Simplification
 
@@ -76,10 +76,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GLOB-01 | Phase 1 | Complete |
 | GLOB-02 | Phase 1 | Complete |
 | GLOB-03 | Phase 1 | Complete |
-| REDN-01 | Phase 4 | Pending |
-| REDN-02 | Phase 4 | Pending |
+| REDN-01 | Phase 4 | Complete |
+| REDN-02 | Phase 4 | Complete |
 | REDN-03 | Phase 5 | Pending |
-| REDN-04 | Phase 4 | Pending |
+| REDN-04 | Phase 4 | Complete |
 | ARCH-01 | Phase 2 | Complete |
 | ARCH-02 | Phase 2 | Complete |
 | ARCH-03 | Phase 2 | Complete |

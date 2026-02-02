@@ -2,10 +2,15 @@
 
 Thin delegation layer: converts Python types to Rust-compatible types,
 calls Rust, converts return values. Falls back to Python when Rust unavailable.
+
+Translates Rust-specific exceptions (RustFileIOIOError, etc.) into standard
+Python exceptions (FileNotFoundError, OSError) so callers don't need to
+know about the Rust backend.
 """
 
 from __future__ import annotations
 
+import errno
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -18,9 +23,39 @@ from ClassicLib.integration.factory import detect_component
 
 logger = logging.getLogger(__name__)
 
+
+def _translate_rust_io_error(e: Exception, path: str | Path) -> Exception:
+    """Translate Rust file I/O exceptions to standard Python exceptions.
+
+    Inspects the error message to determine the appropriate Python exception
+    type, preserving the original message for debugging.
+
+    Args:
+        e: The Rust exception to translate.
+        path: The file path involved, for constructing Python exceptions.
+
+    Returns:
+        A standard Python exception (FileNotFoundError, PermissionError, or OSError).
+
+    """
+    msg = str(e)
+    if "not found" in msg.lower() or "os error 2" in msg.lower():
+        return FileNotFoundError(errno.ENOENT, msg, str(path))
+    if "permission denied" in msg.lower() or "os error 5" in msg.lower():
+        return PermissionError(errno.EACCES, msg, str(path))
+    return OSError(msg)
+
+
 RUST_AVAILABLE, _rust_io = detect_component("classic_file_io", "FileIOCore")
+_RustFileIOIOError: type[Exception] | None = None
 if RUST_AVAILABLE:
     logger.info("Rust FileIOCore available")
+    try:
+        import classic_file_io as _cfi
+
+        _RustFileIOIOError = _cfi.RustFileIOIOError
+    except (ImportError, AttributeError):
+        pass
 
 
 class FileIOCore:
@@ -53,13 +88,23 @@ class FileIOCore:
     async def read_file(self, path: Path | str) -> str:
         """Read file contents as string."""
         if self._rust_core:
-            return await self._rust_core.read_file(str(path))
+            try:
+                return await self._rust_core.read_file(str(path))
+            except Exception as e:
+                if _RustFileIOIOError and isinstance(e, _RustFileIOIOError):
+                    raise _translate_rust_io_error(e, path) from e
+                raise
         return await self._python_core.read_file(Path(path))
 
     async def read_lines(self, path: Path | str) -> list[str]:
         """Read file as list of lines."""
         if self._rust_core:
-            return await self._rust_core.read_lines(str(path))
+            try:
+                return await self._rust_core.read_lines(str(path))
+            except Exception as e:
+                if _RustFileIOIOError and isinstance(e, _RustFileIOIOError):
+                    raise _translate_rust_io_error(e, path) from e
+                raise
         return await self._python_core.read_lines(Path(path))
 
     async def stream_lines(self, path: Path | str) -> AsyncIterator[str]:
@@ -85,7 +130,12 @@ class FileIOCore:
     async def read_bytes(self, path: Path | str) -> bytes:
         """Read file as raw bytes."""
         if self._rust_core:
-            return await self._rust_core.read_bytes(str(path))
+            try:
+                return await self._rust_core.read_bytes(str(path))
+            except Exception as e:
+                if _RustFileIOIOError and isinstance(e, _RustFileIOIOError):
+                    raise _translate_rust_io_error(e, path) from e
+                raise
         return await self._python_core.read_bytes(Path(path))
 
     async def read_file_mmap(self, path: Path | str) -> str:

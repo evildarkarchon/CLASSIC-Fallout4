@@ -263,7 +263,7 @@ class VersionRegistry:
         """Load hardcoded defaults as fallback.
 
         Used when YAML loading fails or Version_Registry section is empty.
-        Provides the three standard Fallout 4 versions: OG, NG, and VR.
+        Provides the four standard Fallout 4 versions: OG, NG, AE, and VR.
         """
         # OG Version - SHA-256 hashes from https://f4se.silverlock.org/
         og_script_hashes = (
@@ -292,6 +292,7 @@ class VersionRegistry:
                 loader="f4se_loader.exe",
                 script_hashes=og_script_hashes,
             ),
+            compatible_range=CompatibleRange.from_strings("1.10.163.0", "1.10.163.999"),
             priority=100,
             exe_hash="55f57947db9e05575122fae1088f0b0247442f11e566b56036caa0ac93329c36",
             crashgen_versions=(
@@ -339,6 +340,7 @@ class VersionRegistry:
                 loader="f4se_loader.exe",
                 script_hashes=ng_script_hashes,
             ),
+            compatible_range=CompatibleRange.from_strings("1.10.984.0", "1.10.999.999"),
             priority=200,
             exe_hash="bcb8f9fe660ef4c33712b873fdc24e5ecbd6a77e629d6419f803c2c09c63eaf2",
             crashgen_versions=(
@@ -352,6 +354,41 @@ class VersionRegistry:
         )
         self._versions[ng.id] = ng
         self._by_version[ng.version_string] = ng
+
+        # AE Version (Anniversary Edition - active development branch)
+        ae = VersionInfo(
+            id="FO4_AE",
+            game="Fallout4",
+            is_vr=False,
+            version=Version("1.11.191.0"),
+            display_name="Fallout 4 Anniversary Edition",
+            short_name="AE",
+            description="Anniversary Edition version (active development branch)",
+            address_library=AddressLibraryConfig(
+                filename="version-1-11-191-0.bin",
+                format="bin",
+                nexus_url="https://www.nexusmods.com/fallout4/mods/47327?tab=files",
+            ),
+            xse=XseConfig(
+                acronym="F4SE",
+                compatible_version="0.7.3",
+                loader="f4se_loader.exe",
+                script_hashes=(),  # AE script hashes not yet available
+            ),
+            compatible_range=CompatibleRange.from_strings("1.11.137.0", "1.11.999.999"),
+            priority=300,
+            exe_hash=None,  # AE exe hash not yet available
+            crashgen_versions=(
+                CrashgenConfig(
+                    version="1.4.0",
+                    name="MiniBuff AE Crash Logger",
+                    description="AE-compatible Crash Logger",
+                    download_url="https://www.nexusmods.com/fallout4/mods/99911",
+                ),
+            ),
+        )
+        self._versions[ae.id] = ae
+        self._by_version[ae.version_string] = ae
 
         # VR Version
         vr = VersionInfo(
@@ -373,6 +410,7 @@ class VersionRegistry:
                 loader="f4sevr_loader.exe",
                 script_hashes=(),  # VR script hashes not yet available
             ),
+            compatible_range=CompatibleRange.from_strings("1.2.0.0", "1.2.999.999"),
             priority=100,
             exe_hash=None,  # VR exe hash not yet available
             crashgen_versions=(
@@ -387,10 +425,10 @@ class VersionRegistry:
         self._versions[vr.id] = vr
         self._by_version[vr.version_string] = vr
 
-        # Set default unknown handling
+        # Set default unknown handling (FO4_AE is highest priority default)
         self._unknown_handling = UnknownVersionHandling(
             strategy="nearest_match",
-            defaults={"Fallout4": "FO4_NG", "Fallout4VR": "FO4_VR"},
+            defaults={"Fallout4": "FO4_AE", "Fallout4VR": "FO4_VR"},
             log_level="warning",
         )
 
