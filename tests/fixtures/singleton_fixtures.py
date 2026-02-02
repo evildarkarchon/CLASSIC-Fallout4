@@ -42,14 +42,6 @@ def reset_all_singletons_impl() -> Generator[None, None, None]:
 
 def _reset_class_singletons() -> None:
     """Reset singletons that have reset_instance() classmethods."""
-    # RustAcceleration coordinator
-    try:
-        from ClassicLib.acceleration.coordinator import RustAcceleration
-
-        RustAcceleration.reset_instance()
-    except (ImportError, RuntimeError):
-        pass
-
     # VersionRegistry
     try:
         from ClassicLib.support.versions.core import VersionRegistry
