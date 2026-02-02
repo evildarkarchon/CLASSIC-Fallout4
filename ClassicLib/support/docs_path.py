@@ -166,17 +166,16 @@ class DocumentsPathManager:
             logger.warning(f"Existing docs path is not accessible: {error_msg}")
             # Continue to auto-detection
 
-        if True:  # Always attempt to find/update path if we get here
-            # Find path based on platform
-            if platform.system() == "Windows":
-                self._find_windows_docs_path()
-            else:
-                self._find_linux_docs_path()
+        # Find path based on platform
+        if platform.system() == "Windows":
+            self._find_windows_docs_path()
+        else:
+            self._find_linux_docs_path()
 
-            # Check if path was found successfully
-            docs_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
-            if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
-                self._get_manual_docs_path()
+        # Check if path was found successfully
+        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
+            self._get_manual_docs_path()
 
     def _find_windows_docs_path(self) -> None:
         """Find the Windows documents path using the registry.

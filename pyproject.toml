@@ -86,6 +86,7 @@ dev = [
     "scipy>=1.16.3",
     "debugpy>=1.8.19",
     "pytest-textual-snapshot>=1.0.0",
+    "vulture>=2.14",
 ]
 
 [tool.uv]
