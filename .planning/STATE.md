@@ -10,27 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-01)
 ## Current Position
 
 Phase: 2 of 5 (Integration Layer Simplification)
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-02-02 -- Completed 01-04-PLAN.md (Phase 1 gap closure)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-02 -- Completed 02-01-PLAN.md (Factory collapse)
 
-Progress: [███░░░░░░░] 31%
+Progress: [████░░░░░░] 38%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 9m 3s
-- Total execution time: ~0.6 hours
+- Total plans completed: 5
+- Average duration: 8m 50s
+- Total execution time: ~0.7 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-foundation-cleanup | 4/4 | 42m 11s | 10m 33s |
+| 02-integration-layer-simplification | 1/2 | 8m | 8m |
 
 **Recent Trend:**
-- Last 5 plans: 01-04 (3m), 01-03 (21m), 01-02 (5m 11s), 01-01 (13m)
+- Last 5 plans: 02-01 (8m), 01-04 (3m), 01-03 (21m), 01-02 (5m 11s), 01-01 (13m)
 - Trend: stable
 
 *Updated after each plan completion*
@@ -52,6 +53,9 @@ Recent decisions affecting current work:
 - [01-03]: lru_cache(maxsize=1) replaces mutable global flags (testable via cache_clear)
 - [01-03]: Autouse reset_all_singletons fixture covers 19+ globals in 4 categories
 - [01-04]: ROADMAP criterion #1 already correctly scoped -- no change needed
+- [02-01]: is_rust_accelerated() kept as compat shim for coordinator (removed in 02-02)
+- [02-01]: DISABLE_RUST_ENV_VAR inlined from config.py into factory.py
+- [02-01]: get_rust_component_status()/print_rust_status() added to factory.py as status.py replacements
 
 ### Pending Todos
 
@@ -65,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 01-04-PLAN.md. Phase 1 fully complete. Ready to plan Phase 2.
+Stopped at: Completed 02-01-PLAN.md. Ready for 02-02 (acceleration coordinator removal).
 Resume file: None
