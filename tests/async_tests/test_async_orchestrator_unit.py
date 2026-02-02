@@ -82,7 +82,7 @@ class TestOrchestratorCore:
 
         # Test with all analyzers enabled
         async with OrchestratorCore(yamldata=mock_yamldata, fcx_mode=False, show_formid_values=True, formid_db_exists=True) as orchestrator:
-            assert orchestrator.formid_analyzer is not None
+            assert orchestrator._async_formid_analyzer is not None
             assert orchestrator.record_scanner is not None
             assert orchestrator.plugin_analyzer is not None
             # Pool should be available for FormID lookups

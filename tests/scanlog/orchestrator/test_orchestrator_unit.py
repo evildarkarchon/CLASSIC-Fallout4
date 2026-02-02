@@ -86,7 +86,6 @@ class TestOrchestratorCoreInit:
 
         # All analyzers should be initialized
         assert orchestrator.plugin_analyzer is not None
-        assert orchestrator.formid_analyzer is not None
         assert orchestrator.suspect_scanner is not None
         assert orchestrator.record_scanner is not None
         assert orchestrator.settings_scanner is not None
