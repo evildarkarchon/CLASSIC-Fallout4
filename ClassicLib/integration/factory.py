@@ -45,6 +45,21 @@ import threading
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from ClassicLib.integration.types import (
+        DatabasePoolProtocol,
+        FCXHandlerProtocol,
+        FileIOProtocol,
+        FormIDAnalyzerProtocol,
+        GpuDetectorProtocol,
+        LogParserProtocol,
+        OrchestratorProtocol,
+        PluginAnalyzerProtocol,
+        RecordScannerProtocol,
+        ReportGeneratorProtocol,
+        SettingsValidatorProtocol,
+        SuspectScannerProtocol,
+        YamlOperationsProtocol,
+    )
     from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 logger = logging.getLogger(__name__)
@@ -241,7 +256,7 @@ def reset_cache() -> None:
 # ---------------------------------------------------------------------------
 
 
-def get_parser() -> Any:
+def get_parser() -> LogParserProtocol:
     """Retrieve the best available log parser implementation.
 
     Returns an instance of RustLogParser if Rust acceleration is available,
@@ -264,7 +279,7 @@ def get_parser() -> Any:
     return PythonParserWrapper()
 
 
-def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
+def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtocol:
     """Retrieve or initialize a global file I/O instance.
 
     Thread-safe singleton pattern. Attempts Rust-based implementation first.
@@ -307,7 +322,7 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> Any:
         return _file_io_instance
 
 
-def get_yaml_operations() -> Any:
+def get_yaml_operations() -> YamlOperationsProtocol | None:
     """Retrieve the appropriate YAML operations implementation.
 
     Returns:
@@ -329,7 +344,7 @@ def get_yaml_operations() -> Any:
     return None
 
 
-def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exists: bool) -> Any:
+def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exists: bool) -> FormIDAnalyzerProtocol:
     """Get an appropriate FormIDAnalyzer instance.
 
     Args:
@@ -356,7 +371,7 @@ def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exi
     return FormIDAnalyzer(yamldata, show_values, db_exists)
 
 
-def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
+def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> PluginAnalyzerProtocol:
     """Retrieve the appropriate plugin analyzer.
 
     Args:
@@ -381,7 +396,7 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> Any:
     return PluginAnalyzer(yamldata)
 
 
-def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
+def get_record_scanner(yamldata: ClassicScanLogsInfo) -> RecordScannerProtocol:
     """Create and return an appropriate record scanner instance.
 
     Args:
@@ -406,7 +421,7 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> Any:
     return RecordScanner(yamldata)
 
 
-def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
+def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> SuspectScannerProtocol:
     """Return a SuspectScanner instance for scanning the given YAML data.
 
     Args:
@@ -426,7 +441,7 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> Any:
     return SuspectScanner(yamldata)
 
 
-def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
+def get_settings_validator(yamldata: ClassicScanLogsInfo) -> SettingsValidatorProtocol:
     """Retrieve and return a settings validator instance.
 
     Args:
@@ -446,7 +461,7 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> Any:
     return SettingsValidator(yamldata)
 
 
-def get_gpu_detector() -> Any:
+def get_gpu_detector() -> GpuDetectorProtocol:
     """Retrieve the GPU detector with automatic Rust or Python fallback.
 
     Returns:
@@ -463,7 +478,7 @@ def get_gpu_detector() -> Any:
     return gpu_rust
 
 
-def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -> Any:
+def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -> DatabasePoolProtocol:
     """Retrieve a database connection pool.
 
     Args:
@@ -489,7 +504,7 @@ def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -
     return AsyncDatabasePool(max_connections)
 
 
-def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
+def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> ReportGeneratorProtocol:
     """Generate a report generator instance.
 
     Args:
@@ -514,7 +529,7 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> Any:
     return ReportGenerator(yamldata)  # type: ignore[arg-type]
 
 
-def get_mod_detector() -> dict[str, Any]:
+def get_mod_detector() -> dict[str, Any]:  # Returns dict of callable functions
     """Fetch appropriate mod detection function implementations.
 
     Returns:
@@ -558,7 +573,7 @@ def get_orchestrator(
     show_formid_values: bool,
     formid_db_exists: bool,
     remove_list: tuple[str, ...] | None = None,
-) -> Any:
+) -> OrchestratorProtocol:
     """Return an orchestrator instance for crash log processing and analysis.
 
     Args:
@@ -599,7 +614,7 @@ def get_orchestrator(
     )
 
 
-def get_yamldata() -> Any:
+def get_yamldata() -> Any:  # Returns Rust YamlData or Python ClassicScanLogsInfo (incompatible interfaces)
     """Load YAML data using Rust acceleration if available.
 
     Returns:
@@ -634,7 +649,7 @@ def get_yamldata() -> Any:
     return ClassicScanLogsInfo()
 
 
-def get_fcx_handler(fcx_mode: bool | None) -> Any:
+def get_fcx_handler(fcx_mode: bool | None) -> FCXHandlerProtocol:
     """Determine and return the appropriate FCXModeHandler.
 
     Args:
