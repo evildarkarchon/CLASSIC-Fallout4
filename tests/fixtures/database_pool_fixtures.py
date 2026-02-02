@@ -79,9 +79,9 @@ def clean_sync_database_pool() -> Generator[None, None, None]:
     Cleans up:
         - SyncDatabasePool singleton instance and its connections
         - query_cache module-level dict in Util.py
-        - _cached_formid_lookup LRU cache in formid_py.py
+        - _cached_formid_lookup LRU cache in FormIDAnalyzerCore.py
     """
-    from ClassicLib.integration.python.formid_py import _cached_formid_lookup
+    from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import _cached_formid_lookup
     from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool, query_cache
 
     # Clear singleton and caches before test

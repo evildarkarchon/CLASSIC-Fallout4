@@ -23,29 +23,23 @@ class TestGetFormidAnalyzer:
 
         assert result is not None
 
-    def test_returns_python_analyzer_when_rust_disabled(self) -> None:
-        """Test returns Python analyzer when Rust is disabled."""
+    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
+        """Test raises RuntimeError when Rust import fails."""
+        import builtins
+
         from ClassicLib.integration.factory import get_formid_analyzer
-        from ClassicLib.integration.python.formid_py import FormIDAnalyzer
 
         mock_yamldata = MagicMock()
+        original_import = builtins.__import__
 
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=True)
+        def mock_import(name, *args, **kwargs):
+            if "formid_rust" in str(args) or name == "ClassicLib.integration.rust.formid_rust":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
 
-        assert isinstance(result, FormIDAnalyzer)
-
-    def test_returns_python_analyzer_when_component_not_available(self) -> None:
-        """Test returns Python analyzer when Rust import fails."""
-        from ClassicLib.integration.factory import get_formid_analyzer
-        from ClassicLib.integration.python.formid_py import FormIDAnalyzer
-
-        mock_yamldata = MagicMock()
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=True)
-
-        assert isinstance(result, FormIDAnalyzer)
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(RuntimeError, match="Required Rust module for FormIDAnalyzer"):
+                get_formid_analyzer(mock_yamldata, show_values=True, db_exists=True)
 
 
 class TestGetPluginAnalyzer:
@@ -82,24 +76,31 @@ class TestGetRecordScanner:
         from ClassicLib.integration.factory import get_record_scanner
 
         mock_yamldata = MagicMock()
+        mock_yamldata.classic_records_list = []
+        mock_yamldata.game_ignore_records = []
+        mock_yamldata.crashgen_name = "Buffout4"
 
-        # Force Python implementation to avoid Rust type errors with MagicMock
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_record_scanner(mock_yamldata)
+        result = get_record_scanner(mock_yamldata)
 
         assert result is not None
 
-    def test_returns_python_scanner_when_rust_disabled(self) -> None:
-        """Test returns Python scanner when Rust is disabled."""
+    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
+        """Test raises RuntimeError when Rust import fails."""
+        import builtins
+
         from ClassicLib.integration.factory import get_record_scanner
-        from ClassicLib.integration.python.record_py import RecordScanner
 
         mock_yamldata = MagicMock()
+        original_import = builtins.__import__
 
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_record_scanner(mock_yamldata)
+        def mock_import(name, *args, **kwargs):
+            if "record_rust" in str(args) or name == "ClassicLib.integration.rust.record_rust":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
 
-        assert isinstance(result, RecordScanner)
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(RuntimeError, match="Required Rust module for RecordScanner"):
+                get_record_scanner(mock_yamldata)
 
 
 class TestGetSuspectScanner:

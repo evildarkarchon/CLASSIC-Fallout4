@@ -14,22 +14,11 @@ pytestmark = [pytest.mark.unit]
 class TestGetReportGenerator:
     """Tests for get_report_generator function."""
 
-    def test_returns_python_generator_when_rust_disabled(self) -> None:
-        """Test returns Python ReportGenerator when Rust is disabled."""
-        from ClassicLib.integration.factory import get_report_generator
-        from ClassicLib.integration.python.report_py import ReportGenerator
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_report_generator(None)
-
-        assert isinstance(result, ReportGenerator)
-
-    def test_returns_python_generator_on_import_error(self) -> None:
-        """Test returns Python ReportGenerator when Rust import fails."""
+    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
+        """Test raises RuntimeError when Rust import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_report_generator
-        from ClassicLib.integration.python.report_py import ReportGenerator
 
         original_import = builtins.__import__
 
@@ -38,13 +27,9 @@ class TestGetReportGenerator:
                 raise ImportError("No module")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
-            result = get_report_generator(None)
-
-        assert isinstance(result, ReportGenerator)
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(RuntimeError, match="Required Rust module for ReportGenerator"):
+                get_report_generator(None)
 
     def test_generator_has_generate_header_method(self) -> None:
         """Test returned generator has generate_header method."""

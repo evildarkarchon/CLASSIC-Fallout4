@@ -74,18 +74,26 @@ class TestGetFileIO:
         finally:
             factory_module._file_io_instance = original
 
-    def test_returns_python_implementation_when_rust_disabled(self) -> None:
-        """Test returns Python implementation when Rust is disabled."""
+    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
+        """Test raises RuntimeError when Rust import fails."""
+        import builtins
+
         original = factory_module._file_io_instance
         factory_module._file_io_instance = None
 
         try:
             from ClassicLib.integration.factory import get_file_io
 
-            with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-                result = get_file_io()
+            original_import = builtins.__import__
 
-            assert result is not None
+            def mock_import(name, *args, **kwargs):
+                if "file_io_rust" in str(args) or name == "ClassicLib.integration.rust.file_io_rust":
+                    raise ImportError("No module")
+                return original_import(name, *args, **kwargs)
+
+            with patch.object(builtins, "__import__", mock_import):
+                with pytest.raises(RuntimeError, match="Required Rust module for FileIO"):
+                    get_file_io()
         finally:
             factory_module._file_io_instance = original
 

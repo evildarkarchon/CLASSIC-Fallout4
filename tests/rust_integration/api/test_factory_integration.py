@@ -104,18 +104,20 @@ class TestRecordScannerFactory:
 
         assert isinstance(scanner, RustRecordScanner)
 
-    def test_get_record_scanner_python_fallback(self, mock_yamldata: MagicMock) -> None:
-        """Verify get_record_scanner() returns Python scanner when Rust disabled."""
-        with patch.dict("os.environ", {"CLASSIC_DISABLE_RUST": "1"}):
-            # Reset cache to pick up env change
-            reset_cache()
+    def test_get_record_scanner_raises_when_rust_unavailable(self, mock_yamldata: MagicMock) -> None:
+        """Verify get_record_scanner() raises RuntimeError when Rust import fails."""
+        import builtins
 
-            scanner = get_record_scanner(mock_yamldata)
+        original_import = builtins.__import__
 
-            # Should be Python implementation
-            from ClassicLib.integration.python.record_py import RecordScanner as PythonRecordScanner
+        def mock_import(name, *args, **kwargs):
+            if "record_rust" in str(args) or name == "ClassicLib.integration.rust.record_rust":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
 
-            assert isinstance(scanner, PythonRecordScanner)
+        with patch.object(builtins, "__import__", mock_import):
+            with pytest.raises(RuntimeError, match="Required Rust module for RecordScanner"):
+                get_record_scanner(mock_yamldata)
 
 
 @pytest.mark.unit

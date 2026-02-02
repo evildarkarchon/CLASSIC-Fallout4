@@ -304,22 +304,15 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtoc
         if _file_io_instance is not None:
             return _file_io_instance
 
-        if not _is_rust_disabled():
-            try:
-                from ClassicLib.integration.rust.file_io_rust import FileIOCore
+        try:
+            from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
-                logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
-                _file_io_instance = FileIOCore(encoding, errors)
-                return _file_io_instance
-            except ImportError as e:
-                logger.warning(f"Failed to import Rust FileIOCore: {e}")
-
-        # Fall back to Python implementation
-        from ClassicLib.integration.python.file_io_py import FileIOCore
-
-        logger.debug("Using Python FileIOCore implementation")
-        _file_io_instance = FileIOCore(encoding, errors)
-        return _file_io_instance
+            logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
+            _file_io_instance = FileIOCore(encoding, errors)
+            return _file_io_instance
+        except ImportError as e:
+            msg = f"Required Rust module for FileIO not available: {e}. Reinstall CLASSIC."
+            raise RuntimeError(msg) from e
 
 
 def get_yaml_operations() -> YamlOperationsProtocol | None:
@@ -356,19 +349,14 @@ def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exi
         Any: An instance of RustFormIDAnalyzer or FormIDAnalyzer.
 
     """
-    if not _is_rust_disabled():
-        try:
-            from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
+    try:
+        from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
-            logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
-            return FormIDAnalyzer(yamldata, show_values, db_exists)
-        except ImportError as e:
-            logger.warning(f"Failed to import Rust FormIDAnalyzer: {e}")
-
-    from ClassicLib.integration.python.formid_py import FormIDAnalyzer
-
-    logger.debug("Using Python FormIDAnalyzer implementation")
-    return FormIDAnalyzer(yamldata, show_values, db_exists)
+        logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
+        return FormIDAnalyzer(yamldata, show_values, db_exists)
+    except ImportError as e:
+        msg = f"Required Rust module for FormIDAnalyzer not available: {e}. Reinstall CLASSIC."
+        raise RuntimeError(msg) from e
 
 
 def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> PluginAnalyzerProtocol:
@@ -406,19 +394,14 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> RecordScannerProtocol:
         Any: An instance of RustRecordScanner or RecordScanner.
 
     """
-    if not _is_rust_disabled():
-        try:
-            from ClassicLib.integration.rust.record_rust import RustRecordScanner
+    try:
+        from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
-            logger.debug("Using RustRecordScanner wrapper (40x speedup potential)")
-            return RustRecordScanner(yamldata)
-        except ImportError as e:
-            logger.warning(f"Failed to import RustRecordScanner: {e}")
-
-    from ClassicLib.integration.python.record_py import RecordScanner
-
-    logger.debug("Using Python RecordScanner implementation")
-    return RecordScanner(yamldata)
+        logger.debug("Using RustRecordScanner wrapper (40x speedup potential)")
+        return RustRecordScanner(yamldata)
+    except ImportError as e:
+        msg = f"Required Rust module for RecordScanner not available: {e}. Reinstall CLASSIC."
+        raise RuntimeError(msg) from e
 
 
 def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> SuspectScannerProtocol:
@@ -514,19 +497,14 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> ReportG
         Any: An instance of the chosen report generator.
 
     """
-    if not _is_rust_disabled():
-        try:
-            from ClassicLib.integration.rust.report_rust import RustAcceleratedReportGenerator
+    try:
+        from ClassicLib.integration.rust.report_rust import RustAcceleratedReportGenerator
 
-            logger.debug("Using Rust ReportGenerator (75x speedup potential)")
-            return RustAcceleratedReportGenerator(yamldata)
-        except (ImportError, AttributeError) as e:
-            logger.warning(f"Failed to get Rust ReportGenerator: {e}")
-
-    from ClassicLib.integration.python.report_py import ReportGenerator
-
-    logger.debug("Using Python report generator implementation")
-    return ReportGenerator(yamldata)  # type: ignore[arg-type]
+        logger.debug("Using Rust ReportGenerator (75x speedup potential)")
+        return RustAcceleratedReportGenerator(yamldata)
+    except (ImportError, AttributeError) as e:
+        msg = f"Required Rust module for ReportGenerator not available: {e}. Reinstall CLASSIC."
+        raise RuntimeError(msg) from e
 
 
 def get_mod_detector() -> dict[str, Any]:  # Returns dict of callable functions
