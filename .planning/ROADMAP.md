@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Foundation Cleanup** - Remove dead code, fix global state, establish tooling baselines
 - [x] **Phase 2: Integration Layer Simplification** - Flatten factory/detector/status indirection and remove acceleration coordinator
-- [ ] **Phase 3: Wrapper Thinning** - Move business logic from fat Python wrappers into Rust -core crates
+- [x] **Phase 3: Wrapper Thinning** - Move business logic from fat Python wrappers into Rust -core crates
 - [ ] **Phase 4: Interface Consolidation** - Remove sync wrappers and dual-interface patterns
 - [ ] **Phase 5: Fallback Pruning** - Remove Python fallback implementations and type-narrow factory returns
 
@@ -77,12 +77,12 @@ Plans:
   2. `ClassicLib/io/yaml/sync/` directory does not exist; YAML access is async-only with sync wrappers at GUI entry points only
   3. `grep -r "create_sync_wrapper" ClassicLib/` returns 0 results; `_async_utils/bridge_helpers.py` and `io/files/sync_adapters.py` do not exist
   4. GUI launches and performs crash log scan without freezing or deadlocking (manual smoke test)
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: FormID sync wrapper removal (REDN-01 -- trace call sites, update to async, remove wrapper)
-- [ ] 04-02: YAML consolidation (REDN-02 -- merge sync/async cache implementations)
-- [ ] 04-03: Bridge helper removal (REDN-04 -- remove create_sync_wrapper usage and transitional helpers)
+- [ ] 04-01-PLAN.md -- FormID sync wrapper removal (REDN-01 -- delete FormIDAnalyzer.py, update callers to FormIDAnalyzerCore)
+- [ ] 04-02-PLAN.md -- Bridge helper + sync adapter removal (REDN-04 -- remove create_sync_wrapper, delete bridge_helpers.py and sync_adapters.py, migrate callers)
+- [ ] 04-03-PLAN.md -- YAML sync/ directory consolidation (REDN-02 -- move sync/ files to parent yaml/, delete sync/ directory, GUI smoke test)
 
 ### Phase 5: Fallback Pruning
 **Goal**: Python fallback implementations are removed where Rust is proven stable, and factory returns typed Rust objects directly
