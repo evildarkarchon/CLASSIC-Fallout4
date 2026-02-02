@@ -218,7 +218,7 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.23 loaded\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_lines") as mock_read:
             mock_read.return_value = ["F4SE version 0.6.23 loaded", "No errors"]
 
             _check_xse_installation(
@@ -239,7 +239,7 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.20 loaded\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_lines") as mock_read:
             mock_read.return_value = ["F4SE version 0.6.20 loaded", "No errors"]
 
             with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
@@ -262,7 +262,7 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.20 loaded\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_lines") as mock_read:
             mock_read.return_value = ["F4SE version 0.6.20 loaded"]
 
             with patch("ClassicLib.support.xse.yaml_settings") as mock_yaml:
@@ -284,7 +284,7 @@ class TestCheckXseInstallation:
         log_path.write_text("F4SE version 0.6.23\n")
         messages: list[str] = []
 
-        with patch("ClassicLib.support.xse.read_lines_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_lines") as mock_read:
             mock_read.return_value = [
                 "F4SE version 0.6.23 loaded",
                 "ERROR: Plugin failed to load",
@@ -488,7 +488,7 @@ class TestCalculateScriptHashes:
         script_file = tmp_path / "test_script.pex"
         script_file.write_bytes(b"test content")
 
-        with patch("ClassicLib.support.xse.read_bytes_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_bytes") as mock_read:
             mock_read.return_value = b"test content"
 
             result = _calculate_script_hashes(["test_script.pex"], str(tmp_path))
@@ -510,7 +510,7 @@ class TestCalculateScriptHashes:
         script_file = tmp_path / "test_script.pex"
         script_file.touch()
 
-        with patch("ClassicLib.support.xse.read_bytes_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_bytes") as mock_read:
             mock_read.side_effect = OSError("Permission denied")
 
             with patch("ClassicLib.support.xse.msg_warning"):
@@ -524,7 +524,7 @@ class TestCalculateScriptHashes:
         (tmp_path / "script1.pex").touch()
         (tmp_path / "script2.pex").touch()
 
-        with patch("ClassicLib.support.xse.read_bytes_sync") as mock_read:
+        with patch("ClassicLib.support.xse._read_bytes") as mock_read:
             mock_read.return_value = b"content"
 
             result = _calculate_script_hashes(

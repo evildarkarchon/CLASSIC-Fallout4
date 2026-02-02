@@ -32,13 +32,12 @@ Metrics Collection:
 
     AsyncBridge.set_metrics_callback(metrics_handler)
 
-Phase 2: Context-Aware Wrappers (EXPERIMENTAL - Migration in progress)
------------------------------------------------------------------------
-Provides utilities that automatically adapt to GUI vs CLI/TUI modes. Use for transitional
-code during migration from synchronous to async patterns.
+Phase 2: Context-Aware Wrappers
+--------------------------------
+Provides utilities that automatically adapt to GUI vs CLI/TUI modes.
 
 Context-Aware Decorator:
-    from ClassicLib.AsyncBridge import context_aware_sync
+    from ClassicLib.core.async_bridge import context_aware_sync
 
     @context_aware_sync
     async def my_async_function():
@@ -48,32 +47,10 @@ Context-Aware Decorator:
     # In GUI mode: my_async_function() returns sync result via AsyncBridge
     # In CLI/TUI mode: my_async_function() returns coroutine, use await
 
-Explicit GUI-Only Sync Wrapper:
-    from ClassicLib.AsyncBridge import create_sync_wrapper
-
-    class MyClass:
-        async def process_data(self):
-            # Implementation
-            pass
-
-        # GUI workers ONLY - errors in CLI/TUI mode
-        process_data_sync = create_sync_wrapper(process_data)
-
-Mode Detection:
-    from ClassicLib.core.registry import GlobalRegistry
-
-    if GlobalRegistry.is_gui_mode():
-        # GUI mode - use sync wrappers
-        result = obj.method_sync()
-    else:
-        # CLI/TUI mode - use native async
-        result = await obj.method()
-
 When to Use What:
     - AsyncBridge.run_async(): GUI workers, QThread contexts (STABLE)
     - Native await: CLI, TUI, all internal async code (PREFERRED)
     - @context_aware_sync: Transitional code during migration (EXPERIMENTAL)
-    - create_sync_wrapper(): Explicit GUI-only sync methods (EXPERIMENTAL)
 
 See Also:
     - docs/ASYNC_BRIDGE_ELIMINATION_PLAN.md - Migration strategy
@@ -101,7 +78,6 @@ __all__ = [
     # Phase 2: Context-aware wrappers
     "context_aware_sync",
     "smart_await",
-    "create_sync_wrapper",
 ]
 
 # Configure module logger
@@ -600,12 +576,122 @@ class AsyncBridge:
             logger.debug("AsyncBridge: Cleanup complete")
 
 
-# Re-export convenience functions and Phase 2 wrappers from refactored module
-# for backward compatibility
-from ClassicLib._async_utils.bridge_helpers import (  # noqa: E402
-    context_aware_sync,  # noqa: PLC2701
-    create_sync_wrapper,  # noqa: PLC2701
-    run_async,  # noqa: PLC2701
-    run_async_with_timeout,  # noqa: PLC2701
-    smart_await,  # noqa: PLC2701
-)
+# Convenience functions (previously in bridge_helpers.py)
+# ======================================================
+
+
+def _get_bridge() -> AsyncBridge:
+    """Get AsyncBridge instance lazily.
+
+    Returns:
+        The singleton AsyncBridge instance.
+
+    """
+    return AsyncBridge.get_instance()
+
+
+def _is_gui_mode() -> bool:
+    """Check GUI mode lazily to avoid circular imports.
+
+    Returns:
+        True if running in GUI mode, False otherwise.
+
+    """
+    from ClassicLib.core.registry import GlobalRegistry
+
+    return GlobalRegistry.is_gui_mode()
+
+
+def run_async(coro: Coroutine[Any, Any, T]) -> T:
+    """Provide convenience wrapper to run async code from sync context.
+
+    Args:
+        coro: The coroutine to run
+
+    Returns:
+        The result of the coroutine
+
+    Usage:
+        result = run_async(my_async_func())
+
+    """
+    bridge = _get_bridge()
+    return bridge.run_async(coro)
+
+
+def run_async_with_timeout(coro: Coroutine[Any, Any, T], timeout: float) -> T:
+    """Provide convenience wrapper to run async code with timeout.
+
+    Args:
+        coro: The coroutine to run
+        timeout: Maximum time to wait in seconds
+
+    Returns:
+        The result of the coroutine
+
+    Raises:
+        TimeoutError: If the coroutine doesn't complete within the timeout
+
+    Usage:
+        result = run_async_with_timeout(my_async_func(), 5.0)
+
+    """
+    bridge = _get_bridge()
+    return bridge.run_async_with_timeout(coro, timeout)
+
+
+def context_aware_sync(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T | Coroutine[Any, Any, T]]:
+    """Decorate to make an async function context-aware.
+
+    In GUI mode: Returns sync result via AsyncBridge
+    In CLI/TUI mode: Returns coroutine for await
+
+    Note: Mode is checked at CALL time, not decoration time.
+
+    Args:
+        async_func: The async function to wrap
+
+    Returns:
+        A wrapper that adapts based on runtime mode
+
+    """
+    from functools import wraps
+
+    @wraps(async_func)
+    def wrapper(*args: Any, **kwargs: Any) -> T | Coroutine[Any, Any, T]:
+        """Context-aware wrapper that checks mode at runtime."""
+        coro = async_func(*args, **kwargs)
+
+        if _is_gui_mode():
+            bridge = _get_bridge()
+            return bridge.run_async(coro)  # type: ignore[return-value]
+
+        return coro  # type: ignore[return-value]
+
+    return wrapper  # type: ignore[return-value]
+
+
+def smart_await(coro: Coroutine[Any, Any, T]) -> T:
+    """Smart await that uses AsyncBridge in GUI mode.
+
+    In GUI mode: Uses AsyncBridge
+    In CLI/TUI mode: Raises error (caller should use native await)
+
+    Args:
+        coro: The coroutine to execute
+
+    Returns:
+        The result of the coroutine
+
+    Raises:
+        RuntimeError: If called in CLI/TUI mode (should use native await)
+
+    """
+    if _is_gui_mode():
+        bridge = _get_bridge()
+        return bridge.run_async(coro)
+
+    raise RuntimeError(
+        "Cannot use smart_await() in CLI/TUI mode. Use native 'await' instead.\n"
+        "This error indicates code that should be using async patterns but is using sync wrappers."
+    )

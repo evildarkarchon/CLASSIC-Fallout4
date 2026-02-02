@@ -237,7 +237,7 @@ class TestExtractPluginsFromSection:
 class TestParseWryeReport:
     """Tests for the parse_wrye_report function."""
 
-    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check._read_file")
     def test_parse_wrye_report_returns_list(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should return a list of strings."""
         report_path = tmp_path / "report.html"
@@ -248,7 +248,7 @@ class TestParseWryeReport:
 
         assert isinstance(result, list)
 
-    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check._read_file")
     def test_parse_wrye_report_processes_h3_sections(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should process h3 sections."""
         report_path = tmp_path / "report.html"
@@ -265,7 +265,7 @@ class TestParseWryeReport:
         assert "Test Section" in result_text
         assert "TestMod.esp" in result_text
 
-    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check._read_file")
     def test_parse_wrye_report_skips_active_plugins_section(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should skip the Active Plugins section header."""
         report_path = tmp_path / "report.html"
@@ -282,7 +282,7 @@ class TestParseWryeReport:
         # The section header should be skipped, but we shouldn't have the formatted header
         assert "=" not in result_text or "Active Plugins" not in result_text
 
-    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check._read_file")
     def test_parse_wrye_report_handles_esl_capable_section(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should add special message for ESL Capable section."""
         report_path = tmp_path / "report.html"
@@ -300,7 +300,7 @@ class TestParseWryeReport:
         assert "SimpleESLify" in result_text
         assert "2" in result_text  # Number of plugins
 
-    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check._read_file")
     def test_parse_wrye_report_includes_matching_warnings(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should include warnings that match section titles."""
         report_path = tmp_path / "report.html"
@@ -316,7 +316,7 @@ class TestParseWryeReport:
         result_text = "".join(result)
         assert "Warning about merged patches!" in result_text
 
-    @patch("ClassicLib.scanning.game.wrye_check.read_file_sync")
+    @patch("ClassicLib.scanning.game.wrye_check._read_file")
     def test_parse_wrye_report_lists_plugins_in_non_special_sections(self, mock_read: MagicMock, tmp_path: Path) -> None:
         """parse_wrye_report should list plugins in non-special sections."""
         report_path = tmp_path / "report.html"

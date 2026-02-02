@@ -324,16 +324,18 @@ class TestScanLogsExecutorGenerateSummary:
 class TestScanLogsExecutorSyncWrapper:
     """Test suite for scan_sync method."""
 
-    def test_scan_sync_creates_wrapper(self) -> None:
-        """Test that scan_sync creates a sync wrapper."""
+    def test_scan_sync_uses_async_bridge(self) -> None:
+        """Test that scan_sync uses AsyncBridge.run_async() directly."""
         with (
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
             patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
-            patch("ClassicLib.scanning.logs.executor.create_sync_wrapper") as mock_wrapper,
+            patch("ClassicLib.scanning.logs.executor.AsyncBridge") as mock_bridge_cls,
         ):
-            mock_wrapper.return_value = MagicMock(return_value=MagicMock())
+            mock_bridge = MagicMock()
+            mock_bridge.run_async.return_value = MagicMock()
+            mock_bridge_cls.get_instance.return_value = mock_bridge
 
             executor = ScanLogsExecutor()
 
@@ -343,8 +345,9 @@ class TestScanLogsExecutorSyncWrapper:
             except Exception:
                 pass  # May fail in test context, that's OK
 
-            # Wrapper should have been created
-            mock_wrapper.assert_called()
+            # AsyncBridge should have been used
+            mock_bridge_cls.get_instance.assert_called()
+            mock_bridge.run_async.assert_called()
 
 
 @pytest.mark.unit

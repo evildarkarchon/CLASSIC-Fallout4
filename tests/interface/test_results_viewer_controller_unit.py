@@ -294,7 +294,7 @@ class TestResultsViewerController:
         assert result is False
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.read_file_sync")
+    @patch("ClassicLib.Interface.controllers.results_viewer._read_file")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_warning")
     def test_load_report_oserror_fallback_to_plain_text(self, mock_warning, mock_error, mock_read, mock_context, qt_application):
@@ -327,7 +327,7 @@ class TestResultsViewerController:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.controllers.results_viewer.QTimer")
-    @patch("ClassicLib.Interface.controllers.results_viewer.read_file_sync")
+    @patch("ClassicLib.Interface.controllers.results_viewer._read_file")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
     def test_load_report_oserror_fallback_also_fails(self, mock_error, mock_read, mock_timer, mock_context):
         """Test load_report returns False when both markdown and plain text fail."""
@@ -738,7 +738,7 @@ class TestResultsViewerDeleteCopy:
         mock_warning.assert_called_once_with("No report loaded")
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.read_file_sync")
+    @patch("ClassicLib.Interface.controllers.results_viewer._read_file")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_info")
     def test_copy_report_success(self, mock_info, mock_read, mock_context, qt_application):
         """Test _copy_report copies content to clipboard."""
@@ -765,7 +765,7 @@ class TestResultsViewerDeleteCopy:
             temp_path.unlink()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.controllers.results_viewer.read_file_sync")
+    @patch("ClassicLib.Interface.controllers.results_viewer._read_file")
     @patch("ClassicLib.Interface.controllers.results_viewer.msg_error")
     def test_copy_report_error(self, mock_error, mock_read, mock_context, qt_application):
         """Test _copy_report handles errors."""

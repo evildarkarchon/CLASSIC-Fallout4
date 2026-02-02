@@ -1,8 +1,7 @@
 """Pure synchronous file I/O helper functions.
 
-This module contains synchronous helper functions that do NOT use create_sync_wrapper
-or AsyncBridge. These are genuinely synchronous operations that work directly with
-the filesystem.
+This module contains pure synchronous helper functions that do NOT use AsyncBridge.
+These are genuinely synchronous operations that work directly with the filesystem.
 
 Functions:
     stream_lines_sync: Stream file contents line by line using pure sync I/O.

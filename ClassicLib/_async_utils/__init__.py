@@ -5,11 +5,13 @@ This package provides utility functions for async/sync bridging and related oper
 Note: This package is intentionally placed directly under ClassicLib (as _async_utils)
 rather than under ClassicLib/Utils to avoid circular import issues. The underscore
 prefix indicates it's an internal package.
+
+Functions are now defined directly in ClassicLib.core.async_bridge and re-exported
+here for backward compatibility.
 """
 
-from .bridge_helpers import (  # noqa: TID252
+from ClassicLib.core.async_bridge import (  # noqa: TID252
     context_aware_sync,
-    create_sync_wrapper,
     run_async,
     run_async_with_timeout,
     smart_await,
@@ -17,7 +19,6 @@ from .bridge_helpers import (  # noqa: TID252
 
 __all__ = [
     "context_aware_sync",
-    "create_sync_wrapper",
     "run_async",
     "run_async_with_timeout",
     "smart_await",

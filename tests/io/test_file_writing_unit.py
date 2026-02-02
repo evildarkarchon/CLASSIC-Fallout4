@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.io.files import FileIOCore, write_bytes_sync, write_crash_report_sync, write_file_sync, write_lines_sync
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.io.files import FileIOCore
 
 
 class TestAsyncFileWriting:
@@ -88,36 +89,40 @@ class TestAsyncFileWriting:
 
 
 class TestSyncFileWriting:
-    """Test cases for sync adapter file writing functions."""
+    """Test cases for sync file writing via AsyncBridge."""
 
-    def test_write_file_sync(self, tmp_path: Path):
-        """Test sync adapter for writing files."""
+    def test_write_file_via_bridge(self, io_core: FileIOCore, tmp_path: Path):
+        """Test writing files via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
         test_path = tmp_path / "sync_write.txt"
-        write_file_sync(test_path, "Sync write test")
+        bridge.run_async(io_core.write_file(test_path, "Sync write test"))
         content = test_path.read_text()
         assert content == "Sync write test"
 
-    def test_write_lines_sync(self, tmp_path: Path):
-        """Test sync adapter for writing lines."""
+    def test_write_lines_via_bridge(self, io_core: FileIOCore, tmp_path: Path):
+        """Test writing lines via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
         test_path = tmp_path / "sync_lines.txt"
         lines = ["Line A", "Line B", "Line C"]
-        write_lines_sync(test_path, lines)
+        bridge.run_async(io_core.write_lines(test_path, lines))
         content = test_path.read_text()
         assert content == "Line A\nLine B\nLine C\n"
 
-    def test_write_bytes_sync(self, tmp_path: Path):
-        """Test sync adapter for writing bytes."""
+    def test_write_bytes_via_bridge(self, io_core: FileIOCore, tmp_path: Path):
+        """Test writing bytes via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
         test_path = tmp_path / "sync_bytes.bin"
         test_bytes = b"Binary sync \xff\xfe"
-        write_bytes_sync(test_path, test_bytes)
+        bridge.run_async(io_core.write_bytes(test_path, test_bytes))
         content = test_path.read_bytes()
         assert content == test_bytes
 
-    def test_write_crash_report_sync(self, tmp_path: Path):
-        """Test sync adapter for writing crash reports."""
+    def test_write_crash_report_via_bridge(self, io_core: FileIOCore, tmp_path: Path):
+        """Test writing crash reports via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
         test_path = tmp_path / "sync_crash.log"
         report_lines = ["# Report\n", "Error\n"]
-        write_crash_report_sync(test_path, report_lines)
+        bridge.run_async(io_core.write_crash_report(test_path, report_lines))
 
         report_path = test_path.with_suffix(".md")
         assert report_path.exists()

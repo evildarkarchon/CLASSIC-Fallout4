@@ -5,7 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.io.files import FileIOCore, read_bytes_sync, read_crash_log_sync, read_file_sync, read_lines_sync
+from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.io.files import FileIOCore
 
 
 class TestAsyncFileReading:
@@ -90,28 +91,32 @@ class TestAsyncFileReading:
 
 
 class TestSyncFileReading:
-    """Test cases for sync adapter file reading functions."""
+    """Test cases for sync file reading via AsyncBridge."""
 
-    def test_read_file_sync(self, temp_file: Path):
-        """Test sync adapter for reading files."""
-        content = read_file_sync(temp_file)
+    def test_read_file_via_bridge(self, io_core: FileIOCore, temp_file: Path):
+        """Test reading files via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
+        content = bridge.run_async(io_core.read_file(temp_file))
         assert "Test content" in content
         assert "Line 2" in content
 
-    def test_read_lines_sync(self, temp_file: Path):
-        """Test sync adapter for reading lines."""
-        lines = read_lines_sync(temp_file)
+    def test_read_lines_via_bridge(self, io_core: FileIOCore, temp_file: Path):
+        """Test reading lines via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
+        lines = bridge.run_async(io_core.read_lines(temp_file))
         assert len(lines) == 3
         assert lines[0] == "Test content"
 
-    def test_read_bytes_sync(self, temp_binary_file: Path):
-        """Test sync adapter for reading bytes."""
-        content = read_bytes_sync(temp_binary_file)
+    def test_read_bytes_via_bridge(self, io_core: FileIOCore, temp_binary_file: Path):
+        """Test reading bytes via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
+        content = bridge.run_async(io_core.read_bytes(temp_binary_file))
         assert b"Binary content" in content
 
-    def test_read_crash_log_sync(self, temp_crash_log: Path):
-        """Test sync adapter for reading crash logs."""
-        lines = read_crash_log_sync(temp_crash_log)
+    def test_read_crash_log_via_bridge(self, io_core: FileIOCore, temp_crash_log: Path):
+        """Test reading crash logs via AsyncBridge.run_async()."""
+        bridge = AsyncBridge.get_instance()
+        lines = bridge.run_async(io_core.read_crash_log(temp_crash_log))
         assert len(lines) == 2
         assert lines[0] == "Crash log line 1"
         assert lines[1] == "Crash log line 2"

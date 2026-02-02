@@ -1,7 +1,7 @@
 """
 Tests for AsyncBridge Phase 2: Context-Aware Wrappers.
 
-Tests the new context-aware functionality that automatically uses AsyncBridge
+Tests the context-aware functionality that automatically uses AsyncBridge
 only in GUI mode, and allows native async in CLI/TUI modes.
 """
 
@@ -12,7 +12,6 @@ import pytest
 
 from ClassicLib.core.async_bridge import (
     context_aware_sync,
-    create_sync_wrapper,
     smart_await,
 )
 from ClassicLib.core.registry import GlobalRegistry
@@ -107,71 +106,6 @@ class TestContextAwareSyncDecorator:
 
 
 @pytest.mark.unit
-class TestCreateSyncWrapper:
-    """Test create_sync_wrapper function."""
-
-    def test_sync_wrapper_works_in_gui_mode(self):
-        """Test sync wrapper works in GUI mode."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
-
-        async def async_function():
-            await asyncio.sleep(0.01)
-            return "result"
-
-        sync_wrapper = create_sync_wrapper(async_function)
-        result = sync_wrapper()
-        assert result == "result"
-
-    def test_sync_wrapper_works_in_cli_mode(self):
-        """Test sync wrapper uses asyncio.run() in CLI mode."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
-
-        async def async_function():
-            return "result"
-
-        sync_wrapper = create_sync_wrapper(async_function)
-
-        # Should work in CLI mode using asyncio.run()
-        result = sync_wrapper()
-        assert result == "result"
-
-    def test_sync_wrapper_preserves_metadata(self):
-        """Test sync wrapper preserves function metadata."""
-
-        async def my_function():
-            """My docstring."""
-            return "result"
-
-        sync_wrapper = create_sync_wrapper(my_function)
-        assert sync_wrapper.__name__ == "my_function"
-        assert sync_wrapper.__doc__ == "My docstring."
-
-    def test_sync_wrapper_handles_arguments(self):
-        """Test sync wrapper handles arguments correctly."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
-
-        async def async_function(arg1, arg2, kwarg1=None):
-            await asyncio.sleep(0.01)
-            return f"{arg1}-{arg2}-{kwarg1}"
-
-        sync_wrapper = create_sync_wrapper(async_function)
-        result = sync_wrapper("a", "b", kwarg1="c")
-        assert result == "a-b-c"
-
-    def test_sync_wrapper_handles_arguments_in_cli_mode(self):
-        """Test sync wrapper handles arguments correctly in CLI mode."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
-
-        async def async_function(arg1, arg2, kwarg1=None):
-            await asyncio.sleep(0.01)
-            return f"{arg1}-{arg2}-{kwarg1}"
-
-        sync_wrapper = create_sync_wrapper(async_function)
-        result = sync_wrapper("a", "b", kwarg1="c")
-        assert result == "a-b-c"
-
-
-@pytest.mark.unit
 class TestSmartAwait:
     """Test smart_await function."""
 
@@ -214,50 +148,6 @@ class TestSmartAwait:
 @pytest.mark.integration
 class TestRealWorldScenarios:
     """Test real-world usage scenarios."""
-
-    def test_class_with_dual_interface(self):
-        """Test class with both async and sync methods."""
-
-        class DataProcessor:
-            async def process_data(self, data):
-                """Async version for CLI/TUI."""
-                await asyncio.sleep(0.01)
-                return f"processed: {data}"
-
-            # Sync wrapper for GUI workers
-            process_data_sync = create_sync_wrapper(process_data)
-
-        processor = DataProcessor()
-
-        # GUI mode - use sync wrapper
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
-        result = processor.process_data_sync("test")
-        assert result == "processed: test"
-
-    async def test_class_with_dual_interface_cli_mode(self):
-        """Test class in CLI mode uses async methods."""
-
-        class DataProcessor:
-            async def process_data(self, data):
-                """Async version for CLI/TUI."""
-                await asyncio.sleep(0.01)
-                return f"processed: {data}"
-
-            # Sync wrapper for GUI workers
-            process_data_sync = create_sync_wrapper(process_data)
-
-        processor = DataProcessor()
-
-        # CLI mode - use async method directly
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, False)
-        result = await processor.process_data("test")  # type: ignore[misc]
-        assert result == "processed: test"
-
-        # Sync wrapper should error
-        # Patch asyncio.run to catch the coroutine and close it
-        with patch("asyncio.run", side_effect=lambda coro: (coro.close(), (_ for _ in ()).throw(RuntimeError("Mocked error")))[1]):
-            with pytest.raises(RuntimeError):
-                processor.process_data_sync("test")
 
     def test_migration_pattern_before_after(self):
         """Test migration from Phase 1 to Phase 2 pattern."""
@@ -333,19 +223,6 @@ class TestRealWorldScenarios:
 @pytest.mark.integration
 class TestErrorHandling:
     """Test error handling in Phase 2 functionality."""
-
-    def test_sync_wrapper_propagates_exceptions(self):
-        """Test sync wrapper propagates exceptions from async function."""
-        GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, True)
-
-        async def failing_function():
-            await asyncio.sleep(0.01)
-            raise ValueError("Test error")
-
-        sync_wrapper = create_sync_wrapper(failing_function)
-
-        with pytest.raises(ValueError, match="Test error"):
-            sync_wrapper()
 
     async def test_context_aware_sync_propagates_exceptions_in_cli_mode(self):
         """Test decorator propagates exceptions in CLI mode."""
