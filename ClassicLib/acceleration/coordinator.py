@@ -24,11 +24,32 @@ from ClassicLib.integration.factory import (
     get_record_scanner,
     get_report_generator,
 )
-from ClassicLib.integration.status import (
-    RUST_AVAILABLE,
-    get_rust_component_status,
-    is_rust_accelerated,
-)
+from ClassicLib.integration.factory import detect_component, is_component_available
+
+# Shims for deleted status.py (coordinator.py is deleted in 02-02)
+RUST_AVAILABLE: dict[str, bool] = {}
+
+
+def is_rust_accelerated(component_name: str) -> bool:
+    """Shim for deleted status.py. Returns False for all components."""
+    return False
+
+
+def get_rust_component_status() -> dict[str, Any]:
+    """Shim for deleted status.py. Returns minimal status dict."""
+    return {
+        "available": {},
+        "active_count": 0,
+        "total_count": 0,
+        "percentage": 0.0,
+        "acceleration_level": "NO ACCELERATION",
+        "versions": {},
+        "disabled": False,
+        "initialized": {},
+        "failed": {},
+        "performance_gains": {},
+        "acceleration_active": False,
+    }
 
 logger = logging.getLogger(__name__)
 
@@ -551,10 +572,8 @@ def configure_for_single_file() -> None:
 
 def print_acceleration_status() -> None:
     """Print the current Rust acceleration status."""
-    from ClassicLib.integration.status import print_rust_status
-
-    # First print component availability
-    print_rust_status()
+    # print_rust_status removed (status.py deleted in 02-01)
+    # coordinator.py itself is deleted in 02-02
 
     # Then print performance metrics if available
     accelerator = get_rust_acceleration()

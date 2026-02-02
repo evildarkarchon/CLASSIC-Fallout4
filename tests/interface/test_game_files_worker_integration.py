@@ -71,7 +71,7 @@ def test_worker_uses_asyncio_run():
 
     # Mock asyncio.run() to capture calls and close coroutines
     with patch("asyncio.run", side_effect=close_coro) as mock_asyncio_run:
-        with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
+        with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
             # Run the scan
             worker._process_game_results_scan()
 
@@ -98,7 +98,7 @@ def test_no_manual_event_loop_creation():
 
     # Mock asyncio.run() to prevent actual execution (close coroutines to avoid warnings)
     with patch("asyncio.run", side_effect=close_coro):
-        with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
+        with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
             with patch("asyncio.new_event_loop") as mock_new_loop:
                 with patch("asyncio.set_event_loop") as mock_set_loop:
                     worker._process_game_results_scan()
@@ -115,7 +115,7 @@ def test_no_manual_event_loop_creation():
 @pytest.mark.rust
 def test_rust_acceleration_detection():
     """Test that Rust acceleration is detected for scangame module."""
-    from ClassicLib.integration.status import is_rust_accelerated
+    from ClassicLib.integration.factory import is_rust_accelerated
 
     rust_available = is_rust_accelerated("scangame")
 
@@ -140,7 +140,7 @@ def test_rust_status_logging():
 
     # Mock asyncio.run() to prevent actual async execution (close coroutines to avoid warnings)
     with patch("asyncio.run", side_effect=close_coro):
-        with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
+        with patch("ClassicLib.integration.factory.is_component_available") as mock_rust_check:
             with patch.object(logger, "info") as mock_log_info:
                 with patch.object(logger, "debug"):
                     # Test with Rust available (future scenario)
@@ -251,7 +251,7 @@ def test_performance_metrics_logged():
 
     # Mock asyncio.run() to prevent actual async execution (close coroutines to avoid warnings)
     with patch("asyncio.run", side_effect=close_coro):
-        with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
+        with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
             with patch.object(logger, "info") as mock_log_info:
                 with patch.object(logger, "debug") as mock_log_debug:
                     worker._process_game_results_scan()

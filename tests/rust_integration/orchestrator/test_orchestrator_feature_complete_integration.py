@@ -15,7 +15,7 @@ from unittest.mock import patch
 import pytest
 
 from ClassicLib.integration.factory import get_orchestrator
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.scanning.logs.hybrid_orchestrator import HybridOrchestrator
 
 

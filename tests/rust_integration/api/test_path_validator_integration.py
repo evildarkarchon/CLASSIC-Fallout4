@@ -27,7 +27,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.support.path_validator import PathValidator
 
 

@@ -115,6 +115,11 @@ def test_detect_mods_scaling():
     times = []
     sizes = [10, 20, 40, 80, 160]
 
+    # Warmup iteration to eliminate cold-start effects (JIT, lazy imports, regex compilation)
+    warmup_dict = {f"warmup_mod_{i}": f"Warmup warning {i}" for i in range(20)}
+    warmup_plugins = {f"plugin_warmup_mod_{j % 20}_{j}.esp": f"[{j:02X}]" for j in range(40)}
+    detect_mods_single(warmup_dict, warmup_plugins)
+
     for size in sizes:
         # Create datasets proportional to size
         yaml_dict = {f"mod_{i:04d}": f"Warning {i}" for i in range(size)}

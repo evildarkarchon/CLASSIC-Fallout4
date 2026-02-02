@@ -29,18 +29,15 @@ from typing import Any
 import pytest
 
 from ClassicLib.core.async_bridge import AsyncBridge
-from ClassicLib.integration.detector import get_available_components
 from ClassicLib.integration.factory import (
     get_formid_analyzer,
     get_parser,
     get_plugin_analyzer,
     get_record_scanner,
-)
-from ClassicLib.integration.status import (
     get_rust_component_status,
 )
 
-RUST_AVAILABLE = get_available_components()["components"]
+RUST_AVAILABLE = get_rust_component_status()["available"]
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.scanning.logs.analyzers.PluginAnalyzer import PluginAnalyzer
 from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner

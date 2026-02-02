@@ -26,13 +26,13 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from ClassicLib.integration.detector import detect_component, get_available_components
+from ClassicLib.integration.factory import detect_component, get_rust_component_status
 
 if TYPE_CHECKING:
     from collections.abc import Callable
 
 # Check if Rust report components are available
-RUST_AVAILABLE = get_available_components()["components"]
+RUST_AVAILABLE = get_rust_component_status()["available"]
 RUST_REPORT_AVAILABLE = RUST_AVAILABLE.get("report_generation", False)
 
 # Try to import Rust components

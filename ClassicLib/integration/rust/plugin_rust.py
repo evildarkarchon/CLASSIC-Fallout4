@@ -16,7 +16,7 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustParseError
 
 # Detect Rust-specific exception types for classic_scanlog

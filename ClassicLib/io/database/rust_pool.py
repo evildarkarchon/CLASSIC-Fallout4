@@ -42,7 +42,7 @@ from typing import TYPE_CHECKING, Any
 from ClassicLib.core.constants import DB_PATHS
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustDatabaseError, RustError
 
 if TYPE_CHECKING:

@@ -343,7 +343,7 @@ class TestRegressionBaselines:
 
     def test_performance_summary(self, metrics, generator):
         """Generate performance summary report."""
-        from ClassicLib.integration.status import get_rust_component_status
+        from ClassicLib.integration.factory import get_rust_component_status
 
         rust_status = get_rust_component_status()
 

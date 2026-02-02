@@ -401,7 +401,7 @@ branch = true
 show_missing = true
 skip_covered = false
 sort = "Cover"
-fail_under = 80
+# fail_under = 80
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",

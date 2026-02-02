@@ -86,7 +86,7 @@ def test_worker_uses_asyncio_run():
             from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
-                with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
+                with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
                     with patch("asyncio.run", side_effect=close_coro) as mock_asyncio_run:
                         # Run the scan
                         try:
@@ -118,7 +118,7 @@ def test_no_manual_event_loop_creation():
             from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
-                with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
+                with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
                     with patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
                         # Configure mock to close coroutines to avoid warnings
                         mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
@@ -141,7 +141,7 @@ def test_no_manual_event_loop_creation():
 @pytest.mark.rust
 def test_rust_acceleration_detection():
     """Test that Rust acceleration is detected and logged."""
-    from ClassicLib.integration.status import is_rust_accelerated
+    from ClassicLib.integration.factory import is_rust_accelerated
 
     # Check if Rust is available
     rust_available = is_rust_accelerated("parser")
@@ -175,7 +175,7 @@ def test_rust_status_logging():
                 # Configure mock to close coroutines
                 mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
 
-                with patch("ClassicLib.integration.status.is_rust_accelerated") as mock_rust_check:
+                with patch("ClassicLib.integration.factory.is_component_available") as mock_rust_check:
                     with patch.object(logger, "info") as mock_log_info:
                         with patch.object(logger, "debug"):
                             # Test with Rust available
@@ -295,7 +295,7 @@ def test_performance_metrics_logged():
             from ClassicLib.scanning.logs import FCXModeHandler
 
             with patch.object(FCXModeHandler, "reset_fcx_checks"):
-                with patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False):
+                with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
                     # Mock asyncio.run to close coroutines to avoid warnings
                     with patch("asyncio.run", side_effect=close_coro):
                         with patch.object(logger, "info") as mock_log_info:

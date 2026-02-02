@@ -42,8 +42,8 @@ class TestAsyncBridgeFailureModes:
         """Test fallback mechanism when Rust acceleration is unavailable."""
         bridge = AsyncBridge.get_instance()
 
-        # Simulate Rust unavailable scenario
-        with patch("ClassicLib.integration.status.RUST_AVAILABLE", {}):
+        # Simulate Rust unavailable scenario (patch env var to disable Rust)
+        with patch.dict("os.environ", {"CLASSIC_DISABLE_RUST": "1"}):
             # Should still work with Python fallback
             async def test_func():
                 return "fallback_result"

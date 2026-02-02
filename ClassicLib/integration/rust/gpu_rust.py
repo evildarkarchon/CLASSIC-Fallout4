@@ -12,7 +12,7 @@ Key API Translations:
 
 from __future__ import annotations
 
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 
 # Centralized detection of Rust GpuDetector
 RUST_AVAILABLE, RustGpuDetector = detect_component("classic_scanlog", "GpuDetector")

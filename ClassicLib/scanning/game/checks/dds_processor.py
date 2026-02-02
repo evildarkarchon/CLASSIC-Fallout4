@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from ClassicLib.scanning.game.checks.dds_analyzer import DDSInfo, EnhancedDDSAnalyzer
 
 # Try to import Rust DDS parser (10-50x faster) - runtime import
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 
 HAS_RUST_DDS, _RuntimeRustDDSHeader = detect_component("classic_file_io", "DDSHeader")
 

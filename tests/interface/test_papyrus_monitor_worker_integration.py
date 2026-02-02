@@ -70,7 +70,7 @@ def test_worker_initialization():
 @pytest.mark.rust
 def test_rust_acceleration_detection():
     """Test that Rust file I/O acceleration is detected."""
-    from ClassicLib.integration.status import is_rust_accelerated
+    from ClassicLib.integration.factory import is_rust_accelerated
 
     # Check if Rust is available
     rust_available = is_rust_accelerated("file_io")

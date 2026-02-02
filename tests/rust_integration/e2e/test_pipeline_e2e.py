@@ -37,10 +37,7 @@ from ClassicLib.integration.factory import (
     get_plugin_analyzer,
     get_record_scanner,
 )
-from ClassicLib.integration.status import (
-    get_rust_component_status,
-    is_rust_accelerated,
-)
+from ClassicLib.integration.factory import get_rust_component_status, is_rust_accelerated
 from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
 logger = logging.getLogger(__name__)

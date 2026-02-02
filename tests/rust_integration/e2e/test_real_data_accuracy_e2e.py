@@ -28,9 +28,7 @@ from ClassicLib.integration.factory import (
     get_formid_analyzer,
     get_plugin_analyzer,
 )
-from ClassicLib.integration.status import (
-    is_rust_accelerated,
-)
+from ClassicLib.integration.factory import is_rust_accelerated
 
 logger = logging.getLogger(__name__)
 

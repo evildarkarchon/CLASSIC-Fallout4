@@ -76,9 +76,9 @@ class PerformanceReportGenerator:
         self.log("Checking Rust component availability...")
 
         try:
-            from ClassicLib.integration.detector import get_available_components
+            from ClassicLib.integration.factory import get_rust_component_status
 
-            info = get_available_components()
+            info = {"components": get_rust_component_status()["available"], "versions": {}, "disabled": False}
             components = info.get("components", {})
             versions = info.get("versions", {})
 

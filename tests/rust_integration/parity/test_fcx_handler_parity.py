@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 
 from ClassicLib.integration.factory import get_fcx_handler
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
 from tests.fixtures.parity_fixtures import (
     ParityResult,

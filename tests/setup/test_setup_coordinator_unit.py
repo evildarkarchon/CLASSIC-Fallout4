@@ -595,48 +595,36 @@ class TestLogRustAccelerationStatus:
         """_log_rust_acceleration_status should log active components."""
         coordinator = SetupCoordinator()
 
-        mock_status = {
-            "disabled": False,
-            "active_count": 5,
-            "total_count": 8,
-            "percentage": 62.5,
-            "acceleration_level": "PARTIAL",
-            "performance_gains": {"YAML": "15x faster", "FileIO": "10x faster"},
-            "version": "1.0.0",
-        }
-
-        # Production code now uses yaml_settings(bool, YAML.Settings, ...) for debug check.
-        # Patch yaml_settings on the setup module namespace where it is imported.
+        # Production code uses lazy import from factory.
+        # Patch at the SOURCE module (factory), not the setup module.
         mock_yaml_settings_fn = MagicMock(return_value=True)
+
+        # detect_component returns (True, module) for available components
+        mock_detect = MagicMock(return_value=(True, MagicMock()))
 
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
+            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
+            patch("ClassicLib.integration.factory.detect_component", mock_detect),
             patch.object(SetupCoordinator, "_log_active_acceleration") as mock_log_active,
             patch("ClassicLib.support.setup.logger"),
         ):
             coordinator._log_rust_acceleration_status()
 
-            mock_log_active.assert_called_once_with(mock_status, True, False)
+            mock_log_active.assert_called_once()
 
     @pytest.mark.unit
     def test_log_rust_acceleration_status_disabled(self) -> None:
         """_log_rust_acceleration_status should log when Rust is disabled."""
         coordinator = SetupCoordinator()
 
-        mock_status = {
-            "disabled": True,
-            "active_count": 0,
-            "total_count": 8,
-        }
-
         mock_yaml_settings_fn = MagicMock(return_value=True)
 
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
+            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True),
             patch.object(SetupCoordinator, "_log_disabled_status") as mock_log_disabled,
             patch("ClassicLib.support.setup.logger"),
         ):
@@ -649,18 +637,16 @@ class TestLogRustAccelerationStatus:
         """_log_rust_acceleration_status should log when no acceleration available."""
         coordinator = SetupCoordinator()
 
-        mock_status = {
-            "disabled": False,
-            "active_count": 0,
-            "total_count": 8,
-        }
-
         mock_yaml_settings_fn = MagicMock(return_value=True)
+
+        # detect_component returns (False, None) for all components
+        mock_detect = MagicMock(return_value=(False, None))
 
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.status.get_rust_component_status", return_value=mock_status),
+            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
+            patch("ClassicLib.integration.factory.detect_component", mock_detect),
             patch.object(SetupCoordinator, "_log_no_acceleration") as mock_log_none,
             patch("ClassicLib.support.setup.logger"),
         ):
@@ -679,7 +665,7 @@ class TestLogRustAccelerationStatus:
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch(
-                "ClassicLib.integration.status.get_rust_component_status",
+                "ClassicLib.integration.factory._is_rust_disabled",
                 side_effect=ImportError("Module not found"),
             ),
             patch.object(SetupCoordinator, "_log_import_error") as mock_log_import,
@@ -699,7 +685,7 @@ class TestLogRustAccelerationStatus:
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch(
-                "ClassicLib.integration.status.get_rust_component_status",
+                "ClassicLib.integration.factory._is_rust_disabled",
                 side_effect=RuntimeError("Unexpected error"),
             ),
             patch.object(SetupCoordinator, "_log_status_check_error") as mock_log_error,

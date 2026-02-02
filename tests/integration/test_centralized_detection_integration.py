@@ -12,7 +12,7 @@ import pytest
 @pytest.mark.rust
 def test_centralized_detection_basic():
     """Test basic component detection."""
-    from ClassicLib.integration.detector import detect_component, is_component_available
+    from ClassicLib.integration.factory import detect_component, is_component_available
 
     # Test successful detection
     available, component = detect_component("classic_yaml", "YamlOperations")
@@ -30,30 +30,24 @@ def test_centralized_detection_basic():
 
 @pytest.mark.integration
 @pytest.mark.rust
-def test_centralized_detection_caching():
-    """Test that detection results are cached."""
-    from ClassicLib.integration.detector import _detection_cache, detect_component
+def test_centralized_detection_repeated_calls():
+    """Test that repeated detection calls work (sys.modules caches imports)."""
+    from ClassicLib.integration.factory import detect_component
 
-    # Clear cache
-    _detection_cache.clear()
+    # First call
+    avail1, comp1 = detect_component("classic_yaml", "YamlOperations")
+    # Second call should return same result (Python's import system caches)
+    avail2, comp2 = detect_component("classic_yaml", "YamlOperations")
 
-    # First call should populate cache
-    detect_component("classic_yaml", "YamlOperations")
-    assert "classic_yaml:YamlOperations" in _detection_cache
-
-    # Second call should use cache
-    cache_size_before = len(_detection_cache)
-    detect_component("classic_yaml", "YamlOperations")
-    cache_size_after = len(_detection_cache)
-
-    assert cache_size_before == cache_size_after
+    assert avail1 == avail2
+    assert comp1 is comp2
 
 
 @pytest.mark.integration
 @pytest.mark.rust
 def test_get_component_success():
     """Test get_component for existing component."""
-    from ClassicLib.integration.detector import get_component
+    from ClassicLib.integration.factory import get_component
 
     component = get_component("classic_yaml", "YamlOperations")
     assert component is not None
@@ -66,7 +60,7 @@ def test_get_component_success():
 @pytest.mark.rust
 def test_get_component_failure():
     """Test get_component raises for missing component."""
-    from ClassicLib.integration.detector import get_component
+    from ClassicLib.integration.factory import get_component
 
     with pytest.raises(ImportError, match="Rust component.*not available"):
         get_component("nonexistent_module", "FakeClass")
@@ -168,7 +162,7 @@ def test_integration_exports():
 @pytest.mark.rust
 def test_detection_with_module_only():
     """Test detection without class name (module-level)."""
-    from ClassicLib.integration.detector import detect_component
+    from ClassicLib.integration.factory import detect_component
 
     # Test module-only detection
     available, module = detect_component("classic_yaml")

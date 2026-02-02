@@ -116,18 +116,9 @@ def _reset_module_singletons() -> None:
     except (ImportError, AttributeError):
         pass
 
-    # FileIO factory singleton
+    # FileIO factory singleton and factory cache
     try:
-        import ClassicLib.integration.factory.file_io as file_io_mod
-
-        with file_io_mod._file_io_lock:
-            file_io_mod._file_io_instance = None
-    except (ImportError, AttributeError):
-        pass
-
-    # Components cache (has its own reset_cache function)
-    try:
-        from ClassicLib.integration.factory.core import reset_cache
+        from ClassicLib.integration.factory import reset_cache
 
         reset_cache()
     except (ImportError, AttributeError):

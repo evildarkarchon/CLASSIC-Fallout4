@@ -242,7 +242,7 @@ async def initialized_database_pool(tmp_path: Path):
     import sqlite3
 
     from ClassicLib.integration.factory import get_database_pool
-    from ClassicLib.integration.status import is_rust_accelerated
+    from ClassicLib.integration.factory import is_rust_accelerated
 
     db_path = tmp_path / "test.db"
 

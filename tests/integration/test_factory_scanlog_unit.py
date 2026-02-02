@@ -1,4 +1,4 @@
-"""Unit tests for ClassicLib.integration.factory.scanlog module.
+"""Unit tests for scanlog factory functions in ClassicLib.integration.factory.
 
 This module tests the scanlog factory functions for report generation,
 mod detection, and orchestrator creation.
@@ -16,53 +16,39 @@ class TestGetReportGenerator:
 
     def test_returns_python_generator_when_rust_disabled(self) -> None:
         """Test returns Python ReportGenerator when Rust is disabled."""
-        from ClassicLib.integration.factory.scanlog import get_report_generator
+        from ClassicLib.integration.factory import get_report_generator
         from ClassicLib.integration.python.report_py import ReportGenerator
 
-        with patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=True):
-            result = get_report_generator(None)
-
-        assert isinstance(result, ReportGenerator)
-
-    def test_returns_python_generator_when_component_not_available(self) -> None:
-        """Test returns Python ReportGenerator when component not available."""
-        from ClassicLib.integration.factory.scanlog import get_report_generator
-        from ClassicLib.integration.python.report_py import ReportGenerator
-
-        with (
-            patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=False),
-            patch("ClassicLib.integration.factory.scanlog.get_components", return_value={"report_generation": False}),
-        ):
+        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
             result = get_report_generator(None)
 
         assert isinstance(result, ReportGenerator)
 
     def test_returns_python_generator_on_import_error(self) -> None:
         """Test returns Python ReportGenerator when Rust import fails."""
-        from ClassicLib.integration.factory.scanlog import get_report_generator
+        import builtins
+
+        from ClassicLib.integration.factory import get_report_generator
         from ClassicLib.integration.python.report_py import ReportGenerator
 
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if "report_rust" in str(args) or name == "ClassicLib.integration.rust.report_rust":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
+
         with (
-            patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=False),
-            patch("ClassicLib.integration.factory.scanlog.get_components", return_value={"report_generation": True}),
+            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
+            patch.object(builtins, "__import__", mock_import),
         ):
-            import builtins
-
-            original_import = builtins.__import__
-
-            def mock_import(name, *args, **kwargs):
-                if "report_rust" in str(args) or name == "ClassicLib.integration.rust.report_rust":
-                    raise ImportError("No module")
-                return original_import(name, *args, **kwargs)
-
-            with patch.object(builtins, "__import__", mock_import):
-                result = get_report_generator(None)
+            result = get_report_generator(None)
 
         assert isinstance(result, ReportGenerator)
 
     def test_generator_has_generate_header_method(self) -> None:
         """Test returned generator has generate_header method."""
-        from ClassicLib.integration.factory.scanlog import get_report_generator
+        from ClassicLib.integration.factory import get_report_generator
 
         generator = get_report_generator(None)
 
@@ -71,13 +57,12 @@ class TestGetReportGenerator:
 
     def test_generator_has_expected_methods(self) -> None:
         """Test returned generator has expected generation methods."""
-        from ClassicLib.integration.factory.scanlog import get_report_generator
+        from ClassicLib.integration.factory import get_report_generator
 
         generator = get_report_generator(None)
 
         # All generators should have generate_header method
         assert hasattr(generator, "generate_header")
-        # Generators may have different method sets
 
 
 class TestGetModDetector:
@@ -85,21 +70,18 @@ class TestGetModDetector:
 
     def test_returns_dict_when_rust_disabled(self) -> None:
         """Test returns dictionary when Rust is disabled."""
-        from ClassicLib.integration.factory.scanlog import get_mod_detector
+        from ClassicLib.integration.factory import get_mod_detector
 
-        with patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=True):
+        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
             result = get_mod_detector()
 
         assert isinstance(result, dict)
 
-    def test_returns_python_functions_when_component_not_available(self) -> None:
-        """Test returns Python functions when component not available."""
-        from ClassicLib.integration.factory.scanlog import get_mod_detector
+    def test_returns_python_functions_when_rust_disabled(self) -> None:
+        """Test returns Python functions when Rust is disabled."""
+        from ClassicLib.integration.factory import get_mod_detector
 
-        with (
-            patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=False),
-            patch("ClassicLib.integration.factory.scanlog.get_components", return_value={"mod_detector": False}),
-        ):
+        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
             result = get_mod_detector()
 
         assert isinstance(result, dict)
@@ -109,7 +91,7 @@ class TestGetModDetector:
 
     def test_all_functions_are_callable(self) -> None:
         """Test all returned functions are callable."""
-        from ClassicLib.integration.factory.scanlog import get_mod_detector
+        from ClassicLib.integration.factory import get_mod_detector
 
         result = get_mod_detector()
 
@@ -118,7 +100,7 @@ class TestGetModDetector:
 
     def test_returns_expected_keys(self) -> None:
         """Test returns dictionary with expected keys."""
-        from ClassicLib.integration.factory.scanlog import get_mod_detector
+        from ClassicLib.integration.factory import get_mod_detector
 
         result = get_mod_detector()
 
@@ -131,14 +113,14 @@ class TestGetOrchestrator:
 
     def test_returns_orchestrator_when_rust_disabled(self) -> None:
         """Test returns orchestrator when Rust is disabled."""
-        from ClassicLib.integration.factory.scanlog import get_orchestrator
+        from ClassicLib.integration.factory import get_orchestrator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"
         mock_yamldata.xse_acronym = "F4SE"
         mock_yamldata.game_root_name = "Fallout4"
 
-        with patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=True):
+        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
             result = get_orchestrator(
                 yamldata=mock_yamldata,
                 fcx_mode=False,
@@ -148,18 +130,27 @@ class TestGetOrchestrator:
 
         assert result is not None
 
-    def test_returns_orchestrator_when_component_not_available(self) -> None:
-        """Test returns orchestrator when component not available."""
-        from ClassicLib.integration.factory.scanlog import get_orchestrator
+    def test_returns_orchestrator_on_import_error(self) -> None:
+        """Test returns orchestrator when Rust import fails."""
+        import builtins
+
+        from ClassicLib.integration.factory import get_orchestrator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"
         mock_yamldata.xse_acronym = "F4SE"
         mock_yamldata.game_root_name = "Fallout4"
 
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if "hybrid_orchestrator" in str(args) or name == "ClassicLib.scanning.logs.hybrid_orchestrator":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
+
         with (
-            patch("ClassicLib.integration.factory.scanlog.is_rust_disabled", return_value=False),
-            patch("ClassicLib.integration.factory.scanlog.get_components", return_value={"orchestrator": False}),
+            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
+            patch.object(builtins, "__import__", mock_import),
         ):
             result = get_orchestrator(
                 yamldata=mock_yamldata,
@@ -172,7 +163,7 @@ class TestGetOrchestrator:
 
     def test_accepts_all_parameters(self) -> None:
         """Test function accepts all expected parameters."""
-        from ClassicLib.integration.factory.scanlog import get_orchestrator
+        from ClassicLib.integration.factory import get_orchestrator
 
         mock_yamldata = MagicMock()
         mock_yamldata.crashgen_name = "Buffout4"

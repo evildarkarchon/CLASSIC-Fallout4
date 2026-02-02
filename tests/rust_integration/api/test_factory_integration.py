@@ -22,7 +22,7 @@ from ClassicLib.integration.factory import (
     get_record_scanner,
     reset_cache,
 )
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 
 if TYPE_CHECKING:
     from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo

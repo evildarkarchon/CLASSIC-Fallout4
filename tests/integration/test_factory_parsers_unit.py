@@ -1,10 +1,10 @@
-"""Unit tests for ClassicLib.integration.factory.parsers module.
+"""Unit tests for parser factory functions in ClassicLib.integration.factory.
 
 This module tests the parser factory and PythonParserWrapper class
 for log parsing functionality.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -16,7 +16,7 @@ class TestPythonParserWrapper:
 
     def test_find_segments_calls_python_implementation(self) -> None:
         """Test find_segments calls the Python implementation."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper
+        from ClassicLib.integration.factory import PythonParserWrapper
 
         crash_data = ["line1", "line2"]
         crashgen_name = "Buffout4"
@@ -33,7 +33,7 @@ class TestPythonParserWrapper:
 
     def test_extract_section_returns_matching_section(self) -> None:
         """Test extract_section returns content between markers."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper
+        from ClassicLib.integration.factory import PythonParserWrapper
 
         crash_data = [
             "some header",
@@ -50,7 +50,7 @@ class TestPythonParserWrapper:
 
     def test_extract_section_returns_none_for_no_match(self) -> None:
         """Test extract_section returns None when no section found."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper
+        from ClassicLib.integration.factory import PythonParserWrapper
 
         crash_data = [
             "some content",
@@ -63,7 +63,7 @@ class TestPythonParserWrapper:
 
     def test_extract_section_returns_none_for_empty_section(self) -> None:
         """Test extract_section returns None for empty section."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper
+        from ClassicLib.integration.factory import PythonParserWrapper
 
         crash_data = [
             "[START]",
@@ -76,7 +76,7 @@ class TestPythonParserWrapper:
 
     def test_extract_section_handles_nested_markers(self) -> None:
         """Test extract_section stops at first end marker."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper
+        from ClassicLib.integration.factory import PythonParserWrapper
 
         crash_data = [
             "[START]",
@@ -93,7 +93,7 @@ class TestPythonParserWrapper:
 
     def test_extract_section_with_partial_match(self) -> None:
         """Test extract_section handles lines that start with marker."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper
+        from ClassicLib.integration.factory import PythonParserWrapper
 
         crash_data = [
             "[START] header",
@@ -111,50 +111,37 @@ class TestGetParser:
 
     def test_returns_python_wrapper_when_rust_disabled(self) -> None:
         """Test returns PythonParserWrapper when Rust is disabled."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper, get_parser
+        from ClassicLib.integration.factory import PythonParserWrapper, get_parser
 
-        with patch("ClassicLib.integration.factory.parsers.is_rust_disabled", return_value=True):
-            result = get_parser()
-
-        assert isinstance(result, PythonParserWrapper)
-
-    def test_returns_python_wrapper_when_component_not_available(self) -> None:
-        """Test returns PythonParserWrapper when parser component not available."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper, get_parser
-
-        with (
-            patch("ClassicLib.integration.factory.parsers.is_rust_disabled", return_value=False),
-            patch("ClassicLib.integration.factory.parsers.get_components", return_value={"parser": False}),
-        ):
+        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
             result = get_parser()
 
         assert isinstance(result, PythonParserWrapper)
 
     def test_returns_python_wrapper_on_import_error(self) -> None:
         """Test returns PythonParserWrapper when Rust import fails."""
-        from ClassicLib.integration.factory.parsers import PythonParserWrapper, get_parser
+        import builtins
+
+        from ClassicLib.integration.factory import PythonParserWrapper, get_parser
+
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if "parser_rust" in str(args) or name == "ClassicLib.integration.rust.parser_rust":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
 
         with (
-            patch("ClassicLib.integration.factory.parsers.is_rust_disabled", return_value=False),
-            patch("ClassicLib.integration.factory.parsers.get_components", return_value={"parser": True}),
+            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
+            patch.object(builtins, "__import__", mock_import),
         ):
-            import builtins
-
-            original_import = builtins.__import__
-
-            def mock_import(name, *args, **kwargs):
-                if "parser_rust" in str(args) or name == "ClassicLib.integration.rust.parser_rust":
-                    raise ImportError("No module")
-                return original_import(name, *args, **kwargs)
-
-            with patch.object(builtins, "__import__", mock_import):
-                result = get_parser()
+            result = get_parser()
 
         assert isinstance(result, PythonParserWrapper)
 
     def test_parser_has_find_segments_method(self) -> None:
         """Test returned parser has find_segments method."""
-        from ClassicLib.integration.factory.parsers import get_parser
+        from ClassicLib.integration.factory import get_parser
 
         parser = get_parser()
 
@@ -163,7 +150,7 @@ class TestGetParser:
 
     def test_parser_has_extract_section_method(self) -> None:
         """Test returned parser has extract_section method."""
-        from ClassicLib.integration.factory.parsers import get_parser
+        from ClassicLib.integration.factory import get_parser
 
         parser = get_parser()
 

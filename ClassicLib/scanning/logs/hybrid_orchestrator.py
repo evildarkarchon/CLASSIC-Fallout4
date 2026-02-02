@@ -19,7 +19,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_component_available
 from ClassicLib.io.yaml import classic_settings
 from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 
@@ -97,7 +97,7 @@ class HybridOrchestrator:
         # Try to initialize Rust orchestrator for batch processing
         self._rust_orch = None
         self._rust_feature_complete = False
-        if is_rust_accelerated("orchestrator"):
+        if is_component_available("classic_scanlog", "Orchestrator"):
             try:
                 from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
 

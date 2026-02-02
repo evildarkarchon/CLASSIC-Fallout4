@@ -12,7 +12,7 @@ NO pip installation or site-packages required!
 import logging
 from typing import Any
 
-from ClassicLib.integration.detector import detect_rust_components, get_available_components
+from ClassicLib.integration.factory import detect_component
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class RustExtensionLoader:
     """Legacy loader wrapper for backward compatibility.
 
-    Delegates to ClassicLib.integration.detector for actual component detection.
+    Delegates to ClassicLib.integration.factory for actual component detection.
 
     Attributes:
         loaded_module: The loaded Rust module (legacy, unused).
@@ -43,8 +43,9 @@ class RustExtensionLoader:
             True if at least one Rust component is available, False otherwise.
 
         """
-        components = detect_rust_components()
-        return any(components.values())
+        # Check a representative set of known Rust modules
+        _known_modules = ["classic_yaml", "classic_scanlog", "classic_fileio"]
+        return any(detect_component(m)[0] for m in _known_modules)
 
     def get_load_info(self) -> dict[str, Any]:
         """Get load info from detector.
@@ -54,14 +55,20 @@ class RustExtensionLoader:
             with keys: loaded, path, search_paths, in_pyinstaller, components, versions.
 
         """
-        info = get_available_components()
+        _known_modules = ["classic_yaml", "classic_scanlog", "classic_fileio"]
+        components = {m: detect_component(m)[0] for m in _known_modules}
+        versions: dict[str, str] = {}
+        for m in _known_modules:
+            avail, mod = detect_component(m)
+            if avail and mod is not None:
+                versions[m] = getattr(mod, "__version__", "unknown")
         return {
             "loaded": self.is_loaded(),
             "path": "modular_packages",
             "search_paths": [],
             "in_pyinstaller": False,
-            "components": info.get("components", {}),
-            "versions": info.get("versions", {}),
+            "components": components,
+            "versions": versions,
         }
 
     def load_extension(self) -> Any | None:

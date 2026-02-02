@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import get_local_dir
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_component_available
 from ClassicLib.Interface.widgets.ResultsViewerWidgets import (
     MarkdownViewer,
     ReportListWidget,
@@ -150,7 +150,7 @@ class ResultsViewerController:
         self._setup_auto_refresh()
 
         # Log Rust acceleration status
-        if is_rust_accelerated("file_io"):
+        if is_component_available("classic_file_io"):
             logger.info("Results viewer using Rust-accelerated file I/O (10x faster)")
         else:
             logger.debug("Results viewer using Python file I/O implementation")

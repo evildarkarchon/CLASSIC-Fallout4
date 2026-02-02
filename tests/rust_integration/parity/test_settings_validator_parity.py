@@ -24,7 +24,7 @@ from typing import Any
 import pytest
 
 from ClassicLib.integration.factory import get_settings_validator
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.scanning.logs.analyzers.SettingsScanner import SettingsScannerFragments
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from tests.fixtures.parity_fixtures import (

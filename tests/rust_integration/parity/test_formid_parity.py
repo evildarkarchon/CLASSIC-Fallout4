@@ -34,9 +34,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from ClassicLib.integration.factory import get_formid_analyzer
-from ClassicLib.integration.status import (
-    is_rust_accelerated,
-)
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.io.database import AsyncDatabasePool
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo

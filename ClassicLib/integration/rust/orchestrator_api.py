@@ -51,7 +51,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 
 # Always import for type checking, conditionally at runtime
 if TYPE_CHECKING:

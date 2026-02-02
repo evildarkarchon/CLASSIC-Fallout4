@@ -50,7 +50,7 @@ from __future__ import annotations
 
 import logging
 
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustParseError
 
 logger = logging.getLogger(__name__)

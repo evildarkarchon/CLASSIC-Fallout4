@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from tests.fixtures.parity_fixtures import skip_if_rust_unavailable
 
 if TYPE_CHECKING:

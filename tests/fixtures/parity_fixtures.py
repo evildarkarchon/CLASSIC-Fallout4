@@ -28,7 +28,7 @@ from unittest.mock import Mock
 import pytest
 
 from ClassicLib.core.async_bridge import AsyncBridge
-from ClassicLib.integration.status import get_rust_component_status
+from ClassicLib.integration.factory import get_rust_component_status
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from tests.rust_integration.fixtures.crash_log_factory import CrashLogFactory, CrashLogType
 

@@ -22,7 +22,7 @@ from typing import Any
 import pytest
 
 from ClassicLib.integration.factory import get_gpu_detector
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.scanning.logs.analyzers.GPUDetector import get_gpu_info
 from tests.fixtures.parity_fixtures import (
     ParityResult,

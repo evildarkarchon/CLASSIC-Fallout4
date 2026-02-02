@@ -18,7 +18,7 @@ import pytest
 
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.factory import get_orchestrator
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.io.yaml import YamlSettingsCache
 from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
 from ClassicLib.scanning.logs.scanloginfo.classic_scan_logs_info import ClassicScanLogsInfo

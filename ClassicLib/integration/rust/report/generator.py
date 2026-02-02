@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 
 # Lazy imports to avoid circular dependency with scanning.logs.reporting
 _PyReportFragment: type | None = None

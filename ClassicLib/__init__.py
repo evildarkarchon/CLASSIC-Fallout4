@@ -52,7 +52,7 @@ from ClassicLib.core.registry import (
 )
 
 # Integration components
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 
 # I/O components
 from ClassicLib.io.files import FileIOCore, read_file_sync, write_file_sync

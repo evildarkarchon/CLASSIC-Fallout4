@@ -84,7 +84,7 @@ class CrashLogsScanWorker(QObject):
         logger.debug(f"Starting crash logs scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
         # Import here to avoid circular dependency
-        from ClassicLib.integration.status import is_rust_accelerated
+        from ClassicLib.integration.factory import is_component_available
         from ClassicLib.scanning.logs import FCXModeHandler
         from ClassicLib.scanning.logs.executor import ScanLogsExecutor
         from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure
@@ -95,7 +95,7 @@ class CrashLogsScanWorker(QObject):
         FCXModeHandler.reset_fcx_checks()
 
         # Log Rust acceleration status
-        if is_rust_accelerated("parser"):
+        if is_component_available("classic_scanlog", "LogParser"):
             logger.info("Crash log scanning using Rust acceleration (150x speedup)")
         else:
             logger.debug("Crash log scanning using Python implementation")
@@ -230,11 +230,11 @@ class GameFilesScanWorker(QObject):
         logger.debug(f"Starting game files scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
         # Import here to avoid circular dependency
-        from ClassicLib.integration.status import is_rust_accelerated
+        from ClassicLib.integration.factory import is_component_available
         from ClassicLib.scanning.game import write_combined_results_async
 
         # Check for Rust acceleration (prepare for future classic_scangame module)
-        if is_rust_accelerated("scangame"):
+        if is_component_available("classic_scangame"):
             logger.info("Game file scanning using Rust acceleration")
         else:
             logger.debug("Game file scanning using Python implementation")

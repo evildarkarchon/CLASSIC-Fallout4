@@ -16,7 +16,7 @@ import pytest
 
 # Import via the integration layer
 from ClassicLib.integration.factory import get_database_pool
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 
 # Try to import Rust wrapper classes for type checking
 try:

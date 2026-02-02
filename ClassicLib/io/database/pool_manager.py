@@ -106,9 +106,9 @@ class DatabasePoolManager:
             if self._pool is None:
                 # Try to use Rust DatabasePool first
                 try:
-                    from ClassicLib.integration.status import is_rust_accelerated
+                    from ClassicLib.integration.factory import is_component_available
 
-                    if is_rust_accelerated("database_pool"):
+                    if is_component_available("classic_database", "DatabasePool"):
                         from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
                         # Match max_connections to max_concurrent for optimal performance

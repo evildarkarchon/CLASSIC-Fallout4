@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.factory import get_file_io, get_mod_detector, get_parser, get_plugin_analyzer, get_record_scanner
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_component_available
 from ClassicLib.io.database import DatabasePoolManager
 from ClassicLib.io.yaml import classic_settings_async, yaml_settings_async
 from ClassicLib.scanning.logs.analyzers.FormIDAnalyzer import FormIDAnalyzer
@@ -698,7 +698,7 @@ class OrchestratorCore:
 
         try:
             # Try Rust-accelerated file I/O first
-            if is_rust_accelerated("file_io_core"):
+            if is_component_available("classic_file_io", "FileIOCore"):
                 try:
                     rust_file_io = get_file_io()
                     if rust_file_io and hasattr(rust_file_io, "read_file_async"):

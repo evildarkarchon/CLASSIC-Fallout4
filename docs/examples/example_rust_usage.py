@@ -54,9 +54,9 @@ def main() -> None:
     if is_rust_available():
         try:
             # Import Rust-accelerated modules
-            from ClassicLib.integration.detector import get_available_components
+            from ClassicLib.integration.factory import get_rust_component_status
 
-            components = get_available_components().get("components", {})
+            components = get_rust_component_status().get("available", {})
 
             print("Available Rust-Accelerated Components:")
             if components.get("file_io_core"):

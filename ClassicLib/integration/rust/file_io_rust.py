@@ -72,7 +72,7 @@ if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
 from ClassicLib.core.async_bridge import AsyncBridge
-from ClassicLib.integration.detector import detect_component
+from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustIOError, RustParseError
 
 logger = logging.getLogger(__name__)

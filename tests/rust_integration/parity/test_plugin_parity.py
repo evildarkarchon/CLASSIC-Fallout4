@@ -31,9 +31,7 @@ from unittest.mock import Mock
 import pytest
 
 from ClassicLib.integration.factory import get_plugin_analyzer
-from ClassicLib.integration.status import (
-    is_rust_accelerated,
-)
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.scanning.logs.analyzers.PluginAnalyzer import PluginAnalyzer
 from tests.fixtures.parity_fixtures import ParityResult, ParityValidator, skip_if_rust_unavailable, validate_plugin_dictionaries
 

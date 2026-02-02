@@ -308,21 +308,24 @@ class SetupCoordinator:
         is_gui = GlobalRegistry.is_gui_mode()
 
         try:
-            from ClassicLib.integration.status import get_rust_component_status
+            from ClassicLib.integration.factory import _is_rust_disabled, detect_component
 
-            status = get_rust_component_status()
-
-            # Handle different acceleration states
-            if status["disabled"]:
+            if _is_rust_disabled():
                 self._log_disabled_status(debug_enabled, is_gui)
-            elif status["active_count"] > 0:
-                self._log_active_acceleration(status, debug_enabled, is_gui)
             else:
-                self._log_no_acceleration(debug_enabled, is_gui)
-
-            # Log version info if available
-            if status.get("version"):
-                logger.debug(f"   Rust Extension Version: {status['version']}")
+                _known = ["classic_yaml", "classic_scanlog", "classic_file_io", "classic_database", "classic_path"]
+                available = [m for m in _known if detect_component(m)[0]]
+                if available:
+                    status = {
+                        "active_count": len(available),
+                        "total_count": len(_known),
+                        "percentage": len(available) / len(_known) * 100,
+                        "acceleration_level": "ACCELERATED",
+                        "performance_gains": {m: "active" for m in available},
+                    }
+                    self._log_active_acceleration(status, debug_enabled, is_gui)
+                else:
+                    self._log_no_acceleration(debug_enabled, is_gui)
 
         except ImportError:
             self._log_import_error(debug_enabled, is_gui)

@@ -21,7 +21,7 @@ from typing import Any
 import pytest
 
 from ClassicLib.integration.factory import get_suspect_scanner
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import is_rust_accelerated
 from ClassicLib.scanning.logs.analyzers.SuspectScanner import SuspectScanner
 from tests.fixtures.parity_fixtures import (
     ParityResult,

@@ -523,7 +523,7 @@ class TestScanPipelineE2E:
         """Establish performance baselines for regression testing."""
         generator = SyntheticCrashLogGenerator()
         from ClassicLib.integration.factory import get_parser
-        from ClassicLib.integration.status import get_rust_component_status
+        from ClassicLib.integration.factory import get_rust_component_status
 
         # Check Rust acceleration status
         rust_status = get_rust_component_status()

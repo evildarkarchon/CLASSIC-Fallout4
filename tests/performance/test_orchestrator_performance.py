@@ -151,7 +151,7 @@ class TestOrchestratorPerformance:
         # Note: DatabasePoolManager imports from ClassicLib.io.database.async_pool
         with (
             patch("ClassicLib.io.database.async_pool.AsyncDatabasePool", MockAsyncDatabasePool),
-            patch("ClassicLib.integration.status.is_rust_accelerated", return_value=False),
+            patch("ClassicLib.integration.factory.is_component_available", return_value=False),
         ):
             # Clear any existing pool and reset using_rust flag
             manager1._pool = None

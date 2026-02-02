@@ -32,14 +32,13 @@ from typing import Any
 
 import regex as re
 
-from ClassicLib.integration.factory import get_parser
-from ClassicLib.integration.status import is_rust_accelerated
+from ClassicLib.integration.factory import get_parser, is_component_available
 
 logger = logging.getLogger(__name__)
 
 # Use centralized factory for getting the appropriate parser
 _rust_parser = get_parser()
-_rust_available = is_rust_accelerated("parser")
+_rust_available = is_component_available("classic_scanlog", "LogParser")
 
 if _rust_available:
     logger.info("Rust LogParser loaded successfully via factory - 150x speedup enabled")
