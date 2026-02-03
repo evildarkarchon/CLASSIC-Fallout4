@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.2.0-part2 Rust Migration - Phase 9 (Orchestration Migration) - GAP CLOSURE COMPLETE
+**Current focus:** v8.2.0-part2 Rust Migration - Phase 10 (Parity Validation) - READY TO START
 
 ## Current Position
 
-Phase: 9 of 11 (Orchestration Migration) - GAP CLOSURE COMPLETE
+Phase: 9 of 11 (Orchestration Migration) - COMPLETE
 Plan: 4 of 4 complete (2 main + 2 gap closure)
-Status: Phase complete with all gaps closed
-Last activity: 2026-02-03 - Completed 09-03-PLAN.md (CLI async context fix - Gap 1 closed)
+Status: Phase 9 complete, ready for Phase 10
+Last activity: 2026-02-03 - Fixed suspects_stack_list type mismatch, reports now complete
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 10/12] 83%
-[##########..] Phase 9 gap closure complete
+Progress: [v1.0: 14/14] [v8.2.0-part2: 12/14] 86%
+[############..] Phase 9 complete, Phase 10 ready
 
 ## Performance Metrics
 
@@ -73,6 +73,9 @@ v8.2.0-part2 decisions:
 - ReportGenerator+ReportComposer pattern for proper AUTOSCAN.md formatting
 - Header info extracted from processed_lines before segmentation
 - Lazy loading via asyncio.to_thread() for crashlog_list/remove_list in ScanLogsExecutor
+- suspects_stack_list type fix: HashMap<String, Vec<String>> not HashMap<String, String> (YAML arrays)
+- Added get_hashmap_vec_value() to YamlOps for key->array YAML maps
+- OrchestratorCore now includes RecordScanner, SettingsValidator, and FcxModeHandler integration
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 09-03-PLAN.md (CLI async context fix - Gap 1 closed)
+Stopped at: Phase 9 complete - fixed suspects_stack_list type mismatch, reports now fully generated
 Resume file: None
-Next action: Execute Phase 10 (Entry Point Streamlining)
+Next action: Execute Phase 10 (Parity Validation)

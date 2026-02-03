@@ -87,11 +87,13 @@ Plans:
   3. VR mode auto-detected per-log in Rust orchestrator
   4. Python OrchestratorCore removed entirely (callers import Rust directly)
   5. All analyzers (Plugin, FormID, Suspect, Mod, Record, Settings) called from Rust
-**Plans**: 2 plans
+**Plans**: 4 plans (2 original + 2 gap closure)
 
 Plans:
 - [x] 09-01-PLAN.md - Extend Rust PyO3 bindings with progress callback, cancellation, order preservation
 - [x] 09-02-PLAN.md - Remove Python orchestrators, update CLI/GUI to use Rust directly
+- [x] 09-03-PLAN.md - Fix CLI async context error with lazy crashlog_list loading (gap closure)
+- [x] 09-04-PLAN.md - Integrate ReportGenerator for complete AUTOSCAN.md output (gap closure)
 
 ### Phase 10: Parity Validation
 **Goal**: Rust output matches Python output character-for-character for all migrated components
@@ -135,8 +137,8 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | 6. Foundation & Settings | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 7. Game Detection | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 8. Report Generation | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
-| 9. Orchestration Migration | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
+| 9. Orchestration Migration | v8.2.0-part2 | 4/4 | Complete | 2026-02-03 |
 | 10. Parity Validation | v8.2.0-part2 | 0/2 | Not started | - |
 | 11. Integration & Cleanup | v8.2.0-part2 | 0/2 | Not started | - |
 
-**v8.2.0-part2 Progress:** 8/12 plans (67%)
+**v8.2.0-part2 Progress:** 12/14 plans (86%)
