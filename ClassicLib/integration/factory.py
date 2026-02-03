@@ -41,6 +41,7 @@ from __future__ import annotations
 
 import logging
 import threading
+import types
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -685,23 +686,23 @@ def get_web_utils() -> Any | None:
     return None
 
 
-def get_path_operations() -> Any | None:
-    """Retrieve the Rust-based path operations module if available.
+def get_path_operations() -> types.ModuleType:
+    """Retrieve the Rust-based path operations module (required).
+
+    The classic_path module is required for game path detection.
+    ImportError propagates if the module is not available.
 
     Returns:
-        Any | None: The classic_path module if available, None otherwise.
+        ModuleType: The classic_path module.
 
+    Raises:
+        ImportError: If classic_path module is not available.
+            This indicates the Rust module was not built or installed.
     """
-    try:
-        import classic_path
-    except ImportError as e:
-        logger.warning(f"Failed to import classic_path: {e}")
-    else:
-        logger.debug("Using Rust path operations module (10-50x speedup)")
-        return classic_path
+    import classic_path
 
-    logger.debug("Path operations module not available, using Python fallback")
-    return None
+    logger.debug("Using Rust path operations module (10-50x speedup)")
+    return classic_path
 
 
 # ---------------------------------------------------------------------------
