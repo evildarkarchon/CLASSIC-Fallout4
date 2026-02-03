@@ -55,6 +55,7 @@ use pyo3::prelude::*;
 // Module declarations - Phase 3B-3C implementations
 pub mod ba2; // BA2 archive handling (Phase 3B) - IMPLEMENTED
 pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
+pub mod enb; // ENB detection (Phase 7) - IMPLEMENTED
 pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
 pub mod integrity;
 pub mod logs; // log_processor.py (Phase 3C) - IMPLEMENTED
@@ -86,6 +87,7 @@ fn classic_scangame(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register all modules - Phase 3B-3C components
     config::register_config(m)?; // Config duplicate detection
+    enb::register_enb(m)?; // ENB detection (Phase 7)
     unpacked::register_unpacked(m)?; // Unpacked file scanning
     logs::register_logs(m)?; // Log processing
     ini::register_ini(m)?; // INI validation
