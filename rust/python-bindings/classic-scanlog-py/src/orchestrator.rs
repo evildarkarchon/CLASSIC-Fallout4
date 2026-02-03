@@ -145,20 +145,10 @@ impl PyAnalysisConfig {
             .getattr("suspects_error_list")?
             .extract::<std::collections::HashMap<String, String>>()?;
 
+        // suspects_stack_list is now dict[str, list[str]] from Rust YamlData
         config.suspects_stack = yamldata
             .getattr("suspects_stack_list")?
-            .extract::<std::collections::HashMap<String, String>>()?
-            .into_iter()
-            .map(|(k, v)| {
-                // Convert string values to Vec<String> by splitting on newlines
-                let patterns: Vec<String> = v
-                    .lines()
-                    .map(|line| line.trim().to_string())
-                    .filter(|line| !line.is_empty())
-                    .collect();
-                (k, patterns)
-            })
-            .collect();
+            .extract::<std::collections::HashMap<String, Vec<String>>>()?;
 
         config.mods_core = yamldata
             .getattr("game_mods_core")?

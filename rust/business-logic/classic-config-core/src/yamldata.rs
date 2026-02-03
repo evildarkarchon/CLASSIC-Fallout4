@@ -106,8 +106,8 @@ pub struct YamlDataCore {
     // Suspect patterns
     /// Suspect error patterns mapped to descriptive explanations or identifiers
     pub suspects_error_list: HashMap<String, String>,
-    /// Suspect stack traces mapped to their corresponding cleanup or diagnostic messages
-    pub suspects_stack_list: HashMap<String, String>,
+    /// Suspect stack traces mapped to pattern lists for matching
+    pub suspects_stack_list: HashMap<String, Vec<String>>,
 
     // Mod databases
     /// Configuration settings for game modification databases
@@ -298,7 +298,7 @@ impl YamlDataCore {
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
             suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Stack_Check"),
+            suspects_stack_list: yaml_ops.get_hashmap_vec_value(game_data, "Crashlog_Stack_Check"),
             game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
             game_mods_core: yaml_ops.get_hashmap_value(game_data, "Mods_CORE"),
             game_mods_core_folon: yaml_ops.get_hashmap_value(game_data, "Mods_CORE_FOLON"),
@@ -452,7 +452,7 @@ impl YamlDataCore {
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
             suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Stack_Check"),
+            suspects_stack_list: yaml_ops.get_hashmap_vec_value(game_data, "Crashlog_Stack_Check"),
             game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
             game_mods_core: yaml_ops.get_hashmap_value(game_data, "Mods_CORE"),
             game_mods_core_folon: yaml_ops.get_hashmap_value(game_data, "Mods_CORE_FOLON"),
@@ -559,7 +559,7 @@ Crashlog_Error_Check:
   ErrorPattern1: "Error description 1"
   ErrorPattern2: "Error description 2"
 Crashlog_Stack_Check:
-  StackPattern1: "Stack description 1"
+  StackPattern1: ["Stack pattern 1", "Stack pattern 2"]
 Mods_CONF:
   ModA: "Config for ModA"
 Mods_CORE:
@@ -693,7 +693,7 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(config.suspects_stack_list.len(), 1);
         assert_eq!(
             config.suspects_stack_list.get("StackPattern1"),
-            Some(&"Stack description 1".to_string())
+            Some(&vec!["Stack pattern 1".to_string(), "Stack pattern 2".to_string()])
         );
     }
 

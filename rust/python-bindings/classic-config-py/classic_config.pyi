@@ -268,11 +268,11 @@ class YamlData:
         """
 
     @property
-    def suspects_stack_list(self) -> dict[str, Any]:
+    def suspects_stack_list(self) -> dict[str, list[str]]:
         """Suspect patterns for callstack analysis.
 
         Returns:
-            Dictionary mapping callstack categories to detection patterns
+            Dictionary mapping callstack categories to pattern lists
 
         """
 
