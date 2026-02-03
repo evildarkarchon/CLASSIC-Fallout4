@@ -1,12 +1,23 @@
-# CLASSIC Codebase Cleanup
+# CLASSIC Rust Migration
 
 ## What This Is
 
-A hybrid Python-Rust desktop application (CLASSIC — Crash Log Auto Scanner & Setup Integrity Checker) that analyzes crash logs from Bethesda games (Fallout 4, Skyrim). After the v1.0 cleanup milestone, the codebase has clear single-ownership for every piece of business logic: Rust owns computation, Python owns UI and orchestration, with thin adapter wrappers at the boundary and fail-fast validation at startup.
+A Rust-first desktop application (CLASSIC — Crash Log Auto Scanner & Setup Integrity Checker) that analyzes crash logs from Bethesda games (Fallout 4, Skyrim). Python serves as a thin UI shell (PySide6/Qt GUI) while Rust owns ALL business logic through PyO3 bindings. The v1.0 cleanup established clear ownership boundaries; v8.2.0-part2 completes the migration.
 
 ## Core Value
 
-Every piece of logic lives in exactly one place, and it's obvious where things belong — so future Rust migration is straightforward rather than archaeological.
+Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
+
+## Current Milestone: v8.2.0-part2 Rust Migration
+
+**Goal:** Migrate all remaining Python business logic to Rust, making Python a thin UI shell.
+
+**Target features:**
+- Scanning orchestration moved to Rust (OrchestratorCore replacement)
+- Game detection migrated to Rust (path detection, XSE/ENB checking)
+- Report generation in Rust (markdown output)
+- Settings management in Rust (configuration loading/saving)
+- Python reduced to: GUI widgets, event handling, PyO3 call sites
 
 ## Requirements
 
@@ -36,34 +47,42 @@ Every piece of logic lives in exactly one place, and it's obvious where things b
 
 ### Active
 
-(None — next milestone requirements defined via `/gsd:new-milestone`)
+- [ ] Migrate scanning orchestration to Rust — v8.2.0-part2
+- [ ] Migrate game detection to Rust — v8.2.0-part2
+- [ ] Migrate report generation to Rust — v8.2.0-part2
+- [ ] Migrate settings management to Rust — v8.2.0-part2
+- [ ] Reduce Python to UI-only code — v8.2.0-part2
 
 ### Out of Scope
 
-- New feature development during cleanup — cleanup only (completed)
-- Rust migration of business logic — deferred to v2.0 milestone
-- UI/UX changes — no user-visible changes unless simplification demands it
-- Performance optimization — unless it falls out of removing redundancy
+- GUI framework migration — Keep PySide6/Qt, don't migrate to Rust GUI (egui/iced)
+- New user-facing features — Migration only, no new capabilities
+- TUI migration — Ratatui TUI is already Rust-native
+- Performance benchmarking — Migration correctness first, optimization later
 
 ## Context
 
-**Shipped v1.0** with 48,342 lines Python (ClassicLib/), ~23 hours wall clock.
+**Starting point:** 48,342 lines Python (ClassicLib/) after v1.0 cleanup.
 **Tech stack:** Python 3.12+, PySide6, Rust (PyO3 0.27), uv package manager.
-**Architecture:** Single flat factory.py with 13 Protocol types, thin adapter wrappers (60-75% reduced), fail-fast RuntimeError on missing Rust, validate_rust_modules() at startup.
-**Known issues:**
-- Pre-existing classic-yaml-core test_clear_cache failure (cache size assertion)
-- Pre-existing GUI file path resolution bug in classic_settings() (relative path)
-- cache.py line 431: return {} metrics placeholder (not implemented)
-- _async_utils package kept for backward compatibility re-exports
+**Architecture:** Single flat factory.py with 13 Protocol types, thin adapter wrappers, fail-fast RuntimeError on missing Rust.
+**Migration targets:**
+- `ClassicLib/ScanGame/` — Game detection, path finding, integrity checks
+- `ClassicLib/ScanLog/` — Crash log orchestration (Parser already Rust)
+- `ClassicLib/Report/` — Markdown report generation
+- `ClassicLib/io/yaml/` — Settings loading (YAML parsing already Rust)
+**Known issues (pre-existing):**
+- classic-yaml-core test_clear_cache failure (cache size assertion)
+- GUI file path resolution bug in classic_settings() (relative path)
+- cache.py line 431: return {} metrics placeholder
 
 ## Constraints
 
-- **Behavioral parity**: App must work identically after cleanup (improvements welcome where they simplify code)
-- **Test coverage**: Existing tests must continue to pass; update tests to match new APIs rather than preserving old ones
-- **Both languages**: Cleanup spans Python and Rust — neither is exempt
+- **Behavioral parity**: App must work identically after migration
+- **Test coverage**: Existing tests must pass; add Rust integration tests for migrated logic
 - **TDD required**: All changes follow red-green-refactor per project standards
-- **No backward compatibility hacks**: If something is unused, delete it completely
-- **Rust required**: No Python fallbacks — Rust modules must be present (fail-fast at startup)
+- **GUI stays Python**: PySide6/Qt remains, only business logic migrates
+- **Incremental migration**: Each component migrates fully before next (no half-migrated state)
+- **PyO3 patterns**: Business logic in `-core` crates, PyO3 adapters in `-py` crates
 
 ## Key Decisions
 
@@ -81,4 +100,4 @@ Every piece of logic lives in exactly one place, and it's obvious where things b
 | validate_rust_modules() at startup | Early failure detection before user interaction | ✓ Good — catches missing modules immediately |
 
 ---
-*Last updated: 2026-02-02 after v1.0 milestone*
+*Last updated: 2026-02-02 after v8.2.0-part2 milestone started*

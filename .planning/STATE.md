@@ -4,17 +4,17 @@
 
 See: .planning/PROJECT.md (updated 2026-02-02)
 
-**Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Planning next milestone
+**Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
+**Current focus:** v8.2.0-part2 Rust Migration
 
 ## Current Position
 
-Phase: v1.0 complete. Next milestone not yet started.
-Plan: N/A
-Status: Ready for /gsd:new-milestone
-Last activity: 2026-02-02 -- v1.0 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-02 — Milestone v8.2.0-part2 started
 
-Progress: [███████████████] v1.0 100% ✅
+Progress: ░░░░░░░░░░░░░░░ 0%
 
 ## Performance Metrics
 
@@ -51,6 +51,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: v1.0 milestone complete and archived.
+Stopped at: Milestone v8.2.0-part2 initialized, defining requirements.
 Resume file: None
-Next action: /gsd:new-milestone
+Next action: Complete requirements definition → roadmap creation
