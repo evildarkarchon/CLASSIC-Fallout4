@@ -3,9 +3,11 @@
 Provides fixtures and utilities for capturing Python output and comparing
 against stored golden files. Used for Rust-Python parity validation.
 
-Per Phase 6 CONTEXT.md decisions:
-- Character-exact matching (byte-for-byte identical)
-- Mask timestamps and paths with placeholders before comparison
+Per Phase 10 CONTEXT.md decisions:
+- Character-exact matching (byte-for-byte identical after normalization)
+- Mask timestamps with {{TIMESTAMP}} placeholder (timestamps change on every run)
+- Paths are NOT masked - they provide valuable debugging information
+- Path slashes are normalized (backslash -> forward slash) for cross-platform comparison
 - Full diff on failure for debugging
 """
 
@@ -25,11 +27,11 @@ if TYPE_CHECKING:
 # Directory for golden files
 GOLDEN_DIR = Path(__file__).parent.parent / "golden" / "captured"
 
-# Placeholder formats per RESEARCH.md
+# Placeholder format for timestamps
 TIMESTAMP_PLACEHOLDER = "{{TIMESTAMP}}"
-PATH_PLACEHOLDER = "{{PATH}}"
 
-# Regex patterns for dynamic data masking
+# Regex patterns for timestamp masking only
+# Note: Paths are NOT masked per Phase 10 decision - they provide debugging value
 TIMESTAMP_PATTERNS = [
     # ISO 8601 full datetime with optional fractional seconds and timezone
     re.compile(r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?"),
@@ -38,34 +40,43 @@ TIMESTAMP_PATTERNS = [
     # Time only (HH:MM:SS)
     re.compile(r"\d{2}:\d{2}:\d{2}"),
 ]
-PATH_PATTERNS = [
-    # Windows paths (e.g., C:\Users\test\file.txt)
-    re.compile(r"[A-Za-z]:\\(?:[^\s\"'<>|]+)"),
-    # Unix common paths (/home, /tmp, /var, /usr, /Users, /mnt)
-    re.compile(r"/(?:home|tmp|var|usr|Users|mnt)[^\s\"'<>|]*"),
-]
 
 
 def mask_dynamic_data(text: str) -> str:
-    """Replace timestamps and paths with placeholders.
+    """Replace timestamps with placeholders.
+
+    Masks only timestamps, which change on every run and provide no debugging value.
+    Paths are NOT masked - they provide valuable debugging information when
+    parity tests fail.
 
     Args:
         text: Raw text potentially containing dynamic data.
 
     Returns:
-        Text with timestamps replaced by {{TIMESTAMP}} and paths by {{PATH}}.
+        Text with timestamps replaced by {{TIMESTAMP}}.
     """
     result = text
 
-    # Mask timestamps first (more specific patterns)
+    # Mask timestamps only (paths are kept visible for debugging)
     for pattern in TIMESTAMP_PATTERNS:
         result = pattern.sub(TIMESTAMP_PLACEHOLDER, result)
 
-    # Mask paths
-    for pattern in PATH_PATTERNS:
-        result = pattern.sub(PATH_PLACEHOLDER, result)
-
     return result
+
+
+def normalize_paths(text: str) -> str:
+    """Normalize path separators for cross-platform comparison.
+
+    Replaces backslashes with forward slashes to ensure consistent
+    comparison between Windows and Unix-style paths.
+
+    Args:
+        text: Text potentially containing file paths.
+
+    Returns:
+        Text with backslashes replaced by forward slashes.
+    """
+    return text.replace("\\", "/")
 
 
 def generate_diff(expected: str, actual: str) -> str:
@@ -108,6 +119,9 @@ class GoldenFileChecker:
     def check(self, output: str | dict[str, Any], name: str) -> None:
         """Compare output against golden file.
 
+        Applies timestamp masking and path normalization before comparison
+        per Phase 10 CONTEXT.md decisions.
+
         Args:
             output: The output to check (string or dict for JSON).
             name: Base name for the golden file (without extension).
@@ -124,26 +138,29 @@ class GoldenFileChecker:
             golden_path = self.golden_dir / f"{name}.golden"
             formatted = str(output)
 
-        # Mask dynamic data
-        masked = mask_dynamic_data(formatted)
+        # Apply normalizations: timestamp masking + path slash normalization
+        normalized = mask_dynamic_data(formatted)
+        normalized = normalize_paths(normalized)
 
         # Check for update mode
         update_golden = self.request.config.getoption("--update-golden", default=False)
 
         if update_golden:
-            golden_path.write_text(masked, encoding="utf-8")
+            golden_path.write_text(normalized, encoding="utf-8")
             return
 
         # Compare against existing golden file
         if not golden_path.exists():
             # Create golden file if it doesn't exist (first run)
-            golden_path.write_text(masked, encoding="utf-8")
+            golden_path.write_text(normalized, encoding="utf-8")
             pytest.skip(f"Created new golden file: {golden_path.name}")
 
         expected = golden_path.read_text(encoding="utf-8")
+        # Normalize expected content as well for consistent comparison
+        expected_normalized = normalize_paths(expected)
 
-        if masked != expected:
-            diff = generate_diff(expected, masked)
+        if normalized != expected_normalized:
+            diff = generate_diff(expected_normalized, normalized)
             pytest.fail(
                 f"Golden file mismatch for {name}:\n\n{diff}\n\n"
                 f"Run with --update-golden to update the golden file."
