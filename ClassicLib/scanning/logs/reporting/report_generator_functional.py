@@ -1,22 +1,55 @@
 """Functional report generator using fragments.
 
+.. deprecated::
+    This module is deprecated and will be removed in a future version.
+    Use ClassicLib.integration.factory.get_report_generator() which returns
+    the Rust-accelerated RustAcceleratedReportGenerator.
+
+    The Rust implementation provides 75x performance improvement and is now
+    the only supported implementation as of Phase 8 of the Rust migration.
+
 This module provides functional versions of report generation methods
 that return immutable fragments instead of mutating shared state.
 """
 
 from __future__ import annotations
 
+import warnings
+from typing import Any
+
 from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment
 
 
 class ReportGeneratorFunctional:
-    """Handle the functionality of generating various sections of a report.
+    """Pure Python report generator (DEPRECATED).
+
+    .. deprecated::
+        This class is deprecated. Use get_report_generator() from
+        ClassicLib.integration.factory instead.
+
+    This implementation remains for reference but is no longer used in
+    production code paths. The Rust ReportGenerator is now the sole
+    implementation.
 
     This class provides static methods to generate specific fragments of a report
     such as the header, error information section, and suspect section. These
     fragments can be used to build comprehensive reports for analyzing crash
     logs.
     """
+
+    def __init__(self, yamldata: Any = None) -> None:
+        """Initialize the deprecated ReportGeneratorFunctional.
+
+        Args:
+            yamldata: Optional YAML data configuration. Unused in static methods.
+        """
+        warnings.warn(
+            "ReportGeneratorFunctional is deprecated and will be removed. "
+            "Use get_report_generator() from ClassicLib.integration.factory.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self.yamldata = yamldata
 
     @staticmethod
     def generate_header(crashlog_filename: str, version: str) -> ReportFragment:
