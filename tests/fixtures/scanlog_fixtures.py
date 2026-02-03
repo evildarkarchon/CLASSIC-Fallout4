@@ -92,7 +92,9 @@ def mock_database_pool_with_data() -> MagicMock:
 
 @pytest.fixture
 def mock_orchestrator_dependencies(mock_yamldata: MagicMock, mock_database_pool: MagicMock) -> dict[str, Any]:
-    """Bundle common mock dependencies for OrchestratorCore testing.
+    """Bundle common mock dependencies for Rust orchestrator testing.
+
+    Phase 9: Updated for Rust orchestrator. Python OrchestratorCore removed.
 
     Args:
         mock_yamldata: Mock YAML data fixture (from yamldata_fixtures).
@@ -228,17 +230,17 @@ def mock_scan_yaml_settings() -> Generator[MagicMock, None, None]:
 
 @pytest.fixture
 def mock_orchestrator_settings() -> Generator[tuple[MagicMock, MagicMock], None, None]:
-    """Mock async settings for OrchestratorCore tests.
+    """Mock async settings for Rust orchestrator tests.
 
-    Patches both yaml_settings_async and classic_settings_async
-    for orchestrator testing.
+    Phase 9: Python OrchestratorCore removed. This fixture is retained
+    for backward compatibility but patches are now no-ops.
 
     Yields:
         Tuple of (mock_yaml_settings_async, mock_classic_settings_async).
     """
     with (
-        patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async") as mock_yaml,
-        patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async") as mock_classic,
+        patch("ClassicLib.io.yaml.yaml_settings_async") as mock_yaml,
+        patch("ClassicLib.io.yaml.classic_settings_async") as mock_classic,
     ):
         mock_yaml.return_value = None
         mock_classic.return_value = None
@@ -247,22 +249,22 @@ def mock_orchestrator_settings() -> Generator[tuple[MagicMock, MagicMock], None,
 
 @pytest.fixture
 def mock_orchestrator_settings_with_concurrency() -> Generator[tuple[MagicMock, MagicMock, Any], None, None]:
-    """Mock async settings for OrchestratorCore with HybridOrchestrator classic_settings.
+    """Mock async settings for Rust orchestrator with concurrency configuration.
 
-    This variant also mocks HybridOrchestrator.classic_settings for
-    tests that need to configure concurrency settings.
+    Phase 9: Python OrchestratorCore and HybridOrchestrator removed.
+    This fixture is retained for backward compatibility.
 
     Yields:
-        Tuple of (mock_yaml_settings_async, mock_classic_settings_async, hybrid_patch).
+        Tuple of (mock_yaml_settings_async, mock_classic_settings_async, concurrency_mock).
     """
     with (
-        patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async") as mock_yaml,
-        patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async") as mock_classic,
-        patch("ClassicLib.scanning.logs.hybrid_orchestrator.classic_settings", return_value=0) as hybrid_mock,
+        patch("ClassicLib.io.yaml.yaml_settings_async") as mock_yaml,
+        patch("ClassicLib.io.yaml.classic_settings_async") as mock_classic,
+        patch("ClassicLib.io.yaml.classic_settings", return_value=0) as concurrency_mock,
     ):
         mock_yaml.return_value = None
         mock_classic.return_value = None
-        yield (mock_yaml, mock_classic, hybrid_mock)
+        yield (mock_yaml, mock_classic, concurrency_mock)
 
 
 @pytest.fixture
