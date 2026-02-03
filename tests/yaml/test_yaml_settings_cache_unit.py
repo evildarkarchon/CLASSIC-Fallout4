@@ -83,7 +83,9 @@ class TestAsyncYamlEdgeCases:
 
     @pytest.mark.asyncio
     async def test_settings_cache_vs_file_cache(self, async_yaml_core, tmp_path: Path) -> None:
-        """Test the relationship between settings_cache and file cache."""
+        """Test that settings are cached in Rust classic_settings."""
+        import classic_settings
+
         test_file = tmp_path / "cache_test.yaml"
         data = {"settings": {"value1": "test", "value2": 42}}
         yaml = ruamel.yaml.YAML()
@@ -94,10 +96,22 @@ class TestAsyncYamlEdgeCases:
             return test_file
 
         async_yaml_core.file_ops.get_path_for_store = mock_get_path
+
+        # Clear Rust cache before test
+        classic_settings.clear_cache()
+
         value1 = await async_yaml_core.async_yaml_settings(str, YAML.Main, "settings.value1")
         assert value1 == "test"
-        cache_key = (str, YAML.Main, "settings.value1")
-        assert cache_key in async_yaml_core.cache.settings_cache
-        assert async_yaml_core.cache.settings_cache[cache_key] == "test"
+
+        # Check that file is cached in Rust (by resolved path)
+        rust_cache_key = str(test_file.resolve())
+        assert classic_settings.is_cached(rust_cache_key)
+
+        # Get cached data and verify
+        cached_docs = classic_settings.get_cached(rust_cache_key)
+        assert cached_docs is not None
+        assert cached_docs[0]["settings"]["value1"] == "test"
+
+        # Second access should use Rust cache
         value2 = await async_yaml_core.async_yaml_settings(str, YAML.Main, "settings.value1")
         assert value2 == "test"

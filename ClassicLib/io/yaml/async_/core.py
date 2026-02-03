@@ -4,6 +4,9 @@ This module provides the AsyncYamlSettingsCore class for managing YAML-based
 settings in asynchronous Python applications. It supports reading, writing,
 batch processing, cache management, file validation, and backups.
 
+YAML content caching is delegated to Rust classic_settings module for
+performance via DashMap-based lock-free concurrent access.
+
 Classes:
     AsyncYamlSettingsCore: Main class for async YAML settings operations.
 
@@ -26,6 +29,8 @@ from collections.abc import Mapping
 from itertools import starmap
 from pathlib import Path
 from typing import Any, cast
+
+import classic_settings
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.io.yaml.async_.cache import YamlCache
@@ -130,10 +135,8 @@ class AsyncYamlSettingsCore:
         """Read or write a setting in a YAML store.
 
         Handles asynchronous retrieval and update of settings stored in YAML files.
-        Supports caching for read operations and allows type validation of retrieved
-        values. When invoked for reading, it fetches the specified setting either
-        from a memory cache or from the YAML file. For write operations, it updates
-        the specified setting and persists the changes.
+        Uses Rust classic_settings cache for reads. For write operations, it updates
+        the file and invalidates the Rust cache to ensure consistency.
 
         Args:
             variable_type: Expected type of the setting value. Used for type
@@ -159,53 +162,61 @@ class AsyncYamlSettingsCore:
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
+        cache_key_rust = str(file_path.resolve())
 
         async with file_lock:
-            # Check cache first for reads
             if value is None:
-                cache_key = (variable_type, yaml_store, key)
-                if cache_key in self.cache.settings_cache:
-                    return cast("T", self.cache.settings_cache[cache_key])
+                # READ operation - check Rust cache first
+                cached_docs = classic_settings.get_cached(cache_key_rust)
+                if cached_docs is not None:
+                    logger.debug("Rust cache hit for %s", cache_key_rust)
+                    data = cached_docs[0] if cached_docs else {}
+                else:
+                    # Cache miss - load via Rust async
+                    logger.debug("Rust cache miss for %s, loading async", cache_key_rust)
+                    docs = await classic_settings.load_settings_async(cache_key_rust, str(file_path))
+                    data = docs[0] if docs else {}
 
-            # Load the YAML file
-            data = await self.file_ops.load_yaml_file(file_path)
-
-            # Parse the key path
-            keys = key.split(".")
-            current = data
-
-            if value is None:
-                # Read operation
+                # Navigate key path
+                keys = key.split(".")
+                current: Any = data
                 for k in keys:
                     if isinstance(current, Mapping) and k in current:
                         current = current[k]
                     else:
                         return None
 
-                # Validate type using imported function
+                # Validate type
                 if not validate_setting_value(current, variable_type):
                     return None
 
-                # Cache the result
-                cache_key = (variable_type, yaml_store, key)
-                self.cache.settings_cache[cache_key] = current
                 return cast("T", current)
-            # Write operation
-            # Navigate to the parent of the target key
+
+            # WRITE operation
+            # Load current data (use Rust cache if available)
+            cached_docs = classic_settings.get_cached(cache_key_rust)
+            if cached_docs is not None:
+                data = cached_docs[0] if cached_docs else {}
+            else:
+                docs = await classic_settings.load_settings_async(cache_key_rust, str(file_path))
+                data = docs[0] if docs else {}
+
+            # Navigate to parent and set value
+            keys = key.split(".")
+            current = data
             for k in keys[:-1]:
                 if k not in current:
                     current[k] = {}
                 current = current[k]
-
-            # Set the value
             current[keys[-1]] = value
 
-            # Save the file
+            # Save file (remains in Python per CONTEXT.md)
             await self.file_ops.save_yaml_file(file_path, data)
 
-            # Update cache
-            cache_key = (variable_type, yaml_store, key)
-            self.cache.settings_cache[cache_key] = value
+            # Invalidate Rust cache after write to ensure next read gets fresh data
+            logger.debug("Invalidating Rust cache after write: %s", cache_key_rust)
+            classic_settings.invalidate(cache_key_rust)
+
             return value
 
     async def batch_get_settings(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
@@ -262,8 +273,8 @@ class AsyncYamlSettingsCore:
     async def clear_cache(self, yaml_store: YAML | None = None) -> None:
         """Clear cached settings and data.
 
-        Clears cached settings, paths, and other relevant data either for a
-        specific YAML store or entirely.
+        Delegates to Rust classic_settings for YAML content cache clearing.
+        Also clears Python-side caches (path_cache, legacy settings_cache).
 
         Args:
             yaml_store: The YAML store whose related cache entries need to be
@@ -275,16 +286,22 @@ class AsyncYamlSettingsCore:
 
         """
         if yaml_store:
-            # Clear entries for specific store from settings cache
+            # Clear specific store from Rust cache
+            file_path = self.file_ops.get_path_for_store(yaml_store)
+            cache_key = str(file_path.resolve())
+            logger.debug("Invalidating Rust cache for store %s: %s", yaml_store, cache_key)
+            classic_settings.invalidate(cache_key)
+
+            # Clear legacy Python caches for backward compatibility
             keys_to_remove = [k for k in self.cache.settings_cache if k[1] == yaml_store]
             for key in keys_to_remove:
                 del self.cache.settings_cache[key]
-
-            # Also clear file ops cache for specific file if possible
-            # Note: This assumes file_ops exposes a way to clear specific files,
-            # or we rely on full clear. For now, we only have global clear for file_ops.
         else:
-            # Clear all caches
+            # Clear all Rust cache
+            logger.debug("Clearing all Rust cache entries")
+            classic_settings.clear_cache()
+
+            # Clear all Python-side caches
             self.cache.cache.clear()
             self.cache.settings_cache.clear()
             self.cache.path_cache.clear()
@@ -295,8 +312,7 @@ class AsyncYamlSettingsCore:
     async def reload_settings(self, yaml_store: YAML) -> dict[str, Any]:
         """Reload configuration settings from disk.
 
-        Retrieves the file path for the given YAML store, removes any cached
-        data for that file, and reloads the data from disk.
+        Invalidates the Rust cache for the file and reloads fresh data.
 
         Args:
             yaml_store: The YAML data store to reload.
@@ -311,14 +327,20 @@ class AsyncYamlSettingsCore:
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
+        cache_key = str(file_path.resolve())
 
         async with file_lock:
-            # Clear cache for this file
+            # Invalidate Rust cache for this file
+            logger.debug("Invalidating Rust cache for reload: %s", cache_key)
+            classic_settings.invalidate(cache_key)
+
+            # Clear legacy Python cache
             if str(file_path) in self.cache.cache:
                 del self.cache.cache[str(file_path)]
 
-            # Load fresh from disk
-            return await self.file_ops.load_yaml_file(file_path)
+            # Load fresh via Rust async
+            docs = await classic_settings.load_settings_async(cache_key, str(file_path))
+            return docs[0] if docs else {}
 
     async def ensure_file_exists(self, yaml_store: YAML) -> None:
         """Ensure a YAML store file exists.
@@ -415,7 +437,8 @@ class AsyncYamlSettingsCore:
         """Update multiple settings in a YAML store.
 
         Applies multiple updates to a YAML file in a single operation,
-        writing only once after all updates are applied.
+        writing only once after all updates are applied. Invalidates Rust
+        cache after write to ensure consistency.
 
         Args:
             yaml_store: The YAML store to update.
@@ -431,9 +454,16 @@ class AsyncYamlSettingsCore:
         """
         file_path = self.file_ops.get_path_for_store(yaml_store)
         file_lock = self._get_file_lock(file_path)
+        rust_cache_key = str(file_path.resolve())
 
         async with file_lock:
-            data = await self.file_ops.load_yaml_file(file_path)
+            # Load via Rust cache
+            cached_docs = classic_settings.get_cached(rust_cache_key)
+            if cached_docs is not None:
+                data = cached_docs[0] if cached_docs else {}
+            else:
+                docs = await classic_settings.load_settings_async(rust_cache_key, str(file_path))
+                data = docs[0] if docs else {}
 
             # Apply updates
             for key, value in updates.items():
@@ -449,12 +479,12 @@ class AsyncYamlSettingsCore:
                 # Set value
                 current[keys[-1]] = value
 
-                # Update cache
-                cache_key: tuple[type, YAML, str] = (type(value), yaml_store, key)  # pyright: ignore[reportUnknownVariableType]
-                self.cache.settings_cache[cache_key] = value
-
-            # Save once
+            # Save once (remains in Python per CONTEXT.md)
             await self.file_ops.save_yaml_file(file_path, data)
+
+            # Invalidate Rust cache after write
+            logger.debug("Invalidating Rust cache after update_settings: %s", rust_cache_key)
+            classic_settings.invalidate(rust_cache_key)
 
 
 # Global instance management

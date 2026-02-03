@@ -123,6 +123,7 @@ class TestAsyncYamlIntegration:
     @pytest.mark.timing
     async def test_prefetch_all_settings(self, async_yaml_core, create_yaml_files: Path) -> None:
         """Test prefetching all settings for performance."""
+        import classic_settings
 
         # Setup paths
         def mock_get_path(store):
@@ -134,12 +135,15 @@ class TestAsyncYamlIntegration:
 
         async_yaml_core.file_ops.get_path_for_store = mock_get_path
 
+        # Clear Rust cache before test
+        classic_settings.clear_cache()
+
         # Load multiple stores to populate cache
         stores_to_load = [(str, YAML.Settings, "Game_Info.CRASHGEN_LogName"), (list, YAML.Game_Local, "catch_log_records")]
         await async_yaml_core.batch_get_settings(stores_to_load)
 
-        # Check that settings are cached
-        assert len(async_yaml_core.cache.settings_cache) > 0
+        # Check that settings are cached in Rust
+        assert classic_settings.cache_size() > 0
 
         # Accessing settings should now be from cache (fast)
         import time
