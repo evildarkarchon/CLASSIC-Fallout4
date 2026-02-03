@@ -22,7 +22,7 @@ See MILESTONES.md for details. 14 plans completed, -11,993 net lines removed.
 
 **Milestone Goal:** Migrate all remaining Python business logic to Rust, making Python a thin UI shell.
 
-- [ ] **Phase 6: Foundation & Settings** - Establish golden file infrastructure and migrate settings management to Rust
+- [x] **Phase 6: Foundation & Settings** - Establish golden file infrastructure and migrate settings management to Rust
 - [ ] **Phase 7: Game Detection** - Wire Rust GamePathFinder to Python wrapper, integrate with GlobalRegistry
 - [ ] **Phase 8: Report Generation** - Wire Rust ReportGenerator/ReportComposer to Python, validate output format
 - [ ] **Phase 9: Orchestration Migration** - Route all scanning through Rust OrchestratorCore
@@ -44,8 +44,8 @@ See MILESTONES.md for details. 14 plans completed, -11,993 net lines removed.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md - Settings cache migration (wire YamlSettingsCache to Rust classic_settings)
-- [ ] 06-02-PLAN.md - Golden file infrastructure (capture/compare framework for parity testing)
+- [x] 06-01-PLAN.md - Settings cache migration (wire YamlSettingsCache to Rust classic_settings)
+- [x] 06-02-PLAN.md - Golden file infrastructure (capture/compare framework for parity testing)
 
 ### Phase 7: Game Detection
 **Goal**: All game path detection routes through Rust GamePathFinder
@@ -132,11 +132,11 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
-| 6. Foundation & Settings | v8.2.0-part2 | 0/2 | Planned | - |
+| 6. Foundation & Settings | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 7. Game Detection | v8.2.0-part2 | 0/2 | Not started | - |
 | 8. Report Generation | v8.2.0-part2 | 0/2 | Not started | - |
 | 9. Orchestration Migration | v8.2.0-part2 | 0/2 | Not started | - |
 | 10. Parity Validation | v8.2.0-part2 | 0/2 | Not started | - |
 | 11. Integration & Cleanup | v8.2.0-part2 | 0/2 | Not started | - |
 
-**v8.2.0-part2 Progress:** 0/12 plans (0%)
+**v8.2.0-part2 Progress:** 2/12 plans (17%)

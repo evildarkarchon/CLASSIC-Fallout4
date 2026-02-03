@@ -31,15 +31,15 @@ Requirements for Rust migration milestone. Each maps to roadmap phases.
 
 ### Settings Management (SETT)
 
-- [ ] **SETT-01**: All YAML settings loading uses Rust classic-settings-core cache
-- [ ] **SETT-02**: Python YamlCache wrapper delegates to Rust DashMap-based cache
-- [ ] **SETT-03**: Batch settings loading uses Rust parallel tokio::join! pattern
-- [ ] **SETT-04**: Cache invalidation correctly clears Rust cache on settings update
-- [ ] **SETT-05**: Settings writing remains in Python (Rust cache is read-only)
+- [x] **SETT-01**: All YAML settings loading uses Rust classic-settings-core cache
+- [x] **SETT-02**: Python YamlCache wrapper delegates to Rust DashMap-based cache
+- [x] **SETT-03**: Batch settings loading uses Rust parallel tokio::join! pattern
+- [x] **SETT-04**: Cache invalidation correctly clears Rust cache on settings update
+- [x] **SETT-05**: Settings writing remains in Python (Rust cache is read-only)
 
 ### Parity Validation (VAL)
 
-- [ ] **VAL-01**: Golden file tests capture Python output for 10+ representative crash logs
+- [x] **VAL-01**: Golden file tests capture Python output for 10+ representative crash logs
 - [ ] **VAL-02**: Rust scanning output matches Python output character-for-character
 - [ ] **VAL-03**: Rust report generation matches Python report format exactly
 - [ ] **VAL-04**: Rust game detection returns identical paths as Python implementation
@@ -90,12 +90,12 @@ Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SETT-01 | Phase 6 | Pending |
-| SETT-02 | Phase 6 | Pending |
-| SETT-03 | Phase 6 | Pending |
-| SETT-04 | Phase 6 | Pending |
-| SETT-05 | Phase 6 | Pending |
-| VAL-01 | Phase 6 | Pending |
+| SETT-01 | Phase 6 | Complete |
+| SETT-02 | Phase 6 | Complete |
+| SETT-03 | Phase 6 | Complete |
+| SETT-04 | Phase 6 | Complete |
+| SETT-05 | Phase 6 | Complete |
+| VAL-01 | Phase 6 | Complete |
 | GAME-01 | Phase 7 | Pending |
 | GAME-02 | Phase 7 | Pending |
 | GAME-03 | Phase 7 | Pending |
@@ -126,4 +126,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after roadmap creation*
+*Last updated: 2026-02-03 after Phase 6 completion*
