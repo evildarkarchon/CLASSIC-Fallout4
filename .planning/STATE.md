@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 4 complete. Ready for Phase 5 - Fallback Pruning.
+**Current focus:** Phase 5 - Fallback Pruning. Plan 01 complete. Ready for Plan 02.
 
 ## Current Position
 
-Phase: 4 of 5 (Interface Consolidation) -- COMPLETE
-Plan: 3 of 3 complete
-Status: Phase complete
-Last activity: 2026-02-02 -- Completed 04-03-PLAN.md (YAML sync/ consolidation)
+Phase: 5 of 5 (Fallback Pruning)
+Plan: 1 of 3 complete
+Status: In progress
+Last activity: 2026-02-02 -- Completed 05-01-PLAN.md (easy fallback removal)
 
-Progress: [██████████░] 92%
+Progress: [████████████░] 93%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
-- Average duration: 9m 30s
-- Total execution time: ~1.7 hours
+- Total plans completed: 12
+- Average duration: 10m 30s
+- Total execution time: ~2 hours
 
 **By Phase:**
 
@@ -31,10 +31,11 @@ Progress: [██████████░] 92%
 | 02-integration-layer-simplification | 2/2 | 20m | 10m |
 | 03-wrapper-thinning | 2/2 | 18m | 9m |
 | 04-interface-consolidation | 3/3 | 33m | 11m |
+| 05-fallback-pruning | 1/3 | 22m | 22m |
 
 **Recent Trend:**
-- Last 5 plans: 04-03 (8m), 04-02 (17m), 04-01 (8m), 03-02 (10m), 03-01 (8m)
-- Trend: stable
+- Last 5 plans: 05-01 (22m), 04-03 (8m), 04-02 (17m), 04-01 (8m), 03-02 (10m)
+- Trend: 05-01 longer due to broad test file updates across 17+ files
 
 *Updated after each plan completion*
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [04-03]: GUI smoke test revealed pre-existing file path resolution bug (not a Phase 4 regression)
 - [03-gap]: file_io 230 lines accepted (Phase 5 will remove fallback paths)
 - [03-gap]: yaml-core test_clear_cache failure accepted as separate bug (unrelated to Phase 3)
+- [05-01]: RuntimeError pattern for 4 factory functions (file_io, formid, record, report)
+- [05-01]: database_py removed without factory.py changes (uses async_pool.py path)
+- [05-01]: CLASSIC_DISABLE_RUST removed entirely -- Rust always attempted
 
 ### Pending Todos
 
@@ -85,5 +89,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 04-03-PLAN.md (YAML sync/ consolidation) -- Phase 4 complete
+Stopped at: Completed 05-01-PLAN.md (easy fallback removal)
 Resume file: None
