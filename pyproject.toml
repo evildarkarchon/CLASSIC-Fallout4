@@ -461,6 +461,7 @@ markers = [
     "error_recovery: Tests for error recovery and resilience",
     "tui: Tests for the Textual TUI interface",
     "snapshot: Visual snapshot regression tests",
+    "parity: Parity tests comparing Python and Rust implementations (slow)",
 ]
 
 [tool.black]
