@@ -17,6 +17,46 @@ from typing import Any
 __version__: str
 
 # =============================================================================
+# Cancellation Support
+# =============================================================================
+
+
+class CancellationToken:
+    """Token for cancelling batch operations.
+
+    Create a token and pass it to process_logs_batch(). Call cancel() from
+    another thread or async task to request cancellation. The orchestrator
+    checks this token between logs and will stop processing after completing
+    the current log.
+
+    Example:
+        >>> token = CancellationToken()
+        >>> # In another thread or async task:
+        >>> token.cancel()  # Request cancellation
+        >>> token.is_cancelled()  # Check if cancelled
+        True
+
+    """
+
+    def __init__(self) -> None:
+        """Create a new cancellation token (not cancelled)."""
+
+    def cancel(self) -> None:
+        """Request cancellation - stops batch after current log completes."""
+
+    def is_cancelled(self) -> bool:
+        """Check if cancellation has been requested.
+
+        Returns:
+            True if cancel() has been called on this token.
+
+        """
+
+    def reset(self) -> None:
+        """Reset the token for reuse (clears cancellation state)."""
+
+
+# =============================================================================
 # FormID Analysis
 # =============================================================================
 
@@ -598,6 +638,8 @@ class Orchestrator:
         self,
         log_paths: list[str],
         max_concurrent: int | None = None,
+        progress_callback: Callable[[int, int, str], None] | None = None,
+        cancellation_token: CancellationToken | None = None,
     ) -> list[AnalysisResult]:
         """Process multiple crash logs in batch mode with configurable parallelism.
 
@@ -605,19 +647,41 @@ class Orchestrator:
         parallelism can be controlled via `max_concurrent`, or left to auto-detect
         based on CPU cores and batch size.
 
+        **Results are returned in input order** - each position in the output
+        corresponds to the same position in the input. Failed logs have placeholder
+        entries with error information.
+
         Args:
             log_paths: List of log file paths to process
             max_concurrent: Optional maximum number of concurrent processing tasks.
                 If None, uses adaptive concurrency based on CPU count and batch size.
                 If specified, uses exactly that many concurrent tasks (minimum 1).
+            progress_callback: Optional callback function called when each log completes.
+                Signature: (current: int, total: int, filename: str) -> None
+                - current: Number of logs processed so far (1-indexed)
+                - total: Total number of logs in batch
+                - filename: Path of the log file just processed
+            cancellation_token: Optional token to cancel batch processing.
+                Call token.cancel() to stop after the current log completes.
+                Remaining logs will have placeholder results with "Cancelled by user".
 
         Returns:
-            List of analysis results (one per log). Note that results may not be
-            in the same order as input due to parallel processing.
+            List of analysis results in the same order as input paths. Failed logs
+            have success=False with error details.
 
-        Raises:
-            IOError: If log files cannot be read
-            ValueError: If log format is invalid
+        Example:
+            >>> from classic_scanlog import Orchestrator, CancellationToken
+            >>> orchestrator = Orchestrator(config)
+            >>>
+            >>> # With progress callback
+            >>> def on_progress(current, total, filename):
+            ...     print(f"Processed {current}/{total}: {filename}")
+            >>> results = orchestrator.process_logs_batch(paths, progress_callback=on_progress)
+            >>>
+            >>> # With cancellation support
+            >>> token = CancellationToken()
+            >>> # In UI: token.cancel() when user clicks Cancel
+            >>> results = orchestrator.process_logs_batch(paths, cancellation_token=token)
 
         """
 
