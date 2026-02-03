@@ -24,7 +24,7 @@ Requirements for the cleanup milestone. Each maps to roadmap phases.
 
 - [x] **REDN-01**: Remove FormIDAnalyzer sync wrapper (156 lines wrapping FormIDAnalyzerCore with deprecated create_sync_wrapper)
 - [x] **REDN-02**: Consolidate YAML sync/async split -- merge parallel sync/ and async_/ cache implementations into async-only with sync wrappers at GUI entry points only
-- [ ] **REDN-03**: Remove Python fallback implementations (8 files in ClassicLib/integration/python/) after verifying Rust wheel bundling and test coverage equivalence
+- [x] **REDN-03**: Remove Python fallback implementations (8 files in ClassicLib/integration/python/) after verifying Rust wheel bundling and test coverage equivalence
 - [x] **REDN-04**: Remove all create_sync_wrapper usage and transitional bridge helpers (_async_utils/bridge_helpers.py, io/files/sync_adapters.py)
 
 ### Architecture Simplification
@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GLOB-03 | Phase 1 | Complete |
 | REDN-01 | Phase 4 | Complete |
 | REDN-02 | Phase 4 | Complete |
-| REDN-03 | Phase 5 | Pending |
+| REDN-03 | Phase 5 | Complete |
 | REDN-04 | Phase 4 | Complete |
 | ARCH-01 | Phase 2 | Complete |
 | ARCH-02 | Phase 2 | Complete |
@@ -92,4 +92,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-01*
-*Last updated: 2026-02-02 after Phase 2 completion*
+*Last updated: 2026-02-02 after Phase 5 completion*

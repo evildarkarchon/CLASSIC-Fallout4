@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Integration Layer Simplification** - Flatten factory/detector/status indirection and remove acceleration coordinator
 - [x] **Phase 3: Wrapper Thinning** - Move business logic from fat Python wrappers into Rust -core crates
 - [x] **Phase 4: Interface Consolidation** - Remove sync wrappers and dual-interface patterns
-- [ ] **Phase 5: Fallback Pruning** - Remove Python fallback implementations and type-narrow factory returns
+- [x] **Phase 5: Fallback Pruning** - Remove Python fallback implementations and type-narrow factory returns
 
 ## Phase Details
 
@@ -96,9 +96,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 05-01-PLAN.md -- Remove 5 easy fallbacks (database, file_io, formid, record, report) + remove CLASSIC_DISABLE_RUST mechanism
-- [ ] 05-02-PLAN.md -- Remove 3 hard fallbacks (parser, mod_detector, plugin) with rust wrapper cleanup + delete integration/python/ directory
-- [ ] 05-03-PLAN.md -- Add startup Rust validation, clean spec files, PyInstaller build verification
+- [x] 05-01-PLAN.md -- Remove 5 easy fallbacks (database, file_io, formid, record, report) + remove CLASSIC_DISABLE_RUST mechanism
+- [x] 05-02-PLAN.md -- Remove 3 hard fallbacks (parser, mod_detector, plugin) with rust wrapper cleanup + delete integration/python/ directory
+- [x] 05-03-PLAN.md -- Add startup Rust validation, clean spec files, PyInstaller build verification
 
 ## Progress
 
@@ -111,4 +111,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5
 | 2. Integration Layer Simplification | 2/2 | Complete | 2026-02-02 |
 | 3. Wrapper Thinning | 2/2 | Complete (accepted deviations) | 2026-02-02 |
 | 4. Interface Consolidation | 3/3 | Complete | 2026-02-02 |
-| 5. Fallback Pruning | 0/3 | Not started | - |
+| 5. Fallback Pruning | 3/3 | Complete (exceeded goal) | 2026-02-02 |
