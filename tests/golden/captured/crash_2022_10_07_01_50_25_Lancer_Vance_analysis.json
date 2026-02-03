@@ -1,0 +1,10 @@
+{
+  "char_count": 37993,
+  "file_size": 39029,
+  "has_call_stack": true,
+  "has_f4se_section": true,
+  "has_modules": true,
+  "has_plugins_section": true,
+  "line_count": 1037,
+  "log_file": "crash-{{TIMESTAMP}}-01-50-25 Lancer_Vance.log"
+}

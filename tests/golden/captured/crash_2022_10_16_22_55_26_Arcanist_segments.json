@@ -1,0 +1,66 @@
+{
+  "log_file": "crash-{{TIMESTAMP}}-22-55-26 Arcanist.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7E1A489A3 Fallout4.exe+03F89A3"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 613,
+      "preview": [
+        "[ 0] 0x7FF7E1A489A3 Fallout4.exe+03F89A3 -> 683719+0x23",
+        "[ 1] 0x7FF7E1A488EE Fallout4.exe+03F88EE -> 1042536+0xE",
+        "[ 2] 0x7FF7E17DC056 Fallout4.exe+018C056 -> 1300345+0xD6",
+        "[ 3] 0x7FF7E2934FEC Fallout4.exe+12E4FEC -> 1028028+0x8C",
+        "[ 4] 0x7FF7E29359B2 Fallout4.exe+12E59B2 -> 732022+0x72"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: true",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 185,
+      "preview": [
+        "[00]     Fallout4.esm",
+        "[01]     DLCRobot.esm",
+        "[02]     DLCworkshop01.esm",
+        "[03]     DLCCoast.esm",
+        "[04]     DLCworkshop02.esm"
+      ]
+    },
+    "system_specs": {
+      "line_count": 6,
+      "preview": [
+        "OS: Microsoft Windows 10 Pro v10.0.19041",
+        "CPU: AuthenticAMD AMD Ryzen 9 5900X 12-Core Processor",
+        "GPU #1: AMD Navi 21 [Radeon RX 6800/6800 XT / 6900 XT]",
+        "GPU #2: Microsoft Basic Render Driver",
+        "PHYSICAL MEMORY: 12.72 GB/31.91 GB"
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 15,
+      "preview": [
+        "BakaScrapHeap.dll v1.3",
+        "Buffout4.dll v1.26.2",
+        "crafting_highlight_fix.dll",
+        "enbhelperf4.dll v1",
+        "f4ee.dll"
+      ]
+    }
+  }
+}

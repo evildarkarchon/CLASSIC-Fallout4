@@ -1,0 +1,66 @@
+{
+  "log_file": "crash-0akensh1eld 1.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF68195CEFD Fallout4.exe+20ACEFD"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 1011,
+      "preview": [
+        "[ 0] 0x7FF68195CEFD Fallout4.exe+20ACEFD -> 834159+0x12D",
+        "[ 1] 0x7FF681993FCD Fallout4.exe+20E3FCD -> 1578720+0x10D",
+        "[ 2] 0x7FF681946A54 Fallout4.exe+2096A54 -> 424437+0x2A64",
+        "[ 3] 0x7FF681943F63 Fallout4.exe+2093F63 -> 344994+0x23",
+        "[ 4] 0x7FF68194860C Fallout4.exe+209860C -> 79342+0x5EC"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: true",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 264,
+      "preview": [
+        "[00]     Fallout4.esm",
+        "[01]     DLCRobot.esm",
+        "[02]     DLCworkshop01.esm",
+        "[03]     DLCCoast.esm",
+        "[04]     DLCworkshop02.esm"
+      ]
+    },
+    "system_specs": {
+      "line_count": 6,
+      "preview": [
+        "OS: Microsoft Windows 10 Home v10.0.19041",
+        "CPU: GenuineIntel Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz",
+        "GPU #1: Nvidia TU116 [GeForce GTX 1660 SUPER]",
+        "GPU #2: Microsoft Basic Render Driver",
+        "PHYSICAL MEMORY: 15.58 GB/31.94 GB"
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 13,
+      "preview": [
+        "BakaScrapHeap.dll v1.3",
+        "BodyPartsUI.dll v1",
+        "Buffout4.dll v1.26.2",
+        "f4ee.dll",
+        "HHS.dll"
+      ]
+    }
+  }
+}

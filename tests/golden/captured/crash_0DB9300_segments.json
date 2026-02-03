@@ -1,0 +1,60 @@
+{
+  "log_file": "crash-0DB9300.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7060B9300 Fallout4.exe+0DB9300"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 354,
+      "preview": [
+        "[ 0] 0x7FF7060B9300      Fallout4.exe+0DB9300 -> 62480+0x10",
+        "[ 1] 0x7FF7060ADBCC      Fallout4.exe+0DADBCC -> 643034+0xEC",
+        "[ 2] 0x7FF705452C3C      Fallout4.exe+0152C3C -> 1420843+0x7C",
+        "[ 3] 0x7FF70603E89A      Fallout4.exe+0D3E89A -> 330940+0xCA",
+        "[ 4] 0x7FF706037D0D      Fallout4.exe+0D37D0D -> 708657+0x32D"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: true",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 0,
+      "preview": []
+    },
+    "system_specs": {
+      "line_count": 7,
+      "preview": [
+        "OS: Microsoft Windows 11 Home v10.0.22621",
+        "CPU: AuthenticAMD AMD Ryzen 9 6900HX with Radeon Graphics",
+        "GPU #1: Nvidia GA104 [Geforce RTX 3070 Ti Laptop GPU]",
+        "GPU #2: AMD Rembrandt [Radeon 680M]",
+        "GPU #3: Microsoft Basic Render Driver"
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 21,
+      "preview": [
+        "achievements.dll",
+        "autoswitch.dll",
+        "BakaScrapHeap.dll v1.3",
+        "BetterConsole.dll",
+        "Buffout4.dll v1.26.2"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "char_count": 80456,
+  "file_size": 82603,
+  "has_call_stack": true,
+  "has_f4se_section": true,
+  "has_modules": true,
+  "has_plugins_section": true,
+  "line_count": 2148,
+  "log_file": "crash-{{TIMESTAMP}}-07-11-38.log"
+}

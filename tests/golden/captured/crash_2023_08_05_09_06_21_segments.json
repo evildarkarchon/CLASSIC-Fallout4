@@ -1,0 +1,34 @@
+{
+  "log_file": "crash-{{TIMESTAMP}}-09-06-21.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.31.1 Feb 28 2023 {{TIMESTAMP}}",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "UNKNOWN"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 0,
+      "preview": []
+    },
+    "compatibility": {
+      "line_count": 0,
+      "preview": []
+    },
+    "modules": {
+      "line_count": 0,
+      "preview": []
+    },
+    "plugins": {
+      "line_count": 0,
+      "preview": []
+    },
+    "system_specs": {
+      "line_count": 0,
+      "preview": []
+    },
+    "xse_plugins": {
+      "line_count": 0,
+      "preview": []
+    }
+  }
+}

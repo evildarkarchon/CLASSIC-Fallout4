@@ -1,0 +1,10 @@
+{
+  "char_count": 31185,
+  "file_size": 32048,
+  "has_call_stack": true,
+  "has_f4se_section": true,
+  "has_modules": true,
+  "has_plugins_section": true,
+  "line_count": 864,
+  "log_file": "crash-{{TIMESTAMP}}-22-55-26 Arcanist.log"
+}

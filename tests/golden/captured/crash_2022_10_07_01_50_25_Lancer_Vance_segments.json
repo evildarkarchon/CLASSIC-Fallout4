@@ -1,0 +1,66 @@
+{
+  "log_file": "crash-{{TIMESTAMP}}-01-50-25 Lancer_Vance.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF72AC6EC97 Fallout4.exe+02FEC97"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 670,
+      "preview": [
+        "[ 0] 0x7FF72AC6EC97 Fallout4.exe+02FEC97 -> 1568735+0xF7",
+        "[ 1] 0x7FF72AC6E37D Fallout4.exe+02FE37D -> 1439924+0x2ED",
+        "[ 2] 0x7FF72AC70A22 Fallout4.exe+0300A22 -> 319569+0x42",
+        "[ 3] 0x7FF72AC6E058 Fallout4.exe+02FE058 -> 1187844+0xB8",
+        "[ 4] 0x7FF72AC6D140 Fallout4.exe+02FD140 -> 1459968+0xB0"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: false",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 304,
+      "preview": [
+        "[00]     Fallout4.esm",
+        "[01]     DLCRobot.esm",
+        "[02]     DLCworkshop01.esm",
+        "[03]     DLCCoast.esm",
+        "[04]     DLCworkshop02.esm"
+      ]
+    },
+    "system_specs": {
+      "line_count": 6,
+      "preview": [
+        "OS: Microsoft Windows 10 Home v10.0.19041",
+        "CPU: AuthenticAMD AMD Ryzen 5 2600 Six-Core Processor",
+        "GPU #1: Nvidia TU106 [GeForce RTX 2060 SUPER]",
+        "GPU #2: Microsoft Basic Render Driver",
+        "PHYSICAL MEMORY: 11.21 GB/39.91 GB"
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 12,
+      "preview": [
+        "Buffout4.dll v1.26.2",
+        "BulletCountedReload.dll",
+        "ClassicHolsteredWeapons.dll",
+        "crafting_highlight_fix.dll",
+        "encounter_zone_recalculation.dll"
+      ]
+    }
+  }
+}

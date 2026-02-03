@@ -1,0 +1,66 @@
+{
+  "log_file": "crash-$123 1.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF78F42A134 Fallout4.exe+273A134"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 852,
+      "preview": [
+        "[ 0] 0x7FF78F42A134      Fallout4.exe+273A134 -> 1357293+0x3C4",
+        "[ 1] 0x7FF78E066692      Fallout4.exe+1376692 -> 1063642+0xB2",
+        "[ 2] 0x7FF78E063B20      Fallout4.exe+1373B20 -> 97381+0x70",
+        "[ 3] 0x7FF78D9D4AD3      Fallout4.exe+0CE4AD3 -> 411446+0x53",
+        "[ 4] 0x7FF78D9D45E0      Fallout4.exe+0CE45E0 -> 214581+0xD0"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: true",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 273,
+      "preview": [
+        "[00]     Fallout4.esm",
+        "[01]     DLCRobot.esm",
+        "[02]     DLCworkshop01.esm",
+        "[03]     DLCCoast.esm",
+        "[04]     DLCworkshop02.esm"
+      ]
+    },
+    "system_specs": {
+      "line_count": 6,
+      "preview": [
+        "OS: Microsoft Windows 11 Pro v10.0.22000",
+        "CPU: GenuineIntel Intel(R) Core(TM) i5-9600K CPU @ 3.70GHz",
+        "GPU #1: Nvidia GA104 [GeForce RTX 3060 Ti]",
+        "GPU #2: Microsoft Basic Render Driver",
+        "PHYSICAL MEMORY: 11.21 GB/15.94 GB"
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 27,
+      "preview": [
+        "achievements.dll",
+        "BakaScrapHeap.dll v1.3",
+        "BodyPartsUI.dll v1",
+        "Buffout4.dll v1.26.2",
+        "BulletCountedReload.dll"
+      ]
+    }
+  }
+}

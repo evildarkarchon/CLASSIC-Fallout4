@@ -1,0 +1,66 @@
+{
+  "log_file": "crash-{{TIMESTAMP}}-07-23-35.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF76FCE29C4 Fallout4.exe+01129C4"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 504,
+      "preview": [
+        "[ 0] 0x7FF76FCE29C4      Fallout4.exe+01129C4 -> 1494320+0xD4",
+        "[ 1] 0x7FF76FCDEB4A      Fallout4.exe+010EB4A -> 350112+0x2FA",
+        "[ 2] 0x7FF76FCE9C50      Fallout4.exe+0119C50 -> 1333622+0x1000",
+        "[ 3] 0x7FF76FCE88E6      Fallout4.exe+01188E6 -> 1043280+0x196",
+        "[ 4] 0x7FF76FCF0CE3      Fallout4.exe+0120CE3 -> 909346+0x63"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: true",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 820,
+      "preview": [
+        "[00]     Fallout4.esm",
+        "[01]     DLCRobot.esm",
+        "[02]     DLCworkshop01.esm",
+        "[03]     DLCCoast.esm",
+        "[04]     DLCworkshop02.esm"
+      ]
+    },
+    "system_specs": {
+      "line_count": 6,
+      "preview": [
+        "OS: Microsoft Windows 11 Pro v10.0.22621",
+        "CPU: GenuineIntel Intel(R) Core(TM) i7-8700K CPU @ 3.70GHz",
+        "GPU #1: Nvidia GP104 [GeForce GTX 1070]",
+        "GPU #2: Microsoft Basic Render Driver",
+        "PHYSICAL MEMORY: 14.55 GB/31.94 GB"
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 18,
+      "preview": [
+        "BetterConsole.dll",
+        "Buffout4.dll v1.26.2",
+        "BulletCountedReload.dll",
+        "CombinedCombatXP.dll",
+        "crafting_highlight_fix.dll"
+      ]
+    }
+  }
+}

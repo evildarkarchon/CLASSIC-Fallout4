@@ -1,0 +1,60 @@
+{
+  "log_file": "crash-1D1777B.log",
+  "parse_metadata": {
+    "crashgen_version": "Buffout 4 v1.26.2",
+    "game_version": "Fallout 4 v1.10.163",
+    "main_error": "Unhandled exception \"EXCEPTION_INT_DIVIDE_BY_ZERO\" at 0x7FF67103777B Fallout4.exe+1D1777B"
+  },
+  "segments": {
+    "call_stack": {
+      "line_count": 434,
+      "preview": [
+        "[0] 0x7FF67103777B Fallout4.exe+1D1777B -> 224250+0x31B",
+        "[1] 0x7FF6710389F1 Fallout4.exe+1D189F1 -> 1106221+0x41",
+        "[2] 0x7FF671029ED0 Fallout4.exe+1D09ED0 -> 564405+0x130",
+        "[3] 0x7FF6700623F7 Fallout4.exe+0D423F7 -> 133902+0xE7",
+        "[4] 0x7FF6700567BB Fallout4.exe+0D367BB -> 665510+0x71B"
+      ]
+    },
+    "compatibility": {
+      "line_count": 32,
+      "preview": [
+        "F4EE: true",
+        "[Fixes]",
+        "ActorIsHostileToActor: true",
+        "CellInit: true",
+        "CreateD3DAndSwapChain: true"
+      ]
+    },
+    "modules": {
+      "line_count": 1,
+      "preview": [
+        ""
+      ]
+    },
+    "plugins": {
+      "line_count": 0,
+      "preview": []
+    },
+    "system_specs": {
+      "line_count": 5,
+      "preview": [
+        "OS: Microsoft Windows 10 Pro N v10.0.19041",
+        "CPU: AuthenticAMD AMD Ryzen 5 3600 6-Core Processor",
+        "GPU #1: AMD Ellesmere [Radeon RX 470/480/570/570X/580/580X/590]",
+        "PHYSICAL MEMORY: 7.02 GB/15.93 GB",
+        ""
+      ]
+    },
+    "xse_plugins": {
+      "line_count": 10,
+      "preview": [
+        "Buffout4.dll v1.26.2",
+        "f4ee.dll",
+        "LL_fourPlay_1_10_163.dll",
+        "mcm.dll",
+        "place.dll"
+      ]
+    }
+  }
+}
