@@ -2,12 +2,16 @@
 
 This module tests YamlSettingsCache batch loading performance,
 cache invalidation, and concurrent access patterns.
+
+Note: Tests use real files since caching now delegates to Rust classic_settings.
 """
 
 import time
-from unittest.mock import MagicMock, patch
+from pathlib import Path
 
 import pytest
+import ruamel.yaml
+import classic_settings
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.io.yaml import YamlSettingsCache
@@ -17,50 +21,32 @@ from ClassicLib.io.yaml.async_ import AsyncYamlSettingsCore
 pytestmark = [pytest.mark.unit, pytest.mark.performance]
 
 
-# Helper for async return values
-async def async_return(result):
-    return result
-
-
 class TestYamlBatchOperations:
     """Test suite for YAML batch operations and performance."""
 
     @pytest.fixture(autouse=True)
-    def setup(self, message_handler, async_bridge):
-        """Reset YamlSettingsCache before each test."""
+    def setup(self, message_handler, async_bridge, tmp_path):
+        """Reset YamlSettingsCache and Rust cache before each test."""
         # Reset singleton
         YamlSettingsCache._instance = None
+        # Clear Rust cache
+        classic_settings.clear_cache()
 
         self.cache = YamlSettingsCache.get_instance()
+        self.tmp_path = tmp_path
+        self.yaml_writer = ruamel.yaml.YAML()
 
-        # Prepare a real AsyncYamlSettingsCore but with mocked file_ops
-        self.real_core = AsyncYamlSettingsCore()
-        self.mock_file_ops = MagicMock()
-        self.real_core.file_ops = self.mock_file_ops
+        # Create a real test file
+        self.test_file = tmp_path / "test_data.yaml"
 
-        # Setup default behaviors - use lambda to return NEW coroutine each time
-        self.mock_file_ops.get_path_for_store.return_value = "mock_path.yaml"
-        self.mock_file_ops.load_yaml_file.side_effect = lambda *args, **kwargs: async_return({})
-        self.mock_file_ops.save_yaml_file.side_effect = lambda *args, **kwargs: async_return(None)
-
-        # Patch the get_async_yaml_core function used by YamlSettingsCache
-        # Note: sync/cache.py imports it from ClassicLib.io.yaml.async_.core
-        # We need side_effect to return a NEW coroutine each time it's called
-        async def get_core():
-            return self.real_core
-
-        self.patcher = patch("ClassicLib.io.yaml.cache.get_async_yaml_core", side_effect=get_core)
-        self.patcher.start()
-
-    def teardown(self):
-        self.patcher.stop()
-        if hasattr(self, "cache") and self.cache._async_core:
-            # Clean up if needed
-            pass
+    def _write_yaml(self, path: Path, data: dict) -> None:
+        """Helper to write YAML data to a file."""
+        with path.open("w", encoding="utf-8") as f:
+            self.yaml_writer.dump(data, f)
 
     def test_batch_loading_performance(self):
         """Test batch loading is more efficient than individual loads."""
-        # Mock data
+        # Create test file with data
         data = {
             "section1": {
                 "key1": "value1",
@@ -72,21 +58,24 @@ class TestYamlBatchOperations:
                 "key5": "value5",
             },
         }
+        self._write_yaml(self.test_file, data)
 
-        # Configure mock to return data (fresh coroutine each time)
-        self.mock_file_ops.load_yaml_file.side_effect = lambda *args, **kwargs: async_return(data)
+        core = self.cache._get_async_core()
+
+        def mock_get_path(store):
+            return self.test_file
+
+        core.file_ops.get_path_for_store = mock_get_path
 
         # Test individual loading
+        classic_settings.clear_cache()
         individual_start = time.time()
         for i in range(1, 6):
-            # Use async_yaml_settings (sync wrapper) instead of get_setting
             self.cache.async_yaml_settings(str, YAML.TEST, f"section{(i - 1) // 3 + 1}.key{i}")
         individual_time = time.time() - individual_start
 
         # Clear cache for fair comparison
-        # AsyncYamlSettingsCore has cache in self.real_core.cache
-        self.real_core.cache.settings_cache.clear()
-        self.real_core.cache.cache.clear()  # clear file cache
+        classic_settings.clear_cache()
 
         # Test batch loading
         batch_start = time.time()
@@ -100,9 +89,8 @@ class TestYamlBatchOperations:
         self.cache.batch_get_settings(keys)
         batch_time = time.time() - batch_start
 
-        # Batch should be called fewer times than individual
-        # Note: Times are captured but not asserted as this tests functionality, not strict performance
-        _ = (individual_time, batch_time)  # Acknowledge variables are intentionally captured
+        # Note: Times are captured but not asserted as this tests functionality
+        _ = (individual_time, batch_time)
 
     def test_batch_loading_under_heavy_load(self):
         """Test batch loading with hundreds of keys."""
@@ -114,7 +102,14 @@ class TestYamlBatchOperations:
             for key_num in range(50):
                 mock_data[section][f"key_{key_num}"] = f"value_{section_num}_{key_num}"
 
-        self.mock_file_ops.load_yaml_file.side_effect = lambda *args, **kwargs: async_return(mock_data)
+        self._write_yaml(self.test_file, mock_data)
+
+        core = self.cache._get_async_core()
+
+        def mock_get_path(store):
+            return self.test_file
+
+        core.file_ops.get_path_for_store = mock_get_path
 
         # Create batch request for 500 keys
         batch_keys = []
@@ -128,18 +123,30 @@ class TestYamlBatchOperations:
 
         # Should complete quickly even with many keys
         assert len(results) == 500
-        # batch_get_settings returns a list of values
         assert all(v is not None for v in results)
 
     def test_cache_invalidation_single_key(self):
-        """Test cache invalidation for a single key."""
-        self.mock_file_ops.load_yaml_file.side_effect = lambda *args, **kwargs: async_return({"section": {"key": "initial_value"}})
+        """Test cache invalidation for a single key via Rust."""
+        self._write_yaml(self.test_file, {"section": {"key": "initial_value"}})
+
+        core = self.cache._get_async_core()
+
+        def mock_get_path(store):
+            return self.test_file
+
+        core.file_ops.get_path_for_store = mock_get_path
 
         # Load and cache value
         value1 = self.cache.async_yaml_settings(str, YAML.TEST, "section.key")
         assert value1 == "initial_value"
 
-        # Skip for now if method missing
+        # Verify cached in Rust
+        rust_key = str(self.test_file.resolve())
+        assert classic_settings.is_cached(rust_key)
+
+        # Invalidate via Rust
+        classic_settings.invalidate(rust_key)
+        assert not classic_settings.is_cached(rust_key)
 
     def test_batch_loading_with_mixed_types(self):
         """Test batch loading with different value types."""
@@ -150,8 +157,14 @@ class TestYamlBatchOperations:
             "lists": {"key": [1, 2, 3]},
             "dicts": {"key": {"nested": "value"}},
         }
+        self._write_yaml(self.test_file, mock_data)
 
-        self.mock_file_ops.load_yaml_file.side_effect = lambda *args, **kwargs: async_return(mock_data)
+        core = self.cache._get_async_core()
+
+        def mock_get_path(store):
+            return self.test_file
+
+        core.file_ops.get_path_for_store = mock_get_path
 
         batch_keys = [
             (str, YAML.TEST, "strings.key"),
@@ -174,12 +187,18 @@ class TestYamlBatchOperations:
         mock_data = {
             "valid": {"key1": "value1", "key2": "value2"},
         }
+        self._write_yaml(self.test_file, mock_data)
 
-        self.mock_file_ops.load_yaml_file.side_effect = lambda *args, **kwargs: async_return(mock_data)
+        core = self.cache._get_async_core()
+
+        def mock_get_path(store):
+            return self.test_file
+
+        core.file_ops.get_path_for_store = mock_get_path
 
         batch_keys = [
             (str, YAML.TEST, "valid.key1"),
-            (str, YAML.TEST, "invalid.key"),  # This will fail
+            (str, YAML.TEST, "invalid.key"),  # This will fail (returns None)
             (str, YAML.TEST, "valid.key2"),
         ]
 
@@ -187,5 +206,5 @@ class TestYamlBatchOperations:
 
         # Valid keys should succeed
         assert results[0] == "value1"
-        assert results[1] is None  # Default is None
+        assert results[1] is None  # Missing key returns None
         assert results[2] == "value2"
