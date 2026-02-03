@@ -32,6 +32,12 @@ anyhow = { workspace = true }
 regex = { workspace = true }
 rayon = { workspace = true }
 
+# Async stream processing for batch operations
+futures = { workspace = true }
+
+# CPU detection for adaptive concurrency
+num_cpus = { workspace = true }
+
 [dev-dependencies]
 tempfile = { workspace = true }
 pyo3 = { workspace = true, features = ["extension-module", "auto-initialize"] }
