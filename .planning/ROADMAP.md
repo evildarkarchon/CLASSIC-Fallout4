@@ -104,11 +104,11 @@ Plans:
   2. Rust report generation matches Python report format exactly
   3. Rust game detection returns identical paths as Python implementation
   4. All existing tests pass with Rust as primary code path (no fallbacks)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 10-01: Scanning parity tests
-- [ ] 10-02: Report and game detection parity
+- [ ] 10-01-PLAN.md - Parity test infrastructure and scanning parity tests (VAL-02)
+- [ ] 10-02-PLAN.md - Report and game detection parity tests (VAL-03, VAL-04, VAL-05)
 
 ### Phase 11: Integration & Cleanup
 **Goal**: Python business logic removed, factory returns Rust directly, builds verified
@@ -138,7 +138,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | 7. Game Detection | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 8. Report Generation | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 9. Orchestration Migration | v8.2.0-part2 | 4/4 | Complete | 2026-02-03 |
-| 10. Parity Validation | v8.2.0-part2 | 0/2 | Not started | - |
+| 10. Parity Validation | v8.2.0-part2 | 0/2 | Planned | - |
 | 11. Integration & Cleanup | v8.2.0-part2 | 0/2 | Not started | - |
 
 **v8.2.0-part2 Progress:** 12/14 plans (86%)
