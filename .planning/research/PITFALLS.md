@@ -2,9 +2,423 @@
 
 **Domain:** Hybrid Python-Rust codebase cleanup and consolidation
 **Researched:** 2026-02-01
-**Confidence:** HIGH (based on codebase analysis docs, not external sources)
+**Updated:** 2026-02-02 (added Migration-Specific Pitfalls)
+**Confidence:** HIGH (based on codebase analysis docs, project history, official PyO3 documentation)
 
-## Critical Pitfalls
+---
+
+## Migration-Specific Pitfalls (New Section)
+
+**Context:** This section covers pitfalls specific to migrating remaining Python business logic to Rust for the v2.0 milestone. CLASSIC has already successfully migrated YAML parsing, database operations, crash log parsing, FormID analysis, and file I/O. The remaining migrations target scanning orchestration, game detection, report generation, and settings management.
+
+### Critical Migration Pitfalls
+
+#### Pitfall M1: Nested Runtime Errors (ONE RUNTIME RULE Violation)
+
+**What goes wrong:** Creating multiple Tokio runtimes causes "Cannot start a runtime from within a runtime" panics. This happens when:
+- Calling `get_runtime().block_on()` from within an already-async context
+- Creating new `Runtime::new()` instances in individual crates
+- Using `#[tokio::main]` in library code meant to be called from Python
+
+**Why it happens:** PyO3 functions called from Python are already running in a context where Python holds the GIL. If that function creates a Tokio runtime and blocks, then calls another function that also tries to create/block on a runtime, you get nested runtime errors.
+
+**Consequences:**
+- Application panics with cryptic "cannot start a runtime from within a runtime" errors
+- Random deadlocks that are extremely difficult to debug
+- Failures that only occur in production, not in isolated Rust tests
+
+**Prevention:**
+1. **Always use `classic_shared_core::get_runtime()`** - Never create new runtimes
+2. **Check context before blocking** - Use `.await` directly in async contexts, only use `block_on()` at sync boundaries
+3. **Release GIL with `py.allow_threads()`** before entering async blocks
+
+```rust
+// CORRECT: Use shared runtime
+#[pyfunction]
+fn process_data(py: Python<'_>, data: String) -> PyResult<String> {
+    py.allow_threads(|| {
+        classic_shared_core::get_runtime().block_on(async move {
+            // async work here
+        })
+    })
+}
+
+// WRONG: Creating new runtime
+#[pyfunction]
+fn process_data(data: String) -> PyResult<String> {
+    let rt = Runtime::new()?;  // NEVER DO THIS
+    rt.block_on(async { ... })
+}
+```
+
+**Detection:**
+- Panic messages containing "cannot start a runtime"
+- Intermittent hangs when processing multiple items
+- Code review: search for `Runtime::new()` or `tokio::runtime::Builder`
+
+**Phase impact:** ALL migration phases - This is a foundational rule that affects every Rust component.
+
+---
+
+#### Pitfall M2: GIL Deadlock During Async Operations
+
+**What goes wrong:** Holding the Python GIL while doing async work in multi-threaded Tokio runtime causes deadlocks. Thread A holds GIL, awaits async work that gets scheduled on Thread B. Thread B needs GIL to return result to Python, but Thread A is blocked waiting for Thread B.
+
+**Why it happens:** PyO3's default behavior keeps the GIL held during function execution. When combined with multi-threaded async runtime, work can be distributed across threads that all need GIL access.
+
+**Consequences:**
+- Complete application freeze (deadlock)
+- Only manifests in multi-threaded scenarios (not in tests)
+- No error messages - just a hung process
+
+**Prevention:**
+1. **Use `py.allow_threads()`** to release GIL before any async work
+2. **Detach Python objects** before sending to other threads: `py.detach()`
+3. **Use `Python::attach()`** when you need GIL back in worker threads
+4. **Avoid holding Python references** across await points
+
+```rust
+// CORRECT: Release GIL for parallel work
+#[pyfunction]
+fn parallel_operation(py: Python<'_>, paths: Vec<String>) -> PyResult<Vec<String>> {
+    py.allow_threads(|| {
+        classic_shared_core::get_runtime().block_on(async {
+            // Async work happens without GIL
+            process_paths_parallel(paths).await
+        })
+    })
+}
+```
+
+**Detection:**
+- Application hangs with no output or error
+- Process stuck at 0% CPU (waiting, not computing)
+- Only happens when processing multiple items concurrently
+- `RUST_BACKTRACE=1` shows threads waiting on GIL
+
+**Phase impact:** Orchestration migration, batch processing, any parallel operations.
+
+---
+
+#### Pitfall M3: Behavioral Parity Regression
+
+**What goes wrong:** Rust implementation produces different output than Python for edge cases, making the migration appear successful in tests but fail in production.
+
+**Why it happens:**
+- Python's dynamic typing allows implicit conversions that Rust requires explicit handling for
+- Unicode handling differences (Python strings vs Rust &str)
+- Floating-point formatting differences
+- Empty collection handling (Python's truthiness vs Rust's explicit checks)
+- Dictionary iteration order (Python preserves insertion order, HashMap doesn't by default)
+
+**Consequences:**
+- Reports look slightly different, confusing users
+- Edge cases (empty logs, corrupted data) crash Rust but not Python
+- Test suite passes but production fails on real-world data
+
+**Prevention:**
+1. **Golden file testing** - Compare Rust output against captured Python output for real crash logs
+2. **Use `IndexMap`** instead of `HashMap` when order matters (CLASSIC already does this in `classic-scanlog-core`)
+3. **Explicit error handling** for all edge cases Python handles implicitly
+4. **Fuzz testing** with random/malformed input
+5. **Character-by-character comparison** of report output during testing
+
+```rust
+// Preserve insertion order like Python dict
+use indexmap::IndexMap;
+
+fn process_plugins(plugins: Vec<String>) -> IndexMap<String, String> {
+    let mut result = IndexMap::new();
+    // Order will match Python's dict behavior
+}
+```
+
+**Detection:**
+- Diff reports: `diff python_output.md rust_output.md`
+- Unit tests that compare exact string output
+- User reports of "output looks different"
+
+**Phase impact:** Report generation migration, mod detection, any human-readable output.
+
+---
+
+#### Pitfall M4: Memory Ownership Across Python/Rust Boundary
+
+**What goes wrong:** Passing Python objects to Rust, doing async work, then trying to use the objects causes "borrowed data escapes outside of function" or use-after-free errors.
+
+**Why it happens:** Python objects have lifetimes tied to the GIL. When you release the GIL (`py.allow_threads()`), Python can garbage collect objects. If Rust is still referencing them, undefined behavior occurs.
+
+**Consequences:**
+- Segmentation faults
+- Memory corruption
+- Data returned to Python contains garbage
+- Errors only under memory pressure
+
+**Prevention:**
+1. **Clone data** before releasing GIL - don't hold references
+2. **Convert to owned types** at the boundary: `String` not `&str`, `Vec` not `&[]`
+3. **Use `Py<T>`** for Python objects that need to outlive GIL release
+4. **Never hold `&PyAny`** across `py.allow_threads()` boundaries
+
+```rust
+// CORRECT: Clone data at boundary
+#[pyfunction]
+fn process_log(py: Python<'_>, content: String, plugins: Vec<String>) -> PyResult<String> {
+    // content and plugins are owned - safe to use after GIL release
+    py.allow_threads(|| {
+        classic_shared_core::get_runtime().block_on(async move {
+            process_async(content, plugins).await
+        })
+    })
+}
+
+// WRONG: Holding borrowed reference
+#[pyfunction]
+fn process_log<'py>(py: Python<'py>, content: &'py str) -> PyResult<String> {
+    py.allow_threads(|| {
+        // content is borrowed from Python - UNDEFINED BEHAVIOR
+        process_sync(content)
+    })
+}
+```
+
+**Detection:**
+- Compile errors about lifetimes (the good case)
+- Segfaults during parallel processing (the bad case)
+- Random garbage in results under load
+
+**Phase impact:** ALL migration phases - every PyO3 function needs correct ownership handling.
+
+---
+
+### Moderate Migration Pitfalls
+
+#### Pitfall M5: Type Conversion Overhead at Hot Paths
+
+**What goes wrong:** Repeatedly converting between Python and Rust types in tight loops negates the performance benefits of Rust.
+
+**Why it happens:**
+- Calling Rust functions from Python loop (N boundary crossings)
+- Converting `list[str]` to `Vec<String>` for each item
+- String encoding/decoding on every call
+
+**Prevention:**
+1. **Batch operations** - Pass entire collections, not individual items
+2. **Keep data on Rust side** between operations
+3. **Measure conversion overhead** before assuming Rust is faster
+4. See `docs/development/pyo3_integration_patterns.md` Type Conversion Performance Reference
+
+```python
+# WRONG: N boundary crossings
+for log in logs:
+    result = rust_process(log)  # Python->Rust->Python per log
+
+# CORRECT: Single boundary crossing
+results = rust_process_batch(logs)  # Python->Rust->Python once
+```
+
+**Detection:**
+- Rust version not faster than Python for small inputs
+- Profiling shows time spent in `FromPyObject::extract`
+
+**Phase impact:** Batch processing, report generation, any loop-heavy operations.
+
+---
+
+#### Pitfall M6: Incomplete Error Propagation
+
+**What goes wrong:** Rust errors get swallowed or converted to generic Python exceptions, losing context needed for debugging.
+
+**Why it happens:**
+- Using `.unwrap()` instead of proper error handling
+- Converting all errors to a single exception type
+- Not preserving error chains
+
+**Prevention:**
+1. **Define specific exception types** for each error category using `define_exceptions!` macro from `classic_shared`
+2. **Include context** in error messages (file path, line number, data sample)
+3. **Use `?` with custom `Into<PyErr>` implementations**
+4. **Log errors** at Rust level before converting to Python
+
+```rust
+// CLASSIC's pattern: 3-tier exception hierarchy (from classic-scanlog-py)
+define_exceptions!(
+    module: classic_scanlog,
+    base: RustScanLogError,        // Generic
+    io: RustParseError,            // Parse/analysis errors
+    parse: RustConfigError         // Configuration errors
+);
+```
+
+**Detection:**
+- Generic "Error" exceptions in Python with no context
+- Unable to determine what file/data caused failure
+- Users reporting unhelpful error messages
+
+**Phase impact:** ALL migration phases - every Rust component needs proper error handling.
+
+---
+
+#### Pitfall M7: State Synchronization Between Python and Rust
+
+**What goes wrong:** Python and Rust have their own caches/state that get out of sync, causing inconsistent behavior.
+
+**Why it happens:**
+- Rust component caches data independently
+- Python modifies state that Rust doesn't see
+- Multiple entry points updating different caches
+
+**Prevention:**
+1. **Single source of truth** - either Python OR Rust owns state, not both
+2. **Explicit invalidation** - when state changes, notify all caches
+3. **Prefer stateless functions** where possible
+4. **Document state ownership** clearly
+
+**Detection:**
+- Results change based on call order
+- Caches contain stale data
+- "Works the second time" bugs
+
+**Phase impact:** Settings management migration, game detection (anything with cached state).
+
+---
+
+#### Pitfall M8: PyO3 API Version Mismatches (Bound<'py, T> Migration)
+
+**What goes wrong:** Using outdated PyO3 patterns from pre-0.21 code examples causes compile errors or deprecation warnings that accumulate into maintenance burden.
+
+**Why it happens:** PyO3 0.21+ introduced `Bound<'py, T>` to replace "GIL Refs" (`&'py PyAny`). Old code examples, StackOverflow answers, and even some official docs still show the old pattern.
+
+**Consequences:**
+- Deprecation warnings flood the build output
+- Mix of old and new patterns creates confusion
+- Eventually the old API will be removed, requiring migration
+
+**Prevention:**
+1. **Use `Bound<'py, T>`** not `&'py PyAny` for all new code
+2. **Reference current PyO3 docs** (v0.22+), not older tutorials
+3. **CI check** that warns about deprecated API usage
+
+```rust
+// OLD (deprecated)
+#[pyfunction]
+fn process(data: &PyAny) -> PyResult<()> { ... }
+
+// NEW (correct)
+#[pyfunction]
+fn process(data: Bound<'_, PyAny>) -> PyResult<()> { ... }
+```
+
+**Detection:**
+- Deprecation warnings during `cargo build`
+- Compile errors after PyO3 upgrade
+
+**Phase impact:** ALL migration phases - affects how PyO3 bindings are written.
+
+---
+
+### Minor Migration Pitfalls
+
+#### Pitfall M9: Missing or Stale Type Stubs (.pyi)
+
+**What goes wrong:** Python type stubs out of sync with actual Rust module, causing IDE errors and mypy failures.
+
+**Prevention:**
+1. **Generate stubs automatically** where possible
+2. **Include stub updates** in Rust change PRs
+3. **CI check** that stubs match runtime introspection
+
+**Detection:**
+- IDE shows wrong types
+- mypy errors on valid code
+
+**Phase impact:** Developer experience, type safety throughout migration.
+
+---
+
+#### Pitfall M10: Build Artifact Confusion
+
+**What goes wrong:** Old `.pyd` files cached, changes not reflected, wrong version loaded.
+
+**Prevention:**
+1. **Use rebuild_rust.ps1** - unified build script
+2. **Force reinstall** with `--force-reinstall`
+3. **Check version** after rebuild: `python -c "import classic_scanlog; print(classic_scanlog.__version__)"`
+
+**Detection:**
+- Changes not reflected after rebuild
+- Version number doesn't match
+
+**Phase impact:** Development workflow throughout migration.
+
+---
+
+### CLASSIC-Specific Learned Patterns (From Project History)
+
+From `.claude/rules/05-memories.md`:
+
+**AsyncBridge Usage Pattern:**
+- **GUI and testing only**: AsyncBridge for same-thread GUI contexts
+- **CLI uses async-first**: Single `asyncio.run(main())` at entry point
+- **Thread-local**: Cannot use in cross-thread workers (QRunnable, QThread)
+
+**PyO3 Patterns Already Established:**
+- **GIL handling**: Use `py.detach()` to release GIL, `Python::attach()` to reacquire
+- **Runtime conflicts**: Avoid `get_runtime().block_on()` when already in Python context
+- **Custom exceptions**: Each `-py` crate defines exceptions via `create_exception!` macro
+
+**Bug Fixes to Remember:**
+- **YAML helper methods**: Use `.get()` on Hash nodes, not index notation
+- **Parallel YAML loading**: Use `tokio::join!` (preserves order), not `JoinSet::join_next()` (completion order)
+
+---
+
+### Migration Phase-Specific Warnings
+
+| Migration Component | Likely Pitfall | Mitigation |
+|---------------------|----------------|------------|
+| Scanning Orchestration | M2: GIL deadlock in batch processing | Release GIL before batch loop |
+| Game Detection | M7: State sync between Python/Rust paths | Single source of truth for paths |
+| Report Generation | M3: Behavioral parity in formatting | Golden file testing against Python output |
+| Settings Management | M5: Type conversion overhead | Batch settings loads |
+| Integration Layer | M1: Nested runtime creation | Audit for `Runtime::new()` |
+
+---
+
+### Migration Pre-Flight Checklist
+
+Before migrating any component from Python to Rust:
+
+- [ ] Uses `classic_shared_core::get_runtime()` (not new runtime)
+- [ ] Releases GIL with `py.allow_threads()` for async work
+- [ ] Clones data at Python/Rust boundary (owned types, not references)
+- [ ] Has specific exception types using `define_exceptions!` macro
+- [ ] Has golden file tests comparing to Python output
+- [ ] Preserves iteration order with IndexMap where needed
+- [ ] Updates type stubs (.pyi) when API changes
+- [ ] Tested with real crash logs, not just unit tests
+- [ ] Follows `-core`/`-py` separation (business logic vs PyO3 bindings)
+- [ ] Documented in crate-level `//!` docs
+
+---
+
+### Migration Sources
+
+- [PyO3 Migration Guide](https://pyo3.rs/v0.22.4/migration) - Official PyO3 migration documentation
+- [PyO3 FAQ and Troubleshooting](https://pyo3.rs/main/faq) - Common issues and solutions
+- [PyO3 Async/Await Guide](https://pyo3.rs/v0.13.2/ecosystem/async-await) - Async runtime patterns
+- [GIL Deadlock Discussion](https://github.com/PyO3/pyo3/discussions/3045) - Multi-threaded Tokio GIL issues
+- [Migrating from Python to Rust](https://corrode.dev/learn/migration-guides/python-to-rust/) - General migration best practices
+- [Incrementally Porting Python to Rust](https://blog.waleedkhan.name/port-python-to-rust/) - Incremental migration strategies
+- CLASSIC project documentation:
+  - `docs/development/pyo3_integration_patterns.md`
+  - `docs/development/async_development_guide.md`
+  - `docs/development/rust_workspace_architecture.md`
+  - `.claude/rules/05-memories.md`
+
+---
+
+## Critical Pitfalls (Cleanup Phase - From Previous Research)
 
 ### Pitfall 1: Removing "Dead" Python Fallbacks That Are Active in Deployed Builds
 
@@ -274,6 +688,10 @@ How roadmap phases should address these pitfalls.
 | Rust crate dependency breakage | Rust cleanup phase | `cargo build --workspace` + `cargo test --workspace` at phase gate |
 | Factory contract breakage | Abstraction flattening phase | Integration tests for each factory function with both Rust and Python paths |
 | Circular import from lazy import loss | Any module consolidation phase | `uv run python -c "import ClassicLib"` and both entry points launch successfully |
+| M1: Nested runtime | Every migration phase | grep for `Runtime::new()`, only one in classic-shared-core |
+| M2: GIL deadlock | Orchestration migration | Manual batch processing test, check for hangs |
+| M3: Behavioral parity | Report generation migration | Golden file tests against Python output |
+| M4: Memory ownership | Every migration phase | Clippy lints, fuzz testing |
 
 ## Sources
 
@@ -286,7 +704,12 @@ How roadmap phases should address these pitfalls.
 - `J:\CLASSIC-Fallout4\rust\Cargo.toml` -- Workspace membership and dependency graph
 - `J:\CLASSIC-Fallout4\ClassicLib\integration\factory\core.py` -- Singleton cache, Rust disable mechanism
 - `J:\CLASSIC-Fallout4\.claude\rules\` -- Project conventions (lazy imports, ONE RUNTIME, TDD)
+- [PyO3 Migration Guide](https://pyo3.rs/v0.22.4/migration) -- Official PyO3 migration documentation
+- [PyO3 FAQ and Troubleshooting](https://pyo3.rs/main/faq) -- Common issues and solutions
+- [GIL Deadlock Discussion](https://github.com/PyO3/pyo3/discussions/3045) -- Multi-threaded Tokio GIL issues
+- [Migrating from Python to Rust](https://corrode.dev/learn/migration-guides/python-to-rust/) -- General migration best practices
 
 ---
-*Pitfalls research for: CLASSIC hybrid Python-Rust codebase cleanup*
-*Researched: 2026-02-01*
+*Pitfalls research for: CLASSIC hybrid Python-Rust codebase cleanup and migration*
+*Initially researched: 2026-02-01*
+*Updated for migration pitfalls: 2026-02-02*

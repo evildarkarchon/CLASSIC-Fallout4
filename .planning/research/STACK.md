@@ -1,192 +1,318 @@
-# Stack Research: Codebase Cleanup & Consolidation Tooling
+# Technology Stack for Rust Migration
 
-**Domain:** Hybrid Python-Rust codebase cleanup, dead code removal, and abstraction consolidation
-**Researched:** 2026-02-01
-**Confidence:** MEDIUM (versions verified from local install; some tool capabilities from training data)
+**Project:** CLASSIC Rust Migration - Scanning Orchestration, Game Detection, Report Generation, Settings Management
+**Researched:** 2026-02-02
+**Confidence:** HIGH - Based on existing crate analysis and verified external sources
 
-## Context
+## Executive Summary
 
-This research covers tooling for cleaning up a mature hybrid Python 3.12+ / Rust codebase with PyO3 bindings. The goal is removing dead code, duplicate logic, overlapping abstractions, and preparing for progressive Rust migration. This is NOT about building new features -- it is about reducing what exists.
+The CLASSIC project already has a mature Rust infrastructure with PyO3 0.27, Tokio 1.49, and 25+ crates. The migration targets require **no new external crates** for core functionality. The existing stack covers all requirements:
 
-## Already Installed (Verified)
+- **Scanning orchestration**: Tokio async runtime (already in place)
+- **Game detection**: classic-path-core + winreg (already in place)
+- **Report generation**: classic-message-core patterns (already in place)
+- **Settings management**: classic-settings-core with yaml-rust2 (already in place)
 
-These tools are already in the project and their versions are confirmed from `uv pip list`:
+## Recommended Stack Additions
 
-| Tool | Installed Version | Relevant Cleanup Capabilities |
-|------|-------------------|-------------------------------|
-| ruff | 0.14.14 | F401 (unused imports), F841 (unused variables), ARG (unused arguments), UP (modernization) |
-| pyright | 1.1.408 | Unreachable code detection, type narrowing reveals dead branches |
-| coverage | 7.13.2 | Branch coverage identifies untouched code paths |
-| pytest-cov | 7.0.0 | Coverage integration with test suite |
-| mypy | (in dev deps) | Cross-reference with pyright for dead code via type errors |
-| pylint | (in dev deps) | Additional dead code checks (unused-wildcard-import, etc.) |
+### DO NOT ADD - Unnecessary Dependencies
 
-**Rust workspace** already has `[workspace.lints.rust] unused = "deny"` which catches unused functions, imports, variables at compile time.
+| Crate | Why NOT to add |
+|-------|----------------|
+| `markdown-gen` | Report generation is simple string concatenation; existing `classic-message-core` patterns suffice. Adding a dependency for basic markdown is overengineering. |
+| `steamlocate` | CLASSIC targets modded game directories, not Steam detection. Users provide paths via settings; Windows registry detection for game paths is already in `classic-path-core` via `winreg`. |
+| `handlebars` / `tera` | Template engines add complexity for simple report format; fragment-based composition already works well. |
+| `tokio-util` | Existing `tokio 1.49` with full features provides sufficient orchestration primitives. |
 
-## Recommended Stack
+### Already Available - Use Existing Crates
 
-### Tier 1: Python Dead Code Detection (Use These)
+| Migration Target | Existing Crate | What's Available |
+|-----------------|----------------|------------------|
+| Scanning Orchestration | `classic-shared-core` | Global Tokio runtime, `get_runtime()` for ONE RUNTIME rule |
+| Scanning Orchestration | `tokio` | `tokio::join!`, `tokio::select!`, `TaskGroup` patterns |
+| Scanning Orchestration | `rayon` | CPU-bound parallel processing |
+| Game Detection | `classic-path-core` | Path validation, INI parsing, directory scanning |
+| Game Detection | `classic-xse-core` | XSE version detection, loader finding |
+| Game Detection | `classic-scangame-core` | TOML config validation, integrity checking |
+| Game Detection | `winreg 0.52` (Windows) | Registry access for game paths |
+| Report Generation | `classic-message-core` | Message routing, emoji stripping, formatting |
+| Report Generation | `string_cache` / `lasso` | String interning for report fragments |
+| Report Generation | `smartstring` | Efficient small string handling |
+| Settings Management | `classic-settings-core` | YAML settings cache with sync/async API |
+| Settings Management | `yaml-rust2 0.11` | YAML parsing (already 15-30x faster than Python) |
+| Settings Management | `dashmap 6.1` | Lock-free concurrent cache |
 
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| ruff (F-rules + ARG) | 0.14.14 (installed) | Unused imports, variables, arguments | Already configured and running. F401, F841, ARG rules catch surface-level dead code. Project already has these active in production code. | HIGH |
-| vulture | 2.14+ | Deep dead code detection | Dedicated dead code finder. Unlike ruff, vulture performs whole-program analysis -- it tracks which functions/classes/variables are DEFINED but never USED across the entire codebase. Ruff only catches unused within a single file. Vulture finds unused functions, methods, classes, attributes, and unreachable code. | MEDIUM (version from training) |
-| coverage (branch mode) | 7.13.2 (installed) | Identify untested/unreachable code | Already configured with `branch = true`. Run a comprehensive test suite, then examine uncovered lines. Code that is never covered by any test is a candidate for dead code. The `--cov-report=html` output makes visual identification easy. | HIGH |
-| pyright (strict mode) | 1.1.408 (installed) | Unreachable code warnings | Already in strict mode. `reportUnreachable` diagnostic flags code after early returns, impossible type narrowings, etc. This catches dead BRANCHES that static analysis alone misses. | HIGH |
+## Per-Migration-Target Analysis
 
-### Tier 2: Rust Dead Code & Dependency Detection (Use These)
+### 1. Scanning Orchestration (OrchestratorCore Replacement)
 
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| cargo clippy | (bundled with rustup) | Lint warnings including dead code | Already available. Key lints: `dead_code`, `unused_imports`, `unused_variables`. The workspace `unused = "deny"` already enforces this. Add `clippy::all` and `clippy::pedantic` for deeper analysis. | HIGH |
-| cargo-machete | 0.7+ | Find unused Cargo dependencies | Fast, heuristic-based approach that greps source files for dependency usage. Does NOT require nightly. Runs in seconds even on large workspaces. Better choice than cargo-udeps for this project because it works on stable Rust. | MEDIUM (version from training) |
-| cargo-udeps | 0.1.x | Find unused Cargo dependencies (precise) | More accurate than cargo-machete because it uses actual compiler data, but REQUIRES nightly Rust. Use as a secondary verification tool, not primary. Run occasionally for validation. | MEDIUM (version from training) |
+**Current Python Implementation:** `ClassicLib/scanning/logs/orchestrator_core.py`
+- 898 lines of async Python orchestrating crash log processing
+- Uses async context managers, asyncio.TaskGroup, concurrent batch processing
+- Coordinates: plugin analysis, suspect scanning, mod detection, FormID analysis, report generation
 
-### Tier 3: Cross-Language Duplicate Detection (Manual + Scripted)
+**Rust Implementation Strategy:**
 
-| Approach | Purpose | Why Recommended | Confidence |
-|----------|---------|-----------------|------------|
-| Coverage-guided audit | Find Python code that has Rust equivalents | Run tests with coverage. Python modules that have Rust `-core` equivalents but still show as "covered" indicate the Python fallback is still the active path. Python code with 0% coverage in modules that have Rust equivalents is dead fallback code. | HIGH |
-| Import graph analysis (custom script) | Map which Python modules import which | Use `importlib` or AST parsing to build a dependency graph. Nodes with zero incoming edges (except entry points) are dead modules. Several small Python scripts can do this with `ast.parse()`. | HIGH |
-| grep-based cross-reference | Find Python functions duplicated in Rust | For each Rust `-core` crate, list its public API. Then grep the Python codebase for equivalent function names. Where both exist and the Rust version is active, the Python version is dead code. | HIGH |
-
-### Tier 4: Structural Analysis Tools (Supporting)
-
-| Technology | Version | Purpose | Why Recommended | Confidence |
-|------------|---------|---------|-----------------|------------|
-| pytest --dead-fixtures | (built into pytest) | Find unused test fixtures | `pytest --collect-only -q` can reveal fixtures that no test uses. Important because this project has centralized fixtures in `tests/fixtures/` that may have accumulated dead entries. | HIGH |
-| pylint | (installed) | Additional dead code checks | Catches some patterns vulture misses: unused-wildcard-import, pointless-statement, unnecessary-pass. Overlaps with ruff but provides a second opinion. | HIGH |
-| pipdeptree / uv tree | (available via uv) | Python dependency tree | `uv pip tree` shows the full dependency graph. Identifies unused Python packages in `[project.dependencies]`. | HIGH |
-
-## Installation
-
-```bash
-# New tools to add (not currently in project)
-uv add --dev vulture
-
-# Rust tools (install globally via cargo)
-cargo install cargo-machete
-
-# Optional: for precise Rust dep checking (needs nightly)
-cargo install cargo-udeps
+```rust
+// Use existing crates - NO new dependencies needed
+use classic_shared_core::get_runtime;     // ONE RUNTIME rule
+use tokio::{self, task::JoinSet};         // Already in workspace
+use rayon::prelude::*;                     // CPU-bound parallelism
+use classic_scanlog_core::*;               // Existing parsing logic
+use classic_database_core::*;              // FormID database access
 ```
 
-## Recommended Ruff Configuration Changes for Cleanup
+**Key Patterns to Follow:**
+- Pipeline pattern with channels for streaming crash logs
+- `tokio::join!` preserves ordering (documented in `05-memories.md`)
+- Use `rayon` for CPU-bound fragment composition
+- Expose via `classic-orchestrator-py` with PyO3 0.27
 
-The project already has an extensive ruff config. For the cleanup phase, temporarily enable additional rules:
+**Estimated Stack Footprint:** 0 new dependencies (all from workspace)
 
-```toml
-# Add to extend-select during cleanup phase:
-extend-select = [
-    # ... existing rules ...
-    "F811",   # Redefinition of unused name (find shadowed dead code)
-    "ERA",    # Commented-out code detection (eradicate)
-]
+### 2. Game Detection (Path Detection, XSE/ENB Checking)
+
+**Current Python Implementation:** `ClassicLib/scanning/game/` package
+- `core.py`, `orchestrator.py`, `check_xse_plugins.py`, `check_crashgen.py`
+- Uses Windows registry for Steam/GOG paths
+- Validates XSE installation, checks ENB presence
+
+**Existing Rust Coverage:**
+
+| Component | Crate | Status |
+|-----------|-------|--------|
+| XSE detection | `classic-xse-core` | COMPLETE - `detect_xse_version()`, `is_xse_installed()` |
+| Path validation | `classic-path-core` | COMPLETE - `PathValidator`, `GamePathLocator` |
+| Registry access | `winreg 0.52` | COMPLETE - Already in workspace |
+| TOML config | `classic-scangame-core` | COMPLETE - `CrashgenChecker`, `TomlConfigIssue` |
+| INI validation | `classic-scangame-core` | COMPLETE - `IniValidator`, `ConfigIssue` |
+| BA2 scanning | `classic-scangame-core` | COMPLETE - `BA2Scanner` |
+
+**What Remains:**
+- Orchestration layer connecting these components (new `GameIntegrityOrchestrator` in Rust)
+- Python bindings via `classic-scangame-py` (partially exists)
+
+**Estimated Stack Footprint:** 0 new dependencies
+
+### 3. Report Generation (Markdown Output)
+
+**Current Python Implementation:**
+- `ClassicLib/scanning/logs/report_generator.py`
+- `ClassicLib/scanning/logs/reporting/` package (fragment_composer, section_composer, etc.)
+- Uses `ReportFragment` immutable objects with functional composition
+
+**Existing Rust Coverage:**
+
+| Component | Crate | Status |
+|-----------|-------|--------|
+| Message types | `classic-message-core` | COMPLETE - `Message`, `MessageType`, `MessageTarget` |
+| Emoji stripping | `classic-message-core` | COMPLETE - `strip_emoji()`, `format_log_message()` |
+| String interning | `lasso 0.7` | COMPLETE - `ThreadedRodeo` for concurrent interning |
+| String optimization | `smartstring 1.0` | COMPLETE - Small string optimization |
+
+**Report Fragment Implementation:**
+
+The Python `ReportFragment` pattern translates directly to Rust:
+
+```rust
+// No new crates needed - use standard library + existing workspace deps
+use smartstring::alias::String as SmartString;
+use lasso::ThreadedRodeo;
+
+pub struct ReportFragment {
+    lines: Vec<SmartString>,
+    interned_pool: Arc<ThreadedRodeo>,
+}
+
+impl ReportFragment {
+    pub fn from_lines(lines: impl IntoIterator<Item = impl AsRef<str>>) -> Self { ... }
+    pub fn compose(fragments: &[Self]) -> Self { ... }
+    pub fn to_markdown(&self) -> String { ... }
+}
 ```
 
-The `ERA` (eradicate) ruleset is particularly valuable for cleanup -- it finds commented-out code blocks that should be deleted rather than left rotting in the codebase. After cleanup is complete, you can decide whether to keep ERA active permanently.
+**Why NOT markdown-gen:**
+- `markdown-gen` (v1.2.1, last updated 2020) is designed for document generation with complex nesting
+- CLASSIC reports are simple: headers, bullet lists, horizontal rules
+- String concatenation with proper formatting is trivial and faster
+- No runtime dependencies vs adding 2+ transitive deps
 
-## Alternatives Considered
+**Estimated Stack Footprint:** 0 new dependencies
 
-| Recommended | Alternative | Why Not |
-|-------------|-------------|---------|
-| vulture | dead (Python package) | dead is unmaintained since ~2020. Vulture is actively maintained and more accurate. |
-| vulture | pylint dead-code checks | pylint catches some dead code but not whole-program unused analysis. Use both -- they are complementary. |
-| cargo-machete (primary) | cargo-udeps (primary) | cargo-udeps requires nightly which adds friction to the workflow. cargo-machete works on stable and is faster. Use udeps as occasional validation. |
-| Custom scripts for cross-lang | No automated tool exists | There is no off-the-shelf tool that finds duplicate Python/Rust implementations in a PyO3 project. This is a manual audit aided by coverage data and grep. |
-| ruff ERA | manual grep for comments | ERA is automated and integrated into the existing ruff workflow. Manual grep is error-prone. |
-| pipdeptree/uv tree | pip-autoremove | pip-autoremove modifies the environment. uv tree is read-only and safer. |
+### 4. Settings Management (Configuration Loading/Saving)
 
-## What NOT to Use
+**Current Python Implementation:**
+- `ClassicLib/io/yaml/` package with async cache
+- `ClassicLib/classic_settings.py` for user preferences
+- Uses ruamel.yaml (replaced by yaml-rust2 in Rust)
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| autoflake | Superseded by ruff. Ruff's F401 and F841 do exactly what autoflake does, faster, and is already configured. | ruff (F401, F841) |
-| pyflakes standalone | Ruff includes pyflakes rules (the F prefix). Running pyflakes separately is redundant. | ruff |
-| isort standalone | Ruff includes isort rules (I prefix). Already configured. | ruff (I rules) |
-| black | Ruff includes formatting. Already configured with `ruff format`. | ruff format |
-| flake8 | Ruff is a drop-in replacement for flake8 with better performance. | ruff |
-| bandit standalone | If you want security checks, use ruff S rules. Not needed for cleanup milestone. | Defer; enable ruff S-rules later |
-| Large-scale automated refactoring tools (rope, bowler) | These rewrite code automatically. For a cleanup milestone, MANUAL review of each removal is safer. Automated refactoring risks breaking the Python-Rust boundary. | Manual removal with test verification |
-| cargo-bloat | Measures binary size, not dead code. Different concern. | clippy + cargo-machete for dead code |
+**Existing Rust Coverage:**
 
-## Workflow: How to Use These Tools Together
+| Component | Crate | Status |
+|-----------|-------|--------|
+| YAML parsing | `yaml-rust2 0.11` | COMPLETE - 15-30x faster than ruamel.yaml |
+| Settings cache | `classic-settings-core` | COMPLETE - `load_settings_sync/async`, `get_cached` |
+| Batch loading | `classic-settings-core` | COMPLETE - `load_batch_async` |
+| Concurrent access | `dashmap 6.1` | COMPLETE - Lock-free cache storage |
 
-The cleanup stack works in layers, from broadest to most specific:
+**What Remains:**
+- Higher-level `ClassicSettings` abstraction for user preferences
+- Python bindings completion in `classic-settings-py`
 
-### Layer 1: Static Analysis (find candidates)
-```bash
-# Python dead code candidates
-uv run vulture ClassicLib/ CLASSIC_*.py --min-confidence 80
-uv run ruff check . --select F401,F841,ARG,ERA
+**Estimated Stack Footprint:** 0 new dependencies
 
-# Rust dead code candidates
-cargo clippy --workspace -- -W clippy::all
-cargo machete
+## Version Verification
+
+All versions verified against workspace `Cargo.toml`:
+
+| Crate | Workspace Version | Current as of 2026-02-02 |
+|-------|-------------------|-------------------------|
+| PyO3 | 0.27.2 | Current (0.28 available but breaking) |
+| pyo3-async-runtimes | 0.27.0 | Current for PyO3 0.27 |
+| tokio | 1.49.0 | Current stable |
+| yaml-rust2 | 0.11.0 | Current stable |
+| winreg | 0.52 | Current stable |
+| dashmap | 6.1 | Current stable |
+| lasso | 0.7 | Current stable |
+| smartstring | 1.0 | Current stable |
+| rayon | 1.10 | Current stable |
+
+## Integration Points with Existing Stack
+
+### classic-shared-core (Foundation)
+
+```rust
+// All orchestration uses the global runtime
+use classic_shared_core::get_runtime;
+
+// Example: Run async orchestration from Python
+pub fn run_orchestration(config: ScanConfig) -> PyResult<ScanResult> {
+    get_runtime().block_on(async {
+        orchestrate_scan(config).await
+    })
+}
 ```
 
-### Layer 2: Coverage Analysis (confirm dead code)
-```bash
-# Run full test suite with coverage
-uv run pytest -n auto --cov --cov-report=html
+### classic-scanlog-core (Business Logic)
 
-# Examine htmlcov/ -- modules with 0% coverage are prime deletion candidates
-# Modules with partial coverage need line-by-line review
+```rust
+// Existing parsing already handles crash log analysis
+use classic_scanlog_core::{LogParser, find_segments};
+
+// Orchestrator coordinates multiple parser instances
+async fn process_batch(logs: Vec<PathBuf>) -> Vec<ScanResult> {
+    let parser = LogParser::new(crashgen_name, xse_acronym, root_name);
+
+    // Use tokio::join! for ordered parallel processing
+    let results = logs.iter()
+        .map(|log| process_single(parser.clone(), log))
+        .collect::<Vec<_>>();
+
+    futures::future::join_all(results).await
+}
 ```
 
-### Layer 3: Cross-Language Audit (find duplicates)
-```bash
-# For each Rust -core crate, check if Python equivalent still exists and is used
-# Compare: rust/business-logic/classic-yaml-core/ vs ClassicLib/yaml_operations.py (or equivalent)
-# If Rust version is active (imported and tested), Python version may be dead fallback code
+### classic-scangame-core (Game Scanning)
 
-# Dependency tree analysis
-uv pip tree --depth 2
+```rust
+// Existing integrity checks can be orchestrated
+use classic_scangame_core::{
+    GameIntegrityChecker,
+    BA2Scanner,
+    IniValidator,
+    CrashgenChecker,
+};
+
+async fn check_game_integrity(game_path: &Path) -> IntegrityResult {
+    let checker = GameIntegrityChecker::new(game_path);
+
+    // Run all checks concurrently
+    tokio::join!(
+        checker.check_xse(),
+        checker.check_crashgen(),
+        checker.check_ini_files(),
+        checker.check_ba2_archives(),
+    )
+}
 ```
 
-### Layer 4: Validate Removals (test after each removal)
-```bash
-# After removing dead code, run full test suite
-uv run pytest -n auto
-# Type check
-uv run pyright
-# Lint
-uv run ruff check .
+## New Crates to Create (Not New Dependencies)
+
+These are NEW CRATES within the workspace, not new external dependencies:
+
+| New Crate | Purpose | Dependencies (all from workspace) |
+|-----------|---------|----------------------------------|
+| `classic-orchestrator-core` | Rust orchestration business logic | classic-shared-core, classic-scanlog-core, tokio, rayon |
+| `classic-orchestrator-py` | PyO3 bindings for orchestrator | pyo3, classic-orchestrator-core |
+| `classic-report-core` | Report fragment generation | classic-message-core, lasso, smartstring |
+| `classic-report-py` | PyO3 bindings for reports | pyo3, classic-report-core |
+
+## Anti-Recommendations
+
+### Do NOT Upgrade PyO3 to 0.28
+
+**Reason:** PyO3 0.28.0 is available but introduces breaking changes. The project uses `abi3-py312` for stable ABI compatibility. Upgrading would require:
+- Updating all `-py` crates (18+ crates)
+- Testing GIL handling changes
+- Potential runtime conflicts with `pyo3-async-runtimes`
+
+**Recommendation:** Stay on PyO3 0.27.2 until a dedicated upgrade milestone.
+
+### Do NOT Add steamlocate
+
+**Reason:** CLASSIC's workflow is:
+1. User runs CLASSIC in their modded game directory
+2. Or user explicitly configures game path in settings
+3. CLASSIC validates the path
+
+The `steamlocate` crate is for:
+- Finding ALL Steam games on a system
+- Auto-detecting game installations
+
+CLASSIC doesn't need auto-detection; it needs path VALIDATION (already in `classic-path-core`).
+
+### Do NOT Add Template Engines
+
+**Reason:** Report output is:
+```markdown
+# crash-2024-01-15.log
+**AUTOSCAN REPORT GENERATED BY CLASSIC v8.2.0**
+
+### Error Information
+**Main Error:** Access violation at 0x00000000
+...
 ```
 
-## Version Compatibility
+This is trivially generated with `format!()` and string concatenation. Template engines add:
+- Compilation overhead
+- Runtime template parsing
+- Template file management
+- Error handling complexity
 
-| Tool | Compatible With | Notes |
-|------|-----------------|-------|
-| ruff 0.14.x | Python 3.12-3.14, pyproject.toml | Fully integrated already |
-| vulture 2.x | Python 3.8+ | Add as dev dependency, no config conflicts |
-| pyright 1.1.x | Python 3.12+ strict mode | Already configured |
-| coverage 7.x | Python 3.12+, pytest-cov 7.x | Already configured with branch coverage |
-| cargo-machete | Stable Rust, Cargo workspaces | Works with workspace Cargo.toml |
-| cargo-udeps | Nightly Rust only | Optional; do not add to CI unless nightly is available |
+None of these provide value for static-format reports.
 
-## Confidence Notes
+## Summary
 
-| Area | Confidence | Reasoning |
-|------|------------|-----------|
-| Already-installed tools (ruff, pyright, coverage) | HIGH | Versions verified from `uv pip list` output; configs read from pyproject.toml |
-| Ruff rule capabilities (F401, F841, ARG, ERA) | HIGH | Rules are documented in project config and standard ruff behavior |
-| Vulture capabilities | MEDIUM | Known from training data. Version may have advanced since. Core functionality (whole-program dead code detection) is stable and well-established. |
-| cargo-machete vs cargo-udeps tradeoffs | MEDIUM | Known from training data. Machete's stable-Rust advantage and speed are well-documented in the Rust ecosystem. |
-| Cross-language audit approach | HIGH | This is methodology, not tool-dependent. Coverage data and grep are reliable regardless of versions. |
-| "What NOT to use" recommendations | HIGH | Tool supersession (autoflake->ruff, pyflakes->ruff) is well-established and unlikely to have changed. |
+**Total new external dependencies required: 0**
 
-## Key Insight for Roadmap
+The existing CLASSIC Rust infrastructure provides all necessary capabilities:
+- Async runtime: `tokio` via `classic-shared-core`
+- Parallel processing: `rayon`
+- YAML settings: `yaml-rust2` via `classic-settings-core`
+- Game detection: `winreg` + `classic-path-core` + `classic-xse-core`
+- Report generation: `classic-message-core` + string interning crates
+- Database: `rusqlite`/`sqlx` via `classic-database-core`
 
-The project already has 80% of the cleanup tooling installed and configured. The main gaps are:
+The migration is about **creating new crates within the workspace** to house orchestration logic, not about adding new external dependencies.
 
-1. **vulture** -- needs to be added as a dev dependency (one command)
-2. **cargo-machete** -- needs to be installed (one command)
-3. **Cross-language audit process** -- no tool exists; needs custom scripted workflow
-4. **ERA rules in ruff** -- just a config change to enable commented-out code detection
+## Sources
 
-The cleanup milestone is primarily a PROCESS problem (which code to remove, in what order, with what validation), not a TOOLING problem. The tools are mature and available.
-
----
-*Stack research for: Hybrid Python-Rust codebase cleanup and consolidation*
-*Researched: 2026-02-01*
+- [PyO3 async-await ecosystem documentation](https://github.com/PyO3/pyo3/blob/main/guide/src/ecosystem/async-await.md)
+- [pyo3-async-runtimes for PyO3 0.27+ compatibility](https://github.com/PyO3/pyo3-async-runtimes)
+- [markdown-gen crate (v1.2.1, last updated 2020)](https://lib.rs/crates/markdown-gen)
+- [steamlocate crate (v2.0.1)](https://lib.rs/crates/steamlocate)
+- [Tokio structured concurrency patterns](https://medium.com/@adamszpilewicz/structured-concurrency-in-rust-with-tokio-beyond-tokio-spawn-78eefd1febb4)
+- [Worker pool patterns in Rust](https://medium.com/@adamszpilewicz/building-a-worker-pool-in-rust-scalable-task-execution-with-tokio-abcb4f193a05)
+- [Rust concurrency patterns (OneSignal)](https://onesignal.com/blog/rust-concurrency-patterns/)
+- CLASSIC workspace `rust/Cargo.toml` (authoritative source for current versions)
+- CLASSIC existing crates: `classic-settings-core`, `classic-scangame-core`, `classic-xse-core`, `classic-message-core`

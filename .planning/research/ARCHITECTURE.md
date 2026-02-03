@@ -1,60 +1,43 @@
 # Architecture Research
 
 **Domain:** Hybrid Python-Rust codebase cleanup for progressive Rust migration
-**Researched:** 2026-02-01
+**Researched:** 2026-02-01 (Updated: 2026-02-02)
 **Confidence:** HIGH (based on direct codebase analysis -- all findings verified against actual source files)
 
 ## System Overview
 
 ```
-┌──────────────────────────────────────────────────────────────────────┐
-│                     PRESENTATION LAYER                               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
-│  │ GUI (Qt) │  │ CLI      │  │ TUI      │                           │
-│  │ PySide6  │  │ asyncio  │  │ Textual  │                           │
-│  └────┬─────┘  └────┬─────┘  └────┬─────┘                           │
-│       │ sync+bridge  │ async       │ async                           │
-├───────┴──────────────┴─────────────┴─────────────────────────────────┤
-│                  INTEGRATION LAYER (Python)                           │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────┐         │
-│  │   factory/   │  │  detector    │  │  acceleration/     │         │
-│  │  (dispatch)  │  │  (discover)  │  │  (coordination)    │         │
-│  └──────┬───────┘  └──────┬───────┘  └────────┬───────────┘         │
-│         │                 │                    │                     │
-│    ┌────┴─────┐     ┌─────┴──────┐             │                     │
-│    │ rust/    │     │ python/    │             │                     │
-│    │ wrappers │     │ fallbacks  │             │                     │
-│    └────┬─────┘     └─────┬──────┘             │                     │
-├─────────┴─────────────────┴────────────────────┴─────────────────────┤
-│                  BUSINESS LOGIC LAYER                                 │
-│  ┌─────────────────────┐  ┌──────────────────────┐                   │
-│  │ scanning/logs/      │  │ scanning/game/        │                  │
-│  │ OrchestratorCore    │  │ GameFilesManager      │                  │
-│  │ FormIDAnalyzer      │  │ ConfigFileCache        │                 │
-│  │ ReportGenerator     │  │ SettingsScanner        │                 │
-│  │ ModDetector         │  │ INI scanning           │                 │
-│  └─────────┬───────────┘  └──────────┬────────────┘                  │
-│            │                         │                               │
-│  ┌─────────┴───────────┐  ┌──────────┴────────────┐                  │
-│  │ support/            │  │ core/                  │                  │
-│  │ game_path, xse,     │  │ AsyncBridge, Registry, │                 │
-│  │ resources, update   │  │ constants, perf        │                 │
-│  └─────────┬───────────┘  └──────────┬────────────┘                  │
-├────────────┴─────────────────────────┴───────────────────────────────┤
-│                  DATA ACCESS LAYER                                    │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐                           │
-│  │ io/yaml  │  │ io/files │  │ io/db    │                           │
-│  └──────────┘  └──────────┘  └──────────┘                           │
-├──────────────────────────────────────────────────────────────────────┤
-│                  RUST ENGINE                                         │
-│  ┌──────────────────────────────────────────────────────────┐        │
-│  │  python-bindings/ (-py crates, PyO3 cdylib adapters)     │        │
-│  ├──────────────────────────────────────────────────────────┤        │
-│  │  business-logic/  (-core crates, pure Rust rlib)         │        │
-│  ├──────────────────────────────────────────────────────────┤        │
-│  │  foundation/      (classic-shared-core, runtime, errors) │        │
-│  └──────────────────────────────────────────────────────────┘        │
-└──────────────────────────────────────────────────────────────────────┘
++----------------------------------------------------------+
+|                    Python Layer (UI)                      |
+|  CLASSIC_Interface.py | CLASSIC_ScanLogs.py | Controllers |
++----------------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------------+
+|               Python Integration Layer                    |
+|    ClassicLib/integration/factory.py (Protocol types)     |
+|    ClassicLib/integration/rust/*.py (Thin wrappers)       |
++----------------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------------+
+|              Python Bindings (-py crates)                 |
+|  classic-scanlog-py | classic-scangame-py | classic-*-py  |
+|         PyO3 adapters, type conversions, GIL handling     |
++----------------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------------+
+|              Business Logic (-core crates)                |
+|  classic-scanlog-core | classic-scangame-core | etc.      |
+|            Pure Rust, NO PyO3, maximum performance        |
++----------------------------------------------------------+
+                            |
+                            v
++----------------------------------------------------------+
+|                   Foundation Layer                        |
+|   classic-shared-core (ONE RUNTIME, errors, utilities)    |
++----------------------------------------------------------+
 ```
 
 ### Component Responsibilities
@@ -74,6 +57,316 @@
 | `rust/business-logic/*-core/` | Pure Rust business logic | Rust | Expand (target for migration) |
 | `rust/python-bindings/*-py/` | PyO3 thin adapters | Rust | Expand to match `-core` |
 | `rust/foundation/` | Shared runtime, errors | Rust | Stable (no changes) |
+
+---
+
+## Migration Targets Integration Analysis
+
+This section addresses how the four remaining migration targets should integrate with the existing Rust architecture.
+
+### Migration Target 1: Scanning Orchestration
+
+**Current Python Implementation:** `ClassicLib/scanning/logs/orchestrator_core.py`
+
+**Existing Rust Support:**
+- `classic-scanlog-core::orchestrator` provides `OrchestratorCore`, `AnalysisConfig`, `AnalysisResult`
+- `HybridOrchestrator` already bridges Python and Rust
+- Rust orchestrator handles batch processing with unbounded parallelism
+
+**Current Data Flow:**
+```
+User Request
+    |
+    v
+get_orchestrator() [factory.py]
+    |
+    v
+HybridOrchestrator [hybrid_orchestrator.py]
+    |
+    +-- batch (>5 logs) --> Rust ClassicOrchestrator
+    |                            |
+    |                            v
+    |                       classic_scanlog.Orchestrator
+    |                            |
+    |                            v
+    |                       classic-scanlog-core::orchestrator
+    |
+    +-- single log ---------> Python OrchestratorCore
+                                 |
+                                 v
+                            Per-analyzer pipeline (get_parser, get_formid_analyzer, etc.)
+```
+
+**Integration Strategy:**
+
+The scanning orchestration is ALREADY substantially migrated. The key insight is:
+
+1. **Rust `is_feature_complete()` check** determines if Rust can handle single-log processing
+2. **Feature completeness requires:** Plugin analyzer + Suspect scanner + FormID analyzer
+3. **Current gap:** Some analyzers still have significant Python logic
+
+**Recommended Crate Changes:**
+
+| Crate | Action | Purpose |
+|-------|--------|---------|
+| `classic-scanlog-core` | Enhance | Complete all analyzer implementations |
+| `classic-scanlog-py` | Enhance | Expose remaining analyzers to Python |
+
+**Python-Rust Boundary:**
+```python
+# factory.py - Keep existing pattern
+def get_orchestrator(...) -> OrchestratorProtocol:
+    return HybridOrchestrator(...)  # Bridges to Rust automatically
+```
+
+**No new crates needed.** Focus on completing feature parity in existing crates.
+
+---
+
+### Migration Target 2: Game Detection
+
+**Current Python Implementation:** `ClassicLib/scanning/game/`
+- `core.py` - `ScanGameCore` orchestrates all game scanning
+- `orchestrator.py` - `GameIntegrityOrchestratorCore` coordinates integrity checks
+- `checks/` - Individual scanners (BA2, INI, XSE, etc.)
+
+**Existing Rust Support:**
+- `classic-scangame-core` provides:
+  - `BA2Scanner` - Archive scanning (COMPLETE)
+  - `ConfigDuplicateDetector` - Config duplicate detection (COMPLETE)
+  - `UnpackedScanner` - Unpacked mod scanning (COMPLETE)
+  - `LogProcessor` - Error log processing (COMPLETE)
+  - `IniValidator` - INI file validation (COMPLETE)
+  - `CrashgenChecker` - Crashgen TOML validation (COMPLETE)
+  - `XseChecker` - XSE plugin checking (COMPLETE)
+  - `GameIntegrityChecker` - Game file integrity (COMPLETE)
+
+**Current Data Flow:**
+```
+User Request (Check Game Files)
+    |
+    v
+GameIntegrityOrchestratorCore.generate_game_combined_result_async()
+    |
+    +-- check_xse_plugins() --> Python (calls scangame_factory -> Rust)
+    +-- check_crashgen_settings() --> Python (calls scangame_factory -> Rust)
+    +-- check_log_errors() --> Python (calls scangame_factory -> Rust)
+    +-- scan_wryecheck() --> Python
+    +-- scan_mod_inis_async() --> Python (calls scangame_factory -> Rust)
+    |
+    v
+Combined Report String
+```
+
+**Integration Strategy:**
+
+Individual scanners are Rust-accelerated via `scangame_factory.py`. The Python orchestration layer (`GameIntegrityOrchestratorCore`) remains for:
+- Progress reporting to GUI
+- Error aggregation and formatting
+- Async coordination
+
+**Recommended Approach:**
+
+**Option A (Conservative):** Keep Python orchestration, ensure all individual scanners use Rust
+- Advantage: Minimal change, GUI integration stays simple
+- Implementation: Complete `scangame_factory.py` wrappers
+
+**Option B (Full Migration):** Create Rust orchestrator in `classic-scangame-core`
+- Advantage: Maximum performance for batch game checks
+- Implementation: New module `classic-scangame-core::orchestrator`
+
+**Recommendation:** Option A for this milestone. Individual scanners are already Rust. The orchestration overhead is minimal compared to actual scanning work.
+
+**Crate Structure (if Option B chosen later):**
+```
+rust/business-logic/classic-scangame-core/
+    src/
+        orchestrator.rs    # NEW: Coordinates all game scanners
+        progress.rs        # NEW: Progress callback support
+
+rust/python-bindings/classic-scangame-py/
+    src/
+        orchestrator.rs    # NEW: PyO3 bindings for orchestrator
+```
+
+---
+
+### Migration Target 3: Report Generation
+
+**Current Python Implementation:** `ClassicLib/scanning/logs/report_generator.py`
+- `ReportGeneratorFragments` - Generates report sections
+- Uses `ReportFragment` from Rust for storage
+
+**Existing Rust Support:**
+- `classic-scanlog-core::report` provides:
+  - `ReportFragment` - Immutable report building block
+  - `ReportComposer` - Fragment composition
+  - `ReportGenerator` - Report section generation
+  - `StringPool` - String interning for efficiency
+
+**Current Data Flow:**
+```
+Report Generation Request
+    |
+    v
+ReportGeneratorFragments (Python)
+    |
+    +-- generate_header() --> Returns ReportFragment (Rust storage)
+    +-- generate_error_section() --> Returns ReportFragment
+    +-- generate_suspect_section_header() --> Returns ReportFragment
+    +-- generate_footer() --> Returns ReportFragment
+    |
+    v
+ReportComposer (Rust) combines fragments
+    |
+    v
+Final Report String
+```
+
+**Integration Strategy:**
+
+The current boundary is APPROPRIATE:
+- **Python decides WHAT to include** (business decisions, i18n, conditional sections)
+- **Rust handles HOW to store/compose** (efficient fragment storage, string pooling)
+
+**Recommended Approach:** Keep current pattern. The Python layer is thin (298 lines) and serves as a configuration point for report content.
+
+**No new crates needed.** The existing `classic-scanlog-core::report` module is sufficient.
+
+**Future Enhancement (post-cleanup):**
+If report generation becomes a bottleneck (unlikely), move format string templates to Rust and expose via `classic-scanlog-py`. Python would pass parameters only.
+
+---
+
+### Migration Target 4: Settings Management
+
+**Current Python Implementation:** `ClassicLib/io/yaml/async_/cache.py`
+- `YamlCache` - YAML caching with TTL and metrics
+- `ClassicLib/io/yaml/async_/core.py` - `yaml_settings_async` helper
+
+**Existing Rust Support:**
+- `classic-settings-core` provides:
+  - `load_settings_sync/async` - File loading
+  - `get_cached`, `is_cached` - Cache access
+  - `load_batch_async` - Parallel loading
+  - Lock-free DashMap storage
+
+**Gap Analysis:**
+
+| Feature | Python YamlCache | Rust classic-settings-core |
+|---------|------------------|---------------------------|
+| TTL-based expiration | Yes | No |
+| File modification detection | Yes | No |
+| Metrics tracking | Yes | No |
+| Typed value extraction | Yes (helpers) | No |
+| Multi-document support | Via ruamel | Yes (yaml-rust2) |
+| Lock-free access | No (asyncio.Lock) | Yes (DashMap) |
+
+**Integration Strategy:**
+
+Two options:
+
+**Option A: Enhance Rust, Deprecate Python**
+1. Add metrics tracking to `classic-settings-core`
+2. Add TTL/modification detection to Rust cache
+3. Create typed extraction helpers in `classic-settings-py`
+4. Deprecate Python `YamlCache`
+
+**Option B: Parallel Systems (Current)**
+- Python `YamlCache` for application settings
+- Rust `classic-settings-core` for high-volume operations
+
+**Recommendation:** Option A for full migration. The Rust cache already has superior concurrency (lock-free). Adding metrics is straightforward.
+
+**Crate Enhancement:**
+```rust
+// classic-settings-core/src/metrics.rs (NEW)
+pub struct CacheMetrics {
+    pub cache_hits: AtomicU64,
+    pub cache_misses: AtomicU64,
+    pub file_reloads: AtomicU64,
+    pub total_reads: AtomicU64,
+}
+
+// classic-settings-core/src/ttl.rs (NEW)
+pub struct TtlEntry<T> {
+    pub value: T,
+    pub expires_at: Instant,
+}
+```
+
+---
+
+## Recommended Build Order
+
+Based on dependency analysis:
+
+### Phase 1: Complete Existing Crates (Week 1-2)
+
+No new crates. Enhance existing:
+
+1. **classic-settings-core** - Add metrics, TTL, typed extraction
+2. **classic-scanlog-core** - Ensure all analyzers are feature-complete
+3. **classic-message-core** - Complete message routing if needed
+
+Dependencies:
+```
+classic-settings-core <- classic-shared-core
+classic-scanlog-core <- classic-shared-core, classic-yaml-core, classic-file-io-core
+```
+
+### Phase 2: Factory Simplification (Week 2-3)
+
+Simplify Python integration layer:
+
+4. Update `factory.py` - Direct imports where Rust is stable
+5. Thin out `integration/rust/*.py` wrappers
+6. Remove detection infrastructure
+
+### Phase 3: Integration Validation (Week 3-4)
+
+7. Add Protocol types to `types.py` if missing
+8. Test all factory paths
+9. Verify fallback behavior
+
+### Phase 4: Optional Full Game Orchestrator (Future)
+
+Only if profiling shows need:
+
+10. Create `classic-scangame-core::orchestrator` (if Option B chosen)
+11. Add PyO3 bindings
+
+---
+
+## New vs. Modified Components Summary
+
+### Components to Modify (NOT Create)
+
+| Component | Modification |
+|-----------|--------------|
+| `classic-settings-core` | Add metrics, TTL, typed extraction |
+| `classic-settings-py` | Expose new features |
+| `classic-scanlog-core` | Complete analyzer implementations |
+| `classic-scanlog-py` | Expose remaining analyzers |
+| `factory.py` | Simplify to direct imports |
+| `integration/rust/*.py` | Thin out wrappers |
+
+### Components That Are Already Complete
+
+| Component | Status |
+|-----------|--------|
+| `classic-scangame-core` | All individual scanners implemented |
+| `classic-scangame-py` | Bindings complete |
+| `classic-scanlog-core::report` | Report fragment system complete |
+| `classic-shared-core` | Foundation stable |
+
+### Components to Possibly Create (Optional, Future)
+
+| Component | Condition |
+|-----------|-----------|
+| `classic-scangame-core::orchestrator` | Only if game scanning orchestration becomes bottleneck |
+
+---
 
 ## Current Boundary Analysis
 
@@ -122,6 +415,8 @@ The workspace has **21 business-logic crates** and **18 python-bindings crates**
 | version-registry | Standalone | Unknown maturity |
 
 **Recommendation:** Audit each crate for actual code vs. stubs. Remove stubs that have no consumers. Do not create new crates during cleanup.
+
+---
 
 ## Architectural Patterns
 
@@ -236,6 +531,8 @@ def get_parser(yamldata):
 
 This eliminates the detection cache, component config map, and multi-layer indirection.
 
+---
+
 ## Data Flow
 
 ### Current Crash Log Processing Flow
@@ -289,7 +586,9 @@ Data Access (Rust for perf, Python for platform specifics)
 
 **Key principle:** Data should flow DOWN through the layers. No upward callbacks from Rust into Python business logic. The current `rust/` wrappers violate this by adding Python logic between the factory and the Rust engine.
 
-## Anti-Patterns
+---
+
+## Anti-Patterns to Avoid
 
 ### Anti-Pattern 1: Fat Rust Wrappers
 
@@ -322,6 +621,8 @@ Data Access (Rust for perf, Python for platform specifics)
 **Why it's wrong:** YAGNI. A desktop crash log scanner does not need workload-aware optimization routing. The overhead of the abstraction exceeds the benefit.
 
 **Do this instead:** Direct factory dispatch. If profiling later shows a need for batch vs. single optimization, add it then with actual measurements.
+
+---
 
 ## Recommended Project Structure After Cleanup
 
@@ -369,73 +670,7 @@ ClassicLib/
 - **`acceleration/` removed**: Workload coordination for a desktop app is over-engineering. Direct dispatch suffices.
 - **`integration/config.py` removed**: 25 component constant definitions with performance multiplier strings serve no runtime purpose.
 
-## Suggested Cleanup Order
-
-The cleanup has dependency ordering constraints. Phases should proceed bottom-up through the stack.
-
-### Phase 1: Dead Code Audit and Removal
-
-**Dependency:** None (safe first step)
-
-Tasks:
-1. Identify which Rust crates are stubs vs. have real code
-2. Remove stub crates from workspace (Phase 4/5 crates with no consumers)
-3. Remove `ui-applications/` directory (empty)
-4. Remove backward compatibility aliases (`_get_components`, `_is_rust_disabled`)
-5. Audit `ClassicLib/Utils/` for overlap with Rust equivalents
-
-**Build impact:** Fewer crates = faster compile times
-
-### Phase 2: Integration Layer Simplification
-
-**Dependency:** Phase 1 (know what's dead)
-
-Tasks:
-1. Flatten `factory/` subpackage to single `factory.py` module
-2. Replace detector/cache system with try-import pattern
-3. Remove `integration/config.py` (component constants)
-4. Remove `integration/diagnostics.py` (runtime diagnostics)
-5. Remove or heavily simplify `integration/status.py`
-6. Remove `acceleration/` package entirely
-
-**Build impact:** Fewer imports at startup, simpler call paths
-
-### Phase 3: Wrapper Thinning
-
-**Dependency:** Phase 2 (factory simplified first)
-
-Tasks:
-1. For each file in `integration/rust/`, measure: how much is type conversion vs. business logic?
-2. Move business logic from fat wrappers into `-core` Rust crates
-3. Reduce wrappers to thin adapters (target: <50 lines each)
-4. Where wrappers become trivial, consider eliminating them (import PyO3 class directly)
-
-**Build impact:** Rust rebuild required for moved logic. Most impactful phase.
-
-### Phase 4: Interface Consolidation
-
-**Dependency:** Phase 3 (wrappers thinned)
-
-Tasks:
-1. Remove all `_sync` method variants
-2. Remove deprecated `FormIDAnalyzer.py` (keep only `FormIDAnalyzerCore.py`)
-3. Consolidate `orchestrator_core.py` + `hybrid_orchestrator.py` (single orchestrator with optional Rust batch)
-4. Remove dual executor patterns
-5. Eliminate `util_legacy.py`
-
-**Build impact:** API changes require test updates
-
-### Phase 5: Python Fallback Pruning
-
-**Dependency:** Phase 4 (interfaces consolidated)
-
-Tasks:
-1. For each `integration/python/*.py`: is the Rust equivalent always available in production?
-2. Where YES: delete the Python fallback, simplify factory to direct Rust import
-3. Where NO: keep fallback but document why
-4. Target: reduce `integration/python/` from 8 files to 2-3 (only for components without stable Rust)
-
-**Build impact:** Reduced code surface. Must verify Rust is reliable on all target platforms.
+---
 
 ## Integration Points
 
@@ -459,6 +694,8 @@ Tasks:
 | support/ <-> scanning/ | Support provides paths, scanning uses them | Keep; may consolidate some path logic |
 | messaging/ <-> everything | MessageHandler called from all layers | Keep; central messaging is correct |
 | acceleration/ <-> integration/ | Coordinator wraps factory | Remove; unnecessary indirection |
+
+---
 
 ## Ownership Migration Strategy
 
@@ -484,6 +721,8 @@ The end state is "Rust is the engine, Python is GUI/glue." The cleanup establish
 
 **During cleanup:** Add a `CLASSIC_REQUIRE_RUST=1` environment variable (opt-in) that errors instead of falling back. Use this in CI to catch fallback triggers.
 
+---
+
 ## Sources
 
 - Direct codebase analysis of `J:\CLASSIC-Fallout4\` (all findings verified against source files)
@@ -497,4 +736,4 @@ The end state is "Rust is the engine, Python is GUI/glue." The cleanup establish
 
 ---
 *Architecture research for: CLASSIC hybrid Python-Rust codebase cleanup*
-*Researched: 2026-02-01*
+*Researched: 2026-02-01, Updated: 2026-02-02*
