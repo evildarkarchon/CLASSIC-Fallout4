@@ -208,15 +208,15 @@ class ModDetectorResult(Protocol):
 class OrchestratorProtocol(Protocol):
     """Protocol for orchestrator implementations (get_orchestrator).
 
-    Both HybridOrchestrator and OrchestratorCore provide these methods.
+    Phase 9: Rust Orchestrator (via ClassicOrchestrator wrapper) provides these methods.
+    Python OrchestratorCore has been removed.
     """
 
-    async def __aenter__(self) -> Any: ...
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None: ...
-    async def process_crash_log(self, crashlog_file: Path) -> tuple[Path, list[str], bool, Counter[str]]: ...
-    async def process_crash_logs_batch(
-        self, crashlog_files: list[Path]
-    ) -> list[tuple[Path, list[str], bool, Counter[str]]]: ...
+    def process_crash_log(self, log_path: Path) -> Any: ...  # Returns AnalysisResult
+    def process_crash_logs_batch(
+        self, log_paths: list[Path], max_concurrent: int | None = None
+    ) -> Any: ...  # Returns BatchAnalysisResult
+    def is_feature_complete(self) -> bool: ...
 
 
 class FCXHandlerProtocol(Protocol):

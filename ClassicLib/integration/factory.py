@@ -487,49 +487,35 @@ def get_mod_detector() -> dict[str, Any]:  # Returns dict of callable functions
 
 
 def get_orchestrator(
-    yamldata: Any,
-    fcx_mode: bool,
-    show_formid_values: bool,
-    formid_db_exists: bool,
-    remove_list: tuple[str, ...] | None = None,
+    yamldata: Any = None,  # noqa: ARG001 - kept for API compatibility
+    fcx_mode: bool = False,  # noqa: ARG001 - kept for API compatibility
+    show_formid_values: bool = False,  # noqa: ARG001 - kept for API compatibility
+    formid_db_exists: bool = False,  # noqa: ARG001 - kept for API compatibility
+    remove_list: tuple[str, ...] | None = None,  # noqa: ARG001 - kept for API compatibility
 ) -> OrchestratorProtocol:
-    """Return an orchestrator instance for crash log processing and analysis.
+    """Return a Rust orchestrator instance for crash log processing and analysis.
+
+    Phase 9: Returns Rust Orchestrator directly via ClassicOrchestrator wrapper.
+    No Python fallback - Rust is required.
 
     Args:
-        yamldata: Configuration data loaded from YAML files.
-        fcx_mode: Whether to enable FCX mode.
-        show_formid_values: Whether to display FormID hex values.
-        formid_db_exists: Whether the FormID database file exists.
-        remove_list: Optional tuple of strings to filter. Defaults to None.
+        yamldata: Ignored - configuration loaded from Rust YamlData.
+        fcx_mode: Ignored - read from settings.
+        show_formid_values: Ignored - read from settings.
+        formid_db_exists: Ignored - detected automatically.
+        remove_list: Ignored - read from settings.
 
     Returns:
-        Any: A HybridOrchestrator or OrchestratorCore instance.
+        ClassicOrchestrator: Rust-accelerated orchestrator instance.
+
+    Raises:
+        RuntimeError: If Rust orchestrator module is not available.
 
     """
-    try:
-        from ClassicLib.scanning.logs.hybrid_orchestrator import HybridOrchestrator
+    from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
 
-        logger.debug("Using HybridOrchestrator (Rust-accelerated batch processing, 10-20x speedup)")
-        return HybridOrchestrator(
-            yamldata=yamldata,
-            fcx_mode=fcx_mode,
-            show_formid_values=show_formid_values,
-            formid_db_exists=formid_db_exists,
-            remove_list=remove_list,
-        )
-    except (ImportError, AttributeError) as e:
-        logger.warning(f"Failed to import HybridOrchestrator: {e}")
-
-    from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
-
-    logger.debug("Using Python OrchestratorCore implementation")
-    return OrchestratorCore(
-        yamldata=yamldata,
-        fcx_mode=fcx_mode,
-        show_formid_values=show_formid_values,
-        formid_db_exists=formid_db_exists,
-        remove_list=remove_list,
-    )
+    logger.debug("Using Rust Orchestrator (10-150x speedup)")
+    return ClassicOrchestrator()  # type: ignore[return-value]
 
 
 def get_yamldata() -> Any:  # Returns Rust YamlData or Python ClassicScanLogsInfo (incompatible interfaces)

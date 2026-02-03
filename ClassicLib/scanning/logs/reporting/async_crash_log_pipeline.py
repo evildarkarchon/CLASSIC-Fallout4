@@ -2,6 +2,8 @@
 
 This module provides the main AsyncCrashLogPipeline class that integrates
 all async components for maximum performance improvement.
+
+Phase 9: Uses Rust Orchestrator directly for all processing.
 """
 
 import asyncio
@@ -16,7 +18,14 @@ from ClassicLib.integration.factory import get_file_io
 from ClassicLib.messaging import msg_progress_context
 from ClassicLib.scanning.logs.async_reformat import crashlogs_reformat_async
 
-# OrchestratorCore imported lazily to avoid circular import
+# Import Rust orchestrator - required, no Python fallback
+try:
+    from classic_scanlog import Orchestrator, AnalysisConfig
+except ImportError as e:
+    raise RuntimeError(
+        "Rust orchestrator module not available. CLASSIC requires its Rust extensions. "
+        "Please reinstall CLASSIC or rebuild Rust modules with: ./rebuild_rust.ps1"
+    ) from e
 
 # ThreadSafeLogCache and load_crash_logs_async removed - using direct file I/O for better performance
 
@@ -133,48 +142,48 @@ class AsyncCrashLogPipeline:
         # Step 3: Async database processing with orchestrator
         process_start = time.perf_counter()
 
-        # Process logs with progress tracking
+        # Process logs with progress tracking using Rust Orchestrator
         total_logs = len(crashlog_list)
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
-            # Local import to avoid circular dependency
-            from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
+            # Initialize Rust orchestrator with YamlData configuration
+            from ClassicLib.integration.factory import get_yamldata
 
-            # OrchestratorCore now reads files directly - no cache needed
-            async with OrchestratorCore(
-                self.yamldata,
-                self.fcx_mode,
-                self.show_formid_values,
-                self.formid_db_exists,
-            ) as orchestrator:
-                # Dynamic batch sizing based on CPU count and log count
-                cpu_count = os.cpu_count() or 4
-                log_count = len(crashlog_list)
+            rust_yamldata = get_yamldata()
+            rust_config = AnalysisConfig.from_yamldata(rust_yamldata)
 
-                # Calculate optimal batch size
-                # - Use more parallelism on systems with more CPUs
-                # - Adjust for log count to avoid too many small batches
-                if log_count <= 10:
-                    batch_size = max(2, log_count)  # Small number of logs
-                elif log_count <= 50:
-                    batch_size = min(cpu_count * 2, 10)  # Medium number
-                else:
-                    batch_size = min(cpu_count * 3, 20)  # Large number
+            # Apply configuration
+            rust_config.fcx_mode = self.fcx_mode or False
+            rust_config.show_formid_values = self.show_formid_values or False
 
-                logger.debug(f"Using dynamic batch size: {batch_size} (CPU cores: {cpu_count}, logs: {log_count})")
-                all_results = []
+            orchestrator = Orchestrator(rust_config)
+            logger.debug(f"Initialized Rust orchestrator (feature_complete={orchestrator.is_feature_complete()})")
 
-                for i in range(0, len(crashlog_list), batch_size):
-                    batch = crashlog_list[i : i + batch_size]
-                    batch_results = await orchestrator.process_crash_logs_batch(batch)
-                    all_results.extend(batch_results)
+            # Convert paths to strings for Rust
+            log_paths = [str(p) for p in crashlog_list]
 
-                    # Update progress with batch results
-                    for crashlog_file, _, _, _ in batch_results:
-                        progress.update(1, f"Processed {crashlog_file.name}")
+            # Progress callback for Rust orchestrator
+            def progress_callback(current: int, total: int, filename: str) -> None:
+                progress.update(1, f"Processed {filename}")
 
-                    # Small delay between batches to prevent system overload
-                    if i + batch_size < len(crashlog_list):
-                        await asyncio.sleep(0.01)
+            # Process all logs in parallel using Rust orchestrator
+            # Run in thread pool to avoid blocking the event loop
+            rust_results = await asyncio.to_thread(
+                orchestrator.process_logs_batch,
+                log_paths,
+                None,  # max_concurrent = auto
+                progress_callback,
+            )
+
+            # Convert Rust results to Python format
+            all_results = []
+            for rust_result in rust_results:
+                crashlog_file = Path(rust_result.log_path)
+                local_stats: Counter[str] = Counter(
+                    scanned=rust_result.scanned,
+                    incomplete=rust_result.incomplete,
+                    failed=rust_result.failed,
+                )
+                all_results.append((crashlog_file, rust_result.report_lines, rust_result.trigger_scan_failed, local_stats))
 
         self.performance_stats["process_time"] = time.perf_counter() - process_start
         logger.debug(f"Async processing completed in {self.performance_stats['process_time']:.3f}s")

@@ -46,9 +46,10 @@ from ClassicLib.scanning.logs.detect_mods import (
 )
 from ClassicLib.scanning.logs.executor import ClassicScanLogs, ScanLogsExecutor
 from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments as FCXModeHandler
-from ClassicLib.scanning.logs.hybrid_orchestrator import HybridOrchestrator
 from ClassicLib.scanning.logs.models import ScanConfig, ScanResult, ScanStatistics
-from ClassicLib.scanning.logs.orchestrator_core import OrchestratorCore
+
+# Phase 9: Python orchestrators removed - use Rust Orchestrator directly
+# from classic_scanlog import Orchestrator, AnalysisConfig
 from ClassicLib.scanning.logs.parser import (
     extract_module_names,
     extract_segments,
@@ -90,7 +91,6 @@ __all__ = [
     "ScanStatistics",
     "ScanLogsExecutor",
     "ClassicScanLogs",
-    "HybridOrchestrator",
     "crashlogs_scan",
     "crashlogs_scan_async_pure",
     "crashlogs_scan_async_pure_with_qt",
@@ -102,7 +102,6 @@ __all__ = [
     "AsyncCrashLogPipeline",
     "AsyncDatabasePool",
     "FormIDAnalyzerCore",
-    "OrchestratorCore",
     "batch_file_copy_async",
     "batch_file_move_async",
     "crashlogs_reformat_async",

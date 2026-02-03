@@ -256,9 +256,8 @@ class ClassicOrchestrator:
     def process_single_log(self, log_path: Path) -> AnalysisResult:
         """Process a single crash log using Rust orchestrator directly.
 
-        This method is used by HybridOrchestrator when Rust is feature-complete.
-        Unlike process_crash_log(), this calls the Rust orchestrator's process_log
-        method directly instead of using batch processing.
+        Calls the Rust orchestrator's process_log method directly for
+        single-log processing with maximum performance.
 
         Args:
             log_path: Path to the crash log file to process.
