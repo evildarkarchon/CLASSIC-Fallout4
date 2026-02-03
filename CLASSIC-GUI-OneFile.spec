@@ -48,9 +48,6 @@ hiddenimports = [
     # Rust integration
     "ClassicLib.integration",
     "ClassicLib.integration.factory",
-    "ClassicLib.integration.config",
-    "ClassicLib.integration.status",
-    "ClassicLib.integration.detector",
 
     # GUI specific
     "PySide6.QtCore",

@@ -64,6 +64,51 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # ---------------------------------------------------------------------------
+# Startup validation
+# ---------------------------------------------------------------------------
+
+# Required Rust modules for CLASSIC to function.
+# Each tuple is (module_name, class_or_attr_name) checked via detect_component.
+_REQUIRED_RUST_MODULES: list[tuple[str, str | None]] = [
+    ("classic_scanlog", "LogParser"),
+    ("classic_scanlog", "PluginAnalyzer"),
+    ("classic_scanlog", "RecordScanner"),
+    ("classic_scanlog", "ReportGenerator"),
+    ("classic_file_io", "FileIOCore"),
+    ("classic_yaml", "YamlOperations"),
+]
+
+
+def validate_rust_modules() -> None:
+    """Validate that all required Rust modules are importable at startup.
+
+    Checks each required Rust native module and raises a clear error if any
+    are missing. Call this early in both GUI and CLI entry points to provide
+    a user-friendly error message instead of a confusing ImportError later.
+
+    Raises:
+        RuntimeError: If any required Rust module is not available, with a
+            message identifying the missing module and suggesting reinstallation.
+
+    Example:
+        >>> from ClassicLib.integration.factory import validate_rust_modules
+        >>> validate_rust_modules()  # Raises RuntimeError if modules missing
+
+    """
+    for module_name, class_name in _REQUIRED_RUST_MODULES:
+        available, _ = detect_component(module_name, class_name)
+        if not available:
+            component_label = f"{module_name}.{class_name}" if class_name else module_name
+            msg = (
+                f"Required Rust module '{component_label}' is not available. "
+                f"CLASSIC cannot start without its Rust extensions. "
+                f"Please reinstall CLASSIC or rebuild Rust modules with: ./rebuild_rust.ps1"
+            )
+            raise RuntimeError(msg)
+    logger.debug("All required Rust modules validated successfully")
+
+
+# ---------------------------------------------------------------------------
 # Centralized component detection
 # ---------------------------------------------------------------------------
 
@@ -777,6 +822,8 @@ def print_rust_status() -> None:
 
 
 __all__ = [
+    # Startup validation
+    "validate_rust_modules",
     # Detection utilities
     "detect_component",
     "is_component_available",

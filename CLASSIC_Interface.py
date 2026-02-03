@@ -216,6 +216,11 @@ def main() -> None:
     the environment, creates the main window, and starts the event loop.
     Handles top-level exceptions and keyboard interrupts.
     """
+    # Validate required Rust modules before anything else
+    from ClassicLib.integration.factory import validate_rust_modules
+
+    validate_rust_modules()
+
     app: QApplication = QApplication(sys.argv)
     # Initialize application using SetupCoordinator
     coordinator = SetupCoordinator()

@@ -34,9 +34,6 @@ hiddenimports.extend([
     "ClassicLib.rust_loader",
     "ClassicLib.integration",
     "ClassicLib.integration.factory",
-    "ClassicLib.integration.config",
-    "ClassicLib.integration.status",
-    "ClassicLib.integration.detector",
 ])
 
 # Add found Rust modules to hidden imports

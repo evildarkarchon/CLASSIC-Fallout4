@@ -194,6 +194,11 @@ def main() -> None:
     internally), then delegates to async run_scan() for the actual scan operation.
     This structure prevents nested asyncio.run() calls.
     """
+    # Validate required Rust modules before anything else
+    from ClassicLib.integration.factory import validate_rust_modules
+
+    validate_rust_modules()
+
     # Ensure UTF-8 encoding for Windows console
     if sys.platform == "win32":  # type: ignore[comparison-overlap]  # Platform type narrowing
         import io
