@@ -408,6 +408,10 @@ pub struct OrchestratorCore {
     plugin_analyzer: Option<PluginAnalyzer>,
     formid_analyzer: FormIDAnalyzerCore,
     suspect_scanner: Option<SuspectScanner>,
+    /// Record scanner for named record detection
+    record_scanner: Option<RecordScanner>,
+    /// Settings validator for crash generator settings
+    settings_validator: SettingsValidator,
     /// Optional database pool for async FormID lookups
     db_pool: Option<Arc<DatabasePool>>,
     /// Whether the orchestrator has been initialized via async_enter
@@ -490,6 +494,23 @@ impl OrchestratorCore {
         let mods_freq = config.mods_freq.clone();
         let mods_conf = config.mods_conf.clone();
 
+        // Initialize record scanner if we have records list
+        let record_scanner = if !config.classic_records_list.is_empty() {
+            Some(RecordScanner::new(
+                config.classic_records_list.clone(),
+                config.ignore_records.clone(),
+                config.crashgen_name.clone(),
+            ))
+        } else {
+            None
+        };
+
+        // Initialize settings validator
+        let settings_validator = SettingsValidator::new(
+            config.crashgen_name.clone(),
+            config.crashgen_ignore.clone(),
+        );
+
         Ok(Self {
             config,
             file_io: FileIOCore::new("utf-8", "ignore", 100, 50),
@@ -504,6 +525,8 @@ impl OrchestratorCore {
                 mods_conf,
             )?,
             suspect_scanner,
+            record_scanner,
+            settings_validator,
             db_pool: None,
             initialized: false,
         })
@@ -846,6 +869,87 @@ impl OrchestratorCore {
         }
         composer.add(report_gen.generate_suspect_found_footer(found_suspect));
 
+        // Add FCX mode notice
+        let fcx_handler = if self.config.fcx_mode {
+            FcxModeHandler::enabled()
+        } else {
+            FcxModeHandler::disabled()
+        };
+        composer.add(fcx_handler.get_fcx_messages());
+
+        // Extract XSE modules for settings validation (segment 3)
+        let xse_modules_for_settings: HashSet<String> = if segments.len() > 3 {
+            extract_module_names(&segments[3])
+        } else {
+            HashSet::new()
+        };
+
+        // Parse crashgen settings from CRASHGEN segment (segment 4)
+        // Format: "key = value" or "key=value" (TOML-like)
+        let crashgen_settings: HashMap<String, String> = if segments.len() > 4 {
+            segments[4]
+                .iter()
+                .filter_map(|line| {
+                    let line = line.trim();
+                    if let Some(eq_pos) = line.find('=') {
+                        let key = line[..eq_pos].trim().to_string();
+                        let value = line[eq_pos + 1..].trim().to_string();
+                        if !key.is_empty() {
+                            Some((key, value))
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .collect()
+        } else {
+            HashMap::new()
+        };
+
+        // Add settings validation section
+        if !crashgen_settings.is_empty() {
+            composer.add(report_gen.generate_settings_section_header());
+
+            // Achievements check
+            if let Ok(achievements_fragment) = self.settings_validator.scan_buffout_achievements_setting(
+                xse_modules_for_settings.clone(),
+                &crashgen_settings,
+            ) {
+                composer.add(achievements_fragment);
+            }
+
+            // Memory Manager check (check for X-Cell and Baka ScrapHeap)
+            let has_xcell = xse_modules_for_settings.contains("x-cell-fo4.dll");
+            let has_old_xcell = false; // Would need version check
+            let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
+            if let Ok(memory_fragment) = self.settings_validator.scan_buffout_memorymanagement_settings(
+                &crashgen_settings,
+                has_xcell,
+                has_old_xcell,
+                has_baka_scrapheap,
+            ) {
+                composer.add(memory_fragment);
+            }
+
+            // ArchiveLimit check
+            if let Ok(archive_fragment) = self.settings_validator.scan_archivelimit_setting(
+                &crashgen_settings,
+                None, // Version parsing would go here
+            ) {
+                composer.add(archive_fragment);
+            }
+
+            // LooksMenu check
+            if let Ok(looksmenu_fragment) = self.settings_validator.scan_buffout_looksmenu_setting(
+                &crashgen_settings,
+                xse_modules_for_settings.clone(),
+            ) {
+                composer.add(looksmenu_fragment);
+            }
+        }
+
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
             // Extract GPU info from system segment (segment 1)
@@ -979,6 +1083,21 @@ impl OrchestratorCore {
                 callstack_segment.iter().map(|s| s.to_string()).collect();
             let formids = self.formid_analyzer.extract_formids(callstack_lines);
             formid_count = formids.len();
+        }
+
+        // Add Named Records section (scan callstack for named records)
+        if let Some(ref record_scanner) = self.record_scanner {
+            if segments.len() > 2 {
+                let callstack_segment = &segments[2];
+                let callstack_lines: Vec<String> =
+                    callstack_segment.iter().map(|s| s.to_string()).collect();
+
+                let (record_report, _matches) = record_scanner.scan_named_records(&callstack_lines);
+                if !record_report.is_empty() {
+                    composer.add(report_gen.generate_record_section_header());
+                    composer.add(ReportFragment::from_lines(record_report));
+                }
+            }
         }
 
         // Add footer with timing information
