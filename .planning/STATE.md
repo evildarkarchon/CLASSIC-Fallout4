@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.2.0-part2 Rust Migration - Phase 8 (Report Generation) - In Progress
+**Current focus:** v8.2.0-part2 Rust Migration - Phase 8 Complete, Ready for Phase 9
 
 ## Current Position
 
-Phase: 8 of 11 (Report Generation)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-03 — Completed 08-01 (Rust Report Generator Wiring)
+Phase: 8 of 11 (Report Generation) - COMPLETE
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-02-03 — Completed 08-02 (Python Fallback Removal & Parity Validation)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 5/12] 42%
-[#####.......] Phase 8 in progress
+Progress: [v1.0: 14/14] [v8.2.0-part2: 6/12] 50%
+[######......] Phase 8 complete
 
 ## Performance Metrics
 
@@ -40,7 +40,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 5/12] 42%
 |-------|-------|-------|----------|
 | 06-foundation-settings | 2/2 | ~15m | ~7.5m |
 | 07-game-detection | 2/2 | ~27m | ~13.5m |
-| 08-report-generation | 1/2 | ~4m | ~4m |
+| 08-report-generation | 2/2 | ~15m | ~7.5m |
 
 ## Accumulated Context
 
@@ -60,6 +60,8 @@ v8.2.0-part2 decisions:
 - Rust-only, hard fail: no Python fallback for path detection (ImportError propagates)
 - Rust-only report generator: no Python fallback, RuntimeError if Rust unavailable
 - VR removal: VR indicator text no longer displayed in reports (VR detection still used internally)
+- Semantic parity for error sections: character-for-character not possible, validate meaning instead
+- Deprecation pattern: module docstring + class docstring + runtime DeprecationWarning
 
 ### Pending Todos
 
@@ -73,6 +75,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 08-01 (Rust Report Generator Wiring)
+Stopped at: Completed Phase 8 (Report Generation)
 Resume file: None
-Next action: Execute 08-02 (Python Fallback Removal from ReportFragment/Composer)
+Next action: Plan Phase 9 (Analysis Pipeline)
