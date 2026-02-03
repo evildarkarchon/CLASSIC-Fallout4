@@ -212,8 +212,8 @@ class OrchestratorCore:
         # Create report composer
         composer = ReportComposer()
 
-        # Generate report header with VR indicator if auto-detected
-        composer.add(self.report_generator.generate_header(crashlog_file.name, is_vr_log))  # pyright: ignore[reportArgumentType]
+        # Generate report header
+        composer.add(self.report_generator.generate_header(crashlog_file.name))  # pyright: ignore[reportArgumentType]
 
         # Parse crash log segments using VR-AWARE settings
         parser = get_parser()
@@ -329,7 +329,6 @@ class OrchestratorCore:
                 version_current,
                 version_latest,
                 version_latest_vr,
-                is_vr_log,
                 game_version_id=game_version_id,
             )  # pyright: ignore[reportArgumentType]
         )
