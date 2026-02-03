@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 5 - Fallback Pruning. Plan 01 complete. Ready for Plan 02.
+**Current focus:** Phase 5 - Fallback Pruning. Plan 02 complete. Ready for Plan 03.
 
 ## Current Position
 
 Phase: 5 of 5 (Fallback Pruning)
-Plan: 1 of 3 complete
+Plan: 2 of 3 complete
 Status: In progress
-Last activity: 2026-02-02 -- Completed 05-01-PLAN.md (easy fallback removal)
+Last activity: 2026-02-02 -- Completed 05-02-PLAN.md (hard fallback removal)
 
-Progress: [████████████░] 93%
+Progress: [█████████████░] 96%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 10m 30s
-- Total execution time: ~2 hours
+- Total plans completed: 13
+- Average duration: 11m 30s
+- Total execution time: ~2.5 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [████████████░] 93%
 | 02-integration-layer-simplification | 2/2 | 20m | 10m |
 | 03-wrapper-thinning | 2/2 | 18m | 9m |
 | 04-interface-consolidation | 3/3 | 33m | 11m |
-| 05-fallback-pruning | 1/3 | 22m | 22m |
+| 05-fallback-pruning | 2/3 | 46m | 23m |
 
 **Recent Trend:**
-- Last 5 plans: 05-01 (22m), 04-03 (8m), 04-02 (17m), 04-01 (8m), 03-02 (10m)
-- Trend: 05-01 longer due to broad test file updates across 17+ files
+- Last 5 plans: 05-02 (24m), 05-01 (22m), 04-03 (8m), 04-02 (17m), 04-01 (8m)
+- Trend: Phase 5 plans longer due to broad test updates and verification
 
 *Updated after each plan completion*
 
@@ -76,6 +76,9 @@ Recent decisions affecting current work:
 - [05-01]: RuntimeError pattern for 4 factory functions (file_io, formid, record, report)
 - [05-01]: database_py removed without factory.py changes (uses async_pool.py path)
 - [05-01]: CLASSIC_DISABLE_RUST removed entirely -- Rust always attempted
+- [05-02]: RuntimeError pattern for 3 more factory functions (parser, plugin, mod_detector)
+- [05-02]: Fail-fast init in parser_rust.py and plugin_rust.py (raise in __init__)
+- [05-02]: integration/python/ directory completely eliminated
 
 ### Pending Todos
 
@@ -89,5 +92,5 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 05-01-PLAN.md (easy fallback removal)
+Stopped at: Completed 05-02-PLAN.md (hard fallback removal)
 Resume file: None
