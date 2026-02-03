@@ -76,15 +76,18 @@ class ScanLogsExecutor:
                 the database pool. Increases initialization time but
                 eliminates freeze on first scan. Default is False.
 
+        Note:
+            crashlog_list is initialized lazily during execute_scan() to avoid
+            calling sync settings functions from async context. See
+            _ensure_crashlog_list_async() for the lazy loading implementation.
+
         """
         self.config = config or self._load_config_from_settings()
 
-        # Get crash log files
-        self.crashlog_list: list[Path] = crashlogs_get_files()
-
-        # Load settings if not provided in config
-        if not self.config.remove_list:
-            self.config.remove_list = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
+        # Crash log files and remove_list loaded lazily in execute_scan() via _ensure_crashlog_list_async()
+        # This avoids calling sync functions (classic_settings, yaml_settings) from async context
+        self.crashlog_list: list[Path] = []
+        # Note: remove_list also loaded lazily if not provided - see _ensure_crashlog_list_async()
 
         # Reformatting now happens inline during processing for zero-delay startup
         logger.debug("Reformatting will happen inline during log processing")
@@ -99,11 +102,10 @@ class ScanLogsExecutor:
         # Set up database availability
         self.config.formid_db_exists = any(db.is_file() for db in DB_PATHS)
 
-        # Initialize statistics
+        # Initialize statistics (total_files set during _ensure_crashlog_list_async)
         self.statistics = ScanStatistics()
-        self.statistics.total_files = len(self.crashlog_list)
 
-        logger.debug(f"Initiated crash log scan for {len(self.crashlog_list)} files")
+        logger.debug("Initiated crash log scanner (crash logs loaded lazily)")
 
     async def warm_up(self) -> None:
         """Proactively warm up resources to eliminate freeze on first scan.
@@ -133,6 +135,39 @@ class ScanLogsExecutor:
             logger.debug("Warmed up database connection pool")
 
         logger.info("Resource warm-up complete - scanning will be smooth")
+
+    async def _ensure_crashlog_list_async(self) -> None:
+        """Lazily load crash log files and remove_list using async-safe method.
+
+        This method is called during execute_scan() to avoid sync settings
+        calls from async context. Uses asyncio.to_thread() to run the sync
+        crashlogs_get_files() in a thread pool, avoiding async context detection.
+
+        The sync function runs in a thread pool worker which does NOT have an
+        event loop running, so the async context detection in yaml_settings()
+        returns False, allowing the sync function to execute safely.
+        """
+        if self.crashlog_list:
+            return  # Already loaded
+
+        # Helper function to run sync operations in thread pool
+        def _load_sync_resources() -> tuple[list[Path], tuple[str, ...]]:
+            """Load crash logs and remove_list synchronously in thread pool."""
+            logs = crashlogs_get_files()
+            remove_list = yaml_settings(tuple, YAML.Main, "exclude_log_records") or ("",)
+            return logs, remove_list
+
+        # Run sync functions in thread pool to avoid async context detection
+        logs, remove_list = await asyncio.to_thread(_load_sync_resources)
+
+        self.crashlog_list = logs
+        self.statistics.total_files = len(self.crashlog_list)
+
+        # Only set remove_list if not already provided in config
+        if not self.config.remove_list:
+            self.config.remove_list = remove_list
+
+        logger.debug(f"Lazily loaded {len(self.crashlog_list)} crash log files")
 
     @staticmethod
     def _load_config_from_settings() -> ScanConfig:
@@ -219,6 +254,9 @@ class ScanLogsExecutor:
             RuntimeError: If resource initialization fails.
 
         """
+        # Load crash log files first (uses asyncio.to_thread to avoid async context issues)
+        await self._ensure_crashlog_list_async()
+
         # Initialize yamldata here using async factory (no AsyncBridge overhead)
         # If eager_load was set, warm_up() should have been called already
         if self.yamldata is None:
@@ -241,10 +279,14 @@ class ScanLogsExecutor:
             rust_yamldata = get_yamldata()
             rust_config = AnalysisConfig.from_yamldata(rust_yamldata)
 
-            # Apply configuration from ScanConfig
-            rust_config.fcx_mode = self.config.fcx_mode
-            rust_config.show_formid_values = self.config.show_formid_values
-            rust_config.simplify_logs = self.config.simplify_logs
+            # Apply configuration from ScanConfig (only override if not None)
+            # rust_config already has defaults from AnalysisConfig.from_yamldata()
+            if self.config.fcx_mode is not None:
+                rust_config.fcx_mode = self.config.fcx_mode
+            if self.config.show_formid_values is not None:
+                rust_config.show_formid_values = self.config.show_formid_values
+            if self.config.simplify_logs is not None:
+                rust_config.simplify_logs = self.config.simplify_logs
             if self.config.remove_list:
                 rust_config.remove_list = list(self.config.remove_list)
 

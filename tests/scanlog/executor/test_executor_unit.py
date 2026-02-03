@@ -57,26 +57,23 @@ class TestScanLogsExecutorInit:
             assert executor.config.show_formid_values is True
             assert executor.config.simplify_logs is True
 
-    def test_init_detects_crash_logs(self, tmp_path: Path) -> None:
-        """Test initialization detects crash log files."""
-        # Create mock crash log files
-        crash_files = [
-            tmp_path / "crash-1.log",
-            tmp_path / "crash-2.log",
-        ]
-        for f in crash_files:
-            f.touch()
+    def test_init_defers_crash_logs_loading(self) -> None:
+        """Test initialization defers crash log file loading (lazy loading).
 
+        Note: crashlog_list is now loaded lazily during execute_scan() via
+        _ensure_crashlog_list_async() to avoid calling sync settings functions
+        from async context. This test verifies __init__ does NOT load crash logs.
+        """
         with (
-            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
             patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
-            assert len(executor.crashlog_list) == 2
-            assert executor.statistics.total_files == 2
+            # crashlog_list should be empty after __init__ (lazy loading)
+            assert len(executor.crashlog_list) == 0
+            assert executor.statistics.total_files == 0
 
     def test_init_detects_formid_db(self, tmp_path: Path) -> None:
         """Test initialization detects FormID database."""
@@ -105,19 +102,22 @@ class TestScanLogsExecutorInit:
 
             assert executor._eager_load is True
 
-    def test_init_loads_remove_list(self) -> None:
-        """Test initialization loads remove_list from YAML settings."""
-        remove_list = ("record1", "record2")
+    def test_init_defers_remove_list_loading(self) -> None:
+        """Test initialization defers remove_list loading (lazy loading).
 
+        Note: remove_list is now loaded lazily during execute_scan() via
+        _ensure_crashlog_list_async() to avoid calling sync yaml_settings()
+        from async context. This test verifies __init__ does NOT load remove_list.
+        """
         with (
-            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
-            patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=remove_list),
+            patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
             patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
-            assert executor.config.remove_list == remove_list
+            # remove_list should be empty tuple after __init__ (deferred to execute_scan)
+            assert executor.config.remove_list == ()
 
 
 @pytest.mark.unit
@@ -157,6 +157,79 @@ class TestScanLogsExecutorLoadConfig:
             assert config.show_formid_values is True
             assert config.move_unsolved_logs is True
             assert config.simplify_logs is True
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+class TestScanLogsExecutorLazyLoading:
+    """Test suite for lazy loading via _ensure_crashlog_list_async."""
+
+    async def test_ensure_crashlog_list_loads_files(self, tmp_path: Path) -> None:
+        """Test _ensure_crashlog_list_async loads crash log files."""
+        crash_files = [tmp_path / f"crash-{i}.log" for i in range(3)]
+        for f in crash_files:
+            f.touch()
+
+        with (
+            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files),
+            patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+        ):
+            executor = ScanLogsExecutor()
+
+            # Before lazy loading
+            assert len(executor.crashlog_list) == 0
+            assert executor.statistics.total_files == 0
+
+            # Trigger lazy loading
+            await executor._ensure_crashlog_list_async()
+
+            # After lazy loading
+            assert len(executor.crashlog_list) == 3
+            assert executor.statistics.total_files == 3
+
+    async def test_ensure_crashlog_list_loads_remove_list(self) -> None:
+        """Test _ensure_crashlog_list_async loads remove_list when not provided."""
+        remove_list = ("record1", "record2")
+
+        with (
+            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=remove_list),
+            patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+        ):
+            executor = ScanLogsExecutor()
+
+            # Before lazy loading
+            assert executor.config.remove_list == ()
+
+            # Trigger lazy loading
+            await executor._ensure_crashlog_list_async()
+
+            # After lazy loading
+            assert executor.config.remove_list == remove_list
+
+    async def test_ensure_crashlog_list_skips_if_already_loaded(self, tmp_path: Path) -> None:
+        """Test _ensure_crashlog_list_async skips if already loaded."""
+        crash_files = [tmp_path / "crash-1.log"]
+        crash_files[0].touch()
+
+        with (
+            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files) as mock_get_files,
+            patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
+            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+        ):
+            executor = ScanLogsExecutor()
+
+            # First call loads files
+            await executor._ensure_crashlog_list_async()
+            assert mock_get_files.call_count == 1
+
+            # Second call should skip (already loaded)
+            await executor._ensure_crashlog_list_async()
+            assert mock_get_files.call_count == 1  # Still 1, not called again
 
 
 @pytest.mark.unit
@@ -256,21 +329,22 @@ class TestScanLogsExecutorStatistics:
             assert executor.statistics.incomplete == 0
             assert executor.statistics.failed == 0
 
-    def test_statistics_tracks_total_files(self, tmp_path: Path) -> None:
-        """Test statistics track total files count."""
-        crash_files = [tmp_path / f"crash-{i}.log" for i in range(5)]
-        for f in crash_files:
-            f.touch()
+    def test_statistics_defers_total_files(self) -> None:
+        """Test statistics defer total_files count (lazy loading).
 
+        Note: total_files is now set during _ensure_crashlog_list_async()
+        which is called in execute_scan(). This test verifies total_files
+        is 0 after __init__ (lazy loading pattern).
+        """
         with (
-            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
             patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
         ):
             executor = ScanLogsExecutor()
 
-            assert executor.statistics.total_files == 5
+            # total_files should be 0 after __init__ (set during execute_scan)
+            assert executor.statistics.total_files == 0
 
 
 @pytest.mark.unit
