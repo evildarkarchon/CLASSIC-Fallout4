@@ -687,6 +687,8 @@ impl OrchestratorCore {
     /// # }
     /// ```
     pub async fn process_log(&self, log_path: String) -> Result<AnalysisResult> {
+        use crate::report::{ReportComposer, ReportFragment};
+
         let start_time = std::time::Instant::now();
 
         // Read log file
@@ -709,19 +711,55 @@ impl OrchestratorCore {
         // Parse log into segments
         let segments = self.parser.parse_segments(&lines);
 
-        // Initialize report
-        let mut report_lines = Vec::new();
-        report_lines.push(format!("Analysis of: {}\n", log_path));
-        report_lines.push(format!("Segments found: {}\n", segments.len()));
-        report_lines.push("\n".to_string());
+        // Create ReportGenerator and ReportComposer for proper formatting
+        let report_gen = self.create_report_generator();
+        let mut composer = ReportComposer::new();
 
         // Statistics
         let mut formid_count = 0;
         let mut plugin_count = 0;
         let mut suspect_count = 0;
 
+        // Extract filename from path for header
+        let crashlog_filename = Path::new(&log_path)
+            .file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or(&log_path);
+
+        // Generate header
+        composer.add(report_gen.generate_header(crashlog_filename));
+
+        // Extract header info (crashgen version, main error) from the raw processed lines
+        // We use processed_lines because header is in the first ~20 lines before segmentation
+        let header_info = self.parser.parse_crash_header(&processed_lines).unwrap_or_default();
+
+        // Get crashgen version from header info
+        let crashgen_version_str = header_info.get("crashgen_version").cloned().unwrap_or_default();
+
+        // Get main error - from header parsing or fallback to first "Unhandled exception" line
+        let main_error = header_info.get("main_error").cloned().unwrap_or_else(|| {
+            // Fallback: search processed_lines for Unhandled exception
+            processed_lines
+                .iter()
+                .find(|line| line.starts_with("Unhandled exception"))
+                .cloned()
+                .unwrap_or_default()
+        });
+
+        // Check crashgen version status
+        let (_, is_outdated) = self.check_crashgen_version(&crashgen_version_str);
+
+        // Generate error section
+        composer.add(report_gen.generate_error_section(
+            &main_error,
+            &crashgen_version_str,
+            is_outdated,
+        ));
+
         // Store plugins for mod detection
         let mut plugins_map: Option<HashMap<String, String>> = None;
+        let mut plugin_limit_triggered = false;
+        let mut plugin_limit_disabled = false;
 
         // Extract plugins from segments (if plugin analyzer is available)
         if let Some(ref analyzer) = self.plugin_analyzer {
@@ -734,61 +772,27 @@ impl OrchestratorCore {
                     plugin_segment.iter().map(|s| s.to_string()).collect();
 
                 // Scan plugins using the analyzer
-                if let Ok((plugins, loaded, _)) = analyzer.loadorder_scan_log(
+                if let Ok((plugins, limit_triggered, limit_disabled)) = analyzer.loadorder_scan_log(
                     plugin_lines,
                     Some(self.config.game_version.as_str()),
                     Some(self.config.crashgen_latest.as_str()),
                 ) {
                     plugin_count = plugins.len();
-                    if loaded {
-                        report_lines.push(format!("PLUGINS: {} loaded\n", plugin_count));
-
-                        // Add top 5 plugins to report
-                        let sample_plugins: Vec<_> = plugins.keys().take(5).collect();
-                        for (i, plugin) in sample_plugins.iter().enumerate() {
-                            report_lines.push(format!("  {}. {}\n", i + 1, plugin));
-                        }
-                        if plugin_count > 5 {
-                            report_lines.push(format!("  ... and {} more\n", plugin_count - 5));
-                        }
-                        report_lines.push("\n".to_string());
-                    }
+                    plugin_limit_triggered = limit_triggered;
+                    plugin_limit_disabled = limit_disabled;
                     // Store plugins for mod detection
                     plugins_map = Some(plugins);
                 }
             }
         }
 
-        // Extract FormIDs from callstack (typically the 3rd segment)
-        if segments.len() > 2 {
-            let callstack_segment = &segments[2];
-
-            // Convert Arc<str> to String for FormID extraction
-            let callstack_lines: Vec<String> =
-                callstack_segment.iter().map(|s| s.to_string()).collect();
-
-            // Extract FormIDs using FormIDAnalyzerCore
-            let formids = self.formid_analyzer.extract_formids(callstack_lines);
-            formid_count = formids.len();
-
-            if formid_count > 0 {
-                report_lines.push(format!("FORMIDS: {} found\n", formid_count));
-
-                // Add top 5 FormIDs to report
-                for (i, formid) in formids.iter().take(5).enumerate() {
-                    report_lines.push(format!("  {}. {}\n", i + 1, formid));
-                }
-                if formid_count > 5 {
-                    report_lines.push(format!("  ... and {} more\n", formid_count - 5));
-                }
-                report_lines.push("\n".to_string());
-            }
-        }
-
         // Scan for suspects (if suspect scanner is available)
+        let mut found_suspect = false;
+        let mut suspect_fragments: Vec<ReportFragment> = Vec::new();
+
         if let Some(ref scanner) = self.suspect_scanner {
-            // Extract main error (typically first segment)
-            let main_error = if !segments.is_empty() {
+            // Extract main error text (typically first segment)
+            let main_error_text = if !segments.is_empty() {
                 segments[0].join("\n")
             } else {
                 String::new()
@@ -805,34 +809,45 @@ impl OrchestratorCore {
 
             // Scan for error suspects
             let (error_fragment, error_found) = scanner
-                .suspect_scan_mainerror(&main_error, max_warn_length)
-                .unwrap_or_else(|_| (crate::report::ReportFragment::empty(), false));
+                .suspect_scan_mainerror(&main_error_text, max_warn_length)
+                .unwrap_or_else(|_| (ReportFragment::empty(), false));
 
             // Scan for stack suspects
             let (stack_fragment, stack_found) = scanner
-                .suspect_scan_stack(&main_error, &callstack, max_warn_length)
-                .unwrap_or_else(|_| (crate::report::ReportFragment::empty(), false));
+                .suspect_scan_stack(&main_error_text, &callstack, max_warn_length)
+                .unwrap_or_else(|_| (ReportFragment::empty(), false));
 
-            if error_found || stack_found {
-                report_lines.push("SUSPECTS FOUND:\n".to_string());
-                report_lines.push("─".repeat(60).to_string());
-                report_lines.push("\n".to_string());
+            // Check for DLL crash pattern
+            let dll_fragment = SuspectScanner::check_dll_crash(&main_error_text)
+                .unwrap_or_else(|_| ReportFragment::empty());
 
-                if error_found {
-                    report_lines.extend(error_fragment.to_list());
-                }
-
-                if stack_found {
-                    report_lines.extend(stack_fragment.to_list());
-                }
-
-                report_lines.push("\n".to_string());
-                suspect_count = if error_found { 1 } else { 0 } + if stack_found { 1 } else { 0 };
+            if error_found {
+                suspect_fragments.push(error_fragment);
+                found_suspect = true;
             }
+
+            if stack_found {
+                suspect_fragments.push(stack_fragment);
+                found_suspect = true;
+            }
+
+            if !dll_fragment.is_empty() {
+                suspect_fragments.push(dll_fragment);
+                found_suspect = true;
+            }
+
+            suspect_count = suspect_fragments.len();
         }
 
+        // Add suspect section
+        composer.add(report_gen.generate_suspect_section_header());
+        for fragment in suspect_fragments {
+            composer.add(fragment);
+        }
+        composer.add(report_gen.generate_suspect_found_footer(found_suspect));
+
         // Mod detection (if we have plugin data)
-        if let Some(plugins) = plugins_map {
+        if let Some(ref plugins) = plugins_map {
             // Extract GPU info from system segment (segment 1)
             let gpu_rival_string: Option<String> = if segments.len() > 1 {
                 let system_segment: Vec<String> =
@@ -857,7 +872,8 @@ impl OrchestratorCore {
                     detect_mods_double(self.config.mods_conf.clone(), plugins.clone())
                 {
                     if !conflict_lines.is_empty() {
-                        report_lines.extend(conflict_lines);
+                        composer.add(report_gen.generate_mod_check_header("May Conflict With Each Other"));
+                        composer.add(ReportFragment::from_lines(conflict_lines));
                     }
                 }
             }
@@ -868,7 +884,8 @@ impl OrchestratorCore {
                     detect_mods_single(self.config.mods_freq.clone(), plugins.clone())
                 {
                     if !freq_lines.is_empty() {
-                        report_lines.extend(freq_lines);
+                        composer.add(report_gen.generate_mod_check_header("Can Cause Frequent Crashes"));
+                        composer.add(ReportFragment::from_lines(freq_lines));
                     }
                 }
             }
@@ -879,7 +896,8 @@ impl OrchestratorCore {
                     detect_mods_single(self.config.mods_solu.clone(), plugins.clone())
                 {
                     if !solu_lines.is_empty() {
-                        report_lines.extend(solu_lines);
+                        composer.add(report_gen.generate_mod_check_header("Have Known Solutions"));
+                        composer.add(ReportFragment::from_lines(solu_lines));
                     }
                 }
             }
@@ -893,7 +911,8 @@ impl OrchestratorCore {
                     xse_modules.clone(),
                 ) {
                     if !important_lines.is_empty() {
-                        report_lines.extend(important_lines);
+                        composer.add(report_gen.generate_mod_check_header("Are Important Core Mods"));
+                        composer.add(ReportFragment::from_lines(important_lines));
                     }
                 }
             }
@@ -904,21 +923,77 @@ impl OrchestratorCore {
                     detect_mods_single(self.config.mods_opc2.clone(), plugins.clone())
                 {
                     if !opc2_lines.is_empty() {
-                        report_lines.extend(opc2_lines);
+                        composer.add(report_gen.generate_mod_check_header("Are Outdated, Redundant, or Have Community Patches"));
+                        composer.add(ReportFragment::from_lines(opc2_lines));
                     }
                 }
             }
         }
 
-        report_lines.push("─".repeat(60).to_string());
-        report_lines.push("\n".to_string());
+        // Add plugin section if we have plugin limit warnings
+        if plugin_limit_triggered || plugin_limit_disabled {
+            composer.add(report_gen.generate_plugin_suspect_header());
+            let mut plugin_lines = Vec::new();
+            if plugin_limit_triggered {
+                plugin_lines.push("⚠️ **PLUGIN LIMIT REACHED!**\n\n".to_string());
+                plugin_lines.push("Your load order has reached the plugin limit (255 plugins).\n".to_string());
+                plugin_lines.push("This may cause instability. Consider merging plugins or removing unnecessary ones.\n\n".to_string());
+            }
+            if plugin_limit_disabled {
+                plugin_lines.push("ℹ️ *Plugin limit checking is disabled for this game version.*\n\n".to_string());
+            }
+            plugin_lines.push(format!("**Total Plugins Detected:** {}\n\n", plugin_count));
+            composer.add(ReportFragment::from_lines(plugin_lines));
+        }
+
+        // Extract FormIDs from callstack (typically the 3rd segment)
+        if segments.len() > 2 && self.config.show_formid_values {
+            let callstack_segment = &segments[2];
+
+            // Convert Arc<str> to String for FormID extraction
+            let callstack_lines: Vec<String> =
+                callstack_segment.iter().map(|s| s.to_string()).collect();
+
+            // Extract FormIDs using FormIDAnalyzerCore
+            let formids = self.formid_analyzer.extract_formids(callstack_lines);
+            formid_count = formids.len();
+
+            if formid_count > 0 {
+                composer.add(report_gen.generate_formid_section_header());
+                let mut formid_lines = Vec::new();
+                formid_lines.push(format!("**FormIDs Found:** {}\n\n", formid_count));
+                for formid in formids.iter().take(20) {
+                    formid_lines.push(format!("- `{}`\n", formid));
+                }
+                if formid_count > 20 {
+                    formid_lines.push(format!("\n*... and {} more FormIDs*\n\n", formid_count - 20));
+                } else {
+                    formid_lines.push("\n".to_string());
+                }
+                composer.add(ReportFragment::from_lines(formid_lines));
+            }
+        } else if segments.len() > 2 {
+            // Still extract FormIDs for statistics even if not showing values
+            let callstack_segment = &segments[2];
+            let callstack_lines: Vec<String> =
+                callstack_segment.iter().map(|s| s.to_string()).collect();
+            let formids = self.formid_analyzer.extract_formids(callstack_lines);
+            formid_count = formids.len();
+        }
+
+        // Add footer with timing information
         let elapsed = start_time.elapsed();
         let elapsed_us = elapsed.as_micros() as u64;
         let elapsed_ms_display = elapsed_us as f64 / 1000.0;
-        report_lines.push(format!(
-            "Analysis completed in {:.2}ms\n",
-            elapsed_ms_display
-        ));
+
+        composer.add(report_gen.generate_footer());
+        composer.add(ReportFragment::from_lines(vec![
+            format!("\n*Analysis completed in {:.2}ms*\n", elapsed_ms_display),
+        ]));
+
+        // Compose final report
+        let final_report = composer.compose();
+        let report_lines = final_report.to_list();
 
         let mut result = AnalysisResult::success(log_path, report_lines, elapsed_us);
 
