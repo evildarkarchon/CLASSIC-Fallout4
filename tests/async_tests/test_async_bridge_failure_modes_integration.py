@@ -38,18 +38,15 @@ class TestAsyncBridgeFailureModes:
             # Clear the instances dict
             AsyncBridge._instances.clear()
 
-    def test_fallback_when_rust_unavailable(self) -> None:
-        """Test fallback mechanism when Rust acceleration is unavailable."""
+    def test_async_bridge_works_without_rust(self) -> None:
+        """Test AsyncBridge works regardless of Rust availability."""
         bridge = AsyncBridge.get_instance()
 
-        # Simulate Rust unavailable scenario (patch env var to disable Rust)
-        with patch.dict("os.environ", {"CLASSIC_DISABLE_RUST": "1"}):
-            # Should still work with Python fallback
-            async def test_func():
-                return "fallback_result"
+        async def test_func():
+            return "result"
 
-            result = bridge.run_async(test_func())
-            assert result == "fallback_result"
+        result = bridge.run_async(test_func())
+        assert result == "result"
 
     def test_error_propagation_from_async_to_sync(self) -> None:
         """Test that exceptions properly propagate from async to sync context."""

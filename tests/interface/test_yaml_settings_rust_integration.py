@@ -9,7 +9,6 @@ This test module verifies that:
 5. AsyncBridge coordination works correctly
 """
 
-import os
 from unittest.mock import patch
 
 import pytest
@@ -260,40 +259,6 @@ async def test_rust_faster_than_python(yaml_file_ops, tmp_path):
     # Note: This is a basic sanity check, not a rigorous benchmark
     print(f"Rust time: {rust_time:.4f}s, Python time: {python_time:.4f}s")
     # Don't assert on speed for CI/CD stability, just log it
-
-
-# Test environment variable control
-
-
-@pytest.mark.unit
-def test_rust_can_be_disabled_via_env():
-    """Test that Rust can be disabled via environment variable."""
-    from ClassicLib.integration.factory import _DISABLE_RUST_ENV_VAR as DISABLE_RUST_ENV_VAR
-    from ClassicLib.integration.factory import _is_rust_disabled
-
-    # Save original value
-    original = os.environ.get(DISABLE_RUST_ENV_VAR)
-
-    try:
-        # Test enabling
-        os.environ[DISABLE_RUST_ENV_VAR] = "0"
-        assert not _is_rust_disabled(), "Should not be disabled with '0'"
-
-        # Test disabling
-        os.environ[DISABLE_RUST_ENV_VAR] = "1"
-        assert _is_rust_disabled(), "Should be disabled with '1'"
-
-        os.environ[DISABLE_RUST_ENV_VAR] = "true"
-        assert _is_rust_disabled(), "Should be disabled with 'true'"
-
-        os.environ[DISABLE_RUST_ENV_VAR] = "yes"
-        assert _is_rust_disabled(), "Should be disabled with 'yes'"
-    finally:
-        # Restore original value
-        if original is not None:
-            os.environ[DISABLE_RUST_ENV_VAR] = original
-        elif DISABLE_RUST_ENV_VAR in os.environ:
-            del os.environ[DISABLE_RUST_ENV_VAR]
 
 
 # Test cache behavior

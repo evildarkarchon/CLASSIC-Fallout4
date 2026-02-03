@@ -11,7 +11,6 @@ Note: yaml_async_core and async_yaml_core fixtures are provided by yaml_fixtures
 Note: yaml_temp_file and temp_yaml_file are provided by yaml_fixtures.py
 """
 
-import os
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
@@ -224,7 +223,7 @@ def mock_yamldata_with_data() -> MagicMock:
 
 @pytest.fixture
 def mock_yamldata_python_only() -> Any:
-    """Mock yamldata that DISABLES Rust acceleration (forces Python fallback).
+    """Mock yamldata for tests that use complex mocking patterns.
 
     Use this fixture ONLY for stress tests or unit tests that use complex
     mocking patterns that don't work with PyO3 type conversion.
@@ -234,11 +233,6 @@ def mock_yamldata_python_only() -> Any:
     Yields:
         Mock: Simple mock object for Python-only testing.
     """
-    # Disable Rust to avoid PyO3 type conversion issues with Mock objects
-    original_value = os.environ.get("CLASSIC_DISABLE_RUST")
-    os.environ["CLASSIC_DISABLE_RUST"] = "1"
-
-    # Create a simple mock that works with Python fallback
     mock = Mock()
     mock.game_path = "C:\\Games\\Fallout4"
     mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
@@ -246,12 +240,6 @@ def mock_yamldata_python_only() -> Any:
     mock.settings = {}
 
     yield mock
-
-    # Restore original environment variable state
-    if original_value is None:
-        os.environ.pop("CLASSIC_DISABLE_RUST", None)
-    else:
-        os.environ["CLASSIC_DISABLE_RUST"] = original_value
 
 
 @pytest.fixture

@@ -109,15 +109,6 @@ class TestPythonParserWrapper:
 class TestGetParser:
     """Tests for get_parser function."""
 
-    def test_returns_python_wrapper_when_rust_disabled(self) -> None:
-        """Test returns PythonParserWrapper when Rust is disabled."""
-        from ClassicLib.integration.factory import PythonParserWrapper, get_parser
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_parser()
-
-        assert isinstance(result, PythonParserWrapper)
-
     def test_returns_python_wrapper_on_import_error(self) -> None:
         """Test returns PythonParserWrapper when Rust import fails."""
         import builtins
@@ -131,10 +122,7 @@ class TestGetParser:
                 raise ImportError("No module")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_parser()
 
         assert isinstance(result, PythonParserWrapper)

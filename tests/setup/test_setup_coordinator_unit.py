@@ -605,7 +605,6 @@ class TestLogRustAccelerationStatus:
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
             patch("ClassicLib.integration.factory.detect_component", mock_detect),
             patch.object(SetupCoordinator, "_log_active_acceleration") as mock_log_active,
             patch("ClassicLib.support.setup.logger"),
@@ -613,24 +612,6 @@ class TestLogRustAccelerationStatus:
             coordinator._log_rust_acceleration_status()
 
             mock_log_active.assert_called_once()
-
-    @pytest.mark.unit
-    def test_log_rust_acceleration_status_disabled(self) -> None:
-        """_log_rust_acceleration_status should log when Rust is disabled."""
-        coordinator = SetupCoordinator()
-
-        mock_yaml_settings_fn = MagicMock(return_value=True)
-
-        with (
-            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
-            patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True),
-            patch.object(SetupCoordinator, "_log_disabled_status") as mock_log_disabled,
-            patch("ClassicLib.support.setup.logger"),
-        ):
-            coordinator._log_rust_acceleration_status()
-
-            mock_log_disabled.assert_called_once_with(True, False)
 
     @pytest.mark.unit
     def test_log_rust_acceleration_status_no_acceleration(self) -> None:
@@ -645,7 +626,6 @@ class TestLogRustAccelerationStatus:
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
             patch("ClassicLib.integration.factory.detect_component", mock_detect),
             patch.object(SetupCoordinator, "_log_no_acceleration") as mock_log_none,
             patch("ClassicLib.support.setup.logger"),
@@ -665,7 +645,7 @@ class TestLogRustAccelerationStatus:
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch(
-                "ClassicLib.integration.factory._is_rust_disabled",
+                "ClassicLib.integration.factory.detect_component",
                 side_effect=ImportError("Module not found"),
             ),
             patch.object(SetupCoordinator, "_log_import_error") as mock_log_import,
@@ -685,7 +665,7 @@ class TestLogRustAccelerationStatus:
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
             patch(
-                "ClassicLib.integration.factory._is_rust_disabled",
+                "ClassicLib.integration.factory.detect_component",
                 side_effect=RuntimeError("Unexpected error"),
             ),
             patch.object(SetupCoordinator, "_log_status_check_error") as mock_log_error,
@@ -759,30 +739,6 @@ class TestDisplayStatusMessage:
 
 class TestLogStatusHelpers:
     """Tests for individual log status helper methods."""
-
-    @pytest.mark.unit
-    def test_log_disabled_status(self) -> None:
-        """_log_disabled_status should log disabled Rust message."""
-        with (
-            patch.object(SetupCoordinator, "_display_status_message") as mock_display,
-            patch("ClassicLib.support.setup.logger") as mock_logger,
-        ):
-            SetupCoordinator._log_disabled_status(debug_enabled=True, is_gui=False)
-
-            mock_display.assert_called_once()
-            assert "disabled" in mock_display.call_args[0][0].lower()
-            mock_logger.warning.assert_called_once()
-
-    @pytest.mark.unit
-    def test_log_disabled_status_skips_display_when_debug_disabled(self) -> None:
-        """_log_disabled_status should skip display when debug is disabled."""
-        with (
-            patch.object(SetupCoordinator, "_display_status_message") as mock_display,
-            patch("ClassicLib.support.setup.logger"),
-        ):
-            SetupCoordinator._log_disabled_status(debug_enabled=False, is_gui=False)
-
-            mock_display.assert_not_called()
 
     @pytest.mark.unit
     def test_log_active_acceleration(self) -> None:

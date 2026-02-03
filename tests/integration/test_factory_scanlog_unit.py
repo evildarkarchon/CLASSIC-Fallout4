@@ -53,21 +53,11 @@ class TestGetReportGenerator:
 class TestGetModDetector:
     """Tests for get_mod_detector function."""
 
-    def test_returns_dict_when_rust_disabled(self) -> None:
-        """Test returns dictionary when Rust is disabled."""
+    def test_returns_dict(self) -> None:
+        """Test returns dictionary of detection functions."""
         from ClassicLib.integration.factory import get_mod_detector
 
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_mod_detector()
-
-        assert isinstance(result, dict)
-
-    def test_returns_python_functions_when_rust_disabled(self) -> None:
-        """Test returns Python functions when Rust is disabled."""
-        from ClassicLib.integration.factory import get_mod_detector
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_mod_detector()
+        result = get_mod_detector()
 
         assert isinstance(result, dict)
         assert "detect_mods_single" in result
@@ -96,8 +86,8 @@ class TestGetModDetector:
 class TestGetOrchestrator:
     """Tests for get_orchestrator function."""
 
-    def test_returns_orchestrator_when_rust_disabled(self) -> None:
-        """Test returns orchestrator when Rust is disabled."""
+    def test_returns_orchestrator_instance(self) -> None:
+        """Test returns orchestrator instance."""
         from ClassicLib.integration.factory import get_orchestrator
 
         mock_yamldata = MagicMock()
@@ -105,13 +95,12 @@ class TestGetOrchestrator:
         mock_yamldata.xse_acronym = "F4SE"
         mock_yamldata.game_root_name = "Fallout4"
 
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_orchestrator(
-                yamldata=mock_yamldata,
-                fcx_mode=False,
-                show_formid_values=True,
-                formid_db_exists=True,
-            )
+        result = get_orchestrator(
+            yamldata=mock_yamldata,
+            fcx_mode=False,
+            show_formid_values=True,
+            formid_db_exists=True,
+        )
 
         assert result is not None
 
@@ -133,10 +122,7 @@ class TestGetOrchestrator:
                 raise ImportError("No module")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_orchestrator(
                 yamldata=mock_yamldata,
                 fcx_mode=False,

@@ -3,7 +3,7 @@
 This module tests the factory functions for database pool creation.
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -21,22 +21,21 @@ class TestGetDatabasePool:
 
         assert result is not None
 
-    def test_returns_python_pool_when_rust_disabled(self) -> None:
-        """Test returns Python pool when Rust is disabled."""
-        from ClassicLib.integration.factory import get_database_pool
-        from ClassicLib.io.database.async_pool import AsyncDatabasePool
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_database_pool()
-
-        assert isinstance(result, AsyncDatabasePool)
-
-    def test_returns_python_pool_when_component_not_available(self) -> None:
+    def test_returns_python_pool_on_import_error(self) -> None:
         """Test returns Python pool when Rust import fails."""
+        import builtins
+
         from ClassicLib.integration.factory import get_database_pool
         from ClassicLib.io.database.async_pool import AsyncDatabasePool
 
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
+        original_import = builtins.__import__
+
+        def mock_import(name, *args, **kwargs):
+            if "rust_pool" in str(args) or name == "ClassicLib.io.database.rust_pool":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", mock_import):
             result = get_database_pool()
 
         assert isinstance(result, AsyncDatabasePool)
@@ -56,23 +55,3 @@ class TestGetDatabasePool:
         result = get_database_pool(cache_ttl_seconds=600)
 
         assert result is not None
-
-    def test_returns_python_pool_on_import_error(self) -> None:
-        """Test returns Python pool when Rust import fails."""
-        from ClassicLib.integration.factory import get_database_pool
-        from ClassicLib.io.database.async_pool import AsyncDatabasePool
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False):
-            import builtins
-
-            original_import = builtins.__import__
-
-            def mock_import(name, *args, **kwargs):
-                if "rust_pool" in str(args) or name == "ClassicLib.io.database.rust_pool":
-                    raise ImportError("No module")
-                return original_import(name, *args, **kwargs)
-
-            with patch.object(builtins, "__import__", mock_import):
-                result = get_database_pool()
-
-        assert isinstance(result, AsyncDatabasePool)

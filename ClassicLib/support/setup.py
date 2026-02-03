@@ -308,37 +308,26 @@ class SetupCoordinator:
         is_gui = GlobalRegistry.is_gui_mode()
 
         try:
-            from ClassicLib.integration.factory import _is_rust_disabled, detect_component
+            from ClassicLib.integration.factory import detect_component
 
-            if _is_rust_disabled():
-                self._log_disabled_status(debug_enabled, is_gui)
+            _known = ["classic_yaml", "classic_scanlog", "classic_file_io", "classic_database", "classic_path"]
+            available = [m for m in _known if detect_component(m)[0]]
+            if available:
+                status = {
+                    "active_count": len(available),
+                    "total_count": len(_known),
+                    "percentage": len(available) / len(_known) * 100,
+                    "acceleration_level": "ACCELERATED",
+                    "performance_gains": {m: "active" for m in available},
+                }
+                self._log_active_acceleration(status, debug_enabled, is_gui)
             else:
-                _known = ["classic_yaml", "classic_scanlog", "classic_file_io", "classic_database", "classic_path"]
-                available = [m for m in _known if detect_component(m)[0]]
-                if available:
-                    status = {
-                        "active_count": len(available),
-                        "total_count": len(_known),
-                        "percentage": len(available) / len(_known) * 100,
-                        "acceleration_level": "ACCELERATED",
-                        "performance_gains": {m: "active" for m in available},
-                    }
-                    self._log_active_acceleration(status, debug_enabled, is_gui)
-                else:
-                    self._log_no_acceleration(debug_enabled, is_gui)
+                self._log_no_acceleration(debug_enabled, is_gui)
 
         except ImportError:
             self._log_import_error(debug_enabled, is_gui)
         except Exception as e:  # noqa: BLE001 - Rust status check is optional, should not crash app
             self._log_status_check_error(e, debug_enabled, is_gui)
-
-    @staticmethod
-    def _log_disabled_status(debug_enabled: bool, is_gui: bool) -> None:
-        """Log status when Rust acceleration is explicitly disabled."""
-        status_msg = "⚠️  Rust acceleration disabled (CLASSIC_DISABLE_RUST is set)"
-        if debug_enabled:
-            SetupCoordinator._display_status_message(status_msg, "WARNING", is_gui)
-        logger.warning("   To enable: unset CLASSIC_DISABLE_RUST environment variable")
 
     @staticmethod
     def _log_active_acceleration(status: dict[str, Any], debug_enabled: bool, is_gui: bool) -> None:

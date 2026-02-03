@@ -101,15 +101,6 @@ class TestGetFileIO:
 class TestGetYamlOperations:
     """Tests for get_yaml_operations function."""
 
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_yaml_operations
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_yaml_operations()
-
-        assert result is None
-
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
         import builtins
@@ -123,10 +114,7 @@ class TestGetYamlOperations:
                 raise ImportError("No module")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_yaml_operations()
 
         assert result is None

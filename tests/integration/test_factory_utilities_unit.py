@@ -1,7 +1,7 @@
 """Unit tests for utility factory functions in ClassicLib.integration.factory.
 
 This module tests the factory functions for Rust utility modules,
-verifying fallback behavior when Rust is disabled or unavailable.
+verifying fallback behavior when Rust is unavailable.
 """
 
 from unittest.mock import patch
@@ -13,24 +13,6 @@ pytestmark = [pytest.mark.unit]
 
 class TestGetConstants:
     """Tests for get_constants function."""
-
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_constants
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_constants()
-
-        assert result is None
-
-    def test_returns_none_when_component_not_available(self) -> None:
-        """Test returns None when constants component not available."""
-        from ClassicLib.integration.factory import get_constants
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_constants()
-
-        assert result is None
 
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
@@ -45,10 +27,7 @@ class TestGetConstants:
                 raise ImportError("No module named 'classic_constants'")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_constants()
 
         assert result is None
@@ -56,15 +35,6 @@ class TestGetConstants:
 
 class TestGetVersionUtils:
     """Tests for get_version_utils function."""
-
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_version_utils
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_version_utils()
-
-        assert result is None
 
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
@@ -79,10 +49,7 @@ class TestGetVersionUtils:
                 raise ImportError("No module named 'classic_version'")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_version_utils()
 
         assert result is None
@@ -90,15 +57,6 @@ class TestGetVersionUtils:
 
 class TestGetResourceMgmt:
     """Tests for get_resource_mgmt function."""
-
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_resource_mgmt
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_resource_mgmt()
-
-        assert result is None
 
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
@@ -113,10 +71,7 @@ class TestGetResourceMgmt:
                 raise ImportError("No module named 'classic_resource'")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_resource_mgmt()
 
         assert result is None
@@ -124,15 +79,6 @@ class TestGetResourceMgmt:
 
 class TestGetXseUtils:
     """Tests for get_xse_utils function."""
-
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_xse_utils
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_xse_utils()
-
-        assert result is None
 
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
@@ -147,10 +93,7 @@ class TestGetXseUtils:
                 raise ImportError("No module named 'classic_xse'")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_xse_utils()
 
         assert result is None
@@ -158,15 +101,6 @@ class TestGetXseUtils:
 
 class TestGetWebUtils:
     """Tests for get_web_utils function."""
-
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_web_utils
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_web_utils()
-
-        assert result is None
 
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
@@ -181,10 +115,7 @@ class TestGetWebUtils:
                 raise ImportError("No module named 'classic_web'")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_web_utils()
 
         assert result is None
@@ -192,15 +123,6 @@ class TestGetWebUtils:
 
 class TestGetPathOperations:
     """Tests for get_path_operations function."""
-
-    def test_returns_none_when_rust_disabled(self) -> None:
-        """Test returns None when Rust is disabled."""
-        from ClassicLib.integration.factory import get_path_operations
-
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
-            result = get_path_operations()
-
-        assert result is None
 
     def test_returns_none_on_import_error(self) -> None:
         """Test returns None when import fails."""
@@ -215,10 +137,7 @@ class TestGetPathOperations:
                 raise ImportError("No module named 'classic_path'")
             return original_import(name, *args, **kwargs)
 
-        with (
-            patch("ClassicLib.integration.factory._is_rust_disabled", return_value=False),
-            patch.object(builtins, "__import__", mock_import),
-        ):
+        with patch.object(builtins, "__import__", mock_import):
             result = get_path_operations()
 
         assert result is None

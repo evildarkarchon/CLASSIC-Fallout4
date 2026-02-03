@@ -55,14 +55,22 @@ class TestGetPluginAnalyzer:
 
         assert result is not None
 
-    def test_returns_python_analyzer_when_rust_disabled(self) -> None:
-        """Test returns Python analyzer when Rust is disabled."""
+    def test_returns_python_analyzer_on_import_error(self) -> None:
+        """Test returns Python analyzer when Rust import fails."""
+        import builtins
+
         from ClassicLib.integration.factory import get_plugin_analyzer
         from ClassicLib.integration.python.plugin_py import PluginAnalyzer
 
         mock_yamldata = MagicMock()
+        original_import = builtins.__import__
 
-        with patch("ClassicLib.integration.factory._is_rust_disabled", return_value=True):
+        def mock_import(name, *args, **kwargs):
+            if "plugin_rust" in str(args) or name == "ClassicLib.integration.rust.plugin_rust":
+                raise ImportError("No module")
+            return original_import(name, *args, **kwargs)
+
+        with patch.object(builtins, "__import__", mock_import):
             result = get_plugin_analyzer(mock_yamldata)
 
         assert isinstance(result, PluginAnalyzer)
