@@ -51,6 +51,12 @@ datas += rich_datas
 binaries += rich_binaries
 hiddenimports += rich_hiddenimports
 
+# Add pyffi data files (VERSION file required at runtime)
+pyffi_datas, pyffi_binaries, pyffi_hiddenimports = collect_all('pyffi')
+datas += pyffi_datas
+binaries += pyffi_binaries
+hiddenimports += pyffi_hiddenimports
+
 # Additional hidden imports for CLI dependencies
 hiddenimports += [
     'aiosqlite',

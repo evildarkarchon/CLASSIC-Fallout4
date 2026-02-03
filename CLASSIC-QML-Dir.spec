@@ -94,6 +94,12 @@ hiddenimports = [
     "pywintypes",
 ] + pyside6_hiddenimports + rust_hidden_imports
 
+# Add pyffi data files (VERSION file required at runtime)
+pyffi_datas, pyffi_binaries, pyffi_hiddenimports = collect_all('pyffi')
+datas += pyffi_datas
+binaries += pyffi_binaries
+hiddenimports += pyffi_hiddenimports
+
 # Data files to bundle (combine with already created datas list)
 datas += pyside6_datas
 
