@@ -41,11 +41,11 @@ See MILESTONES.md for details. 14 plans completed, -11,993 net lines removed.
   3. Batch settings loading completes in parallel via Rust tokio::join! pattern
   4. Cache invalidation correctly clears Rust cache when settings update
   5. Golden file test infrastructure captures Python output for 10+ representative crash logs
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Settings cache migration
-- [ ] 06-02: Golden file infrastructure
+- [ ] 06-01-PLAN.md - Settings cache migration (wire YamlSettingsCache to Rust classic_settings)
+- [ ] 06-02-PLAN.md - Golden file infrastructure (capture/compare framework for parity testing)
 
 ### Phase 7: Game Detection
 **Goal**: All game path detection routes through Rust GamePathFinder
@@ -132,7 +132,7 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
-| 6. Foundation & Settings | v8.2.0-part2 | 0/2 | Not started | - |
+| 6. Foundation & Settings | v8.2.0-part2 | 0/2 | Planned | - |
 | 7. Game Detection | v8.2.0-part2 | 0/2 | Not started | - |
 | 8. Report Generation | v8.2.0-part2 | 0/2 | Not started | - |
 | 9. Orchestration Migration | v8.2.0-part2 | 0/2 | Not started | - |
