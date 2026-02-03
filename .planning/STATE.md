@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.2.0-part2 Rust Migration - Phase 7 (Game Detection) - COMPLETE
+**Current focus:** v8.2.0-part2 Rust Migration - Phase 8 (Report Generation) - In Progress
 
 ## Current Position
 
-Phase: 7 of 11 (Game Detection)
-Plan: 2 of 2 complete
-Status: Phase complete
-Last activity: 2026-02-03 — Completed 07-01-PLAN.md (Rust GamePathFinder Wiring)
+Phase: 8 of 11 (Report Generation)
+Plan: 1 of 2 complete
+Status: In progress
+Last activity: 2026-02-03 — Completed 08-01 (Rust Report Generator Wiring)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 4/12] 33%
-[####........] Phase 7 complete
+Progress: [v1.0: 14/14] [v8.2.0-part2: 5/12] 42%
+[#####.......] Phase 8 in progress
 
 ## Performance Metrics
 
@@ -40,6 +40,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 4/12] 33%
 |-------|-------|-------|----------|
 | 06-foundation-settings | 2/2 | ~15m | ~7.5m |
 | 07-game-detection | 2/2 | ~27m | ~13.5m |
+| 08-report-generation | 1/2 | ~4m | ~4m |
 
 ## Accumulated Context
 
@@ -57,6 +58,8 @@ v8.2.0-part2 decisions:
 - GlobalRegistry stores validation results (XSE_VALID, ENB_PRESENT) for use by other components
 - Dual-interface pattern: sync + async variants for all validation functions
 - Rust-only, hard fail: no Python fallback for path detection (ImportError propagates)
+- Rust-only report generator: no Python fallback, RuntimeError if Rust unavailable
+- VR removal: VR indicator text no longer displayed in reports (VR detection still used internally)
 
 ### Pending Todos
 
@@ -70,6 +73,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed Phase 7 (Game Detection) - both plans
+Stopped at: Completed 08-01 (Rust Report Generator Wiring)
 Resume file: None
-Next action: `/gsd:plan-phase 8` or `/gsd:execute-plan 08-01` (User Interface)
+Next action: Execute 08-02 (Python Fallback Removal from ReportFragment/Composer)
