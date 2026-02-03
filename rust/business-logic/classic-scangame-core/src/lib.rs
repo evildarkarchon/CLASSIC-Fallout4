@@ -15,6 +15,7 @@
 
 // Module declarations - will be implemented in Phase 3B-3C
 pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
+pub mod enb; // ENB detection (Phase 7) - IMPLEMENTED
 pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
 pub mod integrity;
 pub mod logs; // log_processor.py (Phase 3C) - IMPLEMENTED
@@ -28,6 +29,7 @@ pub mod error;
 // Re-export key types for convenience
 pub use ba2::{BA2Error, BA2Issues, BA2Scanner};
 pub use config::{ConfigDuplicateDetector, ConfigError, DuplicateGroup};
+pub use enb::{EnbChecker, EnbConfigResult, EnbError, EnbResult, EnbValidationResult};
 pub use error::ScanGameError;
 pub use ini::{ConfigIssue, IniError, IniValidator, IssueSeverity};
 pub use integrity::{
