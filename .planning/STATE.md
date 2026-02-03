@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.2.0-part2 Rust Migration - Phase 9 (Orchestration Migration) - Plan 01 complete
+**Current focus:** v8.2.0-part2 Rust Migration - Phase 9 (Orchestration Migration) - COMPLETE
 
 ## Current Position
 
-Phase: 9 of 11 (Orchestration Migration)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-02-03 — Completed 09-01-PLAN.md (PyO3 bindings extension)
+Phase: 9 of 11 (Orchestration Migration) - COMPLETE
+Plan: 2 of 2 complete
+Status: Phase complete
+Last activity: 2026-02-03 — Completed 09-02-PLAN.md (Python OrchestratorCore removal)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 7/12] 58%
-[#######.....] Phase 9 plan 01 complete
+Progress: [v1.0: 14/14] [v8.2.0-part2: 8/12] 67%
+[########....] Phase 9 complete
 
 ## Performance Metrics
 
@@ -41,7 +41,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 7/12] 58%
 | 06-foundation-settings | 2/2 | ~15m | ~7.5m |
 | 07-game-detection | 2/2 | ~27m | ~13.5m |
 | 08-report-generation | 2/2 | ~15m | ~7.5m |
-| 09-orchestration-migration | 1/2 | ~7m | ~7m |
+| 09-orchestration-migration | 2/2 | ~32m | ~16m |
 
 ## Accumulated Context
 
@@ -67,6 +67,9 @@ v8.2.0-part2 decisions:
 - Arc<Py<PyAny>> for callback sharing across async tasks (thread-safe in PyO3 0.27)
 - Python::attach() for GIL re-acquisition when invoking callbacks
 - Index-tracking HashMap with buffer_unordered for order-preserving parallel processing
+- ORCH-05 verified: is_feature_complete() returns True with real YamlData configuration
+- Python OrchestratorCore and HybridOrchestrator deleted entirely (not deprecated first)
+- asyncio.to_thread() pattern for Rust batch processing in async Python contexts
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 09-01-PLAN.md (PyO3 bindings extension)
+Stopped at: Completed 09-02-PLAN.md (Python OrchestratorCore removal)
 Resume file: None
-Next action: Execute 09-02-PLAN.md (Python OrchestratorCore removal)
+Next action: Execute Phase 10 (Entry Point Streamlining)
