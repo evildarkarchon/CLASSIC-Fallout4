@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-02-02)
 Phase: 9 of 11 (Orchestration Migration) - GAP CLOSURE COMPLETE
 Plan: 4 of 4 complete (2 main + 2 gap closure)
 Status: Phase complete with all gaps closed
-Last activity: 2026-02-03 - Completed 09-04-PLAN.md (Report generation fix)
+Last activity: 2026-02-03 - Completed 09-03-PLAN.md (CLI async context fix - Gap 1 closed)
 
 Progress: [v1.0: 14/14] [v8.2.0-part2: 10/12] 83%
 [##########..] Phase 9 gap closure complete
@@ -41,7 +41,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 10/12] 83%
 | 06-foundation-settings | 2/2 | ~15m | ~7.5m |
 | 07-game-detection | 2/2 | ~27m | ~13.5m |
 | 08-report-generation | 2/2 | ~15m | ~7.5m |
-| 09-orchestration-migration | 4/4 | ~62m | ~15.5m |
+| 09-orchestration-migration | 4/4 | ~76m | ~19m |
 
 ## Accumulated Context
 
@@ -72,11 +72,13 @@ v8.2.0-part2 decisions:
 - asyncio.to_thread() pattern for Rust batch processing in async Python contexts
 - ReportGenerator+ReportComposer pattern for proper AUTOSCAN.md formatting
 - Header info extracted from processed_lines before segmentation
+- Lazy loading via asyncio.to_thread() for crashlog_list/remove_list in ScanLogsExecutor
 
 ### Pending Todos
 
 - Fix test_clear_cache in classic-yaml-core (pre-existing bug, tracked separately)
 - Pre-existing GUI file path resolution issue in classic_settings() (relative path for CLASSIC Settings.yaml)
+- Update obsolete tests referencing deleted orchestrator_core module (from Phase 9-02)
 
 ### Blockers/Concerns
 
@@ -85,6 +87,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Completed 09-04-PLAN.md (Report generation fix - Gap 2 closed)
+Stopped at: Completed 09-03-PLAN.md (CLI async context fix - Gap 1 closed)
 Resume file: None
 Next action: Execute Phase 10 (Entry Point Streamlining)
