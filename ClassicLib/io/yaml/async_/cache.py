@@ -4,6 +4,10 @@ This module provides a caching system for YAML file data with file monitoring,
 TTL-based expiration, and performance metrics tracking. It ensures thread-safety
 for concurrent access in async contexts.
 
+YAML content caching is delegated to Rust classic_settings module for performance.
+Python retains path_cache for YAML store -> file path mapping and file_mod_times
+for modification tracking.
+
 Classes:
     YamlCache: Utility class for caching YAML data with modification detection.
 
@@ -18,12 +22,17 @@ Example:
 """
 
 import asyncio
+import logging
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
+import classic_settings
+
 if TYPE_CHECKING:
     from ClassicLib.core.constants import YAML
+
+logger = logging.getLogger(__name__)
 
 
 class YamlCache:
@@ -31,24 +40,28 @@ class YamlCache:
 
     This class optimizes file read performance by providing thread-safe
     in-memory caching with customizable time-to-live (TTL) and modification
-    detection mechanisms. It tracks file states, manages cache entries,
-    and supports performance-related metrics for cache usage analysis.
+    detection mechanisms. YAML content caching is delegated to Rust
+    classic_settings module via DashMap for lock-free concurrent access.
+
+    Python retains:
+    - path_cache: YAML store -> file path mapping
+    - file_mod_times: File modification time tracking
+    - settings_cache: Kept for backward compatibility but not used for caching
 
     Attributes:
         CACHE_TTL: Class variable for cache time-to-live in seconds (default 300.0).
-        cache: In-memory cache for storing file or data objects.
+        cache: Legacy cache dict (kept for backward compatibility).
         file_mod_times: Tracks last modification timestamps of files.
         path_cache: Cache for resolved file paths based on YAML objects.
-        settings_cache: Cache for specific processed YAML file settings.
+        settings_cache: Legacy settings cache (kept for backward compatibility).
         last_check_time: Timestamp of the most recent cache TTL check.
 
     Example:
         >>> cache = YamlCache()
         >>> # Check if file was modified
         >>> modified = await cache.check_file_modification(Path("config.yaml"))
-        >>> # Get metrics
-        >>> metrics = cache.get_metrics()
-        >>> print(f"Cache hits: {metrics['cache_hits']}")
+        >>> # Get Rust cache info
+        >>> size = classic_settings.cache_size()
 
     """
 
@@ -62,14 +75,16 @@ class YamlCache:
     def __init__(self) -> None:
         """Initialize the cache with empty storage containers.
 
-        Creates empty dictionaries for the main cache, file modification times,
-        path cache, and settings cache. Also initializes metrics tracking for
-        cache performance analysis.
+        Creates empty dictionaries for path cache, file modification times,
+        and legacy caches. YAML content caching is handled by Rust.
         """
+        # Legacy caches - kept for backward compatibility but not actively used
         self.cache: dict[str, Any] = {}
+        self.settings_cache: dict[tuple[type, YAML, str], Any] = {}
+
+        # Active Python-side caches
         self.file_mod_times: dict[str, float] = {}
         self.path_cache: dict[tuple[YAML, str | None], Path] = {}
-        self.settings_cache: dict[tuple[type, YAML, str], Any] = {}
         self.last_check_time: float = 0
 
         # Metrics tracking
@@ -193,27 +208,28 @@ class YamlCache:
     def clear_cache(self, store: str | None = None) -> None:
         """Clear cache entries for a specific store or all caches.
 
-        If a store is specified, only the cache entries related to that store
-        will be removed. This includes entries from the main cache and related
-        settings cache. If no store is provided, all caches and related data
-        will be cleared.
+        Delegates to Rust classic_settings for YAML content cache clearing.
+        Also clears Python-side caches (path_cache, file_mod_times).
 
         Args:
-            store: The store identifier for which the cache should be cleared.
-                If None, all caches will be cleared.
+            store: The store identifier (file path) for which the cache should
+                be cleared. If None, all caches will be cleared.
 
         Example:
-            >>> cache.clear_cache("CLASSIC_Settings")  # Clear specific store
+            >>> cache.clear_cache("/path/to/settings.yaml")  # Clear specific
             >>> cache.clear_cache()  # Clear all caches
 
         """
         if store:
-            # Clear specific store
+            # Clear specific store from Rust cache
+            logger.debug("Invalidating Rust cache for store: %s", store)
+            classic_settings.invalidate(store)
+
+            # Clear legacy Python caches for backward compatibility
             keys_to_remove = [k for k in self.cache.keys() if k == store]  # noqa: SIM118
             for key in keys_to_remove:
                 del self.cache[key]
 
-            # Clear related settings cache entries
             settings_keys_to_remove = [
                 k
                 for k in self.settings_cache.keys()  # noqa: SIM118
@@ -222,7 +238,11 @@ class YamlCache:
             for key in settings_keys_to_remove:
                 del self.settings_cache[key]
         else:
-            # Clear all caches
+            # Clear all Rust cache
+            logger.debug("Clearing all Rust cache entries")
+            classic_settings.clear_cache()
+
+            # Clear all Python-side caches
             self.cache.clear()
             self.settings_cache.clear()
             self.path_cache.clear()

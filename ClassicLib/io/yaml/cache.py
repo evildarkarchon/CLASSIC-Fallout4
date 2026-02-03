@@ -4,6 +4,9 @@ This module provides the YamlSettingsCache class, a sync wrapper around
 the async YAML settings system. It handles AsyncBridge integration for
 GUI contexts and provides a singleton pattern for efficient settings access.
 
+The cache operations delegate to Rust classic_settings module for performance
+and thread-safety via DashMap-based caching.
+
 Classes:
     YamlSettingsCache: Singleton sync wrapper for YAML settings.
 
@@ -20,6 +23,8 @@ import os
 import threading
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
+
+import classic_settings
 
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
@@ -284,7 +289,9 @@ class YamlSettingsCache:
         return self._get_async_core().file_ops.get_path_for_store(yaml_store)
 
     async def load_yaml_async(self, yaml_path: Path) -> YAMLMapping:
-        """Asynchronously load a YAML file.
+        """Asynchronously load a YAML file using Rust cache.
+
+        Delegates to Rust classic_settings.load_settings_async() for caching.
 
         Args:
             yaml_path: The path to the YAML file to be loaded.
@@ -293,16 +300,23 @@ class YamlSettingsCache:
             The parsed contents of the YAML file as a mapping.
 
         Raises:
-            Exception: If an error occurs during file operations or parsing.
+            RuntimeError: If Rust cache loading fails.
 
         """
-        core = await self._ensure_async_core_async()
-        return await core.file_ops.load_yaml_file(yaml_path)
+        key = str(yaml_path.resolve())
+        logger.debug("Loading YAML async via Rust: %s", key)
+        try:
+            docs = await classic_settings.load_settings_async(key, str(yaml_path))
+            return docs[0] if docs else {}
+        except Exception as e:
+            msg = f"Rust cache load failed for {yaml_path}: {e}"
+            logger.error(msg)
+            raise RuntimeError(msg) from e
 
     def load_yaml(self, yaml_path: Path) -> YAMLMapping:
-        """Load a YAML file synchronously.
+        """Load a YAML file synchronously using Rust cache.
 
-        Uses AsyncBridge to execute the async file operation in a sync context.
+        Delegates to Rust classic_settings.load_settings_sync() for caching.
 
         Note:
             For CLI production code, use load_yaml_async() directly instead.
@@ -313,8 +327,19 @@ class YamlSettingsCache:
         Returns:
             The parsed YAML content as a mapping.
 
+        Raises:
+            RuntimeError: If Rust cache loading fails.
+
         """
-        return self._get_bridge().run_async(self._get_async_core().file_ops.load_yaml_file(yaml_path))
+        key = str(yaml_path.resolve())
+        logger.debug("Loading YAML sync via Rust: %s", key)
+        try:
+            docs = classic_settings.load_settings_sync(key, str(yaml_path))
+            return docs[0] if docs else {}
+        except Exception as e:
+            msg = f"Rust cache load failed for {yaml_path}: {e}"
+            logger.error(msg)
+            raise RuntimeError(msg) from e
 
     def async_yaml_settings(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """Read or write a YAML setting synchronously.
@@ -398,27 +423,35 @@ class YamlSettingsCache:
         return self._get_bridge().run_async(self._get_async_core().batch_get_settings(requests))
 
     def prefetch_all_settings(self) -> None:
-        """Load and cache the main YAML stores.
+        """Load and cache the main YAML stores using Rust batch loading.
 
-        Prefetches Main, Settings, and Game YAML stores into the cache.
+        Prefetches Main, Settings, and Game YAML stores into the Rust cache.
+        Uses Rust load_batch_sync() for efficient batch loading.
         Errors are logged but don't stop the process.
 
         Note:
             This is typically called during GUI initialization. For CLI,
-            consider using async prefetching if available.
+            consider using async prefetching with load_batch_async().
 
         """
-        # Load the three main YAML stores into file cache
+        # Load the three main YAML stores into Rust cache
         stores_to_prefetch = [YAML.Main, YAML.Settings, YAML.Game]
+        paths_to_load: list[str] = []
 
         for store in stores_to_prefetch:
             try:
                 file_path = self._get_async_core().file_ops.get_path_for_store(store)
-                # Trigger file load which will cache it
-                self._get_bridge().run_async(self._get_async_core().file_ops.load_yaml_file(file_path, use_cache=True))
+                paths_to_load.append(str(file_path))
             except (OSError, FileNotFoundError, ValueError, RuntimeError, AttributeError) as e:
-                # Prefetch is best-effort: file system, parsing, or initialization errors are logged but don't crash
-                logger.debug(f"Could not prefetch {store}: {e}")
+                logger.debug("Could not get path for %s: %s", store, e)
+
+        if paths_to_load:
+            try:
+                count = classic_settings.load_batch_sync(paths_to_load)
+                logger.debug("Prefetched %d/%d YAML stores via Rust batch loading", count, len(paths_to_load))
+            except Exception as e:
+                # Prefetch is best-effort: errors are logged but don't crash
+                logger.debug("Rust batch prefetch failed: %s", e)
 
     @staticmethod
     def get_metrics() -> dict[str, int]:
@@ -429,6 +462,48 @@ class YamlSettingsCache:
 
         """
         return {}
+
+    @staticmethod
+    def debug_info() -> dict[str, Any]:
+        """Return cache debugging information from Rust.
+
+        Provides visibility into the Rust DashMap-based cache state for
+        debugging and performance monitoring.
+
+        Returns:
+            Dictionary with cache state:
+            - cache_size: Number of entries in Rust cache
+            - cache_keys: List of all cached keys
+
+        Example:
+            >>> info = YamlSettingsCache.debug_info()
+            >>> print(f"Cache has {info['cache_size']} entries")
+
+        """
+        return {
+            "cache_size": classic_settings.cache_size(),
+            "cache_keys": classic_settings.cache_keys(),
+        }
+
+    def invalidate(self, key: str) -> bool:
+        """Invalidate specific cache entry in Rust.
+
+        Removes a single entry from the Rust DashMap cache by key.
+        Use this for targeted invalidation after settings changes.
+
+        Args:
+            key: Cache key to invalidate (typically str(path.resolve())).
+
+        Returns:
+            True if the key was removed, False if it didn't exist.
+
+        Example:
+            >>> cache = YamlSettingsCache.get_instance()
+            >>> cache.invalidate(str(settings_path.resolve()))
+
+        """
+        logger.debug("Invalidating cache key: %s", key)
+        return classic_settings.invalidate(key)
 
     @property
     def cache(self) -> Any:
