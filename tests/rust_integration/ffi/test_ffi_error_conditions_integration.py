@@ -299,15 +299,9 @@ class TestFFIErrorConditions:
         for corrupt_data in corrupted_structures:
             # Mock loadorder_scan_log which is called internally by analyze_all
             mock_loadorder_scan_log_return = (corrupt_data, False, False)  # Expected tuple return
-            with (
-                patch(
-                    "ClassicLib.integration.python.plugin_py.PythonPluginAnalyzer.loadorder_scan_log",
-                    return_value=mock_loadorder_scan_log_return,
-                ),
-                patch(
-                    "ClassicLib.integration.rust.plugin_rust.RustPluginAnalyzer.loadorder_scan_log",
-                    return_value=mock_loadorder_scan_log_return,
-                ),
+            with patch(
+                "ClassicLib.integration.rust.plugin_rust.RustPluginAnalyzer.loadorder_scan_log",
+                return_value=mock_loadorder_scan_log_return,
             ):
                 try:
                     result = analyzer.analyze_all()

@@ -326,35 +326,22 @@ class TestParsePluginLine:
 # ============================================================================
 
 
-class TestRustPluginAnalyzerFallback:
-    """Tests for Python fallback behavior."""
+class TestRustPluginAnalyzerNoFallback:
+    """Tests for RuntimeError when Rust is unavailable (no Python fallback)."""
 
     @pytest.mark.unit
-    def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_rust_plugin: MagicMock) -> None:
-        """Test Python implementation is used when Rust unavailable."""
+    def test_raises_runtime_error_when_rust_unavailable(self, mock_yamldata_for_rust_plugin: MagicMock) -> None:
+        """Test RuntimeError is raised when Rust is unavailable."""
         with patch.dict("sys.modules", {"classic_scanlog": None}):
             from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
-            analyzer = RustPluginAnalyzer(mock_yamldata_for_rust_plugin)
-
-            # May use Rust or Python depending on actual availability
-            assert isinstance(analyzer.is_rust_accelerated, bool)
+            with pytest.raises(RuntimeError, match="Required Rust module"):
+                RustPluginAnalyzer(mock_yamldata_for_rust_plugin)
 
     @pytest.mark.unit
-    def test_fallback_loadorder_scan(self, mock_yamldata_for_rust_plugin: MagicMock, sample_segment_plugins: list[str]) -> None:
-        """Test loadorder_scan_log works with fallback."""
-        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
-
-        analyzer = RustPluginAnalyzer.__new__(RustPluginAnalyzer)
-        analyzer._rust_analyzer = None
-        analyzer._use_rust = False
-        analyzer._python_analyzer = None
-        analyzer.yamldata = mock_yamldata_for_rust_plugin
-
-        # Should create Python analyzer on demand
-        plugins, triggered, disabled = analyzer.loadorder_scan_log(sample_segment_plugins)
-
-        assert isinstance(plugins, dict)
+    def test_is_always_rust_accelerated(self, rust_plugin_analyzer: "RustPluginAnalyzer") -> None:
+        """Test is_rust_accelerated always returns True."""
+        assert rust_plugin_analyzer.is_rust_accelerated is True
 
 
 # ============================================================================

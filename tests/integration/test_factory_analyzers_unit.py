@@ -55,8 +55,8 @@ class TestGetPluginAnalyzer:
 
         assert result is not None
 
-    def test_returns_instance_on_import_error(self) -> None:
-        """Test returns an instance even when Rust import fails (Python fallback still active for plugin)."""
+    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
+        """Test raises RuntimeError when Rust import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_plugin_analyzer
@@ -70,9 +70,8 @@ class TestGetPluginAnalyzer:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_plugin_analyzer(mock_yamldata)
-
-        assert result is not None
+            with pytest.raises(RuntimeError, match="Required Rust module for plugin analyzer"):
+                get_plugin_analyzer(mock_yamldata)
 
 
 class TestGetRecordScanner:

@@ -289,12 +289,8 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> PluginAnalyzerProtocol
         logger.debug("Using RustPluginAnalyzer wrapper (30x speedup potential)")
         return RustPluginAnalyzer(yamldata)
     except ImportError as e:
-        logger.warning(f"Failed to import RustPluginAnalyzer: {e}")
-
-    from ClassicLib.integration.python.plugin_py import PluginAnalyzer
-
-    logger.debug("Using Python PluginAnalyzer implementation")
-    return PluginAnalyzer(yamldata)
+        msg = f"Required Rust module for plugin analyzer not available: {e}. Reinstall CLASSIC."
+        raise RuntimeError(msg) from e
 
 
 def get_record_scanner(yamldata: ClassicScanLogsInfo) -> RecordScannerProtocol:
