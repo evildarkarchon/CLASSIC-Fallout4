@@ -142,71 +142,6 @@ def get_component(module_name: str, class_name: str) -> Any:
 
 
 # ---------------------------------------------------------------------------
-# PythonParserWrapper (fallback for get_parser)
-# ---------------------------------------------------------------------------
-
-
-class PythonParserWrapper:
-    """Wrapper for Python parser functions to match RustLogParser interface."""
-
-    @staticmethod
-    def find_segments(
-        crash_data: list[str],
-        crashgen_name: str,
-        xse_acronym: str,
-        game_root_name: str,
-    ) -> tuple[str, str, str, list[list[str]]]:
-        """Find and retrieve segments from crash data.
-
-        Args:
-            crash_data: List of strings representing lines of crash data.
-            crashgen_name: The name of the crash generation process or identifier.
-            xse_acronym: Acronym associated with the XSE process specifics.
-            game_root_name: Name of the root directory or identifier for the game's context.
-
-        Returns:
-            tuple[str, str, str, list[list[str]]]: A tuple containing game_version,
-            crashgen_version, main_error, and processed_segments.
-
-        """
-        from ClassicLib.integration.python.parser_py import find_segments
-
-        return find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
-
-    @staticmethod
-    def extract_section(
-        crash_data: list[str],
-        start_marker: str,
-        end_marker: str,
-    ) -> list[str] | None:
-        """Extract a specific section of text from the given crash data.
-
-        Args:
-            crash_data: List of strings representing lines of crash data.
-            start_marker: String that marks the start of the desired section.
-            end_marker: String that marks the end of the desired section.
-
-        Returns:
-            list[str] | None: A list containing lines of the extracted section, or
-            None if no valid section is found.
-
-        """
-        section = []
-        in_section = False
-
-        for line in crash_data:
-            if line.startswith(start_marker):
-                in_section = True
-                continue
-            if line.startswith(end_marker):
-                break
-            if in_section:
-                section.append(line)
-
-        return section or None  # pyright: ignore[reportUnknownVariableType]
-
-
-# ---------------------------------------------------------------------------
 # FileIO singleton state
 # ---------------------------------------------------------------------------
 
@@ -240,13 +175,13 @@ def reset_cache() -> None:
 
 
 def get_parser() -> LogParserProtocol:
-    """Retrieve the best available log parser implementation.
-
-    Returns an instance of RustLogParser if Rust acceleration is available,
-    otherwise returns a PythonParserWrapper.
+    """Retrieve the Rust-accelerated log parser implementation.
 
     Returns:
         Any: A parser instance providing find_segments() and extract_section().
+
+    Raises:
+        RuntimeError: If Rust parser module is not available.
 
     """
     try:
@@ -255,10 +190,8 @@ def get_parser() -> LogParserProtocol:
         logger.debug("Using RustLogParser wrapper (150x speedup potential)")
         return RustLogParser()
     except ImportError as e:
-        logger.warning(f"Failed to import RustLogParser: {e}")
-
-    logger.debug("Using Python parser implementation")
-    return PythonParserWrapper()
+        msg = f"Required Rust module for parser not available: {e}. Reinstall CLASSIC."
+        raise RuntimeError(msg) from e
 
 
 def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtocol:
@@ -500,22 +433,10 @@ def get_mod_detector() -> dict[str, Any]:  # Returns dict of callable functions
             detect_mods_single,
         )
     except (ImportError, AttributeError) as e:
-        logger.warning(f"Failed to get Rust mod detector: {e}")
-    else:
-        logger.debug("Using Rust mod detector functions (35x speedup)")
-        return {
-            "detect_mods_single": detect_mods_single,
-            "detect_mods_double": detect_mods_double,
-            "detect_mods_important": detect_mods_important,
-        }
+        msg = f"Required Rust module for mod detector not available: {e}. Reinstall CLASSIC."
+        raise RuntimeError(msg) from e
 
-    from ClassicLib.integration.python.mod_detector_py import (
-        detect_mods_double,
-        detect_mods_important,
-        detect_mods_single,
-    )
-
-    logger.debug("Using Python mod detector implementation")
+    logger.debug("Using Rust mod detector functions (35x speedup)")
     return {
         "detect_mods_single": detect_mods_single,
         "detect_mods_double": detect_mods_double,
@@ -869,7 +790,6 @@ __all__ = [
     "reset_file_io_singleton",
     # Parsers
     "get_parser",
-    "PythonParserWrapper",
     # File I/O
     "get_file_io",
     "get_yaml_operations",

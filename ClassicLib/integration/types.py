@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 class LogParserProtocol(Protocol):
     """Protocol for log parser implementations (get_parser).
 
-    Both RustLogParser and PythonParserWrapper provide these methods.
+    RustLogParser provides these methods. Rust is required.
     """
 
     def find_segments(

@@ -68,8 +68,8 @@ class TestFFIErrorConditions:
 
         parser = get_parser()
 
-        # Test with None values
-        with pytest.raises((TypeError, ValueError, AttributeError)):
+        # Test with None values (RuntimeError wraps the underlying TypeError/ValueError)
+        with pytest.raises((TypeError, ValueError, AttributeError, RuntimeError)):
             parser.find_segments(None, "Buffout 4", "F4SE", "Fallout4.exe")
 
         # Test with empty values

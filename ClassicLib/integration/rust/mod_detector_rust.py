@@ -1,7 +1,7 @@
 """Rust-accelerated mod detector functions.
 
 This module provides high-performance mod detection and conflict analysis using
-Rust implementations when available, providing 35x speedup for mod detection.
+Rust implementations, providing 35x speedup for mod detection. Rust is required.
 
 Performance improvements with Rust:
 - 35x faster mod conflict detection
@@ -88,23 +88,14 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     """
     from ClassicLib.scanning.logs.reporting import ReportFragment
 
-    if RUST_AVAILABLE and _rust_detect_single:
-        try:
-            # Rust returns Vec<String>, convert to ReportFragment
-            # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
-            lines = _rust_detect_single(yaml_dict, crashlog_plugins)
-            return ReportFragment.from_lines(lines)
-        except parse_errors as e:
-            logger.warning(f"Rust parse error in mod detection, falling back to Python: {e}")
-        except rust_errors as e:
-            logger.warning(f"Rust mod detection failed, falling back to Python: {e}")
-        except ValueError as e:
-            logger.warning(f"Rust mod detection error, falling back to Python: {e}")
+    if not (RUST_AVAILABLE and _rust_detect_single):
+        msg = "Required Rust module classic_scanlog.detect_mods_single not available. Reinstall CLASSIC."
+        raise RuntimeError(msg)
 
-    # Python fallback implementation
-    from ClassicLib.integration.python.mod_detector_py import detect_mods_single as py_detect
-
-    return py_detect(yaml_dict, crashlog_plugins)
+    # Rust returns Vec<String>, convert to ReportFragment
+    # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
+    lines = _rust_detect_single(yaml_dict, crashlog_plugins)
+    return ReportFragment.from_lines(lines)
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
@@ -126,23 +117,14 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     """
     from ClassicLib.scanning.logs.reporting import ReportFragment
 
-    if RUST_AVAILABLE and _rust_detect_double:
-        try:
-            # Rust returns Vec<String>, convert to ReportFragment
-            # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
-            lines = _rust_detect_double(yaml_dict, crashlog_plugins)
-            return ReportFragment.from_lines(lines)
-        except parse_errors as e:
-            logger.warning(f"Rust parse error in mod conflict detection, falling back to Python: {e}")
-        except rust_errors as e:
-            logger.warning(f"Rust mod conflict detection failed, falling back to Python: {e}")
-        except ValueError as e:
-            logger.warning(f"Rust mod conflict detection error, falling back to Python: {e}")
+    if not (RUST_AVAILABLE and _rust_detect_double):
+        msg = "Required Rust module classic_scanlog.detect_mods_double not available. Reinstall CLASSIC."
+        raise RuntimeError(msg)
 
-    # Python fallback implementation
-    from ClassicLib.integration.python.mod_detector_py import detect_mods_double as py_detect
-
-    return py_detect(yaml_dict, crashlog_plugins)
+    # Rust returns Vec<String>, convert to ReportFragment
+    # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
+    lines = _rust_detect_double(yaml_dict, crashlog_plugins)
+    return ReportFragment.from_lines(lines)
 
 
 def detect_mods_important(
@@ -176,23 +158,14 @@ def detect_mods_important(
     if xse_modules is None:
         xse_modules = set()
 
-    if RUST_AVAILABLE and _rust_detect_important:
-        try:
-            # Rust returns Vec<String>, convert to ReportFragment
-            # Rust function expects (yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
-            lines = _rust_detect_important(yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
-            return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()
-        except parse_errors as e:
-            logger.warning(f"Rust parse error in important mod detection, falling back to Python: {e}")
-        except rust_errors as e:
-            logger.warning(f"Rust important mod detection failed, falling back to Python: {e}")
-        except ValueError as e:
-            logger.warning(f"Rust important mod detection error, falling back to Python: {e}")
+    if not (RUST_AVAILABLE and _rust_detect_important):
+        msg = "Required Rust module classic_scanlog.detect_mods_important not available. Reinstall CLASSIC."
+        raise RuntimeError(msg)
 
-    # Python fallback implementation
-    from ClassicLib.integration.python.mod_detector_py import detect_mods_important as py_detect
-
-    return py_detect(yaml_dict, crashlog_plugins, gpu_rival)
+    # Rust returns Vec<String>, convert to ReportFragment
+    # Rust function expects (yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
+    lines = _rust_detect_important(yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
+    return ReportFragment.from_lines(lines, check_content=False) if lines else ReportFragment.empty()
 
 
 def get_mod_detector_status() -> dict[str, Any]:

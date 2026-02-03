@@ -217,18 +217,17 @@ PLUGINS:
                 logger.info(f"Pipeline processing time for {sample_name}: {timer.elapsed:.3f}s")
 
     @pytest.mark.asyncio
-    async def test_rust_python_output_consistency(self, crash_log_samples, mock_yamldata):
+    async def test_rust_parser_produces_valid_output(self, crash_log_samples, mock_yamldata):
         """
-        Test output consistency between Rust and Python implementations.
+        Test that Rust parser produces valid structured output.
 
-        This test runs the same crash log through both Rust and Python
-        implementations to ensure they produce consistent results.
+        Validates that the Rust parser returns correctly structured results
+        with all expected fields populated.
         """
-        # Only run if both Rust and Python implementations are available
         rust_available = is_rust_accelerated("parser")
 
         if not rust_available:
-            pytest.skip("Rust parser not available for consistency testing")
+            pytest.skip("Rust parser not available")
 
         # Test with first available sample
         _, log_path = next(iter(crash_log_samples.items()))
@@ -236,27 +235,20 @@ PLUGINS:
 
         # Test Rust LogParser
         rust_parser = get_parser()
-        rust_result = rust_parser.find_segments(
+        result = rust_parser.find_segments(
             crash_data=crash_data,
             crashgen_name=mock_yamldata.crashgen_name,
             xse_acronym=mock_yamldata.xse_acronym,
             game_root_name=mock_yamldata.game_root_name,
         )
 
-        # Test Python fallback by forcing it
-        with patch.object(rust_parser, "_use_rust", False):
-            python_result = rust_parser.find_segments(
-                crash_data=crash_data,
-                crashgen_name=mock_yamldata.crashgen_name,
-                xse_acronym=mock_yamldata.xse_acronym,
-                game_root_name=mock_yamldata.game_root_name,
-            )
-
-        # Compare results structure (allowing for minor differences in processing)
-        assert len(rust_result) == len(python_result), "Result structure mismatch"
-        assert type(rust_result[0]) is type(python_result[0]), "Game version type mismatch"
-        assert type(rust_result[1]) is type(python_result[1]), "Crashgen version type mismatch"
-        assert len(rust_result[3]) == len(python_result[3]), "Segments count mismatch"
+        # Validate result structure
+        assert len(result) == 4, "Result should have 4 elements (game_ver, crashgen_ver, main_error, segments)"
+        assert isinstance(result[0], str), "Game version should be string"
+        assert isinstance(result[1], str), "Crashgen version should be string"
+        assert isinstance(result[2], str), "Main error should be string"
+        assert isinstance(result[3], list), "Segments should be a list"
+        assert len(result[3]) == 6, "Should have 6 segments"
 
     @pytest.mark.asyncio
     async def test_formid_extraction_integration(self, crash_log_samples, mock_yamldata):
