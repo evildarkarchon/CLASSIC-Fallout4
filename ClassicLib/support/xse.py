@@ -10,17 +10,27 @@ The primary purposes of this module are:
 - To ensure the user's XSE installation is configured properly.
 - To verify the presence and validity of required dependencies, such as Address Library.
 - To check for mismatches in hashes for script files.
+
+Phase 7 Additions:
+- XSE Address Library validation using Rust XseChecker
+- ENB detection using Rust EnbChecker
+- FCX Mode gating (validation only runs when checking own installation)
+- GlobalRegistry storage for validation results
+- Both sync and async variants for dual-interface pattern
 """
 
+from __future__ import annotations
+
+import asyncio
 import hashlib
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
 
+from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import get_game, get_vr
-from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.registry import GlobalRegistry, get_game, get_vr
 from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.messaging import msg_warning
@@ -70,10 +80,51 @@ class Tokens:
     XSE_HASHED_SCRIPTS_TYPE_ERROR_RAISED: bool = False
 
 
+def _is_fcx_mode_enabled() -> bool:
+    """Check if FCX Mode is enabled (checking own installation).
+
+    Per CONTEXT.md: Validation only runs when FCX Mode is enabled.
+    FCX Mode indicates the user is checking their own game installation,
+    not analyzing crash logs from others.
+
+    Returns:
+        bool: True if FCX Mode is enabled, False otherwise.
+
+    """
+    return yaml_settings(bool, YAML.Settings, "FCX_Mode", False)
+
+
+def _get_rust_game_version():
+    """Convert GlobalRegistry game version to Rust GameVersion enum.
+
+    Returns:
+        GameVersion: The corresponding Rust GameVersion enum value.
+
+    """
+    from classic_scangame import GameVersion
+
+    version = GlobalRegistry.get_game_version()
+
+    if version == "VR":
+        return GameVersion.Vr
+    elif version == "Original":
+        return GameVersion.Original
+    elif version == "NextGen":
+        return GameVersion.NextGen
+    elif version == "AnniversaryEdition":
+        return GameVersion.AnniversaryEdition
+    else:
+        # For "auto", default to Original (detection happens elsewhere)
+        return GameVersion.Original
+
+
 # noinspection DuplicatedCode
 def xse_check_integrity() -> str:
     """Perform an integrity check for the XSE installation by verifying associated configurations,
     address library, and log file for potential issues based on predefined error patterns.
+
+    If FCX Mode is enabled, this function also uses the Rust XseChecker to validate
+    the Address Library installation and stores the result in GlobalRegistry.
 
     Returns a string compiled from all generated messages during the checking process, summarizing
     the integrity status of the XSE installation.
@@ -100,8 +151,14 @@ def xse_check_integrity() -> str:
     # Get XSE-related settings
     xse_config: dict[Any, Any] = _load_xse_config(game_vr)
 
-    # Check address library
-    _check_address_library(xse_config["adlib_file"], game_name, messages)
+    # Check address library using Rust XseChecker if FCX Mode is enabled
+    if _is_fcx_mode_enabled():
+        rust_message = _check_address_library_rust(xse_config.get("plugins_folder"))
+        if rust_message:
+            messages.append(rust_message)
+    else:
+        # Fall back to simple file existence check
+        _check_address_library(xse_config["adlib_file"], game_name, messages)
 
     # Check XSE installation and log file
     _check_xse_installation(
@@ -109,6 +166,91 @@ def xse_check_integrity() -> str:
     )
 
     return "".join(messages)
+
+
+async def xse_check_integrity_async() -> str:
+    """Async version of XSE integrity check.
+
+    Uses run_in_executor for Rust calls to prevent blocking event loop.
+    Only runs validation when FCX Mode is enabled.
+
+    Returns:
+        str: Formatted validation message.
+
+    """
+    from ClassicLib.io.yaml.async_.core import yaml_settings_async
+
+    logger.debug("- - - INITIATED XSE INTEGRITY CHECK (ASYNC)")
+    messages: list[str] = []
+
+    # Load configuration settings
+    game_vr: str = get_vr()
+    game_name: str = get_game()
+
+    # Get error patterns to search for in logs
+    error_patterns: list[str] | None = await yaml_settings_async(list[str], YAML.Main, "catch_log_errors")
+    if not isinstance(error_patterns, list):
+        raise TypeError("Error patterns setting must be a list")
+
+    # Get XSE-related settings
+    xse_config: dict[Any, Any] = await _load_xse_config_async(game_vr)
+
+    # Check address library using Rust XseChecker if FCX Mode is enabled
+    fcx_mode = await yaml_settings_async(bool, YAML.Settings, "FCX_Mode", False)
+    if fcx_mode:
+        loop = asyncio.get_running_loop()
+        rust_message = await loop.run_in_executor(None, _check_address_library_rust, xse_config.get("plugins_folder"))
+        if rust_message:
+            messages.append(rust_message)
+    else:
+        # Fall back to simple file existence check
+        _check_address_library(xse_config["adlib_file"], game_name, messages)
+
+    # Check XSE installation and log file (sync for now - file I/O)
+    await _check_xse_installation_async(
+        xse_config["log_file"], xse_config["acronym"], xse_config["full_name"], xse_config["latest_version"], error_patterns, messages
+    )
+
+    return "".join(messages)
+
+
+def _check_address_library_rust(plugins_folder: str | None) -> str:
+    """Check Address Library using Rust XseChecker.
+
+    This function uses the Rust XseChecker to validate that the correct
+    Address Library version is installed for the current game version.
+
+    Args:
+        plugins_folder: Path to the F4SE/SKSE plugins folder.
+
+    Returns:
+        str: Formatted validation message from Rust checker.
+
+    """
+    try:
+        from classic_scangame import ValidationResult, XseChecker
+
+        if not plugins_folder:
+            GlobalRegistry.register(GlobalRegistry.Keys.XSE_VALID, False)
+            return "XSE plugins path not configured.\n"
+
+        # Determine game version for XseChecker
+        is_vr = GlobalRegistry.is_vr_version()
+        game_version = _get_rust_game_version()
+
+        checker = XseChecker(plugins_folder, is_vr, game_version)
+        result = checker.check()
+        message = checker.validate()
+
+        # Store result in registry
+        is_valid = result == ValidationResult.CorrectVersion
+        GlobalRegistry.register(GlobalRegistry.Keys.XSE_VALID, is_valid)
+
+        return message
+    except Exception as e:
+        logger.error(f"Rust XSE validation error: {e}")
+        GlobalRegistry.register(GlobalRegistry.Keys.XSE_VALID, False)
+        return f"XSE validation error: {e}\n"
 
 
 # noinspection PyUnusedLocal
@@ -129,6 +271,7 @@ def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
             - latest_version (str | None): The latest version of the game's XSE.
             - log_file (str | None): The path to the XSE log file.
             - adlib_file (Path | None): A `Path` object representing the game's address library file, or None if not found.
+            - plugins_folder (str | None): Path to the F4SE/SKSE plugins folder for Rust validation.
 
     """
     xse_acronym: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
@@ -136,6 +279,7 @@ def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
     xse_latest_version: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
     xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
     adlib_file_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
+    plugins_folder: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_Folder_Plugins")
 
     adlib_file: Path | None = Path(adlib_file_str) if adlib_file_str else None
 
@@ -145,6 +289,38 @@ def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
         "latest_version": xse_latest_version,
         "log_file": xse_log_file,
         "adlib_file": adlib_file,
+        "plugins_folder": plugins_folder,
+    }
+
+
+async def _load_xse_config_async(game_vr: str) -> dict[str, str | Path | None]:
+    """Async version of _load_xse_config.
+
+    Args:
+        game_vr: The unique identifier for the game version.
+
+    Returns:
+        dict: XSE configuration dictionary.
+
+    """
+    from ClassicLib.io.yaml.async_.core import yaml_settings_async
+
+    xse_acronym: str | None = await yaml_settings_async(str, YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
+    xse_full_name: str | None = await yaml_settings_async(str, YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
+    xse_latest_version: str | None = await yaml_settings_async(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
+    xse_log_file: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
+    adlib_file_str: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
+    plugins_folder: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_Folder_Plugins")
+
+    adlib_file: Path | None = Path(adlib_file_str) if adlib_file_str else None
+
+    return {
+        "acronym": xse_acronym,
+        "full_name": xse_full_name,
+        "latest_version": xse_latest_version,
+        "log_file": xse_log_file,
+        "adlib_file": adlib_file,
+        "plugins_folder": plugins_folder,
     }
 
 
@@ -200,8 +376,6 @@ def _check_xse_installation(
 
     """
     if not isinstance(log_file, str | Path):
-        from ClassicLib.core.registry import GlobalRegistry
-
         game_name = GlobalRegistry.get_game()
         messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
         return
@@ -236,6 +410,164 @@ def _check_xse_installation(
     if error_lines:
         messages.append(f"#❌ CAUTION : {acronym}.log REPORTS THE FOLLOWING ERRORS #\n")
         messages.extend([f"ERROR > {line.strip()} \n-----\n" for line in error_lines])
+
+
+async def _check_xse_installation_async(
+    log_file: str | None, acronym: str, full_name: str, latest_version: str, error_patterns: list[str], messages: list[str]
+) -> None:
+    """Async version of _check_xse_installation.
+
+    Args:
+        log_file: Path to the log file.
+        acronym: XSE acronym (e.g., "F4SE").
+        full_name: XSE full name.
+        latest_version: Latest version string.
+        error_patterns: Error patterns to search for.
+        messages: List to append messages to.
+
+    """
+    from ClassicLib.io.yaml.async_.core import yaml_settings_async
+
+    if not isinstance(log_file, str | Path):
+        game_name = GlobalRegistry.get_game()
+        messages.append(f"❌ Value for {acronym.lower()}.log is invalid or missing from CLASSIC {game_name} Local.yaml!\n-----\n")
+        return
+
+    log_path: Path = Path(log_file)
+    if not log_path.exists():
+        messages.extend([
+            f"❌ CAUTION : *{acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
+            f"   You need to run the game at least once with {acronym.lower()}_loader.exe \n",
+            "    After that, try running CLASSIC again! \n-----\n",
+        ])
+        return
+
+    # XSE is installed
+    messages.append(f"✔️ REQUIRED: *{full_name}* is installed! \n-----\n")
+
+    # Check XSE version and log for errors (async file read)
+    io_core = get_file_io()
+    log_contents: list[str] = await io_core.read_lines(log_path)
+
+    # Check version
+    if str(latest_version) in log_contents[0]:
+        messages.append(f"✔️ You have the latest version of *{full_name}*! \n-----\n")
+    else:
+        warn_outdated: str | None = await yaml_settings_async(str, YAML.Game, "Warnings_XSE.Warn_Outdated")
+        if not isinstance(warn_outdated, str):
+            raise TypeError("XSE outdated warning message must be a string")
+        messages.append(warn_outdated)
+
+    # Check for errors in log
+    error_lines: list[str] = [line for line in log_contents if any(error.lower() in line.lower() for error in error_patterns)]
+
+    if error_lines:
+        messages.append(f"#❌ CAUTION : {acronym}.log REPORTS THE FOLLOWING ERRORS #\n")
+        messages.extend([f"ERROR > {line.strip()} \n-----\n" for line in error_lines])
+
+
+# ============ ENB VALIDATION FUNCTIONS ============
+
+
+def enb_check_presence() -> str:
+    """Check ENB installation using Rust EnbChecker.
+
+    Only runs when FCX Mode is enabled. Stores result
+    in GlobalRegistry.Keys.ENB_PRESENT.
+
+    **Workflow integration:** This function is called during FCX Mode
+    initialization, AFTER game path detection succeeds. Typical call site:
+    - FCX Mode init in CLASSIC_Interface.py or setup_fcx_mode()
+    - After GlobalRegistry.Keys.GAME_PATH is populated
+
+    Returns:
+        str: Formatted message about ENB status.
+
+    """
+    if not _is_fcx_mode_enabled():
+        logger.debug("FCX Mode disabled, skipping ENB validation")
+        return ""
+
+    game_path = GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH)
+    if not game_path:
+        vr_suffix = GlobalRegistry.get_config_suffix()
+        game_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
+
+    if not game_path:
+        GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
+        return "Game path not configured.\n"
+
+    try:
+        from classic_scangame import EnbChecker
+
+        checker = EnbChecker(str(game_path))
+        result = checker.validate()
+
+        is_present = result.is_present()
+        GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, is_present)
+
+        return checker.format_message(result)
+    except Exception as e:
+        logger.error(f"ENB check error: {e}")
+        GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
+        return f"ENB check error: {e}\n"
+
+
+async def enb_check_presence_async() -> str:
+    """Async version of ENB presence check using Rust EnbChecker.
+
+    Uses run_in_executor for Rust calls to prevent blocking event loop.
+    Only runs when FCX Mode is enabled.
+
+    **Workflow integration:** Called during async FCX Mode initialization,
+    AFTER game path detection. Typical call site:
+    - Async FCX Mode setup
+    - After find_game_path_async() completes
+
+    Returns:
+        str: Formatted message about ENB status.
+
+    """
+    from ClassicLib.io.yaml.async_.core import yaml_settings_async
+
+    fcx_mode = await yaml_settings_async(bool, YAML.Settings, "FCX_Mode", False)
+    if not fcx_mode:
+        logger.debug("FCX Mode disabled, skipping ENB validation")
+        return ""
+
+    game_path = GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH)
+    if not game_path:
+        vr_suffix = GlobalRegistry.get_config_suffix()
+        game_path = await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
+
+    if not game_path:
+        GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
+        return "Game path not configured.\n"
+
+    loop = asyncio.get_running_loop()
+
+    try:
+
+        def _check_enb():
+            from classic_scangame import EnbChecker
+
+            checker = EnbChecker(str(game_path))
+            result = checker.validate()
+            return result, checker.format_message(result)
+
+        result, message = await loop.run_in_executor(None, _check_enb)
+
+        is_present = result.is_present()
+        GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, is_present)
+
+        return message
+    except Exception as e:
+        logger.error(f"ENB check error: {e}")
+        GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
+        return f"ENB check error: {e}\n"
+
+
+# ============ XSE HASH CHECKING (UNCHANGED) ============
 
 
 def xse_check_hashes() -> str:
