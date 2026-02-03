@@ -65,6 +65,12 @@ class Keys:
     LOCAL_DIR = "local_dir"
     IS_PRERELEASE = "is_prerelease"
 
+    # Validation status flags (Phase 7 - Game Detection)
+    XSE_VALID = "xse_validation_passed"
+    XSE_VERSION = "xse_detected_version"
+    ENB_PRESENT = "enb_binaries_present"
+    GAME_VERSION_DETECTED = "game_exe_version"
+
 
 def register(key: str, obj: Any) -> None:
     """Register an object in the global registry.
@@ -710,3 +716,21 @@ class GlobalRegistry:
         See :func:`is_vr_version` for full documentation.
         """
         return is_vr_version()
+
+    @staticmethod
+    def is_xse_valid() -> bool:
+        """Check if XSE validation passed.
+
+        Returns:
+            bool: True if XSE validation passed, False otherwise.
+        """
+        return get(Keys.XSE_VALID) or False
+
+    @staticmethod
+    def is_enb_present() -> bool:
+        """Check if ENB binaries are present.
+
+        Returns:
+            bool: True if ENB binaries detected, False otherwise.
+        """
+        return get(Keys.ENB_PRESENT) or False
