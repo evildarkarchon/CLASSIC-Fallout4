@@ -25,7 +25,7 @@ See MILESTONES.md for details. 14 plans completed, -11,993 net lines removed.
 - [x] **Phase 6: Foundation & Settings** - Establish golden file infrastructure and migrate settings management to Rust
 - [x] **Phase 7: Game Detection** - Wire Rust GamePathFinder to Python wrapper, integrate with GlobalRegistry
 - [x] **Phase 8: Report Generation** - Wire Rust ReportGenerator/ReportComposer to Python, validate output format
-- [ ] **Phase 9: Orchestration Migration** - Route all scanning through Rust OrchestratorCore
+- [x] **Phase 9: Orchestration Migration** - Route all scanning through Rust OrchestratorCore
 - [ ] **Phase 10: Parity Validation** - Validate Rust output matches Python character-for-character
 - [ ] **Phase 11: Integration & Cleanup** - Remove Python business logic, finalize factory, verify builds
 
@@ -90,8 +90,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 09-01-PLAN.md - Extend Rust PyO3 bindings with progress callback, cancellation, order preservation
-- [ ] 09-02-PLAN.md - Remove Python orchestrators, update CLI/GUI to use Rust directly
+- [x] 09-01-PLAN.md - Extend Rust PyO3 bindings with progress callback, cancellation, order preservation
+- [x] 09-02-PLAN.md - Remove Python orchestrators, update CLI/GUI to use Rust directly
 
 ### Phase 10: Parity Validation
 **Goal**: Rust output matches Python output character-for-character for all migrated components
@@ -135,8 +135,8 @@ Phases execute in numeric order: 6 -> 7 -> 8 -> 9 -> 10 -> 11
 | 6. Foundation & Settings | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 7. Game Detection | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 8. Report Generation | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
-| 9. Orchestration Migration | v8.2.0-part2 | 0/2 | Not started | - |
+| 9. Orchestration Migration | v8.2.0-part2 | 2/2 | Complete | 2026-02-03 |
 | 10. Parity Validation | v8.2.0-part2 | 0/2 | Not started | - |
 | 11. Integration & Cleanup | v8.2.0-part2 | 0/2 | Not started | - |
 
-**v8.2.0-part2 Progress:** 6/12 plans (50%)
+**v8.2.0-part2 Progress:** 8/12 plans (67%)

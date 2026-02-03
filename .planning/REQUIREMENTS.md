@@ -9,11 +9,11 @@ Requirements for Rust migration milestone. Each maps to roadmap phases.
 
 ### Scanning Orchestration (ORCH)
 
-- [ ] **ORCH-01**: HybridOrchestrator routes all single-log processing through Rust OrchestratorCore
-- [ ] **ORCH-02**: HybridOrchestrator routes all batch processing through Rust with unbounded parallelism
-- [ ] **ORCH-03**: VR mode is auto-detected per-log in Rust orchestrator
-- [ ] **ORCH-04**: Python OrchestratorCore wrapper reduced to thin delegation (< 100 lines)
-- [ ] **ORCH-05**: All analyzer components (Plugin, FormID, Suspect, Mod, Record, Settings) called from Rust
+- [x] **ORCH-01**: HybridOrchestrator routes all single-log processing through Rust OrchestratorCore
+- [x] **ORCH-02**: HybridOrchestrator routes all batch processing through Rust with unbounded parallelism
+- [x] **ORCH-03**: VR mode is auto-detected per-log in Rust orchestrator
+- [x] **ORCH-04**: Python OrchestratorCore wrapper reduced to thin delegation (< 100 lines) *(EXCEEDED: removed entirely)*
+- [x] **ORCH-05**: All analyzer components (Plugin, FormID, Suspect, Mod, Record, Settings) called from Rust
 
 ### Game Detection (GAME)
 
@@ -104,11 +104,11 @@ Which phases cover which requirements.
 | REPT-02 | Phase 8 | Complete |
 | REPT-03 | Phase 8 | Complete |
 | REPT-04 | Phase 8 | Complete |
-| ORCH-01 | Phase 9 | Pending |
-| ORCH-02 | Phase 9 | Pending |
-| ORCH-03 | Phase 9 | Pending |
-| ORCH-04 | Phase 9 | Pending |
-| ORCH-05 | Phase 9 | Pending |
+| ORCH-01 | Phase 9 | Complete |
+| ORCH-02 | Phase 9 | Complete |
+| ORCH-03 | Phase 9 | Complete |
+| ORCH-04 | Phase 9 | Complete (Exceeded) |
+| ORCH-05 | Phase 9 | Complete |
 | VAL-02 | Phase 10 | Pending |
 | VAL-03 | Phase 10 | Pending |
 | VAL-04 | Phase 10 | Pending |
@@ -126,4 +126,4 @@ Which phases cover which requirements.
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-03 after Phase 8 completion*
+*Last updated: 2026-02-03 after Phase 9 completion*
