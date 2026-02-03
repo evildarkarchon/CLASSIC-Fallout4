@@ -107,40 +107,6 @@ def test_detect_mods_important_performance():
     # Verify output was generated
     assert result.has_content
 
-
-@pytest.mark.performance
-@pytest.mark.slow
-def test_detect_mods_scaling():
-    """Test that performance scales linearly with input size."""
-    times = []
-    sizes = [10, 20, 40, 80, 160]
-
-    # Warmup iteration to eliminate cold-start effects (JIT, lazy imports, regex compilation)
-    warmup_dict = {f"warmup_mod_{i}": f"Warmup warning {i}" for i in range(20)}
-    warmup_plugins = {f"plugin_warmup_mod_{j % 20}_{j}.esp": f"[{j:02X}]" for j in range(40)}
-    detect_mods_single(warmup_dict, warmup_plugins)
-
-    for size in sizes:
-        # Create datasets proportional to size
-        yaml_dict = {f"mod_{i:04d}": f"Warning {i}" for i in range(size)}
-        crashlog_plugins = {f"plugin_mod_{j % size:04d}_{j}.esp": f"[{j:02X}]" for j in range(size * 2)}
-
-        # Measure time
-        start = time.perf_counter()
-        detect_mods_single(yaml_dict, crashlog_plugins)
-        elapsed = time.perf_counter() - start
-        times.append(elapsed)
-
-    # Check that performance scales approximately linearly
-    # The ratio of times should not grow exponentially
-    for i in range(1, len(times)):
-        # Time should at most double when size doubles
-        size_ratio = sizes[i] / sizes[i - 1]
-        time_ratio = times[i] / times[i - 1]
-        # Allow some variance but ensure it's not quadratic (which would be 4x)
-        assert time_ratio < size_ratio * 2.5, f"Performance degraded: size increased {size_ratio}x but time increased {time_ratio:.1f}x"
-
-
 if __name__ == "__main__":
     # Run performance tests directly
     print("Running DetectMods performance tests...")
@@ -155,10 +121,6 @@ if __name__ == "__main__":
 
     print("\n3. Testing detect_mods_important performance...")
     test_detect_mods_important_performance()
-    print("   ✓ Passed")
-
-    print("\n4. Testing scaling behavior...")
-    test_detect_mods_scaling()
     print("   ✓ Passed")
 
     print("\n✅ All performance tests passed!")

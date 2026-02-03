@@ -288,23 +288,25 @@ class TestCheckSourceInstallation:
 
     def test_returns_path_when_data_exists_in_module_parent(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return path when CLASSIC Data exists in module parent directory."""
-        # Create mock module structure
-        module_dir = tmp_path / "ClassicLib"
-        module_dir.mkdir()
+        # Create mock module structure matching real layout:
+        # resources.py is at ClassicLib/support/resources.py (3 parents to project root)
+        support_dir = tmp_path / "ClassicLib" / "support"
+        support_dir.mkdir(parents=True)
         data_dir = tmp_path / "CLASSIC Data"
         data_dir.mkdir()
 
-        # Mock __file__ to point to our temp location
-        with patch("ClassicLib.support.resources.__file__", str(module_dir / "ResourceLoader.py")):
+        # Mock __file__ to point to our temp location with correct depth
+        with patch("ClassicLib.support.resources.__file__", str(support_dir / "resources.py")):
             result = ResourceLoader._check_source_installation()
             assert result == data_dir
 
     def test_returns_none_when_data_missing(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """Should return None when CLASSIC Data doesn't exist in module parent."""
-        module_dir = tmp_path / "ClassicLib"
-        module_dir.mkdir()
+        # Match real layout: ClassicLib/support/resources.py (3 parents to project root)
+        support_dir = tmp_path / "ClassicLib" / "support"
+        support_dir.mkdir(parents=True)
 
-        with patch("ClassicLib.support.resources.__file__", str(module_dir / "ResourceLoader.py")):
+        with patch("ClassicLib.support.resources.__file__", str(support_dir / "resources.py")):
             result = ResourceLoader._check_source_installation()
             assert result is None
 

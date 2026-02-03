@@ -263,6 +263,7 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             formid_plugin_pairs_small: Small batch of test pairs.
 
         """
+        loop = asyncio.new_event_loop()
 
         async def setup_and_lookup() -> dict[tuple[str, str], str]:
             pool = AsyncDatabasePool()
@@ -272,7 +273,10 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             await pool.close()
             return result
 
-        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
+        try:
+            result = benchmark(lambda: loop.run_until_complete(setup_and_lookup()))
+        finally:
+            loop.close()
 
         assert len(result) > 0, "Should find at least some entries"
 
@@ -290,6 +294,7 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             formid_plugin_pairs_medium: Medium batch of test pairs.
 
         """
+        loop = asyncio.new_event_loop()
 
         async def setup_and_lookup() -> dict[tuple[str, str], str]:
             pool = AsyncDatabasePool()
@@ -299,7 +304,10 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             await pool.close()
             return result
 
-        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
+        try:
+            result = benchmark(lambda: loop.run_until_complete(setup_and_lookup()))
+        finally:
+            loop.close()
 
         assert len(result) > 0
 
@@ -317,6 +325,7 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             formid_plugin_pairs_large: Large batch of test pairs.
 
         """
+        loop = asyncio.new_event_loop()
 
         async def setup_and_lookup() -> dict[tuple[str, str], str]:
             pool = AsyncDatabasePool()
@@ -326,7 +335,10 @@ class TestPythonDatabaseBenchmarks(TestFormIDDatabaseFixture):
             await pool.close()
             return result
 
-        result = benchmark(lambda: asyncio.run(setup_and_lookup()))
+        try:
+            result = benchmark(lambda: loop.run_until_complete(setup_and_lookup()))
+        finally:
+            loop.close()
 
         assert len(result) > 0
 

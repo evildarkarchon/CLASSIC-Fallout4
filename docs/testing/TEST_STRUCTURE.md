@@ -113,7 +113,7 @@ tests/
 
 ### Run All Tests
 ```bash
-uv run python -m pytest tests/ -n auto -v
+uv run python -m pytest tests/ -v
 ```
 
 ### Run Tests by Category
@@ -157,13 +157,13 @@ Tests use pytest markers for categorization:
 ### Running Tests by Marker
 ```bash
 # Run only unit tests
-uv run python -m pytest -m "unit" -n auto
+uv run python -m pytest -m "unit"
 
 # Run integration tests
 uv run python -m pytest -m "integration" -v
 
 # Skip slow tests
-uv run python -m pytest -m "not slow" -n auto
+uv run python -m pytest -m "not slow"
 ```
 
 ## Test Fixtures

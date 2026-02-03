@@ -32,13 +32,13 @@
 **Run Commands:**
 ```bash
 # All tests with coverage
-uv run pytest -n auto
+uv run pytest
 
 # Quick unit tests only
-uv run pytest -n auto -m "unit and not slow"
+uv run pytest -m "unit and not slow"
 
 # Integration tests
-uv run pytest -n auto -m "integration"
+uv run pytest -m "integration"
 
 # Skip slow/performance tests (CI environments)
 uv run pytest -m "not slow and not performance"

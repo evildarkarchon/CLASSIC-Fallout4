@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-01)
 
 **Core value:** Every piece of logic lives in exactly one place, and it's obvious where things belong -- so future Rust migration is straightforward rather than archaeological.
-**Current focus:** Phase 5 - Fallback Pruning. Plan 02 complete. Ready for Plan 03.
+**Current focus:** Phase 5 complete. All plans executed. Awaiting phase verification.
 
 ## Current Position
 
-Phase: 5 of 5 (Fallback Pruning)
-Plan: 2 of 3 complete
-Status: In progress
-Last activity: 2026-02-02 -- Completed 05-02-PLAN.md (hard fallback removal)
+Phase: 5 of 5 (Fallback Pruning) -- ALL PLANS COMPLETE
+Plan: 3 of 3 complete
+Status: Awaiting verification
+Last activity: 2026-02-02 -- Completed 05-03-PLAN.md (startup validation + spec cleanup)
 
-Progress: [█████████████░] 96%
+Progress: [██████████████░] 98%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 11m 30s
-- Total execution time: ~2.5 hours
+- Total plans completed: 14
+- Average duration: 12m
+- Total execution time: ~2.8 hours
 
 **By Phase:**
 
@@ -31,11 +31,11 @@ Progress: [█████████████░] 96%
 | 02-integration-layer-simplification | 2/2 | 20m | 10m |
 | 03-wrapper-thinning | 2/2 | 18m | 9m |
 | 04-interface-consolidation | 3/3 | 33m | 11m |
-| 05-fallback-pruning | 2/3 | 46m | 23m |
+| 05-fallback-pruning | 3/3 | 64m | 21m |
 
 **Recent Trend:**
-- Last 5 plans: 05-02 (24m), 05-01 (22m), 04-03 (8m), 04-02 (17m), 04-01 (8m)
-- Trend: Phase 5 plans longer due to broad test updates and verification
+- Last 5 plans: 05-03 (18m), 05-02 (24m), 05-01 (22m), 04-03 (8m), 04-02 (17m)
+- Trend: Phase 5 plans longer due to broad test updates, wrapper cleanup, and build verification
 
 *Updated after each plan completion*
 
@@ -79,6 +79,9 @@ Recent decisions affecting current work:
 - [05-02]: RuntimeError pattern for 3 more factory functions (parser, plugin, mod_detector)
 - [05-02]: Fail-fast init in parser_rust.py and plugin_rust.py (raise in __init__)
 - [05-02]: integration/python/ directory completely eliminated
+- [05-03]: validate_rust_modules() checks 6 Rust modules at startup
+- [05-03]: pyffi VERSION file bundled via collect_all('pyffi') (pre-existing packaging gap)
+- [05-03]: PyInstaller build verified -- GUI launches without errors
 
 ### Pending Todos
 
@@ -87,10 +90,10 @@ Recent decisions affecting current work:
 
 ### Blockers/Concerns
 
-- Phase 5 (Fallback Pruning) requires PyInstaller build verification before and after
+None -- Phase 5 PyInstaller build verification passed.
 
 ## Session Continuity
 
 Last session: 2026-02-02
-Stopped at: Completed 05-02-PLAN.md (hard fallback removal)
+Stopped at: All 3 plans of Phase 5 complete. Awaiting phase verification.
 Resume file: None
