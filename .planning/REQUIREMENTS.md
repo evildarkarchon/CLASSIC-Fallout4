@@ -86,44 +86,44 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+Which phases cover which requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| ORCH-01 | TBD | Pending |
-| ORCH-02 | TBD | Pending |
-| ORCH-03 | TBD | Pending |
-| ORCH-04 | TBD | Pending |
-| ORCH-05 | TBD | Pending |
-| GAME-01 | TBD | Pending |
-| GAME-02 | TBD | Pending |
-| GAME-03 | TBD | Pending |
-| GAME-04 | TBD | Pending |
-| REPT-01 | TBD | Pending |
-| REPT-02 | TBD | Pending |
-| REPT-03 | TBD | Pending |
-| REPT-04 | TBD | Pending |
-| SETT-01 | TBD | Pending |
-| SETT-02 | TBD | Pending |
-| SETT-03 | TBD | Pending |
-| SETT-04 | TBD | Pending |
-| SETT-05 | TBD | Pending |
-| VAL-01 | TBD | Pending |
-| VAL-02 | TBD | Pending |
-| VAL-03 | TBD | Pending |
-| VAL-04 | TBD | Pending |
-| VAL-05 | TBD | Pending |
-| INTG-01 | TBD | Pending |
-| INTG-02 | TBD | Pending |
-| INTG-03 | TBD | Pending |
-| INTG-04 | TBD | Pending |
-| INTG-05 | TBD | Pending |
+| SETT-01 | Phase 6 | Pending |
+| SETT-02 | Phase 6 | Pending |
+| SETT-03 | Phase 6 | Pending |
+| SETT-04 | Phase 6 | Pending |
+| SETT-05 | Phase 6 | Pending |
+| VAL-01 | Phase 6 | Pending |
+| GAME-01 | Phase 7 | Pending |
+| GAME-02 | Phase 7 | Pending |
+| GAME-03 | Phase 7 | Pending |
+| GAME-04 | Phase 7 | Pending |
+| REPT-01 | Phase 8 | Pending |
+| REPT-02 | Phase 8 | Pending |
+| REPT-03 | Phase 8 | Pending |
+| REPT-04 | Phase 8 | Pending |
+| ORCH-01 | Phase 9 | Pending |
+| ORCH-02 | Phase 9 | Pending |
+| ORCH-03 | Phase 9 | Pending |
+| ORCH-04 | Phase 9 | Pending |
+| ORCH-05 | Phase 9 | Pending |
+| VAL-02 | Phase 10 | Pending |
+| VAL-03 | Phase 10 | Pending |
+| VAL-04 | Phase 10 | Pending |
+| VAL-05 | Phase 10 | Pending |
+| INTG-01 | Phase 11 | Pending |
+| INTG-02 | Phase 11 | Pending |
+| INTG-03 | Phase 11 | Pending |
+| INTG-04 | Phase 11 | Pending |
+| INTG-05 | Phase 11 | Pending |
 
 **Coverage:**
 - v8.2.0-part2 requirements: 28 total
-- Mapped to phases: 0
-- Unmapped: 28 (pending roadmap creation)
+- Mapped to phases: 28
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-02*
-*Last updated: 2026-02-02 after initial definition*
+*Last updated: 2026-02-02 after roadmap creation*
