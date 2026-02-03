@@ -4,6 +4,77 @@ use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use classic_shared::without_gil;
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
+
+// =============================================================================
+// Cancellation Token
+// =============================================================================
+
+/// Python-accessible cancellation token for batch operations.
+///
+/// Allows Python code to signal cancellation to Rust batch processing.
+/// The token uses atomic operations for thread-safe cancellation signaling.
+///
+/// # Example
+///
+/// ```python
+/// from classic_scanlog import CancellationToken, Orchestrator
+///
+/// token = CancellationToken()
+///
+/// # In another thread or async task:
+/// token.cancel()  # Request cancellation
+///
+/// # The orchestrator checks this between logs
+/// results = orchestrator.process_logs_batch(paths, cancellation_token=token)
+/// ```
+#[pyclass(name = "CancellationToken")]
+#[derive(Clone)]
+pub struct PyCancellationToken {
+    inner: Arc<AtomicBool>,
+}
+
+#[pymethods]
+impl PyCancellationToken {
+    /// Create a new cancellation token (initially not cancelled).
+    #[new]
+    pub fn new() -> Self {
+        Self {
+            inner: Arc::new(AtomicBool::new(false)),
+        }
+    }
+
+    /// Request cancellation - signals the orchestrator to stop after current log.
+    ///
+    /// Once cancelled, the orchestrator will complete processing of the current log,
+    /// then return results for all completed logs plus placeholder entries for
+    /// remaining logs marked as "Cancelled by user".
+    pub fn cancel(&self) {
+        self.inner.store(true, Ordering::Relaxed);
+    }
+
+    /// Check if cancellation has been requested.
+    ///
+    /// Returns:
+    ///     True if cancel() has been called on this token.
+    pub fn is_cancelled(&self) -> bool {
+        self.inner.load(Ordering::Relaxed)
+    }
+
+    /// Reset the token for reuse (clears cancellation state).
+    ///
+    /// Allows the same token to be used for multiple batch operations.
+    pub fn reset(&self) {
+        self.inner.store(false, Ordering::Relaxed);
+    }
+}
+
+impl Default for PyCancellationToken {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Python wrapper for AnalysisConfig
 ///

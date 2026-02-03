@@ -117,7 +117,7 @@ pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
-pub use orchestrator::{PyAnalysisConfig, PyAnalysisResult, PyRustOrchestrator};
+pub use orchestrator::{PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator};
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
 pub use patterns::PyPatternMatcher;
@@ -198,6 +198,7 @@ fn classic_scanlog(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRustOrchestrator>()?;
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
+    m.add_class::<PyCancellationToken>()?;
 
     // Report generation
     m.add_class::<PyStringPool>()?;
@@ -263,6 +264,7 @@ pub fn register_scanlog_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyRustOrchestrator>()?;
     m.add_class::<PyAnalysisConfig>()?;
     m.add_class::<PyAnalysisResult>()?;
+    m.add_class::<PyCancellationToken>()?;
 
     // Report generation
     m.add_class::<PyStringPool>()?;
