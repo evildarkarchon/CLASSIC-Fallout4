@@ -1,26 +1,13 @@
-"""Crash log analyzers for different aspects of log analysis.
+"""Analyzers package - all implementations now in Rust.
 
-This package contains specialized analyzers:
-- FormIDAnalyzerCore: Core FormID analysis functionality
-- GPUDetector: Detects GPU-related issues
-- PluginAnalyzer: Analyzes plugin-related issues
-- RecordScanner: Scans for record-related problems
-- SuspectScanner: Identifies suspect entries
-- SettingsScanner: Scans for settings-related issues
+This package previously contained Python analyzer implementations.
+All analyzers are now provided by the classic_scanlog Rust module.
+
+Access analyzers through ClassicLib.integration.factory:
+- get_formid_analyzer()
+- get_plugin_analyzer()
+- get_record_scanner()
+- get_suspect_scanner()
+- get_settings_validator()
+- get_gpu_detector()
 """
-
-from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.scanning.logs.analyzers.GPUDetector import get_gpu_info
-from ClassicLib.scanning.logs.analyzers.PluginAnalyzer import PluginAnalyzer
-from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner
-from ClassicLib.scanning.logs.analyzers.SettingsScanner import SettingsScannerFragments as SettingsScanner
-from ClassicLib.scanning.logs.analyzers.SuspectScanner import SuspectScanner
-
-__all__ = [
-    "FormIDAnalyzerCore",
-    "get_gpu_info",
-    "PluginAnalyzer",
-    "RecordScanner",
-    "SettingsScanner",
-    "SuspectScanner",
-]

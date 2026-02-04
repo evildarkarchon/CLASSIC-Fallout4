@@ -4,20 +4,24 @@ This package provides functionality for scanning and analyzing crash logs
 from Bethesda games (Fallout 4, Skyrim).
 
 **IMPORTANT - Rust Acceleration**:
-The classes and functions exported from this `__init__.py` are Python reference
-implementations. For automatic Rust acceleration (10-150x speedups), import from
-the factory module instead:
+All analyzer components have been migrated to Rust. Import from the factory
+module for automatic Rust acceleration (10-150x speedups):
 
 ```python
-# ❌ Python-only (no Rust acceleration)
-from ClassicLib.scanning.logs import SuspectScanner
-
-# ✅ Automatic Rust acceleration when available
-from ClassicLib.integration.factory import get_formid_analyzer, get_suspect_scanner
+# Use factory functions for all analyzers
+from ClassicLib.integration.factory import (
+    get_formid_analyzer,
+    get_gpu_detector,
+    get_plugin_analyzer,
+    get_record_scanner,
+    get_settings_validator,
+    get_suspect_scanner,
+    get_fcx_handler,
+)
 ```
 
 Subpackages:
-- analyzers: Individual analyzer components (FormID, GPU, Plugin, etc.)
+- analyzers: Package placeholder (implementations now in Rust)
 - models: Data models for scan configuration and results
 - reporting: Report generation and composition
 """
@@ -25,13 +29,7 @@ Subpackages:
 # Core scanning components
 from ClassicLib.io.database import AsyncDatabasePool
 
-# Analyzers
-from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import FormIDAnalyzerCore
-from ClassicLib.scanning.logs.analyzers.GPUDetector import get_gpu_info
-from ClassicLib.scanning.logs.analyzers.PluginAnalyzer import PluginAnalyzer
-from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner
-from ClassicLib.scanning.logs.analyzers.SettingsScanner import SettingsScannerFragments as SettingsScanner
-from ClassicLib.scanning.logs.analyzers.SuspectScanner import SuspectScanner
+# Async utilities
 from ClassicLib.scanning.logs.async_reformat import (
     batch_file_copy_async,
     batch_file_move_async,
@@ -39,23 +37,29 @@ from ClassicLib.scanning.logs.async_reformat import (
     reformat_single_log_async,
 )
 from ClassicLib.scanning.logs.async_util import write_file_async
+
+# Mod detection (Python utilities, may use Rust internally via factory)
 from ClassicLib.scanning.logs.detect_mods import (
     detect_mods_double,
     detect_mods_important,
     detect_mods_single,
 )
+
+# Executor
 from ClassicLib.scanning.logs.executor import ClassicScanLogs, ScanLogsExecutor
-from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments as FCXModeHandler
+
+# Models
 from ClassicLib.scanning.logs.models import ScanConfig, ScanResult, ScanStatistics
 
-# Phase 9: Python orchestrators removed - use Rust Orchestrator directly
-# from classic_scanlog import Orchestrator, AnalysisConfig
+# Parser (Python utilities, may use Rust internally via factory)
 from ClassicLib.scanning.logs.parser import (
     extract_module_names,
     extract_segments,
     find_segments,
     parse_crash_header,
 )
+
+# Report generator
 from ClassicLib.scanning.logs.report_generator import ReportGeneratorFragments as ReportGenerator
 
 # Reporting components
@@ -63,8 +67,12 @@ from ClassicLib.scanning.logs.reporting import ReportFragment
 from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import AsyncCrashLogPipeline
 from ClassicLib.scanning.logs.reporting.conditional_section import ConditionalSection
 from ClassicLib.scanning.logs.reporting.section_composer import ReportComposer
+
+# Scan log info
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo as ScanLogInfo
+
+# Legacy utilities
 from ClassicLib.scanning.logs.util_legacy import (
     copy_files,
     crashlogs_get_files,
@@ -74,6 +82,8 @@ from ClassicLib.scanning.logs.util_legacy import (
     is_valid_custom_scan_path,
     move_files,
 )
+
+# Scan utilities
 from ClassicLib.scanning.logs.utils import (
     complete_scan_with_summary,
     crashlogs_scan,
@@ -101,7 +111,6 @@ __all__ = [
     # Async components
     "AsyncCrashLogPipeline",
     "AsyncDatabasePool",
-    "FormIDAnalyzerCore",
     "batch_file_copy_async",
     "batch_file_move_async",
     "crashlogs_reformat_async",
@@ -109,18 +118,11 @@ __all__ = [
     "write_file_async",
     # Core scanner components
     "ClassicScanLogsInfo",
-    "FCXModeHandler",
-    "PluginAnalyzer",
-    "RecordScanner",
     "ReportGenerator",
-    "SettingsScanner",
-    "SuspectScanner",
     # Detection functions
     "detect_mods_double",
     "detect_mods_important",
     "detect_mods_single",
-    # GPU functions
-    "get_gpu_info",
     # Parser functions
     "extract_module_names",
     "extract_segments",

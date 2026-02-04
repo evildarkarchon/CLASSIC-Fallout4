@@ -1,8 +1,8 @@
 """Rust-accelerated RecordScanner wrapper.
 
 This module provides a drop-in replacement for the Python RecordScanner that uses
-the high-performance Rust implementation when available, providing 40x speedup
-for call stack record scanning.
+the high-performance Rust implementation, providing 40x speedup for call stack
+record scanning. Rust is required.
 
 Performance improvements with Rust:
 - 40x faster call stack record scanning
@@ -57,95 +57,74 @@ logger = logging.getLogger(__name__)
 
 
 class RustRecordScanner:
-    """Wrapper for Rust RecordScanner that provides Python-compatible API.
+    """Wrapper for Rust RecordScanner. Rust is required.
 
-    Provides high-performance record scanning when Rust is available.
+    Provides high-performance record scanning using the Rust implementation.
     Achieves 40x performance improvement over pure Python implementation.
     """
 
     def __init__(self, yamldata: ClassicScanLogsInfo) -> None:
-        """Initialize the scanner instance using the provided configuration data from yamldata.
-        Determines whether a Rust-based or Python-based scanner implementation should
-        be used. Rust implementation is preferred for performance benefits, but falls
-        back to the Python implementation if unavailable or initialization fails.
+        """Initialize the Rust RecordScanner. Raises RuntimeError if unavailable.
 
         Args:
-            yamldata (ClassicScanLogsInfo): Configuration data required for the scanner,
+            yamldata: Configuration data required for the scanner,
                 including target records, ignore list, and crash generator name.
 
+        Raises:
+            RuntimeError: If Rust RecordScanner is not available.
+
         """
-        self._rust_scanner = None
-        self._use_rust = False
-        self._python_scanner = None
         self.yamldata = yamldata
 
         try:
             import classic_scanlog
 
-            if hasattr(classic_scanlog, "RecordScanner"):
-                RustRecordScannerImpl = classic_scanlog.RecordScanner
+            if not hasattr(classic_scanlog, "RecordScanner"):
+                msg = "RecordScanner not found in classic_scanlog module. Reinstall CLASSIC."
+                raise RuntimeError(msg)
 
-                # Extract required parameters from yamldata
-                target_records = getattr(yamldata, "classic_records_list", [])
-                ignore_records = getattr(yamldata, "game_ignore_records", [])
-                crashgen_name = getattr(yamldata, "crashgen_name", "")
+            RustRecordScannerImpl = classic_scanlog.RecordScanner
 
-                self._rust_scanner = RustRecordScannerImpl(target_records, ignore_records, crashgen_name)
-                self._use_rust = True
-                logger.debug("🚀 RustRecordScanner: Using RUST implementation (40x faster)")
-            else:
-                logger.debug("⚠️  RustRecordScanner: RecordScanner not found in classic_scanlog")
-        except rust_errors as e:
-            logger.error(f"❌ Rust error initializing RecordScanner: {e}")
+            # Extract required parameters from yamldata
+            target_records = getattr(yamldata, "classic_records_list", [])
+            ignore_records = getattr(yamldata, "game_ignore_records", [])
+            crashgen_name = getattr(yamldata, "crashgen_name", "")
+
+            self._rust_scanner = RustRecordScannerImpl(target_records, ignore_records, crashgen_name)
+            logger.debug("RustRecordScanner: Using RUST implementation (40x faster)")
+        except RuntimeError:
+            raise
         except (ImportError, AttributeError) as e:
-            logger.error(f"❌ Failed to initialize Rust RecordScanner: {e}")
-
-        # Only create Python scanner if Rust truly unavailable
-        if not self._use_rust:
-            logger.debug("⚠️  RustRecordScanner: Falling back to Python implementation")
-            from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner
-
-            self._python_scanner = RecordScanner(yamldata)
+            msg = f"Required Rust module for RecordScanner not available: {e}. Reinstall CLASSIC."
+            raise RuntimeError(msg) from e
+        except rust_errors as e:
+            msg = f"Rust error initializing RecordScanner: {e}. Reinstall CLASSIC."
+            raise RuntimeError(msg) from e
 
     def scan_named_records(self, segment_callstack: list[str]) -> tuple[Any, list[str]]:
         """Scan named records in the provided call stack segment.
 
-        This method attempts to scan for named records using a Rust-based scanner
-        when possible for better performance. If the Rust scanner is unavailable or raises
-        an exception, the method falls back to a Python-based scanner for compatibility.
-
         Args:
-            segment_callstack (list[str]): A list representing the segment call stack to be scanned.
+            segment_callstack: A list representing the segment call stack to be scanned.
 
         Returns:
             tuple[ReportFragment, list[str]]: A tuple containing:
                 - ReportFragment object with formatted report content
                 - list[str] of matched record names
 
+        Raises:
+            RuntimeError: If Rust scan fails.
+
         """
-        if self._use_rust and self._rust_scanner:
-            try:
-                # Rust returns (list[str], list[str]) - formatted lines and matches
-                report_lines, matches = self._rust_scanner.scan_named_records(segment_callstack)
-            except parse_errors as e:
-                logger.warning(f"Rust parse error in scan_named_records: {e}")
-            except rust_errors as e:
-                logger.warning(f"Rust scan_named_records failed: {e}")
-            except (TypeError, ValueError) as e:
-                logger.warning(f"Rust scan_named_records error: {e}")
-            else:
-                # Convert Rust list[str] to ReportFragment for consistency with Python implementation
-                from ClassicLib.scanning.logs.reporting import ReportFragment
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
-                return ReportFragment.from_lines(report_lines), matches
-
-        # Use Python fallback - returns (ReportFragment, list[str])
-        if self._python_scanner:
-            return self._python_scanner.scan_named_records(segment_callstack)
-        from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner
-
-        scanner = RecordScanner(self.yamldata)
-        return scanner.scan_named_records(segment_callstack)
+        try:
+            # Rust returns (list[str], list[str]) - formatted lines and matches
+            report_lines, matches = self._rust_scanner.scan_named_records(segment_callstack)
+            return ReportFragment.from_lines(report_lines), matches
+        except (*parse_errors, *rust_errors, TypeError, ValueError) as e:
+            msg = f"Rust scan_named_records failed: {e}"
+            raise RuntimeError(msg) from e
 
     def extract_records(self, segment_callstack: list[str]) -> list[str]:
         """Extract records from callstack segment without formatting.
@@ -159,29 +138,15 @@ class RustRecordScanner:
         Returns:
             list[str]: List of matched record names
 
+        Raises:
+            RuntimeError: If Rust extraction fails.
+
         """
-        if self._use_rust and self._rust_scanner:
-            try:
-                return self._rust_scanner.extract_records(segment_callstack)
-            except parse_errors as e:
-                logger.warning(f"Rust parse error in extract_records: {e}")
-                # Fall through to Python fallback
-            except rust_errors as e:
-                logger.warning(f"Rust extract_records failed: {e}")
-                # Fall through to Python fallback
-            except (TypeError, ValueError) as e:
-                logger.warning(f"Rust extract_records error: {e}")
-                # Fall through to Python fallback
-
-        # Python fallback - extract from scan_named_records result
-        if self._python_scanner:
-            _, matches = self._python_scanner.scan_named_records(segment_callstack)
-            return matches
-        from ClassicLib.scanning.logs.analyzers.RecordScanner import RecordScanner
-
-        scanner = RecordScanner(self.yamldata)
-        _, matches = scanner.scan_named_records(segment_callstack)
-        return matches
+        try:
+            return self._rust_scanner.extract_records(segment_callstack)
+        except (*parse_errors, *rust_errors, TypeError, ValueError) as e:
+            msg = f"Rust extract_records failed: {e}"
+            raise RuntimeError(msg) from e
 
     def clear_cache(self) -> None:
         """Clear the scanner's internal cache.
@@ -189,16 +154,12 @@ class RustRecordScanner:
         Clears any cached data used for optimizing repeated scans. This can be useful
         when switching between different crash logs or resetting the scanner state.
         """
-        if self._rust_scanner:
-            try:
-                self._rust_scanner.clear_cache()
-            except rust_errors as e:
-                logger.debug(f"Rust clear_cache failed: {e}")
-            except AttributeError as e:
-                logger.debug(f"Rust clear_cache not available: {e}")
-
-        if self._python_scanner and hasattr(self._python_scanner, "clear_cache"):
-            self._python_scanner.clear_cache()  # pyright: ignore[reportAttributeAccessIssue]
+        try:
+            self._rust_scanner.clear_cache()
+        except rust_errors as e:
+            logger.debug(f"Rust clear_cache failed: {e}")
+        except AttributeError as e:
+            logger.debug(f"Rust clear_cache not available: {e}")
 
     @staticmethod
     def scan_for_pattern(lines: list[str], pattern: str) -> list[str]:
@@ -208,8 +169,8 @@ class RustRecordScanner:
         does not provide a corresponding method (simple pattern matching).
 
         Args:
-            lines (list[str]): List of strings to scan through.
-            pattern (str): The regex pattern to match within each line.
+            lines: List of strings to scan through.
+            pattern: The regex pattern to match within each line.
 
         Returns:
             list[str]: A list of strings from the input that match the specified pattern.
@@ -256,8 +217,7 @@ class RustRecordScanner:
         """Scan multiple segments of records in parallel using Rust acceleration.
 
         This method processes multiple segments concurrently when Rust is available,
-        providing significant performance improvements for batch operations. Falls back
-        to sequential processing with Python if Rust is unavailable.
+        providing significant performance improvements for batch operations.
 
         Args:
             segments: A list of segments, where each segment is a list of string records.
@@ -267,48 +227,39 @@ class RustRecordScanner:
                 - ReportFragment object with formatted report content
                 - list[str] of matched record names
 
+        Raises:
+            RuntimeError: If Rust batch scan fails.
+
         """
-        if self._use_rust and self._rust_scanner:
-            try:
-                import classic_scanlog
+        import classic_scanlog
 
-                from ClassicLib.scanning.logs.reporting import ReportFragment
+        from ClassicLib.scanning.logs.reporting import ReportFragment
 
-                # Get stored patterns from initialization
-                target_records = list(getattr(self.yamldata, "classic_records_list", []) or [])
-                ignore_records = list(getattr(self.yamldata, "game_ignore_records", []) or [])
+        try:
+            # Get stored patterns from initialization
+            target_records = list(getattr(self.yamldata, "classic_records_list", []) or [])
+            ignore_records = list(getattr(self.yamldata, "game_ignore_records", []) or [])
 
-                # Call standalone batch function for parallel processing
-                matches_batch = classic_scanlog.scan_records_batch(segments, target_records, ignore_records)
+            # Call standalone batch function for parallel processing
+            matches_batch = classic_scanlog.scan_records_batch(segments, target_records, ignore_records)
 
-                # Format results to match Python API: list[tuple[ReportFragment, matches]]
-                results: list[tuple[ReportFragment, list[str]]] = []
-                for matches in matches_batch:
-                    report_lines = self._generate_report_lines(matches)
-                    results.append((ReportFragment.from_lines(report_lines), matches))
+            # Format results to match Python API: list[tuple[ReportFragment, matches]]
+            results: list[tuple[ReportFragment, list[str]]] = []
+            for matches in matches_batch:
+                report_lines = self._generate_report_lines(matches)
+                results.append((ReportFragment.from_lines(report_lines), matches))
 
-                return results  # noqa: TRY300 - Return in try block is clear here
-            except parse_errors as e:
-                logger.warning(f"Rust parse error in batch_scan_records: {e}")
-            except rust_errors as e:
-                logger.warning(f"Rust batch_scan_records failed: {e}")
-            except (TypeError, ValueError, AttributeError) as e:
-                logger.warning(f"Rust batch_scan_records error: {e}")
-
-        # Fallback: sequential processing
-        return [self.scan_named_records(segment) for segment in segments]
+            return results
+        except (*parse_errors, *rust_errors, TypeError, ValueError, AttributeError) as e:
+            msg = f"Rust batch_scan_records failed: {e}"
+            raise RuntimeError(msg) from e
 
     @property
     def is_rust_accelerated(self) -> bool:
-        """Indicate whether Rust acceleration is enabled.
-
-        This property checks whether the implementation is currently using
-        Rust-based acceleration. Rust acceleration can provide performance
-        benefits when enabled, but the underlying implementation determines
-        its availability and usage.
+        """Whether Rust acceleration is active.
 
         Returns:
-            bool: True if Rust acceleration is enabled, False otherwise.
+            True always, since Rust is required.
 
         """
-        return self._use_rust
+        return True
