@@ -1,8 +1,9 @@
 //! Python bindings for SuspectScanner - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::SuspectScanner;
+use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_vecstr};
 use pyo3::prelude::*;
-use std::collections::HashMap;
+use pyo3::types::PyDict;
 
 /// Python wrapper for SuspectScanner
 #[pyclass(name = "SuspectScanner")]
@@ -13,15 +14,20 @@ pub struct PySuspectScanner {
 #[pymethods]
 impl PySuspectScanner {
     /// Create a new instance
-
+    ///
+    /// Args:
+    ///     suspects_error_list: Dict of error patterns (order preserved)
+    ///     suspects_stack_list: Dict of stack patterns (order preserved)
     #[new]
     pub fn new(
-        suspects_error_list: HashMap<String, String>,
-        suspects_stack_list: HashMap<String, Vec<String>>,
-    ) -> Self {
-        Self {
-            inner: SuspectScanner::new(suspects_error_list, suspects_stack_list),
-        }
+        suspects_error_list: &Bound<'_, PyDict>,
+        suspects_stack_list: &Bound<'_, PyDict>,
+    ) -> PyResult<Self> {
+        let error_map = pydict_to_indexmap_str(suspects_error_list)?;
+        let stack_map = pydict_to_indexmap_vecstr(suspects_stack_list)?;
+        Ok(Self {
+            inner: SuspectScanner::new(error_map, stack_map),
+        })
     }
 
     /// Scan main error for suspect patterns

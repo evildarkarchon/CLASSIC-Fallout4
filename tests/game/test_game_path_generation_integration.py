@@ -20,7 +20,7 @@ class TestGamePathGeneration:
     """Tests for game path generation functionality."""
 
     @patch("ClassicLib.support.game_path.yaml_settings")
-    @patch("ClassicLib.support.game_path.read_game_exe_version")
+    @patch("ClassicLib.Utils.version_utils.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_generate_paths_fallout4_vr(

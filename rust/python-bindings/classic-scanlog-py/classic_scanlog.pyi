@@ -197,16 +197,18 @@ class FormIDAnalyzerCore:
 
         """
 
-    def formid_match(self, formids: list[str], plugins: dict[str, str], report: Any) -> None:
-        """Match FormIDs to plugins and update report.
+    def formid_match(self, formids: list[str], plugins: dict[str, str]) -> list[str]:
+        """Match FormIDs against plugins and return formatted report lines.
 
-        Analyzes FormIDs against the plugin list and adds matching
-        information to the report object.
+        This function correlates extracted FormIDs with plugin load order IDs from
+        the crash log, generating a report section with plugin associations and counts.
 
         Args:
-            formids: List of FormID strings to match
-            plugins: Dictionary mapping plugin names to paths/details
-            report: Report object to update with match results
+            formids: FormID strings extracted from callstack (e.g., "Form ID: 12345678")
+            plugins: Mapping of plugin names to their load order IDs
+
+        Returns:
+            A list of formatted report lines ready for inclusion in the analysis report.
 
         """
 

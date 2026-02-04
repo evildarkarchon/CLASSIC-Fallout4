@@ -4,6 +4,7 @@
 
 use crate::error::Result;
 use dashmap::DashMap;
+use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use rayon::prelude::*;
 use regex::Regex;
@@ -143,14 +144,15 @@ impl PluginAnalyzer {
     /// # Ok(())
     /// # }
     /// ```
-    pub fn loadorder_scan_loadorder_txt() -> Result<(HashMap<String, String>, bool, Vec<String>)> {
+    pub fn loadorder_scan_loadorder_txt() -> Result<(IndexMap<String, String>, bool, Vec<String>)> {
         let mut lines = vec![
             "* ✔️ LOADORDER.TXT FILE FOUND IN THE MAIN CLASSIC FOLDER! *\n".to_string(),
             "CLASSIC will now ignore plugins in all crash logs and only detect plugins in this file.\n".to_string(),
             "[ To disable this functionality, simply remove loadorder.txt from your CLASSIC folder. ]\n\n".to_string(),
         ];
 
-        let mut loadorder_plugins = HashMap::new();
+        // IndexMap preserves insertion order for Python parity
+        let mut loadorder_plugins = IndexMap::new();
         let loadorder_path = Path::new("loadorder.txt");
 
         if loadorder_path.exists() {
@@ -202,8 +204,9 @@ impl PluginAnalyzer {
     ///
     /// # Returns
     ///
-    /// Returns `Ok((HashMap, bool, bool))` containing:
-    /// - HashMap mapping plugin names to their hex indices or status ("DLL", "???")
+    /// Returns `Ok((IndexMap, bool, bool))` containing:
+    /// - IndexMap mapping plugin names to their hex indices or status ("DLL", "???")
+    ///   in load order (preserves insertion order for Python parity)
     /// - Boolean flag for plugin limit triggered (requires version params)
     /// - Boolean flag for limit check disabled (requires version params)
     ///
@@ -238,14 +241,14 @@ impl PluginAnalyzer {
         segment_plugins: Vec<String>,
         game_version: Option<&str>,
         version_current: Option<&str>,
-    ) -> Result<(HashMap<String, String>, bool, bool)> {
+    ) -> Result<(IndexMap<String, String>, bool, bool)> {
         // Early return for empty input
         if segment_plugins.is_empty() {
-            return Ok((HashMap::new(), false, false));
+            return Ok((IndexMap::new(), false, false));
         }
 
-        // Initialize plugin map
-        let mut plugin_map = HashMap::new();
+        // Initialize plugin map - IndexMap preserves insertion order for Python parity
+        let mut plugin_map = IndexMap::new();
 
         // Check plugin limits separately if version info provided
         let mut plugin_limit_triggered = false;
@@ -258,6 +261,7 @@ impl PluginAnalyzer {
         }
 
         // Process each plugin entry (universal parsing logic)
+        // Plugins are added in the order they appear in the crash log (load order)
         for entry in &segment_plugins {
             // Extract plugin information using regex
             if let Some(caps) = PLUGIN_PATTERN.captures(entry) {
@@ -451,21 +455,21 @@ impl PluginAnalyzer {
     ///
     /// This method removes plugins that match entries in either the game-specific ignore list
     /// or the user-defined ignore list. Matching is case-insensitive. If no ignore lists are
-    /// configured, returns the original plugin HashMap unchanged.
+    /// configured, returns the original plugin IndexMap unchanged.
     ///
     /// # Arguments
     ///
-    /// * `crashlog_plugins` - HashMap of plugin names to load order IDs
+    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs (preserves order)
     ///
     /// # Returns
     ///
-    /// Returns `Ok(HashMap)` with ignored plugins removed.
+    /// Returns `Ok(IndexMap)` with ignored plugins removed, preserving the original order.
     ///
     /// # Example
     ///
     /// ```rust
     /// use classic_scanlog_core::PluginAnalyzer;
-    /// use std::collections::HashMap;
+    /// use indexmap::IndexMap;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
     /// let analyzer = PluginAnalyzer::new(
@@ -475,7 +479,7 @@ impl PluginAnalyzer {
     ///     "1.10.163".to_string(), "1.10.163vr".to_string(), "1.37.0".to_string()
     /// )?;
     ///
-    /// let mut plugins = HashMap::new();
+    /// let mut plugins = IndexMap::new();
     /// plugins.insert("Fallout4.esm".to_string(), "00".to_string());
     /// plugins.insert("MyMod.esp".to_string(), "01".to_string());
     ///
@@ -486,24 +490,24 @@ impl PluginAnalyzer {
     /// ```
     pub fn filter_ignored_plugins(
         &self,
-        crashlog_plugins: HashMap<String, String>,
-    ) -> Result<HashMap<String, String>> {
+        crashlog_plugins: IndexMap<String, String>,
+    ) -> Result<IndexMap<String, String>> {
         if self.ignore_plugins_list.is_empty() {
             return Ok(crashlog_plugins);
         }
 
         let mut filtered_plugins = crashlog_plugins.clone();
 
-        // Create lowercase mapping
+        // Create lowercase mapping for case-insensitive lookup
         let plugins_lower: HashMap<String, String> = crashlog_plugins
             .keys()
             .map(|k| (k.to_lowercase(), k.clone()))
             .collect();
 
-        // Remove ignored plugins
+        // Remove ignored plugins (IndexMap::shift_remove preserves order of remaining elements)
         for signal in &self.ignore_plugins_list {
             if let Some(original_key) = plugins_lower.get(signal) {
-                filtered_plugins.remove(original_key);
+                filtered_plugins.shift_remove(original_key);
             }
         }
 
@@ -524,8 +528,9 @@ impl PluginAnalyzer {
 ///
 /// # Returns
 ///
-/// A vector of HashMaps, one per input log, in the same order. Each HashMap contains plugin
-/// names as keys and their load order IDs/status as values.
+/// A vector of IndexMaps, one per input log, in the same order. Each IndexMap contains plugin
+/// names as keys and their load order IDs/status as values, preserving the order plugins
+/// appear in the crash log (load order).
 ///
 /// # Performance
 ///
@@ -548,11 +553,12 @@ impl PluginAnalyzer {
 /// assert_eq!(results.len(), 2);
 /// assert!(results[0].contains_key("MyMod.esp"));
 /// ```
-pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<HashMap<String, String>> {
+pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<IndexMap<String, String>> {
     let results: Vec<_> = logs
         .par_iter()
         .map(|log| {
-            let mut plugins = HashMap::new();
+            // IndexMap preserves insertion order for Python parity
+            let mut plugins = IndexMap::new();
 
             for line in log.lines() {
                 if let Some(caps) = PLUGIN_PATTERN.captures(line) {
@@ -965,7 +971,7 @@ mod tests {
         )
         .unwrap();
 
-        let plugins: HashMap<String, String> = HashMap::new();
+        let plugins: IndexMap<String, String> = IndexMap::new();
         let result = analyzer.filter_ignored_plugins(plugins).unwrap();
         assert!(result.is_empty());
     }
@@ -982,7 +988,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut plugins = HashMap::new();
+        let mut plugins = IndexMap::new();
         plugins.insert("Fallout4.esm".to_string(), "00".to_string());
         plugins.insert("MyMod.esp".to_string(), "01".to_string());
 
@@ -1002,7 +1008,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut plugins = HashMap::new();
+        let mut plugins = IndexMap::new();
         plugins.insert("Fallout4.esm".to_string(), "00".to_string());
         plugins.insert("MyMod.esp".to_string(), "01".to_string());
 
@@ -1024,7 +1030,7 @@ mod tests {
         )
         .unwrap();
 
-        let mut plugins = HashMap::new();
+        let mut plugins = IndexMap::new();
         plugins.insert("Fallout4.esm".to_string(), "00".to_string()); // Mixed case
 
         let result = analyzer.filter_ignored_plugins(plugins).unwrap();

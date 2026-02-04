@@ -24,6 +24,7 @@ use crate::suspect_scanner::SuspectScanner;
 use crate::version::{CrashgenVersion, crashgen_version_gen};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
+use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use regex::Regex;
 use std::collections::{HashMap, HashSet};
@@ -88,23 +89,23 @@ pub struct AnalysisConfig {
     /// List of strings to remove from crash logs when simplify_logs is enabled
     pub remove_list: Vec<String>,
 
-    /// Pattern dictionaries for suspect detection
-    pub suspects_error: HashMap<String, String>,
-    /// Stack-based suspect patterns for crash analysis (e.g., function names, memory addresses)
-    pub suspects_stack: HashMap<String, Vec<String>>,
+    /// Pattern dictionaries for suspect detection (IndexMap preserves YAML key order for Python parity)
+    pub suspects_error: IndexMap<String, String>,
+    /// Stack-based suspect patterns for crash analysis (IndexMap preserves YAML key order for Python parity)
+    pub suspects_stack: IndexMap<String, Vec<String>>,
 
-    /// Mod databases
-    pub mods_core: HashMap<String, String>,
-    /// Frequently problematic mods database for crash analysis (e.g., known unstable mods, compatibility issues)
-    pub mods_freq: HashMap<String, String>,
-    /// Mod conflict database for compatibility analysis (e.g., known mod conflicts, incompatible combinations)
-    pub mods_conf: HashMap<String, String>,
-    /// Mod solutions database for providing fixes and workarounds (e.g., compatibility patches, configuration changes)
-    pub mods_solu: HashMap<String, String>,
-    /// Outdated, redundant, or community patch mods database
-    pub mods_opc2: HashMap<String, String>,
-    /// FOLON (Fallout: London) specific mods database
-    pub mods_core_folon: HashMap<String, String>,
+    /// Mod databases (IndexMap preserves YAML key order for Python parity)
+    pub mods_core: IndexMap<String, String>,
+    /// Frequently problematic mods database for crash analysis (IndexMap preserves YAML key order)
+    pub mods_freq: IndexMap<String, String>,
+    /// Mod conflict database for compatibility analysis (IndexMap preserves YAML key order)
+    pub mods_conf: IndexMap<String, String>,
+    /// Mod solutions database for providing fixes and workarounds (IndexMap preserves YAML key order)
+    pub mods_solu: IndexMap<String, String>,
+    /// Outdated, redundant, or community patch mods database (IndexMap preserves YAML key order)
+    pub mods_opc2: IndexMap<String, String>,
+    /// FOLON (Fallout: London) specific mods database (IndexMap preserves YAML key order)
+    pub mods_core_folon: IndexMap<String, String>,
 
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
@@ -165,14 +166,14 @@ impl AnalysisConfig {
             fcx_mode: false,
             simplify_logs: false,
             remove_list: Vec::new(),
-            suspects_error: HashMap::new(),
-            suspects_stack: HashMap::new(),
-            mods_core: HashMap::new(),
-            mods_freq: HashMap::new(),
-            mods_conf: HashMap::new(),
-            mods_solu: HashMap::new(),
-            mods_opc2: HashMap::new(),
-            mods_core_folon: HashMap::new(),
+            suspects_error: IndexMap::new(),
+            suspects_stack: IndexMap::new(),
+            mods_core: IndexMap::new(),
+            mods_freq: IndexMap::new(),
+            mods_conf: IndexMap::new(),
+            mods_solu: IndexMap::new(),
+            mods_opc2: IndexMap::new(),
+            mods_core_folon: IndexMap::new(),
             classic_records_list: Vec::new(),
             crashgen_ignore: Vec::new(),
         }
@@ -779,30 +780,37 @@ impl OrchestratorCore {
             is_outdated,
         ));
 
-        // Store plugins for mod detection
-        let mut plugins_map: Option<HashMap<String, String>> = None;
-        let mut plugin_limit_triggered = false;
-        let mut plugin_limit_disabled = false;
+        // Store plugins for mod detection - IndexMap preserves load order for Python parity
+        let mut plugins_map: Option<IndexMap<String, String>> = None;
 
         // Extract plugins from segments (if plugin analyzer is available)
         if let Some(ref analyzer) = self.plugin_analyzer {
-            // Find plugin segment (typically the 6th segment in Buffout logs)
-            if segments.len() > 5 {
-                let plugin_segment = &segments[5];
+            // Find plugin segment - scan backwards from end to find segment with game plugins
+            // Game plugins have format: "[XX] PluginName.esp" or "[FE:XXX] PluginName.esl"
+            // The Rust parser may return different segment counts depending on crash log format
+            let plugin_segment_opt = segments.iter().rev().find(|seg| {
+                // Check if segment contains game plugin entries
+                seg.iter().any(|line| {
+                    let trimmed = line.trim();
+                    // Game plugins start with [XX] or [FE:XXX] and end with .esp/.esm/.esl
+                    trimmed.starts_with('[')
+                        && (trimmed.contains(".esp") || trimmed.contains(".esm") || trimmed.contains(".esl"))
+                })
+            });
+
+            if let Some(plugin_segment) = plugin_segment_opt {
 
                 // Convert Arc<str> to String for compatibility
                 let plugin_lines: Vec<String> =
                     plugin_segment.iter().map(|s| s.to_string()).collect();
 
-                // Scan plugins using the analyzer
-                if let Ok((plugins, limit_triggered, limit_disabled)) = analyzer.loadorder_scan_log(
+                // Scan plugins using the analyzer (limit flags unused for now, may need in future)
+                if let Ok((plugins, _limit_triggered, _limit_disabled)) = analyzer.loadorder_scan_log(
                     plugin_lines,
                     Some(self.config.game_version.as_str()),
                     Some(self.config.crashgen_latest.as_str()),
                 ) {
                     plugin_count = plugins.len();
-                    plugin_limit_triggered = limit_triggered;
-                    plugin_limit_disabled = limit_disabled;
                     // Store plugins for mod detection
                     plugins_map = Some(plugins);
                 }
@@ -814,14 +822,10 @@ impl OrchestratorCore {
         let mut suspect_fragments: Vec<ReportFragment> = Vec::new();
 
         if let Some(ref scanner) = self.suspect_scanner {
-            // Extract main error text (typically first segment)
-            let main_error_text = if !segments.is_empty() {
-                segments[0].join("\n")
-            } else {
-                String::new()
-            };
+            // Use the main_error extracted from header parsing (not segments[0]!)
+            // segments[0] contains crashgen settings, not the main error line
 
-            // Extract callstack (typically third segment)
+            // Extract callstack (segment 2: PROBABLE CALL STACK)
             let callstack = if segments.len() > 2 {
                 segments[2].join("\n")
             } else {
@@ -830,18 +834,18 @@ impl OrchestratorCore {
 
             let max_warn_length = 50; // Default width for formatting
 
-            // Scan for error suspects
+            // Scan for error suspects (using header-extracted main_error)
             let (error_fragment, error_found) = scanner
-                .suspect_scan_mainerror(&main_error_text, max_warn_length)
+                .suspect_scan_mainerror(&main_error, max_warn_length)
                 .unwrap_or_else(|_| (ReportFragment::empty(), false));
 
-            // Scan for stack suspects
+            // Scan for stack suspects (using header-extracted main_error)
             let (stack_fragment, stack_found) = scanner
-                .suspect_scan_stack(&main_error_text, &callstack, max_warn_length)
+                .suspect_scan_stack(&main_error, &callstack, max_warn_length)
                 .unwrap_or_else(|_| (ReportFragment::empty(), false));
 
-            // Check for DLL crash pattern
-            let dll_fragment = SuspectScanner::check_dll_crash(&main_error_text)
+            // Check for DLL crash pattern (using header-extracted main_error)
+            let dll_fragment = SuspectScanner::check_dll_crash(&main_error)
                 .unwrap_or_else(|_| ReportFragment::empty());
 
             if error_found {
@@ -884,16 +888,22 @@ impl OrchestratorCore {
             HashSet::new()
         };
 
-        // Parse crashgen settings from CRASHGEN segment (segment 4)
-        // Format: "key = value" or "key=value" (TOML-like)
-        let crashgen_settings: HashMap<String, String> = if segments.len() > 4 {
-            segments[4]
+        // Parse crashgen settings from Compatibility segment (segment 0)
+        // Format: "key: value" (TOML-like with colon separator)
+        // Skip section headers like [Compatibility], [Crashlog], [Fixes], etc.
+        let crashgen_settings: HashMap<String, String> = if !segments.is_empty() {
+            segments[0]
                 .iter()
                 .filter_map(|line| {
                     let line = line.trim();
-                    if let Some(eq_pos) = line.find('=') {
-                        let key = line[..eq_pos].trim().to_string();
-                        let value = line[eq_pos + 1..].trim().to_string();
+                    // Skip section headers (lines starting with '[')
+                    if line.starts_with('[') {
+                        return None;
+                    }
+                    // Settings use colon as separator (e.g., "F4EE: true")
+                    if let Some(colon_pos) = line.find(':') {
+                        let key = line[..colon_pos].trim().to_string();
+                        let value = line[colon_pos + 1..].trim().to_string();
                         if !key.is_empty() {
                             Some((key, value))
                         } else {
@@ -1000,7 +1010,7 @@ impl OrchestratorCore {
                     detect_mods_single(self.config.mods_solu.clone(), plugins.clone())
                 {
                     if !solu_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header("Have Known Solutions"));
+                        composer.add(report_gen.generate_mod_check_header("HAVE SOLUTIONS"));
                         composer.add(ReportFragment::from_lines(solu_lines));
                     }
                 }
@@ -1015,7 +1025,10 @@ impl OrchestratorCore {
                     xse_modules.clone(),
                 ) {
                     if !important_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header("Are Important Core Mods"));
+                        // Use direct header to match Python format exactly
+                        composer.add(ReportFragment::from_lines(vec![
+                            "### Checking for Important Mods\n\n".to_string(),
+                        ]));
                         composer.add(ReportFragment::from_lines(important_lines));
                     }
                 }
@@ -1034,20 +1047,39 @@ impl OrchestratorCore {
             }
         }
 
-        // Add plugin section if we have plugin limit warnings
-        if plugin_limit_triggered || plugin_limit_disabled {
-            composer.add(report_gen.generate_plugin_suspect_header());
-            let mut plugin_lines = Vec::new();
-            if plugin_limit_triggered {
-                plugin_lines.push("⚠️ **PLUGIN LIMIT REACHED!**\n\n".to_string());
-                plugin_lines.push("Your load order has reached the plugin limit (255 plugins).\n".to_string());
-                plugin_lines.push("This may cause instability. Consider merging plugins or removing unnecessary ones.\n\n".to_string());
+        // Add Plugin-related Errors section (only when plugins are detected - matches Python behavior)
+        // This section uses plugin_match to find plugins mentioned in the crash stack
+        if let Some(ref analyzer) = self.plugin_analyzer {
+            if let Some(ref plugins) = plugins_map {
+                // Only show section if we have plugins to check (matches Python behavior)
+                if !plugins.is_empty() {
+                    // Get callstack segment (segment 2) for plugin matching
+                    let segment_callstack_lower: Vec<String> = if segments.len() > 2 {
+                        segments[2]
+                            .iter()
+                            .map(|s| s.to_lowercase())
+                            .collect()
+                    } else {
+                        Vec::new()
+                    };
+
+                    // Convert plugins to lowercase set for matching
+                    let crashlog_plugins_lower: HashSet<String> = plugins
+                        .keys()
+                        .map(|k| k.to_lowercase())
+                        .collect();
+
+                    // Call plugin_match to find plugins in crash stack
+                    if let Ok(plugin_match_lines) = analyzer.plugin_match(
+                        segment_callstack_lower,
+                        crashlog_plugins_lower,
+                    ) {
+                        // Add the header and the plugin match results
+                        composer.add(report_gen.generate_plugin_suspect_header());
+                        composer.add(ReportFragment::from_lines(plugin_match_lines));
+                    }
+                }
             }
-            if plugin_limit_disabled {
-                plugin_lines.push("ℹ️ *Plugin limit checking is disabled for this game version.*\n\n".to_string());
-            }
-            plugin_lines.push(format!("**Total Plugins Detected:** {}\n\n", plugin_count));
-            composer.add(ReportFragment::from_lines(plugin_lines));
         }
 
         // Extract FormIDs from callstack (typically the 3rd segment)
@@ -1100,15 +1132,11 @@ impl OrchestratorCore {
             }
         }
 
-        // Add footer with timing information
+        // Add footer (timing is tracked in AnalysisResult, not in report - matches Python)
         let elapsed = start_time.elapsed();
         let elapsed_us = elapsed.as_micros() as u64;
-        let elapsed_ms_display = elapsed_us as f64 / 1000.0;
 
         composer.add(report_gen.generate_footer());
-        composer.add(ReportFragment::from_lines(vec![
-            format!("\n*Analysis completed in {:.2}ms*\n", elapsed_ms_display),
-        ]));
 
         // Compose final report
         let final_report = composer.compose();
@@ -1495,11 +1523,11 @@ impl OrchestratorCore {
     ///
     /// # Returns
     ///
-    /// Reference to the appropriate mods_core database.
+    /// Reference to the appropriate mods_core database (IndexMap preserves YAML order).
     pub fn get_mods_core_for_plugins(
         &self,
         plugins: &HashMap<String, String>,
-    ) -> &HashMap<String, String> {
+    ) -> &IndexMap<String, String> {
         if self.detect_folon(plugins) && !self.config.mods_core_folon.is_empty() {
             &self.config.mods_core_folon
         } else {

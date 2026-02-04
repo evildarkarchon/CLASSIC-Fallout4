@@ -151,8 +151,9 @@ class TestPrintRustModuleStatus:
             print_rust_module_status()
 
         output = captured.getvalue()
-        # Should have either success or failure icons
-        assert "✅" in output or "❌" in output
+        # Should have either success or failure indicators
+        # Implementation uses [OK] and [--] text markers
+        assert "[OK]" in output or "[--]" in output
 
 
 class TestRustModulesAvailable:

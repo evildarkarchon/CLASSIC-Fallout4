@@ -25,12 +25,17 @@ use pyo3::prelude::*;
 // Module declarations
 pub mod error_convert;
 pub mod exceptions;
+pub mod indexmap_utils;
 pub mod path;
 pub mod path_py;
 pub mod performance_py;
 pub mod strings_py;
 
 // Re-export for Rust usage
+pub use indexmap_utils::{
+    pyany_to_indexmap_str, pyany_to_indexmap_vecstr, pydict_to_indexmap_str,
+    pydict_to_indexmap_str_optional, pydict_to_indexmap_vecstr,
+};
 pub use path::PathLike;
 pub use path_py::PyPathHandler;
 pub use performance_py::PyRustPerformanceMonitor;

@@ -114,6 +114,9 @@ regex = "1.12.2"
 memchr = "2.7.6"
 aho-corasick = "1.1.4"
 
+# Ordered collections
+indexmap = "2.7"  # Preserves insertion order (required for YAML key order parity)
+
 # Caching
 lru = "0.16.3"
 linked-hash-map = "0.5"

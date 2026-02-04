@@ -84,15 +84,14 @@ class CrashLogsScanWorker(QObject):
         logger.debug(f"Starting crash logs scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
         # Import here to avoid circular dependency
-        from ClassicLib.integration.factory import is_component_available
-        from ClassicLib.scanning.logs import FCXModeHandler
+        from ClassicLib.integration.factory import _FcxHandlerWrapper, is_component_available
         from ClassicLib.scanning.logs.executor import ScanLogsExecutor
         from ClassicLib.scanning.logs.utils import crashlogs_scan_async_pure
 
         init_start = time.perf_counter()
         # Initialize scanner with eager_load flag for proactive warm-up
         scanner = ScanLogsExecutor(eager_load=True)
-        FCXModeHandler.reset_fcx_checks()
+        _FcxHandlerWrapper.reset_fcx_checks()
 
         # Log Rust acceleration status
         if is_component_available("classic_scanlog", "LogParser"):

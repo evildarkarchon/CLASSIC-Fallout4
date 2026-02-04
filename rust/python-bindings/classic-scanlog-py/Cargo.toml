@@ -32,6 +32,9 @@ anyhow = { workspace = true }
 regex = { workspace = true }
 rayon = { workspace = true }
 
+# Ordered collections (for Python dict -> IndexMap conversion)
+indexmap = { workspace = true }
+
 # Async stream processing for batch operations
 futures = { workspace = true }
 

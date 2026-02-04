@@ -17,7 +17,12 @@ class TestGetFormidAnalyzer:
         """Test returns an analyzer instance."""
         from ClassicLib.integration.factory import get_formid_analyzer
 
+        # Create mock with proper typed attributes (Rust requires strings, not MagicMock)
         mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout4"
+        mock_yamldata.problematic_plugins = {}
+        mock_yamldata.mods_single = {}
+        mock_yamldata.mods_double = {}
 
         result = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=True)
 
@@ -29,7 +34,13 @@ class TestGetFormidAnalyzer:
 
         from ClassicLib.integration.factory import get_formid_analyzer
 
+        # Create mock with proper typed attributes (Rust requires strings, not MagicMock)
         mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout4"
+        mock_yamldata.problematic_plugins = {}
+        mock_yamldata.mods_single = {}
+        mock_yamldata.mods_double = {}
+
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
@@ -146,11 +157,13 @@ class TestGetSettingsValidator:
 class TestGetGpuDetector:
     """Tests for get_gpu_detector function."""
 
-    def test_returns_gpu_rust_module(self) -> None:
-        """Test returns gpu_rust module."""
+    def test_returns_gpu_detector_namespace(self) -> None:
+        """Test returns namespace with get_gpu_info function."""
         from ClassicLib.integration.factory import get_gpu_detector
 
         result = get_gpu_detector()
 
         assert result is not None
-        assert hasattr(result, "RUST_AVAILABLE")
+        # Factory returns SimpleNamespace with get_gpu_info function
+        assert hasattr(result, "get_gpu_info")
+        assert callable(result.get_gpu_info)

@@ -137,6 +137,7 @@
 //! - **Parallel Access**: Lock-free concurrent reads with DashMap
 
 use dashmap::DashMap;
+use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -1197,6 +1198,72 @@ impl YamlOperations {
                 })
                 .collect(),
             _ => HashMap::new(),
+        }
+    }
+
+    /// Get an IndexMap of string key-value pairs from YAML data, preserving insertion order.
+    ///
+    /// This is identical to `get_hashmap_value` but returns an `IndexMap` which preserves
+    /// the original YAML key order. This is essential for Python parity since Python dicts
+    /// preserve insertion order.
+    ///
+    /// # Arguments
+    /// * `data` - The YAML data to read from
+    /// * `key_path` - Dot-separated path to the value (e.g., "section.subsection")
+    ///
+    /// # Returns
+    /// * `IndexMap<String, String>` - Ordered map of string key-value pairs, empty if path not found
+    ///
+    /// # Example
+    /// ```rust
+    /// # use classic_yaml_core::YamlOperations;
+    /// # use yaml_rust2::Yaml;
+    /// # fn main() -> Result<(), Box<dyn std::error::Error>> {
+    /// let ops = YamlOperations::new();
+    /// let yaml = ops.parse_yaml("
+    ///   game:
+    ///     mods:
+    ///       mod1: Description 1
+    ///       mod2: Description 2
+    /// ")?;
+    ///
+    /// let mods = ops.get_indexmap_value(&yaml, "game.mods");
+    /// assert_eq!(mods.len(), 2);
+    /// // Order is preserved: mod1 comes before mod2
+    /// let keys: Vec<_> = mods.keys().collect();
+    /// assert_eq!(keys[0], "mod1");
+    /// assert_eq!(keys[1], "mod2");
+    /// # Ok(())
+    /// # }
+    /// ```
+    pub fn get_indexmap_value(&self, data: &Yaml, key_path: &str) -> IndexMap<String, String> {
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let mut current = data;
+
+        for key in keys {
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return IndexMap::new(),
+                    };
+                }
+                _ => return IndexMap::new(),
+            }
+        }
+
+        match current {
+            Yaml::Hash(map) => map
+                .iter()
+                .filter_map(|(k, v)| match (k.as_str(), v.as_str()) {
+                    (Some(key_str), Some(val_str)) => {
+                        Some((key_str.to_string(), val_str.to_string()))
+                    }
+                    _ => None,
+                })
+                .collect(),
+            _ => IndexMap::new(),
         }
     }
 

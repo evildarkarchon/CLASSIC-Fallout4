@@ -123,6 +123,8 @@ class TestGamePathFinderCreateAsync:
 class TestFindGamePathAsync:
     """Tests for GamePathFinder.find_game_path_async() method."""
 
+    @patch("ClassicLib.support.game_path.RustGamePathFinder")
+    @patch("ClassicLib.support.game_path.PathValidator")
     @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
@@ -133,6 +135,8 @@ class TestFindGamePathAsync:
         mock_get_game: MagicMock,
         mock_get_cached: AsyncMock,
         mock_yaml_async: AsyncMock,
+        mock_path_validator: MagicMock,
+        mock_rust_finder_cls: MagicMock,
         tmp_path: Path,
         message_handler,
     ) -> None:
@@ -142,11 +146,13 @@ class TestFindGamePathAsync:
         exe_path = game_path / "Fallout4.exe"
         exe_path.write_text("# Fake exe")
 
-        # Make get_cached_game_path_async return proper coroutine
-        async def get_cached_coro():
-            return game_path
-
         mock_get_cached.return_value = game_path
+
+        # Mock Rust components
+        mock_path_validator.is_valid_path.return_value = True
+        mock_rust_finder = MagicMock()
+        mock_rust_finder.validate_game_path.return_value = None
+        mock_rust_finder_cls.return_value = mock_rust_finder
 
         # Create async side effect function
         async def yaml_side_effect(*args, **kwargs):
@@ -158,7 +164,7 @@ class TestFindGamePathAsync:
             elif "Main_Root_Name" in key:
                 return "Fallout 4"
             elif "Root_Folder_Game" in key:
-                return None
+                return str(game_path)
             return None
 
         mock_yaml_async.side_effect = yaml_side_effect
@@ -170,30 +176,38 @@ class TestFindGamePathAsync:
 
         assert GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH) == game_path
 
-    @patch("platform.system", return_value="Windows")
-    @patch("ClassicLib.support.game_path._game_path_find_registry")
+    @patch("ClassicLib.support.game_path.RustGamePathFinder")
+    @patch("ClassicLib.support.game_path.PathValidator")
     @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
+    @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
-    async def test_find_game_path_async_uses_registry_on_windows(
+    async def test_find_game_path_async_uses_rust_finder(
         self,
         mock_get_vr: MagicMock,
         mock_get_game: MagicMock,
+        mock_save_cache: MagicMock,
         mock_get_cached: AsyncMock,
         mock_yaml_async: AsyncMock,
-        mock_registry: MagicMock,
-        mock_platform: MagicMock,
+        mock_path_validator: MagicMock,
+        mock_rust_finder_cls: MagicMock,
         tmp_path: Path,
         message_handler,
     ) -> None:
-        """Test find_game_path_async uses registry on Windows when no cache."""
+        """Test find_game_path_async uses Rust finder when no cache."""
         game_path = tmp_path / "Fallout4"
         game_path.mkdir()
         (game_path / "Fallout4.exe").write_text("# Fake exe")
 
         mock_get_cached.return_value = None
-        mock_registry.return_value = game_path
+        mock_path_validator.is_valid_path.return_value = True
+
+        # Mock Rust finder to return game path
+        mock_rust_finder = MagicMock()
+        mock_rust_finder.find_game_path.return_value = str(game_path)
+        mock_rust_finder.validate_game_path.return_value = None
+        mock_rust_finder_cls.return_value = mock_rust_finder
 
         async def yaml_side_effect(*args, **kwargs):
             key = args[2] if len(args) > 2 else ""
@@ -212,13 +226,14 @@ class TestFindGamePathAsync:
         finder = await GamePathFinder.create_async()
         await finder.find_game_path_async()
 
-        mock_registry.assert_called_once_with("Fallout4.exe")
+        # Verify Rust finder was called
+        mock_rust_finder.find_game_path.assert_called_once()
+        assert GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH) == game_path
 
-    @patch("platform.system", return_value="Linux")
-    @patch("ClassicLib.support.game_path._game_path_find_registry")
+    @patch("ClassicLib.support.game_path.RustGamePathFinder")
+    @patch("ClassicLib.support.game_path.PathValidator")
     @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
-    @patch("ClassicLib.Utils.path_utils.validate_path", return_value=(False, "Missing file"))
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "is_gui_mode", return_value=True)
@@ -227,16 +242,22 @@ class TestFindGamePathAsync:
         mock_is_gui: MagicMock,
         mock_get_vr: MagicMock,
         mock_get_game: MagicMock,
-        mock_validate: MagicMock,
         mock_get_cached: AsyncMock,
         mock_yaml_async: AsyncMock,
-        mock_registry: MagicMock,
-        mock_platform: MagicMock,
+        mock_path_validator: MagicMock,
+        mock_rust_finder_cls: MagicMock,
         tmp_path: Path,
         message_handler,
     ) -> None:
-        """Test find_game_path_async skips registry on non-Windows platforms."""
+        """Test find_game_path_async falls back to GUI when Rust finder fails."""
         mock_get_cached.return_value = None
+        game_path = tmp_path / "Fallout4"
+        game_path.mkdir()
+
+        # Mock Rust finder to fail (triggering GUI fallback)
+        mock_rust_finder = MagicMock()
+        mock_rust_finder.find_game_path.side_effect = FileNotFoundError("Not found")
+        mock_rust_finder_cls.return_value = mock_rust_finder
 
         async def yaml_side_effect(*args, **kwargs):
             key = args[2] if len(args) > 2 else ""
@@ -252,17 +273,19 @@ class TestFindGamePathAsync:
 
         from ClassicLib.support.game_path import GamePathFinder
 
-        with patch("ClassicLib.support.game_path.msg_error"):
-            finder = await GamePathFinder.create_async()
-            # Should not raise and should skip registry
-            await finder.find_game_path_async()
+        # Mock the GUI dialog to return a path
+        with patch("ClassicLib.support.game_path.show_game_path_dialog_static", return_value=game_path):
+            with patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache_async"):
+                finder = await GamePathFinder.create_async()
+                await finder.find_game_path_async()
 
-        mock_registry.assert_not_called()
+        assert GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH) == game_path
 
     @patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache_async")
     @patch("platform.system", return_value="Linux")
     @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch("ClassicLib.support.resources.ResourceLoader.get_cached_game_path_async")
+    @patch("ClassicLib.support.game_path.RustGamePathFinder")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "is_gui_mode", return_value=False)
@@ -271,6 +294,7 @@ class TestFindGamePathAsync:
         mock_is_gui: MagicMock,
         mock_get_vr: MagicMock,
         mock_get_game: MagicMock,
+        mock_rust_finder_cls: MagicMock,
         mock_get_cached: AsyncMock,
         mock_yaml_async: AsyncMock,
         mock_platform: MagicMock,
@@ -278,7 +302,7 @@ class TestFindGamePathAsync:
         tmp_path: Path,
         message_handler,
     ) -> None:
-        """Test find_game_path_async falls back to XSE log parsing."""
+        """Test find_game_path_async falls back to Rust finder then user input."""
         game_path = tmp_path / "Fallout4"
         game_path.mkdir()
         (game_path / "Fallout4.exe").write_text("# Fake exe")
@@ -300,15 +324,15 @@ class TestFindGamePathAsync:
 
         mock_yaml_async.side_effect = yaml_side_effect
 
+        # Mock RustGamePathFinder to return the game path via find_game_path
+        mock_rust_finder = MagicMock()
+        mock_rust_finder.find_game_path.return_value = str(game_path)
+        mock_rust_finder_cls.return_value = mock_rust_finder
+
         from ClassicLib.support.game_path import GamePathFinder
 
         finder = await GamePathFinder.create_async()
-
-        # Mock XSE log parsing to return game path
-        with patch.object(finder, "_parse_xse_log_for_path", return_value=game_path):
-            with patch.object(finder, "_validate_game_path", return_value=True):
-                with patch.object(finder, "_validate_xse_file", return_value=True):
-                    await finder.find_game_path_async()
+        await finder.find_game_path_async()
 
         assert GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH) == game_path
 
@@ -338,7 +362,7 @@ class TestGameGeneratePathsAsync:
     """Tests for game_generate_paths_async() function."""
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.read_game_exe_version")
+    @patch("ClassicLib.Utils.version_utils.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_fallout4_og(
@@ -380,7 +404,7 @@ class TestGameGeneratePathsAsync:
         assert call_count >= 6
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.read_game_exe_version")
+    @patch("ClassicLib.Utils.version_utils.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     async def test_generate_paths_async_fallout4_vr(
@@ -471,7 +495,7 @@ class TestGameGeneratePathsAsync:
             await game_generate_paths_async()
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.read_game_exe_version")
+    @patch("ClassicLib.Utils.version_utils.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_null_version_uses_default(
@@ -507,7 +531,7 @@ class TestGameGeneratePathsAsync:
         assert mock_yaml_async.call_count >= 6
 
     @patch("ClassicLib.io.yaml.yaml_settings_async")
-    @patch("ClassicLib.support.game_path.read_game_exe_version")
+    @patch("ClassicLib.Utils.version_utils.read_game_exe_version")
     @patch.object(GlobalRegistry, "get_game", return_value="Starfield")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     async def test_generate_paths_async_unsupported_game(

@@ -1,8 +1,21 @@
 //! Python bindings for PluginAnalyzer - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::PluginAnalyzer;
+use classic_shared::pydict_to_indexmap_str;
+use indexmap::IndexMap;
 use pyo3::prelude::*;
-use std::collections::{HashMap, HashSet};
+use pyo3::types::PyDict;
+use std::collections::HashSet;
+
+/// Convert IndexMap to Python dict, preserving insertion order
+/// Python 3.7+ dicts maintain insertion order, so this is safe
+fn indexmap_to_pydict(py: Python<'_>, map: IndexMap<String, String>) -> Py<PyDict> {
+    let dict = PyDict::new(py);
+    for (k, v) in map {
+        dict.set_item(k, v).expect("Failed to set dict item");
+    }
+    dict.into()
+}
 
 /// Python wrapper for PluginAnalyzer
 #[pyclass(name = "PluginAnalyzer")]
@@ -85,23 +98,27 @@ impl PyPluginAnalyzer {
     /// # Returns
     ///
     /// Tuple containing:
-    /// - Dict mapping plugin names to IDs/status
+    /// - Dict mapping plugin names to IDs/status (order preserved)
     /// - Boolean flag for plugin limit triggered
     /// - Boolean flag for limit check disabled
     #[pyo3(signature = (segment_plugins, game_version=None, version_current=None))]
     pub fn loadorder_scan_log(
         &self,
+        py: Python<'_>,
         segment_plugins: Vec<String>,
         game_version: Option<String>,
         version_current: Option<String>,
-    ) -> PyResult<(HashMap<String, String>, bool, bool)> {
-        self.inner
+    ) -> PyResult<(Py<PyDict>, bool, bool)> {
+        let (plugins, limit_triggered, limit_disabled) = self
+            .inner
             .loadorder_scan_log(
                 segment_plugins,
                 game_version.as_deref(),
                 version_current.as_deref(),
             )
-            .map_err(crate::to_pyerr)
+            .map_err(crate::to_pyerr)?;
+        // Convert IndexMap to Python dict preserving order
+        Ok((indexmap_to_pydict(py, plugins), limit_triggered, limit_disabled))
     }
 
     /// Check plugin limit - returns (plugin_limit_triggered, limit_check_disabled)
@@ -128,20 +145,33 @@ impl PyPluginAnalyzer {
     }
 
     /// Filter ignored plugins
+    ///
+    /// Takes a dict of plugins and returns a filtered dict with ignored plugins removed.
+    /// The order of plugins is preserved.
     pub fn filter_ignored_plugins(
         &self,
-        plugins: HashMap<String, String>,
-    ) -> PyResult<HashMap<String, String>> {
-        self.inner
-            .filter_ignored_plugins(plugins)
-            .map_err(crate::to_pyerr)
+        py: Python<'_>,
+        plugins: &Bound<'_, PyDict>,
+    ) -> PyResult<Py<PyDict>> {
+        let plugins_map = pydict_to_indexmap_str(plugins)?;
+        let filtered = self
+            .inner
+            .filter_ignored_plugins(plugins_map)
+            .map_err(crate::to_pyerr)?;
+        Ok(indexmap_to_pydict(py, filtered))
     }
 }
 
 /// Detect plugins from multiple logs (standalone function)
+///
+/// Returns a list of dicts, each mapping plugin names to their load order IDs.
+/// The order of plugins within each dict is preserved from the crash log.
 #[pyfunction]
-pub fn detect_plugins_batch(logs: Vec<String>) -> Vec<HashMap<String, String>> {
+pub fn detect_plugins_batch(py: Python<'_>, logs: Vec<String>) -> Vec<Py<PyDict>> {
     classic_scanlog_core::detect_plugins_batch(logs)
+        .into_iter()
+        .map(|map| indexmap_to_pydict(py, map))
+        .collect()
 }
 
 /// Check if a line contains a plugin reference (standalone function)

@@ -123,10 +123,7 @@ def mock_database_pool_manager():
     mock_manager.get_pool = AsyncMock(return_value=mock_pool)
     mock_manager.close_pool = AsyncMock()
 
-    with (
-        patch("ClassicLib.io.database.DatabasePoolManager", return_value=mock_manager),
-        patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager", return_value=mock_manager),
-    ):
+    with patch("ClassicLib.io.database.DatabasePoolManager", return_value=mock_manager):
         yield mock_manager
 
 

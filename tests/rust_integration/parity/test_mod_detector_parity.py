@@ -93,12 +93,12 @@ def create_conflicting_crashlog():
 def create_important_mods_db():
     """Create sample YAML dictionary for important mods."""
     return {
-        "f4se | Fallout 4 Script Extender": ("Essential for most mods\n    Download from https://f4se.silverlock.org"),
-        "buffout4 | Buffout 4": ("Crash logging utility\n    Download from Nexus Mods"),
-        "address library | Address Library": ("Required for many F4SE plugins\n    Download from Nexus Mods"),
+        "f4se | Fallout 4 Script Extender": "Essential for most mods\n    Download from https://f4se.silverlock.org",
+        "buffout4 | Buffout 4": "Crash logging utility\n    Download from Nexus Mods",
+        "address library | Address Library": "Required for many F4SE plugins\n    Download from Nexus Mods",
         # Note: Patterns must match actual plugin names (use underscore or no space)
-        "nvidia_reflex | NVIDIA Reflex": ("nvidia\n    NVIDIA GPU optimization plugin"),
-        "amd_fsr | AMD FidelityFX": ("amd\n    AMD GPU optimization plugin"),
+        "nvidia_reflex | NVIDIA Reflex": "nvidia\n    NVIDIA GPU optimization plugin",
+        "amd_fsr | AMD FidelityFX": "amd\n    AMD GPU optimization plugin",
     }
 
 
@@ -318,8 +318,7 @@ class TestDetectModsImportant:
 
         result = detect_mods_important(yaml_dict, crashlog_plugins, None, xse_modules)
 
-        # Should contain header
-        assert any("Checking for Important Mods" in line for line in result)
+        # NOTE: Header "Checking for Important Mods" is added by orchestrator, not this function
 
         # Should show installed mods
         assert any("✔️" in line for line in result)
@@ -327,16 +326,20 @@ class TestDetectModsImportant:
         assert any("Buffout 4" in line for line in result)
 
     def test_detect_mods_important_missing_mods(self):
-        """Test with missing important mods."""
+        """Test with missing important mods.
+
+        When gpu_rival is set, Python shows "❌ not installed" warnings for mods
+        that are not for the rival GPU (i.e., non-GPU mods and mods for user's GPU).
+        """
         yaml_dict = create_important_mods_db()
         crashlog_plugins = {}  # Empty - no mods installed
         xse_modules = set()
 
-        # Note: gpu_rival must be Some to show missing mods
-        # Passing "amd" means user has NVIDIA, so non-GPU and NVIDIA mods will show as missing
+        # gpu_rival="amd" means user has NVIDIA, so non-GPU mods and NVIDIA mods
+        # should show as "not installed"
         result = detect_mods_important(yaml_dict, crashlog_plugins, "amd", xse_modules)
 
-        # Should show missing mods
+        # Should show "not installed" warnings for non-GPU mods
         assert any("❌" in line for line in result)
         assert any("not installed" in line for line in result)
 
@@ -427,9 +430,9 @@ class TestDetectModsImportant:
 
         result = detect_mods_important(yaml_dict, crashlog_plugins, None, xse_modules)
 
-        # Should only contain header
-        assert len(result) == 1
-        assert "Checking for Important Mods" in result[0]
+        # Empty YAML means nothing to check - should return empty
+        # (Header is added by orchestrator, not this function)
+        assert len(result) == 0
 
 
 # ============================================================================

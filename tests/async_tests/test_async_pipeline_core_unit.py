@@ -104,25 +104,40 @@ class TestAsyncPipeline:
             formid_db_exists=False,
         )
 
+        # Create mock Rust result objects
+        class MockRustResult:
+            def __init__(self, log_path: Path):
+                self.log_path = str(log_path)
+                self.report_lines = [f"Report for {log_path.name}"]
+                self.trigger_scan_failed = False
+                self.scanned = 1
+                self.incomplete = 0
+                self.failed = 0
+
         with (
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async") as mock_reformat,
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch") as mock_write,
-            patch("ClassicLib.scanning.logs.orchestrator_core.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator") as mock_orchestrator_class,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig") as mock_config_class,
+            patch("ClassicLib.integration.factory.get_yamldata") as mock_get_yamldata,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context"),
         ):
             # Setup mocks - use AsyncMock for async functions
-            # Note: load_crash_logs_async was removed - pipeline now uses direct file I/O
             mock_reformat.return_value = AsyncMock()
             mock_write.return_value = AsyncMock()
+            mock_get_yamldata.return_value = mock_yamldata
+
+            # Mock AnalysisConfig.from_yamldata
+            mock_config = MagicMock()
+            mock_config_class.from_yamldata.return_value = mock_config
 
             # Create mock orchestrator instance
-            mock_orchestrator: AsyncMock = AsyncMock()
-            mock_orchestrator.process_crash_logs_batch.return_value = [
-                (log_file, [f"Report for {log_file.name}"], False, {}) for log_file in crash_log_files
+            mock_orchestrator = MagicMock()
+            mock_orchestrator.is_feature_complete.return_value = True
+            mock_orchestrator.process_logs_batch.return_value = [
+                MockRustResult(log_file) for log_file in crash_log_files
             ]
-
-            # Setup async context manager
-            mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
-            mock_orchestrator_class.return_value.__aexit__.return_value = None
+            mock_orchestrator_class.return_value = mock_orchestrator
 
             # Run the pipeline
             results, stats = await pipeline.process_crash_logs_async(crashlog_list=crash_log_files, remove_list=("test_remove",))
@@ -132,14 +147,12 @@ class TestAsyncPipeline:
             assert isinstance(stats, dict)
             assert "total_time" in stats
             assert "reformat_time" in stats
-            # Note: "load_time" removed - pipeline now uses direct file I/O for performance
             assert "process_time" in stats
             assert "write_time" in stats
             assert "logs_per_second" in stats
 
             # Verify pipeline stages were called
             mock_reformat.assert_called_once_with(crash_log_files, ("test_remove",))
-            # Note: mock_load removed - load_crash_logs_async was removed from pipeline
             mock_write.assert_called_once()
 
     @pytest.mark.asyncio

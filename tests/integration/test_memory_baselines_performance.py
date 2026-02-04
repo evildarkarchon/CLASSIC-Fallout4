@@ -9,8 +9,6 @@ import random
 import statistics
 import time
 from typing import Any
-from unittest.mock import MagicMock
-
 import psutil
 import pytest
 
@@ -318,11 +316,10 @@ class TestRegressionBaselines:
             baseline = metrics.baselines["parse_1mb"]
             pytest.fail(f"Performance regression: 1MB parsing took {stats['median']:.3f}s (baseline: {baseline:.3f}s)")
 
-    def test_no_regression_in_formid_analysis(self, metrics, generator):
+    def test_no_regression_in_formid_analysis(self, metrics, generator, mock_yamldata):
         """Test that FormID analysis performance hasn't regressed."""
         from ClassicLib.integration.factory import get_formid_analyzer
 
-        mock_yamldata = MagicMock()
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
         # Test 1000 FormIDs using extract_formids

@@ -238,87 +238,36 @@ class TestGenerateGameCombinedResultTuple:
 
 @pytest.mark.integration
 class TestFCXModeHandlerPhase5Integration:
-    """Integration tests for Phase 5: FCXModeHandler tuple unpacking."""
+    """Integration tests for Phase 5: FCXModeHandler tuple unpacking.
+
+    NOTE: The Python FCXModeHandlerFragments class was removed during the Rust
+    migration. FCX handling is now done via get_fcx_handler() factory function
+    which returns a Rust-backed wrapper. These tests now verify the factory
+    behavior and the wrapper's basic functionality.
+    """
 
     @pytest.mark.unit
-    def test_fcx_handler_unpacks_tuple_correctly(self) -> None:
-        """Test that FCXModeHandler properly unpacks tuple from scan_game_files()."""
-        from unittest.mock import Mock, patch
+    def test_fcx_handler_factory_returns_wrapper(self) -> None:
+        """Test that get_fcx_handler returns a valid wrapper instance."""
+        from unittest.mock import patch
 
-        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
+        # Mock the Rust FcxModeHandler to avoid requiring actual Rust module
+        with patch("ClassicLib.integration.factory.RustFcxModeHandler", create=True) as mock_rust:
+            mock_rust.return_value = mock_rust
+            from ClassicLib.integration.factory import get_fcx_handler
 
-        # Reset state
-        FCXModeHandlerFragments.reset_fcx_checks()
+            handler = get_fcx_handler(fcx_mode=True)
 
-        # Mock coordinator (patching at the import location inside the method)
-        with (
-            patch("ClassicLib.support.setup.SetupCoordinator") as mock_coordinator_class,
-            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_generate,
-        ):
-            mock_coordinator = Mock()
-            mock_coordinator.generate_combined_results.return_value = "Main files OK\n"
-            mock_coordinator_class.return_value = mock_coordinator
-
-            # Mock generate_game_combined_result to return tuple
-            test_issue = ConfigIssue(
-                file_path=Path("/test/file.ini"),
-                section="Main",
-                setting="TestSetting",
-                current_value="0",
-                recommended_value="1",
-                description="Test configuration issue",
-                severity="warning",
-            )
-            mock_generate.return_value = ("Game files OK\n", [test_issue])
-
-            # Create handler and run checks
-            handler = FCXModeHandlerFragments(fcx_mode=True)
-            handler.check_fcx_mode()
-
-            # Verify tuple was unpacked correctly
-            assert handler.game_files_check == "Game files OK\n"
-            assert len(FCXModeHandlerFragments._detected_issues) == 1
-            assert FCXModeHandlerFragments._detected_issues[0] == test_issue
-
-            # Verify report includes detected issue
-            fragment = handler.get_fcx_messages()
-            report_content = "".join(fragment.content)  # Join tuple of strings
-
-            assert "DETECTED CONFIGURATION ISSUES" in report_content
-            assert "Test configuration issue" in report_content
+            # Verify wrapper has expected attributes
+            assert hasattr(handler, "fcx_mode")
+            assert hasattr(handler, "check_fcx_mode")
+            assert hasattr(handler, "get_fcx_messages")
+            assert handler.fcx_mode is True
 
     @pytest.mark.unit
-    def test_fcx_handler_handles_empty_issues_list(self) -> None:
-        """Test that FCXModeHandler handles empty issues list correctly."""
-        from unittest.mock import Mock, patch
+    def test_fcx_handler_reset_is_noop(self) -> None:
+        """Test that reset_fcx_checks is a no-op for Rust wrapper."""
+        from ClassicLib.integration.factory import _FcxHandlerWrapper
 
-        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
-
-        # Reset state
-        FCXModeHandlerFragments.reset_fcx_checks()
-
-        with (
-            patch("ClassicLib.support.setup.SetupCoordinator") as mock_coordinator_class,
-            patch("ClassicLib.scanning.game.generate_game_combined_result") as mock_generate,
-        ):
-            mock_coordinator = Mock()
-            mock_coordinator.generate_combined_results.return_value = "Main files OK\n"
-            mock_coordinator_class.return_value = mock_coordinator
-
-            # Mock with empty issues list
-            mock_generate.return_value = ("Game files OK\n", [])
-
-            # Create handler and run checks
-            handler = FCXModeHandlerFragments(fcx_mode=True)
-            handler.check_fcx_mode()
-
-            # Verify empty issues list
-            assert len(FCXModeHandlerFragments._detected_issues) == 0
-
-            # Verify report does NOT include issues section when list is empty
-            fragment = handler.get_fcx_messages()
-            report_content = "".join(fragment.content)  # Join tuple of strings
-
-            # Should not show issues section if no issues detected
-            if not FCXModeHandlerFragments._detected_issues:
-                assert "DETECTED CONFIGURATION ISSUES" not in report_content
+        # Should not raise - just a no-op for Rust (resets automatically)
+        _FcxHandlerWrapper.reset_fcx_checks()

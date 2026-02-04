@@ -82,10 +82,10 @@ def test_worker_uses_asyncio_run():
         mock_executor_cls.return_value = mock_scanner
 
         with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", mock_async_func):
-            # Import FCXModeHandler and patch it directly
-            from ClassicLib.scanning.logs import FCXModeHandler
+            # Patch FCX handler wrapper's reset method (no-op for Rust)
+            from ClassicLib.integration.factory import _FcxHandlerWrapper
 
-            with patch.object(FCXModeHandler, "reset_fcx_checks"):
+            with patch.object(_FcxHandlerWrapper, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
                     with patch("asyncio.run", side_effect=close_coro) as mock_asyncio_run:
                         # Run the scan
@@ -115,9 +115,9 @@ def test_no_manual_event_loop_creation():
     # Mock everything to prevent actual execution
     with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor"):
         with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", AsyncMock()):
-            from ClassicLib.scanning.logs import FCXModeHandler
+            from ClassicLib.integration.factory import _FcxHandlerWrapper
 
-            with patch.object(FCXModeHandler, "reset_fcx_checks"):
+            with patch.object(_FcxHandlerWrapper, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
                     with patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
                         # Configure mock to close coroutines to avoid warnings
@@ -169,9 +169,9 @@ def test_rust_status_logging():
     # Mock dependencies
     with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor"):
         with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", AsyncMock()):
-            from ClassicLib.scanning.logs import FCXModeHandler
+            from ClassicLib.integration.factory import _FcxHandlerWrapper
 
-            with patch.object(FCXModeHandler, "reset_fcx_checks"), patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
+            with patch.object(_FcxHandlerWrapper, "reset_fcx_checks"), patch("ClassicLib.core.async_bridge.AsyncBridge") as mock_bridge_cls:
                 # Configure mock to close coroutines
                 mock_bridge_cls.get_instance.return_value.run_async.side_effect = close_coro
 
@@ -292,9 +292,9 @@ def test_performance_metrics_logged():
     # Mock dependencies
     with patch("ClassicLib.scanning.logs.executor.ScanLogsExecutor"):
         with patch("ClassicLib.scanning.logs.utils.crashlogs_scan_async_pure", AsyncMock()):
-            from ClassicLib.scanning.logs import FCXModeHandler
+            from ClassicLib.integration.factory import _FcxHandlerWrapper
 
-            with patch.object(FCXModeHandler, "reset_fcx_checks"):
+            with patch.object(_FcxHandlerWrapper, "reset_fcx_checks"):
                 with patch("ClassicLib.integration.factory.is_component_available", return_value=False):
                     # Mock asyncio.run to close coroutines to avoid warnings
                     with patch("asyncio.run", side_effect=close_coro):

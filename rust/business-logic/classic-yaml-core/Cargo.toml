@@ -17,6 +17,9 @@ classic-shared-core = { path = "../../foundation/classic-shared-core" }
 # YAML parsing (yaml-rust2)
 yaml-rust2 = { workspace = true }
 
+# Ordered collections (preserves YAML key order)
+indexmap = { workspace = true }
+
 # Caching
 dashmap = { workspace = true }
 once_cell = { workspace = true }

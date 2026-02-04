@@ -124,7 +124,9 @@ class TestReportParity:
 
         # Generate report with Rust orchestrator
         result = orchestrator.process_crash_log(log_path)
-        actual_report = "\n".join(result.report_lines)
+        # Lines already contain their own newlines, so join with empty string
+        # (same as utils.py: autoscan_output = "".join(autoscan_report))
+        actual_report = "".join(result.report_lines)
 
         # Normalize actual report for comparison
         actual_normalized = normalize_for_comparison(actual_report)

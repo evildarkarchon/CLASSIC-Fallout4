@@ -3,6 +3,9 @@ Real-world crash log processing performance tests.
 
 This module contains performance tests for processing actual crash logs,
 measuring pipeline performance with realistic data loads.
+
+Phase 9 Update: Tests now mock the Rust Orchestrator directly since
+orchestrator_core.py was removed during the Rust migration.
 """
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
@@ -15,11 +18,32 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from ClassicLib.scanning.logs.async_util import load_crash_logs_async
 from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import AsyncCrashLogPipeline
 from ClassicLib.scanning.logs.reporting.async_performance_monitor import AsyncPerformanceMonitor
 
 pytestmark = pytest.mark.performance
+
+
+def create_mock_rust_result(log_path: Path) -> MagicMock:
+    """Create a mock Rust AnalysisResult object."""
+    mock_result = MagicMock()
+    mock_result.log_path = str(log_path)
+    mock_result.report_lines = [f"# Report for {log_path.name}"]
+    mock_result.trigger_scan_failed = False
+    mock_result.scanned = 1
+    mock_result.incomplete = 0
+    mock_result.failed = 0
+    return mock_result
+
+
+def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
+    """Create a mock Rust Orchestrator that returns results for given files."""
+    mock_orchestrator = MagicMock()
+    mock_orchestrator.is_feature_complete.return_value = True
+    mock_orchestrator.process_logs_batch.return_value = [
+        create_mock_rust_result(f) for f in crash_files
+    ]
+    return mock_orchestrator
 
 
 @pytest.mark.slow
@@ -102,7 +126,6 @@ class TestRealWorldCrashLogProcessing:
 
         # Now run async test
         print("\n--- ASYNC PIPELINE TEST ---")
-        from collections import Counter
 
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
             yamldata=mock_yamldata,
@@ -114,39 +137,33 @@ class TestRealWorldCrashLogProcessing:
         # Record comprehensive metrics
         full_test_start: float = time.perf_counter()
 
-        # Actually load and process the real crash logs
-        async_cache = await load_crash_logs_async(crash_log_files)
+        # Create mock orchestrator
+        mock_orchestrator = create_mock_orchestrator(crash_log_files)
 
-        # Process with mocked orchestrator for consistent timing
-        # Note: load_crash_logs_async was removed from pipeline - it now uses direct file I/O
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
+
+        # Process with mocked Rust orchestrator
         with (
             patch(
                 "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock
             ) as mock_reformat,
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock) as mock_write,
-            patch("ClassicLib.scanning.logs.orchestrator_core.OrchestratorCore") as mock_orchestrator_class,
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
         ):
             # Return actual loaded data
             mock_reformat.return_value = None
             mock_write.return_value = None
 
-            # Setup orchestrator with realistic processing
-            mock_orchestrator: AsyncMock = AsyncMock()
-
-            async def process_real_logs(batch: list[Path]) -> list[tuple[Path, list[str], bool, Counter]]:
-                results = []
-                for log_file in batch:
-                    lines = async_cache.get(log_file.name, [])
-                    report = [f"Async report for {log_file.name}\n"]
-                    for i, line in enumerate(lines[:100]):
-                        if "Form ID:" in line or "EXCEPTION_" in line or ".dll" in line.lower():
-                            report.append(f"Line {i + 1}: {line.strip()}\n")
-                    results.append((log_file, report, False, Counter()))
-                return results
-
-            mock_orchestrator.process_crash_logs_batch.side_effect = process_real_logs
-            mock_orchestrator_class.return_value.__aenter__.return_value = mock_orchestrator
-            mock_orchestrator_class.return_value.__aexit__.return_value = None
+            mock_context = MagicMock()
+            mock_context.__enter__ = MagicMock(return_value=mock_context)
+            mock_context.__exit__ = MagicMock(return_value=False)
+            mock_context.update = MagicMock()
+            mock_progress.return_value = mock_context
 
             # Run the pipeline (provide empty remove_list)
             results, stats = await pipeline.process_crash_logs_async(crash_log_files, ())

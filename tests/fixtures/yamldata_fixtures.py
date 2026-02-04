@@ -107,6 +107,11 @@ def mock_yamldata() -> MagicMock:
     # Must be dict, not list - Rust FormIDAnalyzerCore expects dict[str, str]
     mock.problematic_plugins = {}
 
+    # Required for Rust FormIDAnalyzerCore initialization
+    # These must be proper Python dicts, not Mock objects
+    mock.mods_single = {}
+    mock.mods_double = {}
+
     # Path attributes (for stress tests)
     mock.game_path = "C:\\Games\\Fallout4"
     mock.docs_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"

@@ -292,25 +292,36 @@ class TestCacheNetworkFallback:
 
     @pytest.mark.asyncio
     async def test_cache_fallback_on_network_failure(self):
-        """Test falling back to cached data when network fails."""
+        """Test that Rust cache hit prevents file load attempts.
+
+        When the Rust cache has data (cache hit), the implementation should
+        return cached data without attempting file operations that could fail.
+        """
         from ClassicLib.core.constants import YAML
         from ClassicLib.io.yaml.async_.core import get_async_yaml_core
 
         core = await get_async_yaml_core()
 
-        # Pre-populate cache
+        # Pre-populate Rust cache by loading the file once
         test_key = "CLASSIC_Settings.test_key"
         test_value = "cached_value"
 
-        # Manually inject into cache
-        cache_key = (str, YAML.Settings, test_key)
-        core.cache.settings_cache[cache_key] = test_value
+        # Mock Rust cache to return cached data (simulating cache hit)
+        # The implementation uses classic_settings.get_cached() for cache lookup
+        cached_data = {"CLASSIC_Settings": {"test_key": test_value}}
 
-        # Simulate network failure (mock file load to fail)
-        with patch.object(core.file_ops, "load_yaml_file", side_effect=aiohttp.ClientError("Network down")):
-            # Should return cached data without hitting file/network
+        with patch("ClassicLib.io.yaml.async_.core.classic_settings") as mock_settings:
+            # get_cached returns cached data (cache hit)
+            mock_settings.get_cached.return_value = [cached_data]
+
+            # With cache hit, load_settings_async should never be called,
+            # so even if it would fail, we get the cached value
             result = await core.async_yaml_settings(str, YAML.Settings, test_key)
             assert result == test_value
+
+            # Verify cache was checked and file load was NOT attempted
+            mock_settings.get_cached.assert_called_once()
+            mock_settings.load_settings_async.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_cache_expiry_during_network_outage(self):

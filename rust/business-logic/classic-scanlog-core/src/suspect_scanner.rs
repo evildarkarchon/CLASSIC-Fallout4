@@ -7,8 +7,8 @@
 //! - YAML-defined suspect pattern matching
 
 use crate::error::Result;
+use indexmap::IndexMap;
 use rayon::prelude::*;
-use std::collections::HashMap;
 
 use crate::report::ReportFragment;
 
@@ -49,8 +49,8 @@ impl MatchStatus {
 /// High-performance suspect scanner (40x speedup)
 #[derive(Clone)]
 pub struct SuspectScanner {
-    suspects_error_list: HashMap<String, String>,
-    suspects_stack_list: HashMap<String, Vec<String>>,
+    suspects_error_list: IndexMap<String, String>,
+    suspects_stack_list: IndexMap<String, Vec<String>>,
 }
 
 impl SuspectScanner {
@@ -74,15 +74,15 @@ impl SuspectScanner {
     ///
     /// ```rust
     /// use classic_scanlog_core::suspect_scanner::SuspectScanner;
-    /// use std::collections::HashMap;
+    /// use indexmap::IndexMap;
     ///
-    /// let mut error_list = HashMap::new();
+    /// let mut error_list = IndexMap::new();
     /// error_list.insert(
     ///     "Critical | Memory Access Violation".to_string(),
     ///     "ACCESS_VIOLATION".to_string()
     /// );
     ///
-    /// let mut stack_list = HashMap::new();
+    /// let mut stack_list = IndexMap::new();
     /// stack_list.insert(
     ///     "High | Stack Overflow".to_string(),
     ///     vec!["ME-REQ|EXCEPTION_STACK_OVERFLOW".to_string()]
@@ -91,8 +91,8 @@ impl SuspectScanner {
     /// let scanner = SuspectScanner::new(error_list, stack_list);
     /// ```
     pub fn new(
-        suspects_error_list: HashMap<String, String>,
-        suspects_stack_list: HashMap<String, Vec<String>>,
+        suspects_error_list: IndexMap<String, String>,
+        suspects_stack_list: IndexMap<String, Vec<String>>,
     ) -> Self {
         Self {
             suspects_error_list,
@@ -113,8 +113,9 @@ impl SuspectScanner {
         crashlog_mainerror: &str,
         max_warn_length: usize,
     ) -> Result<(ReportFragment, bool)> {
-        let mut lines = Vec::new();
-        let mut found_suspect = false;
+        // Collect suspects with severity for sorting (Python parity: highest severity first)
+        // Tuple: (severity_num, error_name_for_tiebreak, formatted_name, severity_str)
+        let mut suspects: Vec<(i32, String, String, String)> = Vec::new();
 
         for (error_key, signal) in &self.suspects_error_list {
             // Skip if signal not in crash log
@@ -128,15 +129,35 @@ impl SuspectScanner {
                 let formatted_error_name =
                     format!("{:.<width$}", error_name, width = max_warn_length);
 
-                // Add to report
-                lines.push(format!(
-                    "- **Checking for {} SUSPECT FOUND! > Severity : {}** \n\n",
-                    formatted_error_name, error_severity
+                // Parse severity as integer for sorting
+                let severity_num = error_severity.trim().parse::<i32>().unwrap_or(0);
+                suspects.push((
+                    severity_num,
+                    error_name.to_string(),
+                    formatted_error_name,
+                    error_severity.to_string(),
                 ));
-                lines.push("-----\n".to_string());
-
-                found_suspect = true;
             }
+        }
+
+        // Sort by severity descending (highest first), then alphabetically by error name for determinism
+        suspects.sort_by(|a, b| {
+            match b.0.cmp(&a.0) {
+                std::cmp::Ordering::Equal => a.1.cmp(&b.1), // Alphabetical tiebreak
+                other => other,
+            }
+        });
+
+        // Build output lines from sorted suspects
+        let mut lines = Vec::new();
+        let found_suspect = !suspects.is_empty();
+
+        for (_, _, formatted_error_name, error_severity) in suspects {
+            lines.push(format!(
+                "- **Checking for {} SUSPECT FOUND! > Severity : {}** \n\n",
+                formatted_error_name, error_severity
+            ));
+            lines.push("-----\n".to_string());
         }
 
         Ok((ReportFragment::from_lines(lines), found_suspect))
@@ -157,8 +178,9 @@ impl SuspectScanner {
         segment_callstack_intact: &str,
         max_warn_length: usize,
     ) -> Result<(ReportFragment, bool)> {
-        let mut lines = Vec::new();
-        let mut any_suspect_found = false;
+        // Collect suspects with severity for sorting (Python parity: highest severity first)
+        // Tuple: (severity_num, error_name_for_tiebreak, formatted_name, severity_str)
+        let mut suspects: Vec<(i32, String, String, String)> = Vec::new();
 
         for (error_key, signal_list) in &self.suspects_stack_list {
             // Parse error information (format: "Severity | Error Name")
@@ -193,13 +215,35 @@ impl SuspectScanner {
             if match_status.is_suspect() {
                 let formatted_error_name =
                     format!("{:.<width$}", error_name, width = max_warn_length);
-                lines.push(format!(
-                    "- **Checking for {} SUSPECT FOUND! > Severity : {}** \n\n",
-                    formatted_error_name, error_severity
+                // Parse severity as integer for sorting
+                let severity_num = error_severity.trim().parse::<i32>().unwrap_or(0);
+                suspects.push((
+                    severity_num,
+                    error_name.to_string(),
+                    formatted_error_name,
+                    error_severity.to_string(),
                 ));
-                lines.push("-----\n".to_string());
-                any_suspect_found = true;
             }
+        }
+
+        // Sort by severity descending (highest first), then alphabetically by error name for determinism
+        suspects.sort_by(|a, b| {
+            match b.0.cmp(&a.0) {
+                std::cmp::Ordering::Equal => a.1.cmp(&b.1), // Alphabetical tiebreak
+                other => other,
+            }
+        });
+
+        // Build output lines from sorted suspects
+        let mut lines = Vec::new();
+        let any_suspect_found = !suspects.is_empty();
+
+        for (_, _, formatted_error_name, error_severity) in suspects {
+            lines.push(format!(
+                "- **Checking for {} SUSPECT FOUND! > Severity : {}** \n\n",
+                formatted_error_name, error_severity
+            ));
+            lines.push("-----\n".to_string());
         }
 
         Ok((ReportFragment::from_lines(lines), any_suspect_found))
@@ -321,13 +365,13 @@ mod tests {
 
     #[test]
     fn test_suspect_scan_mainerror() {
-        let mut error_list = HashMap::new();
+        let mut error_list = IndexMap::new();
         error_list.insert(
             "Critical | Memory Access Violation".to_string(),
             "ACCESS_VIOLATION".to_string(),
         );
 
-        let scanner = SuspectScanner::new(error_list, HashMap::new());
+        let scanner = SuspectScanner::new(error_list, IndexMap::new());
 
         let (fragment, found) = scanner
             .suspect_scan_mainerror("Error: ACCESS_VIOLATION at 0x12345", 50)

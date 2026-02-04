@@ -7,6 +7,7 @@
 //! 3. Efficient memory representation
 
 use classic_yaml_core::YamlOperations;
+use indexmap::IndexMap;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use yaml_rust2::YamlLoader;
@@ -112,10 +113,10 @@ pub struct YamlDataCore {
     // Mod databases
     /// Configuration settings for game modification databases
     pub game_mods_conf: HashMap<String, String>,
-    /// Core mod databases information
-    pub game_mods_core: HashMap<String, String>,
-    /// Folon core mod configuration
-    pub game_mods_core_folon: HashMap<String, String>,
+    /// Core mod databases information (IndexMap preserves YAML key order for Python parity)
+    pub game_mods_core: IndexMap<String, String>,
+    /// Folon core mod configuration (IndexMap preserves YAML key order for Python parity)
+    pub game_mods_core_folon: IndexMap<String, String>,
     /// Frequently used game mod entries
     pub game_mods_freq: HashMap<String, String>,
     /// Specific feature or mod database identified as opc2
@@ -300,8 +301,8 @@ impl YamlDataCore {
             suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
             suspects_stack_list: yaml_ops.get_hashmap_vec_value(game_data, "Crashlog_Stack_Check"),
             game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
-            game_mods_core: yaml_ops.get_hashmap_value(game_data, "Mods_CORE"),
-            game_mods_core_folon: yaml_ops.get_hashmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
+            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
             game_mods_freq: yaml_ops.get_hashmap_value(game_data, "Mods_FREQ"),
             game_mods_opc2: yaml_ops.get_hashmap_value(game_data, "Mods_OPC2"),
             game_mods_solu: yaml_ops.get_hashmap_value(game_data, "Mods_SOLU"),
@@ -454,8 +455,8 @@ impl YamlDataCore {
             suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
             suspects_stack_list: yaml_ops.get_hashmap_vec_value(game_data, "Crashlog_Stack_Check"),
             game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
-            game_mods_core: yaml_ops.get_hashmap_value(game_data, "Mods_CORE"),
-            game_mods_core_folon: yaml_ops.get_hashmap_value(game_data, "Mods_CORE_FOLON"),
+            game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
+            game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
             game_mods_freq: yaml_ops.get_hashmap_value(game_data, "Mods_FREQ"),
             game_mods_opc2: yaml_ops.get_hashmap_value(game_data, "Mods_OPC2"),
             game_mods_solu: yaml_ops.get_hashmap_value(game_data, "Mods_SOLU"),

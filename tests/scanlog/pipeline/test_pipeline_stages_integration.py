@@ -5,6 +5,9 @@ This module tests the async crash log processing pipeline including:
 - Individual stage execution
 - Error handling in pipeline
 - Performance stats tracking
+
+Phase 9 Update: Tests now mock the Rust Orchestrator directly since
+orchestrator_core.py was removed during the Rust migration.
 """
 
 import pytest
@@ -20,6 +23,28 @@ from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import (
     run_async_crash_log_scan,
     write_reports_batch,
 )
+
+
+def create_mock_rust_result(log_path: Path) -> MagicMock:
+    """Create a mock Rust AnalysisResult object."""
+    mock_result = MagicMock()
+    mock_result.log_path = str(log_path)
+    mock_result.report_lines = [f"# Report for {log_path.name}"]
+    mock_result.trigger_scan_failed = False
+    mock_result.scanned = 1
+    mock_result.incomplete = 0
+    mock_result.failed = 0
+    return mock_result
+
+
+def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
+    """Create a mock Rust Orchestrator that returns results for given files."""
+    mock_orchestrator = MagicMock()
+    mock_orchestrator.is_feature_complete.return_value = True
+    mock_orchestrator.process_logs_batch.return_value = [
+        create_mock_rust_result(f) for f in crash_files
+    ]
+    return mock_orchestrator
 
 
 @pytest.mark.unit
@@ -152,19 +177,22 @@ class TestAsyncCrashLogPipelineProcessing:
 
     async def test_process_crash_logs_async_empty_list(self, mock_yamldata: MagicMock) -> None:
         """Test processing empty crash log list."""
+        mock_orchestrator = create_mock_orchestrator([])
+
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
+
         with (
             patch(
                 "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
         ):
-            mock_yaml.return_value = None
-            mock_classic.return_value = False
-
             mock_context = MagicMock()
             mock_context.__enter__ = MagicMock(return_value=mock_context)
             mock_context.__exit__ = MagicMock(return_value=False)
@@ -186,6 +214,12 @@ class TestAsyncCrashLogPipelineProcessing:
 
     async def test_process_crash_logs_async_tracks_performance(self, mock_yamldata: MagicMock, crash_log_file: Path) -> None:
         """Test that processing tracks performance statistics."""
+        mock_orchestrator = create_mock_orchestrator([crash_log_file])
+
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
+
         with (
             patch(
                 "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
@@ -193,28 +227,15 @@ class TestAsyncCrashLogPipelineProcessing:
             ),
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
         ):
-            mock_yaml.return_value = None
-            mock_classic.return_value = False
-
             mock_context = MagicMock()
             mock_context.__enter__ = MagicMock(return_value=mock_context)
             mock_context.__exit__ = MagicMock(return_value=False)
             mock_context.update = MagicMock()
             mock_progress.return_value = mock_context
-
-            mock_io = MagicMock()
-            mock_io.read_file = AsyncMock(return_value=crash_log_file.read_text())
-            mock_get_io.return_value = mock_io
-
-            mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
-            mock_get_parser.return_value = mock_parser
 
             pipeline = AsyncCrashLogPipeline(
                 yamldata=mock_yamldata,
@@ -243,19 +264,22 @@ class TestRunAsyncCrashLogScan:
 
     async def test_run_async_crash_log_scan_creates_pipeline(self, mock_yamldata: MagicMock) -> None:
         """Test that run_async_crash_log_scan creates and uses a pipeline."""
+        mock_orchestrator = create_mock_orchestrator([])
+
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
+
         with (
             patch(
                 "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
                 new_callable=AsyncMock,
             ),
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
-            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
         ):
-            mock_yaml.return_value = None
-            mock_classic.return_value = False
-
             mock_context = MagicMock()
             mock_context.__enter__ = MagicMock(return_value=mock_context)
             mock_context.__exit__ = MagicMock(return_value=False)
@@ -276,9 +300,11 @@ class TestRunAsyncCrashLogScan:
 
     async def test_run_async_crash_log_scan_passes_params(self, mock_yamldata: MagicMock, crash_log_file: Path) -> None:
         """Test that parameters are correctly passed to pipeline."""
-        # Create a properly mocked DatabasePoolManager
-        mock_pool_manager = MagicMock()
-        mock_pool_manager.return_value.get_pool = AsyncMock(return_value=MagicMock())
+        mock_orchestrator = create_mock_orchestrator([crash_log_file])
+
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
 
         with (
             patch(
@@ -287,28 +313,15 @@ class TestRunAsyncCrashLogScan:
             ),
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager", mock_pool_manager),
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
         ):
-            mock_yaml.return_value = None
-            mock_classic.return_value = False
-
             mock_context = MagicMock()
             mock_context.__enter__ = MagicMock(return_value=mock_context)
             mock_context.__exit__ = MagicMock(return_value=False)
             mock_context.update = MagicMock()
             mock_progress.return_value = mock_context
-
-            mock_io = MagicMock()
-            mock_io.read_file = AsyncMock(return_value=crash_log_file.read_text())
-            mock_get_io.return_value = mock_io
-
-            mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
-            mock_get_parser.return_value = mock_parser
 
             results, stats = await run_async_crash_log_scan(
                 crashlog_list=[crash_log_file],
@@ -352,6 +365,25 @@ class TestPipelineErrorHandling:
         """Test pipeline handles individual log processing errors."""
         crash_files = list(crash_logs_directory.glob("*.log"))
 
+        # Create orchestrator that simulates some failures
+        mock_orchestrator = MagicMock()
+        mock_orchestrator.is_feature_complete.return_value = True
+        results = []
+        for i, f in enumerate(crash_files):
+            mock_result = MagicMock()
+            mock_result.log_path = str(f)
+            mock_result.report_lines = [f"# Report for {f.name}"]
+            mock_result.trigger_scan_failed = i % 2 == 0  # Alternate failures
+            mock_result.scanned = 1 if i % 2 != 0 else 0
+            mock_result.incomplete = 0
+            mock_result.failed = 1 if i % 2 == 0 else 0
+            results.append(mock_result)
+        mock_orchestrator.process_logs_batch.return_value = results
+
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
+
         with (
             patch(
                 "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
@@ -359,38 +391,15 @@ class TestPipelineErrorHandling:
             ),
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
         ):
-            mock_yaml.return_value = None
-            mock_classic.return_value = False
-
             mock_context = MagicMock()
             mock_context.__enter__ = MagicMock(return_value=mock_context)
             mock_context.__exit__ = MagicMock(return_value=False)
             mock_context.update = MagicMock()
             mock_progress.return_value = mock_context
-
-            # Make file I/O fail sometimes
-            call_count = 0
-
-            async def flaky_read(path: Path) -> str:
-                nonlocal call_count
-                call_count += 1
-                if call_count % 2 == 0:
-                    raise OSError("Read failed")
-                return path.read_text()
-
-            mock_io = MagicMock()
-            mock_io.read_file = AsyncMock(side_effect=flaky_read)
-            mock_get_io.return_value = mock_io
-
-            mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
-            mock_get_parser.return_value = mock_parser
 
             pipeline = AsyncCrashLogPipeline(
                 yamldata=mock_yamldata,
@@ -420,6 +429,12 @@ class TestPipelineBatchSizing:
             f.write_text(f"test {i}")
             crash_files.append(f)
 
+        mock_orchestrator = create_mock_orchestrator(crash_files)
+
+        mock_config = MagicMock()
+        mock_config_class = MagicMock()
+        mock_config_class.from_yamldata.return_value = mock_config
+
         with (
             patch(
                 "ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async",
@@ -427,29 +442,16 @@ class TestPipelineBatchSizing:
             ),
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
             patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-            patch("ClassicLib.scanning.logs.orchestrator_core.yaml_settings_async", new_callable=AsyncMock) as mock_yaml,
-            patch("ClassicLib.scanning.logs.orchestrator_core.classic_settings_async", new_callable=AsyncMock) as mock_classic,
-            patch("ClassicLib.scanning.logs.orchestrator_core.DatabasePoolManager"),
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_file_io") as mock_get_io,
-            patch("ClassicLib.scanning.logs.orchestrator_core.get_parser") as mock_get_parser,
+            patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+            patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
             patch("os.cpu_count", return_value=4),
         ):
-            mock_yaml.return_value = None
-            mock_classic.return_value = False
-
             mock_context = MagicMock()
             mock_context.__enter__ = MagicMock(return_value=mock_context)
             mock_context.__exit__ = MagicMock(return_value=False)
             mock_context.update = MagicMock()
             mock_progress.return_value = mock_context
-
-            mock_io = MagicMock()
-            mock_io.read_file = AsyncMock(return_value="test content")
-            mock_get_io.return_value = mock_io
-
-            mock_parser = MagicMock()
-            mock_parser.find_segments = MagicMock(return_value=("Game", "Crashgen", "Error", [[], [], [], [], [], []]))
-            mock_get_parser.return_value = mock_parser
 
             pipeline = AsyncCrashLogPipeline(
                 yamldata=mock_yamldata,

@@ -222,12 +222,11 @@ class TestMalformedCrashLogHandling:
         assert game_ver is not None or crashgen_ver is not None or segments is not None
         # Parser should not get stuck in infinite loop
 
-    def test_malformed_formid_handling(self, generator, setup_parser):
+    def test_malformed_formid_handling(self, generator, setup_parser, mock_yamldata):
         """Test handling of invalid FormID formats."""
         from ClassicLib.integration.factory import get_formid_analyzer
 
         malformed_log = generator.generate_malformed_formids()
-        mock_yamldata = MagicMock()
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
         # Extract FormID-like patterns from the log lines

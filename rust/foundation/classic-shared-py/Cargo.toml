@@ -18,6 +18,9 @@ classic-shared-core = { path = "../classic-shared-core" }
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
 
+# Collections with insertion order preservation
+indexmap = { workspace = true }
+
 # Logging
 log = { workspace = true }
 

@@ -343,9 +343,10 @@ jobs:
         shell: pwsh
 
       - name: Verify Rust acceleration
+        shell: bash
         run: |
           uv run python -c "import classic_yaml; print(f'Rust YAML version: {classic_yaml.__version__}')"
-          uv run python -c "from ClassicLib.integration.factory import detect_component; avail = [c for c in ['classic_yaml', 'classic_scanlog', 'classic_fileio'] if detect_component(c)[0]]; print(f'Rust components: {avail or \"none\"}')"
+          uv run python -c "from ClassicLib.integration.factory import detect_component; avail = [c for c in ['classic_yaml', 'classic_scanlog', 'classic_fileio'] if detect_component(c)[0]]; print('Rust components:', avail if avail else 'none')"
 
       - name: Run pytest (unit tests)
         run: uv run pytest -m "unit and not slow and not stress" --maxfail=5 --tb=short --timeout=300 --skip-slow --skip-network --skip-performance --skip-stress --timeout-method=thread --junitxml=test-results/unit.xml --no-cov

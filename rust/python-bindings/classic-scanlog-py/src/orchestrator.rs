@@ -1,7 +1,7 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
-use classic_shared::without_gil;
+use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -140,31 +140,18 @@ impl PyAnalysisConfig {
 
         config.show_formid_values = false; // Not in YamlData
 
-        // Extract dictionaries
-        config.suspects_error = yamldata
-            .getattr("suspects_error_list")?
-            .extract::<std::collections::HashMap<String, String>>()?;
+        // Extract dictionaries (preserving insertion order with IndexMap)
+        config.suspects_error = pyany_to_indexmap_str(&yamldata.getattr("suspects_error_list")?);
 
         // suspects_stack_list is now dict[str, list[str]] from Rust YamlData
-        config.suspects_stack = yamldata
-            .getattr("suspects_stack_list")?
-            .extract::<std::collections::HashMap<String, Vec<String>>>()?;
+        config.suspects_stack = pyany_to_indexmap_vecstr(&yamldata.getattr("suspects_stack_list")?);
 
-        config.mods_core = yamldata
-            .getattr("game_mods_core")?
-            .extract::<std::collections::HashMap<String, String>>()?;
-        config.mods_freq = yamldata
-            .getattr("game_mods_freq")?
-            .extract::<std::collections::HashMap<String, String>>()?;
-        config.mods_conf = yamldata
-            .getattr("game_mods_conf")?
-            .extract::<std::collections::HashMap<String, String>>()?;
-        config.mods_solu = yamldata
-            .getattr("game_mods_solu")?
-            .extract::<std::collections::HashMap<String, String>>()?;
-        config.mods_opc2 = yamldata
-            .getattr("game_mods_opc2")?
-            .extract::<std::collections::HashMap<String, String>>()?;
+        config.mods_core = pyany_to_indexmap_str(&yamldata.getattr("game_mods_core")?);
+        // Use pyany_to_indexmap to preserve YAML key order for Python parity
+        config.mods_freq = pyany_to_indexmap_str(&yamldata.getattr("game_mods_freq")?);
+        config.mods_conf = pyany_to_indexmap_str(&yamldata.getattr("game_mods_conf")?);
+        config.mods_solu = pyany_to_indexmap_str(&yamldata.getattr("game_mods_solu")?);
+        config.mods_opc2 = pyany_to_indexmap_str(&yamldata.getattr("game_mods_opc2")?);
 
         // New fields for Python-Rust parity
         config.crashgen_latest_vr = yamldata
@@ -175,11 +162,7 @@ impl PyAnalysisConfig {
 
         config.mods_core_folon = yamldata
             .getattr("game_mods_core_folon")
-            .ok()
-            .and_then(|attr| {
-                attr.extract::<std::collections::HashMap<String, String>>()
-                    .ok()
-            })
+            .map(|attr| pyany_to_indexmap_str(&attr))
             .unwrap_or_default();
 
         config.classic_records_list = yamldata
@@ -193,6 +176,13 @@ impl PyAnalysisConfig {
             .ok()
             .and_then(|attr| attr.extract::<Vec<String>>().ok())
             .unwrap_or_default();
+
+        // Extract CLASSIC version for report header (e.g., "CLASSIC v8.2.0")
+        config.classic_version = yamldata
+            .getattr("classic_version")
+            .ok()
+            .and_then(|attr| attr.extract::<String>().ok())
+            .unwrap_or_else(|| "CLASSIC".to_string());
 
         Ok(Self { inner: config })
     }
@@ -351,10 +341,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the suspect error patterns dictionary
+    /// Set the suspect error patterns dictionary (preserves dict order)
     #[setter]
-    pub fn set_suspects_error(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.suspects_error = value;
+    pub fn set_suspects_error(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.suspects_error = pyany_to_indexmap_str(value);
     }
 
     /// Get the suspect stack patterns dictionary
@@ -367,10 +357,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the suspect stack patterns dictionary
+    /// Set the suspect stack patterns dictionary (preserves dict order)
     #[setter]
-    pub fn set_suspects_stack(&mut self, value: std::collections::HashMap<String, Vec<String>>) {
-        self.inner.suspects_stack = value;
+    pub fn set_suspects_stack(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.suspects_stack = pyany_to_indexmap_vecstr(value);
     }
 
     /// Get the core mods database
@@ -383,10 +373,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the core mods database
+    /// Set the core mods database (preserves dict order)
     #[setter]
-    pub fn set_mods_core(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.mods_core = value;
+    pub fn set_mods_core(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.mods_core = pyany_to_indexmap_str(value);
     }
 
     /// Get the frequently problematic mods database
@@ -399,10 +389,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the frequently problematic mods database
+    /// Set the frequently problematic mods database (preserves insertion order)
     #[setter]
-    pub fn set_mods_freq(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.mods_freq = value;
+    pub fn set_mods_freq(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.mods_freq = pyany_to_indexmap_str(value);
     }
 
     /// Get the mod conflicts database
@@ -415,10 +405,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the mod conflicts database
+    /// Set the mod conflicts database (preserves insertion order)
     #[setter]
-    pub fn set_mods_conf(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.mods_conf = value;
+    pub fn set_mods_conf(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.mods_conf = pyany_to_indexmap_str(value);
     }
 
     /// Get the mod solutions database
@@ -431,10 +421,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the mod solutions database
+    /// Set the mod solutions database (preserves insertion order)
     #[setter]
-    pub fn set_mods_solu(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.mods_solu = value;
+    pub fn set_mods_solu(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.mods_solu = pyany_to_indexmap_str(value);
     }
 
     /// Get the outdated/redundant/community patch mods database
@@ -447,10 +437,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the outdated/redundant/community patch mods database
+    /// Set the outdated/redundant/community patch mods database (preserves insertion order)
     #[setter]
-    pub fn set_mods_opc2(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.mods_opc2 = value;
+    pub fn set_mods_opc2(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.mods_opc2 = pyany_to_indexmap_str(value);
     }
 
     // ============================================================================
@@ -539,10 +529,10 @@ impl PyAnalysisConfig {
         Ok(dict.into())
     }
 
-    /// Set the FOLON-specific mods database
+    /// Set the FOLON-specific mods database (preserves dict order)
     #[setter]
-    pub fn set_mods_core_folon(&mut self, value: std::collections::HashMap<String, String>) {
-        self.inner.mods_core_folon = value;
+    pub fn set_mods_core_folon(&mut self, value: &Bound<'_, pyo3::types::PyAny>) {
+        self.inner.mods_core_folon = pyany_to_indexmap_str(value);
     }
 
     /// Get the list of named records to scan for

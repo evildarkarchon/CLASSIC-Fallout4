@@ -3,6 +3,9 @@ Pipeline performance baseline tests for async operations.
 
 This module establishes baseline performance metrics specifically for pipeline processing,
 including scalability testing and throughput measurements.
+
+Phase 9 Update: Tests now mock the Rust Orchestrator directly since
+orchestrator_core.py was removed during the Rust migration.
 """
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
@@ -68,6 +71,28 @@ PROBABLE CALL STACK:
     return files
 
 
+def create_mock_rust_result(log_path: Path) -> MagicMock:
+    """Create a mock Rust AnalysisResult object."""
+    mock_result = MagicMock()
+    mock_result.log_path = str(log_path)
+    mock_result.report_lines = [f"# Report for {log_path.name}"]
+    mock_result.trigger_scan_failed = False
+    mock_result.scanned = 1
+    mock_result.incomplete = 0
+    mock_result.failed = 0
+    return mock_result
+
+
+def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
+    """Create a mock Rust Orchestrator that returns results for given files."""
+    mock_orchestrator = MagicMock()
+    mock_orchestrator.is_feature_complete.return_value = True
+    mock_orchestrator.process_logs_batch.return_value = [
+        create_mock_rust_result(f) for f in crash_files
+    ]
+    return mock_orchestrator
+
+
 class TestAsyncPerformancePipeline:
     """Performance baseline tests for pipeline scalability."""
 
@@ -75,8 +100,6 @@ class TestAsyncPerformancePipeline:
     @pytest.mark.asyncio
     async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture) -> None:
         """Baseline: Async pipeline scalability with different log counts."""
-        from collections import Counter
-
         test_counts = [5, 10, 25]
         results = []
 
@@ -90,17 +113,27 @@ class TestAsyncPerformancePipeline:
                 formid_db_exists=False,
             )
 
-            # Mock pipeline components - updated for current API
-            # Note: load_crash_logs_async was removed, pipeline now uses direct file I/O
+            # Create mock orchestrator for this batch
+            mock_orchestrator = create_mock_orchestrator(test_files)
+
+            mock_config = MagicMock()
+            mock_config_class = MagicMock()
+            mock_config_class.from_yamldata.return_value = mock_config
+
+            # Mock pipeline components - updated for Rust Orchestrator API
             with (
                 patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.crashlogs_reformat_async", new_callable=AsyncMock),
                 patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.write_reports_batch", new_callable=AsyncMock),
-                patch("ClassicLib.scanning.logs.orchestrator_core.OrchestratorCore") as mock_orch,
+                patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.msg_progress_context") as mock_progress,
+                patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
+                patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.AnalysisConfig", mock_config_class),
+                patch("ClassicLib.scanning.logs.reporting.async_crash_log_pipeline.Orchestrator", return_value=mock_orchestrator),
             ):
-                mock_orchestrator = AsyncMock()
-                mock_orchestrator.process_crash_logs_batch.return_value = [(f, ["report"], False, Counter()) for f in test_files]
-                mock_orch.return_value.__aenter__.return_value = mock_orchestrator
-                mock_orch.return_value.__aexit__.return_value = None
+                mock_context = MagicMock()
+                mock_context.__enter__ = MagicMock(return_value=mock_context)
+                mock_context.__exit__ = MagicMock(return_value=False)
+                mock_context.update = MagicMock()
+                mock_progress.return_value = mock_context
 
                 start = time.perf_counter()
                 _, stats = await pipeline.process_crash_logs_async(test_files, ())

@@ -122,10 +122,14 @@ class TestGetWebUtils:
 
 
 class TestGetPathOperations:
-    """Tests for get_path_operations function."""
+    """Tests for get_path_operations function.
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    Note: classic_path is a required Rust module. Unlike other utility modules,
+    ImportError propagates rather than returning None.
+    """
+
+    def test_raises_import_error_when_unavailable(self) -> None:
+        """Test raises ImportError when Rust module is unavailable."""
         import builtins
 
         from ClassicLib.integration.factory import get_path_operations
@@ -138,6 +142,5 @@ class TestGetPathOperations:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_path_operations()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_path"):
+                get_path_operations()

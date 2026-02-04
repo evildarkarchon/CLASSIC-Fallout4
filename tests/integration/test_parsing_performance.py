@@ -347,12 +347,12 @@ class TestFormIDAnalysisPerformance:
     def generator(self):
         return SyntheticDataGenerator()
 
-    def test_formid_analysis_speed(self, metrics, generator):
+    def test_formid_analysis_speed(self, metrics, generator, mock_yamldata):
         """Test FormID analysis performance (target: 25x speedup with Rust)."""
         from ClassicLib.integration.factory import get_formid_analyzer
         from ClassicLib.integration.factory import is_rust_accelerated
 
-        mock_yamldata = MagicMock()
+        # Add formid-specific attributes to the fixture
         mock_yamldata.formid_keywords = ["crash", "error"]
 
         analyzer = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=False)
@@ -380,11 +380,11 @@ class TestFormIDAnalysisPerformance:
             assert elapsed < 0.25, f"FormID analysis slow with Python: {elapsed:.3f}s for 1000 IDs"
             print(f"[Python] Performance: {1000 / elapsed:.0f} FormIDs/second")
 
-    def test_formid_pattern_matching(self, metrics, generator):
+    def test_formid_pattern_matching(self, metrics, generator, mock_yamldata):
         """Test FormID pattern matching performance."""
         from ClassicLib.integration.factory import get_formid_analyzer
 
-        mock_yamldata = MagicMock()
+        # Add formid-specific attributes to the fixture
         mock_yamldata.formid_keywords = ["crash", "error", "ctd", "exception"]
 
         analyzer = get_formid_analyzer(mock_yamldata, show_values=True, db_exists=False)
