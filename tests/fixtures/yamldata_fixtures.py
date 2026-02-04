@@ -104,7 +104,8 @@ def mock_yamldata() -> MagicMock:
     mock.autoscan_text = ""
 
     # Problematic plugins (for e2e correlation tests)
-    mock.problematic_plugins = []
+    # Must be dict, not list - Rust FormIDAnalyzerCore expects dict[str, str]
+    mock.problematic_plugins = {}
 
     # Path attributes (for stress tests)
     mock.game_path = "C:\\Games\\Fallout4"
