@@ -247,7 +247,12 @@ class TestFFIErrorConditions:
 
         from ClassicLib.integration.factory import get_formid_analyzer
 
+        # Create mock with real values - Rust requires proper types, not MagicMock objects
         mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.problematic_plugins = {}
+        mock_yamldata.mods_single = {}
+        mock_yamldata.mods_double = {}
         analyzer = get_formid_analyzer(mock_yamldata, True, False)
 
         # extract_formids expects a list of formids
