@@ -10,8 +10,8 @@ import pytest
 
 from tests.fixtures.golden_fixtures import (
     TIMESTAMP_PLACEHOLDER,
-    PATH_PLACEHOLDER,
     mask_dynamic_data,
+    normalize_paths,
     generate_diff,
 )
 
@@ -47,26 +47,29 @@ class TestMaskDynamicData:
         assert TIMESTAMP_PLACEHOLDER in result
         assert "14:32:55" not in result
 
-    def test_masks_windows_path(self):
-        """Windows paths are replaced with placeholder."""
+    def test_normalizes_windows_path(self):
+        """Windows paths are normalized to forward slashes."""
         text = r"File: C:\Users\test\Documents\file.txt"
-        result = mask_dynamic_data(text)
-        assert PATH_PLACEHOLDER in result
-        assert "C:\\" not in result
+        result = normalize_paths(text)
+        # Backslashes should be replaced with forward slashes
+        assert "\\" not in result
+        assert "C:/Users/test/Documents/file.txt" in result
 
-    def test_masks_unix_path(self):
-        """Unix paths are replaced with placeholder."""
+    def test_preserves_unix_path(self):
+        """Unix paths are already normalized."""
         text = "File: /home/user/documents/file.txt"
-        result = mask_dynamic_data(text)
-        assert PATH_PLACEHOLDER in result
-        assert "/home/" not in result
+        result = normalize_paths(text)
+        # Unix paths should be unchanged
+        assert result == text
 
-    def test_masks_multiple_paths(self):
-        """Multiple paths in text are all replaced."""
-        text = r"Source: C:\Users\src\file.py Target: /home/user/dest.py"
-        result = mask_dynamic_data(text)
-        # Should have two PATH placeholders
-        assert result.count(PATH_PLACEHOLDER) == 2
+    def test_normalizes_multiple_paths(self):
+        """Multiple Windows paths in text are all normalized."""
+        text = r"Source: C:\Users\src\file.py Target: D:\data\dest.py"
+        result = normalize_paths(text)
+        # All backslashes should be replaced
+        assert "\\" not in result
+        assert "C:/Users/src/file.py" in result
+        assert "D:/data/dest.py" in result
 
     def test_preserves_non_dynamic_content(self):
         """Non-dynamic content is preserved."""
@@ -75,12 +78,14 @@ class TestMaskDynamicData:
         assert result == text
 
     def test_masks_mixed_content(self):
-        """Mixed content with timestamps and paths is handled correctly."""
+        """Mixed content with timestamps is handled correctly."""
         text = r"[2024-01-15T10:30:45Z] Loaded from C:\Mods\test.esp"
+        # mask_dynamic_data handles timestamps only
         result = mask_dynamic_data(text)
         assert TIMESTAMP_PLACEHOLDER in result
-        assert PATH_PLACEHOLDER in result
         assert "Loaded from" in result
+        # Paths are NOT masked (normalize_paths handles slash normalization separately)
+        assert r"C:\Mods\test.esp" in result or "C:/Mods/test.esp" in result
 
 
 @pytest.mark.unit
@@ -171,8 +176,8 @@ class TestGoldenFileFixture:
         # Should pass
         golden_file.check(data, "json_test")
 
-    def test_golden_file_masks_dynamic_data(self, golden_file, tmp_path, monkeypatch):
-        """Dynamic data is masked before comparison."""
+    def test_golden_file_masks_timestamps(self, golden_file, tmp_path, monkeypatch):
+        """Timestamps are masked before comparison."""
         monkeypatch.setattr(golden_file, "golden_dir", tmp_path)
 
         # Create golden with masked content

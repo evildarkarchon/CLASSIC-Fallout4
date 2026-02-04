@@ -144,7 +144,8 @@ class TestReportParity:
         available = status.get("available", {})
 
         # Core components required for report generation
-        required = ["scanlog", "yaml", "config"]
+        # Note: component names from factory._COMPONENT_KEY_MAP
+        required = ["parser", "yaml", "yamldata", "orchestrator"]
 
         for component in required:
             assert available.get(component, False), (
