@@ -9,7 +9,6 @@ Rust and Python.
 
 from __future__ import annotations
 
-import time
 from typing import TYPE_CHECKING
 
 import pytest
@@ -108,130 +107,10 @@ class TestRustFCXIntegration:
         assert "bad_value" in report
         assert "good_value" in report
 
-    async def test_rust_fcx_detection_accuracy(self, tmp_path: Path):
-        """
-        Verify Rust FCX detection matches Python implementation.
-
-        This test ensures that Rust and Python implementations
-        detect the same configuration issues with identical accuracy.
-        """
-        if not RUST_AVAILABLE:
-            pytest.skip("Rust FCX handler not available")
-
-        from ClassicLib.integration.factory import get_fcx_handler
-        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
-
-        # Create test configurations with known issues
-        espexplorer_ini = tmp_path / "espexplorer.ini"
-        espexplorer_ini.write_text("[Main]\nHotKey = ; F10\n", encoding="utf-8")
-
-        # Create Rust handler
-        rust_handler = get_fcx_handler(fcx_mode=True)
-
-        # Create Python handler
-        FCXModeHandlerFragments.reset_fcx_checks()
-        python_handler = FCXModeHandlerFragments(fcx_mode=True)
-
-        # Note: Actual detection comparison would require full setup
-        # This test verifies the handler structure is consistent
-
-        # Verify both handlers have same interface
-        assert hasattr(rust_handler, "get_fcx_messages")
-        assert hasattr(python_handler, "get_fcx_messages")
-        assert hasattr(rust_handler, "reset_fcx_checks")
-        assert hasattr(python_handler, "reset_fcx_checks")
-
-    @pytest.mark.performance
-    async def test_rust_fcx_performance_advantage(self):
-        """
-        Verify Rust FCX implementation provides performance benefits.
-
-        This test benchmarks Rust vs. Python FCX handler performance
-        to ensure the Rust implementation provides measurable speedups.
-        """
-        if not RUST_AVAILABLE:
-            pytest.skip("Rust FCX handler not available")
-
-        from ClassicLib.integration.factory import get_fcx_handler
-        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
-
-        iterations = 1000
-
-        # Benchmark Rust implementation
-        rust_handler = get_fcx_handler(fcx_mode=True)
-        rust_start = time.perf_counter()
-        for _ in range(iterations):
-            rust_handler.get_fcx_messages()
-        rust_time = time.perf_counter() - rust_start
-
-        # Benchmark Python implementation
-        FCXModeHandlerFragments.reset_fcx_checks()
-        python_handler = FCXModeHandlerFragments(fcx_mode=True)
-        python_start = time.perf_counter()
-        for _ in range(iterations):
-            python_handler.get_fcx_messages()
-        python_time = time.perf_counter() - python_start
-
-        # Calculate performance gain
-        if python_time > 0 and rust_time > 0:
-            performance_gain = python_time / rust_time
-            print(f"\nRust FCX performance: {performance_gain:.2f}x faster than Python")
-            print(f"{iterations} iterations: Rust={rust_time:.4f}s, Python={python_time:.4f}s")
-
-            # Rust should provide some performance advantage
-            # (May be modest for FCX handler due to I/O dominance)
-            # Lower threshold to 0.1x as small microbenchmarks can vary and overhead dominates
-            assert performance_gain >= 0.1, f"Rust implementation should not be slower: {performance_gain:.2f}x"
-
-    async def test_rust_fcx_message_parity(self):
-        """
-        Verify Rust and Python FCX handlers generate identical messages.
-
-        This test ensures complete functional parity between Rust and
-        Python implementations for all FCX mode states.
-        """
-        if not RUST_AVAILABLE:
-            pytest.skip("Rust FCX handler not available")
-
-        from ClassicLib.integration.factory import get_fcx_handler
-        from ClassicLib.scanning.logs.fcx_mode_handler import FCXModeHandlerFragments
-
-        # Test both enabled and disabled states
-        for fcx_mode in [True, False]:
-            # Get Rust implementation
-            rust_handler = get_fcx_handler(fcx_mode=fcx_mode)
-
-            # Get Python implementation
-            FCXModeHandlerFragments.reset_fcx_checks()
-            python_handler = FCXModeHandlerFragments(fcx_mode=fcx_mode)
-
-            # Get messages
-            rust_messages = rust_handler.get_fcx_messages()
-            python_messages = python_handler.get_fcx_messages()
-
-            # Extract content
-            if rust_messages:
-                rust_content = (
-                    "\n".join(rust_messages.content) if isinstance(rust_messages.content, (list, tuple)) else str(rust_messages.content)
-                )
-            else:
-                rust_content = ""
-
-            if python_messages:
-                python_content = (
-                    "\n".join(python_messages.content)
-                    if isinstance(python_messages.content, (list, tuple))
-                    else str(python_messages.content)
-                )
-            else:
-                python_content = ""
-
-            # Verify parity
-            assert rust_content == python_content, (
-                f"Message mismatch for fcx_mode={fcx_mode}:\n"
-                f"Rust ({len(rust_content)} chars):\n{rust_content[:200]}...\n"
-                f"Python ({len(python_content)} chars):\n{python_content[:200]}..."
-            )
+    # NOTE: test_rust_fcx_detection_accuracy, test_rust_fcx_performance_advantage,
+    # and test_rust_fcx_message_parity were removed - they tested Rust vs Python
+    # parity but Python fcx_mode_handler.py was deleted in Phase 11 cleanup.
+    # Parity was validated in Phase 10 before deletion.
 
     async def test_rust_fcx_state_management(self):
         """
