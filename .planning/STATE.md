@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.2.0-part2 Rust Migration - Phase 10 (Parity Validation) - COMPLETE
+**Current focus:** v8.2.0-part2 Rust Migration - Phase 11 (Integration Cleanup) - In Progress
 
 ## Current Position
 
-Phase: 10 of 11 (Parity Validation) - COMPLETE
-Plan: 2 of 2 complete
-Status: Phase 10 complete, ready for Phase 11 (Cleanup)
-Last activity: 2026-02-03 - Completed parity validation with 51 passing + 20 parity failures (expected)
+Phase: 11 of 11 (Integration Cleanup)
+Plan: 1 of 2 complete
+Status: Phase 11 in progress
+Last activity: 2026-02-04 - Completed 11-01-PLAN.md (wrapper file deletion)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] 100%
-[##############] Phase 10 complete
+Progress: [v1.0: 14/14] [v8.2.0-part2: 15/16] 94%
+[###############-] Phase 11 plan 01 complete
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] 100%
 | 08-report-generation | 2/2 | ~15m | ~7.5m |
 | 09-orchestration-migration | 4/4 | ~76m | ~19m |
 | 10-parity-validation | 2/2 | ~17m | ~8.5m |
+| 11-integration-cleanup | 1/2 | ~9m | ~9m |
 
 ## Accumulated Context
 
@@ -82,6 +83,8 @@ v8.2.0-part2 decisions:
 - True parity testing: Golden files from actual Python AUTOSCAN.md output, not generated
 - Parity failures are expected and valuable - they identify real Rust-Python differences
 - Component names from factory._COMPONENT_KEY_MAP (parser, yamldata, orchestrator, path)
+- Lazy import pattern (_get_report_fragment) for ReportFragment to avoid circular imports in factory.py
+- Private wrapper classes in factory (_SuspectScannerWrapper, etc.) for API translation
 
 ### Pending Todos
 
@@ -90,6 +93,7 @@ v8.2.0-part2 decisions:
 - Update obsolete tests referencing deleted orchestrator_core module (from Phase 9-02)
 - Investigate 20 report parity failures (Rust vs Python output differences)
 - Fix pre-existing test failures from Phase 8/9 API changes (46 tests)
+- Pre-existing test failure: test_generate_suspect_section_header (TypeError)
 
 ### Blockers/Concerns
 
@@ -111,7 +115,7 @@ Report parity differences identified:
 
 ## Session Continuity
 
-Last session: 2026-02-03
-Stopped at: Phase 10 plan 02 complete - parity validation with 51 passing + 20 expected failures
+Last session: 2026-02-04
+Stopped at: Phase 11 plan 01 complete - wrapper files deleted, factory updated
 Resume file: None
-Next action: Execute Phase 11 (Cleanup) to address parity findings
+Next action: Execute Phase 11 plan 02 (if exists) or phase complete
