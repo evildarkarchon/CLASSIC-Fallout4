@@ -43,7 +43,7 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 
 **Milestone Goal:** Establish performance baselines, optimize hot paths based on profiling data, and fix pre-existing bugs. Data-driven optimization, not premature.
 
-- [ ] **Phase 12: GIL Release Audit** - Add py.allow_threads() to Rust operations, measure FFI overhead
+- [x] **Phase 12: GIL Release Audit** - Add py.allow_threads() to Rust operations, measure FFI overhead
 - [ ] **Phase 13: Benchmark Infrastructure** - Establish Criterion benchmarks with statistical output and baselines
 - [ ] **Phase 14: Hot Path Profiling & Cache Instrumentation** - Profile hot paths, instrument DashMap caches
 - [ ] **Phase 15: Bug Fixes & Test Stabilization** - Fix test_clear_cache and classic_settings() path resolution
@@ -139,7 +139,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
-| 12. GIL Release Audit | v8.3.0 | 0/1 | Planned | - |
+| 12. GIL Release Audit | v8.3.0 | 1/1 | Complete | 2026-02-04 |
 | 13. Benchmark Infrastructure | v8.3.0 | 0/1 | Not started | - |
 | 14. Hot Path Profiling | v8.3.0 | 0/2 | Not started | - |
 | 15. Bug Fixes | v8.3.0 | 0/2 | Not started | - |

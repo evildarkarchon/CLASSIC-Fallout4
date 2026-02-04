@@ -18,8 +18,8 @@ Requirements for the Performance & Polish milestone. Establish baselines, optimi
 
 ### GIL & FFI Optimization
 
-- [ ] **GIL-01**: Rust operations >1ms release Python GIL via `py.allow_threads()`
-- [ ] **GIL-02**: FFI type conversion overhead measured separately from Rust compute time
+- [x] **GIL-01**: Rust operations >1ms release Python GIL via `py.allow_threads()`
+- [x] **GIL-02**: FFI type conversion overhead measured separately from Rust compute time
 - [ ] **GIL-03**: DashMap cache hit rates instrumented and reportable
 
 ### Profiling
@@ -64,8 +64,8 @@ Explicitly excluded from v8.3.0.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GIL-01 | Phase 12 | Pending |
-| GIL-02 | Phase 12 | Pending |
+| GIL-01 | Phase 12 | Complete |
+| GIL-02 | Phase 12 | Complete |
 | BENCH-01 | Phase 13 | Pending |
 | BENCH-02 | Phase 13 | Pending |
 | BENCH-03 | Phase 13 | Pending |
