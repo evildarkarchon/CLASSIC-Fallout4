@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.3.0 Performance & Polish — Defining requirements
+**Current focus:** v8.3.0 Performance & Polish — Phase 12: GIL Release Audit
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-02-04 — Milestone v8.3.0 started
+Phase: 12 of 17 (GIL Release Audit)
+Plan: 0 of 1 in current phase
+Status: Ready to plan
+Last activity: 2026-02-04 — Roadmap revised (split Phase 12)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 0/?]
-[################] Previous milestones complete
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 0/8]
+[################--------] 78% (28/36 plans)
 
 ## Performance Metrics
 
@@ -49,14 +49,13 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 **Highlighted decisions:**
 - Rust-only, hard fail: no Python fallback for any migrated component
 - Delete Python orchestrators entirely (not deprecate-first)
-- VR indicator removal from reports
-- asyncio.to_thread() for Rust batch processing in async Python
+- GIL release audit must happen before baselines (research finding)
+- Split GIL and Benchmark work into separate phases for cleaner deliverables
 
 ### Pending Todos
 
-- Fix test_clear_cache in classic-yaml-core (pre-existing bug, tracked separately)
-- Pre-existing GUI file path resolution issue in classic_settings()
-- 20 report parity test failures (expected - identifies true Rust-Python differences)
+- Fix test_clear_cache in classic-yaml-core (tracked as BUG-01)
+- Fix classic_settings() path resolution (tracked as BUG-02)
 
 ### Blockers/Concerns
 
@@ -65,6 +64,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: v8.2.0-part2 milestone complete
+Stopped at: v8.3.0 roadmap revised (Phase 12 split into 12+13)
 Resume file: None
-Next action: `/gsd:new-milestone` to start v8.3.0 planning (use `/clear` first for fresh context)
+Next action: `/gsd:plan-phase 12` to create Phase 12 plan

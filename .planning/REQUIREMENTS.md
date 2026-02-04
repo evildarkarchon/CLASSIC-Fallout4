@@ -62,30 +62,28 @@ Explicitly excluded from v8.3.0.
 
 ## Traceability
 
-Updated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| BENCH-01 | TBD | Pending |
-| BENCH-02 | TBD | Pending |
-| BENCH-03 | TBD | Pending |
-| BENCH-04 | TBD | Pending |
-| BENCH-05 | TBD | Pending |
-| BENCH-06 | TBD | Pending |
-| GIL-01 | TBD | Pending |
-| GIL-02 | TBD | Pending |
-| GIL-03 | TBD | Pending |
-| PROF-01 | TBD | Pending |
-| PROF-02 | TBD | Pending |
-| PROF-03 | TBD | Pending |
-| BUG-01 | TBD | Pending |
-| BUG-02 | TBD | Pending |
+| GIL-01 | Phase 12 | Pending |
+| GIL-02 | Phase 12 | Pending |
+| BENCH-01 | Phase 13 | Pending |
+| BENCH-02 | Phase 13 | Pending |
+| BENCH-03 | Phase 13 | Pending |
+| BENCH-04 | Phase 13 | Pending |
+| BENCH-06 | Phase 13 | Pending |
+| PROF-01 | Phase 14 | Pending |
+| PROF-02 | Phase 14 | Pending |
+| PROF-03 | Phase 14 | Pending |
+| GIL-03 | Phase 14 | Pending |
+| BUG-01 | Phase 15 | Pending |
+| BUG-02 | Phase 15 | Pending |
+| BENCH-05 | Phase 17 | Pending |
 
 **Coverage:**
 - v8.3.0 requirements: 14 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 14
+- Mapped to phases: 14/14 (100%)
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after initial definition*
+*Last updated: 2026-02-04 after roadmap revision (Phase 12 split)*

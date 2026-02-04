@@ -4,7 +4,7 @@
 
 - SHIPPED **v1.0 Codebase Cleanup** — Phases 1-5 (shipped 2026-02-02)
 - SHIPPED **v8.2.0-part2 Rust Migration** — Phases 6-11 (shipped 2026-02-04)
-- PLANNING **v8.3.0** — Performance & Polish (not yet started)
+- ACTIVE **v8.3.0 Performance & Polish** — Phases 12-17 (in progress)
 
 ## Phases
 
@@ -39,15 +39,99 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 
 </details>
 
-### v8.3.0 (Planned)
+### v8.3.0 Performance & Polish (In Progress)
 
-*Not yet started. Use `/gsd:new-milestone` to begin planning.*
+**Milestone Goal:** Establish performance baselines, optimize hot paths based on profiling data, and fix pre-existing bugs. Data-driven optimization, not premature.
 
-**Potential focus areas:**
-- Performance benchmarking (PERF-01 to PERF-03)
-- TUI integration with Rust orchestrator (EXT-01)
-- Additional INI/settings validators (EXT-02)
-- Plugin load order analysis (EXT-03)
+- [ ] **Phase 12: GIL Release Audit** - Add py.allow_threads() to Rust operations, measure FFI overhead
+- [ ] **Phase 13: Benchmark Infrastructure** - Establish Criterion benchmarks with statistical output and baselines
+- [ ] **Phase 14: Hot Path Profiling & Cache Instrumentation** - Profile hot paths, instrument DashMap caches
+- [ ] **Phase 15: Bug Fixes & Test Stabilization** - Fix test_clear_cache and classic_settings() path resolution
+- [ ] **Phase 16: Hot Path Optimization (Data-Driven)** - Optimize based on profiling data from Phase 14
+- [ ] **Phase 17: CI Regression Detection** - Automated performance regression detection in CI
+
+## Phase Details
+
+### Phase 12: GIL Release Audit
+**Goal**: Rust operations release Python GIL correctly; FFI overhead measured
+**Depends on**: Phase 11 (completed)
+**Requirements**: GIL-01, GIL-02
+**Success Criteria** (what must be TRUE):
+  1. All Rust operations taking >1ms release Python GIL via py.allow_threads()
+  2. FFI type conversion overhead is measured separately from Rust compute time
+**Plans**: TBD
+
+Plans:
+- [ ] 12-01: GIL release audit and py.allow_threads() implementation
+
+### Phase 13: Benchmark Infrastructure
+**Goal**: Criterion benchmark infrastructure established with statistical output and historical baselines
+**Depends on**: Phase 12 (GIL release required for accurate benchmarks)
+**Requirements**: BENCH-01, BENCH-02, BENCH-03, BENCH-04, BENCH-06
+**Success Criteria** (what must be TRUE):
+  1. Running `cargo bench` in release mode produces statistical output (min/mean/median/stddev/p95/p99)
+  2. Benchmark results export to JSON and are stored as historical baselines
+  3. Benchmarks run multiple iterations with configurable warmup
+  4. Historical baselines stored for comparison across commits
+**Plans**: TBD
+
+Plans:
+- [ ] 13-01: Criterion benchmark infrastructure and baseline establishment
+
+### Phase 14: Hot Path Profiling & Cache Instrumentation
+**Goal**: Hot paths identified via flamegraphs; cache behavior observable
+**Depends on**: Phase 13
+**Requirements**: PROF-01, PROF-02, PROF-03, GIL-03
+**Success Criteria** (what must be TRUE):
+  1. Developer can generate flamegraph for any Rust hot path
+  2. py-spy captures combined Python+Rust stack traces
+  3. Memory allocation profiling available via dhat for Rust code
+  4. DashMap cache hit/miss rates are logged and reportable
+**Plans**: TBD
+
+Plans:
+- [ ] 14-01: Flamegraph and py-spy profiling setup
+- [ ] 14-02: dhat memory profiling and DashMap cache instrumentation
+
+### Phase 15: Bug Fixes & Test Stabilization
+**Goal**: Pre-existing bugs fixed, test suite stable
+**Depends on**: Phase 13 (can run in parallel with Phase 14)
+**Requirements**: BUG-01, BUG-02
+**Success Criteria** (what must be TRUE):
+  1. test_clear_cache passes reliably in parallel test runs (no test pollution)
+  2. classic_settings() returns correct paths regardless of current working directory
+  3. All tests in tests/rust_integration/ pass consistently
+**Plans**: TBD
+
+Plans:
+- [ ] 15-01: Fix test_clear_cache parallel test pollution
+- [ ] 15-02: Fix classic_settings() path resolution
+
+### Phase 16: Hot Path Optimization (Data-Driven)
+**Goal**: Hot paths optimized based on profiling data; measurable performance gains
+**Depends on**: Phase 14 (profiling data required)
+**Requirements**: None (optimization work informed by profiling, not requirement-driven)
+**Success Criteria** (what must be TRUE):
+  1. Top 3 hot paths identified in Phase 14 show measurable improvement
+  2. Benchmark results compared against Phase 13 baselines show improvement
+  3. No performance regressions in non-optimized paths
+**Plans**: TBD (defined after Phase 14 profiling completes)
+
+Plans:
+- [ ] 16-01: Optimize based on profiling findings (scope TBD after Phase 14)
+
+### Phase 17: CI Regression Detection
+**Goal**: CI automatically detects performance regressions
+**Depends on**: Phase 13 (baselines), Phase 16 (optimizations validated)
+**Requirements**: BENCH-05
+**Success Criteria** (what must be TRUE):
+  1. CI pipeline runs benchmarks on PRs
+  2. Performance regression >10% fails the build with clear diagnostic
+  3. Historical baselines are automatically updated on main branch merges
+**Plans**: TBD
+
+Plans:
+- [ ] 17-01: CI benchmark integration and regression detection
 
 ## Progress
 
@@ -55,5 +139,11 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 |-------|-----------|----------------|--------|-----------|
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
+| 12. GIL Release Audit | v8.3.0 | 0/1 | Not started | - |
+| 13. Benchmark Infrastructure | v8.3.0 | 0/1 | Not started | - |
+| 14. Hot Path Profiling | v8.3.0 | 0/2 | Not started | - |
+| 15. Bug Fixes | v8.3.0 | 0/2 | Not started | - |
+| 16. Hot Path Optimization | v8.3.0 | 0/1 | Not started | - |
+| 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 28 plans completed
+**Overall:** 2 milestones shipped, 28 plans completed, 8 plans planned for v8.3.0
