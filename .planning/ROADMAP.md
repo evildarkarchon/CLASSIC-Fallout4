@@ -59,10 +59,10 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 **Success Criteria** (what must be TRUE):
   1. All Rust operations taking >1ms release Python GIL via py.allow_threads()
   2. FFI type conversion overhead is measured separately from Rust compute time
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 12-01: GIL release audit and py.allow_threads() implementation
+- [ ] 12-01-PLAN.md - Comprehensive FFI audit, py.detach() implementation, Criterion benchmarks, GIL verification tests
 
 ### Phase 13: Benchmark Infrastructure
 **Goal**: Criterion benchmark infrastructure established with statistical output and historical baselines
@@ -139,7 +139,7 @@ Plans:
 |-------|-----------|----------------|--------|-----------|
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
-| 12. GIL Release Audit | v8.3.0 | 0/1 | Not started | - |
+| 12. GIL Release Audit | v8.3.0 | 0/1 | Planned | - |
 | 13. Benchmark Infrastructure | v8.3.0 | 0/1 | Not started | - |
 | 14. Hot Path Profiling | v8.3.0 | 0/2 | Not started | - |
 | 15. Bug Fixes | v8.3.0 | 0/2 | Not started | - |
