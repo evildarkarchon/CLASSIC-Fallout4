@@ -16,7 +16,6 @@ Audit all Rust FFI operations to ensure proper GIL release during long-running c
 ### Audit Scope
 - Audit ALL Rust FFI operations, not just hot paths — comprehensive review
 - Document only GIL-relevant operations (those needing or having GIL release)
-- Include TUI review for async/blocking pattern consistency (not GIL, but related)
 - Create persistent audit document (markdown) listing all audited operations
 
 ### Measurement Output
@@ -41,7 +40,6 @@ Audit all Rust FFI operations to ensure proper GIL release during long-running c
 - Specific Criterion benchmark structure and organization
 - Debug assertion placement and messaging
 - Exception documentation format in audit doc
-- TUI review scope and depth
 
 </decisions>
 

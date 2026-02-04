@@ -18,8 +18,12 @@ uv run python CLASSIC_ScanLogs.py   # CLI
 uv run pytest -m "unit and not slow"
 
 # Rust
+## Powershell
 ./rebuild_rust.ps1              # Build all
 ./rebuild_rust.ps1 yaml         # Build specific
+## BASH
+pwsh -ExecutionPolicy Bypass -File ./rebuild_rust.ps1  # Build all
+pwsh -ExecutionPolicy Bypass -File ./rebuild_rust.ps1 yaml  # Build specific
 ```
 
 ## Essential Rules
