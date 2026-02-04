@@ -74,14 +74,15 @@ def clean_sync_database_pool() -> Generator[None, None, None]:
     """Reset SyncDatabasePool singleton and related caches between tests.
 
     This prevents ResourceWarnings about unclosed SQLite connections
-    and ensures test isolation for any code using FormID lookups.
+    and ensures test isolation for any code using database lookups.
 
     Cleans up:
         - SyncDatabasePool singleton instance and its connections
         - query_cache module-level dict in Util.py
-        - _cached_formid_lookup LRU cache in FormIDAnalyzerCore.py
+
+    Note: FormID analyzer caches are now handled in Rust and don't require
+    manual cache clearing.
     """
-    from ClassicLib.scanning.logs.analyzers.FormIDAnalyzerCore import _cached_formid_lookup
     from ClassicLib.scanning.logs.util_legacy import SyncDatabasePool, query_cache
 
     # Clear singleton and caches before test
@@ -89,7 +90,6 @@ def clean_sync_database_pool() -> Generator[None, None, None]:
         SyncDatabasePool._instance.close_all()
     SyncDatabasePool._instance = None
     query_cache.clear()
-    _cached_formid_lookup.cache_clear()
 
     yield
 
@@ -98,7 +98,6 @@ def clean_sync_database_pool() -> Generator[None, None, None]:
         SyncDatabasePool._instance.close_all()
     SyncDatabasePool._instance = None
     query_cache.clear()
-    _cached_formid_lookup.cache_clear()
 
 
 @pytest.fixture
