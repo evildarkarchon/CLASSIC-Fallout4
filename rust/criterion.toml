@@ -1,0 +1,35 @@
+# Criterion Workspace Configuration
+# ================================
+#
+# This file configures Criterion benchmarks at the workspace level.
+# All benchmark crates will automatically use these settings.
+#
+# Benchmark results are stored in ./target/criterion/ (gitignored).
+
+# Store benchmark results within target directory (gitignored)
+criterion_home = "./target/criterion"
+
+# Output configuration
+[output]
+# Use verbose output for clear feedback during benchmark runs
+verbose = true
+
+[plotting]
+# Prefer gnuplot for higher-quality plots when available
+# Falls back to plotters crate (bundled) when gnuplot is not installed
+backend = "gnuplot"
+
+# Save baseline after each run for future comparison
+# Baselines are identified by name, allowing before/after comparisons
+[baseline]
+# Default baseline name (overridden by CLI with --baseline)
+name = "main"
+# Length of commit hash used in baseline names
+commit_hash_length = 8
+
+# HTML report configuration
+[report]
+# Generate HTML reports for visual analysis
+html = true
+# Include all history in trend analysis
+history_size = 100
