@@ -62,7 +62,7 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 **Plans**: 1 plan
 
 Plans:
-- [ ] 12-01-PLAN.md - Comprehensive FFI audit, py.detach() implementation, Criterion benchmarks, GIL verification tests
+- [x] 12-01-PLAN.md - Comprehensive FFI audit, py.detach() implementation, Criterion benchmarks, GIL verification tests
 
 ### Phase 13: Benchmark Infrastructure
 **Goal**: Criterion benchmark infrastructure established with statistical output and historical baselines
@@ -73,10 +73,12 @@ Plans:
   2. Benchmark results export to JSON and are stored as historical baselines
   3. Benchmarks run multiple iterations with configurable warmup
   4. Historical baselines stored for comparison across commits
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 13-01: Criterion benchmark infrastructure and baseline establishment
+- [ ] 13-01-PLAN.md — Criterion workspace configuration, quick/thorough modes, benchmark runner script
+- [ ] 13-02-PLAN.md — Core crate benchmarks (yaml-core, scanlog-core, file-io-core) with realistic fixtures
+- [ ] 13-03-PLAN.md — Baseline management scripts (percentile extraction, cleanup, comparison)
 
 ### Phase 14: Hot Path Profiling & Cache Instrumentation
 **Goal**: Hot paths identified via flamegraphs; cache behavior observable
@@ -140,10 +142,10 @@ Plans:
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
 | 12. GIL Release Audit | v8.3.0 | 1/1 | Complete | 2026-02-04 |
-| 13. Benchmark Infrastructure | v8.3.0 | 0/1 | Not started | - |
+| 13. Benchmark Infrastructure | v8.3.0 | 0/3 | Planned | - |
 | 14. Hot Path Profiling | v8.3.0 | 0/2 | Not started | - |
 | 15. Bug Fixes | v8.3.0 | 0/2 | Not started | - |
 | 16. Hot Path Optimization | v8.3.0 | 0/1 | Not started | - |
 | 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 28 plans completed, 8 plans planned for v8.3.0
+**Overall:** 2 milestones shipped, 29 plans completed, 10 plans planned for v8.3.0
