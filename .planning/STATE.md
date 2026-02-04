@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-02)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.2.0-part2 Rust Migration - Phase 10 (Parity Validation) - READY TO START
+**Current focus:** v8.2.0-part2 Rust Migration - Phase 10 (Parity Validation) - Plan 01 complete
 
 ## Current Position
 
-Phase: 9 of 11 (Orchestration Migration) - COMPLETE
-Plan: 4 of 4 complete (2 main + 2 gap closure)
-Status: Phase 9 complete, ready for Phase 10
-Last activity: 2026-02-03 - Fixed suspects_stack_list type mismatch, reports now complete
+Phase: 10 of 11 (Parity Validation) - IN PROGRESS
+Plan: 1 of 2 complete
+Status: Plan 10-01 complete, ready for plan 10-02
+Last activity: 2026-02-03 - Completed parity test infrastructure with 32 passing tests
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 12/14] 86%
-[############..] Phase 9 complete, Phase 10 ready
+Progress: [v1.0: 14/14] [v8.2.0-part2: 13/14] 93%
+[#############.] Phase 10 plan 01 complete
 
 ## Performance Metrics
 
@@ -42,6 +42,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 12/14] 86%
 | 07-game-detection | 2/2 | ~27m | ~13.5m |
 | 08-report-generation | 2/2 | ~15m | ~7.5m |
 | 09-orchestration-migration | 4/4 | ~76m | ~19m |
+| 10-parity-validation | 1/2 | ~5m | ~5m |
 
 ## Accumulated Context
 
@@ -53,7 +54,7 @@ v8.2.0-part2 decisions:
 - Rust is 90-100% complete for all migration targets; work is wiring, validation, and Python removal
 - Golden file capture happens in Phase 6 before migrations to ensure parity baseline
 - Settings migration first (dependency for other components)
-- Golden file masking uses {{TIMESTAMP}} and {{PATH}} placeholders
+- Golden file masking uses {{TIMESTAMP}} placeholder only (paths visible for debugging)
 - Capture intermediate outputs (segments + analysis) per log for debugging parity issues
 - FCX Mode gates all validation (checking own installation vs analyzing crash logs)
 - GlobalRegistry stores validation results (XSE_VALID, ENB_PRESENT) for use by other components
@@ -76,6 +77,8 @@ v8.2.0-part2 decisions:
 - suspects_stack_list type fix: HashMap<String, Vec<String>> not HashMap<String, String> (YAML arrays)
 - Added get_hashmap_vec_value() to YamlOps for key->array YAML maps
 - OrchestratorCore now includes RecordScanner, SettingsValidator, and FcxModeHandler integration
+- Path normalization (backslash to forward slash) for cross-platform golden file comparison
+- Dynamic golden file stem discovery prevents hardcoded list drift
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-03
-Stopped at: Phase 9 complete - fixed suspects_stack_list type mismatch, reports now fully generated
+Stopped at: Phase 10 plan 01 complete - parity test infrastructure with 32 passing tests
 Resume file: None
-Next action: Execute Phase 10 (Parity Validation)
+Next action: Execute Phase 10 plan 02 (Detection/Analysis Parity)
