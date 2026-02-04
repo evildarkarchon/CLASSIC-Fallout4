@@ -120,11 +120,11 @@ Plans:
   3. PyInstaller build includes all Rust modules and passes smoke test
   4. GUI functionality unchanged (AsyncBridge integration preserved, no deadlocks)
   5. CLI functionality unchanged with Rust code paths
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: Factory cleanup and Python removal
-- [ ] 11-02: Build verification and smoke tests
+- [ ] 11-01-PLAN.md - Factory cleanup and wrapper simplification (require Rust, remove fallbacks)
+- [ ] 11-02-PLAN.md - Python removal and build verification (delete analyzers, verify PyInstaller)
 
 ## Progress
 
