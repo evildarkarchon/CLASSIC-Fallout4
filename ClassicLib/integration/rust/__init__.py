@@ -1,8 +1,17 @@
 """Rust acceleration module for CLASSIC.
 
-This package contains all Rust-accelerated components providing 10-150x performance
-improvements for CLASSIC's core operations. All components provide transparent
-fallback to Python implementations when Rust is not available.
+This package contains Rust-accelerated components. Use factory functions
+from ClassicLib.integration.factory for all component access:
+- get_suspect_scanner(yamldata)
+- get_settings_validator(yamldata)
+- get_gpu_detector()
+- get_fcx_handler(fcx_mode)
+- get_parser()
+- get_file_io()
+- get_report_generator(yamldata)
+- get_formid_analyzer(yamldata, show_values, db_exists)
+- get_plugin_analyzer(yamldata)
+- get_record_scanner(yamldata)
 
 Performance Gains:
 - LogParser: 150x faster crash log parsing
@@ -23,8 +32,6 @@ logger = logging.getLogger(__name__)
 
 # Import all Rust wrapper components
 try:
-    from ClassicLib.integration.rust import gpu_rust
-    from ClassicLib.integration.rust.fcx_rust import FCXModeHandler, FcxModeHandler, RustAcceleratedFcxModeHandler
     from ClassicLib.integration.rust.file_io_rust import FileIOCore
     from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
     from ClassicLib.integration.rust.mod_detector_rust import (
@@ -47,20 +54,14 @@ try:
         RustAcceleratedReportGenerator,
         StringPool,
     )
-    from ClassicLib.integration.rust.settings_rust import (
-        RustAcceleratedSettingsValidator,
-        SettingsScannerFragments,
-        SettingsValidator,
-    )
-    from ClassicLib.integration.rust.suspect_rust import RustAcceleratedSuspectScanner, SuspectScanner
     from ClassicLib.io.database import AsyncDatabasePool, DatabasePoolManager
     from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
     RUST_MODULES_AVAILABLE = True
-    logger.debug("✅ Rust acceleration modules loaded successfully")
+    logger.debug("Rust acceleration modules loaded successfully")
 
 except ImportError as e:
-    logger.warning(f"⚠️  Some Rust modules could not be loaded: {e}")
+    logger.warning(f"Some Rust modules could not be loaded: {e}")
     RUST_MODULES_AVAILABLE = False
 
     # Provide None for missing components
@@ -78,15 +79,6 @@ except ImportError as e:
     ReportComposer = None
     ReportGenerator = None
     StringPool = None
-    RustAcceleratedSuspectScanner = None
-    SuspectScanner = None
-    FCXModeHandler = None
-    FcxModeHandler = None
-    RustAcceleratedFcxModeHandler = None
-    RustAcceleratedSettingsValidator = None
-    SettingsValidator = None
-    SettingsScannerFragments = None
-    gpu_rust = None
 
 
 # Export all components
@@ -119,19 +111,6 @@ __all__ = [
     "ReportComposer",
     "ReportGenerator",
     "StringPool",
-    # Suspect Scanner
-    "RustAcceleratedSuspectScanner",
-    "SuspectScanner",
-    # FCX Mode Handler
-    "FCXModeHandler",
-    "FcxModeHandler",
-    "RustAcceleratedFcxModeHandler",
-    # Settings Validator
-    "RustAcceleratedSettingsValidator",
-    "SettingsValidator",
-    "SettingsScannerFragments",
-    # GPU Detector
-    "gpu_rust",
     # Status
     "RUST_MODULES_AVAILABLE",
 ]
@@ -144,6 +123,8 @@ def get_rust_component_summary() -> dict[str, bool]:
         Dictionary mapping component names to availability status
 
     """
+    from ClassicLib.integration.factory import is_component_available
+
     return {
         "parser": RustLogParser is not None,
         "formid_analyzer": FormIDAnalyzer is not None,
@@ -153,23 +134,24 @@ def get_rust_component_summary() -> dict[str, bool]:
         "database": RustAsyncDatabasePool is not None,
         "report_generation": ReportFragment is not None,
         "mod_detector": "detect_mods_single" in globals(),
-        "suspect_scanner": SuspectScanner is not None,
-        "fcx_handler": FCXModeHandler is not None,
-        "settings_validator": SettingsValidator is not None,
-        "gpu_detector": gpu_rust is not None,
+        # Use factory detection for components without wrappers
+        "suspect_scanner": is_component_available("classic_scanlog", "SuspectScanner"),
+        "fcx_handler": is_component_available("classic_scanlog", "FcxModeHandler"),
+        "settings_validator": is_component_available("classic_scanlog", "SettingsValidator"),
+        "gpu_detector": is_component_available("classic_scanlog", "GpuDetector"),
     }
 
 
 def print_rust_module_status() -> None:
     """Print the status of all Rust modules."""
     print("\n" + "=" * 60)
-    print("🚀 RUST MODULE STATUS")
+    print("RUST MODULE STATUS")
     print("=" * 60)
 
     components = get_rust_component_summary()
 
     for component, available in components.items():
-        icon = "✅" if available else "❌"
+        icon = "[OK]" if available else "[--]"
         status = "LOADED" if available else "NOT AVAILABLE"
         print(f"  {icon} {component:<20} : {status}")
 
