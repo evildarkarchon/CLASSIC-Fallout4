@@ -7,7 +7,7 @@ high-performance record scanning with automatic fallback to Python.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -316,38 +316,5 @@ class TestGenerateReportLines:
         assert "| 3" in content or "3" in content
 
 
-# ============================================================================
-# Fallback Tests
-# ============================================================================
-
-
-class TestRustRecordScannerFallback:
-    """Tests for Python fallback behavior."""
-
-    @pytest.mark.unit
-    def test_fallback_to_python_on_rust_error(self, mock_yamldata_for_record: MagicMock) -> None:
-        """Test fallback to Python when Rust unavailable."""
-        from ClassicLib.integration.rust.record_rust import RustRecordScanner
-
-        # Force Python fallback by manually creating scanner without Rust
-        scanner = RustRecordScanner.__new__(RustRecordScanner)
-        scanner._rust_scanner = None
-        scanner._use_rust = False
-        scanner._python_scanner = None
-        scanner.yamldata = mock_yamldata_for_record
-
-        # Should create Python scanner on demand
-        fragment, matches = scanner.scan_named_records(["test"])
-
-        assert hasattr(fragment, "to_list")
-
-    @pytest.mark.unit
-    def test_uses_python_when_rust_unavailable(self, mock_yamldata_for_record: MagicMock) -> None:
-        """Test Python implementation is used when Rust unavailable."""
-        with patch.dict("sys.modules", {"classic_scanlog": None}):
-            from ClassicLib.integration.rust.record_rust import RustRecordScanner
-
-            scanner = RustRecordScanner(mock_yamldata_for_record)
-
-            # May use Rust or Python depending on actual availability
-            assert isinstance(scanner.is_rust_accelerated, bool)
+# NOTE: TestRustRecordScannerFallback class removed - Python fallback was removed
+# in Phase 11. Rust is now required, there is no fallback behavior to test.

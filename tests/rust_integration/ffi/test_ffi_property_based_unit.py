@@ -160,8 +160,12 @@ class TestRustFFIPropertyBased:
         """Test FormID analyzer with synthetic FormIDs."""
         from ClassicLib.integration.factory import get_formid_analyzer
 
-        # Create mock yamldata
+        # Create mock yamldata with required Rust FFI attributes
         mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.problematic_plugins = {}
+        mock_yamldata.mods_single = {}
+        mock_yamldata.mods_double = {}
         mock_yamldata.formid_keywords = ["crash", "error", "ctd"]
 
         analyzer = get_formid_analyzer(mock_yamldata, show_values, db_exists)

@@ -384,10 +384,11 @@ class TestRustAcceleratedReportGenerator:
 
     @pytest.mark.unit
     def test_generate_suspect_section_header(self) -> None:
-        """Test generate_suspect_section_header static method."""
+        """Test generate_suspect_section_header method."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_suspect_section_header()
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_suspect_section_header()
 
         lines = result.to_list()
         content = "".join(lines)
@@ -399,7 +400,8 @@ class TestRustAcceleratedReportGenerator:
         """Test generate_suspect_found_footer with suspects found."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_suspect_found_footer(True)
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_suspect_found_footer(True)
 
         lines = result.to_list()
         content = "".join(lines)
@@ -411,7 +413,8 @@ class TestRustAcceleratedReportGenerator:
         """Test generate_suspect_found_footer with no suspects."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_suspect_found_footer(False)
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_suspect_found_footer(False)
 
         lines = result.to_list()
         content = "".join(lines)
@@ -420,10 +423,11 @@ class TestRustAcceleratedReportGenerator:
 
     @pytest.mark.unit
     def test_generate_settings_section_header(self) -> None:
-        """Test generate_settings_section_header static method."""
+        """Test generate_settings_section_header method."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_settings_section_header()
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_settings_section_header()
 
         lines = result.to_list()
         content = "".join(lines)
@@ -432,10 +436,11 @@ class TestRustAcceleratedReportGenerator:
 
     @pytest.mark.unit
     def test_generate_mod_check_header(self) -> None:
-        """Test generate_mod_check_header static method."""
+        """Test generate_mod_check_header method."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_mod_check_header("Cause Issues")
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_mod_check_header("Cause Issues")
 
         lines = result.to_list()
         content = "".join(lines)
@@ -444,10 +449,11 @@ class TestRustAcceleratedReportGenerator:
 
     @pytest.mark.unit
     def test_generate_plugin_suspect_header(self) -> None:
-        """Test generate_plugin_suspect_header static method."""
+        """Test generate_plugin_suspect_header method."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_plugin_suspect_header()
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_plugin_suspect_header()
 
         lines = result.to_list()
         content = "".join(lines)
@@ -456,10 +462,11 @@ class TestRustAcceleratedReportGenerator:
 
     @pytest.mark.unit
     def test_generate_formid_section_header(self) -> None:
-        """Test generate_formid_section_header static method."""
+        """Test generate_formid_section_header method."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_formid_section_header()
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_formid_section_header()
 
         lines = result.to_list()
         content = "".join(lines)
@@ -468,10 +475,11 @@ class TestRustAcceleratedReportGenerator:
 
     @pytest.mark.unit
     def test_generate_record_section_header(self) -> None:
-        """Test generate_record_section_header static method."""
+        """Test generate_record_section_header method."""
         from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
 
-        result = RustAcceleratedReportGenerator.generate_record_section_header()
+        generator = RustAcceleratedReportGenerator()
+        result = generator.generate_record_section_header()
 
         lines = result.to_list()
         content = "".join(lines)
@@ -616,11 +624,11 @@ class TestReportIntegration:
         generator = RustAcceleratedReportGenerator()
         composer = RustAcceleratedReportComposer()
 
-        # Add various section headers
+        # Add various section headers (all methods are now instance methods)
         composer.add(generator.generate_header("test-crash.log"))
-        composer.add(RustAcceleratedReportGenerator.generate_suspect_section_header())
+        composer.add(generator.generate_suspect_section_header())
         composer.add(generator.generate_suspect_section(["TestSuspect"]))
-        composer.add(RustAcceleratedReportGenerator.generate_suspect_found_footer(True))
+        composer.add(generator.generate_suspect_found_footer(True))
 
         result = composer.compose()
 
