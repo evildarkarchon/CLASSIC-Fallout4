@@ -1,3 +1,17 @@
+# CLASSIC
+
+## Current Milestone: v8.3.0 Performance & Polish
+
+**Goal:** Establish performance baselines across all major operations, optimize hot paths based on findings, and fix pre-existing bugs.
+
+**Target features:**
+- Comprehensive benchmarking (crash log scanning, YAML operations, report generation)
+- Hot path optimization based on profiling data
+- Fix yaml-core cache bug (test_clear_cache)
+- Fix GUI file path resolution in classic_settings()
+
+---
+
 # CLASSIC Rust Migration
 
 ## What This Is
