@@ -1,7 +1,7 @@
 //! Python bindings for SuspectScanner - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::SuspectScanner;
-use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_vecstr};
+use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_vecstr, without_gil};
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 
@@ -31,46 +31,59 @@ impl PySuspectScanner {
     }
 
     /// Scan main error for suspect patterns
+    ///
+    /// Releases GIL during pattern scanning to allow concurrent Python threads.
     pub fn suspect_scan_mainerror(
         &self,
+        py: Python<'_>,
         crashlog_mainerror: String,
         max_warn_length: usize,
     ) -> PyResult<(Vec<String>, bool)> {
-        let (fragment, found) = self
-            .inner
-            .suspect_scan_mainerror(&crashlog_mainerror, max_warn_length)
-            .map_err(crate::to_pyerr)?;
+        // Release GIL during pattern scanning
+        let (fragment, found) = without_gil(py, || {
+            self.inner
+                .suspect_scan_mainerror(&crashlog_mainerror, max_warn_length)
+        })
+        .map_err(crate::to_pyerr)?;
         Ok((fragment.to_list(), found))
     }
 
     /// Scan callstack for suspect patterns
+    ///
+    /// Releases GIL during pattern scanning to allow concurrent Python threads.
     pub fn suspect_scan_stack(
         &self,
+        py: Python<'_>,
         crashlog_mainerror: String,
         segment_callstack_intact: String,
         max_warn_length: usize,
     ) -> PyResult<(Vec<String>, bool)> {
-        let (fragment, found) = self
-            .inner
-            .suspect_scan_stack(
+        // Release GIL during pattern scanning
+        let (fragment, found) = without_gil(py, || {
+            self.inner.suspect_scan_stack(
                 &crashlog_mainerror,
                 &segment_callstack_intact,
                 max_warn_length,
             )
-            .map_err(crate::to_pyerr)?;
+        })
+        .map_err(crate::to_pyerr)?;
         Ok((fragment.to_list(), found))
     }
 
     /// Batch scan multiple crash logs
+    ///
+    /// Releases GIL during batch scanning to allow concurrent Python threads.
     pub fn scan_suspects_batch(
         &self,
+        py: Python<'_>,
         crash_logs: Vec<(String, String)>,
         max_warn_length: usize,
     ) -> PyResult<Vec<(Vec<String>, bool)>> {
-        let results = self
-            .inner
-            .scan_suspects_batch(crash_logs, max_warn_length)
-            .map_err(crate::to_pyerr)?;
+        // Release GIL during batch scanning
+        let results = without_gil(py, || {
+            self.inner.scan_suspects_batch(crash_logs, max_warn_length)
+        })
+        .map_err(crate::to_pyerr)?;
         Ok(results
             .into_iter()
             .map(|(fragment, found)| (fragment.to_list(), found))

@@ -373,13 +373,16 @@ impl PyFileIOCore {
     }
 
     /// Batch DDS header reading with parallel processing
+    ///
+    /// Releases GIL during batch file I/O to allow concurrent Python threads.
     pub fn read_dds_headers_batch(
         &self,
         py: Python<'_>,
         paths: Vec<String>,
     ) -> PyResult<Py<PyDict>> {
         let path_bufs: Vec<PathBuf> = paths.iter().map(PathBuf::from).collect();
-        let results = self.inner.read_dds_headers_batch(path_bufs);
+        // Release GIL during batch file I/O
+        let results = without_gil(py, || self.inner.read_dds_headers_batch(path_bufs));
 
         // Convert to Python dict
         let dict = PyDict::new(py);
@@ -398,6 +401,7 @@ impl PyFileIOCore {
     /// Parallel directory traversal
     ///
     /// Accepts both string paths and pathlib.Path objects for the directory path.
+    /// Releases GIL during directory traversal to allow concurrent Python threads.
     pub fn py_walk_directory(
         &self,
         py: Python<'_>,
@@ -406,10 +410,11 @@ impl PyFileIOCore {
         max_depth: Option<usize>,
     ) -> PyResult<Py<PyList>> {
         let path_buf: PathBuf = path.into();
-        let files = self
-            .inner
-            .walk_directory(&path_buf, pattern.as_deref(), max_depth)
-            .map_err(to_pyerr)?;
+        // Release GIL during directory traversal
+        let files = without_gil(py, || {
+            self.inner.walk_directory(&path_buf, pattern.as_deref(), max_depth)
+        })
+        .map_err(to_pyerr)?;
 
         // Convert to Python list
         let file_strings: Vec<String> = files

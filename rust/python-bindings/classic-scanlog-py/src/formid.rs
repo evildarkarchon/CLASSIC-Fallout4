@@ -1,6 +1,7 @@
 //! Python bindings for FormID analyzers - Thin wrappers over classic-scanlog-core
 
 use classic_scanlog_core::RustFormIDAnalyzer;
+use classic_shared::without_gil;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
 use std::collections::HashMap;
@@ -28,10 +29,12 @@ impl PyRustFormIDAnalyzer {
     }
 
     /// Extract FormIDs from a callstack segment
+    ///
+    /// Releases GIL during extraction to allow concurrent Python threads.
     #[pyo3(signature = (segment_callstack))]
-    pub fn extract_formids(&self, segment_callstack: Vec<String>) -> PyResult<Vec<String>> {
-        // extract_formids returns Vec<String>, not Result
-        Ok(self.inner.extract_formids(&segment_callstack))
+    pub fn extract_formids(&self, py: Python<'_>, segment_callstack: Vec<String>) -> PyResult<Vec<String>> {
+        // Release GIL during FormID extraction
+        Ok(without_gil(py, || self.inner.extract_formids(&segment_callstack)))
     }
 
     /// Parse and validate a FormID string
@@ -40,16 +43,19 @@ impl PyRustFormIDAnalyzer {
     }
 
     /// Batch analyze FormIDs with plugin resolution
+    ///
+    /// Releases GIL during batch analysis to allow concurrent Python threads.
     #[pyo3(signature = (formids, plugins))]
     pub fn analyze_batch(
         &self,
+        py: Python<'_>,
         formids: Vec<String>,
         plugins: Bound<'_, PyDict>,
     ) -> PyResult<Vec<(String, Option<String>)>> {
-        // Convert PyDict to HashMap<String, String>
+        // Convert PyDict to HashMap<String, String> before releasing GIL
         let plugins_map: HashMap<String, String> = plugins.extract()?;
-        // analyze_batch returns Vec<...>, not Result
-        Ok(self.inner.analyze_batch(formids, &plugins_map))
+        // Release GIL during batch analysis
+        Ok(without_gil(py, || self.inner.analyze_batch(formids.clone(), &plugins_map)))
     }
 
     /// Clear all caches

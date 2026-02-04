@@ -3,6 +3,7 @@
 use classic_scangame_core::integrity::{
     CheckType, GameIntegrityChecker, IntegrityCheckResult, IntegrityConfig, IntegrityError,
 };
+use classic_shared::without_gil;
 use pyo3::exceptions::{PyFileNotFoundError, PyIOError, PyRuntimeError};
 use pyo3::prelude::*;
 use std::path::PathBuf;
@@ -214,6 +215,8 @@ impl PyGameIntegrityChecker {
     /// 2. Compares it against known old and new versions
     /// 3. Checks for Steam INI presence (indicates outdated version)
     ///
+    /// Releases GIL during SHA256 hashing to allow concurrent Python threads.
+    ///
     /// Returns:
     ///     IntegrityCheckResult: Result containing check status and message
     ///
@@ -221,9 +224,9 @@ impl PyGameIntegrityChecker {
     ///     FileNotFoundError: If executable file doesn't exist
     ///     IOError: If failed to read the executable
     ///     RuntimeError: If hash calculation fails
-    fn check_executable_version(&self) -> PyResult<PyIntegrityCheckResult> {
-        self.inner
-            .check_executable_version()
+    fn check_executable_version(&self, py: Python<'_>) -> PyResult<PyIntegrityCheckResult> {
+        // Release GIL during SHA256 hashing (file I/O + CPU intensive)
+        without_gil(py, || self.inner.check_executable_version())
             .map(PyIntegrityCheckResult::from)
             .map_err(convert_integrity_error)
     }
@@ -248,6 +251,8 @@ impl PyGameIntegrityChecker {
     /// 1. Game executable version validation
     /// 2. Installation location verification
     ///
+    /// Releases GIL during checks to allow concurrent Python threads.
+    ///
     /// Returns:
     ///     list[IntegrityCheckResult]: Vector of all check results
     ///
@@ -255,9 +260,9 @@ impl PyGameIntegrityChecker {
     ///     FileNotFoundError: If executable file doesn't exist
     ///     IOError: If failed to read files
     ///     RuntimeError: If hash calculation fails
-    fn run_all_checks(&self) -> PyResult<Vec<PyIntegrityCheckResult>> {
-        self.inner
-            .run_all_checks()
+    fn run_all_checks(&self, py: Python<'_>) -> PyResult<Vec<PyIntegrityCheckResult>> {
+        // Release GIL during integrity checks
+        without_gil(py, || self.inner.run_all_checks())
             .map(|results| {
                 results
                     .into_iter()
@@ -270,6 +275,7 @@ impl PyGameIntegrityChecker {
     /// Run all checks and return combined message string
     ///
     /// This is a convenience method that matches the Python API.
+    /// Releases GIL during checks to allow concurrent Python threads.
     ///
     /// Returns:
     ///     str: Combined message string from all checks
@@ -285,8 +291,9 @@ impl PyGameIntegrityChecker {
     ///     >>> checker = GameIntegrityChecker(config)
     ///     >>> message = checker.run_full_check()
     ///     >>> print(message)
-    fn run_full_check(&self) -> PyResult<String> {
-        self.inner.run_full_check().map_err(convert_integrity_error)
+    fn run_full_check(&self, py: Python<'_>) -> PyResult<String> {
+        // Release GIL during integrity checks
+        without_gil(py, || self.inner.run_full_check()).map_err(convert_integrity_error)
     }
 
     /// Get the configuration

@@ -1,7 +1,7 @@
 //! Python bindings for PluginAnalyzer - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::PluginAnalyzer;
-use classic_shared::pydict_to_indexmap_str;
+use classic_shared::{pydict_to_indexmap_str, without_gil};
 use indexmap::IndexMap;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
@@ -88,6 +88,7 @@ impl PyPluginAnalyzer {
     ///
     /// Scans segment plugins and extracts plugin information, returning a mapping of
     /// plugin names to their load order IDs/status along with plugin limit flags.
+    /// Releases GIL during scanning to allow concurrent Python threads.
     ///
     /// # Arguments
     ///
@@ -109,54 +110,66 @@ impl PyPluginAnalyzer {
         game_version: Option<String>,
         version_current: Option<String>,
     ) -> PyResult<(Py<PyDict>, bool, bool)> {
-        let (plugins, limit_triggered, limit_disabled) = self
-            .inner
-            .loadorder_scan_log(
+        // Release GIL during plugin scanning
+        let (plugins, limit_triggered, limit_disabled) = without_gil(py, || {
+            self.inner.loadorder_scan_log(
                 segment_plugins,
                 game_version.as_deref(),
                 version_current.as_deref(),
             )
-            .map_err(crate::to_pyerr)?;
+        })
+        .map_err(crate::to_pyerr)?;
         // Convert IndexMap to Python dict preserving order
         Ok((indexmap_to_pydict(py, plugins), limit_triggered, limit_disabled))
     }
 
     /// Check plugin limit - returns (plugin_limit_triggered, limit_check_disabled)
+    ///
+    /// Releases GIL during limit checking to allow concurrent Python threads.
     pub fn check_plugin_limit(
         &self,
+        py: Python<'_>,
         segment_plugins: Vec<String>,
         game_version: String,
         version_current: String,
     ) -> PyResult<(bool, bool)> {
-        self.inner
-            .check_plugin_limit(segment_plugins, &game_version, &version_current)
-            .map_err(crate::to_pyerr)
+        without_gil(py, || {
+            self.inner
+                .check_plugin_limit(segment_plugins, &game_version, &version_current)
+        })
+        .map_err(crate::to_pyerr)
     }
 
     /// Match plugins
+    ///
+    /// Releases GIL during plugin matching to allow concurrent Python threads.
     pub fn plugin_match(
         &self,
+        py: Python<'_>,
         segment_callstack_lower: Vec<String>,
         crashlog_plugins_lower: HashSet<String>,
     ) -> PyResult<Vec<String>> {
-        self.inner
-            .plugin_match(segment_callstack_lower, crashlog_plugins_lower)
-            .map_err(crate::to_pyerr)
+        without_gil(py, || {
+            self.inner
+                .plugin_match(segment_callstack_lower, crashlog_plugins_lower)
+        })
+        .map_err(crate::to_pyerr)
     }
 
     /// Filter ignored plugins
     ///
     /// Takes a dict of plugins and returns a filtered dict with ignored plugins removed.
     /// The order of plugins is preserved.
+    /// Releases GIL during filtering to allow concurrent Python threads.
     pub fn filter_ignored_plugins(
         &self,
         py: Python<'_>,
         plugins: &Bound<'_, PyDict>,
     ) -> PyResult<Py<PyDict>> {
+        // Extract Python data before releasing GIL
         let plugins_map = pydict_to_indexmap_str(plugins)?;
-        let filtered = self
-            .inner
-            .filter_ignored_plugins(plugins_map)
+        // Release GIL during filtering
+        let filtered = without_gil(py, || self.inner.filter_ignored_plugins(plugins_map))
             .map_err(crate::to_pyerr)?;
         Ok(indexmap_to_pydict(py, filtered))
     }
@@ -166,9 +179,12 @@ impl PyPluginAnalyzer {
 ///
 /// Returns a list of dicts, each mapping plugin names to their load order IDs.
 /// The order of plugins within each dict is preserved from the crash log.
+/// Releases GIL during batch detection to allow concurrent Python threads.
 #[pyfunction]
 pub fn detect_plugins_batch(py: Python<'_>, logs: Vec<String>) -> Vec<Py<PyDict>> {
-    classic_scanlog_core::detect_plugins_batch(logs)
+    // Release GIL during batch detection
+    let results = without_gil(py, || classic_scanlog_core::detect_plugins_batch(logs));
+    results
         .into_iter()
         .map(|map| indexmap_to_pydict(py, map))
         .collect()

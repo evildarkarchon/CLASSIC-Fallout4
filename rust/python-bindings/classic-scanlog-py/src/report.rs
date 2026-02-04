@@ -1,6 +1,7 @@
 //! Python bindings for report generation - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::{ReportComposer, ReportFragment, ReportGenerator, StringPool};
+use classic_shared::without_gil;
 use pyo3::prelude::*;
 
 /// Python wrapper for StringPool
@@ -32,8 +33,10 @@ impl PyStringPool {
     }
 
     /// Intern multiple strings in parallel
-    pub fn intern_batch(&self, strings: Vec<String>) -> Vec<String> {
-        self.inner.intern_batch(&strings)
+    ///
+    /// Releases GIL during batch interning to allow concurrent Python threads.
+    pub fn intern_batch(&self, py: Python<'_>, strings: Vec<String>) -> Vec<String> {
+        without_gil(py, || self.inner.intern_batch(&strings))
     }
 
     /// Get pool statistics

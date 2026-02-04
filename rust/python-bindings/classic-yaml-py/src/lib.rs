@@ -85,7 +85,7 @@
 //!     t.join()
 //! ```
 
-use classic_shared::{PathLike, define_exceptions, register_exceptions};
+use classic_shared::{PathLike, define_exceptions, register_exceptions, without_gil};
 use classic_yaml_core::{YamlError, YamlOperations};
 use pyo3::prelude::*;
 use pyo3::types::{PyDict, PyList};
@@ -147,22 +147,37 @@ impl PyYamlOperations {
     }
 
     /// Parse YAML content from a string
+    ///
+    /// Releases GIL during parsing for content >1KB to allow concurrent Python threads.
     #[pyo3(signature = (content))]
     fn parse_yaml(&self, py: Python<'_>, content: &str) -> PyResult<Py<PyAny>> {
-        let yaml = self.inner.parse_yaml(content).map_err(to_pyerr)?;
+        // Extract content to owned String before GIL release
+        let content_owned = content.to_string();
+
+        // Release GIL for large content (>1KB typically takes >1ms)
+        let yaml = if content.len() > 1024 {
+            without_gil(py, || self.inner.parse_yaml(&content_owned)).map_err(to_pyerr)?
+        } else {
+            self.inner.parse_yaml(&content_owned).map_err(to_pyerr)?
+        };
         yaml_to_python(py, &yaml)
     }
 
     /// Convert data to YAML string with format preservation
+    ///
+    /// Releases GIL during serialization to allow concurrent Python threads.
     #[pyo3(signature = (data))]
     fn dump_yaml(&self, py: Python<'_>, data: Py<PyAny>) -> PyResult<String> {
+        // Extract data to Rust types while holding GIL
         let yaml = python_to_yaml(py, data)?;
-        self.inner.dump_yaml(&yaml).map_err(to_pyerr)
+        // Release GIL during serialization
+        without_gil(py, || self.inner.dump_yaml(&yaml)).map_err(to_pyerr)
     }
 
     /// Load YAML file with caching
     ///
     /// Accepts both string paths and pathlib.Path objects without requiring manual conversion.
+    /// Releases GIL during file I/O to allow concurrent Python threads.
     ///
     /// # Arguments
     /// * `path` - Path to YAML file (str or pathlib.Path)
@@ -175,14 +190,17 @@ impl PyYamlOperations {
     /// ```
     #[pyo3(signature = (path))]
     fn load_yaml_file(&self, py: Python<'_>, path: PathLike) -> PyResult<Py<PyAny>> {
+        // Extract path while holding GIL
         let path_buf: PathBuf = path.into();
-        let yaml = self.inner.load_yaml_file(&path_buf).map_err(to_pyerr)?;
+        // Release GIL during file I/O and parsing
+        let yaml = without_gil(py, || self.inner.load_yaml_file(&path_buf)).map_err(to_pyerr)?;
         yaml_to_python(py, &yaml)
     }
 
     /// Save data to YAML file with atomic write
     ///
     /// Accepts both string paths and pathlib.Path objects without requiring manual conversion.
+    /// Releases GIL during file I/O to allow concurrent Python threads.
     ///
     /// # Arguments
     /// * `path` - Path to YAML file (str or pathlib.Path)
@@ -196,11 +214,11 @@ impl PyYamlOperations {
     /// ```
     #[pyo3(signature = (path, data))]
     fn save_yaml_file(&self, py: Python<'_>, path: PathLike, data: Py<PyAny>) -> PyResult<()> {
+        // Extract path and data while holding GIL
         let path_buf: PathBuf = path.into();
         let yaml = python_to_yaml(py, data)?;
-        self.inner
-            .save_yaml_file(&path_buf, &yaml)
-            .map_err(to_pyerr)
+        // Release GIL during file I/O
+        without_gil(py, || self.inner.save_yaml_file(&path_buf, &yaml)).map_err(to_pyerr)
     }
 
     /// Get a setting value by key path (dot notation)
