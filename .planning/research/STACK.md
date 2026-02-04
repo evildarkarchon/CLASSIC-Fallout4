@@ -1,318 +1,503 @@
-# Technology Stack for Rust Migration
+# Technology Stack for Performance Benchmarking and Profiling
 
-**Project:** CLASSIC Rust Migration - Scanning Orchestration, Game Detection, Report Generation, Settings Management
-**Researched:** 2026-02-02
-**Confidence:** HIGH - Based on existing crate analysis and verified external sources
+**Project:** CLASSIC Performance Benchmarking Milestone
+**Researched:** 2026-02-04
+**Confidence:** HIGH - Verified against official documentation and existing project infrastructure
 
 ## Executive Summary
 
-The CLASSIC project already has a mature Rust infrastructure with PyO3 0.27, Tokio 1.49, and 25+ crates. The migration targets require **no new external crates** for core functionality. The existing stack covers all requirements:
+CLASSIC already has Criterion 0.8.1 in the workspace for microbenchmarking. This milestone adds **targeted profiling tools** and **CI regression detection**, while avoiding tool bloat. The focus is instrumenting the hybrid Python-Rust boundary and establishing performance baselines.
 
-- **Scanning orchestration**: Tokio async runtime (already in place)
-- **Game detection**: classic-path-core + winreg (already in place)
-- **Report generation**: classic-message-core patterns (already in place)
-- **Settings management**: classic-settings-core with yaml-rust2 (already in place)
+**Key additions:**
+- Profiling: `cargo-flamegraph` (sampling), `tracing-flame` (async spans)
+- Memory: `dhat` (heap profiling with Rust global allocator)
+- CI: `github-action-benchmark` or Bencher for regression detection
+- PyO3: `py-spy` for cross-boundary profiling
+
+**Total new dev-dependencies: 3-4** (carefully selected, not bloat)
+
+## Current State
+
+### Already In Place (DO NOT re-add)
+
+| Tool | Version | Location | Purpose |
+|------|---------|----------|---------|
+| `criterion` | 0.8.1 | `classic-shared-core` dev-deps | Statistical microbenchmarking |
+| `tracing` | 0.1.44 | workspace | Instrumentation framework |
+| `tracing-subscriber` | 0.3.22 | workspace | Subscriber layers |
+| Existing benchmarks | - | `rust/foundation/classic-shared-core/benches/` | Performance, string, path benchmarks |
+
+### Existing Benchmark Coverage
+
+```
+benches/
+  performance_benchmarks.rs  # Timer, metrics, concurrent recording
+  string_benchmarks.rs       # String interning, smartstring
+  path_benchmarks.rs         # Path validation
+```
+
+**Gap analysis:** Business-logic crates (`-core`) lack benchmarks. YAML, scanlog, and database operations are unbenchmarked.
 
 ## Recommended Stack Additions
 
-### DO NOT ADD - Unnecessary Dependencies
+### 1. Profiling Tools
 
-| Crate | Why NOT to add |
-|-------|----------------|
-| `markdown-gen` | Report generation is simple string concatenation; existing `classic-message-core` patterns suffice. Adding a dependency for basic markdown is overengineering. |
-| `steamlocate` | CLASSIC targets modded game directories, not Steam detection. Users provide paths via settings; Windows registry detection for game paths is already in `classic-path-core` via `winreg`. |
-| `handlebars` / `tera` | Template engines add complexity for simple report format; fragment-based composition already works well. |
-| `tokio-util` | Existing `tokio 1.49` with full features provides sufficient orchestration primitives. |
+#### cargo-flamegraph (RECOMMENDED)
 
-### Already Available - Use Existing Crates
+**Purpose:** CPU profiling with visual flamegraph output
+**Version:** 0.6.11 (released 2026-01-19)
 
-| Migration Target | Existing Crate | What's Available |
-|-----------------|----------------|------------------|
-| Scanning Orchestration | `classic-shared-core` | Global Tokio runtime, `get_runtime()` for ONE RUNTIME rule |
-| Scanning Orchestration | `tokio` | `tokio::join!`, `tokio::select!`, `TaskGroup` patterns |
-| Scanning Orchestration | `rayon` | CPU-bound parallel processing |
-| Game Detection | `classic-path-core` | Path validation, INI parsing, directory scanning |
-| Game Detection | `classic-xse-core` | XSE version detection, loader finding |
-| Game Detection | `classic-scangame-core` | TOML config validation, integrity checking |
-| Game Detection | `winreg 0.52` (Windows) | Registry access for game paths |
-| Report Generation | `classic-message-core` | Message routing, emoji stripping, formatting |
-| Report Generation | `string_cache` / `lasso` | String interning for report fragments |
-| Report Generation | `smartstring` | Efficient small string handling |
-| Settings Management | `classic-settings-core` | YAML settings cache with sync/async API |
-| Settings Management | `yaml-rust2 0.11` | YAML parsing (already 15-30x faster than Python) |
-| Settings Management | `dashmap 6.1` | Lock-free concurrent cache |
-
-## Per-Migration-Target Analysis
-
-### 1. Scanning Orchestration (OrchestratorCore Replacement)
-
-**Current Python Implementation:** `ClassicLib/scanning/logs/orchestrator_core.py`
-- 898 lines of async Python orchestrating crash log processing
-- Uses async context managers, asyncio.TaskGroup, concurrent batch processing
-- Coordinates: plugin analysis, suspect scanning, mod detection, FormID analysis, report generation
-
-**Rust Implementation Strategy:**
-
-```rust
-// Use existing crates - NO new dependencies needed
-use classic_shared_core::get_runtime;     // ONE RUNTIME rule
-use tokio::{self, task::JoinSet};         // Already in workspace
-use rayon::prelude::*;                     // CPU-bound parallelism
-use classic_scanlog_core::*;               // Existing parsing logic
-use classic_database_core::*;              // FormID database access
+```bash
+# Install globally (not a project dependency)
+cargo install flamegraph
 ```
 
-**Key Patterns to Follow:**
-- Pipeline pattern with channels for streaming crash logs
-- `tokio::join!` preserves ordering (documented in `05-memories.md`)
-- Use `rayon` for CPU-bound fragment composition
-- Expose via `classic-orchestrator-py` with PyO3 0.27
+**Configuration required in workspace `Cargo.toml`:**
+```toml
+[profile.release-with-debug]
+inherits = "release"
+debug = true  # Already present in project
+```
 
-**Estimated Stack Footprint:** 0 new dependencies (all from workspace)
+**Usage:**
+```bash
+# Profile specific benchmark
+cargo flamegraph --bench performance_benchmarks -- --bench record_timing
 
-### 2. Game Detection (Path Detection, XSE/ENB Checking)
+# Profile with frame pointers for better stacks
+RUSTFLAGS="-C force-frame-pointers=yes" cargo flamegraph --release --bin classic-tui
+```
 
-**Current Python Implementation:** `ClassicLib/scanning/game/` package
-- `core.py`, `orchestrator.py`, `check_xse_plugins.py`, `check_crashgen.py`
-- Uses Windows registry for Steam/GOG paths
-- Validates XSE installation, checks ENB presence
+**Why flamegraph:**
+- Wraps `perf` (Linux) and `dtrace` (macOS) automatically
+- Produces interactive SVG flamegraphs
+- Works with existing release-with-debug profile
+- No code changes required
 
-**Existing Rust Coverage:**
+**Platform note:** Windows support is limited. Use WSL2 for profiling on Windows.
 
-| Component | Crate | Status |
-|-----------|-------|--------|
-| XSE detection | `classic-xse-core` | COMPLETE - `detect_xse_version()`, `is_xse_installed()` |
-| Path validation | `classic-path-core` | COMPLETE - `PathValidator`, `GamePathLocator` |
-| Registry access | `winreg 0.52` | COMPLETE - Already in workspace |
-| TOML config | `classic-scangame-core` | COMPLETE - `CrashgenChecker`, `TomlConfigIssue` |
-| INI validation | `classic-scangame-core` | COMPLETE - `IniValidator`, `ConfigIssue` |
-| BA2 scanning | `classic-scangame-core` | COMPLETE - `BA2Scanner` |
+**Sources:**
+- [flamegraph-rs GitHub](https://github.com/flamegraph-rs/flamegraph)
+- [Rust Performance Book - Profiling](https://nnethercote.github.io/perf-book/profiling.html)
 
-**What Remains:**
-- Orchestration layer connecting these components (new `GameIntegrityOrchestrator` in Rust)
-- Python bindings via `classic-scangame-py` (partially exists)
+#### tracing-flame (RECOMMENDED for async profiling)
 
-**Estimated Stack Footprint:** 0 new dependencies
+**Purpose:** Generate flamegraphs from `tracing` spans (async-aware)
+**Version:** 0.2.0
 
-### 3. Report Generation (Markdown Output)
+```toml
+# Add to workspace Cargo.toml
+[workspace.dependencies]
+tracing-flame = "0.2"
+inferno = "0.12"  # For converting folded stacks to SVG
+```
 
-**Current Python Implementation:**
-- `ClassicLib/scanning/logs/report_generator.py`
-- `ClassicLib/scanning/logs/reporting/` package (fragment_composer, section_composer, etc.)
-- Uses `ReportFragment` immutable objects with functional composition
-
-**Existing Rust Coverage:**
-
-| Component | Crate | Status |
-|-----------|-------|--------|
-| Message types | `classic-message-core` | COMPLETE - `Message`, `MessageType`, `MessageTarget` |
-| Emoji stripping | `classic-message-core` | COMPLETE - `strip_emoji()`, `format_log_message()` |
-| String interning | `lasso 0.7` | COMPLETE - `ThreadedRodeo` for concurrent interning |
-| String optimization | `smartstring 1.0` | COMPLETE - Small string optimization |
-
-**Report Fragment Implementation:**
-
-The Python `ReportFragment` pattern translates directly to Rust:
-
+**Usage pattern:**
 ```rust
-// No new crates needed - use standard library + existing workspace deps
-use smartstring::alias::String as SmartString;
-use lasso::ThreadedRodeo;
+use tracing_flame::FlameLayer;
+use tracing_subscriber::{prelude::*, registry::Registry};
 
-pub struct ReportFragment {
-    lines: Vec<SmartString>,
-    interned_pool: Arc<ThreadedRodeo>,
+fn setup_profiling() -> impl Drop {
+    let (flame_layer, guard) = FlameLayer::with_file("./tracing.folded").unwrap();
+    tracing_subscriber::registry()
+        .with(flame_layer)
+        .init();
+    guard  // Drop guard writes output
 }
 
-impl ReportFragment {
-    pub fn from_lines(lines: impl IntoIterator<Item = impl AsRef<str>>) -> Self { ... }
-    pub fn compose(fragments: &[Self]) -> Self { ... }
-    pub fn to_markdown(&self) -> String { ... }
+// Convert to flamegraph
+// cat tracing.folded | inferno-flamegraph > profile.svg
+```
+
+**Why tracing-flame:**
+- Integrates with existing `tracing` infrastructure (already in workspace)
+- Captures async task boundaries (critical for Tokio-based code)
+- Produces folded stacks compatible with standard flamegraph tools
+- Zero runtime cost when disabled
+
+**Sources:**
+- [tracing-flame on lib.rs](https://lib.rs/crates/tracing-flame)
+
+#### samply (Alternative to flamegraph - OPTIONAL)
+
+**Purpose:** Interactive web-based profiling with Firefox Profiler UI
+**Version:** 0.13
+
+```bash
+# Install globally
+cargo install samply
+```
+
+**When to use:** When you need interactive exploration rather than static SVG.
+
+**Sources:**
+- [Profiling Rust programs the easy way](https://ntietz.com/blog/profiling-rust-programs-the-easy-way/)
+
+### 2. Memory Profiling
+
+#### dhat (RECOMMENDED)
+
+**Purpose:** Heap allocation profiling with test assertions
+**Version:** 0.3.3
+
+```toml
+# Add to workspace Cargo.toml
+[workspace.dependencies]
+dhat = "0.3"
+```
+
+**Usage in benchmarks:**
+```rust
+#[cfg(feature = "dhat-heap")]
+#[global_allocator]
+static ALLOC: dhat::Alloc = dhat::Alloc;
+
+fn main() {
+    #[cfg(feature = "dhat-heap")]
+    let _profiler = dhat::Profiler::new_heap();
+
+    // ... benchmark code
 }
 ```
 
-**Why NOT markdown-gen:**
-- `markdown-gen` (v1.2.1, last updated 2020) is designed for document generation with complex nesting
-- CLASSIC reports are simple: headers, bullet lists, horizontal rules
-- String concatenation with proper formatting is trivial and faster
-- No runtime dependencies vs adding 2+ transitive deps
+**Test allocation counts:**
+```rust
+#[test]
+fn test_yaml_parse_allocations() {
+    let _profiler = dhat::Profiler::builder().testing().build();
 
-**Estimated Stack Footprint:** 0 new dependencies
+    let stats_before = dhat::HeapStats::get();
+    parse_yaml_document(&content);
+    let stats_after = dhat::HeapStats::get();
 
-### 4. Settings Management (Configuration Loading/Saving)
+    // Assert allocation count is reasonable
+    assert!(stats_after.total_blocks - stats_before.total_blocks < 100);
+}
+```
 
-**Current Python Implementation:**
-- `ClassicLib/io/yaml/` package with async cache
-- `ClassicLib/classic_settings.py` for user preferences
-- Uses ruamel.yaml (replaced by yaml-rust2 in Rust)
+**Why dhat:**
+- Pure Rust implementation (no external dependencies)
+- Works on all platforms including Windows
+- Supports assertion-based testing (CI-friendly)
+- Lower overhead than Valgrind-based tools
+- Views with DHAT viewer at https://nicopollas.github.io/nicopollas/dhat-viewer/
 
-**Existing Rust Coverage:**
+**Sources:**
+- [dhat crate documentation](https://docs.rs/dhat/latest/dhat/)
+- [Rust Performance Book - Heap Allocations](https://nnethercote.github.io/perf-book/heap-allocations.html)
 
-| Component | Crate | Status |
-|-----------|-------|--------|
-| YAML parsing | `yaml-rust2 0.11` | COMPLETE - 15-30x faster than ruamel.yaml |
-| Settings cache | `classic-settings-core` | COMPLETE - `load_settings_sync/async`, `get_cached` |
-| Batch loading | `classic-settings-core` | COMPLETE - `load_batch_async` |
-| Concurrent access | `dashmap 6.1` | COMPLETE - Lock-free cache storage |
+### 3. PyO3 Cross-Boundary Profiling
 
-**What Remains:**
-- Higher-level `ClassicSettings` abstraction for user preferences
-- Python bindings completion in `classic-settings-py`
+#### py-spy (RECOMMENDED)
 
-**Estimated Stack Footprint:** 0 new dependencies
+**Purpose:** Profile Python code including Rust extensions
+**Version:** 0.4 (latest)
+
+```bash
+# Install via pip (not Rust)
+pip install py-spy
+```
+
+**Usage:**
+```bash
+# Profile CLASSIC GUI with native extension support
+py-spy record --native -o profile.svg -- python CLASSIC_Interface.py
+
+# Top-like view
+py-spy top --native -- python CLASSIC_ScanLogs.py
+```
+
+**Why py-spy:**
+- Written in Rust, low overhead (~2%)
+- `--native` flag captures Rust stack frames alongside Python
+- No code changes required
+- Can attach to running processes
+
+**Limitation:** Requires debug symbols in Rust extensions. Build with:
+```bash
+# Windows: use release-with-debug profile
+maturin build --profile release-with-debug
+```
+
+**Sources:**
+- [py-spy GitHub](https://github.com/benfred/py-spy)
+- [PyO3 Performance Analysis](https://github.com/PyO3/pyo3/issues/1607)
+
+#### Custom FFI Overhead Measurement (RECOMMENDED)
+
+Create dedicated benchmarks for Python/Rust boundary crossing:
+
+```rust
+// In classic-yaml-py/benches/ffi_overhead.rs
+use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use pyo3::prelude::*;
+
+fn bench_ffi_roundtrip(c: &mut Criterion) {
+    pyo3::prepare_freethreaded_python();
+
+    Python::with_gil(|py| {
+        let module = PyModule::import(py, "classic_yaml").unwrap();
+
+        c.bench_function("yaml_parse_small", |b| {
+            b.iter(|| {
+                let result = module
+                    .call_method1("parse_yaml", ("key: value",))
+                    .unwrap();
+                black_box(result);
+            });
+        });
+    });
+}
+
+criterion_group!(ffi_benches, bench_ffi_roundtrip);
+criterion_main!(ffi_benches);
+```
+
+### 4. CI Regression Detection
+
+#### github-action-benchmark (RECOMMENDED)
+
+**Purpose:** Track benchmark results over time, alert on regressions
+
+```yaml
+# .github/workflows/benchmark.yml
+name: Benchmark
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run benchmarks
+        run: cargo bench --bench performance_benchmarks -- --output-format bencher | tee output.txt
+
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'cargo'
+          output-file-path: output.txt
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: true
+          alert-threshold: '150%'
+          fail-on-alert: false
+          comment-on-alert: true
+```
+
+**Why github-action-benchmark:**
+- Free for public repos
+- No external service dependency
+- Stores results in GitHub Pages
+- Configurable thresholds (default 200%, recommend 150% for CLASSIC)
+
+**Alternative: Bencher**
+
+For more sophisticated regression analysis with statistical significance:
+
+```yaml
+- uses: bencherdev/bencher@main
+- name: Track Benchmarks
+  run: |
+    bencher run \
+      --project classic \
+      --token ${{ secrets.BENCHER_API_TOKEN }} \
+      --branch main \
+      --testbed ubuntu-latest \
+      --adapter rust_criterion \
+      "cargo bench"
+```
+
+**Sources:**
+- [github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark)
+- [Bencher documentation](https://bencher.dev/docs/how-to/github-actions/)
+
+### 5. Async Runtime Profiling
+
+#### tokio-console (RECOMMENDED for debugging)
+
+**Purpose:** Real-time async task visualization
+**Already in ecosystem:** Uses `console-subscriber` with existing `tracing`
+
+```toml
+# Add to workspace (dev-only feature flag recommended)
+[workspace.dependencies]
+console-subscriber = { version = "0.4", optional = true }
+```
+
+**Usage:**
+```rust
+#[cfg(feature = "tokio-console")]
+fn setup_console() {
+    console_subscriber::init();
+}
+```
+
+```bash
+# Run with console
+RUSTFLAGS="--cfg tokio_unstable" cargo run --features tokio-console
+
+# In another terminal
+tokio-console
+```
+
+**Why tokio-console:**
+- Visual task inspector for async code
+- Shows task spawn points, poll counts, waker events
+- Identifies stuck or slow tasks
+- Useful for debugging, not production profiling
+
+**Sources:**
+- [tokio-console GitHub](https://github.com/tokio-rs/console)
+
+## Recommended Stack Configuration
+
+### Workspace Cargo.toml Additions
+
+```toml
+[workspace.dependencies]
+# Profiling (dev-only)
+tracing-flame = "0.2"
+inferno = "0.12"
+dhat = "0.3"
+console-subscriber = "0.4"
+
+# Criterion already present at 0.8.1
+```
+
+### Per-Crate Configuration Pattern
+
+For crates that need benchmarks:
+
+```toml
+# business-logic/classic-yaml-core/Cargo.toml
+[dev-dependencies]
+criterion = { workspace = true }
+dhat = { workspace = true }
+
+[features]
+dhat-heap = []
+
+[[bench]]
+name = "yaml_benchmarks"
+harness = false
+```
+
+## What NOT to Add
+
+| Tool | Reason to Avoid |
+|------|-----------------|
+| `iai-callgrind` | Requires Valgrind (Linux only), CLASSIC targets Windows primarily |
+| `pprof-rs` | jemalloc-based, conflicts with system allocator; dhat is simpler |
+| `heaptrack` | Linux only, high memory overhead |
+| `tikv-jemallocator` | Requires replacing global allocator, invasive change |
+| `criterion-perf-events` | Linux only, requires perf setup |
+| `divan` | Project already standardized on Criterion 0.8.1; switching adds friction |
+| `codspeed` | External service dependency; github-action-benchmark is self-hosted |
+
+### Why Stay with Criterion (Not Divan)
+
+The project already uses Criterion 0.8.1 with 3 benchmark files. While Divan offers ergonomic improvements:
+- Existing benchmarks would need rewriting
+- Team familiarity with Criterion API
+- Criterion's HTML reports are mature
+- Statistical rigor is equivalent
+
+**Recommendation:** Expand Criterion coverage rather than switch frameworks.
+
+## Integration with Existing Infrastructure
+
+### Feature Flags Pattern
+
+```toml
+# In workspace Cargo.toml
+[workspace.features]
+# Development-only profiling
+profiling = ["tracing-flame", "dhat", "console-subscriber"]
+```
+
+### Benchmark Directory Structure
+
+```
+rust/
+  foundation/classic-shared-core/benches/  # Already exists
+  business-logic/
+    classic-yaml-core/benches/
+      yaml_benchmarks.rs          # NEW: YAML parsing benchmarks
+      yaml_memory.rs              # NEW: Allocation profiling
+    classic-scanlog-core/benches/
+      scanlog_benchmarks.rs       # NEW: Crash log parsing
+    classic-database-core/benches/
+      database_benchmarks.rs      # NEW: SQLite operations
+  python-bindings/
+    classic-yaml-py/benches/
+      ffi_benchmarks.rs           # NEW: PyO3 boundary overhead
+```
+
+### Scripts for Profiling Workflows
+
+```powershell
+# scripts/profile-release.ps1
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$Target,
+
+    [string]$OutputDir = "profiles"
+)
+
+$env:RUSTFLAGS = "-C force-frame-pointers=yes"
+New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
+
+Write-Host "Building with debug symbols..."
+cargo build --profile release-with-debug --bin $Target
+
+Write-Host "Profiling with flamegraph..."
+cargo flamegraph --profile release-with-debug --bin $Target -o "$OutputDir/$Target.svg"
+
+Write-Host "Profile saved to $OutputDir/$Target.svg"
+```
 
 ## Version Verification
 
-All versions verified against workspace `Cargo.toml`:
-
-| Crate | Workspace Version | Current as of 2026-02-02 |
-|-------|-------------------|-------------------------|
-| PyO3 | 0.27.2 | Current (0.28 available but breaking) |
-| pyo3-async-runtimes | 0.27.0 | Current for PyO3 0.27 |
-| tokio | 1.49.0 | Current stable |
-| yaml-rust2 | 0.11.0 | Current stable |
-| winreg | 0.52 | Current stable |
-| dashmap | 6.1 | Current stable |
-| lasso | 0.7 | Current stable |
-| smartstring | 1.0 | Current stable |
-| rayon | 1.10 | Current stable |
-
-## Integration Points with Existing Stack
-
-### classic-shared-core (Foundation)
-
-```rust
-// All orchestration uses the global runtime
-use classic_shared_core::get_runtime;
-
-// Example: Run async orchestration from Python
-pub fn run_orchestration(config: ScanConfig) -> PyResult<ScanResult> {
-    get_runtime().block_on(async {
-        orchestrate_scan(config).await
-    })
-}
-```
-
-### classic-scanlog-core (Business Logic)
-
-```rust
-// Existing parsing already handles crash log analysis
-use classic_scanlog_core::{LogParser, find_segments};
-
-// Orchestrator coordinates multiple parser instances
-async fn process_batch(logs: Vec<PathBuf>) -> Vec<ScanResult> {
-    let parser = LogParser::new(crashgen_name, xse_acronym, root_name);
-
-    // Use tokio::join! for ordered parallel processing
-    let results = logs.iter()
-        .map(|log| process_single(parser.clone(), log))
-        .collect::<Vec<_>>();
-
-    futures::future::join_all(results).await
-}
-```
-
-### classic-scangame-core (Game Scanning)
-
-```rust
-// Existing integrity checks can be orchestrated
-use classic_scangame_core::{
-    GameIntegrityChecker,
-    BA2Scanner,
-    IniValidator,
-    CrashgenChecker,
-};
-
-async fn check_game_integrity(game_path: &Path) -> IntegrityResult {
-    let checker = GameIntegrityChecker::new(game_path);
-
-    // Run all checks concurrently
-    tokio::join!(
-        checker.check_xse(),
-        checker.check_crashgen(),
-        checker.check_ini_files(),
-        checker.check_ba2_archives(),
-    )
-}
-```
-
-## New Crates to Create (Not New Dependencies)
-
-These are NEW CRATES within the workspace, not new external dependencies:
-
-| New Crate | Purpose | Dependencies (all from workspace) |
-|-----------|---------|----------------------------------|
-| `classic-orchestrator-core` | Rust orchestration business logic | classic-shared-core, classic-scanlog-core, tokio, rayon |
-| `classic-orchestrator-py` | PyO3 bindings for orchestrator | pyo3, classic-orchestrator-core |
-| `classic-report-core` | Report fragment generation | classic-message-core, lasso, smartstring |
-| `classic-report-py` | PyO3 bindings for reports | pyo3, classic-report-core |
-
-## Anti-Recommendations
-
-### Do NOT Upgrade PyO3 to 0.28
-
-**Reason:** PyO3 0.28.0 is available but introduces breaking changes. The project uses `abi3-py312` for stable ABI compatibility. Upgrading would require:
-- Updating all `-py` crates (18+ crates)
-- Testing GIL handling changes
-- Potential runtime conflicts with `pyo3-async-runtimes`
-
-**Recommendation:** Stay on PyO3 0.27.2 until a dedicated upgrade milestone.
-
-### Do NOT Add steamlocate
-
-**Reason:** CLASSIC's workflow is:
-1. User runs CLASSIC in their modded game directory
-2. Or user explicitly configures game path in settings
-3. CLASSIC validates the path
-
-The `steamlocate` crate is for:
-- Finding ALL Steam games on a system
-- Auto-detecting game installations
-
-CLASSIC doesn't need auto-detection; it needs path VALIDATION (already in `classic-path-core`).
-
-### Do NOT Add Template Engines
-
-**Reason:** Report output is:
-```markdown
-# crash-2024-01-15.log
-**AUTOSCAN REPORT GENERATED BY CLASSIC v8.2.0**
-
-### Error Information
-**Main Error:** Access violation at 0x00000000
-...
-```
-
-This is trivially generated with `format!()` and string concatenation. Template engines add:
-- Compilation overhead
-- Runtime template parsing
-- Template file management
-- Error handling complexity
-
-None of these provide value for static-format reports.
+| Crate | Recommended Version | Verified Date | Source |
+|-------|---------------------|---------------|--------|
+| criterion | 0.8.1 | 2026-02-04 | [docs.rs](https://docs.rs/crate/criterion/0.8.1) - Released 2025-12-07 |
+| flamegraph | 0.6.11 | 2026-02-04 | [GitHub releases](https://github.com/flamegraph-rs/flamegraph/releases) - Released 2026-01-19 |
+| tracing-flame | 0.2.0 | 2026-02-04 | [lib.rs](https://lib.rs/crates/tracing-flame) |
+| dhat | 0.3.3 | 2026-02-04 | [docs.rs](https://docs.rs/dhat/latest/dhat/) |
+| console-subscriber | 0.4.x | 2026-02-04 | [crates.io](https://crates.io/crates/console-subscriber) |
+| py-spy | 0.4.x | 2026-02-04 | [GitHub](https://github.com/benfred/py-spy) |
 
 ## Summary
 
-**Total new external dependencies required: 0**
+**New workspace dependencies (dev-only):**
+1. `tracing-flame = "0.2"` - Async-aware flame profiling
+2. `inferno = "0.12"` - Folded stack to SVG conversion
+3. `dhat = "0.3"` - Heap allocation profiling
+4. `console-subscriber = "0.4"` (optional feature) - Tokio debugging
 
-The existing CLASSIC Rust infrastructure provides all necessary capabilities:
-- Async runtime: `tokio` via `classic-shared-core`
-- Parallel processing: `rayon`
-- YAML settings: `yaml-rust2` via `classic-settings-core`
-- Game detection: `winreg` + `classic-path-core` + `classic-xse-core`
-- Report generation: `classic-message-core` + string interning crates
-- Database: `rusqlite`/`sqlx` via `classic-database-core`
+**External tools (not deps):**
+1. `cargo-flamegraph` - CPU profiling
+2. `py-spy` - Python/Rust cross-boundary profiling
 
-The migration is about **creating new crates within the workspace** to house orchestration logic, not about adding new external dependencies.
+**CI Integration:**
+1. `github-action-benchmark` - Free, self-hosted regression tracking
+
+**Total impact:** 3-4 small crates added to dev-dependencies, no runtime changes, no production code modifications required.
 
 ## Sources
 
-- [PyO3 async-await ecosystem documentation](https://github.com/PyO3/pyo3/blob/main/guide/src/ecosystem/async-await.md)
-- [pyo3-async-runtimes for PyO3 0.27+ compatibility](https://github.com/PyO3/pyo3-async-runtimes)
-- [markdown-gen crate (v1.2.1, last updated 2020)](https://lib.rs/crates/markdown-gen)
-- [steamlocate crate (v2.0.1)](https://lib.rs/crates/steamlocate)
-- [Tokio structured concurrency patterns](https://medium.com/@adamszpilewicz/structured-concurrency-in-rust-with-tokio-beyond-tokio-spawn-78eefd1febb4)
-- [Worker pool patterns in Rust](https://medium.com/@adamszpilewicz/building-a-worker-pool-in-rust-scalable-task-execution-with-tokio-abcb4f193a05)
-- [Rust concurrency patterns (OneSignal)](https://onesignal.com/blog/rust-concurrency-patterns/)
-- CLASSIC workspace `rust/Cargo.toml` (authoritative source for current versions)
-- CLASSIC existing crates: `classic-settings-core`, `classic-scangame-core`, `classic-xse-core`, `classic-message-core`
+- [Criterion.rs Documentation](https://bheisler.github.io/criterion.rs/book/getting_started.html)
+- [The Rust Performance Book](https://nnethercote.github.io/perf-book/profiling.html)
+- [flamegraph-rs GitHub](https://github.com/flamegraph-rs/flamegraph)
+- [tracing-flame on lib.rs](https://lib.rs/crates/tracing-flame)
+- [dhat crate documentation](https://docs.rs/dhat/latest/dhat/)
+- [py-spy GitHub](https://github.com/benfred/py-spy)
+- [PyO3 Performance Analysis Issue](https://github.com/PyO3/pyo3/issues/1607)
+- [github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark)
+- [Bencher CI documentation](https://bencher.dev/docs/how-to/github-actions/)
+- [tokio-console GitHub](https://github.com/tokio-rs/console)
+- [Profiling Rust programs the easy way](https://ntietz.com/blog/profiling-rust-programs-the-easy-way/)

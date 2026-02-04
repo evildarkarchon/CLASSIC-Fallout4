@@ -1,9 +1,370 @@
 # Pitfalls Research
 
-**Domain:** Hybrid Python-Rust codebase cleanup and consolidation
+**Domain:** Hybrid Python-Rust codebase cleanup, consolidation, and performance optimization
 **Researched:** 2026-02-01
-**Updated:** 2026-02-02 (added Migration-Specific Pitfalls)
+**Updated:** 2026-02-04 (added Performance Benchmarking Pitfalls for v8.3.0)
 **Confidence:** HIGH (based on codebase analysis docs, project history, official PyO3 documentation)
+
+---
+
+## Performance Benchmarking Pitfalls (v8.3.0 Section)
+
+**Context:** This section covers pitfalls specific to benchmarking and optimizing the hybrid Python-Rust performance work for v8.3.0. CLASSIC already has Rust acceleration in place (15-150x speedups); this milestone focuses on establishing baselines, profiling hot paths, and fixing pre-existing bugs.
+
+### Critical Performance Pitfalls
+
+#### Pitfall P1: Measuring FFI Overhead Without Isolating Type Conversion
+
+**What goes wrong:** Benchmarks attribute all latency to "Rust code" when significant time is actually spent in Python-to-Rust type conversion (marshaling). Teams optimize the wrong thing.
+
+**Why it happens:** PyO3 automatically converts between Python and Rust types (e.g., `dict` to `HashMap`, `list` to `Vec`). This conversion happens transparently but has measurable cost, especially for nested structures. The `yaml_to_python()` and `python_to_yaml()` functions in `classic-yaml-py` perform recursive conversion for every YAML operation.
+
+**Consequences:**
+- Optimize Rust code when the bottleneck is actually marshaling
+- Miss opportunities to batch operations or use zero-copy techniques
+- False conclusions about Rust speedup factors (claim 10x but actually 2x after accounting for conversion)
+
+**Prevention:**
+1. Use CLASSIC's existing `tools/ffi_profiler.py` to measure `input_size`, `output_size`, and `input_type` for every timed FFI call
+2. Benchmark Rust-side logic separately using `criterion` in Rust tests (no PyO3 boundary)
+3. For hot paths, consider `#[pyclass]` wrappers to keep data on Rust side between operations
+4. Measure "conversion tax" explicitly: time the operation with and without data conversion
+
+**Detection (warning signs):**
+- "Rust speedup is inconsistent between small and large inputs" (small = high conversion ratio)
+- Profiling shows most time in `python_to_yaml` / `yaml_to_python` conversion functions
+- Speedup factor varies wildly (5x to 50x) for similar operations
+
+**Phase relevance:** Phase 1 (Baseline Establishment) - must capture conversion overhead from the start
+
+**CLASSIC-specific note:** The `yaml_to_python` function at line 370 of `classic-yaml-py/src/lib.rs` recursively converts every YAML node. For deeply nested YAML like the game database files, this can be significant.
+
+---
+
+#### Pitfall P2: Holding GIL During Long Rust Operations
+
+**What goes wrong:** Python's Global Interpreter Lock (GIL) remains held during Rust computation, blocking all other Python threads and async tasks. The application appears frozen.
+
+**Why it happens:** By default, PyO3 holds the GIL during Rust function execution. Developers assume "Rust is fast so it doesn't matter" but even 50ms blocks the entire Python runtime. Per [PyO3 Performance Guide](https://pyo3.rs/main/performance): "Operations expected to take multiple milliseconds can benefit from detaching from the interpreter."
+
+**Consequences:**
+- GUI becomes unresponsive during analysis operations
+- async tasks starve waiting for GIL
+- Benchmarks show good Rust performance but real-world application feels slow
+
+**Prevention:**
+1. Use `py.allow_threads(|| { ... })` for any Rust operation >1ms
+2. For CLASSIC's current pattern with `asyncio.to_thread()`, ensure Rust functions don't block GIL acquisition
+3. Benchmark with concurrent Python operations running, not in isolation
+4. Add GIL-release instrumentation to `FFIProfiler.gil_contention_events`
+
+**Detection:**
+- GUI freezes during Rust operations despite "fast" benchmarks
+- `FFIProfiler.gil_contention_events` shows >0.1ms wait times
+- Profiling shows time in "waiting for GIL" category
+- Process at 100% single-core CPU while other Python threads idle
+
+**Phase relevance:** Phase 2 (Hot Path Optimization) - GIL release must be part of optimization work
+
+**CRITICAL FINDING:** Grep of `rust/` directory shows NO matches for `allow_threads` or `py.allow_threads`. This is a gap that v8.3.0 should address for any operation >1ms.
+
+---
+
+#### Pitfall P3: Global Static State Causing Test Non-Determinism
+
+**What goes wrong:** Rust's `static` variables (like `YAML_CACHE` at line 153 of `classic-yaml-core/src/lib.rs`) persist across test runs, causing tests to fail intermittently or in specific orders.
+
+**Why it happens:**
+- Rust tests run in parallel by default
+- Static variables like `Lazy<DashMap<PathBuf, CachedYaml>>` are shared across all tests in a process
+- Cache state from one test pollutes another
+
+**Consequences:**
+- Tests pass locally but fail in CI (different parallelism)
+- `test_clear_cache` assertion fails: "expected 0, got 1" (the exact pre-existing bug documented in PROJECT.md)
+- Flaky tests that pass on retry
+
+**Prevention:**
+1. Use `#[serial_test::serial]` for tests touching global state (CLASSIC already does this in metrics tests)
+2. Call `clear_*_cache()` at start AND end of tests, not just one
+3. For Python tests, ensure singleton cleanup in fixtures
+4. Consider per-test state injection instead of global statics
+
+**Detection:**
+- Tests pass with `cargo test -- --test-threads=1` but fail with parallel execution
+- Assertion failures about cache/counter values
+- "Pre-existing" test failures that nobody can reproduce locally
+
+**Phase relevance:** Phase 3 (Bug Fixes) - the `test_clear_cache` fix requires understanding this pitfall
+
+**CLASSIC-specific note:** The `test_clear_cache` bug in `classic-yaml-core` (line 1792) is exactly this pitfall. The test loads a file (populating `YAML_CACHE`), clears cache, but another parallel test may have loaded a file between the assertion and clear.
+
+---
+
+#### Pitfall P4: Benchmarking Debug Builds Instead of Release
+
+**What goes wrong:** Performance measurements use Rust debug builds (10-100x slower), leading to incorrect optimization decisions.
+
+**Why it happens:**
+- `cargo test` uses debug by default
+- Development workflow uses `maturin develop` (debug) not `maturin develop --release`
+- CI may not specify release mode
+- `rebuild_rust.ps1` without explicit release flag
+
+**Consequences:**
+- Massive performance regression reported that doesn't exist in release
+- Optimization work targets already-fast code
+- False comparisons between Python (optimized) and Rust (unoptimized)
+
+**Prevention:**
+1. Always benchmark with `--release` flag
+2. Add CI check that performance tests use release builds
+3. Document build mode in all benchmark results
+4. Use `CARGO_PROFILE_RELEASE_DEBUG=true` for profiling with symbols (as configured in workspace `Cargo.toml` line 169)
+5. Use `rebuild_rust.ps1` which builds release by default
+
+**Detection:**
+- Rust code slower than Python for same algorithm
+- 10x+ performance difference between "local" and "CI" results
+- Profiling shows unexpected time in bounds checking / overflow checks
+- Missing SIMD/LTO optimizations visible in assembly
+
+**Phase relevance:** Phase 1 (Baseline) - establish release-mode baselines from day one
+
+---
+
+#### Pitfall P5: Using Mean Instead of Minimum for Microbenchmarks
+
+**What goes wrong:** Benchmark reports use mean/average timing, which is heavily influenced by outliers from OS scheduling, GC pauses, and thermal throttling.
+
+**Why it happens:** Statistical intuition says "average multiple samples" but benchmarking is not a normal distribution - interference only makes things slower, never faster. As [Python timeit documentation](https://docs.python.org/3/library/timeit.html) states: "the min() of the result is probably the only number you should be interested in."
+
+**Consequences:**
+- High variance in reported numbers (50ms +/- 40ms is not meaningful)
+- Can't detect real regressions amid noise
+- Over-optimization of already-fast code based on spurious slow samples
+
+**Prevention:**
+1. Use minimum of multiple runs as primary metric
+2. Report percentiles (p50, p95, p99) not just mean - CLASSIC's `FFIProfileStats` already has `p95_call_time` and `p99_call_time`
+3. Use statistical benchmarking tools: `criterion` (Rust), `pyperf` (Python)
+4. Warm up before measuring (both CPU and JIT)
+5. Run on quiet system with performance governor if possible
+
+**Detection:**
+- Coefficient of variation >20% across runs
+- "Improvements" that disappear on re-run
+- Benchmark results change dramatically between machines
+
+**Phase relevance:** Phase 1 (Baseline) - measurement methodology must be correct from start
+
+---
+
+### Moderate Performance Pitfalls
+
+#### Pitfall P6: Not Warming Up JIT/CPU Before Measurement
+
+**What goes wrong:** First runs are significantly slower due to cold CPU caches, JIT compilation (if any), and lazy initialization.
+
+**Prevention:**
+1. Run 3-5 warmup iterations before measurement
+2. Use `criterion`'s built-in warmup phase
+3. For Python, prime caches and imports before timing
+4. Ensure Rust's `Lazy<>` statics are initialized pre-benchmark (YAML_CACHE, METRICS)
+
+**Phase relevance:** Phase 1 (Baseline)
+
+---
+
+#### Pitfall P7: Measuring Wall Clock Without CPU Time
+
+**What goes wrong:** Benchmarks report wall-clock time, which includes time spent waiting for I/O, GIL, and other processes.
+
+**Prevention:**
+1. Report both wall time and CPU time (`time.process_time()`)
+2. Use `FFIProfiler`'s `cpu_time` field alongside `wall_time`
+3. For I/O-bound operations, also measure throughput (bytes/second)
+4. Run benchmarks on quiet systems or in isolated containers
+
+**CLASSIC-specific:** The `FFICall` dataclass in `tools/ffi_profiler.py` already captures both `wall_time` and `cpu_time` at lines 74-75.
+
+**Phase relevance:** Phase 2 (Hot Path Optimization) - need CPU time to find true hotspots
+
+---
+
+#### Pitfall P8: Ignoring Memory Allocation in Performance Analysis
+
+**What goes wrong:** Focus on time metrics while memory allocation patterns cause GC pressure and cache misses.
+
+**Prevention:**
+1. Track memory deltas using `FFIProfiler.memory_before/after`
+2. Use Rust's memory-efficient types (`SmartString`, `lasso` for interning - already in workspace dependencies)
+3. Profile with memory analyzers (Valgrind/DHAT for Rust, memory_profiler for Python)
+4. Watch for "memory leak" warnings (>10MB growth per call)
+5. Monitor `FFIProfileStats.memory_leaks_detected` in profiling output
+
+**Phase relevance:** Phase 2 (Hot Path Optimization)
+
+---
+
+#### Pitfall P9: Optimizing Infrequently Called Code
+
+**What goes wrong:** Significant effort optimizing code paths that execute once per session while ignoring code called thousands of times.
+
+**Prevention:**
+1. Use `FFIProfiler.call_counts` to identify high-frequency functions first
+2. Apply Amdahl's Law: optimize what takes most total time, not just slowest single call
+3. Sort by `total_time = call_count * avg_time` not just `avg_time`
+4. Focus on "hot paths" identified by profiling, not intuition
+5. Use `FFIProfileStats.high_frequency_calls` list for targeting
+
+**Phase relevance:** Phase 2 (Hot Path Optimization)
+
+---
+
+#### Pitfall P10: Async Overhead for Fast Operations
+
+**What goes wrong:** Wrapping sub-millisecond Rust calls in `asyncio.to_thread()` adds more overhead than the operation itself.
+
+**Prevention:**
+1. Only use `asyncio.to_thread()` for operations >1ms
+2. Batch small operations before crossing async boundary
+3. Use direct sync calls for fast operations in sync contexts
+4. Measure the "async tax" for each operation type
+
+**Phase relevance:** Phase 2 (Hot Path Optimization)
+
+**CLASSIC-specific note:** The codebase already documents this pattern in `game_files_manager.py` (line 137): "overhead of using run_in_executor (typically < 1ms)" - ensure this threshold is validated in benchmarks.
+
+---
+
+### Minor Performance Pitfalls
+
+#### Pitfall P11: Forgetting to Clear Caches Between Benchmark Iterations
+
+**What goes wrong:** Cache hits make second iteration artificially fast, skewing comparison.
+
+**Prevention:**
+1. Call `clear_cache()` methods before each iteration
+2. Use fresh temp files/directories per benchmark
+3. Document cache state assumptions in benchmark comments
+
+---
+
+#### Pitfall P12: Platform-Specific Performance Assumptions
+
+**What goes wrong:** Benchmarks on Linux show different results than Windows/macOS due to filesystem, thread scheduling, and memory management differences.
+
+**Prevention:**
+1. Run benchmarks on all target platforms
+2. Document platform for all reported numbers
+3. Use relative comparisons (speedup factor) not absolute times
+
+---
+
+#### Pitfall P13: Tokio Runtime Misconfiguration
+
+**What goes wrong:** Using `tokio::spawn` with `FuturesUnordered` causes quadratic scaling (per [ScyllaDB analysis](https://www.scylladb.com/2022/01/12/async-rust-in-practice-performance-pitfalls-profiling/)), or using wrong thread pool size.
+
+**Prevention:**
+1. Use `tokio::join!` for preserving order (CLASSIC already does this - see 05-memories.md)
+2. Profile with different `TOKIO_WORKER_THREADS` values
+3. Avoid nested `block_on()` calls (panic/deadlock)
+4. Respect ONE RUNTIME rule from CLASSIC architecture
+
+**Phase relevance:** Phase 2 if Rust async optimization is attempted
+
+---
+
+#### Pitfall P14: Relative Path Bugs in Different Working Directories
+
+**What goes wrong:** Code using `Path("filename.yaml")` works from project root but fails from GUI context where CWD differs.
+
+**Prevention:**
+1. Always use absolute paths or paths relative to known anchors (`__file__`, registry paths)
+2. Test from multiple working directories
+3. Avoid bare `Path("name")` - resolve against application directory
+
+**Phase relevance:** Phase 3 (Bug Fixes) - the `classic_settings()` GUI bug is exactly this
+
+**CLASSIC-specific note:** Line 196 of `convenience.py` has `settings_path = Path("CLASSIC Settings.yaml")` - this is the pre-existing bug that fails when CWD is not project root.
+
+---
+
+### Phase-Specific Performance Warnings
+
+| Phase Topic | Likely Pitfall | Mitigation |
+|-------------|---------------|------------|
+| Baseline establishment | P4: Debug builds, P5: wrong statistics | Use release mode, report minimum + percentiles |
+| FFI measurement | P1: Type conversion hidden | Use `FFIProfiler`, benchmark Rust separately |
+| GIL analysis | P2: Holding GIL too long | Add `py.allow_threads()`, test with concurrent load |
+| Cache testing | P3: Parallel test pollution | `#[serial_test::serial]`, clear before AND after |
+| Hot path optimization | P9: Optimizing wrong code | Sort by total time, not per-call time |
+| GUI bug fix | P14: Relative path assumptions | Use absolute paths, test from multiple CWDs |
+| Async optimization | P10: Over-using `to_thread()` | Threshold check (>1ms), batch small operations |
+
+---
+
+### Pre-Existing Bug Analysis (v8.3.0 Scope)
+
+#### Bug 1: `test_clear_cache` in classic-yaml-core
+
+**Root cause:** Pitfall P3 (Global Static State)
+- `YAML_CACHE` is a global `Lazy<DashMap<PathBuf, CachedYaml>>` (line 153)
+- Test at line 1792 loads file, then asserts `cached_files >= 1`
+- Clears cache, asserts `cached_files == 0`
+- But parallel tests may load files between clear and final assertion
+
+**Fix approach:**
+1. Add `#[serial]` attribute if not already present (it is, but verify)
+2. Clear cache at start of test, not just rely on `YamlOperations::new()`
+3. Or: use test-specific cache instance instead of global
+
+#### Bug 2: GUI file path resolution in `classic_settings()`
+
+**Root cause:** Pitfall P14 (Relative Path)
+- Line 196: `settings_path = Path("CLASSIC Settings.yaml")`
+- Works when CWD is project root (CLI, pytest)
+- Fails when CWD is different (GUI launched from Start menu, shortcuts)
+
+**Fix approach:**
+1. Resolve path against application directory: `Path(__file__).parent.parent.parent / "CLASSIC Settings.yaml"`
+2. Or: use existing path resolution through YamlSettingsCache which should handle this
+3. Or: change CWD on GUI startup (less recommended)
+
+---
+
+### Performance Verification Checklist
+
+Before starting v8.3.0 performance work:
+
+- [ ] All benchmarks use release builds (`--release`, `maturin build --release`)
+- [ ] Measurement methodology documented (min vs mean, warmup count)
+- [ ] FFI overhead vs Rust logic measured separately using `FFIProfiler`
+- [ ] GIL release patterns reviewed for hot paths (currently NONE - gap to address)
+- [ ] Test isolation verified for cache-related tests (`#[serial]` attribute)
+- [ ] Baselines captured on target platforms (Windows primary)
+- [ ] Pre-existing bugs documented with root cause analysis
+- [ ] `FFIProfileStats` reporting configured (p50, p95, p99, not just mean)
+
+---
+
+### Performance Sources
+
+**HIGH Confidence (Official Documentation):**
+- [PyO3 Performance Guide](https://pyo3.rs/main/performance) - GIL release, type conversion, reference pool
+- [Python timeit Documentation](https://docs.python.org/3/library/timeit.html) - Use minimum not mean
+- [Criterion.rs Documentation](https://bheisler.github.io/criterion.rs/book/) - Rust benchmarking best practices
+- [The Rust Performance Book - Benchmarking](https://nnethercote.github.io/perf-book/benchmarking.html) - Release builds, warmup
+
+**MEDIUM Confidence (Verified Technical Sources):**
+- [ScyllaDB Async Rust Performance](https://www.scylladb.com/2022/01/12/async-rust-in-practice-performance-pitfalls-profiling/) - FuturesUnordered pitfall
+- [PyO3 GitHub Discussion #3442](https://github.com/PyO3/pyo3/discussions/3442) - FFI overhead analysis
+- [py-spy Profiler](https://github.com/benfred/py-spy) - Sampling profiler for Python with Rust support
+
+**LOW Confidence (Community Sources, Needs Validation):**
+- General blog posts on Python-Rust performance
+- Stack Overflow answers on benchmarking methodology
 
 ---
 
@@ -692,6 +1053,11 @@ How roadmap phases should address these pitfalls.
 | M2: GIL deadlock | Orchestration migration | Manual batch processing test, check for hangs |
 | M3: Behavioral parity | Report generation migration | Golden file tests against Python output |
 | M4: Memory ownership | Every migration phase | Clippy lints, fuzz testing |
+| P1: Type conversion overhead | Performance baseline phase | FFIProfiler data showing conversion vs compute time |
+| P2: GIL holding | Hot path optimization | Add `py.allow_threads()` to operations >1ms |
+| P3: Test non-determinism | Bug fix phase | Tests pass with parallel execution |
+| P4: Debug builds | All performance work | Release mode documented in all benchmarks |
+| P5: Mean vs minimum | All performance work | Report percentiles, use minimum for comparisons |
 
 ## Sources
 
@@ -704,12 +1070,19 @@ How roadmap phases should address these pitfalls.
 - `J:\CLASSIC-Fallout4\rust\Cargo.toml` -- Workspace membership and dependency graph
 - `J:\CLASSIC-Fallout4\ClassicLib\integration\factory\core.py` -- Singleton cache, Rust disable mechanism
 - `J:\CLASSIC-Fallout4\.claude\rules\` -- Project conventions (lazy imports, ONE RUNTIME, TDD)
+- [PyO3 Performance Guide](https://pyo3.rs/main/performance) -- GIL release, type conversion, reference pool
 - [PyO3 Migration Guide](https://pyo3.rs/v0.22.4/migration) -- Official PyO3 migration documentation
 - [PyO3 FAQ and Troubleshooting](https://pyo3.rs/main/faq) -- Common issues and solutions
+- [Python timeit Documentation](https://docs.python.org/3/library/timeit.html) -- Use minimum not mean
+- [Criterion.rs Documentation](https://bheisler.github.io/criterion.rs/book/) -- Rust benchmarking best practices
+- [The Rust Performance Book](https://nnethercote.github.io/perf-book/benchmarking.html) -- Release builds, warmup
+- [ScyllaDB Async Rust Performance](https://www.scylladb.com/2022/01/12/async-rust-in-practice-performance-pitfalls-profiling/) -- FuturesUnordered pitfall
 - [GIL Deadlock Discussion](https://github.com/PyO3/pyo3/discussions/3045) -- Multi-threaded Tokio GIL issues
 - [Migrating from Python to Rust](https://corrode.dev/learn/migration-guides/python-to-rust/) -- General migration best practices
+- [py-spy Profiler](https://github.com/benfred/py-spy) -- Sampling profiler for Python with Rust support
 
 ---
-*Pitfalls research for: CLASSIC hybrid Python-Rust codebase cleanup and migration*
+*Pitfalls research for: CLASSIC hybrid Python-Rust codebase cleanup, migration, and performance optimization*
 *Initially researched: 2026-02-01*
 *Updated for migration pitfalls: 2026-02-02*
+*Updated for performance benchmarking pitfalls (v8.3.0): 2026-02-04*
