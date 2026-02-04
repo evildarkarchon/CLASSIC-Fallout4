@@ -118,11 +118,11 @@ def test_fcx_handler_integration_scenario() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.integration.rust.fcx_rust import RustAcceleratedFcxModeHandler
+        from ClassicLib.integration.factory import get_fcx_handler
         from ClassicLib.scanning.logs.reporting import ReportFragment
 
-        # Create handler instance directly (not through factory)
-        handler = RustAcceleratedFcxModeHandler(fcx_mode=False)
+        # Create handler instance through factory
+        handler = get_fcx_handler(fcx_mode=False)
 
         # Perform FCX mode check (sets up internal state)
         # This may populate the internal message list
@@ -162,11 +162,11 @@ def test_fcx_handler_empty_messages() -> None:
         pytest.skip: If Rust classic_scanlog module is not available
     """
     try:
-        from ClassicLib.integration.rust.fcx_rust import RustAcceleratedFcxModeHandler
+        from ClassicLib.integration.factory import get_fcx_handler
         from ClassicLib.scanning.logs.reporting import ReportFragment
 
-        # Create fresh handler
-        handler = RustAcceleratedFcxModeHandler(fcx_mode=False)
+        # Create fresh handler through factory
+        handler = get_fcx_handler(fcx_mode=False)
 
         # Get messages without calling check_fcx_mode first
         # Should return empty ReportFragment, not error

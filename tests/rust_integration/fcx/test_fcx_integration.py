@@ -55,10 +55,10 @@ class TestRustFCXIntegration:
         # Create Rust-accelerated FCX handler
         handler = get_fcx_handler(fcx_mode=True)
 
-        # Verify we got Rust implementation
-        # (Factory returns best available implementation)
+        # Verify we got a valid handler from factory
+        # (Factory returns _FcxHandlerWrapper which wraps Rust implementation)
         handler_type = type(handler).__name__
-        assert "Rust" in handler_type or handler_type == "FCXModeHandler", f"Expected Rust handler, got {handler_type}"
+        assert handler_type in ("_FcxHandlerWrapper", "RustAcceleratedFcxModeHandler", "FCXModeHandler"), f"Expected FCX handler, got {handler_type}"
 
         # Perform FCX operations
         handler.get_fcx_messages()

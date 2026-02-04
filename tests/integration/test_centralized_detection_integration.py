@@ -108,28 +108,27 @@ def test_runtime_diagnostics_print(capsys):
 @pytest.mark.rust
 def test_wrapper_modules_use_centralized_detection():
     """Verify wrapper modules use centralized detection."""
-    # Import all wrapper modules and check they work
-    from ClassicLib.integration.rust.fcx_rust import RUST_AVAILABLE as fcx_avail
+    # Import remaining wrapper modules and check they work
+    from ClassicLib.integration.factory import is_component_available
     from ClassicLib.integration.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
-    from ClassicLib.integration.rust.gpu_rust import RUST_AVAILABLE as gpu_avail
     from ClassicLib.integration.rust.mod_detector_rust import RUST_AVAILABLE as mod_avail
     from ClassicLib.integration.rust.orchestrator_api import RUST_AVAILABLE as orch_avail
     from ClassicLib.integration.rust.parser_rust import RustLogParser
     from ClassicLib.integration.rust.report_rust import RUST_AVAILABLE as report_avail
-    from ClassicLib.integration.rust.settings_rust import RUST_AVAILABLE as settings_avail
-    from ClassicLib.integration.rust.suspect_rust import RUST_AVAILABLE as suspect_avail
     from ClassicLib.io.database.rust_pool import RUST_AVAILABLE as database_avail
 
     # All should be True in test environment with Rust built
     assert file_io_avail is True
-    assert settings_avail is True
     assert database_avail is True
-    assert gpu_avail is True
-    assert fcx_avail is True
     assert mod_avail is True
     assert report_avail is True
-    assert suspect_avail is True
     assert orch_avail is True
+
+    # Test factory-based components (wrappers deleted, now use factory detection)
+    assert is_component_available("classic_scanlog", "SuspectScanner") is True
+    assert is_component_available("classic_scanlog", "SettingsValidator") is True
+    assert is_component_available("classic_scanlog", "GpuDetector") is True
+    assert is_component_available("classic_scanlog", "FcxModeHandler") is True
 
     # Test parser instance
     parser = RustLogParser()
