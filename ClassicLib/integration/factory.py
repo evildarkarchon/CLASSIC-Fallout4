@@ -45,6 +45,8 @@ import types
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from packaging.version import Version
+    from ClassicLib.scanning.logs.reporting import ReportFragment
     from ClassicLib.integration.types import (
         DatabasePoolProtocol,
         FCXHandlerProtocol,
@@ -185,6 +187,24 @@ def get_component(module_name: str, class_name: str) -> Any:
         msg = f"Rust component {module_name}.{class_name} not available"
         raise ImportError(msg)
     return component
+
+
+# ---------------------------------------------------------------------------
+# Lazy import helpers
+# ---------------------------------------------------------------------------
+
+# ReportFragment is imported lazily to avoid circular imports
+_ReportFragment: type | None = None
+
+
+def _get_report_fragment() -> type:
+    """Lazily import ReportFragment to avoid circular imports."""
+    global _ReportFragment  # noqa: PLW0603 - Intentional lazy initialization pattern
+    if _ReportFragment is None:
+        from ClassicLib.scanning.logs.reporting import ReportFragment
+
+        _ReportFragment = ReportFragment
+    return _ReportFragment
 
 
 # ---------------------------------------------------------------------------
@@ -360,60 +380,175 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> RecordScannerProtocol:
 
 
 def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> SuspectScannerProtocol:
-    """Return a SuspectScanner instance for scanning the given YAML data.
+    """Return a SuspectScanner wrapper for the given yamldata.
+
+    This function extracts suspects lists from yamldata and constructs
+    a Rust SuspectScanner. The returned wrapper converts Rust list[str]
+    returns to Python ReportFragment for API compatibility.
 
     Args:
         yamldata: A ClassicScanLogsInfo object containing log information.
 
     Returns:
-        Any: An instance of the SuspectScanner.
+        SuspectScannerProtocol: A wrapper around Rust SuspectScanner.
+
+    Raises:
+        RuntimeError: If Rust SuspectScanner module is not available.
 
     """
-    from ClassicLib.integration.rust.suspect_rust import RUST_AVAILABLE, SuspectScanner
+    import json
 
-    if RUST_AVAILABLE:
-        logger.debug("Using Rust-accelerated SuspectScanner (40x speedup potential)")
-    else:
-        logger.debug("Using Python SuspectScanner implementation")
+    from classic_scanlog import SuspectScanner as RustSuspectScanner
 
-    return SuspectScanner(yamldata)
+    # Extract suspects lists from yamldata for Rust constructor
+    suspects_error_list = getattr(yamldata, "suspects_error_list", {})
+    raw_stack_list = getattr(yamldata, "suspects_stack_list", {})
+
+    # Rust expects Dict[String, List[String]], convert inner dicts to JSON strings
+    suspects_stack_list = {}
+    for k, v in raw_stack_list.items():
+        if isinstance(v, list):
+            suspects_stack_list[k] = [json.dumps(item) if isinstance(item, dict) else str(item) for item in v]
+        else:
+            suspects_stack_list[k] = v
+
+    rust_scanner = RustSuspectScanner(suspects_error_list, suspects_stack_list)
+    logger.debug("Using Rust-accelerated SuspectScanner (40x speedup potential)")
+
+    # Return wrapper that handles ReportFragment conversion
+    return _SuspectScannerWrapper(rust_scanner)
+
+
+class _SuspectScannerWrapper:
+    """Wrapper that converts Rust list[str] returns to ReportFragment."""
+
+    def __init__(self, rust_scanner: Any) -> None:
+        """Initialize with a Rust SuspectScanner instance."""
+        self._scanner = rust_scanner
+
+    def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[Any, bool]:
+        """Scan main error and convert Rust result to ReportFragment."""
+        ReportFragment = _get_report_fragment()
+        rust_result = self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
+        return ReportFragment.from_lines(rust_result[0]), rust_result[1]
+
+    def suspect_scan_stack(
+        self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
+    ) -> tuple[Any, bool]:
+        """Scan call stack and convert Rust result to ReportFragment."""
+        ReportFragment = _get_report_fragment()
+        rust_result = self._scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
+        return ReportFragment.from_lines(rust_result[0]), rust_result[1]
+
+    @staticmethod
+    def check_dll_crash(crashlog_mainerror: str) -> Any:
+        """Check for DLL-related crashes (static method - calls Rust directly)."""
+        from classic_scanlog import SuspectScanner as RustSuspectScanner
+
+        ReportFragment = _get_report_fragment()
+        rust_result = RustSuspectScanner.check_dll_crash(crashlog_mainerror)
+        return ReportFragment.from_lines(rust_result)
 
 
 def get_settings_validator(yamldata: ClassicScanLogsInfo) -> SettingsValidatorProtocol:
-    """Retrieve and return a settings validator instance.
+    """Return a SettingsValidator wrapper for the given yamldata.
+
+    This function extracts crashgen_name and crashgen_ignore from yamldata
+    and constructs a Rust SettingsValidator. The returned wrapper converts
+    dict values to strings (for Rust) and Rust list[str] returns to ReportFragment.
 
     Args:
         yamldata: An instance of ClassicScanLogsInfo.
 
     Returns:
-        Any: A settings validator instance.
+        SettingsValidatorProtocol: A wrapper around Rust SettingsValidator.
+
+    Raises:
+        RuntimeError: If Rust SettingsValidator module is not available.
 
     """
-    from ClassicLib.integration.rust.settings_rust import RUST_AVAILABLE, SettingsValidator
+    from classic_scanlog import SettingsValidator as RustSettingsValidator
 
-    if RUST_AVAILABLE:
-        logger.debug("Using Rust-accelerated SettingsValidator")
-    else:
-        logger.debug("Using Python SettingsScannerFragments implementation")
+    crashgen_name = getattr(yamldata, "crashgen_name", "Buffout 4")
+    crashgen_ignore = getattr(yamldata, "crashgen_ignore", [])
 
-    return SettingsValidator(yamldata)
+    rust_validator = RustSettingsValidator(crashgen_name, crashgen_ignore)
+    logger.debug("Using Rust-accelerated SettingsValidator")
+
+    return _SettingsValidatorWrapper(rust_validator)
 
 
-def get_gpu_detector() -> GpuDetectorProtocol:
-    """Retrieve the GPU detector with automatic Rust or Python fallback.
+class _SettingsValidatorWrapper:
+    """Wrapper that converts between Python and Rust SettingsValidator APIs."""
+
+    def __init__(self, rust_validator: Any) -> None:
+        """Initialize with a Rust SettingsValidator instance."""
+        self._validator = rust_validator
+
+    def _convert_crashgen(self, crashgen: dict[str, bool | int | str]) -> dict[str, str]:
+        """Convert crashgen dict values to strings for Rust."""
+        return {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
+
+    def scan_buffout_achievements_setting(
+        self, xsemodules: set[str], crashgen: dict[str, bool | int | str]
+    ) -> Any:
+        """Scan Buffout achievements setting."""
+        ReportFragment = _get_report_fragment()
+        lines = self._validator.scan_buffout_achievements_setting(xsemodules, self._convert_crashgen(crashgen))
+        return ReportFragment.from_lines(lines)
+
+    def scan_buffout_memorymanagement_settings(
+        self,
+        crashgen: dict[str, bool | int | str],
+        has_xcell: bool,
+        has_old_xcell: bool,
+        has_baka_scrapheap: bool,
+    ) -> Any:
+        """Scan Buffout memory management settings."""
+        ReportFragment = _get_report_fragment()
+        lines = self._validator.scan_buffout_memorymanagement_settings(
+            self._convert_crashgen(crashgen), has_xcell, has_old_xcell, has_baka_scrapheap
+        )
+        return ReportFragment.from_lines(lines)
+
+    def scan_archivelimit_setting(
+        self, crashgen: dict[str, bool | int | str], crashgen_version: Any = None
+    ) -> Any:
+        """Scan archive limit setting."""
+        ReportFragment = _get_report_fragment()
+        lines = self._validator.scan_archivelimit_setting(self._convert_crashgen(crashgen), crashgen_version)
+        return ReportFragment.from_lines(lines)
+
+    def scan_buffout_looksmenu_setting(
+        self, crashgen: dict[str, bool | int | str], xsemodules: set[str]
+    ) -> Any:
+        """Scan Buffout LooksMenu setting."""
+        ReportFragment = _get_report_fragment()
+        lines = self._validator.scan_buffout_looksmenu_setting(self._convert_crashgen(crashgen), xsemodules)
+        return ReportFragment.from_lines(lines)
+
+
+def get_gpu_detector() -> types.SimpleNamespace:
+    """Return GPU detector with get_gpu_info function.
+
+    Returns a namespace with get_gpu_info(segment_system) -> dict function.
 
     Returns:
-        Any: The gpu_rust module providing GPU detection capabilities.
+        types.SimpleNamespace: Namespace with get_gpu_info function.
+
+    Raises:
+        RuntimeError: If Rust GpuDetector module is not available.
 
     """
-    from ClassicLib.integration.rust import gpu_rust
+    from classic_scanlog import GpuDetector as RustGpuDetector
 
-    if gpu_rust.RUST_AVAILABLE:
-        logger.debug("Using Rust-accelerated GpuDetector")
-    else:
-        logger.debug("Using Python GPUDetector implementation")
+    def get_gpu_info(segment_system: list[str]) -> dict[str, str | None]:
+        detector = RustGpuDetector()
+        gpu_info = detector.extract_gpu_info(segment_system)
+        return gpu_info.to_dict()
 
-    return gpu_rust
+    logger.debug("Using Rust-accelerated GpuDetector")
+    return types.SimpleNamespace(get_gpu_info=get_gpu_info)
 
 
 def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -> DatabasePoolProtocol:
@@ -553,23 +688,56 @@ def get_yamldata() -> Any:  # Returns Rust YamlData or Python ClassicScanLogsInf
 
 
 def get_fcx_handler(fcx_mode: bool | None) -> FCXHandlerProtocol:
-    """Determine and return the appropriate FCXModeHandler.
+    """Return FCXModeHandler wrapper for the given mode.
+
+    Converts None to False for Rust constructor and wraps to convert
+    Rust list[str] returns to ReportFragment.
 
     Args:
         fcx_mode: FCX mode flag (True, False, or None).
 
     Returns:
-        Any: An instance of the appropriate FCXModeHandler.
+        FCXHandlerProtocol: A wrapper around Rust FcxModeHandler.
+
+    Raises:
+        RuntimeError: If Rust FcxModeHandler module is not available.
 
     """
-    from ClassicLib.integration.rust.fcx_rust import RUST_AVAILABLE, FCXModeHandler
+    from classic_scanlog import FcxModeHandler as RustFcxModeHandler
 
-    if RUST_AVAILABLE:
-        logger.debug("Using Rust-accelerated FcxModeHandler")
-    else:
-        logger.debug("Using Python FCXModeHandler implementation")
+    # Rust doesn't accept None, convert to False
+    rust_fcx_mode = fcx_mode if fcx_mode is not None else False
+    rust_handler = RustFcxModeHandler(rust_fcx_mode)
 
-    return FCXModeHandler(fcx_mode)
+    logger.debug("Using Rust-accelerated FcxModeHandler")
+    return _FcxHandlerWrapper(rust_handler, fcx_mode)
+
+
+class _FcxHandlerWrapper:
+    """Wrapper that converts Rust FcxModeHandler to Python API."""
+
+    def __init__(self, rust_handler: Any, fcx_mode: bool | None) -> None:
+        """Initialize with a Rust FcxModeHandler instance."""
+        self._handler = rust_handler
+        self.fcx_mode = fcx_mode
+        self.game_files_check: str | None = None
+        self.main_files_check: str | None = None
+
+    def check_fcx_mode(self) -> None:
+        """Check FCX mode."""
+        self._handler.check_fcx_mode()
+
+    def get_fcx_messages(self) -> Any:
+        """Get FCX messages and convert to ReportFragment."""
+        ReportFragment = _get_report_fragment()
+        lines = self._handler.get_fcx_messages()
+        return ReportFragment.from_lines(lines)
+
+    @classmethod
+    def reset_fcx_checks(cls) -> None:
+        """Reset FCX checks (no-op for Rust - resets automatically)."""
+        # Rust implementation resets automatically, no-op for API compatibility
+        pass
 
 
 # ---------------------------------------------------------------------------
