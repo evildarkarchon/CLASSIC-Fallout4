@@ -1,72 +1,139 @@
 // CLASSIC GUI - Main Window
-// Scaffold UI matching Python GUI layout
+// Production UI with fluent-dark theme, 3-tab layout, and styled controls
 
 import { Button, ProgressIndicator, TabWidget, VerticalBox, HorizontalBox, LineEdit, CheckBox, GroupBox } from "std-widgets.slint";
+import { PathInput } from "widgets/path_input.slint";
 
 export component MainWindow inherits Window {
-    // Window properties - match Python GUI dimensions
-    title: "Crash Log Auto Scanner & Setup Integrity Checker | CLASSIC v9.0.0";
+    // Window properties - production dimensions per CONTEXT.md
+    title: "Crash Log Auto Scanner and Setup Integrity Checker v9.0.0";
     icon: @image-url("../assets/CLASSIC.ico");
-    preferred-width: 650px;
-    preferred-height: 580px;
-    min-width: 550px;
-    min-height: 580px;
+    preferred-width: 800px;
+    preferred-height: 600px;
+    min-width: 640px;
+    min-height: 480px;
 
     // Properties accessible from Rust (use kebab-case, Slint converts to snake_case for Rust)
     in-out property <float> scan-progress: 0;
     in-out property <string> scan-status: "Ready";
     in-out property <bool> scan-in-progress: false;
 
-    // Callbacks invoked from UI (will be wired in Plan 02)
+    // Path input properties
+    in-out property <string> crash-log-path: "";
+    in-out property <string> game-path: "";
+
+    // Tab tracking for state persistence (Plan 02)
+    in-out property <int> active-tab-index: 0;
+
+    // Scan option properties
+    in-out property <bool> option-scan-logs: true;
+    in-out property <bool> option-scan-game: false;
+    in-out property <bool> option-generate-stats: false;
+
+    // Callbacks invoked from UI
     callback start-scan();
     callback cancel-scan();
+    callback browse-crash-logs();
+    callback browse-game-folder();
+    callback tab-changed(int);
 
     VerticalBox {
-        padding: 10px;
-        spacing: 10px;
+        padding: 12px;
+        spacing: 12px;
 
         TabWidget {
-            Tab {
-                title: "MAIN OPTIONS";
-                VerticalBox {
-                    padding: 10px;
-                    spacing: 8px;
+            current-index <=> root.active-tab-index;
 
-                    // Game selection placeholder
+            Tab {
+                title: "Main Options";
+                VerticalBox {
+                    padding: 16px;
+                    spacing: 12px;
+
+                    // Folder paths section
                     GroupBox {
-                        title: "Game Selection";
-                        HorizontalBox {
+                        title: "Folder Paths";
+                        VerticalBox {
                             spacing: 10px;
-                            Text { text: "Game:"; vertical-alignment: center; }
-                            Text { text: "Fallout 4 (placeholder)"; vertical-alignment: center; }
+                            padding: 8px;
+
+                            // Crash log folder
+                            HorizontalBox {
+                                spacing: 8px;
+                                Text {
+                                    text: "Crash Logs:";
+                                    vertical-alignment: center;
+                                    min-width: 100px;
+                                }
+                                PathInput {
+                                    path <=> root.crash-log-path;
+                                    placeholder: "Select crash log folder...";
+                                    enabled: !root.scan-in-progress;
+                                    browse-clicked => { root.browse-crash-logs(); }
+                                }
+                            }
+
+                            // Game folder
+                            HorizontalBox {
+                                spacing: 8px;
+                                Text {
+                                    text: "Game Folder:";
+                                    vertical-alignment: center;
+                                    min-width: 100px;
+                                }
+                                PathInput {
+                                    path <=> root.game-path;
+                                    placeholder: "Select game folder...";
+                                    enabled: !root.scan-in-progress;
+                                    browse-clicked => { root.browse-game-folder(); }
+                                }
+                            }
                         }
                     }
 
-                    // Scan options placeholder
+                    // Scan options section
                     GroupBox {
                         title: "Scan Options";
                         VerticalBox {
-                            spacing: 5px;
-                            CheckBox { text: "Scan crash logs"; checked: true; }
-                            CheckBox { text: "Scan game files"; }
-                            CheckBox { text: "Generate statistics"; }
+                            spacing: 8px;
+                            padding: 8px;
+                            CheckBox {
+                                text: "Scan crash logs";
+                                checked <=> root.option-scan-logs;
+                                enabled: !root.scan-in-progress;
+                            }
+                            CheckBox {
+                                text: "Scan game files";
+                                checked <=> root.option-scan-game;
+                                enabled: !root.scan-in-progress;
+                            }
+                            CheckBox {
+                                text: "Generate statistics";
+                                checked <=> root.option-generate-stats;
+                                enabled: !root.scan-in-progress;
+                            }
                         }
                     }
 
-                    // Spacer
-                    Rectangle { }
+                    // Flexible spacer to push button to bottom
+                    Rectangle {
+                        vertical-stretch: 1;
+                    }
 
-                    // Action buttons
+                    // Scan button centered at bottom
                     HorizontalBox {
-                        spacing: 10px;
+                        alignment: center;
+                        spacing: 12px;
+
                         Button {
-                            text: scan-in-progress ? "Scanning..." : "Scan Crash Logs";
-                            enabled: !scan-in-progress;
+                            text: root.scan-in-progress ? "Scanning..." : "Scan Crash Logs";
+                            enabled: !root.scan-in-progress;
+                            primary: true;
                             clicked => { root.start-scan(); }
                         }
                         Button {
                             text: "Cancel";
-                            enabled: scan-in-progress;
+                            enabled: root.scan-in-progress;
                             clicked => { root.cancel-scan(); }
                         }
                     }
@@ -74,33 +141,47 @@ export component MainWindow inherits Window {
             }
 
             Tab {
-                title: "FILE BACKUP";
+                title: "Results";
                 VerticalBox {
-                    padding: 10px;
-                    Text { text: "Backup options will be implemented in Phase 24"; }
+                    padding: 16px;
+                    spacing: 12px;
+
+                    Text {
+                        text: "Scan results will appear here";
+                        font-size: 14px;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: "Results display will be implemented in Phase 22";
+                        color: #888888;
+                        horizontal-alignment: center;
+                    }
                 }
             }
 
             Tab {
-                title: "ARTICLES";
+                title: "Settings";
                 VerticalBox {
-                    padding: 10px;
-                    Text { text: "Help articles will be implemented in later phases"; }
-                }
-            }
+                    padding: 16px;
+                    spacing: 12px;
 
-            Tab {
-                title: "RESULTS";
-                VerticalBox {
-                    padding: 10px;
-                    Text { text: "Scan results will appear here after Phase 22"; }
+                    Text {
+                        text: "Application Settings";
+                        font-size: 14px;
+                        horizontal-alignment: center;
+                    }
+                    Text {
+                        text: "Settings will be implemented in Phase 24";
+                        color: #888888;
+                        horizontal-alignment: center;
+                    }
                 }
             }
         }
 
         // Progress area - always visible at bottom
         VerticalBox {
-            spacing: 5px;
+            spacing: 6px;
             ProgressIndicator {
                 progress: root.scan-progress / 100;
             }
