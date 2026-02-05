@@ -70,11 +70,11 @@ See `.planning/milestones/v8.3.0-ROADMAP.md` for full details.
   2. Launching the executable displays a window (any content)
   3. Worker thread can spawn async tasks on Tokio runtime without blocking UI
   4. Long-running operation demonstrates progress callback to UI thread
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 19-01: Crate setup and build configuration
-- [ ] 19-02: Async bridge and worker thread pattern
+- [ ] 19-01-PLAN.md — Create classic-gui Slint crate with build system and scaffold UI
+- [ ] 19-02-PLAN.md — Wire AsyncBridge for worker thread pattern with progress callbacks
 
 #### Phase 20: Core UI Layout
 **Goal**: Main window with proper layout, theming, and tabbed interface
@@ -175,7 +175,7 @@ Plans:
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
 | 12-18 | v8.3.0 | 15/15 | Complete | 2026-02-05 |
-| 19. Foundation | v9.0.0 | 0/2 | Not started | - |
+| 19. Foundation | v9.0.0 | 0/2 | Planned | - |
 | 20. Core UI | v9.0.0 | 0/2 | Not started | - |
 | 21. Scan Ops | v9.0.0 | 0/2 | Not started | - |
 | 22. Results | v9.0.0 | 0/2 | Not started | - |
