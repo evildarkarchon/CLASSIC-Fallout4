@@ -25,7 +25,7 @@ where
     W: ScanWindowProperties,
 {
     // Simulated files to scan
-    let files = vec![
+    let files = [
         "crash-2024-01-15-08-30-00.log",
         "crash-2024-01-16-12-45-30.log",
         "crash-2024-01-17-03-20-15.log",

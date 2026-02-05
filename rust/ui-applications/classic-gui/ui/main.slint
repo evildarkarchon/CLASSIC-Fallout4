@@ -12,9 +12,9 @@ export component MainWindow inherits Window {
     min-width: 550px;
     min-height: 580px;
 
-    // Properties accessible from Rust
-    in-out property <float> progress: 0;
-    in-out property <string> status: "Ready";
+    // Properties accessible from Rust (use kebab-case, Slint converts to snake_case for Rust)
+    in-out property <float> scan-progress: 0;
+    in-out property <string> scan-status: "Ready";
     in-out property <bool> scan-in-progress: false;
 
     // Callbacks invoked from UI (will be wired in Plan 02)
@@ -102,10 +102,10 @@ export component MainWindow inherits Window {
         VerticalBox {
             spacing: 5px;
             ProgressIndicator {
-                progress: root.progress / 100;
+                progress: root.scan-progress / 100;
             }
             Text {
-                text: root.status;
+                text: root.scan-status;
                 horizontal-alignment: center;
             }
         }
