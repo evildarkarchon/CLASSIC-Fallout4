@@ -1,0 +1,111 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [ready_for_review]
+    branches: [main]
+
+# Prevent parallel runs for the same PR
+concurrency:
+  group: benchmarks-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  BENCH_MODE: quick
+  CARGO_TERM_COLOR: always
+  PYTHON_VERSION: "3.12"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  benchmark:
+    name: Run Benchmarks
+    runs-on: windows-latest
+    timeout-minutes: 60
+    # Skip if PR is still draft (ready_for_review won't fire for drafts anyway, but safety check)
+    if: github.event_name == 'push' || !github.event.pull_request.draft
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-bench-
+
+      - name: Install critcmp
+        run: cargo install critcmp --locked
+
+      - name: Restore baseline cache
+        id: baseline-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: rust/target/criterion/baseline
+          key: criterion-baseline-${{ runner.os }}-dummy
+          restore-keys: criterion-baseline-${{ runner.os }}
+
+      - name: Check baseline exists
+        id: baseline-check
+        working-directory: rust
+        shell: bash
+        run: |
+          if [ -d "target/criterion/baseline" ]; then
+            echo "baseline_exists=true" >> $GITHUB_OUTPUT
+            echo "Baseline found - comparison will be performed"
+          else
+            echo "baseline_exists=false" >> $GITHUB_OUTPUT
+            echo "::warning::No baseline found - skipping comparison. Run benchmarks on main branch first."
+          fi
+
+      - name: Run benchmarks
+        working-directory: rust
+        run: cargo bench -- --save-baseline current
+
+      - name: Copy current to baseline (main only)
+        if: github.ref == 'refs/heads/main'
+        working-directory: rust
+        shell: bash
+        run: |
+          if [ -d "target/criterion/current" ]; then
+            rm -rf target/criterion/baseline
+            cp -r target/criterion/current target/criterion/baseline
+          fi
+
+      - name: Save baseline cache (main only)
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v4
+        with:
+          path: rust/target/criterion/baseline
+          key: criterion-baseline-${{ runner.os }}-${{ github.sha }}
