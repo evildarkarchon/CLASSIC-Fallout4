@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** v9.0.0 Slint GUI -- Phase 20 Game Detection and Settings
+**Current focus:** v9.0.0 Slint GUI -- Phase 20 Core UI Layout
 
 ## Current Position
 
-Phase: 19 of 25 (Foundation and Async Bridge)
-Plan: 2 of 2 in current phase (PHASE COMPLETE)
-Status: Phase complete
-Last activity: 2026-02-05 -- Completed quick task 001: fix missing documentation warnings
+Phase: 20 of 25 (Core UI Layout)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 -- Completed 20-01-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 2/13]
-[###############################.........] 80% (45/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 3/13]
+[################################........] 82% (46/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 2/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 2
-- Average duration: 5m
-- Commits: 4
+- Plans completed: 3
+- Average duration: 6m
+- Commits: 7
 
 ## Accumulated Context
 
@@ -51,6 +51,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 2/13]
 | 2026-02-05 | 19-01 | Workspace dependencies for Slint | Version consistency across crates |
 | 2026-02-05 | 19-02 | scan- prefix for properties | Distinguishes scan-related properties from future general properties |
 | 2026-02-05 | 19-02 | ScanWindowProperties trait | Enables testing without Slint-generated code dependency |
+| 2026-02-05 | 20-01 | fluent-dark at build time | CompilerConfiguration ensures dark theme without runtime config |
+| 2026-02-05 | 20-01 | 3 tabs only | Main Options, Results, Settings (removed placeholders per CONTEXT.md) |
+| 2026-02-05 | 20-01 | PathInput widget pattern | Reusable path input in widgets/ directory |
 
 ### Pending Todos
 
@@ -76,6 +79,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 19-02-PLAN.md (Phase 19 complete)
+Stopped at: Completed 20-01-PLAN.md
 Resume file: None
-Next action: Execute Phase 20 (Game Detection and Settings)
+Next action: Execute 20-02-PLAN.md (Rust-side callbacks and state management)
