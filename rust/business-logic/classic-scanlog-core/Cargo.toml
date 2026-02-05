@@ -10,7 +10,15 @@ repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
 [lib]
 crate-type = ["rlib"]  # Pure Rust library ONLY - NO Python bindings
 
+[features]
+default = []
+# Phase 16 optimization: Alternative allocator for better performance
+# Enable with: cargo build --features mimalloc
+mimalloc = ["dep:mimalloc"]
+
 [dependencies]
+# Alternative allocator (optional - Phase 16 optimization)
+mimalloc = { workspace = true, optional = true }
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-yaml-core = { path = "../classic-yaml-core" }

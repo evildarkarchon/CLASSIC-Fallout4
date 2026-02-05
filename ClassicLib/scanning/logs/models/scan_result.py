@@ -25,6 +25,10 @@ class ScanResult:
         processed_files (list[Path]): List of successfully processed files.
         error_messages (list[str]): List of error messages encountered during the scan.
 
+    Note:
+        Phase 16 Optimization: Uses internal sets for O(1) membership checks while
+        maintaining list interfaces for backward compatibility.
+
     """
 
     stats: ScanStatistics = field(default_factory=ScanStatistics)
@@ -34,6 +38,12 @@ class ScanResult:
     # Additional result data
     processed_files: list[Path] = field(default_factory=list)
     error_messages: list[str] = field(default_factory=list)
+
+    # Phase 16 Optimization: Internal sets for O(1) membership checks
+    # These are used internally to avoid O(n) list membership checks
+    _processed_files_set: set[Path] = field(default_factory=set, repr=False)
+    _failed_logs_set: set[str] = field(default_factory=set, repr=False)
+    _error_messages_set: set[str] = field(default_factory=set, repr=False)
 
     def __post_init__(self) -> None:
         """Calculate and assigns a default scan time if not explicitly provided during initialization.
@@ -55,35 +65,41 @@ class ScanResult:
         """Add a log entry to the list of failed logs if it is not already present and
         updates the count of failed logs.
 
+        Phase 16 Optimization: Uses set for O(1) membership check instead of O(n) list check.
+
         Args:
             log_name (str): The name of the log to be added to the failed logs list.
 
         """
-        if log_name not in self.failed_logs:
+        if log_name not in self._failed_logs_set:
+            self._failed_logs_set.add(log_name)
             self.failed_logs.append(log_name)
         self.stats.increment_failed()
 
     def add_processed_file(self, file_path: Path) -> None:
         """Add a file to the list of processed files if it has not already been processed.
 
-        This method checks if the given file path is not already in the list of
-        processed files. If it is not present, the file path is added to the list.
+        Phase 16 Optimization: Uses set for O(1) membership check instead of O(n) list check.
 
         Args:
             file_path (Path): The path of the file to be added to the processed files list.
 
         """
-        if file_path not in self.processed_files:
+        if file_path not in self._processed_files_set:
+            self._processed_files_set.add(file_path)
             self.processed_files.append(file_path)
 
     def add_error_message(self, message: str) -> None:
         """Add an error message to the list of error messages if it does not already exist.
 
+        Phase 16 Optimization: Uses set for O(1) membership check instead of O(n) list check.
+
         Args:
             message (str): The error message to add.
 
         """
-        if message not in self.error_messages:
+        if message not in self._error_messages_set:
+            self._error_messages_set.add(message)
             self.error_messages.append(message)
 
     def is_successful(self) -> bool:

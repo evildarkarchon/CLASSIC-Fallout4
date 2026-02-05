@@ -892,11 +892,19 @@ mod tests {
         let plugins: IndexMap<String, String> = IndexMap::new();
         let xse_modules: HashSet<String> = HashSet::new();
 
-        // No plugin-based mods installed = empty section (Python parity)
+        // When gpu_rival is set and mod warning doesn't contain the GPU type,
+        // the function shows "not installed" warnings for recommended mods
         let result =
-            detect_mods_important(yaml_dict, plugins, Some("nvidia"), xse_modules).unwrap();
-        // With no plugin-based mods installed, section should be empty
-        assert!(result.is_empty());
+            detect_mods_important(yaml_dict.clone(), plugins.clone(), Some("nvidia"), xse_modules.clone()).unwrap();
+        let output = result.join("");
+        assert!(output.contains("❌"));
+        assert!(output.contains("Engine Fixes"));
+        assert!(output.contains("not installed"));
+
+        // When gpu_rival is None, no "not installed" warnings are shown for missing mods
+        let result_no_gpu =
+            detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        assert!(result_no_gpu.is_empty());
     }
 
     #[test]

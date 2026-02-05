@@ -114,6 +114,9 @@ regex = "1.12.2"
 memchr = "2.7.6"
 aho-corasick = "1.1.4"
 
+# Alternative allocator (Phase 16 optimization - optional)
+mimalloc = { version = "0.1.43", default-features = false }
+
 # Ordered collections
 indexmap = "2.7"  # Preserves insertion order (required for YAML key order parity)
 

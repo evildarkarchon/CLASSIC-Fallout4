@@ -10,6 +10,17 @@
 //!
 //! **NO PyO3 DEPENDENCIES** - Pure Rust business logic only.
 //! For Python bindings, see `classic-scanlog-py`.
+//!
+//! # Optional Features
+//!
+//! - `mimalloc`: Use mimalloc as the global allocator for improved performance
+//!   (Phase 16 optimization). Enable with `--features mimalloc`.
+
+// Phase 16 optimization: Use mimalloc as global allocator when feature is enabled
+// mimalloc provides better performance for allocation-heavy workloads
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 // Re-export all public modules
 pub mod error;
