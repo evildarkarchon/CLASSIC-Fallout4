@@ -30,8 +30,8 @@ Requirements for the Performance & Polish milestone. Establish baselines, optimi
 
 ### Bug Fixes
 
-- [ ] **BUG-01**: `test_clear_cache` in classic-yaml-core passes reliably (fix parallel test pollution)
-- [ ] **BUG-02**: `classic_settings()` resolves file paths correctly regardless of CWD
+- [x] **BUG-01**: `test_clear_cache` in classic-yaml-core passes reliably (fix parallel test pollution)
+- [x] **BUG-02**: `classic_settings()` resolves file paths correctly regardless of CWD
 
 ## Future Requirements
 
@@ -75,8 +75,8 @@ Explicitly excluded from v8.3.0.
 | PROF-02 | Phase 14 | Complete |
 | PROF-03 | Phase 14 | Complete |
 | GIL-03 | Phase 14 | Complete |
-| BUG-01 | Phase 15 | Pending |
-| BUG-02 | Phase 15 | Pending |
+| BUG-01 | Phase 15 | Complete |
+| BUG-02 | Phase 15 | Complete |
 | BENCH-05 | Phase 17 | Pending |
 
 **Coverage:**
@@ -86,4 +86,4 @@ Explicitly excluded from v8.3.0.
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after roadmap revision (Phase 12 split)*
+*Last updated: 2026-02-04 after Phase 15 completion (BUG-01, BUG-02 fixed)*
