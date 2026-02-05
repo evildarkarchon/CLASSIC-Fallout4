@@ -223,3 +223,16 @@ jobs:
           echo "$failures_md" > failures.md
           echo "$warnings_md" > warnings.md
           echo "$improvements_md" > improvements.md
+
+      - name: Check for bypass label
+        if: github.event_name == 'pull_request'
+        id: check-label
+        shell: bash
+        run: |
+          labels='${{ toJSON(github.event.pull_request.labels.*.name) }}'
+          if echo "$labels" | jq -e 'map(select(. == "perf-regression-accepted")) | length > 0' > /dev/null 2>&1; then
+            echo "bypass=true" >> $GITHUB_OUTPUT
+            echo "::notice::Regression accepted via perf-regression-accepted label"
+          else
+            echo "bypass=false" >> $GITHUB_OUTPUT
+          fi
