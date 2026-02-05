@@ -20,13 +20,13 @@ Requirements for the Performance & Polish milestone. Establish baselines, optimi
 
 - [x] **GIL-01**: Rust operations >1ms release Python GIL via `py.allow_threads()`
 - [x] **GIL-02**: FFI type conversion overhead measured separately from Rust compute time
-- [ ] **GIL-03**: DashMap cache hit rates instrumented and reportable
+- [x] **GIL-03**: DashMap cache hit rates instrumented and reportable
 
 ### Profiling
 
-- [ ] **PROF-01**: Flamegraph generation available for hot path identification
-- [ ] **PROF-02**: py-spy integration captures Python+Rust combined stack traces
-- [ ] **PROF-03**: Memory allocation profiling available via dhat
+- [x] **PROF-01**: Flamegraph generation available for hot path identification
+- [x] **PROF-02**: py-spy integration captures Python+Rust combined stack traces
+- [x] **PROF-03**: Memory allocation profiling available via dhat
 
 ### Bug Fixes
 
@@ -71,10 +71,10 @@ Explicitly excluded from v8.3.0.
 | BENCH-03 | Phase 13 | Complete |
 | BENCH-04 | Phase 13 | Complete |
 | BENCH-06 | Phase 13 | Complete |
-| PROF-01 | Phase 14 | Pending |
-| PROF-02 | Phase 14 | Pending |
-| PROF-03 | Phase 14 | Pending |
-| GIL-03 | Phase 14 | Pending |
+| PROF-01 | Phase 14 | Complete |
+| PROF-02 | Phase 14 | Complete |
+| PROF-03 | Phase 14 | Complete |
+| GIL-03 | Phase 14 | Complete |
 | BUG-01 | Phase 15 | Pending |
 | BUG-02 | Phase 15 | Pending |
 | BENCH-05 | Phase 17 | Pending |
