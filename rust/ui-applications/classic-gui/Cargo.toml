@@ -17,7 +17,9 @@ crate-type = ["rlib"]
 [dependencies]
 slint = { workspace = true, features = ["backend-winit", "renderer-skia", "image-default-formats"] }
 classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["gui-bridge"] }
+tokio = { workspace = true }
 tokio-util = { workspace = true }
+parking_lot = { workspace = true }
 
 [build-dependencies]
 slint-build = { workspace = true }

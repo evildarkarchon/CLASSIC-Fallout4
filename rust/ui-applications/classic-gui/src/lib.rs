@@ -4,5 +4,8 @@
 //! It uses the existing Tokio runtime from classic-shared-core and the
 //! AsyncBridge for coordinating between UI and async operations.
 
-// Re-export for potential testing
+pub mod worker;
+
+// Re-export for convenience
 pub use classic_shared_core::AsyncBridge;
+pub use worker::{simulate_scan, ScanWindowProperties};
