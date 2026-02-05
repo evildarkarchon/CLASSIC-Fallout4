@@ -5,11 +5,24 @@
 //!
 //! The benchmarks use the same data patterns and sizes as production workloads
 //! to ensure timing measurements are representative.
+//!
+//! # Running Benchmarks
+//!
+//! ```bash
+//! # Quick mode (development)
+//! BENCH_MODE=quick cargo bench --bench gil_benchmarks -p classic-scanlog-py
+//!
+//! # Thorough mode (baseline establishment)
+//! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-scanlog-py
+//! ```
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
 use std::hint::black_box;
-use std::time::Duration;
+
+// Import shared benchmark configuration from workspace benches/common/
+#[path = "../../../benches/common/mod.rs"]
+mod common;
 
 /// Generate realistic crash log lines for benchmarking
 fn generate_test_log_lines(count: usize) -> Vec<String> {
@@ -36,9 +49,6 @@ fn generate_plugins(count: usize) -> HashMap<String, String> {
 /// Benchmark log line processing (simulates parse_segments)
 fn bench_log_parsing(c: &mut Criterion) {
     let mut group = c.benchmark_group("scanlog_parsing");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     for size in [100, 1000, 10000] {
         let test_lines = generate_test_log_lines(size);
@@ -68,9 +78,6 @@ fn bench_log_parsing(c: &mut Criterion) {
 /// Benchmark FormID extraction (regex-like pattern matching)
 fn bench_formid_extraction(c: &mut Criterion) {
     let mut group = c.benchmark_group("formid_extraction");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     for size in [100, 1000, 5000] {
         let test_lines = generate_test_log_lines(size);
@@ -99,9 +106,6 @@ fn bench_formid_extraction(c: &mut Criterion) {
 /// Benchmark plugin matching
 fn bench_plugin_matching(c: &mut Criterion) {
     let mut group = c.benchmark_group("plugin_matching");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     let test_lines = generate_test_log_lines(1000);
     let plugins_small = generate_plugins(50);
@@ -142,9 +146,6 @@ fn bench_plugin_matching(c: &mut Criterion) {
 /// Benchmark mod detection pattern matching
 fn bench_mod_detection(c: &mut Criterion) {
     let mut group = c.benchmark_group("mod_detection");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     // Simulate YAML patterns
     let patterns: Vec<(String, String)> = (0..100)
@@ -180,9 +181,6 @@ fn bench_mod_detection(c: &mut Criterion) {
 /// Benchmark suspect pattern scanning
 fn bench_suspect_scanning(c: &mut Criterion) {
     let mut group = c.benchmark_group("suspect_scanning");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     // Simulate suspect patterns
     let error_patterns: Vec<String> = (0..50)
@@ -208,12 +206,14 @@ fn bench_suspect_scanning(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_log_parsing,
-    bench_formid_extraction,
-    bench_plugin_matching,
-    bench_mod_detection,
-    bench_suspect_scanning
-);
+criterion_group! {
+    name = benches;
+    config = common::config::configure_criterion();
+    targets =
+        bench_log_parsing,
+        bench_formid_extraction,
+        bench_plugin_matching,
+        bench_mod_detection,
+        bench_suspect_scanning
+}
 criterion_main!(benches);

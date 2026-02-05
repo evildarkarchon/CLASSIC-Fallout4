@@ -5,11 +5,24 @@
 //!
 //! The benchmarks simulate the types of YAML content processed by CLASSIC
 //! (configuration files, mod databases, etc.).
+//!
+//! # Running Benchmarks
+//!
+//! ```bash
+//! # Quick mode (development)
+//! BENCH_MODE=quick cargo bench --bench gil_benchmarks -p classic-yaml-py
+//!
+//! # Thorough mode (baseline establishment)
+//! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-yaml-py
+//! ```
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::collections::HashMap;
 use std::hint::black_box;
-use std::time::Duration;
+
+// Import shared benchmark configuration from workspace benches/common/
+#[path = "../../../benches/common/mod.rs"]
+mod common;
 
 /// Generate YAML-like content for benchmarking (string operations)
 fn generate_yaml_content(lines: usize) -> String {
@@ -45,9 +58,6 @@ fn generate_nested_yaml(depth: usize, breadth: usize) -> String {
 /// Benchmark YAML string parsing simulation
 fn bench_yaml_parsing(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_parsing");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     for line_count in [100, 1000, 5000] {
         let content = generate_yaml_content(line_count);
@@ -82,9 +92,6 @@ fn bench_yaml_parsing(c: &mut Criterion) {
 /// Benchmark YAML serialization simulation
 fn bench_yaml_serialization(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_serialization");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     for size in [50, 200, 1000] {
         let data: HashMap<String, String> = (0..size)
@@ -112,9 +119,6 @@ fn bench_yaml_serialization(c: &mut Criterion) {
 /// Benchmark nested structure traversal
 fn bench_nested_traversal(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_nested_traversal");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     // Benchmark dot-notation path traversal simulation
     let paths = vec![
@@ -167,9 +171,6 @@ fn bench_nested_traversal(c: &mut Criterion) {
 /// Benchmark key lookup operations
 fn bench_key_lookup(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_key_lookup");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     for size in [100, 500, 2000] {
         let data: HashMap<String, String> = (0..size)
@@ -197,9 +198,6 @@ fn bench_key_lookup(c: &mut Criterion) {
 /// Benchmark string interning simulation (for repeated YAML values)
 fn bench_string_interning(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_string_interning");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     // Simulate repeated strings (common in YAML with mod descriptions)
     let repeated_strings: Vec<String> = (0..1000)
@@ -224,12 +222,14 @@ fn bench_string_interning(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_yaml_parsing,
-    bench_yaml_serialization,
-    bench_nested_traversal,
-    bench_key_lookup,
-    bench_string_interning
-);
+criterion_group! {
+    name = benches;
+    config = common::config::configure_criterion();
+    targets =
+        bench_yaml_parsing,
+        bench_yaml_serialization,
+        bench_nested_traversal,
+        bench_key_lookup,
+        bench_string_interning
+}
 criterion_main!(benches);

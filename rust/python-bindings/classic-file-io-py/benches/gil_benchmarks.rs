@@ -5,11 +5,24 @@
 //!
 //! Note: Actual file I/O timing is highly variable and depends on disk speed,
 //! caching, etc. These benchmarks focus on the compute-bound portions.
+//!
+//! # Running Benchmarks
+//!
+//! ```bash
+//! # Quick mode (development)
+//! BENCH_MODE=quick cargo bench --bench gil_benchmarks -p classic-file-io-py
+//!
+//! # Thorough mode (baseline establishment)
+//! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-file-io-py
+//! ```
 
 use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
 use std::hint::black_box;
 use std::path::PathBuf;
-use std::time::Duration;
+
+// Import shared benchmark configuration from workspace benches/common/
+#[path = "../../../benches/common/mod.rs"]
+mod common;
 
 /// Generate test file paths for benchmarking
 fn generate_test_paths(count: usize) -> Vec<PathBuf> {
@@ -21,9 +34,6 @@ fn generate_test_paths(count: usize) -> Vec<PathBuf> {
 /// Benchmark path filtering operations (simulates walk_directory filtering)
 fn bench_path_filtering(c: &mut Criterion) {
     let mut group = c.benchmark_group("file_io_path_filtering");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     for size in [100, 1000, 10000] {
         // Generate diverse file paths
@@ -82,9 +92,6 @@ fn bench_path_filtering(c: &mut Criterion) {
 /// Benchmark path processing (normalization, joining, etc.)
 fn bench_path_processing(c: &mut Criterion) {
     let mut group = c.benchmark_group("file_io_path_processing");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     let base_paths = generate_test_paths(1000);
 
@@ -119,9 +126,6 @@ fn bench_path_processing(c: &mut Criterion) {
 /// Benchmark DDS header parsing simulation
 fn bench_dds_header_parsing(c: &mut Criterion) {
     let mut group = c.benchmark_group("file_io_dds_parsing");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     // Simulate DDS header bytes (128 bytes is typical DDS header size)
     let header_bytes: Vec<u8> = {
@@ -171,9 +175,6 @@ fn bench_dds_header_parsing(c: &mut Criterion) {
 /// Benchmark batch result aggregation
 fn bench_batch_aggregation(c: &mut Criterion) {
     let mut group = c.benchmark_group("file_io_batch_aggregation");
-    group
-        .sample_size(100)
-        .measurement_time(Duration::from_secs(5));
 
     // Simulate batch read results
     let results: Vec<(PathBuf, Result<String, String>)> = (0..1000)
@@ -205,11 +206,13 @@ fn bench_batch_aggregation(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_path_filtering,
-    bench_path_processing,
-    bench_dds_header_parsing,
-    bench_batch_aggregation
-);
+criterion_group! {
+    name = benches;
+    config = common::config::configure_criterion();
+    targets =
+        bench_path_filtering,
+        bench_path_processing,
+        bench_dds_header_parsing,
+        bench_batch_aggregation
+}
 criterion_main!(benches);
