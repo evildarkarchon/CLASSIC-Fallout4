@@ -83,14 +83,14 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. Window shows "CLASSIC" title and icon in title bar
   2. Dark theme renders (fluent-dark style)
-  3. User can switch between Main Options and Results tabs
+  3. User can switch between Main Options, Results, and Settings tabs
   4. Buttons, inputs, and checkboxes render and respond to clicks
   5. Window resizes without layout breaking
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 20-01: Main window layout and theming
-- [ ] 20-02: Tabbed interface and controls
+- [ ] 20-01-PLAN.md — Main window layout with fluent-dark theme and 3-tab structure
+- [ ] 20-02-PLAN.md — State persistence and native file dialogs
 
 #### Phase 21: Scan Operations
 **Goal**: User can trigger, monitor, and cancel crash log scans
