@@ -1,0 +1,113 @@
+// CLASSIC GUI - Main Window
+// Scaffold UI matching Python GUI layout
+
+import { Button, ProgressIndicator, TabWidget, VerticalBox, HorizontalBox, LineEdit, CheckBox, GroupBox } from "std-widgets.slint";
+
+export component MainWindow inherits Window {
+    // Window properties - match Python GUI dimensions
+    title: "Crash Log Auto Scanner & Setup Integrity Checker | CLASSIC v9.0.0";
+    icon: @image-url("../assets/CLASSIC.ico");
+    preferred-width: 650px;
+    preferred-height: 580px;
+    min-width: 550px;
+    min-height: 580px;
+
+    // Properties accessible from Rust
+    in-out property <float> progress: 0;
+    in-out property <string> status: "Ready";
+    in-out property <bool> scan-in-progress: false;
+
+    // Callbacks invoked from UI (will be wired in Plan 02)
+    callback start-scan();
+    callback cancel-scan();
+
+    VerticalBox {
+        padding: 10px;
+        spacing: 10px;
+
+        TabWidget {
+            Tab {
+                title: "MAIN OPTIONS";
+                VerticalBox {
+                    padding: 10px;
+                    spacing: 8px;
+
+                    // Game selection placeholder
+                    GroupBox {
+                        title: "Game Selection";
+                        HorizontalBox {
+                            spacing: 10px;
+                            Text { text: "Game:"; vertical-alignment: center; }
+                            Text { text: "Fallout 4 (placeholder)"; vertical-alignment: center; }
+                        }
+                    }
+
+                    // Scan options placeholder
+                    GroupBox {
+                        title: "Scan Options";
+                        VerticalBox {
+                            spacing: 5px;
+                            CheckBox { text: "Scan crash logs"; checked: true; }
+                            CheckBox { text: "Scan game files"; }
+                            CheckBox { text: "Generate statistics"; }
+                        }
+                    }
+
+                    // Spacer
+                    Rectangle { }
+
+                    // Action buttons
+                    HorizontalBox {
+                        spacing: 10px;
+                        Button {
+                            text: scan-in-progress ? "Scanning..." : "Scan Crash Logs";
+                            enabled: !scan-in-progress;
+                            clicked => { root.start-scan(); }
+                        }
+                        Button {
+                            text: "Cancel";
+                            enabled: scan-in-progress;
+                            clicked => { root.cancel-scan(); }
+                        }
+                    }
+                }
+            }
+
+            Tab {
+                title: "FILE BACKUP";
+                VerticalBox {
+                    padding: 10px;
+                    Text { text: "Backup options will be implemented in Phase 24"; }
+                }
+            }
+
+            Tab {
+                title: "ARTICLES";
+                VerticalBox {
+                    padding: 10px;
+                    Text { text: "Help articles will be implemented in later phases"; }
+                }
+            }
+
+            Tab {
+                title: "RESULTS";
+                VerticalBox {
+                    padding: 10px;
+                    Text { text: "Scan results will appear here after Phase 22"; }
+                }
+            }
+        }
+
+        // Progress area - always visible at bottom
+        VerticalBox {
+            spacing: 5px;
+            ProgressIndicator {
+                progress: root.progress / 100;
+            }
+            Text {
+                text: root.status;
+                horizontal-alignment: center;
+            }
+        }
+    }
+}
