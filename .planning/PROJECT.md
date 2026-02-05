@@ -1,14 +1,8 @@
 # CLASSIC
 
-## Current Milestone: v8.3.0 Performance & Polish
+## Current Milestone: (None — milestone complete)
 
-**Goal:** Establish performance baselines across all major operations, optimize hot paths based on findings, and fix pre-existing bugs.
-
-**Target features:**
-- Comprehensive benchmarking (crash log scanning, YAML operations, report generation)
-- Hot path optimization based on profiling data
-- Fix yaml-core cache bug (test_clear_cache)
-- Fix GUI file path resolution in classic_settings()
+**Previous:** v8.3.0 Performance & Polish — shipped 2026-02-05
 
 ---
 
@@ -16,13 +10,13 @@
 
 ## What This Is
 
-A Rust-first desktop application (CLASSIC — Crash Log Auto Scanner & Setup Integrity Checker) that analyzes crash logs from Bethesda games (Fallout 4, Skyrim). Python serves as a thin UI shell (PySide6/Qt GUI) while Rust owns ALL business logic through PyO3 bindings. The v8.2.0-part2 milestone completed this transformation.
+A Rust-first desktop application (CLASSIC — Crash Log Auto Scanner & Setup Integrity Checker) that analyzes crash logs from Bethesda games (Fallout 4, Skyrim). Python serves as a thin UI shell (PySide6/Qt GUI) while Rust owns ALL business logic through PyO3 bindings. Performance is systematically measured via Criterion benchmarks with CI regression detection.
 
 ## Core Value
 
 Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
 
-## Current State (After v8.2.0-part2)
+## Current State (After v8.3.0)
 
 **Architecture achieved:**
 - All scanning orchestration routes through Rust OrchestratorCore
@@ -31,13 +25,16 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 - All settings loading routes through Rust classic-settings with DashMap cache
 - 7 Python analyzer files deleted, factory returns Rust components directly
 - 19 Rust modules bundled in PyInstaller build
+- 77+ Criterion benchmarks with statistical analysis
+- CI automatically detects performance regressions (>10% threshold)
 
 **Codebase metrics:**
-- Python: 88,594 LOC (ClassicLib/ - UI shell, integration layer)
-- Rust: 65,277 LOC (rust/ - all business logic)
+- Python: ~88,594 LOC (ClassicLib/ - UI shell, integration layer)
+- Rust: ~65,277+ LOC (rust/ - all business logic)
+- Benchmarks: 77+ Criterion benchmarks across yaml-core, scanlog-core, file-io-core
 - Tests: 3,849 passing with Rust as primary code path
 
-**Tech stack:** Python 3.12+, PySide6/Qt, Rust (PyO3 0.27), tokio async runtime, DashMap
+**Tech stack:** Python 3.12+, PySide6/Qt, Rust (PyO3 0.27), tokio async runtime, DashMap, Criterion
 
 ## Requirements
 
@@ -69,6 +66,13 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 - ✓ Migrate report generation to Rust — v8.2.0-part2
 - ✓ Migrate settings management to Rust — v8.2.0-part2
 - ✓ Reduce Python to UI-only code — v8.2.0-part2
+- ✓ Benchmarks execute in release mode with statistical aggregation — v8.3.0
+- ✓ CI pipeline detects performance regressions (>10% threshold) — v8.3.0
+- ✓ Rust operations >1ms release Python GIL — v8.3.0
+- ✓ Flamegraph and py-spy profiling available — v8.3.0
+- ✓ DashMap cache hit rates instrumented — v8.3.0
+- ✓ test_clear_cache parallel test pollution fixed — v8.3.0
+- ✓ classic_settings() path resolution fixed — v8.3.0
 
 ### Active
 
@@ -85,19 +89,18 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 
 ## Context
 
-**Shipped v8.2.0-part2** with complete Rust migration:
-- 88,594 lines Python (UI shell)
-- 65,277 lines Rust (all business logic)
-- 19 Rust PyO3 modules bundled
+**Shipped v8.3.0** with comprehensive performance infrastructure:
+- 77+ Criterion benchmarks with statistical output
+- CI regression detection (10% threshold, PR comments)
+- GIL release audit (65 without_gil occurrences)
+- Profiling tooling (flamegraph, py-spy, dhat)
+- O(1) membership optimization in Python
 
-**Known issues (pre-existing):**
-- classic-yaml-core test_clear_cache failure (cache size assertion)
-- GUI file path resolution bug in classic_settings() (relative path)
-- cache.py line 431: return {} metrics placeholder
+**Known issues:**
+- py-spy 0.4.1 incompatible with Python 3.14 (limits native frame profiling)
 
 **Tech debt:**
 - Report parity: 20 tests identify true Rust-Python differences (by design)
-- Missing formal VERIFICATION.md files (work documented in summaries)
 
 ## Constraints
 
@@ -107,6 +110,7 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 - **GUI stays Python**: PySide6/Qt remains, only business logic migrates
 - **Incremental migration**: Each component migrates fully before next (no half-migrated state)
 - **PyO3 patterns**: Business logic in `-core` crates, PyO3 adapters in `-py` crates
+- **Performance baselines**: Optimizations must be validated against benchmarks
 
 ## Key Decisions
 
@@ -127,6 +131,14 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 | Delete Python orchestrators entirely | Not deprecate-first, immediate removal | ✓ Good — 1,223 lines removed cleanly |
 | asyncio.to_thread() for Rust batch processing | Avoid blocking event loop in async Python | ✓ Good — smooth async integration |
 | Arc<AtomicBool> for cancellation | Simpler than CancellationToken for between-logs checking | ✓ Good — clean Rust async pattern |
+| 1ms threshold for GIL release | Operations >1ms benefit from parallelism; faster ones don't justify overhead | ✓ Good — clear guideline |
+| Quick/thorough benchmark modes | BENCH_MODE env var controls depth (50 vs 200 samples) | ✓ Good — flexible for dev vs CI |
+| Shared benchmark config via #[path] | Benchmark utilities shared without crate dependency | ✓ Good — standard Rust pattern |
+| serial_test for cache-touching tests | Prevents parallel test pollution in global state tests | ✓ Good — BUG-01 fixed |
+| ResourceLoader.get_data_directory().parent as root | CWD-independent path resolution | ✓ Good — BUG-02 fixed |
+| Python-first optimization focus | Profiling showed 86% threading overhead, 0.3% Rust FFI | ✓ Good — right ROI |
+| ready_for_review trigger for CI benchmarks | Reduces noise vs all PR events | ✓ Good — less CI churn |
+| 5% warning / 10% failure thresholds | Balance sensitivity with noise tolerance | ✓ Good — actionable feedback |
 
 ---
-*Last updated: 2026-02-04 after v8.2.0-part2 milestone*
+*Last updated: 2026-02-05 after v8.3.0 milestone*

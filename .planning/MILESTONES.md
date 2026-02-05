@@ -1,5 +1,34 @@
 # Project Milestones: CLASSIC
 
+## v8.3.0 Performance & Polish (Shipped: 2026-02-05)
+
+**Delivered:** Established comprehensive performance infrastructure — Criterion benchmarks across all Rust crates, GIL release audit, profiling tooling, hot path optimization based on data, and CI-based regression detection.
+
+**Phases completed:** 12-18 (15 plans total)
+
+**Key accomplishments:**
+
+- Comprehensive GIL release audit with 65 without_gil occurrences, enabling true Python thread parallelism for CPU-bound Rust operations (GIL-01, GIL-02)
+- Criterion benchmark infrastructure with quick/thorough modes, statistical output, and PowerShell runner scripts (BENCH-01 to BENCH-06)
+- Profiling tooling: Flamegraph, py-spy (Python+Rust combined stacks), dhat memory profiling, DashMap cache instrumentation (PROF-01 to PROF-03, GIL-03)
+- Fixed test_clear_cache parallel pollution with #[serial] and classic_settings() path resolution bug (BUG-01, BUG-02)
+- Data-driven optimization: Profiling revealed 86% time in Python threading (not Rust FFI at 0.3%); implemented O(1) membership via set-backed lists
+- CI regression detection: GitHub Actions workflow with 10% threshold, PR comments, bypass labels, and branch protection documentation
+
+**Stats:**
+
+- 80 commits over 2 days (2026-02-04 → 2026-02-05)
+- 111 files changed, +18,578 / -175 lines
+- 7 phases, 15 plans, 14 requirements satisfied
+- 77+ Criterion benchmarks across yaml-core, scanlog-core, file-io-core crates
+- All tech debt from milestone audit addressed in Phase 18
+
+**Git range:** `feat(12-01)` → `docs(18)`
+
+**What's next:** New milestone — user-facing features, additional Rust acceleration, or maintenance work now that performance infrastructure is in place.
+
+---
+
 ## v8.2.0-part2 Rust Migration (Shipped: 2026-02-04)
 
 **Delivered:** Completed Rust migration — Python is now a thin UI shell while Rust owns all business logic (settings, game detection, report generation, orchestration, analysis).
