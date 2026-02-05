@@ -48,7 +48,7 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 - [x] **Phase 14: Hot Path Profiling & Cache Instrumentation** - Profile hot paths, instrument DashMap caches
 - [x] **Phase 15: Bug Fixes & Test Stabilization** - Fix test_clear_cache and classic_settings() path resolution
 - [x] **Phase 16: Hot Path Optimization (Data-Driven)** - Optimize based on profiling data from Phase 14
-- [ ] **Phase 17: CI Regression Detection** - Automated performance regression detection in CI
+- [x] **Phase 17: CI Regression Detection** - Automated performance regression detection in CI
 
 ## Phase Details
 
@@ -132,10 +132,12 @@ Plans:
   1. CI pipeline runs benchmarks on PRs
   2. Performance regression >10% fails the build with clear diagnostic
   3. Historical baselines are automatically updated on main branch merges
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 17-01: CI benchmark integration and regression detection
+- [x] 17-01-PLAN.md — Benchmark CI workflow foundation (triggers, caching, config)
+- [x] 17-02-PLAN.md — Benchmark comparison and threshold analysis
+- [x] 17-03-PLAN.md — PR reporting and regression enforcement
 
 ## Progress
 
@@ -148,6 +150,6 @@ Plans:
 | 14. Hot Path Profiling | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 15. Bug Fixes | v8.3.0 | 2/2 | Complete | 2026-02-04 |
 | 16. Hot Path Optimization | v8.3.0 | 2/2 | Complete | 2026-02-04 |
-| 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
+| 17. CI Regression Detection | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 
-**Overall:** 2 milestones shipped, 39 plans completed, 1 plan remaining for v8.3.0
+**Overall:** 2 milestones shipped, 42 plans completed, v8.3.0 ready for milestone audit

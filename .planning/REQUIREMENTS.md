@@ -13,7 +13,7 @@ Requirements for the Performance & Polish milestone. Establish baselines, optimi
 - [x] **BENCH-02**: Benchmark results include statistical aggregation (min/mean/median/stddev/p95/p99)
 - [x] **BENCH-03**: Benchmark results export to JSON format for historical tracking
 - [x] **BENCH-04**: Benchmarks run multiple iterations with configurable warmup
-- [ ] **BENCH-05**: CI pipeline detects performance regressions (>10% threshold)
+- [x] **BENCH-05**: CI pipeline detects performance regressions (>10% threshold)
 - [x] **BENCH-06**: Historical baselines stored for comparison across commits
 
 ### GIL & FFI Optimization
@@ -77,7 +77,7 @@ Explicitly excluded from v8.3.0.
 | GIL-03 | Phase 14 | Complete |
 | BUG-01 | Phase 15 | Complete |
 | BUG-02 | Phase 15 | Complete |
-| BENCH-05 | Phase 17 | Pending |
+| BENCH-05 | Phase 17 | Complete |
 
 **Coverage:**
 - v8.3.0 requirements: 14 total
@@ -86,4 +86,4 @@ Explicitly excluded from v8.3.0.
 
 ---
 *Requirements defined: 2026-02-04*
-*Last updated: 2026-02-04 after Phase 15 completion (BUG-01, BUG-02 fixed)*
+*Last updated: 2026-02-05 after Phase 17 completion (BENCH-05 implemented)*
