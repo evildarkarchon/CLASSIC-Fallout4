@@ -337,3 +337,20 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           body: ${{ steps.comment-body.outputs.body }}
           edit-mode: replace
+
+      - name: Fail on regression
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.analyze.outputs.has_failure == 'true' &&
+          steps.check-label.outputs.bypass != 'true'
+        shell: bash
+        run: |
+          echo "::error::Performance regression detected (>10%)"
+          echo ""
+          echo "One or more benchmarks showed significant regression."
+          echo "Options:"
+          echo "  1. Fix the performance regression"
+          echo "  2. Add label 'perf-regression-accepted' with justification comment"
+          echo ""
+          echo "See the PR comment for detailed benchmark results."
+          exit 1
