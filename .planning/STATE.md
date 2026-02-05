@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.3.0 Performance & Polish — Phase 17 complete (CI Regression Detection)
+**Current focus:** v8.3.0 Performance & Polish — Phase 18 in progress (Tech Debt Cleanup)
 
 ## Current Position
 
-Phase: 17 of 17 (CI Regression Detection)
-Plan: 3 of 3 in current phase
+Phase: 18 of 18 (Tech Debt Cleanup)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-02-05 — Completed 17-03-PLAN.md (PR Reporting and Regression Enforcement)
+Last activity: 2026-02-05 — Completed 18-01-PLAN.md (tech debt items)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 14/14]
-[##############################] 100% (42/42 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/18]
+[#############################-] 96% (43/45 plans estimated)
 
 ## Performance Metrics
 
@@ -30,7 +30,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 14/14]
 - Total execution time: ~2.7 hours
 
 **v8.3.0 Velocity:**
-- Plans completed: 12
+- Plans completed: 15
 - Phase 12-01: ~45m
 - Phase 13-01: ~5m
 - Phase 13-02: ~12m
@@ -45,6 +45,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 14/14]
 - Phase 17-01: ~2m
 - Phase 17-02: ~4m
 - Phase 17-03: ~3m
+- Phase 18-01: ~9m
 
 **By Phase (v8.2.0-part2):**
 
@@ -92,10 +93,15 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 - Label bypass (perf-regression-accepted) for intentional regressions (17-02)
 - GitHub alert syntax for PR comments (> [!CAUTION], etc.) (17-03)
 - Comment marker pattern for updating existing PR comments (17-03)
+- GIL benchmarks use 3-level path for #[path] import - same depth as business-logic crates (18-01)
 
 ### Pending Todos
 
 None.
+
+### Roadmap Evolution
+
+- Phase 18 added: Tech Debt Cleanup (address non-blocking items from milestone audit)
 
 ### Blockers/Concerns
 
@@ -104,6 +110,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 17-03-PLAN.md (v8.3.0 milestone complete)
+Stopped at: Completed 18-01-PLAN.md (tech debt cleanup)
 Resume file: None
-Next action: v8.3.0 milestone complete - all 42 plans executed
+Next action: Phase 18 complete - review milestone for v8.3.0 release readiness
