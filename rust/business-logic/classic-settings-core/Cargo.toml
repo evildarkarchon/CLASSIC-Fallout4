@@ -7,7 +7,16 @@ authors = ["CLASSIC Development Team"]
 description = "Core YAML settings cache with dual sync/async API"
 license = "MIT"
 
+[features]
+default = []
+dhat-heap = ["dep:dhat"]
+
 [dependencies]
+# Heap profiling (optional)
+dhat = { version = "0.3", optional = true }
+
+# Tracing for instrumentation
+tracing = { workspace = true }
 # ONE RUNTIME RULE - shared Tokio runtime
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 

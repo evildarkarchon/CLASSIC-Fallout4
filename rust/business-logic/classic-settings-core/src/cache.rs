@@ -4,8 +4,11 @@ use crate::error::Result;
 use crate::loader::{load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use std::path::Path;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use tracing::trace;
 use yaml_rust2::Yaml;
 
 /// Global settings cache storage.
@@ -13,6 +16,90 @@ use yaml_rust2::Yaml;
 /// Uses DashMap for lock-free concurrent access to cached YAML settings.
 /// Each cache entry stores the parsed YAML documents for a file.
 static SETTINGS_CACHE: Lazy<DashMap<String, Arc<Vec<Yaml>>>> = Lazy::new(DashMap::new);
+
+/// Global counter for cache hits.
+static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
+
+/// Global counter for cache misses.
+static CACHE_MISSES: AtomicU64 = AtomicU64::new(0);
+
+/// Cache performance statistics.
+///
+/// Provides insight into cache effectiveness via hit/miss tracking.
+/// Use `cache_stats()` to retrieve current statistics.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_settings_core::cache_stats;
+///
+/// let stats = cache_stats();
+/// println!("Hit rate: {:.2}%", stats.hit_rate * 100.0);
+/// ```
+#[derive(Debug, Clone, Serialize)]
+pub struct CacheStats {
+    /// Number of cache hits since last reset.
+    pub hits: u64,
+    /// Number of cache misses since last reset.
+    pub misses: u64,
+    /// Hit rate as a fraction (0.0 to 1.0).
+    pub hit_rate: f64,
+    /// Current number of entries in the cache.
+    pub size: usize,
+    /// List of cache keys.
+    pub keys: Vec<String>,
+}
+
+/// Get current cache statistics.
+///
+/// Returns the current hit/miss counts and derived hit rate.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_settings_core::cache_stats;
+///
+/// let stats = cache_stats();
+/// println!("Hits: {}, Misses: {}", stats.hits, stats.misses);
+/// println!("Hit rate: {:.1}%", stats.hit_rate * 100.0);
+/// ```
+pub fn cache_stats() -> CacheStats {
+    let hits = CACHE_HITS.load(Ordering::Relaxed);
+    let misses = CACHE_MISSES.load(Ordering::Relaxed);
+    let total = hits + misses;
+
+    CacheStats {
+        hits,
+        misses,
+        hit_rate: if total > 0 {
+            hits as f64 / total as f64
+        } else {
+            0.0
+        },
+        size: SETTINGS_CACHE.len(),
+        keys: cache_keys(),
+    }
+}
+
+/// Reset cache statistics.
+///
+/// Resets hit and miss counters to zero. Useful for testing or
+/// starting fresh measurements.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_settings_core::{reset_cache_stats, cache_stats};
+///
+/// reset_cache_stats();
+/// let stats = cache_stats();
+/// assert_eq!(stats.hits, 0);
+/// assert_eq!(stats.misses, 0);
+/// ```
+pub fn reset_cache_stats() {
+    CACHE_HITS.store(0, Ordering::Relaxed);
+    CACHE_MISSES.store(0, Ordering::Relaxed);
+}
 
 /// Load and cache YAML settings synchronously.
 ///
@@ -149,6 +236,7 @@ pub async fn load_batch_async(paths: &[&Path]) -> Result<usize> {
 /// Get cached settings by key.
 ///
 /// Retrieves cached YAML documents by key. Returns None if the key is not in the cache.
+/// Tracks cache hits and misses for performance monitoring.
 ///
 /// # Arguments
 ///
@@ -172,7 +260,18 @@ pub async fn load_batch_async(paths: &[&Path]) -> Result<usize> {
 /// # }
 /// ```
 pub fn get_cached(key: &str) -> Option<Arc<Vec<Yaml>>> {
-    SETTINGS_CACHE.get(key).map(|entry| entry.value().clone())
+    match SETTINGS_CACHE.get(key) {
+        Some(entry) => {
+            CACHE_HITS.fetch_add(1, Ordering::Relaxed);
+            trace!(cache = "settings", key = %key, "cache hit");
+            Some(entry.value().clone())
+        }
+        None => {
+            CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
+            trace!(cache = "settings", key = %key, "cache miss");
+            None
+        }
+    }
 }
 
 /// Check if a key exists in the cache.
