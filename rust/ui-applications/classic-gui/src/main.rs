@@ -8,9 +8,12 @@ slint::include_modules!();
 use std::sync::Arc;
 
 use classic_shared_core::{get_runtime, AsyncBridge};
+use parking_lot::Mutex;
 use tokio_util::sync::CancellationToken;
 
-use classic_gui::ScanWindowProperties;
+use classic_gui::{
+    browse_folder, load_window_state, save_window_state, ScanWindowProperties, WindowState,
+};
 
 // Implement ScanWindowProperties for the generated MainWindow
 impl ScanWindowProperties for MainWindow {
@@ -31,6 +34,21 @@ impl ScanWindowProperties for MainWindow {
 struct AppState {
     /// Cancellation token for current scan operation
     cancel_token: Option<CancellationToken>,
+    /// Window state for persistence
+    window_state: WindowState,
+    /// Flag to prevent saving during initialization
+    initialized: bool,
+}
+
+impl AppState {
+    /// Create new app state with loaded window state
+    fn new() -> Self {
+        Self {
+            cancel_token: None,
+            window_state: load_window_state(),
+            initialized: false,
+        }
+    }
 }
 
 fn main() {
@@ -38,27 +56,86 @@ fn main() {
     // This ensures ONE RUNTIME RULE compliance
     let _ = get_runtime();
 
+    // Create shared state and load persisted state
+    let state = Arc::new(Mutex::new(AppState::new()));
+
     // Create main window
     let window = MainWindow::new().expect("Failed to create main window");
 
+    // Restore window state from disk
+    restore_state(&window, &state);
+
     // Set up callbacks
-    setup_callbacks(&window);
+    setup_callbacks(&window, &state);
+
+    // Mark initialization complete - state saves now enabled
+    {
+        let mut state = state.lock();
+        state.initialized = true;
+    }
 
     // Run Slint event loop (blocks until window closes)
     window.run().expect("Failed to run application");
+
+    // Save final state on exit
+    save_final_state(&window, &state);
 }
 
-fn setup_callbacks(window: &MainWindow) {
-    // Shared state for cancellation
-    // Using Arc<parking_lot::Mutex> for thread-safe mutable access
-    let state = Arc::new(parking_lot::Mutex::new(AppState {
-        cancel_token: None,
-    }));
+/// Restore window state from persisted data
+fn restore_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    let state = state.lock();
+    let ws = &state.window_state;
 
+    // Restore paths
+    if !ws.crash_log_path.is_empty() {
+        window.set_crash_log_path(ws.crash_log_path.clone().into());
+    }
+    if !ws.game_path.is_empty() {
+        window.set_game_path(ws.game_path.clone().into());
+    }
+
+    // Restore active tab
+    window.set_active_tab_index(ws.active_tab);
+}
+
+/// Save final state before exit
+fn save_final_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    let mut state = state.lock();
+
+    // Capture current paths
+    state.window_state.crash_log_path = window.get_crash_log_path().to_string();
+    state.window_state.game_path = window.get_game_path().to_string();
+    state.window_state.active_tab = window.get_active_tab_index();
+
+    // Save to disk
+    if let Err(e) = save_window_state(&state.window_state) {
+        eprintln!("Failed to save window state: {}", e);
+    }
+}
+
+/// Save state to disk (called during operation)
+fn persist_state(state: &Arc<Mutex<AppState>>) {
+    let state = state.lock();
+    if !state.initialized {
+        return; // Skip during initialization
+    }
+    if let Err(e) = save_window_state(&state.window_state) {
+        eprintln!("Failed to save window state: {}", e);
+    }
+}
+
+fn setup_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    setup_scan_callbacks(window, state);
+    setup_browse_callbacks(window, state);
+    setup_tab_callback(window, state);
+}
+
+/// Set up scan start/cancel callbacks
+fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     // Start scan callback
     {
         let window_weak = window.as_weak();
-        let state = Arc::clone(&state);
+        let state = Arc::clone(state);
 
         window.on_start_scan(move || {
             let window_weak = window_weak.clone();
@@ -82,16 +159,12 @@ fn setup_callbacks(window: &MainWindow) {
             // Spawn async scan operation
             AsyncBridge::run_with_ui_update(
                 classic_gui::simulate_scan(window_weak.clone(), cancel_token),
-                move |result| {
-                    match result {
-                        Ok(_msg) => {
-                            // Success is already handled in simulate_scan
-                            // This callback is for any final cleanup
-                        }
-                        Err(_e) => {
-                            // Error already shown in UI by simulate_scan
-                            // Future: show modal error dialog here
-                        }
+                move |result| match result {
+                    Ok(_msg) => {
+                        // Success is already handled in simulate_scan
+                    }
+                    Err(_e) => {
+                        // Error already shown in UI by simulate_scan
                     }
                 },
             );
@@ -100,7 +173,7 @@ fn setup_callbacks(window: &MainWindow) {
 
     // Cancel scan callback
     {
-        let state = Arc::clone(&state);
+        let state = Arc::clone(state);
 
         window.on_cancel_scan(move || {
             let state = state.lock();
@@ -109,4 +182,113 @@ fn setup_callbacks(window: &MainWindow) {
             }
         });
     }
+}
+
+/// Set up browse folder callbacks
+fn setup_browse_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    // Browse crash logs callback
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+
+        window.on_browse_crash_logs(move || {
+            let window_weak = window_weak.clone();
+            let state = Arc::clone(&state);
+
+            // Get current path for starting directory
+            let current_path = window_weak
+                .upgrade()
+                .map(|w| w.get_crash_log_path().to_string())
+                .unwrap_or_default();
+
+            let start_dir = if current_path.is_empty() {
+                None
+            } else {
+                Some(current_path.clone())
+            };
+
+            // Spawn async browse dialog
+            AsyncBridge::run_with_ui_update(
+                async move {
+                    browse_folder(
+                        "Select Crash Log Folder",
+                        start_dir.as_deref(),
+                    )
+                    .await
+                },
+                move |result| {
+                    if let Some(path) = result {
+                        if let Some(w) = window_weak.upgrade() {
+                            w.set_crash_log_path(path.clone().into());
+                            // Update state and save
+                            {
+                                let mut state = state.lock();
+                                state.window_state.crash_log_path = path;
+                            }
+                            persist_state(&state);
+                        }
+                    }
+                },
+            );
+        });
+    }
+
+    // Browse game folder callback
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+
+        window.on_browse_game_folder(move || {
+            let window_weak = window_weak.clone();
+            let state = Arc::clone(&state);
+
+            // Get current path for starting directory
+            let current_path = window_weak
+                .upgrade()
+                .map(|w| w.get_game_path().to_string())
+                .unwrap_or_default();
+
+            let start_dir = if current_path.is_empty() {
+                None
+            } else {
+                Some(current_path.clone())
+            };
+
+            // Spawn async browse dialog
+            AsyncBridge::run_with_ui_update(
+                async move {
+                    browse_folder("Select Game Folder", start_dir.as_deref()).await
+                },
+                move |result| {
+                    if let Some(path) = result {
+                        if let Some(w) = window_weak.upgrade() {
+                            w.set_game_path(path.clone().into());
+                            // Update state and save
+                            {
+                                let mut state = state.lock();
+                                state.window_state.game_path = path;
+                            }
+                            persist_state(&state);
+                        }
+                    }
+                },
+            );
+        });
+    }
+}
+
+/// Set up tab change callback for per-tab state persistence
+fn setup_tab_callback(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    let state = Arc::clone(state);
+
+    window.on_tab_changed(move |new_tab| {
+        {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            state.window_state.active_tab = new_tab;
+        }
+        persist_state(&state);
+    });
 }
