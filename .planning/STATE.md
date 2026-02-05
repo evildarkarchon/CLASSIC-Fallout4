@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** v9.0.0 Slint GUI -- Phase 20 Core UI Layout
+**Current focus:** v9.0.0 Slint GUI -- Phase 21 Scan Orchestration
 
 ## Current Position
 
 Phase: 20 of 25 (Core UI Layout)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-05 -- Completed 20-01-PLAN.md
+Plan: 2 of 2 in current phase (PHASE COMPLETE)
+Status: Phase complete
+Last activity: 2026-02-05 -- Completed 20-02-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 3/13]
-[################################........] 82% (46/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 4/13]
+[#################################.......] 84% (47/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 3/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 3
-- Average duration: 6m
-- Commits: 7
+- Plans completed: 4
+- Average duration: 7m
+- Commits: 10
 
 ## Accumulated Context
 
@@ -54,6 +54,10 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 3/13]
 | 2026-02-05 | 20-01 | fluent-dark at build time | CompilerConfiguration ensures dark theme without runtime config |
 | 2026-02-05 | 20-01 | 3 tabs only | Main Options, Results, Settings (removed placeholders per CONTEXT.md) |
 | 2026-02-05 | 20-01 | PathInput widget pattern | Reusable path input in widgets/ directory |
+| 2026-02-05 | 20-02 | directories crate for config | Cross-platform user config directory via ProjectDirs |
+| 2026-02-05 | 20-02 | rfd 0.15 for dialogs | De facto standard for native Rust file dialogs |
+| 2026-02-05 | 20-02 | Save on significant changes | Tab change, path selection, and exit ensures state preserved |
+| 2026-02-05 | 20-02 | Initialization flag pattern | Prevents saves during window setup overwriting restored state |
 
 ### Pending Todos
 
@@ -65,6 +69,7 @@ None.
 - Cancellation pattern tested -- CancellationToken cooperatively stops async operations
 - ONE RUNTIME RULE confirmed -- no runtime panics during execution
 - Markdown rendering uses pulldown-cmark (Slint native markdown is experimental)
+- State persistence working -- JSON file in user config directory
 
 ### Quick Tasks Completed
 
@@ -79,6 +84,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 20-01-PLAN.md
+Stopped at: Completed 20-02-PLAN.md (Phase 20 complete)
 Resume file: None
-Next action: Execute 20-02-PLAN.md (Rust-side callbacks and state management)
+Next action: Execute Phase 21 (Scan Orchestration)
