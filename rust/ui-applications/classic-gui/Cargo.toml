@@ -20,6 +20,10 @@ classic-shared-core = { path = "../../foundation/classic-shared-core", features 
 tokio = { workspace = true }
 tokio-util = { workspace = true }
 parking_lot = { workspace = true }
+directories = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rfd = "0.15"  # Native file dialogs
 
 [build-dependencies]
 slint-build = { workspace = true }

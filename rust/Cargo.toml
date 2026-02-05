@@ -108,6 +108,7 @@ memmap2 = "0.9.9"
 walkdir = "2.5"
 ddsfile = "0.5"
 dirs = "6.0.0"
+directories = "6.0.0"  # Cross-platform config/data directories
 
 # BA2 Archive support
 ba2 = "3.0.1"
