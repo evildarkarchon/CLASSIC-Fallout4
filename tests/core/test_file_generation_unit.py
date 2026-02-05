@@ -23,10 +23,25 @@ class TestFileGenerator:
 
     @pytest.fixture(autouse=True)
     def setup(self, tmp_path: Path, monkeypatch) -> None:
-        """Set up test environment with complete isolation."""
-        # Change to temp directory for all file operations
+        """Set up test environment with complete isolation.
+
+        We mock ResourceLoader.get_data_directory() to return a path within tmp_path
+        so that file generation happens in isolation. This simulates the real behavior
+        where files are created relative to project root (not CWD).
+        """
+        # Change to temp directory for isolation
         monkeypatch.chdir(tmp_path)
         self.tmp_path = tmp_path
+
+        # Create CLASSIC Data directory in tmp_path (simulates project structure)
+        self.mock_data_dir = tmp_path / "CLASSIC Data"
+        self.mock_data_dir.mkdir(parents=True, exist_ok=True)
+
+        # Mock ResourceLoader.get_data_directory to return our test directory
+        monkeypatch.setattr(
+            "ClassicLib.support.resources.ResourceLoader.get_data_directory",
+            lambda: self.mock_data_dir,
+        )
 
     @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_ignore_file_creates_new_file(self, mock_yaml_settings: MagicMock) -> None:
@@ -39,8 +54,8 @@ class TestFileGenerator:
 """
         mock_yaml_settings.return_value = expected_content
 
-        # Ensure file doesn't exist
-        ignore_path = Path("CLASSIC Ignore.yaml")
+        # File will be created at project root (tmp_path, parent of mock_data_dir)
+        ignore_path = self.tmp_path / "CLASSIC Ignore.yaml"
         assert not ignore_path.exists()
 
         # Generate the file
@@ -56,8 +71,8 @@ class TestFileGenerator:
     @patch("ClassicLib.io.yaml.yaml_settings")
     def test_generate_ignore_file_skips_existing(self, mock_yaml_settings: MagicMock) -> None:
         """Test that existing CLASSIC Ignore.yaml is not overwritten."""
-        # Create existing file
-        ignore_path = Path("CLASSIC Ignore.yaml")
+        # Create existing file at project root (tmp_path)
+        ignore_path = self.tmp_path / "CLASSIC Ignore.yaml"
         existing_content = "# Existing ignore file\n*.existing"
         ignore_path.write_text(existing_content, encoding="utf-8")
 
@@ -203,10 +218,6 @@ local_paths:
         # Ensure logger.debug is a regular MagicMock, not an AsyncMock
         mock_logger.debug = MagicMock()
 
-        # Create test directory
-        data_dir = self.tmp_path / "CLASSIC Data"
-        data_dir.mkdir(parents=True, exist_ok=True)
-
         # Generate ignore file
         FileGenerator.generate_ignore_file()
 
@@ -215,16 +226,23 @@ local_paths:
 
         # Verify debug logging was called
         assert mock_logger.debug.call_count == 2
-        mock_logger.debug.assert_any_call("Generated CLASSIC Ignore.yaml at CLASSIC Ignore.yaml")
+        # The path in the log message is now an absolute path
+        expected_ignore_path = self.tmp_path / "CLASSIC Ignore.yaml"
+        mock_logger.debug.assert_any_call(f"Generated CLASSIC Ignore.yaml at {expected_ignore_path}")
 
     @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     def test_generate_local_yaml_creates_parent_directory(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
         """Test that parent directory is created if it doesn't exist."""
+        import shutil
+
         mock_yaml_settings.return_value = "test content"
 
-        # Ensure CLASSIC Data directory doesn't exist yet
-        data_dir = self.tmp_path / "CLASSIC Data"
+        # Remove the CLASSIC Data directory that was created in fixture setup
+        # to test that generate_local_yaml creates it
+        data_dir = self.mock_data_dir
+        if data_dir.exists():
+            shutil.rmtree(data_dir)
         assert not data_dir.exists()
 
         # Generate the file (should create parent directory)
@@ -238,6 +256,11 @@ local_paths:
     @patch("ClassicLib.io.yaml.yaml_settings", side_effect=Exception("YAML error"))
     def test_generate_ignore_file_yaml_error(self, mock_yaml_settings: MagicMock) -> None:
         """Test that exceptions from yaml_settings are propagated."""
+        # Ensure the ignore file doesn't exist (so yaml_settings gets called)
+        ignore_path = self.tmp_path / "CLASSIC Ignore.yaml"
+        if ignore_path.exists():
+            ignore_path.unlink()
+
         # Should raise the exception from yaml_settings
         with pytest.raises(Exception, match="YAML error"):
             FileGenerator.generate_ignore_file()
@@ -252,8 +275,8 @@ local_paths:
         # Generate the file
         FileGenerator.generate_ignore_file()
 
-        # Verify file was created with correct Unicode content
-        ignore_path = Path("CLASSIC Ignore.yaml")
+        # Verify file was created with correct Unicode content at project root
+        ignore_path = self.tmp_path / "CLASSIC Ignore.yaml"
         assert ignore_path.exists()
         assert ignore_path.read_text(encoding="utf-8") == unicode_content
 
@@ -264,9 +287,23 @@ class TestFileGeneratorAsync:
 
     @pytest.fixture(autouse=True)
     def setup(self, tmp_path: Path, monkeypatch) -> None:
-        """Set up test environment with complete isolation."""
+        """Set up test environment with complete isolation.
+
+        We mock ResourceLoader.get_data_directory() to return a path within tmp_path
+        so that file generation happens in isolation.
+        """
         monkeypatch.chdir(tmp_path)
         self.tmp_path = tmp_path
+
+        # Create CLASSIC Data directory in tmp_path (simulates project structure)
+        self.mock_data_dir = tmp_path / "CLASSIC Data"
+        self.mock_data_dir.mkdir(parents=True, exist_ok=True)
+
+        # Mock ResourceLoader.get_data_directory to return our test directory
+        monkeypatch.setattr(
+            "ClassicLib.support.resources.ResourceLoader.get_data_directory",
+            lambda: self.mock_data_dir,
+        )
 
     async def test_generate_ignore_file_async_creates_new_file(self) -> None:
         """Test async generation of CLASSIC Ignore.yaml."""
