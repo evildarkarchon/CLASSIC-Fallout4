@@ -192,8 +192,13 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
         >>> # Equivalent to: yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.VR Mode")
 
     """
-    # Check if settings file exists, create if needed
-    settings_path = Path("CLASSIC Settings.yaml")
+    # Import inside function to avoid circular imports (see CLAUDE.md)
+    from ClassicLib.support.resources import ResourceLoader
+
+    # Use absolute path based on project root (not CWD) to ensure correct resolution
+    # regardless of where the application is launched from (BUG-02 fix)
+    project_root = ResourceLoader.get_data_directory().parent
+    settings_path = project_root / "CLASSIC Settings.yaml"
     if not settings_path.exists():
         # Get default settings from Main YAML
         default_settings = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")

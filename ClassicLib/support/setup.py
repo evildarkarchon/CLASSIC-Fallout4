@@ -193,7 +193,10 @@ class SetupCoordinator:
 
         # Ensure CLASSIC Settings.yaml exists before batch loading
         # This prevents crashes on first launch when the file is missing
-        settings_path = Path("CLASSIC Settings.yaml")
+        # Use absolute path based on project root (not CWD) to ensure correct resolution
+        # regardless of where the application is launched from (BUG-02 fix)
+        project_root = ResourceLoader.get_data_directory().parent
+        settings_path = project_root / "CLASSIC Settings.yaml"
         if not settings_path.exists():
             from ClassicLib.integration.factory import get_file_io
 

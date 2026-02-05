@@ -32,8 +32,12 @@ class FileGenerator:
 
         """
         from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.resources import ResourceLoader
 
-        ignore_path = Path("CLASSIC Ignore.yaml")
+        # Use absolute path based on project root (not CWD) to ensure correct resolution
+        # regardless of where the application is launched from (BUG-02 fix)
+        project_root = ResourceLoader.get_data_directory().parent
+        ignore_path = project_root / "CLASSIC Ignore.yaml"
         if not ignore_path.exists():
             default_ignorefile = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_ignorefile")
             if not isinstance(default_ignorefile, str):
@@ -82,8 +86,12 @@ class FileGenerator:
         """
         from ClassicLib.integration.factory import get_file_io
         from ClassicLib.io.yaml import yaml_settings_async
+        from ClassicLib.support.resources import ResourceLoader
 
-        ignore_path = Path("CLASSIC Ignore.yaml")
+        # Use absolute path based on project root (not CWD) to ensure correct resolution
+        # regardless of where the application is launched from (BUG-02 fix)
+        project_root = ResourceLoader.get_data_directory().parent
+        ignore_path = project_root / "CLASSIC Ignore.yaml"
         io_core = get_file_io()  # Use factory for Rust acceleration
 
         if not io_core.file_exists(ignore_path):
