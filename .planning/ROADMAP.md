@@ -89,11 +89,12 @@ Plans:
   2. py-spy captures combined Python+Rust stack traces
   3. Memory allocation profiling available via dhat for Rust code
   4. DashMap cache hit/miss rates are logged and reportable
-**Plans**: 2 plans
+**Plans**: 3 plans
 
 Plans:
-- [ ] 14-01-PLAN.md — Flamegraph and py-spy profiling setup (cargo aliases, PowerShell scripts)
-- [ ] 14-02-PLAN.md — dhat memory profiling and DashMap cache instrumentation
+- [x] 14-01-PLAN.md — Flamegraph and py-spy profiling setup (cargo aliases, PowerShell scripts)
+- [x] 14-02-PLAN.md — dhat memory profiling and DashMap cache instrumentation
+- [ ] 14-03-PLAN.md — Gap closure: Export cache_stats() from classic-settings-py to Python
 
 ### Phase 15: Bug Fixes & Test Stabilization
 **Goal**: Pre-existing bugs fixed, test suite stable
@@ -143,9 +144,9 @@ Plans:
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
 | 12. GIL Release Audit | v8.3.0 | 1/1 | Complete | 2026-02-04 |
 | 13. Benchmark Infrastructure | v8.3.0 | 3/3 | Complete | 2026-02-05 |
-| 14. Hot Path Profiling | v8.3.0 | 0/2 | Not started | - |
+| 14. Hot Path Profiling | v8.3.0 | 2/3 | Gap closure | - |
 | 15. Bug Fixes | v8.3.0 | 0/2 | Not started | - |
 | 16. Hot Path Optimization | v8.3.0 | 0/1 | Not started | - |
 | 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 32 plans completed, 7 plans remaining for v8.3.0
+**Overall:** 2 milestones shipped, 34 plans completed, 8 plans remaining for v8.3.0
