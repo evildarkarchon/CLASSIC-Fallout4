@@ -1,0 +1,16 @@
+# Benchmark regression detection thresholds
+# Used by CI to determine warning vs failure states
+# This file is READ by the threshold analysis step in .github/workflows/benchmarks.yml
+
+defaults:
+  warning_threshold: 5   # 5% regression = warning annotation
+  failure_threshold: 10  # 10% regression = build failure
+
+# Per-benchmark overrides for noisy benchmarks
+# Keys must match benchmark names exactly as they appear in critcmp output
+overrides:
+  # Example:
+  # yaml_parsing/parse/5000_lines:
+  #   warning_threshold: 8
+  #   failure_threshold: 15
+  #   reason: "Large YAML parsing has high variance on shared runners"
