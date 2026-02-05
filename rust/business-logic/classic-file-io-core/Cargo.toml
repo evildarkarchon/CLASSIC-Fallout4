@@ -54,6 +54,11 @@ chrono = "0.4"
 [dev-dependencies]
 tempfile = { workspace = true }
 serial_test = "3.2"
+criterion = { version = "0.6.0", features = ["html_reports"] }
+
+[[bench]]
+name = "file_io_benchmarks"
+harness = false
 
 [lints.rust]
 deprecated = "deny"
