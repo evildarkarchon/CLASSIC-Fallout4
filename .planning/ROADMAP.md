@@ -47,7 +47,7 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 - [x] **Phase 13: Benchmark Infrastructure** - Establish Criterion benchmarks with statistical output and baselines
 - [x] **Phase 14: Hot Path Profiling & Cache Instrumentation** - Profile hot paths, instrument DashMap caches
 - [x] **Phase 15: Bug Fixes & Test Stabilization** - Fix test_clear_cache and classic_settings() path resolution
-- [ ] **Phase 16: Hot Path Optimization (Data-Driven)** - Optimize based on profiling data from Phase 14
+- [x] **Phase 16: Hot Path Optimization (Data-Driven)** - Optimize based on profiling data from Phase 14
 - [ ] **Phase 17: CI Regression Detection** - Automated performance regression detection in CI
 
 ## Phase Details
@@ -121,8 +121,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 16-01-PLAN.md — Collect profiling data, analyze flamegraphs, identify top 3+ hot paths
-- [ ] 16-02-PLAN.md — Review findings with user, implement optimizations, validate improvements
+- [x] 16-01-PLAN.md — Collect profiling data, analyze flamegraphs, identify top 3+ hot paths
+- [x] 16-02-PLAN.md — Review findings with user, implement optimizations, validate improvements
 
 ### Phase 17: CI Regression Detection
 **Goal**: CI automatically detects performance regressions
@@ -147,7 +147,7 @@ Plans:
 | 13. Benchmark Infrastructure | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 14. Hot Path Profiling | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 15. Bug Fixes | v8.3.0 | 2/2 | Complete | 2026-02-04 |
-| 16. Hot Path Optimization | v8.3.0 | 0/2 | Not started | - |
+| 16. Hot Path Optimization | v8.3.0 | 2/2 | Complete | 2026-02-04 |
 | 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 37 plans completed, 3 plans remaining for v8.3.0
+**Overall:** 2 milestones shipped, 39 plans completed, 1 plan remaining for v8.3.0
