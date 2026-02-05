@@ -1,174 +1,651 @@
-# Feature Research: Codebase Cleanup and Consolidation
+# Feature Landscape: Slint GUI for CLASSIC
 
-**Domain:** Hybrid Python-Rust codebase cleanup (CLASSIC)
-**Researched:** 2026-02-01
-**Confidence:** HIGH (derived from direct codebase analysis, not external sources)
+**Domain:** Desktop crash log analyzer GUI
+**Researched:** 2026-02-05
+**Overall Confidence:** MEDIUM
 
-## Feature Landscape
+## Executive Summary
 
-### Table Stakes (Must-Do or Milestone Fails)
+Slint provides a solid foundation for building the CLASSIC GUI with native Rust integration. The existing Qt GUI requires:
+- Tabbed interface (4 tabs)
+- Crash log scanning with progress feedback
+- Markdown report viewing
+- Report list with context menus
+- Settings dialog with multiple tabs
+- Dark theme styling
 
-Cleanup activities where failure to execute means the codebase remains in a confused state with unclear ownership. These are the minimum to call the milestone "done."
+Slint covers most table stakes features but has notable gaps in markdown rendering and file dialogs that require external libraries or custom implementations.
 
-| Feature | Why Expected | Complexity | Notes |
-|---------|--------------|------------|-------|
-| Remove `FormIDAnalyzer` sync wrapper | Dead code: wraps `FormIDAnalyzerCore` with `create_sync_wrapper` for a GUI mode that should use async directly. Documented as deprecated in its own docstring. | LOW | `ClassicLib/scanning/logs/analyzers/FormIDAnalyzer.py` -- 156 lines wrapping the real implementation. All callers should use `FormIDAnalyzerCore` directly. |
-| Remove Python fallback implementations where Rust is always shipped | 8 fallback files in `ClassicLib/integration/python/` exist for a scenario (Rust unavailable) that never occurs in distribution. They create maintenance burden: every Rust API change requires updating two implementations. | MEDIUM | `formid_py.py`, `parser_py.py`, `plugin_py.py`, `record_py.py`, `report_py.py`, `database_py.py`, `file_io_py.py`, `mod_detector_py.py`. Verify Rust wheels are always bundled before removing. |
-| Eliminate `_VERSION_WARNING_LOGGED` global mutable state | Module-level `global` flag in `game_path.py` that breaks test isolation. Already documented as fragile in CONCERNS.md. | LOW | Replace with instance variable on `GamePath` class or `functools.lru_cache` with `cache_clear()` in test fixtures. |
-| Consolidate YAML sync/async split | `ClassicLib/io/yaml/` has parallel `sync/` and `async_/` subdirectories with overlapping cache implementations. Two code paths to maintain for the same data. | MEDIUM | Collapse to async-only with sync wrappers at entry points (GUI). The sync dir has `cache.py`, `convenience.py`; async dir has `cache.py`, `core.py`, `file_operations.py`. |
-| Remove deprecated module references | 11 files across `ClassicLib/` contain DEPRECATED markers. Deprecated code that remains becomes permanent. | LOW | Audit each of the 11 files from grep results. Remove deprecated paths, update callers to current API. |
-| Clean up global mutable state pattern | 19 instances of `global _*` across ClassicLib (grep results above). Each is a singleton/lazy-init that complicates testing and creates hidden coupling. | HIGH | Not all can be removed (some are legitimate singletons like `_message_handler`). Categorize: which are lazy-init caches (acceptable), which are mutable flags (replace with instance state), which are test-hostile (add reset fixtures). |
-| Simplify factory/detector/status layering | Three overlapping abstraction layers for Rust component detection: `detector.py` (import-based detection + caching), `factory/core.py` (additional cache layer over detector), `status.py` (yet another layer with `RUST_AVAILABLE` dict and `RUST_STATUS` dict). | MEDIUM | Collapse to: detector does detection, factory uses detector directly, status is a read-only view. Remove duplicate caching between `_components_cache` in factory/core.py and `_detection_cache` in detector.py. |
+---
 
-### Differentiators (Makes Future Rust Migration Significantly Easier)
+## Table Stakes
 
-These go beyond "cleaning up the mess" to actively preparing the codebase for the next phase of Rust migration. Not required for the cleanup milestone, but high ROI.
+Features users expect. Missing = product feels incomplete.
 
-| Feature | Value Proposition | Complexity | Notes |
-|---------|-------------------|------------|-------|
-| Establish clear module ownership boundaries | Currently, `ClassicLib/integration/rust/` wraps Rust modules, `ClassicLib/integration/python/` provides fallbacks, and `ClassicLib/integration/factory/` selects between them. After removing fallbacks, this three-layer indirection becomes two layers of indirection for no reason. Flatten to direct Rust imports with thin Python adapter. | HIGH | Major refactor of the integration layer. Sets the pattern for how all future Rust modules are consumed. Do this once, correctly. |
-| Remove `RustAcceleration` coordinator singleton | `ClassicLib/acceleration/` (coordinator.py, metrics.py, types.py, workload.py) is an elaborate optimization framework (OptimizationLevel enum with 5 levels, WorkloadCharacteristics, ComponentMetrics) that adds complexity without clear evidence of use. If Rust is always available, the "coordination" and "fallback" logic is dead weight. | MEDIUM | 4 files, ~400 lines. Verify no runtime code depends on `RustAcceleration` instance. If metrics are needed, they belong in the Rust layer, not a Python wrapper. |
-| Unify async entry patterns | Three different async-entry patterns exist: `AsyncBridge.run_async()` for GUI, `asyncio.run()` for CLI, and `create_sync_wrapper()` for transitional code. After cleanup, there should be exactly two: native async (CLI/TUI) and `AsyncBridge` (GUI). Remove `create_sync_wrapper` and all `_async_utils/bridge_helpers.py` transitional code. | MEDIUM | `ClassicLib/_async_utils/bridge_helpers.py`, `ClassicLib/_async_utils/__init__.py`, `ClassicLib/io/files/sync_adapters.py`, plus 4 files using `create_sync_wrapper`. |
-| Add dead code detection to CI | A cleanup milestone without ongoing enforcement means code will re-accumulate. Add `vulture` or equivalent dead code detection to CI pipeline so deprecated/unused code is flagged automatically. | LOW | One-time CI configuration. Prevents regression. |
-| Type-narrow all `Any` returns from factory functions | Factory functions like `get_parser()`, `get_formid_analyzer()` return `Any` because they could return Rust or Python implementations. After removing fallbacks, return types can be narrowed to specific Rust types, enabling Pyright to catch errors. | MEDIUM | Requires updating ~8 factory functions in `ClassicLib/integration/factory/` and all type stubs. |
-| Document the post-cleanup integration contract | Write a single-page reference for how Python calls Rust after cleanup: import pattern, error handling, type mapping. This replaces the current scattered documentation across 5+ doc files. | LOW | Documentation deliverable. Prevents the integration layer from re-growing organically. |
+### TabWidget (Tabbed Interface)
 
-### Anti-Features (Cleanup Activities That Seem Good but Are Actually Harmful)
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Built-in `TabWidget` with `Tab` children |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
 
-| Feature | Why Requested | Why Problematic | Alternative |
-|---------|---------------|-----------------|-------------|
-| Remove ALL Python fallbacks immediately | "If Rust is always shipped, why keep any Python?" | Some fallback code serves as the reference implementation and test oracle. Removing it before Rust implementations are fully tested removes the safety net. Specifically `database_py.py` and `file_io_py.py` exercise paths that Rust might not cover in edge cases. | Remove fallbacks in phases: first for modules with comprehensive Rust tests (parser, formid, plugin), then for modules where Rust test coverage needs verification (database, file_io). |
-| Rewrite the integration/factory layer from scratch | "It's three layers deep, just rebuild it cleanly" | Factory pattern rewrite affects every import site in the codebase simultaneously. High risk of introducing subtle regressions in component selection. | Simplify incrementally: first remove fallback branches (making factories trivially "always Rust"), then inline the simplified factories, then remove the empty shell. |
-| Convert all global state to dependency injection | "Global mutable state is bad, inject everything" | CLASSIC is a desktop app, not a web server. Some singletons (MessageHandler, GlobalRegistry, ThreadManager) are legitimate application-scoped singletons. Converting them to DI adds constructor parameter proliferation without benefit. | Fix the problematic globals (mutable flags, test-hostile caches) but keep legitimate singletons. Add `reset()` methods for test isolation instead of removing the pattern. |
-| Remove the entire `ClassicLib/acceleration/` package now | "It's premature optimization infrastructure" | While the optimization levels and workload characteristics are likely unused, the ComponentMetrics tracking may have diagnostic value. Removing it without checking runtime usage could break status reporting. | Audit actual usage first. If `RustAcceleration` is only instantiated in status reporting, simplify rather than remove. If never instantiated at runtime, safe to remove entirely. |
-| Merge sync and async YAML into a single module file | "Why have directories when one file would do?" | The YAML subsystem is actively used by dozens of callers. A large merge-and-restructure creates a massive diff that is hard to review and hard to bisect if something breaks. | Consolidate the cache implementations first (two `cache.py` files into one). Then remove the sync convenience wrappers. Then flatten the directory structure. Three small PRs instead of one large one. |
-| Remove `CLASSIC_DISABLE_RUST` environment variable | "If fallbacks are removed, the env var is meaningless" | Development and debugging still benefit from being able to disable Rust modules. Even without fallbacks, the env var can trigger graceful degradation messaging rather than hard crashes. | Keep the env var but change its behavior: instead of falling back to Python, it logs a clear error and exits. Useful for diagnosing Rust loading issues. |
+**Notes:** Native TabWidget with `current-index` property for programmatic tab switching. Maps directly to existing Qt tab structure (MAIN OPTIONS, FILE BACKUP, ARTICLES, RESULTS).
+
+**Example:**
+```slint
+TabWidget {
+    Tab { title: "MAIN OPTIONS"; /* content */ }
+    Tab { title: "FILE BACKUP"; /* content */ }
+    Tab { title: "ARTICLES"; /* content */ }
+    Tab { title: "RESULTS"; /* content */ }
+}
+```
+
+**Sources:**
+- [TabWidget Documentation](https://releases.slint.dev/1.5.1/docs/slint/src/language/widgets/tabwidget)
+
+---
+
+### Buttons and Standard Controls
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Built-in Button, CheckBox, ComboBox, SpinBox, LineEdit |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
+
+**Current Qt Widgets to Map:**
+- QPushButton -> Button
+- QCheckBox -> CheckBox
+- QComboBox -> ComboBox
+- QSpinBox -> SpinBox
+- QLineEdit -> LineEdit
+- QTextEdit -> TextEdit
+
+**Notes:** All standard widgets available with consistent styling across Fluent/Material themes.
+
+**Sources:**
+- [Widgets Documentation](https://releases.slint.dev/1.1.0/docs/slint/src/builtins/widgets)
+
+---
+
+### Progress Indicator
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Built-in `ProgressIndicator` |
+| **Complexity** | MEDIUM (async updates require specific patterns) |
+| **Status** | AVAILABLE |
+
+**Current Usage:** Qt progress dialogs during scanning operations.
+
+**Slint Pattern for Async Updates:**
+```rust
+// Use upgrade_in_event_loop or channel communication
+let weak = ui.as_weak();
+tokio::spawn(async move {
+    // ... scanning work ...
+    weak.upgrade_in_event_loop(|ui| {
+        ui.set_scan_progress(0.5); // 50%
+    });
+});
+```
+
+**Sources:**
+- [ProgressIndicator Discussion](https://github.com/slint-ui/slint/discussions/8466)
+- [Async Progress Updates](https://github.com/slint-ui/slint/discussions/4175)
+
+---
+
+### Dark Theme Styling
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Built-in dark variants for Fluent and Material styles |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
+
+**Options:**
+- `fluent-dark` - Windows-style dark theme
+- `material-dark` - Material Design dark theme
+
+**Implementation:** Set at compile time or detect system preference automatically.
+
+**Current Qt Style:** Custom CSS-like stylesheet (DARK_MODE constant) with colors:
+- Background: #2b2b2b
+- Widget: #3c3c3c
+- Borders: #5c5c5c
+- Text: #ffffff
+- Accent: #0078d4
+
+**Sources:**
+- [Style Selection](https://releases.slint.dev/1.5.1/docs/slint/src/advanced/style)
+
+---
+
+### Report List (ListView)
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Built-in `ListView` with virtualization |
+| **Complexity** | MEDIUM |
+| **Status** | AVAILABLE (with caveats) |
+
+**Current Usage:** QListWidget showing scan reports (*-AUTOSCAN.md files).
+
+**Slint Strengths:**
+- Virtualization: Only visible items instantiated
+- Handles 50M+ items with recent optimizations
+
+**Slint Concerns:**
+- Flickering reported with rapid content updates
+- Destruction performance issues with large lists
+- May need custom optimization for 10K+ items
+
+**Pattern:**
+```slint
+ListView {
+    for report in reports: Rectangle {
+        Text { text: report.name; }
+    }
+}
+```
+
+**Sources:**
+- [ListView Performance](https://github.com/slint-ui/slint/discussions/7986)
+- [Layout Optimization PR](https://github.com/slint-ui/slint/pull/7408)
+
+---
+
+### Context Menu (Right-Click)
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | `ContextMenuArea` with Menu/MenuItem (Slint 1.10+) |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
+
+**Current Usage:** Right-click on reports list for View/Copy/Delete actions.
+
+**Slint Implementation:**
+```slint
+ContextMenuArea {
+    Menu {
+        MenuItem { text: "View Report"; }
+        MenuSeparator { }
+        MenuItem { text: "Copy to Clipboard"; }
+        MenuItem { text: "Delete"; }
+    }
+    // ... list content ...
+}
+```
+
+**Sources:**
+- [ContextMenuArea Docs](https://docs.slint.dev/latest/docs/slint/reference/window/contextmenuarea/)
+- [Menu Support Blog](https://slint.dev/blog/making-slint-desktop-ready)
+
+---
+
+### Modal Dialogs
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | `Dialog` element with StandardButton |
+| **Complexity** | MEDIUM |
+| **Status** | PARTIAL |
+
+**Current Usage:**
+- Settings dialog (modal, tabbed)
+- About dialog
+- Error dialogs with details
+- Confirmation dialogs (delete report)
+
+**Slint Limitations:**
+- No built-in blocking modal behavior like Windows
+- PopupWindow "steals mouse input"
+- True modal parent/child relationship requires workarounds
+
+**Pattern for Settings:**
+```slint
+export component SettingsDialog inherits Dialog {
+    TabWidget {
+        Tab { title: "General"; /* settings */ }
+        Tab { title: "Scanning"; /* settings */ }
+        Tab { title: "Paths"; /* settings */ }
+    }
+    StandardButton { kind: ok; }
+    StandardButton { kind: cancel; }
+}
+```
+
+**Sources:**
+- [Dialog Documentation](https://docs.slint.dev/latest/docs/slint/reference/window/dialog/)
+- [Modal Dialog Discussion](https://github.com/slint-ui/slint/discussions/6028)
+
+---
+
+### Clipboard Operations
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | TextEdit/LineEdit have copy/paste; platform clipboard API |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
+
+**Current Usage:** Copy report content to clipboard.
+
+**Pattern:**
+```rust
+// Direct clipboard access from Rust
+use arboard::Clipboard;
+let mut clipboard = Clipboard::new()?;
+clipboard.set_text(report_content)?;
+```
+
+**Notes:** TextEdit widgets support Ctrl+C/Ctrl+V natively. For programmatic access, use `arboard` crate.
+
+**Sources:**
+- [Clipboard in Slint](https://docs.rs/slint/latest/slint/platform/enum.Clipboard.html)
+- [Clipboard Discussion](https://github.com/slint-ui/slint/discussions/2930)
+
+---
+
+### Window Geometry Persistence
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Window properties accessible from Rust |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
+
+**Current Usage:** Save/restore window size per tab.
+
+**Pattern:** Store window dimensions in settings, restore on startup:
+```rust
+// On close
+let size = window.size();
+settings.set_window_width(size.width);
+settings.set_window_height(size.height);
+
+// On startup
+window.set_width(settings.window_width());
+window.set_height(settings.window_height());
+```
+
+---
+
+### Image/Icon Display
+
+| Aspect | Details |
+|--------|---------|
+| **Slint Support** | Built-in Image element, SVG/PNG/JPEG |
+| **Complexity** | LOW |
+| **Status** | AVAILABLE |
+
+**Current Usage:** Application icon, button icons.
+
+**Pattern:**
+```slint
+Image {
+    source: @image-url("CLASSIC.ico");
+    width: 128px;
+    height: 128px;
+}
+```
+
+**Supported Formats:** SVG, PNG, JPEG (plus many more with cargo feature).
+
+**Sources:**
+- [Image Documentation](https://docs.slint.dev/latest/docs/slint/reference/elements/image/)
+
+---
+
+## Differentiators
+
+Features Slint does better than Qt/Python, or unique Slint advantages.
+
+### Native Rust Integration
+
+| Aspect | Details |
+|--------|---------|
+| **Advantage** | Direct call to Rust business logic, no FFI overhead |
+| **Complexity** | N/A (architectural benefit) |
+
+**Current Pain Point:** Python GUI -> AsyncBridge -> Rust via PyO3 -> Back to Python.
+
+**Slint Advantage:** Rust GUI -> Direct Rust calls -> Same runtime.
+
+**Impact:**
+- Eliminate AsyncBridge complexity
+- Single Tokio runtime for everything
+- No GIL contention
+- Type-safe across entire stack
+
+---
+
+### Compile-Time UI Validation
+
+| Aspect | Details |
+|--------|---------|
+| **Advantage** | .slint files validated at compile time |
+| **Complexity** | N/A (tooling benefit) |
+
+**Current Pain Point:** Qt signals/slots can fail at runtime with typos.
+
+**Slint Advantage:**
+- Property bindings checked at compile
+- LSP integration for IDE errors
+- No runtime signal connection failures
+
+---
+
+### Lightweight Runtime
+
+| Aspect | Details |
+|--------|---------|
+| **Advantage** | <300KB RAM footprint |
+| **Complexity** | N/A (runtime benefit) |
+
+**Current:** Qt + Python runtime is 50-100MB+.
+
+**Slint:** Entire runtime fits in <300KB RAM. Faster startup, smaller binary.
+
+---
+
+### GPU-Accelerated Rendering
+
+| Aspect | Details |
+|--------|---------|
+| **Advantage** | Skia or software renderer, GPU acceleration |
+| **Complexity** | N/A (rendering benefit) |
+
+**Renderers Available:**
+- Skia (GPU accelerated, best quality)
+- FemtoVG (OpenGL)
+- Software (fallback, works everywhere)
+
+---
+
+### Multi-Window Support (Slint 1.7+)
+
+| Aspect | Details |
+|--------|---------|
+| **Advantage** | Multiple windows with shared state |
+| **Complexity** | LOW |
+
+**Pattern:** Define multiple Window components, manage from Rust.
+
+**Sources:**
+- [Multi-Window Blog](https://slint.dev/blog/slint-1.7-released)
+
+---
+
+### Tokio Integration
+
+| Aspect | Details |
+|--------|---------|
+| **Advantage** | Native async with existing Rust infrastructure |
+| **Complexity** | MEDIUM |
+
+**Pattern:**
+```rust
+slint::spawn_local(async move {
+    // Run on UI thread
+    let result = tokio::spawn(async {
+        // Background Tokio task
+        scan_logs().await
+    }).await;
+
+    ui.set_scan_result(result);
+});
+```
+
+**Sources:**
+- [Async Integration](https://github.com/slint-ui/slint/discussions/4377)
+
+---
+
+## Anti-Features
+
+Features Slint cannot do or should NOT try to do.
+
+### Native Markdown Rendering
+
+| Aspect | Details |
+|--------|---------|
+| **Why Avoid** | Not yet implemented in Slint |
+| **What To Do Instead** | Custom solution or external renderer |
+| **Severity** | HIGH (critical for CLASSIC) |
+
+**Current State:** Rich text support is in active development (issue #9560, #6684) but NOT production-ready.
+
+**Alternatives:**
+1. **Convert markdown to styled elements:** Parse markdown in Rust, render as Slint Text/Rectangle with styling
+2. **WebView integration:** Use embedded WebView with marked.js (adds complexity)
+3. **Pre-render to HTML:** Keep Qt-style HTML approach with embedded browser component
+
+**Recommendation:** Implement custom markdown-to-Slint renderer using `pulldown-cmark` (Rust markdown parser). Render headings, bold, lists, code blocks as styled Slint elements.
+
+**Complexity:** HIGH
+
+**Sources:**
+- [Rich Text Issue](https://github.com/slint-ui/slint/issues/9560)
+- [Markdown Issue](https://github.com/slint-ui/slint/issues/6684)
+
+---
+
+### Native File Dialogs
+
+| Aspect | Details |
+|--------|---------|
+| **Why Avoid** | Slint has no built-in file dialog |
+| **What To Do Instead** | Use external crate |
+| **Severity** | MEDIUM |
+
+**Current Usage:**
+- Browse for INI folder
+- Open crash logs folder
+
+**Solution:** Use `rfd` (Rust File Dialog) or `native-dialog` crate:
+```rust
+use rfd::FileDialog;
+
+let folder = FileDialog::new()
+    .set_directory(&starting_path)
+    .pick_folder();
+```
+
+**Complexity:** LOW (well-documented integration)
+
+**Sources:**
+- [File Dialog Discussion](https://github.com/slint-ui/slint/discussions/3015)
+- [rfd crate](https://crates.io/crates/rfd)
+
+---
+
+### Native Tooltips
+
+| Aspect | Details |
+|--------|---------|
+| **Why Avoid** | No built-in tooltip property |
+| **What To Do Instead** | Custom PopupWindow or skip |
+| **Severity** | LOW |
+
+**Current Usage:** Tooltips on buttons (e.g., "Refresh the reports list").
+
+**Workaround:** PopupWindow with delay, but it's clunky and "steals mouse input."
+
+**Recommendation:** For MVP, skip tooltips. Add later when Slint implements native support (tracked in issue #6446).
+
+**Sources:**
+- [Tooltip Discussion](https://github.com/slint-ui/slint/discussions/1617)
+- [Tooltip Issue](https://github.com/slint-ui/slint/issues/6446)
+
+---
+
+### Native Splitter/Resizable Panes
+
+| Aspect | Details |
+|--------|---------|
+| **Why Avoid** | No built-in splitter widget |
+| **What To Do Instead** | Custom implementation or fixed layout |
+| **Severity** | MEDIUM |
+
+**Current Usage:** QSplitter between reports list (30%) and markdown viewer (70%).
+
+**Workaround:** Custom splitter using TouchArea:
+```slint
+// Custom splitter implementation required
+Rectangle {
+    property <length> split-position: 300px;
+
+    // Left panel
+    Rectangle { width: split-position; }
+
+    // Drag handle
+    TouchArea {
+        moved => { split-position = mouse-x; }
+    }
+
+    // Right panel
+    Rectangle { x: split-position + 5px; }
+}
+```
+
+**Complexity:** MEDIUM
+
+**Sources:**
+- [Splitter Discussion](https://github.com/slint-ui/slint/discussions/343)
+
+---
+
+### Blocking Modal Dialogs
+
+| Aspect | Details |
+|--------|---------|
+| **Why Avoid** | Slint dialogs don't block like native OS modals |
+| **What To Do Instead** | Use callbacks, disable parent UI |
+| **Severity** | LOW |
+
+**Pattern:** Instead of blocking, use callback pattern:
+```rust
+ui.on_settings_accepted(|| {
+    // Handle save
+});
+ui.on_settings_cancelled(|| {
+    // Handle cancel
+});
+show_settings_dialog();
+// UI continues, callbacks handle result
+```
+
+---
+
+### System Tray (If Needed)
+
+| Aspect | Details |
+|--------|---------|
+| **Why Avoid** | Not implemented in Slint |
+| **What To Do Instead** | External crate if needed |
+| **Severity** | N/A (not currently used) |
+
+**Notes:** Current CLASSIC does not use system tray. If needed, use `tray-icon` crate.
+
+---
 
 ## Feature Dependencies
 
 ```
-[Remove Python fallbacks]
+Window Setup
     |
-    |--requires--> [Verify Rust wheels always bundled in distribution]
-    |--requires--> [Verify Rust test coverage for each removed fallback]
+    +-- Dark Theme (compile-time selection)
     |
-    +--enables--> [Simplify factory layer]
-                      |
-                      +--enables--> [Type-narrow factory returns]
-                      +--enables--> [Remove acceleration coordinator]
-                      +--enables--> [Flatten integration layers]
+    +-- TabWidget
+            |
+            +-- Main Tab
+            |       +-- Buttons
+            |       +-- Scan Controls
+            |       +-- Progress Indicator
+            |
+            +-- File Backup Tab
+            |       +-- Buttons
+            |       +-- File Operations (via rfd)
+            |
+            +-- Articles Tab
+            |       +-- Static Content
+            |
+            +-- Results Tab
+                    +-- Split Layout (custom)
+                    |       +-- ListView (reports)
+                    |       +-- Markdown Viewer (custom)
+                    |
+                    +-- Context Menu
+                    +-- Clipboard Operations
 
-[Remove FormIDAnalyzer sync wrapper]
-    |--requires--> [Audit all callers to confirm none use sync API]
-    +--enables--> [Unify async entry patterns]
-
-[Consolidate YAML sync/async]
-    |--requires--> [Audit all YAML callers for sync vs async usage]
-    +--independent of--> [Remove Python fallbacks]
-
-[Clean up global mutable state]
-    |--independent of--> [All other items]
-    +--benefits from--> [Improved test fixtures]
-
-[Remove deprecated modules]
-    |--independent of--> [All other items]
-    |--should precede--> [Remove Python fallbacks] (reduces noise in diffs)
-
-[Add dead code detection to CI]
-    |--independent of--> [All other items]
-    +--should be first--> (catches things the manual audit misses)
+Settings Dialog (separate window)
+    +-- TabWidget
+    +-- Form Controls
+    +-- File Browser (via rfd)
 ```
 
-### Dependency Notes
+---
 
-- **Remove Python fallbacks requires Rust verification:** The fallbacks exist because Rust modules might not be available. Before removing them, must confirm that (a) all distribution channels bundle Rust wheels, and (b) each Rust module has equivalent test coverage to its Python fallback.
-- **Simplify factory layer requires fallback removal:** The factory's entire purpose is selecting between Rust and Python. With only Rust, factories become trivial pass-throughs that can be inlined.
-- **Type-narrowing requires simplified factories:** You cannot narrow `Any` to a specific Rust type while the factory might return either implementation.
-- **FormIDAnalyzer removal requires caller audit:** The sync wrapper is marked deprecated but may still be imported somewhere in GUI code.
-- **YAML consolidation is independent:** Can proceed in parallel with fallback removal since the sync/async split is a Python-only concern unrelated to Rust.
+## MVP Recommendation
 
-## MVP Definition
+**Phase 1: Core Window**
+1. Main window with TabWidget (4 tabs)
+2. Dark theme (fluent-dark or material-dark)
+3. Basic buttons and controls
 
-### Phase 1: Foundation Cleanup (Do First)
+**Phase 2: Scanning**
+1. Scan buttons with enable/disable states
+2. Progress indicator with async updates
+3. Basic error dialogs
 
-Minimum viable cleanup -- the activities with no dependencies and low risk.
+**Phase 3: Results Viewer**
+1. ListView for reports (without splitter initially)
+2. Basic text display (plain text, not markdown)
+3. Context menu for actions
+4. Clipboard copy
 
-- [ ] Add dead code detection to CI -- catches things humans miss, prevents regression
-- [ ] Remove deprecated module references -- 11 files, low risk, reduces noise
-- [ ] Eliminate `_VERSION_WARNING_LOGGED` and similar mutable global flags -- LOW complexity, improves test isolation
-- [ ] Audit and categorize all 19 `global _*` instances -- decide which to fix, which to keep
+**Phase 4: Markdown Rendering**
+1. Custom markdown-to-Slint renderer
+2. Headers, bold, lists, code blocks
+3. Custom styling for CLASSIC report elements
 
-### Phase 2: Core Consolidation (Do After Phase 1)
+**Phase 5: Settings and Polish**
+1. Settings dialog with tabs
+2. File dialogs (via rfd)
+3. Window geometry persistence
+4. Splitter (if needed)
 
-The main cleanup work. Removes the largest sources of redundancy.
-
-- [ ] Verify Rust wheel bundling and test coverage -- prerequisite gate
-- [ ] Remove FormIDAnalyzer sync wrapper -- after confirming no callers
-- [ ] Remove Python fallback implementations (parser, formid, plugin, record first) -- after verification
-- [ ] Consolidate YAML sync/async split -- parallel with above
-
-### Phase 3: Architecture Simplification (Do After Phase 2)
-
-Restructuring that depends on the core cleanup being done.
-
-- [ ] Simplify factory/detector/status three-layer indirection -- enabled by fallback removal
-- [ ] Remove or simplify RustAcceleration coordinator -- after auditing usage
-- [ ] Unify async entry patterns, remove transitional `create_sync_wrapper` -- after sync wrappers gone
-- [ ] Type-narrow factory function returns -- after factories simplified
-
-### Future Consideration (Post-Milestone)
-
-- [ ] Flatten integration layer entirely (direct Rust imports) -- too large for cleanup milestone
-- [ ] Document post-cleanup integration contract -- after new patterns stabilize
-- [ ] Migrate remaining Python business logic to Rust -- separate milestone entirely
-
-## Feature Prioritization Matrix
-
-| Feature | User Value | Implementation Cost | Risk | Priority |
-|---------|------------|---------------------|------|----------|
-| Remove deprecated modules | MEDIUM | LOW | LOW | P1 |
-| Fix global mutable state flags | MEDIUM | LOW | LOW | P1 |
-| Add dead code detection to CI | HIGH | LOW | LOW | P1 |
-| Remove FormIDAnalyzer sync wrapper | MEDIUM | LOW | LOW | P1 |
-| Remove Python fallbacks (verified) | HIGH | MEDIUM | MEDIUM | P1 |
-| Consolidate YAML sync/async | HIGH | MEDIUM | MEDIUM | P1 |
-| Simplify factory/detector/status | HIGH | MEDIUM | MEDIUM | P2 |
-| Remove RustAcceleration coordinator | MEDIUM | MEDIUM | LOW | P2 |
-| Unify async entry patterns | MEDIUM | MEDIUM | MEDIUM | P2 |
-| Type-narrow factory returns | HIGH | MEDIUM | LOW | P2 |
-| Flatten integration layers entirely | HIGH | HIGH | HIGH | P3 |
-| Document integration contract | MEDIUM | LOW | LOW | P3 |
-
-**Priority key:**
-- P1: Must complete for cleanup milestone
-- P2: Should complete if time allows, high ROI for future migration
-- P3: Defer to post-milestone or next milestone
-
-## Measurable Outcomes
-
-A successful cleanup is measurable by these concrete metrics:
-
-| Metric | Before (Estimated) | Target After | How to Measure |
-|--------|---------------------|-------------|----------------|
-| Python fallback files | 8 files | 0 files | `ls ClassicLib/integration/python/` |
-| Deprecated markers in prod code | 11 files | 0 files | `grep -r DEPRECATED ClassicLib/` |
-| Global mutable state flags | ~6 problematic | 0 problematic | `grep -r "global _" ClassicLib/` audit |
-| Integration layer depth | 3 layers (detector + factory + status) | 2 layers (detector + factory) | Code review |
-| Duplicate cache implementations | 2 (YAML sync + async caches) | 1 | File count in `io/yaml/` |
-| Sync wrapper files | 3+ (FormIDAnalyzer, sync_adapters, bridge_helpers) | 0 transitional | `grep -r create_sync_wrapper ClassicLib/` |
-| Dead code in CI | Not checked | 0 violations | CI pipeline green |
-| Factory return types using `Any` | ~8 functions | 0 functions | Pyright strict mode |
-
-## Sources
-
-- Direct codebase analysis of `J:\CLASSIC-Fallout4\ClassicLib\` (HIGH confidence)
-- `J:\CLASSIC-Fallout4\.planning\codebase\CONCERNS.md` (HIGH confidence -- recent audit)
-- `J:\CLASSIC-Fallout4\.planning\codebase\ARCHITECTURE.md` (HIGH confidence)
-- `J:\CLASSIC-Fallout4\.planning\codebase\STRUCTURE.md` (HIGH confidence)
-- `J:\CLASSIC-Fallout4\.planning\codebase\CONVENTIONS.md` (HIGH confidence)
-- `J:\CLASSIC-Fallout4\.planning\codebase\INTEGRATIONS.md` (HIGH confidence)
-- Grep results across codebase for patterns: `global _*`, `DEPRECATED`, `create_sync_wrapper` (HIGH confidence)
+**Defer to Post-MVP:**
+- Tooltips (wait for Slint native support)
+- System tray (not currently used)
+- Rich text editing (read-only reports only)
 
 ---
-*Feature research for: CLASSIC codebase cleanup and consolidation*
-*Researched: 2026-02-01*
+
+## Sources Summary
+
+### Official Documentation
+- [Slint Main Site](https://slint.dev/)
+- [Slint GitHub](https://github.com/slint-ui/slint)
+- [Widget Documentation](https://releases.slint.dev/1.1.0/docs/slint/src/builtins/widgets)
+
+### Blog Posts
+- [Slint 1.7 Release](https://slint.dev/blog/slint-1.7-released)
+- [Making Slint Desktop-Ready](https://slint.dev/blog/making-slint-desktop-ready)
+
+### GitHub Discussions
+- [Async Integration](https://github.com/slint-ui/slint/discussions/4377)
+- [Progress Updates](https://github.com/slint-ui/slint/discussions/8466)
+- [File Dialogs](https://github.com/slint-ui/slint/discussions/3015)
+- [Context Menus](https://docs.slint.dev/latest/docs/slint/reference/window/contextmenuarea/)
+- [Modal Dialogs](https://github.com/slint-ui/slint/discussions/6028)
+
+### Known Issues
+- [Rich Text Issue #9560](https://github.com/slint-ui/slint/issues/9560)
+- [Markdown Issue #6684](https://github.com/slint-ui/slint/issues/6684)
+- [Tooltip Issue #6446](https://github.com/slint-ui/slint/issues/6446)

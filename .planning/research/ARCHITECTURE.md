@@ -1,739 +1,579 @@
-# Architecture Research
+# Architecture Patterns: Slint GUI Integration
 
-**Domain:** Hybrid Python-Rust codebase cleanup for progressive Rust migration
-**Researched:** 2026-02-01 (Updated: 2026-02-02)
-**Confidence:** HIGH (based on direct codebase analysis -- all findings verified against actual source files)
+**Domain:** Native Rust GUI for crash log analysis application
+**Researched:** 2026-02-05
+**Confidence:** HIGH (based on official Slint documentation and GitHub discussions)
 
-## System Overview
+## Recommended Architecture
+
+The Slint GUI integrates directly with existing `-core` crates, bypassing the Python binding layer entirely. This follows the existing architecture's principle that "CLI/TUI applications use `-core` crates directly."
 
 ```
-+----------------------------------------------------------+
-|                    Python Layer (UI)                      |
-|  CLASSIC_Interface.py | CLASSIC_ScanLogs.py | Controllers |
-+----------------------------------------------------------+
-                            |
-                            v
-+----------------------------------------------------------+
-|               Python Integration Layer                    |
-|    ClassicLib/integration/factory.py (Protocol types)     |
-|    ClassicLib/integration/rust/*.py (Thin wrappers)       |
-+----------------------------------------------------------+
-                            |
-                            v
-+----------------------------------------------------------+
-|              Python Bindings (-py crates)                 |
-|  classic-scanlog-py | classic-scangame-py | classic-*-py  |
-|         PyO3 adapters, type conversions, GIL handling     |
-+----------------------------------------------------------+
-                            |
-                            v
-+----------------------------------------------------------+
-|              Business Logic (-core crates)                |
-|  classic-scanlog-core | classic-scangame-core | etc.      |
-|            Pure Rust, NO PyO3, maximum performance        |
-+----------------------------------------------------------+
-                            |
-                            v
-+----------------------------------------------------------+
-|                   Foundation Layer                        |
-|   classic-shared-core (ONE RUNTIME, errors, utilities)    |
-+----------------------------------------------------------+
++------------------------------------+
+|         Slint GUI Application       |
+|    rust/ui-applications/classic-gui |
++------------------------------------+
+              |
+              v
++------------------------------------+
+|         Slint Runtime              |
+|  (Main thread event loop)          |
++------------------------------------+
+              |
+    +--------------------+
+    | invoke_from_event  |
+    | _loop() bridge     |
+    +--------------------+
+              |
+              v
++------------------------------------+
+|      Worker Thread Pool            |
+|  (Tokio runtime from classic-shared)|
++------------------------------------+
+              |
+              v
++------------------------------------+
+|      Business Logic Layer          |
+|  classic-scanlog-core              |
+|  classic-settings-core             |
+|  classic-path-core                 |
+|  classic-yaml-core                 |
++------------------------------------+
+              |
+              v
++------------------------------------+
+|      Foundation Layer              |
+|  classic-shared-core               |
+|  (Global Tokio runtime, errors)    |
++------------------------------------+
 ```
 
-### Component Responsibilities
+### Component Boundaries
 
-| Component | Responsibility | Current Owner | Target Owner |
-|-----------|----------------|---------------|--------------|
-| `ClassicLib/integration/factory/` | Dispatch between Rust/Python implementations | Python | Python (permanent) |
-| `ClassicLib/integration/rust/` | Python wrappers around Rust modules | Python | Shrink as Rust absorbs logic |
-| `ClassicLib/integration/python/` | Python fallback implementations | Python | Remove where Rust is stable |
-| `ClassicLib/scanning/logs/` | Crash log analysis pipeline | Python | Migrate to Rust `-core` |
-| `ClassicLib/scanning/game/` | Game file integrity checking | Python | Migrate to Rust `-core` |
-| `ClassicLib/support/` | Path detection, XSE, resources | Python | Migrate to Rust `-core` |
-| `ClassicLib/core/` | Infrastructure (registry, bridge, perf) | Python | Keep Python for GUI bridge; Rust for registry/perf |
-| `ClassicLib/io/` | File I/O, database, YAML access | Python | Already mostly Rust-accelerated |
-| `ClassicLib/acceleration/` | Rust workload coordination | Python | Simplify or remove |
-| `ClassicLib/messaging/` | Message routing | Python | Keep Python (GUI-facing) |
-| `rust/business-logic/*-core/` | Pure Rust business logic | Rust | Expand (target for migration) |
-| `rust/python-bindings/*-py/` | PyO3 thin adapters | Rust | Expand to match `-core` |
-| `rust/foundation/` | Shared runtime, errors | Rust | Stable (no changes) |
+| Component | Responsibility | Communicates With |
+|-----------|---------------|-------------------|
+| `classic-gui` | UI presentation, user interaction, state management | Slint runtime, worker threads |
+| Slint Runtime | Event loop, rendering, property reactivity | UI components, invoke handlers |
+| Worker Thread Pool | Async task execution via Tokio | Business logic crates, UI via channels |
+| `classic-scanlog-core` | Log parsing, analysis, report generation | File I/O, settings, database |
+| `classic-settings-core` | Configuration loading and management | YAML core, file I/O |
+| `classic-shared-core` | Global Tokio runtime, error types | All crates |
 
----
+### Data Flow
 
-## Migration Targets Integration Analysis
-
-This section addresses how the four remaining migration targets should integrate with the existing Rust architecture.
-
-### Migration Target 1: Scanning Orchestration
-
-**Current Python Implementation:** `ClassicLib/scanning/logs/orchestrator_core.py`
-
-**Existing Rust Support:**
-- `classic-scanlog-core::orchestrator` provides `OrchestratorCore`, `AnalysisConfig`, `AnalysisResult`
-- `HybridOrchestrator` already bridges Python and Rust
-- Rust orchestrator handles batch processing with unbounded parallelism
-
-**Current Data Flow:**
 ```
-User Request
-    |
-    v
-get_orchestrator() [factory.py]
-    |
-    v
-HybridOrchestrator [hybrid_orchestrator.py]
-    |
-    +-- batch (>5 logs) --> Rust ClassicOrchestrator
-    |                            |
-    |                            v
-    |                       classic_scanlog.Orchestrator
-    |                            |
-    |                            v
-    |                       classic-scanlog-core::orchestrator
-    |
-    +-- single log ---------> Python OrchestratorCore
-                                 |
-                                 v
-                            Per-analyzer pipeline (get_parser, get_formid_analyzer, etc.)
+User clicks "Scan" button
+        |
+        v
+Slint callback handler triggered (main thread)
+        |
+        v
+Clone Weak<MainWindow> reference
+        |
+        v
+Spawn worker thread with tokio::spawn()
+        |
+        v
+Worker calls OrchestratorCore::process_log() (async)
+        |
+        v
+Worker sends progress via channel to UI
+        |
+        v
+Channel receiver uses upgrade_in_event_loop()
+        |
+        v
+UI updates progress bar (main thread)
+        |
+        v
+Worker completes, sends final result
+        |
+        v
+UI displays report (main thread)
 ```
 
-**Integration Strategy:**
+## Crate Location and Structure
 
-The scanning orchestration is ALREADY substantially migrated. The key insight is:
+The Slint GUI application lives at: `rust/ui-applications/classic-gui/`
 
-1. **Rust `is_feature_complete()` check** determines if Rust can handle single-log processing
-2. **Feature completeness requires:** Plugin analyzer + Suspect scanner + FormID analyzer
-3. **Current gap:** Some analyzers still have significant Python logic
-
-**Recommended Crate Changes:**
-
-| Crate | Action | Purpose |
-|-------|--------|---------|
-| `classic-scanlog-core` | Enhance | Complete all analyzer implementations |
-| `classic-scanlog-py` | Enhance | Expose remaining analyzers to Python |
-
-**Python-Rust Boundary:**
-```python
-# factory.py - Keep existing pattern
-def get_orchestrator(...) -> OrchestratorProtocol:
-    return HybridOrchestrator(...)  # Bridges to Rust automatically
+```
+rust/ui-applications/classic-gui/
+|-- Cargo.toml
+|-- build.rs                    # Compiles .slint files
+|-- src/
+|   |-- main.rs                 # Entry point, event loop
+|   |-- app.rs                  # Application state, initialization
+|   |-- controllers/
+|   |   |-- mod.rs
+|   |   |-- scan.rs             # Scan operations controller
+|   |   |-- settings.rs         # Settings controller
+|   |   |-- backup.rs           # Backup operations controller
+|   |   `-- update.rs           # Update check controller
+|   |-- workers/
+|   |   |-- mod.rs
+|   |   |-- scan_worker.rs      # Background scan task
+|   |   `-- progress.rs         # Progress channel handling
+|   `-- bridge/
+|       |-- mod.rs
+|       `-- tokio_bridge.rs     # Tokio <-> Slint communication
+|-- ui/
+|   |-- main.slint              # Main window layout
+|   |-- components/
+|   |   |-- scan_panel.slint    # Scan tab UI
+|   |   |-- backup_panel.slint  # Backup tab UI
+|   |   |-- results_panel.slint # Results tab UI
+|   |   `-- progress.slint      # Progress indicators
+|   `-- globals/
+|       |-- logic.slint         # Global callbacks for Rust
+|       `-- state.slint         # Shared state properties
 ```
 
-**No new crates needed.** Focus on completing feature parity in existing crates.
+### Cargo.toml Dependencies
 
----
+```toml
+[package]
+name = "classic-gui"
+version = "0.1.0"
+edition = "2021"
 
-### Migration Target 2: Game Detection
+[dependencies]
+# GUI
+slint = { workspace = true }
 
-**Current Python Implementation:** `ClassicLib/scanning/game/`
-- `core.py` - `ScanGameCore` orchestrates all game scanning
-- `orchestrator.py` - `GameIntegrityOrchestratorCore` coordinates integrity checks
-- `checks/` - Individual scanners (BA2, INI, XSE, etc.)
+# Business logic (direct imports, no Python bindings)
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+classic-path-core = { path = "../../business-logic/classic-path-core" }
+classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-database-core = { path = "../../business-logic/classic-database-core" }
 
-**Existing Rust Support:**
-- `classic-scangame-core` provides:
-  - `BA2Scanner` - Archive scanning (COMPLETE)
-  - `ConfigDuplicateDetector` - Config duplicate detection (COMPLETE)
-  - `UnpackedScanner` - Unpacked mod scanning (COMPLETE)
-  - `LogProcessor` - Error log processing (COMPLETE)
-  - `IniValidator` - INI file validation (COMPLETE)
-  - `CrashgenChecker` - Crashgen TOML validation (COMPLETE)
-  - `XseChecker` - XSE plugin checking (COMPLETE)
-  - `GameIntegrityChecker` - Game file integrity (COMPLETE)
+# Async compatibility
+async-compat = "0.2"
+tokio = { workspace = true }
+futures = { workspace = true }
 
-**Current Data Flow:**
-```
-User Request (Check Game Files)
-    |
-    v
-GameIntegrityOrchestratorCore.generate_game_combined_result_async()
-    |
-    +-- check_xse_plugins() --> Python (calls scangame_factory -> Rust)
-    +-- check_crashgen_settings() --> Python (calls scangame_factory -> Rust)
-    +-- check_log_errors() --> Python (calls scangame_factory -> Rust)
-    +-- scan_wryecheck() --> Python
-    +-- scan_mod_inis_async() --> Python (calls scangame_factory -> Rust)
-    |
-    v
-Combined Report String
+# Channels for worker communication
+crossbeam-channel = "0.5"
+
+[build-dependencies]
+slint-build = "1.14"
 ```
 
-**Integration Strategy:**
+## Async Handling Pattern: The Tokio-Slint Bridge
 
-Individual scanners are Rust-accelerated via `scangame_factory.py`. The Python orchestration layer (`GameIntegrityOrchestratorCore`) remains for:
-- Progress reporting to GUI
-- Error aggregation and formatting
-- Async coordination
+### The Core Challenge
 
-**Recommended Approach:**
+Slint's event loop and Tokio's runtime cannot coexist in the same thread. Slint requires its event loop on the main thread, while the existing `classic-shared-core` provides a global multi-threaded Tokio runtime via `get_runtime()`.
 
-**Option A (Conservative):** Keep Python orchestration, ensure all individual scanners use Rust
-- Advantage: Minimal change, GUI integration stays simple
-- Implementation: Complete `scangame_factory.py` wrappers
+**Constraint from Slint maintainers:** "The spawn call on the current-thread runtime would schedule execution, but once the Slint event loop runs, the current-thread runtime cannot actually execute the task."
 
-**Option B (Full Migration):** Create Rust orchestrator in `classic-scangame-core`
-- Advantage: Maximum performance for batch game checks
-- Implementation: New module `classic-scangame-core::orchestrator`
+### Recommended Solution: Worker Thread Pattern
 
-**Recommendation:** Option A for this milestone. Individual scanners are already Rust. The orchestration overhead is minimal compared to actual scanning work.
+Use a dedicated worker thread pool running on the existing Tokio runtime, communicating back to the UI via `invoke_from_event_loop()` or `upgrade_in_event_loop()`.
 
-**Crate Structure (if Option B chosen later):**
-```
-rust/business-logic/classic-scangame-core/
-    src/
-        orchestrator.rs    # NEW: Coordinates all game scanners
-        progress.rs        # NEW: Progress callback support
-
-rust/python-bindings/classic-scangame-py/
-    src/
-        orchestrator.rs    # NEW: PyO3 bindings for orchestrator
-```
-
----
-
-### Migration Target 3: Report Generation
-
-**Current Python Implementation:** `ClassicLib/scanning/logs/report_generator.py`
-- `ReportGeneratorFragments` - Generates report sections
-- Uses `ReportFragment` from Rust for storage
-
-**Existing Rust Support:**
-- `classic-scanlog-core::report` provides:
-  - `ReportFragment` - Immutable report building block
-  - `ReportComposer` - Fragment composition
-  - `ReportGenerator` - Report section generation
-  - `StringPool` - String interning for efficiency
-
-**Current Data Flow:**
-```
-Report Generation Request
-    |
-    v
-ReportGeneratorFragments (Python)
-    |
-    +-- generate_header() --> Returns ReportFragment (Rust storage)
-    +-- generate_error_section() --> Returns ReportFragment
-    +-- generate_suspect_section_header() --> Returns ReportFragment
-    +-- generate_footer() --> Returns ReportFragment
-    |
-    v
-ReportComposer (Rust) combines fragments
-    |
-    v
-Final Report String
-```
-
-**Integration Strategy:**
-
-The current boundary is APPROPRIATE:
-- **Python decides WHAT to include** (business decisions, i18n, conditional sections)
-- **Rust handles HOW to store/compose** (efficient fragment storage, string pooling)
-
-**Recommended Approach:** Keep current pattern. The Python layer is thin (298 lines) and serves as a configuration point for report content.
-
-**No new crates needed.** The existing `classic-scanlog-core::report` module is sufficient.
-
-**Future Enhancement (post-cleanup):**
-If report generation becomes a bottleneck (unlikely), move format string templates to Rust and expose via `classic-scanlog-py`. Python would pass parameters only.
-
----
-
-### Migration Target 4: Settings Management
-
-**Current Python Implementation:** `ClassicLib/io/yaml/async_/cache.py`
-- `YamlCache` - YAML caching with TTL and metrics
-- `ClassicLib/io/yaml/async_/core.py` - `yaml_settings_async` helper
-
-**Existing Rust Support:**
-- `classic-settings-core` provides:
-  - `load_settings_sync/async` - File loading
-  - `get_cached`, `is_cached` - Cache access
-  - `load_batch_async` - Parallel loading
-  - Lock-free DashMap storage
-
-**Gap Analysis:**
-
-| Feature | Python YamlCache | Rust classic-settings-core |
-|---------|------------------|---------------------------|
-| TTL-based expiration | Yes | No |
-| File modification detection | Yes | No |
-| Metrics tracking | Yes | No |
-| Typed value extraction | Yes (helpers) | No |
-| Multi-document support | Via ruamel | Yes (yaml-rust2) |
-| Lock-free access | No (asyncio.Lock) | Yes (DashMap) |
-
-**Integration Strategy:**
-
-Two options:
-
-**Option A: Enhance Rust, Deprecate Python**
-1. Add metrics tracking to `classic-settings-core`
-2. Add TTL/modification detection to Rust cache
-3. Create typed extraction helpers in `classic-settings-py`
-4. Deprecate Python `YamlCache`
-
-**Option B: Parallel Systems (Current)**
-- Python `YamlCache` for application settings
-- Rust `classic-settings-core` for high-volume operations
-
-**Recommendation:** Option A for full migration. The Rust cache already has superior concurrency (lock-free). Adding metrics is straightforward.
-
-**Crate Enhancement:**
 ```rust
-// classic-settings-core/src/metrics.rs (NEW)
-pub struct CacheMetrics {
-    pub cache_hits: AtomicU64,
-    pub cache_misses: AtomicU64,
-    pub file_reloads: AtomicU64,
-    pub total_reads: AtomicU64,
+use classic_shared_core::get_runtime;
+use slint::Weak;
+use std::sync::mpsc;
+
+/// Bridge between Tokio async operations and Slint UI
+pub struct TokioBridge {
+    /// Sender for progress updates
+    progress_tx: mpsc::Sender<ProgressUpdate>,
 }
 
-// classic-settings-core/src/ttl.rs (NEW)
-pub struct TtlEntry<T> {
-    pub value: T,
-    pub expires_at: Instant,
+impl TokioBridge {
+    /// Spawn an async task on the global Tokio runtime
+    pub fn spawn_scan<F>(&self, window: Weak<MainWindow>, task: F)
+    where
+        F: Future<Output = AnalysisResult> + Send + 'static,
+    {
+        let progress_tx = self.progress_tx.clone();
+
+        // Use the existing global runtime (ONE RUNTIME RULE)
+        get_runtime().spawn(async move {
+            let result = task.await;
+
+            // Update UI from the event loop thread
+            window.upgrade_in_event_loop(move |win| {
+                win.set_scan_result(result.into());
+                win.set_is_scanning(false);
+            }).ok();
+        });
+    }
 }
 ```
 
----
+### Alternative: async_compat Wrapper
 
-## Recommended Build Order
+For simpler cases where you need to call async code from Slint callbacks:
 
-Based on dependency analysis:
+```rust
+use async_compat::Compat;
 
-### Phase 1: Complete Existing Crates (Week 1-2)
+fn setup_callbacks(window: &MainWindow) {
+    let window_weak = window.as_weak();
 
-No new crates. Enhance existing:
+    window.on_start_scan(move || {
+        let weak = window_weak.clone();
 
-1. **classic-settings-core** - Add metrics, TTL, typed extraction
-2. **classic-scanlog-core** - Ensure all analyzers are feature-complete
-3. **classic-message-core** - Complete message routing if needed
+        // Use spawn_local with Compat to bridge to Tokio
+        slint::spawn_local(Compat::new(async move {
+            // This runs on the UI thread but can call Tokio futures
+            let result = some_tokio_operation().await;
 
-Dependencies:
-```
-classic-settings-core <- classic-shared-core
-classic-scanlog-core <- classic-shared-core, classic-yaml-core, classic-file-io-core
-```
-
-### Phase 2: Factory Simplification (Week 2-3)
-
-Simplify Python integration layer:
-
-4. Update `factory.py` - Direct imports where Rust is stable
-5. Thin out `integration/rust/*.py` wrappers
-6. Remove detection infrastructure
-
-### Phase 3: Integration Validation (Week 3-4)
-
-7. Add Protocol types to `types.py` if missing
-8. Test all factory paths
-9. Verify fallback behavior
-
-### Phase 4: Optional Full Game Orchestrator (Future)
-
-Only if profiling shows need:
-
-10. Create `classic-scangame-core::orchestrator` (if Option B chosen)
-11. Add PyO3 bindings
-
----
-
-## New vs. Modified Components Summary
-
-### Components to Modify (NOT Create)
-
-| Component | Modification |
-|-----------|--------------|
-| `classic-settings-core` | Add metrics, TTL, typed extraction |
-| `classic-settings-py` | Expose new features |
-| `classic-scanlog-core` | Complete analyzer implementations |
-| `classic-scanlog-py` | Expose remaining analyzers |
-| `factory.py` | Simplify to direct imports |
-| `integration/rust/*.py` | Thin out wrappers |
-
-### Components That Are Already Complete
-
-| Component | Status |
-|-----------|--------|
-| `classic-scangame-core` | All individual scanners implemented |
-| `classic-scangame-py` | Bindings complete |
-| `classic-scanlog-core::report` | Report fragment system complete |
-| `classic-shared-core` | Foundation stable |
-
-### Components to Possibly Create (Optional, Future)
-
-| Component | Condition |
-|-----------|-----------|
-| `classic-scangame-core::orchestrator` | Only if game scanning orchestration becomes bottleneck |
-
----
-
-## Current Boundary Analysis
-
-### The Four-Layer Integration Stack (Problem Area)
-
-The current Rust integration has grown into a four-layer stack between callers and Rust code:
-
-```
-Caller (GUI/CLI)
-  -> factory/ (decides Rust or Python)
-    -> rust/ wrapper (Python class around PyO3 import)
-      -> -py crate (PyO3 #[pyclass] adapter)
-        -> -core crate (pure Rust logic)
+            weak.upgrade_in_event_loop(move |win| {
+                win.set_result(result);
+            }).ok();
+        })).ok();
+    });
+}
 ```
 
-**Layers 1 and 2 are the consolidation target.** The `rust/` wrappers in `ClassicLib/integration/rust/` are often substantial Python files (e.g., `file_io_rust.py` at 39KB, `parser_rust.py` at 15KB, `formid_rust.py` at 16KB) that add Python-side logic on top of Rust calls. This is the inverse of the target state -- Python should be getting thinner, not fatter.
+### Progress Updates Pattern
 
-### Dual Implementation Inventory
+For long-running scans that need to update progress:
 
-Every component currently has both a Rust and Python implementation. The factory decides which to use at runtime.
+```rust
+use crossbeam_channel::{bounded, Sender, Receiver};
+use slint::Timer;
+use std::time::Duration;
 
-| Component | Python impl (`python/`) | Rust wrapper (`rust/`) | Status |
-|-----------|------------------------|----------------------|--------|
-| Parser | `parser_py.py` (8KB) | `parser_rust.py` (15KB) | Rust wrapper is larger than Python impl |
-| FormID | `formid_py.py` (12KB) | `formid_rust.py` (16KB) | Rust wrapper has extra Python logic |
-| Plugin | `plugin_py.py` (13KB) | `plugin_rust.py` (15KB) | Near parity |
-| Record | `record_py.py` (7KB) | `record_rust.py` (14KB) | Rust wrapper 2x Python |
-| Report | `report_py.py` (11KB) | `report_rust.py` (1KB) + `report/` dir | Split across files |
-| ModDetector | `mod_detector_py.py` (12KB) | `mod_detector_rust.py` (11KB) | Near parity |
-| Database | `database_py.py` (14KB) | `database_rust.py` (2KB) | Rust wrapper is thin (good) |
-| FileIO | `file_io_py.py` (18KB) | `file_io_rust.py` (39KB) | Rust wrapper is 2x Python -- inverted |
+pub struct ProgressBridge {
+    receiver: Receiver<ProgressUpdate>,
+    timer: Timer,
+}
 
-**Key finding:** The `rust/` wrappers should be thin adapters but several have grown to contain significant Python business logic. This defeats the purpose of Rust acceleration and creates a maintenance burden where changes must happen in both the Python wrapper AND the Rust core.
+impl ProgressBridge {
+    pub fn new(window: Weak<MainWindow>) -> (Self, Sender<ProgressUpdate>) {
+        let (tx, rx) = bounded(100);
 
-### Crate Proliferation Assessment
+        let timer = Timer::default();
+        let rx_clone = rx.clone();
+        let window_clone = window.clone();
 
-The workspace has **21 business-logic crates** and **18 python-bindings crates** (39 total). Several crate pairs appear to be stubs created during planning phases:
+        // Poll channel periodically from the UI thread
+        timer.start(
+            slint::TimerMode::Repeated,
+            Duration::from_millis(16), // ~60 FPS
+            move || {
+                while let Ok(update) = rx_clone.try_recv() {
+                    if let Some(win) = window_clone.upgrade() {
+                        win.set_progress(update.percent as f32 / 100.0);
+                        win.set_status_text(update.message.into());
+                    }
+                }
+            },
+        );
 
-| Crate Group | Purpose | Likely Status |
-|-------------|---------|---------------|
-| yaml, database, file-io, scanlog, config, scangame | Original set | Mature, has real code |
-| registry, perf, pybridge, settings, message | Phase 1 infra | Has code, partially used |
-| path | Phase 2 | Has code |
-| constants, version, resource, xse, web | Phase 4 utilities | Likely stubs or minimal |
-| update | Phase 5 | Likely stub |
-| version-registry | Standalone | Unknown maturity |
-
-**Recommendation:** Audit each crate for actual code vs. stubs. Remove stubs that have no consumers. Do not create new crates during cleanup.
-
----
-
-## Architectural Patterns
-
-### Pattern 1: Strangler Fig for Python-to-Rust Migration
-
-**What:** Gradually replace Python implementations with Rust by routing through the factory pattern, then removing the Python fallback once Rust is proven stable.
-
-**When to use:** For each component where Rust `-core` has feature parity with the Python implementation.
-
-**How it works in this codebase:**
-
-```
-Phase A (current): Factory dispatches to either Python or Rust
-Phase B (cleanup): Identify components where Rust always wins
-Phase C (removal): Delete Python fallback, simplify factory to direct import
-Phase D (future): Move remaining logic from rust/ wrappers into -core crates
+        (Self { receiver: rx, timer }, tx)
+    }
+}
 ```
 
-**Trade-offs:**
-- Pro: Zero risk of breaking production -- always has fallback
-- Pro: Can be done one component at a time
-- Con: Must maintain both implementations until removal
-- Con: Factory indirection adds complexity
+## State Management Approach
 
-**Recommendation for cleanup:** Phase B is the immediate target. For each component, determine: is the Python fallback ever actually exercised? If Rust is always available in production, the fallback is dead code.
+### Global Callbacks Pattern
 
-### Pattern 2: Wrapper Thinning
+Slint's recommended state management uses exported globals with callbacks that bridge to Rust:
 
-**What:** Move business logic OUT of `ClassicLib/integration/rust/` wrappers and INTO the Rust `-core` crates, leaving only type conversion in the `-py` crate.
+```slint
+// ui/globals/logic.slint
+export global ScanLogic {
+    // Callbacks invoked from UI, handled in Rust
+    callback start-scan();
+    callback stop-scan();
+    callback select-folder() -> string;
 
-**When to use:** When a Rust wrapper file is larger than the Python fallback it replaces (signals logic has leaked into the wrong layer).
+    // Properties bound to UI, set from Rust
+    in-out property <bool> is-scanning: false;
+    in-out property <float> scan-progress: 0.0;
+    in-out property <string> status-message: "";
+    in-out property <[ScanResult]> results: [];
+}
 
-**Example -- current problem in `file_io_rust.py` (39KB):**
+export global SettingsLogic {
+    callback load-settings();
+    callback save-setting(string, string);
 
-```python
-# BAD: Python logic in the Rust wrapper
-class FileIOCore:
-    async def read_file_with_encoding(self, path, encoding):
-        # 200 lines of Python error handling, retry logic, fallback chains
-        try:
-            result = self._rust_core.read_file(str(path))
-        except RustError:
-            # Complex Python recovery logic
-            ...
+    in-out property <string> game-path: "";
+    in-out property <bool> fcx-mode: false;
+    in-out property <bool> simplify-logs: false;
+}
 ```
 
-**Target state:**
+### Rust Backend Connection
 
-```python
-# GOOD: Thin adapter, all logic in Rust
-class FileIOCore:
-    async def read_file_with_encoding(self, path, encoding):
-        return self._rust_core.read_file(str(path), encoding)
+```rust
+fn setup_globals(window: &MainWindow) {
+    let logic = window.global::<ScanLogic>();
+    let settings = window.global::<SettingsLogic>();
+
+    // Set up scan callback
+    let window_weak = window.as_weak();
+    logic.on_start_scan(move || {
+        let weak = window_weak.clone();
+
+        // Update UI state
+        if let Some(win) = weak.upgrade() {
+            win.global::<ScanLogic>().set_is_scanning(true);
+        }
+
+        // Spawn scan on worker thread
+        spawn_scan_worker(weak);
+    });
+
+    // Load initial settings
+    if let Ok(config) = load_classic_settings() {
+        settings.set_game_path(config.game_path.into());
+        settings.set_fcx_mode(config.fcx_mode);
+    }
+}
 ```
 
-**Trade-offs:**
-- Pro: Single source of truth for business logic (Rust)
-- Pro: Python layer becomes trivially simple
-- Con: Requires Rust feature parity before thinning
-- Con: Rust changes require rebuild (slower iteration)
-
-### Pattern 3: Interface Consolidation (Async-Only)
-
-**What:** Remove sync wrappers and dual-interface patterns. Everything async. Wrap at entry points only.
-
-**When to use:** Everywhere. The dual sync/async pattern is documented tech debt.
-
-**Current problem:**
-
-```python
-# FormIDAnalyzer has both:
-async def analyze_segment(self, ...):  # Primary
-def analyze_segment_sync(self, ...):   # "GUI-only" but callable anywhere
-```
-
-**Target state:**
-
-```python
-# One interface, always async
-async def analyze_segment(self, ...):
-    ...
-
-# At GUI entry point only:
-bridge.run_async(analyzer.analyze_segment(...))
-```
-
-### Pattern 4: Factory Simplification Ladder
-
-**What:** Progressively simplify the factory as Rust becomes the default.
-
-**Stages:**
+### State Update Flow
 
 ```
-Stage 1 (now):    factory checks detection cache, imports conditionally
-Stage 2 (cleanup): factory imports Rust directly, catches ImportError only
-Stage 3 (future):  factory becomes a re-export module (no logic)
-Stage 4 (end):     factory removed, callers import Rust directly
+User Action (button click)
+        |
+        v
+Slint callback triggered
+        |
+        v
+Rust on_<callback> handler
+        |
+        v
+Update optimistic UI state (set_is_scanning(true))
+        |
+        v
+Spawn worker on Tokio runtime
+        |
+        v
+Worker processes, sends progress via channel
+        |
+        v
+Timer/channel polls updates to UI
+        |
+        v
+Worker completes
+        |
+        v
+upgrade_in_event_loop() to set final state
 ```
 
-**For cleanup milestone, target Stage 2:**
+## Patterns to Follow
 
-```python
-# Stage 2: Direct import with simple fallback
-def get_parser(yamldata):
-    try:
-        from classic_scanlog import LogParser
-        return LogParser(yamldata)
-    except ImportError:
-        from ClassicLib.integration.python.parser_py import LogParser
-        return LogParser(yamldata)
+### Pattern 1: Weak Reference Capture
+
+**What:** Always capture weak references to windows in closures to avoid memory leaks.
+
+**When:** Any callback or async task that updates UI.
+
+**Example:**
+```rust
+let window_weak = window.as_weak();
+window.on_some_action(move || {
+    let weak = window_weak.clone();
+    get_runtime().spawn(async move {
+        let result = do_work().await;
+        weak.upgrade_in_event_loop(move |win| {
+            win.set_result(result);
+        }).ok();
+    });
+});
 ```
 
-This eliminates the detection cache, component config map, and multi-layer indirection.
+### Pattern 2: ONE RUNTIME RULE Compliance
 
----
+**What:** Use `classic_shared_core::get_runtime()` for all async operations.
 
-## Data Flow
+**When:** Any Tokio operation in the GUI.
 
-### Current Crash Log Processing Flow
+**Example:**
+```rust
+// CORRECT: Use shared runtime
+use classic_shared_core::get_runtime;
 
-```
-CLI Entry (asyncio.run)
-    |
-    v
-ScanLogsExecutor
-    |
-    v
-get_orchestrator() [factory]
-    |
-    +-- Rust available? --> HybridOrchestrator
-    |                           |
-    |                           +-- batch (5+ logs) --> Rust ClassicOrchestrator
-    |                           +-- single log ------> Python OrchestratorCore
-    |
-    +-- No Rust -----------> Python OrchestratorCore
-                                |
-                                v
-                        Per-log analysis pipeline:
-                        get_parser() -> parse crash log
-                        get_formid_analyzer() -> extract FormIDs
-                        get_plugin_analyzer() -> check plugins
-                        get_record_scanner() -> scan records
-                        get_suspect_scanner() -> flag suspects
-                        get_settings_validator() -> validate INIs
-                        get_report_generator() -> compose report
-                                |
-                                v
-                        Report written to file + DB updated
+fn spawn_task<F: Future + Send + 'static>(f: F) {
+    get_runtime().spawn(f);
+}
+
+// WRONG: Creating new runtime
+// let rt = Runtime::new().unwrap(); // NEVER DO THIS
 ```
 
-### Data Flow Direction After Cleanup
+### Pattern 3: UI Thread Safety
 
-The cleanup should establish a clear downward flow:
+**What:** All UI updates must happen on the main thread via `upgrade_in_event_loop()`.
 
+**When:** Updating any Slint property or calling any Slint method from a worker thread.
+
+**Example:**
+```rust
+// From worker thread
+window_weak.upgrade_in_event_loop(move |win| {
+    // This closure runs on the main UI thread
+    win.set_progress(0.5);
+    win.global::<ScanLogic>().set_status_message("Processing...".into());
+}).ok();
 ```
-Presentation (Python only)
-    |  calls async methods
-    v
-Business Logic Interface (Python, thin)
-    |  delegates to Rust via PyO3
-    v
-Rust Engine (-core crates)
-    |  pure Rust operations
-    v
-Data Access (Rust for perf, Python for platform specifics)
+
+### Pattern 4: Global Callbacks for Business Logic
+
+**What:** Define callbacks in `.slint` globals, implement in Rust.
+
+**When:** Any action that requires Rust business logic.
+
+**Example:**
+```slint
+// In .slint
+export global Logic {
+    pure callback format-formid(string) -> string;
+    callback analyze-log(string);
+}
 ```
 
-**Key principle:** Data should flow DOWN through the layers. No upward callbacks from Rust into Python business logic. The current `rust/` wrappers violate this by adding Python logic between the factory and the Rust engine.
+```rust
+// In Rust
+window.global::<Logic>().on_format_formid(|formid| {
+    classic_scanlog_core::format_formid(&formid).into()
+});
 
----
+window.global::<Logic>().on_analyze_log(move |path| {
+    spawn_analysis(path.to_string(), window_weak.clone());
+});
+```
 
 ## Anti-Patterns to Avoid
 
-### Anti-Pattern 1: Fat Rust Wrappers
+### Anti-Pattern 1: Blocking the UI Thread
 
-**What people do:** Put Python business logic in `ClassicLib/integration/rust/*.py` files that are supposed to be thin adapters around Rust.
+**What:** Running long operations synchronously in callbacks.
 
-**Why it's wrong:** Creates a third location for business logic (alongside `python/` fallbacks and `-core` crates). Changes require coordination across three files. The wrapper becomes the actual implementation, with Rust only used for hot inner loops.
+**Why bad:** Freezes the UI, poor user experience.
 
-**Do this instead:** If logic needs to exist in Python, put it in `python/` fallback. If it should be in Rust, put it in `-core`. The `rust/` wrapper should only do: import PyO3 class, adapt types, return result.
+**Instead:** Spawn on worker thread, update UI via `upgrade_in_event_loop()`.
 
-### Anti-Pattern 2: Defensive Over-Detection
+```rust
+// BAD
+window.on_scan(|| {
+    let result = heavy_computation(); // Blocks UI!
+    window.set_result(result);
+});
 
-**What people do:** Build elaborate detection, caching, health-check, and diagnostics infrastructure around Rust availability (detector.py at 370+ lines, config.py with 25 component constants, acceleration/coordinator.py at 670+ lines).
-
-**Why it's wrong:** For a desktop app with controlled deployment, Rust is either compiled in or it's not. The detection infrastructure is proportionate to a microservices deployment, not a desktop tool.
-
-**Do this instead:** Try-import at factory level. If ImportError, fall back. That's it. Remove the detection cache, component config registry, health checks, performance thresholds, and component categories. All of that is dead weight for a desktop app.
-
-### Anti-Pattern 3: Parallel Implementation Maintenance
-
-**What people do:** Maintain both `python/formid_py.py` AND `rust/formid_rust.py` AND `classic-scanlog-core` FormID logic. Three implementations of the same concept.
-
-**Why it's wrong:** Triple maintenance burden. Bugs fixed in one may not be fixed in others. Feature drift between implementations.
-
-**Do this instead:** Pick one owner per component. If Rust is stable and always available, delete the Python fallback. If Rust is not ready, keep Python as primary and don't wrap a partial Rust implementation.
-
-### Anti-Pattern 4: Abstraction Layering for Future Flexibility
-
-**What people do:** Create `acceleration/` coordination package with workload optimization, component metrics, optimization levels -- "in case we need it later."
-
-**Why it's wrong:** YAGNI. A desktop crash log scanner does not need workload-aware optimization routing. The overhead of the abstraction exceeds the benefit.
-
-**Do this instead:** Direct factory dispatch. If profiling later shows a need for batch vs. single optimization, add it then with actual measurements.
-
----
-
-## Recommended Project Structure After Cleanup
-
-```
-ClassicLib/
-├── core/                    # Infrastructure (keep, simplify)
-│   ├── async_bridge.py      # GUI-only sync bridge (keep)
-│   ├── constants.py         # App constants (keep)
-│   ├── registry.py          # GlobalRegistry (keep, consider Rust migration)
-│   └── performance.py       # Perf monitoring (keep, simplify)
-│
-├── integration/             # Rust/Python dispatch (simplify heavily)
-│   ├── factory.py           # Single file, try-import pattern (flatten from factory/)
-│   ├── python/              # Python fallbacks (shrink as Rust matures)
-│   └── exceptions.py        # Rust error types (keep)
-│   # REMOVED: rust/ wrappers, detector.py, config.py, diagnostics.py
-│   # REMOVED: acceleration/ package (coordinator, metrics, workload, types)
-│   # REMOVED: scangame_factory.py, status.py
-│
-├── scanning/                # Business logic (keep, thin out)
-│   ├── logs/                # Crash log pipeline
-│   └── game/                # Game integrity checks
-│
-├── support/                 # Path detection, XSE, resources (keep)
-│
-├── io/                      # Data access (keep, already clean)
-│   ├── yaml/
-│   ├── files/
-│   └── database/
-│
-├── messaging/               # Message routing (keep)
-│
-├── Interface/               # Qt GUI (keep, no changes this milestone)
-│
-├── TUI/                     # Textual TUI (keep, in development)
-│
-└── Utils/                   # Utility functions (audit for overlap with Rust)
+// GOOD
+window.on_scan(move || {
+    let weak = window_weak.clone();
+    get_runtime().spawn(async move {
+        let result = heavy_computation_async().await;
+        weak.upgrade_in_event_loop(|win| win.set_result(result)).ok();
+    });
+});
 ```
 
-### Structure Rationale
+### Anti-Pattern 2: Strong Reference Cycles
 
-- **`integration/factory/` flattened to `integration/factory.py`**: The 8-file factory subpackage with its core.py, analyzers.py, parsers.py, etc. can be a single module. Each factory function is 15-30 lines. Total: ~300 lines in one file.
-- **`integration/rust/` removed**: Fat wrappers absorbed -- logic goes to `-core` crates or stays in `python/` fallbacks. The `-py` PyO3 crates become the direct import target.
-- **`integration/detector.py` removed**: Detection is "try import" at the factory level. No need for a 370-line detection framework.
-- **`acceleration/` removed**: Workload coordination for a desktop app is over-engineering. Direct dispatch suffices.
-- **`integration/config.py` removed**: 25 component constant definitions with performance multiplier strings serve no runtime purpose.
+**What:** Capturing strong window references in closures stored on the window.
 
----
+**Why bad:** Memory leak, window never freed.
 
-## Integration Points
+**Instead:** Use `window.as_weak()` before capturing.
 
-### Python-Rust Boundary (Critical)
+### Anti-Pattern 3: Multiple Tokio Runtimes
 
-| Boundary | Current Pattern | Target Pattern |
-|----------|-----------------|----------------|
-| Factory -> Rust module | factory -> rust/ wrapper -> PyO3 class | factory -> PyO3 class directly |
-| Type conversion | In rust/ wrapper (Python) | In -py crate (Rust/PyO3) |
-| Error handling | Python try/except around Rust calls | Rust errors mapped to Python exceptions in -py |
-| Async bridging | AsyncBridge for GUI, asyncio for CLI | Same (this is correct) |
-| Configuration | Python loads YAML, passes to Rust | Same initially; migrate to Rust YAML loading later |
+**What:** Creating new Tokio runtimes instead of using the shared one.
 
-### Internal Module Boundaries
+**Why bad:** Violates ONE RUNTIME RULE, causes deadlocks.
 
-| Boundary | Communication | Cleanup Notes |
-|----------|---------------|---------------|
-| scanning/logs <-> integration/factory | Factory returns impl instance | Keep; this is the right abstraction |
-| scanning/logs <-> io/ | Direct import for DB, file ops | Keep; clean boundary |
-| core/ <-> everything | Import constants, registry, bridge | Keep; foundation layer is correct |
-| support/ <-> scanning/ | Support provides paths, scanning uses them | Keep; may consolidate some path logic |
-| messaging/ <-> everything | MessageHandler called from all layers | Keep; central messaging is correct |
-| acceleration/ <-> integration/ | Coordinator wraps factory | Remove; unnecessary indirection |
+**Instead:** Always use `classic_shared_core::get_runtime()`.
 
----
+### Anti-Pattern 4: Direct Property Mutation from Threads
 
-## Ownership Migration Strategy
+**What:** Trying to set Slint properties directly from worker threads.
 
-The end state is "Rust is the engine, Python is GUI/glue." The cleanup establishes clear ownership:
+**Why bad:** Slint is not thread-safe, will panic or corrupt state.
 
-### Immediate (Cleanup Milestone)
-- **Rust owns:** YAML parsing, database ops, file I/O, log parsing, batch orchestration
-- **Python owns:** GUI, CLI args, TUI, async bridging, message display, report formatting
-- **Disputed (resolve during cleanup):** FormID analysis, plugin analysis, mod detection, settings validation
+**Instead:** Use `upgrade_in_event_loop()` for all UI updates.
 
-### Future (Post-Cleanup Migration)
-- **Rust expands to own:** FormID, plugin, mod detection, settings, game path resolution, XSE checks
-- **Python shrinks to:** GUI shell, CLI entry point, TUI, configuration loading, user interaction
+## Build Order for Phases
 
-### How to Handle Fallback During Cleanup
+Based on dependencies and integration complexity, the recommended build order is:
 
-**Policy:** Keep fallbacks for components where Rust is not yet proven stable on all platforms. Remove fallbacks where Rust has been shipping reliably.
+### Phase 1: Foundation (Infrastructure)
+1. Create `rust/ui-applications/classic-gui/` directory structure
+2. Set up `Cargo.toml` with dependencies on `-core` crates
+3. Create `build.rs` for Slint compilation
+4. Create minimal `main.rs` that shows an empty window
+5. Verify Slint compiles and window displays
 
-**Decision criteria per component:**
-1. Has the Rust implementation been shipping in production? If yes for 3+ months, safe to remove fallback.
-2. Are there known platforms where Rust fails? If yes, keep fallback.
-3. Is the Python fallback actually tested? If not, it's false safety -- remove it.
+**Dependencies:** None (fresh crate)
+**Validates:** Build system, Slint integration works
 
-**During cleanup:** Add a `CLASSIC_REQUIRE_RUST=1` environment variable (opt-in) that errors instead of falling back. Use this in CI to catch fallback triggers.
+### Phase 2: Tokio Bridge
+1. Implement `TokioBridge` for async operation spawning
+2. Implement `ProgressBridge` for progress updates
+3. Create `bridge/mod.rs` with channel-based communication
+4. Add unit tests for bridge functionality
 
----
+**Dependencies:** Phase 1, `classic-shared-core`
+**Validates:** ONE RUNTIME RULE compliance, async pattern works
+
+### Phase 3: Core UI Layout
+1. Design main window layout in `ui/main.slint`
+2. Implement tab structure (Main, Backup, Results)
+3. Create reusable components (buttons, progress bars)
+4. Set up global callbacks and state properties
+
+**Dependencies:** Phase 1
+**Validates:** UI renders correctly, globals accessible
+
+### Phase 4: Settings Integration
+1. Connect `classic-settings-core` to UI
+2. Implement settings loading on startup
+3. Add settings panel UI
+4. Wire save functionality
+
+**Dependencies:** Phases 2, 3, `classic-settings-core`, `classic-yaml-core`
+**Validates:** Settings load/save works
+
+### Phase 5: Scan Operations
+1. Implement `ScanController` using `OrchestratorCore`
+2. Wire scan button to spawn worker
+3. Implement progress updates during scan
+4. Display results in results panel
+
+**Dependencies:** Phases 2, 3, 4, `classic-scanlog-core`
+**Validates:** Core functionality works
+
+### Phase 6: Polish and Feature Parity
+1. Add remaining features (backup, updates, pastebin)
+2. Implement error handling dialogs
+3. Add window geometry persistence
+4. Performance optimization
+
+**Dependencies:** All previous phases
+**Validates:** Feature parity with Python GUI
+
+## Scalability Considerations
+
+| Concern | Current (100s of logs) | Scale (1000s of logs) | Future (10000s) |
+|---------|------------------------|----------------------|-----------------|
+| Scan performance | Single orchestrator | Parallel batch via `process_logs_batch()` | Consider streaming results |
+| Memory usage | Load all results | Virtualized list view | Pagination, lazy loading |
+| Progress updates | Simple percentage | Per-file progress | Hierarchical progress tree |
+| UI responsiveness | 60 FPS target | Debounce updates | Render on demand |
 
 ## Sources
 
-- Direct codebase analysis of `J:\CLASSIC-Fallout4\` (all findings verified against source files)
-- `J:\CLASSIC-Fallout4\.planning\codebase\ARCHITECTURE.md` -- existing architecture mapping
-- `J:\CLASSIC-Fallout4\.planning\codebase\CONCERNS.md` -- existing concerns audit
-- `J:\CLASSIC-Fallout4\.planning\PROJECT.md` -- project scope definition
-- `J:\CLASSIC-Fallout4\docs\development\rust_workspace_architecture.md` -- Rust workspace docs
-- `J:\CLASSIC-Fallout4\rust\Cargo.toml` -- workspace manifest
-- PyO3 documentation (training data, MEDIUM confidence for version-specific claims)
-- Strangler Fig pattern (Martin Fowler, well-established architectural pattern)
-
----
-*Architecture research for: CLASSIC hybrid Python-Rust codebase cleanup*
-*Researched: 2026-02-01, Updated: 2026-02-02*
+- [Slint + async Rust Discussion](https://github.com/slint-ui/slint/discussions/4377) - Official guidance on async integration
+- [Slint + Tokio Main Thread Discussion](https://github.com/slint-ui/slint/discussions/5784) - Tokio runtime compatibility
+- [spawn_local Documentation](https://docs.rs/slint/latest/slint/fn.spawn_local.html) - Official API docs
+- [Progress Indicator Updates](https://github.com/slint-ui/slint/discussions/4175) - Progress bar patterns
+- [Backend Tokio Communication](https://github.com/slint-ui/slint/discussions/7246) - Worker thread patterns
+- [Global Callbacks Recipe](https://releases.slint.dev/releases/1.5.1/docs/slint/src/recipes/recipes) - State management
+- [Rust Structs for State Management](https://github.com/slint-ui/slint/discussions/5114) - Global singletons
+- [async-compat Documentation](https://docs.rs/async-compat/latest/async_compat/) - Tokio bridge crate
+- [Slint Rust Template](https://github.com/slint-ui/slint-rust-template) - Project structure reference
+- [Slint Rust Documentation](https://docs.slint.dev/latest/docs/rust/slint) - Official Rust API docs

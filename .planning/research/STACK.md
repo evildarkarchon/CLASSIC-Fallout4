@@ -1,503 +1,230 @@
-# Technology Stack for Performance Benchmarking and Profiling
+# Technology Stack: Slint GUI Integration
 
-**Project:** CLASSIC Performance Benchmarking Milestone
-**Researched:** 2026-02-04
-**Confidence:** HIGH - Verified against official documentation and existing project infrastructure
+**Project:** CLASSIC Slint GUI Milestone
+**Researched:** 2026-02-05
+**Overall Confidence:** HIGH
 
 ## Executive Summary
 
-CLASSIC already has Criterion 0.8.1 in the workspace for microbenchmarking. This milestone adds **targeted profiling tools** and **CI regression detection**, while avoiding tool bloat. The focus is instrumenting the hybrid Python-Rust boundary and establishing performance baselines.
+This research covers stack additions for replacing the Python/PySide6 GUI with a native Slint GUI. The existing Rust business logic crates remain unchanged. Key findings:
 
-**Key additions:**
-- Profiling: `cargo-flamegraph` (sampling), `tracing-flame` (async spans)
-- Memory: `dhat` (heap profiling with Rust global allocator)
-- CI: `github-action-benchmark` or Bencher for regression detection
-- PyO3: `py-spy` for cross-boundary profiling
-
-**Total new dev-dependencies: 3-4** (carefully selected, not bloat)
-
-## Current State
-
-### Already In Place (DO NOT re-add)
-
-| Tool | Version | Location | Purpose |
-|------|---------|----------|---------|
-| `criterion` | 0.8.1 | `classic-shared-core` dev-deps | Statistical microbenchmarking |
-| `tracing` | 0.1.44 | workspace | Instrumentation framework |
-| `tracing-subscriber` | 0.3.22 | workspace | Subscriber layers |
-| Existing benchmarks | - | `rust/foundation/classic-shared-core/benches/` | Performance, string, path benchmarks |
-
-### Existing Benchmark Coverage
-
-```
-benches/
-  performance_benchmarks.rs  # Timer, metrics, concurrent recording
-  string_benchmarks.rs       # String interning, smartstring
-  path_benchmarks.rs         # Path validation
-```
-
-**Gap analysis:** Business-logic crates (`-core`) lack benchmarks. YAML, scanlog, and database operations are unbenchmarked.
+- **Slint 1.15.0** is the current stable release (released 2026-02-04)
+- **Tokio integration** is well-supported via the existing `AsyncBridge` pattern
+- **Markdown rendering** is experimental in Slint; recommend `pulldown-cmark` + custom renderer
+- **Skia renderer** recommended for Windows (better CPU efficiency, Direct3D support)
 
 ## Recommended Stack Additions
 
-### 1. Profiling Tools
+### Core GUI Framework
 
-#### cargo-flamegraph (RECOMMENDED)
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| slint | 1.15.0 | GUI framework | Current stable, already in workspace at 1.14.1 - upgrade to 1.15.0 |
+| slint-build | 1.15.0 | Compile .slint files | Required for build.rs compilation of UI markup |
 
-**Purpose:** CPU profiling with visual flamegraph output
-**Version:** 0.6.11 (released 2026-01-19)
+**Rationale:** Slint 1.15.0 (released 2026-02-04) is the latest stable. The project already has Slint 1.14.1 in workspace dependencies and an `AsyncBridge` designed for Slint. Upgrade to 1.15.0 for latest fixes and dynamic GridLayout.
 
-```bash
-# Install globally (not a project dependency)
-cargo install flamegraph
-```
+### Rendering Backend
 
-**Configuration required in workspace `Cargo.toml`:**
-```toml
-[profile.release-with-debug]
-inherits = "release"
-debug = true  # Already present in project
-```
+| Feature | Recommended | Why |
+|---------|-------------|-----|
+| `backend-winit` | Yes | Cross-platform windowing, Windows support via Direct3D |
+| `renderer-skia` | Yes (Windows) | 2% CPU vs 30% with FemtoVG, Direct3D native, better text quality |
+| `renderer-femtovg` | Fallback | Default renderer, lighter memory footprint, good for dev/testing |
 
-**Usage:**
-```bash
-# Profile specific benchmark
-cargo flamegraph --bench performance_benchmarks -- --bench record_timing
+**Rationale:** Skia provides significantly better CPU efficiency on Windows (2% vs ~30%) with superior text rendering quality. The increased memory (~60MB) is acceptable for a desktop application. FemtoVG remains as fallback.
 
-# Profile with frame pointers for better stacks
-RUSTFLAGS="-C force-frame-pointers=yes" cargo flamegraph --release --bin classic-tui
-```
+### Markdown Rendering
 
-**Why flamegraph:**
-- Wraps `perf` (Linux) and `dtrace` (macOS) automatically
-- Produces interactive SVG flamegraphs
-- Works with existing release-with-debug profile
-- No code changes required
+| Technology | Version | Purpose | Why |
+|------------|---------|---------|-----|
+| pulldown-cmark | 0.13.0 | Parse markdown reports | CommonMark compliant, pull parser, minimal deps |
 
-**Platform note:** Windows support is limited. Use WSL2 for profiling on Windows.
+**Slint's Native Markdown Status (MEDIUM confidence):**
+- `@markdown()` macro merged in PR #9733 (Oct 2025) but **experimental**
+- Requires `SLINT_ENABLE_EXPERIMENTAL_FEATURES=1` at build time
+- Supports: bold, italic, strikethrough, code blocks, lists, hyperlinks
+- Missing: complex tables, full styling control
+- Targeted for Slint 1.16 stable release
 
-**Sources:**
-- [flamegraph-rs GitHub](https://github.com/flamegraph-rs/flamegraph)
-- [Rust Performance Book - Profiling](https://nnethercote.github.io/perf-book/profiling.html)
+**Recommended Approach:**
+1. **Phase 1:** Use `pulldown-cmark` to parse markdown into events
+2. **Phase 2:** Render as formatted text blocks with Slint's Text elements
+3. **Phase 3:** Migrate to native `@markdown()` when stabilized in 1.16+
 
-#### tracing-flame (RECOMMENDED for async profiling)
+### Tokio Integration
 
-**Purpose:** Generate flamegraphs from `tracing` spans (async-aware)
-**Version:** 0.2.0
+**NO NEW DEPENDENCIES REQUIRED.** The existing pattern is correct:
 
-```toml
-# Add to workspace Cargo.toml
-[workspace.dependencies]
-tracing-flame = "0.2"
-inferno = "0.12"  # For converting folded stacks to SVG
-```
+| Component | Status | Notes |
+|-----------|--------|-------|
+| `classic-shared-core::get_runtime()` | Existing | Global Tokio runtime (ONE RUNTIME RULE) |
+| `classic-shared-core::AsyncBridge` | Existing | Slint event loop bridge |
+| `async-compat` | NOT NEEDED | Only needed if using `slint::spawn_local` |
 
-**Usage pattern:**
+**Architecture (already implemented in codebase):**
 ```rust
-use tracing_flame::FlameLayer;
-use tracing_subscriber::{prelude::*, registry::Registry};
-
-fn setup_profiling() -> impl Drop {
-    let (flame_layer, guard) = FlameLayer::with_file("./tracing.folded").unwrap();
-    tracing_subscriber::registry()
-        .with(flame_layer)
-        .init();
-    guard  // Drop guard writes output
-}
-
-// Convert to flamegraph
-// cat tracing.folded | inferno-flamegraph > profile.svg
+// In Slint button callback:
+AsyncBridge::run_with_ui_update(
+    async_operation(),  // Runs on shared Tokio runtime
+    |result| {          // Runs on Slint event loop
+        window.set_data(result);
+    }
+);
 ```
 
-**Why tracing-flame:**
-- Integrates with existing `tracing` infrastructure (already in workspace)
-- Captures async task boundaries (critical for Tokio-based code)
-- Produces folded stacks compatible with standard flamegraph tools
-- Zero runtime cost when disabled
+The existing `AsyncBridge::run_with_ui_update()` spawns directly on the Tokio runtime via `get_runtime().spawn()` and uses `slint::invoke_from_event_loop()` for UI updates. This is the optimal pattern.
 
-**Sources:**
-- [tracing-flame on lib.rs](https://lib.rs/crates/tracing-flame)
+## Workspace Cargo.toml Changes
 
-#### samply (Alternative to flamegraph - OPTIONAL)
-
-**Purpose:** Interactive web-based profiling with Firefox Profiler UI
-**Version:** 0.13
-
-```bash
-# Install globally
-cargo install samply
-```
-
-**When to use:** When you need interactive exploration rather than static SVG.
-
-**Sources:**
-- [Profiling Rust programs the easy way](https://ntietz.com/blog/profiling-rust-programs-the-easy-way/)
-
-### 2. Memory Profiling
-
-#### dhat (RECOMMENDED)
-
-**Purpose:** Heap allocation profiling with test assertions
-**Version:** 0.3.3
+### Update Version
 
 ```toml
-# Add to workspace Cargo.toml
 [workspace.dependencies]
-dhat = "0.3"
+# GUI (Slint) - UPDATE to latest
+slint = "1.15.0"  # Was 1.14.1
+
+# Markdown parsing (NEW)
+pulldown-cmark = { version = "0.13.0", default-features = false }
 ```
 
-**Usage in benchmarks:**
-```rust
-#[cfg(feature = "dhat-heap")]
-#[global_allocator]
-static ALLOC: dhat::Alloc = dhat::Alloc;
+### New Build Dependency
 
+```toml
+[workspace.dependencies]
+# For .slint file compilation
+slint-build = "1.15.0"
+```
+
+## New Crate: classic-gui
+
+Create: `rust/ui-applications/classic-gui/Cargo.toml`
+
+```toml
+[package]
+name = "classic-gui"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+
+[dependencies]
+# GUI framework
+slint = { workspace = true, features = [
+    "backend-winit",
+    "renderer-skia",      # Primary: Better CPU efficiency on Windows
+    "renderer-femtovg",   # Fallback renderer
+    "accessibility",      # Screen reader support
+] }
+
+# Async bridge (from foundation)
+classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["gui-bridge"] }
+
+# Business logic crates (as needed)
+classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+
+# Markdown rendering
+pulldown-cmark = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+log = { workspace = true }
+
+[build-dependencies]
+slint-build = { workspace = true }
+
+[[bin]]
+name = "classic-gui"
+path = "src/main.rs"
+```
+
+## Build System Changes
+
+### build.rs Required
+
+Create: `rust/ui-applications/classic-gui/build.rs`
+
+```rust
 fn main() {
-    #[cfg(feature = "dhat-heap")]
-    let _profiler = dhat::Profiler::new_heap();
-
-    // ... benchmark code
+    slint_build::compile("ui/main.slint").unwrap();
 }
 ```
 
-**Test allocation counts:**
-```rust
-#[test]
-fn test_yaml_parse_allocations() {
-    let _profiler = dhat::Profiler::builder().testing().build();
+### UI File Structure
 
-    let stats_before = dhat::HeapStats::get();
-    parse_yaml_document(&content);
-    let stats_after = dhat::HeapStats::get();
-
-    // Assert allocation count is reasonable
-    assert!(stats_after.total_blocks - stats_before.total_blocks < 100);
-}
 ```
-
-**Why dhat:**
-- Pure Rust implementation (no external dependencies)
-- Works on all platforms including Windows
-- Supports assertion-based testing (CI-friendly)
-- Lower overhead than Valgrind-based tools
-- Views with DHAT viewer at https://nicopollas.github.io/nicopollas/dhat-viewer/
-
-**Sources:**
-- [dhat crate documentation](https://docs.rs/dhat/latest/dhat/)
-- [Rust Performance Book - Heap Allocations](https://nnethercote.github.io/perf-book/heap-allocations.html)
-
-### 3. PyO3 Cross-Boundary Profiling
-
-#### py-spy (RECOMMENDED)
-
-**Purpose:** Profile Python code including Rust extensions
-**Version:** 0.4 (latest)
-
-```bash
-# Install via pip (not Rust)
-pip install py-spy
-```
-
-**Usage:**
-```bash
-# Profile CLASSIC GUI with native extension support
-py-spy record --native -o profile.svg -- python CLASSIC_Interface.py
-
-# Top-like view
-py-spy top --native -- python CLASSIC_ScanLogs.py
-```
-
-**Why py-spy:**
-- Written in Rust, low overhead (~2%)
-- `--native` flag captures Rust stack frames alongside Python
-- No code changes required
-- Can attach to running processes
-
-**Limitation:** Requires debug symbols in Rust extensions. Build with:
-```bash
-# Windows: use release-with-debug profile
-maturin build --profile release-with-debug
-```
-
-**Sources:**
-- [py-spy GitHub](https://github.com/benfred/py-spy)
-- [PyO3 Performance Analysis](https://github.com/PyO3/pyo3/issues/1607)
-
-#### Custom FFI Overhead Measurement (RECOMMENDED)
-
-Create dedicated benchmarks for Python/Rust boundary crossing:
-
-```rust
-// In classic-yaml-py/benches/ffi_overhead.rs
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use pyo3::prelude::*;
-
-fn bench_ffi_roundtrip(c: &mut Criterion) {
-    pyo3::prepare_freethreaded_python();
-
-    Python::with_gil(|py| {
-        let module = PyModule::import(py, "classic_yaml").unwrap();
-
-        c.bench_function("yaml_parse_small", |b| {
-            b.iter(|| {
-                let result = module
-                    .call_method1("parse_yaml", ("key: value",))
-                    .unwrap();
-                black_box(result);
-            });
-        });
-    });
-}
-
-criterion_group!(ffi_benches, bench_ffi_roundtrip);
-criterion_main!(ffi_benches);
-```
-
-### 4. CI Regression Detection
-
-#### github-action-benchmark (RECOMMENDED)
-
-**Purpose:** Track benchmark results over time, alert on regressions
-
-```yaml
-# .github/workflows/benchmark.yml
-name: Benchmark
-on:
-  push:
-    branches: [main]
-  pull_request:
-
-jobs:
-  benchmark:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run benchmarks
-        run: cargo bench --bench performance_benchmarks -- --output-format bencher | tee output.txt
-
-      - name: Store benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          tool: 'cargo'
-          output-file-path: output.txt
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          auto-push: true
-          alert-threshold: '150%'
-          fail-on-alert: false
-          comment-on-alert: true
-```
-
-**Why github-action-benchmark:**
-- Free for public repos
-- No external service dependency
-- Stores results in GitHub Pages
-- Configurable thresholds (default 200%, recommend 150% for CLASSIC)
-
-**Alternative: Bencher**
-
-For more sophisticated regression analysis with statistical significance:
-
-```yaml
-- uses: bencherdev/bencher@main
-- name: Track Benchmarks
-  run: |
-    bencher run \
-      --project classic \
-      --token ${{ secrets.BENCHER_API_TOKEN }} \
-      --branch main \
-      --testbed ubuntu-latest \
-      --adapter rust_criterion \
-      "cargo bench"
-```
-
-**Sources:**
-- [github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark)
-- [Bencher documentation](https://bencher.dev/docs/how-to/github-actions/)
-
-### 5. Async Runtime Profiling
-
-#### tokio-console (RECOMMENDED for debugging)
-
-**Purpose:** Real-time async task visualization
-**Already in ecosystem:** Uses `console-subscriber` with existing `tracing`
-
-```toml
-# Add to workspace (dev-only feature flag recommended)
-[workspace.dependencies]
-console-subscriber = { version = "0.4", optional = true }
-```
-
-**Usage:**
-```rust
-#[cfg(feature = "tokio-console")]
-fn setup_console() {
-    console_subscriber::init();
-}
-```
-
-```bash
-# Run with console
-RUSTFLAGS="--cfg tokio_unstable" cargo run --features tokio-console
-
-# In another terminal
-tokio-console
-```
-
-**Why tokio-console:**
-- Visual task inspector for async code
-- Shows task spawn points, poll counts, waker events
-- Identifies stuck or slow tasks
-- Useful for debugging, not production profiling
-
-**Sources:**
-- [tokio-console GitHub](https://github.com/tokio-rs/console)
-
-## Recommended Stack Configuration
-
-### Workspace Cargo.toml Additions
-
-```toml
-[workspace.dependencies]
-# Profiling (dev-only)
-tracing-flame = "0.2"
-inferno = "0.12"
-dhat = "0.3"
-console-subscriber = "0.4"
-
-# Criterion already present at 0.8.1
-```
-
-### Per-Crate Configuration Pattern
-
-For crates that need benchmarks:
-
-```toml
-# business-logic/classic-yaml-core/Cargo.toml
-[dev-dependencies]
-criterion = { workspace = true }
-dhat = { workspace = true }
-
-[features]
-dhat-heap = []
-
-[[bench]]
-name = "yaml_benchmarks"
-harness = false
+rust/ui-applications/classic-gui/
+├── Cargo.toml
+├── build.rs
+├── src/
+│   ├── main.rs
+│   ├── app.rs
+│   └── markdown_renderer.rs
+└── ui/
+    ├── main.slint
+    ├── components/
+    │   ├── scan_panel.slint
+    │   ├── results_view.slint
+    │   └── settings_panel.slint
+    └── styles/
+        └── theme.slint
 ```
 
 ## What NOT to Add
 
-| Tool | Reason to Avoid |
-|------|-----------------|
-| `iai-callgrind` | Requires Valgrind (Linux only), CLASSIC targets Windows primarily |
-| `pprof-rs` | jemalloc-based, conflicts with system allocator; dhat is simpler |
-| `heaptrack` | Linux only, high memory overhead |
-| `tikv-jemallocator` | Requires replacing global allocator, invasive change |
-| `criterion-perf-events` | Linux only, requires perf setup |
-| `divan` | Project already standardized on Criterion 0.8.1; switching adds friction |
-| `codspeed` | External service dependency; github-action-benchmark is self-hosted |
+| Don't Add | Why |
+|-----------|-----|
+| `async-compat` | Existing AsyncBridge handles Tokio integration correctly |
+| `slint-interpreter` | Not needed - use compile-time .slint with slint-build |
+| `renderer-software` | CPU rendering too slow for desktop, Skia handles everything |
+| `egui` or `iced` | Different frameworks - stick with Slint as originally planned |
+| `comrak` | pulldown-cmark is sufficient and lighter |
+| New Tokio runtime | ONE RUNTIME RULE - use existing `get_runtime()` |
 
-### Why Stay with Criterion (Not Divan)
+## Platform-Specific Notes
 
-The project already uses Criterion 0.8.1 with 3 benchmark files. While Divan offers ergonomic improvements:
-- Existing benchmarks would need rewriting
-- Team familiarity with Criterion API
-- Criterion's HTML reports are mature
-- Statistical rigor is equivalent
+### Windows (Primary Platform)
 
-**Recommendation:** Expand Criterion coverage rather than switch frameworks.
+- **Renderer:** Skia with Direct3D backend (automatic via `renderer-skia`)
+- **Build:** MSVC toolchain required for Skia
+- **Distribution:** Single binary, no runtime dependencies
+- **Performance:** ~2% CPU at idle, ~60MB memory
 
-## Integration with Existing Infrastructure
+### Linux/macOS (Secondary)
 
-### Feature Flags Pattern
+- **Renderer:** Skia with Vulkan (Linux) or Metal (macOS)
+- **Fallback:** FemtoVG with OpenGL if Skia unavailable
+- **Selection:** Runtime via `SLINT_BACKEND` environment variable
 
-```toml
-# In workspace Cargo.toml
-[workspace.features]
-# Development-only profiling
-profiling = ["tracing-flame", "dhat", "console-subscriber"]
-```
+## Migration Path from PySide6
 
-### Benchmark Directory Structure
-
-```
-rust/
-  foundation/classic-shared-core/benches/  # Already exists
-  business-logic/
-    classic-yaml-core/benches/
-      yaml_benchmarks.rs          # NEW: YAML parsing benchmarks
-      yaml_memory.rs              # NEW: Allocation profiling
-    classic-scanlog-core/benches/
-      scanlog_benchmarks.rs       # NEW: Crash log parsing
-    classic-database-core/benches/
-      database_benchmarks.rs      # NEW: SQLite operations
-  python-bindings/
-    classic-yaml-py/benches/
-      ffi_benchmarks.rs           # NEW: PyO3 boundary overhead
-```
-
-### Scripts for Profiling Workflows
-
-```powershell
-# scripts/profile-release.ps1
-param(
-    [Parameter(Mandatory=$true)]
-    [string]$Target,
-
-    [string]$OutputDir = "profiles"
-)
-
-$env:RUSTFLAGS = "-C force-frame-pointers=yes"
-New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-
-Write-Host "Building with debug symbols..."
-cargo build --profile release-with-debug --bin $Target
-
-Write-Host "Profiling with flamegraph..."
-cargo flamegraph --profile release-with-debug --bin $Target -o "$OutputDir/$Target.svg"
-
-Write-Host "Profile saved to $OutputDir/$Target.svg"
-```
-
-## Version Verification
-
-| Crate | Recommended Version | Verified Date | Source |
-|-------|---------------------|---------------|--------|
-| criterion | 0.8.1 | 2026-02-04 | [docs.rs](https://docs.rs/crate/criterion/0.8.1) - Released 2025-12-07 |
-| flamegraph | 0.6.11 | 2026-02-04 | [GitHub releases](https://github.com/flamegraph-rs/flamegraph/releases) - Released 2026-01-19 |
-| tracing-flame | 0.2.0 | 2026-02-04 | [lib.rs](https://lib.rs/crates/tracing-flame) |
-| dhat | 0.3.3 | 2026-02-04 | [docs.rs](https://docs.rs/dhat/latest/dhat/) |
-| console-subscriber | 0.4.x | 2026-02-04 | [crates.io](https://crates.io/crates/console-subscriber) |
-| py-spy | 0.4.x | 2026-02-04 | [GitHub](https://github.com/benfred/py-spy) |
-
-## Summary
-
-**New workspace dependencies (dev-only):**
-1. `tracing-flame = "0.2"` - Async-aware flame profiling
-2. `inferno = "0.12"` - Folded stack to SVG conversion
-3. `dhat = "0.3"` - Heap allocation profiling
-4. `console-subscriber = "0.4"` (optional feature) - Tokio debugging
-
-**External tools (not deps):**
-1. `cargo-flamegraph` - CPU profiling
-2. `py-spy` - Python/Rust cross-boundary profiling
-
-**CI Integration:**
-1. `github-action-benchmark` - Free, self-hosted regression tracking
-
-**Total impact:** 3-4 small crates added to dev-dependencies, no runtime changes, no production code modifications required.
+| Python Component | Rust Replacement |
+|-----------------|------------------|
+| `CLASSIC_Interface.py` | `classic-gui` binary |
+| `ClassicLib.AsyncBridge` | `classic_shared_core::AsyncBridge` |
+| PySide6 widgets | `.slint` component files |
+| Qt signals/slots | Slint callbacks and properties |
+| QThread workers | `AsyncBridge::run_with_ui_update()` |
 
 ## Sources
 
-- [Criterion.rs Documentation](https://bheisler.github.io/criterion.rs/book/getting_started.html)
-- [The Rust Performance Book](https://nnethercote.github.io/perf-book/profiling.html)
-- [flamegraph-rs GitHub](https://github.com/flamegraph-rs/flamegraph)
-- [tracing-flame on lib.rs](https://lib.rs/crates/tracing-flame)
-- [dhat crate documentation](https://docs.rs/dhat/latest/dhat/)
-- [py-spy GitHub](https://github.com/benfred/py-spy)
-- [PyO3 Performance Analysis Issue](https://github.com/PyO3/pyo3/issues/1607)
-- [github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark)
-- [Bencher CI documentation](https://bencher.dev/docs/how-to/github-actions/)
-- [tokio-console GitHub](https://github.com/tokio-rs/console)
-- [Profiling Rust programs the easy way](https://ntietz.com/blog/profiling-rust-programs-the-easy-way/)
+### HIGH Confidence (Official Documentation)
+- [Slint 1.15 Release Blog](https://slint.dev/blog/slint-1.15-released) - Version and features
+- [Slint Cargo Features](https://docs.rs/slint/latest/slint/docs/cargo_features/index.html) - Feature flags
+- [Slint Backends & Renderers](https://docs.slint.dev/latest/docs/slint/guide/backends-and-renderers/backends_and_renderers/) - Renderer options
+- [GitHub Releases](https://github.com/slint-ui/slint/releases) - Version history
+
+### MEDIUM Confidence (GitHub Issues/Discussions)
+- [Rich Text Support #9560](https://github.com/slint-ui/slint/issues/9560) - Markdown status
+- [Tokio Integration #5784](https://github.com/slint-ui/slint/discussions/5784) - Async patterns
+- [PR #9733](https://github.com/slint-ui/slint/pull/9733) - Markdown implementation (merged)
+- [Renderer Performance #5677](https://github.com/slint-ui/slint/discussions/5677) - Skia vs FemtoVG CPU usage
+
+### HIGH Confidence (Crates)
+- [pulldown-cmark 0.13.0](https://crates.io/crates/pulldown-cmark) - Latest version
+- [pulldown-cmark Releases](https://github.com/pulldown-cmark/pulldown-cmark/releases) - v0.13.0 features

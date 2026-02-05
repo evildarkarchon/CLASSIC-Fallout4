@@ -1,280 +1,327 @@
 # Project Research Summary
 
-**Project:** CLASSIC v8.3.0 Performance & Polish
-**Domain:** Hybrid Python-Rust application performance benchmarking and optimization
-**Researched:** 2026-02-04
+**Project:** CLASSIC Slint GUI Migration
+**Domain:** Desktop Application GUI Migration (PySide6/Qt to Rust/Slint)
+**Researched:** 2026-02-05
 **Confidence:** HIGH
 
 ## Executive Summary
 
-CLASSIC is a mature hybrid Python-Rust application that has already achieved significant performance gains (15-150x speedups) through Rust acceleration in its hot paths. The v8.3.0 milestone focuses on establishing scientific baselines, identifying remaining optimization opportunities, and fixing pre-existing bugs rather than speculative optimization. Research shows that CLASSIC already has the correct benchmarking infrastructure (Criterion 0.8.1 for Rust, FFIProfiler for PyO3 overhead tracking) but lacks automated regression detection and systematic GIL release patterns.
+CLASSIC is migrating from PySide6/Qt to Slint for its GUI while preserving all existing Rust business logic in `-core` crates. Slint is a modern declarative GUI framework that compiles `.slint` markup files to native Rust code, enabling direct integration with CLASSIC's async-first Rust architecture without the Python/PyO3 overhead.
 
-The recommended approach is methodical: establish release-mode baselines first, profile to identify hot paths second, optimize with measurement third. Research identified a critical gap: **zero usage of `py.allow_threads()` in the Rust codebase**, meaning Python's Global Interpreter Lock is held during all Rust operations. This blocks the Python runtime even when Rust is doing fast work, causing GUI freezes and async starvation. The priority order should be: (1) fix the GIL holding pattern, (2) establish accurate baselines, (3) profile to identify actual bottlenecks, (4) optimize based on data.
+The recommended approach uses Slint 1.15.0 with Skia renderer for Windows, integrating directly with existing `-core` crates via the established global Tokio runtime. Core features (tabbed interface, scan operations, settings, dark theme) are well-supported, but markdown rendering requires a custom solution using `pulldown-cmark` to parse reports and render them as styled Slint elements. The async integration pattern uses worker threads on the global Tokio runtime with `invoke_from_event_loop()` for UI updates, maintaining CLASSIC's ONE RUNTIME RULE.
 
-Key risks center on measurement methodology mistakes (debug builds instead of release, mean instead of minimum for microbenchmarks, type conversion overhead hidden in "Rust time") and test non-determinism from global cache state. These are well-documented in official PyO3 and Criterion documentation, giving high confidence in prevention strategies. The two pre-existing bugs (yaml-core cache test, GUI path resolution) have clear root causes and straightforward fixes.
+The main risk is Tokio runtime conflicts: Slint's event loop cannot coexist with a current-thread Tokio runtime on the same thread. This is mitigated by using `slint::spawn_local()` with `async_compat` for UI-thread async operations and spawning background work on the existing multi-threaded runtime. Early validation of the async bridge pattern in Phase 1 (Foundation) is critical, as architectural errors here require complete rewrites.
 
 ## Key Findings
 
 ### Recommended Stack
 
-CLASSIC should add minimal profiling tools to its existing Criterion 0.8.1 infrastructure rather than switching frameworks. The stack additions are strategic: `cargo-flamegraph` for CPU profiling, `tracing-flame` for async-aware profiling, `dhat` for heap analysis, and `py-spy` for cross-boundary profiling.
+Slint 1.15.0 (released 2026-02-04) is the latest stable release with dynamic GridLayout support and mature Tokio integration patterns. The project already has Slint 1.14.1 in workspace dependencies, so this is an upgrade rather than a new framework addition. Skia renderer is strongly recommended for Windows due to 2% CPU usage vs 30% with FemtoVG, plus superior Direct3D integration and text rendering quality.
 
-**Core additions:**
-- **tracing-flame (0.2)**: Async-aware flame profiling — integrates with existing tracing infrastructure, captures async task boundaries critical for Tokio-based code
-- **dhat (0.3.3)**: Heap allocation profiling — pure Rust, works on Windows, supports test assertions for CI-friendly allocation counting
-- **cargo-flamegraph (0.6.11)**: CPU profiling tool — wraps perf/dtrace automatically, produces interactive SVG flamegraphs, no code changes required
-- **py-spy (0.4)**: Python/Rust cross-boundary profiler — captures Rust stack frames alongside Python with `--native` flag, 2% overhead
-- **github-action-benchmark**: CI regression detection — free for public repos, stores results in GitHub Pages, configurable alert thresholds
+**Core technologies:**
+- **Slint 1.15.0**: Declarative GUI framework — compile-time type safety, GPU acceleration, native Rust integration
+- **Skia renderer**: Graphics backend — 15x better CPU efficiency (2% vs 30%), Direct3D native on Windows
+- **pulldown-cmark 0.13.0**: Markdown parsing — custom renderer for crash log reports until native markdown stabilizes in Slint 1.16+
+- **rfd (Rust File Dialog)**: Native file dialogs — Slint has no built-in file picker, external crate required
+- **async-compat 0.2**: Runtime bridging — bridges Slint's `spawn_local()` to the global Tokio runtime
 
-**What NOT to add:** Custom frameworks (Criterion already works), jemalloc (invasive), Divan (would require rewriting existing benchmarks), iai-callgrind (Linux-only, Windows is primary platform).
-
-**Total impact:** 3-4 dev-dependencies, all opt-in via feature flags, zero runtime overhead when disabled.
+**No new runtime dependencies**: Existing `classic-shared-core::get_runtime()` provides the Tokio runtime. No Python dependencies. No PyO3 layer.
 
 ### Expected Features
 
-The benchmarking suite research identified table stakes (must have for meaningful benchmarks), differentiators (features that add significant value), and anti-features (common over-engineering to avoid).
-
 **Must have (table stakes):**
-- Wall-clock and CPU time measurement — already have via FFIProfiler
-- Statistical rigor (mean/median/stddev/percentiles) — Criterion provides, pytest-benchmark provides
-- Rust vs Python comparison — core value prop, already tracking speedup ratios
-- Warmup iterations — handled by Criterion automatically
-- JSON export for historical tracking — pytest-benchmark supports
+- TabWidget with 4 tabs (MAIN, BACKUP, ARTICLES, RESULTS) — native Slint widget
+- Scan operations with progress feedback — worker threads + channel-based updates
+- ListView for crash reports — built-in virtualized list with potential flicker under rapid updates
+- Context menus on reports — native `ContextMenuArea` (Slint 1.10+)
+- Settings dialog with tabs — `Dialog` element + TabWidget
+- Dark theme — `fluent-dark` or `material-dark` built-in styles
+- File/folder selection — via `rfd` crate (not built into Slint)
+- Markdown report viewing — custom `pulldown-cmark` renderer (Slint's native markdown experimental, targets 1.16)
 
-**Should have (competitive differentiators):**
-- **Historical regression detection** — catch performance regressions in CI before production (Bencher or github-action-benchmark)
-- **PyO3 FFI overhead isolation** — measure type conversion vs actual Rust work separately (FFIProfiler already instruments this)
-- **Cache hit rate tracking** — validate DashMap effectiveness in classic-settings (currently no instrumentation)
-- **Percentile latencies (p95/p99)** — understand tail latency for worst-case users
-- **Component-level breakdown** — attribute time to parsing/analysis/reporting phases
+**Should have (differentiators):**
+- Native Rust integration — eliminates AsyncBridge complexity, no GIL contention, type-safe entire stack
+- Compile-time UI validation — `.slint` files checked at build, LSP integration for IDE errors
+- Lightweight runtime — <300KB RAM vs 50-100MB with Qt+Python
+- GPU-accelerated rendering — Skia or FemtoVG, significantly better performance than Qt software renderer
 
-**Defer (anti-features to avoid):**
-- Custom benchmark framework — reinventing Criterion wastes effort
-- Real-time profiling in production — overhead and security concerns
-- Flame graphs in every run — expensive, generate on-demand only
-- Sub-microsecond precision everywhere — noise dominates at this scale for most operations
-- Cross-platform benchmark parity — Windows and Linux have different characteristics, compare to self not cross-platform
+**Defer (v2+):**
+- Tooltips — no native support, PopupWindow workaround clunky (tracked in issue #6446)
+- Resizable splitter panes — custom TouchArea implementation required, fixed layout sufficient for MVP
+- Rich text editing — read-only markdown viewing sufficient for crash reports
+
+**Known gaps requiring custom implementation:**
+- Markdown rendering (HIGH priority) — custom component using `pulldown-cmark` to generate styled Text elements
+- File dialogs (MEDIUM priority) — integrate `rfd` crate, test on Windows
+- Splitter (LOW priority) — custom TouchArea drag handler if needed
 
 ### Architecture Approach
 
-CLASSIC's benchmarking architecture should follow Rust workspace conventions: crate-level `benches/` directories for pure Rust benchmarks, Python-side pytest-benchmark for FFI overhead measurement, and a workspace-level `classic-bench` integration crate for end-to-end pipelines. The architecture separates concerns: pure Rust performance is measured without PyO3 overhead, then FFI overhead is measured separately, allowing clear attribution of time spent.
+The Slint GUI lives in `rust/ui-applications/classic-gui/` and integrates directly with business logic `-core` crates, completely bypassing the Python binding layer. The architecture follows the worker thread pattern: Slint's event loop runs on the main thread, async operations spawn on the existing global Tokio runtime (`classic_shared_core::get_runtime()`), and UI updates use `invoke_from_event_loop()` or `upgrade_in_event_loop()` to safely cross from worker threads back to the UI thread.
 
 **Major components:**
-1. **Crate-level Rust benchmarks** (`{crate}/benches/`) — Pure Rust microbenchmarks using Criterion, measuring algorithm performance without Python boundary crossing. Priority crates: classic-yaml-core, classic-scanlog-core, classic-file-io-core.
-2. **Workspace integration benchmarks** (`rust/benchmarks/classic-bench/`) — New dedicated benchmark crate for cross-cutting concerns and end-to-end pipelines, depends on all -core crates.
-3. **Python FFI overhead tests** (`tests/benchmarks/`) — Python-side pytest-benchmark measuring round-trip overhead, type conversion costs, batch vs individual calls, GIL impact. Cannot be measured from Rust alone.
-4. **CI regression detection** — GitHub Actions workflow storing baselines, comparing PRs against baselines, alerting on regressions >10-15%.
+1. **Slint Runtime (main thread)** — event loop, rendering, property reactivity, user input handling
+2. **TokioBridge (cross-thread communication)** — spawns async operations on the global runtime, queues UI updates via channels
+3. **ProgressBridge (progress feedback)** — timer-based polling of progress channels at 60 FPS to update progress bars
+4. **Global Callbacks (state management)** — `.slint` files define `global ScanLogic`, `global SettingsLogic` with callbacks implemented in Rust
+5. **Business logic integration** — direct calls to `OrchestratorCore::process_log()`, `YamlSettingsCache`, etc. (no FFI boundary)
 
-**Key architectural decision:** Measure pure Rust and FFI overhead separately. Benchmarking Rust code by calling from Python conflates the two and makes optimization decisions unclear. The FFIProfiler already captures this separation (wall_time, cpu_time, input_size, output_size per call).
+**Data flow:** User clicks button → Slint callback → Clone `Weak<MainWindow>` → Spawn on Tokio runtime → Worker processes → Send progress via channel → Timer polls channel → `upgrade_in_event_loop()` updates UI → Worker completes → Final result via `upgrade_in_event_loop()`.
+
+**Critical architectural constraint:** Slint's event loop and Tokio's current-thread runtime cannot coexist on the same thread. Use `spawn_local()` for UI-thread async, wrap with `async_compat::Compat` to bridge to the multi-threaded runtime.
 
 ### Critical Pitfalls
 
-Research identified 14 performance-specific pitfalls plus 10 migration pitfalls (for context). The top 5 for v8.3.0 are:
+1. **Tokio current-thread runtime incompatibility** — Using `#[tokio::main]` or current-thread scheduler on the same thread as Slint causes deadlocks. Prevention: Use `spawn_local()` + `async_compat` for UI-thread async, spawn workers on existing multi-threaded runtime via `get_runtime().spawn()`. Phase 1 (Foundation) critical.
 
-1. **Holding GIL during long Rust operations (Pitfall P2 - CRITICAL)** — Python's Global Interpreter Lock remains held during Rust execution by default, blocking all Python threads and async tasks. Even 50ms blocks the entire runtime. **CRITICAL FINDING: grep of rust/ directory shows ZERO matches for `py.allow_threads()` or `allow_threads`.** This is a systemic gap. Prevention: Use `py.allow_threads(|| { ... })` for any operation >1ms. Detection: GUI freezes during "fast" Rust operations, async tasks starve.
+2. **Reference cycle memory leaks in callbacks** — Capturing strong `ComponentHandle` references in closures creates cycles where neither component nor callback can be dropped. Prevention: Always use `Weak<T>` via `handle.as_weak()`, upgrade with `upgrade_in_event_loop()`. Phase 1 (Foundation) — establish pattern immediately.
 
-2. **Measuring FFI overhead without isolating type conversion (Pitfall P1)** — PyO3 type conversion (dict to HashMap, list to Vec) happens transparently but has measurable cost. The `yaml_to_python()` function in classic-yaml-py recursively converts every node. For nested YAML, this is significant. Prevention: Use FFIProfiler to measure input_size/output_size, benchmark Rust-side logic separately using Criterion. Detection: Speedup varies wildly (5x to 50x) for similar operations.
+3. **No built-in markdown support** — Slint's `@markdown()` macro is experimental (SLINT_ENABLE_EXPERIMENTAL_FEATURES=1), targets Slint 1.16. Prevention: Build custom renderer using `pulldown-cmark` to parse markdown, render as styled Slint Text/Rectangle elements. Phase 3 (Results Viewer) — core requirement for crash log display.
 
-3. **Global static state causing test non-determinism (Pitfall P3)** — Rust's `static` variables like `YAML_CACHE` persist across parallel test runs, causing intermittent failures. The pre-existing `test_clear_cache` bug is exactly this pitfall. Prevention: Use `#[serial_test::serial]` for tests touching global state, clear cache at start AND end of tests. Detection: Tests pass with `--test-threads=1` but fail in parallel.
+4. **Cross-thread Rc/RefCell usage with models** — `VecModel<T>` uses `Rc` internally, cannot be sent across threads. Prevention: Workers return `Vec<T>`, main thread creates/updates `VecModel` via `invoke_from_event_loop()`. Phase 2 (Log Scanning) — affects all background operations.
 
-4. **Benchmarking debug builds instead of release (Pitfall P4)** — Debug builds are 10-100x slower. Prevention: Always use `--release`, document build mode in results, use `rebuild_rust.ps1` which defaults to release. Detection: Rust slower than Python for same algorithm.
-
-5. **Using mean instead of minimum for microbenchmarks (Pitfall P5)** — Mean is heavily influenced by outliers from OS scheduling and thermal throttling. As Python timeit docs state: "the min() of the result is probably the only number you should be interested in." Prevention: Report minimum + percentiles (p50/p95/p99), not just mean. FFIProfileStats already has p95_call_time and p99_call_time.
+5. **Widget style compile-time lock-in** — Style (fluent/material/cupertino) is set at compile time via `SLINT_STYLE` or cargo features, cannot change at runtime. Prevention: Decide on `fluent` style early, use `Palette` for runtime light/dark switching (Slint 1.6+). Phase 1 (Foundation) — irreversible decision.
 
 ## Implications for Roadmap
 
-Based on research, the milestone should be structured around measurement methodology first, then optimization based on data. The critical GIL finding elevates "fix GIL holding" to a foundational step before accurate benchmarking.
+Based on research, suggested phase structure follows dependency ordering and risk mitigation:
 
-### Phase 1: GIL Release Audit & Baseline Establishment
-**Rationale:** Cannot establish accurate baselines until GIL holding is fixed. If Rust operations block Python threads, the measured performance does not reflect actual user experience. This phase fixes the foundational issue and establishes measurement methodology.
+### Phase 1: Foundation and Async Bridge
+**Rationale:** Async architecture must be correct from the start. Tokio runtime conflicts (Pitfall #1) cause deadlocks requiring complete rewrites. Establishing weak reference patterns (Pitfall #2) early prevents memory leaks throughout the codebase.
 
 **Delivers:**
-- Audit of all PyO3 functions for GIL release patterns
-- Add `py.allow_threads()` to operations >1ms (scan_log, yaml parsing, database queries)
-- Establish release-mode baselines for Tier 1 operations (crash log scanning, YAML loading, report generation)
-- Document measurement methodology (minimum vs mean, warmup, percentiles)
+- `classic-gui` crate structure in `rust/ui-applications/classic-gui/`
+- Build system with `slint-build` compiling `.slint` files
+- Minimal main window that displays (validates Slint integration)
+- `TokioBridge` implementation using `async_compat` + global runtime
+- `ProgressBridge` with channel-based updates and timer polling
+- Weak reference patterns for all callbacks
 
 **Addresses:**
-- Table stakes: Wall-clock time, statistical rigor, warmup iterations
-- Pitfall P2 (GIL holding) - foundational fix
-- Pitfall P4 (debug builds) - establish release baselines
+- Widget style decision (fluent-dark for Windows)
+- Tokio runtime integration (ONE RUNTIME RULE compliance)
+- Window lifecycle (single event loop, hide/show pattern)
 
 **Avoids:**
-- Measuring performance with GIL blocking threads (false baselines)
-- Optimizing based on debug build timings
-- Using mean when minimum is more meaningful
+- Pitfall #1 (Tokio incompatibility)
+- Pitfall #2 (reference cycles)
+- Pitfall #4 (style lock-in)
+- Pitfall #12 (event loop cannot run twice)
 
-**Research flag:** Standard pattern - PyO3 Performance Guide documents GIL release extensively. No deep research needed.
+**Research flag:** LOW — Async patterns well-documented, existing `AsyncBridge` provides reference implementation. Validate early with smoke test (spawn worker, update progress bar).
 
-### Phase 2: Hot Path Profiling & Cache Instrumentation
-**Rationale:** Once baselines are accurate (GIL not blocking, release builds), use profiling to identify actual bottlenecks rather than optimizing by intuition. Add cache hit rate tracking to validate assumptions about DashMap effectiveness.
+---
+
+### Phase 2: Core UI Layout and Settings
+**Rationale:** UI structure and settings must exist before scan operations can display results or load configuration. Settings integration validates the TokioBridge pattern with real business logic (`classic-settings-core`, `classic-yaml-core`).
 
 **Delivers:**
-- Flamegraph profiling of full scan workflow
-- FFI overhead breakdown (conversion vs computation time)
-- Cache hit rate instrumentation for classic-settings DashMap
-- Identification of top 3-5 hot paths by total time (not per-call time)
+- Main window TabWidget with 4 tabs (MAIN, BACKUP, ARTICLES, RESULTS)
+- Global callbacks in `.slint` files (`ScanLogic`, `SettingsLogic`)
+- Settings dialog with tabs for configuration
+- File dialog integration via `rfd` crate
+- Settings loading/saving using `YamlSettingsCache`
+- Dark theme application (`fluent-dark`)
 
 **Uses:**
-- cargo-flamegraph for CPU profiling
-- tracing-flame for async task boundaries
-- py-spy for Python/Rust cross-boundary profiling
-- FFIProfiler for type conversion overhead measurement
+- Slint TabWidget, Dialog, Button, LineEdit, CheckBox, ComboBox
+- `rfd` for folder selection (Browse buttons)
+- `classic-settings-core` for YAML configuration
+- `classic-yaml-core` for file operations
 
-**Implements:**
-- Component-level breakdown architecture (Timer spans for parse/analyze/report phases)
-- Cache hit rate tracking (differentiator feature)
+**Implements:** Global Callbacks state management pattern from ARCHITECTURE.md
 
 **Avoids:**
-- Pitfall P1 (FFI overhead hidden) - explicit measurement
-- Pitfall P9 (optimizing wrong code) - sort by total time
+- Pitfall #7 (no native file dialogs — use `rfd`)
+- Pitfall #14 (VC++ redistributable — plan for bundling early)
 
-**Research flag:** Standard pattern - profiling workflows well-documented in Rust Performance Book and PyO3 guides.
+**Research flag:** LOW — Standard widgets well-documented. File dialog integration has known patterns.
 
-### Phase 3: Bug Fixes & Test Stabilization
-**Rationale:** Fix pre-existing bugs with clear root causes before performance optimization. Test non-determinism masks real issues and must be resolved for reliable benchmarking.
+---
+
+### Phase 3: Scan Operations
+**Rationale:** Scanning is the core business logic of CLASSIC. This phase validates the worker thread pattern under real load and tests progress feedback reliability. Must complete before results viewer because it generates the data to display.
 
 **Delivers:**
-- Fix `test_clear_cache` in classic-yaml-core (Pitfall P3)
-- Fix GUI `classic_settings()` path resolution (Pitfall P14 - relative path bug)
-- Ensure all cache-related tests use `#[serial]` attribute
-- Verify tests pass with parallel execution (`pytest -n auto`)
+- Scan button callbacks spawning workers on Tokio runtime
+- Integration with `OrchestratorCore::process_log()` and batch scanning
+- Progress bar updates via `ProgressBridge` channels
+- Enable/disable states for scan controls during operations
+- Error handling with Slint Dialog elements
+- Basic scan result storage in `VecModel`
+
+**Uses:**
+- `classic-scanlog-core` for log parsing and analysis
+- `classic-file-io-core` for async file operations
+- `classic-database-core` for results storage
+- TokioBridge and ProgressBridge from Phase 1
 
 **Addresses:**
-- Pitfall P3 (global static state) - the exact root cause of test_clear_cache bug
-- Pitfall P14 (relative path assumptions) - the exact root cause of GUI bug
+- Background operations without blocking UI
+- Progress feedback during long scans
+- Error reporting to user
 
 **Avoids:**
-- Flaky tests that pass/fail based on execution order
-- GUI failures from path resolution bugs
+- Pitfall #1 (Tokio deadlock — use established worker pattern)
+- Pitfall #3 (model threading — workers return Vec, main thread updates VecModel)
+- Pitfall #6 (ListView not updating — explicit redraw triggers)
+- Pitfall #8 (upgrade_in_event_loop reliability — timer-based backup)
 
-**Research flag:** Standard pattern - bugs have documented root causes, fixes are straightforward.
+**Research flag:** MEDIUM — Integration of Slint progress patterns with CLASSIC's existing `OrchestratorCore` batch operations. May need phase research for progress reporting granularity.
 
-### Phase 4: Hot Path Optimization (Data-Driven)
-**Rationale:** Only after accurate baselines, profiling data, and stable tests should optimization begin. This phase targets the actual bottlenecks identified by profiling, not intuition.
+---
 
-**Delivers:**
-- Optimize top 3 hot paths identified in Phase 2
-- Batch small operations to reduce FFI crossings (if conversion overhead is high)
-- Async optimization if Tokio runtime shows issues
-- Re-benchmark to validate improvements
-
-**Uses:**
-- Profiling data from Phase 2 to target optimization
-- Criterion for before/after microbenchmarks
-- FFIProfiler to track improvement in FFI overhead
-
-**Avoids:**
-- Pitfall P9 (optimizing infrequently called code) - only target hot paths
-- Pitfall P10 (async overhead for fast ops) - threshold check >1ms
-
-**Research flag:** May need deeper research depending on which hot paths are identified. If optimization targets unusual areas (e.g., GUI rendering, database indexing), use `/gsd:research-phase`.
-
-### Phase 5: CI Regression Detection
-**Rationale:** Lock in performance gains with automated regression detection. This prevents future changes from undoing optimization work.
+### Phase 4: Results Viewer (Markdown Renderer)
+**Rationale:** Custom markdown rendering is the highest complexity feature (Pitfall #5). Defer until core scanning works to avoid blocking critical functionality. This is a presentation-layer concern, not business logic.
 
 **Delivers:**
-- GitHub Actions workflow for benchmark runs
-- Baseline storage and comparison
-- Alert on regressions >10-15%
-- HTML reports for trend visualization
+- Custom `MarkdownViewer` component in `.slint` files
+- `pulldown-cmark` parser integration
+- Renderer converting markdown events to styled Slint elements (Text, Rectangle)
+- ListView for crash reports with context menus
+- Report selection → markdown display flow
+- Clipboard operations for report content
 
 **Uses:**
-- github-action-benchmark for free self-hosted solution
-- Criterion's `--baseline` feature for comparison
+- `pulldown-cmark` for parsing markdown to events
+- Slint Text elements with styling for headers, bold, code blocks
+- `ContextMenuArea` for right-click actions
+- `arboard` crate for clipboard operations
 
 **Addresses:**
-- Differentiator: Historical regression detection
-- CI integration feature
+- Markdown report viewing (table stakes feature)
+- Report list with selection
+- Context menu actions (View, Copy, Delete)
 
-**Research flag:** Standard pattern - github-action-benchmark documentation covers setup thoroughly.
+**Avoids:**
+- Pitfall #5 (no native markdown — custom renderer)
+- Pitfall #15 (image caching — monitor memory with large reports)
+
+**Research flag:** HIGH — Custom markdown renderer is novel implementation. Recommend `/gsd:research-phase` to investigate rendering strategies (inline text vs layout hierarchy) and performance characteristics.
+
+---
+
+### Phase 5: Backup Operations and Remaining Features
+**Rationale:** File backup is independent of core scanning functionality. Deferring to Phase 5 allows focus on critical path (scan → view results) first.
+
+**Delivers:**
+- Backup tab UI with file operations
+- Integration with existing backup logic (if in `-core` crates)
+- Update check functionality
+- Pastebin upload integration
+- About dialog
+- Window geometry persistence
+
+**Addresses:**
+- File backup (existing feature parity)
+- Auto-update checks
+- Pastebin report sharing
+- Window size/position saving
+
+**Avoids:**
+- Pitfall #10 (Windows scaling issues — test on 125%, 150%, 200% DPI)
+
+**Research flag:** LOW — Standard file operations and network requests, well-documented patterns.
+
+---
+
+### Phase 6: Distribution and Polish
+**Rationale:** Final phase focuses on Windows packaging, multi-renderer support for compatibility, and edge case handling discovered during earlier phases.
+
+**Delivers:**
+- Windows installer with VC++ redistributable
+- Multi-renderer build (Skia primary, FemtoVG fallback, software emergency)
+- Renderer auto-detection and fallback logic
+- `SLINT_BACKEND` override documentation for users
+- DPI awareness testing and fixes
+- GPU driver compatibility testing (Intel, AMD, NVIDIA)
+
+**Addresses:**
+- Windows distribution (installer, dependencies)
+- GPU driver compatibility (Pitfall #9)
+- High-DPI display support (Pitfall #10)
+
+**Avoids:**
+- Pitfall #9 (GPU crashes — multi-renderer fallback)
+- Pitfall #10 (scaling issues — DPI testing)
+- Pitfall #13 (Skia build with spaces — CARGO_HOME configuration)
+- Pitfall #14 (VC++ runtime — bundled installer)
+
+**Research flag:** MEDIUM — Windows installer creation and renderer fallback logic. Phase research for packaging strategy.
+
+---
 
 ### Phase Ordering Rationale
 
-- **GIL release before baselines:** Baselines are meaningless if GIL is blocking threads. This is foundational.
-- **Profiling before optimization:** Avoid Pitfall P9 (optimizing wrong code). Measure, then optimize.
-- **Bug fixes before optimization:** Test non-determinism masks real issues. Stable tests are prerequisite.
-- **CI regression detection last:** Only after optimization is complete and working well should we lock in baselines for regression detection.
+- **Foundation first (Phase 1)**: Async architecture errors require full rewrites. Validate Tokio integration before building features.
+- **Settings before scanning (Phase 2 → 3)**: Scanning requires configuration to know where to find crash logs and how to process them.
+- **Scanning before viewer (Phase 3 → 4)**: Results viewer needs scan data to display. Markdown renderer is presentation-layer, not blocking.
+- **Defer backup and polish (Phase 5-6)**: Not on critical path for core workflow (scan logs → view results). Distribution concerns naturally come last.
 
-**Dependency chain:**
-```
-Phase 1 (GIL + Baselines)
-    |
-    v
-Phase 2 (Profiling) <-- depends on accurate baselines
-    |
-    v
-Phase 3 (Bug Fixes) <-- parallel to Phase 2, no dependency
-    |
-    v
-Phase 4 (Optimization) <-- depends on profiling data
-    |
-    v
-Phase 5 (CI) <-- depends on optimized baselines being stable
-```
+**Dependency chain:** Foundation → Settings (loads config) → Scanning (uses config, generates reports) → Viewer (displays reports) → Backup/Polish (ancillary features).
+
+**Risk mitigation:** Place high-risk items (Tokio integration, markdown rendering) in isolated phases with clear validation criteria. Phase 1 validates async patterns with smoke tests before building features. Phase 4 isolates markdown complexity from core functionality.
 
 ### Research Flags
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1:** GIL release patterns extensively documented in PyO3 Performance Guide
-- **Phase 2:** Profiling workflows covered in Rust Performance Book and flamegraph docs
-- **Phase 3:** Bug root causes identified, fixes are straightforward path resolution and test isolation
-- **Phase 5:** github-action-benchmark has clear setup documentation
+**Phases likely needing deeper research during planning:**
+- **Phase 4 (Results Viewer):** Custom markdown renderer is novel. Need research-phase to determine rendering strategy (inline styled Text vs hierarchical layout), performance characteristics with large reports (10K+ lines), and whether to stream rendering or parse-then-render.
+- **Phase 6 (Distribution):** Windows installer creation and multi-renderer fallback logic. Phase research for packaging tools (WiX vs Inno Setup), VC++ bundling, and renderer auto-detection patterns.
 
-**Phases that may need research:**
-- **Phase 4:** Depends on what hot paths are identified. If optimization targets unusual areas (e.g., GUI rendering bottlenecks, SQLite query optimization, regex performance), use `/gsd:research-phase` to investigate best practices for that specific domain. If hot paths are in well-covered areas (YAML parsing, file I/O, string operations), existing research is sufficient.
+**Phases with standard patterns (skip research-phase):**
+- **Phase 1 (Foundation):** Async patterns documented in research, existing `AsyncBridge` provides reference.
+- **Phase 2 (Core UI Layout):** Standard Slint widgets, settings loading via existing `-core` crates.
+- **Phase 3 (Scan Operations):** Worker thread pattern established in Phase 1, integration with existing `OrchestratorCore`.
+- **Phase 5 (Backup/Features):** Standard file I/O and network operations.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Criterion already in use, profiling tools verified against official docs, versions checked |
-| Features | HIGH | Table stakes and differentiators based on existing infrastructure analysis and benchmarking best practices |
-| Architecture | HIGH | Existing codebase already has Criterion benchmarks, architecture extends established patterns |
-| Pitfalls | HIGH | GIL finding verified by grep, PyO3 Performance Guide is authoritative source, bug root causes identified in codebase |
+| Stack | HIGH | Slint 1.15.0 released 2026-02-04 with official docs, Skia renderer performance verified in GitHub discussions, `pulldown-cmark` is mature (0.13.0) |
+| Features | MEDIUM | Core widgets well-documented, but custom markdown renderer is untested. File dialog integration via `rfd` has known patterns but Windows-specific path issues reported. |
+| Architecture | HIGH | Worker thread pattern officially recommended by Slint maintainers, global callback pattern documented in official recipes, ONE RUNTIME RULE alignment validated. |
+| Pitfalls | HIGH | Tokio incompatibility confirmed in multiple GitHub discussions with official maintainer responses. Reference cycle pattern documented in official Weak struct docs. Markdown gap confirmed via issue #6684. |
 
 **Overall confidence:** HIGH
 
-Research is based on official documentation (PyO3 Performance Guide, Criterion.rs docs, Rust Performance Book, Python timeit module), verified against existing CLASSIC codebase (FFIProfiler, Criterion usage, orchestrator results), and cross-referenced with technical sources (ScyllaDB async Rust analysis, py-spy profiler).
+Research is based on official Slint documentation (1.15 release, API docs), GitHub issues with maintainer responses, and verification that CLASSIC's existing architecture (global Tokio runtime, `-core` crates) aligns with recommended Slint patterns.
 
 ### Gaps to Address
 
-**GIL release implementation details:** While the pattern (`py.allow_threads()` for operations >1ms) is clear from documentation, applying it to CLASSIC's specific Rust functions requires reviewing each PyO3 function's context. Some functions may be called from within `asyncio.to_thread()` already, which changes the threading model. This needs careful analysis during Phase 1 implementation, not just mechanical application of the pattern.
+**Markdown rendering performance:** Research identified the need for custom rendering but did not profile performance with CLASSIC's actual crash reports (potentially 10K+ lines, complex nested structures). **Mitigation:** Phase 4 should include performance testing with real reports and consider streaming rendering if parse-then-display is too slow.
 
-**Cache hit rate instrumentation approach:** Research identified that cache hit rate tracking is valuable (differentiator feature), but the specific mechanism for instrumenting DashMap in classic-settings-core is not detailed. Options include: atomic counters, tracing spans with metrics, or DashMap wrapper with counting. This is a low-risk gap (any approach works), but the choice affects performance measurement overhead.
+**ListView rapid update flicker:** GitHub issue #7986 reports flickering with rapid content updates in ListView. CLASSIC's progress updates may trigger this. **Mitigation:** Phase 3 should test debouncing progress updates (e.g., max 60 FPS) and validate with stress tests (1000+ files).
 
-**Hot path identity:** Cannot predict which hot paths profiling will identify until Phase 2 completes. If profiling reveals unexpected bottlenecks (e.g., string formatting, GUI rendering, regex compilation), those areas may need targeted research. The roadmap should budget for optional `/gsd:research-phase` invocation in Phase 4 based on profiling results.
+**Windows file dialog path issues:** `rfd` crate has reported issues with `C:\Users\[User]\Downloads` path (issue #4773). **Mitigation:** Phase 2 should explicitly test file dialogs with system folders and edge case paths.
 
-**Pre-existing bug severity:** The `test_clear_cache` bug and GUI path resolution bug have clear root causes, but their real-world impact is not quantified. If these bugs affect production users frequently, they should be elevated in priority. Recommend asking: "How often do users report these issues?" before finalizing phase order.
+**GPU driver compatibility scope:** Research identified AMD OpenGL driver crashes but did not quantify prevalence. **Mitigation:** Phase 6 should prioritize multi-renderer fallback and collect telemetry during beta to determine if Skia should be default or if FemtoVG is safer primary choice.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [PyO3 Performance Guide](https://pyo3.rs/main/performance) — GIL release patterns, type conversion overhead, reference pool
-- [Criterion.rs Documentation](https://bheisler.github.io/criterion.rs/book/) — Statistical benchmarking, baseline comparison, HTML reports
-- [Python timeit Documentation](https://docs.python.org/3/library/timeit.html) — Use minimum not mean for microbenchmarks
-- [The Rust Performance Book](https://nnethercote.github.io/perf-book/profiling.html) — Release builds, profiling workflows, heap allocations
-- [cargo-flamegraph GitHub](https://github.com/flamegraph-rs/flamegraph) — Version 0.6.11, usage patterns
-- [dhat crate documentation](https://docs.rs/dhat/latest/dhat/) — Heap profiling, test assertions
-- [py-spy GitHub](https://github.com/benfred/py-spy) — Python/Rust cross-boundary profiling with `--native` flag
-- [github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark) — CI regression detection setup
-- CLASSIC codebase analysis:
-  - `j:\CLASSIC-Fallout4\tests\benchmarks\test_rust_ffi_performance.py`
-  - `j:\CLASSIC-Fallout4\tests\performance\test_benchmarks_performance.py`
-  - `j:\CLASSIC-Fallout4\rust\foundation\classic-shared-core\benches\performance_benchmarks.rs`
-  - `j:\CLASSIC-Fallout4\performance\results\orchestrator_single_log.txt`
-  - `j:\CLASSIC-Fallout4\tools\ffi_profiler.py`
+- [Slint 1.15 Release Blog](https://slint.dev/blog/slint-1.15-released) — version features, changelog
+- [Slint Backends & Renderers](https://docs.slint.dev/latest/docs/slint/guide/backends-and-renderers/backends_and_renderers/) — Skia vs FemtoVG performance, renderer selection
+- [Slint Cargo Features](https://docs.rs/slint/latest/slint/docs/cargo_features/index.html) — feature flag documentation
+- [Slint Rust API Documentation](https://docs.slint.dev/latest/docs/rust/slint) — ComponentHandle, Weak, spawn_local APIs
+- [Widget Styles](https://docs.slint.dev/latest/docs/slint/reference/std-widgets/style/) — compile-time style selection
+- [pulldown-cmark 0.13.0](https://crates.io/crates/pulldown-cmark) — markdown parser version and features
 
 ### Secondary (MEDIUM confidence)
-- [ScyllaDB Async Rust Performance](https://www.scylladb.com/2022/01/12/async-rust-in-practice-performance-pitfalls-profiling/) — FuturesUnordered quadratic scaling pitfall
-- [PyO3 GitHub Discussion #3442](https://github.com/PyO3/pyo3/discussions/3442) — FFI overhead analysis
-- [Bencher documentation](https://bencher.dev/docs/how-to/github-actions/) — Alternative CI regression detection
-- [pytest-benchmark documentation](https://pytest-benchmark.readthedocs.io/) — Python benchmarking with statistics
+- [Tokio Integration Discussion #5784](https://github.com/slint-ui/slint/discussions/5784) — official maintainer guidance on runtime coexistence
+- [Async Rust Discussion #4377](https://github.com/slint-ui/slint/discussions/4377) — async patterns and spawn_local usage
+- [Model Threading Discussion #5300](https://github.com/slint-ui/slint/discussions/5300) — Rc/VecModel thread safety
+- [ListView Performance Issue #7986](https://github.com/slint-ui/slint/discussions/7986) — virtualization and flicker reports
+- [Markdown Support Issue #6684](https://github.com/slint-ui/slint/issues/6684) — rich text roadmap
+- [File Dialog Discussion #3015](https://github.com/slint-ui/slint/discussions/3015) — external crate recommendations
+- [Windows Crashes Discussion #6436](https://github.com/slint-ui/slint/discussions/6436) — GPU driver compatibility
+- [Renderer Performance Discussion #5677](https://github.com/slint-ui/slint/discussions/5677) — Skia 2% CPU vs FemtoVG 30%
 
 ### Tertiary (LOW confidence)
-- Blog posts on Python-Rust performance — general patterns, not CLASSIC-specific
-- Community discussions on benchmarking methodology — useful context but not authoritative
+- [Context Menu PR #9733](https://github.com/slint-ui/slint/pull/9733) — experimental markdown macro, not yet stable
+- [Windows Scaling Issue #8765](https://github.com/slint-ui/slint/issues/8765) — DPI awareness, may be fixed in later versions
 
 ---
-*Research completed: 2026-02-04*
+*Research completed: 2026-02-05*
 *Ready for roadmap: yes*
