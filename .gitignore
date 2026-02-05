@@ -115,6 +115,7 @@ Cargo.lock
 *.dll
 # Rust workspace
 .cargo/
+!rust/.cargo/config.toml
 # Rust debugging
 *.pdb
 *.dSYM/
