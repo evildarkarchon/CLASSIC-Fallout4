@@ -4,7 +4,7 @@
 
 - SHIPPED **v1.0 Codebase Cleanup** — Phases 1-5 (shipped 2026-02-02)
 - SHIPPED **v8.2.0-part2 Rust Migration** — Phases 6-11 (shipped 2026-02-04)
-- ACTIVE **v8.3.0 Performance & Polish** — Phases 12-18 (in progress)
+- SHIPPED **v8.3.0 Performance & Polish** — Phases 12-18 (shipped 2026-02-05)
 
 ## Phases
 
@@ -49,7 +49,7 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 - [x] **Phase 15: Bug Fixes & Test Stabilization** - Fix test_clear_cache and classic_settings() path resolution
 - [x] **Phase 16: Hot Path Optimization (Data-Driven)** - Optimize based on profiling data from Phase 14
 - [x] **Phase 17: CI Regression Detection** - Automated performance regression detection in CI
-- [ ] **Phase 18: Tech Debt Cleanup** - Address non-blocking tech debt from milestone audit
+- [x] **Phase 18: Tech Debt Cleanup** - Address non-blocking tech debt from milestone audit
 
 ## Phase Details
 
@@ -151,7 +151,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 18-01-PLAN.md — GIL benchmark config, API update, profiling workflow docs
+- [x] 18-01-PLAN.md — GIL benchmark config, API update, profiling workflow docs
 
 ## Progress
 
@@ -165,6 +165,6 @@ Plans:
 | 15. Bug Fixes | v8.3.0 | 2/2 | Complete | 2026-02-04 |
 | 16. Hot Path Optimization | v8.3.0 | 2/2 | Complete | 2026-02-04 |
 | 17. CI Regression Detection | v8.3.0 | 3/3 | Complete | 2026-02-05 |
-| 18. Tech Debt Cleanup | v8.3.0 | 0/1 | Planned | — |
+| 18. Tech Debt Cleanup | v8.3.0 | 1/1 | Complete | 2026-02-05 |
 
-**Overall:** 2 milestones shipped, 42 plans completed, Phase 18 ready for execution
+**Overall:** 3 milestones shipped, 43 plans completed
