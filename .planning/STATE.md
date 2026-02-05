@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 ## Current Position
 
 Phase: 17 of 17 (CI Regression Detection)
-Plan: 1 of 2 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-05 — Completed 17-01-PLAN.md (Benchmark CI Workflow Foundation)
+Last activity: 2026-02-05 — Completed 17-02-PLAN.md (Benchmark Comparison and Threshold Analysis)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 12/14]
-[#############################] 95% (40/42 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 13/14]
+[##############################] 98% (41/42 plans)
 
 ## Performance Metrics
 
@@ -43,6 +43,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 12/14]
 - Phase 16-01: ~25m
 - Phase 16-02: ~35m
 - Phase 17-01: ~2m
+- Phase 17-02: ~4m
 
 **By Phase (v8.2.0-part2):**
 
@@ -85,6 +86,9 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 - ready_for_review trigger for benchmark CI (reduces noise vs all PR events) (17-01)
 - Separate cache restore/save pattern for baseline management (17-01)
 - 5% warning / 10% failure thresholds as CI defaults (17-01)
+- Windows-compatible yq installation via PowerShell for benchmark CI (17-02)
+- Per-benchmark threshold overrides via yq YAML lookup (17-02)
+- Label bypass (perf-regression-accepted) for intentional regressions (17-02)
 
 ### Pending Todos
 
@@ -97,6 +101,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 17-01-PLAN.md
+Stopped at: Completed 17-02-PLAN.md
 Resume file: None
-Next action: Execute 17-02-PLAN.md (Threshold Analysis and PR Reporting)
+Next action: Execute 17-03-PLAN.md (PR Comment and Failure Enforcement)
