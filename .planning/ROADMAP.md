@@ -89,11 +89,11 @@ Plans:
   2. py-spy captures combined Python+Rust stack traces
   3. Memory allocation profiling available via dhat for Rust code
   4. DashMap cache hit/miss rates are logged and reportable
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 14-01: Flamegraph and py-spy profiling setup
-- [ ] 14-02: dhat memory profiling and DashMap cache instrumentation
+- [ ] 14-01-PLAN.md — Flamegraph and py-spy profiling setup (cargo aliases, PowerShell scripts)
+- [ ] 14-02-PLAN.md — dhat memory profiling and DashMap cache instrumentation
 
 ### Phase 15: Bug Fixes & Test Stabilization
 **Goal**: Pre-existing bugs fixed, test suite stable
