@@ -1462,6 +1462,7 @@ pub use merge::merge_keys;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use std::fs;
     use std::io::Write;
     use std::sync::Arc;
@@ -1845,6 +1846,7 @@ nested:
     }
 
     #[test]
+    #[serial]
     fn test_cache_stats_empty() {
         clear_global_yaml_cache();
 
@@ -1887,7 +1889,11 @@ nested:
     }
 
     #[test]
+    #[serial]
     fn test_clear_cache() {
+        // Clear cache at start to prevent pollution from other serial tests
+        clear_global_yaml_cache();
+
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "clear_test: true").expect("Write failed");
 
@@ -1912,7 +1918,11 @@ nested:
     }
 
     #[test]
+    #[serial]
     fn test_clear_global_yaml_cache_function() {
+        // Clear cache at start to prevent pollution from other serial tests
+        clear_global_yaml_cache();
+
         // Load a file to populate cache
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "global_clear: true").expect("Write failed");

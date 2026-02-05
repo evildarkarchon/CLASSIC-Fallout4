@@ -47,6 +47,7 @@ serde_json = { workspace = true }
 [dev-dependencies]
 tempfile = { workspace = true }
 criterion = { version = "0.6.0", features = ["html_reports"] }
+serial_test = "3.2"
 
 [[bench]]
 name = "yaml_benchmarks"
