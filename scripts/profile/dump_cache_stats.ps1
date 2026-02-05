@@ -69,7 +69,7 @@ stats = {
 # Try to get yaml cache stats
 try:
     import classic_yaml
-    ops = classic_yaml.RustYamlOperations()
+    ops = classic_yaml.YamlOperations()
     yaml_stats = ops.get_cache_stats()
     stats["caches"]["yaml"] = yaml_stats
 except ImportError as e:
