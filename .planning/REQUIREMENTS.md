@@ -9,11 +9,11 @@ Requirements for Slint GUI core workflow. Each maps to roadmap phases.
 
 ### Infrastructure
 
-- [ ] **INFRA-01**: Slint 1.15.0 crate created in rust/ui-applications/classic-gui/
-- [ ] **INFRA-02**: Build system configured with slint-build and Skia renderer
-- [ ] **INFRA-03**: Async bridge connects Slint UI to existing Tokio runtime
-- [ ] **INFRA-04**: Worker thread pattern established for long-running operations
-- [ ] **INFRA-05**: Application launches and displays main window
+- [x] **INFRA-01**: Slint 1.15.0 crate created in rust/ui-applications/classic-gui/
+- [x] **INFRA-02**: Build system configured with slint-build and Skia renderer
+- [x] **INFRA-03**: Async bridge connects Slint UI to existing Tokio runtime
+- [x] **INFRA-04**: Worker thread pattern established for long-running operations
+- [x] **INFRA-05**: Application launches and displays main window
 
 ### Core UI
 
@@ -97,11 +97,11 @@ Deferred to subsequent milestones. Not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 19 | Pending |
-| INFRA-02 | Phase 19 | Pending |
-| INFRA-03 | Phase 19 | Pending |
-| INFRA-04 | Phase 19 | Pending |
-| INFRA-05 | Phase 19 | Pending |
+| INFRA-01 | Phase 19 | Complete |
+| INFRA-02 | Phase 19 | Complete |
+| INFRA-03 | Phase 19 | Complete |
+| INFRA-04 | Phase 19 | Complete |
+| INFRA-05 | Phase 19 | Complete |
 | UI-01 | Phase 20 | Pending |
 | UI-02 | Phase 20 | Pending |
 | UI-03 | Phase 20 | Pending |
@@ -137,4 +137,4 @@ Deferred to subsequent milestones. Not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 -- Roadmap created*
+*Last updated: 2026-02-05 -- Phase 19 complete*

@@ -73,8 +73,8 @@ See `.planning/milestones/v8.3.0-ROADMAP.md` for full details.
 **Plans:** 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md — Create classic-gui Slint crate with build system and scaffold UI
-- [ ] 19-02-PLAN.md — Wire AsyncBridge for worker thread pattern with progress callbacks
+- [x] 19-01-PLAN.md — Create classic-gui Slint crate with build system and scaffold UI
+- [x] 19-02-PLAN.md — Wire AsyncBridge for worker thread pattern with progress callbacks
 
 #### Phase 20: Core UI Layout
 **Goal**: Main window with proper layout, theming, and tabbed interface
@@ -168,6 +168,19 @@ Plans:
 Plans:
 - [ ] 25-01: Platform testing and renderer fallback
 
+#### Phase 26: Async Bridge Audit
+**Goal**: Audit the async_bridge module of classic-shared-core for potential improvements for Slint GUI
+**Depends on**: Phase 25
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. async_bridge module reviewed for Slint integration patterns
+  2. Improvement opportunities identified and documented
+  3. Recommendations implemented or deferred with rationale
+**Plans**: TBD
+
+Plans:
+- [ ] 26-01: TBD (run /gsd:plan-phase 26 to break down)
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -175,12 +188,13 @@ Plans:
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
 | 12-18 | v8.3.0 | 15/15 | Complete | 2026-02-05 |
-| 19. Foundation | v9.0.0 | 0/2 | Planned | - |
+| 19. Foundation | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 20. Core UI | v9.0.0 | 0/2 | Not started | - |
 | 21. Scan Ops | v9.0.0 | 0/2 | Not started | - |
 | 22. Results | v9.0.0 | 0/2 | Not started | - |
 | 23. Markdown | v9.0.0 | 0/1 | Not started | - |
 | 24. Settings | v9.0.0 | 0/2 | Not started | - |
 | 25. Platform | v9.0.0 | 0/1 | Not started | - |
+| 26. Async Bridge Audit | v9.0.0 | 0/1 | Not started | - |
 
-**Overall:** 3 milestones shipped, 43 plans completed | v9.0.0: 0/12 plans
+**Overall:** 3 milestones shipped, 45 plans completed | v9.0.0: 2/13 plans
