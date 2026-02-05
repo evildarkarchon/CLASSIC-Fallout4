@@ -4,17 +4,17 @@
 
 See: .planning/PROJECT.md (updated 2026-02-05)
 
-**Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** Milestone complete — ready for next milestone planning
+**Core value:** Rust is the engine — all business logic and UI in Rust, with Slint for declarative GUI.
+**Current focus:** v9.0.0 Slint GUI — defining requirements
 
 ## Current Position
 
-Phase: 18 of 18 (all complete)
-Plan: N/A — milestone shipped
-Status: Ready to plan
-Last activity: 2026-02-05 — v8.3.0 milestone archived
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-02-05 — Milestone v9.0.0 started
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15]
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 0/?]
 [##############################] 100% (43 plans completed across 3 milestones)
 
 ## Performance Metrics
@@ -48,10 +48,11 @@ None.
 ### Blockers/Concerns
 
 - py-spy 0.4.1 incompatible with Python 3.14 (limits native frame profiling)
+- Slint is new to project — research phase recommended
 
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: v8.3.0 milestone archived
+Stopped at: v9.0.0 milestone started
 Resume file: None
-Next action: Start next milestone (`/gsd:new-milestone`)
+Next action: Research or define requirements

@@ -1,6 +1,14 @@
 # CLASSIC
 
-## Current Milestone: (None — milestone complete)
+## Current Milestone: v9.0.0 Slint GUI
+
+**Goal:** Replace PySide6/Qt with a Rust-native Slint GUI, starting with core workflow (scan logs, view results, configure settings).
+
+**Target features:**
+- Slint-based main window with crash log scanning
+- Results viewer with markdown report rendering
+- Settings dialog for scan configuration
+- Progress feedback during async operations
 
 **Previous:** v8.3.0 Performance & Polish — shipped 2026-02-05
 
@@ -76,18 +84,26 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 
 ### Active
 
-(None — milestone complete, next milestone not yet started)
+- [ ] Slint GUI application with main window and tab structure — v9.0.0
+- [ ] Crash log scanning with progress feedback — v9.0.0
+- [ ] Results viewer with markdown rendering — v9.0.0
+- [ ] Report list with search and filtering — v9.0.0
+- [ ] Settings dialog for scan configuration — v9.0.0
+- [ ] Async operation feedback (progress indicators) — v9.0.0
 
 ### Out of Scope
 
-- GUI framework migration — Keep PySide6/Qt, don't migrate to Rust GUI (egui/iced)
-- New user-facing features — Migration only, no new capabilities
+- Full GUI feature parity in v9.0.0 — Core workflow first (File Backup, Articles, Papyrus monitoring deferred)
+- egui/iced GUI frameworks — Slint chosen for declarative syntax
 - TUI migration — Ratatui TUI is already Rust-native
 - i18n/localization — Future scope, stick to English strings
 - HTML/RTF report output — Markdown is standard
 - Steam API integration — Rely on registry/XSE log
+- Game file scanning in Slint — Deferred to v9.1.0
 
 ## Context
+
+**v9.0.0 Focus:** Slint GUI to replace PySide6/Qt. All business logic already in Rust — this milestone adds a Rust-native UI layer.
 
 **Shipped v8.3.0** with comprehensive performance infrastructure:
 - 77+ Criterion benchmarks with statistical output
@@ -101,16 +117,17 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 
 **Tech debt:**
 - Report parity: 20 tests identify true Rust-Python differences (by design)
+- PySide6/Qt GUI will be deprecated after Slint achieves parity
 
 ## Constraints
 
-- **Behavioral parity**: App must work identically after migration (achieved)
-- **Test coverage**: Existing tests must pass; add Rust integration tests for migrated logic
+- **Behavioral parity**: Slint GUI must match Qt GUI behavior for implemented features
+- **Test coverage**: Add Rust integration tests for Slint components
 - **TDD required**: All changes follow red-green-refactor per project standards
-- **GUI stays Python**: PySide6/Qt remains, only business logic migrates
-- **Incremental migration**: Each component migrates fully before next (no half-migrated state)
-- **PyO3 patterns**: Business logic in `-core` crates, PyO3 adapters in `-py` crates
-- **Performance baselines**: Optimizations must be validated against benchmarks
+- **Slint declarative UI**: Use `.slint` files for UI definition, Rust for logic
+- **Incremental migration**: Core workflow first, then expand feature set
+- **Reuse -core crates**: Slint calls existing business logic crates directly (no duplication)
+- **Performance baselines**: Maintain or improve on Qt GUI responsiveness
 
 ## Key Decisions
 
@@ -141,4 +158,4 @@ Python is the UI, Rust is the engine — every piece of business logic lives in 
 | 5% warning / 10% failure thresholds | Balance sensitivity with noise tolerance | ✓ Good — actionable feedback |
 
 ---
-*Last updated: 2026-02-05 after v8.3.0 milestone*
+*Last updated: 2026-02-05 after starting v9.0.0 milestone*
