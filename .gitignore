@@ -308,3 +308,4 @@ version_backups/
 snapshot_report.html
 docs/CLASSIC_TUI_PRD.md
 TestAppSnapshots*.raw
+Performance CI Test.txt
