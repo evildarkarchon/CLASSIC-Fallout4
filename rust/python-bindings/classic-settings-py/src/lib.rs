@@ -329,6 +329,53 @@ fn cache_keys() -> Vec<String> {
     core::cache_keys()
 }
 
+/// Get current cache statistics.
+///
+/// Returns a dictionary with:
+/// - hits: Number of cache hits
+/// - misses: Number of cache misses
+/// - hit_rate: Hit rate as fraction (0.0 to 1.0)
+/// - size: Current number of entries
+/// - keys: List of cache keys
+///
+/// Example:
+///     >>> import classic_settings
+///     >>> stats = classic_settings.cache_stats()
+///     >>> print(f"Hit rate: {stats['hit_rate'] * 100:.1f}%")
+#[pyfunction]
+fn cache_stats(py: Python) -> PyResult<Py<PyAny>> {
+    let stats = core::cache_stats();
+    let dict = PyDict::new(py);
+    dict.set_item("hits", stats.hits)?;
+    dict.set_item("misses", stats.misses)?;
+    dict.set_item("hit_rate", stats.hit_rate)?;
+    dict.set_item("size", stats.size)?;
+
+    // Convert Vec<String> to Python list
+    let keys_list = PyList::empty(py);
+    for key in stats.keys {
+        keys_list.append(key)?;
+    }
+    dict.set_item("keys", keys_list)?;
+
+    Ok(dict.unbind().into())
+}
+
+/// Reset cache statistics.
+///
+/// Resets hit and miss counters to zero. Useful for testing or
+/// starting fresh measurements.
+///
+/// Example:
+///     >>> import classic_settings
+///     >>> classic_settings.reset_cache_stats()
+///     >>> stats = classic_settings.cache_stats()
+///     >>> assert stats['hits'] == 0
+#[pyfunction]
+fn reset_cache_stats() {
+    core::reset_cache_stats();
+}
+
 /// Python module for YAML settings cache.
 ///
 /// This module provides Rust-accelerated YAML settings caching with both
@@ -353,6 +400,8 @@ fn cache_keys() -> Vec<String> {
 /// - `clear_cache()`: Clear all entries
 /// - `cache_size()`: Get number of entries
 /// - `cache_keys()`: Get all keys
+/// - `cache_stats()`: Get cache performance statistics
+/// - `reset_cache_stats()`: Reset hit/miss counters
 ///
 /// Example:
 ///     >>> import classic_settings
@@ -381,6 +430,8 @@ fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(clear_cache, m)?)?;
     m.add_function(wrap_pyfunction!(cache_size, m)?)?;
     m.add_function(wrap_pyfunction!(cache_keys, m)?)?;
+    m.add_function(wrap_pyfunction!(cache_stats, m)?)?;
+    m.add_function(wrap_pyfunction!(reset_cache_stats, m)?)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
