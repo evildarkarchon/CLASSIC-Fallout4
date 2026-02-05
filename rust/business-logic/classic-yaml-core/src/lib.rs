@@ -139,11 +139,14 @@
 use dashmap::DashMap;
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::SystemTime;
 use thiserror::Error;
+use tracing::trace;
 use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 
 /// Global YAML cache for frequently accessed files
@@ -151,6 +154,95 @@ use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 /// NOTE: This is lazily initialized on first use to avoid deadlocks during module import.
 /// The cache is thread-safe and uses DashMap for concurrent access.
 static YAML_CACHE: Lazy<DashMap<PathBuf, CachedYaml>> = Lazy::new(DashMap::new);
+
+/// Global counter for cache hits.
+static CACHE_HITS: AtomicU64 = AtomicU64::new(0);
+
+/// Global counter for cache misses.
+static CACHE_MISSES: AtomicU64 = AtomicU64::new(0);
+
+/// Cache performance statistics.
+///
+/// Provides insight into cache effectiveness via hit/miss tracking.
+/// Use `cache_stats()` to retrieve current statistics.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_yaml_core::cache_stats;
+///
+/// let stats = cache_stats();
+/// println!("Hit rate: {:.2}%", stats.hit_rate * 100.0);
+/// ```
+#[derive(Debug, Clone, Serialize)]
+pub struct CacheStats {
+    /// Number of cache hits since last reset.
+    pub hits: u64,
+    /// Number of cache misses since last reset.
+    pub misses: u64,
+    /// Hit rate as a fraction (0.0 to 1.0).
+    pub hit_rate: f64,
+    /// Current number of entries in the cache.
+    pub size: usize,
+    /// Total bytes of cached raw content.
+    pub total_bytes: usize,
+}
+
+/// Get current cache statistics.
+///
+/// Returns the current hit/miss counts and derived hit rate.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_yaml_core::cache_stats;
+///
+/// let stats = cache_stats();
+/// println!("Hits: {}, Misses: {}", stats.hits, stats.misses);
+/// println!("Hit rate: {:.1}%", stats.hit_rate * 100.0);
+/// ```
+pub fn cache_stats() -> CacheStats {
+    let hits = CACHE_HITS.load(Ordering::Relaxed);
+    let misses = CACHE_MISSES.load(Ordering::Relaxed);
+    let total = hits + misses;
+
+    let total_bytes: usize = YAML_CACHE
+        .iter()
+        .filter_map(|entry| entry.raw_content.as_ref().map(|s| s.len()))
+        .sum();
+
+    CacheStats {
+        hits,
+        misses,
+        hit_rate: if total > 0 {
+            hits as f64 / total as f64
+        } else {
+            0.0
+        },
+        size: YAML_CACHE.len(),
+        total_bytes,
+    }
+}
+
+/// Reset cache statistics.
+///
+/// Resets hit and miss counters to zero. Useful for testing or
+/// starting fresh measurements.
+///
+/// # Example
+///
+/// ```rust
+/// use classic_yaml_core::{reset_cache_stats, cache_stats};
+///
+/// reset_cache_stats();
+/// let stats = cache_stats();
+/// assert_eq!(stats.hits, 0);
+/// assert_eq!(stats.misses, 0);
+/// ```
+pub fn reset_cache_stats() {
+    CACHE_HITS.store(0, Ordering::Relaxed);
+    CACHE_MISSES.store(0, Ordering::Relaxed);
+}
 
 /// An enumeration of errors that can occur while working with YAML data.
 ///
@@ -606,13 +698,19 @@ impl YamlOperations {
                 if let Ok(metadata) = std::fs::metadata(&file_path) {
                     if let Ok(modified) = metadata.modified() {
                         if modified <= cached.modified {
-                            // Cache is still valid
+                            // Cache is still valid - record hit
+                            CACHE_HITS.fetch_add(1, Ordering::Relaxed);
+                            trace!(cache = "yaml", path = %file_path.display(), "cache hit");
                             return Ok((*cached.data).clone());
                         }
                     }
                 }
             }
         }
+
+        // Cache miss (either not cached, cache disabled, or file modified)
+        CACHE_MISSES.fetch_add(1, Ordering::Relaxed);
+        trace!(cache = "yaml", path = %file_path.display(), "cache miss");
 
         // Read and parse file
         let content = std::fs::read_to_string(&file_path)?;
