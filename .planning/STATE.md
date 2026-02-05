@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-02-04)
 
 ## Current Position
 
-Phase: 14 of 17 (Hot Path Profiling) - VERIFIED ✓
-Plan: 3 of 3 in current phase - ALL COMPLETE (including gap closure plan)
-Status: Phase verified and complete
-Last activity: 2026-02-04 — Completed 14-03-PLAN.md (cache_stats PyO3 export)
+Phase: 15 of 17 (Bug Fixes & Test Stabilization)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 15-01-PLAN.md (BUG-01 cache test pollution fix)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 7/8]
-[########################-] 97% (35/36 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 8/11]
+[#########################] 97% (36/40 plans)
 
 ## Performance Metrics
 
@@ -30,7 +30,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 7/8]
 - Total execution time: ~2.7 hours
 
 **v8.3.0 Velocity:**
-- Plans completed: 7
+- Plans completed: 8
 - Phase 12-01: ~45m
 - Phase 13-01: ~5m
 - Phase 13-02: ~12m
@@ -38,6 +38,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 7/8]
 - Phase 14-01: ~4m
 - Phase 14-02: ~8m
 - Phase 14-03: ~4m (gap closure)
+- Phase 15-01: ~6m
 
 **By Phase (v8.2.0-part2):**
 
@@ -69,11 +70,11 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 - Native frames enabled by default in py-spy for combined Python+Rust stacks
 - AtomicU64 with Ordering::Relaxed for cache hit/miss counters (lock-free statistics)
 - PyO3 cache_stats() returns dict for simpler Python consumption (not exposing Rust struct)
+- serial_test crate for serializing Rust tests that touch global state (BUG-01 fix)
 
 ### Pending Todos
 
-- Fix test_clear_cache in classic-yaml-core (tracked as BUG-01)
-- Fix classic_settings() path resolution (tracked as BUG-02)
+- Fix classic_settings() path resolution (tracked as BUG-02) - 15-02-PLAN.md
 
 ### Blockers/Concerns
 
@@ -82,6 +83,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Phase 14 verified complete (Hot Path Profiling - gap closure done)
+Stopped at: Completed 15-01-PLAN.md (BUG-01 cache test pollution fix)
 Resume file: None
-Next action: `/gsd:discuss-phase 15` or `/gsd:plan-phase 15` to plan Bug Fixes & Test Stabilization
+Next action: `/gsd:execute-phase 15` to complete 15-02-PLAN.md (BUG-02 path resolution)

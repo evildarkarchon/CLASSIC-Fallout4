@@ -107,7 +107,7 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 15-01-PLAN.md — Fix test_clear_cache parallel test pollution (add #[serial], regression tests)
+- [x] 15-01-PLAN.md — Fix test_clear_cache parallel test pollution (add #[serial], regression tests)
 - [ ] 15-02-PLAN.md — Fix classic_settings() path resolution (ResourceLoader-based paths)
 
 ### Phase 16: Hot Path Optimization (Data-Driven)
@@ -145,8 +145,8 @@ Plans:
 | 12. GIL Release Audit | v8.3.0 | 1/1 | Complete | 2026-02-04 |
 | 13. Benchmark Infrastructure | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 14. Hot Path Profiling | v8.3.0 | 3/3 | Complete | 2026-02-05 |
-| 15. Bug Fixes | v8.3.0 | 0/2 | Planned | - |
+| 15. Bug Fixes | v8.3.0 | 1/2 | In progress | - |
 | 16. Hot Path Optimization | v8.3.0 | 0/1 | Not started | - |
 | 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 35 plans completed, 7 plans remaining for v8.3.0
+**Overall:** 2 milestones shipped, 36 plans completed, 4 plans remaining for v8.3.0
