@@ -115,13 +115,14 @@ Plans:
 **Depends on**: Phase 14 (profiling data required)
 **Requirements**: None (optimization work informed by profiling, not requirement-driven)
 **Success Criteria** (what must be TRUE):
-  1. Top 3 hot paths identified in Phase 14 show measurable improvement
+  1. Top 3 hot paths identified in Phase 14 show measurable improvement (20%+ median)
   2. Benchmark results compared against Phase 13 baselines show improvement
-  3. No performance regressions in non-optimized paths
-**Plans**: TBD (defined after Phase 14 profiling completes)
+  3. No performance regressions in non-optimized paths (within +/-5%)
+**Plans**: 2 plans
 
 Plans:
-- [ ] 16-01: Optimize based on profiling findings (scope TBD after Phase 14)
+- [ ] 16-01-PLAN.md — Collect profiling data, analyze flamegraphs, identify top 3+ hot paths
+- [ ] 16-02-PLAN.md — Review findings with user, implement optimizations, validate improvements
 
 ### Phase 17: CI Regression Detection
 **Goal**: CI automatically detects performance regressions
@@ -146,7 +147,7 @@ Plans:
 | 13. Benchmark Infrastructure | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 14. Hot Path Profiling | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 15. Bug Fixes | v8.3.0 | 2/2 | Complete | 2026-02-04 |
-| 16. Hot Path Optimization | v8.3.0 | 0/1 | Not started | - |
+| 16. Hot Path Optimization | v8.3.0 | 0/2 | Not started | - |
 | 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 37 plans completed, 2 plans remaining for v8.3.0
+**Overall:** 2 milestones shipped, 37 plans completed, 3 plans remaining for v8.3.0
