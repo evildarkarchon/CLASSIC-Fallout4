@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.3.0 Performance & Polish — Phase 17 in progress (CI Regression Detection)
+**Current focus:** v8.3.0 Performance & Polish — Phase 17 complete (CI Regression Detection)
 
 ## Current Position
 
 Phase: 17 of 17 (CI Regression Detection)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-05 — Completed 17-02-PLAN.md (Benchmark Comparison and Threshold Analysis)
+Plan: 3 of 3 in current phase
+Status: Phase complete
+Last activity: 2026-02-05 — Completed 17-03-PLAN.md (PR Reporting and Regression Enforcement)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 13/14]
-[##############################] 98% (41/42 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 14/14]
+[##############################] 100% (42/42 plans)
 
 ## Performance Metrics
 
@@ -44,6 +44,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 13/14]
 - Phase 16-02: ~35m
 - Phase 17-01: ~2m
 - Phase 17-02: ~4m
+- Phase 17-03: ~3m
 
 **By Phase (v8.2.0-part2):**
 
@@ -89,6 +90,8 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 - Windows-compatible yq installation via PowerShell for benchmark CI (17-02)
 - Per-benchmark threshold overrides via yq YAML lookup (17-02)
 - Label bypass (perf-regression-accepted) for intentional regressions (17-02)
+- GitHub alert syntax for PR comments (> [!CAUTION], etc.) (17-03)
+- Comment marker pattern for updating existing PR comments (17-03)
 
 ### Pending Todos
 
@@ -101,6 +104,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-05
-Stopped at: Completed 17-02-PLAN.md
+Stopped at: Completed 17-03-PLAN.md (v8.3.0 milestone complete)
 Resume file: None
-Next action: Execute 17-03-PLAN.md (PR Comment and Failure Enforcement)
+Next action: v8.3.0 milestone complete - all 42 plans executed
