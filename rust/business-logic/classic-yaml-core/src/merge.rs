@@ -1,6 +1,6 @@
 //! YAML Merge Key Extension Support
 //!
-//! This module implements the YAML Merge Key extension (http://yaml.org/type/merge.html).
+//! This module implements the YAML Merge Key extension (<http://yaml.org/type/merge.html>).
 //!
 //! The merge key (`<<`) is a YAML 1.1 extension that allows dictionaries to be merged
 //! together. Since yaml-rust2 parses the `<<` key but doesn't resolve it automatically,
@@ -46,7 +46,7 @@ use yaml_rust2::Yaml;
 
 /// Resolve YAML merge keys (`<<`) in a parsed YAML document.
 ///
-/// The YAML Merge Key extension (http://yaml.org/type/merge.html) allows
+/// The YAML Merge Key extension (<http://yaml.org/type/merge.html>) allows
 /// dictionaries to be merged together using the `<<` key. This function
 /// implements the extension by recursively processing the YAML tree and
 /// resolving all merge keys.

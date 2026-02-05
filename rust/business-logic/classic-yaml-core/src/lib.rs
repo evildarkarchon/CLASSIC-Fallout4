@@ -571,11 +571,6 @@ impl YamlOperations {
     /// * `YamlError::ParseError` - Returned if the YAML parser encounters an error while processing the input string.
     /// * `YamlError::EmptyDocument` - Returned if the YAML content is valid but contains no documents.
     ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// // This example uses placeholder types  
-    /// ```
     #[must_use = "parsing may fail; handle the Result"]
     pub fn parse_yaml(&self, content: &str) -> Result<Yaml, YamlError> {
         let docs =
@@ -603,11 +598,6 @@ impl YamlOperations {
     /// Returns a `YamlError::SerializeError` if the `YamlEmitter` fails to serialize the
     /// given `Yaml` object.
     ///
-    /// # Examples
-    ///
-    /// ```rust,ignore
-    /// // This example uses placeholder types
-    /// ```
     #[must_use = "serialization may fail; handle the Result"]
     pub fn dump_yaml(&self, yaml: &Yaml) -> Result<String, YamlError> {
         let mut out_str = String::new();
@@ -670,12 +660,6 @@ impl YamlOperations {
     /// - `YamlError::FileError` for file I/O errors (e.g., missing file or insufficient permissions).
     /// - `YamlError::ParseError` if the YAML is invalid or cannot be parsed.
     /// - `YamlError::EmptyDocument` if the file lacks any YAML document.
-    ///
-    /// # Example
-    ///
-    /// ```rust,ignore
-    /// // This example uses placeholder types
-    /// ```
     ///
     /// # Notes
     ///
@@ -828,11 +812,6 @@ impl YamlOperations {
     ///    - If the key is not found or the current value is not a `Yaml::Hash`, the function returns `None`.
     /// 3. If the entire key path is successfully traversed, it returns the value found at the final key.
     ///
-    /// # Example
-    /// ```rust,ignore
-    /// // This example uses placeholder types
-    /// ```
-    ///
     /// # Notes
     /// - The function assumes the input YAML follows a hierarchical structure of nested maps and values.
     /// - It clones the final value found, which may have performance implications for large or deeply nested YAML structures.
@@ -872,11 +851,6 @@ impl YamlOperations {
     ///
     /// # Errors
     /// - Returns a `YamlError::InvalidKeyPath` if the provided `key_path` is empty or invalid.
-    ///
-    /// # Examples
-    /// ```rust,ignore
-    /// // This example uses placeholder types
-    /// ```
     ///
     /// In this example, the `updated_yaml` will have the following structure (as YAML format):
     /// ```yaml
@@ -1365,10 +1339,10 @@ impl YamlOperations {
         }
     }
 
-    /// Get a HashMap where values are arrays of strings (Vec<String>) from YAML data.
+    /// Get a HashMap where values are arrays of strings (`Vec<String>`) from YAML data.
     ///
     /// This method navigates to a key path and returns a HashMap where each value
-    /// is a Vec<String>. Useful for pattern lists like suspects_stack where each
+    /// is a `Vec<String>`. Useful for pattern lists like suspects_stack where each
     /// key maps to multiple patterns.
     ///
     /// # Arguments
