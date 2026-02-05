@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.3.0 Performance & Polish — Phase 16 complete (Hot Path Optimization)
+**Current focus:** v8.3.0 Performance & Polish — Phase 17 in progress (CI Regression Detection)
 
 ## Current Position
 
-Phase: 16 of 17 (Hot Path Optimization) - VERIFIED ✓
-Plan: 2 of 2 in current phase - ALL COMPLETE
-Status: Phase verified and complete
-Last activity: 2026-02-04 — Completed and verified Phase 16 (Hot Path Optimization)
+Phase: 17 of 17 (CI Regression Detection)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-05 — Completed 17-01-PLAN.md (Benchmark CI Workflow Foundation)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 11/12]
-[############################] 98% (39/40 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 12/14]
+[#############################] 95% (40/42 plans)
 
 ## Performance Metrics
 
@@ -30,7 +30,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 11/12]
 - Total execution time: ~2.7 hours
 
 **v8.3.0 Velocity:**
-- Plans completed: 10
+- Plans completed: 12
 - Phase 12-01: ~45m
 - Phase 13-01: ~5m
 - Phase 13-02: ~12m
@@ -42,6 +42,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 11/12]
 - Phase 15-02: ~8m
 - Phase 16-01: ~25m
 - Phase 16-02: ~35m
+- Phase 17-01: ~2m
 
 **By Phase (v8.2.0-part2):**
 
@@ -81,6 +82,9 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 - Python algorithmic improvements (O(n) to O(1)) more impactful than Rust micro-optimizations (16-02)
 - mimalloc added as optional feature flag for future testing (16-02)
 - Set-backed lists pattern for O(1) membership with list API compatibility (16-02)
+- ready_for_review trigger for benchmark CI (reduces noise vs all PR events) (17-01)
+- Separate cache restore/save pattern for baseline management (17-01)
+- 5% warning / 10% failure thresholds as CI defaults (17-01)
 
 ### Pending Todos
 
@@ -92,7 +96,7 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-02-04
-Stopped at: Phase 16 verified complete (Hot Path Optimization)
+Last session: 2026-02-05
+Stopped at: Completed 17-01-PLAN.md
 Resume file: None
-Next action: `/gsd:discuss-phase 17` or `/gsd:plan-phase 17` to plan CI Regression Detection
+Next action: Execute 17-02-PLAN.md (Threshold Analysis and PR Reporting)
