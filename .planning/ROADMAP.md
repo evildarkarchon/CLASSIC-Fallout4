@@ -89,8 +89,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 20-01-PLAN.md — Main window layout with fluent-dark theme and 3-tab structure
-- [ ] 20-02-PLAN.md — State persistence and native file dialogs
+- [x] 20-01-PLAN.md — Main window layout with fluent-dark theme and 3-tab structure
+- [x] 20-02-PLAN.md — State persistence and native file dialogs
 
 #### Phase 21: Scan Operations
 **Goal**: User can trigger, monitor, and cancel crash log scans
@@ -189,7 +189,7 @@ Plans:
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
 | 12-18 | v8.3.0 | 15/15 | Complete | 2026-02-05 |
 | 19. Foundation | v9.0.0 | 2/2 | Complete | 2026-02-05 |
-| 20. Core UI | v9.0.0 | 0/2 | Not started | - |
+| 20. Core UI | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 21. Scan Ops | v9.0.0 | 0/2 | Not started | - |
 | 22. Results | v9.0.0 | 0/2 | Not started | - |
 | 23. Markdown | v9.0.0 | 0/1 | Not started | - |
@@ -197,4 +197,4 @@ Plans:
 | 25. Platform | v9.0.0 | 0/1 | Not started | - |
 | 26. Async Bridge Audit | v9.0.0 | 0/1 | Not started | - |
 
-**Overall:** 3 milestones shipped, 45 plans completed | v9.0.0: 2/13 plans
+**Overall:** 3 milestones shipped, 47 plans completed | v9.0.0: 4/13 plans
