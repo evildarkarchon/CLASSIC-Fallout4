@@ -1,7 +1,7 @@
 # Requirements: CLASSIC v9.0.0 Slint GUI
 
 **Defined:** 2026-02-05
-**Core Value:** Rust-native GUI using Slint — all business logic and UI in Rust, no Python dependency
+**Core Value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency
 
 ## v9.0.0 Requirements
 
@@ -89,7 +89,7 @@ Deferred to subsequent milestones. Not in current roadmap.
 |---------|--------|
 | PySide6/Qt replacement in v9.0.0 | Slint GUI runs alongside Qt initially; deprecation in v9.1.0+ |
 | egui/iced frameworks | Slint chosen for declarative syntax |
-| Runtime theme switching | Slint limitation — style is compile-time |
+| Runtime theme switching | Slint limitation -- style is compile-time |
 | Native markdown in Slint | Experimental feature; using pulldown-cmark instead |
 | Linux/macOS support | Windows-first; cross-platform in future |
 
@@ -133,8 +133,8 @@ Deferred to subsequent milestones. Not in current roadmap.
 **Coverage:**
 - v9.0.0 requirements: 30 total
 - Mapped to phases: 30
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 after initial definition*
+*Last updated: 2026-02-05 -- Roadmap created*
