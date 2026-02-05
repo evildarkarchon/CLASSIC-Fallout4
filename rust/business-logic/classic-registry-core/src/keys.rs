@@ -65,7 +65,7 @@ impl Keys {
     /// # Deprecation Notice
     ///
     /// This key is deprecated. Use [`Keys::GAME_VERSION`] instead, which stores
-    /// a [`Fallout4Version`] enum that includes VR as a version variant rather
+    /// a `Fallout4Version` enum that includes VR as a version variant rather
     /// than a separate mode toggle.
     ///
     /// The `get_vr()` function will continue to work during the transition period
@@ -85,7 +85,7 @@ impl Keys {
     /// Current game version for Fallout 4.
     ///
     /// Stores the detected or manually selected Fallout 4 version variant
-    /// as a [`Fallout4Version`] enum value (Original, NextGen, or Vr).
+    /// as a `Fallout4Version` enum value (Original, NextGen, or Vr).
     ///
     /// This replaces the legacy VR mode toggle with a unified version system
     /// that treats VR as a version variant alongside OG and NG versions.
@@ -107,7 +107,7 @@ impl Keys {
 
     /// Whether the game version was auto-detected.
     ///
-    /// Boolean flag indicating whether the current [`GAME_VERSION`] was
+    /// Boolean flag indicating whether the current [`Keys::GAME_VERSION`] was
     /// automatically detected from the game installation (true) or
     /// manually selected by the user (false).
     ///

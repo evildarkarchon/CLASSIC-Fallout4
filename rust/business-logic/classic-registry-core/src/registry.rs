@@ -260,7 +260,7 @@ pub fn get_game_path_gui<T: Clone + Any + Send + Sync + 'static>() -> Option<T> 
 /// # Deprecation Notice
 ///
 /// This function is deprecated. Use [`get_game_version()`] instead, which returns
-/// a [`Fallout4Version`] enum that includes VR as a version variant.
+/// a `Fallout4Version` enum that includes VR as a version variant.
 ///
 /// During the transition period, this function will:
 /// 1. First check the legacy VR key
@@ -293,7 +293,7 @@ pub fn get_vr() -> String {
 /// Get the current Fallout 4 version.
 ///
 /// This is the recommended way to check which version of Fallout 4 is being used,
-/// including VR support. The version is stored as a [`Fallout4Version`] enum.
+/// including VR support. The version is stored as a `Fallout4Version` enum.
 ///
 /// # Returns
 ///
