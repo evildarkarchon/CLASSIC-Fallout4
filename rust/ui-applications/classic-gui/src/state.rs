@@ -164,4 +164,11 @@ mod tests {
         assert_eq!(parsed.crash_log_path, "/path/to/logs");
         assert_eq!(parsed.get_tab_geometry(0).width, 1024);
     }
+
+    #[test]
+    fn test_state_file_path_exists() {
+        // Verify ProjectDirs returns a valid path on this platform
+        let path = state_file_path();
+        assert!(path.is_some(), "state_file_path() returned None");
+    }
 }

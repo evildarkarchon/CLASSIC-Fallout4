@@ -12,7 +12,8 @@ use parking_lot::Mutex;
 use tokio_util::sync::CancellationToken;
 
 use classic_gui::{
-    browse_folder, load_window_state, save_window_state, ScanWindowProperties, WindowState,
+    browse_folder, load_window_state, save_window_state, ScanWindowProperties, TabGeometry,
+    WindowState,
 };
 
 // Implement ScanWindowProperties for the generated MainWindow
@@ -96,6 +97,24 @@ fn restore_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
 
     // Restore active tab
     window.set_active_tab_index(ws.active_tab);
+
+    // Restore window geometry for active tab
+    let geometry = ws.get_tab_geometry(ws.active_tab);
+    if geometry.width > 0 && geometry.height > 0 {
+        // Restore size
+        window.window().set_size(slint::LogicalSize::new(
+            geometry.width as f32,
+            geometry.height as f32,
+        ));
+
+        // Restore position (only if valid - some platforms don't support this)
+        if geometry.x != 0 || geometry.y != 0 {
+            window.window().set_position(slint::LogicalPosition::new(
+                geometry.x as f32,
+                geometry.y as f32,
+            ));
+        }
+    }
 }
 
 /// Save final state before exit
@@ -105,7 +124,24 @@ fn save_final_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     // Capture current paths
     state.window_state.crash_log_path = window.get_crash_log_path().to_string();
     state.window_state.game_path = window.get_game_path().to_string();
-    state.window_state.active_tab = window.get_active_tab_index();
+
+    // Capture current tab
+    let active_tab = window.get_active_tab_index();
+    state.window_state.active_tab = active_tab;
+
+    // Capture window geometry for current tab
+    let size = window.window().size();
+    let position = window.window().position();
+    state.window_state.set_tab_geometry(
+        active_tab,
+        TabGeometry {
+            x: position.x as i32,
+            y: position.y as i32,
+            width: size.width as u32,
+            height: size.height as u32,
+            maximized: false, // TODO: Slint doesn't expose maximized state
+        },
+    );
 
     // Save to disk
     if let Err(e) = save_window_state(&state.window_state) {
@@ -279,14 +315,37 @@ fn setup_browse_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
 
 /// Set up tab change callback for per-tab state persistence
 fn setup_tab_callback(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    let window_weak = window.as_weak();
     let state = Arc::clone(state);
 
     window.on_tab_changed(move |new_tab| {
+        let Some(w) = window_weak.upgrade() else {
+            return;
+        };
+
         {
             let mut state = state.lock();
             if !state.initialized {
                 return;
             }
+
+            // Save geometry for previous tab before switching
+            let old_tab = state.window_state.active_tab;
+            if old_tab != new_tab {
+                let size = w.window().size();
+                let position = w.window().position();
+                state.window_state.set_tab_geometry(
+                    old_tab,
+                    TabGeometry {
+                        x: position.x as i32,
+                        y: position.y as i32,
+                        width: size.width as u32,
+                        height: size.height as u32,
+                        maximized: false,
+                    },
+                );
+            }
+
             state.window_state.active_tab = new_tab;
         }
         persist_state(&state);
