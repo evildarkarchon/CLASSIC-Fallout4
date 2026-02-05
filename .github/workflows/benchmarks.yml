@@ -1,5 +1,15 @@
 name: Benchmarks
 
+# IMPORTANT: Configure branch protection for main:
+# - Require status checks to pass before merging
+# - Required check: "Run Benchmarks" (this workflow's job name)
+# - This ensures PRs with performance regressions cannot merge
+#
+# To configure: Repository Settings > Branches > Branch protection rules
+# 1. Add rule for "main"
+# 2. Enable "Require status checks to pass before merging"
+# 3. Select "Run Benchmarks" from status checks list
+
 on:
   push:
     branches: [main]
@@ -236,3 +246,94 @@ jobs:
           else
             echo "bypass=false" >> $GITHUB_OUTPUT
           fi
+
+      - name: Find existing comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: '<!-- benchmark-results -->'
+
+      - name: Build PR comment body
+        if: github.event_name == 'pull_request'
+        id: comment-body
+        working-directory: rust
+        shell: bash
+        run: |
+          {
+            echo '<!-- benchmark-results -->'
+            echo '## Benchmark Results'
+            echo ''
+            echo "**Commit:** ${{ github.event.pull_request.head.sha }}"
+            echo "**Baseline:** main branch"
+            echo "**Mode:** quick (50 samples)"
+            echo ''
+
+            if [ "${{ steps.baseline-check.outputs.baseline_exists }}" != "true" ]; then
+              echo '> [!WARNING]'
+              echo '> No baseline found. Comparison skipped.'
+              echo '> Baseline will be established when this PR merges to main.'
+            else
+              status="${{ steps.analyze.outputs.status }}"
+              case "$status" in
+                failure) echo '> [!CAUTION]' && echo '> Performance regressions detected (>10%)' ;;
+                warning) echo '> [!WARNING]' && echo '> Performance warnings detected (5-10%)' ;;
+                success) echo '> [!TIP]' && echo '> No significant performance changes detected' ;;
+                *) echo '> [!NOTE]' && echo '> Comparison status: '"$status" ;;
+              esac
+
+              echo ''
+
+              if [ -s failures.md ]; then
+                echo '### Regressions (>10%)'
+                echo ''
+                echo '| Benchmark | Change | Current | Baseline |'
+                echo '|-----------|--------|---------|----------|'
+                cat failures.md
+                echo ''
+              fi
+
+              if [ -s warnings.md ]; then
+                echo '### Warnings (5-10%)'
+                echo ''
+                echo '| Benchmark | Change | Current | Baseline |'
+                echo '|-----------|--------|---------|----------|'
+                cat warnings.md
+                echo ''
+              fi
+
+              if [ -s improvements.md ]; then
+                echo '### Improvements'
+                echo ''
+                echo '| Benchmark | Change | Current | Baseline |'
+                echo '|-----------|--------|---------|----------|'
+                cat improvements.md
+                echo ''
+              fi
+
+              if [ ! -s failures.md ] && [ ! -s warnings.md ] && [ ! -s improvements.md ]; then
+                echo 'All benchmarks within threshold (no changes >5%).'
+                echo ''
+              fi
+            fi
+
+            echo '---'
+            echo '*Benchmarks run on GitHub Actions. Results may vary due to shared infrastructure.*'
+            echo '*To accept regressions, add label `perf-regression-accepted` with justification.*'
+          } > comment.md
+
+          body=$(cat comment.md)
+          echo "body<<EOF" >> $GITHUB_OUTPUT
+          echo "$body" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Post or update PR comment
+        if: github.event_name == 'pull_request'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: ${{ steps.comment-body.outputs.body }}
+          edit-mode: replace
