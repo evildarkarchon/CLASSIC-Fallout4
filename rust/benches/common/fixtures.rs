@@ -1,5 +1,11 @@
 //! Benchmark fixtures for loading test data and generating synthetic content.
 //!
+//! This module is included via `#[path]` attribute from individual benchmark files,
+//! so some items may appear unused depending on which benchmark uses this module.
+
+#![allow(dead_code)]
+#![allow(unused_imports)]
+//!
 //! This module provides utilities for loading real crash logs and generating
 //! synthetic data for benchmark scaling tests.
 //!

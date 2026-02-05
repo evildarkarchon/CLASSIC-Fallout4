@@ -1,5 +1,11 @@
 //! Criterion configuration with environment-controlled benchmark modes.
 //!
+//! This module is included via `#[path]` attribute from individual benchmark files,
+//! so some items may appear unused depending on which benchmark uses this module.
+
+#![allow(dead_code)]
+#![allow(unused_imports)]
+//!
 //! This module provides a unified way to configure Criterion benchmarks with
 //! two modes optimized for different use cases:
 //!
