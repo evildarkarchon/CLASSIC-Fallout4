@@ -62,6 +62,9 @@ members = [
 
     # Phase 5 - Application Coordination (Python Bindings)
     "python-bindings/classic-update-py",
+
+    # GUI Applications (v9.0.0 Slint)
+    "ui-applications/classic-gui",
 ]
 resolver = "2"
 
@@ -154,7 +157,11 @@ tracing = "0.1.44"
 tracing-subscriber = "0.3.22"
 
 # GUI (Slint)
-slint = "1.14.1"
+slint = "1.15.0"
+slint-build = "1.15.0"
+
+# Utilities
+tokio-util = "0.7"
 
 # Testing
 tempfile = "3.24.0"

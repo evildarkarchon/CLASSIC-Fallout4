@@ -1,0 +1,30 @@
+[package]
+name = "classic-gui"
+version = "9.0.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Rust-native GUI for CLASSIC crash log analyzer"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[[bin]]
+name = "classic-gui"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+slint = { workspace = true, features = ["backend-winit", "renderer-skia", "image-default-formats"] }
+classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["gui-bridge"] }
+tokio-util = { workspace = true }
+
+[build-dependencies]
+slint-build = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"
