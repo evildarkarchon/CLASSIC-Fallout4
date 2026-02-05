@@ -159,7 +159,7 @@ pub fn pyany_to_indexmap_str(py_any: &Bound<'_, pyo3::types::PyAny>) -> IndexMap
     }
 }
 
-/// Convert any dict-like PyAny to IndexMap with Vec<String> values.
+/// Convert any dict-like PyAny to IndexMap with `Vec<String>` values.
 ///
 /// Handles any Python object that can be downcast to a dict.
 /// Silently skips entries that cannot be extracted.
