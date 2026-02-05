@@ -124,7 +124,7 @@ function Format-ChangeText {
         # Regression (slower)
         return "${ColorRed}${sign}${Change:F1}% [REGRESSION]${ColorReset}"
     }
-    elseif ($Change -lt -$Threshold) {
+    elseif ($Change -lt - $Threshold) {
         # Improvement (faster)
         return "${ColorGreen}${sign}${Change:F1}% [IMPROVED]${ColorReset}"
     }
@@ -144,16 +144,16 @@ function Run-CritcmpComparison {
 
     Write-ColorLine "`nUsing critcmp for detailed comparison..." $ColorCyan
 
-    $args = @($Baseline)
+    $critcmpArgs = @($Baseline)
 
     if ($BenchFilter) {
-        $args += "--filter"
-        $args += $BenchFilter
+        $critcmpArgs += "--filter"
+        $critcmpArgs += $BenchFilter
     }
 
     Push-Location (Join-Path $PSScriptRoot "../../rust")
     try {
-        $output = & critcmp @args 2>&1
+        $output = & critcmp @critcmpArgs 2>&1
         $exitCode = $LASTEXITCODE
 
         if ($exitCode -ne 0) {
@@ -172,9 +172,9 @@ function Run-CritcmpComparison {
                 $change = [double]$Matches[4]
 
                 $results += @{
-                    Name = $benchName
-                    Current = $currentTime
-                    Baseline = $baselineTime
+                    Name          = $benchName
+                    Current       = $currentTime
+                    Baseline      = $baselineTime
                     ChangePercent = $change
                 }
 
@@ -257,10 +257,10 @@ function Run-CriterionComparison {
 
                 if ($currentBench) {
                     $results += @{
-                        Name = $currentBench
+                        Name          = $currentBench
                         ChangePercent = $avgChange
-                        ChangeLow = $lowChange
-                        ChangeHigh = $highChange
+                        ChangeLow     = $lowChange
+                        ChangeHigh    = $highChange
                     }
                 }
             }
@@ -283,15 +283,15 @@ function Export-ResultsToJson {
     )
 
     $export = @{
-        timestamp = (Get-Date -Format "o")
-        baseline = $Baseline
-        threshold = $Threshold
+        timestamp  = (Get-Date -Format "o")
+        baseline   = $Baseline
+        threshold  = $Threshold
         benchmarks = $Results
-        summary = @{
-            total = $Results.Count
-            regressions = ($Results | Where-Object { $_.ChangePercent -gt $Threshold }).Count
-            improvements = ($Results | Where-Object { $_.ChangePercent -lt -$Threshold }).Count
-            unchanged = ($Results | Where-Object { [Math]::Abs($_.ChangePercent) -le $Threshold }).Count
+        summary    = @{
+            total        = $Results.Count
+            regressions  = ($Results | Where-Object { $_.ChangePercent -gt $Threshold }).Count
+            improvements = ($Results | Where-Object { $_.ChangePercent -lt - $Threshold }).Count
+            unchanged    = ($Results | Where-Object { [Math]::Abs($_.ChangePercent) -le $Threshold }).Count
         }
     }
 
@@ -348,7 +348,7 @@ if ($results.Count -gt 0) {
     Write-ColorLine "Summary" $ColorBold
 
     $regressions = $results | Where-Object { $_.ChangePercent -gt $Threshold }
-    $improvements = $results | Where-Object { $_.ChangePercent -lt -$Threshold }
+    $improvements = $results | Where-Object { $_.ChangePercent -lt - $Threshold }
     $unchanged = $results | Where-Object { [Math]::Abs($_.ChangePercent) -le $Threshold }
 
     Write-Host "  Total benchmarks: $($results.Count)"

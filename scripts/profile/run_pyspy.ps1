@@ -49,8 +49,8 @@
 .PARAMETER SubProcesses
     Profile subprocesses as well.
 
-.PARAMETER Pid
-    Attach to an existing process by PID instead of launching a new one.
+.PARAMETER ProcessId
+Attach to an existing process by PID instead of launching a new one.
 
 .PARAMETER Open
     Open the generated output in the default application after profiling.
@@ -79,8 +79,8 @@
     # Profile Python-only stacks (no Rust frames)
 
 .EXAMPLE
-    .\run_pyspy.ps1 -Pid 12345 -Duration 30
-    # Attach to running process for 30 seconds
+.\run_pyspy.ps1 -ProcessId 12345 -Duration 30
+# Attach to running process for 30 seconds
 
 .NOTES
     Requirements:
@@ -126,7 +126,7 @@ param(
     [switch]$SubProcesses,
 
     [Parameter()]
-    [int]$Pid,
+    [int]$ProcessId,
 
     [Parameter()]
     [switch]$Open,
@@ -194,7 +194,8 @@ if ($Mode -eq 'quick') {
     $defaultDuration = 10
     Write-Host "[Config] Mode: quick" -ForegroundColor Yellow
     Write-Host "         Duration: 10s, Rate: ${Rate} Hz" -ForegroundColor DarkGray
-} else {
+}
+else {
     $defaultDuration = 60
     Write-Host "[Config] Mode: thorough" -ForegroundColor Yellow
     Write-Host "         Duration: 60s, Rate: ${Rate} Hz" -ForegroundColor DarkGray
@@ -212,11 +213,13 @@ $useNative = $true
 if ($NoNative) {
     $useNative = $false
     Write-Host "[Config] Native frames: disabled (Python-only)" -ForegroundColor Yellow
-} elseif ($Native) {
+}
+elseif ($Native) {
     # Explicit -Native flag (redundant but supported)
     $useNative = $true
     Write-Host "[Config] Native frames: enabled (combined Python+Rust)" -ForegroundColor Yellow
-} else {
+}
+else {
     Write-Host "[Config] Native frames: enabled (default)" -ForegroundColor DarkGray
 }
 
@@ -269,16 +272,18 @@ if ($SubProcesses) {
 }
 
 # Target specification
-if ($Pid) {
-    $pyspyArgs += @("-p", $Pid)
-    Write-Host "[Config] Attaching to PID: $Pid" -ForegroundColor Yellow
-} else {
+if ($ProcessId) {
+    $pyspyArgs += @("-p", $ProcessId)
+    Write-Host "[Config] Attaching to PID: $ProcessId" -ForegroundColor Yellow
+}
+else {
     # Find Python executable
     $pythonPath = $null
     $venvPython = Join-Path $projectRoot ".venv/Scripts/python.exe"
     if (Test-Path $venvPython) {
         $pythonPath = $venvPython
-    } else {
+    }
+    else {
         $pythonPath = Get-Command python -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
     }
 
@@ -312,7 +317,7 @@ Write-Host ""
 Write-Host "----------------------------------------" -ForegroundColor Cyan
 Write-Host ""
 
-if (-not $Pid) {
+if (-not $ProcessId) {
     Write-Host "[Info] Profiling will start when the application launches" -ForegroundColor DarkGray
     Write-Host "[Info] Use Ctrl+C to stop early" -ForegroundColor DarkGray
     Write-Host ""
@@ -354,7 +359,8 @@ if ($exitCode -eq 0) {
         }
         Start-Process $Output
     }
-} else {
+}
+else {
     Write-Host "[Error] py-spy failed with exit code $exitCode" -ForegroundColor Red
 
     if (-not $isAdmin -and $PSVersionTable.Platform -ne 'Unix') {
