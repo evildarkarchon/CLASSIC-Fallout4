@@ -9,12 +9,12 @@ Requirements for the Performance & Polish milestone. Establish baselines, optimi
 
 ### Benchmarking Infrastructure
 
-- [ ] **BENCH-01**: Benchmarks execute in release mode only (debug builds rejected)
-- [ ] **BENCH-02**: Benchmark results include statistical aggregation (min/mean/median/stddev/p95/p99)
-- [ ] **BENCH-03**: Benchmark results export to JSON format for historical tracking
-- [ ] **BENCH-04**: Benchmarks run multiple iterations with configurable warmup
+- [x] **BENCH-01**: Benchmarks execute in release mode only (debug builds rejected)
+- [x] **BENCH-02**: Benchmark results include statistical aggregation (min/mean/median/stddev/p95/p99)
+- [x] **BENCH-03**: Benchmark results export to JSON format for historical tracking
+- [x] **BENCH-04**: Benchmarks run multiple iterations with configurable warmup
 - [ ] **BENCH-05**: CI pipeline detects performance regressions (>10% threshold)
-- [ ] **BENCH-06**: Historical baselines stored for comparison across commits
+- [x] **BENCH-06**: Historical baselines stored for comparison across commits
 
 ### GIL & FFI Optimization
 
@@ -66,11 +66,11 @@ Explicitly excluded from v8.3.0.
 |-------------|-------|--------|
 | GIL-01 | Phase 12 | Complete |
 | GIL-02 | Phase 12 | Complete |
-| BENCH-01 | Phase 13 | Pending |
-| BENCH-02 | Phase 13 | Pending |
-| BENCH-03 | Phase 13 | Pending |
-| BENCH-04 | Phase 13 | Pending |
-| BENCH-06 | Phase 13 | Pending |
+| BENCH-01 | Phase 13 | Complete |
+| BENCH-02 | Phase 13 | Complete |
+| BENCH-03 | Phase 13 | Complete |
+| BENCH-04 | Phase 13 | Complete |
+| BENCH-06 | Phase 13 | Complete |
 | PROF-01 | Phase 14 | Pending |
 | PROF-02 | Phase 14 | Pending |
 | PROF-03 | Phase 14 | Pending |

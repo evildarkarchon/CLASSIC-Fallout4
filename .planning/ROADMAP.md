@@ -44,7 +44,7 @@ See `.planning/milestones/v8.2.0-part2-ROADMAP.md` for full details.
 **Milestone Goal:** Establish performance baselines, optimize hot paths based on profiling data, and fix pre-existing bugs. Data-driven optimization, not premature.
 
 - [x] **Phase 12: GIL Release Audit** - Add py.allow_threads() to Rust operations, measure FFI overhead
-- [ ] **Phase 13: Benchmark Infrastructure** - Establish Criterion benchmarks with statistical output and baselines
+- [x] **Phase 13: Benchmark Infrastructure** - Establish Criterion benchmarks with statistical output and baselines
 - [ ] **Phase 14: Hot Path Profiling & Cache Instrumentation** - Profile hot paths, instrument DashMap caches
 - [ ] **Phase 15: Bug Fixes & Test Stabilization** - Fix test_clear_cache and classic_settings() path resolution
 - [ ] **Phase 16: Hot Path Optimization (Data-Driven)** - Optimize based on profiling data from Phase 14
@@ -76,9 +76,9 @@ Plans:
 **Plans**: 3 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Criterion workspace configuration, quick/thorough modes, benchmark runner script
-- [ ] 13-02-PLAN.md — Core crate benchmarks (yaml-core, scanlog-core, file-io-core) with realistic fixtures
-- [ ] 13-03-PLAN.md — Baseline management scripts (percentile extraction, cleanup, comparison)
+- [x] 13-01-PLAN.md — Criterion workspace configuration, quick/thorough modes, benchmark runner script
+- [x] 13-02-PLAN.md — Core crate benchmarks (yaml-core, scanlog-core, file-io-core) with realistic fixtures
+- [x] 13-03-PLAN.md — Baseline management scripts (percentile extraction, cleanup, comparison)
 
 ### Phase 14: Hot Path Profiling & Cache Instrumentation
 **Goal**: Hot paths identified via flamegraphs; cache behavior observable
@@ -142,10 +142,10 @@ Plans:
 | 1-5 | v1.0 | 14/14 | Complete | 2026-02-02 |
 | 6-11 | v8.2.0-part2 | 14/14 | Complete | 2026-02-04 |
 | 12. GIL Release Audit | v8.3.0 | 1/1 | Complete | 2026-02-04 |
-| 13. Benchmark Infrastructure | v8.3.0 | 0/3 | Planned | - |
+| 13. Benchmark Infrastructure | v8.3.0 | 3/3 | Complete | 2026-02-05 |
 | 14. Hot Path Profiling | v8.3.0 | 0/2 | Not started | - |
 | 15. Bug Fixes | v8.3.0 | 0/2 | Not started | - |
 | 16. Hot Path Optimization | v8.3.0 | 0/1 | Not started | - |
 | 17. CI Regression Detection | v8.3.0 | 0/1 | Not started | - |
 
-**Overall:** 2 milestones shipped, 29 plans completed, 10 plans planned for v8.3.0
+**Overall:** 2 milestones shipped, 32 plans completed, 7 plans remaining for v8.3.0
