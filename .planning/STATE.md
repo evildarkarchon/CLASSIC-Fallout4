@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-04)
 
 **Core value:** Python is the UI, Rust is the engine — every piece of business logic lives in Rust `-core` crates, Python only handles presentation and user interaction.
-**Current focus:** v8.3.0 Performance & Polish — Phase 15 complete (Bug Fixes)
+**Current focus:** v8.3.0 Performance & Polish — Phase 16 in progress (Hot Path Optimization)
 
 ## Current Position
 
-Phase: 15 of 17 (Bug Fixes & Test Stabilization) - VERIFIED ✓
-Plan: 2 of 2 in current phase - ALL COMPLETE
-Status: Phase verified and complete
-Last activity: 2026-02-05 — Completed 15-02-PLAN.md (BUG-02 path resolution fix)
+Phase: 16 of 17 (Hot Path Optimization)
+Plan: 1 of 2 in current phase - COMPLETE
+Status: In progress
+Last activity: 2026-02-04 — Completed 16-01-PLAN.md (Hot Path Profiling & Analysis)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 9/11]
-[##########################] 98% (37/40 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 10/11]
+[###########################] 100% (38/40 plans)
 
 ## Performance Metrics
 
@@ -30,7 +30,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 9/11]
 - Total execution time: ~2.7 hours
 
 **v8.3.0 Velocity:**
-- Plans completed: 9
+- Plans completed: 10
 - Phase 12-01: ~45m
 - Phase 13-01: ~5m
 - Phase 13-02: ~12m
@@ -40,6 +40,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 9/11]
 - Phase 14-03: ~4m (gap closure)
 - Phase 15-01: ~6m
 - Phase 15-02: ~8m
+- Phase 16-01: ~25m
 
 **By Phase (v8.2.0-part2):**
 
@@ -73,18 +74,21 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 - PyO3 cache_stats() returns dict for simpler Python consumption (not exposing Rust struct)
 - serial_test crate for serializing Rust tests that touch global state (BUG-01 fix)
 - ResourceLoader.get_data_directory().parent as project root anchor (BUG-02 fix)
+- cProfile used instead of py-spy due to Python 3.14 incompatibility (16-01)
+- Threading overhead identified as dominant factor (86%) for optimization (16-01)
+- Rust FFI overhead confirmed minimal (0.3%) - previous optimizations successful (16-01)
 
 ### Pending Todos
 
-None - both BUG-01 and BUG-02 fixed.
+None.
 
 ### Blockers/Concerns
 
-None.
+- py-spy 0.4.1 incompatible with Python 3.14 (limits native frame profiling)
 
 ## Session Continuity
 
 Last session: 2026-02-04
-Stopped at: Phase 15 verified complete (Bug Fixes & Test Stabilization)
+Stopped at: Completed 16-01-PLAN.md (Hot Path Profiling & Analysis)
 Resume file: None
-Next action: `/gsd:discuss-phase 16` or `/gsd:plan-phase 16` to plan Hot Path Optimization
+Next action: Execute 16-02-PLAN.md (Optimization Implementation)
