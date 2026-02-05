@@ -102,11 +102,11 @@ Plans:
   3. User can click "Cancel" to stop a running scan
   4. Scan completion shows summary (X logs scanned, Y issues found)
   5. OrchestratorCore executes actual scan logic (not mocked)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 21-01: Scan trigger and OrchestratorCore integration
-- [ ] 21-02: Progress and cancellation
+- [ ] 21-01-PLAN.md — Wire OrchestratorCore to GUI with morphing Scan/Cancel button
+- [ ] 21-02-PLAN.md — Add indeterminate progress, cancellation with partial results, and auto-tab-switch
 
 #### Phase 22: Results Viewer
 **Goal**: User can browse and view scan reports
@@ -190,7 +190,7 @@ Plans:
 | 12-18 | v8.3.0 | 15/15 | Complete | 2026-02-05 |
 | 19. Foundation | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 20. Core UI | v9.0.0 | 2/2 | Complete | 2026-02-05 |
-| 21. Scan Ops | v9.0.0 | 0/2 | Not started | - |
+| 21. Scan Ops | v9.0.0 | 0/2 | Planned | - |
 | 22. Results | v9.0.0 | 0/2 | Not started | - |
 | 23. Markdown | v9.0.0 | 0/1 | Not started | - |
 | 24. Settings | v9.0.0 | 0/2 | Not started | - |
