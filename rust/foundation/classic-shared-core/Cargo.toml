@@ -38,10 +38,11 @@ log = { workspace = true }
 
 # GUI bridge (optional - only for Slint GUI applications)
 slint = { workspace = true, optional = true }
+tokio-util = { workspace = true, optional = true }
 
 [features]
 # Enable AsyncBridge for Slint GUI applications
-gui-bridge = ["slint"]
+gui-bridge = ["slint", "tokio-util"]
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }

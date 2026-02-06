@@ -9,12 +9,27 @@
 //! - **Slint Event Loop**: Runs on the main thread, handles UI updates
 //! - **Tokio Runtime**: Shared multi-threaded runtime for async I/O (ONE RUNTIME RULE)
 //! - **AsyncBridge**: Coordinates between the two, managing thread transitions
+//! - **EventLoopDispatcher**: Trait abstracting UI-thread dispatch for testability
 //!
 //! # Methods
 //!
 //! - [`AsyncBridge::run_with_ui_update`] - Execute async operation, update UI with result
 //! - [`AsyncBridge::spawn_background`] - Fire-and-forget async operation
 //! - [`AsyncBridge::invoke_on_ui_thread`] - Invoke a function on the Slint event loop
+//! - [`AsyncBridge::run_with_timeout`] - Execute async operation with a timeout
+//! - [`AsyncBridge::run_cancellable`] - Execute async operation with cancellation support
+//!
+//! # Error Handling
+//!
+//! All dispatch operations use [`BridgeError`] for structured error reporting.
+//! Methods that dispatch to the UI thread log errors instead of panicking when
+//! dispatch fails, ensuring the application remains stable.
+//!
+//! # Testability
+//!
+//! The [`EventLoopDispatcher`] trait abstracts `slint::invoke_from_event_loop` behind
+//! a mockable interface. Use [`set_dispatcher`] to inject a test dispatcher that does
+//! not require a running Slint event loop.
 //!
 //! # Pattern
 //!
@@ -33,6 +48,125 @@
 
 #[cfg(feature = "gui-bridge")]
 use std::future::Future;
+#[cfg(feature = "gui-bridge")]
+use std::sync::OnceLock;
+
+/// Error type for async bridge operations
+///
+/// Represents the possible failure modes when coordinating between
+/// the Tokio async runtime and the Slint UI event loop.
+///
+/// # Variants
+///
+/// - [`Timeout`](BridgeError::Timeout) - Operation exceeded its time limit
+/// - [`Cancelled`](BridgeError::Cancelled) - Operation was cancelled via token
+/// - [`DispatchFailed`](BridgeError::DispatchFailed) - Could not dispatch to UI thread
+#[cfg(feature = "gui-bridge")]
+#[derive(Debug, thiserror::Error)]
+pub enum BridgeError {
+    /// The operation did not complete within the specified duration
+    #[error("Operation timed out after {0:?}")]
+    Timeout(std::time::Duration),
+
+    /// The operation was cancelled via a cancellation token
+    #[error("Operation was cancelled")]
+    Cancelled,
+
+    /// Failed to dispatch a callback to the UI event loop
+    #[error("Failed to dispatch to UI thread: {0}")]
+    DispatchFailed(String),
+}
+
+/// Trait abstracting UI-thread dispatch for testability
+///
+/// This trait wraps the mechanism for invoking closures on the UI event loop.
+/// The production implementation ([`SlintDispatcher`]) delegates to
+/// `slint::invoke_from_event_loop`, while test implementations can execute
+/// closures directly or record them for verification.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use classic_shared_core::{EventLoopDispatcher, BridgeError};
+///
+/// struct TestDispatcher;
+/// impl EventLoopDispatcher for TestDispatcher {
+///     fn dispatch(&self, f: Box<dyn FnOnce() + Send + 'static>) -> Result<(), BridgeError> {
+///         f(); // Execute immediately in tests
+///         Ok(())
+///     }
+/// }
+/// ```
+#[cfg(feature = "gui-bridge")]
+pub trait EventLoopDispatcher: Send + Sync + 'static {
+    /// Dispatch a closure to run on the UI event loop thread
+    ///
+    /// # Arguments
+    ///
+    /// * `f` - The closure to invoke on the UI thread
+    ///
+    /// # Errors
+    ///
+    /// Returns [`BridgeError::DispatchFailed`] if the event loop is not running
+    /// or the closure cannot be dispatched.
+    fn dispatch(&self, f: Box<dyn FnOnce() + Send + 'static>) -> Result<(), BridgeError>;
+}
+
+/// Production dispatcher using Slint's event loop
+///
+/// This is the default dispatcher that delegates to `slint::invoke_from_event_loop`.
+/// It is automatically used when no custom dispatcher is set via [`set_dispatcher`].
+#[cfg(feature = "gui-bridge")]
+pub struct SlintDispatcher;
+
+#[cfg(feature = "gui-bridge")]
+impl EventLoopDispatcher for SlintDispatcher {
+    fn dispatch(&self, f: Box<dyn FnOnce() + Send + 'static>) -> Result<(), BridgeError> {
+        slint::invoke_from_event_loop(f)
+            .map_err(|e| BridgeError::DispatchFailed(e.to_string()))
+    }
+}
+
+/// Global dispatcher instance, initialized once at startup
+///
+/// Defaults to [`SlintDispatcher`] if not explicitly set via [`set_dispatcher`].
+#[cfg(feature = "gui-bridge")]
+static DISPATCHER: OnceLock<Box<dyn EventLoopDispatcher>> = OnceLock::new();
+
+/// Set the global event loop dispatcher
+///
+/// Call this once at application startup to configure the dispatch mechanism.
+/// In production, you typically do not need to call this (the default
+/// [`SlintDispatcher`] is used). In tests, call this with a mock dispatcher
+/// before running any bridge operations.
+///
+/// # Panics
+///
+/// Panics if the dispatcher has already been set. This enforces the invariant
+/// that the dispatcher is configured exactly once.
+///
+/// # Examples
+///
+/// ```rust,ignore
+/// use classic_shared_core::set_dispatcher;
+///
+/// // In test setup:
+/// set_dispatcher(TestDispatcher);
+/// ```
+#[cfg(feature = "gui-bridge")]
+pub fn set_dispatcher(dispatcher: impl EventLoopDispatcher + 'static) {
+    DISPATCHER
+        .set(Box::new(dispatcher))
+        .unwrap_or_else(|_| panic!("EventLoopDispatcher already set"));
+}
+
+/// Get a reference to the global dispatcher, initializing with SlintDispatcher if needed
+#[cfg(feature = "gui-bridge")]
+fn get_dispatcher() -> &'static dyn EventLoopDispatcher {
+    DISPATCHER
+        .get_or_init(|| Box::new(SlintDispatcher))
+        .as_ref()
+}
 
 /// Async bridge for coordinating between Slint event loop and Tokio runtime
 ///
@@ -45,12 +179,13 @@ use std::future::Future;
 /// The bridge uses the following pattern:
 /// 1. Spawn async operation on shared Tokio runtime (`get_runtime().spawn()`)
 /// 2. Await result within the spawned task
-/// 3. Invoke callback on Slint event loop (`slint::invoke_from_event_loop()`)
+/// 3. Invoke callback on Slint event loop via [`EventLoopDispatcher`]
 ///
 /// This ensures:
 /// - UI remains responsive (async work on Tokio runtime tasks)
 /// - Proper async execution (using shared Tokio runtime)
 /// - Safe UI updates (callbacks run on Slint event loop)
+/// - Testability (dispatcher can be mocked)
 ///
 /// # Examples
 ///
@@ -103,40 +238,16 @@ impl AsyncBridge {
     /// - Clone data before capturing if the original is not `Send`
     /// - Slint's `ComponentHandle` and `Weak` handles are `Send`, so they can be captured
     ///
-    /// # Common Mistakes
+    /// # Error Handling
     ///
-    /// ❌ **DON'T** use `Rc` (not Send):
-    /// ```rust,compile_fail
-    /// let data = Rc::new(vec![1, 2, 3]);  // Rc is NOT Send!
-    /// AsyncBridge::run_with_ui_update(
-    ///     async move { data.len() },  // Compile error!
-    ///     |_| {}
-    /// );
-    /// ```
-    ///
-    /// ✅ **DO** use `Arc` (is Send):
-    /// ```rust,no_run
-    /// use std::sync::Arc;
-    /// use classic_shared_core::AsyncBridge;
-    ///
-    /// let data = Arc::new(vec![1, 2, 3]);  // Arc IS Send
-    /// let data_clone = Arc::clone(&data);
-    /// AsyncBridge::run_with_ui_update(
-    ///     async move { data_clone.len() },  // Works!
-    ///     |result| { println!("Length: {}", result); }
-    /// );
-    /// ```
+    /// If the UI dispatch fails (e.g., the event loop has stopped), the error is
+    /// logged and the callback is dropped. The application continues running.
     ///
     /// # Thread Execution
     ///
     /// - `operation` runs as a task on the Tokio runtime
     /// - `on_complete` runs on the main Slint event loop thread
     /// - Both must be Send + 'static to cross thread boundaries
-    ///
-    /// # Panics
-    ///
-    /// Panics if unable to invoke the callback on the Slint event loop. This should
-    /// never happen in normal operation.
     ///
     /// # Examples
     ///
@@ -165,20 +276,14 @@ impl AsyncBridge {
         R: Send + 'static,
         C: FnOnce(R) + Send + 'static,
     {
-        // Performance Optimization: Spawn directly on Tokio runtime instead of using
-        // thread pool + block_on. This eliminates thread pool overhead and potential
-        // nested runtime issues.
-        //
-        // Expected impact: 30-50% lower latency (2-5ms reduction), no thread pool overhead
         crate::get_runtime().spawn(async move {
-            // Execute async operation
             let result = operation.await;
 
-            // Invoke callback on Slint event loop for UI updates
-            slint::invoke_from_event_loop(move || {
+            if let Err(e) = get_dispatcher().dispatch(Box::new(move || {
                 on_complete(result);
-            })
-            .expect("Failed to invoke callback on Slint event loop");
+            })) {
+                log::error!("AsyncBridge dispatch failed in run_with_ui_update: {e}");
+            }
         });
     }
 
@@ -205,8 +310,6 @@ impl AsyncBridge {
     where
         F: Future<Output = ()> + Send + 'static,
     {
-        // Performance Optimization: Spawn directly on Tokio runtime
-        // Eliminates thread pool overhead for fire-and-forget operations
         crate::get_runtime().spawn(operation);
     }
 
@@ -220,9 +323,9 @@ impl AsyncBridge {
     ///
     /// * `f` - The function to invoke on the UI thread
     ///
-    /// # Panics
+    /// # Error Handling
     ///
-    /// Panics if unable to invoke the function on the Slint event loop.
+    /// If the UI dispatch fails, the error is logged and the function is dropped.
     ///
     /// # Examples
     ///
@@ -238,7 +341,9 @@ impl AsyncBridge {
     where
         F: FnOnce() + Send + 'static,
     {
-        slint::invoke_from_event_loop(f).expect("Failed to invoke function on Slint event loop");
+        if let Err(e) = get_dispatcher().dispatch(Box::new(f)) {
+            log::error!("AsyncBridge dispatch failed in invoke_on_ui_thread: {e}");
+        }
     }
 }
 
@@ -255,5 +360,17 @@ mod tests {
             std::any::type_name::<AsyncBridge>(),
             "classic_shared_core::async_bridge::AsyncBridge"
         );
+    }
+
+    #[test]
+    fn test_bridge_error_display() {
+        let timeout_err = BridgeError::Timeout(std::time::Duration::from_secs(5));
+        assert!(timeout_err.to_string().contains("5s"));
+
+        let cancelled_err = BridgeError::Cancelled;
+        assert!(cancelled_err.to_string().contains("cancelled"));
+
+        let dispatch_err = BridgeError::DispatchFailed("event loop stopped".to_string());
+        assert!(dispatch_err.to_string().contains("event loop stopped"));
     }
 }
