@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** v9.0.0 Slint GUI -- Phase 26 Async Bridge Audit
+**Current focus:** Phase 27 -- Test Coverage Evaluation and Improvement
 
 ## Current Position
 
-Phase: 26 of 26 (Async Bridge Audit)
-Plan: 3 of 3 in current phase
-Status: Phase complete -- v9.0.0 milestone complete
-Last activity: 2026-02-06 -- Completed 26-03-PLAN.md
+Phase: 27 of 27 (Test Coverage Evaluation and Improvement)
+Plan: 1 of 9 in current phase
+Status: In progress
+Last activity: 2026-02-06 -- Completed 27-01-PLAN.md (Coverage Tooling and Baseline)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16]
-[################################################] 100% (59/59 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 1/9]
+[################################################## ] 88% (60/68 plans)
 
 ## Performance Metrics
 
@@ -99,6 +99,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16]
 | 2026-02-06 | 26-03 | Explicit set_dispatcher at startup | Makes init order explicit rather than relying on get_or_init default |
 | 2026-02-06 | 26-03 | Browse callbacks unchanged | No timeout/cancellation needs; migration adds complexity without benefit |
 | 2026-02-06 | 26-03 | Unit tests with MockDispatcher | 15 tests validate contracts without Slint event loop; OnceLock limits integration tests |
+| 2026-02-06 | 27-01 | Exclude PyO3 crates from coverage test run | Require Python DLL at runtime; thin adapters over -core crates |
+| 2026-02-06 | 27-01 | Use --ignore-run-fail for coverage | Pre-existing flaky test blocks coverage collection without it |
+| 2026-02-06 | 27-01 | Two-phase coverage approach | --ignore-filename-regex is report-only; separate test run from report generation |
 
 ### Pending Todos
 
@@ -119,6 +122,8 @@ None.
 - Plan 25-01 complete -- File logging infrastructure ready, all eprintln! replaced with tracing macros
 - Phase 25 complete -- GUI is distribution-ready: console-less, logged, DPI-aware, self-healing, embedded icon, static CRT
 - Phase 26 complete -- Async bridge audited: dead code removed, BridgeError/EventLoopDispatcher added, run_with_timeout/run_cancellable APIs, 15 unit tests, call sites migrated
+- Coverage baseline established -- 72% workspace aggregate, 18/21 crates above 60%, 3 gaps: classic-yaml-core (19.6%), classic-gui (37.4%), classic-shared-core (49.2%)
+- Flaky test noted -- classic-yaml-core::test_cache_stats_empty fails intermittently due to global state contamination
 
 ### Quick Tasks Completed
 
@@ -129,10 +134,11 @@ None.
 ### Roadmap Evolution
 
 - Phase 26 added: Audit the async_bridge module of classic-shared-core for potential improvements for Slint GUI
+- Phase 27 added: Evaluate test coverage and work on improving it
 
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 26-03-PLAN.md (GUI call site migration and bridge tests)
+Stopped at: Completed 27-01-PLAN.md (Coverage Tooling and Baseline)
 Resume file: None
-Next action: v9.0.0 milestone complete -- all 59 plans across 26 phases executed
+Next action: Execute 27-02-PLAN.md
