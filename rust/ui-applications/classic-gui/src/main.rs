@@ -15,8 +15,9 @@ use slint::{ModelRc, SharedString, VecModel};
 use tokio_util::sync::CancellationToken;
 
 use classic_gui::{
-    browse_folder, copy_to_clipboard, get_report_content, load_window_state, prepare_report_entries,
-    save_window_state, ReportData, ScanWindowProperties, TabGeometry, WindowState,
+    browse_folder, copy_to_clipboard, get_report_content, load_window_state, parse_markdown,
+    prepare_report_entries, save_window_state, ReportData, ScanWindowProperties, TabGeometry,
+    WindowState,
 };
 
 // Implement ScanWindowProperties for the generated MainWindow
@@ -166,6 +167,24 @@ fn persist_state(state: &Arc<Mutex<AppState>>) {
     }
 }
 
+/// Parse markdown content and push blocks to the Slint report-blocks model
+fn update_report_blocks(window: &MainWindow, markdown_content: &str) {
+    let blocks = parse_markdown(markdown_content);
+    let model = Rc::new(VecModel::default());
+    for block in &blocks {
+        model.push(MarkdownBlock {
+            block_type: block.block_type,
+            text: SharedString::from(block.text.as_str()),
+            heading_level: block.heading_level,
+            is_bold: block.is_bold,
+            is_italic: block.is_italic,
+            indent_level: block.indent_level,
+            bullet_marker: SharedString::from(block.bullet_marker.as_str()),
+        });
+    }
+    window.set_report_blocks(ModelRc::from(model));
+}
+
 fn setup_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     setup_scan_callbacks(window, state);
     setup_results_callbacks(window, state);
@@ -246,6 +265,7 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                                         let content =
                                             get_report_content(&reports, first.source_index);
                                         w.set_report_content(SharedString::from(&content));
+                                        update_report_blocks(&w, &content);
                                     }
 
                                     // Switch to Results tab
@@ -308,6 +328,7 @@ fn setup_results_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                 let content = get_report_content(&report_data.reports, source_index);
                 if let Some(w) = window_weak.upgrade() {
                     w.set_report_content(SharedString::from(&content));
+                    update_report_blocks(&w, &content);
                 }
             }
         });
@@ -354,6 +375,7 @@ fn setup_results_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                         let content =
                             get_report_content(&report_data.reports, first.source_index);
                         w.set_report_content(SharedString::from(&content));
+                        update_report_blocks(&w, &content);
                     }
                 }
             }
@@ -390,6 +412,7 @@ fn setup_results_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                         let content =
                             get_report_content(&report_data.reports, first.source_index);
                         w.set_report_content(SharedString::from(&content));
+                        update_report_blocks(&w, &content);
                     }
                 }
             }
