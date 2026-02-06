@@ -13,7 +13,7 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use classic_config_core::ClassicConfig;
-use classic_shared_core::{get_runtime, AsyncBridge};
+use classic_shared_core::{get_runtime, set_dispatcher, AsyncBridge, SlintDispatcher};
 use parking_lot::Mutex;
 use slint::{ModelRc, SharedString, VecModel};
 use tokio_util::sync::CancellationToken;
@@ -69,6 +69,9 @@ fn main() {
 
     // 3. Initialize global Tokio runtime (ONE RUNTIME RULE)
     let _ = get_runtime();
+
+    // 3b. Initialize event loop dispatcher for AsyncBridge
+    set_dispatcher(SlintDispatcher);
 
     // 4. Load state with self-healing for corrupted files
     let state = Arc::new(Mutex::new(load_state_with_healing()));
@@ -327,15 +330,24 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                 w.set_scan_status("Discovering crash logs...".into());
             }
 
-            // Spawn real scan operation using OrchestratorCore
+            // Spawn real scan operation using run_cancellable for dual cancellation:
+            // - Bridge-level: run_cancellable races the future against the token
+            // - Inner-loop: scan_crash_logs checks is_cancelled() per-log for responsiveness
             let window_weak_completion = window_weak.clone();
             let state_completion = Arc::clone(&state);
-            AsyncBridge::run_with_ui_update(
+            AsyncBridge::run_cancellable(
+                cancel_token.clone(),
                 classic_gui::scan_crash_logs(window_weak.clone(), cancel_token, crash_log_path),
                 move |result| {
                     if let Some(w) = window_weak_completion.upgrade() {
                         match result {
-                            Ok(scan_result) => {
+                            None => {
+                                // Bridge-level cancellation (token cancelled between await points)
+                                w.set_scan_progress(0.0);
+                                w.set_scan_status("Cancelled".into());
+                                w.set_scan_in_progress(false);
+                            }
+                            Some(Ok(scan_result)) => {
                                 let has_results = scan_result.has_results();
                                 let status_text = scan_result.format_status();
                                 let reports = scan_result.reports;
@@ -381,7 +393,7 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                                     app_state.reports = Some(ReportData { reports });
                                 }
                             }
-                            Err(msg) => {
+                            Some(Err(msg)) => {
                                 w.set_scan_progress(0.0);
                                 w.set_scan_status(msg.into());
                                 w.set_scan_in_progress(false);
