@@ -13,7 +13,7 @@
 //! All CLASSIC crates MUST use the shared runtime via [`get_runtime()`] to avoid deadlocks.
 //! Creating additional runtimes will cause nested runtime errors and deadlocks.
 
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use tokio::runtime::Runtime;
 
 // Module declarations
@@ -170,7 +170,7 @@ impl RuntimeConfig {
 ///     tokio::fs::read_to_string("file.txt").await
 /// });
 /// ```
-pub(crate) static RUNTIME: Lazy<Runtime> = Lazy::new(|| {
+pub(crate) static RUNTIME: LazyLock<Runtime> = LazyLock::new(|| {
     let config = RuntimeConfig::default();
 
     // Build runtime with configuration

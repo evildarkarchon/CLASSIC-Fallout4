@@ -4,16 +4,16 @@
 //! Python bindings are in `classic-shared-py`.
 
 use dashmap::DashMap;
-use once_cell::sync::Lazy;
+use std::sync::LazyLock;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 
 /// Global performance metrics collector
-static METRICS: Lazy<Arc<PerformanceMetrics>> = Lazy::new(|| Arc::new(PerformanceMetrics::new()));
+static METRICS: LazyLock<Arc<PerformanceMetrics>> = LazyLock::new(|| Arc::new(PerformanceMetrics::new()));
 
 /// Global reference instant for timer measurements
-static TIMER_START: Lazy<Instant> = Lazy::new(Instant::now);
+static TIMER_START: LazyLock<Instant> = LazyLock::new(|| Instant::now());
 
 /// Rolling statistics for constant-memory metrics tracking
 ///

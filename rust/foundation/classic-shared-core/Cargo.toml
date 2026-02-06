@@ -20,11 +20,9 @@ thiserror = { workspace = true }
 anyhow = { workspace = true }
 
 # Performance and caching
-once_cell = { workspace = true }
 dashmap = { workspace = true }
 parking_lot = { workspace = true }
 rayon = { workspace = true }
-num_cpus = { workspace = true }
 
 # String optimization
 string_cache = { workspace = true }
