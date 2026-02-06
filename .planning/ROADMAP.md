@@ -5,7 +5,7 @@
 - **v1.0 Codebase Cleanup** -- Phases 1-5 (shipped 2026-02-02)
 - **v8.2.0-part2 Rust Migration** -- Phases 6-11 (shipped 2026-02-04)
 - **v8.3.0 Performance & Polish** -- Phases 12-18 (shipped 2026-02-05)
-- **v9.0.0 Slint GUI** -- Phases 19-26 (in progress)
+- **v9.0.0 Slint GUI** -- Phases 19-26 (shipped 2026-02-06)
 
 ## Phases
 
@@ -181,9 +181,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 26-01-PLAN.md — Dead code removal and dependency cleanup (once_cell to LazyLock, remove num_cpus)
-- [ ] 26-02-PLAN.md — Add BridgeError, EventLoopDispatcher trait, run_with_timeout, run_cancellable
-- [ ] 26-03-PLAN.md — Migrate GUI call sites and write bridge unit tests
+- [x] 26-01-PLAN.md — Dead code removal and dependency cleanup (once_cell to LazyLock, remove num_cpus)
+- [x] 26-02-PLAN.md — Add BridgeError, EventLoopDispatcher trait, run_with_timeout, run_cancellable
+- [x] 26-03-PLAN.md — Migrate GUI call sites and write bridge unit tests
 
 ## Progress
 
@@ -199,6 +199,6 @@ Plans:
 | 23. Markdown | v9.0.0 | 1/1 | Complete | 2026-02-05 |
 | 24. Settings | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 25. Platform | v9.0.0 | 2/2 | Complete | 2026-02-06 |
-| 26. Async Bridge Audit | v9.0.0 | 0/3 | Not started | - |
+| 26. Async Bridge Audit | v9.0.0 | 3/3 | Complete | 2026-02-06 |
 
-**Overall:** 3 milestones shipped, 56 plans completed | v9.0.0: 13/16 plans
+**Overall:** 3 milestones shipped, 59 plans completed | v9.0.0: 16/16 plans
