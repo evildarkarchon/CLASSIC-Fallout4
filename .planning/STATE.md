@@ -105,6 +105,8 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [P
 | 2026-02-06 | 27-02 | Skip plan -- scanlog-core already above 60% | Baseline shows 62.0% (3,120/5,033 lines); no gap-filling needed |
 | 2026-02-06 | 27-03 | Skip plan -- file-io-core and path-core above 60% | Baseline shows 90.4% and 84.5% respectively; no gap-filling needed |
 | 2026-02-06 | 27-04 | Skip plan -- scangame-core and version-registry-core above 60% | Baseline shows 71.9% and 88.8% respectively; no gap-filling needed |
+| 2026-02-06 | 27-05 | Yaml-core already above 60% per-crate (91.4%); added 26 tests for untested functions | Workspace baseline showed 19.6% but per-crate measurement showed 91.4%; improved to 97.9% |
+| 2026-02-06 | 27-05 | Skip config-core and settings-core | Baseline shows 88.9% and 97.3% respectively; well above 60% |
 | 2026-02-06 | 27-06 | Skip plan -- database-core, message-core, constants-core above 60% | Baseline shows 89.4%, 100.0%, and 88.9% respectively; no gap-filling needed |
 
 ### Pending Todos
@@ -135,6 +137,9 @@ None.
 - classic-database-core verified at 89.4% -- no gap-filling needed (plan 27-06 skipped)
 - classic-message-core verified at 100.0% -- no gap-filling needed (plan 27-06 skipped)
 - classic-constants-core verified at 88.9% -- no gap-filling needed (plan 27-06 skipped)
+- classic-yaml-core per-crate: 97.9% (was 91.4% before 27-05, workspace baseline showed 19.6% due to attribution artifact)
+- classic-config-core verified at 88.9% -- no gap-filling needed (plan 27-05)
+- classic-settings-core verified at 97.3% -- no gap-filling needed (plan 27-05)
 - Flaky test noted -- classic-yaml-core::test_cache_stats_empty fails intermittently due to global state contamination
 
 ### Quick Tasks Completed
