@@ -1,0 +1,32 @@
+// Splitter - Draggable vertical divider between panels
+
+export component Splitter inherits Rectangle {
+    width: 6px;
+
+    callback moved(/* delta */ length);
+
+    property <length> press-start-x;
+
+    Rectangle {
+        width: 100%;
+        height: 100%;
+        background: touch.pressed ? #888888 : #555555;
+        border-radius: 2px;
+    }
+
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        mouse-cursor: ew-resize;
+
+        pointer-event(event) => {
+            if (event.kind == PointerEventKind.down) {
+                root.press-start-x = self.mouse-x;
+            }
+        }
+
+        moved => {
+            root.moved(self.mouse-x - root.press-start-x);
+        }
+    }
+}

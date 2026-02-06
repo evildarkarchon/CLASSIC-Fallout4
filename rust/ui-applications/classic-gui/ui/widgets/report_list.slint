@@ -1,0 +1,97 @@
+// ReportList - Report list panel with search, sortable header, and scrollable list
+import { VerticalBox, HorizontalBox, LineEdit, ListView } from "std-widgets.slint";
+
+export struct ReportEntry {
+    filename: string,
+    timestamp: string,
+    source-index: int,
+}
+
+export component ReportList inherits VerticalBox {
+    in-out property <[ReportEntry]> model;
+    in-out property <int> selected-index: -1;
+    in-out property <bool> sort-ascending: false;
+
+    callback search-changed(/* text */ string);
+    callback sort-toggled();
+    callback report-selected(/* source-index */ int);
+
+    spacing: 8px;
+
+    // Search box
+    LineEdit {
+        placeholder-text: "Filter reports...";
+        edited(text) => {
+            root.search-changed(text);
+        }
+    }
+
+    // Sortable header row
+    sort-header := TouchArea {
+        height: 28px;
+        mouse-cursor: pointer;
+
+        clicked => {
+            root.sort-toggled();
+        }
+
+        Rectangle {
+            background: #333333;
+            border-radius: 4px;
+
+            HorizontalBox {
+                padding-left: 8px;
+                padding-right: 8px;
+                alignment: start;
+
+                Text {
+                    text: "Report";
+                    font-weight: 700;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                }
+                Text {
+                    text: root.sort-ascending ? "\u{25B2}" : "\u{25BC}";
+                    font-size: 10px;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+
+    // Scrollable report list
+    ListView {
+        vertical-stretch: 1;
+
+        for entry[index] in root.model : Rectangle {
+            height: 48px;
+            background: index == root.selected-index ? #404060 : transparent;
+            border-radius: 4px;
+
+            item-touch := TouchArea {
+                clicked => {
+                    root.selected-index = index;
+                    root.report-selected(entry.source-index);
+                }
+            }
+
+            VerticalBox {
+                padding: 4px;
+                padding-left: 8px;
+                spacing: 2px;
+
+                Text {
+                    text: entry.filename;
+                    font-weight: 600;
+                    overflow: elide;
+                }
+                Text {
+                    text: entry.timestamp;
+                    font-size: 11px;
+                    color: #888888;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+}

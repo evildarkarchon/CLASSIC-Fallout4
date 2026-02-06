@@ -1,0 +1,37 @@
+// ReportViewer - Read-only monospace text viewer with Copy All button
+import { VerticalBox, HorizontalBox, Button, TextEdit } from "std-widgets.slint";
+
+export component ReportViewer inherits VerticalBox {
+    in-out property <string> content;
+
+    callback copy-all();
+
+    spacing: 8px;
+
+    // Toolbar with Copy All button
+    HorizontalBox {
+        height: 32px;
+
+        // Flexible spacer pushes button to right
+        Rectangle {
+            horizontal-stretch: 1;
+        }
+
+        Button {
+            text: "Copy All";
+            clicked => {
+                root.copy-all();
+            }
+        }
+    }
+
+    // Read-only text viewer with native scrolling and text selection
+    TextEdit {
+        read-only: true;
+        text <=> root.content;
+        font-family: "Consolas";
+        font-size: 13px;
+        wrap: word-wrap;
+        vertical-stretch: 1;
+    }
+}

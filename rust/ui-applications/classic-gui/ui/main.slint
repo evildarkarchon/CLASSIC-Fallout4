@@ -3,6 +3,9 @@
 
 import { Button, ProgressIndicator, TabWidget, VerticalBox, HorizontalBox, LineEdit, CheckBox, GroupBox } from "std-widgets.slint";
 import { PathInput } from "widgets/path_input.slint";
+import { ReportList, ReportEntry } from "widgets/report_list.slint";
+import { ReportViewer } from "widgets/report_viewer.slint";
+import { Splitter } from "widgets/splitter.slint";
 
 export component MainWindow inherits Window {
     // Window properties - production dimensions per CONTEXT.md
@@ -30,12 +33,26 @@ export component MainWindow inherits Window {
     in-out property <bool> option-scan-game: false;
     in-out property <bool> option-generate-stats: false;
 
+    // Results tab properties
+    in-out property <[ReportEntry]> report-list-model;
+    in-out property <string> report-content: "";
+    in-out property <bool> has-reports: false;
+    in-out property <int> selected-report-index: -1;
+    in-out property <bool> report-sort-ascending: false;
+    in-out property <length> list-panel-width: 200px;
+
     // Callbacks invoked from UI
     callback start-scan();
     callback cancel-scan();
     callback browse-crash-logs();
     callback browse-game-folder();
     callback tab-changed(int);
+
+    // Results tab callbacks
+    callback report-selected(int);
+    callback report-search-changed(string);
+    callback report-sort-toggled();
+    callback report-copy-all();
 
     VerticalBox {
         padding: 12px;
@@ -142,18 +159,70 @@ export component MainWindow inherits Window {
             Tab {
                 title: "Results";
                 VerticalBox {
-                    padding: 16px;
-                    spacing: 12px;
+                    padding: 8px;
+                    spacing: 0;
 
-                    Text {
-                        text: "Scan results will appear here";
-                        font-size: 14px;
-                        horizontal-alignment: center;
+                    // Empty state: no scan results yet
+                    if !root.has-reports : VerticalBox {
+                        alignment: center;
+                        vertical-stretch: 1;
+                        spacing: 12px;
+
+                        Text {
+                            text: "No scan results";
+                            font-size: 16px;
+                            horizontal-alignment: center;
+                        }
+                        Text {
+                            text: "Run a scan to see results here";
+                            color: #888888;
+                            horizontal-alignment: center;
+                        }
+                        HorizontalBox {
+                            alignment: center;
+                            Button {
+                                text: "Scan Crash Logs";
+                                primary: true;
+                                clicked => {
+                                    root.active-tab-index = 0;
+                                }
+                            }
+                        }
                     }
-                    Text {
-                        text: "Results display will be implemented in Phase 22";
-                        color: #888888;
-                        horizontal-alignment: center;
+
+                    // Master-detail layout: report list + splitter + viewer
+                    if root.has-reports : HorizontalLayout {
+                        vertical-stretch: 1;
+
+                        ReportList {
+                            width: clamp(150px, root.list-panel-width, 400px);
+                            model <=> root.report-list-model;
+                            selected-index <=> root.selected-report-index;
+                            sort-ascending <=> root.report-sort-ascending;
+                            report-selected(idx) => {
+                                root.report-selected(idx);
+                            }
+                            search-changed(text) => {
+                                root.report-search-changed(text);
+                            }
+                            sort-toggled => {
+                                root.report-sort-toggled();
+                            }
+                        }
+
+                        Splitter {
+                            moved(delta) => {
+                                root.list-panel-width = root.list-panel-width + delta;
+                            }
+                        }
+
+                        ReportViewer {
+                            horizontal-stretch: 1;
+                            content <=> root.report-content;
+                            copy-all => {
+                                root.report-copy-all();
+                            }
+                        }
                     }
                 }
             }
