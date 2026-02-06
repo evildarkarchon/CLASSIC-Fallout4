@@ -198,7 +198,22 @@ pub struct ClassicConfig {
     pub update_check: bool,
 
     /// Enable VR mode (for VR-specific game configurations)
+    ///
+    /// Note: Kept for backward compatibility. New code should use `game_version`
+    /// instead. Legacy configs with `vr_mode: true` are auto-migrated to
+    /// `game_version: "VR"` on load.
     pub vr_mode: bool,
+
+    /// Game version selection: "auto", "Original", "NextGen", or "VR"
+    ///
+    /// Stored lowercase "auto" in YAML, display as "Auto" in UI.
+    /// When set to "auto", the GUI runs detection and shows a hint.
+    pub game_version: String,
+
+    /// Update source: "github" or "both"
+    ///
+    /// Controls where the application checks for updates.
+    pub update_source: String,
 
     /// Automatically switch to Results tab after scan completion
     pub auto_switch_to_results: bool,
@@ -268,6 +283,8 @@ impl Default for ClassicConfig {
             simplify_logs: false,
             update_check: true,
             vr_mode: false,
+            game_version: "auto".to_string(),
+            update_source: "github".to_string(),
             auto_switch_to_results: true, // Enable by default for better UX
             auto_refresh_interval_ms: 5000,
             paths: PathConfig::default(),
@@ -319,6 +336,22 @@ impl ClassicConfig {
         let simplify_logs = yaml["simplify_logs"].as_bool().unwrap_or(false);
         let update_check = yaml["update_check"].as_bool().unwrap_or(true);
         let vr_mode = yaml["vr_mode"].as_bool().unwrap_or(false);
+
+        // Game version with VR mode migration: if legacy config has vr_mode=true
+        // but no game_version key, auto-migrate to game_version="VR"
+        let game_version = if yaml["game_version"].is_badvalue() && vr_mode {
+            "VR".to_string()
+        } else {
+            yaml["game_version"]
+                .as_str()
+                .unwrap_or("auto")
+                .to_string()
+        };
+        let update_source = yaml["update_source"]
+            .as_str()
+            .unwrap_or("github")
+            .to_string();
+
         let auto_switch_to_results = yaml["auto_switch_to_results"].as_bool().unwrap_or(true);
         let auto_refresh_interval_ms =
             yaml["auto_refresh_interval_ms"].as_i64().unwrap_or(5000) as u64;
@@ -343,8 +376,10 @@ impl ClassicConfig {
             simplify_logs,
             update_check,
             vr_mode,
+            game_version,
+            update_source,
             auto_switch_to_results,
-            auto_refresh_interval_ms, // Add this
+            auto_refresh_interval_ms,
             paths,
         })
     }
@@ -380,6 +415,14 @@ impl ClassicConfig {
         root.insert(
             Yaml::String("vr_mode".to_string()),
             Yaml::Boolean(self.vr_mode),
+        );
+        root.insert(
+            Yaml::String("game_version".to_string()),
+            Yaml::String(self.game_version.clone()),
+        );
+        root.insert(
+            Yaml::String("update_source".to_string()),
+            Yaml::String(self.update_source.clone()),
         );
         root.insert(
             Yaml::String("auto_switch_to_results".to_string()),
@@ -588,6 +631,8 @@ mod tests {
         assert!(!config.simplify_logs);
         assert!(config.update_check);
         assert!(!config.vr_mode);
+        assert_eq!(config.game_version, "auto");
+        assert_eq!(config.update_source, "github");
     }
 
     #[tokio::test]
@@ -623,6 +668,8 @@ mod tests {
             simplify_logs: true,
             update_check: false,
             vr_mode: true,
+            game_version: "NextGen".to_string(),
+            update_source: "both".to_string(),
             auto_switch_to_results: false,
             auto_refresh_interval_ms: 1000,
             paths: PathConfig {
@@ -644,6 +691,8 @@ mod tests {
         assert_eq!(restored.simplify_logs, config.simplify_logs);
         assert_eq!(restored.update_check, config.update_check);
         assert_eq!(restored.vr_mode, config.vr_mode);
+        assert_eq!(restored.game_version, config.game_version);
+        assert_eq!(restored.update_source, config.update_source);
         assert_eq!(
             restored.auto_switch_to_results,
             config.auto_switch_to_results
@@ -657,6 +706,48 @@ mod tests {
         assert_eq!(restored.paths.mods_folder, config.paths.mods_folder);
         assert_eq!(restored.paths.game_root, config.paths.game_root);
         assert_eq!(restored.paths.docs_root, config.paths.docs_root);
+    }
+
+    #[test]
+    fn test_vr_mode_migration() {
+        // Simulate a legacy YAML with vr_mode: true but no game_version key
+        let yaml_str = "vr_mode: true\nfcx_mode: false\n";
+        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
+        let yaml = docs.first().unwrap();
+
+        let config = ClassicConfig::from_yaml(yaml).unwrap();
+
+        // Should auto-migrate to game_version "VR"
+        assert_eq!(config.game_version, "VR");
+        // vr_mode should still be true for backward compat
+        assert!(config.vr_mode);
+    }
+
+    #[test]
+    fn test_vr_mode_no_migration_when_game_version_set() {
+        // If game_version is already set, vr_mode should NOT override it
+        let yaml_str = "vr_mode: true\ngame_version: Original\n";
+        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
+        let yaml = docs.first().unwrap();
+
+        let config = ClassicConfig::from_yaml(yaml).unwrap();
+
+        // game_version should remain as explicitly set
+        assert_eq!(config.game_version, "Original");
+        assert!(config.vr_mode);
+    }
+
+    #[test]
+    fn test_vr_mode_false_no_migration() {
+        // If vr_mode is false and no game_version, should default to "auto"
+        let yaml_str = "vr_mode: false\n";
+        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
+        let yaml = docs.first().unwrap();
+
+        let config = ClassicConfig::from_yaml(yaml).unwrap();
+
+        assert_eq!(config.game_version, "auto");
+        assert!(!config.vr_mode);
     }
 
     #[tokio::test]
@@ -685,6 +776,8 @@ mod tests {
             simplify_logs: false,
             update_check: true,
             vr_mode: false,
+            game_version: "auto".to_string(),
+            update_source: "github".to_string(),
             auto_switch_to_results: true,
             auto_refresh_interval_ms: 5000,
             paths: PathConfig {
