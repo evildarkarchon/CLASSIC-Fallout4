@@ -53,9 +53,9 @@ Requirements for Slint GUI core workflow. Each maps to roadmap phases.
 
 ### Platform
 
-- [ ] **PLAT-01**: Application runs on Windows 10/11
-- [ ] **PLAT-02**: Application handles high-DPI displays correctly
-- [ ] **PLAT-03**: GPU renderer fallback to software if needed
+- [x] **PLAT-01**: Application runs on Windows 10/11
+- [x] **PLAT-02**: Application handles high-DPI displays correctly
+- [x] **PLAT-03**: GPU renderer fallback to software if needed
 
 ## Future Requirements (v9.1.0+)
 
@@ -126,9 +126,9 @@ Deferred to subsequent milestones. Not in current roadmap.
 | SETT-05 | Phase 24 | Complete |
 | SETT-06 | Phase 24 | Complete |
 | SETT-07 | Phase 24 | Complete |
-| PLAT-01 | Phase 25 | Pending |
-| PLAT-02 | Phase 25 | Pending |
-| PLAT-03 | Phase 25 | Pending |
+| PLAT-01 | Phase 25 | Complete |
+| PLAT-02 | Phase 25 | Complete |
+| PLAT-03 | Phase 25 | Complete |
 
 **Coverage:**
 - v9.0.0 requirements: 30 total
@@ -137,4 +137,4 @@ Deferred to subsequent milestones. Not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 -- Phase 24 complete*
+*Last updated: 2026-02-06 -- Phase 25 complete*
