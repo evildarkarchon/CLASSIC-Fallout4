@@ -17,19 +17,19 @@ Requirements for Slint GUI core workflow. Each maps to roadmap phases.
 
 ### Core UI
 
-- [ ] **UI-01**: Main window with application title and icon
-- [ ] **UI-02**: Dark theme applied (fluent-dark style)
-- [ ] **UI-03**: Tabbed interface with Main Options and Results tabs
-- [ ] **UI-04**: Standard controls render correctly (buttons, inputs, checkboxes)
-- [ ] **UI-05**: Window resizing works with proper layout
+- [x] **UI-01**: Main window with application title and icon
+- [x] **UI-02**: Dark theme applied (fluent-dark style)
+- [x] **UI-03**: Tabbed interface with Main Options and Results tabs
+- [x] **UI-04**: Standard controls render correctly (buttons, inputs, checkboxes)
+- [x] **UI-05**: Window resizing works with proper layout
 
 ### Scanning
 
-- [ ] **SCAN-01**: User can trigger crash log scan from main tab
-- [ ] **SCAN-02**: Progress indicator shows scan progress with percentage
-- [ ] **SCAN-03**: User can cancel running scan
-- [ ] **SCAN-04**: Scan completion displays summary (logs scanned, issues found)
-- [ ] **SCAN-05**: Scan integrates with existing OrchestratorCore via async bridge
+- [x] **SCAN-01**: User can trigger crash log scan from main tab
+- [x] **SCAN-02**: Progress indicator shows scan progress with percentage
+- [x] **SCAN-03**: User can cancel running scan
+- [x] **SCAN-04**: Scan completion displays summary (logs scanned, issues found)
+- [x] **SCAN-05**: Scan integrates with existing OrchestratorCore via async bridge
 
 ### Results Viewer
 
@@ -102,16 +102,16 @@ Deferred to subsequent milestones. Not in current roadmap.
 | INFRA-03 | Phase 19 | Complete |
 | INFRA-04 | Phase 19 | Complete |
 | INFRA-05 | Phase 19 | Complete |
-| UI-01 | Phase 20 | Pending |
-| UI-02 | Phase 20 | Pending |
-| UI-03 | Phase 20 | Pending |
-| UI-04 | Phase 20 | Pending |
-| UI-05 | Phase 20 | Pending |
-| SCAN-01 | Phase 21 | Pending |
-| SCAN-02 | Phase 21 | Pending |
-| SCAN-03 | Phase 21 | Pending |
-| SCAN-04 | Phase 21 | Pending |
-| SCAN-05 | Phase 21 | Pending |
+| UI-01 | Phase 20 | Complete |
+| UI-02 | Phase 20 | Complete |
+| UI-03 | Phase 20 | Complete |
+| UI-04 | Phase 20 | Complete |
+| UI-05 | Phase 20 | Complete |
+| SCAN-01 | Phase 21 | Complete |
+| SCAN-02 | Phase 21 | Complete |
+| SCAN-03 | Phase 21 | Complete |
+| SCAN-04 | Phase 21 | Complete |
+| SCAN-05 | Phase 21 | Complete |
 | RSLT-01 | Phase 22 | Pending |
 | RSLT-02 | Phase 22 | Pending |
 | RSLT-03 | Phase 22 | Pending |
@@ -137,4 +137,4 @@ Deferred to subsequent milestones. Not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-05 -- Phase 19 complete*
+*Last updated: 2026-02-06 -- Phase 21 complete*
