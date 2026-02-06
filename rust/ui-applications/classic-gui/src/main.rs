@@ -227,12 +227,14 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                     }
 
                     // Auto-clear status after 5 seconds (Claude's discretion per CONTEXT.md)
+                    // Only clears if no new scan is in progress (user may have started another)
                     let window_weak_clear = window_weak_completion.clone();
                     AsyncBridge::spawn_background(async move {
                         tokio::time::sleep(Duration::from_secs(5)).await;
                         let _ = window_weak_clear.upgrade_in_event_loop(|w| {
                             if !w.get_scan_in_progress() {
-                                w.set_scan_status("".into());
+                                w.set_scan_status("Ready".into());
+                                w.set_scan_progress(0.0);
                             }
                         });
                     });
