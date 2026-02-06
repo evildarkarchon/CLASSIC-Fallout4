@@ -15,7 +15,7 @@ path = "src/main.rs"
 crate-type = ["rlib"]
 
 [dependencies]
-slint = { workspace = true, features = ["backend-winit", "renderer-skia", "image-default-formats"] }
+slint = { workspace = true, features = ["backend-winit", "renderer-skia", "renderer-software", "image-default-formats"] }
 classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["gui-bridge"] }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
@@ -29,11 +29,15 @@ directories = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 pulldown-cmark = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["fmt"] }
+tracing-appender = { workspace = true }
 rfd = "0.15"  # Native file dialogs
 arboard = "3"  # System clipboard access
 
 [build-dependencies]
 slint-build = { workspace = true }
+tauri-winres = "0.3"
 
 [lints.rust]
 deprecated = "deny"
