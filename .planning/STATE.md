@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 27 of 27 (Test Coverage Evaluation and Improvement)
-Plan: 4 of 9 in current phase
+Plan: 6 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-06 -- Completed 27-04-PLAN.md (Game Scanning and Version Registry Coverage -- skipped, both above 60%)
+Last activity: 2026-02-06 -- Completed 27-06-PLAN.md (Database, Message, and Constants Coverage -- skipped, all three above 60%)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 4/9]
-[####################################################] 93% (63/68 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 5/9]
+[#######################################################] 94% (64/68 plans)
 
 ## Performance Metrics
 
@@ -105,6 +105,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [P
 | 2026-02-06 | 27-02 | Skip plan -- scanlog-core already above 60% | Baseline shows 62.0% (3,120/5,033 lines); no gap-filling needed |
 | 2026-02-06 | 27-03 | Skip plan -- file-io-core and path-core above 60% | Baseline shows 90.4% and 84.5% respectively; no gap-filling needed |
 | 2026-02-06 | 27-04 | Skip plan -- scangame-core and version-registry-core above 60% | Baseline shows 71.9% and 88.8% respectively; no gap-filling needed |
+| 2026-02-06 | 27-06 | Skip plan -- database-core, message-core, constants-core above 60% | Baseline shows 89.4%, 100.0%, and 88.9% respectively; no gap-filling needed |
 
 ### Pending Todos
 
@@ -131,6 +132,9 @@ None.
 - classic-path-core verified at 84.5% -- no gap-filling needed (plan 27-03 skipped)
 - classic-scangame-core verified at 71.9% -- no gap-filling needed (plan 27-04 skipped)
 - classic-version-registry-core verified at 88.8% -- no gap-filling needed (plan 27-04 skipped)
+- classic-database-core verified at 89.4% -- no gap-filling needed (plan 27-06 skipped)
+- classic-message-core verified at 100.0% -- no gap-filling needed (plan 27-06 skipped)
+- classic-constants-core verified at 88.9% -- no gap-filling needed (plan 27-06 skipped)
 - Flaky test noted -- classic-yaml-core::test_cache_stats_empty fails intermittently due to global state contamination
 
 ### Quick Tasks Completed
@@ -147,6 +151,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 27-04-PLAN.md (Game Scanning and Version Registry Coverage -- skipped)
+Stopped at: Completed 27-06-PLAN.md (Database, Message, and Constants Coverage -- skipped)
 Resume file: None
-Next action: Execute 27-05-PLAN.md
+Next action: Execute 27-07-PLAN.md
