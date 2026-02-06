@@ -1,0 +1,5 @@
+# Static CRT linking for distribution builds
+# Eliminates dependency on VCRUNTIME140.dll on target systems
+# Scoped to this crate only -- does not affect PyO3 bindings
+[target.'cfg(all(windows, target_env = "msvc"))']
+rustflags = ["-C", "target-feature=+crt-static"]
