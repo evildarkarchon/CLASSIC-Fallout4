@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** v9.0.0 Slint GUI -- Phase 24 Settings Dialog
+**Current focus:** v9.0.0 Slint GUI -- Phase 25 Platform Polish
 
 ## Current Position
 
-Phase: 24 of 25 (Settings Dialog)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-06 -- Completed 24-02-PLAN.md
+Phase: 25 of 25 (Platform Polish)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-06 -- Completed 25-01-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 10/13]
-[#######################################.] 95% (53/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 11/13]
+[########################################] 96% (54/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 10/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 10
+- Plans completed: 11
 - Average duration: 7m
-- Commits: 27
+- Commits: 29
 
 ## Accumulated Context
 
@@ -82,6 +82,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 10/13]
 | 2026-02-06 | 24-02 | Empty path clears setting | Entering empty text clears the path (sets to None) without error |
 | 2026-02-06 | 24-02 | Stub game version detection | Checks VR/standard exe; full EXE version detection deferred |
 | 2026-02-06 | 24-02 | Reset disables initialized flag | Prevents cascading saves during UI repopulation after reset |
+| 2026-02-06 | 25-01 | tracing::warn! for all eprintln! | Non-fatal save/load errors are warnings, not errors |
+| 2026-02-06 | 25-01 | Log file truncated on each launch | Fresh start per session, not appended |
+| 2026-02-06 | 25-01 | data_dir() for log location | Logs are data, not config |
 
 ### Pending Todos
 
@@ -99,6 +102,7 @@ None.
 - Phase 22 complete -- Results tab with master-detail layout, search/filter/sort, clipboard copy
 - Phase 23 complete -- Markdown renderer with pulldown-cmark, 6 block types, styled ScrollView viewer
 - Phase 24 complete -- Settings tab fully functional: UI layout, live persistence, path validation, reset to defaults
+- Plan 25-01 complete -- File logging infrastructure ready, all eprintln! replaced with tracing macros
 
 ### Quick Tasks Completed
 
@@ -113,6 +117,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
+Stopped at: Completed 25-01-PLAN.md
 Resume file: None
-Next action: Execute Phase 25 (Integration)
+Next action: Execute 25-02-PLAN.md (Windows subsystem, build.rs, init_logging wiring)
