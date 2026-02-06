@@ -313,6 +313,117 @@ impl AsyncBridge {
         crate::get_runtime().spawn(operation);
     }
 
+    /// Execute an async operation with a timeout, then dispatch result to UI thread
+    ///
+    /// Wraps the async operation in [`tokio::time::timeout`]. If the operation completes
+    /// within the specified duration, the callback receives `Ok(result)`. If the timeout
+    /// elapses first, the callback receives `Err(BridgeError::Timeout(duration))`.
+    ///
+    /// # Arguments
+    ///
+    /// * `timeout` - Maximum duration to wait for the operation
+    /// * `operation` - The async operation to execute
+    /// * `on_complete` - Callback invoked on UI thread with `Ok(result)` or `Err(BridgeError::Timeout)`
+    ///
+    /// # Error Handling
+    ///
+    /// - Timeout: Callback receives `Err(BridgeError::Timeout(duration))`
+    /// - Dispatch failure: Error is logged and the callback is dropped
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use classic_shared_core::AsyncBridge;
+    /// use std::time::Duration;
+    ///
+    /// AsyncBridge::run_with_timeout(
+    ///     Duration::from_secs(30),
+    ///     async { fetch_data().await },
+    ///     |result| match result {
+    ///         Ok(data) => window.set_data(data),
+    ///         Err(e) => window.set_error(e.to_string()),
+    ///     }
+    /// );
+    /// ```
+    pub fn run_with_timeout<F, R, C>(timeout: std::time::Duration, operation: F, on_complete: C)
+    where
+        F: Future<Output = R> + Send + 'static,
+        R: Send + 'static,
+        C: FnOnce(Result<R, BridgeError>) + Send + 'static,
+    {
+        crate::get_runtime().spawn(async move {
+            let result = match tokio::time::timeout(timeout, operation).await {
+                Ok(value) => Ok(value),
+                Err(_) => Err(BridgeError::Timeout(timeout)),
+            };
+            if let Err(e) = get_dispatcher().dispatch(Box::new(move || {
+                on_complete(result);
+            })) {
+                log::error!("AsyncBridge dispatch failed in run_with_timeout: {e}");
+            }
+        });
+    }
+
+    /// Execute an async operation with cancellation support, then dispatch result to UI thread
+    ///
+    /// Races the async operation against a [`CancellationToken`](tokio_util::sync::CancellationToken).
+    /// If the operation completes before cancellation, the callback receives `Some(result)`.
+    /// If the token is cancelled first, the callback receives `None`.
+    ///
+    /// # Arguments
+    ///
+    /// * `cancel_token` - Token that can be cancelled to abort the operation
+    /// * `operation` - The async operation to execute
+    /// * `on_complete` - Callback invoked on UI thread with `Some(result)` or `None` (cancelled)
+    ///
+    /// # Error Handling
+    ///
+    /// - Cancellation: Callback receives `None`
+    /// - Dispatch failure: Error is logged and the callback is dropped
+    ///
+    /// # Examples
+    ///
+    /// ```rust,ignore
+    /// use classic_shared_core::AsyncBridge;
+    /// use tokio_util::sync::CancellationToken;
+    ///
+    /// let token = CancellationToken::new();
+    /// let cancel_handle = token.clone();
+    ///
+    /// AsyncBridge::run_cancellable(
+    ///     token,
+    ///     async { long_running_scan().await },
+    ///     |result| match result {
+    ///         Some(data) => window.set_results(data),
+    ///         None => window.set_status("Cancelled"),
+    ///     }
+    /// );
+    ///
+    /// // Later, to cancel:
+    /// cancel_handle.cancel();
+    /// ```
+    pub fn run_cancellable<F, R, C>(
+        cancel_token: tokio_util::sync::CancellationToken,
+        operation: F,
+        on_complete: C,
+    ) where
+        F: Future<Output = R> + Send + 'static,
+        R: Send + 'static,
+        C: FnOnce(Option<R>) + Send + 'static,
+    {
+        crate::get_runtime().spawn(async move {
+            let result = tokio::select! {
+                value = operation => Some(value),
+                () = cancel_token.cancelled() => None,
+            };
+            if let Err(e) = get_dispatcher().dispatch(Box::new(move || {
+                on_complete(result);
+            })) {
+                log::error!("AsyncBridge dispatch failed in run_cancellable: {e}");
+            }
+        });
+    }
+
     /// Invoke a function on the Slint event loop from any thread
     ///
     /// This is a low-level utility for directly invoking functions on the Slint
