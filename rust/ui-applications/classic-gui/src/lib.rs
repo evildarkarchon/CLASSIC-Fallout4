@@ -8,6 +8,7 @@ pub mod dialogs;
 pub mod markdown;
 pub mod results;
 pub mod scan;
+pub mod settings;
 pub mod state;
 pub mod worker;
 
@@ -18,4 +19,10 @@ pub use markdown::{parse_markdown, MarkdownBlock};
 pub use results::{copy_to_clipboard, get_report_content, prepare_report_entries, ReportData};
 pub use scan::{scan_crash_logs, ScanResult};
 pub use state::{load_window_state, save_window_state, TabGeometry, WindowState};
+pub use settings::{
+    detect_game_version, game_version_index_to_string, game_version_string_to_index,
+    load_settings, reset_to_defaults, save_full_config, save_path_setting, save_setting_bool,
+    save_setting_string, settings_file_path, update_source_index_to_string,
+    update_source_string_to_index,
+};
 pub use worker::{simulate_scan, ScanWindowProperties};

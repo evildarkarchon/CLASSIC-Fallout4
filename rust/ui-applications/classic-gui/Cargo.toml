@@ -19,7 +19,10 @@ slint = { workspace = true, features = ["backend-winit", "renderer-skia", "image
 classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["gui-bridge"] }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-config-core = { path = "../../business-logic/classic-config-core" }
 tokio = { workspace = true }
+anyhow = { workspace = true }
+yaml-rust2 = { workspace = true }
 tokio-util = { workspace = true }
 parking_lot = { workspace = true }
 directories = { workspace = true }
