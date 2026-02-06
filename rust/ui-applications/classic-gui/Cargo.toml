@@ -26,6 +26,7 @@ directories = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 rfd = "0.15"  # Native file dialogs
+arboard = "3"  # System clipboard access
 
 [build-dependencies]
 slint-build = { workspace = true }
