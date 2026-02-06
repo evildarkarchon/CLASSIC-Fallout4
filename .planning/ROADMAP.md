@@ -138,21 +138,21 @@ Plans:
 - [x] 23-01-PLAN.md — Markdown parsing with pulldown-cmark and block-based Slint rendering
 
 #### Phase 24: Settings Dialog
-**Goal**: User can configure application settings
+**Goal**: User can configure application settings within the existing Settings tab with live save-on-change
 **Depends on**: Phase 20
 **Requirements**: SETT-01, SETT-02, SETT-03, SETT-04, SETT-05, SETT-06, SETT-07
 **Success Criteria** (what must be TRUE):
-  1. Settings button opens a dialog window
-  2. Dialog has tabbed layout (General, Scanning, Paths)
-  3. User can select game version from dropdown and change persists
-  4. User can toggle scan options and changes persist
-  5. User can browse for folder paths (native file dialog opens)
-  6. OK saves changes; Cancel discards changes
-**Plans**: TBD
+  1. Settings tab shows sub-tabs (General, Scanning, Paths)
+  2. User can select game version from dropdown and change persists
+  3. User can toggle scan options and changes persist immediately
+  4. User can browse for folder paths (native file dialog opens)
+  5. Invalid paths are rejected with error messages
+  6. Reset to Defaults resets all settings with confirmation
+**Plans:** 2 plans
 
 Plans:
-- [ ] 24-01: Settings dialog layout
-- [ ] 24-02: Settings persistence and file dialogs
+- [ ] 24-01-PLAN.md — Settings UI layout with sub-tabs and ClassicConfig extension
+- [ ] 24-02-PLAN.md — Wire settings callbacks with live save persistence and validation
 
 #### Phase 25: Platform Polish
 **Goal**: Application is ready for Windows distribution
