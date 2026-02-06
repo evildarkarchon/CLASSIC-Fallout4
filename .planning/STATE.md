@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 26 of 26 (Async Bridge Audit)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-06 -- Completed 26-01-PLAN.md
+Last activity: 2026-02-06 -- Completed 26-02-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 14/16]
-[#############################################-] 98% (57/59 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 15/16]
+[##############################################] 98% (58/59 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 14/16]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 13
+- Plans completed: 14
 - Average duration: 7m
-- Commits: 33
+- Commits: 35
 
 ## Accumulated Context
 
@@ -92,6 +92,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 14/16]
 | 2026-02-06 | 25-02 | Renderer fallback Skia -> software -> exit | Graceful degradation with logging |
 | 2026-02-06 | 26-01 | std::sync::LazyLock over once_cell::Lazy | Standard library, no external dependency needed |
 | 2026-02-06 | 26-01 | One canonical name: AsyncBridge | Removed Bridge alias to avoid confusion |
+| 2026-02-06 | 26-02 | OnceLock dispatcher with get_or_init default | Production needs no explicit init; tests call set_dispatcher() |
+| 2026-02-06 | 26-02 | Log-and-drop over Result for dispatch failures | Fire-and-forget methods cannot return errors; keeps app stable |
+| 2026-02-06 | 26-02 | Option<R> for run_cancellable | Cancellation is expected outcome, not error; cleaner for callers |
 
 ### Pending Todos
 
@@ -125,6 +128,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 26-01-PLAN.md (dead code removal and LazyLock migration)
+Stopped at: Completed 26-02-PLAN.md (resilience APIs and dispatcher trait)
 Resume file: None
-Next action: 26-02-PLAN.md (new AsyncBridge API methods)
+Next action: 26-03-PLAN.md (testing and documentation)
