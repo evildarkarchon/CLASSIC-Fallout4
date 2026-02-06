@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 22 of 25 (Results Viewer)
+Phase: 23 of 25 (Markdown Renderer)
 Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-02-06 -- Completed 22-01-PLAN.md
+Last activity: 2026-02-06 -- Completed 23-01-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 7/13]
-[####################################....] 89% (50/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 8/13]
+[#####################################...] 91% (51/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 7/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 7
+- Plans completed: 8
 - Average duration: 7m
-- Commits: 20
+- Commits: 23
 
 ## Accumulated Context
 
@@ -70,6 +70,10 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 7/13]
 | 2026-02-06 | 22-01 | arboard v3 for clipboard | De facto Rust clipboard crate, maintained by 1Password |
 | 2026-02-06 | 22-01 | Consolas monospace font | Slint no CSS font fallback; Consolas universally available on Windows |
 | 2026-02-06 | 22-01 | Fixed 400px max list panel width | Avoids Slint binding loop from root.width circular dependency |
+| 2026-02-06 | 23-01 | types.slint for shared structs | Avoids circular imports between main.slint and widget files |
+| 2026-02-06 | 23-01 | Block-level formatting flattening | Bold/italic per-block not inline, matches CLASSIC report line-level formatting |
+| 2026-02-06 | 23-01 | Dual property pattern (content + blocks) | Raw markdown preserved for Copy All, parsed blocks for rendering |
+| 2026-02-06 | 23-01 | pulldown-cmark 0.13 for markdown parsing | CommonMark compliant, pure Rust, lighter than comrak |
 
 ### Pending Todos
 
@@ -85,6 +89,7 @@ None.
 - OrchestratorCore runs with minimal config -- full analysis requires Phase 24 YAML settings
 - Phase 21 complete -- full scan UX with discovery, analysis, cancellation, auto-switch, auto-clear
 - Phase 22 complete -- Results tab with master-detail layout, search/filter/sort, clipboard copy
+- Phase 23 complete -- Markdown renderer with pulldown-cmark, 6 block types, styled ScrollView viewer
 
 ### Quick Tasks Completed
 
@@ -99,6 +104,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 22-01-PLAN.md (Phase 22 complete)
+Stopped at: Completed 23-01-PLAN.md (Phase 23 complete)
 Resume file: None
-Next action: Begin Phase 23 (Markdown Renderer)
+Next action: Begin Phase 24 (Settings)
