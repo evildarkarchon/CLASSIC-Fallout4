@@ -33,13 +33,13 @@ Requirements for Slint GUI core workflow. Each maps to roadmap phases.
 
 ### Results Viewer
 
-- [ ] **RSLT-01**: Report list displays available scan reports
-- [ ] **RSLT-02**: Report list shows timestamp, status, and file size
-- [ ] **RSLT-03**: User can search/filter report list
-- [ ] **RSLT-04**: Selecting report displays content in viewer panel
+- [x] **RSLT-01**: Report list displays available scan reports
+- [x] **RSLT-02**: Report list shows timestamp, status, and file size
+- [x] **RSLT-03**: User can search/filter report list
+- [x] **RSLT-04**: Selecting report displays content in viewer panel
 - [ ] **RSLT-05**: Markdown content renders with proper formatting (headers, lists, code blocks)
-- [ ] **RSLT-06**: Report viewer supports scrolling for long reports
-- [ ] **RSLT-07**: User can copy text from report viewer
+- [x] **RSLT-06**: Report viewer supports scrolling for long reports
+- [x] **RSLT-07**: User can copy text from report viewer
 
 ### Settings
 
@@ -112,13 +112,13 @@ Deferred to subsequent milestones. Not in current roadmap.
 | SCAN-03 | Phase 21 | Complete |
 | SCAN-04 | Phase 21 | Complete |
 | SCAN-05 | Phase 21 | Complete |
-| RSLT-01 | Phase 22 | Pending |
-| RSLT-02 | Phase 22 | Pending |
-| RSLT-03 | Phase 22 | Pending |
-| RSLT-04 | Phase 22 | Pending |
+| RSLT-01 | Phase 22 | Complete |
+| RSLT-02 | Phase 22 | Complete |
+| RSLT-03 | Phase 22 | Complete |
+| RSLT-04 | Phase 22 | Complete |
 | RSLT-05 | Phase 23 | Pending |
-| RSLT-06 | Phase 22 | Pending |
-| RSLT-07 | Phase 22 | Pending |
+| RSLT-06 | Phase 22 | Complete |
+| RSLT-07 | Phase 22 | Complete |
 | SETT-01 | Phase 24 | Pending |
 | SETT-02 | Phase 24 | Pending |
 | SETT-03 | Phase 24 | Pending |
@@ -137,4 +137,4 @@ Deferred to subsequent milestones. Not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-06 -- Phase 21 complete*
+*Last updated: 2026-02-06 -- Phase 22 complete*
