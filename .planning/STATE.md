@@ -103,6 +103,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [P
 | 2026-02-06 | 27-01 | Use --ignore-run-fail for coverage | Pre-existing flaky test blocks coverage collection without it |
 | 2026-02-06 | 27-01 | Two-phase coverage approach | --ignore-filename-regex is report-only; separate test run from report generation |
 | 2026-02-06 | 27-02 | Skip plan -- scanlog-core already above 60% | Baseline shows 62.0% (3,120/5,033 lines); no gap-filling needed |
+| 2026-02-06 | 27-03 | Skip plan -- file-io-core and path-core above 60% | Baseline shows 90.4% and 84.5% respectively; no gap-filling needed |
 | 2026-02-06 | 27-04 | Skip plan -- scangame-core and version-registry-core above 60% | Baseline shows 71.9% and 88.8% respectively; no gap-filling needed |
 
 ### Pending Todos
@@ -126,6 +127,8 @@ None.
 - Phase 26 complete -- Async bridge audited: dead code removed, BridgeError/EventLoopDispatcher added, run_with_timeout/run_cancellable APIs, 15 unit tests, call sites migrated
 - Coverage baseline established -- 72% workspace aggregate, 18/21 crates above 60%, 3 gaps: classic-yaml-core (19.6%), classic-gui (37.4%), classic-shared-core (49.2%)
 - classic-scanlog-core verified at 62.0% -- no gap-filling needed (plan 27-02 skipped)
+- classic-file-io-core verified at 90.4% -- no gap-filling needed (plan 27-03 skipped)
+- classic-path-core verified at 84.5% -- no gap-filling needed (plan 27-03 skipped)
 - classic-scangame-core verified at 71.9% -- no gap-filling needed (plan 27-04 skipped)
 - classic-version-registry-core verified at 88.8% -- no gap-filling needed (plan 27-04 skipped)
 - Flaky test noted -- classic-yaml-core::test_cache_stats_empty fails intermittently due to global state contamination
