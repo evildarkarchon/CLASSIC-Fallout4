@@ -9,15 +9,18 @@ use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Duration;
 
+use classic_config_core::ClassicConfig;
 use classic_shared_core::{get_runtime, AsyncBridge};
 use parking_lot::Mutex;
 use slint::{ModelRc, SharedString, VecModel};
 use tokio_util::sync::CancellationToken;
 
 use classic_gui::{
-    browse_folder, copy_to_clipboard, get_report_content, load_window_state, parse_markdown,
-    prepare_report_entries, save_window_state, ReportData, ScanWindowProperties, TabGeometry,
-    WindowState,
+    browse_folder, copy_to_clipboard, detect_game_version, game_version_index_to_string,
+    game_version_string_to_index, get_report_content, load_settings, load_window_state,
+    parse_markdown, prepare_report_entries, reset_to_defaults, save_path_setting,
+    save_setting_bool, save_setting_string, save_window_state, update_source_index_to_string,
+    update_source_string_to_index, ReportData, ScanWindowProperties, TabGeometry, WindowState,
 };
 
 // Implement ScanWindowProperties for the generated MainWindow
@@ -45,16 +48,19 @@ struct AppState {
     initialized: bool,
     /// Scan reports for the Results tab
     reports: Option<ReportData>,
+    /// Application settings persisted to YAML
+    settings: ClassicConfig,
 }
 
 impl AppState {
-    /// Create new app state with loaded window state
+    /// Create new app state with loaded window and settings state
     fn new() -> Self {
         Self {
             cancel_token: None,
             window_state: load_window_state(),
             initialized: false,
             reports: None,
+            settings: load_settings(),
         }
     }
 }
@@ -122,6 +128,9 @@ fn restore_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
             ));
         }
     }
+
+    // Populate settings UI from loaded config
+    populate_settings_ui(window, &state.settings);
 }
 
 /// Save final state before exit
@@ -190,6 +199,7 @@ fn setup_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     setup_results_callbacks(window, state);
     setup_browse_callbacks(window, state);
     setup_tab_callback(window, state);
+    setup_settings_callbacks(window, state);
 }
 
 /// Set up scan start/cancel callbacks
@@ -562,5 +572,461 @@ fn setup_tab_callback(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
             state.window_state.active_tab = new_tab;
         }
         persist_state(&state);
+    });
+}
+
+/// Populate all settings UI controls from a ClassicConfig
+///
+/// Called during initialization and after Reset to Defaults.
+/// Must be called while `initialized` is `false` to prevent save loops.
+fn populate_settings_ui(window: &MainWindow, config: &ClassicConfig) {
+    // General tab
+    window.set_setting_game_version_index(game_version_string_to_index(&config.game_version));
+    window.set_setting_update_check(config.update_check);
+    window.set_setting_update_source_index(update_source_string_to_index(&config.update_source));
+    window.set_setting_fcx_mode(config.fcx_mode);
+
+    // Auto-detection hint for game version "Auto"
+    if config.game_version == "auto" {
+        let hint = detect_game_version(config);
+        window.set_setting_auto_detected_hint(hint.into());
+    } else {
+        window.set_setting_auto_detected_hint(SharedString::default());
+    }
+
+    // Scanning tab
+    window.set_setting_simplify_logs(config.simplify_logs);
+    window.set_setting_show_formid_values(config.show_formid_values);
+    window.set_setting_move_unsolved_logs(config.move_unsolved_logs);
+    window.set_setting_auto_switch_after_scan(config.auto_switch_to_results);
+
+    // Paths tab
+    if let Some(ref path) = config.paths.ini_folder {
+        window.set_setting_ini_path(path.to_string_lossy().to_string().into());
+    } else {
+        window.set_setting_ini_path(SharedString::default());
+    }
+    window.set_setting_ini_error(SharedString::default());
+    window.set_setting_ini_has_error(false);
+
+    if let Some(ref path) = config.paths.mods_folder {
+        window.set_setting_mods_path(path.to_string_lossy().to_string().into());
+    } else {
+        window.set_setting_mods_path(SharedString::default());
+    }
+    window.set_setting_mods_error(SharedString::default());
+    window.set_setting_mods_has_error(false);
+
+    if let Some(ref path) = config.paths.scan_custom {
+        window.set_setting_scan_path(path.to_string_lossy().to_string().into());
+    } else {
+        window.set_setting_scan_path(SharedString::default());
+    }
+    window.set_setting_scan_error(SharedString::default());
+    window.set_setting_scan_has_error(false);
+}
+
+/// Set up all settings tab callbacks for live save-on-change persistence
+fn setup_settings_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    setup_settings_general_callbacks(window, state);
+    setup_settings_scanning_callbacks(window, state);
+    setup_settings_paths_callbacks(window, state);
+    setup_settings_reset_callback(window, state);
+}
+
+/// Set up General sub-tab callbacks (game version, update check, update source, FCX mode)
+fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    // Game version dropdown changed
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_game_version_changed(move |index| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            let version_str = game_version_index_to_string(index);
+            if let Err(e) = save_setting_string(&mut state.settings, "game_version", version_str) {
+                eprintln!("Failed to save game_version: {}", e);
+            }
+
+            // If "Auto" selected (index 0), run detection and update hint
+            if let Some(w) = window_weak.upgrade() {
+                if index == 0 {
+                    let hint = detect_game_version(&state.settings);
+                    w.set_setting_auto_detected_hint(hint.into());
+                } else {
+                    w.set_setting_auto_detected_hint(SharedString::default());
+                }
+            }
+        });
+    }
+
+    // Update check toggle changed
+    {
+        let state = Arc::clone(state);
+        window.on_setting_update_check_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) = save_setting_bool(&mut state.settings, "update_check", checked) {
+                eprintln!("Failed to save update_check: {}", e);
+            }
+        });
+    }
+
+    // Update source dropdown changed
+    {
+        let state = Arc::clone(state);
+        window.on_setting_update_source_changed(move |index| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            let source_str = update_source_index_to_string(index);
+            if let Err(e) =
+                save_setting_string(&mut state.settings, "update_source", source_str)
+            {
+                eprintln!("Failed to save update_source: {}", e);
+            }
+        });
+    }
+
+    // FCX mode toggle changed
+    {
+        let state = Arc::clone(state);
+        window.on_setting_fcx_mode_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) = save_setting_bool(&mut state.settings, "fcx_mode", checked) {
+                eprintln!("Failed to save fcx_mode: {}", e);
+            }
+        });
+    }
+}
+
+/// Set up Scanning sub-tab callbacks (simplify logs, show formid, move unsolved, auto switch)
+fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    // Simplify logs toggle
+    {
+        let state = Arc::clone(state);
+        window.on_setting_simplify_logs_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) = save_setting_bool(&mut state.settings, "simplify_logs", checked) {
+                eprintln!("Failed to save simplify_logs: {}", e);
+            }
+        });
+    }
+
+    // Show FormID values toggle
+    {
+        let state = Arc::clone(state);
+        window.on_setting_show_formid_values_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) =
+                save_setting_bool(&mut state.settings, "show_formid_values", checked)
+            {
+                eprintln!("Failed to save show_formid_values: {}", e);
+            }
+        });
+    }
+
+    // Move unsolved logs toggle
+    {
+        let state = Arc::clone(state);
+        window.on_setting_move_unsolved_logs_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) =
+                save_setting_bool(&mut state.settings, "move_unsolved_logs", checked)
+            {
+                eprintln!("Failed to save move_unsolved_logs: {}", e);
+            }
+        });
+    }
+
+    // Auto switch after scan toggle
+    {
+        let state = Arc::clone(state);
+        window.on_setting_auto_switch_after_scan_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) =
+                save_setting_bool(&mut state.settings, "auto_switch_to_results", checked)
+            {
+                eprintln!("Failed to save auto_switch_to_results: {}", e);
+            }
+        });
+    }
+}
+
+/// Set up Paths sub-tab callbacks (browse dialogs and path accepted handlers)
+fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    // Browse INI folder
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_browse_ini(move || {
+            let window_weak = window_weak.clone();
+            let state = Arc::clone(&state);
+
+            let current_path = window_weak
+                .upgrade()
+                .map(|w| w.get_setting_ini_path().to_string())
+                .unwrap_or_default();
+
+            let start_dir = if current_path.is_empty() {
+                None
+            } else {
+                Some(current_path)
+            };
+
+            AsyncBridge::run_with_ui_update(
+                async move {
+                    browse_folder("Select INI Folder", start_dir.as_deref()).await
+                },
+                move |result| {
+                    if let Some(path) = result {
+                        let mut s = state.lock();
+                        if !s.initialized {
+                            return;
+                        }
+                        match save_path_setting(&mut s.settings, "ini_folder", &path) {
+                            Ok(()) => {
+                                if let Some(w) = window_weak.upgrade() {
+                                    w.set_setting_ini_path(path.into());
+                                    w.set_setting_ini_has_error(false);
+                                    w.set_setting_ini_error(SharedString::default());
+                                }
+                            }
+                            Err(e) => {
+                                if let Some(w) = window_weak.upgrade() {
+                                    w.set_setting_ini_has_error(true);
+                                    w.set_setting_ini_error(e.into());
+                                }
+                            }
+                        }
+                    }
+                },
+            );
+        });
+    }
+
+    // Browse mods folder
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_browse_mods(move || {
+            let window_weak = window_weak.clone();
+            let state = Arc::clone(&state);
+
+            let current_path = window_weak
+                .upgrade()
+                .map(|w| w.get_setting_mods_path().to_string())
+                .unwrap_or_default();
+
+            let start_dir = if current_path.is_empty() {
+                None
+            } else {
+                Some(current_path)
+            };
+
+            AsyncBridge::run_with_ui_update(
+                async move {
+                    browse_folder("Select Mods Folder", start_dir.as_deref()).await
+                },
+                move |result| {
+                    if let Some(path) = result {
+                        let mut s = state.lock();
+                        if !s.initialized {
+                            return;
+                        }
+                        match save_path_setting(&mut s.settings, "mods_folder", &path) {
+                            Ok(()) => {
+                                if let Some(w) = window_weak.upgrade() {
+                                    w.set_setting_mods_path(path.into());
+                                    w.set_setting_mods_has_error(false);
+                                    w.set_setting_mods_error(SharedString::default());
+                                }
+                            }
+                            Err(e) => {
+                                if let Some(w) = window_weak.upgrade() {
+                                    w.set_setting_mods_has_error(true);
+                                    w.set_setting_mods_error(e.into());
+                                }
+                            }
+                        }
+                    }
+                },
+            );
+        });
+    }
+
+    // Browse custom scan folder
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_browse_scan(move || {
+            let window_weak = window_weak.clone();
+            let state = Arc::clone(&state);
+
+            let current_path = window_weak
+                .upgrade()
+                .map(|w| w.get_setting_scan_path().to_string())
+                .unwrap_or_default();
+
+            let start_dir = if current_path.is_empty() {
+                None
+            } else {
+                Some(current_path)
+            };
+
+            AsyncBridge::run_with_ui_update(
+                async move {
+                    browse_folder("Select Custom Scan Folder", start_dir.as_deref()).await
+                },
+                move |result| {
+                    if let Some(path) = result {
+                        let mut s = state.lock();
+                        if !s.initialized {
+                            return;
+                        }
+                        match save_path_setting(&mut s.settings, "scan_custom", &path) {
+                            Ok(()) => {
+                                if let Some(w) = window_weak.upgrade() {
+                                    w.set_setting_scan_path(path.into());
+                                    w.set_setting_scan_has_error(false);
+                                    w.set_setting_scan_error(SharedString::default());
+                                }
+                            }
+                            Err(e) => {
+                                if let Some(w) = window_weak.upgrade() {
+                                    w.set_setting_scan_has_error(true);
+                                    w.set_setting_scan_error(e.into());
+                                }
+                            }
+                        }
+                    }
+                },
+            );
+        });
+    }
+
+    // INI path accepted (Enter key or focus loss)
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_ini_path_accepted(move |text| {
+            let mut s = state.lock();
+            if !s.initialized {
+                return;
+            }
+            let path_str = text.to_string();
+            match save_path_setting(&mut s.settings, "ini_folder", &path_str) {
+                Ok(()) => {
+                    if let Some(w) = window_weak.upgrade() {
+                        w.set_setting_ini_has_error(false);
+                        w.set_setting_ini_error(SharedString::default());
+                    }
+                }
+                Err(e) => {
+                    if let Some(w) = window_weak.upgrade() {
+                        w.set_setting_ini_has_error(true);
+                        w.set_setting_ini_error(e.into());
+                    }
+                }
+            }
+        });
+    }
+
+    // Mods path accepted
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_mods_path_accepted(move |text| {
+            let mut s = state.lock();
+            if !s.initialized {
+                return;
+            }
+            let path_str = text.to_string();
+            match save_path_setting(&mut s.settings, "mods_folder", &path_str) {
+                Ok(()) => {
+                    if let Some(w) = window_weak.upgrade() {
+                        w.set_setting_mods_has_error(false);
+                        w.set_setting_mods_error(SharedString::default());
+                    }
+                }
+                Err(e) => {
+                    if let Some(w) = window_weak.upgrade() {
+                        w.set_setting_mods_has_error(true);
+                        w.set_setting_mods_error(e.into());
+                    }
+                }
+            }
+        });
+    }
+
+    // Scan path accepted
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_scan_path_accepted(move |text| {
+            let mut s = state.lock();
+            if !s.initialized {
+                return;
+            }
+            let path_str = text.to_string();
+            match save_path_setting(&mut s.settings, "scan_custom", &path_str) {
+                Ok(()) => {
+                    if let Some(w) = window_weak.upgrade() {
+                        w.set_setting_scan_has_error(false);
+                        w.set_setting_scan_error(SharedString::default());
+                    }
+                }
+                Err(e) => {
+                    if let Some(w) = window_weak.upgrade() {
+                        w.set_setting_scan_has_error(true);
+                        w.set_setting_scan_error(e.into());
+                    }
+                }
+            }
+        });
+    }
+}
+
+/// Set up Reset to Defaults callback
+fn setup_settings_reset_callback(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
+    let window_weak = window.as_weak();
+    let state = Arc::clone(state);
+
+    window.on_setting_reset_to_defaults(move || {
+        let mut s = state.lock();
+        // Temporarily disable saves to prevent loops during UI repopulation
+        let was_initialized = s.initialized;
+        s.initialized = false;
+
+        // Reset to defaults and save to YAML
+        s.settings = reset_to_defaults();
+
+        // Repopulate all UI controls from fresh defaults
+        if let Some(w) = window_weak.upgrade() {
+            populate_settings_ui(&w, &s.settings);
+        }
+
+        // Re-enable saves
+        s.initialized = was_initialized;
     });
 }
