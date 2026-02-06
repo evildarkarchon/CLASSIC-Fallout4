@@ -132,10 +132,10 @@ Plans:
   2. Bullet lists render with proper indentation
   3. Code blocks render with monospace font and background
   4. Inline formatting (bold, italic, code) renders correctly
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 23-01: Markdown rendering with pulldown-cmark
+- [ ] 23-01-PLAN.md — Markdown parsing with pulldown-cmark and block-based Slint rendering
 
 #### Phase 24: Settings Dialog
 **Goal**: User can configure application settings
