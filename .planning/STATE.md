@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 24 of 25 (Settings Dialog)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-06 -- Completed 24-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-06 -- Completed 24-02-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 9/13]
-[######################################..] 93% (52/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 10/13]
+[#######################################.] 95% (53/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 9/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 9
+- Plans completed: 10
 - Average duration: 7m
-- Commits: 25
+- Commits: 27
 
 ## Accumulated Context
 
@@ -78,6 +78,10 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 9/13]
 | 2026-02-06 | 24-01 | Inline confirmation for Reset to Defaults | Show/hide confirm row; simpler than modal popup in Slint |
 | 2026-02-06 | 24-01 | setting- prefix for settings properties | Distinguishes from scan/results properties on MainWindow |
 | 2026-02-06 | 24-01 | VR mode migration in ClassicConfig | vr_mode=true + no game_version -> game_version="VR" on load |
+| 2026-02-06 | 24-02 | Full config save on each change | Simpler than individual YAML key updates, avoids partial-write issues |
+| 2026-02-06 | 24-02 | Empty path clears setting | Entering empty text clears the path (sets to None) without error |
+| 2026-02-06 | 24-02 | Stub game version detection | Checks VR/standard exe; full EXE version detection deferred |
+| 2026-02-06 | 24-02 | Reset disables initialized flag | Prevents cascading saves during UI repopulation after reset |
 
 ### Pending Todos
 
@@ -94,7 +98,7 @@ None.
 - Phase 21 complete -- full scan UX with discovery, analysis, cancellation, auto-switch, auto-clear
 - Phase 22 complete -- Results tab with master-detail layout, search/filter/sort, clipboard copy
 - Phase 23 complete -- Markdown renderer with pulldown-cmark, 6 block types, styled ScrollView viewer
-- Phase 24 Plan 01 complete -- Settings tab UI with 3 sub-tabs, ClassicConfig extended; Plan 02 wires Rust callbacks
+- Phase 24 complete -- Settings tab fully functional: UI layout, live persistence, path validation, reset to defaults
 
 ### Quick Tasks Completed
 
@@ -109,6 +113,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 24-01-PLAN.md
+Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
 Resume file: None
-Next action: Execute 24-02-PLAN.md (Settings persistence wiring)
+Next action: Execute Phase 25 (Integration)
