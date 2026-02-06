@@ -1,14 +1,20 @@
 //! Async Bridge - Coordinate between Slint event loop and Tokio async runtime
 //!
 //! This module provides utilities to bridge between Slint's UI event loop and Tokio's
-//! async runtime, inspired by Python's AsyncBridge pattern. It handles the complexity
-//! of running async operations from UI callbacks and updating the UI from async contexts.
+//! async runtime. It handles the complexity of running async operations from UI callbacks
+//! and updating the UI from async contexts.
 //!
 //! # Architecture
 //!
 //! - **Slint Event Loop**: Runs on the main thread, handles UI updates
 //! - **Tokio Runtime**: Shared multi-threaded runtime for async I/O (ONE RUNTIME RULE)
 //! - **AsyncBridge**: Coordinates between the two, managing thread transitions
+//!
+//! # Methods
+//!
+//! - [`AsyncBridge::run_with_ui_update`] - Execute async operation, update UI with result
+//! - [`AsyncBridge::spawn_background`] - Fire-and-forget async operation
+//! - [`AsyncBridge::invoke_on_ui_thread`] - Invoke a function on the Slint event loop
 //!
 //! # Pattern
 //!
@@ -28,31 +34,6 @@
 #[cfg(feature = "gui-bridge")]
 use std::future::Future;
 
-#[cfg(feature = "gui-bridge")]
-use once_cell::sync::Lazy;
-#[cfg(feature = "gui-bridge")]
-use rayon::ThreadPool;
-
-// Optimization 5.1: Shared thread pool for all async bridge operations
-// Expected impact: 30-50% faster UI operations, 2-5ms latency reduction
-//
-// Performance Optimization: Smaller thread pool for I/O-bound bridging work.
-// Bridge threads only invoke block_on() - Tokio handles actual parallelism.
-// This reduces memory usage by 50% and context switching overhead.
-#[cfg(feature = "gui-bridge")]
-static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
-    // Optimization: Smaller pool for I/O-bound bridging work
-    // Bridge threads just call block_on() - Tokio runtime handles parallelism
-    let bridge_threads = (num_cpus::get() / 2).clamp(2, 8); // 2 to 8 threads
-
-    rayon::ThreadPoolBuilder::new()
-        .num_threads(bridge_threads)
-        .thread_name(|i| format!("async-bridge-{}", i))
-        .stack_size(1024 * 1024) // 1MB stack (vs default 2MB)
-        .build()
-        .expect("Failed to create async bridge thread pool")
-});
-
 /// Async bridge for coordinating between Slint event loop and Tokio runtime
 ///
 /// This struct provides static methods for executing async operations from UI callbacks
@@ -62,12 +43,12 @@ static BRIDGE_POOL: Lazy<ThreadPool> = Lazy::new(|| {
 /// # Design
 ///
 /// The bridge uses the following pattern:
-/// 1. Spawn a background thread
-/// 2. Execute async operation on shared Tokio runtime (`get_runtime().block_on()`)
+/// 1. Spawn async operation on shared Tokio runtime (`get_runtime().spawn()`)
+/// 2. Await result within the spawned task
 /// 3. Invoke callback on Slint event loop (`slint::invoke_from_event_loop()`)
 ///
 /// This ensures:
-/// - UI remains responsive (async work on background threads)
+/// - UI remains responsive (async work on Tokio runtime tasks)
 /// - Proper async execution (using shared Tokio runtime)
 /// - Safe UI updates (callbacks run on Slint event loop)
 ///
@@ -105,8 +86,8 @@ impl AsyncBridge {
     /// Execute an async operation and invoke a callback on the Slint event loop
     ///
     /// This is the primary method for running async operations from Slint callbacks.
-    /// It spawns a background thread that executes the operation using the shared
-    /// Tokio runtime, then invokes the callback on the Slint event loop to update the UI.
+    /// It spawns a task on the shared Tokio runtime to execute the operation, then
+    /// invokes the callback on the Slint event loop to update the UI.
     ///
     /// # Arguments
     ///
@@ -148,7 +129,7 @@ impl AsyncBridge {
     ///
     /// # Thread Execution
     ///
-    /// - `operation` runs on a background thread in the Tokio runtime
+    /// - `operation` runs as a task on the Tokio runtime
     /// - `on_complete` runs on the main Slint event loop thread
     /// - Both must be Send + 'static to cross thread boundaries
     ///
@@ -192,30 +173,6 @@ impl AsyncBridge {
         crate::get_runtime().spawn(async move {
             // Execute async operation
             let result = operation.await;
-
-            // Invoke callback on Slint event loop for UI updates
-            slint::invoke_from_event_loop(move || {
-                on_complete(result);
-            })
-            .expect("Failed to invoke callback on Slint event loop");
-        });
-    }
-
-    /// Legacy method using thread pool (for compatibility)
-    ///
-    /// This method uses the thread pool approach with block_on. It's provided for
-    /// compatibility with code that may have specific threading requirements.
-    /// Prefer `run_with_ui_update` for new code.
-    pub fn run_with_ui_update_blocking<F, R, C>(operation: F, on_complete: C)
-    where
-        F: Future<Output = R> + Send + 'static,
-        R: Send + 'static,
-        C: FnOnce(R) + Send + 'static,
-    {
-        // Use shared thread pool + block_on pattern
-        BRIDGE_POOL.spawn(move || {
-            // Execute async operation on shared Tokio runtime (ONE RUNTIME RULE)
-            let result = crate::get_runtime().block_on(operation);
 
             // Invoke callback on Slint event loop for UI updates
             slint::invoke_from_event_loop(move || {
@@ -283,62 +240,7 @@ impl AsyncBridge {
     {
         slint::invoke_from_event_loop(f).expect("Failed to invoke function on Slint event loop");
     }
-
-    /// Run an async operation with loading state management
-    ///
-    /// This is a higher-level convenience method that automatically manages a loading
-    /// state flag. It sets the loading state to true before starting, runs the operation,
-    /// then invokes the callback and sets loading to false.
-    ///
-    /// # Arguments
-    ///
-    /// * `set_loading` - Callback to set loading state (called on UI thread)
-    /// * `operation` - The async operation to execute
-    /// * `on_complete` - Callback invoked with result (called on UI thread)
-    ///
-    /// # Examples
-    ///
-    /// ```rust,ignore
-    /// use classic_shared_core::AsyncBridge;
-    ///
-    /// let window = window_weak.clone();
-    /// AsyncBridge::run_with_loading(
-    ///     |loading| { window.set_loading(loading); },
-    ///     fetch_data(),
-    ///     |result| {
-    ///         match result {
-    ///             Ok(data) => window.display(data),
-    ///             Err(e) => window.show_error(e),
-    ///         }
-    ///     }
-    /// );
-    /// ```
-    pub fn run_with_loading<F, R, L, C>(set_loading: L, operation: F, on_complete: C)
-    where
-        F: Future<Output = R> + Send + 'static,
-        R: Send + 'static,
-        L: Fn(bool) + Send + Clone + 'static,
-        C: FnOnce(R) + Send + 'static,
-    {
-        // Set loading state on UI thread
-        let set_loading_clone = set_loading.clone();
-        Self::invoke_on_ui_thread(move || {
-            set_loading_clone(true);
-        });
-
-        // Run operation
-        Self::run_with_ui_update(operation, move |result| {
-            // Clear loading state
-            set_loading(false);
-            // Process result
-            on_complete(result);
-        });
-    }
 }
-
-// Re-export for convenience
-#[cfg(feature = "gui-bridge")]
-pub use AsyncBridge as Bridge;
 
 #[cfg(test)]
 #[cfg(feature = "gui-bridge")]
