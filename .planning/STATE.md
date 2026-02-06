@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 25 of 25 (Platform Polish)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-02-06 -- Completed 25-01-PLAN.md
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-02-06 -- Completed 25-02-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 11/13]
-[########################################] 96% (54/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 13/13]
+[##############################################] 100% (56/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 11/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 11
+- Plans completed: 13
 - Average duration: 7m
-- Commits: 29
+- Commits: 33
 
 ## Accumulated Context
 
@@ -85,6 +85,11 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 11/13]
 | 2026-02-06 | 25-01 | tracing::warn! for all eprintln! | Non-fatal save/load errors are warnings, not errors |
 | 2026-02-06 | 25-01 | Log file truncated on each launch | Fresh start per session, not appended |
 | 2026-02-06 | 25-01 | data_dir() for log location | Logs are data, not config |
+| 2026-02-06 | 25-02 | Crate-local .cargo/config.toml for static CRT | Scoped to GUI binary only, not PyO3 crates |
+| 2026-02-06 | 25-02 | catch_unwind for self-healing state | Wraps load functions for panic recovery on corrupted files |
+| 2026-02-06 | 25-02 | Off-screen validation -200..10000 range | Handles disconnected monitors gracefully |
+| 2026-02-06 | 25-02 | 800x600 default window size | Reasonable default when no saved geometry |
+| 2026-02-06 | 25-02 | Renderer fallback Skia -> software -> exit | Graceful degradation with logging |
 
 ### Pending Todos
 
@@ -103,6 +108,7 @@ None.
 - Phase 23 complete -- Markdown renderer with pulldown-cmark, 6 block types, styled ScrollView viewer
 - Phase 24 complete -- Settings tab fully functional: UI layout, live persistence, path validation, reset to defaults
 - Plan 25-01 complete -- File logging infrastructure ready, all eprintln! replaced with tracing macros
+- Phase 25 complete -- GUI is distribution-ready: console-less, logged, DPI-aware, self-healing, embedded icon, static CRT
 
 ### Quick Tasks Completed
 
@@ -117,6 +123,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 25-01-PLAN.md
+Stopped at: Completed 25-02-PLAN.md (Phase 25 complete, all v9.0.0 plans done)
 Resume file: None
-Next action: Execute 25-02-PLAN.md (Windows subsystem, build.rs, init_logging wiring)
+Next action: Phase 26 (AsyncBridge audit) or distribution
