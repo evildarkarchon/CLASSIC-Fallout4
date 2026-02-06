@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** v9.0.0 Slint GUI -- Phase 25 Platform Polish
+**Current focus:** v9.0.0 Slint GUI -- Phase 26 Async Bridge Audit
 
 ## Current Position
 
-Phase: 25 of 25 (Platform Polish)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-02-06 -- Completed 25-02-PLAN.md
+Phase: 26 of 26 (Async Bridge Audit)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-06 -- Completed 26-01-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 13/13]
-[##############################################] 100% (56/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 14/16]
+[#############################################-] 98% (57/59 plans)
 
 ## Performance Metrics
 
@@ -90,6 +90,8 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 13/13]
 | 2026-02-06 | 25-02 | Off-screen validation -200..10000 range | Handles disconnected monitors gracefully |
 | 2026-02-06 | 25-02 | 800x600 default window size | Reasonable default when no saved geometry |
 | 2026-02-06 | 25-02 | Renderer fallback Skia -> software -> exit | Graceful degradation with logging |
+| 2026-02-06 | 26-01 | std::sync::LazyLock over once_cell::Lazy | Standard library, no external dependency needed |
+| 2026-02-06 | 26-01 | One canonical name: AsyncBridge | Removed Bridge alias to avoid confusion |
 
 ### Pending Todos
 
@@ -123,6 +125,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 25-02-PLAN.md (Phase 25 complete, all v9.0.0 plans done)
+Stopped at: Completed 26-01-PLAN.md (dead code removal and LazyLock migration)
 Resume file: None
-Next action: Phase 26 (AsyncBridge audit) or distribution
+Next action: 26-02-PLAN.md (new AsyncBridge API methods)
