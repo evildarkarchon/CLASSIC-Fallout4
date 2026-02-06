@@ -161,7 +161,7 @@ fn save_final_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
 
     // Save to disk
     if let Err(e) = save_window_state(&state.window_state) {
-        eprintln!("Failed to save window state: {}", e);
+        tracing::warn!("Failed to save window state: {}", e);
     }
 }
 
@@ -172,7 +172,7 @@ fn persist_state(state: &Arc<Mutex<AppState>>) {
         return; // Skip during initialization
     }
     if let Err(e) = save_window_state(&state.window_state) {
-        eprintln!("Failed to save window state: {}", e);
+        tracing::warn!("Failed to save window state: {}", e);
     }
 }
 
@@ -647,7 +647,7 @@ fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppSt
             }
             let version_str = game_version_index_to_string(index);
             if let Err(e) = save_setting_string(&mut state.settings, "game_version", version_str) {
-                eprintln!("Failed to save game_version: {}", e);
+                tracing::warn!("Failed to save game_version: {}", e);
             }
 
             // If "Auto" selected (index 0), run detection and update hint
@@ -671,7 +671,7 @@ fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppSt
                 return;
             }
             if let Err(e) = save_setting_bool(&mut state.settings, "update_check", checked) {
-                eprintln!("Failed to save update_check: {}", e);
+                tracing::warn!("Failed to save update_check: {}", e);
             }
         });
     }
@@ -688,7 +688,7 @@ fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppSt
             if let Err(e) =
                 save_setting_string(&mut state.settings, "update_source", source_str)
             {
-                eprintln!("Failed to save update_source: {}", e);
+                tracing::warn!("Failed to save update_source: {}", e);
             }
         });
     }
@@ -702,7 +702,7 @@ fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppSt
                 return;
             }
             if let Err(e) = save_setting_bool(&mut state.settings, "fcx_mode", checked) {
-                eprintln!("Failed to save fcx_mode: {}", e);
+                tracing::warn!("Failed to save fcx_mode: {}", e);
             }
         });
     }
@@ -719,7 +719,7 @@ fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppS
                 return;
             }
             if let Err(e) = save_setting_bool(&mut state.settings, "simplify_logs", checked) {
-                eprintln!("Failed to save simplify_logs: {}", e);
+                tracing::warn!("Failed to save simplify_logs: {}", e);
             }
         });
     }
@@ -735,7 +735,7 @@ fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppS
             if let Err(e) =
                 save_setting_bool(&mut state.settings, "show_formid_values", checked)
             {
-                eprintln!("Failed to save show_formid_values: {}", e);
+                tracing::warn!("Failed to save show_formid_values: {}", e);
             }
         });
     }
@@ -751,7 +751,7 @@ fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppS
             if let Err(e) =
                 save_setting_bool(&mut state.settings, "move_unsolved_logs", checked)
             {
-                eprintln!("Failed to save move_unsolved_logs: {}", e);
+                tracing::warn!("Failed to save move_unsolved_logs: {}", e);
             }
         });
     }
@@ -767,7 +767,7 @@ fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppS
             if let Err(e) =
                 save_setting_bool(&mut state.settings, "auto_switch_to_results", checked)
             {
-                eprintln!("Failed to save auto_switch_to_results: {}", e);
+                tracing::warn!("Failed to save auto_switch_to_results: {}", e);
             }
         });
     }

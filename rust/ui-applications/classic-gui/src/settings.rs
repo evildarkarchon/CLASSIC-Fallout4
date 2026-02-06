@@ -37,7 +37,7 @@ pub fn load_settings() -> ClassicConfig {
     match rt.block_on(ClassicConfig::load_from_yaml(&path)) {
         Ok(config) => config,
         Err(e) => {
-            eprintln!("Failed to load settings, using defaults: {}", e);
+            tracing::warn!("Failed to load settings, using defaults: {}", e);
             ClassicConfig::default()
         }
     }
@@ -174,7 +174,7 @@ pub fn save_path_setting(
 pub fn reset_to_defaults() -> ClassicConfig {
     let config = ClassicConfig::default();
     if let Err(e) = save_full_config(&config) {
-        eprintln!("Failed to save default settings: {}", e);
+        tracing::warn!("Failed to save default settings: {}", e);
     }
     config
 }
