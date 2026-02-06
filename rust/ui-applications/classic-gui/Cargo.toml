@@ -25,6 +25,7 @@ parking_lot = { workspace = true }
 directories = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+pulldown-cmark = { workspace = true }
 rfd = "0.15"  # Native file dialogs
 arboard = "3"  # System clipboard access
 
