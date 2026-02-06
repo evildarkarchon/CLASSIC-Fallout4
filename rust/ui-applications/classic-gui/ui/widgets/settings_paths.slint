@@ -1,0 +1,109 @@
+// SettingsPaths - Paths settings sub-tab for the Settings tab
+// Contains: INI Folder, Mods Folder, Custom Scan Path with validation error display
+
+import { Button, LineEdit, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+component SettingsPathInput inherits VerticalBox {
+    in-out property <string> path;
+    in-out property <string> label;
+    in-out property <string> error-message: "";
+    in-out property <bool> has-error: false;
+    callback browse-clicked();
+    callback path-accepted(string);
+
+    spacing: 4px;
+
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: root.label;
+            min-width: 140px;
+            vertical-alignment: center;
+        }
+        LineEdit {
+            text <=> root.path;
+            horizontal-stretch: 1;
+            placeholder-text: "Select folder...";
+            accepted(text) => {
+                root.path-accepted(text);
+            }
+            // Save on focus loss
+            changed has-focus => {
+                if (!self.has-focus) {
+                    root.path-accepted(self.text);
+                }
+            }
+        }
+        Button {
+            text: "Browse...";
+            clicked => { root.browse-clicked(); }
+        }
+    }
+    if root.has-error : Text {
+        text: root.error-message;
+        color: #ff6b6b;
+        font-size: 11px;
+    }
+}
+
+export component SettingsPaths inherits VerticalBox {
+    // INI Folder
+    in-out property <string> ini-path: "";
+    in-out property <string> ini-error: "";
+    in-out property <bool> ini-has-error: false;
+
+    // Mods Folder
+    in-out property <string> mods-path: "";
+    in-out property <string> mods-error: "";
+    in-out property <bool> mods-has-error: false;
+
+    // Custom Scan Path
+    in-out property <string> scan-path: "";
+    in-out property <string> scan-error: "";
+    in-out property <bool> scan-has-error: false;
+
+    // Browse callbacks
+    callback browse-ini();
+    callback browse-mods();
+    callback browse-scan();
+
+    // Path accepted callbacks (Enter key or focus loss)
+    callback ini-path-accepted(string);
+    callback mods-path-accepted(string);
+    callback scan-path-accepted(string);
+
+    padding: 16px;
+    spacing: 16px;
+
+    SettingsPathInput {
+        label: "INI Folder:";
+        path <=> root.ini-path;
+        error-message <=> root.ini-error;
+        has-error <=> root.ini-has-error;
+        browse-clicked => { root.browse-ini(); }
+        path-accepted(text) => { root.ini-path-accepted(text); }
+    }
+
+    SettingsPathInput {
+        label: "Mods Folder:";
+        path <=> root.mods-path;
+        error-message <=> root.mods-error;
+        has-error <=> root.mods-has-error;
+        browse-clicked => { root.browse-mods(); }
+        path-accepted(text) => { root.mods-path-accepted(text); }
+    }
+
+    SettingsPathInput {
+        label: "Custom Scan Path:";
+        path <=> root.scan-path;
+        error-message <=> root.scan-error;
+        has-error <=> root.scan-has-error;
+        browse-clicked => { root.browse-scan(); }
+        path-accepted(text) => { root.scan-path-accepted(text); }
+    }
+
+    // Spacer to push content to top
+    Rectangle {
+        vertical-stretch: 1;
+    }
+}

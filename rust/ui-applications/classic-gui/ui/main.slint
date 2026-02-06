@@ -7,6 +7,9 @@ import { ReportList, ReportEntry } from "widgets/report_list.slint";
 import { ReportViewer } from "widgets/report_viewer.slint";
 import { Splitter } from "widgets/splitter.slint";
 import { MarkdownBlock } from "widgets/types.slint";
+import { SettingsGeneral } from "widgets/settings_general.slint";
+import { SettingsScanning } from "widgets/settings_scanning.slint";
+import { SettingsPaths } from "widgets/settings_paths.slint";
 export { MarkdownBlock }
 
 export component MainWindow inherits Window {
@@ -44,6 +47,33 @@ export component MainWindow inherits Window {
     in-out property <bool> report-sort-ascending: false;
     in-out property <length> list-panel-width: 200px;
 
+    // Settings tab properties - General
+    in-out property <int> setting-game-version-index: 0;
+    in-out property <string> setting-auto-detected-hint: "";
+    in-out property <bool> setting-update-check: true;
+    in-out property <int> setting-update-source-index: 0;
+    in-out property <bool> setting-fcx-mode: false;
+
+    // Settings tab properties - Scanning
+    in-out property <bool> setting-simplify-logs: false;
+    in-out property <bool> setting-show-formid-values: false;
+    in-out property <bool> setting-move-unsolved-logs: false;
+    in-out property <bool> setting-auto-switch-after-scan: true;
+
+    // Settings tab properties - Paths
+    in-out property <string> setting-ini-path: "";
+    in-out property <string> setting-ini-error: "";
+    in-out property <bool> setting-ini-has-error: false;
+    in-out property <string> setting-mods-path: "";
+    in-out property <string> setting-mods-error: "";
+    in-out property <bool> setting-mods-has-error: false;
+    in-out property <string> setting-scan-path: "";
+    in-out property <string> setting-scan-error: "";
+    in-out property <bool> setting-scan-has-error: false;
+
+    // Settings tab - Reset to Defaults
+    property <bool> reset-confirm-visible: false;
+
     // Callbacks invoked from UI
     callback start-scan();
     callback cancel-scan();
@@ -56,6 +86,29 @@ export component MainWindow inherits Window {
     callback report-search-changed(string);
     callback report-sort-toggled();
     callback report-copy-all();
+
+    // Settings tab callbacks - General
+    callback setting-game-version-changed(int);
+    callback setting-update-check-changed(bool);
+    callback setting-update-source-changed(int);
+    callback setting-fcx-mode-changed(bool);
+
+    // Settings tab callbacks - Scanning
+    callback setting-simplify-logs-changed(bool);
+    callback setting-show-formid-values-changed(bool);
+    callback setting-move-unsolved-logs-changed(bool);
+    callback setting-auto-switch-after-scan-changed(bool);
+
+    // Settings tab callbacks - Paths
+    callback setting-browse-ini();
+    callback setting-browse-mods();
+    callback setting-browse-scan();
+    callback setting-ini-path-accepted(string);
+    callback setting-mods-path-accepted(string);
+    callback setting-scan-path-accepted(string);
+
+    // Settings tab callbacks - Reset
+    callback setting-reset-to-defaults();
 
     VerticalBox {
         padding: 12px;
@@ -234,18 +287,91 @@ export component MainWindow inherits Window {
             Tab {
                 title: "Settings";
                 VerticalBox {
-                    padding: 16px;
-                    spacing: 12px;
+                    padding: 8px;
+                    spacing: 8px;
 
-                    Text {
-                        text: "Application Settings";
-                        font-size: 14px;
-                        horizontal-alignment: center;
+                    TabWidget {
+                        vertical-stretch: 1;
+
+                        Tab {
+                            title: "General";
+                            SettingsGeneral {
+                                game-version-index <=> root.setting-game-version-index;
+                                auto-detected-hint <=> root.setting-auto-detected-hint;
+                                update-check <=> root.setting-update-check;
+                                update-source-index <=> root.setting-update-source-index;
+                                fcx-mode <=> root.setting-fcx-mode;
+                                game-version-changed(idx) => { root.setting-game-version-changed(idx); }
+                                update-check-changed(val) => { root.setting-update-check-changed(val); }
+                                update-source-changed(idx) => { root.setting-update-source-changed(idx); }
+                                fcx-mode-changed(val) => { root.setting-fcx-mode-changed(val); }
+                            }
+                        }
+
+                        Tab {
+                            title: "Scanning";
+                            SettingsScanning {
+                                simplify-logs <=> root.setting-simplify-logs;
+                                show-formid-values <=> root.setting-show-formid-values;
+                                move-unsolved-logs <=> root.setting-move-unsolved-logs;
+                                auto-switch-after-scan <=> root.setting-auto-switch-after-scan;
+                                simplify-logs-changed(val) => { root.setting-simplify-logs-changed(val); }
+                                show-formid-values-changed(val) => { root.setting-show-formid-values-changed(val); }
+                                move-unsolved-logs-changed(val) => { root.setting-move-unsolved-logs-changed(val); }
+                                auto-switch-after-scan-changed(val) => { root.setting-auto-switch-after-scan-changed(val); }
+                            }
+                        }
+
+                        Tab {
+                            title: "Paths";
+                            SettingsPaths {
+                                ini-path <=> root.setting-ini-path;
+                                ini-error <=> root.setting-ini-error;
+                                ini-has-error <=> root.setting-ini-has-error;
+                                mods-path <=> root.setting-mods-path;
+                                mods-error <=> root.setting-mods-error;
+                                mods-has-error <=> root.setting-mods-has-error;
+                                scan-path <=> root.setting-scan-path;
+                                scan-error <=> root.setting-scan-error;
+                                scan-has-error <=> root.setting-scan-has-error;
+                                browse-ini => { root.setting-browse-ini(); }
+                                browse-mods => { root.setting-browse-mods(); }
+                                browse-scan => { root.setting-browse-scan(); }
+                                ini-path-accepted(text) => { root.setting-ini-path-accepted(text); }
+                                mods-path-accepted(text) => { root.setting-mods-path-accepted(text); }
+                                scan-path-accepted(text) => { root.setting-scan-path-accepted(text); }
+                            }
+                        }
                     }
-                    Text {
-                        text: "Settings will be implemented in Phase 24";
-                        color: #888888;
-                        horizontal-alignment: center;
+
+                    // Reset to Defaults with inline confirmation
+                    HorizontalBox {
+                        alignment: center;
+                        spacing: 8px;
+
+                        if !root.reset-confirm-visible : Button {
+                            text: "Reset to Defaults";
+                            clicked => { root.reset-confirm-visible = true; }
+                        }
+                        if root.reset-confirm-visible : HorizontalBox {
+                            spacing: 8px;
+                            Text {
+                                text: "Reset ALL settings to defaults?";
+                                color: #ff6b6b;
+                                vertical-alignment: center;
+                            }
+                            Button {
+                                text: "Yes, Reset";
+                                clicked => {
+                                    root.setting-reset-to-defaults();
+                                    root.reset-confirm-visible = false;
+                                }
+                            }
+                            Button {
+                                text: "Cancel";
+                                clicked => { root.reset-confirm-visible = false; }
+                            }
+                        }
                     }
                 }
             }

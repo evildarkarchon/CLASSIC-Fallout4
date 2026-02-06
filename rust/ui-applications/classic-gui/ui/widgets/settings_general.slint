@@ -1,0 +1,105 @@
+// SettingsGeneral - General settings sub-tab for the Settings tab
+// Contains: Game Version dropdown, Update Check toggle, Update Source dropdown, FCX Mode toggle
+
+import { ComboBox, Switch, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export component SettingsGeneral inherits VerticalBox {
+    // Game version: 0=Auto, 1=Original, 2=NextGen, 3=VR
+    in-out property <int> game-version-index: 0;
+    in-out property <string> auto-detected-hint: "";
+
+    // Update settings
+    in-out property <bool> update-check: true;
+    // Update source: 0=GitHub, 1=Both
+    in-out property <int> update-source-index: 0;
+
+    // FCX mode
+    in-out property <bool> fcx-mode: false;
+
+    // Callbacks for Rust to handle persistence
+    callback game-version-changed(int);
+    callback update-check-changed(bool);
+    callback update-source-changed(int);
+    callback fcx-mode-changed(bool);
+
+    padding: 16px;
+    spacing: 16px;
+
+    // Game Version
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Game Version:";
+            min-width: 140px;
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: ["Auto", "Original", "NextGen", "VR"];
+            current-index <=> root.game-version-index;
+            selected(value) => {
+                root.game-version-changed(self.current-index);
+            }
+        }
+        // Hint text shown only when Auto is selected
+        if root.game-version-index == 0 && root.auto-detected-hint != "" : Text {
+            text: root.auto-detected-hint;
+            color: #888888;
+            font-size: 11px;
+            vertical-alignment: center;
+        }
+    }
+
+    // Update Check
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Check for Updates:";
+            min-width: 140px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.update-check;
+            toggled => {
+                root.update-check-changed(self.checked);
+            }
+        }
+    }
+
+    // Update Source
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Update Source:";
+            min-width: 140px;
+            vertical-alignment: center;
+        }
+        ComboBox {
+            model: ["GitHub", "Both"];
+            current-index <=> root.update-source-index;
+            selected(value) => {
+                root.update-source-changed(self.current-index);
+            }
+        }
+    }
+
+    // FCX Mode
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "FCX Mode:";
+            min-width: 140px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.fcx-mode;
+            toggled => {
+                root.fcx-mode-changed(self.checked);
+            }
+        }
+    }
+
+    // Spacer to push content to top
+    Rectangle {
+        vertical-stretch: 1;
+    }
+}

@@ -1,0 +1,90 @@
+// SettingsScanning - Scanning settings sub-tab for the Settings tab
+// Contains: Simplify Logs, Show FormID Values, Move Unsolved Logs, Auto Switch After Scan
+
+import { Switch, HorizontalBox, VerticalBox } from "std-widgets.slint";
+
+export component SettingsScanning inherits VerticalBox {
+    // Toggle properties
+    in-out property <bool> simplify-logs: false;
+    in-out property <bool> show-formid-values: false;
+    in-out property <bool> move-unsolved-logs: false;
+    in-out property <bool> auto-switch-after-scan: true;
+
+    // Callbacks for Rust to handle persistence
+    callback simplify-logs-changed(bool);
+    callback show-formid-values-changed(bool);
+    callback move-unsolved-logs-changed(bool);
+    callback auto-switch-after-scan-changed(bool);
+
+    padding: 16px;
+    spacing: 16px;
+
+    // Simplify Logs
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Simplify Logs:";
+            min-width: 180px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.simplify-logs;
+            toggled => {
+                root.simplify-logs-changed(self.checked);
+            }
+        }
+    }
+
+    // Show FormID Values
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Show FormID Values:";
+            min-width: 180px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.show-formid-values;
+            toggled => {
+                root.show-formid-values-changed(self.checked);
+            }
+        }
+    }
+
+    // Move Unsolved Logs
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Move Unsolved Logs:";
+            min-width: 180px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.move-unsolved-logs;
+            toggled => {
+                root.move-unsolved-logs-changed(self.checked);
+            }
+        }
+    }
+
+    // Auto Switch After Scan
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Auto Switch After Scan:";
+            min-width: 180px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.auto-switch-after-scan;
+            toggled => {
+                root.auto-switch-after-scan-changed(self.checked);
+            }
+        }
+    }
+
+    // Spacer to push content to top
+    Rectangle {
+        vertical-stretch: 1;
+    }
+}
