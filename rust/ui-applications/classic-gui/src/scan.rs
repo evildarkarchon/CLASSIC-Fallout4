@@ -107,6 +107,13 @@ where
 
     let total = log_paths.len();
 
+    // Switch from indeterminate to determinate progress (0%)
+    update_status(
+        &window_weak,
+        &format!("Found {} crash logs, analyzing...", total),
+        0.0,
+    );
+
     // Create OrchestratorCore with default config for Fallout4
     let orchestrator = create_orchestrator()
         .map_err(|e| format!("Failed to initialize scanner: {}", e))?;
