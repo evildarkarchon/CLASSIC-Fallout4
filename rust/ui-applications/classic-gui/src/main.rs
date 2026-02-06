@@ -1,7 +1,10 @@
 //! CLASSIC GUI - Application entry point
 //!
-//! Initializes the Slint GUI application and runs the event loop.
+//! Production startup sequence: logging, renderer fallback, Tokio runtime,
+//! self-healing state load, window creation, and event loop.
 //! Uses the global Tokio runtime from classic-shared-core (ONE RUNTIME RULE).
+
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 slint::include_modules!();
 
@@ -52,47 +55,127 @@ struct AppState {
     settings: ClassicConfig,
 }
 
-impl AppState {
-    /// Create new app state with loaded window and settings state
-    fn new() -> Self {
-        Self {
-            cancel_token: None,
-            window_state: load_window_state(),
-            initialized: false,
-            reports: None,
-            settings: load_settings(),
+fn main() {
+    // 1. Initialize logging FIRST (before anything that might log)
+    let _log_guard = classic_gui::init_logging();
+
+    tracing::info!("CLASSIC GUI v{} starting", env!("CARGO_PKG_VERSION"));
+
+    // 2. Initialize renderer with GPU-to-software fallback
+    if let Err(e) = init_renderer() {
+        tracing::error!("Fatal: renderer initialization failed: {}", e);
+        std::process::exit(1);
+    }
+
+    // 3. Initialize global Tokio runtime (ONE RUNTIME RULE)
+    let _ = get_runtime();
+
+    // 4. Load state with self-healing for corrupted files
+    let state = Arc::new(Mutex::new(load_state_with_healing()));
+
+    // 5. Create main window
+    let window = MainWindow::new().expect("Failed to create main window");
+
+    // 6. Restore window state (with default geometry + off-screen validation)
+    restore_state(&window, &state);
+
+    // 7. Set up callbacks
+    setup_callbacks(&window, &state);
+
+    // 8. Mark initialization complete - state saves now enabled
+    {
+        state.lock().initialized = true;
+    }
+
+    // 9. Run Slint event loop (blocks until window closes)
+    window.run().expect("Failed to run application");
+
+    // 10. Save final state on exit
+    save_final_state(&window, &state);
+
+    tracing::info!("CLASSIC GUI shutting down normally");
+}
+
+/// Initialize the Slint rendering backend with GPU-to-software fallback.
+///
+/// Tries Skia first (which auto-falls back from GPU to CPU rasterization).
+/// If Skia entirely fails to initialize, falls back to the software renderer.
+fn init_renderer() -> Result<(), slint::PlatformError> {
+    // Try Skia first (auto GPU-to-software within Skia)
+    let result = slint::BackendSelector::new()
+        .renderer_name("skia".into())
+        .select();
+
+    match result {
+        Ok(()) => {
+            tracing::info!("Renderer: Skia initialized");
+            Ok(())
+        }
+        Err(skia_err) => {
+            tracing::warn!(
+                "Skia renderer failed: {}, trying software renderer",
+                skia_err
+            );
+            // Fall back to pure software renderer
+            match slint::BackendSelector::new()
+                .renderer_name("software".into())
+                .select()
+            {
+                Ok(()) => {
+                    tracing::info!("Renderer: Software fallback initialized");
+                    Ok(())
+                }
+                Err(sw_err) => {
+                    tracing::error!(
+                        "All renderers failed. Skia: {}. Software: {}",
+                        skia_err,
+                        sw_err
+                    );
+                    Err(sw_err)
+                }
+            }
         }
     }
 }
 
-fn main() {
-    // Initialize global Tokio runtime before Slint event loop
-    // This ensures ONE RUNTIME RULE compliance
-    let _ = get_runtime();
+/// Load application state with self-healing for corrupted files.
+///
+/// If window state (JSON) fails to parse or panics, deletes and recreates it.
+/// If settings (YAML) fails to load or panics, deletes and recreates it.
+/// Each file is healed independently -- a corrupted state file does
+/// not cause settings to be reset, and vice versa.
+fn load_state_with_healing() -> AppState {
+    // Try loading window state with healing
+    let window_state = match std::panic::catch_unwind(load_window_state) {
+        Ok(state) => state,
+        Err(_) => {
+            tracing::warn!("Window state load panicked, resetting to defaults");
+            if let Some(path) = classic_gui::state_file_path() {
+                let _ = std::fs::remove_file(&path);
+            }
+            WindowState::default()
+        }
+    };
 
-    // Create shared state and load persisted state
-    let state = Arc::new(Mutex::new(AppState::new()));
+    // Try loading settings with healing
+    let settings = match std::panic::catch_unwind(load_settings) {
+        Ok(config) => config,
+        Err(_) => {
+            tracing::warn!("Settings load panicked, resetting to defaults");
+            if let Some(path) = classic_gui::settings_file_path() {
+                let _ = std::fs::remove_file(&path);
+            }
+            ClassicConfig::default()
+        }
+    };
 
-    // Create main window
-    let window = MainWindow::new().expect("Failed to create main window");
-
-    // Restore window state from disk
-    restore_state(&window, &state);
-
-    // Set up callbacks
-    setup_callbacks(&window, &state);
-
-    // Mark initialization complete - state saves now enabled
-    {
-        let mut state = state.lock();
-        state.initialized = true;
+    AppState {
+        cancel_token: None,
+        window_state,
+        initialized: false,
+        reports: None,
+        settings,
     }
-
-    // Run Slint event loop (blocks until window closes)
-    window.run().expect("Failed to run application");
-
-    // Save final state on exit
-    save_final_state(&window, &state);
 }
 
 /// Restore window state from persisted data
@@ -111,22 +194,32 @@ fn restore_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     // Restore active tab
     window.set_active_tab_index(ws.active_tab);
 
-    // Restore window geometry for active tab
+    // Restore window geometry for active tab with off-screen validation
     let geometry = ws.get_tab_geometry(ws.active_tab);
     if geometry.width > 0 && geometry.height > 0 {
+        // Validate position is not wildly off-screen
+        // (e.g., monitor disconnected, saved position is now invisible)
+        let x_valid = geometry.x > -200 && geometry.x < 10000;
+        let y_valid = geometry.y > -200 && geometry.y < 10000;
+
         // Restore size
         window.window().set_size(slint::LogicalSize::new(
             geometry.width as f32,
             geometry.height as f32,
         ));
 
-        // Restore position (only if valid - some platforms don't support this)
-        if geometry.x != 0 || geometry.y != 0 {
+        // Restore position only if valid
+        if x_valid && y_valid && (geometry.x != 0 || geometry.y != 0) {
             window.window().set_position(slint::LogicalPosition::new(
                 geometry.x as f32,
                 geometry.y as f32,
             ));
         }
+    } else {
+        // No saved geometry -- use default 800x600
+        window
+            .window()
+            .set_size(slint::LogicalSize::new(800.0, 600.0));
     }
 
     // Populate settings UI from loaded config

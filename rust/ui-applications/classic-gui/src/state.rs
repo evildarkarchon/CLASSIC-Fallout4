@@ -54,7 +54,7 @@ impl WindowState {
 }
 
 /// Get the path to the state file
-fn state_file_path() -> Option<PathBuf> {
+pub fn state_file_path() -> Option<PathBuf> {
     ProjectDirs::from("com", "classic", "classic-gui")
         .map(|dirs| dirs.config_dir().join("window_state.json"))
 }
