@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 26 of 26 (Async Bridge Audit)
-Plan: 2 of 3 in current phase
-Status: In progress
-Last activity: 2026-02-06 -- Completed 26-02-PLAN.md
+Plan: 3 of 3 in current phase
+Status: Phase complete -- v9.0.0 milestone complete
+Last activity: 2026-02-06 -- Completed 26-03-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 15/16]
-[##############################################] 98% (58/59 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16]
+[################################################] 100% (59/59 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 15/16]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 14
+- Plans completed: 16
 - Average duration: 7m
-- Commits: 35
+- Commits: 39
 
 ## Accumulated Context
 
@@ -95,6 +95,10 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 15/16]
 | 2026-02-06 | 26-02 | OnceLock dispatcher with get_or_init default | Production needs no explicit init; tests call set_dispatcher() |
 | 2026-02-06 | 26-02 | Log-and-drop over Result for dispatch failures | Fire-and-forget methods cannot return errors; keeps app stable |
 | 2026-02-06 | 26-02 | Option<R> for run_cancellable | Cancellation is expected outcome, not error; cleaner for callers |
+| 2026-02-06 | 26-03 | Dual cancellation pattern | run_cancellable for bridge-level + CancellationToken for per-log inner-loop |
+| 2026-02-06 | 26-03 | Explicit set_dispatcher at startup | Makes init order explicit rather than relying on get_or_init default |
+| 2026-02-06 | 26-03 | Browse callbacks unchanged | No timeout/cancellation needs; migration adds complexity without benefit |
+| 2026-02-06 | 26-03 | Unit tests with MockDispatcher | 15 tests validate contracts without Slint event loop; OnceLock limits integration tests |
 
 ### Pending Todos
 
@@ -114,6 +118,7 @@ None.
 - Phase 24 complete -- Settings tab fully functional: UI layout, live persistence, path validation, reset to defaults
 - Plan 25-01 complete -- File logging infrastructure ready, all eprintln! replaced with tracing macros
 - Phase 25 complete -- GUI is distribution-ready: console-less, logged, DPI-aware, self-healing, embedded icon, static CRT
+- Phase 26 complete -- Async bridge audited: dead code removed, BridgeError/EventLoopDispatcher added, run_with_timeout/run_cancellable APIs, 15 unit tests, call sites migrated
 
 ### Quick Tasks Completed
 
@@ -128,6 +133,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 26-02-PLAN.md (resilience APIs and dispatcher trait)
+Stopped at: Completed 26-03-PLAN.md (GUI call site migration and bridge tests)
 Resume file: None
-Next action: 26-03-PLAN.md (testing and documentation)
+Next action: v9.0.0 milestone complete -- all 59 plans across 26 phases executed
