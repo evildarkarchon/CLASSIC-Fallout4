@@ -135,7 +135,7 @@ Plans:
 **Plans:** 1 plan
 
 Plans:
-- [ ] 23-01-PLAN.md — Markdown parsing with pulldown-cmark and block-based Slint rendering
+- [x] 23-01-PLAN.md — Markdown parsing with pulldown-cmark and block-based Slint rendering
 
 #### Phase 24: Settings Dialog
 **Goal**: User can configure application settings
@@ -191,9 +191,9 @@ Plans:
 | 20. Core UI | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 21. Scan Ops | v9.0.0 | 2/2 | Complete | 2026-02-06 |
 | 22. Results | v9.0.0 | 1/1 | Complete | 2026-02-06 |
-| 23. Markdown | v9.0.0 | 0/1 | Not started | - |
+| 23. Markdown | v9.0.0 | 1/1 | Complete | 2026-02-05 |
 | 24. Settings | v9.0.0 | 0/2 | Not started | - |
 | 25. Platform | v9.0.0 | 0/1 | Not started | - |
 | 26. Async Bridge Audit | v9.0.0 | 0/1 | Not started | - |
 
-**Overall:** 3 milestones shipped, 50 plans completed | v9.0.0: 7/12 plans
+**Overall:** 3 milestones shipped, 51 plans completed | v9.0.0: 8/12 plans

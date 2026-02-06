@@ -37,7 +37,7 @@ Requirements for Slint GUI core workflow. Each maps to roadmap phases.
 - [x] **RSLT-02**: Report list shows timestamp, status, and file size
 - [x] **RSLT-03**: User can search/filter report list
 - [x] **RSLT-04**: Selecting report displays content in viewer panel
-- [ ] **RSLT-05**: Markdown content renders with proper formatting (headers, lists, code blocks)
+- [x] **RSLT-05**: Markdown content renders with proper formatting (headers, lists, code blocks)
 - [x] **RSLT-06**: Report viewer supports scrolling for long reports
 - [x] **RSLT-07**: User can copy text from report viewer
 
