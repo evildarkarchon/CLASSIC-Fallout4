@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 27 of 27 (Test Coverage Evaluation and Improvement)
-Plan: 7 of 9 in current phase
+Plan: 8 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-06 -- Completed 27-07-PLAN.md (Small Business-Logic Crates Coverage -- skipped, all 8 above 60%)
+Last activity: 2026-02-06 -- Completed 27-08-PLAN.md (GUI, Shared-Core, and Shared-Py Coverage)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 6/9]
-[########################################################] 96% (65/68 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 7/9]
+[#########################################################] 97% (66/68 plans)
 
 ## Performance Metrics
 
