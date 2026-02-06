@@ -9,13 +9,13 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 
 ## Current Position
 
-Phase: 21 of 25 (Scan Operations)
-Plan: 2 of 2 in current phase
+Phase: 22 of 25 (Results Viewer)
+Plan: 1 of 1 in current phase
 Status: Phase complete
-Last activity: 2026-02-06 -- Completed 21-02-PLAN.md
+Last activity: 2026-02-06 -- Completed 22-01-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 6/13]
-[###################################.....] 88% (49/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 7/13]
+[####################################....] 89% (50/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 6/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 6
+- Plans completed: 7
 - Average duration: 7m
-- Commits: 16
+- Commits: 19
 
 ## Accumulated Context
 
@@ -65,6 +65,11 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 6/13]
 | 2026-02-06 | 21-02 | Explicit 0% progress transition | Shows "Found N logs, analyzing..." between discovery and analysis |
 | 2026-02-06 | 21-02 | has_results() encapsulation | Clean API method instead of inline field checks for tab-switch decision |
 | 2026-02-06 | 21-02 | Auto-clear resets to "Ready" | Matches initial window state instead of empty string |
+| 2026-02-06 | 22-01 | VecModel rebuild for filter/sort | Simpler than FilterModel, keeps results.rs Slint-independent |
+| 2026-02-06 | 22-01 | ReportEntryData intermediate type | Decouples business logic from Slint-generated code |
+| 2026-02-06 | 22-01 | arboard v3 for clipboard | De facto Rust clipboard crate, maintained by 1Password |
+| 2026-02-06 | 22-01 | Consolas monospace font | Slint no CSS font fallback; Consolas universally available on Windows |
+| 2026-02-06 | 22-01 | Fixed 400px max list panel width | Avoids Slint binding loop from root.width circular dependency |
 
 ### Pending Todos
 
@@ -79,6 +84,7 @@ None.
 - State persistence working -- JSON file in user config directory
 - OrchestratorCore runs with minimal config -- full analysis requires Phase 24 YAML settings
 - Phase 21 complete -- full scan UX with discovery, analysis, cancellation, auto-switch, auto-clear
+- Phase 22 complete -- Results tab with master-detail layout, search/filter/sort, clipboard copy
 
 ### Quick Tasks Completed
 
@@ -93,6 +99,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 21-02-PLAN.md (Phase 21 complete)
+Stopped at: Completed 22-01-PLAN.md (Phase 22 complete)
 Resume file: None
-Next action: Begin Phase 22 (Results Display)
+Next action: Begin Phase 23 (Results Display - Markdown rendering)
