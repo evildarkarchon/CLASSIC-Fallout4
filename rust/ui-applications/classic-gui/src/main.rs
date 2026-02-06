@@ -7,6 +7,8 @@ slint::include_modules!();
 
 use std::sync::Arc;
 
+use std::time::Duration;
+
 use classic_shared_core::{get_runtime, AsyncBridge};
 use parking_lot::Mutex;
 use tokio_util::sync::CancellationToken;
@@ -185,23 +187,55 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                 state.cancel_token = Some(cancel_token.clone());
             }
 
-            // Set UI to scanning state
+            // Get crash log path from UI
+            let crash_log_path = window_weak
+                .upgrade()
+                .map(|w| w.get_crash_log_path().to_string())
+                .unwrap_or_default();
+
+            // Set UI to scanning state (immediate progress display per CONTEXT.md)
             if let Some(w) = window_weak.upgrade() {
                 w.set_scan_in_progress(true);
-                w.set_scan_progress(0.0);
-                w.set_scan_status("Starting scan...".into());
+                w.set_scan_progress(-1.0); // Indeterminate during discovery
+                w.set_scan_status("Discovering crash logs...".into());
             }
 
-            // Spawn async scan operation
+            // Spawn real scan operation using OrchestratorCore
+            let window_weak_completion = window_weak.clone();
             AsyncBridge::run_with_ui_update(
-                classic_gui::simulate_scan(window_weak.clone(), cancel_token),
-                move |result| match result {
-                    Ok(_msg) => {
-                        // Success is already handled in simulate_scan
+                classic_gui::scan_crash_logs(window_weak.clone(), cancel_token, crash_log_path),
+                move |result| {
+                    if let Some(w) = window_weak_completion.upgrade() {
+                        match result {
+                            Ok(scan_result) => {
+                                w.set_scan_progress(100.0);
+                                w.set_scan_status(scan_result.format_status().into());
+                                w.set_scan_in_progress(false);
+
+                                // Auto-switch to Results tab on success with results
+                                // (not on cancel or zero logs per CONTEXT.md)
+                                if !scan_result.cancelled && !scan_result.reports.is_empty() {
+                                    w.set_active_tab_index(1); // Results tab
+                                }
+                            }
+                            Err(msg) => {
+                                w.set_scan_progress(0.0);
+                                w.set_scan_status(msg.into());
+                                w.set_scan_in_progress(false);
+                            }
+                        }
                     }
-                    Err(_e) => {
-                        // Error already shown in UI by simulate_scan
-                    }
+
+                    // Auto-clear status after 5 seconds (Claude's discretion per CONTEXT.md)
+                    let window_weak_clear = window_weak_completion.clone();
+                    AsyncBridge::spawn_background(async move {
+                        tokio::time::sleep(Duration::from_secs(5)).await;
+                        let _ = window_weak_clear.upgrade_in_event_loop(|w| {
+                            if !w.get_scan_in_progress() {
+                                w.set_scan_status("".into());
+                            }
+                        });
+                    });
                 },
             );
         });

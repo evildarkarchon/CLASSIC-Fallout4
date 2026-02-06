@@ -120,21 +120,20 @@ export component MainWindow inherits Window {
                         vertical-stretch: 1;
                     }
 
-                    // Scan button centered at bottom
+                    // Morphing Scan/Cancel button - single button, dual purpose
                     HorizontalBox {
                         alignment: center;
-                        spacing: 12px;
 
                         Button {
-                            text: root.scan-in-progress ? "Scanning..." : "Scan Crash Logs";
-                            enabled: !root.scan-in-progress;
-                            primary: true;
-                            clicked => { root.start-scan(); }
-                        }
-                        Button {
-                            text: "Cancel";
-                            enabled: root.scan-in-progress;
-                            clicked => { root.cancel-scan(); }
+                            text: root.scan-in-progress ? "Cancel" : "Scan Crash Logs";
+                            primary: !root.scan-in-progress;
+                            clicked => {
+                                if (root.scan-in-progress) {
+                                    root.cancel-scan();
+                                } else {
+                                    root.start-scan();
+                                }
+                            }
                         }
                     }
                 }
@@ -179,11 +178,13 @@ export component MainWindow inherits Window {
             }
         }
 
-        // Progress area - always visible at bottom
+        // Status bar - always visible at bottom (visible across all tabs)
         VerticalBox {
             spacing: 6px;
             ProgressIndicator {
-                progress: root.scan-progress / 100;
+                // Indeterminate when progress < 0 (discovery phase), determinate otherwise
+                indeterminate: root.scan-progress < 0;
+                progress: root.scan-progress >= 0 ? root.scan-progress / 100 : 0;
             }
             Text {
                 text: root.scan-status;
