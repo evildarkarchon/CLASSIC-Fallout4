@@ -6,6 +6,8 @@ import { PathInput } from "widgets/path_input.slint";
 import { ReportList, ReportEntry } from "widgets/report_list.slint";
 import { ReportViewer } from "widgets/report_viewer.slint";
 import { Splitter } from "widgets/splitter.slint";
+import { MarkdownBlock } from "widgets/types.slint";
+export { MarkdownBlock }
 
 export component MainWindow inherits Window {
     // Window properties - production dimensions per CONTEXT.md
@@ -36,6 +38,7 @@ export component MainWindow inherits Window {
     // Results tab properties
     in-out property <[ReportEntry]> report-list-model;
     in-out property <string> report-content: "";
+    in-out property <[MarkdownBlock]> report-blocks;
     in-out property <bool> has-reports: false;
     in-out property <int> selected-report-index: -1;
     in-out property <bool> report-sort-ascending: false;
@@ -219,6 +222,7 @@ export component MainWindow inherits Window {
                         ReportViewer {
                             horizontal-stretch: 1;
                             content <=> root.report-content;
+                            blocks: root.report-blocks;
                             copy-all => {
                                 root.report-copy-all();
                             }
