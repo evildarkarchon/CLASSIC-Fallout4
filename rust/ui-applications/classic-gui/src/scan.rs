@@ -54,8 +54,16 @@ impl ScanResult {
     }
 
     /// Format the scan result as a human-readable status message
+    ///
+    /// Returns contextual messages:
+    /// - `"No crash logs found"` for empty discovery
+    /// - `"Scanned N logs"` for successful completion
+    /// - `"Scanned N logs (M errors)"` for completion with errors
+    /// - `"Cancelled (X of Y logs)"` for user cancellation
     pub fn format_status(&self) -> String {
-        if self.cancelled {
+        if self.total == 0 {
+            "No crash logs found".to_string()
+        } else if self.cancelled {
             format!("Cancelled ({} of {} logs)", self.attempted, self.total)
         } else if self.error_count > 0 {
             format!(
@@ -65,6 +73,15 @@ impl ScanResult {
         } else {
             format!("Scanned {} logs", self.total)
         }
+    }
+
+    /// Check if scan completed successfully with results
+    ///
+    /// Returns `true` only when the scan was not cancelled and produced
+    /// at least one analysis report. Used to decide whether to auto-switch
+    /// to the Results tab.
+    pub fn has_results(&self) -> bool {
+        !self.cancelled && !self.reports.is_empty()
     }
 }
 

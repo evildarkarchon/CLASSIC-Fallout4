@@ -214,7 +214,7 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
 
                                 // Auto-switch to Results tab on success with results
                                 // (not on cancel or zero logs per CONTEXT.md)
-                                if !scan_result.cancelled && !scan_result.reports.is_empty() {
+                                if scan_result.has_results() {
                                     w.set_active_tab_index(1); // Results tab
                                 }
                             }
