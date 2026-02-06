@@ -2542,4 +2542,496 @@ nulls:
         assert_eq!(ops.get_setting(&yaml, "nulls.explicit"), Some(Yaml::Null));
         assert_eq!(ops.get_setting(&yaml, "nulls.tilde"), Some(Yaml::Null));
     }
+
+    // ============================================================================
+    // IndexMap Value Tests
+    // ============================================================================
+
+    #[test]
+    fn test_get_indexmap_value_returns_ordered_map() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+game:
+  mods:
+    alpha_mod: "First mod"
+    beta_mod: "Second mod"
+    gamma_mod: "Third mod"
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let mods = ops.get_indexmap_value(&yaml, "game.mods");
+        assert_eq!(mods.len(), 3);
+
+        // Verify values
+        assert_eq!(mods.get("alpha_mod"), Some(&"First mod".to_string()));
+        assert_eq!(mods.get("beta_mod"), Some(&"Second mod".to_string()));
+        assert_eq!(mods.get("gamma_mod"), Some(&"Third mod".to_string()));
+
+        // Verify order is preserved
+        let keys: Vec<&String> = mods.keys().collect();
+        assert_eq!(keys[0], "alpha_mod");
+        assert_eq!(keys[1], "beta_mod");
+        assert_eq!(keys[2], "gamma_mod");
+    }
+
+    #[test]
+    fn test_get_indexmap_value_empty_map() {
+        let ops = YamlOperations::new();
+        let yaml_str = "empty_map: {}";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_indexmap_value(&yaml, "empty_map");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_get_indexmap_value_missing_key() {
+        let ops = YamlOperations::new();
+        let yaml_str = "exists: true";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_indexmap_value(&yaml, "nonexistent.path");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_get_indexmap_value_not_a_map() {
+        let ops = YamlOperations::new();
+        let yaml_str = "scalar: just_a_string";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_indexmap_value(&yaml, "scalar");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_get_indexmap_value_filters_non_string_pairs() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+mixed:
+  string_key: "string_value"
+  number_key: 42
+  bool_key: true
+  another_string: "another_value"
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_indexmap_value(&yaml, "mixed");
+        // Only string-to-string entries should be returned
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.get("string_key"), Some(&"string_value".to_string()));
+        assert_eq!(
+            result.get("another_string"),
+            Some(&"another_value".to_string())
+        );
+    }
+
+    #[test]
+    fn test_get_indexmap_value_nested_path() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+outer:
+  inner:
+    key1: val1
+    key2: val2
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_indexmap_value(&yaml, "outer.inner");
+        assert_eq!(result.len(), 2);
+        assert_eq!(result.get("key1"), Some(&"val1".to_string()));
+    }
+
+    #[test]
+    fn test_get_indexmap_value_path_through_non_hash() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+items:
+  - list_item
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        // Path goes through an array, not a hash
+        let result = ops.get_indexmap_value(&yaml, "items.subkey");
+        assert!(result.is_empty());
+    }
+
+    // ============================================================================
+    // HashMap Vec Value Tests
+    // ============================================================================
+
+    #[test]
+    fn test_get_hashmap_vec_value_with_arrays() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+Crashlog_Stack_Check:
+  "6 | BA2 Limit Crash":
+    - LooseFileAsyncStream
+  "3 | NPC Pathing Crash":
+    - NavMesh
+    - PathingCell
+    - BSPathBuilder
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "Crashlog_Stack_Check");
+        assert_eq!(result.len(), 2);
+
+        let ba2 = result.get("6 | BA2 Limit Crash").expect("BA2 entry should exist");
+        assert_eq!(ba2, &vec!["LooseFileAsyncStream".to_string()]);
+
+        let npc = result
+            .get("3 | NPC Pathing Crash")
+            .expect("NPC entry should exist");
+        assert_eq!(npc.len(), 3);
+        assert!(npc.contains(&"NavMesh".to_string()));
+        assert!(npc.contains(&"PathingCell".to_string()));
+        assert!(npc.contains(&"BSPathBuilder".to_string()));
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_with_single_strings() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+patterns:
+  crash1: SinglePattern
+  crash2: AnotherPattern
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "patterns");
+        assert_eq!(result.len(), 2);
+
+        // Single string values should be wrapped in vec
+        assert_eq!(
+            result.get("crash1"),
+            Some(&vec!["SinglePattern".to_string()])
+        );
+        assert_eq!(
+            result.get("crash2"),
+            Some(&vec!["AnotherPattern".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_mixed() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+checks:
+  single: OnlyOne
+  multi:
+    - First
+    - Second
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "checks");
+        assert_eq!(result.len(), 2);
+
+        assert_eq!(result.get("single"), Some(&vec!["OnlyOne".to_string()]));
+        let multi = result.get("multi").expect("multi should exist");
+        assert_eq!(multi, &vec!["First".to_string(), "Second".to_string()]);
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_missing_key() {
+        let ops = YamlOperations::new();
+        let yaml_str = "exists: true";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "nonexistent");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_not_a_map() {
+        let ops = YamlOperations::new();
+        let yaml_str = "not_map: just_string";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "not_map");
+        assert!(result.is_empty());
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_filters_non_string_arrays() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+data:
+  good:
+    - string1
+    - string2
+  bad_value: 42
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "data");
+        // Only string/array entries with string key, bad_value(42) is not a string or array
+        assert_eq!(result.len(), 1);
+        assert!(result.contains_key("good"));
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_nested_path() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+outer:
+  inner:
+    pattern1:
+      - match_a
+      - match_b
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let result = ops.get_hashmap_vec_value(&yaml, "outer.inner");
+        assert_eq!(result.len(), 1);
+        assert_eq!(
+            result.get("pattern1"),
+            Some(&vec!["match_a".to_string(), "match_b".to_string()])
+        );
+    }
+
+    #[test]
+    fn test_get_hashmap_vec_value_path_through_non_hash() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+list:
+  - item1
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        // Path goes through array, not hash
+        let result = ops.get_hashmap_vec_value(&yaml, "list.subkey");
+        assert!(result.is_empty());
+    }
+
+    // ============================================================================
+    // Module-Level Cache Stats Function Tests
+    // ============================================================================
+
+    #[test]
+    #[serial]
+    fn test_cache_stats_function() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
+        let stats = cache_stats();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+        assert_eq!(stats.hit_rate, 0.0);
+        assert_eq!(stats.size, 0);
+        assert_eq!(stats.total_bytes, 0);
+    }
+
+    #[test]
+    fn test_cache_stats_after_operations() {
+        // Use a unique temp file to avoid interference with parallel tests.
+        // We only test that cache_stats() returns meaningful data,
+        // not exact counts (global counters are shared across parallel tests).
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+        writeln!(temp_file, "stats_test: true").expect("Write failed");
+
+        let ops = YamlOperations::new();
+
+        // Load file to ensure at least one cache entry exists
+        let _ = ops
+            .load_yaml_file(temp_file.path())
+            .expect("Load should succeed");
+
+        let stats = cache_stats();
+        // Cache should have at least one entry (our file)
+        assert!(stats.size >= 1, "Cache should have at least one entry");
+        assert!(stats.total_bytes > 0, "Cache should have content bytes");
+        // Total requests should be non-zero
+        assert!(
+            stats.hits + stats.misses > 0,
+            "Should have at least one hit or miss"
+        );
+        // Hit rate should be a valid fraction
+        assert!(
+            stats.hit_rate >= 0.0 && stats.hit_rate <= 1.0,
+            "Hit rate should be between 0.0 and 1.0"
+        );
+    }
+
+    #[test]
+    #[serial]
+    fn test_reset_cache_stats_function() {
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
+        // Generate some hits/misses
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+        writeln!(temp_file, "reset_test: yes").expect("Write failed");
+
+        let ops = YamlOperations::new();
+        let _ = ops.load_yaml_file(temp_file.path()).unwrap();
+        let _ = ops.load_yaml_file(temp_file.path()).unwrap();
+
+        let stats = cache_stats();
+        assert!(stats.hits > 0 || stats.misses > 0);
+
+        // Reset
+        reset_cache_stats();
+
+        let stats = cache_stats();
+        assert_eq!(stats.hits, 0);
+        assert_eq!(stats.misses, 0);
+        assert_eq!(stats.hit_rate, 0.0);
+        // size and total_bytes depend on cache content, not stats counters
+    }
+
+    // ============================================================================
+    // Additional Edge Cases for set_setting / set_settings_batch
+    // ============================================================================
+
+    #[test]
+    fn test_set_setting_creates_intermediate_path() {
+        let ops = YamlOperations::new();
+        let yaml_str = "existing: value";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        // Create entirely new nested path
+        let updated = ops
+            .set_setting(
+                &yaml,
+                "new.deeply.nested.key",
+                Yaml::String("created".to_string()),
+            )
+            .expect("Should succeed");
+
+        assert_eq!(
+            ops.get_setting(&updated, "new.deeply.nested.key"),
+            Some(Yaml::String("created".to_string()))
+        );
+        // Existing key should still be present
+        assert_eq!(
+            ops.get_setting(&updated, "existing"),
+            Some(Yaml::String("value".to_string()))
+        );
+    }
+
+    #[test]
+    fn test_set_settings_batch_with_empty_key_path_fails() {
+        let ops = YamlOperations::new();
+        let yaml_str = "key: value";
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        let updates = vec![("", Yaml::Boolean(true))];
+        let result = ops.set_settings_batch(&yaml, &updates);
+        assert!(result.is_err());
+    }
+
+    // ============================================================================
+    // get_string_value from non-hash root
+    // ============================================================================
+
+    #[test]
+    fn test_get_string_value_from_array_root() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+- item1
+- item2
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        // Root is array, not hash
+        let result = ops.get_string_value(&yaml, "key", "default");
+        assert_eq!(result, "default");
+    }
+
+    #[test]
+    fn test_get_vec_value_from_non_hash_intermediate() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+outer: "string_not_hash"
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+
+        // Path traverses through a string value, not a hash
+        let result = ops.get_vec_value(&yaml, "outer.inner");
+        assert!(result.is_empty());
+    }
+
+    // ============================================================================
+    // Dump YAML edge cases
+    // ============================================================================
+
+    #[test]
+    fn test_dump_yaml_with_nested_structure() {
+        let ops = YamlOperations::new();
+        let yaml_str = r#"
+root:
+  child:
+    grandchild: value
+  list:
+    - item1
+    - item2
+"#;
+        let yaml = ops.parse_yaml(yaml_str).expect("Parse should succeed");
+        let dumped = ops.dump_yaml(&yaml).expect("Dump should succeed");
+
+        assert!(dumped.contains("root"));
+        assert!(dumped.contains("grandchild"));
+        assert!(dumped.contains("item1"));
+    }
+
+    #[test]
+    fn test_dump_yaml_scalar() {
+        let ops = YamlOperations::new();
+        let yaml = Yaml::String("hello world".to_string());
+        let dumped = ops.dump_yaml(&yaml).expect("Dump should succeed");
+        assert!(dumped.contains("hello world"));
+    }
+
+    // ============================================================================
+    // save_yaml_file with cache disabled
+    // ============================================================================
+
+    #[test]
+    fn test_save_yaml_file_with_cache_disabled() {
+        clear_global_yaml_cache();
+
+        let temp_dir = tempfile::tempdir().expect("Failed to create temp dir");
+        let config_path = temp_dir.path().join("no_cache_save.yaml");
+
+        let mut ops = YamlOperations::new();
+        ops.set_cache_enabled(false);
+
+        let mut hash = yaml_rust2::yaml::Hash::new();
+        hash.insert(
+            Yaml::String("saved".to_string()),
+            Yaml::Boolean(true),
+        );
+        let yaml = Yaml::Hash(hash);
+
+        ops.save_yaml_file(&config_path, &yaml)
+            .expect("Save should succeed");
+
+        // File should exist and be valid
+        let content = fs::read_to_string(&config_path).expect("Should read file");
+        assert!(content.contains("saved"));
+    }
+
+    // ============================================================================
+    // load_yaml_file cache edge cases
+    // ============================================================================
+
+    #[test]
+    fn test_load_yaml_file_with_cache_disabled_no_cache_entry() {
+        clear_global_yaml_cache();
+
+        let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
+        writeln!(temp_file, "no_cache: true").expect("Write failed");
+        let file_path = temp_file.path().to_path_buf();
+
+        let mut ops = YamlOperations::new();
+        ops.set_cache_enabled(false);
+
+        let yaml = ops.load_yaml_file(&file_path).expect("Load should succeed");
+        assert_eq!(ops.get_setting(&yaml, "no_cache"), Some(Yaml::Boolean(true)));
+
+        // Should NOT be in cache
+        assert!(!YAML_CACHE.contains_key(&file_path));
+    }
 }
