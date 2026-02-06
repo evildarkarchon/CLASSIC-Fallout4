@@ -5,7 +5,7 @@
 - **v1.0 Codebase Cleanup** -- Phases 1-5 (shipped 2026-02-02)
 - **v8.2.0-part2 Rust Migration** -- Phases 6-11 (shipped 2026-02-04)
 - **v8.3.0 Performance & Polish** -- Phases 12-18 (shipped 2026-02-05)
-- **v9.0.0 Slint GUI** -- Phases 19-26 (shipped 2026-02-06)
+- **v9.0.0 Slint GUI** -- Phases 19-27 (shipped 2026-02-06)
 
 ## Phases
 
@@ -185,6 +185,28 @@ Plans:
 - [x] 26-02-PLAN.md — Add BridgeError, EventLoopDispatcher trait, run_with_timeout, run_cancellable
 - [x] 26-03-PLAN.md — Migrate GUI call sites and write bridge unit tests
 
+#### Phase 27: Test Coverage Evaluation and Improvement
+**Goal**: Establish 60% minimum line coverage across all Rust crates using cargo-llvm-cov, with per-crate measurement and systematic gap-filling
+**Depends on**: Phase 26
+**Requirements**: TBD
+**Success Criteria** (what must be TRUE):
+  1. Test coverage baseline established across all Rust crates
+  2. Critical gaps identified and prioritized
+  3. New tests written for under-covered areas
+  4. All non-PyO3 Rust crates meet 60% line coverage minimum
+**Plans:** 9 plans
+
+Plans:
+- [ ] 27-01-PLAN.md — Coverage tooling setup, baseline measurement, and gap analysis
+- [ ] 27-02-PLAN.md — Gap-fill classic-scanlog-core (largest crate, 11K lines)
+- [ ] 27-03-PLAN.md — Gap-fill classic-file-io-core and classic-path-core
+- [ ] 27-04-PLAN.md — Gap-fill classic-scangame-core and classic-version-registry-core
+- [ ] 27-05-PLAN.md — Gap-fill classic-yaml-core, classic-config-core, classic-settings-core
+- [ ] 27-06-PLAN.md — Gap-fill classic-database-core, classic-message-core, classic-constants-core
+- [ ] 27-07-PLAN.md — Gap-fill 8 small business-logic crates
+- [ ] 27-08-PLAN.md — Gap-fill classic-gui, classic-shared-core, classic-shared-py
+- [ ] 27-09-PLAN.md — Final workspace-wide verification and coverage report
+
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -200,5 +222,6 @@ Plans:
 | 24. Settings | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 25. Platform | v9.0.0 | 2/2 | Complete | 2026-02-06 |
 | 26. Async Bridge Audit | v9.0.0 | 3/3 | Complete | 2026-02-06 |
+| 27. Test Coverage | v9.0.0 | 0/9 | In Progress | - |
 
-**Overall:** 3 milestones shipped, 59 plans completed | v9.0.0: 16/16 plans
+**Overall:** 4 milestones shipped, 59 plans completed | v9.0.0: 16/16 plans + Phase 27 (0/9)
