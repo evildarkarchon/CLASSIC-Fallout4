@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-02-05)
 
 **Core value:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
-**Current focus:** v9.0.0 Slint GUI -- Phase 23 Markdown Renderer
+**Current focus:** v9.0.0 Slint GUI -- Phase 24 Settings Dialog
 
 ## Current Position
 
-Phase: 23 of 25 (Markdown Renderer)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-02-06 -- Completed 23-01-PLAN.md
+Phase: 24 of 25 (Settings Dialog)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-02-06 -- Completed 24-01-PLAN.md
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 8/13]
-[#####################################...] 91% (51/56 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 9/13]
+[######################################..] 93% (52/56 plans)
 
 ## Performance Metrics
 
@@ -36,9 +36,9 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 8/13]
 - Files changed: 111
 
 **v9.0.0 Velocity:**
-- Plans completed: 8
+- Plans completed: 9
 - Average duration: 7m
-- Commits: 23
+- Commits: 25
 
 ## Accumulated Context
 
@@ -74,6 +74,10 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 8/13]
 | 2026-02-06 | 23-01 | Block-level formatting flattening | Bold/italic per-block not inline, matches CLASSIC report line-level formatting |
 | 2026-02-06 | 23-01 | Dual property pattern (content + blocks) | Raw markdown preserved for Copy All, parsed blocks for rendering |
 | 2026-02-06 | 23-01 | pulldown-cmark 0.13 for markdown parsing | CommonMark compliant, pure Rust, lighter than comrak |
+| 2026-02-06 | 24-01 | Nested TabWidget for settings sub-tabs | Standard Slint component, works with fluent-dark theme |
+| 2026-02-06 | 24-01 | Inline confirmation for Reset to Defaults | Show/hide confirm row; simpler than modal popup in Slint |
+| 2026-02-06 | 24-01 | setting- prefix for settings properties | Distinguishes from scan/results properties on MainWindow |
+| 2026-02-06 | 24-01 | VR mode migration in ClassicConfig | vr_mode=true + no game_version -> game_version="VR" on load |
 
 ### Pending Todos
 
@@ -90,6 +94,7 @@ None.
 - Phase 21 complete -- full scan UX with discovery, analysis, cancellation, auto-switch, auto-clear
 - Phase 22 complete -- Results tab with master-detail layout, search/filter/sort, clipboard copy
 - Phase 23 complete -- Markdown renderer with pulldown-cmark, 6 block types, styled ScrollView viewer
+- Phase 24 Plan 01 complete -- Settings tab UI with 3 sub-tabs, ClassicConfig extended; Plan 02 wires Rust callbacks
 
 ### Quick Tasks Completed
 
@@ -104,6 +109,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 23-01-PLAN.md (Phase 23 complete)
+Stopped at: Completed 24-01-PLAN.md
 Resume file: None
-Next action: Begin Phase 24 (Settings)
+Next action: Execute 24-02-PLAN.md (Settings persistence wiring)
