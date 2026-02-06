@@ -5,7 +5,7 @@
 - **v1.0 Codebase Cleanup** -- Phases 1-5 (shipped 2026-02-02)
 - **v8.2.0-part2 Rust Migration** -- Phases 6-11 (shipped 2026-02-04)
 - **v8.3.0 Performance & Polish** -- Phases 12-18 (shipped 2026-02-05)
-- **v9.0.0 Slint GUI** -- Phases 19-27 (shipped 2026-02-06)
+- **v9.0.0 Slint GUI** -- Phases 19-27, 25 plans (shipped 2026-02-06)
 
 ## Phases
 
@@ -57,7 +57,7 @@ See `.planning/milestones/v8.3.0-ROADMAP.md` for full details.
 
 </details>
 
-### v9.0.0 Slint GUI (In Progress)
+### v9.0.0 Slint GUI -- SHIPPED 2026-02-06
 
 **Milestone Goal:** Rust-native GUI using Slint -- all business logic and UI in Rust, no Python dependency.
 
@@ -197,15 +197,15 @@ Plans:
 **Plans:** 9 plans
 
 Plans:
-- [ ] 27-01-PLAN.md — Coverage tooling setup, baseline measurement, and gap analysis
-- [ ] 27-02-PLAN.md — Gap-fill classic-scanlog-core (largest crate, 11K lines)
-- [ ] 27-03-PLAN.md — Gap-fill classic-file-io-core and classic-path-core
-- [ ] 27-04-PLAN.md — Gap-fill classic-scangame-core and classic-version-registry-core
-- [ ] 27-05-PLAN.md — Gap-fill classic-yaml-core, classic-config-core, classic-settings-core
-- [ ] 27-06-PLAN.md — Gap-fill classic-database-core, classic-message-core, classic-constants-core
-- [ ] 27-07-PLAN.md — Gap-fill 8 small business-logic crates
-- [ ] 27-08-PLAN.md — Gap-fill classic-gui, classic-shared-core, classic-shared-py
-- [ ] 27-09-PLAN.md — Final workspace-wide verification and coverage report
+- [x] 27-01-PLAN.md — Coverage tooling setup, baseline measurement, and gap analysis
+- [x] 27-02-PLAN.md — Gap-fill classic-scanlog-core (largest crate, 11K lines)
+- [x] 27-03-PLAN.md — Gap-fill classic-file-io-core and classic-path-core
+- [x] 27-04-PLAN.md — Gap-fill classic-scangame-core and classic-version-registry-core
+- [x] 27-05-PLAN.md — Gap-fill classic-yaml-core, classic-config-core, classic-settings-core
+- [x] 27-06-PLAN.md — Gap-fill classic-database-core, classic-message-core, classic-constants-core
+- [x] 27-07-PLAN.md — Gap-fill 8 small business-logic crates
+- [x] 27-08-PLAN.md — Gap-fill classic-gui, classic-shared-core, classic-shared-py
+- [x] 27-09-PLAN.md — Final workspace-wide verification and coverage report
 
 ## Progress
 
@@ -222,6 +222,6 @@ Plans:
 | 24. Settings | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 25. Platform | v9.0.0 | 2/2 | Complete | 2026-02-06 |
 | 26. Async Bridge Audit | v9.0.0 | 3/3 | Complete | 2026-02-06 |
-| 27. Test Coverage | v9.0.0 | 0/9 | In Progress | - |
+| 27. Test Coverage | v9.0.0 | 9/9 | Complete | 2026-02-06 |
 
-**Overall:** 4 milestones shipped, 59 plans completed | v9.0.0: 16/16 plans + Phase 27 (0/9)
+**Overall:** 5 milestones shipped, 68 plans completed
