@@ -198,3 +198,178 @@ where
         window.set_scan_status(status.into());
     });
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use classic_scanlog_core::AnalysisResult;
+
+    /// Helper to create a minimal AnalysisResult for testing
+    fn make_result(log_path: &str) -> AnalysisResult {
+        AnalysisResult {
+            log_path: log_path.to_string(),
+            report_lines: vec!["line1".to_string()],
+            success: true,
+            error: None,
+            processing_time_us: 0,
+            processing_time_ms: 0,
+            formid_count: 0,
+            plugin_count: 0,
+            suspect_count: 0,
+            scanned: 1,
+            incomplete: 0,
+            failed: 0,
+            trigger_scan_failed: false,
+        }
+    }
+
+    // ---- ScanResult::format_status ----
+
+    #[test]
+    fn test_format_status_no_logs_found() {
+        let result = ScanResult {
+            reports: vec![],
+            error_count: 0,
+            attempted: 0,
+            total: 0,
+            cancelled: false,
+        };
+        assert_eq!(result.format_status(), "No crash logs found");
+    }
+
+    #[test]
+    fn test_format_status_successful_scan() {
+        let result = ScanResult {
+            reports: vec![make_result("a.log"), make_result("b.log")],
+            error_count: 0,
+            attempted: 2,
+            total: 2,
+            cancelled: false,
+        };
+        assert_eq!(result.format_status(), "Scanned 2 logs");
+    }
+
+    #[test]
+    fn test_format_status_scan_with_errors() {
+        let result = ScanResult {
+            reports: vec![make_result("a.log")],
+            error_count: 2,
+            attempted: 3,
+            total: 3,
+            cancelled: false,
+        };
+        assert_eq!(result.format_status(), "Scanned 3 logs (2 errors)");
+    }
+
+    #[test]
+    fn test_format_status_cancelled() {
+        let result = ScanResult {
+            reports: vec![make_result("a.log")],
+            error_count: 0,
+            attempted: 3,
+            total: 10,
+            cancelled: true,
+        };
+        assert_eq!(result.format_status(), "Cancelled (3 of 10 logs)");
+    }
+
+    #[test]
+    fn test_format_status_single_log() {
+        let result = ScanResult {
+            reports: vec![make_result("only.log")],
+            error_count: 0,
+            attempted: 1,
+            total: 1,
+            cancelled: false,
+        };
+        assert_eq!(result.format_status(), "Scanned 1 logs");
+    }
+
+    // ---- ScanResult::has_results ----
+
+    #[test]
+    fn test_has_results_with_reports() {
+        let result = ScanResult {
+            reports: vec![make_result("a.log")],
+            error_count: 0,
+            attempted: 1,
+            total: 1,
+            cancelled: false,
+        };
+        assert!(result.has_results());
+    }
+
+    #[test]
+    fn test_has_results_no_reports() {
+        let result = ScanResult {
+            reports: vec![],
+            error_count: 0,
+            attempted: 0,
+            total: 0,
+            cancelled: false,
+        };
+        assert!(!result.has_results());
+    }
+
+    #[test]
+    fn test_has_results_cancelled_with_reports() {
+        let result = ScanResult {
+            reports: vec![make_result("a.log")],
+            error_count: 0,
+            attempted: 1,
+            total: 5,
+            cancelled: true,
+        };
+        assert!(!result.has_results(), "Cancelled scans should not report has_results");
+    }
+
+    #[test]
+    fn test_has_results_cancelled_no_reports() {
+        let result = ScanResult {
+            reports: vec![],
+            error_count: 0,
+            attempted: 0,
+            total: 5,
+            cancelled: true,
+        };
+        assert!(!result.has_results());
+    }
+
+    // ---- ScanResult constructors (private but fields are pub) ----
+
+    #[test]
+    fn test_complete_constructor_total_calculation() {
+        let result = ScanResult::complete(vec![make_result("a.log"), make_result("b.log")], 1);
+        assert_eq!(result.total, 3); // 2 reports + 1 error
+        assert_eq!(result.attempted, 3);
+        assert_eq!(result.error_count, 1);
+        assert!(!result.cancelled);
+    }
+
+    #[test]
+    fn test_cancelled_constructor_preserves_partial() {
+        let result = ScanResult::cancelled(vec![make_result("a.log")], 3, 10);
+        assert_eq!(result.reports.len(), 1);
+        assert_eq!(result.attempted, 3);
+        assert_eq!(result.total, 10);
+        assert!(result.cancelled);
+        assert_eq!(result.error_count, 0);
+    }
+
+    #[test]
+    fn test_complete_no_errors() {
+        let result = ScanResult::complete(vec![make_result("x.log")], 0);
+        assert_eq!(result.total, 1);
+        assert_eq!(result.error_count, 0);
+        assert!(result.has_results());
+    }
+
+    #[test]
+    fn test_complete_only_errors() {
+        let result = ScanResult::complete(vec![], 5);
+        assert_eq!(result.total, 5);
+        assert_eq!(result.error_count, 5);
+        assert!(!result.has_results());
+        assert_eq!(result.format_status(), "Scanned 5 logs (5 errors)");
+    }
+}

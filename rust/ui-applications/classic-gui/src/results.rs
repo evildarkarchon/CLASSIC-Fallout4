@@ -242,4 +242,166 @@ mod tests {
         assert_eq!(entries[0].filename, "a-crash.log");
         assert_eq!(entries[1].filename, "z-crash.log");
     }
+
+    // ---- Additional coverage tests ----
+
+    #[test]
+    fn test_extract_timestamp_various_valid() {
+        // Midnight time
+        assert_eq!(
+            extract_timestamp("crash-2024-06-01-00-00-00.log"),
+            "2024-06-01 00:00:00"
+        );
+        // Max valid time
+        assert_eq!(
+            extract_timestamp("crash-2024-12-31-23-59-59.log"),
+            "2024-12-31 23:59:59"
+        );
+    }
+
+    #[test]
+    fn test_extract_timestamp_invalid_month() {
+        // Month 13 is invalid
+        assert_eq!(extract_timestamp("crash-2024-13-01.log"), "");
+    }
+
+    #[test]
+    fn test_extract_timestamp_invalid_day() {
+        // Day 32 is invalid
+        assert_eq!(extract_timestamp("crash-2024-01-32.log"), "");
+    }
+
+    #[test]
+    fn test_extract_timestamp_invalid_hour() {
+        // Hour 25 is invalid -- falls back to date only
+        assert_eq!(
+            extract_timestamp("crash-2024-01-15-25-30-00.log"),
+            "2024-01-15"
+        );
+    }
+
+    #[test]
+    fn test_extract_timestamp_year_out_of_range() {
+        // Year 1899 is below range
+        assert_eq!(extract_timestamp("crash-1899-01-01.log"), "");
+        // Year 2101 is above range
+        assert_eq!(extract_timestamp("crash-2101-01-01.log"), "");
+    }
+
+    #[test]
+    fn test_extract_timestamp_embedded_in_longer_name() {
+        assert_eq!(
+            extract_timestamp("FO4-crash-2024-03-20-14-00-00-custom.log"),
+            "2024-03-20 14:00:00"
+        );
+    }
+
+    #[test]
+    fn test_get_report_content_empty_reports() {
+        let reports: Vec<AnalysisResult> = vec![];
+        assert_eq!(get_report_content(&reports, 0), "");
+    }
+
+    #[test]
+    fn test_get_report_content_multiple_lines() {
+        let reports = vec![make_result(
+            "test.log",
+            vec!["A".to_string(), "B".to_string(), "C".to_string()],
+        )];
+        assert_eq!(get_report_content(&reports, 0), "A\nB\nC");
+    }
+
+    #[test]
+    fn test_prepare_report_entries_empty() {
+        let reports: Vec<AnalysisResult> = vec![];
+        let entries = prepare_report_entries(&reports, true);
+        assert!(entries.is_empty());
+    }
+
+    #[test]
+    fn test_prepare_report_entries_extracts_filename() {
+        let reports = vec![make_result(
+            "/home/user/logs/crash-2024-01-15.log",
+            vec![],
+        )];
+        let entries = prepare_report_entries(&reports, true);
+        assert_eq!(entries[0].filename, "crash-2024-01-15.log");
+        assert_eq!(entries[0].timestamp, "2024-01-15");
+        assert_eq!(entries[0].source_index, 0);
+    }
+
+    #[test]
+    fn test_prepare_report_entries_preserves_source_index_after_sort() {
+        let reports = vec![
+            make_result("c-crash.log", vec![]),
+            make_result("a-crash.log", vec![]),
+            make_result("b-crash.log", vec![]),
+        ];
+        let entries = prepare_report_entries(&reports, true);
+        assert_eq!(entries[0].filename, "a-crash.log");
+        assert_eq!(entries[0].source_index, 1); // Originally index 1
+        assert_eq!(entries[1].filename, "b-crash.log");
+        assert_eq!(entries[1].source_index, 2); // Originally index 2
+        assert_eq!(entries[2].filename, "c-crash.log");
+        assert_eq!(entries[2].source_index, 0); // Originally index 0
+    }
+
+    #[test]
+    fn test_report_data_struct() {
+        let data = ReportData {
+            reports: vec![make_result("test.log", vec!["line".to_string()])],
+        };
+        assert_eq!(data.reports.len(), 1);
+        assert_eq!(data.reports[0].log_path, "test.log");
+    }
+
+    #[test]
+    fn test_report_entry_data_fields() {
+        let entry = ReportEntryData {
+            filename: "crash.log".to_string(),
+            timestamp: "2024-01-01".to_string(),
+            source_index: 42,
+        };
+        assert_eq!(entry.filename, "crash.log");
+        assert_eq!(entry.timestamp, "2024-01-01");
+        assert_eq!(entry.source_index, 42);
+    }
+
+    #[test]
+    fn test_copy_to_clipboard_succeeds() {
+        // Test clipboard operations (may fail in headless CI but exercises the code path)
+        let result = copy_to_clipboard("test clipboard content");
+        // On Windows desktop environments this should work
+        // In headless environments it may fail, which is acceptable
+        if result.is_ok() {
+            // Verify by reading back (arboard supports this)
+            let mut clipboard = Clipboard::new().unwrap();
+            let text = clipboard.get_text().unwrap_or_default();
+            assert_eq!(text, "test clipboard content");
+        }
+    }
+
+    #[test]
+    fn test_copy_to_clipboard_empty_string() {
+        let result = copy_to_clipboard("");
+        // Should succeed (or fail gracefully) even with empty string
+        // Just verify it doesn't panic
+        let _ = result;
+    }
+
+    #[test]
+    fn test_prepare_report_entries_single() {
+        let reports = vec![make_result("crash-2024-06-15-10-30-00.log", vec!["data".to_string()])];
+        let entries = prepare_report_entries(&reports, true);
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].filename, "crash-2024-06-15-10-30-00.log");
+        assert_eq!(entries[0].timestamp, "2024-06-15 10:30:00");
+        assert_eq!(entries[0].source_index, 0);
+    }
+
+    #[test]
+    fn test_get_report_content_single_line() {
+        let reports = vec![make_result("test.log", vec!["Only line".to_string()])];
+        assert_eq!(get_report_content(&reports, 0), "Only line");
+    }
 }

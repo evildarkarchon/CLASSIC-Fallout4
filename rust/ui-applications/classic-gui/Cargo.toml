@@ -39,6 +39,9 @@ arboard = "3"  # System clipboard access
 slint-build = { workspace = true }
 tauri-winres = "0.3"
 
+[dev-dependencies]
+tempfile = { workspace = true }
+
 [lints.rust]
 deprecated = "deny"
 rust_2024_compatibility = "deny"

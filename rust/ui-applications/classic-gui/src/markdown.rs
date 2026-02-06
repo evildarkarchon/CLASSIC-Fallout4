@@ -391,4 +391,174 @@ mod tests {
         assert!(blocks[0].is_bold);
         assert_eq!(blocks[0].text, "Bold quote");
     }
+
+    // ---- Additional coverage tests ----
+
+    #[test]
+    fn test_heading_h2() {
+        let blocks = parse_markdown("## Subsection");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].heading_level, 2);
+        assert_eq!(blocks[0].text, "Subsection");
+    }
+
+    #[test]
+    fn test_heading_h4_maps_to_level_4() {
+        let blocks = parse_markdown("#### Deep heading");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].heading_level, 4);
+        assert_eq!(blocks[0].text, "Deep heading");
+    }
+
+    #[test]
+    fn test_nested_list() {
+        let input = "- Item 1\n  - Sub-item A\n  - Sub-item B\n- Item 2";
+        let blocks = parse_markdown(input);
+        // Should have outer and inner list items
+        assert!(blocks.len() >= 3, "Expected at least 3 items, got {}", blocks.len());
+        // First item at depth 1
+        assert_eq!(blocks[0].block_type, BLOCK_LIST_ITEM);
+    }
+
+    #[test]
+    fn test_bold_list_item() {
+        let input = "- **Bold item**";
+        let blocks = parse_markdown(input);
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].block_type, BLOCK_LIST_ITEM);
+        assert!(blocks[0].is_bold);
+        assert_eq!(blocks[0].text, "Bold item");
+    }
+
+    #[test]
+    fn test_soft_break_becomes_space() {
+        // A soft break (single newline in paragraph) becomes a space
+        let input = "Line one\nLine two";
+        let blocks = parse_markdown(input);
+        assert_eq!(blocks.len(), 1);
+        assert!(blocks[0].text.contains("Line one"));
+        assert!(blocks[0].text.contains("Line two"));
+    }
+
+    #[test]
+    fn test_hard_break_becomes_newline() {
+        // Two spaces followed by newline = hard break
+        let input = "Line one  \nLine two";
+        let blocks = parse_markdown(input);
+        assert_eq!(blocks.len(), 1);
+        assert!(blocks[0].text.contains('\n'), "Hard break should become newline");
+    }
+
+    #[test]
+    fn test_multiple_paragraphs() {
+        let input = "Paragraph one\n\nParagraph two\n\nParagraph three";
+        let blocks = parse_markdown(input);
+        assert_eq!(blocks.len(), 3);
+        for block in &blocks {
+            assert_eq!(block.block_type, BLOCK_PARAGRAPH);
+        }
+    }
+
+    #[test]
+    fn test_code_block_trailing_newline_trimmed() {
+        let blocks = parse_markdown("```\ncode line\n```");
+        assert_eq!(blocks.len(), 1);
+        assert_eq!(blocks[0].block_type, BLOCK_CODE);
+        assert!(!blocks[0].text.ends_with('\n'), "Trailing newline should be trimmed");
+    }
+
+    #[test]
+    fn test_markdown_block_constructors() {
+        // Test heading constructor
+        let h = MarkdownBlock::heading(2, "Title");
+        assert_eq!(h.block_type, BLOCK_HEADING);
+        assert_eq!(h.heading_level, 2);
+        assert!(h.is_bold);
+        assert!(!h.is_italic);
+        assert_eq!(h.indent_level, 0);
+
+        // Test paragraph constructor
+        let p = MarkdownBlock::paragraph("text", true, true);
+        assert_eq!(p.block_type, BLOCK_PARAGRAPH);
+        assert!(p.is_bold);
+        assert!(p.is_italic);
+
+        // Test code_block constructor
+        let c = MarkdownBlock::code_block("fn main() {}\n");
+        assert_eq!(c.block_type, BLOCK_CODE);
+        assert_eq!(c.text, "fn main() {}"); // trailing newline trimmed
+
+        // Test rule constructor
+        let r = MarkdownBlock::rule();
+        assert_eq!(r.block_type, BLOCK_RULE);
+        assert!(r.text.is_empty());
+
+        // Test list_item constructor at various depths
+        let l1 = MarkdownBlock::list_item(1, "Level 1", false);
+        assert_eq!(l1.bullet_marker, "\u{2022}");
+        assert_eq!(l1.indent_level, 0);
+
+        let l2 = MarkdownBlock::list_item(2, "Level 2", false);
+        assert_eq!(l2.bullet_marker, "\u{25E6}");
+        assert_eq!(l2.indent_level, 1);
+
+        let l3 = MarkdownBlock::list_item(3, "Level 3", true);
+        assert_eq!(l3.bullet_marker, "\u{25AA}");
+        assert_eq!(l3.indent_level, 2);
+        assert!(l3.is_bold);
+
+        // Test blockquote constructor
+        let bq = MarkdownBlock::blockquote("Quote", false);
+        assert_eq!(bq.block_type, BLOCK_BLOCKQUOTE);
+        assert!(!bq.is_bold);
+    }
+
+    #[test]
+    fn test_multiple_horizontal_rules() {
+        let input = "---\n\n---\n\n---";
+        let blocks = parse_markdown(input);
+        assert_eq!(blocks.len(), 3);
+        for block in &blocks {
+            assert_eq!(block.block_type, BLOCK_RULE);
+        }
+    }
+
+    #[test]
+    fn test_block_constants_distinct() {
+        let types = [BLOCK_PARAGRAPH, BLOCK_HEADING, BLOCK_CODE, BLOCK_RULE, BLOCK_LIST_ITEM, BLOCK_BLOCKQUOTE];
+        for (i, a) in types.iter().enumerate() {
+            for (j, b) in types.iter().enumerate() {
+                if i != j {
+                    assert_ne!(a, b, "Block type constants should be distinct");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_bold_and_italic_paragraph() {
+        // Bold and italic combined
+        let blocks = parse_markdown("***Bold italic***");
+        assert_eq!(blocks.len(), 1);
+        assert!(blocks[0].is_bold);
+        assert!(blocks[0].is_italic);
+    }
+
+    #[test]
+    fn test_blockquote_multiline() {
+        let input = "> Line one\n> Line two";
+        let blocks = parse_markdown(input);
+        assert!(!blocks.is_empty());
+        assert_eq!(blocks[0].block_type, BLOCK_BLOCKQUOTE);
+    }
+
+    #[test]
+    fn test_markdown_block_equality() {
+        let a = MarkdownBlock::paragraph("text", false, false);
+        let b = MarkdownBlock::paragraph("text", false, false);
+        assert_eq!(a, b);
+
+        let c = MarkdownBlock::paragraph("text", true, false);
+        assert_ne!(a, c);
+    }
 }
