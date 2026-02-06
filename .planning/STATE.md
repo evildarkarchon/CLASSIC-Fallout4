@@ -10,12 +10,12 @@ See: .planning/PROJECT.md (updated 2026-02-05)
 ## Current Position
 
 Phase: 27 of 27 (Test Coverage Evaluation and Improvement)
-Plan: 6 of 9 in current phase
+Plan: 7 of 9 in current phase
 Status: In progress
-Last activity: 2026-02-06 -- Completed 27-06-PLAN.md (Database, Message, and Constants Coverage -- skipped, all three above 60%)
+Last activity: 2026-02-06 -- Completed 27-07-PLAN.md (Small Business-Logic Crates Coverage -- skipped, all 8 above 60%)
 
-Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 5/9]
-[#######################################################] 94% (64/68 plans)
+Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [Phase 27: 6/9]
+[########################################################] 96% (65/68 plans)
 
 ## Performance Metrics
 
@@ -108,6 +108,7 @@ Progress: [v1.0: 14/14] [v8.2.0-part2: 14/14] [v8.3.0: 15/15] [v9.0.0: 16/16] [P
 | 2026-02-06 | 27-05 | Yaml-core already above 60% per-crate (91.4%); added 26 tests for untested functions | Workspace baseline showed 19.6% but per-crate measurement showed 91.4%; improved to 97.9% |
 | 2026-02-06 | 27-05 | Skip config-core and settings-core | Baseline shows 88.9% and 97.3% respectively; well above 60% |
 | 2026-02-06 | 27-06 | Skip plan -- database-core, message-core, constants-core above 60% | Baseline shows 89.4%, 100.0%, and 88.9% respectively; no gap-filling needed |
+| 2026-02-06 | 27-07 | Skip plan -- all 8 small business-logic crates above 60% | Baseline shows 65.2%-100.0% for all 8 crates; no gap-filling needed |
 
 ### Pending Todos
 
@@ -140,6 +141,14 @@ None.
 - classic-yaml-core per-crate: 97.9% (was 91.4% before 27-05, workspace baseline showed 19.6% due to attribution artifact)
 - classic-config-core verified at 88.9% -- no gap-filling needed (plan 27-05)
 - classic-settings-core verified at 97.3% -- no gap-filling needed (plan 27-05)
+- classic-update-core verified at 91.7% -- no gap-filling needed (plan 27-07 skipped)
+- classic-web-core verified at 99.4% -- no gap-filling needed (plan 27-07 skipped)
+- classic-registry-core verified at 89.0% -- no gap-filling needed (plan 27-07 skipped)
+- classic-resource-core verified at 69.1% -- no gap-filling needed (plan 27-07 skipped)
+- classic-perf-core verified at 99.6% -- no gap-filling needed (plan 27-07 skipped)
+- classic-version-core verified at 90.2% -- no gap-filling needed (plan 27-07 skipped)
+- classic-xse-core verified at 65.2% -- no gap-filling needed (plan 27-07 skipped)
+- classic-pybridge-core verified at 100.0% -- no gap-filling needed (plan 27-07 skipped)
 - Flaky test noted -- classic-yaml-core::test_cache_stats_empty fails intermittently due to global state contamination
 
 ### Quick Tasks Completed
@@ -156,6 +165,6 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-06
-Stopped at: Completed 27-06-PLAN.md (Database, Message, and Constants Coverage -- skipped)
+Stopped at: Completed 27-07-PLAN.md (Small Business-Logic Crates Coverage -- skipped, all 8 above 60%)
 Resume file: None
-Next action: Execute 27-07-PLAN.md
+Next action: Execute 27-08-PLAN.md
