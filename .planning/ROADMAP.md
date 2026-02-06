@@ -151,8 +151,8 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 24-01-PLAN.md — Settings UI layout with sub-tabs and ClassicConfig extension
-- [ ] 24-02-PLAN.md — Wire settings callbacks with live save persistence and validation
+- [x] 24-01-PLAN.md — Settings UI layout with sub-tabs and ClassicConfig extension
+- [x] 24-02-PLAN.md — Wire settings callbacks with live save persistence and validation
 
 #### Phase 25: Platform Polish
 **Goal**: Application is ready for Windows distribution
@@ -192,8 +192,8 @@ Plans:
 | 21. Scan Ops | v9.0.0 | 2/2 | Complete | 2026-02-06 |
 | 22. Results | v9.0.0 | 1/1 | Complete | 2026-02-06 |
 | 23. Markdown | v9.0.0 | 1/1 | Complete | 2026-02-05 |
-| 24. Settings | v9.0.0 | 0/2 | Not started | - |
+| 24. Settings | v9.0.0 | 2/2 | Complete | 2026-02-05 |
 | 25. Platform | v9.0.0 | 0/1 | Not started | - |
 | 26. Async Bridge Audit | v9.0.0 | 0/1 | Not started | - |
 
-**Overall:** 3 milestones shipped, 51 plans completed | v9.0.0: 8/12 plans
+**Overall:** 3 milestones shipped, 53 plans completed | v9.0.0: 10/12 plans

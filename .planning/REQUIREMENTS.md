@@ -43,13 +43,13 @@ Requirements for Slint GUI core workflow. Each maps to roadmap phases.
 
 ### Settings
 
-- [ ] **SETT-01**: Settings dialog opens from main tab
-- [ ] **SETT-02**: Settings dialog has tabbed layout (General, Scanning, Paths)
-- [ ] **SETT-03**: User can select game version from dropdown
-- [ ] **SETT-04**: User can configure scan options (checkboxes)
-- [ ] **SETT-05**: User can browse and set folder paths (using rfd file dialogs)
-- [ ] **SETT-06**: Settings persist via existing classic-settings-core
-- [ ] **SETT-07**: Settings dialog has OK/Cancel buttons with proper behavior
+- [x] **SETT-01**: Settings tab accessible from main tab widget
+- [x] **SETT-02**: Settings tab has sub-tabbed layout (General, Scanning, Paths)
+- [x] **SETT-03**: User can select game version from dropdown
+- [x] **SETT-04**: User can configure scan options (switches)
+- [x] **SETT-05**: User can browse and set folder paths (using rfd file dialogs)
+- [x] **SETT-06**: Settings persist via ClassicConfig YAML save-on-change
+- [x] **SETT-07**: Live save-on-change with Reset to Defaults (replaces OK/Cancel per design decision)
 
 ### Platform
 
@@ -116,16 +116,16 @@ Deferred to subsequent milestones. Not in current roadmap.
 | RSLT-02 | Phase 22 | Complete |
 | RSLT-03 | Phase 22 | Complete |
 | RSLT-04 | Phase 22 | Complete |
-| RSLT-05 | Phase 23 | Pending |
+| RSLT-05 | Phase 23 | Complete |
 | RSLT-06 | Phase 22 | Complete |
 | RSLT-07 | Phase 22 | Complete |
-| SETT-01 | Phase 24 | Pending |
-| SETT-02 | Phase 24 | Pending |
-| SETT-03 | Phase 24 | Pending |
-| SETT-04 | Phase 24 | Pending |
-| SETT-05 | Phase 24 | Pending |
-| SETT-06 | Phase 24 | Pending |
-| SETT-07 | Phase 24 | Pending |
+| SETT-01 | Phase 24 | Complete |
+| SETT-02 | Phase 24 | Complete |
+| SETT-03 | Phase 24 | Complete |
+| SETT-04 | Phase 24 | Complete |
+| SETT-05 | Phase 24 | Complete |
+| SETT-06 | Phase 24 | Complete |
+| SETT-07 | Phase 24 | Complete |
 | PLAT-01 | Phase 25 | Pending |
 | PLAT-02 | Phase 25 | Pending |
 | PLAT-03 | Phase 25 | Pending |
@@ -137,4 +137,4 @@ Deferred to subsequent milestones. Not in current roadmap.
 
 ---
 *Requirements defined: 2026-02-05*
-*Last updated: 2026-02-06 -- Phase 22 complete*
+*Last updated: 2026-02-05 -- Phase 24 complete*
