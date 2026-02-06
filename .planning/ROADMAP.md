@@ -162,10 +162,11 @@ Plans:
   1. Application runs on Windows 10 and Windows 11
   2. UI is legible and properly scaled on 4K display (200% scaling)
   3. Application launches without GPU (software renderer fallback works)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 25-01: Platform testing and renderer fallback
+- [ ] 25-01-PLAN.md — Logging infrastructure, eprintln! replacement, renderer-software feature
+- [ ] 25-02-PLAN.md — Build system (manifest, icon, static CRT), startup overhaul (self-healing, console suppression, default geometry)
 
 #### Phase 26: Async Bridge Audit
 **Goal**: Audit the async_bridge module of classic-shared-core for potential improvements for Slint GUI
@@ -193,7 +194,7 @@ Plans:
 | 22. Results | v9.0.0 | 1/1 | Complete | 2026-02-06 |
 | 23. Markdown | v9.0.0 | 1/1 | Complete | 2026-02-05 |
 | 24. Settings | v9.0.0 | 2/2 | Complete | 2026-02-05 |
-| 25. Platform | v9.0.0 | 0/1 | Not started | - |
+| 25. Platform | v9.0.0 | 0/2 | Not started | - |
 | 26. Async Bridge Audit | v9.0.0 | 0/1 | Not started | - |
 
-**Overall:** 3 milestones shipped, 53 plans completed | v9.0.0: 10/12 plans
+**Overall:** 3 milestones shipped, 53 plans completed | v9.0.0: 10/14 plans
