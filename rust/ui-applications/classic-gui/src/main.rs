@@ -699,6 +699,7 @@ fn populate_settings_ui(window: &MainWindow, config: &ClassicConfig) {
     window.set_setting_game_version_index(game_version_string_to_index(&config.game_version));
     window.set_setting_update_check(config.update_check);
     window.set_setting_fcx_mode(config.fcx_mode);
+    window.set_setting_generate_stats(config.stat_logging);
 
     // Auto-detection hint for game version "Auto"
     if config.game_version == "auto" {
@@ -792,6 +793,20 @@ fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppSt
             }
             if let Err(e) = save_setting_bool(&mut state.settings, "fcx_mode", checked) {
                 tracing::warn!("Failed to save fcx_mode: {}", e);
+            }
+        });
+    }
+
+    // Generate statistics toggle changed
+    {
+        let state = Arc::clone(state);
+        window.on_setting_generate_stats_changed(move |checked| {
+            let mut state = state.lock();
+            if !state.initialized {
+                return;
+            }
+            if let Err(e) = save_setting_bool(&mut state.settings, "stat_logging", checked) {
+                tracing::warn!("Failed to save stat_logging: {}", e);
             }
         });
     }

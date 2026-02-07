@@ -47,6 +47,7 @@ export component MainWindow inherits Window {
     in-out property <string> setting-auto-detected-hint: "";
     in-out property <bool> setting-update-check: true;
     in-out property <bool> setting-fcx-mode: false;
+    in-out property <bool> setting-generate-stats: false;
 
     // Settings tab properties - Scanning
     in-out property <bool> setting-simplify-logs: false;
@@ -82,6 +83,7 @@ export component MainWindow inherits Window {
     callback setting-game-version-changed(int);
     callback setting-update-check-changed(bool);
     callback setting-fcx-mode-changed(bool);
+    callback setting-generate-stats-changed(bool);
 
     // Settings tab callbacks - Scanning
     callback setting-simplify-logs-changed(bool);
@@ -283,6 +285,8 @@ export component MainWindow inherits Window {
                                 game-version-changed(idx) => { root.setting-game-version-changed(idx); }
                                 update-check-changed(val) => { root.setting-update-check-changed(val); }
                                 fcx-mode-changed(val) => { root.setting-fcx-mode-changed(val); }
+                                generate-stats <=> root.setting-generate-stats;
+                                generate-stats-changed(val) => { root.setting-generate-stats-changed(val); }
                             }
                         }
 

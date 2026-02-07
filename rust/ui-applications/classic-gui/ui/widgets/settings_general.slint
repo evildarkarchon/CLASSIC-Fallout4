@@ -1,5 +1,5 @@
 // SettingsGeneral - General settings sub-tab for the Settings tab
-// Contains: Game Version dropdown, Update Check toggle, FCX Mode toggle
+// Contains: Game Version dropdown, Update Check toggle, FCX Mode toggle, Generate Statistics toggle
 
 import { ComboBox, Switch, HorizontalBox, VerticalBox } from "std-widgets.slint";
 
@@ -14,10 +14,14 @@ export component SettingsGeneral inherits VerticalBox {
     // FCX mode
     in-out property <bool> fcx-mode: false;
 
+    // Generate statistics during scan
+    in-out property <bool> generate-stats: false;
+
     // Callbacks for Rust to handle persistence
     callback game-version-changed(int);
     callback update-check-changed(bool);
     callback fcx-mode-changed(bool);
+    callback generate-stats-changed(bool);
 
     padding: 16px;
     spacing: 16px;
@@ -74,6 +78,22 @@ export component SettingsGeneral inherits VerticalBox {
             checked <=> root.fcx-mode;
             toggled => {
                 root.fcx-mode-changed(self.checked);
+            }
+        }
+    }
+
+    // Generate Statistics
+    HorizontalBox {
+        spacing: 8px;
+        Text {
+            text: "Generate Statistics:";
+            min-width: 140px;
+            vertical-alignment: center;
+        }
+        Switch {
+            checked <=> root.generate-stats;
+            toggled => {
+                root.generate-stats-changed(self.checked);
             }
         }
     }

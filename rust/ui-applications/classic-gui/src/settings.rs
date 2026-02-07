@@ -83,6 +83,7 @@ pub fn save_setting_bool(
         "move_unsolved_logs" => config.move_unsolved_logs = value,
         "update_check" => config.update_check = value,
         "auto_switch_to_results" => config.auto_switch_to_results = value,
+        "stat_logging" => config.stat_logging = value,
         _ => return Err(format!("Unknown boolean setting: {}", key).into()),
     }
 
@@ -430,7 +431,7 @@ mod tests {
     #[test]
     fn test_save_setting_bool_all_keys() {
         // Verify all known boolean keys are accepted (save may fail in test env)
-        let keys = ["fcx_mode", "show_formid_values", "simplify_logs", "move_unsolved_logs", "update_check", "auto_switch_to_results"];
+        let keys = ["fcx_mode", "show_formid_values", "simplify_logs", "move_unsolved_logs", "update_check", "auto_switch_to_results", "stat_logging"];
         for key in keys {
             let mut config = ClassicConfig::default();
             let result = save_setting_bool(&mut config, key, true);
@@ -497,6 +498,9 @@ mod tests {
 
         let _ = save_setting_bool(&mut config, "auto_switch_to_results", false);
         assert!(!config.auto_switch_to_results);
+
+        let _ = save_setting_bool(&mut config, "stat_logging", true);
+        assert!(config.stat_logging);
     }
 
     #[test]
