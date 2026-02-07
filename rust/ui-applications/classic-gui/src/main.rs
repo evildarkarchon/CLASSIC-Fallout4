@@ -22,8 +22,8 @@ use classic_gui::{
     browse_folder, copy_to_clipboard, detect_game_version, game_version_index_to_string,
     game_version_string_to_index, get_report_content, load_settings, load_window_state,
     parse_markdown, prepare_report_entries, reset_to_defaults, save_path_setting,
-    save_setting_bool, save_setting_string, save_window_state, update_source_index_to_string,
-    update_source_string_to_index, ReportData, ScanWindowProperties, TabGeometry, WindowState,
+    save_setting_bool, save_setting_string, save_window_state, ReportData, ScanWindowProperties,
+    TabGeometry, WindowState,
 };
 
 // Implement ScanWindowProperties for the generated MainWindow
@@ -688,7 +688,6 @@ fn populate_settings_ui(window: &MainWindow, config: &ClassicConfig) {
     // General tab
     window.set_setting_game_version_index(game_version_string_to_index(&config.game_version));
     window.set_setting_update_check(config.update_check);
-    window.set_setting_update_source_index(update_source_string_to_index(&config.update_source));
     window.set_setting_fcx_mode(config.fcx_mode);
 
     // Auto-detection hint for game version "Auto"
@@ -739,7 +738,7 @@ fn setup_settings_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     setup_settings_reset_callback(window, state);
 }
 
-/// Set up General sub-tab callbacks (game version, update check, update source, FCX mode)
+/// Set up General sub-tab callbacks (game version, update check, FCX mode)
 fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     // Game version dropdown changed
     {
@@ -777,23 +776,6 @@ fn setup_settings_general_callbacks(window: &MainWindow, state: &Arc<Mutex<AppSt
             }
             if let Err(e) = save_setting_bool(&mut state.settings, "update_check", checked) {
                 tracing::warn!("Failed to save update_check: {}", e);
-            }
-        });
-    }
-
-    // Update source dropdown changed
-    {
-        let state = Arc::clone(state);
-        window.on_setting_update_source_changed(move |index| {
-            let mut state = state.lock();
-            if !state.initialized {
-                return;
-            }
-            let source_str = update_source_index_to_string(index);
-            if let Err(e) =
-                save_setting_string(&mut state.settings, "update_source", source_str)
-            {
-                tracing::warn!("Failed to save update_source: {}", e);
             }
         });
     }

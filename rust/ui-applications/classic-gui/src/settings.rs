@@ -94,7 +94,7 @@ pub fn save_setting_bool(
 /// # Arguments
 ///
 /// * `config` - Mutable reference to the config to update
-/// * `key` - Setting key name (e.g., `"game_version"`, `"update_source"`)
+/// * `key` - Setting key name (e.g., `"game_version"`)
 /// * `value` - New string value
 ///
 /// # Errors
@@ -107,7 +107,6 @@ pub fn save_setting_string(
 ) -> Result<(), Box<dyn std::error::Error>> {
     match key {
         "game_version" => config.game_version = value.to_string(),
-        "update_source" => config.update_source = value.to_string(),
         _ => return Err(format!("Unknown string setting: {}", key).into()),
     }
 
@@ -246,31 +245,6 @@ pub fn game_version_string_to_index(version: &str) -> i32 {
     }
 }
 
-/// Convert an update source dropdown index to its YAML storage string.
-///
-/// | Index | String     |
-/// |-------|------------|
-/// | 0     | `"github"` |
-/// | 1     | `"both"`   |
-pub fn update_source_index_to_string(index: i32) -> &'static str {
-    match index {
-        0 => "github",
-        1 => "both",
-        _ => "github",
-    }
-}
-
-/// Convert an update source YAML string to its dropdown index.
-///
-/// Returns 0 (GitHub) for unknown values.
-pub fn update_source_string_to_index(source: &str) -> i32 {
-    match source {
-        "github" => 0,
-        "both" => 1,
-        _ => 0,
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -296,21 +270,6 @@ mod tests {
     fn test_game_version_unknown_defaults_to_auto() {
         assert_eq!(game_version_string_to_index("unknown"), 0);
         assert_eq!(game_version_index_to_string(99), "auto");
-    }
-
-    #[test]
-    fn test_update_source_index_round_trip() {
-        for index in 0..=1 {
-            let s = update_source_index_to_string(index);
-            let back = update_source_string_to_index(s);
-            assert_eq!(back, index, "Round trip failed for index {}", index);
-        }
-    }
-
-    #[test]
-    fn test_update_source_unknown_defaults_to_github() {
-        assert_eq!(update_source_string_to_index("unknown"), 0);
-        assert_eq!(update_source_index_to_string(99), "github");
     }
 
     #[test]
@@ -415,17 +374,6 @@ mod tests {
     }
 
     #[test]
-    fn test_update_source_all_values() {
-        assert_eq!(update_source_index_to_string(0), "github");
-        assert_eq!(update_source_index_to_string(1), "both");
-    }
-
-    #[test]
-    fn test_update_source_negative_index() {
-        assert_eq!(update_source_index_to_string(-1), "github");
-    }
-
-    #[test]
     fn test_save_path_setting_empty_clears_mods() {
         let mut config = ClassicConfig::default();
         config.paths.mods_folder = Some(PathBuf::from("C:\\Mods"));
@@ -505,7 +453,7 @@ mod tests {
 
     #[test]
     fn test_save_setting_string_all_keys() {
-        let keys = ["game_version", "update_source"];
+        let keys = ["game_version"];
         for key in keys {
             let mut config = ClassicConfig::default();
             let result = save_setting_string(&mut config, key, "test_value");
@@ -566,9 +514,6 @@ mod tests {
         let mut config = ClassicConfig::default();
         let _ = save_setting_string(&mut config, "game_version", "VR");
         assert_eq!(config.game_version, "VR");
-
-        let _ = save_setting_string(&mut config, "update_source", "both");
-        assert_eq!(config.update_source, "both");
     }
 
     #[test]

@@ -51,7 +51,6 @@ export component MainWindow inherits Window {
     in-out property <int> setting-game-version-index: 0;
     in-out property <string> setting-auto-detected-hint: "";
     in-out property <bool> setting-update-check: true;
-    in-out property <int> setting-update-source-index: 0;
     in-out property <bool> setting-fcx-mode: false;
 
     // Settings tab properties - Scanning
@@ -90,7 +89,6 @@ export component MainWindow inherits Window {
     // Settings tab callbacks - General
     callback setting-game-version-changed(int);
     callback setting-update-check-changed(bool);
-    callback setting-update-source-changed(int);
     callback setting-fcx-mode-changed(bool);
 
     // Settings tab callbacks - Scanning
@@ -299,11 +297,9 @@ export component MainWindow inherits Window {
                                 game-version-index <=> root.setting-game-version-index;
                                 auto-detected-hint <=> root.setting-auto-detected-hint;
                                 update-check <=> root.setting-update-check;
-                                update-source-index <=> root.setting-update-source-index;
                                 fcx-mode <=> root.setting-fcx-mode;
                                 game-version-changed(idx) => { root.setting-game-version-changed(idx); }
                                 update-check-changed(val) => { root.setting-update-check-changed(val); }
-                                update-source-changed(idx) => { root.setting-update-source-changed(idx); }
                                 fcx-mode-changed(val) => { root.setting-fcx-mode-changed(val); }
                             }
                         }

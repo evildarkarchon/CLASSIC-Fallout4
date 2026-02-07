@@ -1,5 +1,5 @@
 // SettingsGeneral - General settings sub-tab for the Settings tab
-// Contains: Game Version dropdown, Update Check toggle, Update Source dropdown, FCX Mode toggle
+// Contains: Game Version dropdown, Update Check toggle, FCX Mode toggle
 
 import { ComboBox, Switch, HorizontalBox, VerticalBox } from "std-widgets.slint";
 
@@ -10,8 +10,6 @@ export component SettingsGeneral inherits VerticalBox {
 
     // Update settings
     in-out property <bool> update-check: true;
-    // Update source: 0=GitHub, 1=Both
-    in-out property <int> update-source-index: 0;
 
     // FCX mode
     in-out property <bool> fcx-mode: false;
@@ -19,7 +17,6 @@ export component SettingsGeneral inherits VerticalBox {
     // Callbacks for Rust to handle persistence
     callback game-version-changed(int);
     callback update-check-changed(bool);
-    callback update-source-changed(int);
     callback fcx-mode-changed(bool);
 
     padding: 16px;
@@ -61,23 +58,6 @@ export component SettingsGeneral inherits VerticalBox {
             checked <=> root.update-check;
             toggled => {
                 root.update-check-changed(self.checked);
-            }
-        }
-    }
-
-    // Update Source
-    HorizontalBox {
-        spacing: 8px;
-        Text {
-            text: "Update Source:";
-            min-width: 140px;
-            vertical-alignment: center;
-        }
-        ComboBox {
-            model: ["GitHub", "Both"];
-            current-index <=> root.update-source-index;
-            selected(value) => {
-                root.update-source-changed(self.current-index);
             }
         }
     }
