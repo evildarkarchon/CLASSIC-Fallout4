@@ -124,7 +124,7 @@ pub fn save_setting_string(
 /// # Arguments
 ///
 /// * `config` - Mutable reference to the config to update
-/// * `key` - Path setting key (`"ini_folder"`, `"mods_folder"`, or `"scan_custom"`)
+/// * `key` - Path setting key (`"ini_folder"` or `"mods_folder"`)
 /// * `path` - The path string to validate and save
 ///
 /// # Errors
@@ -142,7 +142,6 @@ pub fn save_path_setting(
         match key {
             "ini_folder" => config.paths.ini_folder = None,
             "mods_folder" => config.paths.mods_folder = None,
-            "scan_custom" => config.paths.scan_custom = None,
             _ => return Err(format!("Unknown path setting: {}", key)),
         }
         save_full_config(config).map_err(|e| format!("Failed to save: {}", e))?;
@@ -159,7 +158,6 @@ pub fn save_path_setting(
     match key {
         "ini_folder" => config.paths.ini_folder = Some(path_buf),
         "mods_folder" => config.paths.mods_folder = Some(path_buf),
-        "scan_custom" => config.paths.scan_custom = Some(path_buf),
         _ => return Err(format!("Unknown path setting: {}", key)),
     }
 
@@ -382,14 +380,6 @@ mod tests {
     }
 
     #[test]
-    fn test_save_path_setting_empty_clears_scan_custom() {
-        let mut config = ClassicConfig::default();
-        config.paths.scan_custom = Some(PathBuf::from("C:\\Scan"));
-        let _ = save_path_setting(&mut config, "scan_custom", "");
-        assert!(config.paths.scan_custom.is_none());
-    }
-
-    #[test]
     fn test_save_path_setting_whitespace_treated_as_empty() {
         let mut config = ClassicConfig::default();
         config.paths.ini_folder = Some(PathBuf::from("C:\\Test"));
@@ -526,13 +516,4 @@ mod tests {
         }
     }
 
-    #[test]
-    fn test_save_path_setting_valid_dir_scan_custom() {
-        let dir = tempfile::tempdir().unwrap();
-        let mut config = ClassicConfig::default();
-        let result = save_path_setting(&mut config, "scan_custom", dir.path().to_str().unwrap());
-        if result.is_ok() {
-            assert_eq!(config.paths.scan_custom, Some(dir.path().to_path_buf()));
-        }
-    }
 }

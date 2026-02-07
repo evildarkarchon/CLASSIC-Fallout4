@@ -66,10 +66,6 @@ export component MainWindow inherits Window {
     in-out property <string> setting-mods-path: "";
     in-out property <string> setting-mods-error: "";
     in-out property <bool> setting-mods-has-error: false;
-    in-out property <string> setting-scan-path: "";
-    in-out property <string> setting-scan-error: "";
-    in-out property <bool> setting-scan-has-error: false;
-
     // Settings tab - Reset to Defaults
     property <bool> reset-confirm-visible: false;
 
@@ -100,10 +96,8 @@ export component MainWindow inherits Window {
     // Settings tab callbacks - Paths
     callback setting-browse-ini();
     callback setting-browse-mods();
-    callback setting-browse-scan();
     callback setting-ini-path-accepted(string);
     callback setting-mods-path-accepted(string);
-    callback setting-scan-path-accepted(string);
 
     // Settings tab callbacks - Reset
     callback setting-reset-to-defaults();
@@ -327,15 +321,10 @@ export component MainWindow inherits Window {
                                 mods-path <=> root.setting-mods-path;
                                 mods-error <=> root.setting-mods-error;
                                 mods-has-error <=> root.setting-mods-has-error;
-                                scan-path <=> root.setting-scan-path;
-                                scan-error <=> root.setting-scan-error;
-                                scan-has-error <=> root.setting-scan-has-error;
                                 browse-ini => { root.setting-browse-ini(); }
                                 browse-mods => { root.setting-browse-mods(); }
-                                browse-scan => { root.setting-browse-scan(); }
                                 ini-path-accepted(text) => { root.setting-ini-path-accepted(text); }
                                 mods-path-accepted(text) => { root.setting-mods-path-accepted(text); }
-                                scan-path-accepted(text) => { root.setting-scan-path-accepted(text); }
                             }
                         }
                     }

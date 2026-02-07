@@ -720,14 +720,6 @@ fn populate_settings_ui(window: &MainWindow, config: &ClassicConfig) {
     }
     window.set_setting_mods_error(SharedString::default());
     window.set_setting_mods_has_error(false);
-
-    if let Some(ref path) = config.paths.scan_custom {
-        window.set_setting_scan_path(path.to_string_lossy().to_string().into());
-    } else {
-        window.set_setting_scan_path(SharedString::default());
-    }
-    window.set_setting_scan_error(SharedString::default());
-    window.set_setting_scan_has_error(false);
 }
 
 /// Set up all settings tab callbacks for live save-on-change persistence
@@ -962,56 +954,6 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
         });
     }
 
-    // Browse custom scan folder
-    {
-        let window_weak = window.as_weak();
-        let state = Arc::clone(state);
-        window.on_setting_browse_scan(move || {
-            let window_weak = window_weak.clone();
-            let state = Arc::clone(&state);
-
-            let current_path = window_weak
-                .upgrade()
-                .map(|w| w.get_setting_scan_path().to_string())
-                .unwrap_or_default();
-
-            let start_dir = if current_path.is_empty() {
-                None
-            } else {
-                Some(current_path)
-            };
-
-            AsyncBridge::run_with_ui_update(
-                async move {
-                    browse_folder("Select Custom Scan Folder", start_dir.as_deref()).await
-                },
-                move |result| {
-                    if let Some(path) = result {
-                        let mut s = state.lock();
-                        if !s.initialized {
-                            return;
-                        }
-                        match save_path_setting(&mut s.settings, "scan_custom", &path) {
-                            Ok(()) => {
-                                if let Some(w) = window_weak.upgrade() {
-                                    w.set_setting_scan_path(path.into());
-                                    w.set_setting_scan_has_error(false);
-                                    w.set_setting_scan_error(SharedString::default());
-                                }
-                            }
-                            Err(e) => {
-                                if let Some(w) = window_weak.upgrade() {
-                                    w.set_setting_scan_has_error(true);
-                                    w.set_setting_scan_error(e.into());
-                                }
-                            }
-                        }
-                    }
-                },
-            );
-        });
-    }
-
     // INI path accepted (Enter key or focus loss)
     {
         let window_weak = window.as_weak();
@@ -1066,32 +1008,6 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
         });
     }
 
-    // Scan path accepted
-    {
-        let window_weak = window.as_weak();
-        let state = Arc::clone(state);
-        window.on_setting_scan_path_accepted(move |text| {
-            let mut s = state.lock();
-            if !s.initialized {
-                return;
-            }
-            let path_str = text.to_string();
-            match save_path_setting(&mut s.settings, "scan_custom", &path_str) {
-                Ok(()) => {
-                    if let Some(w) = window_weak.upgrade() {
-                        w.set_setting_scan_has_error(false);
-                        w.set_setting_scan_error(SharedString::default());
-                    }
-                }
-                Err(e) => {
-                    if let Some(w) = window_weak.upgrade() {
-                        w.set_setting_scan_has_error(true);
-                        w.set_setting_scan_error(e.into());
-                    }
-                }
-            }
-        });
-    }
 }
 
 /// Set up Reset to Defaults callback
