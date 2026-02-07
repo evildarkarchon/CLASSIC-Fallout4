@@ -1,7 +1,7 @@
 // CLASSIC GUI - Main Window
 // Production UI with fluent-dark theme, 3-tab layout, and styled controls
 
-import { Button, ProgressIndicator, TabWidget, VerticalBox, HorizontalBox, LineEdit, CheckBox, GroupBox } from "std-widgets.slint";
+import { Button, ProgressIndicator, TabWidget, VerticalBox, HorizontalBox, LineEdit, GroupBox } from "std-widgets.slint";
 import { PathInput } from "widgets/path_input.slint";
 import { ReportList, ReportEntry } from "widgets/report_list.slint";
 import { ReportViewer } from "widgets/report_viewer.slint";
@@ -32,11 +32,6 @@ export component MainWindow inherits Window {
 
     // Tab tracking for state persistence (Plan 02)
     in-out property <int> active-tab-index: 0;
-
-    // Scan option properties
-    in-out property <bool> option-scan-logs: true;
-    in-out property <bool> option-scan-game: false;
-    in-out property <bool> option-generate-stats: false;
 
     // Results tab properties
     in-out property <[ReportEntry]> report-list-model;
@@ -70,7 +65,8 @@ export component MainWindow inherits Window {
     property <bool> reset-confirm-visible: false;
 
     // Callbacks invoked from UI
-    callback start-scan();
+    callback start-scan-logs();
+    callback start-scan-game();
     callback cancel-scan();
     callback browse-crash-logs();
     callback browse-game-folder();
@@ -158,47 +154,37 @@ export component MainWindow inherits Window {
                         }
                     }
 
-                    // Scan options section
-                    GroupBox {
-                        title: "Scan Options";
-                        VerticalBox {
-                            spacing: 8px;
-                            padding: 8px;
-                            CheckBox {
-                                text: "Scan crash logs";
-                                checked <=> root.option-scan-logs;
-                                enabled: !root.scan-in-progress;
-                            }
-                            CheckBox {
-                                text: "Scan game files";
-                                checked <=> root.option-scan-game;
-                                enabled: !root.scan-in-progress;
-                            }
-                            CheckBox {
-                                text: "Generate statistics";
-                                checked <=> root.option-generate-stats;
-                                enabled: !root.scan-in-progress;
-                            }
-                        }
-                    }
-
-                    // Flexible spacer to push button to bottom
+                    // Flexible spacer to push buttons to bottom
                     Rectangle {
                         vertical-stretch: 1;
                     }
 
-                    // Morphing Scan/Cancel button - single button, dual purpose
+                    // Action buttons
                     HorizontalBox {
                         alignment: center;
+                        spacing: 12px;
 
                         Button {
                             text: root.scan-in-progress ? "Cancel" : "Scan Crash Logs";
                             primary: !root.scan-in-progress;
+                            enabled: root.scan-in-progress || root.crash-log-path != "";
                             clicked => {
                                 if (root.scan-in-progress) {
                                     root.cancel-scan();
                                 } else {
-                                    root.start-scan();
+                                    root.start-scan-logs();
+                                }
+                            }
+                        }
+
+                        Button {
+                            text: root.scan-in-progress ? "Cancel" : "Scan Game Files";
+                            enabled: !root.scan-in-progress;
+                            clicked => {
+                                if (root.scan-in-progress) {
+                                    root.cancel-scan();
+                                } else {
+                                    root.start-scan-game();
                                 }
                             }
                         }

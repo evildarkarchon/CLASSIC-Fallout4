@@ -305,7 +305,7 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
         let window_weak = window.as_weak();
         let state = Arc::clone(state);
 
-        window.on_start_scan(move || {
+        window.on_start_scan_logs(move || {
             let window_weak = window_weak.clone();
 
             // Create new cancellation token
@@ -415,6 +415,16 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                     });
                 },
             );
+        });
+    }
+
+    // Start game files scan callback (stub - not yet implemented)
+    {
+        let window_weak = window.as_weak();
+        window.on_start_scan_game(move || {
+            if let Some(w) = window_weak.upgrade() {
+                w.set_scan_status("Game file scanning not yet implemented".into());
+            }
         });
     }
 
