@@ -28,7 +28,7 @@ class TestScanLogsExecutorInit:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -49,7 +49,7 @@ class TestScanLogsExecutorInit:
         with (
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor(config=config)
 
@@ -67,7 +67,7 @@ class TestScanLogsExecutorInit:
         with (
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -84,7 +84,7 @@ class TestScanLogsExecutorInit:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", [db_file]),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= [db_file]),
         ):
             executor = ScanLogsExecutor()
 
@@ -96,7 +96,7 @@ class TestScanLogsExecutorInit:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor(eager_load=True)
 
@@ -112,7 +112,7 @@ class TestScanLogsExecutorInit:
         with (
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -174,7 +174,7 @@ class TestScanLogsExecutorLazyLoading:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -197,7 +197,7 @@ class TestScanLogsExecutorLazyLoading:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=remove_list),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -219,7 +219,7 @@ class TestScanLogsExecutorLazyLoading:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files) as mock_get_files,
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -245,7 +245,7 @@ class TestScanLogsExecutorWarmUp:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -267,7 +267,7 @@ class TestScanLogsExecutorWarmUp:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -292,7 +292,7 @@ class TestScanLogsExecutorWarmUp:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", [db_file]),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= [db_file]),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -320,7 +320,7 @@ class TestScanLogsExecutorStatistics:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -339,7 +339,7 @@ class TestScanLogsExecutorStatistics:
         with (
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -357,7 +357,7 @@ class TestScanLogsExecutorGenerateSummary:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
 
@@ -375,7 +375,7 @@ class TestScanLogsExecutorGenerateSummary:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
         ):
             executor = ScanLogsExecutor()
             executor.statistics.scanned = 5
@@ -404,7 +404,7 @@ class TestScanLogsExecutorSyncWrapper:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch("ClassicLib.scanning.logs.executor.AsyncBridge") as mock_bridge_cls,
         ):
             mock_bridge = MagicMock()

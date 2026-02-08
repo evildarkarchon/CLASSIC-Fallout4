@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 
-from ClassicLib.core.constants import DB_PATHS
+from ClassicLib.core.constants import get_all_db_paths
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 
@@ -105,7 +105,7 @@ class AsyncDatabasePool:
     async def initialize(self) -> None:
         """Initialize database connections.
 
-        Opens async connections to all database files defined in DB_PATHS.
+        Opens async connections to all database files from get_all_db_paths().
         Thread-safe initialization using an async lock.
 
         Raises:
@@ -115,7 +115,7 @@ class AsyncDatabasePool:
         """
         async with self._lock:
             try:
-                for db_path in DB_PATHS:
+                for db_path in get_all_db_paths():
                     if db_path.is_file():
                         try:
                             conn = await aiosqlite.connect(db_path)

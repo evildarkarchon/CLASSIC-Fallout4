@@ -11,7 +11,7 @@ import sqlite3
 import threading
 from pathlib import Path
 
-from ClassicLib.core.constants import DB_PATHS, YAML
+from ClassicLib.core.constants import YAML, get_all_db_paths
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import classic_settings, yaml_settings
@@ -386,7 +386,7 @@ def get_entry(formid: str, plugin: str) -> str | None:
 
     This function checks if an entry corresponding to the given `formid` and
     `plugin` exists in the query cache. If the entry is not found in the cache,
-    it iterates through a list of database paths (`DB_PATHS`) to locate the entry
+    it iterates through a list of database paths (from ``get_all_db_paths()``) to locate the entry
     in the database file. If found in the database, the entry is added to the
     query cache for faster access on subsequent calls.
 
@@ -404,7 +404,7 @@ def get_entry(formid: str, plugin: str) -> str | None:
     # Use connection pool for better performance
     pool = SyncDatabasePool.get_instance()
 
-    for db_path in DB_PATHS:
+    for db_path in get_all_db_paths():
         if db_path.is_file():
             try:
                 conn = pool.get_connection(db_path)

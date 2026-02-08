@@ -110,7 +110,7 @@ class TestScanLogsExecutorExecuteScan:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[crash_log_file]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -145,7 +145,7 @@ class TestScanLogsExecutorExecuteScan:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -201,7 +201,7 @@ class TestScanLogsExecutorErrorRecovery:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[crash_file]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -251,7 +251,7 @@ class TestScanLogsExecutorCancellation:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,
@@ -312,7 +312,7 @@ class TestScanLogsExecutorResourceManagement:
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
             patch("ClassicLib.scanning.logs.executor.classic_settings", return_value=False),
-            patch("ClassicLib.scanning.logs.executor.DB_PATHS", []),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", return_value= []),
             patch(
                 "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
                 new_callable=AsyncMock,

@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from ClassicLib.scanning.logs.executor import ScanLogsExecutor as ScanLogsExecutorType
     from classic_scanlog import AnalysisResult
 
-from ClassicLib.core.constants import DB_PATHS, YAML
+from ClassicLib.core.constants import YAML, get_all_db_paths
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import classic_settings, yaml_settings
@@ -100,7 +100,7 @@ class ScanLogsExecutor:
         self._rust_orchestrator: Orchestrator | None = None
 
         # Set up database availability
-        self.config.formid_db_exists = any(db.is_file() for db in DB_PATHS)
+        self.config.formid_db_exists = any(db.is_file() for db in get_all_db_paths())
 
         # Initialize statistics (total_files set during _ensure_crashlog_list_async)
         self.statistics = ScanStatistics()
@@ -295,7 +295,7 @@ class ScanLogsExecutor:
 
             # Attach database pool for FormID value lookups if available
             if self.config.formid_db_exists and self.config.show_formid_values:
-                db_paths_str = [str(p) for p in DB_PATHS if p.is_file()]
+                db_paths_str = [str(p) for p in get_all_db_paths() if p.is_file()]
                 if db_paths_str:
                     game = GlobalRegistry.get_game()
                     self._rust_orchestrator.attach_database(db_paths_str, game)

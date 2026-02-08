@@ -281,8 +281,8 @@ async def initialized_database_pool(tmp_path: Path):
             # Rust version can take paths
             await pool.initialize([str(db_path)])
         else:
-            # Python version uses global DB_PATHS
-            with patch("ClassicLib.core.constants.get_db_paths", return_value=(db_path,)):
+            # Python version uses get_all_db_paths()
+            with patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value=[db_path]):
                 await pool.initialize()
 
     yield pool
