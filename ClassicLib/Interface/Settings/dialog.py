@@ -28,13 +28,13 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.Interface.Settings.path_manager import PathManager
-
-# File filter for FormID database file dialogs
-SQLITE_FILE_FILTER = "SQLite Databases (*.db *.sqlite *.sqlite3 *.db3 *.sdb);;All Files (*)"
 from ClassicLib.Interface.Settings.tab_creators import TabCreator, ensure_game_version_options
 from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
 from ClassicLib.io.yaml import yaml_cache, yaml_settings
 from ClassicLib.messaging import msg_error, msg_success
+
+# File filter for FormID database file dialogs
+SQLITE_FILE_FILTER = "SQLite Databases (*.db *.sqlite *.sqlite3 *.db3 *.sdb);;All Files (*)"
 
 
 class SettingsDialog(QDialog):
