@@ -20,10 +20,10 @@ use tokio_util::sync::CancellationToken;
 
 use classic_gui::{
     browse_folder, copy_to_clipboard, detect_game_version, game_version_index_to_string,
-    game_version_string_to_index, get_report_content, load_settings, load_window_state,
-    parse_markdown, prepare_report_entries, reset_to_defaults, save_path_setting,
-    save_setting_bool, save_setting_string, save_window_state, ReportData, ScanWindowProperties,
-    TabGeometry, WindowState,
+    game_version_string_to_index, get_formid_databases, get_report_content, load_settings,
+    load_window_state, parse_markdown, prepare_report_entries, reset_to_defaults,
+    save_formid_databases, save_path_setting, save_setting_bool, save_setting_string,
+    save_window_state, ReportData, ScanWindowProperties, TabGeometry, WindowState,
 };
 
 // Implement ScanWindowProperties for the generated MainWindow
@@ -737,6 +737,20 @@ fn populate_settings_ui(window: &MainWindow, config: &ClassicConfig) {
     }
     window.set_setting_mods_error(SharedString::default());
     window.set_setting_mods_has_error(false);
+
+    // Paths tab - database list
+    let game_for_db = if config.game_version == "auto" {
+        "Fallout4"
+    } else {
+        config.game_version.as_str()
+    };
+    let db_paths = get_formid_databases(config, game_for_db);
+    let db_strings: Vec<SharedString> = db_paths
+        .iter()
+        .map(|p| SharedString::from(p.to_string_lossy().to_string()))
+        .collect();
+    let db_model = Rc::new(VecModel::from(db_strings));
+    window.set_setting_database_list(ModelRc::from(db_model));
 }
 
 /// Set up all settings tab callbacks for live save-on-change persistence
@@ -1035,6 +1049,112 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
                         w.set_setting_mods_error(e.into());
                     }
                 }
+            }
+        });
+    }
+
+    // Database list: Add
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_database_add_clicked(move || {
+            let window_weak = window_weak.clone();
+            let state = Arc::clone(&state);
+
+            AsyncBridge::run_with_ui_update(
+                async move {
+                    let dialog = rfd::AsyncFileDialog::new()
+                        .set_title("Select FormID Database Files")
+                        .add_filter(
+                            "SQLite Databases",
+                            &["db", "sqlite", "sqlite3", "db3", "sdb"],
+                        )
+                        .add_filter("All Files", &["*"]);
+                    dialog.pick_files().await
+                },
+                move |result| {
+                    if let Some(files) = result {
+                        let mut s = state.lock();
+                        if !s.initialized {
+                            return;
+                        }
+
+                        let game = if s.settings.game_version == "auto" {
+                            "Fallout4"
+                        } else {
+                            &s.settings.game_version
+                        };
+                        let mut current = get_formid_databases(&s.settings, game);
+
+                        // Add new paths, skipping duplicates
+                        let existing: std::collections::HashSet<String> =
+                            current.iter().map(|p| p.to_string_lossy().to_string()).collect();
+                        for file in &files {
+                            let path_str = file.path().to_string_lossy().to_string();
+                            if !existing.contains(&path_str) {
+                                current.push(file.path().to_path_buf());
+                            }
+                        }
+
+                        let game_owned = game.to_string();
+                        if let Err(e) =
+                            save_formid_databases(&mut s.settings, &game_owned, current.clone())
+                        {
+                            tracing::warn!("Failed to save database list: {}", e);
+                        }
+
+                        // Update UI
+                        if let Some(w) = window_weak.upgrade() {
+                            let db_strings: Vec<SharedString> = current
+                                .iter()
+                                .map(|p| SharedString::from(p.to_string_lossy().to_string()))
+                                .collect();
+                            let db_model = Rc::new(VecModel::from(db_strings));
+                            w.set_setting_database_list(ModelRc::from(db_model));
+                        }
+                    }
+                },
+            );
+        });
+    }
+
+    // Database list: Remove
+    {
+        let window_weak = window.as_weak();
+        let state = Arc::clone(state);
+        window.on_setting_database_remove_clicked(move |index| {
+            let mut s = state.lock();
+            if !s.initialized {
+                return;
+            }
+
+            let game = if s.settings.game_version == "auto" {
+                "Fallout4"
+            } else {
+                &s.settings.game_version
+            };
+            let mut current = get_formid_databases(&s.settings, game);
+
+            let idx = index as usize;
+            if idx < current.len() {
+                current.remove(idx);
+            }
+
+            let game_owned = game.to_string();
+            if let Err(e) =
+                save_formid_databases(&mut s.settings, &game_owned, current.clone())
+            {
+                tracing::warn!("Failed to save database list: {}", e);
+            }
+
+            // Update UI
+            if let Some(w) = window_weak.upgrade() {
+                let db_strings: Vec<SharedString> = current
+                    .iter()
+                    .map(|p| SharedString::from(p.to_string_lossy().to_string()))
+                    .collect();
+                let db_model = Rc::new(VecModel::from(db_strings));
+                w.set_setting_database_list(ModelRc::from(db_model));
             }
         });
     }

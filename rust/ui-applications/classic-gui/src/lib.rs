@@ -23,7 +23,8 @@ pub use scan::{scan_crash_logs, ScanResult};
 pub use state::{load_window_state, save_window_state, state_file_path, TabGeometry, WindowState};
 pub use settings::{
     detect_game_version, game_version_index_to_string, game_version_string_to_index,
-    load_settings, reset_to_defaults, save_full_config, save_path_setting, save_setting_bool,
-    save_setting_string, settings_file_path,
+    get_formid_databases, load_settings, reset_to_defaults, save_formid_databases,
+    save_full_config, save_path_setting, save_setting_bool, save_setting_string,
+    settings_file_path,
 };
 pub use worker::{simulate_scan, ScanWindowProperties};

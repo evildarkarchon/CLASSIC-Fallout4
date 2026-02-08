@@ -244,6 +244,42 @@ pub fn game_version_string_to_index(version: &str) -> i32 {
     }
 }
 
+/// Get the FormID database list for a game, with defaults for Fallout4.
+///
+/// Returns the user-configured database list from the config. If no
+/// list exists for the given game, returns a default list (FOLON for
+/// Fallout4, empty for others).
+pub fn get_formid_databases(config: &ClassicConfig, game: &str) -> Vec<PathBuf> {
+    config
+        .formid_databases
+        .get(game)
+        .cloned()
+        .unwrap_or_else(|| {
+            if game == "Fallout4" {
+                vec![PathBuf::from("databases/FOLON FormIDs.db")]
+            } else {
+                vec![]
+            }
+        })
+}
+
+/// Save the FormID database list for a specific game.
+///
+/// Inserts or replaces the database list for the given game in the config
+/// and persists the entire config to YAML.
+///
+/// # Errors
+///
+/// Returns an error if saving the config file fails.
+pub fn save_formid_databases(
+    config: &mut ClassicConfig,
+    game: &str,
+    paths: Vec<PathBuf>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    config.formid_databases.insert(game.to_string(), paths);
+    save_full_config(config)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -518,6 +554,42 @@ mod tests {
         if result.is_ok() {
             assert_eq!(config.paths.mods_folder, Some(dir.path().to_path_buf()));
         }
+    }
+
+    #[test]
+    fn test_get_formid_databases_default_fallout4() {
+        let config = ClassicConfig::default();
+        let dbs = get_formid_databases(&config, "Fallout4");
+        assert_eq!(dbs.len(), 1);
+        assert_eq!(dbs[0], PathBuf::from("databases/FOLON FormIDs.db"));
+    }
+
+    #[test]
+    fn test_get_formid_databases_default_other_game() {
+        let config = ClassicConfig::default();
+        let dbs = get_formid_databases(&config, "Skyrim");
+        assert!(dbs.is_empty());
+    }
+
+    #[test]
+    fn test_get_formid_databases_custom() {
+        let mut config = ClassicConfig::default();
+        config.formid_databases.insert(
+            "Fallout4".to_string(),
+            vec![PathBuf::from("custom.db"), PathBuf::from("extra.sqlite")],
+        );
+        let dbs = get_formid_databases(&config, "Fallout4");
+        assert_eq!(dbs.len(), 2);
+        assert_eq!(dbs[0], PathBuf::from("custom.db"));
+    }
+
+    #[test]
+    fn test_save_formid_databases_updates_config() {
+        let mut config = ClassicConfig::default();
+        let paths = vec![PathBuf::from("a.db"), PathBuf::from("b.db")];
+        // save_formid_databases writes to disk which may fail in test, but should update config
+        let _ = save_formid_databases(&mut config, "Fallout4", paths.clone());
+        assert_eq!(config.formid_databases.get("Fallout4"), Some(&paths));
     }
 
 }

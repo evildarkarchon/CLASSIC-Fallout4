@@ -62,6 +62,10 @@ export component MainWindow inherits Window {
     in-out property <string> setting-mods-path: "";
     in-out property <string> setting-mods-error: "";
     in-out property <bool> setting-mods-has-error: false;
+
+    // Settings tab properties - Paths (database list)
+    in-out property <[string]> setting-database-list;
+
     // Settings tab - Reset to Defaults
     property <bool> reset-confirm-visible: false;
 
@@ -96,6 +100,10 @@ export component MainWindow inherits Window {
     callback setting-browse-mods();
     callback setting-ini-path-accepted(string);
     callback setting-mods-path-accepted(string);
+
+    // Settings tab callbacks - Paths (database list)
+    callback setting-database-add-clicked();
+    callback setting-database-remove-clicked(int);
 
     // Settings tab callbacks - Reset
     callback setting-reset-to-defaults();
@@ -317,6 +325,9 @@ export component MainWindow inherits Window {
                                 browse-mods => { root.setting-browse-mods(); }
                                 ini-path-accepted(text) => { root.setting-ini-path-accepted(text); }
                                 mods-path-accepted(text) => { root.setting-mods-path-accepted(text); }
+                                database-list <=> root.setting-database-list;
+                                database-add-clicked => { root.setting-database-add-clicked(); }
+                                database-remove-clicked(index) => { root.setting-database-remove-clicked(index); }
                             }
                         }
                     }

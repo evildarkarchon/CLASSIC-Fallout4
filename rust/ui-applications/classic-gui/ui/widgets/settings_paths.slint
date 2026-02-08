@@ -47,6 +47,26 @@ component SettingsPathInput inherits VerticalBox {
     }
 }
 
+component DatabaseRow inherits HorizontalBox {
+    in property <string> name;
+    in property <int> index;
+    callback remove-clicked(int);
+    spacing: 8px;
+    height: 32px;
+
+    Text {
+        text: root.name;
+        vertical-alignment: center;
+        horizontal-stretch: 1;
+        overflow: elide;
+    }
+    Button {
+        text: "\u{2715}";
+        clicked => { root.remove-clicked(root.index); }
+        max-width: 32px;
+    }
+}
+
 export component SettingsPaths inherits VerticalBox {
     // INI Folder
     in-out property <string> ini-path: "";
@@ -58,6 +78,9 @@ export component SettingsPaths inherits VerticalBox {
     in-out property <string> mods-error: "";
     in-out property <bool> mods-has-error: false;
 
+    // Database list
+    in property <[string]> database-list;
+
     // Browse callbacks
     callback browse-ini();
     callback browse-mods();
@@ -65,6 +88,10 @@ export component SettingsPaths inherits VerticalBox {
     // Path accepted callbacks (Enter key or focus loss)
     callback ini-path-accepted(string);
     callback mods-path-accepted(string);
+
+    // Database list callbacks
+    callback database-add-clicked();
+    callback database-remove-clicked(int);
 
     padding: 16px;
     spacing: 16px;
@@ -85,6 +112,27 @@ export component SettingsPaths inherits VerticalBox {
         has-error <=> root.mods-has-error;
         browse-clicked => { root.browse-mods(); }
         path-accepted(text) => { root.mods-path-accepted(text); }
+    }
+
+    Text {
+        text: "FormID Databases";
+        font-weight: 700;
+    }
+    Text {
+        text: "Additional databases loaded for FormID lookups during scanning.";
+        color: #888888;
+        font-size: 11px;
+        wrap: word-wrap;
+    }
+    for db[index] in root.database-list : DatabaseRow {
+        name: db;
+        index: index;
+        remove-clicked(i) => { root.database-remove-clicked(i); }
+    }
+    Button {
+        text: "Add...";
+        max-width: 100px;
+        clicked => { root.database-add-clicked(); }
     }
 
     // Spacer to push content to top
