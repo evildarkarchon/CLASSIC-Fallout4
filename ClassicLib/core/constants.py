@@ -11,13 +11,13 @@ This module provides:
 from __future__ import annotations
 
 from enum import Enum, auto
+from pathlib import Path
 from typing import TYPE_CHECKING, Literal
 
 from packaging.version import Version
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
-    from pathlib import Path
 
 # Removed to fix circular import - GlobalRegistry will be imported when needed
 
@@ -74,56 +74,116 @@ SETTINGS_IGNORE_NONE = {
 }
 
 
-# Define paths for both Main and Local databases
-# Changed to a function to avoid circular import at module level
-def get_db_paths() -> tuple[Path, Path, Path]:
-    """Get absolute database paths based on current game.
+# Default FormID databases per game (relative to data directory).
+# Used as fallback when YAML settings key is missing.
+_DEFAULT_FORMID_DATABASES: dict[str, list[str]] = {
+    "Fallout4": ["databases/FOLON FormIDs.db"],
+    "Fallout4VR": ["databases/FOLON FormIDs.db"],
+    "Skyrim": [],
+    "Starfield": [],
+}
 
-    Returns absolute paths by resolving relative to CLASSIC Data directory
-    found by ResourceLoader. This ensures databases work correctly whether
+
+def get_main_db_path() -> Path:
+    """Get the absolute path to the Main FormID database for the current game.
+
+    Resolves the path relative to the CLASSIC Data directory found by
+    ResourceLoader. This ensures the database works correctly whether
     running from source, installed package, or frozen executable.
 
     Returns:
-        A tuple containing (main_db_path, local_db_path, and FOLON db path) as Path objects.
+        The absolute path to the Main FormID database file.
 
     """
     from ClassicLib.core.registry import GlobalRegistry
     from ClassicLib.support.resources import ResourceLoader
 
-    # Get the CLASSIC Data directory (handles all installation types)
     data_dir = ResourceLoader.get_data_directory()
-
-    # Return absolute paths to database files
     game = GlobalRegistry.get_game()
-    return (
-        data_dir / "databases" / f"{game} FormIDs Main.db",
-        data_dir / "databases" / f"{game} FormIDs Local.db",
-        data_dir / "databases" / "FOLON FormIDs.db",
-    )
+    return data_dir / "databases" / f"{game} FormIDs Main.db"
+
+
+def get_user_db_paths() -> list[Path]:
+    """Get user-configured FormID database paths from YAML settings.
+
+    Reads the game-specific database list from YAML settings at
+    ``CLASSIC_Settings.FormID Databases.<game>``. Relative paths are
+    resolved against ``ResourceLoader.get_data_directory()``, while
+    absolute paths are used as-is. Missing files are filtered out with
+    a warning.
+
+    When the YAML key is absent (returns None), falls back to the
+    defaults in ``_DEFAULT_FORMID_DATABASES`` for the current game.
+
+    Returns:
+        A list of absolute paths to existing user-configured database files.
+
+    """
+    from ClassicLib.core.logger import logger
+    from ClassicLib.core.registry import GlobalRegistry
+    from ClassicLib.io.yaml.convenience import yaml_settings
+    from ClassicLib.support.resources import ResourceLoader
+
+    data_dir = ResourceLoader.get_data_directory()
+    game = GlobalRegistry.get_game()
+
+    key_path = f"CLASSIC_Settings.FormID Databases.{game}"
+    raw_paths: list[str] | None = yaml_settings(list, YAML.Settings, key_path)
+
+    if raw_paths is None:
+        raw_paths = _DEFAULT_FORMID_DATABASES.get(game, [])
+
+    resolved: list[Path] = []
+    for entry in raw_paths:
+        p = Path(entry)
+        if not p.is_absolute():
+            p = data_dir / p
+        if p.is_file():
+            resolved.append(p)
+        else:
+            logger.warning("FormID database not found, skipping: %s", p)
+
+    return resolved
+
+
+def get_all_db_paths() -> list[Path]:
+    """Get all FormID database paths (Main + user-configured).
+
+    Combines the Main database path with user-configured paths. The Main
+    database is always first in the list regardless of whether it exists
+    on disk (existence checking is the caller's responsibility for Main).
+
+    Returns:
+        A list of paths with the Main database first, followed by
+        user-configured databases.
+
+    """
+    return [get_main_db_path(), *get_user_db_paths()]
 
 
 # For backward compatibility, create a property-like object
 class _DBPaths:
     """Backward compatible DB_PATHS that lazily evaluates database paths.
 
-    This class provides a lazy-loading wrapper around get_db_paths() to
-    maintain backward compatibility with code that accesses DB_PATHS as
-    an indexable/iterable collection.
+    This class provides a lazy-loading wrapper around get_all_db_paths()
+    to maintain backward compatibility with code that accesses DB_PATHS
+    as an indexable/iterable collection.
 
     Note:
         This class has no instance attributes. It delegates all access
-        to get_db_paths() which returns paths based on GlobalRegistry state.
+        to get_all_db_paths() which returns paths based on GlobalRegistry
+        state and YAML settings.
 
     """
 
     def __getitem__(self, index: int) -> Path:
-        return get_db_paths()[index]
+        return get_all_db_paths()[index]
 
     def __iter__(self) -> Iterator[Path]:
-        return iter(get_db_paths())
+        return iter(get_all_db_paths())
 
     def __len__(self) -> int:
-        return 3
+        return len(get_all_db_paths())
 
 
 DB_PATHS = _DBPaths()

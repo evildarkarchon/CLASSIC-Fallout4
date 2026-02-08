@@ -34,6 +34,9 @@ from ClassicLib.core.constants import (
     SETTINGS_IGNORE_NONE,
     YAML,
     GameID,
+    get_all_db_paths,
+    get_main_db_path,
+    get_user_db_paths,
 )
 from ClassicLib.core.logger import logger
 from ClassicLib.core.performance import TimedBlock, async_timed_operation, timed_operation
@@ -121,6 +124,9 @@ __all__ = [
     "NULL_VERSION",
     "SETTINGS_IGNORE_NONE",
     "YAML",
+    "get_all_db_paths",
+    "get_main_db_path",
+    "get_user_db_paths",
     # VersionRegistry (replaces deprecated version constants)
     "VersionRegistry",
     "get_version_registry",
