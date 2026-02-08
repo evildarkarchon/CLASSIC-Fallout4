@@ -21,8 +21,10 @@ pub fn detect_mods_single(
     let yaml_map = pydict_to_indexmap_str(yaml_dict)?;
     let plugins_map = pydict_to_indexmap_str(crashlog_plugins)?;
     // Release GIL during pattern matching
-    without_gil(py, || classic_scanlog_core::detect_mods_single(yaml_map, plugins_map))
-        .map_err(crate::to_pyerr)
+    without_gil(py, || {
+        classic_scanlog_core::detect_mods_single(yaml_map, plugins_map)
+    })
+    .map_err(crate::to_pyerr)
 }
 
 /// Detect double-type mods (standalone function)
@@ -40,8 +42,10 @@ pub fn detect_mods_double(
     let yaml_map = pydict_to_indexmap_str(yaml_dict)?;
     let plugins_map = pydict_to_indexmap_str(crashlog_plugins)?;
     // Release GIL during pattern matching
-    without_gil(py, || classic_scanlog_core::detect_mods_double(yaml_map, plugins_map))
-        .map_err(crate::to_pyerr)
+    without_gil(py, || {
+        classic_scanlog_core::detect_mods_double(yaml_map, plugins_map)
+    })
+    .map_err(crate::to_pyerr)
 }
 
 /// Detect important mods (standalone function)
@@ -92,6 +96,8 @@ pub fn detect_mods_batch(
         .collect();
     let plugins = plugins_list?;
     // Release GIL during batch processing
-    without_gil(py, || classic_scanlog_core::detect_mods_batch(yaml_map, plugins))
-        .map_err(crate::to_pyerr)
+    without_gil(py, || {
+        classic_scanlog_core::detect_mods_batch(yaml_map, plugins)
+    })
+    .map_err(crate::to_pyerr)
 }

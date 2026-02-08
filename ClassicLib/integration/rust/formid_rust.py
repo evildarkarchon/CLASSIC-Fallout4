@@ -10,8 +10,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.factory import detect_component
 
 if TYPE_CHECKING:
     from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo

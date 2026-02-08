@@ -12,13 +12,6 @@ The integration layer handles:
 
 from __future__ import annotations
 
-# Centralized component detection
-from ClassicLib.integration.factory import (
-    detect_component,
-    get_component,
-    is_component_available,
-)
-
 # Runtime diagnostics (Phase 3)
 from ClassicLib.integration.diagnostics import (
     get_runtime_stats,
@@ -35,6 +28,13 @@ from ClassicLib.integration.exceptions import (
     RustIOError,
     RustMemoryError,
     RustParseError,
+)
+
+# Centralized component detection
+from ClassicLib.integration.factory import (
+    detect_component,
+    get_component,
+    is_component_available,
 )
 
 # Note: We don't import other submodules here to avoid circular dependencies.

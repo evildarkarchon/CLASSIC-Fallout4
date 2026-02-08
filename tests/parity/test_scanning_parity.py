@@ -107,9 +107,7 @@ class TestScanningParity:
     """VAL-02: Rust segment parsing matches Python golden files."""
 
     @pytest.mark.parametrize("log_stem", GOLDEN_LOG_STEMS)
-    def test_segments_parity(
-        self, log_stem: str, rust_parser: LogParserProtocol, sample_logs_dir: Path
-    ) -> None:
+    def test_segments_parity(self, log_stem: str, rust_parser: LogParserProtocol, sample_logs_dir: Path) -> None:
         """Rust segment parsing matches golden segments.
 
         Args:
@@ -175,15 +173,10 @@ class TestScanningParity:
 
         if actual_normalized != expected_normalized:
             diff = generate_diff(expected_normalized, actual_normalized)
-            pytest.fail(
-                f"Segment parity mismatch for {log_stem}:\n\n{diff}\n\n"
-                "Golden files are authoritative - Rust must match them."
-            )
+            pytest.fail(f"Segment parity mismatch for {log_stem}:\n\n{diff}\n\nGolden files are authoritative - Rust must match them.")
 
     @pytest.mark.parametrize("log_stem", GOLDEN_LOG_STEMS)
-    def test_analysis_metadata_parity(
-        self, log_stem: str, sample_logs_dir: Path
-    ) -> None:
+    def test_analysis_metadata_parity(self, log_stem: str, sample_logs_dir: Path) -> None:
         """Analysis metadata matches golden analysis.
 
         Args:
@@ -225,6 +218,4 @@ class TestScanningParity:
 
         if actual_normalized != expected_normalized:
             diff = generate_diff(expected_normalized, actual_normalized)
-            pytest.fail(
-                f"Analysis metadata parity mismatch for {log_stem}:\n\n{diff}"
-            )
+            pytest.fail(f"Analysis metadata parity mismatch for {log_stem}:\n\n{diff}")

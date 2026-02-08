@@ -16,7 +16,7 @@
 //! cargo bench --bench yaml_benchmarks -- --test
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use yaml_rust2::{Yaml, YamlLoader};
 
 // Import shared benchmark configuration from workspace benches/common/
@@ -113,7 +113,11 @@ fn yaml_parsing_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_parsing");
 
     // Test different YAML sizes
-    let sizes = [(100, "100_lines"), (1000, "1000_lines"), (5000, "5000_lines")];
+    let sizes = [
+        (100, "100_lines"),
+        (1000, "1000_lines"),
+        (5000, "5000_lines"),
+    ];
 
     for (lines, name) in sizes {
         let content = generate_yaml_content(lines);
@@ -123,9 +127,7 @@ fn yaml_parsing_benchmarks(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::new("parse", name), &content, |b, content| {
             let ops = YamlOperations::new();
-            b.iter(|| {
-                ops.parse_yaml(content).expect("parse should succeed")
-            });
+            b.iter(|| ops.parse_yaml(content).expect("parse should succeed"));
         });
     }
 
@@ -136,9 +138,7 @@ fn yaml_parsing_benchmarks(c: &mut Criterion) {
         BenchmarkId::new("parse", "multi_document_5x100"),
         &multi_doc,
         |b, content| {
-            b.iter(|| {
-                YamlLoader::load_from_str(content).expect("parse should succeed")
-            });
+            b.iter(|| YamlLoader::load_from_str(content).expect("parse should succeed"));
         },
     );
 
@@ -152,7 +152,11 @@ fn yaml_parsing_benchmarks(c: &mut Criterion) {
 fn yaml_serialization_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("yaml_serialization");
 
-    let sizes = [(100, "100_lines"), (1000, "1000_lines"), (5000, "5000_lines")];
+    let sizes = [
+        (100, "100_lines"),
+        (1000, "1000_lines"),
+        (5000, "5000_lines"),
+    ];
 
     for (lines, name) in sizes {
         let content = generate_yaml_content(lines);
@@ -163,9 +167,7 @@ fn yaml_serialization_benchmarks(c: &mut Criterion) {
         group.throughput(Throughput::Bytes(content.len() as u64));
 
         group.bench_with_input(BenchmarkId::new("dump", name), &parsed, |b, yaml| {
-            b.iter(|| {
-                ops.dump_yaml(yaml).expect("dump should succeed")
-            });
+            b.iter(|| ops.dump_yaml(yaml).expect("dump should succeed"));
         });
     }
 
@@ -186,28 +188,25 @@ fn yaml_traversal_benchmarks(c: &mut Criterion) {
 
     // Benchmark shallow key access
     group.bench_function("get_setting_shallow", |b| {
-        b.iter(|| {
-            ops.get_setting(&parsed, "version")
-        });
+        b.iter(|| ops.get_setting(&parsed, "version"));
     });
 
     // Benchmark nested key access
     group.bench_function("get_setting_nested", |b| {
-        b.iter(|| {
-            ops.get_setting(&parsed, "settings.fcx_mode")
-        });
+        b.iter(|| ops.get_setting(&parsed, "settings.fcx_mode"));
     });
 
     // Benchmark deep nested access
     let deep_content = generate_nested_yaml(10);
     let deep_parsed = ops.parse_yaml(&deep_content).expect("parse should succeed");
-    let deep_path = (0..10).map(|i| format!("level_{}", i)).collect::<Vec<_>>().join(".");
+    let deep_path = (0..10)
+        .map(|i| format!("level_{}", i))
+        .collect::<Vec<_>>()
+        .join(".");
     let full_path = format!("root.{}.value", deep_path);
 
     group.bench_function("get_setting_deep_10_levels", |b| {
-        b.iter(|| {
-            ops.get_setting(&deep_parsed, &full_path)
-        });
+        b.iter(|| ops.get_setting(&deep_parsed, &full_path));
     });
 
     // Benchmark iteration over hash keys
@@ -322,29 +321,31 @@ fn yaml_config_benchmarks(c: &mut Criterion) {
 
     group.bench_function("parse_with_default_config", |b| {
         b.iter(|| {
-            default_ops.parse_yaml(&content).expect("parse should succeed")
+            default_ops
+                .parse_yaml(&content)
+                .expect("parse should succeed")
         });
     });
 
     group.bench_function("parse_with_custom_config", |b| {
         b.iter(|| {
-            custom_ops.parse_yaml(&content).expect("parse should succeed")
+            custom_ops
+                .parse_yaml(&content)
+                .expect("parse should succeed")
         });
     });
 
     // Serialization with different configs
-    let parsed = default_ops.parse_yaml(&content).expect("parse should succeed");
+    let parsed = default_ops
+        .parse_yaml(&content)
+        .expect("parse should succeed");
 
     group.bench_function("dump_with_default_config", |b| {
-        b.iter(|| {
-            default_ops.dump_yaml(&parsed).expect("dump should succeed")
-        });
+        b.iter(|| default_ops.dump_yaml(&parsed).expect("dump should succeed"));
     });
 
     group.bench_function("dump_with_custom_config", |b| {
-        b.iter(|| {
-            custom_ops.dump_yaml(&parsed).expect("dump should succeed")
-        });
+        b.iter(|| custom_ops.dump_yaml(&parsed).expect("dump should succeed"));
     });
 
     group.finish();

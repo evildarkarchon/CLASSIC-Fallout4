@@ -16,7 +16,7 @@
 //! cargo bench --bench scanlog_benchmarks -- --test
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use std::sync::Arc;
 
 // Import shared benchmark configuration from workspace benches/common/
@@ -24,8 +24,8 @@ use std::sync::Arc;
 mod common;
 
 use classic_scanlog_core::{
-    contains_plugin, contains_record, detect_plugins_batch, FormIDAnalyzerCore, LogParser,
-    PatternMatcher, RecordScanner, scan_records_batch,
+    FormIDAnalyzerCore, LogParser, PatternMatcher, RecordScanner, contains_plugin, contains_record,
+    detect_plugins_batch, scan_records_batch,
 };
 use indexmap::IndexMap;
 
@@ -56,9 +56,7 @@ fn log_to_lines(content: &str) -> Vec<Arc<str>> {
 fn extract_callstack_lines(content: &str) -> Vec<String> {
     content
         .lines()
-        .filter(|line| {
-            line.contains("Form ID:") || line.contains("FormID") || line.contains("0x")
-        })
+        .filter(|line| line.contains("Form ID:") || line.contains("FormID") || line.contains("0x"))
         .map(|s| s.to_string())
         .take(200) // Limit for benchmark
         .collect()
@@ -298,10 +296,7 @@ fn plugin_detection_benchmarks(c: &mut Criterion) {
     }
 
     // Benchmark batch plugin detection
-    let logs_batch: Vec<String> = vec![
-        SAMPLE_LOG_SMALL.to_string(),
-        SAMPLE_LOG_MEDIUM.to_string(),
-    ];
+    let logs_batch: Vec<String> = vec![SAMPLE_LOG_SMALL.to_string(), SAMPLE_LOG_MEDIUM.to_string()];
     group.bench_function("detect_plugins_batch_2_logs", |b| {
         b.iter(|| detect_plugins_batch(logs_batch.clone()));
     });
@@ -347,11 +342,8 @@ fn record_scanning_benchmarks(c: &mut Criterion) {
             BenchmarkId::new("record_scanner_scan", name),
             content,
             |b, content| {
-                let scanner = RecordScanner::new(
-                    record_types.clone(),
-                    vec![],
-                    "Buffout 4".to_string(),
-                );
+                let scanner =
+                    RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string());
 
                 let lines: Vec<String> = content.lines().map(|s| s.to_string()).collect();
                 b.iter(|| scanner.scan_named_records(&lines));
@@ -366,7 +358,11 @@ fn record_scanning_benchmarks(c: &mut Criterion) {
     ];
     group.bench_function("scan_records_batch_2_segments", |b| {
         b.iter(|| {
-            scan_records_batch(segments.clone(), record_types.clone(), ignore_records.clone())
+            scan_records_batch(
+                segments.clone(),
+                record_types.clone(),
+                ignore_records.clone(),
+            )
         });
     });
 
@@ -473,9 +469,7 @@ fn parser_creation_benchmarks(c: &mut Criterion) {
     // Record scanner creation
     group.bench_function("record_scanner_creation", |b| {
         let record_types = create_record_types();
-        b.iter(|| {
-            RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string())
-        });
+        b.iter(|| RecordScanner::new(record_types.clone(), vec![], "Buffout 4".to_string()));
     });
 
     // Pattern matcher creation with 15 patterns

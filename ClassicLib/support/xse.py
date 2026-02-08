@@ -23,9 +23,8 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
@@ -34,6 +33,9 @@ from ClassicLib.core.registry import GlobalRegistry, get_game, get_vr
 from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.messaging import msg_warning
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 def _read_bytes(path: Path) -> bytes:
@@ -94,7 +96,7 @@ def _is_fcx_mode_enabled() -> bool:
     return yaml_settings(bool, YAML.Settings, "FCX_Mode", False)
 
 
-def _get_rust_game_version():
+def _get_rust_game_version() -> object:
     """Convert GlobalRegistry game version to Rust GameVersion enum.
 
     Returns:
@@ -107,15 +109,14 @@ def _get_rust_game_version():
 
     if version == "VR":
         return GameVersion.Vr
-    elif version == "Original":
+    if version == "Original":
         return GameVersion.Original
-    elif version == "NextGen":
+    if version == "NextGen":
         return GameVersion.NextGen
-    elif version == "AnniversaryEdition":
+    if version == "AnniversaryEdition":
         return GameVersion.AnniversaryEdition
-    else:
-        # For "auto", default to Original (detection happens elsewhere)
-        return GameVersion.Original
+    # For "auto", default to Original (detection happens elsewhere)
+    return GameVersion.Original
 
 
 # noinspection DuplicatedCode
@@ -246,8 +247,8 @@ def _check_address_library_rust(plugins_folder: str | None) -> str:
         is_valid = result == ValidationResult.CorrectVersion
         GlobalRegistry.register(GlobalRegistry.Keys.XSE_VALID, is_valid)
 
-        return message
-    except Exception as e:
+        return message  # noqa: TRY300
+    except (ImportError, RuntimeError, ValueError, OSError) as e:
         logger.error(f"Rust XSE validation error: {e}")
         GlobalRegistry.register(GlobalRegistry.Keys.XSE_VALID, False)
         return f"XSE validation error: {e}\n"
@@ -434,7 +435,7 @@ async def _check_xse_installation_async(
         return
 
     log_path: Path = Path(log_file)
-    if not log_path.exists():
+    if not log_path.exists():  # noqa: ASYNC240
         messages.extend([
             f"❌ CAUTION : *{acronym.lower()}.log* FILE IS MISSING FROM YOUR DOCUMENTS FOLDER! \n",
             f"   You need to run the game at least once with {acronym.lower()}_loader.exe \n",
@@ -507,7 +508,7 @@ def enb_check_presence() -> str:
         GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, is_present)
 
         return checker.format_message(result)
-    except Exception as e:
+    except (ImportError, RuntimeError, ValueError, OSError) as e:
         logger.error(f"ENB check error: {e}")
         GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
         return f"ENB check error: {e}\n"
@@ -548,7 +549,7 @@ async def enb_check_presence_async() -> str:
 
     try:
 
-        def _check_enb():
+        def _check_enb() -> tuple[object, str]:
             from classic_scangame import EnbChecker
 
             checker = EnbChecker(str(game_path))
@@ -560,8 +561,8 @@ async def enb_check_presence_async() -> str:
         is_present = result.is_present()
         GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, is_present)
 
-        return message
-    except Exception as e:
+        return message  # noqa: TRY300
+    except (ImportError, RuntimeError, ValueError, OSError) as e:
         logger.error(f"ENB check error: {e}")
         GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
         return f"ENB check error: {e}\n"

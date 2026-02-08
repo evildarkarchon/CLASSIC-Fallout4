@@ -6,8 +6,8 @@ use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gi
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 // =============================================================================
@@ -824,15 +824,12 @@ impl PyRustOrchestrator {
         // Reconstruct results in input order with placeholders for any missing entries
         let results: Vec<PyAnalysisResult> = (0..total)
             .map(|i| {
-                indexed_results
-                    .get(&i)
-                    .cloned()
-                    .unwrap_or_else(|| {
-                        AnalysisResult::failure(
-                            log_paths_clone[i].clone(),
-                            "Processing result missing".to_string(),
-                        )
-                    })
+                indexed_results.get(&i).cloned().unwrap_or_else(|| {
+                    AnalysisResult::failure(
+                        log_paths_clone[i].clone(),
+                        "Processing result missing".to_string(),
+                    )
+                })
             })
             .map(|r| PyAnalysisResult { inner: r })
             .collect();

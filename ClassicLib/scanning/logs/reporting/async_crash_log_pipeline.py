@@ -7,7 +7,6 @@ Phase 9: Uses Rust Orchestrator directly for all processing.
 """
 
 import asyncio
-import os
 import time
 from collections import Counter
 from pathlib import Path
@@ -20,7 +19,7 @@ from ClassicLib.scanning.logs.async_reformat import crashlogs_reformat_async
 
 # Import Rust orchestrator - required, no Python fallback
 try:
-    from classic_scanlog import Orchestrator, AnalysisConfig
+    from classic_scanlog import AnalysisConfig, Orchestrator
 except ImportError as e:
     raise RuntimeError(
         "Rust orchestrator module not available. CLASSIC requires its Rust extensions. "
@@ -162,7 +161,7 @@ class AsyncCrashLogPipeline:
             log_paths = [str(p) for p in crashlog_list]
 
             # Progress callback for Rust orchestrator
-            def progress_callback(current: int, total: int, filename: str) -> None:
+            def progress_callback(_current: int, _total: int, filename: str) -> None:
                 progress.update(1, f"Processed {filename}")
 
             # Process all logs in parallel using Rust orchestrator

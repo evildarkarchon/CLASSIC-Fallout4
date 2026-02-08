@@ -134,9 +134,7 @@ class TestAsyncPipeline:
             # Create mock orchestrator instance
             mock_orchestrator = MagicMock()
             mock_orchestrator.is_feature_complete.return_value = True
-            mock_orchestrator.process_logs_batch.return_value = [
-                MockRustResult(log_file) for log_file in crash_log_files
-            ]
+            mock_orchestrator.process_logs_batch.return_value = [MockRustResult(log_file) for log_file in crash_log_files]
             mock_orchestrator_class.return_value = mock_orchestrator
 
             # Run the pipeline

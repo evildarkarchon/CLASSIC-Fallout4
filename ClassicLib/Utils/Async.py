@@ -723,7 +723,7 @@ class AsyncTimer:
         self.start_time = time.perf_counter()
         return self
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+    async def __aexit__(self, _exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: TracebackType | None) -> None:
         self.end_time = time.perf_counter()
 
     @property
@@ -748,7 +748,7 @@ class Throttler:
         await self.semaphore.acquire()
         return self
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: TracebackType | None) -> None:
+    async def __aexit__(self, _exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: TracebackType | None) -> None:
         task: asyncio.Task[Any] = asyncio.create_task(self.release_after_delay())
         self.tasks.add(task)
         task.add_done_callback(self.tasks.discard)

@@ -80,7 +80,7 @@ class RustAcceleratedReportGenerator:
         crashgen_version: str,
         version_current: Any,
         version_latest: Any,
-        version_latest_vr: Any,
+        _version_latest_vr: Any,
         *,
         game_version_id: str | None = None,
     ) -> Any:

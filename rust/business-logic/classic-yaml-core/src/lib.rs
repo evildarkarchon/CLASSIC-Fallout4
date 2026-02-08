@@ -142,8 +142,8 @@ use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::SystemTime;
 use thiserror::Error;
 use tracing::trace;
@@ -1370,7 +1370,11 @@ impl YamlOperations {
     ///   "3 | NPC Pathing Crash": ["NavMesh", "PathingCell", "BSPathBuilder"]
     /// }
     /// ```
-    pub fn get_hashmap_vec_value(&self, data: &Yaml, key_path: &str) -> HashMap<String, Vec<String>> {
+    pub fn get_hashmap_vec_value(
+        &self,
+        data: &Yaml,
+        key_path: &str,
+    ) -> HashMap<String, Vec<String>> {
         let keys: Vec<&str> = key_path.split('.').collect();
         let mut current = data;
 
@@ -1420,7 +1424,11 @@ impl YamlOperations {
     ///
     /// # Returns
     /// * `IndexMap<String, Vec<String>>` - Ordered map of keys to string arrays
-    pub fn get_indexmap_vec_value(&self, data: &Yaml, key_path: &str) -> IndexMap<String, Vec<String>> {
+    pub fn get_indexmap_vec_value(
+        &self,
+        data: &Yaml,
+        key_path: &str,
+    ) -> IndexMap<String, Vec<String>> {
         let keys: Vec<&str> = key_path.split('.').collect();
         let mut current = data;
 
@@ -2730,7 +2738,9 @@ Crashlog_Stack_Check:
         let result = ops.get_hashmap_vec_value(&yaml, "Crashlog_Stack_Check");
         assert_eq!(result.len(), 2);
 
-        let ba2 = result.get("6 | BA2 Limit Crash").expect("BA2 entry should exist");
+        let ba2 = result
+            .get("6 | BA2 Limit Crash")
+            .expect("BA2 entry should exist");
         assert_eq!(ba2, &vec!["LooseFileAsyncStream".to_string()]);
 
         let npc = result
@@ -3052,10 +3062,7 @@ root:
         ops.set_cache_enabled(false);
 
         let mut hash = yaml_rust2::yaml::Hash::new();
-        hash.insert(
-            Yaml::String("saved".to_string()),
-            Yaml::Boolean(true),
-        );
+        hash.insert(Yaml::String("saved".to_string()), Yaml::Boolean(true));
         let yaml = Yaml::Hash(hash);
 
         ops.save_yaml_file(&config_path, &yaml)
@@ -3082,7 +3089,10 @@ root:
         ops.set_cache_enabled(false);
 
         let yaml = ops.load_yaml_file(&file_path).expect("Load should succeed");
-        assert_eq!(ops.get_setting(&yaml, "no_cache"), Some(Yaml::Boolean(true)));
+        assert_eq!(
+            ops.get_setting(&yaml, "no_cache"),
+            Some(Yaml::Boolean(true))
+        );
 
         // Should NOT be in cache
         assert!(!YAML_CACHE.contains_key(&file_path));

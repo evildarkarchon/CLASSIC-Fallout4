@@ -38,7 +38,7 @@ class TestDatabasePoolResourceManagement:
             return mock_conn
 
         with (
-            patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value= [db_path, db_path, db_path]),
+            patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value=[db_path, db_path, db_path]),
             patch("aiosqlite.connect", side_effect=mock_connect),
         ):
             pool = AsyncDatabasePool()
@@ -62,7 +62,7 @@ class TestDatabasePoolResourceManagement:
 
         cleanup_called = False
 
-        with patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value= []):
+        with patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value=[]):
             async with AsyncDatabasePool() as pool:
                 # Monkey-patch to track cleanup
                 original_close = pool.close
@@ -103,7 +103,7 @@ class TestDatabasePoolResourceManagement:
             raise RuntimeError("Too many connections")
 
         with (
-            patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value= [db_path]),
+            patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value=[db_path]),
             patch("aiosqlite.connect", side_effect=mock_connect),
         ):
             async with AsyncDatabasePool() as pool:
@@ -132,7 +132,7 @@ class TestDatabasePoolResourceManagement:
             return mock_conn
 
         with (
-            patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value= [db_path]),
+            patch("ClassicLib.io.database.async_pool.get_all_db_paths", return_value=[db_path]),
             patch("aiosqlite.connect", side_effect=mock_connect),
         ):
             pool = AsyncDatabasePool()

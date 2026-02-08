@@ -41,9 +41,7 @@ def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
     """Create a mock Rust Orchestrator that returns results for given files."""
     mock_orchestrator = MagicMock()
     mock_orchestrator.is_feature_complete.return_value = True
-    mock_orchestrator.process_logs_batch.return_value = [
-        create_mock_rust_result(f) for f in crash_files
-    ]
+    mock_orchestrator.process_logs_batch.return_value = [create_mock_rust_result(f) for f in crash_files]
     return mock_orchestrator
 
 

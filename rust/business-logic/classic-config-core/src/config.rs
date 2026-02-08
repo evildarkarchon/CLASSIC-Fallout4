@@ -350,10 +350,7 @@ impl ClassicConfig {
         let game_version = if yaml["game_version"].is_badvalue() && vr_mode {
             "VR".to_string()
         } else {
-            yaml["game_version"]
-                .as_str()
-                .unwrap_or("auto")
-                .to_string()
+            yaml["game_version"].as_str().unwrap_or("auto").to_string()
         };
         let update_source = yaml["update_source"]
             .as_str()

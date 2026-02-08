@@ -6,8 +6,8 @@ use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use serde::Serialize;
 use std::path::Path;
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
 use tracing::trace;
 use yaml_rust2::Yaml;
 

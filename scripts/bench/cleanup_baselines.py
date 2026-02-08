@@ -18,17 +18,18 @@ Examples:
 
     # Custom Criterion directory
     python cleanup_baselines.py --criterion-dir target/criterion --execute
+
 """
 
 from __future__ import annotations
 
 import argparse
+import operator
 import re
 import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-
 
 # Pattern to match baseline directories: baseline-YYYY-MM-DD-HHMMSS
 BASELINE_PATTERN = re.compile(r"^baseline-(\d{4})-(\d{2})-(\d{2})-(\d{2})(\d{2})(\d{2})$")
@@ -42,6 +43,7 @@ def parse_baseline_timestamp(name: str) -> datetime | None:
 
     Returns:
         Datetime object if valid baseline name, None otherwise.
+
     """
     match = BASELINE_PATTERN.match(name)
     if not match:
@@ -63,6 +65,7 @@ def find_baselines(criterion_dir: Path) -> list[tuple[datetime, Path]]:
 
     Returns:
         List of (timestamp, path) tuples, sorted by timestamp (oldest first).
+
     """
     baselines: list[tuple[datetime, Path]] = []
 
@@ -78,7 +81,7 @@ def find_baselines(criterion_dir: Path) -> list[tuple[datetime, Path]]:
             baselines.append((timestamp, entry))
 
     # Sort by timestamp (oldest first)
-    baselines.sort(key=lambda x: x[0])
+    baselines.sort(key=operator.itemgetter(0))
     return baselines
 
 
@@ -90,6 +93,7 @@ def format_size(size_bytes: int) -> str:
 
     Returns:
         Formatted size string.
+
     """
     for unit in ["B", "KB", "MB", "GB"]:
         if size_bytes < 1024:
@@ -106,6 +110,7 @@ def get_dir_size(path: Path) -> int:
 
     Returns:
         Total size in bytes.
+
     """
     total = 0
     try:
@@ -131,6 +136,7 @@ def cleanup_baselines(
 
     Returns:
         Tuple of (kept_paths, deleted_paths).
+
     """
     baselines = find_baselines(criterion_dir)
 
@@ -146,7 +152,7 @@ def cleanup_baselines(
     deleted_paths: list[Path] = []
     kept_paths: list[Path] = [path for _, path in to_keep]
 
-    for timestamp, path in to_delete:
+    for _timestamp, path in to_delete:
         if execute:
             try:
                 shutil.rmtree(path)
@@ -160,10 +166,11 @@ def cleanup_baselines(
 
 
 def main() -> int:
-    """Main entry point for baseline cleanup.
+    """Run baseline cleanup.
 
     Returns:
         Exit code: 0 for success, 1 for error.
+
     """
     parser = argparse.ArgumentParser(
         description="Clean up old Criterion baselines, keeping the most recent.",
@@ -239,15 +246,10 @@ Examples:
 
     if deleted_paths:
         action = "DELETED" if args.execute else "WOULD DELETE"
-        print(f"Baselines to DELETE:")
+        print("Baselines to DELETE:")
         total_size = 0
         for path in deleted_paths:
-            if not args.execute:
-                # In dry run, directory still exists
-                size = get_dir_size(path)
-            else:
-                # After execution, directory is gone
-                size = 0
+            size = get_dir_size(path) if not args.execute else 0
             total_size += size
             timestamp = parse_baseline_timestamp(path.name)
             ts_str = timestamp.strftime("%Y-%m-%d %H:%M:%S") if timestamp else "unknown"

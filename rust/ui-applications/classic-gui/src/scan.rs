@@ -71,10 +71,7 @@ impl ScanResult {
         } else if self.cancelled {
             format!("Cancelled ({} of {} logs)", self.attempted, self.total)
         } else if self.error_count > 0 {
-            format!(
-                "Scanned {} logs ({} errors)",
-                self.total, self.error_count
-            )
+            format!("Scanned {} logs ({} errors)", self.total, self.error_count)
         } else {
             format!("Scanned {} logs", self.total)
         }
@@ -141,7 +138,8 @@ where
 
     // Load YAML databases and create OrchestratorCore
     update_status(&window_weak, "Loading analysis databases...", -1.0);
-    let orchestrator = create_orchestrator(&settings).await
+    let orchestrator = create_orchestrator(&settings)
+        .await
         .map_err(|e| format!("Failed to initialize scanner: {}", e))?;
 
     // Phase 2: Analysis (determinate progress)
@@ -189,8 +187,8 @@ async fn create_orchestrator(settings: &ClassicConfig) -> Result<OrchestratorCor
     };
 
     let show_formid_values = config.show_formid_values;
-    let mut orchestrator =
-        OrchestratorCore::new(config).map_err(|e| format!("OrchestratorCore init failed: {}", e))?;
+    let mut orchestrator = OrchestratorCore::new(config)
+        .map_err(|e| format!("OrchestratorCore init failed: {}", e))?;
 
     // Attach database pool for FormID value lookups if enabled
     if show_formid_values {
@@ -264,13 +262,9 @@ async fn load_analysis_config(settings: &ClassicConfig) -> Result<AnalysisConfig
     let data_dir = root_dir.join("CLASSIC Data");
 
     let yaml_dirs = vec![root_dir, data_dir];
-    let yamldata = YamlDataCore::load_from_yaml_files(
-        yaml_dirs,
-        "Fallout4".to_string(),
-        false,
-    )
-    .await
-    .map_err(|e| format!("Failed to load YAML databases: {}", e))?;
+    let yamldata = YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false)
+        .await
+        .map_err(|e| format!("Failed to load YAML databases: {}", e))?;
 
     Ok(build_analysis_config(yamldata, settings))
 }
@@ -483,7 +477,10 @@ mod tests {
             total: 5,
             cancelled: true,
         };
-        assert!(!result.has_results(), "Cancelled scans should not report has_results");
+        assert!(
+            !result.has_results(),
+            "Cancelled scans should not report has_results"
+        );
     }
 
     #[test]

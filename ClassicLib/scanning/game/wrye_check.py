@@ -10,9 +10,9 @@ from pathlib import Path
 # noinspection PyProtectedMember
 from bs4 import BeautifulSoup, PageElement
 
+from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_game, get_vr
-from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 

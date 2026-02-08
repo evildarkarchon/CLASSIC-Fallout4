@@ -23,14 +23,14 @@ from pathlib import Path
 
 import pytest
 
+from ClassicLib.integration.factory import get_rust_component_status
+from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
 from tests.fixtures.golden_fixtures import (
     GOLDEN_DIR,
     generate_diff,
     mask_dynamic_data,
     normalize_paths,
 )
-from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
-from ClassicLib.integration.factory import get_rust_component_status
 
 
 def load_report_manifest() -> dict[str, dict[str, str]]:
@@ -98,9 +98,7 @@ class TestReportParity:
     """
 
     @pytest.mark.parametrize("golden_stem", REPORT_GOLDEN_STEMS)
-    def test_report_matches_python_golden(
-        self, golden_stem: str, orchestrator, crash_logs_dir: Path
-    ):
+    def test_report_matches_python_golden(self, golden_stem: str, orchestrator, crash_logs_dir: Path):
         """Rust report output matches Python golden for {golden_stem}."""
         # Load manifest to find source log
         manifest = load_report_manifest()
@@ -159,6 +157,4 @@ class TestReportParity:
     def test_orchestrator_is_feature_complete(self, orchestrator):
         """VAL-05 partial: Orchestrator has required features."""
         assert orchestrator is not None
-        assert hasattr(orchestrator, 'process_crash_log'), (
-            "Orchestrator missing process_crash_log method"
-        )
+        assert hasattr(orchestrator, "process_crash_log"), "Orchestrator missing process_crash_log method"

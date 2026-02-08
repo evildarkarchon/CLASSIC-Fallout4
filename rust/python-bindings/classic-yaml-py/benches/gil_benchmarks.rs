@@ -16,7 +16,7 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-yaml-py
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::hint::black_box;
 
@@ -177,15 +177,16 @@ fn bench_key_lookup(c: &mut Criterion) {
             .map(|i| (format!("key_{}", i), format!("value_{}", i)))
             .collect();
 
-        let lookup_keys: Vec<String> = (0..100).map(|i| format!("key_{}", i * (size / 100))).collect();
+        let lookup_keys: Vec<String> = (0..100)
+            .map(|i| format!("key_{}", i * (size / 100)))
+            .collect();
 
         group.bench_with_input(
             BenchmarkId::new("lookup_100_keys", size),
             &(data, lookup_keys),
             |b, (data, keys)| {
                 b.iter(|| {
-                    let found: Vec<Option<&String>> =
-                        keys.iter().map(|k| data.get(k)).collect();
+                    let found: Vec<Option<&String>> = keys.iter().map(|k| data.get(k)).collect();
                     black_box(found)
                 })
             },
@@ -204,7 +205,10 @@ fn bench_string_interning(c: &mut Criterion) {
         .map(|i| {
             // Create strings with some repetition
             let base = i % 50;
-            format!("Common mod description text {} with some variation {}", base, i)
+            format!(
+                "Common mod description text {} with some variation {}",
+                base, i
+            )
         })
         .collect();
 

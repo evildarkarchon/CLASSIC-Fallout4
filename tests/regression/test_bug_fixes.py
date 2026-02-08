@@ -110,9 +110,7 @@ class TestBug02PathResolution:
             # If FileNotFoundError, verify it's looking in the right place
             # (project root, not tmp_path)
             assert "CLASSIC Settings.yaml" in str(e)
-            assert str(tmp_path) not in str(e), (
-                f"classic_settings() is resolving relative to CWD ({tmp_path}), not project root"
-            )
+            assert str(tmp_path) not in str(e), f"classic_settings() is resolving relative to CWD ({tmp_path}), not project root"
         except Exception:
             # Other errors are acceptable (missing YAML data, etc.)
             pass

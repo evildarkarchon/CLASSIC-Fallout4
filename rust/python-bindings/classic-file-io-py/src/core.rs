@@ -412,7 +412,8 @@ impl PyFileIOCore {
         let path_buf: PathBuf = path.into();
         // Release GIL during directory traversal
         let files = without_gil(py, || {
-            self.inner.walk_directory(&path_buf, pattern.as_deref(), max_depth)
+            self.inner
+                .walk_directory(&path_buf, pattern.as_deref(), max_depth)
         })
         .map_err(to_pyerr)?;
 

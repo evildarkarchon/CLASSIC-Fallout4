@@ -20,7 +20,6 @@ __version__: str
 # Cancellation Support
 # =============================================================================
 
-
 class CancellationToken:
     """Token for cancelling batch operations.
 
@@ -54,7 +53,6 @@ class CancellationToken:
 
     def reset(self) -> None:
         """Reset the token for reuse (clears cancellation state)."""
-
 
 # =============================================================================
 # FormID Analysis

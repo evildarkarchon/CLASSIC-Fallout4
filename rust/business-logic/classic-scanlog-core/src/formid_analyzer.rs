@@ -286,13 +286,12 @@ impl FormIDAnalyzerCore {
 
             // Light plugins (ESL) use a 5-char prefix: "FE" + 3-digit load order index
             // Regular plugins use a 2-char prefix: load order hex byte
-            let (formid_prefix, formid_suffix) = if formid_value.starts_with("FE")
-                && formid_value.len() >= 5
-            {
-                (&formid_value[..5], &formid_value[5..])
-            } else {
-                (&formid_value[..2], &formid_value[2..])
-            };
+            let (formid_prefix, formid_suffix) =
+                if formid_value.starts_with("FE") && formid_value.len() >= 5 {
+                    (&formid_value[..5], &formid_value[5..])
+                } else {
+                    (&formid_value[..2], &formid_value[2..])
+                };
 
             // Fast O(1) lookup instead of O(m) linear search
             if let Some(&plugin) = prefix_to_plugin.get(formid_prefix) {

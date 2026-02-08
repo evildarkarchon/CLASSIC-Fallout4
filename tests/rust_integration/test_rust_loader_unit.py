@@ -446,17 +446,17 @@ class TestGetRustInfo:
 
         mock_detect.side_effect = [
             # Components dict: classic_yaml, classic_scanlog, classic_fileio
-            (True, mock_yaml),    # classic_yaml for components
-            (False, None),        # classic_scanlog for components
-            (False, None),        # classic_fileio for components
+            (True, mock_yaml),  # classic_yaml for components
+            (False, None),  # classic_scanlog for components
+            (False, None),  # classic_fileio for components
             # Versions dict: classic_yaml, classic_scanlog, classic_fileio
-            (True, mock_yaml),    # classic_yaml for versions
-            (False, None),        # classic_scanlog for versions
-            (False, None),        # classic_fileio for versions
+            (True, mock_yaml),  # classic_yaml for versions
+            (False, None),  # classic_scanlog for versions
+            (False, None),  # classic_fileio for versions
             # is_loaded(): classic_yaml, classic_scanlog, classic_fileio
-            (True, mock_yaml),    # classic_yaml for is_loaded
-            (False, None),        # classic_scanlog for is_loaded
-            (False, None),        # classic_fileio for is_loaded
+            (True, mock_yaml),  # classic_yaml for is_loaded
+            (False, None),  # classic_scanlog for is_loaded
+            (False, None),  # classic_fileio for is_loaded
         ]
 
         from ClassicLib.core.rust_loader import get_rust_info

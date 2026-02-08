@@ -16,7 +16,7 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-scanlog-py
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::collections::HashMap;
 use std::hint::black_box;
 
@@ -53,23 +53,27 @@ fn bench_log_parsing(c: &mut Criterion) {
     for size in [100, 1000, 10000] {
         let test_lines = generate_test_log_lines(size);
 
-        group.bench_with_input(BenchmarkId::new("line_count", size), &test_lines, |b, lines| {
-            b.iter(|| {
-                // Simulate segment boundary detection
-                let mut segment_count = 0;
-                let mut in_segment = false;
-                for line in lines.iter() {
-                    if line.contains("FORMS:") {
-                        in_segment = true;
-                        segment_count += 1;
-                    } else if line.is_empty() {
-                        in_segment = false;
+        group.bench_with_input(
+            BenchmarkId::new("line_count", size),
+            &test_lines,
+            |b, lines| {
+                b.iter(|| {
+                    // Simulate segment boundary detection
+                    let mut segment_count = 0;
+                    let mut in_segment = false;
+                    for line in lines.iter() {
+                        if line.contains("FORMS:") {
+                            in_segment = true;
+                            segment_count += 1;
+                        } else if line.is_empty() {
+                            in_segment = false;
+                        }
+                        black_box(in_segment);
                     }
-                    black_box(in_segment);
-                }
-                black_box(segment_count)
-            })
-        });
+                    black_box(segment_count)
+                })
+            },
+        );
     }
 
     group.finish();

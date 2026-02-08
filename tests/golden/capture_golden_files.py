@@ -23,7 +23,7 @@ from typing import Any
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from tests.fixtures.golden_fixtures import mask_dynamic_data, GOLDEN_DIR
+from tests.fixtures.golden_fixtures import GOLDEN_DIR, mask_dynamic_data
 
 # Sample logs directory
 SAMPLE_LOGS_DIR = project_root / "sample_logs" / "FO4"

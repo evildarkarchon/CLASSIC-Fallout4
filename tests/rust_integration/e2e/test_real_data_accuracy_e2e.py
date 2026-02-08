@@ -27,8 +27,8 @@ pytest.importorskip("classic_scanlog", reason="Rust extensions not available")
 from ClassicLib.integration.factory import (
     get_formid_analyzer,
     get_plugin_analyzer,
+    is_rust_accelerated,
 )
-from ClassicLib.integration.factory import is_rust_accelerated
 
 logger = logging.getLogger(__name__)
 

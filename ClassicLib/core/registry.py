@@ -723,6 +723,7 @@ class GlobalRegistry:
 
         Returns:
             bool: True if XSE validation passed, False otherwise.
+
         """
         return get(Keys.XSE_VALID) or False
 
@@ -732,5 +733,6 @@ class GlobalRegistry:
 
         Returns:
             bool: True if ENB binaries detected, False otherwise.
+
         """
         return get(Keys.ENB_PRESENT) or False

@@ -185,8 +185,20 @@ mod tests {
     fn test_set_tab_geometry_overwrites() {
         let mut state = WindowState::default();
 
-        let g1 = TabGeometry { x: 10, y: 20, width: 100, height: 200, maximized: false };
-        let g2 = TabGeometry { x: 30, y: 40, width: 300, height: 400, maximized: true };
+        let g1 = TabGeometry {
+            x: 10,
+            y: 20,
+            width: 100,
+            height: 200,
+            maximized: false,
+        };
+        let g2 = TabGeometry {
+            x: 30,
+            y: 40,
+            width: 300,
+            height: 400,
+            maximized: true,
+        };
 
         state.set_tab_geometry(0, g1);
         state.set_tab_geometry(0, g2);
@@ -201,9 +213,36 @@ mod tests {
     fn test_multiple_tabs_independent() {
         let mut state = WindowState::default();
 
-        state.set_tab_geometry(0, TabGeometry { x: 1, y: 2, width: 100, height: 200, maximized: false });
-        state.set_tab_geometry(1, TabGeometry { x: 10, y: 20, width: 800, height: 600, maximized: true });
-        state.set_tab_geometry(2, TabGeometry { x: 50, y: 50, width: 500, height: 400, maximized: false });
+        state.set_tab_geometry(
+            0,
+            TabGeometry {
+                x: 1,
+                y: 2,
+                width: 100,
+                height: 200,
+                maximized: false,
+            },
+        );
+        state.set_tab_geometry(
+            1,
+            TabGeometry {
+                x: 10,
+                y: 20,
+                width: 800,
+                height: 600,
+                maximized: true,
+            },
+        );
+        state.set_tab_geometry(
+            2,
+            TabGeometry {
+                x: 50,
+                y: 50,
+                width: 500,
+                height: 400,
+                maximized: false,
+            },
+        );
 
         assert_eq!(state.get_tab_geometry(0).x, 1);
         assert_eq!(state.get_tab_geometry(1).x, 10);
@@ -229,7 +268,13 @@ mod tests {
 
     #[test]
     fn test_tab_geometry_clone() {
-        let g = TabGeometry { x: 100, y: 200, width: 1024, height: 768, maximized: true };
+        let g = TabGeometry {
+            x: 100,
+            y: 200,
+            width: 1024,
+            height: 768,
+            maximized: true,
+        };
         let g2 = g.clone();
         assert_eq!(g2.x, g.x);
         assert_eq!(g2.width, g.width);
@@ -245,12 +290,26 @@ mod tests {
             game_path: "C:\\Games\\FO4".to_string(),
             ..Default::default()
         };
-        state.set_tab_geometry(0, TabGeometry {
-            x: 50, y: 75, width: 1920, height: 1080, maximized: true,
-        });
-        state.set_tab_geometry(2, TabGeometry {
-            x: 100, y: 100, width: 800, height: 600, maximized: false,
-        });
+        state.set_tab_geometry(
+            0,
+            TabGeometry {
+                x: 50,
+                y: 75,
+                width: 1920,
+                height: 1080,
+                maximized: true,
+            },
+        );
+        state.set_tab_geometry(
+            2,
+            TabGeometry {
+                x: 100,
+                y: 100,
+                width: 800,
+                height: 600,
+                maximized: false,
+            },
+        );
 
         // Serialize then deserialize
         let json = serde_json::to_string_pretty(&state).unwrap();
@@ -276,7 +335,13 @@ mod tests {
 
     #[test]
     fn test_tab_geometry_debug_format() {
-        let g = TabGeometry { x: 1, y: 2, width: 3, height: 4, maximized: false };
+        let g = TabGeometry {
+            x: 1,
+            y: 2,
+            width: 3,
+            height: 4,
+            maximized: false,
+        };
         let debug = format!("{:?}", g);
         assert!(debug.contains("TabGeometry"));
         assert!(debug.contains("width: 3"));
@@ -299,9 +364,16 @@ mod tests {
             game_path: "C:\\Test\\Game".to_string(),
             ..Default::default()
         };
-        state.set_tab_geometry(1, TabGeometry {
-            x: 200, y: 150, width: 1280, height: 720, maximized: false,
-        });
+        state.set_tab_geometry(
+            1,
+            TabGeometry {
+                x: 200,
+                y: 150,
+                width: 1280,
+                height: 720,
+                maximized: false,
+            },
+        );
 
         // Save (may fail if config dir is read-only, which is ok)
         if save_window_state(&state).is_ok() {

@@ -21,9 +21,7 @@ import pytest
 class TestGILReleaseConcurrency:
     """Tests proving GIL release enables true concurrency."""
 
-    def test_scanlog_parser_releases_gil(
-        self, thread_pool: ThreadPoolExecutor, large_test_data: list[str]
-    ) -> None:
+    def test_scanlog_parser_releases_gil(self, thread_pool: ThreadPoolExecutor, large_test_data: list[str]) -> None:
         """Prove log parsing releases GIL by running concurrently."""
         try:
             import classic_scanlog
@@ -62,9 +60,7 @@ class TestGILReleaseConcurrency:
         )
         assert len(results) == 4
 
-    def test_yaml_operations_concurrent_safety(
-        self, thread_pool: ThreadPoolExecutor
-    ) -> None:
+    def test_yaml_operations_concurrent_safety(self, thread_pool: ThreadPoolExecutor) -> None:
         """Verify YAML operations are thread-safe under concurrent access.
 
         Note: YAML operations release GIL during Rust parsing/serialization,
@@ -120,9 +116,7 @@ class TestGILReleaseConcurrency:
         for worker_id, result in results:
             assert result == expected, f"Worker {worker_id} produced incorrect result"
 
-    def test_mod_detection_releases_gil(
-        self, thread_pool: ThreadPoolExecutor, plugin_test_data: dict[str, str]
-    ) -> None:
+    def test_mod_detection_releases_gil(self, thread_pool: ThreadPoolExecutor, plugin_test_data: dict[str, str]) -> None:
         """Prove mod detection releases GIL."""
         try:
             import classic_scanlog
@@ -151,8 +145,7 @@ class TestGILReleaseConcurrency:
 
         max_expected = single_time * 2.5
         assert concurrent_time < max_expected, (
-            f"Mod detection appears sequential. "
-            f"Single: {single_time:.3f}s, Concurrent: {concurrent_time:.3f}s"
+            f"Mod detection appears sequential. Single: {single_time:.3f}s, Concurrent: {concurrent_time:.3f}s"
         )
 
 
@@ -160,9 +153,7 @@ class TestGILReleaseConcurrency:
 class TestGILReleaseDoesNotBreakFunctionality:
     """Verify GIL release doesn't cause correctness issues."""
 
-    def test_concurrent_results_are_correct(
-        self, thread_pool: ThreadPoolExecutor, large_test_data: list[str]
-    ) -> None:
+    def test_concurrent_results_are_correct(self, thread_pool: ThreadPoolExecutor, large_test_data: list[str]) -> None:
         """Ensure concurrent execution produces correct results."""
         try:
             import classic_scanlog
@@ -185,9 +176,7 @@ class TestGILReleaseDoesNotBreakFunctionality:
         for i, result in enumerate(concurrent_results):
             assert len(result) == len(baseline_result), f"Thread {i} produced different segment count"
 
-    def test_no_data_races_in_concurrent_access(
-        self, thread_pool: ThreadPoolExecutor
-    ) -> None:
+    def test_no_data_races_in_concurrent_access(self, thread_pool: ThreadPoolExecutor) -> None:
         """Stress test for data races under concurrent load."""
         try:
             import classic_scanlog
@@ -217,9 +206,7 @@ class TestGILReleaseDoesNotBreakFunctionality:
         assert not errors, f"Workers encountered errors: {errors}"
         assert len(results) == 10, f"Expected 10 results, got {len(results)}"
 
-    def test_yaml_concurrent_correctness(
-        self, thread_pool: ThreadPoolExecutor
-    ) -> None:
+    def test_yaml_concurrent_correctness(self, thread_pool: ThreadPoolExecutor) -> None:
         """Ensure concurrent YAML parsing produces correct results."""
         try:
             import classic_yaml
@@ -250,9 +237,7 @@ class TestGILReleaseDoesNotBreakFunctionality:
 class TestGILReleasePerformanceGain:
     """Tests that measure actual performance gains from GIL release."""
 
-    def test_parallel_speedup_log_parsing(
-        self, thread_pool: ThreadPoolExecutor, large_test_data: list[str]
-    ) -> None:
+    def test_parallel_speedup_log_parsing(self, thread_pool: ThreadPoolExecutor, large_test_data: list[str]) -> None:
         """Measure actual speedup from parallel log parsing."""
         try:
             import classic_scanlog

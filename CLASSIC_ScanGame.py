@@ -61,7 +61,8 @@ _scan_game_core = get_scan_game_core()
 # Created once at module load, reused for all calls
 # Work in GUI mode, error in CLI/TUI mode
 
-def check_log_errors(*args, **kwargs):
+
+def check_log_errors(*args: object, **kwargs: object) -> object:
     """Check for log errors synchronously via AsyncBridge (GUI-only).
 
     Args:
@@ -105,7 +106,7 @@ def get_issue_messages(xse_acronym: str, mode: str) -> dict[str, list[str]]:
     return core.get_issue_messages(xse_acronym, mode)
 
 
-def scan_mods_unpacked(*args, **kwargs):
+def scan_mods_unpacked(*args: object, **kwargs: object) -> object:
     """Scan unpacked mods synchronously via AsyncBridge (GUI-only).
 
     Args:
@@ -119,7 +120,7 @@ def scan_mods_unpacked(*args, **kwargs):
     return AsyncBridge.get_instance().run_async(_scan_game_core.scan_mods_unpacked(*args, **kwargs))
 
 
-def scan_mods_archived(*args, **kwargs):
+def scan_mods_archived(*args: object, **kwargs: object) -> object:
     """Scan archived mods synchronously via AsyncBridge (GUI-only).
 
     Args:

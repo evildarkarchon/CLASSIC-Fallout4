@@ -42,10 +42,10 @@ class ReportGeneratorFunctional:
 
         Args:
             yamldata: Optional YAML data configuration. Unused in static methods.
+
         """
         warnings.warn(
-            "ReportGeneratorFunctional is deprecated and will be removed. "
-            "Use get_report_generator() from ClassicLib.integration.factory.",
+            "ReportGeneratorFunctional is deprecated and will be removed. Use get_report_generator() from ClassicLib.integration.factory.",
             DeprecationWarning,
             stacklevel=2,
         )

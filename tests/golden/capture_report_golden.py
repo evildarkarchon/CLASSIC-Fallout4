@@ -151,10 +151,7 @@ def main() -> int:
 
     # Save manifest for test parametrization
     manifest_path = GOLDEN_DIR / "report_manifest.json"
-    manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True),
-        encoding="utf-8"
-    )
+    manifest_path.write_text(json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8")
 
     print()
     print(f"Captured: {captured} golden report files")

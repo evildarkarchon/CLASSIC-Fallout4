@@ -30,7 +30,9 @@ pub mod async_bridge;
 pub use errors::{ClassicError, ClassicResult, IntoClassicError};
 
 #[cfg(feature = "gui-bridge")]
-pub use async_bridge::{AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher};
+pub use async_bridge::{
+    AsyncBridge, BridgeError, EventLoopDispatcher, SlintDispatcher, set_dispatcher,
+};
 
 /// Configuration for the global Tokio runtime
 ///

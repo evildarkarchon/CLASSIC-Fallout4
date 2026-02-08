@@ -280,9 +280,7 @@ class TestParallelismEfficiency:
             # For extremely fast operations (< 1ms), parallelism overhead completely
             # dominates. Thread spawning and synchronization takes ~10-15ms regardless
             # of work size. Skip this test as parallelism isn't measurable.
-            pytest.skip(
-                f"Processing too fast to measure parallelism benefit: {sequential_time:.3f}ms sequential"
-            )
+            pytest.skip(f"Processing too fast to measure parallelism benefit: {sequential_time:.3f}ms sequential")
         elif sequential_time < 50:
             # For fast operations (1-50ms), parallelism overhead is significant.
             # Just verify parallel doesn't add excessive overhead.

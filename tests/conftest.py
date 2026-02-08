@@ -33,9 +33,6 @@ os.environ["QT_QPA_PLATFORM"] = "offscreen"
 # Core fixtures
 from tests.fixtures.async_fixtures import *  # noqa: F403
 
-# Singleton reset (autouse fixture for test isolation)
-from tests.fixtures.singleton_fixtures import reset_all_singletons_impl
-
 # Phase 2 consolidated fixtures (fixture consolidation task)
 from tests.fixtures.backup_fixtures import *  # noqa: F403
 from tests.fixtures.concurrency_fixtures import *  # noqa: F403
@@ -58,6 +55,9 @@ from tests.fixtures.rust_fixtures import *  # noqa: F403
 
 # Scanlog fixtures (orchestrator, parser fixtures)
 from tests.fixtures.scanlog_fixtures import *  # noqa: F403
+
+# Singleton reset (autouse fixture for test isolation)
+from tests.fixtures.singleton_fixtures import reset_all_singletons_impl
 from tests.fixtures.stress_fixtures import *  # noqa: F403
 from tests.fixtures.version_cache_fixtures import *  # noqa: F403
 from tests.fixtures.yaml_fixtures import *  # noqa: F403

@@ -314,3 +314,6 @@ Performance CI Test.txt
 ui-applications/classic-gui/CLASSIC Data
 rust/ui-applications/classic-gui/CLASSIC Data
 con
+
+# Git Worktrees
+.worktrees/

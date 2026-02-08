@@ -9,9 +9,9 @@ Note: Tests use real files since caching now delegates to Rust classic_settings.
 import time
 from pathlib import Path
 
+import classic_settings
 import pytest
 import ruamel.yaml
-import classic_settings
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.io.yaml import YamlSettingsCache

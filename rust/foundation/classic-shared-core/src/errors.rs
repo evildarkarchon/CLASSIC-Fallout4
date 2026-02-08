@@ -566,10 +566,8 @@ mod tests {
 
     #[test]
     fn test_into_classic_error_err() {
-        let result: Result<i32, std::io::Error> = Err(std::io::Error::new(
-            std::io::ErrorKind::Other,
-            "bad things",
-        ));
+        let result: Result<i32, std::io::Error> =
+            Err(std::io::Error::new(std::io::ErrorKind::Other, "bad things"));
         let classic_result = result.into_classic("test context");
         let err = classic_result.unwrap_err();
         match err {
@@ -586,20 +584,62 @@ mod tests {
     #[test]
     fn test_all_error_variants_display() {
         let errors: Vec<ClassicError> = vec![
-            ClassicError::Io { message: "io".to_string(), source: None },
-            ClassicError::Path { message: "path".to_string(), path: Some("/p".to_string()) },
-            ClassicError::Validation { message: "val".to_string(), field: Some("f".to_string()) },
-            ClassicError::Parse { message: "parse".to_string(), position: Some(1), context: Some("ctx".to_string()) },
-            ClassicError::Database { message: "db".to_string(), query: Some("q".to_string()) },
-            ClassicError::Cache { message: "cache".to_string() },
-            ClassicError::Encoding { message: "enc".to_string(), encoding: Some("UTF-8".to_string()) },
-            ClassicError::Timeout { operation: "op".to_string(), duration_ms: 100 },
-            ClassicError::Permission { message: "perm".to_string(), resource: Some("res".to_string()) },
-            ClassicError::Configuration { message: "config".to_string(), key: Some("k".to_string()) },
-            ClassicError::Processing { message: "proc".to_string(), stage: Some("s".to_string()) },
-            ClassicError::NotFound { resource: "res".to_string() },
-            ClassicError::InvalidState { message: "state".to_string(), expected: Some("A".to_string()), actual: Some("B".to_string()) },
-            ClassicError::Generic { message: "gen".to_string(), details: Some("det".to_string()) },
+            ClassicError::Io {
+                message: "io".to_string(),
+                source: None,
+            },
+            ClassicError::Path {
+                message: "path".to_string(),
+                path: Some("/p".to_string()),
+            },
+            ClassicError::Validation {
+                message: "val".to_string(),
+                field: Some("f".to_string()),
+            },
+            ClassicError::Parse {
+                message: "parse".to_string(),
+                position: Some(1),
+                context: Some("ctx".to_string()),
+            },
+            ClassicError::Database {
+                message: "db".to_string(),
+                query: Some("q".to_string()),
+            },
+            ClassicError::Cache {
+                message: "cache".to_string(),
+            },
+            ClassicError::Encoding {
+                message: "enc".to_string(),
+                encoding: Some("UTF-8".to_string()),
+            },
+            ClassicError::Timeout {
+                operation: "op".to_string(),
+                duration_ms: 100,
+            },
+            ClassicError::Permission {
+                message: "perm".to_string(),
+                resource: Some("res".to_string()),
+            },
+            ClassicError::Configuration {
+                message: "config".to_string(),
+                key: Some("k".to_string()),
+            },
+            ClassicError::Processing {
+                message: "proc".to_string(),
+                stage: Some("s".to_string()),
+            },
+            ClassicError::NotFound {
+                resource: "res".to_string(),
+            },
+            ClassicError::InvalidState {
+                message: "state".to_string(),
+                expected: Some("A".to_string()),
+                actual: Some("B".to_string()),
+            },
+            ClassicError::Generic {
+                message: "gen".to_string(),
+                details: Some("det".to_string()),
+            },
         ];
 
         for err in errors {

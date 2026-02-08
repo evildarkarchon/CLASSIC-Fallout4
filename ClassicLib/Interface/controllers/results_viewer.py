@@ -27,17 +27,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import get_local_dir
-from ClassicLib.integration.factory import is_component_available
+from ClassicLib.integration.factory import get_file_io, is_component_available
 from ClassicLib.Interface.widgets.ResultsViewerWidgets import (
     MarkdownViewer,
     ReportListWidget,
     ReportMetadataWidget,
 )
-from ClassicLib.core.async_bridge import AsyncBridge
-from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 from ClassicLib.messaging import msg_error, msg_info, msg_warning
 

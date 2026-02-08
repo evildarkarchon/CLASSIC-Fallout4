@@ -83,9 +83,7 @@ class TestGamePathFindWithRustFinder:
 
     @patch("ClassicLib.support.game_path.msg_info")
     @patch("ClassicLib.support.game_path.RustGamePathFinder")
-    def test_game_path_find_uses_rust_finder(
-        self, mock_rust_finder_cls: MagicMock, mock_msg_info: MagicMock, message_handler
-    ) -> None:
+    def test_game_path_find_uses_rust_finder(self, mock_rust_finder_cls: MagicMock, mock_msg_info: MagicMock, message_handler) -> None:
         """Test that game_path_find uses Rust finder for path detection."""
         # Mock Rust finder to return a valid path
         mock_rust_finder = MagicMock()

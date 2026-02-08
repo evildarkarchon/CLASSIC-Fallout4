@@ -201,8 +201,7 @@ class TestLogParsingPerformance:
 
     def test_parser_performance_small_logs(self, metrics, generator):
         """Test parser performance on small logs (0.5MB)."""
-        from ClassicLib.integration.factory import get_parser
-        from ClassicLib.integration.factory import is_rust_accelerated
+        from ClassicLib.integration.factory import get_parser, is_rust_accelerated
 
         parser = get_parser()
         using_rust = is_rust_accelerated("parser")
@@ -237,8 +236,7 @@ class TestLogParsingPerformance:
 
     def test_parser_performance_medium_logs(self, metrics, generator):
         """Test parser performance on medium logs (1.5MB)."""
-        from ClassicLib.integration.factory import get_parser
-        from ClassicLib.integration.factory import is_rust_accelerated
+        from ClassicLib.integration.factory import get_parser, is_rust_accelerated
 
         parser = get_parser()
         using_rust = is_rust_accelerated("parser")
@@ -274,8 +272,7 @@ class TestLogParsingPerformance:
 
     def test_parser_performance_complex_logs(self, metrics, generator):
         """Test parser performance on complex logs with many sections."""
-        from ClassicLib.integration.factory import get_parser
-        from ClassicLib.integration.factory import is_rust_accelerated
+        from ClassicLib.integration.factory import get_parser, is_rust_accelerated
 
         parser = get_parser()
         using_rust = is_rust_accelerated("parser")
@@ -302,8 +299,7 @@ class TestLogParsingPerformance:
 
     def test_parser_scaling_performance(self, metrics, generator):
         """Test parser performance scaling with log size."""
-        from ClassicLib.integration.factory import get_parser
-        from ClassicLib.integration.factory import is_rust_accelerated
+        from ClassicLib.integration.factory import get_parser, is_rust_accelerated
 
         parser = get_parser()
         using_rust = is_rust_accelerated("parser")
@@ -349,8 +345,7 @@ class TestFormIDAnalysisPerformance:
 
     def test_formid_analysis_speed(self, metrics, generator, mock_yamldata):
         """Test FormID analysis performance (target: 25x speedup with Rust)."""
-        from ClassicLib.integration.factory import get_formid_analyzer
-        from ClassicLib.integration.factory import is_rust_accelerated
+        from ClassicLib.integration.factory import get_formid_analyzer, is_rust_accelerated
 
         # Add formid-specific attributes to the fixture
         mock_yamldata.formid_keywords = ["crash", "error"]

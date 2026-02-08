@@ -332,10 +332,22 @@ mod tests {
 
     #[test]
     fn test_string_operation_from_str() {
-        assert_eq!("upper".parse::<StringOperation>().unwrap(), StringOperation::Upper);
-        assert_eq!("lower".parse::<StringOperation>().unwrap(), StringOperation::Lower);
-        assert_eq!("trim".parse::<StringOperation>().unwrap(), StringOperation::Trim);
-        assert_eq!("normalize".parse::<StringOperation>().unwrap(), StringOperation::Normalize);
+        assert_eq!(
+            "upper".parse::<StringOperation>().unwrap(),
+            StringOperation::Upper
+        );
+        assert_eq!(
+            "lower".parse::<StringOperation>().unwrap(),
+            StringOperation::Lower
+        );
+        assert_eq!(
+            "trim".parse::<StringOperation>().unwrap(),
+            StringOperation::Trim
+        );
+        assert_eq!(
+            "normalize".parse::<StringOperation>().unwrap(),
+            StringOperation::Normalize
+        );
     }
 
     #[test]
@@ -360,7 +372,9 @@ mod tests {
 
     #[test]
     fn test_parse_string_operation_error_display() {
-        let err = ParseStringOperationError { invalid_value: "bad".to_string() };
+        let err = ParseStringOperationError {
+            invalid_value: "bad".to_string(),
+        };
         let msg = err.to_string();
         assert!(msg.contains("bad"));
         assert!(msg.contains("Invalid string operation"));

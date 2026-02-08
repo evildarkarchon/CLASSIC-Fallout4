@@ -16,8 +16,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.factory import detect_component
 
 # Detect Rust-specific exception types for classic_scanlog
 _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
@@ -82,7 +82,7 @@ class RustPluginAnalyzer:
 
             if not hasattr(classic_scanlog, "PluginAnalyzer"):
                 msg = "PluginAnalyzer not found in classic_scanlog module. Reinstall CLASSIC."
-                raise RuntimeError(msg)
+                raise RuntimeError(msg)  # noqa: TRY301
 
             RustPluginAnalyzerImpl = classic_scanlog.PluginAnalyzer
 

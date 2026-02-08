@@ -16,7 +16,7 @@
 //! BENCH_MODE=thorough cargo bench --bench gil_benchmarks -p classic-file-io-py
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion};
+use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
 use std::path::PathBuf;
 
@@ -74,11 +74,7 @@ fn bench_path_filtering(c: &mut Criterion) {
                 b.iter(|| {
                     let matching: Vec<&PathBuf> = paths
                         .iter()
-                        .filter(|p| {
-                            p.to_string_lossy()
-                                .to_lowercase()
-                                .contains("textures")
-                        })
+                        .filter(|p| p.to_string_lossy().to_lowercase().contains("textures"))
                         .collect();
                     black_box(matching)
                 })
@@ -99,11 +95,7 @@ fn bench_path_processing(c: &mut Criterion) {
         b.iter(|| {
             let normalized: Vec<String> = base_paths
                 .iter()
-                .map(|p| {
-                    p.to_string_lossy()
-                        .replace('\\', "/")
-                        .to_lowercase()
-                })
+                .map(|p| p.to_string_lossy().replace('\\', "/").to_lowercase())
                 .collect();
             black_box(normalized)
         })

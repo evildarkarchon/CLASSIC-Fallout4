@@ -91,13 +91,13 @@ class AsyncDatabasePool:
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    async def __aexit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
         """Exit async context manager, cleaning up resources.
 
         Args:
             exc_type: Exception type if an exception was raised.
-            exc_val: Exception instance if an exception was raised.
-            exc_tb: Traceback if an exception was raised.
+            _exc_val: Exception instance if an exception was raised.
+            _exc_tb: Traceback if an exception was raised.
 
         """
         await self.close()

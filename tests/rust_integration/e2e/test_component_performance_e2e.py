@@ -25,8 +25,8 @@ from ClassicLib.integration.factory import (
     get_formid_analyzer,
     get_parser,
     get_plugin_analyzer,
+    is_rust_accelerated,
 )
-from ClassicLib.integration.factory import is_rust_accelerated
 
 # Status imports
 from tests.test_infra.performance_utils import PerformanceTimer

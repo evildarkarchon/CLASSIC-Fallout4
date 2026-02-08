@@ -90,15 +90,15 @@ class ProgressContext:
     def __exit__(
         self,
         exc_type: type[BaseException] | None,
-        exc_val: BaseException | None,
-        exc_tb: Any,
+        _exc_val: BaseException | None,
+        _exc_tb: Any,
     ) -> None:
         """Exit the progress context.
 
         Args:
             exc_type: Exception type if raised.
-            exc_val: Exception value if raised.
-            exc_tb: Exception traceback if raised.
+            _exc_val: Exception value if raised.
+            _exc_tb: Exception traceback if raised.
 
         """
         if self._progress_handler is not None:

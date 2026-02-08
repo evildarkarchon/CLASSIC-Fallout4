@@ -693,7 +693,10 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(config.suspects_stack_list.len(), 1);
         assert_eq!(
             config.suspects_stack_list.get("StackPattern1"),
-            Some(&vec!["Stack pattern 1".to_string(), "Stack pattern 2".to_string()])
+            Some(&vec![
+                "Stack pattern 1".to_string(),
+                "Stack pattern 2".to_string()
+            ])
         );
     }
 

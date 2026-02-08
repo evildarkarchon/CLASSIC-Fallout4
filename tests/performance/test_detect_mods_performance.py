@@ -107,6 +107,7 @@ def test_detect_mods_important_performance():
     # Verify output was generated
     assert result.has_content
 
+
 if __name__ == "__main__":
     # Run performance tests directly
     print("Running DetectMods performance tests...")

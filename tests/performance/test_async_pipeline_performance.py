@@ -87,9 +87,7 @@ def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
     """Create a mock Rust Orchestrator that returns results for given files."""
     mock_orchestrator = MagicMock()
     mock_orchestrator.is_feature_complete.return_value = True
-    mock_orchestrator.process_logs_batch.return_value = [
-        create_mock_rust_result(f) for f in crash_files
-    ]
+    mock_orchestrator.process_logs_batch.return_value = [create_mock_rust_result(f) for f in crash_files]
     return mock_orchestrator
 
 
@@ -98,7 +96,9 @@ class TestAsyncPerformancePipeline:
 
     @pytest.mark.slow
     @pytest.mark.asyncio
-    async def test_async_pipeline_scalability_baseline(self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture) -> None:
+    async def test_async_pipeline_scalability_baseline(
+        self, tmp_path: Path, mock_yamldata: MagicMock, init_message_handler_fixture
+    ) -> None:
         """Baseline: Async pipeline scalability with different log counts."""
         test_counts = [5, 10, 25]
         results = []

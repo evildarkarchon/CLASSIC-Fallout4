@@ -36,11 +36,13 @@ class TestGameDetectionAPI:
         """GamePathFinder imports successfully from Rust module."""
         # Rust-only, hard fail if unavailable
         from classic_path import GamePathFinder as RustGamePathFinder
+
         assert RustGamePathFinder is not None
 
     def test_path_validator_import(self):
         """PathValidator imports successfully from Rust module."""
         from classic_path import PathValidator
+
         assert PathValidator is not None
 
     def test_game_path_finder_initialization(self):
@@ -125,10 +127,7 @@ class TestGameDetectionAPI:
         # Actual parsing happens in Rust classic-path crate
         # This just verifies the API accepts the parameter
         try:
-            result = finder.find_game_path(
-                cached_path=None,
-                xse_log_path=r"D:\Docs\My Games\Fallout4\F4SE\f4se.log"
-            )
+            result = finder.find_game_path(cached_path=None, xse_log_path=r"D:\Docs\My Games\Fallout4\F4SE\f4se.log")
         except (FileNotFoundError, ValueError, OSError):
             # Expected if files don't exist
             pass
@@ -224,8 +223,7 @@ class TestRustComponentsAvailable:
 
         for component in required:
             assert available.get(component, False), (
-                f"Rust component '{component}' not available. "
-                "Run './rebuild_rust.ps1' to build Rust modules."
+                f"Rust component '{component}' not available. Run './rebuild_rust.ps1' to build Rust modules."
             )
 
     def test_acceleration_level(self):
@@ -237,7 +235,4 @@ class TestRustComponentsAvailable:
 
         # Expect at least partial acceleration
         acceptable_levels = ["PARTIALLY ACCELERATED", "HIGHLY ACCELERATED", "FULLY ACCELERATED"]
-        assert level in acceptable_levels, (
-            f"Rust acceleration level '{level}' too low. "
-            f"Expected one of: {acceptable_levels}"
-        )
+        assert level in acceptable_levels, f"Rust acceleration level '{level}' too low. Expected one of: {acceptable_levels}"

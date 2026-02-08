@@ -88,9 +88,9 @@ mod loader;
 
 // Re-export public API
 pub use cache::{
-    cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate, is_cached,
-    load_batch_async, load_batch_sync, load_settings_async, load_settings_sync, reset_cache_stats,
-    CacheStats,
+    CacheStats, cache_keys, cache_size, cache_stats, clear_cache, get_cached, invalidate,
+    is_cached, load_batch_async, load_batch_sync, load_settings_async, load_settings_sync,
+    reset_cache_stats,
 };
 pub use error::{Result, SettingsError};
 pub use loader::{load_yaml_async, load_yaml_batch_async, load_yaml_batch_sync, load_yaml_sync};

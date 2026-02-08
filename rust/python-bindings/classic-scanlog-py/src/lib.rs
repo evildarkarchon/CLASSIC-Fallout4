@@ -117,7 +117,9 @@ pub use gpu_detector::{PyGpuDetector, PyGpuInfo, PyGpuVendor};
 pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
-pub use orchestrator::{PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator};
+pub use orchestrator::{
+    PyAnalysisConfig, PyAnalysisResult, PyCancellationToken, PyRustOrchestrator,
+};
 pub use papyrus::{PyPapyrusAnalyzer, PyPapyrusStats, papyrus_logging};
 pub use parser::PyLogParser;
 pub use patterns::PyPatternMatcher;

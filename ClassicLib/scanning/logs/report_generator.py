@@ -68,7 +68,7 @@ class ReportGeneratorFragments:
         crashgen_version: str,
         version_current: Any,
         version_latest: Any,
-        version_latest_vr: Any,
+        _version_latest_vr: Any,
         *,
         game_version_id: str | None = None,
     ) -> ReportFragment:
@@ -121,13 +121,12 @@ class ReportGeneratorFragments:
             else:
                 # UNKNOWN_GAME_VERSION or other unexpected status
                 lines.append(f"⚠️ *Unable to verify {crashgen_name} version.*\n\n")
+        # Legacy single-version comparison for backward compatibility
+        # Simple comparison: current < latest means outdated
+        elif version_current < version_latest:
+            lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
         else:
-            # Legacy single-version comparison for backward compatibility
-            # Simple comparison: current < latest means outdated
-            if version_current < version_latest:
-                lines.append(f"***❌ WARNING: YOUR {crashgen_name} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n")
-            else:
-                lines.append(f"✅ *You have the latest version of {crashgen_name}!*\n\n")
+            lines.append(f"✅ *You have the latest version of {crashgen_name}!*\n\n")
 
         lines.append("---\n\n")
 

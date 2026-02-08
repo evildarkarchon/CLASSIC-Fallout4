@@ -29,25 +29,19 @@ class TestDatabaseListWidget:
         """The Paths tab should include a QListWidget keyed as 'database_list'."""
         widget = gui_settings_dialog.settings_widgets.get("database_list")
         assert widget is not None, "database_list widget not found in settings_widgets"
-        assert isinstance(widget, QListWidget), (
-            f"Expected QListWidget, got {type(widget).__name__}"
-        )
+        assert isinstance(widget, QListWidget), f"Expected QListWidget, got {type(widget).__name__}"
 
     def test_paths_tab_has_add_button(self, gui_settings_dialog: SettingsDialog) -> None:
         """The Paths tab should have an Add button keyed as 'db_add_button'."""
         widget = gui_settings_dialog.settings_widgets.get("db_add_button")
         assert widget is not None, "db_add_button widget not found in settings_widgets"
-        assert isinstance(widget, QPushButton), (
-            f"Expected QPushButton, got {type(widget).__name__}"
-        )
+        assert isinstance(widget, QPushButton), f"Expected QPushButton, got {type(widget).__name__}"
 
     def test_paths_tab_has_remove_button(self, gui_settings_dialog: SettingsDialog) -> None:
         """The Paths tab should have a Remove button keyed as 'db_remove_button'."""
         widget = gui_settings_dialog.settings_widgets.get("db_remove_button")
         assert widget is not None, "db_remove_button widget not found in settings_widgets"
-        assert isinstance(widget, QPushButton), (
-            f"Expected QPushButton, got {type(widget).__name__}"
-        )
+        assert isinstance(widget, QPushButton), f"Expected QPushButton, got {type(widget).__name__}"
 
     def test_remove_button_starts_disabled(self, gui_settings_dialog: SettingsDialog) -> None:
         """The Remove button should start disabled (no selection)."""
@@ -80,9 +74,7 @@ class TestDatabaseListLoadSave:
 
         # Pre-populate mock cache with database paths for the game
         with patch("ClassicLib.core.registry.get_game", return_value="Fallout4"):
-            gui_settings_mock_cache.store[
-                (gui_settings_dialog.yaml_store, "CLASSIC_Settings.FormID Databases.Fallout4")
-            ] = [
+            gui_settings_mock_cache.store[(gui_settings_dialog.yaml_store, "CLASSIC_Settings.FormID Databases.Fallout4")] = [
                 "C:/databases/formids.db",
                 "C:/databases/extra.sqlite",
             ]

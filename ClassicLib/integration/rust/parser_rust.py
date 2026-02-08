@@ -8,8 +8,8 @@ from __future__ import annotations
 
 import logging
 
-from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.factory import detect_component
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ class RustLogParser:
             raise RuntimeError(msg) from e
 
     def find_segments(
-        self, crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
+        self, crash_data: list[str], _crashgen_name: str, xse_acronym: str, _game_root_name: str
     ) -> tuple[str, str, str, list[list[str]]]:
         """Find and extract crash log segments.
 
@@ -63,10 +63,7 @@ class RustLogParser:
 
         """
         xse_upper = xse_acronym.upper()
-        segment_boundaries = [
-            (s.replace("{xse}", xse_upper), e.replace("{xse}", xse_upper))
-            for s, e in SEGMENT_BOUNDARIES_TEMPLATE
-        ]
+        segment_boundaries = [(s.replace("{xse}", xse_upper), e.replace("{xse}", xse_upper)) for s, e in SEGMENT_BOUNDARIES_TEMPLATE]
         try:
             scan_output = self._rust_parser.parse_complete(crash_data, segment_boundaries, xse_acronym)
         except (RustParseError, RustError, AttributeError, TypeError, ValueError) as e:

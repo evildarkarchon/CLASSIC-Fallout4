@@ -202,9 +202,9 @@ async def crashlogs_scan_async_pure(executor: "ScanLogsExecutor") -> ScanResult:
     logger.info("Starting pure async crash log scanning")
 
     # Reset FCX checks for new scan session (no-op for Rust - resets automatically)
-    from ClassicLib.integration.factory import _FcxHandlerWrapper
+    from ClassicLib.integration.factory import FcxHandlerWrapper
 
-    _FcxHandlerWrapper.reset_fcx_checks()
+    FcxHandlerWrapper.reset_fcx_checks()
 
     # Execute the scan
     result = await executor.execute_scan()

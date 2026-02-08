@@ -6,8 +6,7 @@ identical results for crash log parsing operations.
 
 import pytest
 
-from ClassicLib.integration.factory import get_parser
-from ClassicLib.integration.factory import is_rust_accelerated
+from ClassicLib.integration.factory import get_parser, is_rust_accelerated
 from ClassicLib.scanning.logs.parser import (
     extract_segments,
     find_segments,

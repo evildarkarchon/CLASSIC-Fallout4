@@ -122,8 +122,7 @@ pub struct SlintDispatcher;
 #[cfg(feature = "gui-bridge")]
 impl EventLoopDispatcher for SlintDispatcher {
     fn dispatch(&self, f: Box<dyn FnOnce() + Send + 'static>) -> Result<(), BridgeError> {
-        slint::invoke_from_event_loop(f)
-            .map_err(|e| BridgeError::DispatchFailed(e.to_string()))
+        slint::invoke_from_event_loop(f).map_err(|e| BridgeError::DispatchFailed(e.to_string()))
     }
 }
 

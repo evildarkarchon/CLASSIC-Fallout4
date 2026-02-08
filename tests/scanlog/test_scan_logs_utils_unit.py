@@ -371,7 +371,7 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.statistics.scan_start_time = time.perf_counter()
 
         with (
-            patch("ClassicLib.integration.factory._FcxHandlerWrapper") as mock_fcx,
+            patch("ClassicLib.integration.factory.FcxHandlerWrapper") as mock_fcx,
             patch("ClassicLib.scanning.logs.utils.complete_scan_with_summary"),
         ):
             await crashlogs_scan_async_pure(mock_executor)
@@ -395,7 +395,7 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.statistics.scan_start_time = time.perf_counter()
 
         with (
-            patch("ClassicLib.integration.factory._FcxHandlerWrapper"),
+            patch("ClassicLib.integration.factory.FcxHandlerWrapper"),
             patch("ClassicLib.scanning.logs.utils.complete_scan_with_summary"),
         ):
             result = await crashlogs_scan_async_pure(mock_executor)
@@ -412,7 +412,7 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.yamldata = None  # Simulate uninitialized
 
         with (
-            patch("ClassicLib.integration.factory._FcxHandlerWrapper"),
+            patch("ClassicLib.integration.factory.FcxHandlerWrapper"),
             pytest.raises(RuntimeError, match="YAML data should be initialized"),
         ):
             await crashlogs_scan_async_pure(mock_executor)
@@ -434,7 +434,7 @@ class TestCrashlogsScanAsyncPure:
         mock_executor.statistics.scan_start_time = 12345.0
 
         with (
-            patch("ClassicLib.integration.factory._FcxHandlerWrapper"),
+            patch("ClassicLib.integration.factory.FcxHandlerWrapper"),
             patch("ClassicLib.scanning.logs.utils.complete_scan_with_summary") as mock_complete,
         ):
             await crashlogs_scan_async_pure(mock_executor)

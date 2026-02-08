@@ -520,7 +520,7 @@ class AsyncBridge:
         logger.debug(f"AsyncBridge: Entered context for thread {self._thread_id}")
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None, exc_tb: Any) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: Any) -> None:
         """Context manager exit - shutdown loop."""
         logger.debug(f"AsyncBridge: Exiting context for thread {self._thread_id}")
         self.shutdown()
@@ -602,7 +602,7 @@ def _is_gui_mode() -> bool:
     return GlobalRegistry.is_gui_mode()
 
 
-def run_async(coro: Coroutine[Any, Any, T]) -> T:
+def run_async[T](coro: Coroutine[Any, Any, T]) -> T:
     """Provide convenience wrapper to run async code from sync context.
 
     Args:
@@ -619,7 +619,7 @@ def run_async(coro: Coroutine[Any, Any, T]) -> T:
     return bridge.run_async(coro)
 
 
-def run_async_with_timeout(coro: Coroutine[Any, Any, T], timeout: float) -> T:
+def run_async_with_timeout[T](coro: Coroutine[Any, Any, T], timeout: float) -> T:
     """Provide convenience wrapper to run async code with timeout.
 
     Args:
@@ -640,7 +640,7 @@ def run_async_with_timeout(coro: Coroutine[Any, Any, T], timeout: float) -> T:
     return bridge.run_async_with_timeout(coro, timeout)
 
 
-def context_aware_sync(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T | Coroutine[Any, Any, T]]:
+def context_aware_sync[T](async_func: Callable[..., Coroutine[Any, Any, T]]) -> Callable[..., T | Coroutine[Any, Any, T]]:
     """Decorate to make an async function context-aware.
 
     In GUI mode: Returns sync result via AsyncBridge
@@ -671,7 +671,7 @@ def context_aware_sync(async_func: Callable[..., Coroutine[Any, Any, T]]) -> Cal
     return wrapper  # type: ignore[return-value]
 
 
-def smart_await(coro: Coroutine[Any, Any, T]) -> T:
+def smart_await[T](coro: Coroutine[Any, Any, T]) -> T:
     """Smart await that uses AsyncBridge in GUI mode.
 
     In GUI mode: Uses AsyncBridge

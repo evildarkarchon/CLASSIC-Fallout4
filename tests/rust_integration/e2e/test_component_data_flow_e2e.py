@@ -27,8 +27,8 @@ from ClassicLib.integration.factory import (
     get_parser,
     get_plugin_analyzer,
     get_record_scanner,
+    is_rust_accelerated,
 )
-from ClassicLib.integration.factory import is_rust_accelerated
 
 # Status imports
 from tests.test_infra.performance_utils import PerformanceTimer

@@ -92,13 +92,7 @@ def generate_diff(expected: str, actual: str) -> str:
     expected_lines = expected.splitlines(keepends=True)
     actual_lines = actual.splitlines(keepends=True)
 
-    diff = unified_diff(
-        expected_lines,
-        actual_lines,
-        fromfile="expected (golden)",
-        tofile="actual",
-        lineterm=""
-    )
+    diff = unified_diff(expected_lines, actual_lines, fromfile="expected (golden)", tofile="actual", lineterm="")
     return "".join(diff)
 
 
@@ -161,10 +155,7 @@ class GoldenFileChecker:
 
         if normalized != expected_normalized:
             diff = generate_diff(expected_normalized, normalized)
-            pytest.fail(
-                f"Golden file mismatch for {name}:\n\n{diff}\n\n"
-                f"Run with --update-golden to update the golden file."
-            )
+            pytest.fail(f"Golden file mismatch for {name}:\n\n{diff}\n\nRun with --update-golden to update the golden file.")
 
 
 @pytest.fixture

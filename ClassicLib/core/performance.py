@@ -299,7 +299,7 @@ class TimedBlock:
         self.start_time = time.perf_counter()
         return self
 
-    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+    def __exit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
         """Context manager exit method that handles logging and performance metrics based
         on the elapsed time. Logs the elapsed time of the operation and stores the
         metric upon successful execution, or an error message if an exception is
@@ -307,8 +307,8 @@ class TimedBlock:
 
         Args:
             exc_type (Any): Exception type that caused the context manager to exit.
-            exc_val (Any): Exception value provided during the context manager's exit.
-            exc_tb (Any): Traceback object related to the exception.
+            _exc_val (Any): Exception value provided during the context manager's exit.
+            _exc_tb (Any): Traceback object related to the exception.
 
         """
         elapsed = time.perf_counter() - self.start_time

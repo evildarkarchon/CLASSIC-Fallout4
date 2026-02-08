@@ -199,9 +199,7 @@ class TestGetUserDbPaths:
 
             get_user_db_paths()
 
-        mock_yaml.assert_called_once_with(
-            list, YAML.Settings, "CLASSIC_Settings.FormID Databases.Fallout4"
-        )
+        mock_yaml.assert_called_once_with(list, YAML.Settings, "CLASSIC_Settings.FormID Databases.Fallout4")
 
     def test_empty_yaml_list_returns_empty(self, tmp_path: Path) -> None:
         """An empty list from YAML returns empty user paths."""

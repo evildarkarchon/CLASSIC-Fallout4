@@ -120,7 +120,11 @@ impl PyPluginAnalyzer {
         })
         .map_err(crate::to_pyerr)?;
         // Convert IndexMap to Python dict preserving order
-        Ok((indexmap_to_pydict(py, plugins), limit_triggered, limit_disabled))
+        Ok((
+            indexmap_to_pydict(py, plugins),
+            limit_triggered,
+            limit_disabled,
+        ))
     }
 
     /// Check plugin limit - returns (plugin_limit_triggered, limit_check_disabled)

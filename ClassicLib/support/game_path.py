@@ -19,7 +19,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, cast
 
 # Direct Rust import - ImportError propagates if unavailable (Rust-only, hard fail)
-from classic_path import GamePathFinder as RustGamePathFinder, PathValidator
+from classic_path import GamePathFinder as RustGamePathFinder
+from classic_path import PathValidator
 
 from ClassicLib.core.constants import NULL_VERSION, YAML
 from ClassicLib.core.logger import logger
@@ -47,6 +48,7 @@ def _log_version_warning(game_version: "Version", match_message: str = "") -> bo
 
     Returns:
         True (cached -- function runs only once per unique arguments).
+
     """
     registry = get_version_registry()
     supported = [str(v.version) for v in registry.get_all_for_game("Fallout4")]
@@ -66,6 +68,7 @@ def _game_path_find_registry(exe_name: str) -> Path | None:
     Returns:
         A Path object representing the game's valid installation directory if found,
         otherwise None.
+
     """
     try:
         finder = RustGamePathFinder(
@@ -104,6 +107,7 @@ class GamePathFinder:
         xse_acronym: Acronym used in the XSE file configuration.
         xse_acronym_base: Base acronym for XSE.
         game_name: Root name of the game.
+
     """
 
     def __init__(self) -> None:
@@ -115,6 +119,7 @@ class GamePathFinder:
         Raises:
             TypeError: If any of the YAML settings are not strings.
             RuntimeError: If called from within an async context.
+
         """
         self.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
         self.xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
@@ -145,6 +150,7 @@ class GamePathFinder:
 
         Raises:
             TypeError: If any of the YAML settings are not strings.
+
         """
         from ClassicLib.io.yaml import yaml_settings_async
 
@@ -171,7 +177,8 @@ class GamePathFinder:
 
         return instance
 
-    def _get_path_from_user_gui(self) -> Path:
+    @staticmethod
+    def _get_path_from_user_gui() -> Path:
         """Retrieve a file path from the user via a graphical user interface (GUI).
 
         Raises:
@@ -179,6 +186,7 @@ class GamePathFinder:
 
         Returns:
             Path: The file path selected by the user.
+
         """
         result = show_game_path_dialog_static()
         if result is None:
@@ -190,6 +198,7 @@ class GamePathFinder:
 
         Returns:
             Path: The validated directory path provided by the user.
+
         """
         while True:
             msg_info(f"> > PLEASE ENTER THE FULL DIRECTORY PATH WHERE YOUR {self.game_name} IS LOCATED < <")
@@ -206,26 +215,31 @@ class GamePathFinder:
             # Check for executable using Rust validation
             try:
                 self._rust_finder.validate_game_path(str(game_path))
-                return game_path
             except ValueError as e:
                 msg_error(f"ERROR : {e}")
+            else:
+                return game_path
 
-    def _save_game_path(self, game_path: Path) -> None:
+    @staticmethod
+    def _save_game_path(game_path: Path) -> None:
         """Save the provided game path to cache and register it globally.
 
         Args:
             game_path: The path to the game directory to be saved.
+
         """
         from ClassicLib.support.resources import ResourceLoader
 
         ResourceLoader.save_path_to_cache(game_path, "GamePath")
         GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
 
-    async def _save_game_path_async(self, game_path: Path) -> None:
+    @staticmethod
+    async def _save_game_path_async(game_path: Path) -> None:
         """Asynchronously save the game path to cache and register it globally.
 
         Args:
             game_path: The path to the game directory to be saved.
+
         """
         from ClassicLib.support.resources import ResourceLoader
 
@@ -248,25 +262,24 @@ class GamePathFinder:
             # Validate with Rust
             try:
                 self._rust_finder.validate_game_path(str(cached_path))
+            except (ValueError, FileNotFoundError):
+                logger.debug("Cached path invalid, trying other methods")
+            else:
                 logger.debug(f"Using cached game path: {cached_path}")
                 GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
                 yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path))
                 return
-            except (ValueError, FileNotFoundError):
-                logger.debug("Cached path invalid, trying other methods")
 
         # Try Rust finder with all strategies
         xse_log_path = str(self.xse_file) if self.xse_file else None
         try:
-            path_str = self._rust_finder.find_game_path(
-                cached_path=str(cached_path) if cached_path else None,
-                xse_log_path=xse_log_path
-            )
+            path_str = self._rust_finder.find_game_path(cached_path=str(cached_path) if cached_path else None, xse_log_path=xse_log_path)
+        except FileNotFoundError:
+            logger.debug("Rust finder could not find game path, prompting user")
+        else:
             game_path = Path(path_str)
             self._save_game_path(game_path)
             return
-        except FileNotFoundError:
-            logger.debug("Rust finder could not find game path, prompting user")
 
         # Fall back to user input
         game_path = self._get_path_from_user_gui() if GlobalRegistry.is_gui_mode() else self._get_path_from_user_console()
@@ -290,29 +303,30 @@ class GamePathFinder:
             if is_valid:
                 try:
                     await loop.run_in_executor(None, self._rust_finder.validate_game_path, str(cached_path))
-                    logger.debug(f"Using cached game path: {cached_path}")
-                    GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
-                    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path))
-                    return
                 except (ValueError, FileNotFoundError):
                     logger.debug("Cached path invalid, trying other methods")
+                else:
+                    logger.debug(f"Using cached game path: {cached_path}")
+                    GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
+                    await yaml_settings_async(
+                        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path)
+                    )
+                    return
 
         # Try Rust finder with all strategies
         xse_log_path = str(self.xse_file) if self.xse_file else None
 
         def find_path() -> str:
-            return self._rust_finder.find_game_path(
-                cached_path=str(cached_path) if cached_path else None,
-                xse_log_path=xse_log_path
-            )
+            return self._rust_finder.find_game_path(cached_path=str(cached_path) if cached_path else None, xse_log_path=xse_log_path)
 
         try:
             path_str = await loop.run_in_executor(None, find_path)
+        except FileNotFoundError:
+            logger.debug("Rust finder could not find game path, prompting user")
+        else:
             game_path = Path(path_str)
             await self._save_game_path_async(game_path)
             return
-        except FileNotFoundError:
-            logger.debug("Rust finder could not find game path, prompting user")
 
         # Fall back to user input
         game_path = self._get_path_from_user_gui() if GlobalRegistry.is_gui_mode() else self._get_path_from_user_console()
@@ -326,6 +340,7 @@ def game_path_find() -> None:
 
     Raises:
         Any exceptions raised by the `GamePathFinder` methods will propagate.
+
     """
     logger.debug("- - - INITIATED GAME PATH CHECK")
     finder = GamePathFinder()
@@ -348,6 +363,7 @@ def game_generate_paths() -> None:
     Raises:
         TypeError: If the game path or XSE acronym base is not of type `str`.
         ValueError: If the game version is unsupported or invalid.
+
     """
     from ClassicLib.Utils.version_utils import read_game_exe_version
 
@@ -361,7 +377,9 @@ def game_generate_paths() -> None:
 
     yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
     yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
-    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins")
+    yaml_settings(
+        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins"
+    )
     yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
     yaml_settings(
         str,
@@ -416,6 +434,7 @@ async def game_generate_paths_async() -> None:
     Raises:
         TypeError: If the game path or XSE acronym base is not of type `str`.
         ValueError: If the game version is unsupported or invalid.
+
     """
     from ClassicLib.io.yaml import yaml_settings_async
     from ClassicLib.Utils.version_utils import read_game_exe_version
@@ -430,7 +449,9 @@ async def game_generate_paths_async() -> None:
 
     await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
     await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
-    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins")
+    await yaml_settings_async(
+        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins"
+    )
     await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
     await yaml_settings_async(
         str,

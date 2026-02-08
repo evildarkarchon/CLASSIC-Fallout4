@@ -16,8 +16,8 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.factory import detect_component
 from ClassicLib.integration.exceptions import RustError, RustParseError
+from ClassicLib.integration.factory import detect_component
 
 # Detect Rust-specific exception types for classic_scanlog
 _, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
@@ -81,7 +81,7 @@ class RustRecordScanner:
 
             if not hasattr(classic_scanlog, "RecordScanner"):
                 msg = "RecordScanner not found in classic_scanlog module. Reinstall CLASSIC."
-                raise RuntimeError(msg)
+                raise RuntimeError(msg)  # noqa: TRY301
 
             RustRecordScannerImpl = classic_scanlog.RecordScanner
 
@@ -249,7 +249,7 @@ class RustRecordScanner:
                 report_lines = self._generate_report_lines(matches)
                 results.append((ReportFragment.from_lines(report_lines), matches))
 
-            return results
+            return results  # noqa: TRY300
         except (*parse_errors, *rust_errors, TypeError, ValueError, AttributeError) as e:
             msg = f"Rust batch_scan_records failed: {e}"
             raise RuntimeError(msg) from e

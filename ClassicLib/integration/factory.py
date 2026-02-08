@@ -45,14 +45,11 @@ import types
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from packaging.version import Version
-    from ClassicLib.scanning.logs.reporting import ReportFragment
     from ClassicLib.integration.types import (
         DatabasePoolProtocol,
         FCXHandlerProtocol,
         FileIOProtocol,
         FormIDAnalyzerProtocol,
-        GpuDetectorProtocol,
         LogParserProtocol,
         OrchestratorProtocol,
         PluginAnalyzerProtocol,
@@ -140,7 +137,7 @@ def detect_component(module_name: str, class_name: str | None = None) -> tuple[b
                 return (False, None)
             return (True, getattr(module, class_name))
 
-        return (True, module)
+        return (True, module)  # noqa: TRY300
     except ImportError:
         return (False, None)
 
@@ -290,10 +287,11 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtoc
 
             logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
             _file_io_instance = FileIOCore(encoding, errors)
-            return _file_io_instance
         except ImportError as e:
             msg = f"Required Rust module for FileIO not available: {e}. Reinstall CLASSIC."
             raise RuntimeError(msg) from e
+        else:
+            return _file_io_instance
 
 
 def get_yaml_operations() -> YamlOperationsProtocol | None:
@@ -432,9 +430,7 @@ class _SuspectScannerWrapper:
         rust_result = self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
         return ReportFragment.from_lines(rust_result[0]), rust_result[1]
 
-    def suspect_scan_stack(
-        self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
-    ) -> tuple[Any, bool]:
+    def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int) -> tuple[Any, bool]:
         """Scan call stack and convert Rust result to ReportFragment."""
         ReportFragment = _get_report_fragment()
         rust_result = self._scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
@@ -485,16 +481,15 @@ class _SettingsValidatorWrapper:
         """Initialize with a Rust SettingsValidator instance."""
         self._validator = rust_validator
 
-    def _convert_crashgen(self, crashgen: dict[str, bool | int | str]) -> dict[str, str]:
+    @staticmethod
+    def _convert_crashgen(crashgen: dict[str, bool | int | str]) -> dict[str, str]:
         """Convert crashgen dict values to strings for Rust."""
         return {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
 
-    def scan_buffout_achievements_setting(
-        self, xsemodules: set[str], crashgen: dict[str, bool | int | str]
-    ) -> Any:
+    def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, bool | int | str]) -> Any:
         """Scan Buffout achievements setting."""
         ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_buffout_achievements_setting(xsemodules, self._convert_crashgen(crashgen))
+        lines = self._validator.scan_buffout_achievements_setting(xsemodules, _SettingsValidatorWrapper._convert_crashgen(crashgen))
         return ReportFragment.from_lines(lines)
 
     def scan_buffout_memorymanagement_settings(
@@ -507,24 +502,20 @@ class _SettingsValidatorWrapper:
         """Scan Buffout memory management settings."""
         ReportFragment = _get_report_fragment()
         lines = self._validator.scan_buffout_memorymanagement_settings(
-            self._convert_crashgen(crashgen), has_xcell, has_old_xcell, has_baka_scrapheap
+            _SettingsValidatorWrapper._convert_crashgen(crashgen), has_xcell, has_old_xcell, has_baka_scrapheap
         )
         return ReportFragment.from_lines(lines)
 
-    def scan_archivelimit_setting(
-        self, crashgen: dict[str, bool | int | str], crashgen_version: Any = None
-    ) -> Any:
+    def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: Any = None) -> Any:
         """Scan archive limit setting."""
         ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_archivelimit_setting(self._convert_crashgen(crashgen), crashgen_version)
+        lines = self._validator.scan_archivelimit_setting(_SettingsValidatorWrapper._convert_crashgen(crashgen), crashgen_version)
         return ReportFragment.from_lines(lines)
 
-    def scan_buffout_looksmenu_setting(
-        self, crashgen: dict[str, bool | int | str], xsemodules: set[str]
-    ) -> Any:
+    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> Any:
         """Scan Buffout LooksMenu setting."""
         ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_buffout_looksmenu_setting(self._convert_crashgen(crashgen), xsemodules)
+        lines = self._validator.scan_buffout_looksmenu_setting(_SettingsValidatorWrapper._convert_crashgen(crashgen), xsemodules)
         return ReportFragment.from_lines(lines)
 
 
@@ -710,10 +701,10 @@ def get_fcx_handler(fcx_mode: bool | None) -> FCXHandlerProtocol:
     rust_handler = RustFcxModeHandler(rust_fcx_mode)
 
     logger.debug("Using Rust-accelerated FcxModeHandler")
-    return _FcxHandlerWrapper(rust_handler, fcx_mode)
+    return FcxHandlerWrapper(rust_handler, fcx_mode)
 
 
-class _FcxHandlerWrapper:
+class FcxHandlerWrapper:
     """Wrapper that converts Rust FcxModeHandler to Python API."""
 
     def __init__(self, rust_handler: Any, fcx_mode: bool | None) -> None:
@@ -737,7 +728,6 @@ class _FcxHandlerWrapper:
     def reset_fcx_checks(cls) -> None:
         """Reset FCX checks (no-op for Rust - resets automatically)."""
         # Rust implementation resets automatically, no-op for API compatibility
-        pass
 
 
 # ---------------------------------------------------------------------------
@@ -852,6 +842,7 @@ def get_path_operations() -> types.ModuleType:
     Raises:
         ImportError: If classic_path module is not available.
             This indicates the Rust module was not built or installed.
+
     """
     import classic_path
 

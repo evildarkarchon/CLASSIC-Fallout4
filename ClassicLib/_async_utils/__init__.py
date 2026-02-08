@@ -10,7 +10,7 @@ Functions are now defined directly in ClassicLib.core.async_bridge and re-export
 here for backward compatibility.
 """
 
-from ClassicLib.core.async_bridge import (  # noqa: TID252
+from ClassicLib.core.async_bridge import (
     context_aware_sync,
     run_async,
     run_async_with_timeout,

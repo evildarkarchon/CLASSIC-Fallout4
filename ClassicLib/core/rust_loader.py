@@ -44,8 +44,8 @@ class RustExtensionLoader:
 
         """
         # Check a representative set of known Rust modules
-        _known_modules = ["classic_yaml", "classic_scanlog", "classic_fileio"]
-        return any(detect_component(m)[0] for m in _known_modules)
+        known_modules = ["classic_yaml", "classic_scanlog", "classic_fileio"]
+        return any(detect_component(m)[0] for m in known_modules)
 
     def get_load_info(self) -> dict[str, Any]:
         """Get load info from detector.
@@ -55,10 +55,10 @@ class RustExtensionLoader:
             with keys: loaded, path, search_paths, in_pyinstaller, components, versions.
 
         """
-        _known_modules = ["classic_yaml", "classic_scanlog", "classic_fileio"]
-        components = {m: detect_component(m)[0] for m in _known_modules}
+        known_modules = ["classic_yaml", "classic_scanlog", "classic_fileio"]
+        components = {m: detect_component(m)[0] for m in known_modules}
         versions: dict[str, str] = {}
-        for m in _known_modules:
+        for m in known_modules:
             avail, mod = detect_component(m)
             if avail and mod is not None:
                 versions[m] = getattr(mod, "__version__", "unknown")

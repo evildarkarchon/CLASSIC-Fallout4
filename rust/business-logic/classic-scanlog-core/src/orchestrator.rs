@@ -507,10 +507,8 @@ impl OrchestratorCore {
         };
 
         // Initialize settings validator
-        let settings_validator = SettingsValidator::new(
-            config.crashgen_name.clone(),
-            config.crashgen_ignore.clone(),
-        );
+        let settings_validator =
+            SettingsValidator::new(config.crashgen_name.clone(), config.crashgen_ignore.clone());
 
         Ok(Self {
             config,
@@ -788,10 +786,16 @@ impl OrchestratorCore {
 
         // Extract header info (crashgen version, main error) from the raw processed lines
         // We use processed_lines because header is in the first ~20 lines before segmentation
-        let header_info = self.parser.parse_crash_header(&processed_lines).unwrap_or_default();
+        let header_info = self
+            .parser
+            .parse_crash_header(&processed_lines)
+            .unwrap_or_default();
 
         // Get crashgen version from header info
-        let crashgen_version_str = header_info.get("crashgen_version").cloned().unwrap_or_default();
+        let crashgen_version_str = header_info
+            .get("crashgen_version")
+            .cloned()
+            .unwrap_or_default();
 
         // Get main error - from header parsing or fallback to first "Unhandled exception" line
         let main_error = header_info.get("main_error").cloned().unwrap_or_else(|| {
@@ -827,22 +831,25 @@ impl OrchestratorCore {
                     let trimmed = line.trim();
                     // Game plugins start with [XX] or [FE:XXX] and end with .esp/.esm/.esl
                     trimmed.starts_with('[')
-                        && (trimmed.contains(".esp") || trimmed.contains(".esm") || trimmed.contains(".esl"))
+                        && (trimmed.contains(".esp")
+                            || trimmed.contains(".esm")
+                            || trimmed.contains(".esl"))
                 })
             });
 
             if let Some(plugin_segment) = plugin_segment_opt {
-
                 // Convert Arc<str> to String for compatibility
                 let plugin_lines: Vec<String> =
                     plugin_segment.iter().map(|s| s.to_string()).collect();
 
                 // Scan plugins using the analyzer (limit flags unused for now, may need in future)
-                if let Ok((plugins, _limit_triggered, _limit_disabled)) = analyzer.loadorder_scan_log(
-                    plugin_lines,
-                    Some(self.config.game_version.as_str()),
-                    Some(self.config.crashgen_latest.as_str()),
-                ) {
+                if let Ok((plugins, _limit_triggered, _limit_disabled)) = analyzer
+                    .loadorder_scan_log(
+                        plugin_lines,
+                        Some(self.config.game_version.as_str()),
+                        Some(self.config.crashgen_latest.as_str()),
+                    )
+                {
                     plugin_count = plugins.len();
                     // Store plugins for mod detection
                     plugins_map = Some(plugins);
@@ -956,10 +963,12 @@ impl OrchestratorCore {
             composer.add(report_gen.generate_settings_section_header());
 
             // Achievements check
-            if let Ok(achievements_fragment) = self.settings_validator.scan_buffout_achievements_setting(
-                xse_modules_for_settings.clone(),
-                &crashgen_settings,
-            ) {
+            if let Ok(achievements_fragment) =
+                self.settings_validator.scan_buffout_achievements_setting(
+                    xse_modules_for_settings.clone(),
+                    &crashgen_settings,
+                )
+            {
                 composer.add(achievements_fragment);
             }
 
@@ -967,12 +976,15 @@ impl OrchestratorCore {
             let has_xcell = xse_modules_for_settings.contains("x-cell-fo4.dll");
             let has_old_xcell = false; // Would need version check
             let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
-            if let Ok(memory_fragment) = self.settings_validator.scan_buffout_memorymanagement_settings(
-                &crashgen_settings,
-                has_xcell,
-                has_old_xcell,
-                has_baka_scrapheap,
-            ) {
+            if let Ok(memory_fragment) = self
+                .settings_validator
+                .scan_buffout_memorymanagement_settings(
+                    &crashgen_settings,
+                    has_xcell,
+                    has_old_xcell,
+                    has_baka_scrapheap,
+                )
+            {
                 composer.add(memory_fragment);
             }
 
@@ -1019,7 +1031,9 @@ impl OrchestratorCore {
                     detect_mods_double(self.config.mods_conf.clone(), plugins.clone())
                 {
                     if !conflict_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header("May Conflict With Each Other"));
+                        composer.add(
+                            report_gen.generate_mod_check_header("May Conflict With Each Other"),
+                        );
                         composer.add(ReportFragment::from_lines(conflict_lines));
                     }
                 }
@@ -1031,7 +1045,9 @@ impl OrchestratorCore {
                     detect_mods_single(self.config.mods_freq.clone(), plugins.clone())
                 {
                     if !freq_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header("Can Cause Frequent Crashes"));
+                        composer.add(
+                            report_gen.generate_mod_check_header("Can Cause Frequent Crashes"),
+                        );
                         composer.add(ReportFragment::from_lines(freq_lines));
                     }
                 }
@@ -1073,7 +1089,9 @@ impl OrchestratorCore {
                     detect_mods_single(self.config.mods_opc2.clone(), plugins.clone())
                 {
                     if !opc2_lines.is_empty() {
-                        composer.add(report_gen.generate_mod_check_header("Are Outdated, Redundant, or Have Community Patches"));
+                        composer.add(report_gen.generate_mod_check_header(
+                            "Are Outdated, Redundant, or Have Community Patches",
+                        ));
                         composer.add(ReportFragment::from_lines(opc2_lines));
                     }
                 }
@@ -1088,25 +1106,19 @@ impl OrchestratorCore {
                 if !plugins.is_empty() {
                     // Get callstack segment (segment 2) for plugin matching
                     let segment_callstack_lower: Vec<String> = if segments.len() > 2 {
-                        segments[2]
-                            .iter()
-                            .map(|s| s.to_lowercase())
-                            .collect()
+                        segments[2].iter().map(|s| s.to_lowercase()).collect()
                     } else {
                         Vec::new()
                     };
 
                     // Convert plugins to lowercase set for matching
-                    let crashlog_plugins_lower: HashSet<String> = plugins
-                        .keys()
-                        .map(|k| k.to_lowercase())
-                        .collect();
+                    let crashlog_plugins_lower: HashSet<String> =
+                        plugins.keys().map(|k| k.to_lowercase()).collect();
 
                     // Call plugin_match to find plugins in crash stack
-                    if let Ok(plugin_match_lines) = analyzer.plugin_match(
-                        segment_callstack_lower,
-                        crashlog_plugins_lower,
-                    ) {
+                    if let Ok(plugin_match_lines) =
+                        analyzer.plugin_match(segment_callstack_lower, crashlog_plugins_lower)
+                    {
                         // Add the header and the plugin match results
                         composer.add(report_gen.generate_plugin_suspect_header());
                         composer.add(ReportFragment::from_lines(plugin_match_lines));

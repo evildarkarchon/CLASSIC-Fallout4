@@ -15,8 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ClassicLib.integration.factory import get_file_io
-from ClassicLib.integration.factory import is_rust_accelerated
+from ClassicLib.integration.factory import get_file_io, is_rust_accelerated
 
 # Check if Rust file I/O is available
 RUST_AVAILABLE = {"file_io_core": is_rust_accelerated("file_io_core")}

@@ -313,15 +313,15 @@ class SetupCoordinator:
         try:
             from ClassicLib.integration.factory import detect_component
 
-            _known = ["classic_yaml", "classic_scanlog", "classic_file_io", "classic_database", "classic_path"]
-            available = [m for m in _known if detect_component(m)[0]]
+            known = ["classic_yaml", "classic_scanlog", "classic_file_io", "classic_database", "classic_path"]
+            available = [m for m in known if detect_component(m)[0]]
             if available:
                 status = {
                     "active_count": len(available),
-                    "total_count": len(_known),
-                    "percentage": len(available) / len(_known) * 100,
+                    "total_count": len(known),
+                    "percentage": len(available) / len(known) * 100,
                     "acceleration_level": "ACCELERATED",
-                    "performance_gains": {m: "active" for m in available},
+                    "performance_gains": dict.fromkeys(available, "active"),
                 }
                 self._log_active_acceleration(status, debug_enabled, is_gui)
             else:

@@ -419,8 +419,14 @@ mod tests {
     #[test]
     fn test_get_filename() {
         let handler = PathHandler::new(60);
-        assert_eq!(handler.get_filename("C:\\logs\\crash.log"), Some("crash.log".to_string()));
-        assert_eq!(handler.get_filename("crash.log"), Some("crash.log".to_string()));
+        assert_eq!(
+            handler.get_filename("C:\\logs\\crash.log"),
+            Some("crash.log".to_string())
+        );
+        assert_eq!(
+            handler.get_filename("crash.log"),
+            Some("crash.log".to_string())
+        );
     }
 
     #[test]
@@ -552,8 +558,8 @@ mod tests {
     fn test_validate_paths_batch() {
         let handler = PathHandler::new(60);
         let paths = vec![
-            ".".to_string(),                    // exists
-            "Z:\\nonexistent\\42".to_string(),   // doesn't exist
+            ".".to_string(),                   // exists
+            "Z:\\nonexistent\\42".to_string(), // doesn't exist
         ];
         let results = handler.validate_paths_batch(&paths);
         assert_eq!(results.len(), 2);

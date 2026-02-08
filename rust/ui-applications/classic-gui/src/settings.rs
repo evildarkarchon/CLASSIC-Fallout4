@@ -131,11 +131,7 @@ pub fn save_setting_string(
 /// # Errors
 ///
 /// Returns a user-facing error string if the path is invalid or the key is unknown.
-pub fn save_path_setting(
-    config: &mut ClassicConfig,
-    key: &str,
-    path: &str,
-) -> Result<(), String> {
+pub fn save_path_setting(config: &mut ClassicConfig, key: &str, path: &str) -> Result<(), String> {
     let trimmed = path.trim();
 
     // Empty path clears the setting
@@ -287,7 +283,10 @@ mod tests {
     #[test]
     fn test_settings_file_path_is_some() {
         let path = settings_file_path();
-        assert!(path.is_some(), "settings_file_path() should return Some on this platform");
+        assert!(
+            path.is_some(),
+            "settings_file_path() should return Some on this platform"
+        );
         let path = path.unwrap();
         assert!(path.ends_with("settings.yaml"));
     }
@@ -384,7 +383,11 @@ mod tests {
         );
         assert!(result.is_err());
         let err = result.unwrap_err();
-        assert!(err.contains("does not exist"), "Error should mention non-existence: {}", err);
+        assert!(
+            err.contains("does not exist"),
+            "Error should mention non-existence: {}",
+            err
+        );
     }
 
     // ---- Additional coverage tests ----
@@ -467,13 +470,26 @@ mod tests {
     #[test]
     fn test_save_setting_bool_all_keys() {
         // Verify all known boolean keys are accepted (save may fail in test env)
-        let keys = ["fcx_mode", "show_formid_values", "simplify_logs", "move_unsolved_logs", "update_check", "auto_switch_to_results", "stat_logging"];
+        let keys = [
+            "fcx_mode",
+            "show_formid_values",
+            "simplify_logs",
+            "move_unsolved_logs",
+            "update_check",
+            "auto_switch_to_results",
+            "stat_logging",
+        ];
         for key in keys {
             let mut config = ClassicConfig::default();
             let result = save_setting_bool(&mut config, key, true);
             // We only care that it doesn't fail with "Unknown" error
             if let Err(e) = &result {
-                assert!(!e.to_string().contains("Unknown"), "Key '{}' should be known: {}", key, e);
+                assert!(
+                    !e.to_string().contains("Unknown"),
+                    "Key '{}' should be known: {}",
+                    key,
+                    e
+                );
             }
         }
     }
@@ -485,7 +501,12 @@ mod tests {
             let mut config = ClassicConfig::default();
             let result = save_setting_string(&mut config, key, "test_value");
             if let Err(e) = &result {
-                assert!(!e.to_string().contains("Unknown"), "Key '{}' should be known: {}", key, e);
+                assert!(
+                    !e.to_string().contains("Unknown"),
+                    "Key '{}' should be known: {}",
+                    key,
+                    e
+                );
             }
         }
     }
@@ -591,5 +612,4 @@ mod tests {
         let _ = save_formid_databases(&mut config, "Fallout4", paths.clone());
         assert_eq!(config.formid_databases.get("Fallout4"), Some(&paths));
     }
-
 }

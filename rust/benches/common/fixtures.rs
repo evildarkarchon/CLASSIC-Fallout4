@@ -172,7 +172,10 @@ pub fn load_crash_log_by_size(size: FixtureSize) -> String {
         Ok(entries) => entries
             .filter_map(|e| e.ok())
             .filter(|e| {
-                e.path().extension().map(|ext| ext == "log").unwrap_or(false)
+                e.path()
+                    .extension()
+                    .map(|ext| ext == "log")
+                    .unwrap_or(false)
             })
             .filter_map(|e| {
                 let metadata = e.metadata().ok()?;
@@ -250,7 +253,12 @@ pub fn load_crash_log_fixture(name: &str) -> String {
             if let Some(Ok(entry)) = entries.find(|e| {
                 e.as_ref()
                     .ok()
-                    .map(|e| e.path().extension().map(|ext| ext == "log").unwrap_or(false))
+                    .map(|e| {
+                        e.path()
+                            .extension()
+                            .map(|ext| ext == "log")
+                            .unwrap_or(false)
+                    })
                     .unwrap_or(false)
             }) {
                 if let Ok(content) = fs::read_to_string(entry.path()) {
@@ -270,9 +278,8 @@ pub fn load_crash_log_fixture(name: &str) -> String {
 
     let path = dir.join(&filename);
     if path.exists() {
-        return fs::read_to_string(&path).unwrap_or_else(|e| {
-            format!("ERROR: Could not read {}: {}", path.display(), e)
-        });
+        return fs::read_to_string(&path)
+            .unwrap_or_else(|e| format!("ERROR: Could not read {}: {}", path.display(), e));
     }
 
     // Try partial match
@@ -324,9 +331,8 @@ pub fn load_yaml_fixture(name: &str) -> String {
     };
 
     let path = dir.join(&filename);
-    fs::read_to_string(&path).unwrap_or_else(|e| {
-        format!("ERROR: Could not read {}: {}", path.display(), e)
-    })
+    fs::read_to_string(&path)
+        .unwrap_or_else(|e| format!("ERROR: Could not read {}: {}", path.display(), e))
 }
 
 /// Generates synthetic crash log lines for scaling tests.
@@ -364,7 +370,8 @@ pub fn generate_synthetic_lines(count: usize) -> Vec<String> {
         "Fallout 4 v1.10.163".to_string(),
         "Buffout 4 v1.26.2".to_string(),
         String::new(),
-        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7060B9300 Fallout4.exe+0DB9300".to_string(),
+        "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7060B9300 Fallout4.exe+0DB9300"
+            .to_string(),
         String::new(),
     ];
 
@@ -377,26 +384,52 @@ pub fn generate_synthetic_lines(count: usize) -> Vec<String> {
     // Generate mixed content
     for i in 0..remaining {
         let line = match i % 10 {
-            0 => format!("\t[ {}] 0x7FF{:07X}      Fallout4.exe+{:07X} -> {}+0x{:X}",
-                i % 100, i * 17 % 0xFFFFFF, i * 13 % 0xFFFFFF, i * 7 % 2000000, i % 0xFFF),
-            1 => format!("\t\t{}: {}",
+            0 => format!(
+                "\t[ {}] 0x7FF{:07X}      Fallout4.exe+{:07X} -> {}+0x{:X}",
+                i % 100,
+                i * 17 % 0xFFFFFF,
+                i * 13 % 0xFFFFFF,
+                i * 7 % 2000000,
+                i % 0xFFF
+            ),
+            1 => format!(
+                "\t\t{}: {}",
                 ["F4EE", "ActorIsHostileToActor", "CellInit", "SafeExit"][i % 4],
-                if i % 2 == 0 { "true" } else { "false" }),
-            2 => format!("\tR{} 0x{:016X}      ({})",
+                if i % 2 == 0 { "true" } else { "false" }
+            ),
+            2 => format!(
+                "\tR{} 0x{:016X}      ({})",
                 ["AX", "BX", "CX", "DX", "SP", "BP", "SI", "DI"][i % 8],
                 i as u64 * 0x1234567890,
-                ["size_t", "void*", "PlayerCharacter*", "TESObjectREFR*"][i % 4]),
-            3 => format!("\t\tFile: \"{}\"",
-                ["", "Fallout4.esm", "DLCCoast.esm", "SomePlugin.esp"][i % 4]),
+                ["size_t", "void*", "PlayerCharacter*", "TESObjectREFR*"][i % 4]
+            ),
+            3 => format!(
+                "\t\tFile: \"{}\"",
+                ["", "Fallout4.esm", "DLCCoast.esm", "SomePlugin.esp"][i % 4]
+            ),
             4 => format!("\t\tForm ID: 0x{:08X}", i * 0x12345 % 0xFFFFFF),
             5 => format!("\t\tFlags: 0x{:08X}", i * 0x1111 % 0xFFFF),
-            6 => format!("\t[{}] {}.dll+{:07X}", i % 100,
+            6 => format!(
+                "\t[{}] {}.dll+{:07X}",
+                i % 100,
                 ["KERNEL32", "ntdll", "f4se_1_10_163", "steam_api64"][i % 4],
-                i * 0x111 % 0xFFFFFF),
+                i * 0x111 % 0xFFFFFF
+            ),
             7 => format!("\t\t\tForm Type: {}", i % 200),
-            8 => format!("\tPlugin: [{:02X}] {}.esp", i % 0xFF,
-                ["SomeWeaponMod", "ArmorOverhaul", "QuestExpansion", "SettlementStuff"][i % 4]),
-            _ => format!("\t\tObject Reference: FormID 0x{:08X}", i * 0x7777 % 0xFFFFFF),
+            8 => format!(
+                "\tPlugin: [{:02X}] {}.esp",
+                i % 0xFF,
+                [
+                    "SomeWeaponMod",
+                    "ArmorOverhaul",
+                    "QuestExpansion",
+                    "SettlementStuff"
+                ][i % 4]
+            ),
+            _ => format!(
+                "\t\tObject Reference: FormID 0x{:08X}",
+                i * 0x7777 % 0xFFFFFF
+            ),
         };
         lines.push(line);
     }
@@ -448,7 +481,12 @@ pub fn generate_synthetic_yaml(entries: usize) -> String {
         yaml.push_str("    metadata:\n");
         yaml.push_str(&format!("      created: 2026-01-{:02}\n", (i % 28) + 1));
         yaml.push_str(&format!("      updated: 2026-02-{:02}\n", (i % 28) + 1));
-        yaml.push_str(&format!("      version: {}.{}.{}\n", i % 10, i % 100, i % 1000));
+        yaml.push_str(&format!(
+            "      version: {}.{}.{}\n",
+            i % 10,
+            i % 100,
+            i % 1000
+        ));
     }
 
     yaml

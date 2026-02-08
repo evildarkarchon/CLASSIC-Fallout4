@@ -40,9 +40,7 @@ def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
     """Create a mock Rust Orchestrator that returns results for given files."""
     mock_orchestrator = MagicMock()
     mock_orchestrator.is_feature_complete.return_value = True
-    mock_orchestrator.process_logs_batch.return_value = [
-        create_mock_rust_result(f) for f in crash_files
-    ]
+    mock_orchestrator.process_logs_batch.return_value = [create_mock_rust_result(f) for f in crash_files]
     return mock_orchestrator
 
 
@@ -51,7 +49,9 @@ def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
 class TestRealWorldCrashLogProcessing:
     """Real-world crash log processing performance tests."""
 
-    async def test_real_world_crash_logs_performance(self, mock_yamldata: MagicMock, performance_test_logs: list[Path], init_message_handler_fixture) -> None:
+    async def test_real_world_crash_logs_performance(
+        self, mock_yamldata: MagicMock, performance_test_logs: list[Path], init_message_handler_fixture
+    ) -> None:
         """Real-world performance test: Process crash logs using test fixtures.
 
         This test uses sample crash logs from test_data directory to ensure

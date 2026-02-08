@@ -32,9 +32,15 @@ impl PyRustFormIDAnalyzer {
     ///
     /// Releases GIL during extraction to allow concurrent Python threads.
     #[pyo3(signature = (segment_callstack))]
-    pub fn extract_formids(&self, py: Python<'_>, segment_callstack: Vec<String>) -> PyResult<Vec<String>> {
+    pub fn extract_formids(
+        &self,
+        py: Python<'_>,
+        segment_callstack: Vec<String>,
+    ) -> PyResult<Vec<String>> {
         // Release GIL during FormID extraction
-        Ok(without_gil(py, || self.inner.extract_formids(&segment_callstack)))
+        Ok(without_gil(py, || {
+            self.inner.extract_formids(&segment_callstack)
+        }))
     }
 
     /// Parse and validate a FormID string
@@ -55,7 +61,9 @@ impl PyRustFormIDAnalyzer {
         // Convert PyDict to HashMap<String, String> before releasing GIL
         let plugins_map: HashMap<String, String> = plugins.extract()?;
         // Release GIL during batch analysis
-        Ok(without_gil(py, || self.inner.analyze_batch(formids.clone(), &plugins_map)))
+        Ok(without_gil(py, || {
+            self.inner.analyze_batch(formids.clone(), &plugins_map)
+        }))
     }
 
     /// Clear all caches

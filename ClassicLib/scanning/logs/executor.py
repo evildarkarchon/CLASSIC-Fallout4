@@ -9,32 +9,30 @@ All crash log processing is handled by Rust for maximum performance.
 """
 
 import asyncio
-import os
 import random
 from collections import Counter
-from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 from ClassicLib.core.async_bridge import AsyncBridge
 
 if TYPE_CHECKING:
-    from ClassicLib.scanning.logs.executor import ScanLogsExecutor as ScanLogsExecutorType
     from classic_scanlog import AnalysisResult
+
+    from ClassicLib.scanning.logs.executor import ScanLogsExecutor as ScanLogsExecutorType
 
 from ClassicLib.core.constants import YAML, get_all_db_paths
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 from ClassicLib.messaging import MessageTarget, msg_info, msg_progress_context
-from ClassicLib.messaging.progress.context import ProgressContext
 from ClassicLib.scanning.logs.models import ScanConfig, ScanResult, ScanStatistics
 from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
 # Import Rust orchestrator - required, no Python fallback
 try:
-    from classic_scanlog import Orchestrator, AnalysisConfig
+    from classic_scanlog import AnalysisConfig, Orchestrator
 except ImportError as e:
     raise RuntimeError(
         "Rust orchestrator module not available. CLASSIC requires its Rust extensions. "
@@ -332,7 +330,7 @@ class ScanLogsExecutor:
 
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
             # Define progress callback for Rust orchestrator
-            def progress_callback(current: int, total: int, filename: str) -> None:
+            def progress_callback(_current: int, _total: int, filename: str) -> None:
                 progress.update(1, f"Processed: {filename}")
                 # Check for cancellation
                 if progress.was_cancelled():

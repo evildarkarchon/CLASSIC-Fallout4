@@ -18,12 +18,12 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
 from tests.fixtures.golden_fixtures import (
     GOLDEN_DIR,
     mask_dynamic_data,
     normalize_paths,
 )
-from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
 
 # Source directories
 CRASH_LOGS_DIR = project_root / "Crash Logs"

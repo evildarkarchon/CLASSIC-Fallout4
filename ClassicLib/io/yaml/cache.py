@@ -288,7 +288,8 @@ class YamlSettingsCache:
         """
         return self._get_async_core().file_ops.get_path_for_store(yaml_store)
 
-    async def load_yaml_async(self, yaml_path: Path) -> YAMLMapping:
+    @staticmethod
+    async def load_yaml_async(yaml_path: Path) -> YAMLMapping:
         """Asynchronously load a YAML file using Rust cache.
 
         Delegates to Rust classic_settings.load_settings_async() for caching.
@@ -303,7 +304,7 @@ class YamlSettingsCache:
             RuntimeError: If Rust cache loading fails.
 
         """
-        key = str(yaml_path.resolve())
+        key = str(yaml_path.resolve())  # noqa: ASYNC240
         logger.debug("Loading YAML async via Rust: %s", key)
         try:
             docs = await classic_settings.load_settings_async(key, str(yaml_path))
@@ -313,7 +314,8 @@ class YamlSettingsCache:
             logger.error(msg)
             raise RuntimeError(msg) from e
 
-    def load_yaml(self, yaml_path: Path) -> YAMLMapping:
+    @staticmethod
+    def load_yaml(yaml_path: Path) -> YAMLMapping:
         """Load a YAML file synchronously using Rust cache.
 
         Delegates to Rust classic_settings.load_settings_sync() for caching.
@@ -449,7 +451,7 @@ class YamlSettingsCache:
             try:
                 count = classic_settings.load_batch_sync(paths_to_load)
                 logger.debug("Prefetched %d/%d YAML stores via Rust batch loading", count, len(paths_to_load))
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 # Prefetch is best-effort: errors are logged but don't crash
                 logger.debug("Rust batch prefetch failed: %s", e)
 
@@ -485,7 +487,8 @@ class YamlSettingsCache:
             "cache_keys": classic_settings.cache_keys(),
         }
 
-    def invalidate(self, key: str) -> bool:
+    @staticmethod
+    def invalidate(key: str) -> bool:
         """Invalidate specific cache entry in Rust.
 
         Removes a single entry from the Rust DashMap cache by key.

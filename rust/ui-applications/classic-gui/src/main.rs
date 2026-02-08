@@ -13,17 +13,17 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use classic_config_core::ClassicConfig;
-use classic_shared_core::{get_runtime, set_dispatcher, AsyncBridge, SlintDispatcher};
+use classic_shared_core::{AsyncBridge, SlintDispatcher, get_runtime, set_dispatcher};
 use parking_lot::Mutex;
 use slint::{ModelRc, SharedString, VecModel};
 use tokio_util::sync::CancellationToken;
 
 use classic_gui::{
-    browse_folder, copy_to_clipboard, detect_game_version, game_version_index_to_string,
-    game_version_string_to_index, get_formid_databases, get_report_content, load_settings,
-    load_window_state, parse_markdown, prepare_report_entries, reset_to_defaults,
-    save_formid_databases, save_path_setting, save_setting_bool, save_setting_string,
-    save_window_state, ReportData, ScanWindowProperties, TabGeometry, WindowState,
+    ReportData, ScanWindowProperties, TabGeometry, WindowState, browse_folder, copy_to_clipboard,
+    detect_game_version, game_version_index_to_string, game_version_string_to_index,
+    get_formid_databases, get_report_content, load_settings, load_window_state, parse_markdown,
+    prepare_report_entries, reset_to_defaults, save_formid_databases, save_path_setting,
+    save_setting_bool, save_setting_string, save_window_state,
 };
 
 // Implement ScanWindowProperties for the generated MainWindow
@@ -247,10 +247,10 @@ fn save_final_state(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
     state.window_state.set_tab_geometry(
         active_tab,
         TabGeometry {
-            x: position.x as i32,
-            y: position.y as i32,
-            width: size.width as u32,
-            height: size.height as u32,
+            x: position.x,
+            y: position.y,
+            width: size.width,
+            height: size.height,
             maximized: false, // TODO: Slint doesn't expose maximized state
         },
     );
@@ -343,7 +343,12 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
             let state_completion = Arc::clone(&state);
             AsyncBridge::run_cancellable(
                 cancel_token.clone(),
-                classic_gui::scan_crash_logs(window_weak.clone(), cancel_token, crash_log_path, settings),
+                classic_gui::scan_crash_logs(
+                    window_weak.clone(),
+                    cancel_token,
+                    crash_log_path,
+                    settings,
+                ),
                 move |result| {
                     if let Some(w) = window_weak_completion.upgrade() {
                         match result {
@@ -371,9 +376,7 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                                     for entry in &entries {
                                         model.push(ReportEntry {
                                             filename: SharedString::from(entry.filename.as_str()),
-                                            timestamp: SharedString::from(
-                                                entry.timestamp.as_str(),
-                                            ),
+                                            timestamp: SharedString::from(entry.timestamp.as_str()),
                                             source_index: entry.source_index,
                                         });
                                     }
@@ -503,8 +506,7 @@ fn setup_results_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                     // Auto-select first filtered result
                     if let Some(first) = filtered.first() {
                         w.set_selected_report_index(0);
-                        let content =
-                            get_report_content(&report_data.reports, first.source_index);
+                        let content = get_report_content(&report_data.reports, first.source_index);
                         w.set_report_content(SharedString::from(&content));
                         update_report_blocks(&w, &content);
                     }
@@ -540,8 +542,7 @@ fn setup_results_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                     // Auto-select first after re-sort
                     if let Some(first) = entries.first() {
                         w.set_selected_report_index(0);
-                        let content =
-                            get_report_content(&report_data.reports, first.source_index);
+                        let content = get_report_content(&report_data.reports, first.source_index);
                         w.set_report_content(SharedString::from(&content));
                         update_report_blocks(&w, &content);
                     }
@@ -589,13 +590,7 @@ fn setup_browse_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
 
             // Spawn async browse dialog
             AsyncBridge::run_with_ui_update(
-                async move {
-                    browse_folder(
-                        "Select Crash Log Folder",
-                        start_dir.as_deref(),
-                    )
-                    .await
-                },
+                async move { browse_folder("Select Crash Log Folder", start_dir.as_deref()).await },
                 move |result| {
                     if let Some(path) = result {
                         if let Some(w) = window_weak.upgrade() {
@@ -636,9 +631,7 @@ fn setup_browse_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
 
             // Spawn async browse dialog
             AsyncBridge::run_with_ui_update(
-                async move {
-                    browse_folder("Select Game Folder", start_dir.as_deref()).await
-                },
+                async move { browse_folder("Select Game Folder", start_dir.as_deref()).await },
                 move |result| {
                     if let Some(path) = result {
                         if let Some(w) = window_weak.upgrade() {
@@ -681,10 +674,10 @@ fn setup_tab_callback(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                 state.window_state.set_tab_geometry(
                     old_tab,
                     TabGeometry {
-                        x: position.x as i32,
-                        y: position.y as i32,
-                        width: size.width as u32,
-                        height: size.height as u32,
+                        x: position.x,
+                        y: position.y,
+                        width: size.width,
+                        height: size.height,
                         maximized: false,
                     },
                 );
@@ -856,9 +849,7 @@ fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppS
             if !state.initialized {
                 return;
             }
-            if let Err(e) =
-                save_setting_bool(&mut state.settings, "show_formid_values", checked)
-            {
+            if let Err(e) = save_setting_bool(&mut state.settings, "show_formid_values", checked) {
                 tracing::warn!("Failed to save show_formid_values: {}", e);
             }
         });
@@ -872,9 +863,7 @@ fn setup_settings_scanning_callbacks(window: &MainWindow, state: &Arc<Mutex<AppS
             if !state.initialized {
                 return;
             }
-            if let Err(e) =
-                save_setting_bool(&mut state.settings, "move_unsolved_logs", checked)
-            {
+            if let Err(e) = save_setting_bool(&mut state.settings, "move_unsolved_logs", checked) {
                 tracing::warn!("Failed to save move_unsolved_logs: {}", e);
             }
         });
@@ -919,9 +908,7 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
             };
 
             AsyncBridge::run_with_ui_update(
-                async move {
-                    browse_folder("Select INI Folder", start_dir.as_deref()).await
-                },
+                async move { browse_folder("Select INI Folder", start_dir.as_deref()).await },
                 move |result| {
                     if let Some(path) = result {
                         let mut s = state.lock();
@@ -969,9 +956,7 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
             };
 
             AsyncBridge::run_with_ui_update(
-                async move {
-                    browse_folder("Select Mods Folder", start_dir.as_deref()).await
-                },
+                async move { browse_folder("Select Mods Folder", start_dir.as_deref()).await },
                 move |result| {
                     if let Some(path) = result {
                         let mut s = state.lock();

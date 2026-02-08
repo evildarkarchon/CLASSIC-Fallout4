@@ -267,7 +267,7 @@ class TestFCXModeHandlerPhase5Integration:
     @pytest.mark.unit
     def test_fcx_handler_reset_is_noop(self) -> None:
         """Test that reset_fcx_checks is a no-op for Rust wrapper."""
-        from ClassicLib.integration.factory import _FcxHandlerWrapper
+        from ClassicLib.integration.factory import FcxHandlerWrapper
 
         # Should not raise - just a no-op for Rust (resets automatically)
-        _FcxHandlerWrapper.reset_fcx_checks()
+        FcxHandlerWrapper.reset_fcx_checks()

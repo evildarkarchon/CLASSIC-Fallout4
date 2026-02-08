@@ -78,6 +78,7 @@ class FileIOCore:
                 logger.warning(f"Failed to initialize Rust FileIOCore: {e}")
         if not self._rust_core:
             from ClassicLib.io.files.core import FileIOCore as PythonFileIOCore
+
             self._python_core = PythonFileIOCore(encoding, errors)
 
     @property
@@ -123,6 +124,7 @@ class FileIOCore:
             yield from self._rust_core.stream_lines_sync(str(path))
             return
         from ClassicLib.Utils.file_utils import open_file_with_encoding
+
         with open_file_with_encoding(Path(path)) as f:
             for line in f:
                 yield line.rstrip("\n")
@@ -148,7 +150,7 @@ class FileIOCore:
         """Read file with specific encoding."""
         if self._rust_core:
             return await self._rust_core.read_file_with_encoding(str(path), encoding)
-        return Path(path).read_text(encoding=encoding, errors=self.default_errors)
+        return Path(path).read_text(encoding=encoding, errors=self.default_errors)  # noqa: ASYNC240
 
     async def write_file(self, path: Path | str, content: str) -> None:
         """Write string content to file."""
@@ -187,7 +189,9 @@ class FileIOCore:
                 return None
         try:
             import asyncio
+
             from ClassicLib.scanning.game.checks.dds_processor import DDSProcessor
+
             return DDSProcessor(asyncio.Semaphore(1)).read_dds_header_mmap(Path(path))
         except (ImportError, OSError, RuntimeError):
             return None
@@ -203,6 +207,7 @@ class FileIOCore:
         if self._rust_core:
             return self._rust_core.py_walk_directory(str(path), pattern, max_depth)
         import re
+
         path_obj, pattern_re = Path(path), re.compile(pattern) if pattern else None
         results: list[str] = []
 

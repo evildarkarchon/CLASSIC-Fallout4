@@ -11,15 +11,13 @@ API (used by callers of factory functions) are included.
 
 from __future__ import annotations
 
-from collections import Counter
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
+    from pathlib import Path
 
     from ClassicLib.scanning.logs.reporting import ReportFragment
-    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 
 class LogParserProtocol(Protocol):
@@ -106,9 +104,7 @@ class PluginAnalyzerProtocol(Protocol):
     Both RustPluginAnalyzer and PythonPluginAnalyzer provide these methods.
     """
 
-    def check_plugin_limit(
-        self, segment_plugins: list[str], game_version: Any = ..., version_current: Any = ...
-    ) -> tuple[bool, bool]: ...
+    def check_plugin_limit(self, segment_plugins: list[str], game_version: Any = ..., version_current: Any = ...) -> tuple[bool, bool]: ...
     def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> Any: ...
     def filter_ignored_plugins(self, crashlog_plugins: dict[str, str]) -> dict[str, str]: ...
 
@@ -131,9 +127,7 @@ class SuspectScannerProtocol(Protocol):
     these methods.
     """
 
-    def suspect_scan_mainerror(
-        self, crashlog_mainerror: str, max_warn_length: int
-    ) -> tuple[ReportFragment, bool]: ...
+    def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[ReportFragment, bool]: ...
 
     def suspect_scan_stack(
         self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int
@@ -147,17 +141,11 @@ class SettingsValidatorProtocol(Protocol):
     provide these methods.
     """
 
-    def scan_buffout_achievements_setting(
-        self, xsemodules: set[str], crashgen: dict[str, bool | int | str]
-    ) -> ReportFragment: ...
+    def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, bool | int | str]) -> ReportFragment: ...
 
-    def scan_archivelimit_setting(
-        self, crashgen: dict[str, bool | int | str], crashgen_version: Any = ...
-    ) -> ReportFragment: ...
+    def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: Any = ...) -> ReportFragment: ...
 
-    def scan_buffout_looksmenu_setting(
-        self, crashgen: dict[str, bool | int | str], xsemodules: set[str]
-    ) -> ReportFragment: ...
+    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> ReportFragment: ...
 
 
 class GpuDetectorProtocol(Protocol):
@@ -179,7 +167,7 @@ class DatabasePoolProtocol(Protocol):
     """
 
     async def __aenter__(self) -> Any: ...
-    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None: ...
+    async def __aexit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None: ...
     async def initialize(self) -> None: ...
     async def close(self) -> None: ...
     async def get_entry(self, formid: str, plugin: str) -> Any: ...
@@ -213,9 +201,7 @@ class OrchestratorProtocol(Protocol):
     """
 
     def process_crash_log(self, log_path: Path) -> Any: ...  # Returns AnalysisResult
-    def process_crash_logs_batch(
-        self, log_paths: list[Path], max_concurrent: int | None = None
-    ) -> Any: ...  # Returns BatchAnalysisResult
+    def process_crash_logs_batch(self, log_paths: list[Path], max_concurrent: int | None = None) -> Any: ...  # Returns BatchAnalysisResult
     def is_feature_complete(self) -> bool: ...
 
 

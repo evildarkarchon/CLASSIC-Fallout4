@@ -320,10 +320,7 @@ mod tests {
 
     #[test]
     fn test_prepare_report_entries_extracts_filename() {
-        let reports = vec![make_result(
-            "/home/user/logs/crash-2024-01-15.log",
-            vec![],
-        )];
+        let reports = vec![make_result("/home/user/logs/crash-2024-01-15.log", vec![])];
         let entries = prepare_report_entries(&reports, true);
         assert_eq!(entries[0].filename, "crash-2024-01-15.log");
         assert_eq!(entries[0].timestamp, "2024-01-15");
@@ -387,7 +384,10 @@ mod tests {
 
     #[test]
     fn test_prepare_report_entries_single() {
-        let reports = vec![make_result("crash-2024-06-15-10-30-00.log", vec!["data".to_string()])];
+        let reports = vec![make_result(
+            "crash-2024-06-15-10-30-00.log",
+            vec!["data".to_string()],
+        )];
         let entries = prepare_report_entries(&reports, true);
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].filename, "crash-2024-06-15-10-30-00.log");

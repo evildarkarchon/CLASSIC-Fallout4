@@ -39,7 +39,6 @@ from __future__ import annotations
 import argparse
 import csv
 import json
-import math
 import sys
 from pathlib import Path
 from statistics import mean, stdev
@@ -57,6 +56,7 @@ def calculate_percentiles(values: list[float]) -> dict[str, float]:
 
     Raises:
         ValueError: If values list is empty.
+
     """
     if not values:
         raise ValueError("Cannot calculate percentiles from empty list")
@@ -102,6 +102,7 @@ def process_raw_csv(csv_path: Path) -> dict[str, Any] | None:
 
     Returns:
         Dictionary with percentile statistics, or None if file is invalid.
+
     """
     try:
         with csv_path.open("r", encoding="utf-8", errors="ignore") as f:
@@ -136,7 +137,7 @@ def process_raw_csv(csv_path: Path) -> dict[str, Any] | None:
         stats = calculate_percentiles(per_iteration_times)
         stats["unit"] = unit
 
-        return stats
+        return stats  # noqa: TRY300
 
     except (OSError, csv.Error) as e:
         print(f"Warning: Failed to process {csv_path}: {e}", file=sys.stderr)
@@ -156,6 +157,7 @@ def extract_benchmark_name(csv_path: Path) -> str:
 
     Returns:
         Extracted benchmark name.
+
     """
     parts = csv_path.parts
     # Find the index of "criterion" and "new" to extract the benchmark path
@@ -177,15 +179,15 @@ def format_time(ns: float) -> str:
 
     Returns:
         Formatted time string with appropriate unit.
+
     """
     if ns < 1_000:
         return f"{ns:.2f} ns"
-    elif ns < 1_000_000:
+    if ns < 1_000_000:
         return f"{ns / 1_000:.2f} us"
-    elif ns < 1_000_000_000:
+    if ns < 1_000_000_000:
         return f"{ns / 1_000_000:.2f} ms"
-    else:
-        return f"{ns / 1_000_000_000:.2f} s"
+    return f"{ns / 1_000_000_000:.2f} s"
 
 
 def print_summary(results: dict[str, dict[str, Any]]) -> None:
@@ -193,6 +195,7 @@ def print_summary(results: dict[str, dict[str, Any]]) -> None:
 
     Args:
         results: Dictionary mapping benchmark names to their statistics.
+
     """
     if not results:
         print("No benchmark data found.")
@@ -217,10 +220,11 @@ def print_summary(results: dict[str, dict[str, Any]]) -> None:
 
 
 def main() -> int:
-    """Main entry point for percentile extraction.
+    """Run percentile extraction.
 
     Returns:
         Exit code: 0 for success, 1 for error.
+
     """
     parser = argparse.ArgumentParser(
         description="Extract p95/p99 percentiles from Criterion raw.csv files.",
@@ -282,16 +286,15 @@ Examples:
             results[benchmark_name] = stats
             if not args.quiet:
                 print(f"  Processed: {benchmark_name}")
-        else:
-            if not args.quiet:
-                print(f"  Skipped (empty/invalid): {benchmark_name}")
+        elif not args.quiet:
+            print(f"  Skipped (empty/invalid): {benchmark_name}")
 
     if not results:
         print("No valid benchmark data found.", file=sys.stderr)
         return 1
 
     # Determine output path
-    output_path = args.output if args.output else criterion_dir / "percentiles.json"
+    output_path = args.output or criterion_dir / "percentiles.json"
 
     # Write JSON output
     with output_path.open("w", encoding="utf-8") as f:

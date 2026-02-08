@@ -10,12 +10,11 @@ SETT-03: Batch loading uses Rust with tokio parallelism
 
 from pathlib import Path
 
-import pytest
 import classic_settings
+import pytest
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.io.yaml.cache import YamlSettingsCache
-
 
 pytestmark = pytest.mark.unit
 

@@ -10,9 +10,9 @@ import pytest
 
 from tests.fixtures.golden_fixtures import (
     TIMESTAMP_PLACEHOLDER,
+    generate_diff,
     mask_dynamic_data,
     normalize_paths,
-    generate_diff,
 )
 
 
@@ -181,9 +181,7 @@ class TestGoldenFileFixture:
         monkeypatch.setattr(golden_file, "golden_dir", tmp_path)
 
         # Create golden with masked content
-        (tmp_path / "masked.golden").write_text(
-            f"Log at {TIMESTAMP_PLACEHOLDER}", encoding="utf-8"
-        )
+        (tmp_path / "masked.golden").write_text(f"Log at {TIMESTAMP_PLACEHOLDER}", encoding="utf-8")
 
         # Input with actual timestamp should match
         golden_file.check("Log at 2024-01-15T10:30:45Z", "masked")

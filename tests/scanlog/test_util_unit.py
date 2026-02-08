@@ -589,7 +589,7 @@ class TestGetEntry:
         mock_pool.get_connection.return_value = mock_conn
 
         with (
-            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value= [db_path]),
+            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value=[db_path]),
             patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool.get_instance", return_value=mock_pool),
             patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
@@ -619,7 +619,7 @@ class TestGetEntry:
         mock_pool.get_connection.return_value = mock_conn
 
         with (
-            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value= [db_path]),
+            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value=[db_path]),
             patch("ClassicLib.scanning.logs.util_legacy.SyncDatabasePool.get_instance", return_value=mock_pool),
             patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
@@ -640,7 +640,7 @@ class TestGetEntry:
         db_path.write_text("invalid database content")
 
         with (
-            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value= [db_path]),
+            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value=[db_path]),
             patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
         ):
             result = Util.get_entry("12345", "Test.esp")
@@ -776,7 +776,7 @@ class TestGetEntryEdgeCases:
 
         nonexistent_db = tmp_path / "nonexistent.db"
 
-        with patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value= [nonexistent_db]):
+        with patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value=[nonexistent_db]):
             result = Util.get_entry("12345", "Test.esp")
 
             # Should return None without raising (db file doesn't exist)
