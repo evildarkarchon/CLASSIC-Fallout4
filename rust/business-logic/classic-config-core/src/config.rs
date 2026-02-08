@@ -5,6 +5,7 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use tokio::fs;
 use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
@@ -223,6 +224,12 @@ pub struct ClassicConfig {
 
     /// Path configuration
     pub paths: PathConfig,
+
+    /// User-configured FormID databases per game
+    ///
+    /// Key: game name (e.g., "Fallout4"), Value: list of relative or absolute paths.
+    /// Relative paths are resolved against the data directory at runtime.
+    pub formid_databases: HashMap<String, Vec<PathBuf>>,
 }
 
 /// Configuration structure for defining various file system paths related to a game.
@@ -288,6 +295,7 @@ impl Default for ClassicConfig {
             auto_switch_to_results: true, // Enable by default for better UX
             auto_refresh_interval_ms: 5000,
             paths: PathConfig::default(),
+            formid_databases: HashMap::new(),
         }
     }
 }
@@ -368,6 +376,24 @@ impl ClassicConfig {
             docs_root: paths_yaml["docs_root"].as_str().map(PathBuf::from),
         };
 
+        // Parse formid_databases map
+        let mut formid_databases = HashMap::new();
+        if let Some(db_hash) = yaml["formid_databases"].as_hash() {
+            for (game_key, paths_yaml) in db_hash {
+                if let Some(game_name) = game_key.as_str() {
+                    let mut db_paths = Vec::new();
+                    if let Some(arr) = paths_yaml.as_vec() {
+                        for item in arr {
+                            if let Some(s) = item.as_str() {
+                                db_paths.push(PathBuf::from(s));
+                            }
+                        }
+                    }
+                    formid_databases.insert(game_name.to_string(), db_paths);
+                }
+            }
+        }
+
         Ok(Self {
             fcx_mode,
             show_formid_values,
@@ -381,6 +407,7 @@ impl ClassicConfig {
             auto_switch_to_results,
             auto_refresh_interval_ms,
             paths,
+            formid_databases,
         })
     }
 
@@ -465,6 +492,22 @@ impl ClassicConfig {
         }
 
         root.insert(Yaml::String("paths".to_string()), Yaml::Hash(paths));
+
+        // Build formid_databases hash
+        if !self.formid_databases.is_empty() {
+            let mut db_hash = LinkedHashMap::new();
+            for (game, db_paths) in &self.formid_databases {
+                let arr: Vec<Yaml> = db_paths
+                    .iter()
+                    .map(|p| Yaml::String(p.to_string_lossy().to_string()))
+                    .collect();
+                db_hash.insert(Yaml::String(game.clone()), Yaml::Array(arr));
+            }
+            root.insert(
+                Yaml::String("formid_databases".to_string()),
+                Yaml::Hash(db_hash),
+            );
+        }
 
         Yaml::Hash(root)
     }
@@ -679,6 +722,10 @@ mod tests {
                 game_root: PathBuf::from("C:\\Game"),
                 docs_root: Some(PathBuf::from("C:\\Docs")),
             },
+            formid_databases: HashMap::from([(
+                "Fallout4".to_string(),
+                vec![PathBuf::from("databases/FOLON FormIDs.db")],
+            )]),
         };
 
         let yaml = config.to_yaml();
@@ -706,6 +753,7 @@ mod tests {
         assert_eq!(restored.paths.mods_folder, config.paths.mods_folder);
         assert_eq!(restored.paths.game_root, config.paths.game_root);
         assert_eq!(restored.paths.docs_root, config.paths.docs_root);
+        assert_eq!(restored.formid_databases, config.formid_databases);
     }
 
     #[test]
@@ -787,6 +835,7 @@ mod tests {
                 game_root: PathBuf::from("C:\\Game"),
                 docs_root: None,
             },
+            formid_databases: HashMap::new(),
         };
 
         config.save_to_yaml(&config_path).await.unwrap();
@@ -816,5 +865,68 @@ mod tests {
         let config = ClassicConfig::load_or_default().await.unwrap();
         assert!(!config.fcx_mode); // Should be default
         assert!(config.update_check); // Should be default (true)
+    }
+
+    #[test]
+    fn test_formid_databases_default() {
+        let config = ClassicConfig::default();
+        assert!(config.formid_databases.is_empty());
+    }
+
+    #[test]
+    fn test_formid_databases_yaml_round_trip() {
+        let mut config = ClassicConfig::default();
+        config.formid_databases.insert(
+            "Fallout4".to_string(),
+            vec![PathBuf::from("databases/FOLON FormIDs.db")],
+        );
+        config
+            .formid_databases
+            .insert("Skyrim".to_string(), vec![]);
+
+        let yaml = config.to_yaml();
+        let restored = ClassicConfig::from_yaml(&yaml).unwrap();
+
+        assert_eq!(restored.formid_databases.len(), 2);
+        assert_eq!(
+            restored.formid_databases["Fallout4"],
+            vec![PathBuf::from("databases/FOLON FormIDs.db")]
+        );
+        assert!(restored.formid_databases["Skyrim"].is_empty());
+    }
+
+    #[test]
+    fn test_formid_databases_missing_key_defaults_empty() {
+        let yaml_str = "fcx_mode: false\n";
+        let docs = YamlLoader::load_from_str(yaml_str).unwrap();
+        let yaml = docs.first().unwrap();
+
+        let config = ClassicConfig::from_yaml(yaml).unwrap();
+        assert!(config.formid_databases.is_empty());
+    }
+
+    #[test]
+    fn test_formid_databases_multiple_paths_per_game() {
+        let mut config = ClassicConfig::default();
+        config.formid_databases.insert(
+            "Fallout4".to_string(),
+            vec![
+                PathBuf::from("databases/FOLON FormIDs.db"),
+                PathBuf::from("D:/Custom/My FormIDs.db"),
+            ],
+        );
+
+        let yaml = config.to_yaml();
+        let restored = ClassicConfig::from_yaml(&yaml).unwrap();
+
+        assert_eq!(restored.formid_databases["Fallout4"].len(), 2);
+        assert_eq!(
+            restored.formid_databases["Fallout4"][0],
+            PathBuf::from("databases/FOLON FormIDs.db")
+        );
+        assert_eq!(
+            restored.formid_databases["Fallout4"][1],
+            PathBuf::from("D:/Custom/My FormIDs.db")
+        );
     }
 }
