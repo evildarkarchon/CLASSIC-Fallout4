@@ -182,7 +182,7 @@ impl FormIDAnalyzerCore {
     ///
     /// The matching process:
     /// 1. Counts and sorts FormID occurrences (preserves insertion order with LinkedHashMap)
-    /// 2. Extracts the 2-character prefix from each FormID
+    /// 2. Extracts the plugin prefix from each FormID (2-char for regular, 5-char for FE light plugins)
     /// 3. Matches prefixes to plugin IDs from the crash log
     /// 4. Optionally performs database lookups for FormID descriptions
     /// 5. Generates formatted report lines with counts and explanations
@@ -190,7 +190,7 @@ impl FormIDAnalyzerCore {
     /// # Arguments
     ///
     /// * `formids_matches` - Vector of formatted FormID strings from `extract_formids()`
-    /// * `crashlog_plugins` - HashMap of plugin names to their load order IDs
+    /// * `crashlog_plugins` - IndexMap of plugin names to their load order IDs (preserves load order)
     ///
     /// # Returns
     ///
@@ -226,7 +226,7 @@ impl FormIDAnalyzerCore {
     ///     "Form ID: 12345678".to_string(), // Duplicate
     /// ];
     ///
-    /// let mut plugins = HashMap::new();
+    /// let mut plugins = IndexMap::new();
     /// plugins.insert("MyMod.esp".to_string(), "12".to_string());
     ///
     /// let report = analyzer.formid_match(formids, &plugins).await?;
@@ -240,7 +240,7 @@ impl FormIDAnalyzerCore {
     pub async fn formid_match(
         &self,
         mut formids_matches: Vec<String>, // Optimization 1.2: Make mutable for in-place sort
-        crashlog_plugins: &HashMap<String, String>,
+        crashlog_plugins: &IndexMap<String, String>,
     ) -> Result<Vec<String>> {
         if formids_matches.is_empty() {
             return Ok(vec![
@@ -283,8 +283,16 @@ impl FormIDAnalyzerCore {
             if formid_value.len() < 2 {
                 continue;
             }
-            let formid_prefix = &formid_value[..2];
-            let formid_suffix = &formid_value[2..];
+
+            // Light plugins (ESL) use a 5-char prefix: "FE" + 3-digit load order index
+            // Regular plugins use a 2-char prefix: load order hex byte
+            let (formid_prefix, formid_suffix) = if formid_value.starts_with("FE")
+                && formid_value.len() >= 5
+            {
+                (&formid_value[..5], &formid_value[5..])
+            } else {
+                (&formid_value[..2], &formid_value[2..])
+            };
 
             // Fast O(1) lookup instead of O(m) linear search
             if let Some(&plugin) = prefix_to_plugin.get(formid_prefix) {
@@ -308,8 +316,9 @@ impl FormIDAnalyzerCore {
                     lines.push(format!("- {} | {} | {}\n", plugin, formid_value, count));
                 }
             } else {
-                // FormID has no matching plugin - still show it
-                lines.push(format!("- {} | {}\n", formid_value, count));
+                // FormID has no matching plugin - skip it
+                // (includes FF-prefixed FormIDs that slipped through, and orphaned FormIDs)
+                continue;
             }
         }
 
@@ -386,7 +395,7 @@ impl FormIDAnalyzerCore {
     ///
     /// # Arguments
     ///
-    /// * `crashlog_plugins` - HashMap of plugin names to load order IDs from the crash log
+    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
     ///
     /// # Returns
     ///
@@ -439,7 +448,7 @@ impl FormIDAnalyzerCore {
     ///
     /// # Arguments
     ///
-    /// * `crashlog_plugins` - HashMap of plugin names to load order IDs from the crash log
+    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
     ///
     /// # Returns
     ///
@@ -498,7 +507,7 @@ impl FormIDAnalyzerCore {
     ///
     /// # Arguments
     ///
-    /// * `crashlog_plugins` - HashMap of plugin names to load order IDs from the crash log
+    /// * `crashlog_plugins` - IndexMap of plugin names to load order IDs from the crash log
     /// * `gpu_rival` - Optional GPU vendor for compatibility checking (e.g., "nvidia", "amd")
     /// * `xse_modules` - Set of XSE module names (DLLs) loaded by the script extender
     ///

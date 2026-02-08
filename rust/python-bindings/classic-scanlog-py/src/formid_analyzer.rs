@@ -1,11 +1,10 @@
 //! Python bindings for FormIDAnalyzerCore - Thin wrapper over classic-scanlog-core
 
 use classic_scanlog_core::FormIDAnalyzerCore;
-use classic_shared::{pydict_to_indexmap_str_optional, without_gil};
+use classic_shared::{pydict_to_indexmap_str, pydict_to_indexmap_str_optional, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
 use pyo3::types::PyDict;
-use std::collections::HashMap;
 
 /// Python wrapper for FormIDAnalyzerCore
 #[pyclass(name = "FormIDAnalyzerCore")]
@@ -89,13 +88,14 @@ impl PyFormIDAnalyzerCore {
         &self,
         py: Python<'_>,
         formids: Vec<String>,
-        crashlog_plugins: HashMap<String, String>,
+        crashlog_plugins: &Bound<'_, PyDict>,
     ) -> PyResult<Vec<String>> {
+        let plugins_map = pydict_to_indexmap_str(crashlog_plugins)?;
         // Use without_gil to release GIL while running async operation
         without_gil(py, || {
             get_runtime().block_on(async {
                 self.inner
-                    .formid_match(formids, &crashlog_plugins)
+                    .formid_match(formids, &plugins_map)
                     .await
                     .map_err(crate::to_pyerr)
             })

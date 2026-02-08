@@ -1,11 +1,14 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
+use classic_database_core::DatabasePool;
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
+use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
+use std::time::Duration;
 
 // =============================================================================
 // Cancellation Token
@@ -856,6 +859,46 @@ impl PyRustOrchestrator {
     /// True if all required features are available
     pub fn is_feature_complete(&self) -> bool {
         self.inner.is_feature_complete()
+    }
+
+    /// Attach a database pool for FormID value lookups.
+    ///
+    /// Creates a DatabasePool from the given database file paths, initializes it,
+    /// and attaches it to the orchestrator for FormID description resolution.
+    ///
+    /// # Arguments
+    /// * `py` - Python GIL token
+    /// * `db_paths` - Paths to SQLite database files (e.g., "Fallout4 FormIDs Main.db")
+    /// * `game_table` - Optional game table name for lookups (e.g., "Fallout4")
+    ///
+    /// # Errors
+    /// Returns PyErr if database initialization fails.
+    #[pyo3(signature = (db_paths, game_table = None))]
+    pub fn attach_database(
+        &mut self,
+        py: Python<'_>,
+        db_paths: Vec<String>,
+        game_table: Option<String>,
+    ) -> PyResult<()> {
+        let table = game_table.unwrap_or_else(|| self.inner.config().game.clone());
+        let pool = DatabasePool::new(None, Duration::from_secs(300), table);
+
+        let paths: Vec<PathBuf> = db_paths.iter().map(PathBuf::from).collect();
+
+        // Initialize the pool (async) with GIL released
+        without_gil(py, || {
+            get_runtime()
+                .block_on(async { pool.initialize(paths).await })
+                .map_err(|e| {
+                    pyo3::exceptions::PyRuntimeError::new_err(format!(
+                        "Database initialization failed: {}",
+                        e
+                    ))
+                })
+        })?;
+
+        self.inner.attach_database_pool(Arc::new(pool));
+        Ok(())
     }
 
     /// Check if this orchestrator has a database pool attached.

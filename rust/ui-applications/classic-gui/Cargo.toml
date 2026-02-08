@@ -18,6 +18,7 @@ crate-type = ["rlib"]
 slint = { workspace = true, features = ["backend-winit", "renderer-skia", "renderer-software", "image-default-formats"] }
 classic-shared-core = { path = "../../foundation/classic-shared-core", features = ["gui-bridge"] }
 classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+classic-database-core = { path = "../../business-logic/classic-database-core" }
 classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
 classic-config-core = { path = "../../business-logic/classic-config-core" }
 tokio = { workspace = true }

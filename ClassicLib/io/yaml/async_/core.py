@@ -87,9 +87,12 @@ class AsyncYamlSettingsCore:
         self.settings_dir = Path(settings_dir) if settings_dir else Path("CLASSIC Data")
         self.cache = YamlCache()
         self.file_ops = YamlFileOperations()
-        self._lock = asyncio.Lock()
         # Use OrderedDict for LRU-style eviction of file locks
         self._file_locks: OrderedDict[Path, asyncio.Lock] = OrderedDict()
+        # Track which event loop the cached locks belong to, so we can
+        # invalidate them when the event loop changes (e.g., AsyncBridge
+        # creates a new loop in a background thread).
+        self._locks_event_loop: asyncio.AbstractEventLoop | None = None
 
     def _get_file_lock(self, file_path: Path) -> asyncio.Lock:
         """Get or create a file-specific async lock with LRU eviction.
@@ -98,6 +101,10 @@ class AsyncYamlSettingsCore:
         a bounded dictionary of locks keyed by file paths. Uses LRU eviction
         to prevent unbounded memory growth.
 
+        Detects event loop changes (e.g., when AsyncBridge creates a new
+        background loop) and invalidates stale locks to prevent
+        "bound to a different event loop" errors in Python 3.12+.
+
         Args:
             file_path: The path of the file for which the lock is required.
 
@@ -105,6 +112,24 @@ class AsyncYamlSettingsCore:
             An asyncio lock instance associated with the specified file path.
 
         """
+        # Detect event loop changes and invalidate stale locks.
+        # asyncio.Lock binds to the loop on first acquire; if the loop
+        # changes (AsyncBridge restart, different thread), old locks raise
+        # RuntimeError: "bound to a different event loop".
+        try:
+            current_loop = asyncio.get_running_loop()
+        except RuntimeError:
+            current_loop = None
+
+        if current_loop is not None and self._locks_event_loop is not current_loop:
+            if self._file_locks:
+                logger.debug(
+                    "Event loop changed, clearing %d stale file locks",
+                    len(self._file_locks),
+                )
+                self._file_locks.clear()
+            self._locks_event_loop = current_loop
+
         if file_path in self._file_locks:
             # Move to end (most recently used)
             self._file_locks.move_to_end(file_path)
@@ -497,20 +522,36 @@ import threading  # noqa: E402 - Intentional late import for lazy lock creation
 
 _core_lock_threading = threading.Lock()
 _core_lock: asyncio.Lock | None = None
+_core_lock_loop: asyncio.AbstractEventLoop | None = None
 
 
 def _get_core_lock() -> asyncio.Lock:
     """Get or create the asyncio.Lock lazily within an async context.
 
     This ensures the lock is created in the correct event loop context,
-    preventing deadlocks when AsyncBridge runs coroutines in its background thread.
+    preventing "bound to a different event loop" errors when AsyncBridge
+    runs coroutines in its background thread.
+
+    Recreates the lock if the event loop has changed since last creation.
     """
-    global _core_lock  # noqa: PLW0603 - Intentional lazy initialization pattern
-    if _core_lock is None:
+    global _core_lock, _core_lock_loop  # noqa: PLW0603 - Intentional lazy initialization pattern
+
+    try:
+        current_loop = asyncio.get_running_loop()
+    except RuntimeError:
+        current_loop = None
+
+    needs_new = _core_lock is None or (current_loop is not None and _core_lock_loop is not current_loop)
+
+    if needs_new:
         with _core_lock_threading:
-            if _core_lock is None:
+            # Re-check after acquiring threading lock
+            needs_new = _core_lock is None or (current_loop is not None and _core_lock_loop is not current_loop)
+            if needs_new:
                 _core_lock = asyncio.Lock()
-    return _core_lock
+                _core_lock_loop = current_loop
+
+    return _core_lock  # type: ignore[return-value]
 
 
 async def get_async_yaml_core() -> AsyncYamlSettingsCore:

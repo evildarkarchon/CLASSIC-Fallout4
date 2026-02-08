@@ -293,6 +293,14 @@ class ScanLogsExecutor:
             self._rust_orchestrator = Orchestrator(rust_config)
             logger.debug(f"Initialized Rust orchestrator (feature_complete={self._rust_orchestrator.is_feature_complete()})")
 
+            # Attach database pool for FormID value lookups if available
+            if self.config.formid_db_exists and self.config.show_formid_values:
+                db_paths_str = [str(p) for p in DB_PATHS if p.is_file()]
+                if db_paths_str:
+                    game = GlobalRegistry.get_game()
+                    self._rust_orchestrator.attach_database(db_paths_str, game)
+                    logger.debug(f"Attached database pool with {len(db_paths_str)} database(s) for FormID lookups")
+
     async def _process_crashlogs_with_rust(self, result: ScanResult) -> None:
         """Process all crash logs using Rust orchestrator with progress tracking.
 

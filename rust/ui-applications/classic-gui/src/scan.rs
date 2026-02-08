@@ -4,8 +4,11 @@
 //! to the Slint GUI with progress reporting and cooperative cancellation.
 
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
 
 use classic_config_core::{ClassicConfig, YamlDataCore};
+use classic_database_core::DatabasePool;
 use classic_file_io_core::LogCollector;
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use slint::Weak;
@@ -183,7 +186,60 @@ async fn create_orchestrator(settings: &ClassicConfig) -> Result<OrchestratorCor
             AnalysisConfig::new("Fallout4".to_string(), false)
         }
     };
-    OrchestratorCore::new(config).map_err(|e| format!("OrchestratorCore init failed: {}", e))
+
+    let show_formid_values = config.show_formid_values;
+    let mut orchestrator =
+        OrchestratorCore::new(config).map_err(|e| format!("OrchestratorCore init failed: {}", e))?;
+
+    // Attach database pool for FormID value lookups if enabled
+    if show_formid_values {
+        if let Err(e) = attach_database_pool(&mut orchestrator).await {
+            tracing::warn!("FormID database not available: {}", e);
+        }
+    }
+
+    Ok(orchestrator)
+}
+
+/// Discover SQLite databases and attach a DatabasePool to the orchestrator
+async fn attach_database_pool(orchestrator: &mut OrchestratorCore) -> Result<(), String> {
+    let root_dir = find_data_root();
+    let db_dir = root_dir.join("CLASSIC Data").join("databases");
+
+    if !db_dir.is_dir() {
+        return Err("databases directory not found".to_string());
+    }
+
+    // Collect *.db files from the databases directory
+    let db_paths: Vec<PathBuf> = std::fs::read_dir(&db_dir)
+        .map_err(|e| format!("Cannot read databases dir: {}", e))?
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            let path = entry.path();
+            if path.extension().and_then(|ext| ext.to_str()) == Some("db") {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    if db_paths.is_empty() {
+        return Err("no .db files found in databases directory".to_string());
+    }
+
+    let pool = DatabasePool::new(None, Duration::from_secs(300), "Fallout4".to_string());
+    pool.initialize(db_paths.clone())
+        .await
+        .map_err(|e| format!("Database pool init failed: {}", e))?;
+
+    orchestrator.attach_database_pool(Arc::new(pool));
+    tracing::info!(
+        "Attached database pool with {} database(s) for FormID lookups",
+        db_paths.len()
+    );
+
+    Ok(())
 }
 
 /// Load YAML databases and build a fully populated AnalysisConfig

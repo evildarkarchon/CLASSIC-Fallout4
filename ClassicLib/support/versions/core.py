@@ -21,9 +21,9 @@ Example:
 from __future__ import annotations
 
 import threading
+from collections.abc import Mapping
 from typing import Any, ClassVar
 
-import ruamel.yaml
 from packaging.version import InvalidVersion, Version
 
 from ClassicLib.core.constants import YAML
@@ -110,21 +110,52 @@ class VersionRegistry:
         with cls._lock:
             cls._instance = None
 
+    @staticmethod
+    def _read_yaml_key(data: Any, key_path: str) -> Any:
+        """Navigate a dot-separated key path through nested YAML data.
+
+        Args:
+            data: The root YAML mapping to navigate.
+            key_path: Dot-separated path (e.g., "Version_Registry.versions").
+
+        Returns:
+            The value at the key path, or None if any segment is missing.
+
+        """
+        current: Any = data
+        for key in key_path.split("."):
+            if isinstance(current, Mapping) and key in current:
+                current = current[key]
+            else:
+                return None
+        return current
+
     def _load(self) -> None:
         """Load version data from YAML configuration.
 
-        Attempts to load version metadata from the Version_Registry section
-        of CLASSIC Main.yaml. Falls back to hardcoded defaults if loading fails.
+        Uses the Rust classic_settings module directly for YAML access to avoid
+        the async context guard in the Python yaml_settings() convenience function.
+        This ensures the registry can be loaded from both sync and async contexts.
+
+        Falls back to hardcoded defaults if loading fails.
         """
         with self._init_lock:
             if self._loaded:
                 return
 
             try:
-                from ClassicLib.io.yaml import yaml_settings
+                import classic_settings
 
-                # Load version registry from YAML
-                versions_data: list[dict[str, Any]] = yaml_settings(list, YAML.Main, "Version_Registry.versions")  # pyright: ignore[reportUnknownVariableType]
+                from ClassicLib.io.yaml.async_.file_operations import YamlFileOperations
+
+                # Load YAML directly via Rust (works in both sync and async contexts)
+                yaml_path = YamlFileOperations.get_path_for_store(YAML.Main)
+                cache_key = str(yaml_path.resolve())
+                docs = classic_settings.load_settings_sync(cache_key, str(yaml_path))
+                data = docs[0] if docs else {}
+
+                # Navigate key paths directly
+                versions_data: list[dict[str, Any]] | None = self._read_yaml_key(data, "Version_Registry.versions")
 
                 if not versions_data:
                     logger.warning("No versions found in Version_Registry, using defaults")
@@ -137,7 +168,7 @@ class VersionRegistry:
                     self._by_version[version_info.version_string] = version_info
 
                 # Load unknown version handling config
-                handling_data: dict[str, Any] | None = yaml_settings(dict, YAML.Main, "Version_Registry.unknown_version_handling")  # pyright: ignore[reportUnknownVariableType]
+                handling_data: dict[str, Any] | None = self._read_yaml_key(data, "Version_Registry.unknown_version_handling")
                 if handling_data:
                     self._unknown_handling = UnknownVersionHandling(
                         strategy=handling_data.get("strategy", "nearest_match"),
@@ -157,7 +188,6 @@ class VersionRegistry:
                 RuntimeError,
                 AttributeError,
                 ImportError,
-                ruamel.yaml.YAMLError,
             ) as e:
                 logger.warning(f"Failed to load version registry: {e}, using defaults")
                 self._load_defaults()

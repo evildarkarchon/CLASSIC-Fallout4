@@ -687,6 +687,22 @@ class Orchestrator:
 
         """
 
+    def attach_database(self, db_paths: list[str], game_table: str | None = None) -> None:
+        """Attach a database pool for FormID value lookups.
+
+        Creates a DatabasePool from the given SQLite database file paths,
+        initializes it, and attaches it to the orchestrator so that FormID
+        descriptions are resolved during analysis.
+
+        Args:
+            db_paths: Paths to SQLite database files (e.g., "Fallout4 FormIDs Main.db")
+            game_table: Optional game table name for lookups (defaults to config game name)
+
+        Raises:
+            RuntimeError: If database initialization fails.
+
+        """
+
     def is_feature_complete(self) -> bool:
         """Check if the orchestrator has all features required for Rust-first processing.
 

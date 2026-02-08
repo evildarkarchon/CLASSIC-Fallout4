@@ -591,6 +591,39 @@ impl OrchestratorCore {
         self
     }
 
+    /// Attaches a database pool for async FormID lookups on an existing orchestrator.
+    ///
+    /// Unlike [`with_database_pool`](Self::with_database_pool) which consumes `self` (builder pattern),
+    /// this method takes `&mut self` and can be called after construction. This is
+    /// needed when the orchestrator is already owned (e.g., inside a PyO3 `#[pyclass]`).
+    ///
+    /// # Arguments
+    ///
+    /// * `pool` - The database connection pool to use for FormID lookups
+    pub fn attach_database_pool(&mut self, pool: Arc<DatabasePool>) {
+        self.formid_analyzer = FormIDAnalyzerCore::new(
+            Some(pool.clone()),
+            self.config.show_formid_values,
+            self.config.crashgen_name.clone(),
+            self.config.mods_core.clone(),
+            self.config.mods_freq.clone(),
+            self.config.mods_conf.clone(),
+        )
+        .unwrap_or_else(|_| {
+            // Fallback without database pool if creation fails
+            FormIDAnalyzerCore::new(
+                None,
+                self.config.show_formid_values,
+                self.config.crashgen_name.clone(),
+                self.config.mods_core.clone(),
+                self.config.mods_freq.clone(),
+                self.config.mods_conf.clone(),
+            )
+            .expect("FormID analyzer creation should not fail")
+        });
+        self.db_pool = Some(pool);
+    }
+
     /// Returns whether this orchestrator has a database pool attached.
     ///
     /// This can be used to determine if rich FormID resolution is available.
@@ -1100,14 +1133,12 @@ impl OrchestratorCore {
             if formid_count > 0 {
                 // Match FormIDs against plugins for proper formatting
                 // Format: plugin_name | FormID (or plugin_name | FormID | db_value)
-                let plugins_hashmap: HashMap<String, String> = plugins_map
-                    .as_ref()
-                    .map(|pm| pm.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
-                    .unwrap_or_default();
+                let empty_plugins = IndexMap::new();
+                let plugins_ref = plugins_map.as_ref().unwrap_or(&empty_plugins);
 
                 let formid_report_lines = self
                     .formid_analyzer
-                    .formid_match(formids, &plugins_hashmap)
+                    .formid_match(formids, plugins_ref)
                     .await?;
 
                 composer.add(report_gen.generate_formid_section_header());
