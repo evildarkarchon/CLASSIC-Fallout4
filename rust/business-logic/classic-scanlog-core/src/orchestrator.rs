@@ -1082,8 +1082,11 @@ impl OrchestratorCore {
             }
         }
 
-        // Extract FormIDs from callstack (typically the 3rd segment)
-        if segments.len() > 2 && self.config.show_formid_values {
+        // Extract FormIDs from callstack segment (segment 2 includes registers/stack
+        // since it spans from PROBABLE CALL STACK: to MODULES:)
+        // FormIDs are ALWAYS shown regardless of show_formid_values setting.
+        // The show_formid_values setting only controls whether database descriptions are included.
+        if segments.len() > 2 {
             let callstack_segment = &segments[2];
 
             // Convert Arc<str> to String for FormID extraction
@@ -1095,26 +1098,21 @@ impl OrchestratorCore {
             formid_count = formids.len();
 
             if formid_count > 0 {
+                // Match FormIDs against plugins for proper formatting
+                // Format: plugin_name | FormID (or plugin_name | FormID | db_value)
+                let plugins_hashmap: HashMap<String, String> = plugins_map
+                    .as_ref()
+                    .map(|pm| pm.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+                    .unwrap_or_default();
+
+                let formid_report_lines = self
+                    .formid_analyzer
+                    .formid_match(formids, &plugins_hashmap)
+                    .await?;
+
                 composer.add(report_gen.generate_formid_section_header());
-                let mut formid_lines = Vec::new();
-                formid_lines.push(format!("**FormIDs Found:** {}\n\n", formid_count));
-                for formid in formids.iter().take(20) {
-                    formid_lines.push(format!("- `{}`\n", formid));
-                }
-                if formid_count > 20 {
-                    formid_lines.push(format!("\n*... and {} more FormIDs*\n\n", formid_count - 20));
-                } else {
-                    formid_lines.push("\n".to_string());
-                }
-                composer.add(ReportFragment::from_lines(formid_lines));
+                composer.add(ReportFragment::from_lines(formid_report_lines));
             }
-        } else if segments.len() > 2 {
-            // Still extract FormIDs for statistics even if not showing values
-            let callstack_segment = &segments[2];
-            let callstack_lines: Vec<String> =
-                callstack_segment.iter().map(|s| s.to_string()).collect();
-            let formids = self.formid_analyzer.extract_formids(callstack_lines);
-            formid_count = formids.len();
         }
 
         // Add Named Records section (scan callstack for named records)

@@ -271,6 +271,8 @@ impl FormIDAnalyzerCore {
             .collect();
 
         // Process each FormID with O(1) plugin lookup
+        // Format: plugin_name | FormID (always shown)
+        // Format: plugin_name | FormID | database_value (when show_formid_values is enabled)
         for (formid_full, count) in sorted_entries {
             let parts: Vec<&str> = formid_full.splitn(2, ": ").collect();
             if parts.len() < 2 {
@@ -286,29 +288,32 @@ impl FormIDAnalyzerCore {
 
             // Fast O(1) lookup instead of O(m) linear search
             if let Some(&plugin) = prefix_to_plugin.get(formid_prefix) {
-                // Perform database lookup if available
+                // Perform database lookup if show_formid_values is enabled
                 if self.show_formid_values {
                     if let Some(ref pool) = self.db_pool {
                         if let Ok(Some(description)) =
                             pool.get_entry(formid_suffix, plugin, None).await
                         {
                             lines.push(format!(
-                                "- {} | [{}] | {} | {}\n",
-                                formid_full, plugin, description, count
+                                "- {} | {} | {} | {}\n",
+                                plugin, formid_value, description, count
                             ));
                         } else {
-                            lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
+                            lines.push(format!("- {} | {} | {}\n", plugin, formid_value, count));
                         }
                     } else {
-                        lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
+                        lines.push(format!("- {} | {} | {}\n", plugin, formid_value, count));
                     }
                 } else {
-                    lines.push(format!("- {} | [{}] | {}\n", formid_full, plugin, count));
+                    lines.push(format!("- {} | {} | {}\n", plugin, formid_value, count));
                 }
+            } else {
+                // FormID has no matching plugin - still show it
+                lines.push(format!("- {} | {}\n", formid_value, count));
             }
         }
 
-        // Add footer information - exact same text as Python
+        // Add footer information
         lines.extend(vec![
             "\n[Last number counts how many times each Form ID shows up in the crash log.]\n".to_string(),
             format!("These Form IDs were caught by {} and some of them might be related to this crash.\n",

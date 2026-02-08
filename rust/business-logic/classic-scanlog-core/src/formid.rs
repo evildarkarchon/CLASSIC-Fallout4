@@ -58,9 +58,7 @@ impl RustFormIDAnalyzer {
         }
 
         for line in segment_callstack {
-            println!("DEBUG: Checking line: '{}'", line);
             if let Some(captures) = FORMID_EXTRACTION_PATTERN.captures(line) {
-                println!("DEBUG: Match found!");
                 if let Some(formid_hex) = captures.get(1) {
                     let formid_id = formid_hex.as_str().to_uppercase();
 
@@ -70,8 +68,6 @@ impl RustFormIDAnalyzer {
                         formids_matches.push(format!("Form ID: {}", formid_id));
                     }
                 }
-            } else {
-                println!("DEBUG: No match for line");
             }
         }
 
