@@ -14,6 +14,7 @@ use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use slint::Weak;
 use tokio_util::sync::CancellationToken;
 
+use crate::settings::get_formid_databases;
 use crate::worker::ScanWindowProperties;
 
 /// Result of a scan operation
@@ -193,7 +194,7 @@ async fn create_orchestrator(settings: &ClassicConfig) -> Result<OrchestratorCor
 
     // Attach database pool for FormID value lookups if enabled
     if show_formid_values {
-        if let Err(e) = attach_database_pool(&mut orchestrator).await {
+        if let Err(e) = attach_database_pool(&mut orchestrator, settings).await {
             tracing::warn!("FormID database not available: {}", e);
         }
     }
@@ -201,34 +202,49 @@ async fn create_orchestrator(settings: &ClassicConfig) -> Result<OrchestratorCor
     Ok(orchestrator)
 }
 
-/// Discover SQLite databases and attach a DatabasePool to the orchestrator
-async fn attach_database_pool(orchestrator: &mut OrchestratorCore) -> Result<(), String> {
+/// Attach Main + user-configured FormID databases to the orchestrator
+///
+/// Resolves the main database from the `CLASSIC Data/databases` directory
+/// and merges user-configured databases from `ClassicConfig`. Relative
+/// paths in the user list are resolved against the data directory.
+async fn attach_database_pool(
+    orchestrator: &mut OrchestratorCore,
+    settings: &ClassicConfig,
+) -> Result<(), String> {
     let root_dir = find_data_root();
-    let db_dir = root_dir.join("CLASSIC Data").join("databases");
+    let data_dir = root_dir.join("CLASSIC Data");
 
-    if !db_dir.is_dir() {
-        return Err("databases directory not found".to_string());
+    // Get main database
+    let game = "Fallout4"; // TODO: make dynamic based on settings.game_version
+    let main_db = data_dir
+        .join("databases")
+        .join(format!("{game} FormIDs Main.db"));
+
+    // Get user-configured databases
+    let user_dbs = get_formid_databases(settings, game);
+
+    // Resolve relative paths against data_dir, keep absolute paths as-is
+    let mut db_paths: Vec<PathBuf> = vec![];
+    if main_db.is_file() {
+        db_paths.push(main_db);
     }
-
-    // Collect *.db files from the databases directory
-    let db_paths: Vec<PathBuf> = std::fs::read_dir(&db_dir)
-        .map_err(|e| format!("Cannot read databases dir: {}", e))?
-        .filter_map(|entry| {
-            let entry = entry.ok()?;
-            let path = entry.path();
-            if path.extension().and_then(|ext| ext.to_str()) == Some("db") {
-                Some(path)
-            } else {
-                None
-            }
-        })
-        .collect();
+    for p in user_dbs {
+        let resolved = if p.is_absolute() { p } else { data_dir.join(&p) };
+        if resolved.is_file() {
+            db_paths.push(resolved);
+        } else {
+            tracing::warn!(
+                "FormID database not found, skipping: {}",
+                resolved.display()
+            );
+        }
+    }
 
     if db_paths.is_empty() {
-        return Err("no .db files found in databases directory".to_string());
+        return Err("no FormID database files found".to_string());
     }
 
-    let pool = DatabasePool::new(None, Duration::from_secs(300), "Fallout4".to_string());
+    let pool = DatabasePool::new(None, Duration::from_secs(300), game.to_string());
     pool.initialize(db_paths.clone())
         .await
         .map_err(|e| format!("Database pool init failed: {}", e))?;
