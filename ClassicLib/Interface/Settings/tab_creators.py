@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QListWidget,
     QPushButton,
     QSpinBox,
     QVBoxLayout,
@@ -408,6 +409,46 @@ class TabCreator:
         paths_layout.addWidget(help_label)
 
         layout.addWidget(paths_group)
+
+        # FormID Databases group
+        db_group = QGroupBox("FormID Databases")
+        db_layout = QVBoxLayout(db_group)
+        db_layout.setSpacing(10)
+
+        db_help_label = QLabel(
+            "Additional SQLite databases for FormID name lookups during crash log scanning.\n"
+            "The built-in database is always included. Add extra databases here if needed."
+        )
+        db_help_label.setWordWrap(True)
+        db_help_label.setStyleSheet("QLabel { color: #888888; font-size: 11px; }")
+        db_layout.addWidget(db_help_label)
+
+        database_list = QListWidget()
+        database_list.setToolTip("List of additional FormID database files used during scanning")
+        db_layout.addWidget(database_list)
+        settings_widgets["database_list"] = database_list
+
+        # Add / Remove buttons
+        db_button_layout = QHBoxLayout()
+        db_button_layout.setSpacing(10)
+
+        db_add_button = QPushButton("Add...")
+        db_add_button.setToolTip("Browse for SQLite database files to add")
+        db_add_button.setMaximumWidth(100)
+        db_button_layout.addWidget(db_add_button)
+        settings_widgets["db_add_button"] = db_add_button
+
+        db_remove_button = QPushButton("Remove")
+        db_remove_button.setToolTip("Remove the selected database from the list")
+        db_remove_button.setMaximumWidth(100)
+        db_remove_button.setEnabled(False)
+        db_button_layout.addWidget(db_remove_button)
+        settings_widgets["db_remove_button"] = db_remove_button
+
+        db_button_layout.addStretch()
+        db_layout.addLayout(db_button_layout)
+
+        layout.addWidget(db_group)
         layout.addStretch()
 
         return paths_widget, settings_widgets

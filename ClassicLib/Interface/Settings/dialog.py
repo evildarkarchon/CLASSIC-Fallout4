@@ -16,7 +16,9 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QDialogButtonBox,
+    QFileDialog,
     QLineEdit,
+    QListWidget,
     QPushButton,
     QSpinBox,
     QTabWidget,
@@ -26,6 +28,9 @@ from PySide6.QtWidgets import (
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.Interface.Settings.path_manager import PathManager
+
+# File filter for FormID database file dialogs
+SQLITE_FILE_FILTER = "SQLite Databases (*.db *.sqlite *.sqlite3 *.db3 *.sdb);;All Files (*)"
 from ClassicLib.Interface.Settings.tab_creators import TabCreator, ensure_game_version_options
 from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
 from ClassicLib.io.yaml import yaml_cache, yaml_settings
@@ -156,6 +161,17 @@ class SettingsDialog(QDialog):
         # Create proxy methods for backwards compatibility
         self.ini_reset_button = QPushButton()  # Dummy button for attribute access
         self.ini_browse_button = QPushButton()  # Dummy button for attribute access
+
+        # Wire FormID database list signals
+        db_add_button = self.settings_widgets.get("db_add_button")
+        db_remove_button = self.settings_widgets.get("db_remove_button")
+        database_list = self.settings_widgets.get("database_list")
+        if isinstance(db_add_button, QPushButton):
+            db_add_button.clicked.connect(self._add_databases)
+        if isinstance(db_remove_button, QPushButton):
+            db_remove_button.clicked.connect(self._remove_database)
+        if isinstance(database_list, QListWidget):
+            database_list.itemSelectionChanged.connect(self._on_db_selection_changed)
 
         # Updates tab
         updates_widget, updates_widgets, check_now_button = TabCreator.create_updates_tab(self)
@@ -312,6 +328,9 @@ class SettingsDialog(QDialog):
             if isinstance(max_concurrent_widget, QSpinBox):
                 max_concurrent_widget.setValue(max_concurrent_value)
 
+            # Load FormID database list
+            self.load_database_list()
+
             logger.info("Loaded settings into dialog")
 
         except (TypeError, ValueError, KeyError) as e:
@@ -344,6 +363,9 @@ class SettingsDialog(QDialog):
         from ClassicLib.core.logger import logger
 
         try:
+            # Save FormID database list
+            self.save_database_list()
+
             # Save checkboxes (excluding removed vr_mode)
             for key in [
                 "fcx_mode",
@@ -421,6 +443,90 @@ class SettingsDialog(QDialog):
         except (TypeError, ValueError, OSError) as e:
             logger.error(f"Failed to save settings: {e}")
             msg_error(f"Failed to save settings: {e!s}\n\nPlease check file permissions and try again.")
+
+    def load_database_list(self) -> None:
+        """Load the FormID database list from YAML settings into the QListWidget.
+
+        Reads the game-specific database list from the YAML settings key
+        ``CLASSIC_Settings.FormID Databases.<game>`` and populates the
+        ``database_list`` QListWidget. Clears existing items first.
+
+        The game name is obtained from ``GlobalRegistry.get_game()``.
+        """
+        from ClassicLib.core.registry import GlobalRegistry
+
+        db_list = self.settings_widgets.get("database_list")
+        if not isinstance(db_list, QListWidget):
+            return
+
+        db_list.clear()
+        game = GlobalRegistry.get_game()
+        paths = yaml_settings(list, self.yaml_store, f"CLASSIC_Settings.FormID Databases.{game}")
+        if paths:
+            for p in paths:
+                db_list.addItem(str(p))
+
+    def save_database_list(self) -> None:
+        """Save the FormID database list from the QListWidget to YAML settings.
+
+        Reads all items from the ``database_list`` QListWidget and writes them
+        to ``CLASSIC_Settings.FormID Databases.<game>`` in the YAML store.
+
+        The game name is obtained from ``GlobalRegistry.get_game()``.
+        """
+        from ClassicLib.core.registry import GlobalRegistry
+
+        db_list = self.settings_widgets.get("database_list")
+        if not isinstance(db_list, QListWidget):
+            return
+
+        game = GlobalRegistry.get_game()
+        paths = [db_list.item(i).text() for i in range(db_list.count())]
+        yaml_settings(list, self.yaml_store, f"CLASSIC_Settings.FormID Databases.{game}", paths)
+
+    def _add_databases(self) -> None:
+        """Open a file dialog to add FormID database files to the list.
+
+        Uses ``QFileDialog.getOpenFileNames`` with SQLite filters
+        (``.db``, ``.sqlite``, ``.sqlite3``, ``.db3``, ``.sdb``) and
+        supports multi-select. Duplicate paths are silently skipped.
+        """
+        db_list = self.settings_widgets.get("database_list")
+        if not isinstance(db_list, QListWidget):
+            return
+
+        files, _ = QFileDialog.getOpenFileNames(
+            self,
+            "Select FormID Database Files",
+            "",
+            SQLITE_FILE_FILTER,
+        )
+        if not files:
+            return
+
+        # Collect existing items for duplicate detection
+        existing = {db_list.item(i).text() for i in range(db_list.count())}
+        for f in files:
+            if f not in existing:
+                db_list.addItem(f)
+                existing.add(f)
+
+    def _remove_database(self) -> None:
+        """Remove the currently selected items from the database list."""
+        db_list = self.settings_widgets.get("database_list")
+        if not isinstance(db_list, QListWidget):
+            return
+
+        for item in db_list.selectedItems():
+            row = db_list.row(item)
+            db_list.takeItem(row)
+
+    def _on_db_selection_changed(self) -> None:
+        """Enable or disable the Remove button based on list selection state."""
+        db_list = self.settings_widgets.get("database_list")
+        remove_btn = self.settings_widgets.get("db_remove_button")
+        if isinstance(db_list, QListWidget) and isinstance(remove_btn, QPushButton):
+            remove_btn.setEnabled(bool(db_list.selectedItems()))
 
     def _recalculate_derivative_paths(self) -> None:
         """Recalculates derivative paths related to documents, game, and mods based on the current
