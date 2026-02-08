@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main, classic-next, develop, gsd]
+    branches: [main, classic-next, develop, getting-rusty]
   pull_request:
-    branches: [main, classic-next, develop, gsd]
+    branches: [main, classic-next, develop, getting-rusty]
 
 env:
   RUST_BACKTRACE: 1
