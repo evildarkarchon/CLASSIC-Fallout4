@@ -330,6 +330,12 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
                 w.set_scan_status("Discovering crash logs...".into());
             }
 
+            // Clone settings for the scan task
+            let settings = {
+                let state = state.lock();
+                state.settings.clone()
+            };
+
             // Spawn real scan operation using run_cancellable for dual cancellation:
             // - Bridge-level: run_cancellable races the future against the token
             // - Inner-loop: scan_crash_logs checks is_cancelled() per-log for responsiveness
@@ -337,7 +343,7 @@ fn setup_scan_callbacks(window: &MainWindow, state: &Arc<Mutex<AppState>>) {
             let state_completion = Arc::clone(&state);
             AsyncBridge::run_cancellable(
                 cancel_token.clone(),
-                classic_gui::scan_crash_logs(window_weak.clone(), cancel_token, crash_log_path),
+                classic_gui::scan_crash_logs(window_weak.clone(), cancel_token, crash_log_path, settings),
                 move |result| {
                     if let Some(w) = window_weak_completion.upgrade() {
                         match result {

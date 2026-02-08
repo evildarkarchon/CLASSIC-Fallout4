@@ -16,12 +16,15 @@
 //! cargo bench --bench file_io_benchmarks -- --test
 //! ```
 
-use criterion::{criterion_group, criterion_main, BenchmarkId, Criterion, Throughput};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use std::path::PathBuf;
 use tempfile::TempDir;
 
 // Import shared benchmark configuration from workspace benches/common/
+// Note: Path is relative to this file. rust-analyzer may show a false positive
+// warning about unresolved module, but the path is correct and compiles fine.
 #[path = "../../../benches/common/mod.rs"]
+#[allow(dead_code)]
 mod common;
 
 use classic_file_io_core::{EncodingDetector, FileIOCore};
@@ -78,7 +81,9 @@ fn generate_windows_1252_content(size: usize) -> Vec<u8> {
 
 /// Generates a list of file paths for filtering benchmarks.
 fn generate_path_list(count: usize) -> Vec<PathBuf> {
-    let extensions = [".esp", ".esm", ".esl", ".dds", ".nif", ".txt", ".log", ".ini"];
+    let extensions = [
+        ".esp", ".esm", ".esl", ".dds", ".nif", ".txt", ".log", ".ini",
+    ];
     let prefixes = ["Data", "Mods", "Plugins", "Textures", "Meshes", "Scripts"];
 
     (0..count)
@@ -97,11 +102,7 @@ fn generate_path_list(count: usize) -> Vec<PathBuf> {
 fn encoding_detection_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("encoding_detection");
 
-    let sizes = [
-        (1024, "1kb"),
-        (10 * 1024, "10kb"),
-        (100 * 1024, "100kb"),
-    ];
+    let sizes = [(1024, "1kb"), (10 * 1024, "10kb"), (100 * 1024, "100kb")];
 
     // Benchmark UTF-8 detection (most common case)
     for (size, name) in sizes {
@@ -165,7 +166,11 @@ fn encoding_detection_benchmarks(c: &mut Criterion) {
 fn path_filtering_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("path_filtering");
 
-    let sizes = [(100, "100_paths"), (1000, "1000_paths"), (10000, "10000_paths")];
+    let sizes = [
+        (100, "100_paths"),
+        (1000, "1000_paths"),
+        (10000, "10000_paths"),
+    ];
 
     for (count, name) in sizes {
         let paths = generate_path_list(count);
@@ -193,12 +198,7 @@ fn path_filtering_benchmarks(c: &mut Criterion) {
             BenchmarkId::new("filter_by_data_prefix", name),
             &paths,
             |b, paths| {
-                b.iter(|| {
-                    paths
-                        .iter()
-                        .filter(|p| p.starts_with("Data"))
-                        .count()
-                });
+                b.iter(|| paths.iter().filter(|p| p.starts_with("Data")).count());
             },
         );
 
@@ -208,10 +208,8 @@ fn path_filtering_benchmarks(c: &mut Criterion) {
             &paths,
             |b, paths| {
                 b.iter(|| {
-                    let mut extensions: Vec<_> = paths
-                        .iter()
-                        .filter_map(|p| p.extension())
-                        .collect();
+                    let mut extensions: Vec<_> =
+                        paths.iter().filter_map(|p| p.extension()).collect();
                     extensions.sort();
                     extensions.dedup();
                     extensions.len()
@@ -262,9 +260,7 @@ fn file_io_core_benchmarks(c: &mut Criterion) {
             let _ = file_io.read_file(&small_path).await;
         });
 
-        b.iter(|| {
-            rt.block_on(async { file_io.read_file(&small_path).await.ok() })
-        });
+        b.iter(|| rt.block_on(async { file_io.read_file(&small_path).await.ok() }));
     });
 
     group.bench_function("read_file_10kb_cached", |b| {
@@ -276,9 +272,7 @@ fn file_io_core_benchmarks(c: &mut Criterion) {
             let _ = file_io.read_file(&medium_path).await;
         });
 
-        b.iter(|| {
-            rt.block_on(async { file_io.read_file(&medium_path).await.ok() })
-        });
+        b.iter(|| rt.block_on(async { file_io.read_file(&medium_path).await.ok() }));
     });
 
     group.finish();
@@ -306,23 +300,13 @@ fn log_pattern_benchmarks(c: &mut Criterion) {
     // Benchmark crash log pattern matching
     group.bench_function("match_crash_log_pattern", |b| {
         let pattern = regex::Regex::new(r"crash-.*\.log$").unwrap();
-        b.iter(|| {
-            log_filenames
-                .iter()
-                .filter(|f| pattern.is_match(f))
-                .count()
-        });
+        b.iter(|| log_filenames.iter().filter(|f| pattern.is_match(f)).count());
     });
 
     // Benchmark autoscan pattern matching
     group.bench_function("match_autoscan_pattern", |b| {
         let pattern = regex::Regex::new(r"crash-autoscan\.log$").unwrap();
-        b.iter(|| {
-            log_filenames
-                .iter()
-                .filter(|f| pattern.is_match(f))
-                .count()
-        });
+        b.iter(|| log_filenames.iter().filter(|f| pattern.is_match(f)).count());
     });
 
     // Benchmark simple string matching (for comparison)

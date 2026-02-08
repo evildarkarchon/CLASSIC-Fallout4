@@ -8,7 +8,6 @@
 
 use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use yaml_rust2::YamlLoader;
 
@@ -38,15 +37,15 @@ use yaml_rust2::YamlLoader;
 /// * `game_ignore_records` - A `Vec<String>` containing records to be ignored.
 /// * `ignore_list` - A `Vec<String>` listing entries to be collectively ignored.
 ///
-/// * `suspects_error_list` - A `HashMap<String, String>` containing suspect error patterns mapped to descriptive explanations or identifiers.
-/// * `suspects_stack_list` - A `HashMap<String, String>` mapping suspect stack traces to their corresponding cleanup or diagnostic messages.
+/// * `suspects_error_list` - An `IndexMap<String, String>` containing suspect error patterns mapped to descriptive explanations or identifiers.
+/// * `suspects_stack_list` - An `IndexMap<String, Vec<String>>` mapping suspect stack traces to their corresponding pattern lists.
 ///
-/// * `game_mods_conf` - A `HashMap<String, String>` holding configuration settings for game modification databases.
-/// * `game_mods_core` - A `HashMap<String, String>` storing core mod databases information.
-/// * `game_mods_core_folon` - A `HashMap<String, String>` specific to the `Folon` core mod configuration.
-/// * `game_mods_freq` - A `HashMap<String, String>` containing frequently used game mod entries.
-/// * `game_mods_opc2` - A `HashMap<String, String>` for a specific feature or mod database identified as `opc2`.
-/// * `game_mods_solu` - A `HashMap<String, String>` representing solution-related game mod configurations.
+/// * `game_mods_conf` - An `IndexMap<String, String>` holding configuration settings for game modification databases.
+/// * `game_mods_core` - An `IndexMap<String, String>` storing core mod databases information.
+/// * `game_mods_core_folon` - An `IndexMap<String, String>` specific to the `Folon` core mod configuration.
+/// * `game_mods_freq` - An `IndexMap<String, String>` containing frequently used game mod entries.
+/// * `game_mods_opc2` - An `IndexMap<String, String>` for a specific feature or mod database identified as `opc2`.
+/// * `game_mods_solu` - An `IndexMap<String, String>` representing solution-related game mod configurations.
 ///
 /// * `autoscan_text` - A `String` defining the text used in the "autoscan" UI component.
 ///
@@ -104,25 +103,25 @@ pub struct YamlDataCore {
     /// Entries to be collectively ignored
     pub ignore_list: Vec<String>,
 
-    // Suspect patterns
+    // Suspect patterns (IndexMap preserves YAML key order for deterministic matching priority)
     /// Suspect error patterns mapped to descriptive explanations or identifiers
-    pub suspects_error_list: HashMap<String, String>,
+    pub suspects_error_list: IndexMap<String, String>,
     /// Suspect stack traces mapped to pattern lists for matching
-    pub suspects_stack_list: HashMap<String, Vec<String>>,
+    pub suspects_stack_list: IndexMap<String, Vec<String>>,
 
-    // Mod databases
+    // Mod databases (IndexMap preserves YAML key order for Python parity)
     /// Configuration settings for game modification databases
-    pub game_mods_conf: HashMap<String, String>,
-    /// Core mod databases information (IndexMap preserves YAML key order for Python parity)
+    pub game_mods_conf: IndexMap<String, String>,
+    /// Core mod databases information
     pub game_mods_core: IndexMap<String, String>,
-    /// Folon core mod configuration (IndexMap preserves YAML key order for Python parity)
+    /// Folon core mod configuration
     pub game_mods_core_folon: IndexMap<String, String>,
     /// Frequently used game mod entries
-    pub game_mods_freq: HashMap<String, String>,
+    pub game_mods_freq: IndexMap<String, String>,
     /// Specific feature or mod database identified as opc2
-    pub game_mods_opc2: HashMap<String, String>,
+    pub game_mods_opc2: IndexMap<String, String>,
     /// Solution-related game mod configurations
-    pub game_mods_solu: HashMap<String, String>,
+    pub game_mods_solu: IndexMap<String, String>,
 
     // UI configuration
     /// Text used in the autoscan UI component
@@ -298,14 +297,14 @@ impl YamlDataCore {
             xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
-            suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_hashmap_vec_value(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
+            suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
+            suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
+            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
             game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
             game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
-            game_mods_freq: yaml_ops.get_hashmap_value(game_data, "Mods_FREQ"),
-            game_mods_opc2: yaml_ops.get_hashmap_value(game_data, "Mods_OPC2"),
-            game_mods_solu: yaml_ops.get_hashmap_value(game_data, "Mods_SOLU"),
+            game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
+            game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
+            game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
             game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
             game_version_vr: yaml_ops.get_string_value(game_data, "GameVR_Info.GameVersion", ""),
@@ -452,14 +451,14 @@ impl YamlDataCore {
             xse_acronym: yaml_ops.get_string_value(game_data, "Game_Info.XSE_Acronym", ""),
             game_ignore_plugins: yaml_ops.get_vec_value(game_data, "Crashlog_Plugins_Exclude"),
             game_ignore_records: yaml_ops.get_vec_value(game_data, "Crashlog_Records_Exclude"),
-            suspects_error_list: yaml_ops.get_hashmap_value(game_data, "Crashlog_Error_Check"),
-            suspects_stack_list: yaml_ops.get_hashmap_vec_value(game_data, "Crashlog_Stack_Check"),
-            game_mods_conf: yaml_ops.get_hashmap_value(game_data, "Mods_CONF"),
+            suspects_error_list: yaml_ops.get_indexmap_value(game_data, "Crashlog_Error_Check"),
+            suspects_stack_list: yaml_ops.get_indexmap_vec_value(game_data, "Crashlog_Stack_Check"),
+            game_mods_conf: yaml_ops.get_indexmap_value(game_data, "Mods_CONF"),
             game_mods_core: yaml_ops.get_indexmap_value(game_data, "Mods_CORE"),
             game_mods_core_folon: yaml_ops.get_indexmap_value(game_data, "Mods_CORE_FOLON"),
-            game_mods_freq: yaml_ops.get_hashmap_value(game_data, "Mods_FREQ"),
-            game_mods_opc2: yaml_ops.get_hashmap_value(game_data, "Mods_OPC2"),
-            game_mods_solu: yaml_ops.get_hashmap_value(game_data, "Mods_SOLU"),
+            game_mods_freq: yaml_ops.get_indexmap_value(game_data, "Mods_FREQ"),
+            game_mods_opc2: yaml_ops.get_indexmap_value(game_data, "Mods_OPC2"),
+            game_mods_solu: yaml_ops.get_indexmap_value(game_data, "Mods_SOLU"),
             game_version: yaml_ops.get_string_value(game_data, "Game_Info.GameVersion", ""),
             game_version_new: yaml_ops.get_string_value(game_data, "Game_Info.GameVersionNEW", ""),
             game_version_vr: yaml_ops.get_string_value(game_data, "GameVR_Info.GameVersion", ""),

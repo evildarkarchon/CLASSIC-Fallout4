@@ -5,6 +5,7 @@
 
 use std::path::PathBuf;
 
+use classic_config_core::{ClassicConfig, YamlDataCore};
 use classic_file_io_core::LogCollector;
 use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
 use slint::Weak;
@@ -89,7 +90,8 @@ impl ScanResult {
 ///
 /// This async function coordinates the full scan workflow:
 /// 1. Discovery phase: Uses LogCollector to find crash logs (indeterminate progress)
-/// 2. Analysis phase: Processes each log with OrchestratorCore (determinate progress)
+/// 2. Config loading: Loads YAML databases for suspect patterns, mod databases, etc.
+/// 3. Analysis phase: Processes each log with OrchestratorCore (determinate progress)
 ///
 /// Progress is reported to the UI via `upgrade_in_event_loop` after each log.
 /// Cancellation is checked before each log via `CancellationToken`.
@@ -99,10 +101,12 @@ impl ScanResult {
 /// * `window_weak` - Weak reference to the Slint window for progress updates
 /// * `cancel_token` - Token for cooperative cancellation
 /// * `crash_log_path` - Base folder path for log discovery
+/// * `settings` - User settings from the GUI (FCX mode, show FormIDs, etc.)
 pub async fn scan_crash_logs<W>(
     window_weak: Weak<W>,
     cancel_token: CancellationToken,
     crash_log_path: String,
+    settings: ClassicConfig,
 ) -> Result<ScanResult, String>
 where
     W: slint::ComponentHandle + ScanWindowProperties + 'static,
@@ -131,8 +135,9 @@ where
         0.0,
     );
 
-    // Create OrchestratorCore with default config for Fallout4
-    let orchestrator = create_orchestrator()
+    // Load YAML databases and create OrchestratorCore
+    update_status(&window_weak, "Loading analysis databases...", -1.0);
+    let orchestrator = create_orchestrator(&settings).await
         .map_err(|e| format!("Failed to initialize scanner: {}", e))?;
 
     // Phase 2: Analysis (determinate progress)
@@ -165,14 +170,100 @@ where
     Ok(ScanResult::complete(results, errors))
 }
 
-/// Create an OrchestratorCore with default Fallout4 configuration
+/// Create an OrchestratorCore with full configuration loaded from YAML databases
 ///
-/// Uses minimal AnalysisConfig suitable for basic crash log scanning.
-/// Full configuration (suspect patterns, mod databases) will be loaded
-/// from YAML settings in Phase 24 (Settings).
-fn create_orchestrator() -> Result<OrchestratorCore, String> {
-    let config = AnalysisConfig::new("Fallout4".to_string(), false);
+/// Loads the three YAML database files (Main, Game, Ignore) to populate
+/// suspect patterns, mod databases, version info, and ignore lists.
+/// Falls back to empty config if YAML loading fails (same as previous behavior).
+async fn create_orchestrator(settings: &ClassicConfig) -> Result<OrchestratorCore, String> {
+    let config = match load_analysis_config(settings).await {
+        Ok(config) => config,
+        Err(e) => {
+            tracing::warn!("Failed to load YAML config, using empty defaults: {}", e);
+            AnalysisConfig::new("Fallout4".to_string(), false)
+        }
+    };
     OrchestratorCore::new(config).map_err(|e| format!("OrchestratorCore init failed: {}", e))
+}
+
+/// Load YAML databases and build a fully populated AnalysisConfig
+async fn load_analysis_config(settings: &ClassicConfig) -> Result<AnalysisConfig, String> {
+    let root_dir = find_data_root();
+    let data_dir = root_dir.join("CLASSIC Data");
+
+    let yaml_dirs = vec![root_dir, data_dir];
+    let yamldata = YamlDataCore::load_from_yaml_files(
+        yaml_dirs,
+        "Fallout4".to_string(),
+        false,
+    )
+    .await
+    .map_err(|e| format!("Failed to load YAML databases: {}", e))?;
+
+    Ok(build_analysis_config(yamldata, settings))
+}
+
+/// Find the root directory containing "CLASSIC Data"
+///
+/// Checks the executable's directory first (distribution), then falls
+/// back to the current working directory (development).
+fn find_data_root() -> PathBuf {
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(exe_dir) = exe.parent() {
+            if exe_dir.join("CLASSIC Data").is_dir() {
+                return exe_dir.to_path_buf();
+            }
+        }
+    }
+    std::env::current_dir().unwrap_or_default()
+}
+
+/// Convert YamlDataCore + ClassicConfig into a fully populated AnalysisConfig
+fn build_analysis_config(yaml: YamlDataCore, settings: &ClassicConfig) -> AnalysisConfig {
+    AnalysisConfig {
+        game: "Fallout4".to_string(),
+        vr_mode: false,
+
+        // Version info from YAML databases
+        crashgen_name: yaml.crashgen_name,
+        crashgen_latest: yaml.crashgen_latest_og,
+        crashgen_latest_vr: yaml.crashgen_latest_vr,
+        game_version: yaml.game_version,
+        game_version_vr: yaml.game_version_vr,
+        game_version_new: yaml.game_version_new,
+        xse_acronym: yaml.xse_acronym,
+        classic_version: format!("CLASSIC v{}", yaml.classic_version),
+
+        // Ignore lists (renamed fields)
+        ignore_plugins: yaml.game_ignore_plugins,
+        ignore_records: yaml.game_ignore_records,
+        ignore_list: yaml.ignore_list,
+
+        // Suspect patterns (already IndexMap from YAML, preserving key order)
+        suspects_error: yaml.suspects_error_list,
+        suspects_stack: yaml.suspects_stack_list,
+
+        // Mod databases (already IndexMap from YAML, preserving key order)
+        mods_core: yaml.game_mods_core,
+        mods_freq: yaml.game_mods_freq,
+        mods_conf: yaml.game_mods_conf,
+        mods_solu: yaml.game_mods_solu,
+        mods_opc2: yaml.game_mods_opc2,
+        mods_core_folon: yaml.game_mods_core_folon,
+
+        // Record tracking
+        classic_records_list: yaml.classic_records_list,
+        crashgen_ignore: yaml.crashgen_ignore,
+
+        // User settings from GUI
+        show_formid_values: settings.show_formid_values,
+        fcx_mode: settings.fcx_mode,
+        simplify_logs: settings.simplify_logs,
+
+        // Fields left as defaults (future work)
+        game_root_name: String::new(),
+        remove_list: Vec::new(),
+    }
 }
 
 /// Update scan status with indeterminate or determinate progress

@@ -541,6 +541,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(invalid_from_utf8)]
     fn test_from_utf8_error() {
         // Create an invalid UTF-8 sequence
         let bytes = &[0xff, 0xfe];

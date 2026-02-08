@@ -1345,6 +1345,9 @@ impl YamlOperations {
     /// is a `Vec<String>`. Useful for pattern lists like suspects_stack where each
     /// key maps to multiple patterns.
     ///
+    /// **Note**: This method does not preserve YAML key order. Use
+    /// [`get_indexmap_vec_value`](Self::get_indexmap_vec_value) when order matters.
+    ///
     /// # Arguments
     /// * `data` - The YAML data to read from
     /// * `key_path` - Dot-separated path to the section (e.g., "Crashlog_Stack_Check")
@@ -1403,6 +1406,56 @@ impl YamlOperations {
                 })
                 .collect(),
             _ => HashMap::new(),
+        }
+    }
+
+    /// Get an IndexMap where values are arrays of strings (`Vec<String>`) from YAML data.
+    ///
+    /// Like [`get_hashmap_vec_value`](Self::get_hashmap_vec_value) but preserves YAML key
+    /// insertion order, which is important for deterministic pattern matching priority.
+    ///
+    /// # Arguments
+    /// * `data` - The YAML data to read from
+    /// * `key_path` - Dot-separated path to the section (e.g., "Crashlog_Stack_Check")
+    ///
+    /// # Returns
+    /// * `IndexMap<String, Vec<String>>` - Ordered map of keys to string arrays
+    pub fn get_indexmap_vec_value(&self, data: &Yaml, key_path: &str) -> IndexMap<String, Vec<String>> {
+        let keys: Vec<&str> = key_path.split('.').collect();
+        let mut current = data;
+
+        for key in keys {
+            match current {
+                Yaml::Hash(hash) => {
+                    let key_yaml = Yaml::String(key.to_string());
+                    current = match hash.get(&key_yaml) {
+                        Some(value) => value,
+                        None => return IndexMap::new(),
+                    };
+                }
+                _ => return IndexMap::new(),
+            }
+        }
+
+        match current {
+            Yaml::Hash(map) => map
+                .iter()
+                .filter_map(|(k, v)| {
+                    let key_str = k.as_str()?.to_string();
+                    let values: Vec<String> = match v {
+                        // Single value: wrap in vec
+                        Yaml::String(s) => vec![s.clone()],
+                        // Array: collect all strings
+                        Yaml::Array(arr) => arr
+                            .iter()
+                            .filter_map(|item| item.as_str().map(String::from))
+                            .collect(),
+                        _ => return None,
+                    };
+                    Some((key_str, values))
+                })
+                .collect(),
+            _ => IndexMap::new(),
         }
     }
 }

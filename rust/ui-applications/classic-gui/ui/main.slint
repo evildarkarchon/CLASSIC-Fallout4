@@ -123,7 +123,7 @@ export component MainWindow inherits Window {
                             // Crash log folder
                             HorizontalBox {
                                 spacing: 8px;
-                                height: 32px;
+                                max-height: 40px;
                                 Text {
                                     text: "Crash Logs:";
                                     vertical-alignment: center;
@@ -140,7 +140,7 @@ export component MainWindow inherits Window {
                             // Game folder
                             HorizontalBox {
                                 spacing: 8px;
-                                height: 32px;
+                                max-height: 40px;
                                 Text {
                                     text: "Game Folder:";
                                     vertical-alignment: center;
@@ -169,7 +169,7 @@ export component MainWindow inherits Window {
                         Button {
                             text: root.scan-in-progress ? "Cancel" : "Scan Crash Logs";
                             primary: !root.scan-in-progress;
-                            enabled: root.scan-in-progress || root.crash-log-path != "";
+                            enabled: true;
                             clicked => {
                                 if (root.scan-in-progress) {
                                     root.cancel-scan();
