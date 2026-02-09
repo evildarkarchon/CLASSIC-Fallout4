@@ -877,9 +877,7 @@ mod tests {
             "Fallout4".to_string(),
             vec![PathBuf::from("databases/FOLON FormIDs.db")],
         );
-        config
-            .formid_databases
-            .insert("Skyrim".to_string(), vec![]);
+        config.formid_databases.insert("Skyrim".to_string(), vec![]);
 
         let yaml = config.to_yaml();
         let restored = ClassicConfig::from_yaml(&yaml).unwrap();

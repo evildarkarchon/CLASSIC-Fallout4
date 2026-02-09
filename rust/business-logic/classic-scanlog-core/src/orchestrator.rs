@@ -973,9 +973,14 @@ impl OrchestratorCore {
             }
 
             // Memory Manager check (check for X-Cell and Baka ScrapHeap)
-            let has_xcell = ["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll", "x-cell-ae.dll"]
-                .iter()
-                .any(|dll| xse_modules_for_settings.contains(*dll));
+            let has_xcell = [
+                "x-cell-fo4.dll",
+                "x-cell-og.dll",
+                "x-cell-ng2.dll",
+                "x-cell-ae.dll",
+            ]
+            .iter()
+            .any(|dll| xse_modules_for_settings.contains(*dll));
             let has_old_xcell = false; // Would need version check
             let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
             if let Ok(memory_fragment) = self

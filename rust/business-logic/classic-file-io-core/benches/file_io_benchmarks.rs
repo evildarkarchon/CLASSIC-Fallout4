@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! Criterion benchmarks for classic-file-io-core operations.
 //!
 //! This module benchmarks encoding detection, path operations, and file I/O
@@ -230,7 +231,7 @@ fn file_io_core_benchmarks(c: &mut Criterion) {
 
     // Benchmark FileIOCore creation
     group.bench_function("creation_default", |b| {
-        b.iter(|| FileIOCore::default());
+        b.iter(FileIOCore::default);
     });
 
     group.bench_function("creation_custom_cache", |b| {
@@ -286,7 +287,7 @@ fn log_pattern_benchmarks(c: &mut Criterion) {
     let mut group = c.benchmark_group("log_patterns");
 
     // Test log filename matching patterns
-    let log_filenames = vec![
+    let log_filenames = [
         "crash-2024-01-15-10-30-00.log".to_string(),
         "crash-1234567890.log".to_string(),
         "crash-autoscan.log".to_string(),
@@ -331,7 +332,7 @@ fn dds_parsing_benchmarks(c: &mut Criterion) {
 
     // Create a minimal valid DDS header (128 bytes minimum)
     // DDS magic: 0x20534444 ("DDS ")
-    let mut dds_header = vec![0u8; 128];
+    let mut dds_header = [0u8; 128];
     dds_header[0..4].copy_from_slice(&[0x44, 0x44, 0x53, 0x20]); // "DDS "
     dds_header[4..8].copy_from_slice(&[124, 0, 0, 0]); // Header size = 124
     dds_header[8..12].copy_from_slice(&[0x0F, 0x10, 0x00, 0x00]); // Flags

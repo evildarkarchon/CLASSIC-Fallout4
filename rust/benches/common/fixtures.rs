@@ -158,10 +158,9 @@ pub fn load_crash_log_by_size(size: FixtureSize) -> String {
     let dir = match find_sample_logs_dir() {
         Some(d) => d,
         None => {
-            return format!(
-                "ERROR: Could not find sample_logs/FO4 directory. \
+            return "ERROR: Could not find sample_logs/FO4 directory. \
                  Run benchmarks from project root or rust/ directory."
-            );
+                .to_string();
         }
     };
 
@@ -240,10 +239,9 @@ pub fn load_crash_log_fixture(name: &str) -> String {
     let dir = match find_sample_logs_dir() {
         Some(d) => d,
         None => {
-            return format!(
-                "ERROR: Could not find sample_logs/FO4 directory. \
+            return "ERROR: Could not find sample_logs/FO4 directory. \
                  Run benchmarks from project root or rust/ directory."
-            );
+                .to_string();
         }
     };
 
@@ -317,10 +315,9 @@ pub fn load_yaml_fixture(name: &str) -> String {
     let dir = match find_databases_dir() {
         Some(d) => d,
         None => {
-            return format!(
-                "ERROR: Could not find 'CLASSIC Data/databases' directory. \
+            return "ERROR: Could not find 'CLASSIC Data/databases' directory. \
                  Run benchmarks from project root or rust/ directory."
-            );
+                .to_string();
         }
     };
 
@@ -466,7 +463,7 @@ pub fn generate_synthetic_yaml(entries: usize) -> String {
     yaml.push_str("# Synthetic YAML for benchmark testing\n");
     yaml.push_str("version: 1.0\n");
     yaml.push_str("generated: true\n");
-    yaml.push_str("\n");
+    yaml.push('\n');
     yaml.push_str("entries:\n");
 
     for i in 0..entries {

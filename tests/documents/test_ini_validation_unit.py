@@ -89,7 +89,8 @@ iSize W=1920
         assert "CAUTION" in result
         assert "BROKEN" in result
 
-    def test_check_ini_invalid_docs_name_type(self) -> None:
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value="C:/fake/docs")
+    def test_check_ini_invalid_docs_name_type(self, mock_yaml: MagicMock) -> None:  # noqa: ARG002
         """Test check_ini raises TypeError for invalid docs_name."""
         manager = DocumentsPathManager()
         manager.docs_name = None  # type: ignore[assignment] # Invalid type for testing

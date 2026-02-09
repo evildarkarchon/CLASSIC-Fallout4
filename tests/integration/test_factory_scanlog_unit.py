@@ -86,68 +86,61 @@ class TestGetModDetector:
 class TestGetOrchestrator:
     """Tests for get_orchestrator function."""
 
-    def test_returns_orchestrator_instance(self) -> None:
+    @patch("ClassicLib.integration.rust.orchestrator_api.ClassicOrchestrator")
+    def test_returns_orchestrator_instance(self, mock_orchestrator_cls: MagicMock) -> None:
         """Test returns orchestrator instance."""
         from ClassicLib.integration.factory import get_orchestrator
 
-        mock_yamldata = MagicMock()
-        mock_yamldata.crashgen_name = "Buffout4"
-        mock_yamldata.xse_acronym = "F4SE"
-        mock_yamldata.game_root_name = "Fallout4"
+        mock_instance = MagicMock()
+        mock_orchestrator_cls.return_value = mock_instance
 
         result = get_orchestrator(
-            yamldata=mock_yamldata,
+            yamldata=MagicMock(),
             fcx_mode=False,
             show_formid_values=True,
             formid_db_exists=True,
         )
 
-        assert result is not None
+        assert result is mock_instance
+        mock_orchestrator_cls.assert_called_once()
 
     def test_returns_orchestrator_on_import_error(self) -> None:
-        """Test returns orchestrator when Rust import fails."""
+        """Test raises ImportError when Rust orchestrator import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_orchestrator
 
-        mock_yamldata = MagicMock()
-        mock_yamldata.crashgen_name = "Buffout4"
-        mock_yamldata.xse_acronym = "F4SE"
-        mock_yamldata.game_root_name = "Fallout4"
-
         original_import = builtins.__import__
 
         def mock_import(name, *args, **kwargs):
-            if "hybrid_orchestrator" in str(args) or name == "ClassicLib.scanning.logs.hybrid_orchestrator":
+            if "orchestrator_api" in str(args) or name == "ClassicLib.integration.rust.orchestrator_api":
                 raise ImportError("No module")
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_orchestrator(
-                yamldata=mock_yamldata,
-                fcx_mode=False,
-                show_formid_values=True,
-                formid_db_exists=True,
-            )
+            with pytest.raises(ImportError):
+                get_orchestrator(
+                    yamldata=MagicMock(),
+                    fcx_mode=False,
+                    show_formid_values=True,
+                    formid_db_exists=True,
+                )
 
-        assert result is not None
-
-    def test_accepts_all_parameters(self) -> None:
+    @patch("ClassicLib.integration.rust.orchestrator_api.ClassicOrchestrator")
+    def test_accepts_all_parameters(self, mock_orchestrator_cls: MagicMock) -> None:
         """Test function accepts all expected parameters."""
         from ClassicLib.integration.factory import get_orchestrator
 
-        mock_yamldata = MagicMock()
-        mock_yamldata.crashgen_name = "Buffout4"
-        mock_yamldata.xse_acronym = "F4SE"
-        mock_yamldata.game_root_name = "Fallout4"
+        mock_instance = MagicMock()
+        mock_orchestrator_cls.return_value = mock_instance
 
         # Should not raise any errors
         result = get_orchestrator(
-            yamldata=mock_yamldata,
+            yamldata=MagicMock(),
             fcx_mode=True,
             show_formid_values=False,
             formid_db_exists=False,
             remove_list=("item1", "item2"),
         )
 
-        assert result is not None
+        assert result is mock_instance

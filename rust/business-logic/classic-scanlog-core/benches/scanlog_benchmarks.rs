@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! Criterion benchmarks for classic-scanlog-core operations.
 //!
 //! This module benchmarks crash log parsing, FormID extraction, pattern matching,
@@ -49,7 +50,7 @@ const SAMPLE_LOG_LARGE: &str =
 
 /// Splits crash log content into lines as Arc<str> for LogParser.
 fn log_to_lines(content: &str) -> Vec<Arc<str>> {
-    content.lines().map(|line| Arc::from(line)).collect()
+    content.lines().map(Arc::from).collect()
 }
 
 /// Extracts callstack-like lines from log content.

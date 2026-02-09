@@ -310,7 +310,12 @@ impl CrashgenChecker {
     ///
     /// Vector of settings to validate
     fn get_settings_to_check(&self) -> Vec<TomlSetting> {
-        let has_xcell = self.has_plugin(&["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll", "x-cell-ae.dll"]);
+        let has_xcell = self.has_plugin(&[
+            "x-cell-fo4.dll",
+            "x-cell-og.dll",
+            "x-cell-ng2.dll",
+            "x-cell-ae.dll",
+        ]);
         let has_achievements =
             self.has_plugin(&["achievements.dll", "achievementsmodsenablerloader.dll"]);
         let has_looksmenu = self.installed_plugins.iter().any(|f| f.contains("f4ee"));

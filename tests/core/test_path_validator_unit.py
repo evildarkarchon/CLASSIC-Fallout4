@@ -73,14 +73,29 @@ class TestPathValidator:
         # The implementation passes the Path object directly
         mock_is_valid.assert_called_once_with(test_path)
 
+    @patch.object(PathValidator, "validate_ini_folder_path")
+    @patch.object(PathValidator, "validate_mods_folder_path")
+    @patch.object(PathValidator, "validate_documents_path")
+    @patch.object(PathValidator, "validate_game_root_path")
     @patch.object(PathValidator, "validate_custom_scan_path")
     @patch("ClassicLib.support.path_validator.logger")
     def test_validate_all_settings_paths(
-        self, mock_logger: MagicMock, mock_validate_custom: MagicMock, init_message_handler_fixture: MagicMock
+        self,
+        mock_logger: MagicMock,
+        mock_validate_custom: MagicMock,
+        mock_validate_game: MagicMock,
+        mock_validate_docs: MagicMock,
+        mock_validate_mods: MagicMock,
+        mock_validate_ini: MagicMock,
+        init_message_handler_fixture: MagicMock,
     ) -> None:
         """Test validate_all_settings_paths calls all validation methods."""
         PathValidator.validate_all_settings_paths()
         mock_validate_custom.assert_called_once()
+        mock_validate_game.assert_called_once()
+        mock_validate_docs.assert_called_once()
+        mock_validate_mods.assert_called_once()
+        mock_validate_ini.assert_called_once()
         mock_logger.debug.assert_any_call("Validating all settings paths")
         mock_logger.debug.assert_any_call("Path validation complete")
 

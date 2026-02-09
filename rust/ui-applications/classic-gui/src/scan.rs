@@ -227,7 +227,11 @@ async fn attach_database_pool(
         db_paths.push(main_db);
     }
     for p in user_dbs {
-        let resolved = if p.is_absolute() { p } else { data_dir.join(&p) };
+        let resolved = if p.is_absolute() {
+            p
+        } else {
+            data_dir.join(&p)
+        };
         if resolved.is_file() {
             db_paths.push(resolved);
         } else {

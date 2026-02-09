@@ -12,8 +12,8 @@
 #[macro_use]
 extern crate napi_derive;
 
-mod yaml;
 mod scanlog;
+mod yaml;
 
 /// Get the version of the classic-node bindings
 #[napi]

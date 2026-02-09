@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! GIL Release Audit Benchmarks - Phase 12
 //!
 //! These benchmarks measure pure Rust compute time to establish baselines
@@ -96,7 +97,7 @@ fn bench_formid_extraction(c: &mut Criterion) {
                         .iter()
                         .filter(|line| line.contains("Form ID:"))
                         .filter_map(|line| line.split("Form ID:").nth(1))
-                        .map(|s| s.trim().split_whitespace().next().unwrap_or(""))
+                        .map(|s| s.split_whitespace().next().unwrap_or(""))
                         .collect();
                     black_box(formids)
                 })

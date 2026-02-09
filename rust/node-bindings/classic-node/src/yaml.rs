@@ -107,11 +107,7 @@ pub fn yaml_get_value(content: String, key_path: String) -> Result<serde_json::V
 
 /// Extract a string value from YAML using dot-notation, with a default fallback.
 #[napi]
-pub fn yaml_get_string_value(
-    content: String,
-    key_path: String,
-    default: String,
-) -> Result<String> {
+pub fn yaml_get_string_value(content: String, key_path: String, default: String) -> Result<String> {
     let ops = YamlOperations::new();
     let yaml = ops.parse_yaml(&content).map_err(to_napi_err)?;
     Ok(ops.get_string_value(&yaml, &key_path, &default))

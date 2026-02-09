@@ -1072,8 +1072,10 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
                         let mut current = get_formid_databases(&s.settings, game);
 
                         // Add new paths, skipping duplicates
-                        let existing: std::collections::HashSet<String> =
-                            current.iter().map(|p| p.to_string_lossy().to_string()).collect();
+                        let existing: std::collections::HashSet<String> = current
+                            .iter()
+                            .map(|p| p.to_string_lossy().to_string())
+                            .collect();
                         for file in &files {
                             let path_str = file.path().to_string_lossy().to_string();
                             if !existing.contains(&path_str) {
@@ -1126,9 +1128,7 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
             }
 
             let game_owned = game.to_string();
-            if let Err(e) =
-                save_formid_databases(&mut s.settings, &game_owned, current.clone())
-            {
+            if let Err(e) = save_formid_databases(&mut s.settings, &game_owned, current.clone()) {
                 tracing::warn!("Failed to save database list: {}", e);
             }
 
@@ -1143,7 +1143,6 @@ fn setup_settings_paths_callbacks(window: &MainWindow, state: &Arc<Mutex<AppStat
             }
         });
     }
-
 }
 
 /// Set up Reset to Defaults callback

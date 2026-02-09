@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! GIL Release Audit Benchmarks - File I/O operations
 //!
 //! These benchmarks measure pure Rust compute time for file I/O related

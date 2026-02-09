@@ -1,3 +1,4 @@
+#![allow(missing_docs)]
 //! Criterion benchmarks for classic-yaml-core operations.
 //!
 //! This module benchmarks YAML parsing, serialization, traversal, and modification
@@ -39,7 +40,7 @@ fn generate_yaml_content(lines: usize) -> String {
     yaml.push_str("# CLASSIC Configuration File\n");
     yaml.push_str("version: 8.2.0\n");
     yaml.push_str("game: Fallout4\n");
-    yaml.push_str("\n");
+    yaml.push('\n');
 
     // Settings section
     yaml.push_str("settings:\n");
@@ -47,7 +48,7 @@ fn generate_yaml_content(lines: usize) -> String {
     yaml.push_str("  show_formid_values: false\n");
     yaml.push_str("  auto_scan: true\n");
     yaml.push_str("  log_level: INFO\n");
-    yaml.push_str("\n");
+    yaml.push('\n');
 
     // Generate mod entries
     let entries = (lines.saturating_sub(20)) / 8;
@@ -212,13 +213,8 @@ fn yaml_traversal_benchmarks(c: &mut Criterion) {
     // Benchmark iteration over hash keys
     group.bench_function("iterate_mods_section", |b| {
         b.iter(|| {
-            if let Some(mods) = ops.get_setting(&parsed, "mods") {
-                if let Yaml::Hash(hash) = mods {
-                    let count: usize = hash.iter().count();
-                    count
-                } else {
-                    0
-                }
+            if let Some(Yaml::Hash(hash)) = ops.get_setting(&parsed, "mods") {
+                hash.iter().count()
             } else {
                 0
             }

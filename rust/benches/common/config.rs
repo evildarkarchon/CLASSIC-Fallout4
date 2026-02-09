@@ -94,7 +94,7 @@ impl BenchMode {
         match env::var("BENCH_MODE") {
             Ok(mode) => match mode.to_lowercase().as_str() {
                 "thorough" => BenchMode::Thorough,
-                "quick" | _ => BenchMode::Quick,
+                _ => BenchMode::Quick,
             },
             Err(_) => BenchMode::Quick,
         }
