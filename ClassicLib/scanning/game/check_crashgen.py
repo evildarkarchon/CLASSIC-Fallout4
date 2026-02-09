@@ -182,7 +182,7 @@ class CrashgenChecker:
         if get_game() != "Fallout4":
             return []
 
-        has_xcell = self.has_plugin(["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll"])
+        has_xcell = self.has_plugin(["x-cell-fo4.dll", "x-cell-og.dll", "x-cell-ng2.dll", "x-cell-ae.dll"])
         has_achievements = self.has_plugin(["achievements.dll", "achievementsmodsenablerloader.dll"])
         has_looksmenu = any("f4ee" in file for file in self.installed_plugins)
 
