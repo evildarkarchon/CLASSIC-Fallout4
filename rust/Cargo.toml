@@ -63,6 +63,9 @@ members = [
     # Phase 5 - Application Coordination (Python Bindings)
     "python-bindings/classic-update-py",
 
+    # Node.js/Bun Bindings (NAPI-RS adapters)
+    "node-bindings/classic-node",
+
     # GUI Applications (v9.0.0 Slint)
     "ui-applications/classic-gui",
 ]

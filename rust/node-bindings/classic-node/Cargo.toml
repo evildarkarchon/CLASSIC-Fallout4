@@ -1,0 +1,39 @@
+[package]
+name = "classic-node"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Node.js/Bun bindings for CLASSIC via NAPI-RS"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# NAPI-RS framework
+napi = { version = "3", default-features = false, features = ["async", "napi9", "serde-json"] }
+napi-derive = "3"
+
+# CLASSIC core dependencies
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
+yaml-rust2 = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+tokio = { workspace = true }
+thiserror = { workspace = true }
+indexmap = { workspace = true }
+
+[build-dependencies]
+napi-build = "2"
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused_imports = "deny"
+dead_code = "allow"  # NAPI-RS exports are called from JS, not Rust; cargo check can't see FFI usage

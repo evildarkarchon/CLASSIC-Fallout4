@@ -1,0 +1,28 @@
+{
+  "name": "@classic/node",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node.js/Bun bindings for CLASSIC Rust crates via NAPI-RS",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "napi": {
+    "binaryName": "classic-node",
+    "targets": [
+      "x86_64-pc-windows-msvc"
+    ]
+  },
+  "scripts": {
+    "build": "napi build --release --platform --manifest-path ./Cargo.toml",
+    "build:debug": "napi build --platform --manifest-path ./Cargo.toml",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@napi-rs/cli": "^3.0.0",
+    "bun-types": "latest"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+  }
+}
