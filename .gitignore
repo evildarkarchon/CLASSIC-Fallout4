@@ -317,3 +317,4 @@ con
 
 # Git Worktrees
 .worktrees/
+!**/fixtures/*.log
