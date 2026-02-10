@@ -39,7 +39,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.core.constants import get_all_db_paths
+from ClassicLib.core.constants import get_all_db_paths_async
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.exceptions import RustDatabaseError, RustError
@@ -180,7 +180,7 @@ class RustAsyncDatabasePool:
             return
 
         # Get database paths
-        db_paths_str = [str(path) for path in get_all_db_paths() if path.is_file()]
+        db_paths_str = [str(path) for path in await get_all_db_paths_async() if path.is_file()]
 
         if db_paths_str:
             # Await Rust coroutine - true async, no blocking!

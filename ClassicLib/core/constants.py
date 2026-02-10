@@ -161,6 +161,58 @@ def get_all_db_paths() -> list[Path]:
     return [get_main_db_path(), *get_user_db_paths()]
 
 
+async def get_user_db_paths_async() -> list[Path]:
+    """Async version of get_user_db_paths for use in async contexts.
+
+    Reads the game-specific database list from YAML settings using
+    ``yaml_settings_async`` to avoid the sync-in-async guard. Relative
+    paths are resolved against ``ResourceLoader.get_data_directory()``.
+
+    Returns:
+        A list of absolute paths to existing user-configured database files.
+
+    """
+    from ClassicLib.core.logger import logger
+    from ClassicLib.core.registry import GlobalRegistry
+    from ClassicLib.io.yaml.async_.core import yaml_settings_async
+    from ClassicLib.support.resources import ResourceLoader
+
+    data_dir = ResourceLoader.get_data_directory()
+    game = GlobalRegistry.get_game()
+
+    key_path = f"CLASSIC_Settings.FormID Databases.{game}"
+    raw_paths: list[str] | None = await yaml_settings_async(list, YAML.Settings, key_path)
+
+    if raw_paths is None:
+        raw_paths = _DEFAULT_FORMID_DATABASES.get(game, [])
+
+    resolved: list[Path] = []
+    for entry in raw_paths:
+        p = Path(entry)
+        if not p.is_absolute():
+            p = data_dir / p
+        if p.is_file():
+            resolved.append(p)
+        else:
+            logger.warning("FormID database not found, skipping: %s", p)
+
+    return resolved
+
+
+async def get_all_db_paths_async() -> list[Path]:
+    """Async version of get_all_db_paths for use in async contexts.
+
+    Combines the Main database path with user-configured paths. Uses
+    ``yaml_settings_async`` internally so it's safe to call from async code.
+
+    Returns:
+        A list of paths with the Main database first, followed by
+        user-configured databases.
+
+    """
+    return [get_main_db_path(), *(await get_user_db_paths_async())]
+
+
 # For backward compatibility, create a property-like object
 class _DBPaths:
     """Backward compatible DB_PATHS that lazily evaluates database paths.

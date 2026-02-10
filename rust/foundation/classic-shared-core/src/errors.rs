@@ -532,7 +532,7 @@ mod tests {
 
     #[test]
     fn test_from_io_error_other() {
-        let io_err = std::io::Error::new(std::io::ErrorKind::Other, "unexpected");
+        let io_err = std::io::Error::other("unexpected");
         let err: ClassicError = io_err.into();
         match err {
             ClassicError::Io { .. } => {}
@@ -567,7 +567,7 @@ mod tests {
     #[test]
     fn test_into_classic_error_err() {
         let result: Result<i32, std::io::Error> =
-            Err(std::io::Error::new(std::io::ErrorKind::Other, "bad things"));
+            Err(std::io::Error::other("bad things"));
         let classic_result = result.into_classic("test context");
         let err = classic_result.unwrap_err();
         match err {

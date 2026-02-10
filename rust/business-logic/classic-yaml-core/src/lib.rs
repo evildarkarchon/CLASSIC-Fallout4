@@ -2887,10 +2887,11 @@ list:
     }
 
     #[test]
+    #[serial]
     fn test_cache_stats_after_operations() {
-        // Use a unique temp file to avoid interference with parallel tests.
-        // We only test that cache_stats() returns meaningful data,
-        // not exact counts (global counters are shared across parallel tests).
+        clear_global_yaml_cache();
+        reset_cache_stats();
+
         let mut temp_file = NamedTempFile::new().expect("Failed to create temp file");
         writeln!(temp_file, "stats_test: true").expect("Write failed");
 

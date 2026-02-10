@@ -19,7 +19,20 @@ def reset_all_singletons_impl() -> Generator[None, None, None]:
 
     Yields control to the test, then resets all known singletons,
     caches, and module-level state on teardown.
+
+    The GlobalRegistry baseline (YAML_CACHE, GAME, VR, etc.) established
+    by the session-scoped ``_setup_global_registry_session`` fixture is
+    preserved by snapshotting before the test and restoring after teardown.
     """
+    # Snapshot registry baseline so we can restore after teardown clears it
+    saved_registry: dict | None = None
+    try:
+        import ClassicLib.core.registry as registry_mod
+
+        saved_registry = dict(registry_mod._registry)
+    except ImportError:
+        pass
+
     yield
 
     # Post-test teardown -- reset all state
@@ -38,6 +51,15 @@ def reset_all_singletons_impl() -> Generator[None, None, None]:
 
     # 4. lru_cache functions
     _reset_lru_caches()
+
+    # 5. Restore registry baseline (session fixture essentials)
+    if saved_registry is not None:
+        try:
+            import ClassicLib.core.registry as registry_mod
+
+            registry_mod._registry.update(saved_registry)
+        except ImportError:
+            pass
 
 
 def _reset_class_singletons() -> None:

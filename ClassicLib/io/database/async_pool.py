@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiosqlite
 
-from ClassicLib.core.constants import get_all_db_paths
+from ClassicLib.core.constants import get_all_db_paths_async
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 
@@ -115,7 +115,7 @@ class AsyncDatabasePool:
         """
         async with self._lock:
             try:
-                for db_path in get_all_db_paths():
+                for db_path in await get_all_db_paths_async():
                     if db_path.is_file():
                         try:
                             conn = await aiosqlite.connect(db_path)
