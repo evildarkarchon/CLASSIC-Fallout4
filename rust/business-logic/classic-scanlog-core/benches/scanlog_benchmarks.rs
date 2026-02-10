@@ -2,7 +2,7 @@
 //! Criterion benchmarks for classic-scanlog-core operations.
 //!
 //! This module benchmarks crash log parsing, FormID extraction, pattern matching,
-//! and plugin detection using real crash log fixtures from sample_logs/FO4/.
+//! and plugin detection using real crash log fixtures from benches/fixtures/.
 //!
 //! # Running Benchmarks
 //!
@@ -35,14 +35,13 @@ use indexmap::IndexMap;
 // =============================================================================
 
 /// Small crash log (~15 KB) - quick iteration
-const SAMPLE_LOG_SMALL: &str = include_str!("../../../../sample_logs/FO4/crash-0DB9300.log");
+const SAMPLE_LOG_SMALL: &str = include_str!("fixtures/crash-0DB9300.log");
 
 /// Medium crash log (~37 KB) - realistic workload
-const SAMPLE_LOG_MEDIUM: &str = include_str!("../../../../sample_logs/FO4/crash-12624.log");
+const SAMPLE_LOG_MEDIUM: &str = include_str!("fixtures/crash-12624.log");
 
 /// Large crash log (~61 KB) - stress testing
-const SAMPLE_LOG_LARGE: &str =
-    include_str!("../../../../sample_logs/FO4/crash-2022-06-05-12-58-02.log");
+const SAMPLE_LOG_LARGE: &str = include_str!("fixtures/crash-2022-06-05-12-58-02.log");
 
 // =============================================================================
 // Helper Functions

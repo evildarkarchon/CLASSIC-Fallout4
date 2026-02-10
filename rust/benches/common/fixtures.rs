@@ -2,6 +2,9 @@
 //!
 //! This module is included via `#[path]` attribute from individual benchmark files,
 //! so some items may appear unused depending on which benchmark uses this module.
+//!
+//! Fixture files must be co-located with benchmark files in `benches/fixtures/`
+//! within each crate. No fallback to project-root directories is attempted.
 
 #![allow(dead_code)]
 #![allow(unused_imports)]
@@ -66,68 +69,32 @@ impl FixtureSize {
     }
 }
 
-/// Returns the path to the sample_logs/FO4 directory.
+/// Returns the path to the crate's `benches/fixtures/` directory.
 ///
-/// This function searches for the sample_logs directory relative to
-/// common Rust build locations (workspace root, target directory).
+/// Uses `CARGO_MANIFEST_DIR` to locate fixtures co-located with the benchmark files.
+/// Returns `None` if the directory doesn't exist — callers should fail explicitly.
 fn find_sample_logs_dir() -> Option<PathBuf> {
-    // Try relative paths from typical cargo bench working directories
-    let candidates = [
-        // From rust/ directory (cargo bench runs here)
-        PathBuf::from("../sample_logs/FO4"),
-        // From project root
-        PathBuf::from("sample_logs/FO4"),
-        // From target directory
-        PathBuf::from("../../sample_logs/FO4"),
-        PathBuf::from("../../../sample_logs/FO4"),
-    ];
-
-    for candidate in candidates {
-        if candidate.exists() && candidate.is_dir() {
-            return Some(candidate);
-        }
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").ok()?;
+    let fixtures_dir = PathBuf::from(manifest_dir).join("benches/fixtures");
+    if fixtures_dir.exists() && fixtures_dir.is_dir() {
+        Some(fixtures_dir)
+    } else {
+        None
     }
-
-    // Try using CARGO_MANIFEST_DIR if available
-    if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let from_manifest = PathBuf::from(manifest_dir)
-            .parent()? // Go up from crate dir
-            .parent()? // Go up from category dir (business-logic, etc.)
-            .join("sample_logs/FO4");
-        if from_manifest.exists() {
-            return Some(from_manifest);
-        }
-    }
-
-    None
 }
 
-/// Returns the path to the CLASSIC Data/databases directory.
+/// Returns the path to the crate's `benches/fixtures/` directory for database fixtures.
+///
+/// Uses `CARGO_MANIFEST_DIR` to locate fixtures co-located with the benchmark files.
+/// Returns `None` if the directory doesn't exist — callers should fail explicitly.
 fn find_databases_dir() -> Option<PathBuf> {
-    let candidates = [
-        PathBuf::from("../CLASSIC Data/databases"),
-        PathBuf::from("CLASSIC Data/databases"),
-        PathBuf::from("../../CLASSIC Data/databases"),
-        PathBuf::from("../../../CLASSIC Data/databases"),
-    ];
-
-    for candidate in candidates {
-        if candidate.exists() && candidate.is_dir() {
-            return Some(candidate);
-        }
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR").ok()?;
+    let fixtures_dir = PathBuf::from(manifest_dir).join("benches/fixtures");
+    if fixtures_dir.exists() && fixtures_dir.is_dir() {
+        Some(fixtures_dir)
+    } else {
+        None
     }
-
-    if let Ok(manifest_dir) = std::env::var("CARGO_MANIFEST_DIR") {
-        let from_manifest = PathBuf::from(manifest_dir)
-            .parent()?
-            .parent()?
-            .join("CLASSIC Data/databases");
-        if from_manifest.exists() {
-            return Some(from_manifest);
-        }
-    }
-
-    None
 }
 
 /// Loads a crash log fixture by size category.
@@ -158,8 +125,8 @@ pub fn load_crash_log_by_size(size: FixtureSize) -> String {
     let dir = match find_sample_logs_dir() {
         Some(d) => d,
         None => {
-            return "ERROR: Could not find sample_logs/FO4 directory. \
-                 Run benchmarks from project root or rust/ directory."
+            return "ERROR: Could not find benches/fixtures/ directory in crate. \
+                 Ensure fixture files are co-located with benchmark files."
                 .to_string();
         }
     };
@@ -187,7 +154,7 @@ pub fn load_crash_log_by_size(size: FixtureSize) -> String {
             })
             .collect(),
         Err(e) => {
-            return format!("ERROR: Could not read sample_logs directory: {}", e);
+            return format!("ERROR: Could not read fixtures directory: {}", e);
         }
     };
 
@@ -239,8 +206,8 @@ pub fn load_crash_log_fixture(name: &str) -> String {
     let dir = match find_sample_logs_dir() {
         Some(d) => d,
         None => {
-            return "ERROR: Could not find sample_logs/FO4 directory. \
-                 Run benchmarks from project root or rust/ directory."
+            return "ERROR: Could not find benches/fixtures/ directory in crate. \
+                 Ensure fixture files are co-located with benchmark files."
                 .to_string();
         }
     };
@@ -264,7 +231,7 @@ pub fn load_crash_log_fixture(name: &str) -> String {
                 }
             }
         }
-        return "ERROR: No log files found in sample_logs/FO4".to_string();
+        return "ERROR: No log files found in benches/fixtures/".to_string();
     }
 
     // Try exact filename match
@@ -315,8 +282,8 @@ pub fn load_yaml_fixture(name: &str) -> String {
     let dir = match find_databases_dir() {
         Some(d) => d,
         None => {
-            return "ERROR: Could not find 'CLASSIC Data/databases' directory. \
-                 Run benchmarks from project root or rust/ directory."
+            return "ERROR: Could not find benches/fixtures/ directory in crate. \
+                 Ensure fixture files are co-located with benchmark files."
                 .to_string();
         }
     };

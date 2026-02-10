@@ -566,8 +566,7 @@ mod tests {
 
     #[test]
     fn test_into_classic_error_err() {
-        let result: Result<i32, std::io::Error> =
-            Err(std::io::Error::other("bad things"));
+        let result: Result<i32, std::io::Error> = Err(std::io::Error::other("bad things"));
         let classic_result = result.into_classic("test context");
         let err = classic_result.unwrap_err();
         match err {
