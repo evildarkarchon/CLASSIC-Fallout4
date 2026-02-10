@@ -16,6 +16,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from ClassicLib.core.logger import logger
+import ClassicLib.core.registry as _registry_mod
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import YamlSettingsCache
 from ClassicLib.messaging import MessageHandler, init_message_handler
@@ -373,7 +374,7 @@ def mock_global_registry() -> Generator[ModuleType, None, None]:
     original_values = {}
 
     # Save original values
-    for key in GlobalRegistry._registry:
+    for key in _registry_mod._registry:
         original_values[key] = GlobalRegistry.get(key)
 
     # Set test values
@@ -404,7 +405,7 @@ def setup_global_registry_session() -> Generator[None, None, None]:
     """
     # Store original registry state for restoration
     # Use direct access for copy semantics (needed for restoration)
-    original_registry = dict(GlobalRegistry._registry)
+    original_registry = dict(_registry_mod._registry)
 
     try:
         # Clear registry to start fresh using the public API
@@ -446,8 +447,8 @@ def setup_global_registry_session() -> Generator[None, None, None]:
     finally:
         # Restore original registry state
         # Use direct access for update semantics (needed for restoration)
-        GlobalRegistry._registry.clear()
-        GlobalRegistry._registry.update(original_registry)
+        _registry_mod._registry.clear()
+        _registry_mod._registry.update(original_registry)
 
 
 @pytest.fixture
@@ -472,8 +473,10 @@ def setup_global_registry() -> None:
 
 
 # Autouse fixture to ensure GlobalRegistry is always initialized for tests
+# NOTE: Name must NOT start with '_' so that `from module import *` exports it
+# into conftest.py's namespace where pytest can discover it.
 @pytest.fixture(scope="session", autouse=True)
-def _ensure_global_registry(_setup_global_registry_session: Any) -> None:
+def ensure_global_registry(setup_global_registry_session: Any) -> None:
     """Ensure GlobalRegistry is initialized for all tests."""
     # This fixture is automatically used by all tests
     # It depends on setup_global_registry_session to do the actual work
@@ -643,7 +646,7 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
                 if hasattr(YamlSettingsCacheModule, "yaml_cache"):
                     delattr(YamlSettingsCacheModule, "yaml_cache")
                 if GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
-                    GlobalRegistry._registry.pop(GlobalRegistry.Keys.YAML_CACHE, None)
+                    _registry_mod._registry.pop(GlobalRegistry.Keys.YAML_CACHE, None)
 
 
 @pytest.fixture

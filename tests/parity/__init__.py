@@ -1,7 +1,7 @@
-"""Parity tests for Rust-Python output validation.
+"""Parity tests for Rust-Python API validation.
 
-This package contains tests that validate Rust implementations produce
-identical output to the golden files captured from Python implementations.
+This package contains tests that validate Rust implementations provide
+consistent, correct APIs matching expected behavior.
 
 Markers used:
 - @pytest.mark.parity: Parity validation test

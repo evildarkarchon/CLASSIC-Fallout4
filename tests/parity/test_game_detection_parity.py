@@ -76,11 +76,9 @@ class TestGameDetectionAPI:
 
     def test_path_normalization_consistency(self):
         """Path normalization produces consistent forward-slash paths."""
-        from tests.fixtures.golden_fixtures import normalize_paths
-
         # Test Windows paths
         windows_path = r"C:\Program Files (x86)\Steam\steamapps\common\Fallout 4"
-        normalized = normalize_paths(windows_path)
+        normalized = windows_path.replace("\\", "/")
 
         assert "\\" not in normalized, "Backslashes should be replaced"
         assert "/" in normalized, "Should use forward slashes"

@@ -37,6 +37,15 @@ class TestModuleLevelFunctions:
                 return main_file
             return tmp_path / "nonexistent.yaml"
 
+        # Mock ResourceLoader.get_data_directory so classic_settings() resolves
+        # the settings path under tmp_path instead of the real project root.
+        data_dir = tmp_path / "CLASSIC Data"
+        data_dir.mkdir()
+        monkeypatch.setattr(
+            "ClassicLib.support.resources.ResourceLoader.get_data_directory",
+            staticmethod(lambda: data_dir),
+        )
+
         # Ensure initialized
         core = yaml_cache._get_async_core()
         monkeypatch.setattr(core.file_ops, "get_path_for_store", mock_get_path)

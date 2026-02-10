@@ -45,7 +45,7 @@ class RustLogParser:
             raise RuntimeError(msg) from e
 
     def find_segments(
-        self, crash_data: list[str], _crashgen_name: str, xse_acronym: str, _game_root_name: str
+        self, crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
     ) -> tuple[str, str, str, list[list[str]]]:
         """Find and extract crash log segments.
 

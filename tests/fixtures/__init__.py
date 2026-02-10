@@ -113,6 +113,7 @@ __all__ = [
     "gui_message_handler",
     "mock_qt_dialogs",
     # Registry fixtures
+    "ensure_global_registry",
     "setup_global_registry_session",
     "setup_global_registry",
     "mock_global_registry",

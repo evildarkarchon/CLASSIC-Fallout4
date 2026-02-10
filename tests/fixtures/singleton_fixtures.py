@@ -21,7 +21,7 @@ def reset_all_singletons_impl() -> Generator[None, None, None]:
     caches, and module-level state on teardown.
 
     The GlobalRegistry baseline (YAML_CACHE, GAME, VR, etc.) established
-    by the session-scoped ``_setup_global_registry_session`` fixture is
+    by the session-scoped ``setup_global_registry_session`` fixture is
     preserved by snapshotting before the test and restoring after teardown.
     """
     # Snapshot registry baseline so we can restore after teardown clears it
