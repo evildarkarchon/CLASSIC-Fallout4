@@ -47,7 +47,7 @@ class RustLogParser:
     def find_segments(
         self,
         crash_data: list[str],
-        crashgen_name: str,
+        crashgen_name: str,  # noqa: ARG002
         xse_acronym: str,
         game_root_name: str,  # noqa: ARG002
     ) -> tuple[str, str, str, list[list[str]]]:

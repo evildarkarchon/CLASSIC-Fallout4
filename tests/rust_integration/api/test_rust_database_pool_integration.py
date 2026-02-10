@@ -386,7 +386,7 @@ class TestRustAsyncDatabasePool:
         """Test async database pool initialization."""
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             # Use factory to get the pool
             pool = get_database_pool(max_connections=10, cache_ttl_seconds=300)
@@ -403,7 +403,7 @@ class TestRustAsyncDatabasePool:
         """Test using the pool as an async context manager."""
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             pool = get_database_pool()
 
@@ -427,7 +427,7 @@ class TestRustAsyncDatabasePool:
         """Test async single entry lookup."""
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             pool = get_database_pool()
             if hasattr(pool, "initialize"):
@@ -448,7 +448,7 @@ class TestRustAsyncDatabasePool:
 
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
@@ -471,7 +471,7 @@ class TestRustAsyncDatabasePool:
         """Test async cache management."""
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             pool = RustAsyncDatabasePool(cache_ttl_seconds=60)  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
@@ -496,7 +496,7 @@ class TestRustAsyncDatabasePool:
 
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
@@ -508,7 +508,7 @@ class TestRustAsyncDatabasePool:
         """Test DatabasePoolManager singleton behavior."""
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             manager1 = DatabasePoolManager()  # pyright: ignore[reportOptionalCall]
             manager2 = DatabasePoolManager()  # pyright: ignore[reportOptionalCall]
@@ -532,7 +532,7 @@ class TestRustAsyncDatabasePool:
 
         with (
             patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
-            patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[tmp_path / "dummy.db"]),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[tmp_path / "dummy.db"]),
         ):
             pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
@@ -612,7 +612,7 @@ class TestDatabasePoolPerformance:
         if not RUST_WRAPPER_AVAILABLE:
             pytest.skip("RustAsyncDatabasePool not available")
 
-        with patch("ClassicLib.io.database.rust_pool.get_all_db_paths", return_value=[db_path]):
+        with patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[db_path]):
             pool = RustAsyncDatabasePool()  # pyright: ignore[reportOptionalCall]
             await pool.initialize()
 
