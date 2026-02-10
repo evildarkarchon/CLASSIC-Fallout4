@@ -672,10 +672,14 @@ def get_yamldata() -> Any:  # Returns Rust YamlData or Python ClassicScanLogsInf
     except (ImportError, AttributeError, TypeError, ValueError, OSError) as e:
         logger.warning(f"Failed to initialize Rust YamlData: {e}")
 
-    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
+    try:
+        from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
-    logger.debug("Using Python ClassicScanLogsInfo implementation")
-    return ClassicScanLogsInfo()
+        logger.debug("Using Python ClassicScanLogsInfo implementation")
+        return ClassicScanLogsInfo()
+    except (TypeError, RuntimeError) as e:
+        msg = f"YAML data initialization failed (both Rust and Python backends unavailable): {e}"
+        raise RuntimeError(msg) from e
 
 
 def get_fcx_handler(fcx_mode: bool | None) -> FCXHandlerProtocol:

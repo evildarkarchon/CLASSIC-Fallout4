@@ -152,18 +152,17 @@ class TestScanLogsExecutorExecuteScan:
             patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
             patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
             patch("ClassicLib.scanning.logs.executor.msg_info"),
+            patch(
+                "ClassicLib.integration.factory.get_yamldata",
+                side_effect=RuntimeError("YAML data unavailable"),
+            ),
         ):
             executor = ScanLogsExecutor()
 
-            # The executor should raise when yamldata is None during _initialize_scan_resources
-            # But it actually stores None and continues - the error happens in execute_scan
-            # when it tries to use yamldata. Let's check that the result indicates failure.
-            # Actually, looking at executor.py, it doesn't explicitly check for None yamldata
-            # before proceeding. The Rust orchestrator initialization will fail.
-            # For now, let's verify the executor handles this gracefully.
-            result = await executor.execute_scan()
-            # With None yamldata, the orchestrator init will fail or return empty results
-            assert isinstance(result, ScanResult)
+            # When both Rust and Python YAML backends are unavailable,
+            # get_yamldata() raises RuntimeError which propagates from _initialize_scan_resources
+            with pytest.raises(RuntimeError, match="YAML data unavailable"):
+                await executor.execute_scan()
 
 
 @pytest.mark.integration
