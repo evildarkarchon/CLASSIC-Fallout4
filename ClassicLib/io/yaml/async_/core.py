@@ -199,7 +199,12 @@ class AsyncYamlSettingsCore:
                 else:
                     # Cache miss - load via Rust async
                     logger.debug("Rust cache miss for %s, loading async", cache_key_rust)
-                    docs = await classic_settings.load_settings_async(cache_key_rust, str(file_path))
+                    try:
+                        docs = await classic_settings.load_settings_async(cache_key_rust, str(file_path))
+                    except OSError:
+                        # File doesn't exist (e.g., CLASSIC Ignore.yaml not yet generated)
+                        logger.debug("File not found for %s, returning None", cache_key_rust)
+                        return None
                     data = docs[0] if docs else {}
 
                 # Navigate key path

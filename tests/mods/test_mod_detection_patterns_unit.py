@@ -86,10 +86,9 @@ class TestModDetectionPatterns:
     def setup_registry(self, setup_global_registry):
         """Ensure GlobalRegistry is initialized for all tests."""
 
-    def test_plugin_list_parsing(self):
+    def test_plugin_list_parsing(self, mock_yamldata):
         """Test parsing of plugin list from crash log."""
         from ClassicLib.integration.factory import get_plugin_analyzer
-        from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
         # Generate synthetic plugin list like in real logs
         plugin_lines = []
@@ -104,10 +103,9 @@ class TestModDetectionPatterns:
         # Use unique names to avoid deduplication
         plugin_lines.extend(f"[FE:{i:03X}] SyntheticLight_{i}.esp" for i in range(0x050))
 
-        # Parse the list using PluginAnalyzer
-        # Pass dummy yamldata
-        yamldata = ClassicScanLogsInfo()
-        analyzer = get_plugin_analyzer(yamldata)
+        # Parse the list using PluginAnalyzer with mock yamldata
+        # (avoids loading CLASSIC Ignore.yaml from filesystem)
+        analyzer = get_plugin_analyzer(mock_yamldata)
 
         plugins, _, _ = analyzer.loadorder_scan_log(plugin_lines)
 
