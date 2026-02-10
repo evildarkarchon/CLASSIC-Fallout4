@@ -735,8 +735,8 @@ yaml_ops.save_file("config.yaml", data)
 ### Checking Rust Availability
 
 ```python
+# classic_registry is mandatory (always available)
 from ClassicLib import (
-    RUST_REGISTRY_AVAILABLE,
     RUST_SETTINGS_AVAILABLE,
     RUST_MESSAGE_AVAILABLE,
 )

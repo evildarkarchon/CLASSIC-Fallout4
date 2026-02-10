@@ -2,24 +2,23 @@
 
 This module serves as a central storage location for objects that need to be accessed
 from multiple modules throughout the application.
+
+Storage is backed by Rust (classic_registry) for thread-safe, lock-free access via DashMap.
 """
 
 from __future__ import annotations
 
 import os
-import threading
 import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
+
+import classic_registry as _rust_registry
 
 if TYPE_CHECKING:
     from io import TextIOWrapper
 
     from ClassicLib.support.versions import VersionInfo
-
-# Central storage for all globally accessible objects
-_registry: dict[str, Any] = {}
-_registry_lock = threading.RLock()
 
 # Environment variable to enable test-only functionality
 _TESTING_MODE_ENV_VAR = "PYTEST_CURRENT_TEST"
@@ -85,8 +84,7 @@ def register(key: str, obj: Any) -> None:
     """
     if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
-    with _registry_lock:
-        _registry[key] = obj
+    _rust_registry.register(key, obj)
 
 
 def get(key: str) -> Any:
@@ -104,8 +102,7 @@ def get(key: str) -> Any:
     """
     if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
-    with _registry_lock:
-        return _registry.get(key)
+    return _rust_registry.get(key)
 
 
 def is_registered(key: str) -> bool:
@@ -123,17 +120,79 @@ def is_registered(key: str) -> bool:
     """
     if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
         raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
-    with _registry_lock:
-        return key in _registry
+    return _rust_registry.is_registered(key)
+
+
+def unregister(key: str) -> bool:
+    """Remove a specific key from the global registry.
+
+    This function removes a single entry from the registry. Unlike clear(),
+    this can be used in production code for legitimate cleanup scenarios.
+
+    Args:
+        key: The unique identifier of the object to remove (must be a string).
+
+    Returns:
+        True if the key was found and removed, False if the key was not present.
+
+    Raises:
+        TypeError: If key is not a string.
+
+    Example:
+        >>> from ClassicLib.core.registry import GlobalRegistry
+        >>> GlobalRegistry.register("temp_key", "temp_value")
+        >>> GlobalRegistry.unregister("temp_key")
+        True
+        >>> GlobalRegistry.unregister("nonexistent")
+        False
+
+    """
+    if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
+        raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
+    return _rust_registry.unregister(key)
+
+
+def clear() -> None:
+    """Clear all entries from the global registry.
+
+    This function is intended for use in testing scenarios ONLY to reset
+    singleton state between test runs. It clears all registered objects
+    from the registry to prevent test pollution.
+
+    **WARNING**: This function will only execute when running under pytest
+    (detected via the PYTEST_CURRENT_TEST environment variable). Calling
+    this function in production code will raise a RuntimeError.
+
+    Raises:
+        RuntimeError: If called outside of a pytest testing context.
+
+    Example:
+        In test fixtures::
+
+            import pytest
+            from ClassicLib.core.registry import GlobalRegistry
+
+            @pytest.fixture(autouse=True)
+            def clean_registry():
+                GlobalRegistry.clear()
+                yield
+                GlobalRegistry.clear()
+
+    """
+    # Safety check: only allow clearing in test environments
+    if not os.environ.get(_TESTING_MODE_ENV_VAR):
+        raise RuntimeError(
+            "GlobalRegistry.clear() is only allowed in testing contexts. "
+            "The PYTEST_CURRENT_TEST environment variable is not set. "
+            "If you need to clear the registry in production, reconsider "
+            "your architecture or implement targeted removal methods."
+        )
+    _rust_registry.clear_all()
 
 
 # Convenience functions for commonly used registry items
 def get_yaml_cache() -> Any:
     """Retrieve the YAML cache from the application's storage.
-
-    Fetches the YAML cache associated with the provided key and returns
-    it. This function is typically used to retrieve cached configurations
-    or data stored in YAML format.
 
     Returns:
         Any: The YAML cache retrieved from the storage.
@@ -143,44 +202,31 @@ def get_yaml_cache() -> Any:
 
 
 def set_game(game_name: str) -> None:
-    """Set the current game name in the system registry. This function ensures that
-    a game name is either registered for the first time or updated if different
-    from the currently registered game name. The operation is thread-safe due to
-    the use of a lock mechanism.
+    """Set the current game name in the system registry.
 
     Args:
         game_name (str): The name of the game to set in the registry.
 
     """
-    with _registry_lock:
-        if not is_registered(Keys.GAME) or game_name != _registry[Keys.GAME]:
-            register(Keys.GAME, game_name)
+    if not is_registered(Keys.GAME) or game_name != get(Keys.GAME):
+        register(Keys.GAME, game_name)
 
 
 def get_manual_docs_gui() -> Any:
-    """Retrieve the manual documentation GUI by accessing the appropriate key.
-
-    This function fetches the manual documentation GUI value from a designated
-    key repository. It leverages an internal mechanism to interact with the key
-    management system and ensures the retrieval of the intended value.
+    """Retrieve the manual documentation GUI.
 
     Returns:
-        Any: The manual documentation GUI object associated with the specified
-        key.
+        Any: The manual documentation GUI object.
 
     """
     return get(Keys.MANUAL_DOCS_GUI)
 
 
 def get_game_path_gui() -> Any:
-    """Retrieve the value associated with the key `GAME_PATH_GUI` from a certain
-    storage or configuration.
-
-    This function uses a predefined constant key to fetch the corresponding value
-    from an assumed underlying storage or configuration system.
+    """Retrieve the game path GUI value.
 
     Returns:
-        Any: The value associated with the `GAME_PATH_GUI` key.
+        Any: The value associated with the GAME_PATH_GUI key.
 
     """
     return get(Keys.GAME_PATH_GUI)
@@ -188,10 +234,6 @@ def get_game_path_gui() -> Any:
 
 def is_gui_mode() -> bool:
     """Determine if the application is running in GUI mode.
-
-    This function checks the current state of the application and determines
-    whether it is running with a graphical user interface (GUI) or not.
-    The returned value is a boolean that represents this state.
 
     Returns:
         bool: True if the application is in GUI mode; otherwise, False.
@@ -201,9 +243,7 @@ def is_gui_mode() -> bool:
 
 
 def open_file_with_encoding(path: Path | str, encoding: str = "utf-8", errors: str = "ignore") -> TextIOWrapper:
-    """Open a file with a specified encoding and error handling strategy. The function
-    delegates the actual implementation to a registered handler, if available. If
-    no handler is registered, raises a RuntimeError.
+    """Open a file with a specified encoding and error handling strategy.
 
     Args:
         path: The path to the file to be opened. Can be a string or a Path object.
@@ -237,15 +277,6 @@ def get_game_version() -> GameVersionValue:
     Returns:
         GameVersionValue: The current game version setting. Defaults to "auto" if not set.
 
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> version = GlobalRegistry.get_game_version()
-        >>> if version == "VR":
-        ...     print("VR mode enabled")
-
-    .. versionadded:: 8.0.0
-        Replaces the legacy VR Mode boolean setting with a proper version enum.
-
     """
     if not is_registered(Keys.GAME_VERSION):
         # Check if legacy VR key is set for backward compatibility
@@ -266,22 +297,8 @@ def get_vr() -> str:
        Use :func:`get_game_version()` instead. VR is now a version variant
        of Fallout 4, not a separate mode.
 
-    This function is maintained for backward compatibility. It derives
-    the VR suffix from the new GAME_VERSION setting.
-
     Returns:
         str: "VR" if game version is VR, otherwise empty string "".
-
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> # Old way (deprecated):
-        >>> vr_suffix = GlobalRegistry.get_vr()
-        >>> config_key = f"Game{vr_suffix}_Info.Setting"
-        >>>
-        >>> # New way (preferred):
-        >>> version = GlobalRegistry.get_game_version()
-        >>> if version == "VR":
-        ...     config_key = "GameVR_Info.Setting"
 
     """
     # Issue deprecation warning only in non-test environments to reduce noise
@@ -309,13 +326,8 @@ def get_vr() -> str:
 def get_game() -> str:
     """Retrieve the name of the game.
 
-    This function checks if a game is registered under the `Keys.GAME` key. If it is not registered or if the registered
-    value is an empty string, the function defaults to returning the string "Fallout4". Otherwise, it retrieves and returns
-    the registered game name.
-
     Returns:
-        str: The name of the game. Defaults to "Fallout4" if no game is registered or if the registered game name is
-        an empty string.
+        str: The name of the game. Defaults to "Fallout4" if not set or empty.
 
     """
     if not is_registered(Keys.GAME):
@@ -331,10 +343,6 @@ def get_game() -> str:
 
 def get_local_dir(as_string: bool = False) -> Path | str:
     """Determine and return the local directory path.
-
-    Retrieves the local directory path, either as a Path object or as a
-    string. If the local directory is not registered or is empty, defaults
-    to the current working directory.
 
     Args:
         as_string: If True, return as string instead of Path. Default False.
@@ -359,108 +367,12 @@ def get_local_dir(as_string: bool = False) -> Path | str:
     return local_dir_value
 
 
-def clear() -> None:
-    """Clear all entries from the global registry.
-
-    This function is intended for use in testing scenarios ONLY to reset
-    singleton state between test runs. It clears all registered objects
-    from the registry to prevent test pollution.
-
-    **WARNING**: This function will only execute when running under pytest
-    (detected via the PYTEST_CURRENT_TEST environment variable). Calling
-    this function in production code will raise a RuntimeError.
-
-    This operation is thread-safe and will acquire the registry lock before
-    clearing.
-
-    Raises:
-        RuntimeError: If called outside of a pytest testing context.
-
-    Example:
-        In test fixtures::
-
-            import pytest
-            from ClassicLib.core.registry import GlobalRegistry
-
-            @pytest.fixture(autouse=True)
-            def clean_registry():
-                GlobalRegistry.clear()
-                yield
-                GlobalRegistry.clear()
-
-    Note:
-        For production code that needs to remove specific entries, use
-        targeted removal via direct registry access or implement a
-        specific ``unregister()`` function for individual keys.
-
-    """
-    # Safety check: only allow clearing in test environments
-    if not os.environ.get(_TESTING_MODE_ENV_VAR):
-        raise RuntimeError(
-            "GlobalRegistry.clear() is only allowed in testing contexts. "
-            "The PYTEST_CURRENT_TEST environment variable is not set. "
-            "If you need to clear the registry in production, reconsider "
-            "your architecture or implement targeted removal methods."
-        )
-
-    with _registry_lock:
-        _registry.clear()
-
-
-def unregister(key: str) -> bool:
-    """Remove a specific key from the global registry.
-
-    This function removes a single entry from the registry. Unlike clear(),
-    this can be used in production code for legitimate cleanup scenarios.
-
-    Args:
-        key: The unique identifier of the object to remove (must be a string).
-
-    Returns:
-        True if the key was found and removed, False if the key was not present.
-
-    Raises:
-        TypeError: If key is not a string.
-
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> GlobalRegistry.register("temp_key", "temp_value")
-        >>> GlobalRegistry.unregister("temp_key")
-        True
-        >>> GlobalRegistry.unregister("nonexistent")
-        False
-
-    """
-    if not isinstance(key, str):  # pyright: ignore[reportUnnecessaryIsInstance]
-        raise TypeError(f"Registry key must be a string, got {type(key).__name__}")
-    with _registry_lock:
-        if key in _registry:
-            del _registry[key]
-            return True
-        return False
-
-
 def get_version_info() -> VersionInfo | None:
     """Get the VersionInfo from VersionRegistry based on current game version setting.
-
-    This function looks up the current game version in the VersionRegistry and
-    returns the corresponding VersionInfo object containing all metadata about
-    the version (address library config, XSE config, etc.).
 
     Returns:
         VersionInfo: The VersionInfo for the current game version, or None if
             the version could not be found in the registry.
-
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> info = GlobalRegistry.get_version_info()
-        >>> if info:
-        ...     print(f"Game version: {info.display_name}")
-        ...     if info.address_library:
-        ...         print(f"Address Library: {info.address_library.filename}")
-
-    .. versionadded:: 8.0.0
-        Uses the VersionRegistry for data-driven version metadata.
 
     """
     from ClassicLib.support.versions import get_version_registry
@@ -468,13 +380,10 @@ def get_version_info() -> VersionInfo | None:
     game_version = get_game_version()
 
     if game_version == "auto":
-        # For auto-detect, we can't determine the version without game file analysis
-        # Return None and let the caller handle detection
         return None
 
     registry = get_version_registry()
 
-    # Map the setting value to the short name used in VersionRegistry
     short_name_map = {
         "Original": "OG",
         "NextGen": "NG",
@@ -489,63 +398,30 @@ def get_version_info() -> VersionInfo | None:
 
 
 def get_config_suffix() -> str:
-    """Get the config key suffix based on game version from VersionRegistry.
-
-    This function returns the configuration suffix ("" or "VR") to use when
-    building YAML config keys like "Game_Info" or "GameVR_Info". The suffix
-    is determined from the VersionRegistry based on the current game version.
-
-    This is the preferred replacement for get_vr() that uses the VersionRegistry
-    instead of legacy boolean settings.
+    """Get the config key suffix based on game version.
 
     Returns:
         str: "VR" if the current game version is VR, otherwise empty string "".
 
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> suffix = GlobalRegistry.get_config_suffix()
-        >>> config_key = f"Game{suffix}_Info.Root_Folder_Game"
-        >>> # For VR: "GameVR_Info.Root_Folder_Game"
-        >>> # For non-VR: "Game_Info.Root_Folder_Game"
-
-    .. versionadded:: 8.0.0
-        Replaces get_vr() with VersionRegistry integration.
-
     """
     game_version = get_game_version()
 
-    # For VR, return "VR" suffix
     if game_version == "VR":
         return "VR"
 
-    # For auto-detect mode, check if a VersionInfo is available from registry
     if game_version == "auto":
         version_info = get_version_info()
         if version_info and version_info.is_vr:
             return "VR"
 
-    # For Original, NextGen, and auto (non-VR), return empty suffix
     return ""
 
 
 def is_vr_version() -> bool:
     """Check if the current game version is a VR version.
 
-    This function uses the VersionRegistry to determine if the current
-    game version is VR.
-
     Returns:
         bool: True if the current game version is VR, False otherwise.
-
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> if GlobalRegistry.is_vr_version():
-        ...     print("VR mode is active")
-        >>> else:
-        ...     print("Standard (non-VR) mode")
-
-    .. versionadded:: 8.0.0
-        Uses VersionRegistry for version determination.
 
     """
     return get_config_suffix() == "VR"
@@ -554,20 +430,10 @@ def is_vr_version() -> bool:
 class GlobalRegistry:
     """Namespace class providing access to global registry functions.
 
-    This class provides a convenient namespace for accessing all registry
-    functions. It allows code to use the pattern `GlobalRegistry.get_game()`
-    instead of importing functions directly.
-
     All methods are static and delegate to the module-level functions.
 
     Attributes:
         Keys: Reference to the Keys class for accessing registry key constants.
-
-    Example:
-        >>> from ClassicLib.core.registry import GlobalRegistry
-        >>> GlobalRegistry.register("my_key", "my_value")
-        >>> value = GlobalRegistry.get("my_key")
-        >>> game = GlobalRegistry.get_game()
 
     """
 

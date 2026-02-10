@@ -90,6 +90,10 @@ class Keys:
     IS_PRERELEASE: str
     GAME_VERSION: str  # New in v8.0 - replaces VR
     VERSION_AUTO_DETECTED: str  # New in v8.0
+    XSE_VALID: str
+    XSE_VERSION: str
+    ENB_PRESENT: str
+    GAME_VERSION_DETECTED: str
 
 def register(key: str, value: Any) -> None:
     """Register a value in the global registry.
@@ -153,6 +157,25 @@ def clear_all() -> None:
         >>> from classic_registry import clear_all
         >>> # In test teardown
         >>> clear_all()
+
+    """
+
+def unregister(key: str) -> bool:
+    """Remove a key from the global registry.
+
+    Args:
+        key: The registry key to remove.
+
+    Returns:
+        True if the key was found and removed, False if not present.
+
+    Example:
+        >>> from classic_registry import register, unregister
+        >>> register("temp", "value")
+        >>> unregister("temp")
+        True
+        >>> unregister("nonexistent")
+        False
 
     """
 
@@ -294,5 +317,48 @@ def is_version_auto_detected() -> bool:
         >>> print(f"Game version: {version}")
 
     .. versionadded:: 8.0.0
+
+    """
+
+def get_config_suffix() -> str:
+    """Get the config key suffix based on game version.
+
+    Returns "VR" if VR version, empty string otherwise. Used for building
+    YAML config keys like "Game_Info" vs "GameVR_Info".
+
+    Returns:
+        "VR" if VR version, "" otherwise.
+
+    """
+
+def is_vr_version() -> bool:
+    """Check if the current game version is VR.
+
+    Returns:
+        True if VR version, False otherwise.
+
+    """
+
+def is_xse_valid() -> bool:
+    """Check if XSE validation passed.
+
+    Returns:
+        True if XSE validation passed, False otherwise.
+
+    """
+
+def is_enb_present() -> bool:
+    """Check if ENB binaries are present.
+
+    Returns:
+        True if ENB binaries detected, False otherwise.
+
+    """
+
+def get_game_version_string() -> str:
+    """Get the game version as a string.
+
+    Returns:
+        The version string, defaulting to "auto" if not set.
 
     """

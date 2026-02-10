@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from ClassicLib.core.registry import GlobalRegistry, Keys, _registry, _registry_lock  # Import internal registry
+from ClassicLib.core.registry import GlobalRegistry, Keys
 
 if TYPE_CHECKING:
     import classic_config
@@ -40,8 +40,7 @@ def setup_global_registry(create_mock_yaml_config: Path):
         classic_config.clear_yaml_cache()  # pyright: ignore[reportAttributeAccessIssue]
 
     # Ensure registry is clear before each test
-    with _registry_lock:
-        _registry.clear()
+    GlobalRegistry.clear()
 
     # Register mock values
     GlobalRegistry.register(Keys.GAME, "Fallout4")
@@ -52,8 +51,7 @@ def setup_global_registry(create_mock_yaml_config: Path):
     yield
 
     # Ensure registry is clear after each test
-    with _registry_lock:
-        _registry.clear()
+    GlobalRegistry.clear()
 
     # Clear YAML cache after test
     if RUST_CONFIG_AVAILABLE and classic_config:

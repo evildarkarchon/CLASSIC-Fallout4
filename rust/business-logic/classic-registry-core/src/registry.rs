@@ -141,6 +141,36 @@ pub fn clear_all() {
     REGISTRY.clear();
 }
 
+/// Remove a key from the global registry.
+///
+/// # Arguments
+///
+/// * `key` - The registry key to remove
+///
+/// # Returns
+///
+/// Returns `true` if the key was found and removed, `false` if the key was not present.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, unregister, is_registered};
+///
+/// register("temp_key", "temp_value".to_string());
+/// assert!(is_registered("temp_key"));
+///
+/// assert!(unregister("temp_key"));
+/// assert!(!is_registered("temp_key"));
+///
+/// assert!(!unregister("nonexistent"));
+/// ```
+pub fn unregister<K>(key: K) -> bool
+where
+    K: AsRef<str>,
+{
+    REGISTRY.remove(key.as_ref()).is_some()
+}
+
 // ============================================================================
 // Convenience Functions - Match Python API
 // ============================================================================
@@ -362,6 +392,131 @@ pub fn get_local_dir() -> PathBuf {
         .unwrap_or_else(|| std::env::current_dir().unwrap_or_else(|_| PathBuf::from(".")))
 }
 
+/// Get the config key suffix based on game version.
+///
+/// Returns "VR" if the game version is VR (either via `GAME_VERSION` or the
+/// legacy `VR` key), otherwise returns an empty string. Used for building
+/// YAML config keys like `"Game_Info"` vs `"GameVR_Info"`.
+///
+/// # Returns
+///
+/// `"VR"` if the current version is VR, `""` otherwise.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, get_config_suffix, Keys, clear_all};
+///
+/// clear_all();
+/// assert_eq!(get_config_suffix(), "");
+///
+/// register(Keys::GAME_VERSION, "VR".to_string());
+/// assert_eq!(get_config_suffix(), "VR");
+/// ```
+#[allow(deprecated)]
+pub fn get_config_suffix() -> String {
+    // Check GAME_VERSION first
+    if let Some(version) = get::<_, String>(Keys::GAME_VERSION) {
+        if version == "VR" {
+            return "VR".to_string();
+        }
+    }
+    // Fall back to legacy VR key
+    if let Some(vr) = get::<_, String>(Keys::VR) {
+        if vr == "VR" {
+            return "VR".to_string();
+        }
+    }
+    String::new()
+}
+
+/// Check if the current game version is a VR version.
+///
+/// # Returns
+///
+/// `true` if the current version is VR, `false` otherwise.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, is_vr_version, Keys, clear_all};
+///
+/// clear_all();
+/// assert!(!is_vr_version());
+///
+/// register(Keys::GAME_VERSION, "VR".to_string());
+/// assert!(is_vr_version());
+/// ```
+pub fn is_vr_version() -> bool {
+    get_config_suffix() == "VR"
+}
+
+/// Check if XSE validation passed.
+///
+/// # Returns
+///
+/// `true` if XSE validation passed, `false` if not set or failed.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, is_xse_valid, Keys, clear_all};
+///
+/// clear_all();
+/// assert!(!is_xse_valid());
+///
+/// register(Keys::XSE_VALID, true);
+/// assert!(is_xse_valid());
+/// ```
+pub fn is_xse_valid() -> bool {
+    get::<_, bool>(Keys::XSE_VALID).unwrap_or(false)
+}
+
+/// Check if ENB binaries are present.
+///
+/// # Returns
+///
+/// `true` if ENB binaries were detected, `false` if not set or not detected.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, is_enb_present, Keys, clear_all};
+///
+/// clear_all();
+/// assert!(!is_enb_present());
+///
+/// register(Keys::ENB_PRESENT, true);
+/// assert!(is_enb_present());
+/// ```
+pub fn is_enb_present() -> bool {
+    get::<_, bool>(Keys::ENB_PRESENT).unwrap_or(false)
+}
+
+/// Get the game version as a string.
+///
+/// Named `get_game_version_string` to avoid ambiguity with the existing
+/// generic `get_game_version<T>()`.
+///
+/// # Returns
+///
+/// The game version string, defaulting to `"auto"` if not set.
+///
+/// # Examples
+///
+/// ```rust
+/// use classic_registry_core::{register, get_game_version_string, Keys, clear_all};
+///
+/// clear_all();
+/// assert_eq!(get_game_version_string(), "auto");
+///
+/// register(Keys::GAME_VERSION, "NextGen".to_string());
+/// assert_eq!(get_game_version_string(), "NextGen");
+/// ```
+pub fn get_game_version_string() -> String {
+    get::<_, String>(Keys::GAME_VERSION).unwrap_or_else(|| "auto".to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -455,5 +610,127 @@ mod tests {
         register("key", "second".to_string());
         let value2: Option<String> = get("key");
         assert_eq!(value2, Some("second".to_string()));
+    }
+
+    #[test]
+    #[serial]
+    fn test_unregister_existing() {
+        clear_all();
+
+        register("temp_key", "temp_value".to_string());
+        assert!(is_registered("temp_key"));
+
+        let removed = unregister("temp_key");
+        assert!(removed);
+        assert!(!is_registered("temp_key"));
+    }
+
+    #[test]
+    #[serial]
+    fn test_unregister_nonexistent() {
+        clear_all();
+
+        let removed = unregister("nonexistent");
+        assert!(!removed);
+    }
+
+    #[test]
+    #[serial]
+    fn test_get_config_suffix_default() {
+        clear_all();
+        assert_eq!(get_config_suffix(), "");
+    }
+
+    #[test]
+    #[serial]
+    fn test_get_config_suffix_vr_via_game_version() {
+        clear_all();
+        register(Keys::GAME_VERSION, "VR".to_string());
+        assert_eq!(get_config_suffix(), "VR");
+    }
+
+    #[test]
+    #[serial]
+    #[allow(deprecated)]
+    fn test_get_config_suffix_vr_via_legacy_key() {
+        clear_all();
+        register(Keys::VR, "VR".to_string());
+        assert_eq!(get_config_suffix(), "VR");
+    }
+
+    #[test]
+    #[serial]
+    fn test_get_config_suffix_non_vr() {
+        clear_all();
+        register(Keys::GAME_VERSION, "NextGen".to_string());
+        assert_eq!(get_config_suffix(), "");
+    }
+
+    #[test]
+    #[serial]
+    fn test_is_vr_version_default() {
+        clear_all();
+        assert!(!is_vr_version());
+    }
+
+    #[test]
+    #[serial]
+    fn test_is_vr_version_true() {
+        clear_all();
+        register(Keys::GAME_VERSION, "VR".to_string());
+        assert!(is_vr_version());
+    }
+
+    #[test]
+    #[serial]
+    fn test_is_xse_valid_default() {
+        clear_all();
+        assert!(!is_xse_valid());
+    }
+
+    #[test]
+    #[serial]
+    fn test_is_xse_valid_set_true() {
+        clear_all();
+        register(Keys::XSE_VALID, true);
+        assert!(is_xse_valid());
+    }
+
+    #[test]
+    #[serial]
+    fn test_is_enb_present_default() {
+        clear_all();
+        assert!(!is_enb_present());
+    }
+
+    #[test]
+    #[serial]
+    fn test_is_enb_present_set_true() {
+        clear_all();
+        register(Keys::ENB_PRESENT, true);
+        assert!(is_enb_present());
+    }
+
+    #[test]
+    #[serial]
+    fn test_get_game_version_string_default() {
+        clear_all();
+        assert_eq!(get_game_version_string(), "auto");
+    }
+
+    #[test]
+    #[serial]
+    fn test_get_game_version_string_set() {
+        clear_all();
+        register(Keys::GAME_VERSION, "NextGen".to_string());
+        assert_eq!(get_game_version_string(), "NextGen");
+    }
+
+    #[test]
+    #[serial]
+    fn test_get_game_version_string_vr() {
+        clear_all();
+        register(Keys::GAME_VERSION, "VR".to_string());
+        assert_eq!(get_game_version_string(), "VR");
     }
 }

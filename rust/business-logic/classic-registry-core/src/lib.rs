@@ -41,7 +41,7 @@ mod keys;
 mod registry;
 
 pub use keys::Keys;
-pub use registry::{clear_all, get, is_registered, register};
+pub use registry::{clear_all, get, is_registered, register, unregister};
 
 // Convenience functions matching Python API
 #[allow(deprecated)]
@@ -52,6 +52,11 @@ pub use registry::{
 
 // New version-aware convenience functions
 pub use registry::{get_game_version, is_version_auto_detected};
+
+// Additional convenience functions
+pub use registry::{
+    get_config_suffix, get_game_version_string, is_enb_present, is_vr_version, is_xse_valid,
+};
 
 #[cfg(test)]
 mod tests {

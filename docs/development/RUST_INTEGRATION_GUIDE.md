@@ -143,16 +143,15 @@ yaml_ops = get_yaml_operations()
 ### Checking Availability
 
 ```python
-# Module-level flags
+# Module-level flags (classic_registry is always available - mandatory)
+import classic_registry
 from ClassicLib import (
-    RUST_REGISTRY_AVAILABLE,
     RUST_PERF_AVAILABLE,
     RUST_SETTINGS_AVAILABLE,
     RUST_MESSAGE_AVAILABLE,
 )
 
-if RUST_REGISTRY_AVAILABLE:
-    print("Using Rust registry (20x faster)")
+print("Using Rust registry (mandatory, always available)")
 
 # Component detector
 from ClassicLib.integration.detector import detect_component

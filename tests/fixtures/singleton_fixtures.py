@@ -27,9 +27,15 @@ def reset_all_singletons_impl() -> Generator[None, None, None]:
     # Snapshot registry baseline so we can restore after teardown clears it
     saved_registry: dict | None = None
     try:
-        import ClassicLib.core.registry as registry_mod
+        from ClassicLib.core.registry import GlobalRegistry, Keys
 
-        saved_registry = dict(registry_mod._registry)
+        # Save known key values via public API (no internal dict access)
+        _all_keys = [attr for attr in dir(Keys) if not attr.startswith("_") and isinstance(getattr(Keys, attr), str)]
+        saved_registry = {}
+        for attr in _all_keys:
+            key_value = getattr(Keys, attr)
+            if GlobalRegistry.is_registered(key_value):
+                saved_registry[key_value] = GlobalRegistry.get(key_value)
     except ImportError:
         pass
 
@@ -55,9 +61,10 @@ def reset_all_singletons_impl() -> Generator[None, None, None]:
     # 5. Restore registry baseline (session fixture essentials)
     if saved_registry is not None:
         try:
-            import ClassicLib.core.registry as registry_mod
+            from ClassicLib.core.registry import GlobalRegistry
 
-            registry_mod._registry.update(saved_registry)
+            for key, value in saved_registry.items():
+                GlobalRegistry.register(key, value)
         except ImportError:
             pass
 

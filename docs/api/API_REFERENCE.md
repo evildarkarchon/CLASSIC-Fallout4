@@ -57,7 +57,7 @@ from ClassicLib import (
 
 # Check Rust acceleration availability
 from ClassicLib import (
-    RUST_REGISTRY_AVAILABLE, classic_registry,
+    classic_registry,  # Mandatory - always available
     RUST_PERF_AVAILABLE, classic_perf,
     RUST_SETTINGS_AVAILABLE, rust_settings,
     RUST_MESSAGE_AVAILABLE, classic_message,
@@ -858,7 +858,7 @@ CLASSIC uses Rust for performance-critical operations, providing 10-150x speedup
 
 ```python
 from ClassicLib import (
-    RUST_REGISTRY_AVAILABLE,  # GlobalRegistry (15-25x)
+    classic_registry,         # GlobalRegistry (mandatory, Rust-backed)
     RUST_PERF_AVAILABLE,      # PerformanceMonitor
     RUST_PYBRIDGE_AVAILABLE,  # Async bridge
     RUST_SETTINGS_AVAILABLE,  # YAML settings (15-30x)

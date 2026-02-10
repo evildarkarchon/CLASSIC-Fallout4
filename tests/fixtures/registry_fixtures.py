@@ -16,7 +16,6 @@ from unittest.mock import MagicMock
 import pytest
 
 from ClassicLib.core.logger import logger
-import ClassicLib.core.registry as _registry_mod
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import YamlSettingsCache
 from ClassicLib.messaging import MessageHandler, init_message_handler
@@ -371,11 +370,22 @@ def mock_global_registry() -> Generator[ModuleType, None, None]:
     multiple tests. Prefer the function-scoped 'global_registry' fixture
     for better isolation.
     """
+    # Save original values for known keys via public API
+    known_keys = [
+        GlobalRegistry.Keys.GAME,
+        GlobalRegistry.Keys.VR,
+        GlobalRegistry.Keys.IS_GUI_MODE,
+        GlobalRegistry.Keys.LOCAL_DIR,
+        GlobalRegistry.Keys.GAME_PATH,
+        GlobalRegistry.Keys.DOCS_PATH,
+        GlobalRegistry.Keys.YAML_CACHE,
+        GlobalRegistry.Keys.IS_PRERELEASE,
+        GlobalRegistry.Keys.OPEN_FILE_FUNC,
+    ]
     original_values = {}
-
-    # Save original values
-    for key in _registry_mod._registry:
-        original_values[key] = GlobalRegistry.get(key)
+    for key in known_keys:
+        if GlobalRegistry.is_registered(key):
+            original_values[key] = GlobalRegistry.get(key)
 
     # Set test values
     GlobalRegistry.register(GlobalRegistry.Keys.GAME, "Fallout4")
@@ -398,28 +408,34 @@ def setup_global_registry_session() -> Generator[None, None, None]:
     components try to access registry values.
 
     This fixture is automatically used by tests that need GlobalRegistry.
-
-    Note: This fixture uses direct _registry access for session-scoped operations
-    where copy() semantics are needed. The public clear() API is preferred for
-    function-scoped fixtures.
     """
-    # Store original registry state for restoration
-    # Use direct access for copy semantics (needed for restoration)
-    original_registry = dict(_registry_mod._registry)
+    # Save original values for known keys via public API
+    known_keys = [
+        GlobalRegistry.Keys.YAML_CACHE,
+        GlobalRegistry.Keys.GAME,
+        GlobalRegistry.Keys.VR,
+        GlobalRegistry.Keys.IS_GUI_MODE,
+        GlobalRegistry.Keys.LOCAL_DIR,
+        GlobalRegistry.Keys.GAME_PATH,
+        GlobalRegistry.Keys.DOCS_PATH,
+        GlobalRegistry.Keys.OPEN_FILE_FUNC,
+        GlobalRegistry.Keys.IS_PRERELEASE,
+    ]
+    original_values: dict[str, Any] = {}
+    for key in known_keys:
+        if GlobalRegistry.is_registered(key):
+            original_values[key] = GlobalRegistry.get(key)
 
     try:
         # Clear registry to start fresh using the public API
         GlobalRegistry.clear()
 
         # Initialize YAML cache (many components depend on this)
-        # Check if yaml_cache already exists in the module to avoid re-initialization issues
         try:
             from ClassicLib.io.yaml import yaml_cache
 
-            # Re-register the existing instance
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
         except ImportError:
-            # If import fails, create a new instance
             yaml_cache = YamlSettingsCache()
             GlobalRegistry.register(GlobalRegistry.Keys.YAML_CACHE, yaml_cache)
 
@@ -445,10 +461,10 @@ def setup_global_registry_session() -> Generator[None, None, None]:
         yield
 
     finally:
-        # Restore original registry state
-        # Use direct access for update semantics (needed for restoration)
-        _registry_mod._registry.clear()
-        _registry_mod._registry.update(original_registry)
+        # Restore original registry state via public API
+        GlobalRegistry.clear()
+        for key, value in original_values.items():
+            GlobalRegistry.register(key, value)
 
 
 @pytest.fixture
@@ -646,7 +662,7 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
                 if hasattr(YamlSettingsCacheModule, "yaml_cache"):
                     delattr(YamlSettingsCacheModule, "yaml_cache")
                 if GlobalRegistry.is_registered(GlobalRegistry.Keys.YAML_CACHE):
-                    _registry_mod._registry.pop(GlobalRegistry.Keys.YAML_CACHE, None)
+                    GlobalRegistry.unregister(GlobalRegistry.Keys.YAML_CACHE)
 
 
 @pytest.fixture

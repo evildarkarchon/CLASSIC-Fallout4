@@ -80,6 +80,22 @@ impl Keys {
 
     #[classattr]
     const IS_PRERELEASE: &'static str = classic_registry_core::Keys::IS_PRERELEASE;
+
+    /// XSE validation status flag.
+    #[classattr]
+    const XSE_VALID: &'static str = classic_registry_core::Keys::XSE_VALID;
+
+    /// Detected XSE version string.
+    #[classattr]
+    const XSE_VERSION: &'static str = classic_registry_core::Keys::XSE_VERSION;
+
+    /// ENB binaries presence flag.
+    #[classattr]
+    const ENB_PRESENT: &'static str = classic_registry_core::Keys::ENB_PRESENT;
+
+    /// Detected game executable version.
+    #[classattr]
+    const GAME_VERSION_DETECTED: &'static str = classic_registry_core::Keys::GAME_VERSION_DETECTED;
 }
 
 /// Register a value in the global registry.
@@ -168,6 +184,20 @@ fn clear_all() {
     classic_registry_core::clear_all();
 }
 
+/// Remove a key from the global registry.
+///
+/// # Arguments
+///
+/// * `key` - The registry key to remove
+///
+/// # Returns
+///
+/// `True` if the key was found and removed, `False` if it was not present
+#[pyfunction]
+fn unregister(key: String) -> bool {
+    classic_registry_core::unregister(key)
+}
+
 // ============================================================================
 // Convenience Functions
 // ============================================================================
@@ -187,7 +217,17 @@ fn clear_all() {
 /// print(f"Current game: {game}")
 /// ```
 #[pyfunction]
-fn get_game() -> String {
+fn get_game(py: Python) -> String {
+    // Try PyObjectWrapper first (Python-stored value), then native
+    if let Some(wrapper) =
+        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME)
+    {
+        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
+            if !value.is_empty() {
+                return value;
+            }
+        }
+    }
     classic_registry_core::get_game()
 }
 
@@ -205,8 +245,10 @@ fn get_game() -> String {
 /// registry.set_game("Skyrim")
 /// ```
 #[pyfunction]
-fn set_game(game_name: String) {
-    classic_registry_core::set_game(game_name);
+fn set_game(py: Python, game_name: String) {
+    // Store as PyObjectWrapper so get() and get_game() can both retrieve it
+    let py_str = PyObjectWrapper::new(game_name.into_pyobject(py).unwrap().into_any().unbind());
+    classic_registry_core::register(classic_registry_core::Keys::GAME.to_string(), py_str);
 }
 
 /// Check if the application is running in GUI mode.
@@ -326,7 +368,15 @@ fn get_vr(py: Python) -> String {
 ///     print("Version was auto-detected")
 /// ```
 #[pyfunction]
-fn is_version_auto_detected() -> bool {
+fn is_version_auto_detected(py: Python) -> bool {
+    // Try PyObjectWrapper first (Python-stored value), then native
+    if let Some(wrapper) = classic_registry_core::get::<_, PyObjectWrapper>(
+        classic_registry_core::Keys::VERSION_AUTO_DETECTED,
+    ) {
+        if let Ok(value) = wrapper.get(py).extract::<bool>(py) {
+            return value;
+        }
+    }
     classic_registry_core::is_version_auto_detected()
 }
 
@@ -345,10 +395,94 @@ fn is_version_auto_detected() -> bool {
 /// print(f"Local directory: {local_dir}")
 /// ```
 #[pyfunction]
-fn get_local_dir() -> String {
+fn get_local_dir(py: Python) -> String {
+    // Try PyObjectWrapper first (Python-stored value), then native
+    if let Some(wrapper) =
+        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::LOCAL_DIR)
+    {
+        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
+            if !value.is_empty() {
+                return value;
+            }
+        }
+    }
     classic_registry_core::get_local_dir()
         .to_string_lossy()
         .to_string()
+}
+
+/// Get the config key suffix based on game version.
+///
+/// Returns "VR" if VR version, empty string otherwise.
+#[pyfunction]
+fn get_config_suffix(py: Python) -> String {
+    // Try PyObjectWrapper first for GAME_VERSION
+    if let Some(wrapper) =
+        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME_VERSION)
+    {
+        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
+            if value == "VR" {
+                return "VR".to_string();
+            }
+            if !value.is_empty() {
+                return String::new();
+            }
+        }
+    }
+    // Fall back to native check (also checks legacy VR key)
+    classic_registry_core::get_config_suffix()
+}
+
+/// Check if the current game version is VR.
+#[pyfunction]
+fn is_vr_version(py: Python) -> bool {
+    get_config_suffix(py) == "VR"
+}
+
+/// Check if XSE validation passed.
+#[pyfunction]
+fn is_xse_valid(py: Python) -> bool {
+    // Try PyObjectWrapper first, then native
+    if let Some(wrapper) =
+        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::XSE_VALID)
+    {
+        if let Ok(value) = wrapper.get(py).extract::<bool>(py) {
+            return value;
+        }
+    }
+    classic_registry_core::is_xse_valid()
+}
+
+/// Check if ENB binaries are present.
+#[pyfunction]
+fn is_enb_present(py: Python) -> bool {
+    // Try PyObjectWrapper first, then native
+    if let Some(wrapper) =
+        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::ENB_PRESENT)
+    {
+        if let Ok(value) = wrapper.get(py).extract::<bool>(py) {
+            return value;
+        }
+    }
+    classic_registry_core::is_enb_present()
+}
+
+/// Get the game version as a string.
+///
+/// Returns the version string, defaulting to "auto" if not set.
+#[pyfunction]
+fn get_game_version_string(py: Python) -> String {
+    // Try PyObjectWrapper first, then native
+    if let Some(wrapper) =
+        classic_registry_core::get::<_, PyObjectWrapper>(classic_registry_core::Keys::GAME_VERSION)
+    {
+        if let Ok(value) = wrapper.get(py).extract::<String>(py) {
+            if !value.is_empty() {
+                return value;
+            }
+        }
+    }
+    classic_registry_core::get_game_version_string()
 }
 
 /// Python module for global registry access.
@@ -383,6 +517,7 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(is_registered, m)?)?;
     m.add_function(wrap_pyfunction!(get, m)?)?;
     m.add_function(wrap_pyfunction!(clear_all, m)?)?;
+    m.add_function(wrap_pyfunction!(unregister, m)?)?;
 
     // Add convenience functions
     m.add_function(wrap_pyfunction!(get_game, m)?)?;
@@ -396,6 +531,11 @@ fn classic_registry(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Add new version-aware functions
     m.add_function(wrap_pyfunction!(is_version_auto_detected, m)?)?;
+    m.add_function(wrap_pyfunction!(get_config_suffix, m)?)?;
+    m.add_function(wrap_pyfunction!(is_vr_version, m)?)?;
+    m.add_function(wrap_pyfunction!(is_xse_valid, m)?)?;
+    m.add_function(wrap_pyfunction!(is_enb_present, m)?)?;
+    m.add_function(wrap_pyfunction!(get_game_version_string, m)?)?;
 
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

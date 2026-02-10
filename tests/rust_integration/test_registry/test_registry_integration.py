@@ -15,14 +15,20 @@ try:
         Keys,
         clear_all,
         get,
+        get_config_suffix,
         get_game,
+        get_game_version_string,
         get_local_dir,
         get_vr,
         get_yaml_cache,
+        is_enb_present,
         is_gui_mode,
         is_registered,
+        is_vr_version,
+        is_xse_valid,
         register,
         set_game,
+        unregister,
     )
 
     REGISTRY_AVAILABLE = True
@@ -35,14 +41,20 @@ except ImportError as e:
     Keys: Any = None
     clear_all: Any = None
     get: Any = None
+    get_config_suffix: Any = None
     get_game: Any = None
+    get_game_version_string: Any = None
     get_local_dir: Any = None
     get_vr: Any = None
     get_yaml_cache: Any = None
+    is_enb_present: Any = None
     is_gui_mode: Any = None
     is_registered: Any = None
+    is_vr_version: Any = None
+    is_xse_valid: Any = None
     register: Any = None
     set_game: Any = None
+    unregister: Any = None
 
 
 pytestmark = [
@@ -92,6 +104,12 @@ class TestKeys:
             "GAME",
             "LOCAL_DIR",
             "IS_PRERELEASE",
+            "GAME_VERSION",
+            "VERSION_AUTO_DETECTED",
+            "XSE_VALID",
+            "XSE_VERSION",
+            "ENB_PRESENT",
+            "GAME_VERSION_DETECTED",
         ]
 
         for key_name in expected_keys:
@@ -324,6 +342,121 @@ class TestAPICompatibility:
         # Should accept (key) and return bool
         result = is_registered("test")
         assert isinstance(result, bool)
+
+
+class TestUnregister:
+    """Test unregister() functionality."""
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_unregister_existing_key(self):
+        """Test unregistering an existing key returns True."""
+        register("temp_key", "temp_value")
+        assert is_registered("temp_key")
+        result = unregister("temp_key")
+        assert result is True
+        assert not is_registered("temp_key")
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_unregister_nonexistent_key(self):
+        """Test unregistering a non-existent key returns False."""
+        result = unregister("nonexistent_key")
+        assert result is False
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_unregister_after_clear(self):
+        """Test unregistering after clear_all returns False."""
+        register("key1", "value1")
+        clear_all()
+        result = unregister("key1")
+        assert result is False
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_unregister_value_no_longer_retrievable(self):
+        """Test that unregistered value returns None from get()."""
+        register("key1", "value1")
+        unregister("key1")
+        assert get("key1") is None
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_unregister_does_not_affect_other_keys(self):
+        """Test that unregistering one key doesn't affect others."""
+        register("key1", "value1")
+        register("key2", "value2")
+        unregister("key1")
+        assert not is_registered("key1")
+        assert is_registered("key2")
+        assert get("key2") == "value2"
+
+
+class TestNewConvenienceFunctions:
+    """Test newly added convenience functions."""
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_get_config_suffix_default(self):
+        """Test get_config_suffix() returns empty string by default."""
+        assert get_config_suffix() == ""
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_get_config_suffix_vr_via_game_version(self):
+        """Test get_config_suffix() returns 'VR' when GAME_VERSION is 'VR'."""
+        register(Keys.GAME_VERSION, "VR")
+        assert get_config_suffix() == "VR"
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_get_config_suffix_non_vr(self):
+        """Test get_config_suffix() returns '' for non-VR version."""
+        register(Keys.GAME_VERSION, "NextGen")
+        assert get_config_suffix() == ""
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_is_vr_version_default(self):
+        """Test is_vr_version() returns False by default."""
+        assert is_vr_version() is False
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_is_vr_version_true(self):
+        """Test is_vr_version() returns True when VR is set."""
+        register(Keys.GAME_VERSION, "VR")
+        assert is_vr_version() is True
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_is_xse_valid_default(self):
+        """Test is_xse_valid() returns False by default."""
+        assert is_xse_valid() is False
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_is_xse_valid_true(self):
+        """Test is_xse_valid() returns True when set."""
+        register(Keys.XSE_VALID, True)
+        assert is_xse_valid() is True
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_is_enb_present_default(self):
+        """Test is_enb_present() returns False by default."""
+        assert is_enb_present() is False
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_is_enb_present_true(self):
+        """Test is_enb_present() returns True when set."""
+        register(Keys.ENB_PRESENT, True)
+        assert is_enb_present() is True
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_get_game_version_string_default(self):
+        """Test get_game_version_string() returns 'auto' by default."""
+        assert get_game_version_string() == "auto"
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_get_game_version_string_set(self):
+        """Test get_game_version_string() returns registered value."""
+        register(Keys.GAME_VERSION, "NextGen")
+        assert get_game_version_string() == "NextGen"
+
+    @pytest.mark.skipif(not REGISTRY_AVAILABLE, reason="Registry not available")
+    def test_get_game_version_string_vr(self):
+        """Test get_game_version_string() with VR value."""
+        register(Keys.GAME_VERSION, "VR")
+        assert get_game_version_string() == "VR"
 
 
 if __name__ == "__main__":

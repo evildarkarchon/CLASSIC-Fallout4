@@ -125,6 +125,26 @@ impl Keys {
     ///
     /// Boolean flag indicating whether this is a prerelease version.
     pub const IS_PRERELEASE: &'static str = "is_prerelease";
+
+    /// XSE validation status.
+    ///
+    /// Boolean flag indicating whether XSE (Script Extender) validation passed.
+    pub const XSE_VALID: &'static str = "xse_validation_passed";
+
+    /// Detected XSE version.
+    ///
+    /// Stores the detected version string of the Script Extender.
+    pub const XSE_VERSION: &'static str = "xse_detected_version";
+
+    /// ENB binaries presence flag.
+    ///
+    /// Boolean flag indicating whether ENB binaries were detected.
+    pub const ENB_PRESENT: &'static str = "enb_binaries_present";
+
+    /// Detected game executable version.
+    ///
+    /// Stores the version string of the game executable.
+    pub const GAME_VERSION_DETECTED: &'static str = "game_exe_version";
 }
 
 #[cfg(test)]
@@ -149,6 +169,10 @@ mod tests {
             Keys::VERSION_AUTO_DETECTED,
             Keys::LOCAL_DIR,
             Keys::IS_PRERELEASE,
+            Keys::XSE_VALID,
+            Keys::XSE_VERSION,
+            Keys::ENB_PRESENT,
+            Keys::GAME_VERSION_DETECTED,
         ];
 
         let mut unique_keys = keys.clone();
