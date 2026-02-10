@@ -52,7 +52,8 @@ class TestGILReleaseConcurrency:
         # If GIL released: concurrent_time ~ single_time (with overhead)
         # If GIL held: concurrent_time ~ 4 * single_time
         # Allow 2.5x single time as threshold (imperfect parallelism)
-        max_expected = single_time * 2.5
+        # Add 15ms floor for thread scheduling overhead on CI runners
+        max_expected = single_time * 2.5 + 0.015
         assert concurrent_time < max_expected, (
             f"Operations appear sequential (GIL not released). "
             f"Single: {single_time:.3f}s, Concurrent: {concurrent_time:.3f}s, "
@@ -143,7 +144,8 @@ class TestGILReleaseConcurrency:
         _ = [f.result() for f in as_completed(futures)]
         concurrent_time = time.perf_counter() - start_concurrent
 
-        max_expected = single_time * 2.5
+        # Add 15ms floor for thread scheduling overhead on CI runners
+        max_expected = single_time * 2.5 + 0.015
         assert concurrent_time < max_expected, (
             f"Mod detection appears sequential. Single: {single_time:.3f}s, Concurrent: {concurrent_time:.3f}s"
         )

@@ -245,7 +245,7 @@ mod tests {
     fn test_pydict_to_indexmap_vecstr() {
         Python::attach(|py| {
             let dict = PyDict::new(py);
-            let list = pyo3::types::PyList::new(py, &["a", "b", "c"]).unwrap();
+            let list = pyo3::types::PyList::new(py, ["a", "b", "c"]).unwrap();
             dict.set_item("key", list).unwrap();
 
             let result = pydict_to_indexmap_vecstr(&dict).unwrap();

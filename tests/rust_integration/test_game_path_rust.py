@@ -136,7 +136,11 @@ class TestPythonWrapperThin:
 
     def test_rust_finder_used_directly(self) -> None:
         """Verify Rust GamePathFinder is imported."""
-        source = Path("j:/CLASSIC-Fallout4/ClassicLib/support/game_path.py").read_text()
+        import ClassicLib.support.game_path as gp
+
+        source_path = Path(gp.__file__) if gp.__file__ else None
+        assert source_path is not None, "Cannot locate game_path.py source"
+        source = source_path.read_text()
         assert "from classic_path import" in source or "import classic_path" in source
 
 
@@ -145,7 +149,11 @@ class TestGlobalRegistryIntegration:
 
     def test_sync_path_registers_to_registry(self) -> None:
         """Verify find_game_path registers detected path to GlobalRegistry."""
-        source = Path("j:/CLASSIC-Fallout4/ClassicLib/support/game_path.py").read_text()
+        import ClassicLib.support.game_path as gp
+
+        source_path = Path(gp.__file__) if gp.__file__ else None
+        assert source_path is not None, "Cannot locate game_path.py source"
+        source = source_path.read_text()
         # Should have at least 2 registrations (sync and async)
         registration_count = source.count("GlobalRegistry.register")
         game_path_registrations = source.count("GlobalRegistry.Keys.GAME_PATH") + source.count("Keys.GAME_PATH")
