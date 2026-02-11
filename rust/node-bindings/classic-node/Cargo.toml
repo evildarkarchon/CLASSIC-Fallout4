@@ -15,17 +15,47 @@ crate-type = ["cdylib"]
 napi = { version = "3", default-features = false, features = ["async", "napi9", "serde-json"] }
 napi-derive = "3"
 
-# CLASSIC core dependencies
-classic-shared-core = { path = "../../foundation/classic-shared-core" }
-classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
-yaml-rust2 = { workspace = true }
+# Serialization & data
 serde = { workspace = true }
 serde_json = { workspace = true }
-
-classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+yaml-rust2 = { workspace = true }
+indexmap = { workspace = true }
 tokio = { workspace = true }
 thiserror = { workspace = true }
-indexmap = { workspace = true }
+semver = { workspace = true }
+log = { workspace = true }
+walkdir = { workspace = true }
+
+# Foundation
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# Wave 1: Core Infrastructure
+classic-perf-core = { path = "../../business-logic/classic-perf-core" }
+classic-registry-core = { path = "../../business-logic/classic-registry-core" }
+classic-constants-core = { path = "../../business-logic/classic-constants-core" }
+classic-version-core = { path = "../../business-logic/classic-version-core" }
+classic-message-core = { path = "../../business-logic/classic-message-core" }
+
+# Wave 2: Existing modules (already partial)
+classic-yaml-core = { path = "../../business-logic/classic-yaml-core" }
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+
+# Wave 3: File I/O & Data
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-database-core = { path = "../../business-logic/classic-database-core" }
+classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+classic-config-core = { path = "../../business-logic/classic-config-core" }
+
+# Wave 4: Game Analysis
+classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
+classic-path-core = { path = "../../business-logic/classic-path-core" }
+classic-xse-core = { path = "../../business-logic/classic-xse-core" }
+classic-version-registry-core = { path = "../../business-logic/classic-version-registry-core" }
+
+# Wave 5: Utilities & Polish
+classic-resource-core = { path = "../../business-logic/classic-resource-core" }
+classic-web-core = { path = "../../business-logic/classic-web-core" }
+classic-update-core = { path = "../../business-logic/classic-update-core" }
 
 [build-dependencies]
 napi-build = "2"

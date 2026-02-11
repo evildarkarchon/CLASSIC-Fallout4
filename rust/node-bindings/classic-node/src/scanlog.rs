@@ -2,8 +2,23 @@
 //!
 //! Exposes crash log analysis configuration and result types to JavaScript/TypeScript.
 //! Full orchestration (process_log) is exposed as an async function that returns a Promise.
+//!
+//! ## Async Pattern
+//! All async functions respect the ONE RUNTIME RULE by spawning work on the shared
+//! Tokio runtime via `classic_shared_core::get_runtime()`.
+//!
+//! ## Sync Utilities
+//! Parsing utilities (`parseLogSegments`, `extractFormIds`, `extractPluginList`,
+//! `detectCrashPattern`) are synchronous and operate on string content directly.
 
+use classic_scanlog_core::OrchestratorCore;
 use classic_scanlog_core::orchestrator;
+use classic_scanlog_core::parser::LogParser;
+
+/// Convert any Display error to a napi::Error.
+fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
+    napi::Error::from_reason(format!("{err}"))
+}
 
 /// JavaScript-compatible analysis configuration.
 ///
@@ -50,6 +65,25 @@ pub struct JsAnalysisResult {
     pub suspect_count: u32,
 }
 
+/// JavaScript-compatible parsed log segments.
+///
+/// Contains the various sections extracted from a crash log.
+#[napi(object)]
+pub struct JsLogSegments {
+    /// Header/compatibility section lines
+    pub header: Vec<String>,
+    /// System specs section lines
+    pub system: Vec<String>,
+    /// Probable call stack section lines
+    pub stack: Vec<String>,
+    /// Modules section lines
+    pub modules: Vec<String>,
+    /// Plugins section lines
+    pub plugins: Vec<String>,
+    /// Number of segments found
+    pub segment_count: u32,
+}
+
 /// Create a new analysis configuration with defaults.
 ///
 /// Returns a JavaScript object with the configuration fields.
@@ -66,6 +100,179 @@ pub fn create_analysis_config(game: String, vr_mode: bool) -> JsAnalysisConfig {
         simplify_logs: false,
     }
 }
+
+// ============================================================================
+// Async Analysis Functions
+// ============================================================================
+
+/// Process a single crash log file and return the analysis result.
+///
+/// Reads the crash log at `logPath`, runs the full analysis pipeline, and
+/// returns a Promise that resolves to a `JsAnalysisResult`.
+///
+/// Respects the ONE RUNTIME RULE: spawns work on the shared Tokio runtime.
+#[napi]
+pub async fn process_log(
+    log_path: String,
+    config: JsAnalysisConfig,
+) -> napi::Result<JsAnalysisResult> {
+    let core_config = _js_config_to_core(&config);
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    let result = handle
+        .spawn(async move {
+            let orchestrator = OrchestratorCore::new(core_config)
+                .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
+            orchestrator
+                .process_log(log_path)
+                .await
+                .map_err(|e| format!("Analysis error: {e}"))
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(_core_result_to_js(&result))
+}
+
+/// Process multiple crash log files concurrently and return all results.
+///
+/// Each log is analyzed independently; failures do not stop processing of
+/// remaining logs. Failed analyses appear in the result array with
+/// `success: false` and an error message.
+///
+/// Respects the ONE RUNTIME RULE: spawns work on the shared Tokio runtime.
+#[napi]
+pub async fn process_logs_batch(
+    log_paths: Vec<String>,
+    config: JsAnalysisConfig,
+) -> napi::Result<Vec<JsAnalysisResult>> {
+    let core_config = _js_config_to_core(&config);
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    let results = handle
+        .spawn(async move {
+            let orchestrator = OrchestratorCore::new(core_config)
+                .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
+            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, None).await)
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(results.iter().map(_core_result_to_js).collect())
+}
+
+// ============================================================================
+// Synchronous Parsing Utilities
+// ============================================================================
+
+/// Parse crash log content into structured segments.
+///
+/// Splits the log content into sections (header, system, stack, modules, plugins)
+/// using the SIMD-optimized parser. This is a synchronous operation.
+///
+/// @param content - The full crash log file content as a string.
+/// @returns A `JsLogSegments` object with the extracted sections.
+#[napi]
+pub fn parse_log_segments(content: String) -> napi::Result<JsLogSegments> {
+    let parser = LogParser::new(None).map_err(to_napi_err)?;
+
+    let lines: Vec<String> = content.lines().map(String::from).collect();
+
+    let all_sections = parser.parse_all_sections(&lines);
+
+    Ok(JsLogSegments {
+        header: all_sections
+            .get("compatibility")
+            .cloned()
+            .unwrap_or_default(),
+        system: all_sections.get("system").cloned().unwrap_or_default(),
+        stack: all_sections.get("callstack").cloned().unwrap_or_default(),
+        modules: all_sections.get("modules").cloned().unwrap_or_default(),
+        plugins: all_sections.get("plugins").cloned().unwrap_or_default(),
+        segment_count: all_sections.len() as u32,
+    })
+}
+
+/// Extract FormID hex strings from crash log content.
+///
+/// Searches for Bethesda game FormIDs (8-character hex identifiers) in the
+/// provided text. Uses SIMD-optimized regex matching.
+///
+/// @param content - The crash log content (or a section of it) to search.
+/// @returns An array of FormID strings (hex values without "0x" prefix).
+#[napi]
+pub fn extract_form_ids(content: String) -> napi::Result<Vec<String>> {
+    let parser = LogParser::new(None).map_err(to_napi_err)?;
+    let lines: Vec<String> = content.lines().map(String::from).collect();
+    Ok(parser.extract_formids(&lines))
+}
+
+/// Extract plugin names from crash log content.
+///
+/// Searches for Bethesda game plugin entries (e.g., `[00] Fallout4.esm`)
+/// and returns just the plugin filenames.
+///
+/// @param content - The crash log content (or plugin section) to search.
+/// @returns An array of plugin filename strings (e.g., "Fallout4.esm").
+#[napi]
+pub fn extract_plugin_list(content: String) -> napi::Result<Vec<String>> {
+    let parser = LogParser::new(None).map_err(to_napi_err)?;
+    let lines: Vec<String> = content.lines().map(String::from).collect();
+    let plugins = parser.extract_plugins(&lines);
+    // Return just the plugin names (first element of each tuple)
+    Ok(plugins.into_iter().map(|(name, _index)| name).collect())
+}
+
+/// Detect the crash pattern from crash log content.
+///
+/// Analyzes the log header for known crash patterns (e.g., "ACCESS_VIOLATION",
+/// "STACK_OVERFLOW", "STACK_BUFFER_OVERRUN"). Returns the pattern name if
+/// detected, or `undefined` if no known pattern is found.
+///
+/// @param content - The crash log content to analyze.
+/// @returns The crash pattern name, or `undefined` if none detected.
+#[napi]
+pub fn detect_crash_pattern(content: String) -> Option<String> {
+    // Known crash patterns to detect in the main error line
+    let known_patterns: &[(&str, &str)] = &[
+        ("EXCEPTION_ACCESS_VIOLATION", "ACCESS_VIOLATION"),
+        ("EXCEPTION_STACK_OVERFLOW", "STACK_OVERFLOW"),
+        ("EXCEPTION_INT_DIVIDE_BY_ZERO", "INT_DIVIDE_BY_ZERO"),
+        ("EXCEPTION_BREAKPOINT", "BREAKPOINT"),
+        ("EXCEPTION_ILLEGAL_INSTRUCTION", "ILLEGAL_INSTRUCTION"),
+        ("EXCEPTION_STACK_BUFFER_OVERRUN", "STACK_BUFFER_OVERRUN"),
+        ("STATUS_HEAP_CORRUPTION", "HEAP_CORRUPTION"),
+        ("0xC0000005", "ACCESS_VIOLATION"),
+        ("0xC00000FD", "STACK_OVERFLOW"),
+        ("0xC0000094", "INT_DIVIDE_BY_ZERO"),
+        ("0x80000003", "BREAKPOINT"),
+        ("0xC000001D", "ILLEGAL_INSTRUCTION"),
+        ("0xC0000409", "STACK_BUFFER_OVERRUN"),
+    ];
+
+    // Search the first 30 lines for the main error / unhandled exception
+    let upper = content.to_uppercase();
+    for line in upper.lines().take(30) {
+        if line.contains("UNHANDLED EXCEPTION")
+            || line.contains("EXCEPTION_")
+            || line.contains("0XC000")
+        {
+            for (pattern, name) in known_patterns {
+                if line.contains(pattern) {
+                    return Some(name.to_string());
+                }
+            }
+        }
+    }
+
+    None
+}
+
+// ============================================================================
+// Internal Helpers
+// ============================================================================
 
 /// Convert a JsAnalysisConfig to the core AnalysisConfig type.
 ///

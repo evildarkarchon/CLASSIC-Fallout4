@@ -241,6 +241,71 @@ jobs:
       - name: Run Rust tests with all features
         run: cargo test --workspace --release --all-features --manifest-path rust/Cargo.toml -- --nocapture
 
+  # Test Node.js/Bun bindings (NAPI-RS)
+  test-node-bindings:
+    name: Node.js Bindings (Bun)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: rust/target
+          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-node-
+
+      - name: Install npm dependencies
+        working-directory: rust/node-bindings/classic-node
+        run: bun install
+
+      - name: Build NAPI-RS binary
+        working-directory: rust/node-bindings/classic-node
+        run: bun run build
+
+      - name: Verify NAPI binary exists
+        working-directory: rust/node-bindings/classic-node
+        shell: pwsh
+        run: |
+          $binary = Get-ChildItem -Filter "*.node" -Recurse
+          if ($binary) {
+            Write-Host "NAPI binary found: $($binary.FullName) ($([math]::Round($binary.Length / 1MB, 2)) MB)"
+          } else {
+            Write-Error "NAPI binary not found after build"
+            exit 1
+          }
+
+      - name: Run Bun tests
+        working-directory: rust/node-bindings/classic-node
+        run: bun test
+
   # Build Python bindings with maturin
   build-python-bindings:
     name: Build Python Bindings
