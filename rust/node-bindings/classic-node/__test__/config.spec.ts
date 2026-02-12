@@ -363,7 +363,7 @@ describe("YamlData VR mode", () => {
     clearYamlCache();
   });
 
-  test("VR mode reads from GameVR_Info section", () => {
+  test("VR mode reads from GameVR_Info section via accessor", () => {
     const data = YamlData.fromYamlContent(
       MAIN_YAML,
       GAME_YAML,
@@ -371,11 +371,17 @@ describe("YamlData VR mode", () => {
       "Fallout4",
       true,
     );
-    expect(data.crashgenName).toBe("crash-vr");
-    expect(data.crashgenIgnore).toEqual(["VRIgnoreItem1"]);
+    // Dual-loading always populates both OG and VR fields;
+    // use VR-aware accessor methods to get the correct value.
+    expect(data.getCrashgenName(true)).toBe("crash-vr");
+    expect(data.getCrashgenIgnore(true)).toEqual(["VRIgnoreItem1"]);
+    // Raw properties always hold the OG values
+    expect(data.crashgenName).toBe("crash-og");
+    // VR-specific raw properties hold the VR values
+    expect(data.crashgenNameVr).toBe("crash-vr");
   });
 
-  test("non-VR mode reads from Game_Info section", () => {
+  test("non-VR mode reads from Game_Info section via accessor", () => {
     const data = YamlData.fromYamlContent(
       MAIN_YAML,
       GAME_YAML,
@@ -384,6 +390,7 @@ describe("YamlData VR mode", () => {
       false,
     );
     // Game_Info.CRASHGEN_LogName is "crash-og" in our test fixture
+    expect(data.getCrashgenName(false)).toBe("crash-og");
     expect(data.crashgenName).toBe("crash-og");
   });
 });

@@ -8,6 +8,14 @@ import {
   hashFilesParallel,
   detectEncoding,
   JsBackupManager,
+  JsDdsAnalyzer,
+  calculateFileSimilarity,
+  calculateTextSimilarity,
+  JsLogCollector,
+  JsFileGenerator,
+  JsGameFilesManager,
+  CRASH_LOG_PATTERN,
+  CRASH_AUTOSCAN_PATTERN,
 } from "../index.js";
 
 // ============================================================================
@@ -458,5 +466,226 @@ describe("JsBackupManager", () => {
     await expect(manager.backupExists("invalid_type")).rejects.toThrow(
       /Unknown backup type/
     );
+  });
+});
+
+// ============================================================================
+// JsDdsAnalyzer
+// ============================================================================
+
+describe("JsDdsAnalyzer", () => {
+  test("constructor accepts Fallout4 game target", () => {
+    const analyzer = new JsDdsAnalyzer("Fallout4");
+    expect(analyzer).toBeDefined();
+  });
+
+  test("constructor accepts SkyrimSE game target", () => {
+    const analyzer = new JsDdsAnalyzer("SkyrimSE");
+    expect(analyzer).toBeDefined();
+  });
+
+  test("constructor rejects invalid game target", () => {
+    expect(() => new JsDdsAnalyzer("InvalidGame")).toThrow(/Unknown game target/);
+  });
+
+  test("validateDimensions returns no issues for even dimensions", () => {
+    const issues = JsDdsAnalyzer.validateDimensions(1024, 512);
+    // Even dimensions within limits should have no dimension-specific issues
+    const dimIssues = issues.filter((i) => i.message.includes("Non-even"));
+    expect(dimIssues.length).toBe(0);
+  });
+
+  test("validateDimensions flags odd dimensions", () => {
+    const issues = JsDdsAnalyzer.validateDimensions(1023, 511);
+    const oddIssues = issues.filter((i) => i.message.includes("Non-even"));
+    expect(oddIssues.length).toBeGreaterThan(0);
+  });
+
+  test("validateDimensions flags large dimensions", () => {
+    const issues = JsDdsAnalyzer.validateDimensions(8192, 8192);
+    const largeIssues = issues.filter((i) => i.message.includes("Large"));
+    expect(largeIssues.length).toBeGreaterThan(0);
+  });
+
+  test("validateFile returns issues for non-existent file", () => {
+    const analyzer = new JsDdsAnalyzer("Fallout4");
+    const issues = analyzer.validateFile(join(tempDir, "nonexistent.dds"));
+    expect(issues.length).toBeGreaterThan(0);
+    expect(issues[0].message).toContain("Unable to read");
+  });
+
+  test("validateFile returns issues for non-DDS file", () => {
+    const analyzer = new JsDdsAnalyzer("Fallout4");
+    const fakePath = join(tempDir, "fake.dds");
+    writeFileSync(fakePath, "not a DDS file");
+
+    const issues = analyzer.validateFile(fakePath);
+    expect(issues.length).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================================
+// File Similarity
+// ============================================================================
+
+describe("calculateTextSimilarity", () => {
+  test("returns 1.0 for identical strings", () => {
+    const ratio = calculateTextSimilarity("a\nb\nc", "a\nb\nc");
+    expect(ratio).toBeCloseTo(1.0);
+  });
+
+  test("returns 0.0 for completely different strings", () => {
+    const ratio = calculateTextSimilarity("a\nb\nc", "x\ny\nz");
+    expect(ratio).toBeCloseTo(0.0);
+  });
+
+  test("returns 1.0 for two empty strings", () => {
+    const ratio = calculateTextSimilarity("", "");
+    expect(ratio).toBeCloseTo(1.0);
+  });
+
+  test("returns partial similarity for overlapping content", () => {
+    const ratio = calculateTextSimilarity("a\nb", "a\nc");
+    // LCS=1 ("a"), ratio = 2*1/(2+2) = 0.5
+    expect(ratio).toBeCloseTo(0.5);
+  });
+});
+
+describe("calculateFileSimilarity", () => {
+  test("returns 1.0 for identical files", () => {
+    const path1 = join(tempDir, "sim1.txt");
+    const path2 = join(tempDir, "sim2.txt");
+    writeFileSync(path1, "line 1\nline 2\nline 3\n");
+    writeFileSync(path2, "line 1\nline 2\nline 3\n");
+
+    const ratio = calculateFileSimilarity(path1, path2);
+    expect(ratio).toBeCloseTo(1.0);
+  });
+
+  test("returns 0.0 for completely different files", () => {
+    const path1 = join(tempDir, "diff1.txt");
+    const path2 = join(tempDir, "diff2.txt");
+    writeFileSync(path1, "aaa\nbbb\nccc\n");
+    writeFileSync(path2, "xxx\nyyy\nzzz\n");
+
+    const ratio = calculateFileSimilarity(path1, path2);
+    expect(ratio).toBeCloseTo(0.0);
+  });
+
+  test("throws for non-existent file", () => {
+    const path1 = join(tempDir, "exists-sim.txt");
+    writeFileSync(path1, "content");
+
+    expect(() =>
+      calculateFileSimilarity(path1, join(tempDir, "nonexistent-sim.txt")),
+    ).toThrow();
+  });
+});
+
+// ============================================================================
+// JsLogCollector
+// ============================================================================
+
+describe("JsLogCollector", () => {
+  test("constructor accepts base folder", () => {
+    const collector = new JsLogCollector(tempDir);
+    expect(collector).toBeDefined();
+  });
+
+  test("constructor accepts optional xse and custom folders", () => {
+    const collector = new JsLogCollector(
+      tempDir,
+      join(tempDir, "xse"),
+      join(tempDir, "custom"),
+    );
+    expect(collector).toBeDefined();
+  });
+
+  test("crashLogsDir returns correct path", () => {
+    const collector = new JsLogCollector(tempDir);
+    const dir = collector.crashLogsDir();
+    expect(dir).toContain("Crash Logs");
+    expect(dir).toContain(tempDir);
+  });
+
+  test("pastebinDir returns correct path", () => {
+    const collector = new JsLogCollector(tempDir);
+    const dir = collector.pastebinDir();
+    expect(dir).toContain("Pastebin");
+    expect(dir).toContain("Crash Logs");
+  });
+});
+
+describe("Log collection constants", () => {
+  test("CRASH_LOG_PATTERN is defined", () => {
+    expect(CRASH_LOG_PATTERN).toBe("crash-*.log");
+  });
+
+  test("CRASH_AUTOSCAN_PATTERN is defined", () => {
+    expect(CRASH_AUTOSCAN_PATTERN).toBe("crash-*-AUTOSCAN.md");
+  });
+});
+
+// ============================================================================
+// JsFileGenerator
+// ============================================================================
+
+describe("JsFileGenerator", () => {
+  test("constructor accepts all parameters", () => {
+    const gen = new JsFileGenerator("# ignore", "# local yaml", "Fallout4");
+    expect(gen).toBeDefined();
+  });
+
+  test("ignoreFilePath returns expected path", () => {
+    const gen = new JsFileGenerator("# ignore", "# local yaml", "Fallout4");
+    expect(gen.ignoreFilePath()).toBe("CLASSIC Ignore.yaml");
+  });
+
+  test("localYamlPath returns expected path", () => {
+    const gen = new JsFileGenerator("# ignore", "# local yaml", "Fallout4");
+    const path = gen.localYamlPath();
+    expect(path).toContain("CLASSIC Data");
+    expect(path).toContain("Fallout4");
+    expect(path).toContain("Local.yaml");
+  });
+
+  test("localYamlPath varies by game name", () => {
+    const gen = new JsFileGenerator("# ignore", "# local yaml", "SkyrimSE");
+    const path = gen.localYamlPath();
+    expect(path).toContain("SkyrimSE");
+  });
+});
+
+// ============================================================================
+// JsGameFilesManager
+// ============================================================================
+
+describe("JsGameFilesManager", () => {
+  test("constructor accepts game root and backup root", () => {
+    const manager = new JsGameFilesManager(tempDir, join(tempDir, "backup"));
+    expect(manager).toBeDefined();
+  });
+
+  test("backup returns result for empty directory", async () => {
+    const backupDir = join(tempDir, "backup");
+    mkdirSync(backupDir);
+    const manager = new JsGameFilesManager(tempDir, backupDir);
+
+    const result = await manager.backup("test-group", ["nonexistent-pattern"]);
+    expect(result).toBeDefined();
+    expect(result.operation).toBe("BACKUP");
+    expect(result.label).toBe("test-group");
+    expect(result.filesAffected).toBe(0);
+  });
+
+  test("remove returns result for empty directory", async () => {
+    const backupDir = join(tempDir, "backup");
+    mkdirSync(backupDir);
+    const manager = new JsGameFilesManager(tempDir, backupDir);
+
+    const result = await manager.remove("test-group", ["nonexistent-pattern"]);
+    expect(result).toBeDefined();
+    expect(result.operation).toBe("REMOVE");
+    expect(result.filesAffected).toBe(0);
   });
 });

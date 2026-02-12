@@ -1069,3 +1069,476 @@ pub fn check_xse_plugins(
     let checker = CoreXseChecker::new(&plugins_path, is_vr_mode, version).map_err(to_napi_err)?;
     Ok(checker.validate())
 }
+
+// ============================================================================
+// 10. Game Scan Orchestrator
+// ============================================================================
+
+/// Convert a JS game target string to the core DDS GameTarget enum.
+fn parse_game_target_for_scan(s: &str) -> classic_file_io_core::dds::GameTarget {
+    match s {
+        "SkyrimSE" | "SkyrimSe" => classic_file_io_core::dds::GameTarget::SkyrimSE,
+        _ => classic_file_io_core::dds::GameTarget::Fallout4,
+    }
+}
+
+/// Configuration for a game scan operation.
+///
+/// Provides all paths and settings the orchestrator needs to run
+/// game integrity checks and mod scans.
+#[napi(object)]
+pub struct JsGameScanConfig {
+    /// Path to the game root directory.
+    pub game_path: String,
+    /// Path to the docs folder (for log scanning).
+    pub docs_path: Option<String>,
+    /// Path to the mods folder.
+    pub mods_path: Option<String>,
+    /// XSE acronym (e.g., "F4SE", "SKSE").
+    pub xse_acronym: String,
+    /// XSE script file patterns -> expected hashes.
+    pub xse_scriptfiles: HashMap<String, Vec<String>>,
+    /// Path to F4SE/SKSE plugins directory.
+    pub plugins_path: Option<String>,
+    /// Whether in VR mode.
+    pub is_vr: bool,
+    /// Detected game version string ("Original", "NextGen", "Vr", etc.).
+    pub game_version: String,
+    /// Crashgen plugin name (e.g., "Buffout4").
+    pub crashgen_name: String,
+    /// Wrye Bash warning patterns.
+    pub wrye_warnings: HashMap<String, String>,
+    /// Log error catch patterns.
+    pub log_catch_errors: Vec<String>,
+    /// Log file exclude patterns.
+    pub log_exclude_files: Vec<String>,
+    /// Log error exclude patterns.
+    pub log_exclude_errors: Vec<String>,
+    /// Game target for DDS validation ("Fallout4" or "SkyrimSE").
+    pub game_target: String,
+    /// Game name string (e.g., "Fallout4").
+    pub game_name: String,
+}
+
+/// Convert a JS scan config to the core GameScanConfig.
+fn js_scan_config_to_core(
+    config: &JsGameScanConfig,
+) -> classic_scangame_core::orchestrator::GameScanConfig {
+    classic_scangame_core::orchestrator::GameScanConfig {
+        game_path: PathBuf::from(&config.game_path),
+        docs_path: config.docs_path.as_ref().map(PathBuf::from),
+        mods_path: config.mods_path.as_ref().map(PathBuf::from),
+        xse_acronym: config.xse_acronym.clone(),
+        xse_scriptfiles: config.xse_scriptfiles.clone(),
+        plugins_path: config.plugins_path.as_ref().map(PathBuf::from),
+        is_vr: config.is_vr,
+        game_version: parse_game_version(&config.game_version),
+        crashgen_name: config.crashgen_name.clone(),
+        wrye_warnings: config.wrye_warnings.clone(),
+        log_catch_errors: config.log_catch_errors.clone(),
+        log_exclude_files: config.log_exclude_files.clone(),
+        log_exclude_errors: config.log_exclude_errors.clone(),
+        game_target: parse_game_target_for_scan(&config.game_target),
+        game_name: config.game_name.clone(),
+    }
+}
+
+/// Convert a core ConfigIssue to the existing JsConfigIssue.
+fn config_issue_to_js(issue: classic_scangame_core::ini::ConfigIssue) -> JsConfigIssue {
+    JsConfigIssue {
+        file_path: issue.file_path.to_string_lossy().to_string(),
+        section: issue.section,
+        setting: issue.setting,
+        current_value: issue.current_value,
+        recommended_value: issue.recommended_value,
+        description: issue.description,
+        severity: match issue.severity {
+            IssueSeverity::Error => "Error".to_string(),
+            IssueSeverity::Warning => "Warning".to_string(),
+            IssueSeverity::Info => "Info".to_string(),
+        },
+    }
+}
+
+/// Result of a single check task.
+#[napi(object)]
+pub struct JsCheckResult {
+    /// Name of the check.
+    pub name: String,
+    /// Formatted output text.
+    pub output: String,
+}
+
+/// Combined result of all game integrity checks.
+#[napi(object)]
+pub struct JsGameScanResult {
+    /// Formatted report text from all checks.
+    pub report: String,
+    /// Detected configuration issues (read-only).
+    pub config_issues: Vec<JsConfigIssue>,
+    /// Individual check results.
+    pub check_results: Vec<JsCheckResult>,
+    /// Any errors from failed checks (non-fatal).
+    pub errors: Vec<String>,
+}
+
+/// Combined result of mod scanning (unpacked + archived).
+#[napi(object)]
+pub struct JsModScanResult {
+    /// Formatted report text.
+    pub report: String,
+    /// Count of unpacked issues found.
+    pub unpacked_issue_count: u32,
+    /// Count of archived issues found.
+    pub archived_issue_count: u32,
+    /// Any errors from scanning.
+    pub errors: Vec<String>,
+}
+
+/// Run all game integrity checks concurrently.
+///
+/// Executes XSE validation, crashgen checking, ENB detection,
+/// log error scanning, Wrye Bash analysis, and mod INI scanning
+/// as concurrent tasks.
+#[napi]
+pub async fn run_game_checks(config: JsGameScanConfig) -> napi::Result<JsGameScanResult> {
+    let core_config = js_scan_config_to_core(&config);
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    handle
+        .spawn(async move {
+            let orchestrator =
+                classic_scangame_core::orchestrator::GameScanOrchestrator::new(core_config);
+            orchestrator.run_game_checks().await
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Task join error: {e}")))?
+        .map(|result| JsGameScanResult {
+            report: result.report,
+            config_issues: result
+                .config_issues
+                .into_iter()
+                .map(config_issue_to_js)
+                .collect(),
+            check_results: result
+                .check_results
+                .into_iter()
+                .map(|r| JsCheckResult {
+                    name: r.name,
+                    output: r.output,
+                })
+                .collect(),
+            errors: result.errors,
+        })
+        .map_err(to_napi_err)
+}
+
+/// Run mod file scans (unpacked + archived) concurrently.
+///
+/// Scans both loose/unpacked mod files and BA2 archives for issues.
+#[napi]
+pub async fn run_mod_scans(config: JsGameScanConfig) -> napi::Result<JsModScanResult> {
+    let core_config = js_scan_config_to_core(&config);
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    handle
+        .spawn(async move {
+            let orchestrator =
+                classic_scangame_core::orchestrator::GameScanOrchestrator::new(core_config);
+            orchestrator.run_mod_scans().await
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Task join error: {e}")))?
+        .map(|result| JsModScanResult {
+            report: result.report,
+            unpacked_issue_count: result.unpacked_issue_count as u32,
+            archived_issue_count: result.archived_issue_count as u32,
+            errors: result.errors,
+        })
+        .map_err(to_napi_err)
+}
+
+// ============================================================================
+// 11. Crashgen Check Orchestrator
+// ============================================================================
+
+/// Full crash generator check report.
+#[napi(object)]
+pub struct JsCrashgenReport {
+    /// Formatted message string.
+    pub message: String,
+    /// Structured list of configuration issues detected.
+    pub issues: Vec<JsTomlConfigIssue>,
+    /// Name of the crash generator being checked.
+    pub crashgen_name: String,
+    /// Path to the configuration file that was checked (if found).
+    pub config_path: Option<String>,
+    /// Set of installed plugin DLL names (lowercase).
+    pub installed_plugins: Vec<String>,
+}
+
+/// Run a full crash generator configuration check.
+///
+/// Locates config files, detects plugins, validates settings,
+/// and produces a structured report.
+///
+/// @param pluginsPath - Path to the game's plugin directory (e.g., Data/F4SE/Plugins).
+/// @param crashgenName - Name of crash generator (e.g., "Buffout4").
+#[napi]
+pub fn check_crashgen_full(
+    plugins_path: String,
+    crashgen_name: String,
+) -> napi::Result<JsCrashgenReport> {
+    let report = classic_scangame_core::crashgen_orchestrator::CrashgenCheckOrchestrator::check(
+        Path::new(&plugins_path),
+        &crashgen_name,
+    )
+    .map_err(to_napi_err)?;
+
+    Ok(JsCrashgenReport {
+        message: report.message,
+        issues: report
+            .issues
+            .into_iter()
+            .map(|i| JsTomlConfigIssue {
+                file_path: i.file_path.to_string_lossy().to_string(),
+                section: i.section,
+                setting: i.setting,
+                current_value: i.current_value,
+                recommended_value: i.recommended_value,
+                description: i.description,
+                severity: match i.severity {
+                    TomlIssueSeverity::Error => "Error".to_string(),
+                    TomlIssueSeverity::Warning => "Warning".to_string(),
+                    TomlIssueSeverity::Info => "Info".to_string(),
+                },
+            })
+            .collect(),
+        crashgen_name: report.crashgen_name,
+        config_path: report.config_path.map(|p| p.to_string_lossy().to_string()),
+        installed_plugins: report.installed_plugins,
+    })
+}
+
+// ============================================================================
+// 12. Wrye Bash Parser
+// ============================================================================
+
+/// An issue found in the Wrye Bash plugin checker report.
+#[napi(object)]
+pub struct JsWryeIssue {
+    /// Section title from the report (e.g., "Missing Masters", "ESL Capable").
+    pub section_title: String,
+    /// Plugin names associated with this section.
+    pub plugins: Vec<String>,
+    /// Warning message from the YAML database, if any.
+    pub warning_message: Option<String>,
+    /// Issue severity ("Info", "Warning", "Error").
+    pub severity: String,
+}
+
+/// Wrye Bash ModChecker.html report parser.
+///
+/// Extracts sections (h3 headers) and their associated plugin lists from
+/// the HTML report. Matches sections against a warnings dictionary.
+#[napi]
+pub struct JsWryeBashParser {
+    inner: classic_scangame_core::wrye::WryeBashParser,
+}
+
+#[napi]
+impl JsWryeBashParser {
+    /// Create a new Wrye Bash parser with warning messages.
+    ///
+    /// @param wryeWarnings - Map of warning name substrings to warning message text.
+    #[napi(constructor)]
+    pub fn new(wrye_warnings: HashMap<String, String>) -> Self {
+        Self {
+            inner: classic_scangame_core::wrye::WryeBashParser::new(wrye_warnings),
+        }
+    }
+
+    /// Parse an HTML Wrye Bash report and extract issues.
+    ///
+    /// @param htmlContent - Raw HTML string from ModChecker.html.
+    /// @returns Array of issue objects.
+    #[napi]
+    pub fn parse(&self, html_content: String) -> Vec<JsWryeIssue> {
+        self.inner
+            .parse(&html_content)
+            .into_iter()
+            .map(wrye_issue_to_js)
+            .collect()
+    }
+
+    /// Format parsed issues into a complete report string.
+    ///
+    /// @param issues - Array of JsWryeIssue objects from parse().
+    /// @returns Formatted report string.
+    #[napi]
+    pub fn format_report(issues: Vec<JsWryeIssue>) -> String {
+        let core_issues: Vec<classic_scangame_core::wrye::WryeIssue> =
+            issues.into_iter().map(js_wrye_issue_to_core).collect();
+        classic_scangame_core::wrye::WryeBashParser::format_report(&core_issues)
+    }
+}
+
+/// Convert a core WryeIssue to the JS DTO.
+fn wrye_issue_to_js(issue: classic_scangame_core::wrye::WryeIssue) -> JsWryeIssue {
+    JsWryeIssue {
+        section_title: issue.section_title,
+        plugins: issue.plugins,
+        warning_message: issue.warning_message,
+        severity: match issue.severity {
+            classic_scangame_core::wrye::WryeSeverity::Info => "Info".to_string(),
+            classic_scangame_core::wrye::WryeSeverity::Warning => "Warning".to_string(),
+            classic_scangame_core::wrye::WryeSeverity::Error => "Error".to_string(),
+        },
+    }
+}
+
+/// Convert a JS WryeIssue back to the core type for formatting.
+fn js_wrye_issue_to_core(issue: JsWryeIssue) -> classic_scangame_core::wrye::WryeIssue {
+    classic_scangame_core::wrye::WryeIssue {
+        section_title: issue.section_title,
+        plugins: issue.plugins,
+        warning_message: issue.warning_message,
+        severity: match issue.severity.as_str() {
+            "Warning" => classic_scangame_core::wrye::WryeSeverity::Warning,
+            "Error" => classic_scangame_core::wrye::WryeSeverity::Error,
+            _ => classic_scangame_core::wrye::WryeSeverity::Info,
+        },
+    }
+}
+
+// ============================================================================
+// 13. Mod INI Scanner
+// ============================================================================
+
+/// A file with VSync enabled.
+#[napi(object)]
+pub struct JsVsyncEntry {
+    /// Path to the config file.
+    pub file_path: String,
+    /// Setting name that has VSync enabled.
+    pub setting: String,
+}
+
+/// A duplicate configuration file entry.
+#[napi(object)]
+pub struct JsModDuplicateEntry {
+    /// Lowercase filename.
+    pub file_name: String,
+    /// All paths where this file was found.
+    pub paths: Vec<String>,
+}
+
+/// Result of a mod INI scan.
+#[napi(object)]
+pub struct JsModIniScanResult {
+    /// Formatted report message for display.
+    pub message: String,
+    /// Structured list of detected configuration issues.
+    pub issues: Vec<JsConfigIssue>,
+    /// List of files with VSync enabled.
+    pub vsync_files: Vec<JsVsyncEntry>,
+    /// Duplicate files detected.
+    pub duplicates: Vec<JsModDuplicateEntry>,
+}
+
+/// Scan mod INI files for configuration issues.
+///
+/// Checks VSync settings, console commands, mod-specific problems,
+/// and duplicate configuration files.
+///
+/// @param gameRoot - Root directory of the game installation.
+/// @param gameName - Game name (e.g., "Fallout4").
+#[napi]
+pub fn scan_mod_inis(game_root: String, game_name: String) -> napi::Result<JsModIniScanResult> {
+    let result =
+        classic_scangame_core::mod_ini::ModIniScanner::scan(Path::new(&game_root), &game_name)
+            .map_err(to_napi_err)?;
+
+    Ok(JsModIniScanResult {
+        message: result.message,
+        issues: result.issues.into_iter().map(config_issue_to_js).collect(),
+        vsync_files: result
+            .vsync_files
+            .into_iter()
+            .map(|v| JsVsyncEntry {
+                file_path: v.file_path.to_string_lossy().to_string(),
+                setting: v.setting,
+            })
+            .collect(),
+        duplicates: result
+            .duplicates
+            .into_iter()
+            .map(|d| JsModDuplicateEntry {
+                file_name: d.file_name,
+                paths: d
+                    .paths
+                    .into_iter()
+                    .map(|p| p.to_string_lossy().to_string())
+                    .collect(),
+            })
+            .collect(),
+    })
+}
+
+// ============================================================================
+// 14. Setup Checking
+// ============================================================================
+
+/// Migrate legacy VR Mode setting to Game Version format.
+///
+/// In CLASSIC v8.0+, the "VR Mode" boolean was replaced with a
+/// "Game Version" string ("Original", "NextGen", "VR", "auto").
+///
+/// @param gameVersion - The new Game Version setting value.
+/// @param vrMode - The legacy VR Mode boolean.
+/// @returns The resolved game version string, or null if neither setting is configured.
+#[napi]
+pub fn migrate_vr_setting(game_version: Option<String>, vr_mode: Option<bool>) -> Option<String> {
+    classic_scangame_core::setup::migrate_vr_setting(game_version.as_deref(), vr_mode)
+}
+
+/// Resolve the effective game version from a raw setting.
+///
+/// Maps the raw Game Version setting to one of the known values,
+/// defaulting to "auto" for unknown or missing values.
+///
+/// @param version - The raw Game Version setting value.
+/// @returns One of: "Original", "NextGen", "VR", or "auto".
+#[napi]
+pub fn resolve_effective_game_version(version: Option<String>) -> String {
+    classic_scangame_core::setup::resolve_effective_game_version(version.as_deref()).to_string()
+}
+
+/// Result of checking if paths need auto-detection.
+#[napi(object)]
+pub struct JsPathDetectionResult {
+    /// Whether game path needs detection.
+    pub needs_game_path: bool,
+    /// Whether docs path needs detection.
+    pub needs_docs_path: bool,
+}
+
+/// Check if paths need auto-detection.
+///
+/// @param gamePath - Current game path setting (empty or null means not configured).
+/// @param docsPath - Current documents path setting (empty or null means not configured).
+/// @returns Object indicating which paths need detection.
+#[napi]
+pub fn needs_path_detection(
+    game_path: Option<String>,
+    docs_path: Option<String>,
+) -> JsPathDetectionResult {
+    let (needs_game, needs_docs) = classic_scangame_core::setup::needs_path_detection(
+        game_path.as_deref(),
+        docs_path.as_deref(),
+    );
+    JsPathDetectionResult {
+        needs_game_path: needs_game,
+        needs_docs_path: needs_docs,
+    }
+}

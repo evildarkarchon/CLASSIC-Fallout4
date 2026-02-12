@@ -1,4 +1,7 @@
-import { describe, test, expect } from "bun:test";
+import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { mkdtempSync, writeFileSync, rmSync } from "fs";
+import { join } from "path";
+import { tmpdir } from "os";
 import {
   createAnalysisConfig,
   getVersion,
@@ -8,6 +11,11 @@ import {
   extractFormIds,
   extractPluginList,
   detectCrashPattern,
+  detectVrLog,
+  detectGpuInfo,
+  parseCrashgenVersion,
+  checkCrashgenVersionStatus,
+  analyzePapyrusLog,
 } from "../index.js";
 
 // ============================================================================
@@ -328,5 +336,241 @@ describe("detectCrashPattern", () => {
     // EXCEPTION_UNKNOWN_TYPE is not a known pattern, but the line does contain EXCEPTION_
     // The function should not match it to any known pattern
     expect(pattern).toBeNull();
+  });
+});
+
+// ============================================================================
+// Synchronous: detectVrLog
+// ============================================================================
+
+describe("detectVrLog", () => {
+  test("returns true for VR crash log content", () => {
+    expect(detectVrLog("Fallout4VR.exe v1.2.72.0")).toBe(true);
+  });
+
+  test("returns true for VR ESM reference", () => {
+    expect(detectVrLog("[00] Fallout4VR.esm")).toBe(true);
+  });
+
+  test("returns true for case-insensitive VR match", () => {
+    expect(detectVrLog("FALLOUT4VR.EXE loaded")).toBe(true);
+  });
+
+  test("returns false for non-VR crash log", () => {
+    expect(detectVrLog("Fallout4.exe v1.10.163.0")).toBe(false);
+  });
+
+  test("returns false for empty content", () => {
+    expect(detectVrLog("")).toBe(false);
+  });
+
+  test("returns false for unrelated content", () => {
+    expect(detectVrLog("Some random text\nNo game references")).toBe(false);
+  });
+});
+
+// ============================================================================
+// Synchronous: detectGpuInfo
+// ============================================================================
+
+describe("detectGpuInfo", () => {
+  test("detects Nvidia GPU", () => {
+    const info = detectGpuInfo([
+      "\tGPU #1: Nvidia AD104 [GeForce RTX 4070]",
+    ]);
+    expect(info.manufacturer).toBe("Nvidia");
+    expect(info.primary).toContain("Nvidia");
+    expect(info.rival).toBe("amd");
+  });
+
+  test("detects AMD GPU", () => {
+    const info = detectGpuInfo(["\tGPU #1: AMD Radeon RX 7900 XTX"]);
+    expect(info.manufacturer).toBe("AMD");
+    expect(info.primary).toContain("AMD");
+    expect(info.rival).toBe("nvidia");
+  });
+
+  test("detects Intel GPU", () => {
+    const info = detectGpuInfo(["\tGPU #1: Intel UHD Graphics 770"]);
+    expect(info.manufacturer).toBe("Intel");
+    expect(info.primary).toContain("Intel");
+    expect(info.rival).toBeUndefined();
+  });
+
+  test("detects secondary GPU", () => {
+    const info = detectGpuInfo([
+      "\tGPU #1: Nvidia GeForce RTX 4070",
+      "\tGPU #2: Intel UHD Graphics 770",
+    ]);
+    expect(info.primary).toContain("Nvidia");
+    expect(info.secondary).toContain("Intel");
+  });
+
+  test("returns Unknown for unrecognized GPU lines", () => {
+    const info = detectGpuInfo(["no GPU info here"]);
+    expect(info.manufacturer).toBe("Unknown");
+    expect(info.primary).toBe("Unknown");
+    expect(info.secondary).toBeUndefined();
+    expect(info.rival).toBeUndefined();
+  });
+
+  test("returns Unknown for empty input", () => {
+    const info = detectGpuInfo([]);
+    expect(info.manufacturer).toBe("Unknown");
+  });
+});
+
+// ============================================================================
+// Synchronous: parseCrashgenVersion
+// ============================================================================
+
+describe("parseCrashgenVersion", () => {
+  test("parses a simple version string", () => {
+    const v = parseCrashgenVersion("1.28.6");
+    expect(v).not.toBeNull();
+    expect(v!.major).toBe(1);
+    expect(v!.minor).toBe(28);
+    expect(v!.patch).toBe(6);
+  });
+
+  test("parses a version with v prefix", () => {
+    const v = parseCrashgenVersion("v1.29.1");
+    expect(v).not.toBeNull();
+    expect(v!.major).toBe(1);
+    expect(v!.minor).toBe(29);
+    expect(v!.patch).toBe(1);
+  });
+
+  test("parses a version with crashgen prefix", () => {
+    const v = parseCrashgenVersion("Buffout 4 v1.30.2");
+    expect(v).not.toBeNull();
+    expect(v!.major).toBe(1);
+    expect(v!.minor).toBe(30);
+    expect(v!.patch).toBe(2);
+  });
+
+  test("parses version with two components", () => {
+    const v = parseCrashgenVersion("1.28");
+    expect(v).not.toBeNull();
+    expect(v!.major).toBe(1);
+    expect(v!.minor).toBe(28);
+    expect(v!.patch).toBe(0);
+  });
+
+  test("returns null for invalid version", () => {
+    expect(parseCrashgenVersion("not a version")).toBeNull();
+  });
+
+  test("returns null for empty string", () => {
+    expect(parseCrashgenVersion("")).toBeNull();
+  });
+});
+
+// ============================================================================
+// Synchronous: checkCrashgenVersionStatus
+// ============================================================================
+
+describe("checkCrashgenVersionStatus", () => {
+  test("returns Valid for matching version", () => {
+    const status = checkCrashgenVersionStatus("1.28.6", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("Valid");
+  });
+
+  test("returns Valid for second valid version", () => {
+    const status = checkCrashgenVersionStatus("1.37.0", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("Valid");
+  });
+
+  test("returns Outdated for old version", () => {
+    const status = checkCrashgenVersionStatus("1.26.0", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("Outdated");
+  });
+
+  test("returns NewerThanKnown for newer version", () => {
+    const status = checkCrashgenVersionStatus("1.40.0", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("NewerThanKnown");
+  });
+
+  test("returns NoSupportedVersion for empty valid list", () => {
+    const status = checkCrashgenVersionStatus("1.28.6", []);
+    expect(status).toBe("NoSupportedVersion");
+  });
+
+  test("handles version with crashgen prefix", () => {
+    const status = checkCrashgenVersionStatus("Buffout 4 v1.28.6", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("Valid");
+  });
+});
+
+// ============================================================================
+// Synchronous: analyzePapyrusLog
+// ============================================================================
+
+describe("analyzePapyrusLog", () => {
+  let tempDir: string;
+
+  beforeEach(() => {
+    tempDir = mkdtempSync(join(tmpdir(), "classic-papyrus-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tempDir, { recursive: true, force: true });
+  });
+
+  test("analyzes a papyrus log with known content", () => {
+    const logPath = join(tempDir, "Papyrus.0.log");
+    const content = [
+      "[01/01/2025 - 12:00:00AM] Papyrus log opened",
+      "[01/01/2025 - 12:00:01AM] warning: Variable not found",
+      "[01/01/2025 - 12:00:02AM] error: Stack overflow",
+      "[01/01/2025 - 12:00:03AM] warning: Property not found",
+      "[01/01/2025 - 12:00:04AM] Dumping Stacks",
+      "[01/01/2025 - 12:00:05AM] Dumping Stack",
+    ].join("\n");
+    writeFileSync(logPath, content);
+
+    const stats = analyzePapyrusLog(logPath);
+    expect(stats).toBeDefined();
+    expect(stats.warnings).toBe(2);
+    expect(stats.errors).toBe(1);
+    expect(stats.dumps).toBe(1);
+    expect(stats.stacks).toBe(1);
+    expect(stats.totalIssues).toBe(3);
+    expect(stats.linesProcessed).toBe(6);
+    expect(["OK", "Warning", "Critical"]).toContain(stats.severity);
+  });
+
+  test("analyzes an empty papyrus log", () => {
+    const logPath = join(tempDir, "Empty.log");
+    writeFileSync(logPath, "");
+
+    const stats = analyzePapyrusLog(logPath);
+    expect(stats.dumps).toBe(0);
+    expect(stats.stacks).toBe(0);
+    expect(stats.warnings).toBe(0);
+    expect(stats.errors).toBe(0);
+    expect(stats.totalIssues).toBe(0);
+    expect(stats.severity).toBe("OK");
+  });
+
+  test("throws for non-existent log file", () => {
+    expect(() =>
+      analyzePapyrusLog(join(tempDir, "nonexistent.log")),
+    ).toThrow();
   });
 });

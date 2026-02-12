@@ -12,11 +12,17 @@ import {
   JsCrashgenChecker,
   JsUnpackedScanner,
   JsXseChecker,
+  JsWryeBashParser,
   checkEnb,
   detectConfigDuplicates,
   scanUnpackedFiles,
   processGameLogs,
   checkCrashgenConfig,
+  checkCrashgenFull,
+  scanModInis,
+  migrateVrSetting,
+  resolveEffectiveGameVersion,
+  needsPathDetection,
   getAddressLibInfo,
   checkXsePlugins,
 } from "../index.js";
@@ -663,5 +669,282 @@ describe("checkXsePlugins convenience function", () => {
     expect(() =>
       checkXsePlugins(join(tempDir, "nonexistent"), false, "Original")
     ).toThrow();
+  });
+});
+
+// ============================================================================
+// Crashgen Full Check Orchestrator
+// ============================================================================
+
+describe("checkCrashgenFull", () => {
+  test("returns report for empty plugins directory", () => {
+    const report = checkCrashgenFull(tempDir, "Buffout4");
+
+    expect(typeof report.message).toBe("string");
+    expect(report.crashgenName).toBe("Buffout4");
+    expect(report.message).toContain("Unable to find");
+    expect(report.issues).toEqual([]);
+  });
+
+  test("detects achievements plugin conflict", () => {
+    const buffoutDir = join(tempDir, "Buffout4");
+    mkdirSync(buffoutDir);
+    writeFileSync(
+      join(buffoutDir, "config.toml"),
+      "[Patches]\nAchievements = true\n"
+    );
+    writeFileSync(join(tempDir, "achievements.dll"), "");
+
+    const report = checkCrashgenFull(tempDir, "Buffout4");
+
+    expect(report.configPath).toBeTruthy();
+    expect(report.issues.length).toBeGreaterThanOrEqual(1);
+    expect(report.issues.some((i) => i.setting === "Achievements")).toBe(true);
+    expect(report.installedPlugins.length).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================================
+// Wrye Bash Parser
+// ============================================================================
+
+describe("JsWryeBashParser", () => {
+  test("constructor creates instance", () => {
+    const parser = new JsWryeBashParser({});
+    expect(parser).toBeDefined();
+  });
+
+  test("parse returns empty array for empty HTML", () => {
+    const parser = new JsWryeBashParser({});
+    const issues = parser.parse("");
+    expect(issues).toEqual([]);
+  });
+
+  test("parse extracts h3 sections from HTML", () => {
+    const parser = new JsWryeBashParser({});
+    const html = `<html><body>
+      <h3>Missing Masters</h3>
+      <p>\u2022\u00a0 ArmorKeywords.esm</p>
+      <p>\u2022\u00a0 AWKCR.esp</p>
+      <h3>ESL Capable</h3>
+      <p>\u2022\u00a0 SmallMod.esp</p>
+      <h3>Active Plugins:</h3>
+      <p>\u2022\u00a0 Fallout4.esm</p>
+    </body></html>`;
+
+    const issues = parser.parse(html);
+
+    // Active Plugins is skipped, so 2 sections
+    expect(issues.length).toBe(2);
+    expect(issues[0].sectionTitle).toBe("Missing Masters");
+    expect(issues[0].plugins.length).toBe(2);
+    expect(issues[1].sectionTitle).toBe("ESL Capable");
+    expect(issues[1].plugins.length).toBe(1);
+  });
+
+  test("parse applies warning messages", () => {
+    const parser = new JsWryeBashParser({
+      "Missing Masters": "  WARNING: Fix your load order!\n",
+    });
+    const html =
+      '<html><body><h3>Missing Masters</h3><p>\u2022\u00a0 Mod.esp</p></body></html>';
+
+    const issues = parser.parse(html);
+
+    expect(issues.length).toBe(1);
+    expect(issues[0].warningMessage).toBe(
+      "  WARNING: Fix your load order!\n"
+    );
+    expect(issues[0].severity).toBe("Warning");
+  });
+
+  test("formatReport produces formatted string", () => {
+    const issues = [
+      {
+        sectionTitle: "Missing Masters",
+        plugins: ["AWKCR.esp"],
+        warningMessage: "  Fix your load order!\n",
+        severity: "Warning",
+      },
+    ];
+
+    const report = JsWryeBashParser.formatReport(issues);
+
+    expect(report).toContain("Missing Masters");
+    expect(report).toContain("> AWKCR.esp");
+    expect(report).toContain("Fix your load order!");
+  });
+
+  test("formatReport handles ESL Capable section", () => {
+    const issues = [
+      {
+        sectionTitle: "ESL Capable",
+        plugins: ["SmallMod.esp", "TinyPatch.esl"],
+        warningMessage: undefined,
+        severity: "Info",
+      },
+    ];
+
+    const report = JsWryeBashParser.formatReport(issues);
+
+    expect(report).toContain("2 plugins");
+    expect(report).toContain("SimpleESLify");
+    // ESL Capable section should NOT list individual plugins
+    expect(report).not.toContain("> SmallMod.esp");
+  });
+
+  test("formatReport returns empty string for no issues", () => {
+    const report = JsWryeBashParser.formatReport([]);
+    expect(report).toBe("");
+  });
+});
+
+// ============================================================================
+// Mod INI Scanner
+// ============================================================================
+
+describe("scanModInis", () => {
+  test("returns empty result for empty directory", () => {
+    const result = scanModInis(tempDir, "Fallout4");
+
+    expect(result.message).toBe("");
+    expect(result.issues).toEqual([]);
+    expect(result.vsyncFiles).toEqual([]);
+    expect(result.duplicates).toEqual([]);
+  });
+
+  test("throws for non-existent game root", () => {
+    expect(() =>
+      scanModInis(join(tempDir, "nonexistent"), "Fallout4")
+    ).toThrow();
+  });
+
+  test("detects EPO particle count issue", () => {
+    writeFileSync(
+      join(tempDir, "epo.ini"),
+      "[Particles]\niMaxDesired=10000\n"
+    );
+
+    const result = scanModInis(tempDir, "Fallout4");
+
+    expect(result.issues.length).toBeGreaterThanOrEqual(1);
+    const epoIssue = result.issues.find((i) => i.setting === "iMaxDesired");
+    expect(epoIssue).toBeDefined();
+    expect(epoIssue!.recommendedValue).toBe("5000");
+  });
+
+  test("detects VSync settings", () => {
+    writeFileSync(
+      join(tempDir, "enblocal.ini"),
+      "[ENGINE]\nForceVSync=true\n"
+    );
+
+    const result = scanModInis(tempDir, "Fallout4");
+
+    expect(result.vsyncFiles.length).toBe(1);
+    expect(result.vsyncFiles[0].setting).toBe("ForceVSync");
+    expect(result.message).toContain("VSYNC");
+  });
+});
+
+// ============================================================================
+// VR Setting Migration
+// ============================================================================
+
+describe("migrateVrSetting", () => {
+  test("new setting (Original) takes precedence over legacy VR", () => {
+    const result = migrateVrSetting("Original", true);
+    expect(result).toBe("Original");
+  });
+
+  test("legacy VR migration when new setting is absent", () => {
+    const result = migrateVrSetting(null, true);
+    expect(result).toBe("VR");
+  });
+
+  test("legacy VR migration when new setting is auto", () => {
+    const result = migrateVrSetting("auto", true);
+    expect(result).toBe("VR");
+  });
+
+  test("returns null when neither setting is configured", () => {
+    const result = migrateVrSetting(null, null);
+    expect(result).toBeNull();
+  });
+
+  test("returns null when only legacy false is set", () => {
+    const result = migrateVrSetting(null, false);
+    expect(result).toBeNull();
+  });
+
+  test("preserves auto when legacy is false", () => {
+    const result = migrateVrSetting("auto", false);
+    expect(result).toBe("auto");
+  });
+});
+
+// ============================================================================
+// Game Version Resolution
+// ============================================================================
+
+describe("resolveEffectiveGameVersion", () => {
+  test("returns VR for VR", () => {
+    expect(resolveEffectiveGameVersion("VR")).toBe("VR");
+  });
+
+  test("returns Original for Original", () => {
+    expect(resolveEffectiveGameVersion("Original")).toBe("Original");
+  });
+
+  test("returns NextGen for NextGen", () => {
+    expect(resolveEffectiveGameVersion("NextGen")).toBe("NextGen");
+  });
+
+  test("returns auto for unknown value", () => {
+    expect(resolveEffectiveGameVersion("invalid")).toBe("auto");
+  });
+
+  test("returns auto for null", () => {
+    expect(resolveEffectiveGameVersion(null)).toBe("auto");
+  });
+
+  test("returns auto for auto", () => {
+    expect(resolveEffectiveGameVersion("auto")).toBe("auto");
+  });
+});
+
+// ============================================================================
+// Path Detection
+// ============================================================================
+
+describe("needsPathDetection", () => {
+  test("both missing (null) returns both true", () => {
+    const result = needsPathDetection(null, null);
+    expect(result.needsGamePath).toBe(true);
+    expect(result.needsDocsPath).toBe(true);
+  });
+
+  test("game path set returns only docs needed", () => {
+    const result = needsPathDetection("C:\\Games\\Fallout4", null);
+    expect(result.needsGamePath).toBe(false);
+    expect(result.needsDocsPath).toBe(true);
+  });
+
+  test("both set returns both false", () => {
+    const result = needsPathDetection("C:\\Games", "C:\\Docs");
+    expect(result.needsGamePath).toBe(false);
+    expect(result.needsDocsPath).toBe(false);
+  });
+
+  test("empty strings treated as missing", () => {
+    const result = needsPathDetection("", "");
+    expect(result.needsGamePath).toBe(true);
+    expect(result.needsDocsPath).toBe(true);
+  });
+
+  test("docs path set returns only game needed", () => {
+    const result = needsPathDetection(null, "C:\\Docs");
+    expect(result.needsGamePath).toBe(true);
+    expect(result.needsDocsPath).toBe(false);
   });
 });

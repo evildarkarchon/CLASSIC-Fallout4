@@ -17,6 +17,11 @@ import {
   registrySet,
   registryRemove,
   registryClear,
+  // Registry convenience
+  registrySetGame,
+  registryGetGame,
+  registryGetGameVersion,
+  registryIsVrVersion,
   // Diagnostics
   isRuntimeAvailable,
   getRuntimeInfo,
@@ -223,5 +228,62 @@ describe("Diagnostics", () => {
     const info = getRuntimeInfo();
     expect(info.available).toBe(true);
     expect(info.threadCount).toBeGreaterThan(0);
+  });
+});
+
+// ============================================================================
+// Registry Convenience Functions
+// ============================================================================
+
+describe("Registry convenience functions", () => {
+  beforeEach(() => {
+    registryClear();
+  });
+
+  test("registrySetGame and registryGetGame round-trip", () => {
+    registrySetGame("Fallout4");
+    const game = registryGetGame();
+    expect(game).toBe("Fallout4");
+  });
+
+  test("registryGetGame returns null when not set", () => {
+    const game = registryGetGame();
+    expect(game).toBeNull();
+  });
+
+  test("registrySetGame overwrites previous value", () => {
+    registrySetGame("Fallout4");
+    registrySetGame("Skyrim");
+    expect(registryGetGame()).toBe("Skyrim");
+  });
+
+  test("registryGetGameVersion returns null when not set", () => {
+    const version = registryGetGameVersion();
+    expect(version).toBeNull();
+  });
+
+  test("registryGetGameVersion returns set value", () => {
+    registrySet("gamevars_version", "Original");
+    const version = registryGetGameVersion();
+    expect(version).toBe("Original");
+  });
+
+  test("registryIsVrVersion returns false when not set", () => {
+    expect(registryIsVrVersion()).toBe(false);
+  });
+
+  test("registryIsVrVersion returns true for VR version", () => {
+    registrySet("gamevars_version", "Vr");
+    expect(registryIsVrVersion()).toBe(true);
+  });
+
+  test("registryIsVrVersion returns false for non-VR version", () => {
+    registrySet("gamevars_version", "Original");
+    expect(registryIsVrVersion()).toBe(false);
+  });
+
+  test("registryIsVrVersion is case-insensitive", () => {
+    registrySet("gamevars_version", "VR");
+    expect(registryIsVrVersion()).toBe(true);
   });
 });

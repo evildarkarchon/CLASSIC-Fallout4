@@ -451,3 +451,430 @@ impl JsBackupManager {
             .map_err(to_napi_err)?
     }
 }
+
+// ============================================================================
+// 4. DDS Texture Analysis
+// ============================================================================
+
+/// Parse a game target string to the core enum.
+fn parse_game_target(s: &str) -> Result<classic_file_io_core::dds::GameTarget> {
+    match s {
+        "Fallout4" => Ok(classic_file_io_core::dds::GameTarget::Fallout4),
+        "SkyrimSE" | "SkyrimSe" => Ok(classic_file_io_core::dds::GameTarget::SkyrimSE),
+        _ => Err(napi::Error::from_reason(format!(
+            "Unknown game target: {s}. Valid: Fallout4, SkyrimSE"
+        ))),
+    }
+}
+
+/// A single validation issue found in a DDS texture file.
+#[napi(object)]
+pub struct JsDDSIssue {
+    /// Human-readable description of the issue.
+    pub message: String,
+}
+
+/// DDS texture analyzer with game-specific validation rules.
+///
+/// Validates DDS texture files against game-specific requirements
+/// (dimension limits, BC compression compatibility, mipmap recommendations).
+#[napi]
+pub struct JsDDSAnalyzer {
+    inner: classic_file_io_core::dds::DDSAnalyzer,
+}
+
+#[napi]
+impl JsDDSAnalyzer {
+    /// Create a new DDS analyzer targeting a specific game.
+    ///
+    /// @param gameTarget - One of: "Fallout4", "SkyrimSE"
+    #[napi(constructor)]
+    pub fn new(game_target: String) -> Result<Self> {
+        let target = parse_game_target(&game_target)?;
+        Ok(Self {
+            inner: classic_file_io_core::dds::DDSAnalyzer::new(target),
+        })
+    }
+
+    /// Validate a single DDS file and return any issues found.
+    ///
+    /// An empty array means the file is valid. If the file cannot be read
+    /// or parsed, returns a single "Unable to read DDS header" issue.
+    ///
+    /// @param path - Absolute path to the DDS file.
+    /// @returns Array of validation issues.
+    #[napi]
+    pub fn validate_file(&self, path: String) -> Vec<JsDDSIssue> {
+        self.inner
+            .validate_file(Path::new(&path))
+            .into_iter()
+            .map(|issue| JsDDSIssue {
+                message: issue.message,
+            })
+            .collect()
+    }
+
+    /// Validate multiple DDS files in parallel using Rayon.
+    ///
+    /// Returns an array of `[path, issues[]]` pairs for files that had issues.
+    /// Files with no issues are omitted from the result.
+    ///
+    /// @param paths - Array of absolute paths to DDS files.
+    /// @returns Array of `{ path, issues }` objects for files with issues.
+    #[napi]
+    pub fn validate_batch(&self, paths: Vec<String>) -> Vec<JsDDSBatchResult> {
+        let path_bufs: Vec<PathBuf> = paths.into_iter().map(PathBuf::from).collect();
+        self.inner
+            .validate_batch(&path_bufs)
+            .into_iter()
+            .map(|(path, issues)| JsDDSBatchResult {
+                path: path.to_string_lossy().to_string(),
+                issues: issues
+                    .into_iter()
+                    .map(|i| JsDDSIssue { message: i.message })
+                    .collect(),
+            })
+            .collect()
+    }
+
+    /// Validate DDS dimensions from width/height only (fallback for non-parseable files).
+    ///
+    /// Checks for even dimensions and reasonable size limits.
+    ///
+    /// @param width - Texture width in pixels.
+    /// @param height - Texture height in pixels.
+    /// @returns Array of validation issues.
+    #[napi]
+    pub fn validate_dimensions(width: u32, height: u32) -> Vec<JsDDSIssue> {
+        classic_file_io_core::dds::DDSAnalyzer::validate_dimensions(width, height)
+            .into_iter()
+            .map(|issue| JsDDSIssue {
+                message: issue.message,
+            })
+            .collect()
+    }
+}
+
+/// Result from batch DDS validation for a single file.
+#[napi(object)]
+pub struct JsDDSBatchResult {
+    /// Path to the DDS file that had issues.
+    pub path: String,
+    /// Validation issues found.
+    pub issues: Vec<JsDDSIssue>,
+}
+
+// ============================================================================
+// 5. File Similarity
+// ============================================================================
+
+/// Calculate the similarity ratio between two files.
+///
+/// Reads both files, splits into lines, and computes an LCS-based similarity ratio.
+/// Returns a number between 0.0 (completely different) and 1.0 (identical).
+///
+/// @param path1 - Absolute path to the first file.
+/// @param path2 - Absolute path to the second file.
+/// @returns Similarity ratio (0.0 to 1.0).
+#[napi]
+pub fn calculate_file_similarity(path1: String, path2: String) -> Result<f64> {
+    classic_file_io_core::similarity::calculate_similarity(Path::new(&path1), Path::new(&path2))
+        .map_err(to_napi_err)
+}
+
+/// Calculate the similarity ratio between two text strings.
+///
+/// Computes an LCS-based similarity ratio between two in-memory strings.
+/// Returns a number between 0.0 (completely different) and 1.0 (identical).
+///
+/// @param text1 - First text content.
+/// @param text2 - Second text content.
+/// @returns Similarity ratio (0.0 to 1.0).
+#[napi]
+pub fn calculate_text_similarity(text1: String, text2: String) -> f64 {
+    classic_file_io_core::similarity::similarity_ratio(&text1, &text2)
+}
+
+// ============================================================================
+// 6. Log Collection (path info only)
+// ============================================================================
+
+/// File pattern for standard crash log files.
+#[napi]
+pub const CRASH_LOG_PATTERN: &str = classic_file_io_core::CRASH_LOG_PATTERN;
+
+/// File pattern for AUTOSCAN report files generated during crash analysis.
+#[napi]
+pub const CRASH_AUTOSCAN_PATTERN: &str = classic_file_io_core::CRASH_AUTOSCAN_PATTERN;
+
+/// Log collector for organizing crash logs from multiple sources.
+///
+/// Provides path information for the crash logs directory structure.
+/// For actual log collection (file moves/copies), use the async collect methods.
+#[napi]
+pub struct JsLogCollector {
+    inner: classic_file_io_core::LogCollector,
+}
+
+#[napi]
+impl JsLogCollector {
+    /// Create a new log collector with the specified base folder.
+    ///
+    /// @param baseFolder - Working directory where the "Crash Logs" folder will be created.
+    /// @param xseFolder - Optional path to the game's XSE folder (e.g., My Games/Fallout4/F4SE).
+    /// @param customFolder - Optional path to a custom scan directory.
+    #[napi(constructor)]
+    pub fn new(
+        base_folder: String,
+        xse_folder: Option<String>,
+        custom_folder: Option<String>,
+    ) -> Self {
+        Self {
+            inner: classic_file_io_core::LogCollector::new(
+                PathBuf::from(base_folder),
+                xse_folder.map(PathBuf::from),
+                custom_folder.map(PathBuf::from),
+            ),
+        }
+    }
+
+    /// Get the path to the Crash Logs directory.
+    #[napi]
+    pub fn crash_logs_dir(&self) -> String {
+        self.inner.crash_logs_dir().to_string_lossy().to_string()
+    }
+
+    /// Get the path to the Pastebin subdirectory.
+    #[napi]
+    pub fn pastebin_dir(&self) -> String {
+        self.inner.pastebin_dir().to_string_lossy().to_string()
+    }
+}
+
+// ============================================================================
+// 7. File Generation
+// ============================================================================
+
+/// File generator for CLASSIC configuration files (ignore file and local YAML).
+#[napi]
+pub struct JsFileGenerator {
+    inner: classic_file_io_core::FileGenerator,
+}
+
+#[napi]
+impl JsFileGenerator {
+    /// Create a new file generator.
+    ///
+    /// @param ignoreFileContent - Default content for CLASSIC Ignore.yaml.
+    /// @param localYamlContent - Default content for the local YAML file.
+    /// @param gameName - Game name for local YAML path (e.g., "Fallout4").
+    #[napi(constructor)]
+    pub fn new(ignore_file_content: String, local_yaml_content: String, game_name: String) -> Self {
+        Self {
+            inner: classic_file_io_core::FileGenerator::new(
+                classic_file_io_core::FileGeneratorConfig::new(
+                    ignore_file_content,
+                    local_yaml_content,
+                    game_name,
+                ),
+            ),
+        }
+    }
+
+    /// Get the path where the ignore file would be created.
+    #[napi]
+    pub fn ignore_file_path(&self) -> String {
+        self.inner.ignore_file_path().to_string_lossy().to_string()
+    }
+
+    /// Get the path where the local YAML file would be created.
+    #[napi]
+    pub fn local_yaml_path(&self) -> String {
+        self.inner.local_yaml_path().to_string_lossy().to_string()
+    }
+}
+
+/// Generate a CLASSIC Ignore.yaml file if it does not already exist.
+///
+/// @param content - Default content to write.
+/// @returns `true` if the file was generated, `false` if it already existed.
+#[napi]
+pub async fn generate_ignore_file(content: String) -> Result<bool> {
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    handle
+        .spawn(async move {
+            classic_file_io_core::generate_ignore_file(content)
+                .await
+                .map_err(to_napi_err)
+        })
+        .await
+        .map_err(to_napi_err)?
+}
+
+/// Generate a CLASSIC local YAML file if it does not already exist.
+///
+/// @param content - Default content to write.
+/// @param gameName - Game name for the file path (e.g., "Fallout4").
+/// @returns `true` if the file was generated, `false` if it already existed.
+#[napi]
+pub async fn generate_local_yaml(content: String, game_name: String) -> Result<bool> {
+    let handle = classic_shared_core::get_runtime().handle().clone();
+    handle
+        .spawn(async move {
+            classic_file_io_core::generate_local_yaml(content, game_name)
+                .await
+                .map_err(to_napi_err)
+        })
+        .await
+        .map_err(to_napi_err)?
+}
+
+// ============================================================================
+// 8. Game Files Manager
+// ============================================================================
+
+/// Result of a game file operation (backup, restore, or remove).
+#[napi(object)]
+pub struct JsFileOperationResult {
+    /// The operation performed: "BACKUP", "RESTORE", or "REMOVE".
+    pub operation: String,
+    /// Label identifying the file group that was targeted.
+    pub label: String,
+    /// Number of files/directories successfully affected.
+    pub files_affected: u32,
+    /// Error messages for any failures encountered (non-fatal).
+    pub errors: Vec<String>,
+}
+
+/// Game file manager for backup, restore, and remove operations.
+///
+/// Operates on a game root directory and a backup root directory, matching
+/// files using case-insensitive substring patterns.
+#[napi]
+pub struct JsGameFilesManager {
+    game_root: String,
+    backup_root: String,
+}
+
+#[napi]
+impl JsGameFilesManager {
+    /// Create a new game files manager.
+    ///
+    /// @param gameRoot - Path to the game installation directory.
+    /// @param backupRoot - Path to the backup root directory.
+    #[napi(constructor)]
+    pub fn new(game_root: String, backup_root: String) -> Self {
+        Self {
+            game_root,
+            backup_root,
+        }
+    }
+
+    /// Back up matching files from the game directory to a labeled backup subdirectory.
+    ///
+    /// @param label - A label for this backup group (used as subdirectory name).
+    /// @param patterns - Case-insensitive substring patterns to match filenames.
+    /// @returns Operation result with file count and any errors.
+    #[napi]
+    pub async fn backup(
+        &self,
+        label: String,
+        patterns: Vec<String>,
+    ) -> Result<JsFileOperationResult> {
+        let game_root = self.game_root.clone();
+        let backup_root = self.backup_root.clone();
+        let handle = classic_shared_core::get_runtime().handle().clone();
+
+        handle
+            .spawn(async move {
+                let manager = classic_file_io_core::GameFilesManager::new(
+                    PathBuf::from(&game_root),
+                    PathBuf::from(&backup_root),
+                );
+                let result = manager
+                    .backup(&label, &patterns)
+                    .await
+                    .map_err(to_napi_err)?;
+                Ok(JsFileOperationResult {
+                    operation: result.operation.to_string(),
+                    label: result.label,
+                    files_affected: result.files_affected as u32,
+                    errors: result.errors,
+                })
+            })
+            .await
+            .map_err(to_napi_err)?
+    }
+
+    /// Restore matching files from a labeled backup subdirectory back to the game directory.
+    ///
+    /// @param label - The backup group label (subdirectory name under backupRoot).
+    /// @param patterns - Case-insensitive substring patterns to match filenames.
+    /// @returns Operation result with file count and any errors.
+    #[napi]
+    pub async fn restore(
+        &self,
+        label: String,
+        patterns: Vec<String>,
+    ) -> Result<JsFileOperationResult> {
+        let game_root = self.game_root.clone();
+        let backup_root = self.backup_root.clone();
+        let handle = classic_shared_core::get_runtime().handle().clone();
+
+        handle
+            .spawn(async move {
+                let manager = classic_file_io_core::GameFilesManager::new(
+                    PathBuf::from(&game_root),
+                    PathBuf::from(&backup_root),
+                );
+                let result = manager
+                    .restore(&label, &patterns)
+                    .await
+                    .map_err(to_napi_err)?;
+                Ok(JsFileOperationResult {
+                    operation: result.operation.to_string(),
+                    label: result.label,
+                    files_affected: result.files_affected as u32,
+                    errors: result.errors,
+                })
+            })
+            .await
+            .map_err(to_napi_err)?
+    }
+
+    /// Remove matching files/directories from the game directory.
+    ///
+    /// @param label - A label identifying the file group (for result tracking).
+    /// @param patterns - Case-insensitive substring patterns to match filenames.
+    /// @returns Operation result with file count and any errors.
+    #[napi]
+    pub async fn remove(
+        &self,
+        label: String,
+        patterns: Vec<String>,
+    ) -> Result<JsFileOperationResult> {
+        let game_root = self.game_root.clone();
+        let backup_root = self.backup_root.clone();
+        let handle = classic_shared_core::get_runtime().handle().clone();
+
+        handle
+            .spawn(async move {
+                let manager = classic_file_io_core::GameFilesManager::new(
+                    PathBuf::from(&game_root),
+                    PathBuf::from(&backup_root),
+                );
+                let result = manager
+                    .remove(&label, &patterns)
+                    .await
+                    .map_err(to_napi_err)?;
+                Ok(JsFileOperationResult {
+                    operation: result.operation.to_string(),
+                    label: result.label,
+                    files_affected: result.files_affected as u32,
+                    errors: result.errors,
+                })
+            })
+            .await
+            .map_err(to_napi_err)?
+    }
+}

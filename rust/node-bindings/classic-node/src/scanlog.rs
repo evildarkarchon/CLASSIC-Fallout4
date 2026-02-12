@@ -301,3 +301,157 @@ pub(crate) fn _core_result_to_js(result: &orchestrator::AnalysisResult) -> JsAna
         suspect_count: result.suspect_count as u32,
     }
 }
+
+// ============================================================================
+// VR Log Detection
+// ============================================================================
+
+/// Detect if crash log content is from a VR game.
+///
+/// Checks for VR-specific markers (e.g. "Fallout4VR.exe", "Fallout4VR.esm")
+/// in the log content, case-insensitively.
+///
+/// @param content - The crash log content to check.
+/// @returns `true` if VR markers are found, `false` otherwise.
+#[napi]
+pub fn detect_vr_log(content: String) -> bool {
+    classic_scanlog_core::detect_vr_log(&content)
+}
+
+// ============================================================================
+// GPU Detection
+// ============================================================================
+
+/// GPU information detected from system specs.
+#[napi(object)]
+pub struct JsGpuInfo {
+    /// Primary GPU name (e.g. "Nvidia AD104 [GeForce RTX 4070]")
+    pub primary: String,
+    /// Secondary GPU name, if present
+    pub secondary: Option<String>,
+    /// GPU manufacturer (e.g. "AMD", "Nvidia", "Intel", "Unknown")
+    pub manufacturer: String,
+    /// Rival GPU manufacturer for compatibility checks
+    pub rival: Option<String>,
+}
+
+/// Detect GPU information from system specification lines.
+///
+/// Parses lines from the SYSTEM SPECS section of a crash log to identify
+/// the primary and secondary GPUs, manufacturer, and rival vendor.
+///
+/// @param systemLines - Array of system specification lines from the crash log.
+/// @returns A `JsGpuInfo` object with the detected GPU information.
+#[napi]
+pub fn detect_gpu_info(system_lines: Vec<String>) -> JsGpuInfo {
+    let info = classic_scanlog_core::gpu_detector::GpuDetector::get_gpu_info(&system_lines);
+    JsGpuInfo {
+        primary: info.primary,
+        secondary: info.secondary,
+        manufacturer: info.manufacturer,
+        rival: info.rival,
+    }
+}
+
+// ============================================================================
+// Crashgen Version Checking
+// ============================================================================
+
+/// Parsed crash generator version components.
+#[napi(object)]
+pub struct JsCrashgenVersionInfo {
+    /// Major version number (e.g. 1 in "1.28.0")
+    pub major: u32,
+    /// Minor version number (e.g. 28 in "1.28.0")
+    pub minor: u32,
+    /// Patch version number (e.g. 0 in "1.28.0")
+    pub patch: u32,
+}
+
+/// Parse a crash generator version string into components.
+///
+/// Accepts various formats: "1.28.0", "v1.28.0", "Buffout 4 v1.28.0".
+/// Returns `undefined` if parsing fails.
+///
+/// @param versionStr - The version string to parse.
+/// @returns Parsed version components, or `undefined` on failure.
+#[napi]
+pub fn parse_crashgen_version(version_str: String) -> Option<JsCrashgenVersionInfo> {
+    classic_scanlog_core::version::CrashgenVersion::parse(&version_str).map(|v| {
+        JsCrashgenVersionInfo {
+            major: v.major as u32,
+            minor: v.minor as u32,
+            patch: v.patch as u32,
+        }
+    })
+}
+
+/// Check a crash generator version against a list of valid versions.
+///
+/// Returns one of: "Valid", "Outdated", "NewerThanKnown", "NoSupportedVersion".
+///
+/// @param detected - The detected version string (e.g. "1.28.6" or "Buffout 4 v1.28.6").
+/// @param validVersions - Array of valid version strings to check against.
+/// @returns A status string indicating the validation result.
+#[napi]
+pub fn check_crashgen_version_status(detected: String, valid_versions: Vec<String>) -> String {
+    let valid_refs: Vec<&str> = valid_versions.iter().map(|s| s.as_str()).collect();
+    let status =
+        classic_scanlog_core::version::check_crashgen_version_status(&detected, &valid_refs);
+    match status {
+        classic_scanlog_core::version::CrashgenVersionStatus::Valid => "Valid".to_string(),
+        classic_scanlog_core::version::CrashgenVersionStatus::Outdated => "Outdated".to_string(),
+        classic_scanlog_core::version::CrashgenVersionStatus::NewerThanKnown => {
+            "NewerThanKnown".to_string()
+        }
+        classic_scanlog_core::version::CrashgenVersionStatus::NoSupportedVersion => {
+            "NoSupportedVersion".to_string()
+        }
+    }
+}
+
+// ============================================================================
+// Papyrus Analysis
+// ============================================================================
+
+/// Papyrus log analysis statistics.
+#[napi(object)]
+pub struct JsPapyrusStats {
+    /// Number of "Dumping Stacks" entries (plural)
+    pub dumps: u32,
+    /// Number of "Dumping Stack" entries (singular)
+    pub stacks: u32,
+    /// Number of warning messages
+    pub warnings: u32,
+    /// Number of error messages
+    pub errors: u32,
+    /// Severity level: "OK", "Warning", or "Critical"
+    pub severity: String,
+    /// Total issues (warnings + errors)
+    pub total_issues: u32,
+    /// Total lines processed from the log file
+    pub lines_processed: u32,
+}
+
+/// Analyze a Papyrus log file and return statistics.
+///
+/// Reads the Papyrus log at the given path and collects statistics about
+/// dumps, stacks, warnings, errors, and overall severity.
+///
+/// @param logPath - Absolute path to the Papyrus log file.
+/// @returns A `JsPapyrusStats` object with the analysis results.
+#[napi]
+pub fn analyze_papyrus_log(log_path: String) -> napi::Result<JsPapyrusStats> {
+    let mut analyzer =
+        classic_scanlog_core::papyrus::PapyrusAnalyzer::new(std::path::PathBuf::from(&log_path));
+    let stats = analyzer.analyze_full().map_err(to_napi_err)?;
+    Ok(JsPapyrusStats {
+        dumps: stats.dumps as u32,
+        stacks: stats.stacks as u32,
+        warnings: stats.warnings as u32,
+        errors: stats.errors as u32,
+        severity: stats.severity_level().to_string(),
+        total_issues: stats.total_issues() as u32,
+        lines_processed: stats.lines_processed as u32,
+    })
+}

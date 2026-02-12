@@ -266,3 +266,83 @@ pub fn get_runtime_info() -> RuntimeInfo {
         thread_count,
     }
 }
+
+// ============================================================================
+// 6. Registry Convenience Functions (well-known keys)
+// ============================================================================
+
+/// Set the current game name in the global registry.
+///
+/// Uses the well-known registry key "gamevars_game".
+///
+/// @param game - Game name (e.g., "Fallout4", "Skyrim").
+#[napi]
+pub fn registry_set_game(game: String) -> Result<()> {
+    register(
+        classic_registry_core::Keys::GAME.to_string(),
+        serde_json::Value::String(game),
+    );
+    Ok(())
+}
+
+/// Get the current game name from the global registry.
+///
+/// Uses the well-known registry key "gamevars_game".
+/// Returns `undefined` if no game has been set.
+#[napi]
+pub fn registry_get_game() -> Option<String> {
+    let value: Option<serde_json::Value> =
+        classic_registry_core::get(classic_registry_core::Keys::GAME);
+    match value {
+        Some(serde_json::Value::String(s)) => Some(s),
+        _ => {
+            // Fall back to raw String type (in case set by Rust code directly)
+            classic_registry_core::get::<_, String>(classic_registry_core::Keys::GAME)
+        }
+    }
+}
+
+/// Get the current game version string from the global registry.
+///
+/// Uses the well-known registry key "gamevars_version".
+/// Returns the version as a string (e.g., "Original", "NextGen", "Vr"),
+/// or `undefined` if no version has been set.
+#[napi]
+pub fn registry_get_game_version() -> Option<String> {
+    let value: Option<serde_json::Value> =
+        classic_registry_core::get(classic_registry_core::Keys::GAME_VERSION);
+    match value {
+        Some(serde_json::Value::String(s)) => Some(s),
+        _ => {
+            // Try raw String type
+            classic_registry_core::get::<_, String>(classic_registry_core::Keys::GAME_VERSION)
+        }
+    }
+}
+
+/// Check if the current game version is a VR version.
+///
+/// Reads the game version from the registry and checks if it represents
+/// a VR variant. Returns `false` if no version is set.
+#[napi]
+pub fn registry_is_vr_version() -> bool {
+    let value: Option<serde_json::Value> =
+        classic_registry_core::get(classic_registry_core::Keys::GAME_VERSION);
+    match value {
+        Some(serde_json::Value::String(ref s)) => {
+            let lower = s.to_lowercase();
+            lower == "vr" || lower.contains("vr")
+        }
+        _ => {
+            // Try raw String type
+            if let Some(s) =
+                classic_registry_core::get::<_, String>(classic_registry_core::Keys::GAME_VERSION)
+            {
+                let lower = s.to_lowercase();
+                lower == "vr" || lower.contains("vr")
+            } else {
+                false
+            }
+        }
+    }
+}
