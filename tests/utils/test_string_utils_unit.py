@@ -111,15 +111,18 @@ class TestStringUtilities:
         assert similarity == 1.0  # Empty files are identical
 
     def test_calculate_similarity_nonexistent_file(self, tmp_path: Path) -> None:
-        """Test calculate_similarity with nonexistent file."""
+        """Test calculate_similarity raises for nonexistent file.
+
+        The Rust implementation propagates file-not-found errors as
+        RustFileIOIOError rather than silently returning 0.0.
+        """
         file1 = tmp_path / "exists.txt"
         file2 = tmp_path / "does_not_exist.txt"
 
         file1.write_text("content")
 
-        # Should return 0.0 for nonexistent file (error is caught)
-        similarity = calculate_similarity(file1, file2)
-        assert similarity == 0.0
+        with pytest.raises(Exception, match="Failed to compare files"):
+            calculate_similarity(file1, file2)
 
     def test_append_or_extend_single_values(self) -> None:
         """Test append_or_extend with single values."""

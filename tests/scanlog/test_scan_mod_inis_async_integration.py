@@ -2,7 +2,8 @@
 Test suite for async INI scanning functionality.
 
 This module contains tests for the async INI scanning functions
-and ConfigFileCache async methods that were optimized for performance.
+which now delegate to Rust RustModIniScanner. Tests verify the
+Python glue layer and ConfigFileCache async methods.
 """
 
 import asyncio
@@ -13,7 +14,6 @@ import pytest
 
 from ClassicLib.scanning.game.config import ConfigFileCache
 from ClassicLib.scanning.game.scan_mod_inis import (
-    check_vsync_settings_async,
     scan_mod_inis,
     scan_mod_inis_async,
 )
@@ -21,214 +21,109 @@ from ClassicLib.scanning.game.scan_mod_inis import (
 
 @pytest.mark.unit
 class TestAsyncINIScanning:
-    """Test async INI scanning functionality."""
+    """Test async INI scanning functionality (Rust delegation)."""
 
     @pytest.mark.asyncio
-    async def test_scan_mod_inis_async_basic(self):
-        """Test basic async INI scanning functionality."""
-        with patch("ClassicLib.scanning.game.scan_mod_inis.ConfigFileCache") as MockConfigCache:
-            # Create mock config cache instance
-            mock_cache = MagicMock()
-            mock_cache.get_async = AsyncMock(return_value=None)
-            mock_cache.duplicate_files = {}
-            MockConfigCache.return_value = mock_cache
+    async def test_scan_mod_inis_async_returns_string(self) -> None:
+        """Test scan_mod_inis_async returns a string."""
+        with patch("ClassicLib.scanning.game.scan_mod_inis._run_rust_scan") as mock_scan:
+            mock_result = MagicMock()
+            mock_result.message = "Test scan result"
+            mock_scan.return_value = mock_result
 
-            # Mock the async helper functions
-            with (
-                patch("ClassicLib.scanning.game.scan_mod_inis.check_starting_console_command_async", new_callable=MagicMock),
-                patch("ClassicLib.scanning.game.scan_mod_inis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync,
-                patch("ClassicLib.scanning.game.scan_mod_inis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect,
-                patch("ClassicLib.scanning.game.scan_mod_inis.check_duplicate_files"),
-            ):
-                mock_vsync.return_value = []
-                mock_detect.return_value = []  # No issues detected
-                result = await scan_mod_inis_async()
+            result = await scan_mod_inis_async()
 
-                # Verify result is a string
-                assert isinstance(result, str)
-                assert result == ""  # Empty when no issues found
+            assert isinstance(result, str)
+            assert result == "Test scan result"
 
     @pytest.mark.asyncio
-    async def test_scan_mod_inis_async_with_vsync(self):
-        """Test async INI scanning with VSync settings detected."""
-        with patch("ClassicLib.scanning.game.scan_mod_inis.ConfigFileCache") as MockConfigCache:
-            mock_cache = MagicMock()
-            mock_cache.get_async = AsyncMock(return_value=None)
-            mock_cache.duplicate_files = {}
-            MockConfigCache.return_value = mock_cache
+    async def test_scan_mod_inis_async_returns_empty_when_no_game_root(self) -> None:
+        """Test scan_mod_inis_async returns empty string when game root is unavailable."""
+        with patch("ClassicLib.scanning.game.scan_mod_inis._run_rust_scan") as mock_scan:
+            mock_scan.return_value = None
 
-            with (
-                patch("ClassicLib.scanning.game.scan_mod_inis.check_starting_console_command_async", new_callable=MagicMock),
-                patch("ClassicLib.scanning.game.scan_mod_inis.check_vsync_settings_async", new_callable=AsyncMock) as mock_vsync,
-                patch("ClassicLib.scanning.game.scan_mod_inis.detect_all_ini_issues_async", new_callable=AsyncMock) as mock_detect,
-                patch("ClassicLib.scanning.game.scan_mod_inis.check_duplicate_files"),
-            ):
-                # Mock VSync settings found
-                mock_vsync.return_value = ["enblocal.ini | SETTING: ForceVSync\n"]
-                mock_detect.return_value = []  # No issues detected
-                result = await scan_mod_inis_async()
+            result = await scan_mod_inis_async()
 
-                # Verify VSync notice is in result
-                assert "VSYNC IS CURRENTLY ENABLED" in result
-                assert "enblocal.ini" in result
+            assert result == ""
 
-    @pytest.mark.asyncio
-    async def test_check_vsync_settings_async(self):
-        """Test async VSync settings detection."""
-        mock_cache = MagicMock()
-
-        # Create an async function that returns the right value
-        async def mock_get_async_impl(value_type, file_name, section, setting):
-            # Return True for enblocal.ini ForceVSync (which is in VSYNC_SETTINGS)
-            if file_name == "enblocal.ini" and section == "ENGINE" and setting == "ForceVSync":
-                return True
-            return None  # Return None for other settings
-
-        # Set up the mock
-        mock_cache.get_async = mock_get_async_impl
-        mock_cache.__contains__ = MagicMock(return_value=False)  # No highfpsphysicsfix.ini
-        mock_cache.__getitem__ = MagicMock(return_value=Path("test/enblocal.ini"))
-
-        result = await check_vsync_settings_async(mock_cache)
-
-        # Verify VSync was detected
-        assert len(result) == 1
-        assert "ForceVSync" in result[0]
-
-    def test_scan_mod_inis_sync_wrapper(self):
-        """Test synchronous wrapper calls async version correctly."""
-        # Import and patch at the module level where it's used
-        with (
-            patch("ClassicLib.core.async_bridge.AsyncBridge") as MockBridge,
-            patch("ClassicLib.scanning.game.scan_mod_inis.scan_mod_inis_async", new_callable=MagicMock) as mock_scan_async,
-        ):
-            mock_bridge_instance = MagicMock()
-            MockBridge.get_instance.return_value = mock_bridge_instance
-            mock_bridge_instance.run_async.return_value = "Test Result"
-
-            # Mock return value of async function (coroutine object if not awaited, but here just passed)
-            mock_scan_async.return_value = "coroutine_obj"
+    def test_scan_mod_inis_sync_returns_string(self) -> None:
+        """Test synchronous scan_mod_inis returns string from Rust scanner."""
+        with patch("ClassicLib.scanning.game.scan_mod_inis._run_rust_scan") as mock_scan:
+            mock_result = MagicMock()
+            mock_result.message = "Sync result"
+            mock_scan.return_value = mock_result
 
             result = scan_mod_inis()
 
-            # Verify AsyncBridge was used
-            MockBridge.get_instance.assert_called_once()
-            mock_bridge_instance.run_async.assert_called_with("coroutine_obj")
-            assert result == "Test Result"
+            assert result == "Sync result"
+
+    def test_scan_mod_inis_sync_returns_empty_when_no_game_root(self) -> None:
+        """Test synchronous scan_mod_inis returns empty when game root is unavailable."""
+        with patch("ClassicLib.scanning.game.scan_mod_inis._run_rust_scan") as mock_scan:
+            mock_scan.return_value = None
+
+            result = scan_mod_inis()
+
+            assert result == ""
 
 
 @pytest.mark.unit
 class TestConfigFileCacheAsync:
-    """Test ConfigFileCache async methods."""
+    """Test ConfigFileCache async methods (Rust-backed).
+
+    ConfigFileCache now delegates to RustConfigFileCache which scans the
+    game root directory on construction. Tests create INI files in tmp_path
+    before constructing the cache.
+    """
 
     @pytest.mark.asyncio
-    async def test_get_async_loads_config(self):
-        """Test get_async loads configuration when not cached."""
-        # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=Path()):
+    async def test_get_async_returns_value(self, tmp_path: Path) -> None:
+        """Test get_async retrieves values from Rust-backed cache."""
+        test_file = tmp_path / "test.ini"
+        test_file.write_text("[section]\nkey = test_value\n", encoding="utf-8")
+
+        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=tmp_path):
             cache = ConfigFileCache()
-        cache._config_files = {"test.ini": Path("test/test.ini")}
-        cache._config_file_cache = {}
-
-        # Mock _load_config_async
-        cache._load_config_async = AsyncMock()
-
-        # Mock the config after loading
-        mock_config = MagicMock()
-        mock_config.has_section.return_value = True
-        mock_config.has_option.return_value = True
-        mock_config.get.return_value = "test_value"
-
-        with patch.object(
-            cache,
-            "_config_file_cache",
-            {
-                "test.ini": {
-                    "encoding": "utf-8",
-                    "path": Path("test/test.ini"),
-                    "settings": mock_config,
-                    "text": "[section]\nkey=test_value",
-                }
-            },
-        ):
-            result = await cache.get_async(str, "test.ini", "section", "key")
-            assert result == "test_value"
-
-    @pytest.mark.asyncio
-    async def test_get_async_uses_cached_config(self):
-        """Test get_async uses cached configuration without reloading."""
-        # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=Path()):
-            cache = ConfigFileCache()
-        cache._config_files = {"test.ini": Path("test/test.ini")}
-
-        # Pre-populate cache
-        mock_config = MagicMock()
-        mock_config.has_section.return_value = True
-        mock_config.has_option.return_value = True
-        mock_config.get.return_value = "cached_value"
-        cache._config_file_cache = {
-            "test.ini": {
-                "encoding": "utf-8",
-                "path": Path("test/test.ini"),
-                "settings": mock_config,
-                "text": "[section]\nkey=cached_value",
-            }
-        }
-
-        # Mock _load_config_async - should not be called
-        cache._load_config_async = AsyncMock()
 
         result = await cache.get_async(str, "test.ini", "section", "key")
-
-        # Verify cached value was used
-        assert result == "cached_value"
-        cache._load_config_async.assert_not_called()
+        assert result == "test_value"
 
     @pytest.mark.asyncio
-    async def test_load_config_async_processes_file(self, tmp_path):
-        """Test _load_config_async processes files asynchronously."""
-        # Create an actual test file to avoid FileNotFoundError
+    async def test_get_async_returns_none_for_missing_key(self, tmp_path: Path) -> None:
+        """Test get_async returns None for non-existent keys."""
         test_file = tmp_path / "test.ini"
-        test_file.write_text("[section]\nkey=value", encoding="utf-8")
+        test_file.write_text("[section]\nkey = value\n", encoding="utf-8")
 
-        # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=Path()):
+        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=tmp_path):
             cache = ConfigFileCache()
-        cache._config_files = {"test.ini": test_file}
-        cache._config_file_cache = {}
 
-        # Load the config file
-        await cache._load_config_async("test.ini")
-
-        # Verify the file was loaded into the cache
-        assert "test.ini" in cache._config_file_cache
-        assert cache._config_file_cache["test.ini"]["settings"] is not None
-        assert cache._config_file_cache["test.ini"]["encoding"] is not None
+        result = await cache.get_async(str, "test.ini", "section", "nonexistent")
+        assert result is None
 
     @pytest.mark.asyncio
-    async def test_hash_caching_prevents_recalculation(self):
-        """Test that file hash caching prevents recalculation."""
-        # Mock yaml_settings to avoid async context error during init
-        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=Path()):
+    async def test_get_async_delegates_to_sync_get(self, tmp_path: Path) -> None:
+        """Test get_async delegates to synchronous get() method."""
+        test_file = tmp_path / "test.ini"
+        test_file.write_text("[section]\nkey = value\n", encoding="utf-8")
+
+        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=tmp_path):
             cache = ConfigFileCache()
-        cache._hash_cache = {}
 
-        test_path = Path("test/file.ini")
+        sync_result = cache.get(str, "test.ini", "section", "key")
+        async_result = await cache.get_async(str, "test.ini", "section", "key")
+        assert sync_result == async_result
 
-        # Mock calculate_file_hash
-        with patch("ClassicLib.scanning.game.config.calculate_file_hash") as mock_hash:
-            mock_hash.return_value = "hash123"
+    @pytest.mark.asyncio
+    async def test_contains_check_after_construction(self, tmp_path: Path) -> None:
+        """Test __contains__ finds files scanned during construction."""
+        test_file = tmp_path / "test.ini"
+        test_file.write_text("[Main]\nKey = Value\n", encoding="utf-8")
 
-            # First call should calculate hash
-            hash1 = cache._get_cached_hash(test_path)
-            assert hash1 == "hash123"
-            mock_hash.assert_called_once_with(test_path)
+        with patch("ClassicLib.scanning.game.config.yaml_settings", return_value=tmp_path):
+            cache = ConfigFileCache()
 
-            # Second call should use cache
-            hash2 = cache._get_cached_hash(test_path)
-            assert hash2 == "hash123"
-            mock_hash.assert_called_once()  # Still only called once
+        assert "test.ini" in cache
+        assert "nonexistent.ini" not in cache
 
 
 @pytest.mark.unit
@@ -236,7 +131,7 @@ class TestScanGameOptimizations:
     """Test ScanGame optimizations."""
 
     @pytest.mark.asyncio
-    async def test_optimized_directory_walking(self):
+    async def test_optimized_directory_walking(self) -> None:
         """Test optimized directory walking using pathlib.rglob."""
         from ClassicLib.scanning.game.core import ScanGameCore
 
@@ -257,7 +152,7 @@ class TestScanGameOptimizations:
         assert core is not None  # Basic sanity check
 
     @pytest.mark.asyncio
-    async def test_dds_batch_processing_optimization(self):
+    async def test_dds_batch_processing_optimization(self) -> None:
         """Test optimized DDS header batch processing."""
         from ClassicLib.scanning.game.core import ScanGameCore
 
@@ -270,14 +165,14 @@ class TestScanGameOptimizations:
         issue_locks = {"tex_dims": asyncio.Lock()}
 
         # Mock _read_dds_header_mmap to return odd dimensions for some files
-        def mock_read_header(file_path):
+        def mock_read_header(file_path: Path) -> tuple[int, int]:
             # Return odd dimensions for first 10 files
             if "test0" in str(file_path) or "test1" in str(file_path):
                 return (101, 102)  # Odd width
             return (100, 100)  # Even dimensions
 
         # We must mock the method on the dds_processor instance, not the core
-        core.dds_processor.read_dds_header_mmap = mock_read_header
+        core.dds_processor.read_dds_header_mmap = mock_read_header  # type: ignore[assignment]
 
         # Mock the executor
         with patch("asyncio.get_event_loop") as mock_get_loop:
@@ -299,7 +194,7 @@ class TestGameIntegrityOrchestratorAsync:
     """Test GameIntegrityOrchestrator async integration."""
 
     @pytest.mark.asyncio
-    async def test_orchestrator_calls_async_ini_scan_directly(self):
+    async def test_orchestrator_calls_async_ini_scan_directly(self) -> None:
         """Test orchestrator calls scan_mod_inis_async directly without executor."""
         from ClassicLib.scanning.game.orchestrator import GameIntegrityOrchestratorCore
 
@@ -316,7 +211,7 @@ class TestGameIntegrityOrchestratorAsync:
             assert result == "Test INI scan result"
 
     @pytest.mark.asyncio
-    async def test_orchestrator_performance_improvement(self):
+    async def test_orchestrator_performance_improvement(self) -> None:
         """Test that orchestrator doesn't use run_in_executor for async functions."""
         from ClassicLib.scanning.game.orchestrator import GameIntegrityOrchestratorCore
 

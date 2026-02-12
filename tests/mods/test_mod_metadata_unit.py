@@ -50,21 +50,28 @@ class TestImportantModDetection:
         assert "AMD Mod is installed" in report_str
 
     def test_missing_important_mod_with_matching_gpu(self) -> None:
-        """Test when an important mod is missing and GPU matches."""
+        """Test when an important mod is missing and GPU matches.
+
+        The Rust implementation does not add headers or report missing mods --
+        it only reports mods that ARE installed. So when no matching plugins
+        are found, the result is empty.
+        """
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod is important for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00"}
         gpu_rival: str = "nvidia"
 
         result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, gpu_rival, set())  # type: ignore[arg-type]
 
-        # The implementation always adds a header, so it has content
-        assert result.has_content
-        report_str = "".join(result.to_list())
-        # Should just have header with no specific mod warnings
-        assert "### Checking for Important Mods" in report_str
+        # Rust returns empty when no matching plugins are found
+        assert not result.has_content
 
     def test_missing_important_mod_with_nonmatching_gpu(self) -> None:
-        """Test when an important mod is missing and GPU doesn't match."""
+        """Test when an important mod is missing and GPU doesn't match.
+
+        The Rust implementation reports "not installed" for mods when the warning
+        text does NOT contain the rival GPU name. Here the warning says "nvidia GPUs"
+        and the rival is "amd", so the warning does not contain "amd" -> reports as not installed.
+        """
         yaml_dict: dict[str, str] = {"nvidia_mod | NVIDIA Mod": "This mod is important for nvidia GPUs"}
         crashlog_plugins: dict[str, str] = {"unrelated_plugin.esp": "00"}
         gpu_rival: str = "amd"
@@ -73,8 +80,7 @@ class TestImportantModDetection:
 
         assert result.has_content
         report_str = "".join(result.to_list())
-        # The actual implementation adds warnings for important mods not installed
-        assert "NVIDIA Mod is not installed" in report_str or "NVIDIA Mod is missing" in report_str
+        assert "NVIDIA Mod is not installed" in report_str
 
     def test_no_gpu_rival_specified(self) -> None:
         """Test when no gpu_rival is specified."""
@@ -89,37 +95,43 @@ class TestImportantModDetection:
         assert "Important Mod is installed" in report_str
 
     def test_empty_yaml_dict(self) -> None:
-        """Test with empty YAML dictionary."""
+        """Test with empty YAML dictionary.
+
+        Rust returns empty Vec when no patterns to match against.
+        """
         yaml_dict: dict[Any, Any] = {}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00"}
 
         result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None, set())  # type: ignore[arg-type]
 
-        # The implementation always adds a header
-        assert result.has_content
-        report_str = "".join(result.to_list())
-        assert "### Checking for Important Mods" in report_str
+        # Rust returns empty for empty yaml dict
+        assert not result.has_content
 
     def test_empty_crashlog_plugins(self, sample_important_dict: dict[str, str]) -> None:
-        """Test with empty crashlog plugins."""
+        """Test with empty crashlog plugins.
+
+        Rust returns empty Vec when no plugins to match against.
+        """
         crashlog_plugins: dict[str, str] = {}
 
         result: ReportFragment = detect_mods_important(sample_important_dict, crashlog_plugins, None, set())
 
-        # The implementation always adds a header
-        assert result.has_content
-        report_str = "".join(result.to_list())
-        assert "### Checking for Important Mods" in report_str
+        # Rust returns empty when no plugins present
+        assert not result.has_content
 
     def test_malformed_mod_entry_format(self) -> None:
-        """Test with malformed mod entry format (no separator)."""
+        """Test with malformed mod entry format (no separator).
+
+        The Rust implementation silently skips keys without ' | ' separator
+        instead of raising ValueError like the old Python code did.
+        """
         yaml_dict: dict[str, str] = {"ImportantMod": "This is an important mod"}
         crashlog_plugins: dict[str, str] = {"important_mod_plugin.esp": "00"}
 
-        with pytest.raises(ValueError) as excinfo:  # type: ignore  # noqa: PT011
-            detect_mods_important(yaml_dict, crashlog_plugins, None, set())
+        result: ReportFragment = detect_mods_important(yaml_dict, crashlog_plugins, None, set())
 
-        assert "not enough values to unpack" in str(excinfo.value)
+        # Malformed key is silently skipped, no result produced
+        assert not result.has_content
 
     def test_multiple_important_mods(self, sample_important_dict: dict[str, str]) -> None:
         """Test detecting multiple important mods."""

@@ -3,10 +3,10 @@ Unit tests for update checking logic and error handling in Update.py.
 
 This module tests the is_latest_version function and UpdateCheckError
 exception class, including various update scenarios, error handling,
-and edge cases. The update system uses GitHub as the sole source.
+and edge cases. The update system uses the Rust GithubClient binding.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from packaging.version import Version
@@ -15,6 +15,15 @@ from ClassicLib.support.update import (
     UpdateCheckError,
     is_latest_version,
 )
+
+
+def _make_mock_release(*, name: str = "v7.30.1", tag_name: str = "v7.30.1", prerelease: bool = False) -> MagicMock:
+    """Create a mock GithubRelease object."""
+    release = MagicMock()
+    release.name = name
+    release.tag_name = tag_name
+    release.prerelease = prerelease
+    return release
 
 
 @pytest.mark.unit
@@ -62,8 +71,6 @@ class TestUpdateChecking:
         result = await is_latest_version(quiet=False, gui_request=False)
 
         assert result is False
-        # Message would be logged via the real msg_info function
-        # We're testing the result, not the message logging
 
     @pytest.mark.asyncio
     async def test_is_latest_version_up_to_date(self, mock_dependencies):
@@ -87,28 +94,15 @@ class TestUpdateChecking:
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock GitHub returning same version
-        # We need to patch aiohttp.ClientSession to control the network calls
-        with patch("ClassicLib.support.update.aiohttp.ClientSession") as mock_session_class:
-            mock_session = AsyncMock()
-            mock_session_class.return_value.__aenter__ = AsyncMock(return_value=mock_session)
-            mock_session_class.return_value.__aexit__ = AsyncMock()
+        # Mock GithubClient returning latest release with same version
+        mock_release = _make_mock_release(name="v7.30.1", tag_name="v7.30.1")
+        mock_client = MagicMock()
+        mock_client.get_latest_release = AsyncMock(return_value=mock_release)
 
-            # Mock the get_latest_and_top_release_details function
-            with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
-                # Create a coroutine for the async function
-                async def mock_get_details(*args, **kwargs):
-                    return {
-                        "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
-                        "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
-                    }
+        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
+            result = await is_latest_version(quiet=False, gui_request=False)
 
-                mock_github.side_effect = mock_get_details
-
-                result = await is_latest_version(quiet=False, gui_request=False)
-
-            assert result is True
-            # Success message would be logged via the real msg_success function
+        assert result is True
 
     @pytest.mark.asyncio
     async def test_is_latest_version_update_available_gui(self, mock_dependencies):
@@ -132,14 +126,12 @@ class TestUpdateChecking:
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock GitHub returning newer version
-        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
-            mock_github.return_value = {
-                "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
-                "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
-            }
+        # Mock GithubClient returning newer version
+        mock_release = _make_mock_release(name="v7.30.1", tag_name="v7.30.1")
+        mock_client = MagicMock()
+        mock_client.get_latest_release = AsyncMock(return_value=mock_release)
 
-            # Should raise UpdateCheckError for GUI
+        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
             with pytest.raises(UpdateCheckError, match="A new version is available"):
                 await is_latest_version(quiet=False, gui_request=True)
 
@@ -166,17 +158,15 @@ class TestUpdateChecking:
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock GitHub returning newer version
-        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
-            mock_github.return_value = {
-                "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
-                "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
-            }
+        # Mock GithubClient returning newer version
+        mock_release = _make_mock_release(name="v7.30.1", tag_name="v7.30.1")
+        mock_client = MagicMock()
+        mock_client.get_latest_release = AsyncMock(return_value=mock_release)
 
+        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
             result = await is_latest_version(quiet=False, gui_request=False)
 
-            assert result is False  # Outdated
-            # Warning message would be logged via the real msg_warning function
+        assert result is False  # Outdated
 
     @pytest.mark.asyncio
     async def test_is_latest_version_network_error_handling(self, mock_dependencies):
@@ -201,18 +191,15 @@ class TestUpdateChecking:
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock get_latest_and_top_release_details to return None (simulating network failure)
-        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
-            # Return None to simulate network failure
-            async def mock_get_details(*args, **kwargs):
-                return None
+        # Mock GithubClient raising RuntimeError (network failure)
+        mock_client = MagicMock()
+        mock_client.get_latest_release = AsyncMock(side_effect=RuntimeError("GitHub API error: connection refused"))
+        mock_client.get_all_releases = AsyncMock(side_effect=RuntimeError("GitHub API error: connection refused"))
 
-            mock_github.side_effect = mock_get_details
-
+        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
             result = await is_latest_version(quiet=False, gui_request=False)
 
-            assert result is False
-            # Error message would be logged via the real msg_error function
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_is_latest_version_unknown_local_version(self, mock_dependencies):
@@ -236,17 +223,15 @@ class TestUpdateChecking:
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock GitHub returning a version
-        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
-            mock_github.return_value = {
-                "latest_endpoint_release": {"version": Version("7.30.1"), "prerelease": False},
-                "top_of_list_release": {"version": Version("7.30.1"), "prerelease": False},
-            }
+        # Mock GithubClient returning a version
+        mock_release = _make_mock_release(name="v7.30.1", tag_name="v7.30.1")
+        mock_client = MagicMock()
+        mock_client.get_latest_release = AsyncMock(return_value=mock_release)
 
+        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
             result = await is_latest_version(quiet=False, gui_request=False)
 
-            assert result is False  # Assume outdated when local version unknown
-            # Warning message would be logged via the real msg_warning function
+        assert result is False  # Assume outdated when local version unknown
 
 
 @pytest.mark.unit
@@ -291,11 +276,12 @@ class TestUpdateCheckErrorHandling:
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock GitHub failure
-        with patch("ClassicLib.support.update.get_latest_and_top_release_details") as mock_github:
-            mock_github.return_value = None  # Failed
+        # Mock GithubClient where both get_latest_release and get_all_releases fail
+        mock_client = MagicMock()
+        mock_client.get_latest_release = AsyncMock(side_effect=RuntimeError("GitHub API error: not found"))
+        mock_client.get_all_releases = AsyncMock(side_effect=RuntimeError("GitHub API error: not found"))
 
-            # Should raise UpdateCheckError for GUI
+        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
             with pytest.raises(UpdateCheckError, match="Unable to fetch version information from GitHub"):
                 await is_latest_version(quiet=True, gui_request=True)
 
@@ -319,11 +305,8 @@ class TestUpdateCheckErrorHandling:
 
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock unexpected exception
-        with patch("ClassicLib.support.update.aiohttp.ClientSession") as mock_session_class:
-            mock_session_class.side_effect = RuntimeError("Unexpected error")
-
-            # Should raise UpdateCheckError for GUI
+        # Mock GithubClient constructor raising unexpected exception
+        with patch("ClassicLib.support.update.GithubClient", side_effect=RuntimeError("Unexpected error")):
             with pytest.raises(UpdateCheckError, match="An unexpected error occurred"):
                 await is_latest_version(quiet=True, gui_request=True)
 

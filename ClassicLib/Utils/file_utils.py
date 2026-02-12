@@ -13,18 +13,17 @@ import contextlib
 import hashlib
 import os
 from collections.abc import Iterator
-from difflib import SequenceMatcher
 from io import TextIOWrapper
 from pathlib import Path
 
 import chardet
+from classic_file_io import calculate_similarity as _rust_calculate_similarity
 
 
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """Calculate the similarity percentage between two text files.
 
-    Delegates to Rust LCS-based comparison for speed, with Python
-    SequenceMatcher fallback.
+    Delegates to Rust LCS-based comparison via classic_file_io.
 
     Args:
         file1: Path to the first file
@@ -34,19 +33,7 @@ def calculate_similarity(file1: Path, file2: Path) -> float:
         Similarity ratio as a float between 0.0 and 1.0
 
     """
-    try:
-        from classic_file_io import calculate_similarity as rust_similarity
-
-        return rust_similarity(str(file1), str(file2))
-    except Exception:  # noqa: BLE001
-        pass
-
-    try:
-        content1 = file1.read_text(encoding="utf-8", errors="ignore")
-        content2 = file2.read_text(encoding="utf-8", errors="ignore")
-        return SequenceMatcher(None, content1, content2).ratio()
-    except (OSError, UnicodeDecodeError):
-        return 0.0
+    return _rust_calculate_similarity(str(file1), str(file2))
 
 
 def calculate_file_hash(file_path: Path) -> str:

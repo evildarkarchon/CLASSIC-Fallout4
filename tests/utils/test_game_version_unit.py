@@ -1,13 +1,13 @@
 """
-Test suite for game version detection utility functions in ClassicLib/Util.py.
+Test suite for game version detection utility functions.
 
-This module contains tests for detecting game executable versions across
-different platforms.
+This module contains tests for detecting game executable versions
+using the Rust PE parser (classic_version).
 """
 
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002, PLR0913, F841
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 from packaging.version import Version
@@ -28,82 +28,31 @@ class TestGameVersionDetection:
         version = read_game_exe_version(nonexistent_exe)
         assert version == Constants.NULL_VERSION
 
-    @patch("platform.system", return_value="Windows")
-    @patch("ClassicLib.Utils.version_utils.get_version_windows_api")
-    def test_read_game_exe_version_windows_success(self, mock_windows_api: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:  # noqa: ARG002
-        """Test read_game_exe_version on Windows with successful API call."""
+    @patch("ClassicLib.Utils.version_utils.extract_pe_version")
+    def test_read_game_exe_version_rust_success(self, mock_extract, tmp_path: Path) -> None:
+        """Test read_game_exe_version with successful Rust extraction."""
         test_exe = tmp_path / "test.exe"
         test_exe.write_bytes(b"fake exe content")
 
-        expected_version = Version("1.10.163.0")
-        mock_windows_api.return_value = expected_version
+        mock_extract.return_value = (1, 10, 163, 0)
 
         version = read_game_exe_version(test_exe)
-        assert version == expected_version
-        mock_windows_api.assert_called_once_with(test_exe)
+        assert version == Version("1.10.163.0")
+        mock_extract.assert_called_once_with(str(test_exe))
 
-    @patch("platform.system", return_value="Linux")
-    @patch("ClassicLib.Utils.version_utils.get_version_from_pe_header")
-    def test_read_game_exe_version_linux_fallback(self, mock_pe_header: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:  # noqa: ARG002
-        """Test read_game_exe_version on Linux using PE header fallback."""
+    @patch("ClassicLib.Utils.version_utils.extract_pe_version", side_effect=RuntimeError("PE parse failed"))
+    def test_read_game_exe_version_rust_failure(self, mock_extract, tmp_path: Path) -> None:
+        """Test read_game_exe_version returns NULL_VERSION when Rust extraction fails."""
         test_exe = tmp_path / "test.exe"
         test_exe.write_bytes(b"fake exe content")
 
-        expected_version = Version("1.10.163.0")
-        mock_pe_header.return_value = expected_version
-
         version = read_game_exe_version(test_exe)
-        assert version == expected_version
-        mock_pe_header.assert_called_once_with(test_exe)
-
-    @patch("platform.system", return_value="Windows")
-    @patch("ClassicLib.Utils.version_utils.get_version_from_pe_header")
-    @patch("ClassicLib.Utils.version_utils.get_version_windows_api", return_value=Constants.NULL_VERSION)
-    def test_read_game_exe_version_windows_fallback_on_error(
-        self, mock_windows_api: MagicMock, mock_pe_header: MagicMock, mock_platform: MagicMock, tmp_path: Path
-    ) -> None:  # noqa: ARG002
-        """Test read_game_exe_version falls back to PE header when Windows API fails."""
-        test_exe = tmp_path / "test.exe"
-        test_exe.write_bytes(b"fake exe content")
-
-        expected_version = Version("1.10.162.0")
-        mock_pe_header.return_value = expected_version
-
-        version = read_game_exe_version(test_exe)
-        assert version == expected_version
-        mock_pe_header.assert_called_once_with(test_exe)
-
-    @patch("platform.system", return_value="Darwin")  # macOS
-    @patch("ClassicLib.Utils.version_utils.get_version_from_pe_header")
-    def test_read_game_exe_version_macos(self, mock_pe_header: MagicMock, mock_platform: MagicMock, tmp_path: Path) -> None:  # noqa: ARG002
-        """Test read_game_exe_version on macOS."""
-        test_exe = tmp_path / "test.exe"
-        test_exe.write_bytes(b"fake exe content")
-
-        expected_version = Version("1.10.163.0")
-        mock_pe_header.return_value = expected_version
-
-        version = read_game_exe_version(test_exe)
-        assert version == expected_version
-        mock_pe_header.assert_called_once_with(test_exe)
+        assert version == Constants.NULL_VERSION
 
     def test_read_game_exe_version_empty_file(self, tmp_path: Path) -> None:
         """Test read_game_exe_version with empty executable file."""
         test_exe = tmp_path / "empty.exe"
         test_exe.write_bytes(b"")
-
-        version = read_game_exe_version(test_exe)
-        assert version == Constants.NULL_VERSION
-
-    @patch("platform.system", return_value="Windows")
-    @patch("ClassicLib.Utils.version_utils.get_version_windows_api", return_value=Constants.NULL_VERSION)
-    @patch("ClassicLib.Utils.version_utils.get_version_from_pe_header", return_value=Constants.NULL_VERSION)
-    def test_read_game_exe_version_both_methods_fail(
-        self, mock_pe_header: MagicMock, mock_windows_api: MagicMock, mock_platform: MagicMock, tmp_path: Path
-    ) -> None:  # noqa: ARG002
-        """Test read_game_exe_version when both detection methods fail."""
-        test_exe = tmp_path / "test.exe"
-        test_exe.write_bytes(b"fake exe content")
 
         version = read_game_exe_version(test_exe)
         assert version == Constants.NULL_VERSION
@@ -116,6 +65,11 @@ class TestGameVersionDetection:
         # The function expects a Path object
         version = read_game_exe_version(test_exe)
         # Without mocking, it will return NULL_VERSION for a fake exe
+        assert version == Constants.NULL_VERSION
+
+    def test_read_game_exe_version_none_path(self) -> None:
+        """Test read_game_exe_version with None path."""
+        version = read_game_exe_version(None)  # type: ignore[arg-type]
         assert version == Constants.NULL_VERSION
 
 

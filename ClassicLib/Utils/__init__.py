@@ -17,14 +17,7 @@ from ClassicLib.Utils.string_utils import append_or_extend, normalize_list
 
 # Version utilities
 from ClassicLib.Utils.version_utils import (
-    VERSION_PATTERNS,
     crashgen_version_gen,
-    create_version_from_info,
-    extract_windows_version_info,
-    get_version_fallback,
-    get_version_from_pe_header,
-    get_version_windows_api,
-    get_version_with_pefile,
     is_valid_executable_path,
     read_game_exe_version,
 )
@@ -46,14 +39,7 @@ __all__ = [
     # Version utilities
     "read_game_exe_version",
     "crashgen_version_gen",
-    "get_version_windows_api",
-    "get_version_from_pe_header",
-    "get_version_with_pefile",
-    "get_version_fallback",
-    "extract_windows_version_info",
-    "create_version_from_info",
     "is_valid_executable_path",
-    "VERSION_PATTERNS",
     # Logging utilities
     "configure_logging",
     "enable_debug_logging",

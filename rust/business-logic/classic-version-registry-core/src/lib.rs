@@ -55,7 +55,7 @@ mod version;
 pub use error::VersionRegistryError;
 pub use matching::{MatchConfidence, MatchResult, VersionMatcher};
 pub use models::{
-    AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig,
+    AddressLibFormat, AddressLibraryConfig, CompatibleRange, CrashgenConfig, LogLevel,
     UnknownVersionHandling, UnknownVersionStrategy, VersionInfo, XseConfig,
 };
 pub use registry::{VersionRegistry, get_version_registry};

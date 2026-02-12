@@ -95,6 +95,9 @@ pub struct XseConfig {
     pub compatible_version: String,
     /// Loader executable name (e.g., "f4se_loader.exe").
     pub loader: String,
+    /// SHA-256 hashes for XSE script files, as (filename, hash) pairs.
+    /// Used for validating that installed scripts match the expected version.
+    pub script_hashes: Vec<(String, String)>,
 }
 
 impl XseConfig {
@@ -109,6 +112,23 @@ impl XseConfig {
             acronym: acronym.into(),
             compatible_version: compatible_version.into(),
             loader: loader.into(),
+            script_hashes: Vec::new(),
+        }
+    }
+
+    /// Create a new XSE configuration with script hashes.
+    #[must_use]
+    pub fn with_script_hashes(
+        acronym: impl Into<String>,
+        compatible_version: impl Into<String>,
+        loader: impl Into<String>,
+        script_hashes: Vec<(String, String)>,
+    ) -> Self {
+        Self {
+            acronym: acronym.into(),
+            compatible_version: compatible_version.into(),
+            loader: loader.into(),
+            script_hashes,
         }
     }
 }
@@ -342,6 +362,9 @@ pub struct VersionInfo {
     pub priority: i32,
     /// Whether this version is deprecated.
     pub deprecated: bool,
+    /// SHA-256 hash of the game executable for this version.
+    /// Used for validating game executable integrity.
+    pub exe_hash: Option<String>,
     /// Crash generator versions compatible with this game version.
     ///
     /// Each `CrashgenConfig` contains version, name, description, download_url,
@@ -706,6 +729,7 @@ mod tests {
             compatible_range: None,
             priority: 100,
             deprecated: false,
+            exe_hash: None,
             crashgen_versions: vec![
                 CrashgenConfig::with_range(
                     "1.28.6",
@@ -855,6 +879,7 @@ mod tests {
             compatible_range: None,
             priority: 100,
             deprecated: false,
+            exe_hash: None,
             crashgen_versions: vec![
                 CrashgenConfig::with_range("1.0.0", "Config 1", "", "", range1),
                 CrashgenConfig::with_range("2.0.0", "Config 2", "", "", range2),

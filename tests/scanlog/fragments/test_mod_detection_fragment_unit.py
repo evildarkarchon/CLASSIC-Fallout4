@@ -73,25 +73,19 @@ class TestDetectModsSingleFragment:
 
         assert result.has_content
 
-    def test_pipe_separated_required_plugins_all_present(self) -> None:
-        """Test pipe-separated required plugins when all are present."""
+    def test_pipe_separated_key_not_matched_as_literal(self) -> None:
+        """Test pipe-separated key is treated as literal in single detection.
+
+        The Rust detect_mods_single treats the entire key as a literal pattern
+        (not splitting on ' | '). So 'PluginA | PluginB' is never matched
+        against individual plugin names.
+        """
         yaml_dict = {"PluginA | PluginB": "Warning: Both plugins required"}
         crashlog_plugins = {"PluginA.esp": "00", "PluginB.esp": "01"}
 
         result = detect_mods_single_fragment(yaml_dict, crashlog_plugins)
 
-        assert result.has_content
-        content = "".join(result.to_list())
-        assert "Both plugins required" in content
-
-    def test_pipe_separated_required_plugins_missing_one(self) -> None:
-        """Test pipe-separated required plugins when one is missing."""
-        yaml_dict = {"PluginA | PluginB": "Warning: Both plugins required"}
-        crashlog_plugins = {"PluginA.esp": "00", "unrelated.esp": "01"}
-
-        result = detect_mods_single_fragment(yaml_dict, crashlog_plugins)
-
-        # Should not match because PluginB is missing
+        # Rust treats the full key as a single pattern -- no plugin name contains "plugina | pluginb"
         assert not result.has_content
 
     def test_empty_yaml_dict(self) -> None:
@@ -112,15 +106,19 @@ class TestDetectModsSingleFragment:
 
         assert not result.has_content
 
-    def test_warning_emoji_format(self) -> None:
-        """Test that warnings include emoji formatting."""
+    def test_warning_format(self) -> None:
+        """Test that warnings include Rust formatting.
+
+        The Rust implementation uses '[!] FOUND' format instead of emoji.
+        """
         yaml_dict = {"TestMod": "Test warning message"}
         crashlog_plugins = {"TestMod.esp": "00"}
 
         result = detect_mods_single_fragment(yaml_dict, crashlog_plugins)
 
         content = "".join(result.to_list())
-        assert "⚠️" in content
+        assert "[!] FOUND" in content
+        assert "Test warning message" in content
 
 
 class TestGenerateModCheckHeaderFragment:

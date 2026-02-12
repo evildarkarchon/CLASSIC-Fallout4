@@ -38,7 +38,7 @@ from ClassicLib.scanning.logs.async_reformat import (
 )
 from ClassicLib.scanning.logs.async_util import write_file_async
 
-# Mod detection (Python utilities, may use Rust internally via factory)
+# Mod detection (delegates to Rust classic_scanlog via integration layer)
 from ClassicLib.scanning.logs.detect_mods import (
     detect_mods_double,
     detect_mods_important,

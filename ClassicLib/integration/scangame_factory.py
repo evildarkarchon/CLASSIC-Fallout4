@@ -1,89 +1,63 @@
-"""Factory for ScanGame components with transparent Rust acceleration.
+"""Factory for ScanGame components using mandatory Rust acceleration.
 
-This module provides factory functions that return Rust implementations when available,
-automatically falling back to Python implementations if Rust modules are not installed.
+This module provides factory functions that return Rust implementations
+from the classic_scangame binding crate.
 
 Usage:
     from ClassicLib.integration.scangame_factory import get_ba2_scanner
 
-    scanner = get_ba2_scanner()  # Returns Rust or Python implementation
+    scanner = get_ba2_scanner()
     issues = scanner.scan_archive(path)
 """
 
 from pathlib import Path
-from types import ModuleType
 from typing import Any
 
-# Track Rust availability
-_RUST_AVAILABLE = False
-_classic_scangame: ModuleType | None = None
-
-try:
-    import classic_scangame
-
-    _classic_scangame = classic_scangame
-    _RUST_AVAILABLE = True
-except ImportError:
-    _RUST_AVAILABLE = False
+import classic_scangame
 
 
 def is_rust_available() -> bool:
     """Check if Rust acceleration is available.
 
     Returns:
-        True if classic_scangame Rust module is installed, False otherwise.
+        Always True since classic_scangame is mandatory.
 
     """
-    return _RUST_AVAILABLE
+    return True
 
 
 def get_ba2_scanner() -> Any:
-    """Get BA2Scanner implementation (Rust or Python fallback).
+    """Get BA2Scanner implementation.
 
     Returns:
-        BA2Scanner instance (Rust if available, otherwise Python).
+        BA2Scanner instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        return _classic_scangame.BA2Scanner()
-    from ClassicLib.scanning.game.checks.ba2_fallback import BA2Scanner
-
-    return BA2Scanner()
+    return classic_scangame.BA2Scanner()
 
 
 def get_config_duplicate_detector() -> Any:
-    """Get ConfigDuplicateDetector implementation (Rust or Python fallback).
+    """Get ConfigDuplicateDetector implementation.
 
     Returns:
-        ConfigDuplicateDetector instance (Rust if available, otherwise Python).
+        ConfigDuplicateDetector instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        return _classic_scangame.ConfigDuplicateDetector()
-    from ClassicLib.scanning.game.checks.config_duplicate_fallback import ConfigDuplicateDetector
-
-    return ConfigDuplicateDetector()
+    return classic_scangame.ConfigDuplicateDetector()
 
 
 def get_unpacked_scanner() -> Any:
-    """Get UnpackedScanner implementation (Rust or Python fallback).
+    """Get UnpackedScanner implementation.
 
     Returns:
-        UnpackedScanner instance (Rust if available, otherwise Python).
+        UnpackedScanner instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        return _classic_scangame.UnpackedScanner()
-    from ClassicLib.scanning.game.checks.unpacked_fallback import UnpackedScanner
-
-    return UnpackedScanner()
+    return classic_scangame.UnpackedScanner()
 
 
 def get_log_processor(catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> Any:
-    """Get LogProcessor implementation (Rust or Python fallback).
+    """Get LogProcessor implementation.
 
     Args:
         catch_errors: List of error patterns to catch.
@@ -91,61 +65,41 @@ def get_log_processor(catch_errors: list[str], ignore_files: list[str], ignore_e
         ignore_errors: List of error patterns to ignore.
 
     Returns:
-        LogProcessor instance (Rust if available, otherwise Python).
+        LogProcessor instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        return _classic_scangame.LogProcessor(catch_errors, ignore_files, ignore_errors)
-    from ClassicLib.scanning.game.checks.log_fallback import LogProcessor
-
-    return LogProcessor(catch_errors, ignore_files, ignore_errors)
+    return classic_scangame.LogProcessor(catch_errors, ignore_files, ignore_errors)
 
 
 def get_ini_validator(game_name: str) -> Any:
-    """Get IniValidator implementation (Rust or Python fallback).
+    """Get IniValidator implementation.
 
     Args:
         game_name: Name of the game (e.g., "Fallout4").
 
     Returns:
-        IniValidator instance (Rust if available, otherwise Python).
+        IniValidator instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        return _classic_scangame.IniValidator(game_name)
-    from ClassicLib.scanning.game.checks.ini_fallback import IniValidator
-
-    return IniValidator(game_name)
+    return classic_scangame.IniValidator(game_name)
 
 
 def get_crashgen_checker(plugins_path: Path, crashgen_name: str) -> Any:
-    """Get CrashgenChecker implementation (Rust or Python fallback).
+    """Get CrashgenChecker implementation.
 
     Args:
         plugins_path: Path to plugins directory.
         crashgen_name: Name of crash generator (e.g., "Buffout4").
 
     Returns:
-        CrashgenChecker instance (Rust if available, otherwise Python).
-
-    Note:
-        The Python fallback retrieves plugins_path and crashgen_name from
-        settings internally, so these arguments are only used for Rust.
+        CrashgenChecker instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        return _classic_scangame.CrashgenChecker(plugins_path, crashgen_name)
-    from ClassicLib.scanning.game.check_crashgen import CrashgenChecker
-
-    # Python implementation gets these from settings, ignores arguments
-    return CrashgenChecker()
+    return classic_scangame.CrashgenChecker(plugins_path, crashgen_name)
 
 
 def get_xse_checker(plugins_path: Path, is_vr_mode: bool = False, game_version: Any = None) -> Any:
-    """Get XseChecker implementation (Rust or Python fallback).
+    """Get XseChecker implementation.
 
     Args:
         plugins_path: Path to plugins directory.
@@ -153,34 +107,21 @@ def get_xse_checker(plugins_path: Path, is_vr_mode: bool = False, game_version: 
         game_version: Game version enum (uses Original if None).
 
     Returns:
-        XseChecker instance (Rust if available, otherwise Python).
+        XseChecker instance from Rust.
 
     """
-    if _RUST_AVAILABLE:
-        assert _classic_scangame is not None
-        if game_version is None:
-            game_version = _classic_scangame.GameVersion.Original
-        return _classic_scangame.XseChecker(plugins_path, is_vr_mode, game_version)
-    from ClassicLib.scanning.game.checks.xse_fallback import GameVersion, XseChecker
-
     if game_version is None:
-        game_version = GameVersion.Original
-    return XseChecker(plugins_path, is_vr_mode, game_version)
+        game_version = classic_scangame.GameVersion.Original
+    return classic_scangame.XseChecker(plugins_path, is_vr_mode, game_version)
 
 
 def get_rust_status() -> dict[str, Any]:
     """Get detailed Rust acceleration status.
 
     Returns:
-        Dictionary with Rust availability information:
-        - available: bool - Whether Rust is available
-        - version: str or None - classic_scangame version
-        - components: list[str] - Available Rust components
+        Dictionary with Rust availability information.
 
     """
-    if not _RUST_AVAILABLE:
-        return {"available": False, "version": None, "components": []}
-
     components = [
         "BA2Scanner",
         "ConfigDuplicateDetector",
@@ -191,4 +132,4 @@ def get_rust_status() -> dict[str, Any]:
         "XseChecker",
     ]
 
-    return {"available": True, "version": getattr(_classic_scangame, "__version__", "unknown"), "components": components}
+    return {"available": True, "version": getattr(classic_scangame, "__version__", "unknown"), "components": components}

@@ -738,21 +738,28 @@ class TestStructuredYamlParsing:
         assert "47359" in config.download_url
 
     @pytest.mark.unit
-    def test_yaml_loaded_crashgen_has_compatible_range(self):
-        """Test that YAML-loaded crashgen configs have compatible_range when specified."""
+    def test_og_crashgen_128_has_expected_metadata(self):
+        """Test that OG crashgen 1.28.6 has correct metadata from Rust defaults.
+
+        The Rust registry loads from hardcoded defaults where crashgen configs
+        include compatible_range matching the YAML definition.
+        """
         registry = get_version_registry()
         og = registry.get_by_id("FO4_OG")
         assert og is not None
 
         config = og.get_crashgen_for_version("1.28.6")
         assert config is not None
-        # This config should have compatible_range from structured YAML
+        assert config.name == "Buffout 4"
+        assert config.description == "Legacy version for OG"
+        # Rust defaults include compatible_range for OG's legacy Buffout 4
         assert config.compatible_range is not None
         assert config.compatible_range.min_version == Version("1.10.163.0")
+        assert config.compatible_range.max_version == Version("1.10.163.999")
 
     @pytest.mark.unit
     def test_yaml_loaded_ng_crashgen_metadata(self):
-        """Test that NG crashgen config has proper metadata."""
+        """Test that NG crashgen config has proper metadata including compatible_range."""
         registry = get_version_registry()
         ng = registry.get_by_id("FO4_NG")
         assert ng is not None
@@ -764,6 +771,10 @@ class TestStructuredYamlParsing:
         # Description identifies this as the NG version
         assert config.description == "Buffout 4 NG"
         assert "64880" in config.download_url
+        # NG crashgen has compatible_range for NG game versions
+        assert config.compatible_range is not None
+        assert config.compatible_range.min_version == Version("1.10.984.0")
+        assert config.compatible_range.max_version == Version("1.10.999.999")
 
     @pytest.mark.unit
     def test_yaml_loaded_vr_crashgen_metadata(self):
@@ -791,6 +802,47 @@ class TestStructuredYamlParsing:
         assert config.name == "Buffout 4"
         # This should not have a compatible_range (compatible with any OG version)
         assert config.compatible_range is None
+
+    @pytest.mark.unit
+    def test_ae_crashgen_has_compatible_range(self):
+        """Test that AE crashgen (MiniBuff) has compatible_range matching AE version range."""
+        registry = get_version_registry()
+        ae = registry.get_by_id("FO4_AE")
+        assert ae is not None
+
+        config = ae.get_crashgen_for_version("1.4.0")
+        assert config is not None
+        assert config.name == "MiniBuff AE Crash Logger"
+        assert config.compatible_range is not None
+        assert config.compatible_range.min_version == Version("1.11.137.0")
+        assert config.compatible_range.max_version == Version("1.11.999.999")
+
+    @pytest.mark.unit
+    def test_vr_crashgen_has_no_compatible_range(self):
+        """Test that VR crashgen has no compatible_range (universal within VR)."""
+        registry = get_version_registry()
+        vr = registry.get_by_id("FO4_VR")
+        assert vr is not None
+
+        config = vr.get_crashgen_for_version("1.37.0")
+        assert config is not None
+        assert config.compatible_range is None
+
+    @pytest.mark.unit
+    def test_og_get_compatible_crashgens_filters_by_range(self):
+        """Test that get_compatible_crashgens properly filters using crashgen ranges."""
+        registry = get_version_registry()
+        og = registry.get_by_id("FO4_OG")
+        assert og is not None
+
+        # OG game version - both crashgens compatible (1.28.6 range contains OG, 1.37.0 universal)
+        og_compatible = og.get_compatible_crashgens(str(Version("1.10.163.0")))
+        assert len(og_compatible) == 2
+
+        # NG game version - only 1.37.0 compatible (1.28.6 range excludes NG)
+        ng_compatible = og.get_compatible_crashgens(str(Version("1.10.984.0")))
+        assert len(ng_compatible) == 1
+        assert ng_compatible[0].version == "1.37.0"
 
 
 class TestRegistryGetCrashgenConfigs:

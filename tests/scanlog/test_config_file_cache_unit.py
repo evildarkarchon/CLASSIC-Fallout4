@@ -107,64 +107,60 @@ class TestConfigFileCacheReadOnly:
         """
         Verify detect_issue() detects issues when condition matches.
 
-        This test confirms that issues are correctly identified when
-        the detection condition is met.
+        Rust RustConfigFileCache scans game_root on init, so we
+        create the INI file before constructing the cache.
         """
-        # Create test configuration with issue
+        # Create test configuration with issue (must exist before cache init)
         test_ini = tmp_path / "test.ini"
         test_ini.write_text("[Settings]\nValue = 10\n", encoding="utf-8")
 
         cache = ConfigFileCache()
-        cache._config_files = {"test.ini": test_ini}
 
-        # Load the configuration
-        await cache._load_config_async("test.ini")
-
-        # Verify we can get the current value
+        # Verify Rust backend found and parsed the file
         current_value = cache.get(str, "test.ini", "Settings", "Value")
         assert current_value == "10", f"Expected '10', got '{current_value}'"
-
-        # Note: detect_issue() implementation details may vary
-        # This test verifies the general contract
 
     @pytest.mark.asyncio
     async def test_detect_issue_with_non_matching_condition(self, tmp_path: Path):
         """
         Verify detect_issue() returns None when condition doesn't match.
 
-        This test ensures that no false positives are generated when
-        configuration values are correct.
+        Rust RustConfigFileCache scans game_root on init, so we
+        create the INI file before constructing the cache.
         """
-        # Create test configuration without issue
+        # Create test configuration without issue (must exist before cache init)
         test_ini = tmp_path / "test.ini"
         test_ini.write_text("[Settings]\nValue = good_value\n", encoding="utf-8")
 
         cache = ConfigFileCache()
-        cache._config_files = {"test.ini": test_ini}
 
-        # Load the configuration
-        await cache._load_config_async("test.ini")
-
-        # Verify we can get the current value
+        # Verify Rust backend found and parsed the file
         current_value = cache.get(str, "test.ini", "Settings", "Value")
         assert current_value == "good_value"
 
-        # If detect_issue is implemented, it should return None when value is correct
-        # (Implementation details may vary based on actual API)
+        # detect_issue should return None when condition doesn't match
+        issue = await cache.detect_issue(
+            str,
+            file_name_lower="test.ini",
+            section="Settings",
+            setting="Value",
+            recommended_value="good_value",
+            description="Test",
+            condition_check=lambda v: v != "good_value",
+        )
+        assert issue is None
 
     def test_detect_issue_with_missing_file(self):
         """
-        Verify detect_issue() handles missing files gracefully.
+        Verify ConfigFileCache handles missing files gracefully.
 
         This test ensures that missing configuration files don't cause
         crashes and are handled appropriately.
         """
         cache = ConfigFileCache()
 
-        # Try to detect issue in non-existent file
-        # Should either return None or raise appropriate exception
-        # (Implementation may vary)
-        assert "nonexistent.ini" not in cache._config_files
+        # Verify nonexistent file is not found in cache
+        assert "nonexistent.ini" not in cache
 
     def test_file_modification_time_unchanged(self, tmp_path: Path):
         """
@@ -228,10 +224,10 @@ class TestConfigFileCacheReadOnly:
 
     def test_config_file_cache_isolation(self, tmp_path: Path):
         """
-        Verify ConfigFileCache instances are properly isolated.
+        Verify ConfigFileCache reads distinct files correctly.
 
-        This test ensures that multiple cache instances don't
-        interfere with each other's read operations.
+        The Rust RustConfigFileCache scans the game root directory
+        and indexes files by their actual names.
         """
         # Create test configurations
         test_ini1 = tmp_path / "test1.ini"
@@ -240,16 +236,12 @@ class TestConfigFileCacheReadOnly:
         test_ini2 = tmp_path / "test2.ini"
         test_ini2.write_text("[Main]\nKey = Value2\n", encoding="utf-8")
 
-        # Create separate cache instances
-        cache1 = ConfigFileCache()
-        cache1._config_files = {"test.ini": test_ini1}
+        # Single cache instance finds both files by their real names
+        cache = ConfigFileCache()
 
-        cache2 = ConfigFileCache()
-        cache2._config_files = {"test.ini": test_ini2}
-
-        # Read values from each cache
-        value1 = cache1.get(str, "test.ini", "Main", "Key")
-        value2 = cache2.get(str, "test.ini", "Main", "Key")
+        # Read values using actual file names
+        value1 = cache.get(str, "test1.ini", "Main", "Key")
+        value2 = cache.get(str, "test2.ini", "Main", "Key")
 
         # Verify correct values retrieved
         assert value1 == "Value1"

@@ -185,11 +185,18 @@ impl VersionRegistry {
 
         // Parse XSE config
         let xse = yaml_ops.get_setting(yaml, "xse").map(|xse_yaml| {
-            XseConfig::new(
-                yaml_ops.get_string_value(&xse_yaml, "acronym", ""),
-                yaml_ops.get_string_value(&xse_yaml, "compatible_version", ""),
-                yaml_ops.get_string_value(&xse_yaml, "loader", ""),
-            )
+            let acronym = yaml_ops.get_string_value(&xse_yaml, "acronym", "");
+            let compatible_version = yaml_ops.get_string_value(&xse_yaml, "compatible_version", "");
+            let loader = yaml_ops.get_string_value(&xse_yaml, "loader", "");
+
+            // Parse script_hashes as a map of filename -> hash
+            let script_hashes: Vec<(String, String)> = yaml_ops
+                .get_hashmap_value(&xse_yaml, "script_hashes")
+                .into_iter()
+                .filter(|(_, v)| !v.is_empty())
+                .collect();
+
+            XseConfig::with_script_hashes(acronym, compatible_version, loader, script_hashes)
         });
 
         // Parse compatible range
@@ -221,6 +228,12 @@ impl VersionRegistry {
             .and_then(|v| v.as_bool())
             .unwrap_or(false);
 
+        // Parse exe_hash
+        let exe_hash = yaml_ops
+            .get_setting(yaml, "exe_hash")
+            .and_then(|v| v.as_str().map(String::from))
+            .filter(|s| !s.is_empty());
+
         // Parse crashgen_versions (supports both simple strings and structured format)
         let crashgen_versions = Self::parse_crashgen_versions_yaml(yaml, &yaml_ops);
 
@@ -237,6 +250,7 @@ impl VersionRegistry {
             compatible_range,
             priority,
             deprecated,
+            exe_hash,
             crashgen_versions,
         })
     }

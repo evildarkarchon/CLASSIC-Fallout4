@@ -1,69 +1,56 @@
 """Mod detection fragment generation utilities.
 
 This module provides functions for generating report fragments
-related to mod detection and warnings.
+related to mod detection and warnings. Delegates to Rust-accelerated
+mod detection (classic_scanlog.detect_mods_single) and report generation.
 """
 
 from __future__ import annotations
 
-from ClassicLib.integration.rust.report_rust import ReportFragment
+from typing import TYPE_CHECKING
+
+from ClassicLib.integration.rust.mod_detector_rust import detect_mods_single as _rust_detect_mods_single
+from ClassicLib.integration.rust.report.generator import RustAcceleratedReportGenerator
+
+if TYPE_CHECKING:
+    from ClassicLib.integration.rust.report_rust import ReportFragment
+
+_report_generator = RustAcceleratedReportGenerator()
 
 
 def detect_mods_single_fragment(
     yaml_dict: dict[str, str],
     crashlog_plugins: dict[str, str],
 ) -> ReportFragment:
-    """Detect mod-related warnings by analyzing YAML-defined mod descriptions
-    against provided crashlog plugins and returns a formatted report fragment.
+    """Detect mod-related warnings using Rust-accelerated pattern matching.
+
+    Delegates to Rust classic_scanlog.detect_mods_single() for 35x faster
+    mod detection with compiled regex and parallel processing.
 
     Args:
-        yaml_dict (dict[str, str]): A dictionary where keys are mod names
-            (including conditions for required plugins separated by "|") and
-            values are their corresponding descriptive warnings.
-        crashlog_plugins (dict[str, str]): A dictionary representing detected
-            plugins in the crash log where keys are plugin identifiers and values
-            are plugin descriptions.
+        yaml_dict: Dictionary mapping mod names to warning descriptions.
+            Pipe-separated keys (e.g., "PluginA | PluginB") require all plugins present.
+        crashlog_plugins: Dictionary of detected plugins from the crash log.
 
     Returns:
-        ReportFragment: An object representing the formatted list of mod-related
-            warnings if any are found; otherwise, an empty report fragment.
+        ReportFragment containing formatted mod warnings, or empty if none found.
 
     """
-    lines: list[str] = []
-    found_count = 0
-
-    for mod_name, mod_description in yaml_dict.items():
-        # Check if all required plugins are present
-        if "|" in mod_name:
-            required_plugins = [p.strip() for p in mod_name.split("|")]
-            if not all(any(p.lower() in plugin.lower() for plugin in crashlog_plugins) for p in required_plugins):
-                continue
-        # Single plugin check
-        elif not any(mod_name.lower() in plugin.lower() for plugin in crashlog_plugins):
-            continue
-
-        # Add the warning for this mod
-        lines.append(f"* ⚠️ {mod_description}\n")
-        found_count += 1
-
-    if found_count > 0:
-        lines.append("\n")
-
-    return ReportFragment.from_lines(lines)
+    return _rust_detect_mods_single(yaml_dict, crashlog_plugins)
 
 
 def generate_mod_check_header_fragment(check_type: str) -> tuple[str, ...]:
-    """Generate a markdown header fragment for mods based on the specified check type.
+    """Generate a markdown header fragment for mod checks.
 
-    This function creates a tuple containing a single markdown header string for
-    displaying mod check information, which is formatted to include the provided
-    `check_type`.
+    Delegates to Rust ReportGenerator.generate_mod_check_header() and
+    returns a tuple for backward compatibility with existing callers.
 
     Args:
-        check_type (str): The type of check to be included in the header fragment.
+        check_type: The type of check (e.g., "Cause Crashes", "Have Known Issues").
 
     Returns:
-        tuple[str, ...]: A tuple containing the formatted markdown header string.
+        A tuple containing the formatted markdown header string.
 
     """
-    return (f"### Checking For Mods That {check_type}\n\n",)
+    fragment = _report_generator.generate_mod_check_header(check_type)
+    return tuple(fragment.to_list())

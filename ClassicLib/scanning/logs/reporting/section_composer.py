@@ -1,48 +1,39 @@
 """Report composer for combining multiple fragments.
 
 This module provides the ReportComposer class for composing
-multiple report fragments into a complete report.
+multiple report fragments into a complete report. Delegates to
+Rust-accelerated ReportComposer for high-performance composition.
 """
 
 from collections.abc import Callable
 
+from ClassicLib.integration.rust.report.composer import RustAcceleratedReportComposer
 from ClassicLib.integration.rust.report_rust import ReportFragment
 from ClassicLib.scanning.logs.reporting.conditional_section import ConditionalSection
 
 
 class ReportComposer:
-    """Responsible for managing and composing report fragments into a cohesive structure.
+    """Compose report fragments into a cohesive structure.
 
-    This class provides functionality to add report fragments, conditionally add sections,
-    and compose them into a final report. It allows for method chaining to streamline
-    the construction of reports.
-
-    Attributes:
-        fragments (list[ReportFragment]): Stores a list of ReportFragment objects.
-
+    Delegates to Rust-accelerated ReportComposer for parallel fragment
+    processing with string interning. Supports method chaining and
+    conditional section additions.
     """
 
     def __init__(self) -> None:
-        """Initialize an instance of the class.
-
-        The constructor sets up the instance by initializing required attributes.
-        """
-        self.fragments: list[ReportFragment] = []
+        self._inner = RustAcceleratedReportComposer()
 
     def add(self, fragment: ReportFragment) -> "ReportComposer":
-        """Add a report fragment to the current collection of fragments.
-
-        This method allows chaining by returning the instance of the class after
-        adding the provided fragment to the list of report fragments.
+        """Add a report fragment to the composer.
 
         Args:
-            fragment: The report fragment to be added to the collection.
+            fragment: The report fragment to add.
 
         Returns:
-            ReportComposer: The instance of the class, enabling method chaining.
+            ReportComposer: Self for method chaining.
 
         """
-        self.fragments.append(fragment)
+        self._inner.add(fragment)
         return self
 
     def add_conditional(
@@ -50,23 +41,18 @@ class ReportComposer:
         content_generator: Callable[[], ReportFragment],
         header_text: str,
     ) -> "ReportComposer":
-        """Add a conditional section to the report composer. This method creates a new
-        conditional section using the provided content generator and header text, then
-        appends it to the report composer fragments. Finally, it returns the updated
-        report composer instance.
+        """Add a conditional section that includes a header only if content exists.
 
         Args:
-            content_generator (Callable[[], ReportFragment]): A callable that generates
-                a `ReportFragment`, which is used to create the conditional section.
-            header_text (str): The header text for the conditional section.
+            content_generator: Callable that generates the content fragment.
+            header_text: Header text for the conditional section.
 
         Returns:
-            ReportComposer: The updated report composer instance with the added
-            conditional section.
+            ReportComposer: Self for method chaining.
 
         """
         fragment = ConditionalSection.with_header(content_generator, header_text)
-        self.fragments.append(fragment)
+        self._inner.add(fragment)
         return self
 
     def add_conditional_custom(
@@ -74,69 +60,43 @@ class ReportComposer:
         content_generator: Callable[[], ReportFragment],
         header_generator: Callable[[], ReportFragment],
     ) -> "ReportComposer":
-        """Add a conditional custom section with a custom header and body content to the report.
-
-        This method creates a conditional section using the provided content and header generators
-        and appends it to the list of report fragments. It then returns the updated report composer
-        to allow method chaining.
+        """Add a conditional section with a custom header fragment.
 
         Args:
-            content_generator (Callable[[], ReportFragment]): A callable function that
-                generates the content of the conditional section.
-            header_generator (Callable[[], ReportFragment]): A callable function that
-                generates the header for the conditional section.
+            content_generator: Callable that generates the content fragment.
+            header_generator: Callable that generates the header fragment.
 
         Returns:
-            ReportComposer: The updated instance of the report composer.
+            ReportComposer: Self for method chaining.
 
         """
         fragment = ConditionalSection.with_custom_header(content_generator, header_generator)
-        self.fragments.append(fragment)
+        self._inner.add(fragment)
         return self
 
     def compose(self) -> ReportFragment:
-        """Composes and returns a consolidated ReportFragment from a list of fragments.
-
-        This method iterates through the available fragments and combines them into a
-        single, consolidated ReportFragment. If no fragments are present, it returns
-        an empty ReportFragment.
+        """Compose all fragments into a single ReportFragment.
 
         Returns:
-            ReportFragment: A consolidated instance of ReportFragment formed by
-            combining all individual fragments. Returns an empty ReportFragment if
-            no fragments are available.
+            ReportFragment: The combined result of all added fragments.
 
         """
-        if not self.fragments:
-            return ReportFragment.empty()
-
-        result = self.fragments[0]
-        for fragment in self.fragments[1:]:
-            result += fragment
-
-        return result
+        return self._inner.compose()
 
     def build(self) -> ReportFragment:
-        """Build and returns a ReportFragment object.
-
-        This method is responsible for invoking the compose function and returning
-        the resulting ReportFragment instance.
+        """Alias for compose().
 
         Returns:
-            ReportFragment: The resulting report fragment generated by the compose
-            function.
+            ReportFragment: The combined result of all added fragments.
 
         """
-        return self.compose()
+        return self._inner.build()
 
     def to_list(self) -> list[str]:
-        """Convert the composed result to a list of strings.
-
-        This method first composes the internal representation and then
-        transforms the result into a list of strings.
+        """Compose and convert to a list of strings.
 
         Returns:
-            list[str]: A list of strings derived from the composed result.
+            list[str]: All report lines as strings.
 
         """
-        return self.compose().to_list()
+        return self._inner.to_list()

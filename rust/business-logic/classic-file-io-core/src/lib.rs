@@ -20,6 +20,7 @@ pub mod core;
 pub mod dds;
 pub mod encoding;
 pub mod error;
+pub mod game_files;
 pub mod generation;
 pub mod hash;
 pub mod log_collection;
@@ -30,6 +31,7 @@ pub use core::FileIOCore;
 pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
+pub use game_files::{FileOperation, FileOperationResult, GameFilesManager};
 pub use generation::{
     FileGenerator, FileGeneratorConfig, generate_ignore_file, generate_local_yaml,
 };

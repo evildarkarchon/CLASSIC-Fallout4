@@ -32,22 +32,32 @@ from ClassicLib.scanning.game.core import ScanGameCore
 def mock_settings():
     """Mock YAML settings for tests.
 
-    Note: ScanGameCore doesn't have a yaml_settings attribute - it uses
-    validators.get_scan_settings() async method. We mock the YamlSettingsCache
-    module-level function instead.
+    The log processor uses yaml_settings_async, so we must mock that.
+    We also mock the sync yaml_settings for other callers.
     """
-    with patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_cache:
+    from unittest.mock import AsyncMock
 
-        def yaml_side_effect(type_, yaml_key, setting_path, default=None):
-            settings_map = {
-                "catch_log_errors": ["error", "warning", "critical"],
-                "exclude_log_files": ["ignore.log"],
-                "exclude_log_errors": ["ignorable error"],
-            }
-            return settings_map.get(setting_path, default)
+    settings_map = {
+        "catch_log_errors": ["error", "warning", "critical"],
+        "exclude_log_files": ["ignore.log"],
+        "exclude_log_errors": ["ignorable error"],
+    }
 
-        mock_yaml_cache.side_effect = yaml_side_effect
-        yield mock_yaml_cache
+    def yaml_side_effect(type_, yaml_key, setting_path, default=None):
+        return settings_map.get(setting_path, default)
+
+    async def yaml_async_side_effect(type_, yaml_key, setting_path, default=None):
+        return settings_map.get(setting_path, default)
+
+    with (
+        patch("ClassicLib.io.yaml.yaml_settings", side_effect=yaml_side_effect) as mock_sync,
+        patch(
+            "ClassicLib.scanning.game.checks.log_processor.yaml_settings_async",
+            new_callable=AsyncMock,
+            side_effect=yaml_async_side_effect,
+        ),
+    ):
+        yield mock_sync
 
 
 @pytest.fixture

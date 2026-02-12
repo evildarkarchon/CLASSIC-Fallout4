@@ -1,4 +1,9 @@
-"""Tests for complete integrity check workflow and report generation."""
+"""Tests for complete integrity check workflow and report generation.
+
+These tests verify the Python-to-Rust delegation in run_full_check().
+Since run_full_check() delegates to the Rust GameIntegrityChecker
+(via _build_rust_checker), we mock at that boundary.
+"""
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 from unittest.mock import MagicMock, patch
@@ -11,108 +16,75 @@ from ClassicLib.support.integrity import GameIntegrityChecker
 class TestFullIntegrityCheck:
     """Tests for running full integrity check workflow."""
 
-    @patch.object(GameIntegrityChecker, "check_installation_location")
-    @patch.object(GameIntegrityChecker, "check_executable_version")
-    @patch.object(GameIntegrityChecker, "load_configuration")
     @patch("ClassicLib.support.integrity.logger")
-    def test_run_full_check_all_messages(
+    def test_run_full_check_delegates_to_rust(
         self,
         mock_logger: MagicMock,
-        mock_load: MagicMock,
-        mock_check_version: MagicMock,
-        mock_check_location: MagicMock,
         checker: GameIntegrityChecker,
     ) -> None:
-        """Test running full integrity check with all checks returning messages."""
-        # Setup mocks
-        mock_check_version.return_value = (True, "Version OK\n")
-        mock_check_location.return_value = (True, "Location OK\n")
+        """Test that run_full_check delegates to Rust checker and returns its result."""
+        mock_rust_checker = MagicMock()
+        mock_rust_checker.run_full_check.return_value = "Version OK\nLocation OK\n"
 
-        # Run full check
-        result = checker.run_full_check()
+        with patch.object(checker, "_build_rust_checker", return_value=mock_rust_checker):
+            checker._config = {"game_exe_path": "C:/Games/Fallout4.exe"}
+            result = checker.run_full_check()
 
-        # Verify all checks were called
-        mock_load.assert_called_once()
-        mock_check_version.assert_called_once()
-        mock_check_location.assert_called_once()
-
-        # Verify result contains both messages
+        mock_rust_checker.run_full_check.assert_called_once()
         assert result == "Version OK\nLocation OK\n"
-
-        # Verify logging
         mock_logger.debug.assert_called_with("- - - INITIATED GAME INTEGRITY CHECK")
 
-    @patch.object(GameIntegrityChecker, "check_installation_location")
-    @patch.object(GameIntegrityChecker, "check_executable_version")
-    def test_run_full_check_no_config(
-        self, mock_check_version: MagicMock, mock_check_location: MagicMock, checker: GameIntegrityChecker
-    ) -> None:
-        """Test running full check loads configuration if not present."""
-        # Setup mocks
-        mock_check_version.return_value = (False, "Version Bad")
-        mock_check_location.return_value = (False, "")
-
-        # Ensure no config is loaded
+    def test_run_full_check_loads_config_when_empty(self, checker: GameIntegrityChecker) -> None:
+        """Test that run_full_check loads configuration if not present."""
         assert not checker._config
 
         with patch.object(checker, "load_configuration") as mock_load:
-            # Run full check
-            checker.run_full_check()
+            with patch.object(checker, "_build_rust_checker") as mock_build:
+                mock_build.return_value.run_full_check.return_value = ""
+                checker.run_full_check()
+                mock_load.assert_called_once()
 
-            # Verify configuration was loaded
-            mock_load.assert_called_once()
+    def test_run_full_check_skips_config_when_present(self, checker: GameIntegrityChecker) -> None:
+        """Test that run_full_check skips loading config if already present."""
+        checker._config = {"game_exe_path": "C:/Games/Fallout4.exe"}
 
-    @patch.object(GameIntegrityChecker, "check_installation_location")
-    @patch.object(GameIntegrityChecker, "check_executable_version")
-    def test_run_full_check_empty_messages(
-        self, mock_check_version: MagicMock, mock_check_location: MagicMock, checker: GameIntegrityChecker
-    ) -> None:
-        """Test running full check with empty messages."""
-        # Setup mocks to return empty messages
-        mock_check_version.return_value = (True, "")
-        mock_check_location.return_value = (True, "")
+        with patch.object(checker, "load_configuration") as mock_load:
+            with patch.object(checker, "_build_rust_checker") as mock_build:
+                mock_build.return_value.run_full_check.return_value = ""
+                checker.run_full_check()
+                mock_load.assert_not_called()
 
-        # Set dummy config so load_configuration isn't called
-        checker._config = {"dummy": "config"}
+    def test_run_full_check_empty_result(self, checker: GameIntegrityChecker) -> None:
+        """Test that run_full_check returns empty string when Rust returns empty."""
+        checker._config = {"game_exe_path": "C:/Games/Fallout4.exe"}
 
-        # Run full check
-        result = checker.run_full_check()
+        mock_rust_checker = MagicMock()
+        mock_rust_checker.run_full_check.return_value = ""
 
-        # Should return empty string
+        with patch.object(checker, "_build_rust_checker", return_value=mock_rust_checker):
+            result = checker.run_full_check()
+
+        assert result == ""
+
+    def test_run_full_check_handles_rust_error(self, checker: GameIntegrityChecker) -> None:
+        """Test that run_full_check gracefully handles Rust errors."""
+        checker._config = {"game_exe_path": "C:/Games/Fallout4.exe"}
+
+        with patch.object(checker, "_build_rust_checker", side_effect=RuntimeError("config error")):
+            result = checker.run_full_check()
+
         assert result == ""
 
     @patch("ClassicLib.support.integrity.logger")
     def test_run_full_check_logging(self, mock_logger: MagicMock, checker: GameIntegrityChecker) -> None:
         """Test that run_full_check logs debug message."""
-        # Set dummy config
-        checker._config = {"dummy": "config"}
+        checker._config = {"game_exe_path": "C:/Games/Fallout4.exe"}
 
-        with patch.object(checker, "check_executable_version", return_value=(True, "")):
-            with patch.object(checker, "check_installation_location", return_value=(True, "")):
-                checker.run_full_check()
+        with patch.object(checker, "_build_rust_checker") as mock_build:
+            mock_build.return_value.run_full_check.return_value = ""
+            checker.run_full_check()
 
-        # Verify debug logging
         mock_logger.debug.assert_called_with("- - - INITIATED GAME INTEGRITY CHECK")
-
-    @patch.object(GameIntegrityChecker, "check_installation_location")
-    @patch.object(GameIntegrityChecker, "check_executable_version")
-    def test_run_full_check_mixed_results(
-        self, mock_check_version: MagicMock, mock_check_location: MagicMock, checker: GameIntegrityChecker
-    ) -> None:
-        """Test running full check with mixed pass/fail results."""
-        # Setup mocks - one passes, one fails
-        mock_check_version.return_value = (True, "✔️ Version is good\n")
-        mock_check_location.return_value = (False, "WARNING: Bad location\n")
-
-        # Set dummy config
-        checker._config = {"dummy": "config"}
-
-        # Run full check
-        result = checker.run_full_check()
-
-        # Should contain both messages
-        assert "✔️ Version is good" in result
-        assert "WARNING: Bad location" in result
 
 
 if __name__ == "__main__":

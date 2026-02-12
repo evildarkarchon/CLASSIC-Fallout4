@@ -75,13 +75,19 @@ class TestConflictDetection:
         assert len(result.content) == 0
 
     def test_invalid_mod_pair_format(self) -> None:
-        """Test error handling when mod pair format is invalid."""
+        """Test that invalid mod pair format is handled gracefully.
+
+        The Rust implementation silently skips keys without ' | ' separator
+        instead of raising ValueError like the old Python code did.
+        """
         yaml_dict: dict[str, str] = {"mod1mod2": "Invalid format"}
         crashlog_plugins: dict[str, str] = {"mod1_plugin.esp": "00", "mod2_plugin.esp": "01"}
 
-        with pytest.raises(ValueError) as excinfo:  # type: ignore  # noqa: PT011
-            detect_mods_double(yaml_dict, crashlog_plugins)
-        assert "not enough values to unpack" in str(excinfo.value)
+        result: ReportFragment = detect_mods_double(yaml_dict, crashlog_plugins)
+
+        # Invalid key is silently skipped, no conflict detected
+        assert not result.has_content
+        assert len(result.content) == 0
 
     def test_empty_yaml_dict(self, empty_crashlog_plugins: dict[str, str]) -> None:
         """Test with empty YAML dictionary."""

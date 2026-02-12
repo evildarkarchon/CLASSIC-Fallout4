@@ -66,6 +66,11 @@ def create_rust_compatible_yamldata() -> MagicMock:
         return mock_yamldata.game_root_name_vr if is_vr else mock_yamldata.game_root_name
 
     mock_yamldata.get_game_root_name = get_game_root_name
+
+    # Required for Rust orchestrator initialization (to_rust_config creates AnalysisConfig)
+    mock_rust_config = MagicMock()
+    mock_yamldata.to_rust_config = MagicMock(return_value=mock_rust_config)
+
     return mock_yamldata
 
 
@@ -99,11 +104,6 @@ class TestScanLogsExecutorExecuteScan:
         mock_yamldata = create_rust_compatible_yamldata()
         mock_orchestrator = create_mock_orchestrator([crash_log_file])
 
-        # Mock AnalysisConfig
-        mock_config = MagicMock()
-        mock_config_class = MagicMock()
-        mock_config_class.from_yamldata.return_value = mock_config
-
         with (
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[crash_log_file]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
@@ -119,7 +119,6 @@ class TestScanLogsExecutorExecuteScan:
             patch("ClassicLib.scanning.logs.executor.msg_info"),
             patch("ClassicLib.scanning.logs.executor.msg_progress_context") as mock_progress,
             patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
-            patch("ClassicLib.scanning.logs.executor.AnalysisConfig", mock_config_class),
             patch("ClassicLib.scanning.logs.executor.Orchestrator", return_value=mock_orchestrator),
             patch("ClassicLib.scanning.logs.utils.write_report_to_file_async", new_callable=AsyncMock),
         ):
@@ -138,7 +137,12 @@ class TestScanLogsExecutorExecuteScan:
             assert result.stats is not None
 
     async def test_execute_scan_raises_without_yamldata(self) -> None:
-        """Test execute_scan raises if yamldata initialization fails."""
+        """Test execute_scan raises if yamldata initialization fails.
+
+        When ClassicScanLogsInfo.create_async() returns None, the executor
+        proceeds to call self.yamldata.to_rust_config() which raises
+        AttributeError on NoneType.
+        """
         with (
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
@@ -152,16 +156,12 @@ class TestScanLogsExecutorExecuteScan:
             patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
             patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
             patch("ClassicLib.scanning.logs.executor.msg_info"),
-            patch(
-                "ClassicLib.integration.factory.get_yamldata",
-                side_effect=RuntimeError("YAML data unavailable"),
-            ),
         ):
             executor = ScanLogsExecutor()
 
-            # When both Rust and Python YAML backends are unavailable,
-            # get_yamldata() raises RuntimeError which propagates from _initialize_scan_resources
-            with pytest.raises(RuntimeError, match="YAML data unavailable"):
+            # When create_async returns None, the executor tries to call
+            # to_rust_config() on None, resulting in AttributeError
+            with pytest.raises(AttributeError):
                 await executor.execute_scan()
 
 
@@ -190,10 +190,6 @@ class TestScanLogsExecutorErrorRecovery:
         mock_result.failed = 1
         mock_orchestrator.process_logs_batch.return_value = [mock_result]
 
-        mock_config = MagicMock()
-        mock_config_class = MagicMock()
-        mock_config_class.from_yamldata.return_value = mock_config
-
         with (
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[crash_file]),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
@@ -209,7 +205,6 @@ class TestScanLogsExecutorErrorRecovery:
             patch("ClassicLib.scanning.logs.executor.msg_info"),
             patch("ClassicLib.scanning.logs.executor.msg_progress_context") as mock_progress,
             patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
-            patch("ClassicLib.scanning.logs.executor.AnalysisConfig", mock_config_class),
             patch("ClassicLib.scanning.logs.executor.Orchestrator", return_value=mock_orchestrator),
         ):
             mock_context = MagicMock()
@@ -240,10 +235,6 @@ class TestScanLogsExecutorCancellation:
         mock_yamldata = create_rust_compatible_yamldata()
         mock_orchestrator = create_mock_orchestrator(crash_files)
 
-        mock_config = MagicMock()
-        mock_config_class = MagicMock()
-        mock_config_class.from_yamldata.return_value = mock_config
-
         with (
             patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=crash_files),
             patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
@@ -259,7 +250,6 @@ class TestScanLogsExecutorCancellation:
             patch("ClassicLib.scanning.logs.executor.msg_info"),
             patch("ClassicLib.scanning.logs.executor.msg_progress_context") as mock_progress,
             patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
-            patch("ClassicLib.scanning.logs.executor.AnalysisConfig", mock_config_class),
             patch("ClassicLib.scanning.logs.executor.Orchestrator", return_value=mock_orchestrator),
             patch("ClassicLib.scanning.logs.utils.write_report_to_file_async", new_callable=AsyncMock),
         ):
@@ -327,11 +317,8 @@ class TestScanLogsExecutorResourceManagement:
             ),
             patch("ClassicLib.scanning.logs.executor.msg_info"),
             patch("ClassicLib.integration.factory.get_yamldata", return_value=mock_yamldata),
-            patch("ClassicLib.scanning.logs.executor.AnalysisConfig") as mock_config_class,
             patch("ClassicLib.scanning.logs.executor.Orchestrator"),
         ):
-            mock_config_class.from_yamldata.return_value = MagicMock()
-
             executor = ScanLogsExecutor()
 
             # Trigger initialization

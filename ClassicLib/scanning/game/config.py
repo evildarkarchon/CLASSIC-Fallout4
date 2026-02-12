@@ -40,9 +40,7 @@ class ConfigFileCache:
             raise FileNotFoundError
 
         self._inner = RustConfigFileCache(game_root, ["F4EE"])
-        self.duplicate_files: dict[str, list[Path]] = {
-            k: [Path(p) for p in v] for k, v in self._inner.get_duplicates().items()
-        }
+        self.duplicate_files: dict[str, list[Path]] = {k: [Path(p) for p in v] for k, v in self._inner.get_duplicates().items()}
 
     def __contains__(self, file_name_lower: str) -> bool:
         return self._inner.contains(file_name_lower)
