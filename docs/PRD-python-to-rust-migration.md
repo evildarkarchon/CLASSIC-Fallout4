@@ -88,9 +88,9 @@ These are Python coordination layers that call Rust-backed functions. They're cl
 | # | Gap | Python Source | Lines | Assessment |
 |---|-----|-------------|-------|------------|
 | G-16 | Scan Logs Executor | `scanning/logs/executor.py` | 449 | **ORCHESTRATION** — Config loading from YAML, crash log file discovery, resource warm-up, progress tracking, summary generation. Calls Rust Orchestrator for analysis. Config loading and summary generation could move to Rust. |
-| G-17 | ClassicScanLogsInfo | `scanning/logs/scanloginfo/classic_scan_logs_info.py` | 345 | **DATA CONTAINER** — 30+ YAML attributes loaded via batch. Has `to_rust_config()` bridge. Could be unified with Rust `YamlData` but serves as Python-side config aggregator. |
+| G-17 | ClassicScanLogsInfo | `scanning/logs/scanloginfo/classic_scan_logs_info.py` | 345 | **DATA CONTAINER** — 30+ YAML attributes loaded via batch. Has `to_rust_config()` bridge. Could be unified with Rust `YamlData` but serves as Python-side config aggregator. **Deferred to dedicated porting session** due to complexity. |
 | G-25 | Game Integrity Orchestrator | `scanning/game/orchestrator.py` | 456 | **NEW GAP** — Python `GameIntegrityOrchestratorCore` runs XSE/crashgen/wrye/INI checks via `asyncio.TaskGroup`. All individual checks already delegate to Rust. This coordinator could call the Rust `GameScanOrchestrator` directly instead of coordinating individual Rust-backed Python functions. |
-| G-26 | Game Files Manager | `scanning/game/game_files_manager.py` | 565 | **NEW GAP** — Async file backup/restore/remove with semaphored I/O. Pure Python file operations. Low priority since it's I/O-bound with minimal CPU-intensive logic. |
+| G-26 | Game Files Manager | `scanning/game/game_files_manager.py` | 565 | **NEW GAP** — Async file backup/restore/remove with semaphored I/O. The existing Rust `BackupManager` in `classic-file-io-core` handles 4 hardcoded `BackupType` variants but lacks the generic, list-driven approach. A Rust `GameFilesManager` should be created for cross-language benefit (Slint GUI, Node bindings, etc.); **Python stays as-is** since it's I/O-bound with no delegation benefit. |
 
 ### 3.3 Undelegated Python Logic (Priority: HIGH)
 
@@ -133,7 +133,7 @@ These Python files already delegate to Rust but retain fallback code paths. Clea
 3. `support/versions/matching.py` (G-32, 297 lines) → Delegate to Rust `VersionMatcher`
 4. `support/versions/crashgen_checker.py` (G-33, 348 lines) → Delegate to Rust `check_crashgen_version_status()`, `crashgen_version_gen()`
 5. `support/integrity.py` (G-34, 230 lines) → Delegate to Rust `GameIntegrityChecker.run_full_check()`
-6. `support/update.py` (G-35, 549 lines) → Delegate to Rust `GithubClient` for API calls (keep `aiohttp` as async transport if needed, or use Rust's reqwest)
+6. `support/update.py` (G-35, 549 lines) → Delegate to Rust `GithubClient` for API calls ~~(keep `aiohttp` as async transport if needed, or use Rust's reqwest)~~ (Rust implementation should already be async, if it is not, it needs an async version)
 7. `scanning/logs/detect_mods.py` (G-36, 287 lines) → Delegate to Rust `detect_mods_single()`, `detect_mods_double()`, `detect_mods_important()`
 
 **Python LoC Converted**: ~3,100 → ~400 (thin wrappers)
@@ -214,19 +214,42 @@ Similarly, the scan logs executor (`executor.py`) orchestrates the Rust crash lo
 
 ---
 
-### Phase D: Low-Priority Items (~1,000 lines, optional)
+### Phase D: Low-Priority Items (~1,000 lines, mixed)
 
-**Gaps**: G-12, G-13, G-17, G-26
-**Rationale**: These items provide minimal migration value. `FragmentCollector` and `ReportComposer` (fragment) are already <65 lines each and are essentially type adapters. `ClassicScanLogsInfo` is a YAML data aggregator that bridges Python settings to Rust config. `GameFilesManager` is I/O-bound file operations.
+**Gaps**: G-12, G-13, G-17 (keep), G-26 (Rust-only implementation)
+**Rationale**: `FragmentCollector` and `ReportComposer` (fragment) are already <65 lines each and are essentially type adapters. `ClassicScanLogsInfo` is a YAML data aggregator that bridges Python settings to Rust config. These three are acceptable as Python-side glue.
 
-**Recommended Action**: Leave as-is unless a specific need arises. These are acceptable as Python-side glue.
+`GameFilesManager` is I/O-bound and provides no Python-side migration benefit, **but** a Rust implementation is needed so other consumers (Slint GUI, Node bindings, future Rust-only tools) can use it without reimplementing. The Python version remains as-is.
 
 | Gap | Recommendation |
 |-----|---------------|
 | G-12 FragmentCollector (55 lines) | **Keep** — Backwards-compatible adapter, minimal logic |
 | G-13 ReportComposer (63 lines) | **Keep** — Two static methods using Rust types |
-| G-17 ClassicScanLogsInfo (345 lines) | **Keep** — Python YAML aggregator, has Rust bridge via `to_rust_config()` |
-| G-26 GameFilesManager (565 lines) | **Keep** — I/O-bound operations, no performance benefit from Rust |
+| G-17 ClassicScanLogsInfo (345 lines) | **Deferred** — Python YAML aggregator with 30+ attributes and `to_rust_config()` bridge; requires dedicated porting session due to complexity |
+| G-26 GameFilesManager (565 lines) | **Rust-only** — Create generic `GameFilesManager` in `classic-file-io-core` for cross-language use; Python stays as-is |
+
+#### G-26 Implementation Details
+
+**Problem**: The existing Rust `BackupManager` in `classic-file-io-core/src/backup.rs` is limited to 4 hardcoded `BackupType` enum variants (XSE, ReShade, Vulkan, ENB) with predefined glob patterns. The Python `GameFilesManagerCore` supports arbitrary YAML-configured file lists with case-insensitive substring matching, file+directory handling, and semaphore-limited concurrency.
+
+**New Rust additions to `classic-file-io-core`** (new `game_files.rs` module):
+1. `GameFilesManager` — Generic game file backup/restore/remove manager
+   - Takes `game_root: PathBuf`, `backup_root: PathBuf`
+   - Operations accept a list label (string) and a `Vec<String>` of file name patterns
+   - Case-insensitive substring matching (matching Python's `item.lower() in name.lower()`)
+   - Supports both files and directories (copy/copytree, remove/rmtree)
+   - Async with `tokio::fs`, concurrent operations via `JoinSet` or `FuturesUnordered`
+2. `FileOperation` — Enum: Backup / Restore / Remove
+3. `FileOperationResult` — Summary struct (files_affected, errors, operation type)
+
+**New PyO3 bindings** in `classic-file-io-py` (optional, for Python consumers who want it):
+- Expose `GameFilesManager` — but Python is NOT required to delegate to it
+
+**Python changes**: None — `game_files_manager.py` remains as-is
+
+**Rust LoC Added**: ~300-500
+**Python LoC Changed**: 0
+**Estimated Effort**: Small (1-2 sessions)
 
 ---
 
@@ -254,7 +277,8 @@ Phase B ─┬─ G-24 ModDetector (independent)
 Phase C ─┬─ G-25 Orchestrator consolidation (depends on Phase A0)
          └─ G-16 Executor consolidation (independent)
 
-Phase D ─── Optional, no dependencies
+Phase D ─┬─ G-26 GameFilesManager Rust-only implementation (independent, no Python changes)
+         └─ G-12, G-13, G-17 remain as-is (no action)
 ```
 
 ---
@@ -274,8 +298,8 @@ Unchanged from PRD v1.0. These are inherently Python-specific:
 | `CLASSIC_ScanLogs.py`, `CLASSIC_Interface.py` | Entry points |
 | `ClassicLib/integration/types.py` | TYPE_CHECKING-only protocols |
 | `ClassicLib/core/performance.py` | Python TimedBlock |
-| `ClassicLib/scanning/game/game_files_manager.py` | I/O-bound file operations (Phase D, optional) |
-| `ClassicLib/scanning/logs/scanloginfo/classic_scan_logs_info.py` | YAML data aggregator (Phase D, optional) |
+| `ClassicLib/scanning/game/game_files_manager.py` | I/O-bound; Python stays as-is (Rust equivalent created separately for cross-language use) |
+| `ClassicLib/scanning/logs/scanloginfo/classic_scan_logs_info.py` | YAML data aggregator; deferred to dedicated porting session (complex 30+ attribute unification) |
 
 ---
 
@@ -289,7 +313,7 @@ Unchanged from PRD v1.0. These are inherently Python-specific:
 | Phase A1 | ~600 | 0 | All tests pass; no fallback code remains for Rust-mandatory components |
 | Phase B | ~280 | ~500-700 | Report composition produces identical output via Rust |
 | Phase C | ~700 | ~800-1,200 | Game scan orchestration calls Rust directly; executor summary matches |
-| Phase D | 0 (keep as-is) | 0 | N/A — items stay in Python |
+| Phase D | 0 (Python stays as-is) | ~300-500 (G-26 Rust-only) | G-26: Rust `GameFilesManager` passes backup/restore/remove tests; G-12/13/17 stay in Python |
 
 ### Overall Completion Criteria
 
@@ -392,7 +416,7 @@ ClassicLib/Utils/version_utils.py            (~327 lines, Rust-first + fallback)
 | G-14 | **PHASE B** | SectionComposer (143 lines, builder pattern) |
 | G-15 | **PHASE B** | ConditionalSection (109 lines, business logic) |
 | G-16 | **PHASE C** | ScanLogsExecutor (449 lines, orchestration) |
-| G-17 | **KEEP** | ClassicScanLogsInfo (345 lines, YAML aggregator) |
+| G-17 | **DEFERRED** | ClassicScanLogsInfo (345 lines, YAML aggregator) — dedicated porting session due to complexity |
 | G-18 | **COMPLETE** | `setup.rs` in classic-scangame-core |
 | G-19 | **COMPLETE** | Papyrus delegates to Rust |
 | G-20 | **COMPLETE** | `validators.rs` in classic-settings-core |
@@ -406,7 +430,7 @@ ClassicLib/Utils/version_utils.py            (~327 lines, Rust-first + fallback)
 |----------|----------|-------|
 | G-24 | **PHASE B** | Mod detection fragment logic (70 lines, `reporting/mod_detection.py`) |
 | G-25 | **PHASE C** | Game integrity orchestrator consolidation (456 lines) |
-| G-26 | **KEEP** | Game files manager (565 lines, I/O-bound) |
+| G-26 | **PHASE D (Rust-only)** | Game files manager — Rust `GameFilesManager` for cross-language use; Python stays as-is |
 | G-27 | **PHASE A1** | Version utils fallback cleanup |
 | G-28 | **PHASE A1** | File utils fallback cleanup |
 | G-29 | **PHASE A1** | Path utils fallback cleanup |
