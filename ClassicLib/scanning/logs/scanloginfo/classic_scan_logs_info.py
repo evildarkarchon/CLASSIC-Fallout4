@@ -297,6 +297,28 @@ class ClassicScanLogsInfo:
         """Get game root name based on VR mode."""
         return self.game_root_name_vr if is_vr else self.game_root_name
 
+    @staticmethod
+    def to_rust_config() -> Any:
+        """Create a Rust AnalysisConfig from a Rust YamlData instance.
+
+        Bridges the Python YAML data layer to the Rust orchestrator by creating
+        a Rust ``YamlData`` instance and converting it to ``AnalysisConfig``.
+        This avoids callers needing separate ``get_yamldata()`` calls.
+
+        Returns:
+            AnalysisConfig: Rust analysis configuration suitable for the Orchestrator.
+
+        Raises:
+            RuntimeError: If Rust modules are not available.
+
+        """
+        from classic_scanlog import AnalysisConfig
+
+        from ClassicLib.integration.factory import get_yamldata
+
+        rust_yamldata = get_yamldata()
+        return AnalysisConfig.from_yamldata(rust_yamldata)
+
     def get_crashgen_latest(self, is_vr: bool) -> str:
         """Get latest crash generator version based on VR mode.
 

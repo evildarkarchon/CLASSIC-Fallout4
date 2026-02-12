@@ -185,6 +185,16 @@ impl CrashgenChecker {
         checker
     }
 
+    /// Get the resolved configuration file path, if found
+    pub fn config_file(&self) -> Option<&PathBuf> {
+        self.config_file.as_ref()
+    }
+
+    /// Get the list of installed plugins (lowercase DLL names)
+    pub fn installed_plugins(&self) -> &[String] {
+        &self.installed_plugins
+    }
+
     /// Find the configuration file
     ///
     /// Checks for both Buffout4/config.toml and Buffout4.toml

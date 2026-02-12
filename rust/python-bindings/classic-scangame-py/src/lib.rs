@@ -55,12 +55,18 @@ use pyo3::prelude::*;
 // Module declarations - Phase 3B-3C implementations
 pub mod ba2; // BA2 archive handling (Phase 3B) - IMPLEMENTED
 pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
+pub mod config_cache; // ConfigFileCache (G-03) + ModIniScanner (G-04) - IMPLEMENTED
+pub mod crashgen_orchestrator; // CrashgenCheckOrchestrator (G-07) - IMPLEMENTED
 pub mod enb; // ENB detection (Phase 7) - IMPLEMENTED
+pub mod game_report; // ScanReportBuilder + ScanValidators (G-09/G-10) - IMPLEMENTED
 pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
 pub mod integrity;
 pub mod logs; // log_processor.py (Phase 3C) - IMPLEMENTED
+pub mod orchestrator; // GameScanOrchestrator (G-01/G-02) - IMPLEMENTED
+pub mod setup; // SetupCoordinator (G-18) - IMPLEMENTED
 pub mod toml_check; // CheckCrashgen.py TOML validation (Phase 3C) - IMPLEMENTED
 pub mod unpacked; // unpacked_scanner.py (Phase 3B) - IMPLEMENTED
+pub mod wrye; // WryeBashParser (G-05) - IMPLEMENTED
 pub mod xse; // CheckXsePlugins.py (Phase 3C) - IMPLEMENTED // GameIntegrity.py (Phase 5) - IMPLEMENTED
 
 /// Convert ScanGameError to PyErr
@@ -87,16 +93,24 @@ fn classic_scangame(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register all modules - Phase 3B-3C components
     config::register_config(m)?; // Config duplicate detection
+    config_cache::register_config_cache(m)?; // ConfigFileCache (G-03) + ModIniScanner (G-04)
+    crashgen_orchestrator::register_crashgen_orchestrator(m)?; // CrashgenCheckOrchestrator (G-07)
     enb::register_enb(m)?; // ENB detection (Phase 7)
     unpacked::register_unpacked(m)?; // Unpacked file scanning
     logs::register_logs(m)?; // Log processing
     ini::register_ini(m)?; // INI validation
     toml_check::register_toml(m)?; // TOML validation (CheckCrashgen)
+    wrye::register_wrye(m)?; // WryeBashParser (G-05)
     xse::register_xse(m)?; // XSE plugin checking
     ba2::register_ba2(m)?; // BA2 archive handling
 
     // Phase 5 - Application Coordination
     integrity::register(m)?; // Game integrity checking
+
+    // Wave 4 - Orchestrator, Setup, Game Report
+    orchestrator::register_orchestrator(m)?; // GameScanOrchestrator (G-01/G-02)
+    setup::register_setup(m)?; // SetupCoordinator (G-18)
+    game_report::register_game_report(m)?; // ScanReportBuilder + ScanValidators (G-09/G-10)
 
     Ok(())
 }

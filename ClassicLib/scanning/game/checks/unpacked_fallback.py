@@ -1,5 +1,9 @@
 """Pure Python fallback implementation of UnpackedScanner.
 
+.. deprecated::
+    This fallback is deprecated. The Rust classic_scangame.UnpackedScanner is the
+    primary implementation. This module will be removed in a future release.
+
 This module provides a Python-only implementation of unpacked file scanning
 that matches the Rust interface.
 """

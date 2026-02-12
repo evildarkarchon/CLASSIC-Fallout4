@@ -433,8 +433,165 @@ fn classic_settings(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(cache_stats, m)?)?;
     m.add_function(wrap_pyfunction!(reset_cache_stats, m)?)?;
 
+    // Validator functions
+    m.add_function(wrap_pyfunction!(validate_settings_structure, m)?)?;
+    m.add_function(wrap_pyfunction!(validate_setting_value, m)?)?;
+    m.add_function(wrap_pyfunction!(coerce_setting_value, m)?)?;
+
     // Add version
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     Ok(())
+}
+
+/// Validate the structure of a YAML settings document.
+///
+/// Checks for common structural issues such as missing root keys,
+/// non-mapping roots, and empty documents.
+///
+/// Args:
+///     yaml_content: Raw YAML content string to validate
+///
+/// Returns:
+///     List of dicts, each with 'severity' ('warning' or 'error') and 'message' keys.
+///     An empty list means the document is valid.
+///
+/// Raises:
+///     ValueError: If the YAML content cannot be parsed
+///
+/// Example:
+///     >>> import classic_settings
+///     >>> issues = classic_settings.validate_settings_structure("CLASSIC_Settings:\\n  key: value")
+///     >>> assert len(issues) == 0  # Valid structure
+///     >>> issues = classic_settings.validate_settings_structure("42")
+///     >>> assert issues[0]['severity'] == 'error'
+#[pyfunction]
+fn validate_settings_structure(py: Python, yaml_content: &str) -> PyResult<Py<PyAny>> {
+    use classic_settings_core::validators;
+    use yaml_rust2::YamlLoader;
+
+    let docs = YamlLoader::load_from_str(yaml_content)
+        .map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("Invalid YAML: {}", e)))?;
+
+    if docs.is_empty() {
+        // No documents parsed -- treat as null/empty
+        let issues = validators::validate_settings_structure(&Yaml::Null);
+        return issues_to_py(py, &issues);
+    }
+
+    let issues = validators::validate_settings_structure(&docs[0]);
+    issues_to_py(py, &issues)
+}
+
+/// Validate that a string value can be interpreted as the expected setting type.
+///
+/// Args:
+///     value: The string value to validate
+///     expected_type: One of 'int', 'bool', 'float', 'path', 'string'
+///
+/// Returns:
+///     True if the value matches or can be coerced to the expected type
+///
+/// Raises:
+///     ValueError: If expected_type is not a recognized type name
+///
+/// Example:
+///     >>> import classic_settings
+///     >>> classic_settings.validate_setting_value("42", "int")
+///     True
+///     >>> classic_settings.validate_setting_value("yes", "bool")
+///     True
+///     >>> classic_settings.validate_setting_value("hello", "int")
+///     False
+#[pyfunction]
+fn validate_setting_value(value: &str, expected_type: &str) -> PyResult<bool> {
+    let setting_type = parse_setting_type(expected_type)?;
+    Ok(classic_settings_core::validators::validate_setting_value(
+        value,
+        setting_type,
+    ))
+}
+
+/// Coerce a string value to the target setting type.
+///
+/// Attempts to convert the value to the expected type. Supports:
+/// - 'int': Parses as integer
+/// - 'bool': Accepts true/false, yes/no, 1/0, on/off (case-insensitive)
+/// - 'float': Parses as floating-point
+/// - 'path': Any non-empty string
+/// - 'string': Always succeeds (identity conversion)
+///
+/// Args:
+///     value: The string value to coerce
+///     target_type: One of 'int', 'bool', 'float', 'path', 'string'
+///
+/// Returns:
+///     The coerced value as the appropriate Python type (int, bool, float, or str)
+///
+/// Raises:
+///     ValueError: If coercion fails or target_type is not recognized
+///
+/// Example:
+///     >>> import classic_settings
+///     >>> classic_settings.coerce_setting_value("42", "int")
+///     42
+///     >>> classic_settings.coerce_setting_value("yes", "bool")
+///     True
+///     >>> classic_settings.coerce_setting_value("3.14", "float")
+///     3.14
+#[pyfunction]
+fn coerce_setting_value(py: Python, value: &str, target_type: &str) -> PyResult<Py<PyAny>> {
+    use classic_settings_core::validators::{self, CoercedValue};
+    use pyo3::IntoPyObject;
+
+    let setting_type = parse_setting_type(target_type)?;
+    let coerced = validators::coerce_setting_value(value, setting_type)
+        .map_err(pyo3::exceptions::PyValueError::new_err)?;
+
+    match coerced {
+        CoercedValue::Int(v) => Ok(v.into_pyobject(py)?.unbind().into()),
+        CoercedValue::Bool(v) => Ok(v.into_pyobject(py)?.to_owned().unbind().into()),
+        CoercedValue::Float(v) => Ok(v.into_pyobject(py)?.unbind().into()),
+        CoercedValue::Path(v) => Ok(v.into_pyobject(py)?.unbind().into()),
+        CoercedValue::String(v) => Ok(v.into_pyobject(py)?.unbind().into()),
+    }
+}
+
+/// Parse a string setting type name into the Rust enum.
+fn parse_setting_type(type_name: &str) -> PyResult<classic_settings_core::validators::SettingType> {
+    use classic_settings_core::validators::SettingType;
+    match type_name.to_lowercase().as_str() {
+        "int" | "integer" => Ok(SettingType::Int),
+        "bool" | "boolean" => Ok(SettingType::Bool),
+        "float" | "double" => Ok(SettingType::Float),
+        "path" => Ok(SettingType::Path),
+        "string" | "str" => Ok(SettingType::String),
+        _ => Err(pyo3::exceptions::PyValueError::new_err(format!(
+            "Unknown setting type '{}'. Expected one of: int, bool, float, path, string",
+            type_name
+        ))),
+    }
+}
+
+/// Convert validation issues to Python list of dicts.
+fn issues_to_py(
+    py: Python,
+    issues: &[classic_settings_core::validators::ValidationIssue],
+) -> PyResult<Py<PyAny>> {
+    use classic_settings_core::validators::IssueSeverity;
+
+    let list = PyList::empty(py);
+    for issue in issues {
+        let dict = PyDict::new(py);
+        dict.set_item(
+            "severity",
+            match issue.severity {
+                IssueSeverity::Warning => "warning",
+                IssueSeverity::Error => "error",
+            },
+        )?;
+        dict.set_item("message", &issue.message)?;
+        list.append(dict)?;
+    }
+    Ok(list.unbind().into())
 }

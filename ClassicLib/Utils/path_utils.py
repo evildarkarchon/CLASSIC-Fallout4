@@ -80,6 +80,8 @@ def _check_write_permissions(path_obj: Path) -> tuple[bool, str]:
 def validate_path(path: Path | str, check_write: bool = False, check_read: bool = True) -> tuple[bool, str]:
     """Validate that a path exists and is accessible with appropriate permissions.
 
+    Delegates to Rust PathValidator when available, with Python fallback.
+
     Args:
         path: Path to validate
         check_write: Whether to check write permissions
@@ -90,29 +92,36 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
     """
     try:
-        # Reject empty or whitespace-only paths
+        from classic_path import PathValidator
+
+        PathValidator.validate_path_with_permissions(str(path), check_read, check_write)
+    except ImportError:
+        pass
+    except Exception as e:  # noqa: BLE001
+        return False, str(e)
+    else:
+        return True, ""
+
+    # Python fallback
+    try:
         path_str = str(path).strip() if path else ""
         if not path_str:
             return False, "Path is empty"
 
         path_obj = Path(path) if not isinstance(path, Path) else path
 
-        # Check if the drive exists (Windows)
         is_valid, error_msg = _check_drive_exists(path_obj)
         if not is_valid:
             return False, error_msg
 
-        # Check if path exists
         if not path_obj.exists():
             return False, f"Path does not exist: {path_obj}"
 
-        # Check read permissions
         if check_read:
             is_valid, error_msg = _check_read_permissions(path_obj)
             if not is_valid:
                 return False, error_msg
 
-        # Check write permissions
         if check_write:
             is_valid, error_msg = _check_write_permissions(path_obj)
             if not is_valid:
@@ -125,26 +134,34 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
 
 def remove_readonly(file_path: Path) -> None:
-    """Remove the read-only attribute from a file or directory at the given path. This operation is
-    specific to the Windows platform and will not perform any actions on other platforms. If any
-    error occurs, such as an `OSError` or `PermissionError`, a warning will be logged instead of
-    raising an exception.
+    """Remove the read-only attribute from a file or directory.
+
+    Delegates to Rust PathValidator when available, with Python fallback.
+    This operation is specific to Windows and is a no-op on other platforms.
 
     Args:
         file_path (Path): The path to the file or directory for which the read-only attribute needs
             to be removed.
 
-    Raises:
-        OSError: If the file operation encounters a general operating system error.
-        PermissionError: If there is a permissions issue preventing the operation.
-
     """
-    if sys.platform == "win32":
-        try:
-            # Remove the read-only attribute
-            file_path.chmod(file_path.stat().st_mode | stat.S_IWRITE)
-        except (OSError, PermissionError) as e:
-            # Log error but don't raise - this is a best-effort operation
-            from ClassicLib.core.logger import logger
+    if sys.platform != "win32":
+        return
 
-            logger.warning(f"Could not remove read-only attribute from {file_path}: {e}")
+    try:
+        from classic_path import PathValidator
+
+        PathValidator.remove_readonly_attribute(str(file_path))
+    except ImportError:
+        pass
+    except Exception:  # noqa: BLE001
+        pass
+    else:
+        return
+
+    # Python fallback
+    try:
+        file_path.chmod(file_path.stat().st_mode | stat.S_IWRITE)
+    except (OSError, PermissionError) as e:
+        from ClassicLib.core.logger import logger
+
+        logger.warning(f"Could not remove read-only attribute from {file_path}: {e}")

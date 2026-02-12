@@ -580,6 +580,157 @@ pub fn validate_path_with_permissions(
     Ok(())
 }
 
+// ============================================================================
+// Boolean Convenience Wrappers
+// ============================================================================
+
+/// Check if the drive letter in a path exists (Windows only).
+///
+/// This is a convenience wrapper that returns a simple `bool` instead of a `Result`.
+/// On non-Windows platforms, always returns `true`.
+///
+/// # Arguments
+///
+/// * `path` - The path whose drive to check
+///
+/// # Returns
+///
+/// `true` if the drive exists or on non-Windows platforms, `false` if the drive doesn't exist.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::drive_exists;
+/// use std::path::Path;
+///
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// if drive_exists(path) {
+///     println!("Drive exists");
+/// }
+/// ```
+#[must_use]
+pub fn drive_exists(path: &Path) -> bool {
+    check_drive_exists(path).is_ok()
+}
+
+/// Check if a path has read permissions (convenience boolean wrapper).
+///
+/// Returns `true` if the current process can read from the path.
+/// On error (file not found, not a file/directory), returns `false`.
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// `true` if the path is readable, `false` otherwise.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::has_read_permission;
+/// use std::path::Path;
+///
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// if has_read_permission(path) {
+///     println!("Path is readable");
+/// }
+/// ```
+#[must_use]
+pub fn has_read_permission(path: &Path) -> bool {
+    check_read_permissions(path).is_ok()
+}
+
+/// Check if a path has write permissions (convenience boolean wrapper).
+///
+/// Returns `true` if the current process can write to the path.
+/// For files, checks the parent directory. On error, returns `false`.
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// `true` if the path is writable, `false` otherwise.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::has_write_permission;
+/// use std::path::Path;
+///
+/// let path = Path::new("C:\\Games\\Fallout4");
+/// if has_write_permission(path) {
+///     println!("Path is writable");
+/// }
+/// ```
+#[must_use]
+pub fn has_write_permission(path: &Path) -> bool {
+    check_write_permissions(path).is_ok()
+}
+
+/// Remove the read-only attribute from a file (cross-platform).
+///
+/// On Windows, clears the read-only file attribute using `std::fs::set_permissions`.
+/// On non-Windows platforms, this is a no-op that always succeeds.
+///
+/// # Arguments
+///
+/// * `path` - The file path to modify
+///
+/// # Returns
+///
+/// `Ok(())` if the attribute was removed or the file was already writable.
+///
+/// # Errors
+///
+/// Returns `PathError` if the file doesn't exist or permissions can't be modified.
+///
+/// # Examples
+///
+/// ```rust,no_run
+/// use classic_path_core::remove_readonly_attribute;
+/// use std::path::Path;
+///
+/// let file = Path::new("config.ini");
+/// remove_readonly_attribute(file)?;
+/// # Ok::<(), classic_path_core::PathError>(())
+/// ```
+#[cfg(target_os = "windows")]
+pub fn remove_readonly_attribute(path: &Path) -> PathResult<()> {
+    use std::fs;
+
+    let metadata = fs::metadata(path).map_err(|e| PathError::IoError {
+        path: path.to_path_buf(),
+        source: e,
+    })?;
+
+    let mut permissions = metadata.permissions();
+    if permissions.readonly() {
+        #[allow(clippy::permissions_set_readonly_false)]
+        permissions.set_readonly(false);
+        fs::set_permissions(path, permissions).map_err(|e| {
+            PathError::PermissionDenied(format!(
+                "Failed to remove read-only attribute from {}: {}",
+                path.display(),
+                e
+            ))
+        })?;
+    }
+
+    Ok(())
+}
+
+/// Remove the read-only attribute (non-Windows stub).
+///
+/// On non-Windows platforms, this is a no-op that always succeeds.
+#[cfg(not(target_os = "windows"))]
+pub fn remove_readonly_attribute(_path: &Path) -> PathResult<()> {
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -775,6 +926,86 @@ mod tests {
         let invalid_game = temp_dir.path().join("invalid");
         fs::create_dir(&invalid_game).unwrap();
         let result = validate_settings_paths(&invalid_game, &docs_dir, None, "Missing.exe");
+        assert!(result.is_err());
+    }
+
+    // ====================================================================
+    // Boolean wrapper tests
+    // ====================================================================
+
+    #[test]
+    fn test_drive_exists_current_dir() {
+        // Current working directory's drive should always exist
+        let cwd = std::env::current_dir().unwrap();
+        assert!(drive_exists(&cwd));
+    }
+
+    #[test]
+    fn test_has_read_permission_temp() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("readable.txt");
+        fs::write(&file_path, "content").unwrap();
+        assert!(has_read_permission(&file_path));
+    }
+
+    #[test]
+    fn test_has_read_permission_nonexistent() {
+        assert!(!has_read_permission(&PathBuf::from(
+            "nonexistent_path_12345"
+        )));
+    }
+
+    #[test]
+    fn test_has_write_permission_temp() {
+        let temp_dir = TempDir::new().unwrap();
+        assert!(has_write_permission(temp_dir.path()));
+    }
+
+    #[test]
+    fn test_has_write_permission_nonexistent() {
+        // Use a path with a nonexistent parent chain to ensure write check fails
+        assert!(!has_write_permission(&PathBuf::from(
+            "Z:\\nonexistent_drive_12345\\deeply\\nested\\path"
+        )));
+    }
+
+    #[test]
+    fn test_remove_readonly_attribute_normal_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("normal.txt");
+        fs::write(&file_path, "content").unwrap();
+
+        // Should succeed on a normal (non-readonly) file
+        assert!(remove_readonly_attribute(&file_path).is_ok());
+    }
+
+    #[test]
+    fn test_remove_readonly_attribute_readonly_file() {
+        let temp_dir = TempDir::new().unwrap();
+        let file_path = temp_dir.path().join("readonly.txt");
+        fs::write(&file_path, "content").unwrap();
+
+        // Set read-only
+        let mut perms = fs::metadata(&file_path).unwrap().permissions();
+        perms.set_readonly(true);
+        fs::set_permissions(&file_path, perms).unwrap();
+
+        // Remove read-only
+        let result = remove_readonly_attribute(&file_path);
+        assert!(
+            result.is_ok(),
+            "Failed to remove readonly: {:?}",
+            result.err()
+        );
+
+        // Verify it's writable now
+        let perms = fs::metadata(&file_path).unwrap().permissions();
+        assert!(!perms.readonly());
+    }
+
+    #[test]
+    fn test_remove_readonly_attribute_nonexistent() {
+        let result = remove_readonly_attribute(Path::new("nonexistent_12345.txt"));
         assert!(result.is_err());
     }
 }

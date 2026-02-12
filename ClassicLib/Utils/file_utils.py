@@ -23,6 +23,9 @@ import chardet
 def calculate_similarity(file1: Path, file2: Path) -> float:
     """Calculate the similarity percentage between two text files.
 
+    Delegates to Rust LCS-based comparison for speed, with Python
+    SequenceMatcher fallback.
+
     Args:
         file1: Path to the first file
         file2: Path to the second file
@@ -31,6 +34,13 @@ def calculate_similarity(file1: Path, file2: Path) -> float:
         Similarity ratio as a float between 0.0 and 1.0
 
     """
+    try:
+        from classic_file_io import calculate_similarity as rust_similarity
+
+        return rust_similarity(str(file1), str(file2))
+    except Exception:  # noqa: BLE001
+        pass
+
     try:
         content1 = file1.read_text(encoding="utf-8", errors="ignore")
         content2 = file2.read_text(encoding="utf-8", errors="ignore")

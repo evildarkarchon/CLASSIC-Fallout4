@@ -71,10 +71,15 @@ pub use validator::{
     check_drive_exists,
     check_read_permissions,
     check_write_permissions,
+    // Boolean convenience wrappers
+    drive_exists,
+    has_read_permission,
+    has_write_permission,
     is_restricted_path,
     // Permission and accessibility checks
     is_valid_executable_path,
     is_valid_path,
+    remove_readonly_attribute,
     validate_custom_scan_path,
     validate_is_directory,
     validate_is_file,

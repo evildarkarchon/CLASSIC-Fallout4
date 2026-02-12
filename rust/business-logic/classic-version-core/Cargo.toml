@@ -1,6 +1,6 @@
 [package]
 name = "classic-version-core"
-version = "8.2.0"
+version = "9.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["CLASSIC Development Team"]
@@ -21,10 +21,16 @@ regex = { workspace = true }
 thiserror = { workspace = true }
 anyhow = { workspace = true }
 
+# PE file parsing
+pelite = { workspace = true }
+
 # Constants access
 classic-constants-core = { path = "../classic-constants-core" }
 
 # NO PyO3 dependency!
+
+[dev-dependencies]
+tempfile = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

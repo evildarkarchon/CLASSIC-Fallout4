@@ -248,9 +248,8 @@ def get_version_from_pe_header(exe_path: Path) -> Version:
 def read_game_exe_version(game_exe_path: Path) -> Version:
     """Retrieve the version information of a game executable.
 
-    This function attempts to detect the version of a given game executable
-    file located at `game_exe_path`. It supports both Windows API-based
-    extraction and a cross-platform PE header parsing fallback.
+    Tries Rust PE parser (pelite) first for speed, then falls back to
+    Windows API and Python PE header parsing.
 
     Args:
         game_exe_path (Path): Path to the game executable file.
@@ -265,7 +264,17 @@ def read_game_exe_version(game_exe_path: Path) -> Version:
         logger.warning("Game executable not found or path is invalid")
         return NULL_VERSION
 
-    # Try Windows API first if on Windows
+    # Try Rust PE parser first (fastest path)
+    try:
+        from classic_version import extract_pe_version
+
+        major, minor, patch, build = extract_pe_version(str(game_exe_path))
+        logger.debug("PE version extracted via Rust (pelite)")
+        return Version(f"{major}.{minor}.{patch}.{build}")
+    except Exception:  # noqa: BLE001
+        logger.debug("Rust PE version extraction failed, trying Python fallbacks")
+
+    # Try Windows API if on Windows
     if platform.system() == "Windows":
         version = get_version_windows_api(game_exe_path)
         if version != NULL_VERSION:

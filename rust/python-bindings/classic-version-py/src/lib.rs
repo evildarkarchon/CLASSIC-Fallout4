@@ -294,6 +294,69 @@ fn format_version(version: (u64, u64, u64), prefix: Option<&str>) -> String {
     classic_version_core::format_version(&v, actual_prefix)
 }
 
+/// Extract the file version from a PE executable (.exe or .dll).
+///
+/// Reads the VS_VERSIONINFO resource from a Windows PE file and returns
+/// the file version as a 4-part tuple (major, minor, patch, build).
+///
+/// # Arguments
+///
+/// * `path` - Path to the PE file (.exe or .dll)
+///
+/// # Returns
+///
+/// A tuple of (major, minor, patch, build) version components.
+///
+/// # Raises
+///
+/// * `ValueError` - If the file is not a valid PE file or has no version info
+/// * `FileNotFoundError` - If the file doesn't exist or has wrong extension
+///
+/// # Examples
+///
+/// ```python
+/// import classic_version
+///
+/// version = classic_version.extract_pe_version("C:\\Windows\\System32\\kernel32.dll")
+/// print(f"Version: {version[0]}.{version[1]}.{version[2]}.{version[3]}")
+/// ```
+#[pyfunction]
+fn extract_pe_version(path: &str) -> PyResult<(u16, u16, u16, u16)> {
+    use classic_version_core::pe_version;
+
+    pe_version::extract_pe_version(std::path::Path::new(path)).map_err(|e| match &e {
+        pe_version::PeVersionError::InvalidPath(_) | pe_version::PeVersionError::IoError { .. } => {
+            PyErr::new::<pyo3::exceptions::PyFileNotFoundError, _>(e.to_string())
+        }
+        _ => PyValueError::new_err(e.to_string()),
+    })
+}
+
+/// Check if a path points to a valid executable or DLL file.
+///
+/// Validates that the path exists, is a file, and has .exe or .dll extension.
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+///
+/// # Returns
+///
+/// True if the path is a valid executable or DLL.
+///
+/// # Examples
+///
+/// ```python
+/// import classic_version
+///
+/// assert classic_version.is_valid_pe_path("C:\\Windows\\System32\\kernel32.dll")
+/// assert not classic_version.is_valid_pe_path("readme.txt")
+/// ```
+#[pyfunction]
+fn is_valid_pe_path(path: &str) -> bool {
+    classic_version_core::pe_version::is_valid_executable_path(std::path::Path::new(path))
+}
+
 /// Python module for version utilities.
 ///
 /// This module provides comprehensive version handling for CLASSIC, including:
@@ -301,6 +364,7 @@ fn format_version(version: (u64, u64, u64), prefix: Option<&str>) -> String {
 /// - Version comparison
 /// - Version extraction from filenames and logs
 /// - Version validation against known versions
+/// - PE file version extraction
 #[pymodule]
 fn classic_version(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Version parsing
@@ -319,6 +383,10 @@ fn classic_version(m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Version formatting
     m.add_function(wrap_pyfunction!(format_version, m)?)?;
+
+    // PE version extraction
+    m.add_function(wrap_pyfunction!(extract_pe_version, m)?)?;
+    m.add_function(wrap_pyfunction!(is_valid_pe_path, m)?)?;
 
     // Module metadata
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;

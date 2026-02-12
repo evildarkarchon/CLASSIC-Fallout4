@@ -1,6 +1,6 @@
 [package]
 name = "classic-scangame-core"
-version = "8.2.0"
+version = "9.0.0"
 edition = "2024"
 rust-version = "1.85.0"
 authors = ["CLASSIC Development Team"]
@@ -14,6 +14,7 @@ crate-type = ["rlib"] # Pure Rust library ONLY - NO Python bindings
 # CLASSIC core dependencies (pure Rust - NO PyO3!)
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
+classic-path-core = { path = "../classic-path-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }
 
 # Async runtime
@@ -30,6 +31,13 @@ sha2 = { workspace = true }
 strsim = { workspace = true }
 configparser = { workspace = true }
 toml = "0.8"
+
+# Encoding detection
+encoding_rs = { workspace = true }
+chardetng = { workspace = true }
+
+# HTML parsing
+scraper = { workspace = true }
 
 # Parsing and pattern matching
 regex = { workspace = true }

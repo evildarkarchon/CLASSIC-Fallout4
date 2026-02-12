@@ -145,6 +145,7 @@ configparser = "3.1" # INI file parsing
 
 # Version parsing
 semver = "1.0" # Semantic versioning for crashgen version comparison
+pelite = "0.10" # PE file parsing for version extraction
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }

@@ -32,10 +32,15 @@
 //! }
 //! ```
 
+pub mod pe_version;
+
 use regex::Regex;
 use semver::Version;
 use std::cmp::Ordering;
 use thiserror::Error;
+
+// Re-export PE version types for convenience
+pub use pe_version::{PeVersionError, PeVersionResult, extract_pe_version};
 
 // Re-export VersionRegistry for version information
 pub use classic_constants_core::{

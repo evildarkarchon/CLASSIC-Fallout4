@@ -105,6 +105,7 @@ define_exceptions!(
 
 mod core;
 mod dds;
+mod dds_analyzer;
 mod encoding;
 mod generation;
 mod hash;
@@ -113,6 +114,7 @@ mod stream;
 
 pub use core::PyFileIOCore;
 pub use dds::PyDDSHeader;
+pub use dds_analyzer::PyDDSAnalyzer;
 pub use encoding::PyEncodingDetector;
 pub use generation::{
     PyFileGenerator, PyFileGeneratorConfig, generate_ignore_file_async, generate_local_yaml_async,
@@ -185,8 +187,80 @@ pub fn register_file_io_module(m: &Bound<'_, PyModule>) -> PyResult<()> {
     // Phase 5 - File generation
     generation::register(m)?;
 
+    // DDS Analyzer (G-08 DDS Pipeline)
+    dds_analyzer::register_dds_analyzer(m)?;
+
+    // Similarity functions
+    m.add_function(wrap_pyfunction!(calculate_similarity, m)?)?;
+    m.add_function(wrap_pyfunction!(similarity_ratio, m)?)?;
+
     // Register custom exception types using the shared macro
     register_exceptions!(m, RustFileIOError, RustFileIOIOError, RustFileIOParseError);
 
     Ok(())
+}
+
+/// Calculate the similarity ratio between two text files.
+///
+/// Reads both files as UTF-8 text (with lossy conversion for non-UTF-8 bytes),
+/// splits them into lines, and computes the LCS-based similarity ratio.
+///
+/// This mirrors Python's `difflib.SequenceMatcher.ratio()` behavior.
+///
+/// # Arguments
+///
+/// * `path1` - Path to the first file
+/// * `path2` - Path to the second file
+///
+/// # Returns
+///
+/// A float between 0.0 (completely different) and 1.0 (identical).
+///
+/// # Raises
+///
+/// * `IOError` - If either file cannot be read
+///
+/// # Examples
+///
+/// ```python
+/// import classic_file_io
+///
+/// ratio = classic_file_io.calculate_similarity("original.ini", "modified.ini")
+/// print(f"Similarity: {ratio:.1%}")
+/// ```
+#[pyfunction]
+fn calculate_similarity(path1: &str, path2: &str) -> PyResult<f64> {
+    classic_file_io_core::similarity::calculate_similarity(
+        std::path::Path::new(path1),
+        std::path::Path::new(path2),
+    )
+    .map_err(|e| RustFileIOIOError::new_err(format!("Failed to compare files: {}", e)))
+}
+
+/// Calculate similarity ratio between two strings.
+///
+/// Computes the LCS-based similarity ratio between two text strings,
+/// comparing them line-by-line. This is the pure computation function,
+/// useful when file content is already in memory.
+///
+/// # Arguments
+///
+/// * `text1` - First text content
+/// * `text2` - Second text content
+///
+/// # Returns
+///
+/// A float between 0.0 (completely different) and 1.0 (identical).
+///
+/// # Examples
+///
+/// ```python
+/// import classic_file_io
+///
+/// ratio = classic_file_io.similarity_ratio("line1\nline2", "line1\nline3")
+/// print(f"Similarity: {ratio:.1%}")
+/// ```
+#[pyfunction]
+fn similarity_ratio(text1: &str, text2: &str) -> f64 {
+    classic_file_io_core::similarity::similarity_ratio(text1, text2)
 }

@@ -23,10 +23,11 @@ pub mod error;
 pub mod generation;
 pub mod hash;
 pub mod log_collection;
+pub mod similarity;
 
 pub use backup::{BackupInfo, BackupManager, BackupType};
 pub use core::FileIOCore;
-pub use dds::DDSHeader;
+pub use dds::{DDSAnalyzer, DDSHeader, DDSIssue, GameTarget};
 pub use encoding::EncodingDetector;
 pub use error::FileIOError;
 pub use generation::{
@@ -34,3 +35,4 @@ pub use generation::{
 };
 pub use hash::FileHasher;
 pub use log_collection::{CRASH_AUTOSCAN_PATTERN, CRASH_LOG_PATTERN, LogCollector};
+pub use similarity::{calculate_similarity, similarity_ratio};

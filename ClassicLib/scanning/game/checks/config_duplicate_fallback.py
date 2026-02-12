@@ -1,5 +1,9 @@
 """Pure Python fallback implementation of ConfigDuplicateDetector.
 
+.. deprecated::
+    This fallback is deprecated. The Rust classic_scangame.ConfigDuplicateDetector
+    is the primary implementation. This module will be removed in a future release.
+
 This module provides a Python-only implementation of configuration file
 duplicate detection that matches the Rust interface.
 """

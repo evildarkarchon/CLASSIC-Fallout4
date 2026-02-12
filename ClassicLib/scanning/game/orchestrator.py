@@ -94,12 +94,10 @@ class GameIntegrityOrchestratorCore:
                 # Re-raise to propagate the failure
                 raise
 
-            # Detect configuration issues (read-only, no file modifications)
-            from ClassicLib.scanning.game.config import ConfigFileCache
+            # Detect configuration issues (read-only, delegated to Rust scanner)
             from ClassicLib.scanning.game.scan_mod_inis import detect_all_ini_issues_async
 
-            config_cache = ConfigFileCache()
-            ini_issues = await detect_all_ini_issues_async(config_cache)
+            ini_issues = await detect_all_ini_issues_async()
 
             # Combine issues from both crashgen and INI scans
             all_detected_issues = crashgen_issues + ini_issues

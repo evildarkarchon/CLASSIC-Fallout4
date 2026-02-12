@@ -27,6 +27,16 @@ Functions:
     get_orchestrator: Crash log orchestrator factory.
     get_yamldata: YAML data loader factory.
     get_fcx_handler: FCX mode handler factory.
+    get_xse_checker: XSE Address Library checker factory.
+    get_wrye_parser: Wrye Bash report parser factory.
+    get_crashgen_orchestrator: Crash generator orchestrator factory.
+    get_config_file_cache: Rust ConfigFileCache factory.
+    get_mod_ini_scanner: Rust ModIniScanner factory.
+    get_game_scan_orchestrator: Rust GameScanOrchestrator factory.
+    get_game_scan_config: Rust GameScanConfig factory.
+    get_dds_analyzer: Rust DDSAnalyzer factory.
+    get_scan_report_builder: Rust scan report builder functions factory.
+    get_papyrus_analyzer: Papyrus log analyzer factory.
     get_constants: Rust constants module factory.
     get_version_utils: Rust version utilities factory.
     get_resource_mgmt: Rust resource management factory.
@@ -739,6 +749,172 @@ class FcxHandlerWrapper:
 # ---------------------------------------------------------------------------
 
 
+def get_xse_checker(plugins_path: Any, is_vr_mode: bool = False, game_version: str = "Original") -> Any:
+    """Retrieve a Rust XseChecker instance for Address Library validation.
+
+    Args:
+        plugins_path: Path to the F4SE/SKSE plugins directory.
+        is_vr_mode: Whether the game is running in VR mode.
+        game_version: Game version name ('Null', 'Original', 'NextGen',
+            'AnniversaryEdition', 'Vr').
+
+    Returns:
+        Any: An XseChecker instance from the Rust classic_scangame module.
+
+    """
+    from classic_scangame import GameVersion as RustGameVersion
+    from classic_scangame import XseChecker
+
+    rust_game_version = getattr(RustGameVersion, game_version, RustGameVersion.Original)
+    logger.debug("Using Rust XseChecker for Address Library validation")
+    return XseChecker(plugins_path, is_vr_mode, rust_game_version)
+
+
+def get_wrye_parser(wrye_warnings: dict[str, str] | None = None) -> Any:
+    """Retrieve a Rust WryeBashParser instance for Wrye Bash report parsing.
+
+    Args:
+        wrye_warnings: Warning messages keyed by section title substring.
+            If None, an empty dict is used.
+
+    Returns:
+        Any: A WryeBashParser instance from the Rust classic_scangame module.
+
+    """
+    from classic_scangame import WryeBashParser
+
+    logger.debug("Using Rust WryeBashParser for Wrye Bash report parsing")
+    return WryeBashParser(wrye_warnings)
+
+
+def get_crashgen_orchestrator() -> Any:
+    """Retrieve the Rust CrashgenCheckOrchestrator class.
+
+    Returns:
+        Any: The CrashgenCheckOrchestrator class from Rust classic_scangame.
+            Call CrashgenCheckOrchestrator.check(path, name) for full validation.
+
+    """
+    from classic_scangame import CrashgenCheckOrchestrator
+
+    logger.debug("Using Rust CrashgenCheckOrchestrator for crashgen validation")
+    return CrashgenCheckOrchestrator
+
+
+def get_config_file_cache(game_root: Any, duplicate_whitelist: list[str] | None = None) -> Any:
+    """Retrieve a Rust ConfigFileCache instance for INI/CONF file scanning.
+
+    Args:
+        game_root: Path to the game root directory.
+        duplicate_whitelist: Optional list of directory/filename prefixes for duplicate detection.
+
+    Returns:
+        Any: A RustConfigFileCache instance from the Rust classic_scangame module.
+
+    """
+    from classic_scangame import RustConfigFileCache
+
+    logger.debug("Using Rust ConfigFileCache for INI/CONF file scanning")
+    return RustConfigFileCache(game_root, duplicate_whitelist)
+
+
+def get_mod_ini_scanner() -> Any:
+    """Retrieve the Rust ModIniScanner class for mod INI scanning.
+
+    Returns:
+        Any: The RustModIniScanner class from Rust classic_scangame.
+            Call RustModIniScanner.scan(game_root, game_name) to scan.
+
+    """
+    from classic_scangame import RustModIniScanner
+
+    logger.debug("Using Rust ModIniScanner for mod INI scanning")
+    return RustModIniScanner
+
+
+def get_game_scan_orchestrator(config: Any) -> Any:
+    """Retrieve a Rust GameScanOrchestrator instance.
+
+    Args:
+        config: A PyGameScanConfig instance from classic_scangame.
+
+    Returns:
+        Any: A GameScanOrchestrator instance from Rust classic_scangame.
+
+    """
+    from classic_scangame import GameScanOrchestrator
+
+    logger.debug("Using Rust GameScanOrchestrator for game integrity scanning")
+    return GameScanOrchestrator(config)
+
+
+def get_game_scan_config(**kwargs: Any) -> Any:
+    """Retrieve a Rust GameScanConfig instance.
+
+    Accepts the same keyword arguments as the Rust GameScanConfig constructor.
+
+    Returns:
+        Any: A GameScanConfig instance from Rust classic_scangame.
+
+    """
+    from classic_scangame import GameScanConfig
+
+    return GameScanConfig(**kwargs)
+
+
+def get_dds_analyzer(game_target: str = "fallout4") -> Any:
+    """Retrieve a Rust DDSAnalyzer instance for DDS texture validation.
+
+    Args:
+        game_target: Game to validate against ("fallout4" or "skyrimse").
+
+    Returns:
+        Any: A DDSAnalyzer instance from Rust classic_file_io.
+
+    """
+    from classic_file_io import DDSAnalyzer
+
+    logger.debug("Using Rust DDSAnalyzer for DDS texture validation")
+    return DDSAnalyzer(game_target)
+
+
+def get_scan_report_builder() -> Any:
+    """Retrieve Rust scan report building functions.
+
+    Returns:
+        Any: A module-like namespace with build_unpacked_report,
+            build_archived_report, build_combined_scan_report,
+            get_scan_issue_messages.
+
+    """
+    import classic_scangame
+
+    logger.debug("Using Rust ScanReportBuilder functions")
+    return classic_scangame
+
+
+def get_papyrus_analyzer(log_path: Any = None) -> Any:
+    """Retrieve a Rust PapyrusAnalyzer instance for Papyrus log analysis.
+
+    Args:
+        log_path: Path to the Papyrus log file. If None, must be set later.
+
+    Returns:
+        Any: A PapyrusAnalyzer instance from the Rust classic_scanlog module.
+
+    Raises:
+        RuntimeError: If Rust PapyrusAnalyzer module is not available.
+
+    """
+    from classic_scanlog import PapyrusAnalyzer
+
+    logger.debug("Using Rust PapyrusAnalyzer (15-30x speedup)")
+    if log_path is not None:
+        return PapyrusAnalyzer(log_path)
+    msg = "log_path is required for PapyrusAnalyzer"
+    raise ValueError(msg)
+
+
 def get_constants() -> Any | None:
     """Retrieve the Rust-based constants module if available.
 
@@ -882,6 +1058,8 @@ _COMPONENT_KEY_MAP: dict[str, tuple[str, str | None]] = {
     "yamldata": ("classic_config", "YamlData"),
     "constants": ("classic_constants", None),
     "version_utils": ("classic_version", None),
+    "pe_version": ("classic_version", "extract_pe_version"),
+    "similarity": ("classic_file_io", "calculate_similarity"),
     "resource_mgmt": ("classic_resource", None),
     "xse_utils": ("classic_xse", None),
     "web_utils": ("classic_web", None),
@@ -894,6 +1072,22 @@ _COMPONENT_KEY_MAP: dict[str, tuple[str, str | None]] = {
     "crashgen_checker": ("classic_scangame", "CrashgenChecker"),
     "xse_checker": ("classic_scangame", "XseChecker"),
     "integrity_checker": ("classic_scangame", "GameIntegrityChecker"),
+    "wrye_parser": ("classic_scangame", "WryeBashParser"),
+    "crashgen_orchestrator": ("classic_scangame", "CrashgenCheckOrchestrator"),
+    "config_file_cache": ("classic_scangame", "RustConfigFileCache"),
+    "mod_ini_scanner": ("classic_scangame", "RustModIniScanner"),
+    "game_scan_orchestrator": ("classic_scangame", "GameScanOrchestrator"),
+    "game_scan_config": ("classic_scangame", "GameScanConfig"),
+    "game_scan_result": ("classic_scangame", "GameScanResult"),
+    "mod_scan_result": ("classic_scangame", "ModScanResult"),
+    "dds_analyzer": ("classic_file_io", "DDSAnalyzer"),
+    "scan_report_builder": ("classic_scangame", "build_unpacked_report"),
+    "setup_checks": ("classic_scangame", "run_setup_checks"),
+    "papyrus_analyzer": ("classic_scanlog", "PapyrusAnalyzer"),
+    "papyrus_stats": ("classic_scanlog", "PapyrusStats"),
+    "report_fragment": ("classic_scanlog", "ReportFragment"),
+    "report_composer": ("classic_scanlog", "ReportComposer"),
+    "string_pool": ("classic_scanlog", "StringPool"),
 }
 
 
@@ -1002,6 +1196,24 @@ __all__ = [
     # Game
     "get_yamldata",
     "get_fcx_handler",
+    # XSE
+    "get_xse_checker",
+    # Wrye Bash
+    "get_wrye_parser",
+    # Crashgen
+    "get_crashgen_orchestrator",
+    # Config cache / Mod INI
+    "get_config_file_cache",
+    "get_mod_ini_scanner",
+    # Game Scan Orchestrator
+    "get_game_scan_orchestrator",
+    "get_game_scan_config",
+    # DDS
+    "get_dds_analyzer",
+    # Scan Report
+    "get_scan_report_builder",
+    # Papyrus
+    "get_papyrus_analyzer",
     # Utilities
     "get_constants",
     "get_version_utils",

@@ -6,7 +6,7 @@ related to mod detection and warnings.
 
 from __future__ import annotations
 
-from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment
+from ClassicLib.integration.rust.report_rust import ReportFragment
 
 
 def detect_mods_single_fragment(

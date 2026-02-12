@@ -85,6 +85,7 @@
 mod cache;
 mod error;
 mod loader;
+pub mod validators;
 
 // Re-export public API
 pub use cache::{

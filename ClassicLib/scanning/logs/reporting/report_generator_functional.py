@@ -17,7 +17,7 @@ from __future__ import annotations
 import warnings
 from typing import Any
 
-from ClassicLib.scanning.logs.reporting.report_fragment import ReportFragment
+from ClassicLib.integration.rust.report_rust import ReportFragment
 
 
 class ReportGeneratorFunctional:

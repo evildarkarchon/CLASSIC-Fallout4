@@ -1,14 +1,11 @@
-"""Parse and identifies potential issues in Wrye Bash plugin checker reports and provides
-detailed guidance and warnings based on parsed data and configuration settings.
+"""Parse and identify potential issues in Wrye Bash plugin checker reports.
 
-This module includes functions for scanning the Wrye Bash report, parsing the content,
-and presenting summarized or actionable information for users regarding their plugins.
+Delegates HTML parsing and report formatting to the Rust WryeBashParser
+(classic_scangame.WryeBashParser). Python handles YAML settings resolution,
+file reading, and surrounding message construction.
 """
 
 from pathlib import Path
-
-# noinspection PyProtectedMember
-from bs4 import BeautifulSoup, PageElement
 
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
@@ -18,15 +15,7 @@ from ClassicLib.io.yaml import yaml_settings
 
 
 def _read_file(path: Path) -> str:
-    """Read a file synchronously via AsyncBridge (GUI-only helper).
-
-    Args:
-        path: Path to the file to read.
-
-    Returns:
-        The file contents as a string.
-
-    """
+    """Read a file synchronously via AsyncBridge (GUI-only helper)."""
     io_core = get_file_io()
     return AsyncBridge.get_instance().run_async(io_core.read_file(path))
 
@@ -34,32 +23,24 @@ def _read_file(path: Path) -> str:
 def scan_wryecheck() -> str:
     """Scan the Wrye Bash plugin checker report for detected problems.
 
-    Reads settings from YAML configuration and validates the presence of a
-    plugin check HTML report. If the report exists, it is parsed and a summary
-    message is constructed with detailed resources and guidance links.
+    Reads settings from YAML configuration, reads the HTML report,
+    and delegates parsing to the Rust WryeBashParser.
 
     Returns:
-        The generated analysis message detailing the contents of the plugin
-        checker report, or a warning message if the report is missing.
+        Analysis message detailing the report contents, or a warning
+        if the report is missing.
 
     Raises:
-        ValueError: If the required warnings setting is not found in YAML config.
+        ValueError: If required warnings setting is missing from YAML config.
 
     """
-    # Constants for formatting and links
-    # noinspection PyPep8Naming
-    RESOURCE_LINKS: dict[str, str] = {
-        "troubleshooting": "https://www.nexusmods.com/fallout4/articles/4141",
-        "documentation": "https://wrye-bash.github.io/docs/",
-        "simple_eslify": "https://www.nexusmods.com/skyrimspecialedition/mods/27568",
-    }
+    from classic_scangame import WryeBashParser
 
     # Load settings from YAML
     missing_html_setting: str | None = yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
     plugin_check_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Docs_File_WryeBashPC")
     warnings_dict: dict[str, str] | None = yaml_settings(dict[str, str], YAML.Main, "Warnings_WRYE")
 
-    # Validate settings
     missing_html_message: str | None = missing_html_setting if isinstance(missing_html_setting, str) else None
     wrye_warnings: dict[str, str] = warnings_dict if isinstance(warnings_dict, dict) else {}
 
@@ -69,120 +50,23 @@ def scan_wryecheck() -> str:
             return missing_html_message
         raise ValueError("ERROR: Warnings_WRYE missing from the database!")
 
-    # Build the message
+    # Read HTML and delegate parsing to Rust
+    html_content = _read_file(plugin_check_path)
+    parser = WryeBashParser(wrye_warnings)
+    issues = parser.parse(html_content)
+    report_body = WryeBashParser.format_report(issues)
+
+    # Build the full message with header and resource links
     message_parts: list[str] = [
-        "\n✔️ WRYE BASH PLUGIN CHECKER REPORT WAS FOUND! ANALYZING CONTENTS...\n",
+        "\n\u2714\ufe0f WRYE BASH PLUGIN CHECKER REPORT WAS FOUND! ANALYZING CONTENTS...\n",
         f"  [This report is located in your Documents/My Games/{get_game()} folder.]\n",
         "  [To hide this report, remove *ModChecker.html* from the same folder.]\n",
+        report_body,
+        "\n\u2754 For more info about the above detected problems, see the WB Advanced Readme\n",
+        "  For more details about solutions, read the Advanced Troubleshooting Article\n",
+        "  Advanced Troubleshooting: https://www.nexusmods.com/fallout4/articles/4141\n",
+        "  Wrye Bash Advanced Readme Documentation: https://wrye-bash.github.io/docs/\n",
+        "  [ After resolving any problems, run Plugin Checker in Wrye Bash again! ]\n\n",
     ]
 
-    # Parse the HTML report
-    report_contents: list[str] = parse_wrye_report(plugin_check_path, wrye_warnings)
-    message_parts.extend(report_contents)
-
-    # Add resource links
-    message_parts.extend([
-        "\n❔ For more info about the above detected problems, see the WB Advanced Readme\n",
-        "  For more details about solutions, read the Advanced Troubleshooting Article\n",
-        f"  Advanced Troubleshooting: {RESOURCE_LINKS['troubleshooting']}\n",
-        f"  Wrye Bash Advanced Readme Documentation: {RESOURCE_LINKS['documentation']}\n",
-        "  [ After resolving any problems, run Plugin Checker in Wrye Bash again! ]\n\n",
-    ])
-
     return "".join(message_parts)
-
-
-def parse_wrye_report(report_path: Path, wrye_warnings: dict[str, str]) -> list[str]:
-    """Parse a Wrye Bash report in HTML format and extracts relevant messages and plugin details.
-
-    This function reads a Wrye Bash plugin analysis report in the form of an HTML file,
-    extracts and processes relevant data concerning plugins and warnings. The data is formatted
-    into a list of strings, which may include sections, warnings, and lists of plugins,
-    based on the content of the file and a provided dictionary of warning messages.
-
-    Arguments:
-        report_path (Path): The path to the Wrye Bash report file in HTML format.
-        wrye_warnings (dict[str, str]): A dictionary mapping warning names to their respective warning messages.
-
-    Returns:
-        list[str]: A list of formatted message strings containing details from the report and warnings.
-
-    """
-    message_parts: list[str] = []
-
-    # Read and parse HTML file
-    html_content = _read_file(report_path)
-    soup: BeautifulSoup = BeautifulSoup(html_content, "html.parser")
-
-    # Process each section (h3 element)
-    for section in soup.find_all("h3"):
-        title: str = section.get_text()
-        plugins: list[str] = extract_plugins_from_section(section)
-
-        # Format section header
-        if title != "Active Plugins:":
-            message_parts.append(format_section_header(title))
-
-        # Handle special ESL Capable section
-        if title == "ESL Capable":
-            message_parts.extend([
-                f"❓ There are {len(plugins)} plugins that can be given the ESL flag. This can be done with\n",
-                "  the SimpleESLify script to avoid reaching the plugin limit (254 esm/esp).\n",
-                "  SimpleESLify: https://www.nexusmods.com/skyrimspecialedition/mods/27568\n  -----\n",
-            ])
-
-        # Add any matching warnings from settings
-        message_parts.extend([warning_text for warning_name, warning_text in wrye_warnings.items() if warning_name in title])
-
-        # List plugins (except for special sections)
-        if title not in {"ESL Capable", "Active Plugins:"}:
-            message_parts.extend([f"    > {plugin}\n" for plugin in plugins])
-
-    return message_parts
-
-
-def extract_plugins_from_section(section: PageElement) -> list[str]:
-    """Extract a list of plugins from a specified section of a page element. A plugin is
-    identified as text containing specific extensions (.esp, .esl, .esm). The function
-    searches through paragraphs in the given section, parsing relevant text while
-    ensuring it does not process content from other sections.
-
-    Args:
-        section (PageElement): The section of the page to extract plugin information from.
-
-    Returns:
-        list[str]: A list of strings representing detected plugins.
-
-    """
-    plugins: list[str] = []
-    for paragraph in section.find_next_siblings("p"):
-        # Stop if we've moved to a different section
-        if paragraph.find_previous_sibling("h3") != section:
-            break
-
-        # Process the plugin entry
-        text: str = paragraph.get_text().strip().replace("•\xa0 ", "")
-        if any(ext in text for ext in (".esp", ".esl", ".esm")):
-            plugins.append(text)
-
-    return plugins
-
-
-def format_section_header(title: str) -> str:
-    """Format a section header with a title string, aligning it symmetrically with padding
-    if the title's length is less than 32 characters. Adds an equal sign (`=`)
-    padding around the title to create a visually distinct section.
-
-    Args:
-        title (str): The title of the section to format.
-
-    Returns:
-        str: A formatted section header string.
-
-    """
-    if len(title) < 32:
-        diff: int = 32 - len(title)
-        left: int = diff // 2
-        right: int = diff - left
-        return f"\n   {'=' * left} {title} {'=' * right}\n"
-    return title

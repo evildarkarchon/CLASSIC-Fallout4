@@ -1,11 +1,11 @@
-"""Papyrus log file processor and analyzer. to extract statistics and
-summarize relevant data such as the number of dumps, stacks, warnings, and errors.
+"""Papyrus log file processor and analyzer.
 
-The module relies on external utility libraries to locate and process log files.
-If logs are not accessible, the module provides guidance for enabling logging.
+Thin wrapper that delegates to the Rust ``classic_scanlog.papyrus_logging``
+function for high-performance log analysis with automatic encoding detection.
 
-The primary function returns a summary of log details and the total count of
-recorded dumps and raises specific errors for encoding-related issues.
+The module resolves the Papyrus log path from YAML settings and passes it
+to Rust for analysis.  The Rust implementation handles streaming I/O,
+encoding detection, and statistics collection (15-30x faster than Python).
 """
 
 from pathlib import Path
@@ -13,71 +13,34 @@ from pathlib import Path
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
-from ClassicLib.io.files import stream_lines_sync
-
-# yaml_settings is imported lazily inside functions to avoid circular imports
 
 
 def papyrus_logging() -> tuple[str, int]:
-    """Analyze Papyrus log files, extracting various statistics and compiling a summary.
+    """Analyze Papyrus log files via the Rust ``classic_scanlog`` backend.
 
-    This function reads a Papyrus log file using streaming file I/O to minimize memory usage,
-    and computes key data such as the total number of dumps, stacks, warnings, and errors
-    present in the log. It also calculates the ratio of dumps to stacks. If the log file
-    is not found, the function provides user guidance on enabling and locating Papyrus
-    logging.
-
-    Optimization:
-        - Uses stream_lines_sync for memory-efficient line-by-line processing
-        - Automatic encoding detection
-        - Handles multi-gigabyte logs without OOM errors
+    Resolves the Papyrus log path from YAML settings, then delegates all
+    analysis work to the Rust ``papyrus_logging`` function which handles
+    streaming I/O, encoding detection, and statistics collection.
 
     Returns:
         tuple[str, int]: A tuple containing a formatted string with log analysis
         details and the total count of dumps extracted from the log.
 
-    Raises:
-        ValueError: If file reading fails or path is invalid.
-
     """
     from ClassicLib.io.yaml import yaml_settings
 
-    message_list: list[str] = []
     papyrus_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_PapyrusLog")
 
-    # Log optimization status (only once at module level)
-    if not hasattr(papyrus_logging, "_logged_status"):
-        logger.debug("Papyrus log reading using Streaming I/O (Memory Efficient)")
-        papyrus_logging._logged_status = True  # type: ignore[attr-defined]  # Dynamic attribute for one-time logging
-
-    count_dumps = count_stacks = count_warnings = count_errors = 0
     if papyrus_path and papyrus_path.exists():
-        # Use streaming I/O (automatic encoding detection, memory efficient)
-        for line in stream_lines_sync(papyrus_path):
-            if "Dumping Stacks" in line:
-                count_dumps += 1
-            elif "Dumping Stack" in line:
-                count_stacks += 1
-            elif " warning: " in line:
-                count_warnings += 1
-            elif " error: " in line:
-                count_errors += 1
+        from classic_scanlog import papyrus_logging as rust_papyrus_logging
 
-        ratio: float = 0.0 if count_dumps == 0 else count_dumps / count_stacks
+        logger.debug("Papyrus log analysis delegated to Rust (Streaming I/O)")
+        return rust_papyrus_logging(papyrus_path)
 
-        message_list.extend((
-            f"NUMBER OF DUMPS    : {count_dumps}\n",
-            f"NUMBER OF STACKS   : {count_stacks}\n",
-            f"DUMPS/STACKS RATIO : {round(ratio, 3)}\n",  # pyrefly: ignore
-            f"NUMBER OF WARNINGS : {count_warnings}\n",
-            f"NUMBER OF ERRORS   : {count_errors}\n",
-        ))
-    else:
-        message_list.extend((
-            "[!] ERROR : UNABLE TO FIND *Papyrus.0.log* (LOGGING IS DISABLED OR YOU DIDN'T RUN THE GAME)\n",
-            "ENABLE PAPYRUS LOGGING MANUALLY OR WITH BETHINI AND START THE GAME TO GENERATE THE LOG FILE\n",
-            "BethINI Link | Use Manual Download : https://www.nexusmods.com/site/mods/631?tab=files\n",
-        ))
-
-    message_output: str = "".join(message_list)  # Debug print
-    return message_output, count_dumps
+    # Log not found -- return guidance message (no Rust call needed)
+    message_output = (
+        "[!] ERROR : UNABLE TO FIND *Papyrus.0.log* (LOGGING IS DISABLED OR YOU DIDN'T RUN THE GAME)\n"
+        "ENABLE PAPYRUS LOGGING MANUALLY OR WITH BETHINI AND START THE GAME TO GENERATE THE LOG FILE\n"
+        "BethINI Link | Use Manual Download : https://www.nexusmods.com/site/mods/631?tab=files\n"
+    )
+    return message_output, 0

@@ -32,7 +32,7 @@ from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
 # Import Rust orchestrator - required, no Python fallback
 try:
-    from classic_scanlog import AnalysisConfig, Orchestrator
+    from classic_scanlog import Orchestrator
 except ImportError as e:
     raise RuntimeError(
         "Rust orchestrator module not available. CLASSIC requires its Rust extensions. "
@@ -272,10 +272,8 @@ class ScanLogsExecutor:
 
         # Initialize Rust orchestrator with YamlData configuration
         if self._rust_orchestrator is None:
-            from ClassicLib.integration.factory import get_yamldata
-
-            rust_yamldata = get_yamldata()
-            rust_config = AnalysisConfig.from_yamldata(rust_yamldata)
+            # Use the bridge method on ClassicScanLogsInfo to create Rust AnalysisConfig
+            rust_config = self.yamldata.to_rust_config()
 
             # Apply configuration from ScanConfig (only override if not None)
             # rust_config already has defaults from AnalysisConfig.from_yamldata()

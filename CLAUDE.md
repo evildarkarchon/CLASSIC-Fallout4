@@ -87,7 +87,7 @@ The Rust workspace under `rust/` follows a strict three-layer separation:
 3. **Bindings** (`rust/python-bindings/`, `rust/node-bindings/`) - Thin PyO3/NAPI-RS adapters
    - Each `*-py` crate wraps its corresponding `*-core` crate as a `cdylib`
    - Python imports them directly: `import classic_yaml`, `import classic_scanlog`
-   - `classic-node`: NAPI-RS bindings for Node.js/Bun (in development)
+   - `classic-node`: NAPI-RS bindings for Node.js/Bun (tested in CI with Bun)
 
 4. **UI Applications** (`rust/ui-applications/`)
    - `classic-gui`: Pure Rust GUI using Slint framework (v9.0.0)
@@ -104,6 +104,9 @@ Python code organized into subpackages:
 - `support/` - Version registry, XSE checks
 - `Utils/` - File, path, string, version, web utilities
 - `Interface/` - PySide6 GUI components
+- `TUI/` - Textual-based terminal UI (entry point: `classic-tui`)
+- `_async_utils/` - Async utility helpers
+- `acceleration/` - Rust acceleration utilities
 
 ### Rust Acceleration Pattern
 
@@ -165,3 +168,5 @@ GitHub Actions on `windows-latest` with parallel jobs:
 2. **Lint**: ruff check + clippy + vulture (blocking)
 3. **Build Rust** -> **Build Python Bindings** (maturin) -> **Python Tests** (unit, integration, rust-integration)
 4. **Rust Tests** (independent, parallel with Python pipeline)
+5. **Node.js Bindings** (Bun): build NAPI-RS binary + run Bun tests (independent)
+6. **Benchmarks** (`benchmarks.yml`): separate workflow for performance tracking

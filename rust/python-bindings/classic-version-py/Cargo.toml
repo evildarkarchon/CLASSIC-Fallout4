@@ -1,6 +1,6 @@
 [package]
 name = "classic-version-py"
-version = "8.2.0"
+version = "9.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["CLASSIC Development Team"]

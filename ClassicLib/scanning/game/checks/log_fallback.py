@@ -1,5 +1,9 @@
 """Pure Python fallback implementation of LogProcessor.
 
+.. deprecated::
+    This fallback is deprecated. The Rust classic_scangame.LogProcessor is the
+    primary implementation. This module will be removed in a future release.
+
 This module provides a Python-only implementation of log processing
 that matches the Rust interface.
 """

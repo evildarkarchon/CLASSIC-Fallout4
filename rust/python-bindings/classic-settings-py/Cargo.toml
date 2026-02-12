@@ -1,6 +1,6 @@
 [package]
 name = "classic-settings-py"
-version = "8.2.0"
+version = "9.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["CLASSIC Development Team"]
@@ -20,6 +20,9 @@ pyo3-async-runtimes = { workspace = true, features = ["tokio-runtime"] }
 
 # Core settings cache business logic
 classic-settings-core = { path = "../../business-logic/classic-settings-core" }
+
+# YAML parsing (needed for validate_settings_structure to parse raw strings)
+yaml-rust2 = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

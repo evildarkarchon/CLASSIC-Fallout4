@@ -1,5 +1,9 @@
 """Pure Python fallback implementation of BA2Scanner.
 
+.. deprecated::
+    This fallback is deprecated. The Rust classic_scangame.BA2Scanner is the
+    primary implementation. This module will be removed in a future release.
+
 This module provides a Python-only implementation of BA2 archive scanning
 that matches the Rust interface. It's used as a fallback when the Rust
 acceleration module is not available.
