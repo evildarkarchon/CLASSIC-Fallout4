@@ -380,7 +380,7 @@ mod tests {
     fn test_long_text() {
         let patterns = vec!["NEEDLE".to_string()];
         let matcher = PatternMatcher::new(patterns).unwrap();
-        let long_text = "X".repeat(10000) + "NEEDLE" + &"Y".repeat(10000);
+        let long_text = format!("{}NEEDLE{}", "X".repeat(10000), "Y".repeat(10000));
         assert!(matcher.has_match(&long_text));
     }
 }

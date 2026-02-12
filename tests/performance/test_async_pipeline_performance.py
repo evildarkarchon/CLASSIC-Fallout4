@@ -107,7 +107,6 @@ class TestAsyncPerformancePipeline:
             test_files = create_large_crash_log_set(tmp_path / f"scale_{count}", count)
 
             pipeline = AsyncCrashLogPipeline(
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,

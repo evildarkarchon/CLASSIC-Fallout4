@@ -47,6 +47,11 @@ class TestAsyncYamlCaching:
     @pytest.mark.performance
     async def test_cache_hit_performance(self, async_yaml_core, temp_yaml_file, monkeypatch):
         """Test performance of cache hits."""
+        import tracemalloc
+
+        if tracemalloc.is_tracing():
+            pytest.skip("tracemalloc adds overhead that inflates timing results")
+
         from ClassicLib.core.constants import YAML
 
         # Mock get_path_for_store to return our test file

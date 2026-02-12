@@ -52,9 +52,9 @@ class FormIDAnalyzer:
             self._rust_analyzer = FormIDAnalyzerCore(
                 show_formid_values,
                 getattr(yamldata, "crashgen_name", ""),
-                getattr(yamldata, "problematic_plugins", {}),
-                getattr(yamldata, "mods_single", {}),
-                getattr(yamldata, "mods_double", {}),
+                {},  # problematic_plugins: unused by FormIDAnalyzerCore
+                {},  # mods_single: unused by FormIDAnalyzerCore
+                {},  # mods_double: unused by FormIDAnalyzerCore
             )
             logger.debug("FormIDAnalyzer: Using RUST FormIDAnalyzerCore")
         except (RustError, TypeError, ValueError) as e:

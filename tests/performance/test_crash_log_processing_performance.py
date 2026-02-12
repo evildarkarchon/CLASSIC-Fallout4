@@ -128,7 +128,6 @@ class TestRealWorldCrashLogProcessing:
         print("\n--- ASYNC PIPELINE TEST ---")
 
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=True,
             formid_db_exists=False,  # Don't use real DB in test

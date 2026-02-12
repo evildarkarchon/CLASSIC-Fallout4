@@ -235,9 +235,21 @@ impl PyYamlData {
     }
 
     #[getter]
+    fn crashgen_name_vr(&self) -> String {
+        self.inner.crashgen_name_vr.clone()
+    }
+
+    #[getter]
     fn crashgen_ignore(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
         // Convert Vec<String> to PySet (was a set in original Python)
         let list = PyList::new(py, &self.inner.crashgen_ignore)?;
+        let py_set = PySet::new(py, list.iter())?;
+        Ok(py_set.unbind().into())
+    }
+
+    #[getter]
+    fn crashgen_ignore_vr(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let list = PyList::new(py, &self.inner.crashgen_ignore_vr)?;
         let py_set = PySet::new(py, list.iter())?;
         Ok(py_set.unbind().into())
     }
@@ -393,6 +405,20 @@ impl PyYamlData {
     #[getter]
     fn game_version_vr(&self) -> String {
         self.inner.game_version_vr.clone()
+    }
+
+    // ========================================================================
+    // Game Root Names
+    // ========================================================================
+
+    #[getter]
+    fn game_root_name(&self) -> String {
+        self.inner.game_root_name.clone()
+    }
+
+    #[getter]
+    fn game_root_name_vr(&self) -> String {
+        self.inner.game_root_name_vr.clone()
     }
 
     // ========================================================================

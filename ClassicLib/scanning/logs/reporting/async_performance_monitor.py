@@ -12,8 +12,6 @@ from ClassicLib.scanning.logs.reporting.async_crash_log_pipeline import run_asyn
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
-
 
 class AsyncPerformanceMonitor:
     """Monitor and compare asynchronous vs synchronous performance metrics.
@@ -125,7 +123,6 @@ class AsyncPerformanceMonitor:
 async def benchmark_async_pipeline(
     crashlog_list: list["Path"],
     remove_list: tuple[str],
-    yamldata: "ClassicScanLogsInfo",
     fcx_mode: bool | None,
     show_formid_values: bool | None,
     formid_db_exists: bool,
@@ -139,7 +136,6 @@ async def benchmark_async_pipeline(
     Args:
         crashlog_list (list[Path]): List of paths to crash log files to be scanned.
         remove_list (tuple[str]): Tuple containing strings of items to be removed.
-        yamldata (ClassicScanLogsInfo): Data for the classic scan logs configuration.
         fcx_mode (bool | None): Indicates whether the FCX mode is enabled.
         show_formid_values (bool | None): Indicates whether to display form ID values during processing.
         formid_db_exists (bool): Specifies whether the FormID database exists.
@@ -152,9 +148,7 @@ async def benchmark_async_pipeline(
     logger.info("Starting async pipeline benchmark...")
 
     # Run async pipeline
-    _results, async_stats = await run_async_crash_log_scan(
-        crashlog_list, remove_list, yamldata, fcx_mode, show_formid_values, formid_db_exists
-    )
+    _results, async_stats = await run_async_crash_log_scan(crashlog_list, remove_list, fcx_mode, show_formid_values, formid_db_exists)
 
     # Generate performance comparison
     comparison = AsyncPerformanceMonitor.compare_performance(async_stats, sync_baseline or 0, len(crashlog_list))

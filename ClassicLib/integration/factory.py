@@ -654,11 +654,11 @@ def get_orchestrator(
     return ClassicOrchestrator()  # type: ignore[return-value]
 
 
-def get_yamldata() -> Any:  # Returns Rust YamlData or Python ClassicScanLogsInfo (incompatible interfaces)
-    """Load YAML data using Rust acceleration if available.
+def get_yamldata() -> Any:  # Returns Rust YamlData (both paths are now Rust-backed)
+    """Load YAML data using Rust YamlData.
 
     Returns:
-        Any: A YamlData or ClassicScanLogsInfo instance.
+        Any: A YamlData instance (direct or via ClassicScanLogsInfo thin wrapper).
 
     """
     try:

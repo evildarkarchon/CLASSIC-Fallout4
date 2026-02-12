@@ -49,25 +49,22 @@ def create_mock_orchestrator(crash_files: list[Path]) -> MagicMock:
 class TestAsyncCrashLogPipelineInit:
     """Test suite for AsyncCrashLogPipeline initialization."""
 
-    def test_init_with_minimal_params(self, mock_yamldata: MagicMock) -> None:
+    def test_init_with_minimal_params(self) -> None:
         """Test pipeline initialization with minimal parameters."""
         pipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=False,
             formid_db_exists=False,
         )
 
-        assert pipeline.yamldata is mock_yamldata
         assert pipeline.fcx_mode is False
         assert pipeline.show_formid_values is False
         assert pipeline.formid_db_exists is False
         assert pipeline.performance_stats == {}
 
-    def test_init_with_all_flags_enabled(self, mock_yamldata: MagicMock) -> None:
+    def test_init_with_all_flags_enabled(self) -> None:
         """Test pipeline initialization with all flags enabled."""
         pipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=True,
             show_formid_values=True,
             formid_db_exists=True,
@@ -77,10 +74,9 @@ class TestAsyncCrashLogPipelineInit:
         assert pipeline.show_formid_values is True
         assert pipeline.formid_db_exists is True
 
-    def test_init_performance_stats_empty(self, mock_yamldata: MagicMock) -> None:
+    def test_init_performance_stats_empty(self) -> None:
         """Test that performance stats start empty."""
         pipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=False,
             formid_db_exists=False,
@@ -198,7 +194,6 @@ class TestAsyncCrashLogPipelineProcessing:
             mock_progress.return_value = mock_context
 
             pipeline = AsyncCrashLogPipeline(
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
@@ -236,7 +231,6 @@ class TestAsyncCrashLogPipelineProcessing:
             mock_progress.return_value = mock_context
 
             pipeline = AsyncCrashLogPipeline(
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
@@ -287,7 +281,6 @@ class TestRunAsyncCrashLogScan:
             results, stats = await run_async_crash_log_scan(
                 crashlog_list=[],
                 remove_list=("",),
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
@@ -324,7 +317,6 @@ class TestRunAsyncCrashLogScan:
             results, stats = await run_async_crash_log_scan(
                 crashlog_list=[crash_log_file],
                 remove_list=("record1", "record2"),
-                yamldata=mock_yamldata,
                 fcx_mode=True,
                 show_formid_values=True,
                 formid_db_exists=True,
@@ -339,7 +331,7 @@ class TestRunAsyncCrashLogScan:
 class TestPipelineErrorHandling:
     """Test suite for pipeline error handling."""
 
-    async def test_handles_reformat_error(self, mock_yamldata: MagicMock, crash_log_file: Path) -> None:
+    async def test_handles_reformat_error(self, crash_log_file: Path) -> None:
         """Test pipeline handles reformatting errors."""
         with (
             patch(
@@ -349,7 +341,6 @@ class TestPipelineErrorHandling:
             ),
         ):
             pipeline = AsyncCrashLogPipeline(
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
@@ -400,7 +391,6 @@ class TestPipelineErrorHandling:
             mock_progress.return_value = mock_context
 
             pipeline = AsyncCrashLogPipeline(
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,
@@ -452,7 +442,6 @@ class TestPipelineBatchSizing:
             mock_progress.return_value = mock_context
 
             pipeline = AsyncCrashLogPipeline(
-                yamldata=mock_yamldata,
                 fcx_mode=False,
                 show_formid_values=False,
                 formid_db_exists=False,

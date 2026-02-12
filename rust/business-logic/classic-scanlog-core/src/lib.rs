@@ -51,7 +51,9 @@ pub use gpu_detector::{GpuDetector, GpuInfo, GpuVendor};
 pub use mod_detector::{
     detect_mods_batch, detect_mods_double, detect_mods_important, detect_mods_single,
 };
-pub use orchestrator::{AnalysisConfig, AnalysisResult, OrchestratorCore};
+pub use orchestrator::{
+    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+};
 pub use papyrus::{PapyrusAnalyzer, PapyrusError, PapyrusStats};
 pub use parser::{LogParser, StreamingIteratorParser, StreamingLogParser};
 pub use patterns::PatternMatcher;

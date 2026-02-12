@@ -171,8 +171,12 @@ class ClassicOrchestrator:
         # Get YamlData from factory (uses Rust if available, Python fallback otherwise)
         self.yamldata = get_yamldata()
 
-        # Create AnalysisConfig from YamlData
-        self.config = AnalysisConfig.from_yamldata(self.yamldata)
+        # Create AnalysisConfig from YamlData with game/VR context
+        from ClassicLib.core.registry import get_game, get_vr
+
+        game = get_game()
+        vr_mode = get_vr() == "VR"
+        self.config = AnalysisConfig.from_yamldata(self.yamldata, game, vr_mode)
 
         # Create Orchestrator
         self.orchestrator = Orchestrator(self.config)

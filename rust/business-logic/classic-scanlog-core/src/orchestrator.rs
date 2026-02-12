@@ -180,6 +180,62 @@ impl AnalysisConfig {
     }
 }
 
+/// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
+///
+/// This is the canonical way to create an `AnalysisConfig` from loaded YAML data.
+/// It uses VR-aware accessors to select the correct crashgen name, ignore list,
+/// and game root name based on the `vr_mode` parameter.
+///
+/// # Arguments
+///
+/// * `yaml` - Reference to the loaded YAML configuration data
+/// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
+/// * `vr_mode` - Whether VR mode is active for this analysis
+/// * `show_formid_values` - Whether to include FormID value lookups in reports
+/// * `fcx_mode` - Whether FCX (enhanced analysis) mode is enabled
+/// * `simplify_logs` - Whether to remove specified strings from crash logs
+/// * `remove_list` - Strings to remove when `simplify_logs` is enabled
+pub fn build_analysis_config_from_yaml(
+    yaml: &classic_config_core::YamlDataCore,
+    game: &str,
+    vr_mode: bool,
+    show_formid_values: bool,
+    fcx_mode: bool,
+    simplify_logs: bool,
+    remove_list: Vec<String>,
+) -> AnalysisConfig {
+    AnalysisConfig {
+        game: game.to_string(),
+        vr_mode,
+        crashgen_name: yaml.get_crashgen_name(vr_mode).to_string(),
+        crashgen_latest: yaml.crashgen_latest_og.clone(),
+        crashgen_latest_vr: yaml.crashgen_latest_vr.clone(),
+        game_version: yaml.game_version.clone(),
+        game_version_vr: yaml.game_version_vr.clone(),
+        game_version_new: yaml.game_version_new.clone(),
+        xse_acronym: yaml.xse_acronym.clone(),
+        game_root_name: yaml.get_game_root_name(vr_mode).to_string(),
+        classic_version: format!("CLASSIC v{}", yaml.classic_version),
+        ignore_plugins: yaml.game_ignore_plugins.clone(),
+        ignore_records: yaml.game_ignore_records.clone(),
+        ignore_list: yaml.ignore_list.clone(),
+        show_formid_values,
+        fcx_mode,
+        simplify_logs,
+        remove_list,
+        suspects_error: yaml.suspects_error_list.clone(),
+        suspects_stack: yaml.suspects_stack_list.clone(),
+        mods_core: yaml.game_mods_core.clone(),
+        mods_freq: yaml.game_mods_freq.clone(),
+        mods_conf: yaml.game_mods_conf.clone(),
+        mods_solu: yaml.game_mods_solu.clone(),
+        mods_opc2: yaml.game_mods_opc2.clone(),
+        mods_core_folon: yaml.game_mods_core_folon.clone(),
+        classic_records_list: yaml.classic_records_list.clone(),
+        crashgen_ignore: yaml.get_crashgen_ignore(vr_mode).to_vec(),
+    }
+}
+
 /// Analysis result for a single crash log
 ///
 /// Contains all analysis results including the generated report,

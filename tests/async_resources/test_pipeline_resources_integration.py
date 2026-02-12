@@ -4,7 +4,7 @@ Phase 9: Updated to test Rust orchestrator pipeline.
 """
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -17,9 +17,7 @@ class TestAsyncPipelineResourceManagement:
         """Test that pipeline properly cleans up resources on exception."""
         from ClassicLib.scanning.logs.reporting import AsyncCrashLogPipeline
 
-        mock_yamldata = MagicMock()
         pipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=False,
             formid_db_exists=False,
@@ -41,9 +39,7 @@ class TestAsyncPipelineResourceManagement:
         """Test that pipeline maintains proper state throughout lifecycle."""
         from ClassicLib.scanning.logs.reporting import AsyncCrashLogPipeline
 
-        mock_yamldata = MagicMock()
         pipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=True,
             show_formid_values=True,
             formid_db_exists=True,

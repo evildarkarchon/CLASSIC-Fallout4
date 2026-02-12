@@ -76,14 +76,18 @@ pub struct YamlDataCore {
     pub classic_version_date: String,
 
     // Crashgen configuration
-    /// Identifier for the crash generation configuration
+    /// Identifier for the crash generation configuration (OG/non-VR)
     pub crashgen_name: String,
+    /// Identifier for the crash generation configuration (VR)
+    pub crashgen_name_vr: String,
     /// Latest original generation crash identifier
     pub crashgen_latest_og: String,
     /// Latest VR (virtual reality) generation crash identifier
     pub crashgen_latest_vr: String,
-    /// Items to be ignored during crash generation
-    pub crashgen_ignore: Vec<String>, // Converted from Python set
+    /// Items to be ignored during crash generation (OG/non-VR)
+    pub crashgen_ignore: Vec<String>,
+    /// Items to be ignored during crash generation (VR)
+    pub crashgen_ignore_vr: Vec<String>,
 
     // Warnings
     /// Warning message for cases where no plugins are active or available
@@ -134,9 +138,42 @@ pub struct YamlDataCore {
     pub game_version_new: String,
     /// Version of the game for VR (virtual reality)
     pub game_version_vr: String,
+
+    // Game root names
+    /// Main root name for the game (OG/non-VR, from Game_Info.Main_Root_Name)
+    pub game_root_name: String,
+    /// Main root name for the game (VR, from GameVR_Info.Main_Root_Name)
+    pub game_root_name_vr: String,
 }
 
 impl YamlDataCore {
+    /// Get crash generator name based on VR mode.
+    pub fn get_crashgen_name(&self, is_vr: bool) -> &str {
+        if is_vr {
+            &self.crashgen_name_vr
+        } else {
+            &self.crashgen_name
+        }
+    }
+
+    /// Get crash generator ignore list based on VR mode.
+    pub fn get_crashgen_ignore(&self, is_vr: bool) -> &[String] {
+        if is_vr {
+            &self.crashgen_ignore_vr
+        } else {
+            &self.crashgen_ignore
+        }
+    }
+
+    /// Get game root name based on VR mode.
+    pub fn get_game_root_name(&self, is_vr: bool) -> &str {
+        if is_vr {
+            &self.game_root_name_vr
+        } else {
+            &self.game_root_name
+        }
+    }
+
     /// Load all configuration from YAML files in parallel (pure Rust)
     ///
     /// # Arguments
@@ -245,7 +282,9 @@ impl YamlDataCore {
         let yaml_ops = YamlOperations::new();
 
         // Extract values using helper functions from YamlOperations
-        let vr_suffix = if vr_mode { "VR" } else { "" };
+        // NOTE: vr_mode is no longer used to gate crashgen/game_root loading.
+        // Both OG and VR variants are always loaded for per-log VR selection.
+        let _ = vr_mode; // Kept in signature for API compatibility
 
         // Build the configuration struct
         Ok(Self {
@@ -265,11 +304,25 @@ impl YamlDataCore {
 
             // Game YAML values
             classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
-            crashgen_name: yaml_ops.get_string_value(
+
+            // OG variants (always from Game_Info)
+            crashgen_name: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LogName", ""),
+            crashgen_ignore: yaml_ops.get_vec_value(game_data, "Game_Info.CRASHGEN_Ignore"),
+            game_root_name: yaml_ops.get_string_value(game_data, "Game_Info.Main_Root_Name", ""),
+
+            // VR variants (always from GameVR_Info)
+            crashgen_name_vr: yaml_ops.get_string_value(
                 game_data,
-                &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
+                "GameVR_Info.CRASHGEN_LogName",
                 "",
             ),
+            crashgen_ignore_vr: yaml_ops.get_vec_value(game_data, "GameVR_Info.CRASHGEN_Ignore"),
+            game_root_name_vr: yaml_ops.get_string_value(
+                game_data,
+                "GameVR_Info.Main_Root_Name",
+                "",
+            ),
+
             crashgen_latest_og: yaml_ops.get_string_value(
                 game_data,
                 "Game_Info.CRASHGEN_LatestVer",
@@ -279,10 +332,6 @@ impl YamlDataCore {
                 game_data,
                 "GameVR_Info.CRASHGEN_LatestVer",
                 "",
-            ),
-            crashgen_ignore: yaml_ops.get_vec_value(
-                game_data,
-                &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
             ),
             warn_noplugins: yaml_ops.get_string_value(
                 game_data,
@@ -399,7 +448,9 @@ impl YamlDataCore {
         let yaml_ops = YamlOperations::new();
 
         // Extract values using helper functions from YamlOperations
-        let vr_suffix = if vr_mode { "VR" } else { "" };
+        // NOTE: vr_mode is no longer used to gate crashgen/game_root loading.
+        // Both OG and VR variants are always loaded for per-log VR selection.
+        let _ = vr_mode; // Kept in signature for API compatibility
 
         // Build the configuration struct
         Ok(Self {
@@ -419,11 +470,25 @@ impl YamlDataCore {
 
             // Game YAML values
             classic_game_hints: yaml_ops.get_vec_value(game_data, "Game_Hints"),
-            crashgen_name: yaml_ops.get_string_value(
+
+            // OG variants (always from Game_Info)
+            crashgen_name: yaml_ops.get_string_value(game_data, "Game_Info.CRASHGEN_LogName", ""),
+            crashgen_ignore: yaml_ops.get_vec_value(game_data, "Game_Info.CRASHGEN_Ignore"),
+            game_root_name: yaml_ops.get_string_value(game_data, "Game_Info.Main_Root_Name", ""),
+
+            // VR variants (always from GameVR_Info)
+            crashgen_name_vr: yaml_ops.get_string_value(
                 game_data,
-                &format!("Game{}_Info.CRASHGEN_LogName", vr_suffix),
+                "GameVR_Info.CRASHGEN_LogName",
                 "",
             ),
+            crashgen_ignore_vr: yaml_ops.get_vec_value(game_data, "GameVR_Info.CRASHGEN_Ignore"),
+            game_root_name_vr: yaml_ops.get_string_value(
+                game_data,
+                "GameVR_Info.Main_Root_Name",
+                "",
+            ),
+
             crashgen_latest_og: yaml_ops.get_string_value(
                 game_data,
                 "Game_Info.CRASHGEN_LatestVer",
@@ -433,10 +498,6 @@ impl YamlDataCore {
                 game_data,
                 "GameVR_Info.CRASHGEN_LatestVer",
                 "",
-            ),
-            crashgen_ignore: yaml_ops.get_vec_value(
-                game_data,
-                &format!("Game{}_Info.CRASHGEN_Ignore", vr_suffix),
             ),
             warn_noplugins: yaml_ops.get_string_value(
                 game_data,
@@ -539,12 +600,18 @@ Game_Info:
   GameVersion: "1.10.163"
   GameVersionNEW: "1.10.984"
   CRASHGEN_LatestVer: "4.0.0"
+  CRASHGEN_LogName: "crash-og"
+  CRASHGEN_Ignore:
+    - "OGIgnoreItem1"
+    - "OGIgnoreItem2"
+  Main_Root_Name: "Fallout4"
 GameVR_Info:
   GameVersion: "1.2.72"
   CRASHGEN_LatestVer: "3.0.0"
   CRASHGEN_LogName: "crash-vr"
   CRASHGEN_Ignore:
     - "VRIgnoreItem1"
+  Main_Root_Name: "Fallout4VR"
 Game_Hints:
   - "Hint 1"
   - "Hint 2"
@@ -643,6 +710,19 @@ CLASSIC_Ignore_Skyrim:
         assert_eq!(config.classic_game_hints, vec!["Hint 1", "Hint 2"]);
         assert_eq!(config.warn_noplugins, "No plugins found!");
         assert_eq!(config.warn_outdated, "Your version is outdated.");
+
+        // OG crashgen/game_root fields
+        assert_eq!(config.crashgen_name, "crash-og");
+        assert_eq!(
+            config.crashgen_ignore,
+            vec!["OGIgnoreItem1", "OGIgnoreItem2"]
+        );
+        assert_eq!(config.game_root_name, "Fallout4");
+
+        // VR crashgen/game_root fields
+        assert_eq!(config.crashgen_name_vr, "crash-vr");
+        assert_eq!(config.crashgen_ignore_vr, vec!["VRIgnoreItem1"]);
+        assert_eq!(config.game_root_name_vr, "Fallout4VR");
     }
 
     #[test]
@@ -738,36 +818,84 @@ CLASSIC_Ignore_Skyrim:
     }
 
     #[test]
-    fn test_from_yaml_content_vr_mode_enabled() {
+    fn test_from_yaml_content_dual_vr_loading() {
+        // Both OG and VR variants are always loaded regardless of vr_mode
         let config = YamlDataCore::from_yaml_content(
             minimal_main_yaml(),
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            true, // VR mode enabled
+            false, // vr_mode is ignored for dual-loading
         )
         .unwrap();
 
-        // VR mode should use GameVR_Info section
-        assert_eq!(config.crashgen_name, "crash-vr");
-        assert_eq!(config.crashgen_ignore, vec!["VRIgnoreItem1"]);
+        // OG fields always populated from Game_Info
+        assert_eq!(config.crashgen_name, "crash-og");
+        assert_eq!(
+            config.crashgen_ignore,
+            vec!["OGIgnoreItem1", "OGIgnoreItem2"]
+        );
+        assert_eq!(config.game_root_name, "Fallout4");
+
+        // VR fields always populated from GameVR_Info
+        assert_eq!(config.crashgen_name_vr, "crash-vr");
+        assert_eq!(config.crashgen_ignore_vr, vec!["VRIgnoreItem1"]);
+        assert_eq!(config.game_root_name_vr, "Fallout4VR");
         assert_eq!(config.game_version_vr, "1.2.72");
     }
 
     #[test]
-    fn test_from_yaml_content_vr_mode_disabled() {
+    fn test_vr_accessor_methods() {
         let config = YamlDataCore::from_yaml_content(
             minimal_main_yaml(),
             minimal_game_yaml(),
             minimal_ignore_yaml(),
             "Fallout4".to_string(),
-            false, // VR mode disabled
+            false,
         )
         .unwrap();
 
-        // Non-VR mode should use Game_Info section
-        // crashgen_name would be empty since Game_Info.CRASHGEN_LogName isn't defined
-        assert_eq!(config.crashgen_name, "");
+        // Non-VR accessors return OG values
+        assert_eq!(config.get_crashgen_name(false), "crash-og");
+        assert_eq!(
+            config.get_crashgen_ignore(false),
+            &["OGIgnoreItem1", "OGIgnoreItem2"]
+        );
+        assert_eq!(config.get_game_root_name(false), "Fallout4");
+
+        // VR accessors return VR values
+        assert_eq!(config.get_crashgen_name(true), "crash-vr");
+        assert_eq!(config.get_crashgen_ignore(true), &["VRIgnoreItem1"]);
+        assert_eq!(config.get_game_root_name(true), "Fallout4VR");
+    }
+
+    #[test]
+    fn test_vr_mode_parameter_does_not_affect_loading() {
+        // Loading with vr_mode=true should produce identical results to vr_mode=false
+        let config_og = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            false,
+        )
+        .unwrap();
+
+        let config_vr = YamlDataCore::from_yaml_content(
+            minimal_main_yaml(),
+            minimal_game_yaml(),
+            minimal_ignore_yaml(),
+            "Fallout4".to_string(),
+            true,
+        )
+        .unwrap();
+
+        assert_eq!(config_og.crashgen_name, config_vr.crashgen_name);
+        assert_eq!(config_og.crashgen_name_vr, config_vr.crashgen_name_vr);
+        assert_eq!(config_og.crashgen_ignore, config_vr.crashgen_ignore);
+        assert_eq!(config_og.crashgen_ignore_vr, config_vr.crashgen_ignore_vr);
+        assert_eq!(config_og.game_root_name, config_vr.game_root_name);
+        assert_eq!(config_og.game_root_name_vr, config_vr.game_root_name_vr);
     }
 
     #[test]
@@ -1185,7 +1313,7 @@ CLASSIC_Ignore_TestGame:
     }
 
     #[tokio::test]
-    async fn test_load_from_yaml_files_with_vr_mode() {
+    async fn test_load_from_yaml_files_dual_vr_loading() {
         let temp_dir = tempdir().unwrap();
         let databases_dir = temp_dir.path().join("databases");
         std::fs::create_dir_all(&databases_dir).unwrap();
@@ -1204,17 +1332,16 @@ CLASSIC_Ignore_TestGame:
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        let result = YamlDataCore::load_from_yaml_files(
-            yaml_dirs,
-            "Fallout4".to_string(),
-            true, // VR mode
-        )
-        .await;
+        let result =
+            YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), false).await;
 
         assert!(result.is_ok());
         let config = result.unwrap();
-        // VR mode should read from GameVR_Info
-        assert_eq!(config.crashgen_name, "crash-vr");
+        // Both OG and VR fields should be populated
+        assert_eq!(config.crashgen_name, "crash-og");
+        assert_eq!(config.crashgen_name_vr, "crash-vr");
+        assert_eq!(config.game_root_name, "Fallout4");
+        assert_eq!(config.game_root_name_vr, "Fallout4VR");
     }
 
     // ============================================================

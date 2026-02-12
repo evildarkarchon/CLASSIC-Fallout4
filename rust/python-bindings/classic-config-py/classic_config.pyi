@@ -136,7 +136,11 @@ class YamlData:
     # Crash generator settings
     @property
     def crashgen_name(self) -> str:
-        """Crash generator/logger name (e.g., 'Buffout 4')."""
+        """Crash generator/logger name for OG/non-VR (e.g., 'Buffout 4')."""
+
+    @property
+    def crashgen_name_vr(self) -> str:
+        """Crash generator/logger name for VR mode."""
 
     @property
     def crashgen_latest_og(self) -> str:
@@ -185,12 +189,30 @@ class YamlData:
 
     @property
     def crashgen_ignore(self) -> set[str]:
-        """Set of crash generator-specific patterns to ignore.
+        """Set of crash generator-specific patterns to ignore (OG/non-VR).
 
         Returns:
             Set of ignore pattern strings
 
         """
+
+    @property
+    def crashgen_ignore_vr(self) -> set[str]:
+        """Set of crash generator-specific patterns to ignore (VR).
+
+        Returns:
+            Set of ignore pattern strings
+
+        """
+
+    # Game root names
+    @property
+    def game_root_name(self) -> str:
+        """Game root name (OG/non-VR, from Game_Info.Main_Root_Name)."""
+
+    @property
+    def game_root_name_vr(self) -> str:
+        """Game root name (VR, from GameVR_Info.Main_Root_Name)."""
 
     # Mod detection lists
     @property

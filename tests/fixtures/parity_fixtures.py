@@ -533,8 +533,6 @@ def parity_mock_scanlog_info(parity_mock_yaml_cache):
     This fixture provides a comprehensive mock with all attributes required
     by the various analyzers (PluginAnalyzer, FormIDAnalyzer, RecordScanner, etc.).
     """
-    from packaging.version import Version
-
     mock_info = Mock(spec=ClassicScanLogsInfo)
 
     # Configure mock attributes that Rust/Python implementations expect
@@ -555,10 +553,10 @@ def parity_mock_scanlog_info(parity_mock_yaml_cache):
     ]
     mock_info.ignore_list = []
 
-    # Plugin limit detection required attributes
-    mock_info.game_version = Version("1.10.163")
-    mock_info.game_version_new = Version("1.10.984")
-    mock_info.game_version_vr = Version("1.2.72")
+    # Plugin limit detection required attributes (str, not Version)
+    mock_info.game_version = "1.10.163"
+    mock_info.game_version_new = "1.10.984"
+    mock_info.game_version_vr = "1.2.72"
 
     # CrashGen info (required by plugin_match)
     mock_info.crashgen_name = "Buffout 4"
@@ -601,8 +599,6 @@ def parity_mock_scanlog_info(parity_mock_yaml_cache):
     mock_info.get_crashgen_name = Mock(side_effect=lambda is_vr: mock_info.crashgen_name_vr if is_vr else mock_info.crashgen_name)
     mock_info.get_crashgen_ignore = Mock(side_effect=lambda is_vr: mock_info.crashgen_ignore_vr if is_vr else mock_info.crashgen_ignore)
     mock_info.get_game_root_name = Mock(side_effect=lambda is_vr: mock_info.game_root_name_vr if is_vr else mock_info.game_root_name)
-    mock_info.get_crashgen_latest = Mock(side_effect=lambda is_vr: mock_info.crashgen_latest_vr if is_vr else mock_info.crashgen_latest_og)
-
     # Mock YAML cache integration
     mock_info.yaml_cache = parity_mock_yaml_cache
 

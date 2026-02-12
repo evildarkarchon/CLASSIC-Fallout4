@@ -413,6 +413,11 @@ class TestScanLogsExecutorSyncWrapper:
 
             executor = ScanLogsExecutor()
 
+            # Mock execute_scan to return a MagicMock instead of a real coroutine,
+            # preventing "coroutine was never awaited" warnings when the mock
+            # bridge.run_async() silently discards the argument.
+            executor.execute_scan = MagicMock(return_value=MagicMock())  # type: ignore[method-assign]
+
             # Call scan_sync
             try:
                 executor.scan_sync()

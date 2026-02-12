@@ -79,16 +79,14 @@ def crash_log_files(tmp_path: Path, sample_crash_log_content: str) -> list[Path]
 class TestAsyncPipeline:
     """Integration tests for the async crash log processing pipeline."""
 
-    async def test_async_pipeline_initialization(self, mock_yamldata: MagicMock) -> None:
+    async def test_async_pipeline_initialization(self) -> None:
         """Test that AsyncCrashLogPipeline initializes correctly."""
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=True,
             formid_db_exists=False,
         )
 
-        assert pipeline.yamldata == mock_yamldata
         assert pipeline.fcx_mode is False
         assert pipeline.show_formid_values is True
         assert pipeline.formid_db_exists is False
@@ -98,7 +96,6 @@ class TestAsyncPipeline:
     async def test_async_pipeline_process_crash_logs(self, crash_log_files: list[Path], mock_yamldata: MagicMock, message_handler) -> None:
         """Test the full async pipeline processing."""
         pipeline: AsyncCrashLogPipeline = AsyncCrashLogPipeline(
-            yamldata=mock_yamldata,
             fcx_mode=False,
             show_formid_values=False,
             formid_db_exists=False,

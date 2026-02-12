@@ -823,14 +823,27 @@ class AnalysisConfig:
         """
 
     @staticmethod
-    def from_yamldata(yamldata: Any) -> AnalysisConfig:
+    def from_yamldata(
+        yamldata: Any,
+        game: str,
+        vr_mode: bool,
+        show_formid_values: bool = False,
+        fcx_mode: bool = False,
+        simplify_logs: bool = False,
+    ) -> AnalysisConfig:
         """Create AnalysisConfig from YamlData.
 
         Converts a YamlData object (from classic_config) into an
-        AnalysisConfig for use with Orchestrator.
+        AnalysisConfig for use with Orchestrator. Uses VR-aware field
+        selection based on the vr_mode parameter.
 
         Args:
             yamldata: YamlData object from classic_config module
+            game: Game identifier (e.g., "Fallout4", "Skyrim")
+            vr_mode: Whether VR mode is active
+            show_formid_values: Whether to show FormID values (default: False)
+            fcx_mode: Whether FCX mode is enabled (default: False)
+            simplify_logs: Whether to simplify logs (default: False)
 
         Returns:
             Configured AnalysisConfig instance
@@ -839,7 +852,7 @@ class AnalysisConfig:
             >>> from classic_config import YamlData
             >>> from classic_scanlog import AnalysisConfig
             >>> yamldata = YamlData([...], "Fallout4", False)
-            >>> config = AnalysisConfig.from_yamldata(yamldata)
+            >>> config = AnalysisConfig.from_yamldata(yamldata, "Fallout4", False)
 
         """
 

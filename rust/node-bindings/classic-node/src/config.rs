@@ -137,10 +137,22 @@ impl YamlData {
         self.inner.crashgen_latest_vr.clone()
     }
 
-    /// Items to ignore during crash generation (as an array).
+    /// Crash generator name for VR mode.
+    #[napi(getter)]
+    pub fn crashgen_name_vr(&self) -> String {
+        self.inner.crashgen_name_vr.clone()
+    }
+
+    /// Items to ignore during crash generation (OG/non-VR, as an array).
     #[napi(getter)]
     pub fn crashgen_ignore(&self) -> Vec<String> {
         self.inner.crashgen_ignore.clone()
+    }
+
+    /// Items to ignore during crash generation (VR, as an array).
+    #[napi(getter)]
+    pub fn crashgen_ignore_vr(&self) -> Vec<String> {
+        self.inner.crashgen_ignore_vr.clone()
     }
 
     // ========================================================================
@@ -313,6 +325,44 @@ impl YamlData {
     #[napi(getter)]
     pub fn game_version_vr(&self) -> String {
         self.inner.game_version_vr.clone()
+    }
+
+    // ========================================================================
+    // Game Root Names
+    // ========================================================================
+
+    /// Game root name (OG/non-VR).
+    #[napi(getter)]
+    pub fn game_root_name(&self) -> String {
+        self.inner.game_root_name.clone()
+    }
+
+    /// Game root name (VR).
+    #[napi(getter)]
+    pub fn game_root_name_vr(&self) -> String {
+        self.inner.game_root_name_vr.clone()
+    }
+
+    // ========================================================================
+    // VR-Aware Accessor Methods
+    // ========================================================================
+
+    /// Get crash generator name for the specified mode (OG or VR).
+    #[napi]
+    pub fn get_crashgen_name(&self, is_vr: bool) -> String {
+        self.inner.get_crashgen_name(is_vr).to_string()
+    }
+
+    /// Get crash generator ignore list for the specified mode (OG or VR).
+    #[napi]
+    pub fn get_crashgen_ignore(&self, is_vr: bool) -> Vec<String> {
+        self.inner.get_crashgen_ignore(is_vr).to_vec()
+    }
+
+    /// Get game root name for the specified mode (OG or VR).
+    #[napi]
+    pub fn get_game_root_name(&self, is_vr: bool) -> String {
+        self.inner.get_game_root_name(is_vr).to_string()
     }
 
     // ========================================================================

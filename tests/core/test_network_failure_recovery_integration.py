@@ -9,7 +9,7 @@ import socket
 import time
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 import pytest
@@ -84,92 +84,111 @@ class TestUpdateManagerNetworkResilience:
 
     @pytest.mark.asyncio
     async def test_update_check_connection_refused(self):
-        """Test handling of connection refused errors."""
+        """Test handling of connection refused errors.
+
+        Note: The update module now uses Rust's GithubClient (classic_update) instead
+        of aiohttp directly. We mock _fetch_github_version to simulate network errors
+        that would propagate from the Rust HTTP layer.
+        """
         from ClassicLib.support.update import is_latest_version
+
+        async def connection_refused():
+            raise RuntimeError("Connection refused")
 
         # Mock settings to enable update check
         with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
-            with patch("aiohttp.ClientSession.get") as mock_get:
-                mock_get.side_effect = aiohttp.ClientConnectionError("Connection refused")
-
+            with patch(
+                "ClassicLib.support.update.VersionChecker._fetch_github_version",
+                side_effect=connection_refused,
+            ):
                 # Should handle connection refused
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False
 
     @pytest.mark.asyncio
     async def test_update_check_dns_failure(self):
-        """Test handling of DNS resolution failures."""
+        """Test handling of DNS resolution failures.
+
+        Note: The update module now uses Rust's GithubClient (classic_update) instead
+        of aiohttp directly. We mock _fetch_github_version to simulate DNS errors.
+        """
         from ClassicLib.support.update import is_latest_version
 
-        simulator = NetworkFailureSimulator()
+        async def dns_failure():
+            raise RuntimeError("Name or service not known")
 
         # Mock settings to enable update check
         with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
-            with patch("aiohttp.ClientSession.get") as mock_get:
-                mock_get.side_effect = simulator.simulate_dns_failure
-
+            with patch(
+                "ClassicLib.support.update.VersionChecker._fetch_github_version",
+                side_effect=dns_failure,
+            ):
                 # Should handle DNS failure
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False
 
     @pytest.mark.asyncio
     async def test_slow_network_timeout(self):
-        """Test timeout handling for slow network responses."""
+        """Test timeout handling for slow network responses.
+
+        Note: The update module now uses Rust's GithubClient (classic_update) instead
+        of aiohttp directly. We mock _fetch_github_version to simulate timeout.
+        """
         from ClassicLib.support.update import is_latest_version
 
-        simulator = NetworkFailureSimulator()
+        async def timeout_error():
+            raise RuntimeError("Request timed out")
 
         # Mock settings to enable update check
         with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
-            with patch("aiohttp.ClientSession.get") as mock_get:
-                mock_response = AsyncMock()
-                mock_response.json = AsyncMock(side_effect=lambda: simulator.simulate_slow_response(10.0))
-                mock_get.return_value.__aenter__.return_value = mock_response
-
-                # Simulate timeout error
-                mock_get.side_effect = asyncio.TimeoutError("Timeout")
-
+            with patch(
+                "ClassicLib.support.update.VersionChecker._fetch_github_version",
+                side_effect=timeout_error,
+            ):
                 # Should handle timeout gracefully
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False
 
     @pytest.mark.asyncio
     async def test_partial_response_handling(self):
-        """Test handling of partial responses before connection drop."""
+        """Test handling of partial responses before connection drop.
+
+        Note: The update module now uses Rust's GithubClient (classic_update) instead
+        of aiohttp directly. We mock _fetch_github_version to simulate partial response.
+        """
         from ClassicLib.support.update import is_latest_version
 
-        simulator = NetworkFailureSimulator()
+        async def partial_response():
+            raise RuntimeError("Connection lost while reading response")
 
         # Mock settings to enable update check
         with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
-            with patch("aiohttp.ClientSession.get") as mock_get:
-                mock_response = AsyncMock()
-                mock_response.json = AsyncMock(side_effect=simulator.simulate_partial_response)
-                # raise_for_status is a sync method in aiohttp, must use MagicMock not AsyncMock
-                mock_response.raise_for_status = MagicMock()
-                mock_get.return_value.__aenter__.return_value = mock_response
-
+            with patch(
+                "ClassicLib.support.update.VersionChecker._fetch_github_version",
+                side_effect=partial_response,
+            ):
                 # Should handle partial response gracefully
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False
 
     @pytest.mark.asyncio
     async def test_corrupted_response_handling(self):
-        """Test handling of corrupted response data."""
-        import json
+        """Test handling of corrupted response data.
 
+        Note: The update module now uses Rust's GithubClient (classic_update) instead
+        of aiohttp directly. We mock _fetch_github_version to simulate corrupted data.
+        """
         from ClassicLib.support.update import is_latest_version
+
+        async def corrupted_response():
+            raise RuntimeError("Failed to parse GitHub API response")
 
         # Mock settings to enable update check
         with patch("ClassicLib.support.update.classic_settings_async", new_callable=AsyncMock, return_value=True):
-            with patch("aiohttp.ClientSession.get") as mock_get:
-                mock_response = AsyncMock()
-                # VersionChecker calls .json()
-                mock_response.json = AsyncMock(side_effect=json.JSONDecodeError("Expecting value", "", 0))
-                # raise_for_status is a sync method in aiohttp, must use MagicMock not AsyncMock
-                mock_response.raise_for_status = MagicMock()
-                mock_get.return_value.__aenter__.return_value = mock_response
-
+            with patch(
+                "ClassicLib.support.update.VersionChecker._fetch_github_version",
+                side_effect=corrupted_response,
+            ):
                 # Should handle corrupted JSON gracefully
                 result = await is_latest_version(quiet=True, gui_request=False)
                 assert result is False

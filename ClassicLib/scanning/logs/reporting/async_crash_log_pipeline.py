@@ -10,7 +10,6 @@ import asyncio
 import time
 from collections import Counter
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from ClassicLib.core.logger import logger
 from ClassicLib.integration.factory import get_file_io
@@ -27,9 +26,6 @@ except ImportError as e:
     ) from e
 
 # ThreadSafeLogCache and load_crash_logs_async removed - using direct file I/O for better performance
-
-if TYPE_CHECKING:
-    from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
 
 
 async def write_reports_batch(reports: list[tuple[Path, list[str], bool]]) -> None:
@@ -63,7 +59,6 @@ class AsyncCrashLogPipeline:
     improved performance on systems with higher CPU counts.
 
     Attributes:
-        yamldata (ClassicScanLogsInfo): Configuration data for processing.
         fcx_mode (bool | None): Indicates whether FCX mode is enabled.
         show_formid_values (bool | None): Indicates whether FormID values are displayed in the results.
         formid_db_exists (bool): Indicates whether the FormID database is present for use during processing.
@@ -73,7 +68,6 @@ class AsyncCrashLogPipeline:
 
     def __init__(
         self,
-        yamldata: "ClassicScanLogsInfo",
         fcx_mode: bool | None,
         show_formid_values: bool | None,
         formid_db_exists: bool,
@@ -85,13 +79,11 @@ class AsyncCrashLogPipeline:
         to store performance statistics.
 
         Args:
-            yamldata: ClassicScanLogsInfo-like object representing scan log data.
             fcx_mode: Boolean or None indicating whether the FCX mode is active or unset.
             show_formid_values: Boolean or None to specify whether to display form ID values.
             formid_db_exists: Boolean indicating whether the form ID database already exists.
 
         """
-        self.yamldata = yamldata
         self.fcx_mode = fcx_mode
         self.show_formid_values = show_formid_values
         self.formid_db_exists = formid_db_exists
@@ -145,10 +137,13 @@ class AsyncCrashLogPipeline:
         total_logs = len(crashlog_list)
         with msg_progress_context("Processing Crash Logs", total_logs) as progress:
             # Initialize Rust orchestrator with YamlData configuration
+            from ClassicLib.core.registry import get_game, get_vr
             from ClassicLib.integration.factory import get_yamldata
 
             rust_yamldata = get_yamldata()
-            rust_config = AnalysisConfig.from_yamldata(rust_yamldata)
+            game = get_game()
+            vr_mode = get_vr() == "VR"
+            rust_config = AnalysisConfig.from_yamldata(rust_yamldata, game, vr_mode)
 
             # Apply configuration
             rust_config.fcx_mode = self.fcx_mode or False
@@ -216,7 +211,6 @@ class AsyncCrashLogPipeline:
 async def run_async_crash_log_scan(
     crashlog_list: list[Path],
     remove_list: tuple[str, ...],
-    yamldata: "ClassicScanLogsInfo",
     fcx_mode: bool | None,
     show_formid_values: bool | None,
     formid_db_exists: bool,
@@ -231,8 +225,6 @@ async def run_async_crash_log_scan(
         crashlog_list (list[Path]): A list of paths pointing to the crash log files.
         remove_list (tuple[str, ...]): A tuple containing identifiers or patterns that need to be filtered out
             while processing the logs.
-        yamldata (ClassicScanLogsInfo): An object containing configuration data and parsing rules for the log
-            scanning process.
         fcx_mode (bool | None): A flag indicating whether the processing should operate in FCX mode.
         show_formid_values (bool | None): A flag to decide if "formid" values in the logs should be displayed.
         formid_db_exists (bool): A flag indicating if the "formid" database exists.
@@ -248,6 +240,6 @@ async def run_async_crash_log_scan(
               the scan process.
 
     """
-    pipeline = AsyncCrashLogPipeline(yamldata, fcx_mode, show_formid_values, formid_db_exists)
+    pipeline = AsyncCrashLogPipeline(fcx_mode, show_formid_values, formid_db_exists)
 
     return await pipeline.process_crash_logs_async(crashlog_list, remove_list)

@@ -111,20 +111,35 @@ impl PyAnalysisConfig {
     ///
     /// # Arguments
     /// * `yamldata` - YamlData object from classic_config module
+    /// * `game` - Game identifier (e.g., "Fallout4", "Skyrim")
+    /// * `vr_mode` - Whether VR mode is active
+    /// * `show_formid_values` - Whether to show FormID values (default: false)
+    /// * `fcx_mode` - Whether FCX mode is enabled (default: false)
+    /// * `simplify_logs` - Whether to simplify logs (default: false)
     ///
     /// # Returns
     /// Configured AnalysisConfig instance
     #[staticmethod]
-    pub fn from_yamldata(yamldata: &Bound<'_, pyo3::types::PyAny>) -> PyResult<Self> {
-        // Extract game and vr_mode (not available in YamlData, use defaults)
-        let game = yamldata.getattr("crashgen_name")?.extract::<String>()?;
-        let vr_mode = false; // YamlData doesn't expose this directly
-
+    #[pyo3(signature = (yamldata, game, vr_mode, show_formid_values=false, fcx_mode=false, simplify_logs=false))]
+    pub fn from_yamldata(
+        yamldata: &Bound<'_, pyo3::types::PyAny>,
+        game: String,
+        vr_mode: bool,
+        show_formid_values: bool,
+        fcx_mode: bool,
+        simplify_logs: bool,
+    ) -> PyResult<Self> {
         // Create base config
         let mut config = AnalysisConfig::new(game, vr_mode);
 
-        // Populate from YamlData fields
-        config.crashgen_name = yamldata.getattr("crashgen_name")?.extract::<String>()?;
+        // Select OG or VR field based on vr_mode
+        config.crashgen_name = if vr_mode {
+            yamldata.getattr("crashgen_name_vr")
+        } else {
+            yamldata.getattr("crashgen_name")
+        }?
+        .extract::<String>()?;
+
         config.crashgen_latest = yamldata
             .getattr("crashgen_latest_og")?
             .extract::<String>()?;
@@ -132,6 +147,15 @@ impl PyAnalysisConfig {
         config.game_version_vr = yamldata.getattr("game_version_vr")?.extract::<String>()?;
         config.game_version_new = yamldata.getattr("game_version_new")?.extract::<String>()?;
         config.xse_acronym = yamldata.getattr("xse_acronym")?.extract::<String>()?;
+
+        // Select OG or VR game root name
+        config.game_root_name = if vr_mode {
+            yamldata.getattr("game_root_name_vr")
+        } else {
+            yamldata.getattr("game_root_name")
+        }?
+        .extract::<String>()
+        .unwrap_or_default();
 
         config.ignore_plugins = yamldata
             .getattr("game_ignore_plugins")?
@@ -141,22 +165,20 @@ impl PyAnalysisConfig {
             .extract::<Vec<String>>()?;
         config.ignore_list = yamldata.getattr("ignore_list")?.extract::<Vec<String>>()?;
 
-        config.show_formid_values = false; // Not in YamlData
+        config.show_formid_values = show_formid_values;
+        config.fcx_mode = fcx_mode;
+        config.simplify_logs = simplify_logs;
 
         // Extract dictionaries (preserving insertion order with IndexMap)
         config.suspects_error = pyany_to_indexmap_str(&yamldata.getattr("suspects_error_list")?);
-
-        // suspects_stack_list is now dict[str, list[str]] from Rust YamlData
         config.suspects_stack = pyany_to_indexmap_vecstr(&yamldata.getattr("suspects_stack_list")?);
 
         config.mods_core = pyany_to_indexmap_str(&yamldata.getattr("game_mods_core")?);
-        // Use pyany_to_indexmap to preserve YAML key order for Python parity
         config.mods_freq = pyany_to_indexmap_str(&yamldata.getattr("game_mods_freq")?);
         config.mods_conf = pyany_to_indexmap_str(&yamldata.getattr("game_mods_conf")?);
         config.mods_solu = pyany_to_indexmap_str(&yamldata.getattr("game_mods_solu")?);
         config.mods_opc2 = pyany_to_indexmap_str(&yamldata.getattr("game_mods_opc2")?);
 
-        // New fields for Python-Rust parity
         config.crashgen_latest_vr = yamldata
             .getattr("crashgen_latest_vr")
             .ok()
@@ -174,11 +196,14 @@ impl PyAnalysisConfig {
             .and_then(|attr| attr.extract::<Vec<String>>().ok())
             .unwrap_or_default();
 
-        config.crashgen_ignore = yamldata
-            .getattr("crashgen_ignore")
-            .ok()
-            .and_then(|attr| attr.extract::<Vec<String>>().ok())
-            .unwrap_or_default();
+        // Select OG or VR crashgen_ignore based on vr_mode
+        config.crashgen_ignore = if vr_mode {
+            yamldata.getattr("crashgen_ignore_vr")
+        } else {
+            yamldata.getattr("crashgen_ignore")
+        }
+        .and_then(|attr| attr.extract::<Vec<String>>())
+        .unwrap_or_default();
 
         // Extract CLASSIC version for report header (e.g., "CLASSIC v8.2.0")
         config.classic_version = yamldata
