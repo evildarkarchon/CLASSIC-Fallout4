@@ -22,10 +22,10 @@ param()
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ExePath = Join-Path $ScriptDir "build\Release\classic-cli.exe"
+$ExePath = Join-Path $ScriptDir "build\classic-cli.exe"
 $TestDataDir = Join-Path $ScriptDir "test_data"
 # Project root where "CLASSIC Data/" lives (needed for YAML config loading)
-$ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..\..\..")).Path
+$ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..")).Path
 $ClassicDataDir = Join-Path $ProjectRoot "CLASSIC Data"
 
 # ── Preflight checks ─────────────────────────────────────────────

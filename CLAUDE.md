@@ -46,12 +46,12 @@ cargo test --workspace --manifest-path rust/Cargo.toml
 cargo test --workspace --manifest-path rust/Cargo.toml -- --nocapture  # With output
 cargo test -p classic-scanlog-core --manifest-path rust/Cargo.toml     # Single crate
 
-# C++ tests (Catch2 v3 via CTest) -- run from rust/cpp-bindings/classic-cli/
-cmake --preset default                                               # Configure (installs vcpkg deps)
-cmake --build build --config Release --target classic-cli-tests      # Build test executable
-ctest --test-dir build --build-config Release --output-on-failure    # Run all tests via CTest
-.\build\Release\classic-cli-tests.exe [thread_pool]                  # Run by tag
-.\build\Release\classic-cli-tests.exe -s                             # Verbose with SECTION names
+# C++ tests (Catch2 v3 via CTest) -- run from classic-cli/ (requires VS Dev Shell)
+cmake --preset default                                               # Configure (vcpkg + Ninja + Corrosion)
+cmake --build build --target classic-cli-tests                       # Build test executable
+ctest --test-dir build --output-on-failure                           # Run all tests via CTest
+.\build\classic-cli-tests.exe [thread_pool]                          # Run by tag
+.\build\classic-cli-tests.exe -s                                     # Verbose with SECTION names
 
 # C++ integration tests (PowerShell, requires built classic-cli.exe)
 .\test_cli.ps1                                                       # Full CLI integration suite
@@ -99,7 +99,7 @@ The Rust workspace under `rust/` follows a strict three-layer separation:
    - Python imports them directly: `import classic_yaml`, `import classic_scanlog`
    - `classic-node`: NAPI-RS bindings for Node.js/Bun (tested in CI with Bun)
    - `classic-cpp-bridge`: CXX bridge exposing Rust core crates to C++ (staticlib)
-   - `classic-cli`: C++ CLI scanner built with CMake + vcpkg (fmt, CLI11, Catch2)
+   - `classic-cli`: C++ CLI scanner built with CMake + vcpkg + Corrosion (fmt, CLI11, Catch2)
 
 4. **UI Applications** (`rust/ui-applications/`)
    - `classic-gui`: Pure Rust GUI using Slint framework (v9.0.0)
@@ -156,11 +156,11 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 
 ### C++ Style
 - C++20, MSVC on Windows (`/utf-8 /W4`)
-- CMake 3.25+ with vcpkg for package management
+- CMake 3.25+ with vcpkg + Corrosion (Ninja generator, requires VS Dev Shell)
 - Catch2 v3 for unit tests (bridge-free components: ThreadPool, Progress, CliArgs)
 - Unit test tags: `[thread_pool]`, `[progress]`, `[cli_args]`
 - Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)
-- Test source: `rust/cpp-bindings/classic-cli/tests/`
+- Test source: `classic-cli/tests/`
 
 ### Test Isolation
 - An autouse `reset_all_singletons` fixture clears all caches/singletons between tests

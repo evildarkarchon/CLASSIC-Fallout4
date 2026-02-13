@@ -46,7 +46,7 @@ cargo test --workspace --manifest-path rust/Cargo.toml
 cargo test --workspace --manifest-path rust/Cargo.toml -- --nocapture  # With output
 cargo test -p classic-scanlog-core --manifest-path rust/Cargo.toml     # Single crate
 
-# C++ tests (Catch2 v3 via CTest) -- run from rust/cpp-bindings/classic-cli/
+# C++ tests (Catch2 v3 via CTest) -- run from classic-cli/
 cmake --preset default                                               # Configure (installs vcpkg deps)
 cmake --build build --config Release --target classic-cli-tests      # Build test executable
 ctest --test-dir build --build-config Release --output-on-failure    # Run all tests via CTest
@@ -140,7 +140,7 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 - Catch2 v3 for unit tests (bridge-free components: ThreadPool, Progress, CliArgs)
 - Unit test tags: `[thread_pool]`, `[progress]`, `[cli_args]`
 - Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)
-- Test source: `rust/cpp-bindings/classic-cli/tests/`
+- Test source: `classic-cli/tests/`
 
 ### Test Isolation (Python)
 - An autouse `reset_all_singletons` fixture clears all caches/singletons between tests

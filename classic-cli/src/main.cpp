@@ -2,7 +2,7 @@
 #include "scanner.h"
 
 #include "rust/cxx.h"
-#include "classic-cpp-bridge/src/config.rs.h"
+#include "classic_cxx_bridge/config.h"
 
 #include <fmt/core.h>
 
