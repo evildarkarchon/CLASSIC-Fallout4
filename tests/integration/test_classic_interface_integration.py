@@ -56,6 +56,16 @@ class TestClassicInterface:
         patcher = patch("ClassicLib.core.async_bridge.AsyncBridge")
         patcher.start()
 
+        # Patch yaml_settings/classic_settings at controller module level.
+        # Tests already patch these at the CLASSIC_Interface level, but controllers
+        # import them directly from ClassicLib.io.yaml, bypassing those patches.
+        # Without these patches, controller methods hit the real Rust YAML loader
+        # which fails on CI because CLASSIC Settings.yaml doesn't exist.
+        yaml_patcher = patch("ClassicLib.Interface.controllers.window_geometry.yaml_settings", return_value=None)
+        classic_patcher = patch("ClassicLib.Interface.controllers.folder_manager.classic_settings", return_value=None)
+        yaml_patcher.start()
+        classic_patcher.start()
+
         # Reset MessageHandler singleton to prevent dangling parent references
         from ClassicLib.messaging import handler as msg_handler_module
 
@@ -68,6 +78,8 @@ class TestClassicInterface:
         with _message_handler_lock:
             msg_handler_module._message_handler = None
 
+        classic_patcher.stop()
+        yaml_patcher.stop()
         patcher.stop()
 
     @patch("CLASSIC_Interface.SetupCoordinator")
