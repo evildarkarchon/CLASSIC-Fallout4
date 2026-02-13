@@ -139,6 +139,7 @@ pub fn save_path_setting(config: &mut ClassicConfig, key: &str, path: &str) -> R
         match key {
             "ini_folder" => config.paths.ini_folder = None,
             "mods_folder" => config.paths.mods_folder = None,
+            "scan_custom" => config.paths.scan_custom = None,
             _ => return Err(format!("Unknown path setting: {}", key)),
         }
         save_full_config(config).map_err(|e| format!("Failed to save: {}", e))?;
@@ -155,6 +156,7 @@ pub fn save_path_setting(config: &mut ClassicConfig, key: &str, path: &str) -> R
     match key {
         "ini_folder" => config.paths.ini_folder = Some(path_buf),
         "mods_folder" => config.paths.mods_folder = Some(path_buf),
+        "scan_custom" => config.paths.scan_custom = Some(path_buf),
         _ => return Err(format!("Unknown path setting: {}", key)),
     }
 

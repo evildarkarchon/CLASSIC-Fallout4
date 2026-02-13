@@ -118,7 +118,8 @@ where
     update_status(&window_weak, "Discovering crash logs...", -1.0);
 
     let base_folder = PathBuf::from(&crash_log_path);
-    let collector = LogCollector::new(base_folder, None, None);
+    let custom_folder = settings.paths.scan_custom.clone();
+    let collector = LogCollector::new(base_folder, None, custom_folder);
 
     let log_paths = collector
         .collect_all()
@@ -168,6 +169,31 @@ where
         {
             Ok(result) => results.push(result),
             Err(_) => errors += 1,
+        }
+    }
+
+    // Phase 3: Write AUTOSCAN reports to disk
+    let write_batch: Vec<(PathBuf, Vec<String>, bool)> = results
+        .iter()
+        .filter(|r| r.success)
+        .map(|r| {
+            (
+                PathBuf::from(&r.log_path),
+                r.report_lines.clone(),
+                r.trigger_scan_failed,
+            )
+        })
+        .collect();
+
+    if !write_batch.is_empty() {
+        update_status(&window_weak, "Writing reports...", -1.0);
+        match orchestrator.write_reports_batch(write_batch).await {
+            Ok(paths) => {
+                tracing::info!("Wrote {} AUTOSCAN reports", paths.len());
+            }
+            Err(e) => {
+                tracing::warn!("Failed to write some AUTOSCAN reports: {}", e);
+            }
         }
     }
 

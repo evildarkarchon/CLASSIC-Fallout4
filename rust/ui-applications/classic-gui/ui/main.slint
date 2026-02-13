@@ -63,6 +63,11 @@ export component MainWindow inherits Window {
     in-out property <string> setting-mods-error: "";
     in-out property <bool> setting-mods-has-error: false;
 
+    // Settings tab properties - Paths (custom scan folder)
+    in-out property <string> setting-scan-custom-path: "";
+    in-out property <string> setting-scan-custom-error: "";
+    in-out property <bool> setting-scan-custom-has-error: false;
+
     // Settings tab properties - Paths (database list)
     in-out property <[string]> setting-database-list;
 
@@ -100,6 +105,10 @@ export component MainWindow inherits Window {
     callback setting-browse-mods();
     callback setting-ini-path-accepted(string);
     callback setting-mods-path-accepted(string);
+
+    // Settings tab callbacks - Paths (custom scan folder)
+    callback setting-browse-scan-custom();
+    callback setting-scan-custom-path-accepted(string);
 
     // Settings tab callbacks - Paths (database list)
     callback setting-database-add-clicked();
@@ -325,6 +334,11 @@ export component MainWindow inherits Window {
                                 browse-mods => { root.setting-browse-mods(); }
                                 ini-path-accepted(text) => { root.setting-ini-path-accepted(text); }
                                 mods-path-accepted(text) => { root.setting-mods-path-accepted(text); }
+                                scan-custom-path <=> root.setting-scan-custom-path;
+                                scan-custom-error <=> root.setting-scan-custom-error;
+                                scan-custom-has-error <=> root.setting-scan-custom-has-error;
+                                browse-scan-custom => { root.setting-browse-scan-custom(); }
+                                scan-custom-path-accepted(text) => { root.setting-scan-custom-path-accepted(text); }
                                 database-list <=> root.setting-database-list;
                                 database-add-clicked => { root.setting-database-add-clicked(); }
                                 database-remove-clicked(index) => { root.setting-database-remove-clicked(index); }
