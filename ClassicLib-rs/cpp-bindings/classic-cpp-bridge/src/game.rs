@@ -297,8 +297,8 @@ mod tests {
 
     #[test]
     fn test_validate_path() {
-        // Existing path should be valid
-        assert!(validate_path("J:\\CLASSIC-Fallout4"));
+        // Existing path should be valid (use crate directory, always exists during tests)
+        assert!(validate_path(env!("CARGO_MANIFEST_DIR")));
         // Garbage path should be invalid
         assert!(!validate_path(""));
     }
