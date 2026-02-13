@@ -71,6 +71,9 @@ members = [
 
     # GUI Applications (v9.0.0 Slint)
     "ui-applications/classic-gui",
+
+    # C++ Bindings (CXX FFI adapters)
+    "cpp-bindings/classic-cpp-bridge",
 ]
 resolver = "2"
 
@@ -164,6 +167,10 @@ env_logger = "0.11"
 tracing = "0.1.44"
 tracing-subscriber = "0.3.22"
 tracing-appender = "0.2"
+
+# C++ FFI (CXX)
+cxx = "1.0"
+cxx-build = "1.0"
 
 # GUI (Slint)
 slint = "1.15.0"

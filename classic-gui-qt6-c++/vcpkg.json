@@ -1,0 +1,6 @@
+{
+    "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+    "name": "classic-gui-qt6",
+    "version": "1.0.0",
+    "description": "CLASSIC Crash Log Scanner - C++ Qt 6 GUI"
+}

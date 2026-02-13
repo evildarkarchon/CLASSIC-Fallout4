@@ -45,6 +45,16 @@ uv run pytest --no-cov                           # Disable coverage for faster i
 cargo test --workspace --manifest-path rust/Cargo.toml
 cargo test --workspace --manifest-path rust/Cargo.toml -- --nocapture  # With output
 cargo test -p classic-scanlog-core --manifest-path rust/Cargo.toml     # Single crate
+
+# C++ tests (Catch2 v3 via CTest) -- run from rust/cpp-bindings/classic-cli/
+cmake --preset default                                               # Configure (installs vcpkg deps)
+cmake --build build --config Release --target classic-cli-tests      # Build test executable
+ctest --test-dir build --build-config Release --output-on-failure    # Run all tests via CTest
+.\build\Release\classic-cli-tests.exe [thread_pool]                  # Run by tag
+.\build\Release\classic-cli-tests.exe -s                             # Verbose with SECTION names
+
+# C++ integration tests (PowerShell, requires built classic-cli.exe)
+.\test_cli.ps1                                                       # Full CLI integration suite
 ```
 
 ### Linting & Formatting
@@ -84,10 +94,12 @@ The Rust workspace under `rust/` follows a strict three-layer separation:
    - `classic-config-core`: Configuration management
    - Plus ~14 more domain crates (constants, path, registry, settings, web, etc.)
 
-3. **Bindings** (`rust/python-bindings/`, `rust/node-bindings/`) - Thin PyO3/NAPI-RS adapters
+3. **Bindings** (`rust/python-bindings/`, `rust/node-bindings/`, `rust/cpp-bindings/`) - Thin PyO3/NAPI-RS/CXX adapters
    - Each `*-py` crate wraps its corresponding `*-core` crate as a `cdylib`
    - Python imports them directly: `import classic_yaml`, `import classic_scanlog`
    - `classic-node`: NAPI-RS bindings for Node.js/Bun (tested in CI with Bun)
+   - `classic-cpp-bridge`: CXX bridge exposing Rust core crates to C++ (staticlib)
+   - `classic-cli`: C++ CLI scanner built with CMake + vcpkg (fmt, CLI11, Catch2)
 
 4. **UI Applications** (`rust/ui-applications/`)
    - `classic-gui`: Pure Rust GUI using Slint framework (v9.0.0)
@@ -141,6 +153,14 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 - Pyright strict mode for type checking
 - `ban-relative-imports = "all"` -- always use absolute imports
 - pytest-asyncio with `asyncio_mode = "auto"`
+
+### C++ Style
+- C++20, MSVC on Windows (`/utf-8 /W4`)
+- CMake 3.25+ with vcpkg for package management
+- Catch2 v3 for unit tests (bridge-free components: ThreadPool, Progress, CliArgs)
+- Unit test tags: `[thread_pool]`, `[progress]`, `[cli_args]`
+- Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)
+- Test source: `rust/cpp-bindings/classic-cli/tests/`
 
 ### Test Isolation
 - An autouse `reset_all_singletons` fixture clears all caches/singletons between tests

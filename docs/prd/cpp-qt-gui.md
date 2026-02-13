@@ -27,7 +27,7 @@ CLASSIC currently has three GUI implementations: PySide6 (Python, production), T
 | Package Manager | vcpkg (manifest mode) | CMake-native, Microsoft-backed, excellent Windows support |
 | Build System | CMake + Corrosion | Industry standard for C++; Corrosion imports Rust crates into CMake |
 | Rust FFI | CXX crate | Compile-time type safety on both sides, rich type mapping, zero overhead |
-| C++ Standard | C++17 (Qt 6 minimum) | Broad compiler support, sufficient for all patterns needed |
+| C++ Standard | C++20 | Consistent with existing classic-cli, enables ranges/concepts/format |
 | Compiler | MSVC | Primary Qt/Windows target, best tooling, vcpkg default |
 | Linking | Dynamic (`x64-windows`) | LGPL-compatible, faster builds, standard deployment |
 | Qt Version | 6.10.x | Latest release, newest features and improvements |
@@ -605,7 +605,7 @@ J:\CLASSIC-Fallout4\
 cmake_minimum_required(VERSION 3.22)
 project(ClassicGui VERSION 1.0.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)  # Auto-generate moc for QObject subclasses
 set(CMAKE_AUTOUIC ON)  # Auto-process .ui files via uic

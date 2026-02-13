@@ -1,0 +1,5 @@
+{
+  "name": "classic-cli",
+  "version": "9.0.0",
+  "dependencies": ["fmt", "cli11", "catch2"]
+}

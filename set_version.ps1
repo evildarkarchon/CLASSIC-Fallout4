@@ -220,7 +220,7 @@ function Update-CargoToml {
         # Pattern to match version = "X.Y.Z" in [package] section
         # This regex matches: version = "any version" (with optional whitespace)
         $Pattern = '(?m)^(\s*version\s*=\s*)"[^"]*"'
-        $Replacement = '$1"' + $NewVersion + '"'
+        $Replacement = '${1}"' + $NewVersion + '"'
 
         $NewContent = $Content -replace $Pattern, $Replacement
 
@@ -268,19 +268,22 @@ function Update-YamlFile {
         $OriginalContent = $Content
 
         # Update version line: version: CLASSIC vX.Y.Z
+        # NOTE: Use ${1} instead of $1 to disambiguate backreference from
+        # version digits (e.g., "$1" + "9.0.0" = "$19.0.0" which .NET
+        # interprets as group 19, corrupting the output).
         $VersionPattern = '(?m)^(\s*version:\s*CLASSIC\s+v)[^\n\r]*'
-        $VersionReplacement = '$1' + $NewVersion
+        $VersionReplacement = '${1}' + $NewVersion
         $NewContent = $Content -replace $VersionPattern, $VersionReplacement
 
         # Update version_date line: version_date: YY.MM.DD
         $DatePattern = '(?m)^(\s*version_date:\s*)\d{2}\.\d{2}\.\d{2}'
-        $DateReplacement = '$1' + $NewDate
+        $DateReplacement = '${1}' + $NewDate
         $NewContent = $NewContent -replace $DatePattern, $DateReplacement
 
         # Update is_prerelease line: is_prerelease: true/false
         $PrereleasePattern = '(?m)^(\s*is_prerelease:\s*)\w+'
         $PrereleaseValue = if ($Prerelease) { "true" } else { "false" }
-        $PrereleaseReplacement = '$1' + $PrereleaseValue
+        $PrereleaseReplacement = '${1}' + $PrereleaseValue
         $NewContent = $NewContent -replace $PrereleasePattern, $PrereleaseReplacement
 
         if ($NewContent -eq $OriginalContent) {

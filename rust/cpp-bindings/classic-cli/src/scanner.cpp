@@ -1,0 +1,275 @@
+#include "scanner.h"
+#include "progress.h"
+#include "report_writer.h"
+#include "thread_pool.h"
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#endif
+
+#include "rust/cxx.h"
+
+// CXX-generated headers for each bridge module
+#include "classic-cpp-bridge/src/runtime.rs.h"
+#include "classic-cpp-bridge/src/registry.rs.h"
+#include "classic-cpp-bridge/src/message.rs.h"
+#include "classic-cpp-bridge/src/config.rs.h"
+#include "classic-cpp-bridge/src/scanner.rs.h"
+#include "classic-cpp-bridge/src/files.rs.h"
+
+#include <fmt/core.h>
+#include <chrono>
+#include <filesystem>
+#include <mutex>
+#include <string>
+#include <thread>
+#include <vector>
+
+namespace fs = std::filesystem;
+
+// ── Data root discovery ────────────────────────────────────────────
+
+struct DataDirs {
+    std::string root;
+    std::string data;
+};
+
+/// Find the root directory containing "CLASSIC Data/" and derive both
+/// yaml_dir_root (the parent) and yaml_dir_data (the CLASSIC Data subdir).
+/// Mirrors classic-gui/src/scan.rs: find_data_root() + load_analysis_config().
+static DataDirs find_data_root() {
+    std::error_code ec;
+    fs::path exe_path = fs::current_path(ec); // fallback, overridden below
+
+#ifdef _WIN32
+    // Try getting actual exe path on Windows
+    wchar_t buf[MAX_PATH];
+    DWORD len = GetModuleFileNameW(nullptr, buf, MAX_PATH);
+    if (len > 0 && len < MAX_PATH) {
+        fs::path ep(buf);
+        exe_path = ep.parent_path();
+        if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
+            return DataDirs{
+                exe_path.string(),
+                (exe_path / "CLASSIC Data").string()
+            };
+        }
+    }
+#endif
+
+    // Check: Current working directory for "CLASSIC Data/" (development / distribution)
+    auto cwd = fs::current_path(ec);
+    if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
+        return DataDirs{cwd.string(), (cwd / "CLASSIC Data").string()};
+    }
+
+    // Check: Exe directory for "CLASSIC Data/" (running from build dir)
+    if (fs::is_directory(exe_path / "CLASSIC Data", ec)) {
+        return DataDirs{exe_path.string(), (exe_path / "CLASSIC Data").string()};
+    }
+
+    // Fallback: use cwd anyway (will fail at config load with a clear error)
+    return DataDirs{cwd.string(), cwd.string()};
+}
+
+// ── Concurrency calculation ────────────────────────────────────────
+
+static uint32_t effective_concurrency(uint32_t requested) {
+    if (requested > 0) {
+        return requested;
+    }
+    auto cpus = std::thread::hardware_concurrency();
+    auto workers = (cpus > 2) ? (cpus - 2) : 2u;
+    return std::min(workers, 32u);
+}
+
+// ── Filename extraction helper ─────────────────────────────────────
+
+static std::string filename_from_path(const std::string& path) {
+    auto pos = path.find_last_of("/\\");
+    return (pos != std::string::npos) ? path.substr(pos + 1) : path;
+}
+
+// ── Scan pipeline (inner) ──────────────────────────────────────────
+// Factored out so rust::Box<T> objects can be constructed in-place
+// rather than pre-declared (rust::Box is non-nullable, no nullptr init).
+
+static int scan_with_config(
+    const CliArgs& args,
+    const DataDirs& dirs,
+    std::chrono::steady_clock::time_point total_start)
+{
+    // Build scan config from YAML
+    auto config = classic::scanner::build_full_scan_config(
+        dirs.root,
+        dirs.data,
+        args.game,
+        args.vr_mode,
+        args.show_fid_values,
+        args.fcx_mode,
+        args.simplify_logs
+    );
+
+    // Create orchestrator
+    auto orch = classic::scanner::orchestrator_new(*config);
+
+    // Discover crash logs
+    // Mirrors Python's _crashlogs_get_files_rust():
+    //   base_folder  = cwd (where "Crash Logs/" subdirectory is managed)
+    //   custom_folder = --scan-path (searched directly, no file moving)
+    std::error_code ec;
+    std::string base_dir = fs::current_path(ec).string();
+    std::string custom_dir = args.scan_path; // empty string = no custom folder
+
+    auto collector = classic::files::log_collector_new(base_dir, "", custom_dir);
+    auto log_paths = classic::files::log_collector_collect_all(*collector);
+
+    if (log_paths.empty()) {
+        if (custom_dir.empty()) {
+            fmt::print("No crash logs found in: {}\n", base_dir);
+        } else {
+            fmt::print("No crash logs found in: {} or {}\n", base_dir, custom_dir);
+        }
+        return 0;
+    }
+
+    auto total_logs = static_cast<uint32_t>(log_paths.size());
+    fmt::print("Found {} crash log{}\n\n", total_logs, total_logs == 1 ? "" : "s");
+
+    // Scan all logs with thread pool + progress display
+    auto concurrency = effective_concurrency(args.max_concurrent);
+    fmt::print("Scanning with {} worker thread{}\n\n",
+        concurrency, concurrency == 1 ? "" : "s");
+
+    ProgressDisplay progress(total_logs, args.game);
+    ThreadPool pool(concurrency);
+
+    // Collect results thread-safely
+    std::mutex results_mutex;
+    std::vector<LogScanResult> results;
+    results.reserve(total_logs);
+
+    // Submit scan tasks
+    for (const auto& rpath : log_paths) {
+        std::string path_str(rpath.data(), rpath.size());
+
+        pool.submit([&orch, &progress, &results, &results_mutex, path = std::move(path_str)]() {
+            auto tid = std::this_thread::get_id();
+            auto log_name = filename_from_path(path);
+            progress.report_started(tid, log_name);
+
+            LogScanResult result;
+            result.log_path = path;
+
+            try {
+                auto sr = classic::scanner::orchestrator_process_log(*orch, path);
+                result.success = sr.success;
+                result.processing_time_ms = sr.processing_time_ms;
+                result.error_message = std::string(sr.error_message.data(), sr.error_message.size());
+
+                // Convert rust::Vec<rust::String> to std::vector<std::string>
+                result.report_lines.reserve(sr.report_lines.size());
+                for (const auto& line : sr.report_lines) {
+                    result.report_lines.emplace_back(line.data(), line.size());
+                }
+
+                if (result.success) {
+                    progress.report_finished(tid);
+                } else {
+                    progress.report_error(tid);
+                }
+            } catch (const rust::Error& e) {
+                result.success = false;
+                result.error_message = e.what();
+                progress.report_error(tid);
+            }
+
+            {
+                std::lock_guard lock(results_mutex);
+                results.push_back(std::move(result));
+            }
+        });
+    }
+
+    // Poll progress display while workers are active
+    while (progress.completed() < total_logs) {
+        progress.render();
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+    // Final render to show 100%
+    progress.render();
+
+    pool.wait_all();
+    progress.finish();
+
+    // Write AUTOSCAN.md reports
+    uint32_t reports_written = 0;
+    uint32_t report_failures = 0;
+
+    for (const auto& result : results) {
+        if (result.success && !result.report_lines.empty()) {
+            if (write_report(result.log_path, result.report_lines)) {
+                ++reports_written;
+            } else {
+                ++report_failures;
+            }
+        }
+    }
+
+    // Print summary
+    auto total_end = std::chrono::steady_clock::now();
+    double duration = std::chrono::duration<double>(total_end - total_start).count();
+    double speed = (duration > 0.0) ? (total_logs / duration) : 0.0;
+    auto error_count = progress.errors();
+
+    fmt::print("\nScan Complete\n");
+    fmt::print("  Scanned:  {} log{}\n", total_logs, total_logs == 1 ? "" : "s");
+    if (error_count > 0) {
+        fmt::print("  Errors:   {} log{}\n", error_count, error_count == 1 ? "" : "s");
+    }
+    fmt::print("  Reports:  {} written\n", reports_written);
+    if (report_failures > 0) {
+        fmt::print("  Failed:   {} report{}\n", report_failures, report_failures == 1 ? "" : "s");
+    }
+    fmt::print("  Duration: {:.2f}s\n", duration);
+    fmt::print("  Speed:    {:.1f} logs/sec\n", speed);
+
+    return (error_count > 0) ? 1 : 0;
+}
+
+// ── Public entry point ─────────────────────────────────────────────
+
+int run_scan(const CliArgs& args) {
+    auto total_start = std::chrono::steady_clock::now();
+
+    // Initialize Rust runtime + logging
+    try {
+        classic::runtime::init_runtime();
+        classic::message::init_logging();
+    } catch (const rust::Error& e) {
+        fmt::print(stderr, "Fatal: failed to initialize runtime: {}\n", std::string(e.what()));
+        return 2;
+    }
+
+    // Set game in global registry
+    classic::registry::registry_set_game(args.game);
+
+    // Find data root
+    auto dirs = find_data_root();
+    fmt::print("Data root: {}\n", dirs.root);
+    fmt::print("Data dir:  {}\n\n", dirs.data);
+
+    // Run the scan pipeline (all rust::Box<T> objects live inside this scope)
+    int exit_code;
+    try {
+        exit_code = scan_with_config(args, dirs, total_start);
+    } catch (const rust::Error& e) {
+        fmt::print(stderr, "Fatal: {}\n", std::string(e.what()));
+        exit_code = 2;
+    }
+
+    classic::runtime::shutdown_runtime();
+    return exit_code;
+}

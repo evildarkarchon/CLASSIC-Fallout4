@@ -1,0 +1,54 @@
+#include "report_writer.h"
+#include "rust/cxx.h"
+
+// CXX-generated headers
+#include "classic-cpp-bridge/src/files.rs.h"
+
+#include <fmt/core.h>
+#include <filesystem>
+#include <fstream>
+#include <string>
+
+bool write_report(const std::string& log_path,
+                  const std::vector<std::string>& report_lines) {
+    // Derive output path: crash-2025-08-21.log -> crash-2025-08-21-AUTOSCAN.md
+    std::filesystem::path p(log_path);
+    std::string stem = p.stem().string();
+    std::string out_name = stem + "-AUTOSCAN.md";
+    std::filesystem::path out_path = p.parent_path() / out_name;
+
+    // Join lines into a single report string
+    std::string content;
+    for (const auto& line : report_lines) {
+        content += line;
+        content += '\n';
+    }
+
+    std::string out_str = out_path.string();
+
+    // Try writing through the Rust bridge first (encoding-consistent)
+    try {
+        classic::files::write_file_string(out_str, content);
+        return true;
+    } catch (const rust::Error& e) {
+        fmt::print(stderr, "  Warning: bridge write failed for {}: {}\n",
+            out_str, std::string(e.what()));
+    }
+
+    // Fallback: direct file write with UTF-8 BOM
+    try {
+        std::ofstream ofs(out_path, std::ios::binary);
+        if (!ofs) {
+            fmt::print(stderr, "  Error: cannot open {} for writing\n", out_str);
+            return false;
+        }
+        // UTF-8 BOM
+        ofs.write("\xEF\xBB\xBF", 3);
+        ofs.write(content.data(), static_cast<std::streamsize>(content.size()));
+        return true;
+    } catch (const std::exception& e) {
+        fmt::print(stderr, "  Error: fallback write failed for {}: {}\n",
+            out_str, e.what());
+        return false;
+    }
+}
