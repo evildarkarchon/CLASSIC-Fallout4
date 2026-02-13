@@ -39,4 +39,5 @@
 			"packageManager": "ms-python.python:pip"
 		}
 	],
+	"cmake.sourceDirectory": "J:/CLASSIC-Fallout4/classic-gui-qt6-c++",
 }
