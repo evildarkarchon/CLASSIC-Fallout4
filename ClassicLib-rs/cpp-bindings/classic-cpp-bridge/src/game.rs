@@ -3,10 +3,10 @@
 //! Bridges version registry, version parsing, PE version extraction,
 //! XSE detection, and path validation/detection.
 
-use classic_path_core::{is_valid_path, is_restricted_path, GamePathFinder};
+use classic_path_core::{GamePathFinder, is_restricted_path, is_valid_path};
 use classic_version_core::pe_version::extract_pe_version;
-use classic_version_registry_core::{get_version_registry, GameVersion};
-use classic_xse_core::{XseType, is_xse_installed, detect_xse_version};
+use classic_version_registry_core::{GameVersion, get_version_registry};
+use classic_xse_core::{XseType, detect_xse_version, is_xse_installed};
 use std::path::{Path, PathBuf};
 
 // ── Version Registry ────────────────────────────────────────────────
@@ -54,7 +54,10 @@ fn version_registry_match_version(
             let result = registry.match_version(&detected, game, is_vr);
             let is_match = result.version_info.is_some();
             ffi::MatchResultDto {
-                matched_id: result.version_info.map(|v| v.id.clone()).unwrap_or_default(),
+                matched_id: result
+                    .version_info
+                    .map(|v| v.id.clone())
+                    .unwrap_or_default(),
                 confidence: format!("{:?}", result.confidence),
                 message: result.message.clone(),
                 is_match,

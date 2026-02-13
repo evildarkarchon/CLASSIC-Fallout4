@@ -335,7 +335,7 @@ async def smart_run_in_executor[R](
 # -----------------------------------------------------------------------------
 
 
-async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent: int | None = None) -> list[Any]:
+async def async_map[T](func: Callable[[T], Any], items: Iterable[T], max_concurrent: int | None = None) -> list[Any]:
     """Async version of map with concurrency control.
 
     Args:
@@ -369,7 +369,7 @@ async def async_map(func: Callable[[T], Any], items: Iterable[T], max_concurrent
     return await asyncio.gather(*tasks, return_exceptions=False)
 
 
-async def async_map_smart(
+async def async_map_smart[T](
     func: Callable[[T], Any], items: list[T], max_concurrent: int | None = None, use_executor: bool | str = "auto"
 ) -> list[Any]:
     """Enhanced async map with intelligent executor usage.
@@ -452,7 +452,7 @@ async def async_map_smart(
     return await asyncio.gather(*tasks, return_exceptions=False)
 
 
-async def batch_process(items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5) -> list[Any]:
+async def batch_process[T](items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5) -> list[Any]:
     """Process items in batches with concurrency control.
 
     Args:
@@ -483,7 +483,7 @@ async def batch_process(items: list[T], processor: Callable[[T], Any], batch_siz
     return results
 
 
-async def batch_process_smart(
+async def batch_process_smart[T](
     items: list[T], processor: Callable[[T], Any], batch_size: int = 10, max_concurrent: int = 5, use_executor: bool | str = "auto"
 ) -> list[Any]:
     """Enhanced batch processing with intelligent executor usage.
@@ -525,7 +525,7 @@ async def batch_process_smart(
     return results  # pyright: ignore[reportUnknownVariableType]
 
 
-async def async_filter_smart(
+async def async_filter_smart[T](
     predicate: Callable[[T], bool] | Callable[[T], Awaitable[bool]],
     items: Iterable[T],
     max_concurrent: int | None = None,
@@ -582,7 +582,7 @@ async def async_filter_smart(
     return [item for item, keep in zip(items_list, results, strict=False) if keep]
 
 
-async def async_filter(
+async def async_filter[T](
     predicate: Callable[[T], bool] | Callable[[T], Awaitable[bool]],
     items: Iterable[T],
     max_concurrent: int | None = None,
@@ -671,7 +671,7 @@ def async_timeout(seconds: float) -> Callable[[Callable[P, Awaitable[R]]], Calla
     return decorator
 
 
-async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
+async def _run_awaitable[T](coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
     """Provide internal helper to run an awaitable without timeout handling.
 
     Args:
@@ -687,7 +687,7 @@ async def _run_awaitable(coro: Awaitable[T] | Callable[[], Awaitable[T]]) -> T:
     return await coro  # type: ignore[misc]  # Union type handling for callable vs awaitable
 
 
-def run_with_timeout(
+def run_with_timeout[T](
     coro: Awaitable[T] | Callable[[], Awaitable[T]], timeout_seconds: float, default: T | None = None
 ) -> Callable[[], Awaitable[T | None]]:
     """Create a coroutine that runs with timeout, returning default on timeout.

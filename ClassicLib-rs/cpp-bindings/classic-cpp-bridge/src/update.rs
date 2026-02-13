@@ -3,8 +3,8 @@
 //! Bridges `classic_update_core::GithubClient` for checking if updates are
 //! available by comparing semver versions.
 
-use classic_update_core::GithubClient;
 use classic_shared_core::get_runtime;
+use classic_update_core::GithubClient;
 
 fn github_has_update(current: &str, latest: &str) -> bool {
     let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
@@ -90,11 +90,7 @@ mod tests {
     #[test]
     #[ignore] // Requires network access
     fn test_check_for_updates_network() {
-        let result = github_check_for_updates(
-            "evildarkarchon",
-            "CLASSIC-Fallout4",
-            "0.0.1",
-        );
+        let result = github_check_for_updates("evildarkarchon", "CLASSIC-Fallout4", "0.0.1");
         assert!(result.error_message.is_empty());
         assert!(!result.latest_version.is_empty());
     }

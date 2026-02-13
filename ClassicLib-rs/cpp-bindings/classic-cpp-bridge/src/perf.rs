@@ -28,10 +28,7 @@ fn perf_clear_metrics() {
 
 fn perf_get_operation_count(operation: &str) -> u32 {
     let summary = get_summary();
-    summary
-        .get(operation)
-        .map(|s| s.count as u32)
-        .unwrap_or(0)
+    summary.get(operation).map(|s| s.count as u32).unwrap_or(0)
 }
 
 fn perf_get_operation_average(operation: &str) -> f64 {

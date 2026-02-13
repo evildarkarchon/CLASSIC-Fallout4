@@ -18,7 +18,12 @@ pub struct YamlData {
 
 // ── Construction ────────────────────────────────────────────────────
 
-fn yaml_data_load(yaml_dir_root: &str, yaml_dir_data: &str, game: &str, vr_mode: bool) -> Result<Box<YamlData>, String> {
+fn yaml_data_load(
+    yaml_dir_root: &str,
+    yaml_dir_data: &str,
+    game: &str,
+    vr_mode: bool,
+) -> Result<Box<YamlData>, String> {
     let dirs = vec![PathBuf::from(yaml_dir_root), PathBuf::from(yaml_dir_data)];
     let inner = get_runtime()
         .block_on(YamlDataCore::load_from_yaml_files(

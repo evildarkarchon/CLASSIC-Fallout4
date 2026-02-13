@@ -3,11 +3,11 @@
 //! Bridges `classic_file_io_core` for backup management, game files,
 //! log collection, file similarity, and encoding-aware file I/O.
 
+use classic_file_io_core::FileIOCore;
 use classic_file_io_core::backup::{BackupManager, BackupType};
 use classic_file_io_core::game_files::GameFilesManager;
 use classic_file_io_core::log_collection::LogCollector;
 use classic_file_io_core::similarity::calculate_similarity;
-use classic_file_io_core::FileIOCore;
 use classic_shared_core::get_runtime;
 use std::path::{Path, PathBuf};
 
@@ -84,7 +84,11 @@ fn game_files_manager_new(game_root: &str, backup_root: &str) -> Box<CxxGameFile
     })
 }
 
-fn game_files_backup(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]) -> Result<String, String> {
+fn game_files_backup(
+    mgr: &CxxGameFilesManager,
+    label: &str,
+    patterns: &[String],
+) -> Result<String, String> {
     let result = get_runtime()
         .block_on(mgr.inner.backup(label, patterns))
         .map_err(|e| format!("{e}"))?;
@@ -95,7 +99,11 @@ fn game_files_backup(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]
     ))
 }
 
-fn game_files_restore(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]) -> Result<String, String> {
+fn game_files_restore(
+    mgr: &CxxGameFilesManager,
+    label: &str,
+    patterns: &[String],
+) -> Result<String, String> {
     let result = get_runtime()
         .block_on(mgr.inner.restore(label, patterns))
         .map_err(|e| format!("{e}"))?;
@@ -106,7 +114,11 @@ fn game_files_restore(mgr: &CxxGameFilesManager, label: &str, patterns: &[String
     ))
 }
 
-fn game_files_remove(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]) -> Result<String, String> {
+fn game_files_remove(
+    mgr: &CxxGameFilesManager,
+    label: &str,
+    patterns: &[String],
+) -> Result<String, String> {
     let result = get_runtime()
         .block_on(mgr.inner.remove(label, patterns))
         .map_err(|e| format!("{e}"))?;
@@ -195,9 +207,21 @@ mod ffi {
 
         // GameFilesManager
         fn game_files_manager_new(game_root: &str, backup_root: &str) -> Box<CxxGameFilesManager>;
-        fn game_files_backup(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]) -> Result<String>;
-        fn game_files_restore(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]) -> Result<String>;
-        fn game_files_remove(mgr: &CxxGameFilesManager, label: &str, patterns: &[String]) -> Result<String>;
+        fn game_files_backup(
+            mgr: &CxxGameFilesManager,
+            label: &str,
+            patterns: &[String],
+        ) -> Result<String>;
+        fn game_files_restore(
+            mgr: &CxxGameFilesManager,
+            label: &str,
+            patterns: &[String],
+        ) -> Result<String>;
+        fn game_files_remove(
+            mgr: &CxxGameFilesManager,
+            label: &str,
+            patterns: &[String],
+        ) -> Result<String>;
 
         // LogCollector
         fn log_collector_new(
@@ -241,11 +265,8 @@ mod tests {
         std::fs::write(&file1, "hello world").unwrap();
         std::fs::write(&file2, "hello world").unwrap();
 
-        let sim = calculate_file_similarity(
-            file1.to_str().unwrap(),
-            file2.to_str().unwrap(),
-        )
-        .unwrap();
+        let sim =
+            calculate_file_similarity(file1.to_str().unwrap(), file2.to_str().unwrap()).unwrap();
         assert!((sim - 1.0).abs() < f64::EPSILON);
     }
 

@@ -58,7 +58,7 @@ class ScanResult:
 
         """
         # Calculate scan time if not provided
-        if self.scan_time == 0.0:
+        if self.scan_time <= 0.0:
             self.scan_time = self.stats.get_scan_duration()
 
     def add_failed_log(self, log_name: str) -> None:

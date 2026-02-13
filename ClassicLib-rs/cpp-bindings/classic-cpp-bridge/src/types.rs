@@ -175,7 +175,10 @@ mod tests {
     #[test]
     fn test_string_vec_map_construction() {
         let mut map = IndexMap::new();
-        map.insert("patterns".to_string(), vec!["a".to_string(), "b".to_string()]);
+        map.insert(
+            "patterns".to_string(),
+            vec!["a".to_string(), "b".to_string()],
+        );
         let svm = StringVecMap::new(map);
         assert_eq!(string_vec_map_len(&svm), 1);
         assert!(!string_vec_map_is_empty(&svm));
@@ -184,7 +187,10 @@ mod tests {
     #[test]
     fn test_string_vec_map_get_existing() {
         let mut map = IndexMap::new();
-        map.insert("stack".to_string(), vec!["frame1".to_string(), "frame2".to_string()]);
+        map.insert(
+            "stack".to_string(),
+            vec!["frame1".to_string(), "frame2".to_string()],
+        );
         let svm = StringVecMap::new(map);
         assert_eq!(string_vec_map_get(&svm, "stack"), vec!["frame1", "frame2"]);
     }

@@ -54,9 +54,7 @@ fn db_pool_get_entries_batch(pool: &DbPool, formids: &[String], plugins: &[Strin
     match result {
         Ok(map) => {
             // Return as "formid\tvalue" pairs for C++ to parse
-            map.into_iter()
-                .map(|(k, v)| format!("{k}\t{v}"))
-                .collect()
+            map.into_iter().map(|(k, v)| format!("{k}\t{v}")).collect()
         }
         Err(_) => Vec::new(),
     }
@@ -92,7 +90,11 @@ mod ffi {
         fn db_pool_new(game_table: &str, max_connections: u32, cache_ttl_secs: u64) -> Box<DbPool>;
         fn db_pool_initialize(pool: &DbPool, db_paths: &[String]) -> Result<()>;
         fn db_pool_get_entry(pool: &DbPool, formid: &str, plugin: &str) -> String;
-        fn db_pool_get_entries_batch(pool: &DbPool, formids: &[String], plugins: &[String]) -> Vec<String>;
+        fn db_pool_get_entries_batch(
+            pool: &DbPool,
+            formids: &[String],
+            plugins: &[String],
+        ) -> Vec<String>;
         fn db_pool_is_available(pool: &DbPool) -> bool;
         fn db_pool_cache_size(pool: &DbPool) -> usize;
         fn db_pool_clear_cache(pool: &DbPool, expired_only: bool) -> usize;

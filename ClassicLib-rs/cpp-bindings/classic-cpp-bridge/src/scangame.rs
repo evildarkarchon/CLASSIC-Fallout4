@@ -3,7 +3,9 @@
 //! Bridges `classic_scangame_core` for setup checks and path detection.
 
 use classic_scangame_core::integrity::IntegrityConfig;
-use classic_scangame_core::setup::{SetupCheckConfig, run_combined_checks, needs_path_detection as core_needs_path_detection};
+use classic_scangame_core::setup::{
+    SetupCheckConfig, needs_path_detection as core_needs_path_detection, run_combined_checks,
+};
 use std::path::PathBuf;
 
 fn run_setup_checks(
@@ -78,11 +80,7 @@ mod tests {
 
     #[test]
     fn test_run_setup_checks_nonexistent() {
-        let result = run_setup_checks(
-            "nonexistent_exe.exe",
-            "nonexistent_root",
-            "Fallout4",
-        );
+        let result = run_setup_checks("nonexistent_exe.exe", "nonexistent_root", "Fallout4");
         // Should complete without panic
         let _ = result.combined_output;
     }

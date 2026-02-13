@@ -5,7 +5,9 @@
 //! Placeholder — will be implemented by Wave 2 agent.
 
 use classic_config_core::YamlDataCore;
-use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml};
+use classic_scanlog_core::{
+    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+};
 use classic_shared_core::get_runtime;
 use std::path::PathBuf;
 
@@ -71,14 +73,20 @@ fn orchestrator_new_minimal(
     Ok(Box::new(Orchestrator { inner: orch }))
 }
 
-fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ffi::ScanResult, String> {
+fn orchestrator_process_log(
+    orch: &Orchestrator,
+    log_path: &str,
+) -> Result<ffi::ScanResult, String> {
     let result = get_runtime()
         .block_on(orch.inner.process_log(log_path.to_string()))
         .map_err(|e| format!("{e}"))?;
     Ok(analysis_result_to_dto(result))
 }
 
-fn orchestrator_process_logs_batch(orch: &Orchestrator, log_paths: &[String]) -> Vec<ffi::ScanResult> {
+fn orchestrator_process_logs_batch(
+    orch: &Orchestrator,
+    log_paths: &[String],
+) -> Vec<ffi::ScanResult> {
     let paths: Vec<String> = log_paths.to_vec();
     let results = get_runtime().block_on(orch.inner.process_logs_batch(paths, None));
     results.into_iter().map(analysis_result_to_dto).collect()
@@ -152,7 +160,10 @@ mod ffi {
             xse_acronym: &str,
         ) -> Result<Box<Orchestrator>>;
         fn orchestrator_process_log(orch: &Orchestrator, log_path: &str) -> Result<ScanResult>;
-        fn orchestrator_process_logs_batch(orch: &Orchestrator, log_paths: &[String]) -> Vec<ScanResult>;
+        fn orchestrator_process_logs_batch(
+            orch: &Orchestrator,
+            log_paths: &[String],
+        ) -> Vec<ScanResult>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;
@@ -205,11 +216,7 @@ mod tests {
 
     #[test]
     fn test_scan_result_dto() {
-        let ar = AnalysisResult::success(
-            "test.log".to_string(),
-            vec!["line1".to_string()],
-            1000,
-        );
+        let ar = AnalysisResult::success("test.log".to_string(), vec!["line1".to_string()], 1000);
         let dto = analysis_result_to_dto(ar);
         assert_eq!(dto.log_path, "test.log");
         assert!(dto.success);

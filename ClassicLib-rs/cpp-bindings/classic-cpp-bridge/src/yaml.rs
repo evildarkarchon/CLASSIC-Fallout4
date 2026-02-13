@@ -122,7 +122,11 @@ fn yaml_ops_get_setting_value(ops: &YamlOps, key_path: &str) -> ffi::YamlValue {
     }
 }
 
-fn yaml_ops_set_string_setting(ops: &mut YamlOps, key_path: &str, value: &str) -> Result<(), String> {
+fn yaml_ops_set_string_setting(
+    ops: &mut YamlOps,
+    key_path: &str,
+    value: &str,
+) -> Result<(), String> {
     let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
     let updated = ops
         .ops
@@ -187,7 +191,11 @@ mod ffi {
         fn yaml_ops_get_string(ops: &YamlOps, key_path: &str, default_val: &str) -> String;
         fn yaml_ops_get_vec(ops: &YamlOps, key_path: &str) -> Vec<String>;
         fn yaml_ops_get_setting_value(ops: &YamlOps, key_path: &str) -> YamlValue;
-        fn yaml_ops_set_string_setting(ops: &mut YamlOps, key_path: &str, value: &str) -> Result<()>;
+        fn yaml_ops_set_string_setting(
+            ops: &mut YamlOps,
+            key_path: &str,
+            value: &str,
+        ) -> Result<()>;
         fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> Result<()>;
 
         // Cache management
@@ -242,11 +250,7 @@ mod tests {
     #[test]
     fn test_get_setting_value_types() {
         let mut ops = yaml_ops_new();
-        yaml_ops_parse(
-            &mut ops,
-            "str_val: hello\nbool_val: true\nint_val: 42\n",
-        )
-        .unwrap();
+        yaml_ops_parse(&mut ops, "str_val: hello\nbool_val: true\nint_val: 42\n").unwrap();
 
         let str_v = yaml_ops_get_setting_value(&ops, "str_val");
         assert_eq!(str_v.value, "hello");

@@ -42,16 +42,16 @@
 //! - [`message`] - Logging
 //! - [`perf`] - Performance monitoring
 
-pub mod types;
-pub mod runtime;
-pub mod registry;
-pub mod yaml;
 pub mod config;
-pub mod scanner;
 pub mod database;
 pub mod files;
-pub mod scangame;
 pub mod game;
-pub mod update;
 pub mod message;
 pub mod perf;
+pub mod registry;
+pub mod runtime;
+pub mod scangame;
+pub mod scanner;
+pub mod types;
+pub mod update;
+pub mod yaml;
