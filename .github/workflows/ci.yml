@@ -49,7 +49,7 @@ jobs:
           components: rustfmt
 
       - name: Run rustfmt check
-        run: cargo fmt --all --manifest-path rust/Cargo.toml -- --check
+        run: cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
 
   # Linting checks (can catch real bugs, run in parallel with builds)
   lint-python:
@@ -126,14 +126,14 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
 
       - name: Run clippy
-        run: cargo clippy --workspace --all-targets --all-features --manifest-path rust/Cargo.toml -- -D warnings
+        run: cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
 
   # Build Rust components (no dependencies - runs immediately)
   build-rust:
@@ -174,22 +174,22 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
 
       - name: Build all Rust workspace
-        run: cargo build --workspace --release --manifest-path rust/Cargo.toml
+        run: cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
 
       - name: Upload Rust build artifacts
         uses: actions/upload-artifact@v4
         with:
           name: rust-libs
           path: |
-            rust/target/release/*.dll
-            rust/target/release/*.pdb
+            ClassicLib-rs/target/release/*.dll
+            ClassicLib-rs/target/release/*.pdb
           retention-days: 1
 
   # Run Rust tests (independent of Python tests)
@@ -229,17 +229,17 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-test-
 
       - name: Run Rust tests
-        run: cargo test --workspace --release --manifest-path rust/Cargo.toml -- --nocapture
+        run: cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
 
       - name: Run Rust tests with all features
-        run: cargo test --workspace --release --all-features --manifest-path rust/Cargo.toml -- --nocapture
+        run: cargo test --workspace --release --all-features --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
 
   # Test Node.js/Bun bindings (NAPI-RS)
   test-node-bindings:
@@ -276,22 +276,22 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-node-
 
       - name: Install npm dependencies
-        working-directory: rust/node-bindings/classic-node
+        working-directory: ClassicLib-rs/node-bindings/classic-node
         run: bun install
 
       - name: Build NAPI-RS binary
-        working-directory: rust/node-bindings/classic-node
+        working-directory: ClassicLib-rs/node-bindings/classic-node
         run: bun run build
 
       - name: Verify NAPI binary exists
-        working-directory: rust/node-bindings/classic-node
+        working-directory: ClassicLib-rs/node-bindings/classic-node
         shell: pwsh
         run: |
           $binary = Get-ChildItem -Filter "*.node" -Recurse
@@ -303,7 +303,7 @@ jobs:
           }
 
       - name: Run Bun tests
-        working-directory: rust/node-bindings/classic-node
+        working-directory: ClassicLib-rs/node-bindings/classic-node
         run: bun test
 
   # Build Python bindings with maturin
@@ -337,8 +337,8 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-build-
@@ -355,8 +355,8 @@ jobs:
         with:
           name: python-wheels
           path: |
-            rust/python-bindings/*/dist/*.whl
-            rust/foundation/*/dist/*.whl
+            ClassicLib-rs/python-bindings/*/dist/*.whl
+            ClassicLib-rs/foundation/*/dist/*.whl
           retention-days: 1
 
   # Run Python tests

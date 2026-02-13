@@ -306,7 +306,7 @@ cargo --version  # Should be 1.80+
 **Issue:** Module import fails
 **Solution:** Reinstall the module:
 ```bash
-cd rust/python-bindings/classic-scangame-py
+cd ClassicLib-rs/python-bindings/classic-scangame-py
 maturin build --release --out dist
 uv pip install dist/classic_scangame_py-*.whl --force-reinstall
 ```
@@ -351,7 +351,7 @@ print(f"Rust available: {scangame_factory.is_rust_available()}")
 
 ### Rust Module Structure
 ```
-rust/
+ClassicLib-rs/
 ├── business-logic/
 │   └── classic-scangame-core/    # Pure Rust business logic
 └── python-bindings/

@@ -4,7 +4,7 @@
 
 **Goal:** Create a NAPI-RS v3 binding crate (`classic-node`) that exposes `classic-yaml-core` and `classic-scanlog-core` to Node.js/Bun.
 
-**Architecture:** Single unified `cdylib` crate at `rust/node-bindings/classic-node/` using NAPI-RS v3 with the `async` feature (not `tokio_rt`) to respect the ONE RUNTIME RULE. Thin adapter layer over existing `-core` crates, mirroring the PyO3 `-py` pattern.
+**Architecture:** Single unified `cdylib` crate at `ClassicLib-rs/node-bindings/classic-node/` using NAPI-RS v3 with the `async` feature (not `tokio_rt`) to respect the ONE RUNTIME RULE. Thin adapter layer over existing `-core` crates, mirroring the PyO3 `-py` pattern.
 
 **Tech Stack:** NAPI-RS v3, Bun (package manager + test runner), Tokio (shared runtime), TypeScript (tests + generated types)
 
@@ -13,18 +13,18 @@
 ### Task 1: Create the crate scaffold
 
 **Files:**
-- Create: `rust/node-bindings/classic-node/Cargo.toml`
-- Create: `rust/node-bindings/classic-node/build.rs`
-- Create: `rust/node-bindings/classic-node/src/lib.rs`
-- Modify: `rust/Cargo.toml` (add workspace member)
+- Create: `ClassicLib-rs/node-bindings/classic-node/Cargo.toml`
+- Create: `ClassicLib-rs/node-bindings/classic-node/build.rs`
+- Create: `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`
+- Modify: `ClassicLib-rs/Cargo.toml` (add workspace member)
 
 **Step 1: Create the directory**
 
-Run: `mkdir -p rust/node-bindings/classic-node/src`
+Run: `mkdir -p ClassicLib-rs/node-bindings/classic-node/src`
 
 **Step 2: Create `build.rs`**
 
-Create file `rust/node-bindings/classic-node/build.rs`:
+Create file `ClassicLib-rs/node-bindings/classic-node/build.rs`:
 
 ```rust
 extern crate napi_build;
@@ -36,7 +36,7 @@ fn main() {
 
 **Step 3: Create `Cargo.toml`**
 
-Create file `rust/node-bindings/classic-node/Cargo.toml`:
+Create file `ClassicLib-rs/node-bindings/classic-node/Cargo.toml`:
 
 ```toml
 [package]
@@ -90,7 +90,7 @@ unused = "deny"
 
 **Step 4: Create minimal `src/lib.rs`**
 
-Create file `rust/node-bindings/classic-node/src/lib.rs`:
+Create file `ClassicLib-rs/node-bindings/classic-node/src/lib.rs`:
 
 ```rust
 //! CLASSIC Node.js/Bun Bindings
@@ -119,13 +119,13 @@ pub fn get_version() -> String {
 
 **Step 5: Create placeholder module files**
 
-Create file `rust/node-bindings/classic-node/src/yaml.rs`:
+Create file `ClassicLib-rs/node-bindings/classic-node/src/yaml.rs`:
 
 ```rust
 //! YAML bindings for classic-yaml-core
 ```
 
-Create file `rust/node-bindings/classic-node/src/scanlog.rs`:
+Create file `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs`:
 
 ```rust
 //! Scanlog bindings for classic-scanlog-core
@@ -133,7 +133,7 @@ Create file `rust/node-bindings/classic-node/src/scanlog.rs`:
 
 **Step 6: Add to workspace**
 
-In `rust/Cargo.toml`, add `"node-bindings/classic-node"` to the `[workspace] members` list, in a new section after the Python bindings:
+In `ClassicLib-rs/Cargo.toml`, add `"node-bindings/classic-node"` to the `[workspace] members` list, in a new section after the Python bindings:
 
 ```toml
     # Node.js/Bun Bindings (NAPI-RS adapters)
@@ -148,7 +148,7 @@ Expected: Compilation succeeds with no errors (warnings about unused modules are
 **Step 8: Commit**
 
 ```bash
-git add rust/node-bindings/ rust/Cargo.toml
+git add ClassicLib-rs/node-bindings/ ClassicLib-rs/Cargo.toml
 git commit -m "feat(node): scaffold classic-node NAPI-RS crate"
 ```
 
@@ -157,18 +157,18 @@ git commit -m "feat(node): scaffold classic-node NAPI-RS crate"
 ### Task 2: Set up the Bun/npm package
 
 **Files:**
-- Create: `rust/node-bindings/classic-node/package.json`
-- Create: `rust/node-bindings/classic-node/.npmignore`
+- Create: `ClassicLib-rs/node-bindings/classic-node/package.json`
+- Create: `ClassicLib-rs/node-bindings/classic-node/.npmignore`
 
 **Step 1: Initialize Bun in the crate directory**
 
-Run: `cd rust/node-bindings/classic-node && bun init -y`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun init -y`
 
 This creates a default `package.json`. We'll overwrite it next.
 
 **Step 2: Write the package.json**
 
-Overwrite `rust/node-bindings/classic-node/package.json`:
+Overwrite `ClassicLib-rs/node-bindings/classic-node/package.json`:
 
 ```json
 {
@@ -203,7 +203,7 @@ Overwrite `rust/node-bindings/classic-node/package.json`:
 
 **Step 3: Create `.npmignore`**
 
-Create file `rust/node-bindings/classic-node/.npmignore`:
+Create file `ClassicLib-rs/node-bindings/classic-node/.npmignore`:
 
 ```
 target/
@@ -217,18 +217,18 @@ __test__/
 
 **Step 4: Install dependencies**
 
-Run: `cd rust/node-bindings/classic-node && bun install`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun install`
 Expected: `@napi-rs/cli` and `bun-types` installed successfully.
 
 **Step 5: Verify napi CLI works**
 
-Run: `cd rust/node-bindings/classic-node && npx napi --version`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && npx napi --version`
 Expected: Prints NAPI-RS CLI version (3.x.x).
 
 **Step 6: Commit**
 
 ```bash
-git add rust/node-bindings/classic-node/package.json rust/node-bindings/classic-node/.npmignore rust/node-bindings/classic-node/bun.lock
+git add ClassicLib-rs/node-bindings/classic-node/package.json ClassicLib-rs/node-bindings/classic-node/.npmignore ClassicLib-rs/node-bindings/classic-node/bun.lock
 git commit -m "feat(node): add Bun/npm package configuration"
 ```
 
@@ -241,22 +241,22 @@ git commit -m "feat(node): add Bun/npm package configuration"
 
 **Step 1: Build the native addon**
 
-Run: `cd rust/node-bindings/classic-node && bun run build`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun run build`
 Expected: Produces `classic-node.win32-x64-msvc.node`, `index.js`, and `index.d.ts` in the crate directory.
 
 **Step 2: Verify the generated files exist**
 
-Run: `ls rust/node-bindings/classic-node/*.node rust/node-bindings/classic-node/index.js rust/node-bindings/classic-node/index.d.ts`
+Run: `ls ClassicLib-rs/node-bindings/classic-node/*.node ClassicLib-rs/node-bindings/classic-node/index.js ClassicLib-rs/node-bindings/classic-node/index.d.ts`
 Expected: All three files listed.
 
 **Step 3: Verify it loads in Bun**
 
-Run: `cd rust/node-bindings/classic-node && bun -e "const m = require('./index.js'); console.log('version:', m.getVersion())"`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun -e "const m = require('./index.js'); console.log('version:', m.getVersion())"`
 Expected: Prints `version: 0.1.0`.
 
 **Step 4: Add generated files to .gitignore**
 
-Create or append to `rust/node-bindings/classic-node/.gitignore`:
+Create or append to `ClassicLib-rs/node-bindings/classic-node/.gitignore`:
 
 ```
 *.node
@@ -268,7 +268,7 @@ index.d.ts
 **Step 5: Commit**
 
 ```bash
-git add rust/node-bindings/classic-node/.gitignore
+git add ClassicLib-rs/node-bindings/classic-node/.gitignore
 git commit -m "feat(node): verify NAPI-RS build pipeline works end-to-end"
 ```
 
@@ -277,12 +277,12 @@ git commit -m "feat(node): verify NAPI-RS build pipeline works end-to-end"
 ### Task 4: Implement YAML bindings
 
 **Files:**
-- Modify: `rust/node-bindings/classic-node/src/yaml.rs`
-- Create: `rust/node-bindings/classic-node/__test__/yaml.spec.ts`
+- Modify: `ClassicLib-rs/node-bindings/classic-node/src/yaml.rs`
+- Create: `ClassicLib-rs/node-bindings/classic-node/__test__/yaml.spec.ts`
 
 **Step 1: Write the failing test**
 
-Create file `rust/node-bindings/classic-node/__test__/yaml.spec.ts`:
+Create file `ClassicLib-rs/node-bindings/classic-node/__test__/yaml.spec.ts`:
 
 ```typescript
 import { describe, test, expect } from "bun:test";
@@ -353,12 +353,12 @@ describe("YAML bindings", () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd rust/node-bindings/classic-node && bun test`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun test`
 Expected: FAIL - functions not exported yet.
 
 **Step 3: Implement the YAML bindings**
 
-Write `rust/node-bindings/classic-node/src/yaml.rs`:
+Write `ClassicLib-rs/node-bindings/classic-node/src/yaml.rs`:
 
 ```rust
 //! YAML bindings for classic-yaml-core
@@ -519,18 +519,18 @@ pub fn yaml_get_hashmap_value(content: String, key_path: String) -> Result<HashM
 
 **Step 4: Rebuild the native addon**
 
-Run: `cd rust/node-bindings/classic-node && bun run build`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun run build`
 Expected: Build succeeds, `index.d.ts` now includes `yamlParse`, `yamlStringify`, etc.
 
 **Step 5: Run tests to verify they pass**
 
-Run: `cd rust/node-bindings/classic-node && bun test`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun test`
 Expected: All 8 YAML tests PASS.
 
 **Step 6: Commit**
 
 ```bash
-git add rust/node-bindings/classic-node/src/yaml.rs rust/node-bindings/classic-node/__test__/yaml.spec.ts
+git add ClassicLib-rs/node-bindings/classic-node/src/yaml.rs ClassicLib-rs/node-bindings/classic-node/__test__/yaml.spec.ts
 git commit -m "feat(node): implement YAML bindings with tests"
 ```
 
@@ -539,12 +539,12 @@ git commit -m "feat(node): implement YAML bindings with tests"
 ### Task 5: Implement scanlog bindings
 
 **Files:**
-- Modify: `rust/node-bindings/classic-node/src/scanlog.rs`
-- Create: `rust/node-bindings/classic-node/__test__/scanlog.spec.ts`
+- Modify: `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs`
+- Create: `ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts`
 
 **Step 1: Write the failing test**
 
-Create file `rust/node-bindings/classic-node/__test__/scanlog.spec.ts`:
+Create file `ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts`:
 
 ```typescript
 import { describe, test, expect } from "bun:test";
@@ -576,12 +576,12 @@ describe("Scanlog bindings", () => {
 
 **Step 2: Run test to verify it fails**
 
-Run: `cd rust/node-bindings/classic-node && bun test __test__/scanlog.spec.ts`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun test __test__/scanlog.spec.ts`
 Expected: FAIL - `createAnalysisConfig` not exported yet.
 
 **Step 3: Implement the scanlog bindings**
 
-Write `rust/node-bindings/classic-node/src/scanlog.rs`:
+Write `ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs`:
 
 ```rust
 //! Scanlog bindings for classic-scanlog-core
@@ -686,18 +686,18 @@ fn core_result_to_js(result: &orchestrator::AnalysisResult) -> JsAnalysisResult 
 
 **Step 4: Rebuild the native addon**
 
-Run: `cd rust/node-bindings/classic-node && bun run build`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun run build`
 Expected: Build succeeds.
 
 **Step 5: Run tests to verify they pass**
 
-Run: `cd rust/node-bindings/classic-node && bun test`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun test`
 Expected: All scanlog tests PASS, all YAML tests still PASS.
 
 **Step 6: Commit**
 
 ```bash
-git add rust/node-bindings/classic-node/src/scanlog.rs rust/node-bindings/classic-node/__test__/scanlog.spec.ts
+git add ClassicLib-rs/node-bindings/classic-node/src/scanlog.rs ClassicLib-rs/node-bindings/classic-node/__test__/scanlog.spec.ts
 git commit -m "feat(node): implement scanlog config/result bindings with tests"
 ```
 
@@ -800,12 +800,12 @@ git commit -m "feat(node): add rebuild_node.ps1 build script"
 
 **Step 1: Run the full test suite**
 
-Run: `cd rust/node-bindings/classic-node && bun test`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && bun test`
 Expected: All tests PASS.
 
 **Step 2: Verify the TypeScript types are generated**
 
-Run: `cd rust/node-bindings/classic-node && cat index.d.ts`
+Run: `cd ClassicLib-rs/node-bindings/classic-node && cat index.d.ts`
 Expected: Contains type declarations for `getVersion`, `yamlParse`, `yamlStringify`, `yamlLoadFile`, `yamlGetValue`, `yamlGetStringValue`, `yamlGetVecValue`, `yamlGetHashmapValue`, `createAnalysisConfig`, plus interfaces for `JsAnalysisConfig` and `JsAnalysisResult`.
 
 **Step 3: Verify Rust workspace still compiles**

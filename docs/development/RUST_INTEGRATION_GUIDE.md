@@ -53,7 +53,7 @@ CLASSIC uses a three-tier Rust architecture:
 ### Three-Tier Structure
 
 ```
-rust/
+ClassicLib-rs/
 ├── foundation/                    # Layer 1: Shared infrastructure
 │   ├── classic-shared-core/      # Runtime, errors, utilities
 │   └── classic-shared-py/        # Python bindings for shared
@@ -246,7 +246,7 @@ def process_logs(logs):
 ### Step 1: Create Business Logic Crate
 
 ```bash
-cd rust/business-logic
+cd ClassicLib-rs/business-logic
 cargo new classic-myfeature-core --lib
 ```
 
@@ -301,7 +301,7 @@ impl MyFeature {
 ### Step 2: Create Python Bindings Crate
 
 ```bash
-cd rust/python-bindings
+cd ClassicLib-rs/python-bindings
 cargo new classic-myfeature-py --lib
 ```
 
@@ -389,7 +389,7 @@ class RustMyFeature:
 
 ### Step 4: Update Workspace
 
-**`rust/Cargo.toml`**:
+**`ClassicLib-rs/Cargo.toml`**:
 ```toml
 [workspace]
 members = [
@@ -570,7 +570,7 @@ def test_myfeature_with_file(tmp_path):
 ### Rust Tests
 
 ```rust
-// rust/business-logic/classic-myfeature-core/src/lib.rs
+// ClassicLib-rs/business-logic/classic-myfeature-core/src/lib.rs
 
 #[cfg(test)]
 mod tests {
@@ -603,7 +603,7 @@ cd rust
 cargo test --workspace
 
 # All tests
-uv run pytest -n auto && cargo test --workspace --manifest-path rust/Cargo.toml
+uv run pytest -n auto && cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
 ```
 
 ---
@@ -636,7 +636,7 @@ cargo build --release
 uv pip install maturin --upgrade
 
 # Try wheel build
-cd rust/python-bindings/classic-myfeature-py
+cd ClassicLib-rs/python-bindings/classic-myfeature-py
 maturin build --release --out dist
 uv pip install dist/*.whl --force-reinstall
 ```

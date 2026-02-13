@@ -60,7 +60,7 @@ log_paths: list[str] = collector.collect_all()
 
 ### ⚠️ Stub File Issues
 
-**File**: `rust/python-bindings/classic-file-io-py/classic_file_io.pyi`
+**File**: `ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi`
 
 #### Issue 1: Incorrect Async Signatures (Lines 745-801)
 
@@ -113,7 +113,7 @@ def pastebin_dir(self) -> str:
 
 ### Priority 1: Fix Stub File (HIGH PRIORITY)
 
-**File**: `rust/python-bindings/classic-file-io-py/classic_file_io.pyi`
+**File**: `ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi`
 
 **Changes needed**:
 
@@ -169,7 +169,7 @@ collector = PyLogCollector(...)
 
 ## Action Items Checklist
 
-- [ ] **Fix stub file** (`rust/python-bindings/classic-file-io-py/classic_file_io.pyi`)
+- [ ] **Fix stub file** (`ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi`)
   - [ ] Remove `Coroutine` return types from PyLogCollector methods
   - [ ] Add `pastebin_dir()` method declaration
   - [ ] Update class docstring to clarify synchronous nature
@@ -271,5 +271,5 @@ Stub file has critical errors that could mislead future developers. Fix before a
 
 - **Detailed Report**: `classic_file_io_py_audit_report.md`
 - **Main Audit Report**: `python_binding_audit_report.md`
-- **Stub File**: `rust/python-bindings/classic-file-io-py/classic_file_io.pyi`
+- **Stub File**: `ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi`
 - **Production Code**: `ClassicLib/ScanLog/Util.py` (lines 284-317)

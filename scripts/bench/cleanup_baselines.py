@@ -200,8 +200,8 @@ Examples:
     parser.add_argument(
         "--criterion-dir",
         type=Path,
-        default=Path("rust/target/criterion"),
-        help="Path to Criterion results directory (default: rust/target/criterion)",
+        default=Path("ClassicLib-rs/target/criterion"),
+        help="Path to Criterion results directory (default: ClassicLib-rs/target/criterion)",
     )
 
     args = parser.parse_args()

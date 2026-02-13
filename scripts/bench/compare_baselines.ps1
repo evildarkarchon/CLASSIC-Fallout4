@@ -38,7 +38,7 @@
 .NOTES
     Requires:
     - Rust and Cargo installed
-    - Criterion benchmark suite in rust/ directory
+    - Criterion benchmark suite in ClassicLib-rs/ directory
     - Optional: critcmp (cargo install critcmp) for enhanced comparison
 #>
 
@@ -91,7 +91,7 @@ function Test-CritcmpInstalled {
 function Get-BaselinePath {
     param([string]$BaselineName)
 
-    $criterionDir = Join-Path $PSScriptRoot "../../rust/target/criterion"
+    $criterionDir = Join-Path $PSScriptRoot "../../ClassicLib-rs/target/criterion"
     $baselinePath = Join-Path $criterionDir $BaselineName
 
     if (Test-Path $baselinePath) {
@@ -310,7 +310,7 @@ if (-not $baselinePath) {
     Write-Host ""
     Write-Host "Available baselines:"
 
-    $criterionDir = Join-Path $PSScriptRoot "../../rust/target/criterion"
+    $criterionDir = Join-Path $PSScriptRoot "../../ClassicLib-rs/target/criterion"
     if (Test-Path $criterionDir) {
         Get-ChildItem $criterionDir -Directory | Where-Object { $_.Name -match '^baseline-' } | ForEach-Object {
             Write-Host "  $($_.Name)"

@@ -225,7 +225,7 @@ else {
 
 # Create output directory
 $timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"
-$outputDir = Join-Path $projectRoot "rust/target/profiling/pyspy"
+$outputDir = Join-Path $projectRoot "ClassicLib-rs/target/profiling/pyspy"
 if (-not (Test-Path $outputDir)) {
     New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
     Write-Host "[Setup] Created output directory: $outputDir" -ForegroundColor DarkGray

@@ -570,7 +570,7 @@ CLASSIC-Fallout4/
 │   ├── python/                  # Python fallbacks
 │   └── rust/                    # Rust API wrappers
 │
-├── rust/                        # Rust workspace
+├── ClassicLib-rs/               # Rust workspace
 │   ├── Cargo.toml              # Workspace manifest
 │   │
 │   ├── foundation/             # Layer 1

@@ -37,20 +37,20 @@ classic-shared (Runtime, Errors, Utilities)
 
 ### 1. LogParser Optimizations
 
-#### Changes in `rust/business-logic/classic-scanlog-core`:
+#### Changes in `ClassicLib-rs/business-logic/classic-scanlog-core`:
 - ✅ Bounded LRU caches (replacing unbounded DashMap)
 - ✅ Arc-based segment/pattern storage for cheap clones
 - ✅ Improved hash functions (xxh3)
 - ✅ Optimized string handling with SmartString
 
-#### Required Changes in `rust/python-bindings/classic-scanlog-py`:
+#### Required Changes in `ClassicLib-rs/python-bindings/classic-scanlog-py`:
 
 **Status:** ✅ **NO CHANGES REQUIRED**
 
 **Reason:** The Python bindings already delegate to the core implementation. The optimizations are transparent to Python:
 
 ```rust
-// rust/python-bindings/classic-scanlog-py/src/parser.rs (CURRENT - CORRECT)
+// ClassicLib-rs/python-bindings/classic-scanlog-py/src/parser.rs (CURRENT - CORRECT)
 pub fn parse_segments(&self, lines: Vec<String>) -> Vec<Vec<String>> {
     self.inner.parse_segments(&lines)  // ✅ Delegates to optimized core
 }
@@ -62,19 +62,19 @@ pub fn parse_segments(&self, lines: Vec<String>) -> Vec<Vec<String>> {
 
 ### 2. FileIOCore Optimizations
 
-#### Changes in `rust/business-logic/classic-file-io-core`:
+#### Changes in `ClassicLib-rs/business-logic/classic-file-io-core`:
 - ✅ Read cache uses read locks first (write lock only on miss)
 - ✅ Separate read/write semaphores for better concurrency
 - ✅ Adaptive concurrency in batch operations
 - ⚠️ **API Change:** Some methods may return `Arc<T>` instead of `T` for zero-copy
 
-#### Required Changes in `rust/python-bindings/classic-file-io-py`:
+#### Required Changes in `ClassicLib-rs/python-bindings/classic-file-io-py`:
 
 **Status:** ⚠️ **MINOR CHANGES MAY BE NEEDED**
 
 **Current Implementation:**
 ```rust
-// rust/python-bindings/classic-file-io-py/src/core.rs
+// ClassicLib-rs/python-bindings/classic-file-io-py/src/core.rs
 #[pyo3(name = "read_file")]
 pub fn py_read_file(&self, _py: Python<'_>, path: String) -> PyResult<String> {
     let path_buf = PathBuf::from(path);
@@ -101,7 +101,7 @@ pub fn py_read_file(&self, _py: Python<'_>, path: String) -> PyResult<String> {
 ```
 
 **Action:**
-1. ✅ Check if `rust/business-logic/classic-file-io-core` API changed to return `Arc<String>`
+1. ✅ Check if `ClassicLib-rs/business-logic/classic-file-io-core` API changed to return `Arc<String>`
 2. ✅ If yes, update bindings to deref before returning to Python
 3. ✅ Test performance impact (Arc deref is cheap)
 
@@ -109,20 +109,20 @@ pub fn py_read_file(&self, _py: Python<'_>, path: String) -> PyResult<String> {
 
 ### 3. DatabasePool Optimizations
 
-#### Changes in `rust/business-logic/classic-database-core`:
+#### Changes in `ClassicLib-rs/business-logic/classic-database-core`:
 - ✅ Optimized batch query construction (pre-allocated strings)
 - ✅ Prepared statement caching
 - ✅ Background cache cleanup task
 - ✅ Improved parameter handling (no clones)
 
-#### Required Changes in `rust/python-bindings/classic-database-py`:
+#### Required Changes in `ClassicLib-rs/python-bindings/classic-database-py`:
 
 **Status:** ✅ **NO CHANGES REQUIRED**
 
 **Reason:** Batch query optimizations are internal to the core. Python bindings just need to pass data through:
 
 ```rust
-// rust/python-bindings/classic-database-py/src/pool.rs (CURRENT - CORRECT)
+// ClassicLib-rs/python-bindings/classic-database-py/src/pool.rs (CURRENT - CORRECT)
 #[pyo3(name = "get_entries_batch")]
 pub fn py_get_entries_batch(
     &self,
@@ -181,12 +181,12 @@ pub fn py_get_entries_batch(
 
 ### 4. FormIDAnalyzerCore Optimizations
 
-#### Changes in `rust/business-logic/classic-scanlog-core`:
+#### Changes in `ClassicLib-rs/business-logic/classic-scanlog-core`:
 - ✅ Pre-build plugin prefix reverse index (O(1) lookup instead of O(n*m))
 - ✅ Use FxHashMap instead of LinkedHashMap for counting
 - ✅ Optimized string handling
 
-#### Required Changes in `rust/python-bindings/classic-scanlog-py`:
+#### Required Changes in `ClassicLib-rs/python-bindings/classic-scanlog-py`:
 
 **Status:** ✅ **NO CHANGES REQUIRED**
 
@@ -198,18 +198,18 @@ pub fn py_get_entries_batch(
 
 ### 5. OrchestratorCore Optimizations
 
-#### Changes in `rust/business-logic/classic-scanlog-core`:
+#### Changes in `ClassicLib-rs/business-logic/classic-scanlog-core`:
 - ✅ Parallel log processing (instead of sequential)
 - ✅ Bounded parallelism with adaptive concurrency
 - ✅ Work-stealing with Rayon
 
-#### Required Changes in `rust/python-bindings/classic-scanlog-py`:
+#### Required Changes in `ClassicLib-rs/python-bindings/classic-scanlog-py`:
 
 **Status:** ⚠️ **NEW API METHODS NEEDED**
 
 **Current Implementation:**
 ```rust
-// rust/python-bindings/classic-scanlog-py/src/orchestrator.rs
+// ClassicLib-rs/python-bindings/classic-scanlog-py/src/orchestrator.rs
 // Check if parallel methods are exposed
 ```
 
@@ -220,7 +220,7 @@ pub fn py_get_entries_batch(
 
 **Recommended Addition:**
 ```rust
-// rust/python-bindings/classic-scanlog-py/src/orchestrator.rs
+// ClassicLib-rs/python-bindings/classic-scanlog-py/src/orchestrator.rs
 #[pymethods]
 impl PyOrchestratorCore {
     /// Process multiple logs in parallel with bounded concurrency
@@ -288,7 +288,7 @@ pub fn normalize_string(&self, s: String) -> String {
 
 **Implementation:**
 
-#### 1. Add to `rust/python-bindings/classic-scanlog-py/src/parser.rs`:
+#### 1. Add to `ClassicLib-rs/python-bindings/classic-scanlog-py/src/parser.rs`:
 
 ```rust
 /// Get cache statistics for monitoring
@@ -313,7 +313,7 @@ pub fn py_get_performance_metrics(&self) -> PyResult<HashMap<String, f64>> {
 }
 ```
 
-#### 2. Add to `rust/python-bindings/classic-file-io-py/src/core.rs`:
+#### 2. Add to `ClassicLib-rs/python-bindings/classic-file-io-py/src/core.rs`:
 
 ```rust
 /// Get cache statistics
@@ -332,7 +332,7 @@ pub fn py_get_cache_stats(&self, _py: Python<'_>) -> PyResult<HashMap<String, us
 }
 ```
 
-#### 3. Add to `rust/python-bindings/classic-database-py/src/pool.rs`:
+#### 3. Add to `ClassicLib-rs/python-bindings/classic-database-py/src/pool.rs`:
 
 **Status:** ✅ **ALREADY IMPLEMENTED**
 

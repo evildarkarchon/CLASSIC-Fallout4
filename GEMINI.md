@@ -17,9 +17,9 @@ uv run python CLASSIC_ScanLogs.py   # Run CLI crash log scanner
 
 ### Rust Build
 ```powershell
-cargo build --workspace --manifest-path rust/Cargo.toml              # Build all Rust crates
-cargo build --workspace --release --manifest-path rust/Cargo.toml    # Release build
-cargo build -p classic-gui --manifest-path rust/Cargo.toml           # Build only the Slint GUI
+cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml              # Build all Rust crates
+cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml    # Release build
+cargo build -p classic-gui --manifest-path ClassicLib-rs/Cargo.toml           # Build only the Slint GUI
 ```
 
 ### Rust Python Bindings (PyO3 via maturin)
@@ -42,9 +42,9 @@ uv run pytest --skip-slow --skip-network --skip-performance --skip-stress  # CI-
 uv run pytest --no-cov                           # Disable coverage for faster iteration
 
 # Rust tests
-cargo test --workspace --manifest-path rust/Cargo.toml
-cargo test --workspace --manifest-path rust/Cargo.toml -- --nocapture  # With output
-cargo test -p classic-scanlog-core --manifest-path rust/Cargo.toml     # Single crate
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture  # With output
+cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml     # Single crate
 
 # C++ tests (Catch2 v3 via CTest) -- run from classic-cli/
 cmake --preset default                                               # Configure (installs vcpkg deps)
@@ -66,21 +66,21 @@ uv run ruff format .              # Auto-format
 uv run vulture ClassicLib/ vulture_whitelist.py --min-confidence 80  # Dead code
 
 # Rust
-cargo fmt --all --manifest-path rust/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path rust/Cargo.toml -- -D warnings
+cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
 ```
 
 ## Architecture
 
-### Three-Layer Rust Workspace (`rust/`)
+### Three-Layer Rust Workspace (`ClassicLib-rs/`)
 
-The Rust workspace under `rust/` follows a strict three-layer separation:
+The Rust workspace under `ClassicLib-rs/` follows a strict three-layer separation:
 
-1. **Foundation** (`rust/foundation/`) - Shared utilities used by all other crates
+1. **Foundation** (`ClassicLib-rs/foundation/`) - Shared utilities used by all other crates
    - `classic-shared-core`: Runtime management, string interning, error types, caching primitives
    - `classic-shared-py`: PyO3 bindings for shared utilities
 
-2. **Business Logic** (`rust/business-logic/`) - Pure Rust crates (`rlib` only, NO PyO3)
+2. **Business Logic** (`ClassicLib-rs/business-logic/`) - Pure Rust crates (`rlib` only, NO PyO3)
    - `classic-scanlog-core`: Crash log parsing and analysis
    - `classic-yaml-core`: YAML settings loading/caching
    - `classic-database-core`: SQLite database operations
@@ -88,14 +88,14 @@ The Rust workspace under `rust/` follows a strict three-layer separation:
    - `classic-config-core`: Configuration management
    - Plus ~14 more domain crates (constants, path, registry, settings, web, etc.)
 
-3. **Bindings** (`rust/python-bindings/`, `rust/node-bindings/`, `rust/cpp-bindings/`) - Thin PyO3/NAPI-RS/CXX adapters
+3. **Bindings** (`ClassicLib-rs/python-bindings/`, `ClassicLib-rs/node-bindings/`, `ClassicLib-rs/cpp-bindings/`) - Thin PyO3/NAPI-RS/CXX adapters
    - Each `*-py` crate wraps its corresponding `*-core` crate as a `cdylib`
    - Python imports them directly: `import classic_yaml`, `import classic_scanlog`
    - `classic-node`: NAPI-RS bindings for Node.js/Bun (tested in CI with Bun)
    - `classic-cpp-bridge`: CXX bridge exposing Rust core crates to C++ (staticlib)
    - `classic-cli`: C++ CLI scanner built with CMake + vcpkg (fmt, CLI11, Catch2)
 
-4. **UI Applications** (`rust/ui-applications/`)
+4. **UI Applications** (`ClassicLib-rs/ui-applications/`)
    - `classic-gui`: Pure Rust GUI using Slint framework (v9.0.0)
 
 ### Python Library (`ClassicLib/`)

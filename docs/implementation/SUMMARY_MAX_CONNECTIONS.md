@@ -2,7 +2,7 @@
 
 ## Changes Made
 
-### 1. Core Rust Logic (`rust/business-logic/classic-database-core/src/pool.rs`)
+### 1. Core Rust Logic (`ClassicLib-rs/business-logic/classic-database-core/src/pool.rs`)
 
 **Added dynamic max_connections calculation:**
 - Changed `_max_connections: usize` to `max_connections: Arc<RwLock<Option<usize>>>`
@@ -15,7 +15,7 @@
 - `set_max_connections(max_conn: usize)` - Manually set max_connections
 - `recalculate_max_connections()` - Recalculate based on current system resources
 
-### 2. Python Bindings (`rust/python-bindings/classic-database-py/src/pool.rs`)
+### 2. Python Bindings (`ClassicLib-rs/python-bindings/classic-database-py/src/pool.rs`)
 
 **Updated Python interface:**
 - Changed `new()` signature from `max_connections=10` to `max_connections=None`
@@ -32,14 +32,14 @@
 num_cpus = "1.16"
 ```
 
-**Added to `rust/business-logic/classic-database-core/Cargo.toml`:**
+**Added to `ClassicLib-rs/business-logic/classic-database-core/Cargo.toml`:**
 ```toml
 num_cpus = { workspace = true }
 ```
 
 ### 4. Tests
 
-**Added new test (`rust/business-logic/classic-database-core/src/pool.rs`):**
+**Added new test (`ClassicLib-rs/business-logic/classic-database-core/src/pool.rs`):**
 ```rust
 #[test]
 fn test_pool_auto_max_connections() {

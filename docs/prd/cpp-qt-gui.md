@@ -43,7 +43,7 @@ CLASSIC currently has three GUI implementations: PySide6 (Python, production), T
 +---------------------+       +------------------------+       +-------------------+
          |                              |                              |
     Qt6::Widgets                   Corrosion                    Cargo workspace
-    Qt6::Network                 (CMake import)                  rust/Cargo.toml
+    Qt6::Network                 (CMake import)                  ClassicLib-rs/Cargo.toml
          |                              |                              |
     vcpkg.json                   CMakeLists.txt                  build.rs
 ```
@@ -311,7 +311,7 @@ FetchContent_Declare(Corrosion
     GIT_TAG v0.6
 )
 FetchContent_MakeAvailable(Corrosion)
-corrosion_import_crate(MANIFEST_PATH rust/Cargo.toml CRATES classic-cpp-bridge)
+corrosion_import_crate(MANIFEST_PATH ClassicLib-rs/Cargo.toml CRATES classic-cpp-bridge)
 target_link_libraries(ClassicGui PRIVATE classic-cpp-bridge)
 ```
 
@@ -320,7 +320,7 @@ target_link_libraries(ClassicGui PRIVATE classic-cpp-bridge)
 A new Rust crate `classic-cpp-bridge` acts as the single FFI surface:
 
 ```
-rust/
+ClassicLib-rs/
   cpp-bindings/
     classic-cpp-bridge/
       Cargo.toml          # [lib] crate-type = ["staticlib"]
@@ -530,7 +530,7 @@ The `classic-gui-qt6-c++/` directory sits alongside the existing project structu
 
 ```
 J:\CLASSIC-Fallout4\
-  rust/                               # Existing Rust workspace
+  ClassicLib-rs/                      # Existing Rust workspace
     cpp-bindings/                     # NEW: C++ bridge crate(s)
       classic-cpp-bridge/
         Cargo.toml
@@ -623,7 +623,7 @@ FetchContent_Declare(Corrosion
 )
 FetchContent_MakeAvailable(Corrosion)
 corrosion_import_crate(
-    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../rust/Cargo.toml
+    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../ClassicLib-rs/Cargo.toml
     CRATES classic-cpp-bridge
 )
 

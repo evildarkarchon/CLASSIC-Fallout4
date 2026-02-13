@@ -10,8 +10,8 @@ Phase 4 of the CLASSIC Rust port provides essential utility modules for game con
 
 All Phase 4 components follow the standard CLASSIC Rust architecture:
 
-- **Business Logic** (`-core` crates): Pure Rust implementations in `rust/business-logic/`
-- **Python Bindings** (`-py` crates): PyO3 wrappers in `rust/python-bindings/`
+- **Business Logic** (`-core` crates): Pure Rust implementations in `ClassicLib-rs/business-logic/`
+- **Python Bindings** (`-py` crates): PyO3 wrappers in `ClassicLib-rs/python-bindings/`
 - **Integration**: Factory functions in `ClassicLib/integration/factory.py`
 - **Detection**: Automatic detection in `ClassicLib/integration/detector.py`
 
@@ -22,8 +22,8 @@ All Phase 4 components follow the standard CLASSIC Rust architecture:
 **Purpose**: Game-specific constants, enumerations, and common values.
 
 **Location**:
-- Core: [`rust/business-logic/classic-constants-core/`](../../rust/business-logic/classic-constants-core/)
-- Bindings: [`rust/python-bindings/classic-constants-py/`](../../rust/python-bindings/classic-constants-py/)
+- Core: [`ClassicLib-rs/business-logic/classic-constants-core/`](../../ClassicLib-rs/business-logic/classic-constants-core/)
+- Bindings: [`ClassicLib-rs/python-bindings/classic-constants-py/`](../../ClassicLib-rs/python-bindings/classic-constants-py/)
 
 **Key Features**:
 - Game ID enumeration (Fallout4, Fallout4VR, Skyrim, Starfield)
@@ -62,8 +62,8 @@ print(fallout4.as_str())  # "Fallout4"
 **Purpose**: High-performance version parsing, comparison, and extraction.
 
 **Location**:
-- Core: [`rust/business-logic/classic-version-core/`](../../rust/business-logic/classic-version-core/)
-- Bindings: [`rust/python-bindings/classic-version-py/`](../../rust/python-bindings/classic-version-py/)
+- Core: [`ClassicLib-rs/business-logic/classic-version-core/`](../../ClassicLib-rs/business-logic/classic-version-core/)
+- Bindings: [`ClassicLib-rs/python-bindings/classic-version-py/`](../../ClassicLib-rs/python-bindings/classic-version-py/)
 
 **Key Features**:
 - Semantic version parsing (`semver` crate)
@@ -122,8 +122,8 @@ print(v)  # (1, 10, 163)
 **Purpose**: Resource file detection, enumeration, and validation.
 
 **Location**:
-- Core: [`rust/business-logic/classic-resource-core/`](../../rust/business-logic/classic-resource-core/)
-- Bindings: [`rust/python-bindings/classic-resource-py/`](../../rust/python-bindings/classic-resource-py/)
+- Core: [`ClassicLib-rs/business-logic/classic-resource-core/`](../../ClassicLib-rs/business-logic/classic-resource-core/)
+- Bindings: [`ClassicLib-rs/python-bindings/classic-resource-py/`](../../ClassicLib-rs/python-bindings/classic-resource-py/)
 
 **Key Features**:
 - Resource type detection by extension
@@ -202,8 +202,8 @@ print(rt.as_str())  # "texture"
 **Purpose**: Script Extender (XSE) detection, version checking, and status information.
 
 **Location**:
-- Core: [`rust/business-logic/classic-xse-core/`](../../rust/business-logic/classic-xse-core/)
-- Bindings: [`rust/python-bindings/classic-xse-py/`](../../rust/python-bindings/classic-xse-py/)
+- Core: [`ClassicLib-rs/business-logic/classic-xse-core/`](../../ClassicLib-rs/business-logic/classic-xse-core/)
+- Bindings: [`ClassicLib-rs/python-bindings/classic-xse-py/`](../../ClassicLib-rs/python-bindings/classic-xse-py/)
 
 **Key Features**:
 - XSE type enumeration (F4SE, F4SEVR, SKSE, SKSE64, SKSEVR, SFSE)
@@ -269,8 +269,8 @@ print(f"Installed: {info.installed()}")
 **Purpose**: URL validation, user agent generation, and mod site constants.
 
 **Location**:
-- Core: [`rust/business-logic/classic-web-core/`](../../rust/business-logic/classic-web-core/)
-- Bindings: [`rust/python-bindings/classic-web-py/`](../../rust/python-bindings/classic-web-py/)
+- Core: [`ClassicLib-rs/business-logic/classic-web-core/`](../../ClassicLib-rs/business-logic/classic-web-core/)
+- Bindings: [`ClassicLib-rs/python-bindings/classic-web-py/`](../../ClassicLib-rs/python-bindings/classic-web-py/)
 
 **Key Features**:
 - URL validation and parsing (`url` crate)
@@ -405,7 +405,7 @@ print(components["versions"]["classic_constants"])  # "8.0.0"
 .\rebuild_rust.ps1
 
 # Build specific module
-cd rust/python-bindings/classic-web-py
+cd ClassicLib-rs/python-bindings/classic-web-py
 maturin build --release --out dist
 uv pip install dist/classic_web_py-*.whl --force-reinstall
 ```

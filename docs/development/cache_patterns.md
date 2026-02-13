@@ -16,7 +16,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 
 ### 1. File Mod-Time Cache (YAML)
 
-**Location**: `rust/business-logic/classic-yaml-core/src/lib.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-yaml-core/src/lib.rs`
 
 **Purpose**: Cache parsed YAML files with automatic invalidation when the source file changes.
 
@@ -57,7 +57,7 @@ if let Some(cached) = CACHE.get(&path) {
 
 ### 2. String-Key Cache (Settings)
 
-**Location**: `rust/business-logic/classic-settings-core/src/cache.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-settings-core/src/cache.rs`
 
 **Purpose**: Cache loaded YAML settings with logical names for fast lookup.
 
@@ -97,7 +97,7 @@ if is_cached("game_config") {
 
 ### 3. Dynamic Registry
 
-**Location**: `rust/business-logic/classic-registry-core/src/registry.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-registry-core/src/registry.rs`
 
 **Purpose**: Store application-wide state with dynamic typing.
 
@@ -138,7 +138,7 @@ let is_gui = is_gui_mode(); // Returns bool
 
 ### 4. Path Hash Cache
 
-**Location**: `rust/business-logic/classic-file-io-core/src/hash.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-file-io-core/src/hash.rs`
 
 **Purpose**: Cache SHA256 file hashes to avoid redundant calculations.
 
@@ -177,7 +177,7 @@ let size = FileHasher::cache_size();
 
 ### 5. Time Series Metrics
 
-**Location**: `rust/business-logic/classic-perf-core/src/metrics.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-perf-core/src/metrics.rs`
 
 **Purpose**: Record and summarize performance timing data.
 

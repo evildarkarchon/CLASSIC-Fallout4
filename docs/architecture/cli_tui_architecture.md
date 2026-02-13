@@ -34,14 +34,14 @@
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│  CLI Application (rust/ui-applications/classic-cli)                      │
+│  CLI Application (ClassicLib-rs/ui-applications/classic-cli)                      │
 │  - Argument parsing (clap)                          │
 │  - Progress bars (indicatif)                        │
 │  - Terminal utilities (console)                     │
 └─────────────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────┐
-│  TUI Application (rust/ui-applications/classic-tui)                      │
+│  TUI Application (ClassicLib-rs/ui-applications/classic-tui)                      │
 │  - Terminal UI (ratatui)                            │
 │  - Cross-platform terminal (crossterm)              │
 │  - Widget system (custom)                           │
@@ -49,11 +49,11 @@
                       ↓
 ┌─────────────────────────────────────────────────────┐
 │  Business Logic Layer (-core crates)                │
-│  - rust/business-logic/classic-scanlog-core: Log parsing                │
-│  - rust/business-logic/classic-database-core: FormID lookups            │
-│  - rust/business-logic/classic-file-io-core: File operations            │
-│  - rust/business-logic/classic-yaml-core: YAML operations               │
-│  - rust/business-logic/classic-config-core: Configuration                │
+│  - ClassicLib-rs/business-logic/classic-scanlog-core: Log parsing                │
+│  - ClassicLib-rs/business-logic/classic-database-core: FormID lookups            │
+│  - ClassicLib-rs/business-logic/classic-file-io-core: File operations            │
+│  - ClassicLib-rs/business-logic/classic-yaml-core: YAML operations               │
+│  - ClassicLib-rs/business-logic/classic-config-core: Configuration                │
 └─────────────────────────────────────────────────────┘
                       ↓
 ┌─────────────────────────────────────────────────────┐
@@ -91,7 +91,7 @@ use classic_scanlog_py::RustLogParser;  // Wrapper with conversions
 ### Crate Structure
 
 ```
-rust/ui-applications/classic-cli/
+ClassicLib-rs/ui-applications/classic-cli/
 ├── src/
 │   ├── main.rs         # Entry point, orchestration
 │   ├── lib.rs          # Library exports for testing
@@ -116,7 +116,7 @@ rust/ui-applications/classic-cli/
 use clap::Parser;
 
 #[derive(Parser, Debug)]
-#[command(name = "rust/ui-applications/classic-cli")]
+#[command(name = "ClassicLib-rs/ui-applications/classic-cli")]
 #[command(about = "CLASSIC Crash Log Auto Scanner")]
 pub struct CliArgs {
     /// Enable FCX mode
@@ -164,7 +164,7 @@ pub struct CliConfig {
 impl CliConfig {
     /// Load from YAML, create default if missing
     pub async fn load_from_yaml(path: &Path) -> Result<Self> {
-        // Uses rust/business-logic/classic-yaml-core directly
+        // Uses ClassicLib-rs/business-logic/classic-yaml-core directly
     }
 
     /// Merge CLI args (CLI args take precedence)
@@ -195,7 +195,7 @@ impl CliConfig {
 ```rust
 pub struct ScanExecutor {
     config: CliConfig,
-    yaml_data: YamlData,  // From rust/business-logic/classic-config-core
+    yaml_data: YamlData,  // From ClassicLib-rs/business-logic/classic-config-core
 }
 
 impl ScanExecutor {
@@ -203,11 +203,11 @@ impl ScanExecutor {
         // 1. Find crash logs
         let logs = self.find_crash_logs().await?;
 
-        // 2. Parse logs (rust/business-logic/classic-scanlog-core)
+        // 2. Parse logs (ClassicLib-rs/business-logic/classic-scanlog-core)
         let parser = LogParser::new();
         let parsed = parser.parse_logs(&logs).await?;
 
-        // 3. Analyze FormIDs (rust/business-logic/classic-database-core)
+        // 3. Analyze FormIDs (ClassicLib-rs/business-logic/classic-database-core)
         let analyzer = FormIDAnalyzer::new(&self.yaml_data);
         let analyzed = analyzer.analyze(&parsed).await?;
 
@@ -296,7 +296,7 @@ async fn main() -> Result<()> {
 ### Crate Structure
 
 ```
-rust/ui-applications/classic-tui/
+ClassicLib-rs/ui-applications/classic-tui/
 ├── src/
 │   ├── main.rs         # Entry point
 │   ├── lib.rs          # Library exports
@@ -492,7 +492,7 @@ impl ScanHandler {
         tokio::spawn(async move {
             tx.send(ScanMessage::Started).await.ok();
 
-            // Use rust/business-logic/classic-scanlog-core
+            // Use ClassicLib-rs/business-logic/classic-scanlog-core
             let executor = ScanExecutor::new(config);
 
             match executor.scan().await {
@@ -574,7 +574,7 @@ pub fn main_screen_layout(area: Rect) -> Vec<Rect> {
 **Shared between CLI and TUI:**
 
 ```rust
-// rust/business-logic/classic-config-core/src/lib.rs
+// ClassicLib-rs/business-logic/classic-config-core/src/lib.rs
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClassicConfig {
     pub fcx_mode: bool,
@@ -591,7 +591,7 @@ pub struct ClassicConfig {
 
 - CLI: Load via `CliConfig::load_from_yaml()`
 - TUI: Load via `App::load_config()`
-- Python: Load via PyO3 bindings (rust/python-bindings/classic-config-py)
+- Python: Load via PyO3 bindings (ClassicLib-rs/python-bindings/classic-config-py)
 
 ### 2. Business Logic (-core crates)
 
@@ -841,10 +841,10 @@ fn bench_folder_selector_validation(c: &mut Criterion) {
 
 ```bash
 # CLI
-cargo build --release --bin rust/ui-applications/classic-cli
+cargo build --release --bin ClassicLib-rs/ui-applications/classic-cli
 
 # TUI
-cargo build --release --bin rust/ui-applications/classic-tui
+cargo build --release --bin ClassicLib-rs/ui-applications/classic-tui
 
 # Both
 cargo build --release --workspace --bins
@@ -878,12 +878,12 @@ panic = "abort"         # Smaller binary
 
 ```bash
 # Windows
-upx --best --lzma target/release/rust/ui-applications/classic-cli.exe
-upx --best --lzma target/release/rust/ui-applications/classic-tui.exe
+upx --best --lzma target/release/ClassicLib-rs/ui-applications/classic-cli.exe
+upx --best --lzma target/release/ClassicLib-rs/ui-applications/classic-tui.exe
 
 # Linux/macOS
-upx --best --lzma target/release/rust/ui-applications/classic-cli
-upx --best --lzma target/release/rust/ui-applications/classic-tui
+upx --best --lzma target/release/ClassicLib-rs/ui-applications/classic-cli
+upx --best --lzma target/release/ClassicLib-rs/ui-applications/classic-tui
 ```
 
 ---

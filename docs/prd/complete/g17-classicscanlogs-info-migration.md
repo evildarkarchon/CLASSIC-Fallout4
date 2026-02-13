@@ -88,7 +88,7 @@ YAML Files (3 sources: Main, Game, Ignore)
 
 ### 3.2 Rust YamlDataCore (28 fields)
 
-**Location**: `rust/business-logic/classic-config-core/src/yamldata.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-config-core/src/yamldata.rs`
 
 **Construction**: `load_from_yaml_files()` (async, parallel `tokio::join!` over 3 YAML files) or `from_yaml_content()` (sync, for tests).
 
@@ -102,7 +102,7 @@ YAML Files (3 sources: Main, Game, Ignore)
 
 ### 3.3 AnalysisConfig (Rust, in classic-scanlog-core)
 
-**Location**: `rust/business-logic/classic-scanlog-core/src/orchestrator.rs`
+**Location**: `ClassicLib-rs/business-logic/classic-scanlog-core/src/orchestrator.rs`
 
 A **superset** of YamlDataCore with runtime config fields (`game`, `vr_mode`, `show_formid_values`, `fcx_mode`, `simplify_logs`, `game_root_name`, `remove_list`). Currently populated by:
 - **GUI**: `build_analysis_config()` in `scan.rs` — manually maps YamlDataCore fields with hardcoded game/vr_mode

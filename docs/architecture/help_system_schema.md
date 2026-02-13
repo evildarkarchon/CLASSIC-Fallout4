@@ -300,7 +300,7 @@ The help system detects current context:
    - Populate with initial help topics
 
 2. **Rust Helper Module**
-   - `rust/ui-applications/classic-ui-shared/src/help.rs`
+   - `ClassicLib-rs/ui-applications/classic-ui-shared/src/help.rs`
    - Load and parse YAML
    - Lookup help topics by category/ID
    - Format content for display

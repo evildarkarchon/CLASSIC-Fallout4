@@ -51,7 +51,7 @@ def cache_stats(self) -> tuple[int, int]:
 ```
 
 **Rust Implementation Location:**
-- `rust/python-bindings/classic-scanlog-py/src/formid.rs`
+- `ClassicLib-rs/python-bindings/classic-scanlog-py/src/formid.rs`
 - Lines 32-58: `RustFormIDAnalyzer` methods
 - Lines 85-111: `FormIDAnalyzer` methods
 
@@ -103,7 +103,7 @@ def check_disabled_settings(
 ```
 
 **Rust Implementation Location:**
-- `rust/python-bindings/classic-scanlog-py/src/settings_validator.rs`
+- `ClassicLib-rs/python-bindings/classic-scanlog-py/src/settings_validator.rs`
 - Lines 84-94: `check_disabled_settings()` method
 
 **Python Equivalent:**
@@ -277,7 +277,7 @@ File: `ClassicLib/rust/settings_rust.py`
 
 #### 1. Update `.pyi` Stub File
 
-**File:** `rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi`
+**File:** `ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi`
 
 **Changes Required:**
 

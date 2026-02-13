@@ -55,7 +55,6 @@ temp_rust_build/
 # Don't ignore rust_extensions - these are committed for uvx!
 # rust_extensions/  <-- DON'T ADD THIS
 # But do ignore build artifacts in other locations
-classic-rust/target/
 dist-rust/
 # Stale module directories that shadow installed packages
 /classic_core/
@@ -115,9 +114,9 @@ Cargo.lock
 *.dll
 # Rust workspace
 .cargo/
-!rust/.cargo/config.toml
-!rust/ui-applications/classic-gui/.cargo/
-!rust/ui-applications/classic-gui/.cargo/config.toml
+!ClassicLib-rs/.cargo/config.toml
+!ClassicLib-rs/ui-applications/classic-gui/.cargo/
+!ClassicLib-rs/ui-applications/classic-gui/.cargo/config.toml
 # Rust debugging
 *.pdb
 *.dSYM/
@@ -146,9 +145,9 @@ cprofile*.txt
 *.db-wal
 CLASSIC Data/graphics/Scanner 111*.svg
 test-collection.txt
-rust/clippy_full_report.txt
-rust/clippy_report.txt
-rust/CLASSIC_Settings.yaml
+ClassicLib-rs/clippy_full_report.txt
+ClassicLib-rs/clippy_report.txt
+ClassicLib-rs/CLASSIC_Settings.yaml
 performance/results/orchestrator_batch.txt
 performance/results/orchestrator_single_log.txt
 prompts/
@@ -312,7 +311,7 @@ docs/CLASSIC_TUI_PRD.md
 TestAppSnapshots*.raw
 Performance CI Test.txt
 ui-applications/classic-gui/CLASSIC Data
-rust/ui-applications/classic-gui/CLASSIC Data
+ClassicLib-rs/ui-applications/classic-gui/CLASSIC Data
 con
 
 # Git Worktrees

@@ -11,7 +11,7 @@ This guide covers the modular Cargo workspace structure for CLASSIC's Rust compo
 - **NO PyO3 dependency** - Must compile without PyO3
 - Contains all algorithms, data structures, and logic
 - Can be used by CLI/TUI applications directly
-- Example: `rust/business-logic/classic-yaml-core`, `rust/business-logic/classic-scanlog-core`
+- Example: `ClassicLib-rs/business-logic/classic-yaml-core`, `ClassicLib-rs/business-logic/classic-scanlog-core`
 
 ### 2. Python Binding Crates (`*-py`)
 - `crate-type = ["cdylib"]` - Python extension only
@@ -19,7 +19,7 @@ This guide covers the modular Cargo workspace structure for CLASSIC's Rust compo
 - Thin adapter layer converting Python ↔ Rust types
 - Should be **minimal** - only type conversions and `#[pyclass]`/`#[pymethods]` wrappers
 - No business logic - all algorithms/data structures belong in `-core`
-- Example: `rust/python-bindings/classic-yaml-py`, `rust/python-bindings/classic-scanlog-py`
+- Example: `ClassicLib-rs/python-bindings/classic-yaml-py`, `ClassicLib-rs/python-bindings/classic-scanlog-py`
 
 ### 3. Naming Convention
 - Business logic: `classic-{name}-core`
@@ -33,7 +33,7 @@ This guide covers the modular Cargo workspace structure for CLASSIC's Rust compo
 ## Example Structure
 
 ```toml
-# rust/business-logic/classic-yaml-core/Cargo.toml (Business Logic)
+# ClassicLib-rs/business-logic/classic-yaml-core/Cargo.toml (Business Logic)
 [lib]
 crate-type = ["rlib"]  # Pure Rust
 
@@ -42,13 +42,13 @@ classic-shared = { path = "../classic-shared" }
 yaml-rust2 = { workspace = true }
 # NO pyo3!
 
-# rust/python-bindings/classic-yaml-py/Cargo.toml (Python Bindings)
+# ClassicLib-rs/python-bindings/classic-yaml-py/Cargo.toml (Python Bindings)
 [lib]
 name = "classic_yaml"  # Python module name
 crate-type = ["cdylib"]
 
 [dependencies]
-rust/business-logic/classic-yaml-core = { path = "../rust/business-logic/classic-yaml-core" }
+ClassicLib-rs/business-logic/classic-yaml-core = { path = "../ClassicLib-rs/business-logic/classic-yaml-core" }
 pyo3 = { workspace = true }
 ```
 
@@ -63,39 +63,39 @@ CLASSIC uses a modular Cargo workspace with separated business logic and Python 
 ├── classic-shared/                  # Foundation (runtime, errors, utilities)
 │   └── src/runtime.rs              # Global Tokio runtime (ONE RUNTIME RULE)
 │
-├── rust/business-logic/classic-yaml-core/               # YAML business logic (pure Rust)
+├── ClassicLib-rs/business-logic/classic-yaml-core/               # YAML business logic (pure Rust)
 │   └── src/lib.rs                  # YamlOperations
-├── rust/python-bindings/classic-yaml-py/                 # YAML Python bindings (PyO3)
+├── ClassicLib-rs/python-bindings/classic-yaml-py/                 # YAML Python bindings (PyO3)
 │   └── src/lib.rs                  # PyYamlOperations wrapper
 │
-├── rust/business-logic/classic-database-core/           # Database business logic (pure Rust)
+├── ClassicLib-rs/business-logic/classic-database-core/           # Database business logic (pure Rust)
 │   └── src/lib.rs                  # DatabasePool, FormID lookups
-├── rust/python-bindings/classic-database-py/             # Database Python bindings (PyO3)
+├── ClassicLib-rs/python-bindings/classic-database-py/             # Database Python bindings (PyO3)
 │   └── src/lib.rs                  # PyDatabasePool wrapper
 │
-├── rust/business-logic/classic-file-io-core/            # File I/O business logic (pure Rust)
+├── ClassicLib-rs/business-logic/classic-file-io-core/            # File I/O business logic (pure Rust)
 │   └── src/lib.rs                  # FileIOCore, encoding, DDS
-├── rust/python-bindings/classic-file-io-py/              # File I/O Python bindings (PyO3)
+├── ClassicLib-rs/python-bindings/classic-file-io-py/              # File I/O Python bindings (PyO3)
 │   └── src/lib.rs                  # RustFileIOCore wrapper
 │
-├── rust/business-logic/classic-scanlog-core/            # Scanlog business logic (pure Rust)
+├── ClassicLib-rs/business-logic/classic-scanlog-core/            # Scanlog business logic (pure Rust)
 │   └── src/lib.rs                  # LogParser, FormIDAnalyzer, etc.
-├── rust/python-bindings/classic-scanlog-py/              # Scanlog Python bindings (PyO3)
+├── ClassicLib-rs/python-bindings/classic-scanlog-py/              # Scanlog Python bindings (PyO3)
 │   └── src/lib.rs                  # Rust*Parser wrappers
 │
-├── rust/python-bindings/classic-config-py/               # Config Python bindings (PyO3)
+├── ClassicLib-rs/python-bindings/classic-config-py/               # Config Python bindings (PyO3)
 │   └── src/lib.rs                  # YamlData wrapper
-├── rust/business-logic/classic-config-core/             # Config business logic (pure Rust)
+├── ClassicLib-rs/business-logic/classic-config-core/             # Config business logic (pure Rust)
 │   └── src/lib.rs                  # Configuration management
 │
 ├── classic-core/                    # Facade (re-exports all -py modules)
 │   └── src/lib.rs                  # Python entry point
 │
 └── [Legacy crates being phased out]
-    ├── classic-yaml/                # To be replaced by rust/python-bindings/classic-yaml-py
-    ├── classic-database/            # To be replaced by rust/python-bindings/classic-database-py
-    ├── classic-file-io/             # To be replaced by rust/python-bindings/classic-file-io-py
-    └── classic-scanlog/             # To be replaced by rust/python-bindings/classic-scanlog-py
+    ├── classic-yaml/                # To be replaced by ClassicLib-rs/python-bindings/classic-yaml-py
+    ├── classic-database/            # To be replaced by ClassicLib-rs/python-bindings/classic-database-py
+    ├── classic-file-io/             # To be replaced by ClassicLib-rs/python-bindings/classic-file-io-py
+    └── classic-scanlog/             # To be replaced by ClassicLib-rs/python-bindings/classic-scanlog-py
 ```
 
 ## Dependency Hierarchy (New Architecture)
@@ -108,14 +108,14 @@ CLASSIC uses a modular Cargo workspace with separated business logic and Python 
                     ↓
 ┌─────────────────────────────────────────────┐
 │  Python Bindings Layer (-py crates)        │
-│  rust/python-bindings/classic-yaml-py, rust/python-bindings/classic-database-py       │
-│  rust/python-bindings/classic-file-io-py, rust/python-bindings/classic-scanlog-py    │
+│  ClassicLib-rs/python-bindings/classic-yaml-py, ClassicLib-rs/python-bindings/classic-database-py       │
+│  ClassicLib-rs/python-bindings/classic-file-io-py, ClassicLib-rs/python-bindings/classic-scanlog-py    │
 └─────────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────────┐
 │  Business Logic Layer (-core crates)       │
-│  rust/business-logic/classic-yaml-core, rust/business-logic/classic-database-core   │
-│  rust/business-logic/classic-file-io-core, rust/business-logic/classic-scanlog-core│
+│  ClassicLib-rs/business-logic/classic-yaml-core, ClassicLib-rs/business-logic/classic-database-core   │
+│  ClassicLib-rs/business-logic/classic-file-io-core, ClassicLib-rs/business-logic/classic-scanlog-core│
 └─────────────────────────────────────────────┘
                     ↓
 ┌─────────────────────────────────────────────┐

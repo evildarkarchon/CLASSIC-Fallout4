@@ -176,7 +176,7 @@ collector = PyLogCollector(...)
 
 ### 2. Fix Stub File (HIGH PRIORITY)
 
-Update `rust/python-bindings/classic-file-io-py/classic_file_io.pyi`:
+Update `ClassicLib-rs/python-bindings/classic-file-io-py/classic_file_io.pyi`:
 
 **Required changes**:
 1. Remove `Coroutine` return types from PyLogCollector methods (lines 745-801)

@@ -17,10 +17,10 @@ consumption.
 
 ```bash
 # CLI memory tests
-cargo test --test memory_tests -p rust/ui-applications/classic-cli
+cargo test --test memory_tests -p ClassicLib-rs/ui-applications/classic-cli
 
 # TUI memory tests
-cargo test --test memory_tests -p rust/ui-applications/classic-tui
+cargo test --test memory_tests -p ClassicLib-rs/ui-applications/classic-tui
 
 # Run profiling markers (with output)
 cargo test --test memory_tests -- --ignored --nocapture
@@ -52,20 +52,20 @@ brew install valgrind
 
 ```bash
 # Build with debug symbols
-cargo build --release-with-debug --bin rust/ui-applications/classic-cli
+cargo build --release-with-debug --bin ClassicLib-rs/ui-applications/classic-cli
 
 # Run with Valgrind
 valgrind --leak-check=full \
          --show-leak-kinds=all \
          --track-origins=yes \
-         ./target/release-with-debug/rust/ui-applications/classic-cli
+         ./target/release-with-debug/ClassicLib-rs/ui-applications/classic-cli
 
 # For detailed output
 valgrind --leak-check=full \
          --show-leak-kinds=all \
          --track-origins=yes \
          --log-file=valgrind.log \
-         ./target/release-with-debug/rust/ui-applications/classic-cli
+         ./target/release-with-debug/ClassicLib-rs/ui-applications/classic-cli
 ```
 
 **Expected Output:**
@@ -90,13 +90,13 @@ sudo apt install heaptrack heaptrack-gui
 
 ```bash
 # Profile CLI
-heaptrack ./target/release/rust/ui-applications/classic-cli
+heaptrack ./target/release/ClassicLib-rs/ui-applications/classic-cli
 
 # Profile TUI (run then quit with Q)
-heaptrack ./target/release/rust/ui-applications/classic-tui
+heaptrack ./target/release/ClassicLib-rs/ui-applications/classic-tui
 
 # Analyze results
-heaptrack_gui heaptrack.rust/ui-applications/classic-cli.*.gz
+heaptrack_gui heaptrack.ClassicLib-rs/ui-applications/classic-cli.*.gz
 ```
 
 **What to Look For:**
@@ -151,8 +151,8 @@ cargo install flamegraph
 
 ```bash
 # Memory allocation flamegraph
-cargo flamegraph --bin rust/ui-applications/classic-cli
-cargo flamegraph --bin rust/ui-applications/classic-tui
+cargo flamegraph --bin ClassicLib-rs/ui-applications/classic-cli
+cargo flamegraph --bin ClassicLib-rs/ui-applications/classic-tui
 
 # Open generated flamegraph.svg in browser
 ```
@@ -169,7 +169,7 @@ cargo flamegraph --bin rust/ui-applications/classic-tui
 wpr -start CPU -start HeapSnapshot
 
 # Run application
-.\target\release\rust/ui-applications/classic-cli.exe
+.\target\release\ClassicLib-rs/ui-applications/classic-cli.exe
 
 # Stop recording
 wpr -stop memory_profile.etl
@@ -430,15 +430,15 @@ jobs:
 
       - name: Run memory tests
         run: |
-          cargo test --test memory_tests -p rust/ui-applications/classic-cli
-          cargo test --test memory_tests -p rust/ui-applications/classic-tui
+          cargo test --test memory_tests -p ClassicLib-rs/ui-applications/classic-cli
+          cargo test --test memory_tests -p ClassicLib-rs/ui-applications/classic-tui
 
       - name: Run with Valgrind
         run: |
           sudo apt-get install valgrind
-          cargo build --release-with-debug --bin rust/ui-applications/classic-cli
+          cargo build --release-with-debug --bin ClassicLib-rs/ui-applications/classic-cli
           valgrind --leak-check=full --error-exitcode=1 \
-            ./target/release-with-debug/rust/ui-applications/classic-cli --help
+            ./target/release-with-debug/ClassicLib-rs/ui-applications/classic-cli --help
 ```
 
 ### Local Pre-commit Hook

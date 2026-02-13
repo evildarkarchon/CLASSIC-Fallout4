@@ -51,7 +51,7 @@ Write-Host "🔍 Discovering Rust Python modules..." -ForegroundColor Cyan
 $RustModules = @()
 
 # Search directories
-$searchPaths = @("rust/foundation", "rust/python-bindings")
+$searchPaths = @("ClassicLib-rs/foundation", "ClassicLib-rs/python-bindings")
 foreach ($path in $searchPaths) {
     if (Test-Path $path) {
         $cargoFiles = Get-ChildItem -Path $path -Filter "Cargo.toml" -Recurse
@@ -103,7 +103,7 @@ foreach ($m in $RustModules) {
 # Clean if requested
 if ($Clean) {
     Write-Host "🧹 Cleaning old builds..." -ForegroundColor Cyan
-    Push-Location rust
+    Push-Location ClassicLib-rs
     cargo clean
     Pop-Location
 

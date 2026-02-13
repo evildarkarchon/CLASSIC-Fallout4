@@ -178,7 +178,7 @@ function Get-RustModuleInfo {
 #   3. 10-150x performance improvements for all operations
 # Python imports individual modules directly (e.g., import classic_yaml)
 #
-if (Test-Path "rust/python-bindings") {
+if (Test-Path "ClassicLib-rs/python-bindings") {
     Write-Host "============================================================" -ForegroundColor Cyan
     Write-Host "Building Rust workspace (separated architecture)..." -ForegroundColor Cyan
     Write-Host "============================================================" -ForegroundColor Cyan
@@ -189,7 +189,7 @@ if (Test-Path "rust/python-bindings") {
     $RustModules = @()
 
     # Search directories
-    $searchPaths = @("rust/foundation", "rust/python-bindings")
+    $searchPaths = @("ClassicLib-rs/foundation", "ClassicLib-rs/python-bindings")
     foreach ($path in $searchPaths) {
         if (Test-Path $path) {
             $cargoFiles = Get-ChildItem -Path $path -Filter "Cargo.toml" -Recurse
@@ -456,6 +456,6 @@ if ($BuildTest) {
 
 Write-Host ""
 Write-Host "Note: TUI is now a pure Rust application. Build separately with:" -ForegroundColor Yellow
-Write-Host "  cd rust\ui-applications\classic-tui && cargo build --release" -ForegroundColor Cyan
+Write-Host "  cd ClassicLib-rs\ui-applications\classic-tui && cargo build --release" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "Build script completed!" -ForegroundColor Green

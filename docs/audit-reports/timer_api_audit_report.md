@@ -29,7 +29,7 @@
 |------|----------------|------------|
 | `ClassicLib/__init__.py` | `import classic_perf` | Module availability check only |
 | `tests/rust_integration/test_perf/test_perf_core.py` | `import classic_perf` | Direct Rust API testing |
-| `rust/python-bindings/classic-perf-py/classic_perf.pyi` | N/A | Type stub file (documentation) |
+| `ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi` | N/A | Type stub file (documentation) |
 
 **Total Files**: 3 (1 production, 1 test, 1 stub)
 
@@ -152,7 +152,7 @@ All test cases explicitly call `timer.finish()`, which is the recommended patter
 |------|-----------|-------------------|-----------------|
 | `ClassicLib/__init__.py` | NONE | Import for availability check only | None |
 | `tests/rust_integration/test_perf/test_perf_core.py` | LOW | Test-only, correct manual finish() usage | None |
-| `rust/python-bindings/classic-perf-py/classic_perf.pyi` | DOCUMENTATION | Stub file previously documented ghost methods | Update stub file |
+| `ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi` | DOCUMENTATION | Stub file previously documented ghost methods | Update stub file |
 
 ---
 
@@ -427,7 +427,7 @@ class AsyncTimer:
 
 ### 8.2 Stub File Update Required
 
-**Required Action**: Update `rust/python-bindings/classic-perf-py/classic_perf.pyi` to remove ghost methods.
+**Required Action**: Update `ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi` to remove ghost methods.
 
 **Changes Needed**:
 1. Remove `__enter__` method documentation (lines ~121-129)
@@ -561,7 +561,7 @@ grep -rn "\.start_timer\(\|classic_perf\.Timer\(" --include="*.py"
 4. `tests/rust_integration/test_perf/test_perf_core.py` - Rust Timer API tests
 
 **Stub Files**:
-5. `rust/python-bindings/classic-perf-py/classic_perf.pyi` - Type definitions
+5. `ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi` - Type definitions
 
 **Test Infrastructure**:
 6. `tests/test_infra/performance_utils.py` - Test timing utilities

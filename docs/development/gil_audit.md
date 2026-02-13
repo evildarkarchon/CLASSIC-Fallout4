@@ -306,7 +306,7 @@ GIL release is verified through:
 3. **Timing comparisons** (concurrent vs sequential execution)
 
 See:
-- `rust/python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs`
-- `rust/python-bindings/classic-file-io-py/benches/gil_benchmarks.rs`
-- `rust/python-bindings/classic-yaml-py/benches/gil_benchmarks.rs`
+- `ClassicLib-rs/python-bindings/classic-scanlog-py/benches/gil_benchmarks.rs`
+- `ClassicLib-rs/python-bindings/classic-file-io-py/benches/gil_benchmarks.rs`
+- `ClassicLib-rs/python-bindings/classic-yaml-py/benches/gil_benchmarks.rs`
 - `tests/rust_integration/gil_release/test_concurrent_operations.py`

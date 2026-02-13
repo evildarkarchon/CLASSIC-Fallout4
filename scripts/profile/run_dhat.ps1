@@ -79,7 +79,7 @@ Write-Host ""
 # Resolve script and project paths
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectRoot = (Get-Item "$scriptDir/../..").FullName
-$rustDir = Join-Path $projectRoot "rust"
+$rustDir = Join-Path $projectRoot "ClassicLib-rs"
 
 # Setup output directory
 $timestamp = Get-Date -Format "yyyy-MM-dd-HHmmss"

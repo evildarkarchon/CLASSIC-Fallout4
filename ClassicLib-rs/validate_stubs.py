@@ -9,9 +9,9 @@ corresponding Rust implementation by checking for:
 - Missing module-level exports
 
 Usage:
-    python rust/validate_stubs.py              # Validate all crates
-    python rust/validate_stubs.py --verbose    # Show detailed output
-    python rust/validate_stubs.py --fix        # Auto-fix simple issues (future)
+    python ClassicLib-rs/validate_stubs.py              # Validate all crates
+    python ClassicLib-rs/validate_stubs.py --verbose    # Show detailed output
+    python ClassicLib-rs/validate_stubs.py --fix        # Auto-fix simple issues (future)
 """
 
 import argparse

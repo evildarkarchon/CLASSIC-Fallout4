@@ -4,7 +4,7 @@
 
 **Goal:** Simplify the Rust Slint GUI by converting scan checkboxes to action buttons, fixing path label heights, removing redundant settings, and fixing the results viewer.
 
-**Architecture:** All changes are in the `classic-gui` crate (`rust/ui-applications/classic-gui/`). Changes span Slint markup (`.slint` files), Rust callbacks (`main.rs`), settings persistence (`settings.rs`), and the markdown parser (`markdown.rs`). The scan logic (`scan.rs`) stays unchanged -- only how it's triggered changes.
+**Architecture:** All changes are in the `classic-gui` crate (`ClassicLib-rs/ui-applications/classic-gui/`). Changes span Slint markup (`.slint` files), Rust callbacks (`main.rs`), settings persistence (`settings.rs`), and the markdown parser (`markdown.rs`). The scan logic (`scan.rs`) stays unchanged -- only how it's triggered changes.
 
 **Tech Stack:** Slint 1.x (`.slint` markup), Rust, pulldown-cmark (markdown parsing), classic-config-core (settings YAML)
 
@@ -15,11 +15,11 @@
 The simplest removal. No behavioral changes, just deleting dead code.
 
 **Files:**
-- Modify: `rust/ui-applications/classic-gui/ui/widgets/settings_general.slint:13-14,22,68-83`
-- Modify: `rust/ui-applications/classic-gui/ui/main.slint:54,93,302,306`
-- Modify: `rust/ui-applications/classic-gui/src/main.rs:25-26,691,784-799`
-- Modify: `rust/ui-applications/classic-gui/src/settings.rs:110,249-272`
-- Modify: `rust/ui-applications/classic-gui/src/lib.rs:27-28`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/widgets/settings_general.slint:13-14,22,68-83`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/main.slint:54,93,302,306`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/main.rs:25-26,691,784-799`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/settings.rs:110,249-272`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/lib.rs:27-28`
 
 **Step 1: Remove Update Source from settings_general.slint**
 
@@ -134,7 +134,7 @@ Expected: All remaining tests pass
 **Step 7: Commit**
 
 ```bash
-git add rust/ui-applications/classic-gui/
+git add ClassicLib-rs/ui-applications/classic-gui/
 git commit -m "refactor(gui): remove Update Source selector (GitHub-only)"
 ```
 
@@ -145,10 +145,10 @@ git commit -m "refactor(gui): remove Update Source selector (GitHub-only)"
 Another removal -- the "Custom Scan Path" row and all its wiring.
 
 **Files:**
-- Modify: `rust/ui-applications/classic-gui/ui/widgets/settings_paths.slint:60-63,68,73,96-103`
-- Modify: `rust/ui-applications/classic-gui/ui/main.slint:70-72,105,108,334-336,339,342`
-- Modify: `rust/ui-applications/classic-gui/src/main.rs:725-731,983-1031,1087-1112`
-- Modify: `rust/ui-applications/classic-gui/src/settings.rs:146,163`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/widgets/settings_paths.slint:60-63,68,73,96-103`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/main.slint:70-72,105,108,334-336,339,342`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/main.rs:725-731,983-1031,1087-1112`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/settings.rs:146,163`
 
 **Step 1: Remove Custom Scan Path from settings_paths.slint**
 
@@ -253,7 +253,7 @@ Expected: Compiles and all tests pass
 **Step 6: Commit**
 
 ```bash
-git add rust/ui-applications/classic-gui/
+git add ClassicLib-rs/ui-applications/classic-gui/
 git commit -m "refactor(gui): remove Custom Scan Path from Settings (redundant with Main tab)"
 ```
 
@@ -264,8 +264,8 @@ git commit -m "refactor(gui): remove Custom Scan Path from Settings (redundant w
 Add `height: 32px` to path input rows on both the Main tab and Settings > Paths.
 
 **Files:**
-- Modify: `rust/ui-applications/classic-gui/ui/main.slint:134,150`
-- Modify: `rust/ui-applications/classic-gui/ui/widgets/settings_paths.slint:16`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/main.slint:134,150`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/widgets/settings_paths.slint:16`
 
 **Step 1: Fix Main tab path row heights**
 
@@ -309,7 +309,7 @@ Expected: Compiles cleanly
 **Step 4: Commit**
 
 ```bash
-git add rust/ui-applications/classic-gui/ui/
+git add ClassicLib-rs/ui-applications/classic-gui/ui/
 git commit -m "fix(gui): constrain path input row heights to 32px"
 ```
 
@@ -320,8 +320,8 @@ git commit -m "fix(gui): constrain path input row heights to 32px"
 The main UI redesign -- remove the Scan Options GroupBox and morphing button, replace with two side-by-side action buttons.
 
 **Files:**
-- Modify: `rust/ui-applications/classic-gui/ui/main.slint:37-39,78,167-211`
-- Modify: `rust/ui-applications/classic-gui/src/main.rs:302-419`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/main.slint:37-39,78,167-211`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/main.rs:302-419`
 
 **Step 1: Update main.slint properties and callbacks**
 
@@ -420,7 +420,7 @@ Expected: Compiles and tests pass
 **Step 5: Commit**
 
 ```bash
-git add rust/ui-applications/classic-gui/
+git add ClassicLib-rs/ui-applications/classic-gui/
 git commit -m "feat(gui): replace scan checkboxes with direct action buttons"
 ```
 
@@ -431,10 +431,10 @@ git commit -m "feat(gui): replace scan checkboxes with direct action buttons"
 Add "Generate statistics" as a persistent boolean setting in the General settings tab.
 
 **Files:**
-- Modify: `rust/ui-applications/classic-gui/ui/widgets/settings_general.slint`
-- Modify: `rust/ui-applications/classic-gui/ui/main.slint`
-- Modify: `rust/ui-applications/classic-gui/src/main.rs`
-- Modify: `rust/ui-applications/classic-gui/src/settings.rs`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/widgets/settings_general.slint`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/ui/main.slint`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/main.rs`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/settings.rs`
 
 **Step 1: Add Generate Statistics to settings_general.slint**
 
@@ -533,7 +533,7 @@ Expected: Compiles and tests pass
 **Step 6: Commit**
 
 ```bash
-git add rust/ui-applications/classic-gui/
+git add ClassicLib-rs/ui-applications/classic-gui/
 git commit -m "feat(gui): move Generate Statistics to Settings > General"
 ```
 
@@ -544,7 +544,7 @@ git commit -m "feat(gui): move Generate Statistics to Settings > General"
 Investigation + fix for FormID, Plugin-related Errors, Mods with Solutions, and Named Records not showing.
 
 **Files:**
-- Modify: `rust/ui-applications/classic-gui/src/markdown.rs`
+- Modify: `ClassicLib-rs/ui-applications/classic-gui/src/markdown.rs`
 - Reference: `Crash Logs/crash-2025-08-25-08-22-24-AUTOSCAN.md` (has all sections)
 
 **Step 1: Write a test using real report content**
@@ -662,7 +662,7 @@ Expected: All tests pass
 **Step 7: Commit**
 
 ```bash
-git add rust/ui-applications/classic-gui/src/
+git add ClassicLib-rs/ui-applications/classic-gui/src/
 git commit -m "fix(gui): results viewer now shows all report sections"
 ```
 
@@ -694,6 +694,6 @@ Expected: No new warnings introduced by our changes
 **Step 5: Commit any cleanup**
 
 ```bash
-git add rust/ui-applications/classic-gui/
+git add ClassicLib-rs/ui-applications/classic-gui/
 git commit -m "chore(gui): cleanup dead code from GUI simplification"
 ```

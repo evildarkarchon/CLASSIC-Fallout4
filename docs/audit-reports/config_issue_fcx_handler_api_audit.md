@@ -35,7 +35,7 @@ The Python wrapper `ClassicLib/rust/fcx_rust.py` calls **the wrong method name**
 - No Rust import dependency
 - Export pattern: Re-exported from `ClassicLib.ScanGame.models.__init__.py`
 
-**Rust Implementation**: `rust/python-bindings/classic-scanlog-py/src/fcx_handler.rs` (lines 7-98)
+**Rust Implementation**: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs` (lines 7-98)
 - Type: PyO3 PyClass wrapper around `classic_scanlog_core::ConfigIssue`
 - Exported from `classic_scanlog` module
 
@@ -348,7 +348,7 @@ get_fcx_messages() calls found: 34
 
 ### .pyi File Assessment: ✅ **CORRECT**
 
-**File**: `rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi`
+**File**: `ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi`
 
 **ConfigIssue** (lines 1457-1523): ✅ Complete and accurate
 - Constructor matches Rust (lines 1464-1484)
@@ -460,8 +460,8 @@ This audit found exactly **ONE critical runtime error**:
 5. ✅ `ClassicLib/ScanGame/models/fcx_issue.py` - ConfigIssue model
 
 ### Rust Sources (2)
-1. ✅ `rust/python-bindings/classic-scanlog-py/src/fcx_handler.rs` - Rust implementation
-2. ✅ `rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi` - Type stub (CORRECT)
+1. ✅ `ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs` - Rust implementation
+2. ✅ `ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi` - Type stub (CORRECT)
 
 ### Supporting Files
 - ✅ `ClassicLib/ScanLog/OrchestratorCore.py` - Production usage

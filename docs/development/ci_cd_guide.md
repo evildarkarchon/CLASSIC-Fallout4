@@ -46,7 +46,7 @@ Validates Rust code quality:
 **Caching**:
 - Cargo registry (`~/.cargo/registry`)
 - Cargo index (`~/.cargo/git`)
-- Build artifacts (`rust/target`)
+- Build artifacts (`ClassicLib-rs/target`)
 
 ### 3. Build Rust Components
 **Timeout**: 20 minutes
@@ -146,7 +146,7 @@ Three separate caches for Rust builds:
    - Stores git dependencies
 
 3. **Build Cache**
-   - Path: `rust/target`
+   - Path: `ClassicLib-rs/target`
    - Key: `{os}-cargo-build-{Cargo.lock hash}-{source files hash}`
    - Stores compiled artifacts
    - Fallback keys allow partial cache hits
@@ -173,7 +173,7 @@ The `astral-sh/setup-uv@v4` action handles Python dependency caching automatical
 **Solutions**:
 - Check clippy warnings - they're treated as errors (`-D warnings`)
 - Verify all Rust code has proper documentation (missing docs = error)
-- Run locally: `cargo clippy --workspace --all-targets --all-features --manifest-path rust/Cargo.toml -- -D warnings`
+- Run locally: `cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings`
 - Check for new Rust 2024 edition issues
 
 #### 3. Python Binding Build Failures
@@ -182,7 +182,7 @@ The `astral-sh/setup-uv@v4` action handles Python dependency caching automatical
 **Solutions**:
 - Check that the crate's `Cargo.toml` has `crate-type = ["cdylib", "rlib"]`
 - Verify PyO3 dependencies are correctly specified
-- Test locally: `cd rust/python-bindings/<crate> && maturin build --release`
+- Test locally: `cd ClassicLib-rs/python-bindings/<crate> && maturin build --release`
 - Check for missing or outdated `.pyi` stub files
 
 #### 4. Python Test Failures
@@ -220,12 +220,12 @@ uv run ruff check .
 uv run ruff format --check .
 
 # Rust linting
-cargo fmt --all --manifest-path rust/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --all-features --manifest-path rust/Cargo.toml -- -D warnings
+cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
 
 # Build Rust components
-cargo build --workspace --release --manifest-path rust/Cargo.toml
-cargo test --workspace --release --manifest-path rust/Cargo.toml
+cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
 
 # Build Python bindings (if needed)
 ./rebuild_rust.ps1  # Windows PowerShell
@@ -255,7 +255,7 @@ uv run pytest tests/rust_integration/ -v
 
 3. **Build Rust Components**:
    ```bash
-   cargo build --workspace --release --manifest-path rust/Cargo.toml
+   cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
    ```
 
 4. **Build Python Bindings**:
@@ -283,10 +283,10 @@ uv run pytest tests/rust_integration/ -v
 8. **(Optional) Build Pure Rust Apps**:
    ```bash
    # CLI
-   cargo build --release --manifest-path rust/Cargo.toml -p classic-cli
+   cargo build --release --manifest-path ClassicLib-rs/Cargo.toml -p classic-cli
 
    # TUI
-   cargo build --release --manifest-path rust/Cargo.toml -p classic-tui
+   cargo build --release --manifest-path ClassicLib-rs/Cargo.toml -p classic-tui
    ```
 
 ## CI Workflow Dependencies

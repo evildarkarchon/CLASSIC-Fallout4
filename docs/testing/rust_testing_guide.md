@@ -7,7 +7,7 @@ This guide covers testing patterns, fixtures, and coverage requirements for CLAS
 ## Rust Test Structure
 
 ```
-rust/
+ClassicLib-rs/
 ├── foundation/
 │   └── classic-shared-core/
 │       └── tests/                    # Foundation layer tests
@@ -47,33 +47,33 @@ rust/
 
 ```bash
 # From workspace root
-cargo test --workspace --manifest-path rust/Cargo.toml
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
 
 # Run with output
-cargo test --workspace --manifest-path rust/Cargo.toml -- --nocapture
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
 ```
 
 ### Run Tests for Specific Crate
 
 ```bash
 # Run classic-yaml-core tests
-cargo test -p classic-yaml-core --manifest-path rust/Cargo.toml
+cargo test -p classic-yaml-core --manifest-path ClassicLib-rs/Cargo.toml
 
 # Run classic-database-core tests (requires async runtime)
-cargo test -p classic-database-core --manifest-path rust/Cargo.toml
+cargo test -p classic-database-core --manifest-path ClassicLib-rs/Cargo.toml
 
 # Run classic-config-core tests
-cargo test -p classic-config-core --manifest-path rust/Cargo.toml
+cargo test -p classic-config-core --manifest-path ClassicLib-rs/Cargo.toml
 ```
 
 ### Run Integration Tests Only
 
 ```bash
 # Run all integration tests
-cargo test --workspace --manifest-path rust/Cargo.toml --test integration_tests
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml --test integration_tests
 
 # Run specific crate integration tests
-cargo test -p classic-yaml-core --test integration_tests --manifest-path rust/Cargo.toml
+cargo test -p classic-yaml-core --test integration_tests --manifest-path ClassicLib-rs/Cargo.toml
 ```
 
 ## Test Patterns
@@ -225,17 +225,17 @@ fn test_concurrent_access() {
 cargo install cargo-llvm-cov
 
 # Run coverage for workspace
-cargo llvm-cov --workspace --manifest-path rust/Cargo.toml
+cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml
 
 # Generate HTML report
-cargo llvm-cov --workspace --manifest-path rust/Cargo.toml --html
+cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml --html
 
 # View report
 start target/llvm-cov/html/index.html  # Windows
 open target/llvm-cov/html/index.html   # macOS
 
 # Exclude Python binding crates (not tested via Rust)
-cargo llvm-cov --workspace --manifest-path rust/Cargo.toml \
+cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml \
   --exclude classic-yaml-py \
   --exclude classic-database-py \
   --exclude classic-file-io-py \
@@ -502,7 +502,7 @@ RUST_BACKTRACE=1 cargo test -p problematic-crate
 ```bash
 # Clean and rebuild
 cargo clean
-cargo llvm-cov --workspace --manifest-path rust/Cargo.toml
+cargo llvm-cov --workspace --manifest-path ClassicLib-rs/Cargo.toml
 ```
 
 ## Related Documentation

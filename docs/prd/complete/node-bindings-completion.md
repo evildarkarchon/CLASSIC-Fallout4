@@ -113,7 +113,7 @@ All 19 business-logic crates have complete Python bindings via PyO3 `-py` crates
 
 ## 6. Detailed Requirements
 
-Each module below corresponds to a `.rs` file in `rust/node-bindings/classic-node/src/`. The module name matches the Cargo dependency crate name with `-core` stripped.
+Each module below corresponds to a `.rs` file in `ClassicLib-rs/node-bindings/classic-node/src/`. The module name matches the Cargo dependency crate name with `-core` stripped.
 
 ### 6.1 `scanlog` Module (COMPLETE - Currently Incomplete)
 
@@ -1099,7 +1099,7 @@ classic-node/
 
 ```bash
 # Development (debug, fast iteration)
-cd rust/node-bindings/classic-node
+cd ClassicLib-rs/node-bindings/classic-node
 npm run build:debug
 
 # Release (optimized, stripped)

@@ -184,10 +184,10 @@ No matches found for IniValidator.load_files() in tests/
 **Results**:
 ```
 Found 5 files:
-✅ rust/python-bindings/classic-scangame-py/classic_scangame.pyi  (stub file - expected)
+✅ ClassicLib-rs/python-bindings/classic-scangame-py/classic_scangame.pyi  (stub file - expected)
 ✅ ClassicLib/integration/scangame_factory.py  (factory pattern - safe)
-✅ rust/python-bindings/classic-scangame-py/src/integrity.rs  (Rust source - expected)
-✅ rust/python-bindings/classic-scangame-py/src/lib.rs  (Rust source - expected)
+✅ ClassicLib-rs/python-bindings/classic-scangame-py/src/integrity.rs  (Rust source - expected)
+✅ ClassicLib-rs/python-bindings/classic-scangame-py/src/lib.rs  (Rust source - expected)
 ✅ docs/development/scangame_rust_acceleration.md  (documentation - expected)
 ```
 
@@ -545,7 +545,7 @@ class IniValidator:  # ✅ Same signature
 ### Immediate Actions
 
 #### 1. Fix Rust Docstring (Low Priority)
-**File**: `rust/python-bindings/classic-scangame-py/src/ini.rs:70`
+**File**: `ClassicLib-rs/python-bindings/classic-scangame-py/src/ini.rs:70`
 
 **Current**:
 ```rust

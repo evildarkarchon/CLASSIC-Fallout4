@@ -15,7 +15,7 @@ The initial scope is infrastructure scaffolding with a minimal proof-of-concept 
 |----------|--------|-----------|
 | Binding technology | NAPI-RS v3 | Mature, Bun-native, mirrors PyO3 pattern |
 | Crate structure | Single unified `classic-node` | Less boilerplate; can split later |
-| Location | `rust/node-bindings/classic-node/` | Parallel to `python-bindings/` |
+| Location | `ClassicLib-rs/node-bindings/classic-node/` | Parallel to `python-bindings/` |
 | Initial crates bound | `classic-yaml-core`, `classic-scanlog-core` | High-value + proves sync/async |
 | Runtime strategy | `async` feature (not `tokio_rt`) | Respects ONE RUNTIME RULE |
 | Package manager | Bun | User preference |
@@ -27,7 +27,7 @@ The initial scope is infrastructure scaffolding with a minimal proof-of-concept 
 ### Crate Location and Structure
 
 ```
-rust/node-bindings/classic-node/
+ClassicLib-rs/node-bindings/classic-node/
 ├── Cargo.toml          # Rust crate (cdylib)
 ├── package.json        # npm/Bun package
 ├── build.rs            # napi-build codegen
@@ -206,7 +206,7 @@ describe("classic-node", () => {
 ## Build Workflow
 
 ```bash
-cd rust/node-bindings/classic-node
+cd ClassicLib-rs/node-bindings/classic-node
 bun install                  # install @napi-rs/cli
 bun run build                # compile Rust + generate JS/TS glue
 bun test                     # run tests

@@ -8,7 +8,7 @@ This skill guides creation of new Rust crates in the CLASSIC project, following 
 ## Architecture Overview
 
 ```
-rust/
+ClassicLib-rs/
 ├── foundation/           # Shared runtime, errors, utilities
 ├── business-logic/       # Pure Rust (-core crates, NO PyO3)
 ├── python-bindings/      # PyO3 adapters (-py crates)
@@ -26,13 +26,13 @@ rust/
 ### 1.1 Create Directory
 
 ```bash
-mkdir -p rust/business-logic/classic-<name>-core/src
+mkdir -p ClassicLib-rs/business-logic/classic-<name>-core/src
 ```
 
 ### 1.2 Create Cargo.toml
 
 ```toml
-# rust/business-logic/classic-<name>-core/Cargo.toml
+# ClassicLib-rs/business-logic/classic-<name>-core/Cargo.toml
 [package]
 name = "classic-<name>-core"
 version = "0.1.0"
@@ -70,7 +70,7 @@ pub use types::*;
 
 ### 1.4 Add to Workspace
 
-Edit `rust/Cargo.toml`:
+Edit `ClassicLib-rs/Cargo.toml`:
 ```toml
 members = [
     # ... existing members ...
@@ -84,13 +84,13 @@ members = [
 ### 2.1 Create Directory
 
 ```bash
-mkdir -p rust/python-bindings/classic-<name>-py/src
+mkdir -p ClassicLib-rs/python-bindings/classic-<name>-py/src
 ```
 
 ### 2.2 Create Cargo.toml
 
 ```toml
-# rust/python-bindings/classic-<name>-py/Cargo.toml
+# ClassicLib-rs/python-bindings/classic-<name>-py/Cargo.toml
 [package]
 name = "classic-<name>-py"
 version = "0.1.0"
@@ -136,7 +136,7 @@ fn classic_<name>(m: &Bound<'_, PyModule>) -> PyResult<()> {
 ### 2.4 Create Type Stub (.pyi)
 
 ```python
-# rust/python-bindings/classic-<name>-py/classic_<name>.pyi
+# ClassicLib-rs/python-bindings/classic-<name>-py/classic_<name>.pyi
 """Type stubs for classic_<name> Rust module."""
 
 __version__: str
@@ -150,7 +150,7 @@ class Rust<Name>Error(Exception):
 
 ### 2.5 Add to Workspace
 
-Edit `rust/Cargo.toml`:
+Edit `ClassicLib-rs/Cargo.toml`:
 ```toml
 members = [
     # ... existing members ...
@@ -201,7 +201,7 @@ def is_rust_available() -> bool:
 
 ### 4.1 Rust Unit Tests
 
-In `rust/business-logic/classic-<name>-core/src/lib.rs`:
+In `ClassicLib-rs/business-logic/classic-<name>-core/src/lib.rs`:
 ```rust
 #[cfg(test)]
 mod tests {
@@ -236,9 +236,9 @@ def test_rust_module_loads():
 
 ## Checklist
 
-- [ ] Business logic crate created in `rust/business-logic/`
-- [ ] Python bindings crate created in `rust/python-bindings/`
-- [ ] Both crates added to `rust/Cargo.toml` workspace
+- [ ] Business logic crate created in `ClassicLib-rs/business-logic/`
+- [ ] Python bindings crate created in `ClassicLib-rs/python-bindings/`
+- [ ] Both crates added to `ClassicLib-rs/Cargo.toml` workspace
 - [ ] `.pyi` stub file created for type hints
 - [ ] Crate-level documentation (`//!`) in both crates
 - [ ] All public items have `///` doc comments

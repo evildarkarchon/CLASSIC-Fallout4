@@ -88,7 +88,7 @@ python CLASSIC_ScanLogs.py --fcx-mode
 **After (Rust):**
 
 ```bash
-rust/ui-applications/classic-cli --fcx-mode
+ClassicLib-rs/ui-applications/classic-cli --fcx-mode
 # Startup: <500ms (5-6x faster)
 # Dependencies: None (single binary)
 ```
@@ -100,7 +100,7 @@ rust/ui-applications/classic-cli --fcx-mode
 **After:**
 
 ```bash
-rust/ui-applications/classic-tui
+ClassicLib-rs/ui-applications/classic-tui
 # Beautiful terminal interface
 # 60 FPS rendering
 # Full keyboard navigation
@@ -170,7 +170,7 @@ python CLASSIC_ScanLogs.py --fcx-mode --show-fid-values
 **Rust (same flags):**
 
 ```bash
-rust/ui-applications/classic-cli --fcx-mode --show-fid-values
+ClassicLib-rs/ui-applications/classic-cli --fcx-mode --show-fid-values
 ```
 
 All flags have identical names and behavior.
@@ -193,8 +193,8 @@ All flags have identical names and behavior.
 
 1. Go to [Releases](https://github.com/evildarkarchon/CLASSIC-Fallout4/releases)
 2. Download:
-    - `rust/ui-applications/classic-cli.exe` (Command-line)
-    - `rust/ui-applications/classic-tui.exe` (Terminal UI)
+    - `ClassicLib-rs/ui-applications/classic-cli.exe` (Command-line)
+    - `ClassicLib-rs/ui-applications/classic-tui.exe` (Terminal UI)
 3. Place in a folder (e.g., `C:\CLASSIC\`)
 
 **Option B: Build from Source**
@@ -202,8 +202,8 @@ All flags have identical names and behavior.
 ```bash
 git clone https://github.com/evildarkarchon/CLASSIC-Fallout4.git
 cd CLASSIC-Fallout4
-cargo build --release --bin rust/ui-applications/classic-cli
-cargo build --release --bin rust/ui-applications/classic-tui
+cargo build --release --bin ClassicLib-rs/ui-applications/classic-cli
+cargo build --release --bin ClassicLib-rs/ui-applications/classic-tui
 ```
 
 Binaries will be in `target/release/`
@@ -218,8 +218,8 @@ $env:Path += ";C:\CLASSIC"
 [Environment]::SetEnvironmentVariable("Path", $env:Path, "User")
 
 # Verify
-rust/ui-applications/classic-cli --version
-rust/ui-applications/classic-tui --version
+ClassicLib-rs/ui-applications/classic-cli --version
+ClassicLib-rs/ui-applications/classic-tui --version
 ```
 
 **Linux/macOS:**
@@ -229,18 +229,18 @@ rust/ui-applications/classic-tui --version
 export PATH=$PATH:/path/to/classic
 
 # Verify
-rust/ui-applications/classic-cli --version
-rust/ui-applications/classic-tui --version
+ClassicLib-rs/ui-applications/classic-cli --version
+ClassicLib-rs/ui-applications/classic-tui --version
 ```
 
 ### Step 3: Verify Installation
 
 ```bash
 # Test CLI
-rust/ui-applications/classic-cli --help
+ClassicLib-rs/ui-applications/classic-cli --help
 
 # Test TUI
-rust/ui-applications/classic-tui
+ClassicLib-rs/ui-applications/classic-tui
 # (Press Q to quit)
 ```
 
@@ -284,7 +284,7 @@ paths:
 **3. Test with Rust CLI:**
 
 ```bash
-rust/ui-applications/classic-cli --help
+ClassicLib-rs/ui-applications/classic-cli --help
 # Check if config loads without errors
 ```
 
@@ -426,7 +426,7 @@ from ClassicLib.ScanLog.Parser import parse_crash_log
 
 ## Troubleshooting
 
-### Issue: "rust/ui-applications/classic-cli not found"
+### Issue: "ClassicLib-rs/ui-applications/classic-cli not found"
 
 **Cause:** Binary not in PATH
 
@@ -434,7 +434,7 @@ from ClassicLib.ScanLog.Parser import parse_crash_log
 
 ```bash
 # Full path
-C:\CLASSIC\rust/ui-applications/classic-cli.exe --version
+C:\CLASSIC\ClassicLib-rs/ui-applications/classic-cli.exe --version
 
 # Or add to PATH (see Installation)
 ```
@@ -450,13 +450,13 @@ C:\CLASSIC\rust/ui-applications/classic-cli.exe --version
 cd "C:\Users\<Name>\Documents\My Games\Fallout4"
 
 # Run Rust CLI from same location
-rust/ui-applications/classic-cli
+ClassicLib-rs/ui-applications/classic-cli
 ```
 
 Or specify path:
 
 ```bash
-rust/ui-applications/classic-cli --ini-path "C:\Users\<Name>\Documents\My Games\Fallout4"
+ClassicLib-rs/ui-applications/classic-cli --ini-path "C:\Users\<Name>\Documents\My Games\Fallout4"
 ```
 
 ### Issue: "Results look different"
@@ -477,7 +477,7 @@ rust/ui-applications/classic-cli --ini-path "C:\Users\<Name>\Documents\My Games\
 
 1. **Using release build?**
    ```bash
-   rust/ui-applications/classic-cli --version
+   ClassicLib-rs/ui-applications/classic-cli --version
    # Should NOT say "debug"
    ```
 
@@ -494,7 +494,7 @@ rust/ui-applications/classic-cli --ini-path "C:\Users\<Name>\Documents\My Games\
 **Check version:**
 
 ```bash
-rust/ui-applications/classic-cli --version  # Should be 8.0.0+
+ClassicLib-rs/ui-applications/classic-cli --version  # Should be 8.0.0+
 ```
 
 **Feature matrix:** See [Feature Comparison](#feature-comparison)
@@ -513,8 +513,8 @@ C:\CLASSIC\
 │   ├── CLASSIC_Interface.py  (GUI)
 │   └── CLASSIC_ScanLogs.py   (CLI)
 └── Rust\
-    ├── rust/ui-applications/classic-cli.exe        (CLI - Rust version)
-    └── rust/ui-applications/classic-tui.exe        (TUI - Rust only)
+    ├── ClassicLib-rs/ui-applications/classic-cli.exe        (CLI - Rust version)
+    └── ClassicLib-rs/ui-applications/classic-tui.exe        (TUI - Rust only)
 ```
 
 ### Workflow Examples
@@ -523,7 +523,7 @@ C:\CLASSIC\
 
 ```bash
 # Quick check (Rust CLI - fast)
-rust/ui-applications/classic-cli
+ClassicLib-rs/ui-applications/classic-cli
 
 # Detailed investigation (Python GUI - feature-rich)
 python CLASSIC_Interface.py
@@ -533,7 +533,7 @@ python CLASSIC_Interface.py
 
 ```bash
 # CI/CD (Rust CLI - fast, reliable)
-rust/ui-applications/classic-cli --stat-logging > results.txt
+ClassicLib-rs/ui-applications/classic-cli --stat-logging > results.txt
 
 # Manual review (Python GUI - visual)
 python CLASSIC_Interface.py
@@ -544,7 +544,7 @@ python CLASSIC_Interface.py
 ```bash
 # SSH session (Rust TUI - terminal-native)
 ssh server
-rust/ui-applications/classic-tui
+ClassicLib-rs/ui-applications/classic-tui
 
 # Local GUI (Python - mouse-friendly)
 python CLASSIC_Interface.py
@@ -570,7 +570,7 @@ python CLASSIC_Interface.py
 import subprocess
 
 result = subprocess.run(
-    ["rust/ui-applications/classic-cli", "--fcx-mode"],
+    ["ClassicLib-rs/ui-applications/classic-cli", "--fcx-mode"],
     capture_output=True,
     text=True
 )
@@ -602,7 +602,7 @@ print(result.stdout)
 python CLASSIC_ScanLogs.py --fcx-mode
 
 # New (same flags)
-rust/ui-applications/classic-cli --fcx-mode
+ClassicLib-rs/ui-applications/classic-cli --fcx-mode
 ```
 
 ### Q: Can I mix Rust CLI and Python GUI?
@@ -637,7 +637,7 @@ rust/ui-applications/classic-cli --fcx-mode
 
 ### Week 3: Script Migration
 
-1. **Update automation**: Replace `python CLASSIC_ScanLogs.py` with `rust/ui-applications/classic-cli`
+1. **Update automation**: Replace `python CLASSIC_ScanLogs.py` with `ClassicLib-rs/ui-applications/classic-cli`
 2. **Test CI/CD**: Verify integration works
 3. **Monitor**: Check for regressions
 

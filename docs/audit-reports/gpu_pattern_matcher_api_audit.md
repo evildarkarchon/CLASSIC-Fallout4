@@ -675,7 +675,7 @@ uv run pytest tests/rust_integration/test_pattern_matcher_parity.py -v
 
 ### GpuDetector Rust Implementation
 
-**File**: `rust/python-bindings/classic-scanlog-py/src/gpu_detector.rs`
+**File**: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/gpu_detector.rs`
 
 **Lines 106-153** (verified):
 ```rust
@@ -700,7 +700,7 @@ impl PyGpuDetector {
 
 ### PatternMatcher Rust Implementation
 
-**File**: `rust/python-bindings/classic-scanlog-py/src/patterns.rs`
+**File**: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/patterns.rs`
 
 **Lines 1-51** (verified):
 ```rust
@@ -727,7 +727,7 @@ impl PyPatternMatcher {
 
 ### PyO3 Module Registration
 
-**File**: `rust/python-bindings/classic-scanlog-py/src/lib.rs`
+**File**: `ClassicLib-rs/python-bindings/classic-scanlog-py/src/lib.rs`
 
 **Lines 149-155** (verified):
 ```rust

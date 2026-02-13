@@ -21,7 +21,7 @@ FetchContent_Declare(Corrosion
 FetchContent_MakeAvailable(Corrosion)
 
 corrosion_import_crate(
-    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../rust/Cargo.toml
+    MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../ClassicLib-rs/Cargo.toml
     CRATES classic-cpp-bridge
     PROFILE release
 )

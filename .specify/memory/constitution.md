@@ -135,10 +135,10 @@ Avoid over-engineering. Only make changes that are directly requested or clearly
 
 ### Directory Structure
 
-All Rust crates are organized in `rust/` with subdirectories by layer:
+All Rust crates are organized in `ClassicLib-rs/` with subdirectories by layer:
 
 ```
-rust/
+ClassicLib-rs/
 ├── Cargo.toml                    # Workspace manifest (authoritative)
 ├── foundation/                   # Foundation Layer
 │   ├── classic-shared-core/     # Core runtime, errors, utilities
@@ -155,16 +155,16 @@ rust/
 
 ### Creating New Crates
 
-1. **Business Logic** (`-core`): Create in `rust/business-logic/`
+1. **Business Logic** (`-core`): Create in `ClassicLib-rs/business-logic/`
    - Pure Rust, NO PyO3 dependencies
    - Add to workspace under `# Business Logic` comment
 
-2. **Python Bindings** (`-py`): Create in `rust/python-bindings/`
+2. **Python Bindings** (`-py`): Create in `ClassicLib-rs/python-bindings/`
    - Depends on corresponding `-core` crate
    - MUST create `.pyi` stub file
    - Add to `rebuild_rust.ps1` and `build_all.ps1`
 
-3. **UI Applications**: Create in `rust/ui-applications/`
+3. **UI Applications**: Create in `ClassicLib-rs/ui-applications/`
 
 ## Development Workflow
 
@@ -199,8 +199,8 @@ Before any commit:
 
 ```bash
 # Lint
-cargo fmt --all --manifest-path rust/Cargo.toml -- --check
-cargo clippy --workspace --all-targets --manifest-path rust/Cargo.toml -- -D warnings
+cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+cargo clippy --workspace --all-targets --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
 
 # Build
 ./rebuild_rust.ps1              # All crates

@@ -108,8 +108,8 @@ def test_stub_file_locations():
     """Test that stub files are in the correct locations."""
     print("Testing stub file locations...")
 
-    classic_config_stub = Path("rust/python-bindings/classic-config-py/classic_config.pyi")
-    classic_scanlog_stub = Path("rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi")
+    classic_config_stub = Path("ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi")
+    classic_scanlog_stub = Path("ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi")
 
     assert classic_config_stub.exists(), f"Missing: {classic_config_stub}"
     assert classic_scanlog_stub.exists(), f"Missing: {classic_scanlog_stub}"
@@ -122,8 +122,8 @@ def test_stub_file_syntax():
     print("Testing stub file syntax...")
 
     stub_files = [
-        Path("rust/python-bindings/classic-config-py/classic_config.pyi"),
-        Path("rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi"),
+        Path("ClassicLib-rs/python-bindings/classic-config-py/classic_config.pyi"),
+        Path("ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi"),
     ]
 
     for stub_file in stub_files:

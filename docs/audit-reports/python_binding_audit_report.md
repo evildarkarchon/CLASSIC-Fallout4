@@ -1,7 +1,7 @@
 # Python Binding Type Stub Audit Report
 
 **Generated**: 2025-11-03
-**Scope**: All 18 Python binding crates in `rust/python-bindings/`
+**Scope**: All 18 Python binding crates in `ClassicLib-rs/python-bindings/`
 **Status**: IN PROGRESS
 
 ---
@@ -1720,8 +1720,8 @@ def repo_url(self) -> str:
 ## 8. classic-constants-py Audit (Phase 4 - Batch 1)
 
 **Files Analyzed**:
-- rust/python-bindings/classic-constants-py/src/lib.rs (397 lines)
-- rust/python-bindings/classic-constants-py/classic_constants.pyi (246 lines)
+- ClassicLib-rs/python-bindings/classic-constants-py/src/lib.rs (397 lines)
+- ClassicLib-rs/python-bindings/classic-constants-py/classic_constants.pyi (246 lines)
 
 **API Inventory**:
 - **Classes**: YamlFile (7 variants), GameId (4 variants)
@@ -1742,9 +1742,9 @@ The .pyi file perfectly represents the Rust API:
 ## 9. classic-message-py Audit (Phase 4 - Batch 1)
 
 **Files Analyzed**:
-- rust/python-bindings/classic-message-py/src/lib.rs (527 lines)
-- rust/python-bindings/classic-message-py/src/logging.rs (292 lines)
-- rust/python-bindings/classic-message-py/classic_message.pyi (535 lines)
+- ClassicLib-rs/python-bindings/classic-message-py/src/lib.rs (527 lines)
+- ClassicLib-rs/python-bindings/classic-message-py/src/logging.rs (292 lines)
+- ClassicLib-rs/python-bindings/classic-message-py/classic_message.pyi (535 lines)
 
 **API Inventory**:
 - **Enums**: MessageType (7 variants), MessageTarget (6 variants)
@@ -1765,8 +1765,8 @@ The .pyi file perfectly represents the Rust API:
 ## 10. classic-path-py Audit (Phase 4 - Batch 1)
 
 **Files Analyzed**:
-- rust/python-bindings/classic-path-py/src/lib.rs (1434 lines)
-- rust/python-bindings/classic-path-py/classic_path.pyi (523 lines)
+- ClassicLib-rs/python-bindings/classic-path-py/src/lib.rs (1434 lines)
+- ClassicLib-rs/python-bindings/classic-path-py/classic_path.pyi (523 lines)
 
 **API Inventory**:
 - **Classes**: GamePathFinder, PathValidator, DocsPathFinder, BackupManager, XseVersion, IniCheckResult, DocumentsChecker
@@ -1791,8 +1791,8 @@ All classes present with correct method signatures:
 ## 11. classic-perf-py Audit (Phase 4 - Batch 1)
 
 **Files Analyzed**:
-- rust/python-bindings/classic-perf-py/src/lib.rs (252 lines)
-- rust/python-bindings/classic-perf-py/classic_perf.pyi (278 lines)
+- ClassicLib-rs/python-bindings/classic-perf-py/src/lib.rs (252 lines)
+- ClassicLib-rs/python-bindings/classic-perf-py/classic_perf.pyi (278 lines)
 
 **API Inventory**:
 - **Classes**: MetricsSummary, Timer

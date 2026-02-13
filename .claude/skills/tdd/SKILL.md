@@ -295,13 +295,13 @@ uv run pytest --cov=ClassicLib --cov-report=html -n auto
 
 ```bash
 # All Rust tests
-cargo test --workspace --manifest-path rust/Cargo.toml
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
 
 # Specific crate
-cargo test -p classic-yaml-core --manifest-path rust/Cargo.toml
+cargo test -p classic-yaml-core --manifest-path ClassicLib-rs/Cargo.toml
 
 # With output
-cargo test --workspace --manifest-path rust/Cargo.toml -- --nocapture
+cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
 ```
 
 ### Rust Integration (Python)

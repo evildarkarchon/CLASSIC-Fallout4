@@ -67,7 +67,7 @@
 
 .NOTES
     This script should be run from the project root directory.
-    Benchmark results are stored in rust/target/criterion/ (gitignored).
+    Benchmark results are stored in ClassicLib-rs/target/criterion/ (gitignored).
 #>
 
 [CmdletBinding()]
@@ -98,8 +98,8 @@ param(
 # Ensure we're in the project root or can find the rust directory
 $rustDir = $null
 $searchPaths = @(
-    (Join-Path $PSScriptRoot "../../rust"),
-    (Join-Path (Get-Location) "rust"),
+    (Join-Path $PSScriptRoot "../../ClassicLib-rs"),
+    (Join-Path (Get-Location) "ClassicLib-rs"),
     (Get-Location)
 )
 
@@ -112,7 +112,7 @@ foreach ($path in $searchPaths) {
 }
 
 if (-not $rustDir) {
-    Write-Error "Could not find rust/ directory with Cargo.toml. Run this script from the project root."
+    Write-Error "Could not find ClassicLib-rs/ directory with Cargo.toml. Run this script from the project root."
     exit 1
 }
 

@@ -154,7 +154,7 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 .\scripts\bench\run_benchmarks.ps1 -Mode thorough -SaveBaseline -BaselineName "pre-optimization"
 ```
 
-Baseline location: `rust/target/criterion/{baseline-name}/`
+Baseline location: `ClassicLib-rs/target/criterion/{baseline-name}/`
 
 ### GIL Benchmarks
 

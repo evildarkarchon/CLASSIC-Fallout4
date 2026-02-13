@@ -69,8 +69,8 @@ jobs:
       - name: Cache cargo build
         uses: actions/cache@v4
         with:
-          path: rust/target
-          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('rust/**/*.rs') }}
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
           restore-keys: |
             ${{ runner.os }}-cargo-bench-${{ hashFiles('**/Cargo.lock') }}-
             ${{ runner.os }}-cargo-bench-
@@ -82,13 +82,13 @@ jobs:
         id: baseline-cache
         uses: actions/cache/restore@v4
         with:
-          path: rust/target/criterion/baseline
+          path: ClassicLib-rs/target/criterion/baseline
           key: criterion-baseline-${{ runner.os }}-dummy
           restore-keys: criterion-baseline-${{ runner.os }}
 
       - name: Check baseline exists
         id: baseline-check
-        working-directory: rust
+        working-directory: ClassicLib-rs
         shell: bash
         run: |
           if [ -d "target/criterion/baseline" ]; then
@@ -100,12 +100,12 @@ jobs:
           fi
 
       - name: Run benchmarks
-        working-directory: rust
+        working-directory: ClassicLib-rs
         run: cargo bench -- --save-baseline current
 
       - name: Copy current to baseline (main only)
         if: github.ref == 'refs/heads/main'
-        working-directory: rust
+        working-directory: ClassicLib-rs
         shell: bash
         run: |
           if [ -d "target/criterion/current" ]; then
@@ -117,7 +117,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: actions/cache/save@v4
         with:
-          path: rust/target/criterion/baseline
+          path: ClassicLib-rs/target/criterion/baseline
           key: criterion-baseline-${{ runner.os }}-${{ github.sha }}
 
       - name: Install yq for YAML parsing
@@ -130,7 +130,7 @@ jobs:
       - name: Compare against baseline
         if: github.event_name == 'pull_request' && steps.baseline-check.outputs.baseline_exists == 'true'
         id: compare
-        working-directory: rust
+        working-directory: ClassicLib-rs
         shell: bash
         run: |
           critcmp baseline current > comparison.txt 2>&1 || true
@@ -142,7 +142,7 @@ jobs:
       - name: Analyze thresholds
         if: github.event_name == 'pull_request' && steps.baseline-check.outputs.baseline_exists == 'true'
         id: analyze
-        working-directory: rust
+        working-directory: ClassicLib-rs
         shell: bash
         run: |
           # Read default thresholds from config file
@@ -259,7 +259,7 @@ jobs:
       - name: Build PR comment body
         if: github.event_name == 'pull_request'
         id: comment-body
-        working-directory: rust
+        working-directory: ClassicLib-rs
         shell: bash
         run: |
           {

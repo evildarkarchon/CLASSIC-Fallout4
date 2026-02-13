@@ -388,7 +388,7 @@ class RustAcceleratedFcxModeHandler:
 
 ### Phase 3: Rust Implementation Updates
 
-#### rust/business-logic/classic-scanlog-core/src/fcx_handler.rs
+#### ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs
 **Lines affected**: Entire file
 
 **Current behavior:**
@@ -484,7 +484,7 @@ impl FCXModeHandler {
 
 ---
 
-#### rust/python-bindings/classic-scanlog-py/src/fcx_handler.rs
+#### ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs
 **Lines affected**: Entire file
 
 **Changes required:**
@@ -953,11 +953,11 @@ Each detected issue includes:
 ### Step 6: Update Rust Implementation
 **Estimated time**: 2-3 hours
 
-1. Update `rust/business-logic/classic-scanlog-core/src/fcx_handler.rs`:
+1. Update `ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs`:
    - Remove fix-related state
    - Add `ConfigIssue` struct
    - Update state management
-2. Update `rust/python-bindings/classic-scanlog-py/src/fcx_handler.rs`:
+2. Update `ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs`:
    - Add `PyConfigIssue` wrapper
    - Remove fix-related methods
    - Update PyO3 bindings
@@ -1175,8 +1175,8 @@ Each detected issue includes:
 - **Rust Wrapper**: [ClassicLib/rust/fcx_rust.py](../ClassicLib/rust/fcx_rust.py)
 - **Config Cache**: [ClassicLib/ScanGame/Config.py](../ClassicLib/ScanGame/Config.py)
 - **Mod INI Scanner**: [ClassicLib/ScanGame/ScanModInis.py](../ClassicLib/ScanGame/ScanModInis.py)
-- **Rust Core**: [rust/business-logic/classic-scanlog-core/src/fcx_handler.rs](../../rust/business-logic/classic-scanlog-core/src/fcx_handler.rs)
-- **Rust PyO3**: [rust/python-bindings/classic-scanlog-py/src/fcx_handler.rs](../../rust/python-bindings/classic-scanlog-py/src/fcx_handler.rs)
+- **Rust Core**: [ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs](../../ClassicLib-rs/business-logic/classic-scanlog-core/src/fcx_handler.rs)
+- **Rust PyO3**: [ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs](../../ClassicLib-rs/python-bindings/classic-scanlog-py/src/fcx_handler.rs)
 
 ### Related Documentation
 - [Async Development Guide](../development/async_development_guide.md)

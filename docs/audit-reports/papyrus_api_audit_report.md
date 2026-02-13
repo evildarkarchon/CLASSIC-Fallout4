@@ -23,7 +23,7 @@ The Python codebase does NOT currently use the Rust Papyrus classes (`PapyrusAna
 
 ### What's Available in classic-scanlog-py
 
-From `rust/python-bindings/classic-scanlog-py/src/papyrus.rs` and `lib.rs`:
+From `ClassicLib-rs/python-bindings/classic-scanlog-py/src/papyrus.rs` and `lib.rs`:
 
 **1. PapyrusAnalyzer Class** (`PyPapyrusAnalyzer`):
 ```python
@@ -295,7 +295,7 @@ import classic_scanlog  # For detect_mods_*
 
 ### Missing from `.pyi` Stub
 
-From `rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi`:
+From `ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi`:
 
 **Currently MISSING**:
 1. `class PapyrusAnalyzer` - Not in stub
@@ -376,7 +376,7 @@ from ClassicLib.Interface.Papyrus import PapyrusMonitorWorker, PapyrusStats
 
 **Action**: Add missing Papyrus classes to `classic_scanlog.pyi`
 
-**Location**: `rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi`
+**Location**: `ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi`
 
 **Required Additions**:
 ```python
@@ -772,9 +772,9 @@ The current Python implementation works correctly. Migration would provide signi
 | Python PapyrusMonitorWorker | `ClassicLib/Interface/Papyrus.py` |
 | Python dialog UI | `ClassicLib/Interface/PapyrusDialog.py` |
 | Factory pattern | `ClassicLib/integration/factory.py` |
-| Rust Papyrus implementation | `rust/business-logic/classic-scanlog-core/src/papyrus.rs` |
-| Rust Python bindings | `rust/python-bindings/classic-scanlog-py/src/papyrus.rs` |
-| Type stub | `rust/python-bindings/classic-scanlog-py/classic_scanlog.pyi` |
+| Rust Papyrus implementation | `ClassicLib-rs/business-logic/classic-scanlog-core/src/papyrus.rs` |
+| Rust Python bindings | `ClassicLib-rs/python-bindings/classic-scanlog-py/src/papyrus.rs` |
+| Type stub | `ClassicLib-rs/python-bindings/classic-scanlog-py/classic_scanlog.pyi` |
 | Tests | `tests/interface/test_papyrus_monitor_worker.py` |
 
 ---
@@ -796,7 +796,7 @@ def papyrus_logging() -> tuple[str, int]:
 ### Rust `papyrus_logging()` Function
 
 ```rust
-// Location: rust/python-bindings/classic-scanlog-py/src/papyrus.rs
+// Location: ClassicLib-rs/python-bindings/classic-scanlog-py/src/papyrus.rs
 #[pyfunction]
 pub fn papyrus_logging(log_path: PathBuf) -> (String, usize) {
     """
@@ -827,7 +827,7 @@ class PapyrusStats:
 ### Rust `PapyrusStats` Class
 
 ```rust
-// Location: rust/python-bindings/classic-scanlog-py/src/papyrus.rs
+// Location: ClassicLib-rs/python-bindings/classic-scanlog-py/src/papyrus.rs
 #[pyclass(name = "PapyrusStats")]
 pub struct PyPapyrusStats {
     // Properties:
