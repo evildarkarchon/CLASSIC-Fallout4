@@ -7,7 +7,11 @@ use classic_path_core::{DocsPathFinder, GamePathFinder};
 use std::path::Path;
 
 fn detect_fallout4_game_path(cached_path: &str, is_vr: bool) -> String {
-    let game_exe = if is_vr { "Fallout4VR.exe" } else { "Fallout4.exe" };
+    let game_exe = if is_vr {
+        "Fallout4VR.exe"
+    } else {
+        "Fallout4.exe"
+    };
     let finder = GamePathFinder::new(game_exe, None::<&str>, "Fallout4", is_vr);
 
     let cached = if cached_path.is_empty() {
@@ -75,4 +79,3 @@ mod tests {
         assert!(!result.contains('\0'));
     }
 }
-
