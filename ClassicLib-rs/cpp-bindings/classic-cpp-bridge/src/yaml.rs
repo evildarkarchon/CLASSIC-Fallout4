@@ -146,7 +146,11 @@ fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> 
     Ok(())
 }
 
-fn yaml_ops_set_integer_setting(ops: &mut YamlOps, key_path: &str, value: i64) -> Result<(), String> {
+fn yaml_ops_set_integer_setting(
+    ops: &mut YamlOps,
+    key_path: &str,
+    value: i64,
+) -> Result<(), String> {
     let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
     let updated = ops
         .ops
@@ -156,7 +160,11 @@ fn yaml_ops_set_integer_setting(ops: &mut YamlOps, key_path: &str, value: i64) -
     Ok(())
 }
 
-fn yaml_ops_set_vec_setting(ops: &mut YamlOps, key_path: &str, values: Vec<String>) -> Result<(), String> {
+fn yaml_ops_set_vec_setting(
+    ops: &mut YamlOps,
+    key_path: &str,
+    values: Vec<String>,
+) -> Result<(), String> {
     let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
     let yaml_array = Yaml::Array(values.into_iter().map(Yaml::String).collect());
     let updated = ops
@@ -218,8 +226,16 @@ mod ffi {
             value: &str,
         ) -> Result<()>;
         fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> Result<()>;
-        fn yaml_ops_set_integer_setting(ops: &mut YamlOps, key_path: &str, value: i64) -> Result<()>;
-        fn yaml_ops_set_vec_setting(ops: &mut YamlOps, key_path: &str, values: Vec<String>) -> Result<()>;
+        fn yaml_ops_set_integer_setting(
+            ops: &mut YamlOps,
+            key_path: &str,
+            value: i64,
+        ) -> Result<()>;
+        fn yaml_ops_set_vec_setting(
+            ops: &mut YamlOps,
+            key_path: &str,
+            values: Vec<String>,
+        ) -> Result<()>;
 
         // Cache management
         fn yaml_ops_clear_cache(ops: &YamlOps);
