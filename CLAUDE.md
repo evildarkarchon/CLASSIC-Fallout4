@@ -196,10 +196,9 @@ Key markers: `unit`, `integration`, `slow`, `stress`, `performance`, `network`, 
 
 ## CI Pipeline
 
-GitHub Actions on `windows-latest` with parallel jobs:
-1. **Format**: ruff format + rustfmt (non-blocking)
-2. **Lint**: ruff check + clippy + vulture (blocking)
-3. **Build Rust** -> **Build Python Bindings** (maturin) -> **Python Tests** (unit, integration, rust-integration)
-4. **Rust Tests** (independent, parallel with Python pipeline)
-5. **Node.js Bindings** (Bun): build NAPI-RS binary + run Bun tests (independent)
-6. **Benchmarks** (`benchmarks.yml`): separate workflow for performance tracking
+GitHub Actions on `windows-latest`, split into per-language workflows for independent notifications:
+
+1. **`ci-rust.yml`** — Rust: format (rustfmt) → lint (clippy) → build → test (with all features)
+2. **`ci-python.yml`** — Python: format (ruff) → lint (ruff) → dead code (vulture) → build Rust → build PyO3 bindings (maturin) → pytest (unit, integration, rust-integration)
+3. **`ci-typescript.yml`** — TypeScript: build NAPI-RS binary → Bun tests
+4. **`benchmarks.yml`** — Benchmarks: separate workflow for performance tracking

@@ -1,4 +1,4 @@
-name: CI
+name: CI — Python
 
 on:
   push:
@@ -9,17 +9,15 @@ on:
 env:
   RUST_BACKTRACE: 1
   CARGO_TERM_COLOR: always
-  # Python version must match project requirements
   PYTHON_VERSION: "3.12"
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 jobs:
-  # Formatting checks (non-blocking, aesthetic only)
-  format-python:
-    name: Python Formatting (Ruff)
+  format:
+    name: Formatting (Ruff)
     runs-on: windows-latest
     timeout-minutes: 10
-    continue-on-error: true # Don't block CI on formatting issues
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -35,25 +33,8 @@ jobs:
       - name: Run ruff format check
         run: uv run ruff format --check .
 
-  format-rust:
-    name: Rust Formatting (rustfmt)
-    runs-on: windows-latest
-    timeout-minutes: 10
-    continue-on-error: true # Don't block CI on formatting issues
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt
-
-      - name: Run rustfmt check
-        run: cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
-
-  # Linting checks (can catch real bugs, run in parallel with builds)
-  lint-python:
-    name: Python Linting (Ruff)
+  lint:
+    name: Linting (Ruff)
     runs-on: windows-latest
     timeout-minutes: 10
     steps:
@@ -90,56 +71,10 @@ jobs:
       - name: Run vulture dead code detection
         run: uv run vulture ClassicLib/ vulture_whitelist.py --min-confidence 80
 
-  lint-rust:
-    name: Rust Linting (Clippy)
+  build-rust:
+    name: Build Rust (for PyO3 bindings)
     runs-on: windows-latest
     timeout-minutes: 60
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-index-
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
-            ${{ runner.os }}-cargo-build-
-
-      - name: Run clippy
-        run: cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
-
-  # Build Rust components (no dependencies - runs immediately)
-  build-rust:
-    name: Build Rust Components
-    runs-on: windows-latest
-    timeout-minutes: 60 # Prevent build from hanging
     env:
       RUST_BACKTRACE: full
     steps:
@@ -152,8 +87,6 @@ jobs:
 
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
-        with:
-          components: clippy
 
       - name: Cache cargo registry
         uses: actions/cache@v4
@@ -192,126 +125,11 @@ jobs:
             ClassicLib-rs/target/release/*.pdb
           retention-days: 1
 
-  # Run Rust tests (independent of Python tests)
-  test-rust:
-    name: Rust Tests
-    runs-on: windows-latest
-    timeout-minutes: 120
-    env:
-      RUST_BACKTRACE: full
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-index-
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
-            ${{ runner.os }}-cargo-test-
-
-      - name: Run Rust tests
-        run: cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
-
-      - name: Run Rust tests with all features
-        run: cargo test --workspace --release --all-features --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
-
-  # Test Node.js/Bun bindings (NAPI-RS)
-  test-node-bindings:
-    name: Node.js Bindings (Bun)
-    runs-on: windows-latest
-    timeout-minutes: 60
-    env:
-      RUST_BACKTRACE: full
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/registry
-          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-registry-
-
-      - name: Cache cargo index
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/git
-          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-index-
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: ClassicLib-rs/target
-          key: ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-node-${{ hashFiles('**/Cargo.lock') }}-
-            ${{ runner.os }}-cargo-node-
-
-      - name: Install npm dependencies
-        working-directory: ClassicLib-rs/node-bindings/classic-node
-        run: bun install
-
-      - name: Build NAPI-RS binary
-        working-directory: ClassicLib-rs/node-bindings/classic-node
-        run: bun run build
-
-      - name: Verify NAPI binary exists
-        working-directory: ClassicLib-rs/node-bindings/classic-node
-        shell: pwsh
-        run: |
-          $binary = Get-ChildItem -Filter "*.node" -Recurse
-          if ($binary) {
-            Write-Host "NAPI binary found: $($binary.FullName) ($([math]::Round($binary.Length / 1MB, 2)) MB)"
-          } else {
-            Write-Error "NAPI binary not found after build"
-            exit 1
-          }
-
-      - name: Run Bun tests
-        working-directory: ClassicLib-rs/node-bindings/classic-node
-        run: bun test
-
-  # Build Python bindings with maturin
   build-python-bindings:
-    name: Build Python Bindings
+    name: Build Python Bindings (maturin)
     runs-on: windows-latest
-    needs: [build-rust] # Only wait for Rust build, not linting
-    timeout-minutes: 30 # Maturin builds can be slow
+    needs: [build-rust]
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -359,14 +177,13 @@ jobs:
             ClassicLib-rs/foundation/*/dist/*.whl
           retention-days: 1
 
-  # Run Python tests
-  test-python:
-    name: Python Tests
+  test:
+    name: Tests (pytest)
     runs-on: windows-latest
     needs: [build-python-bindings]
-    timeout-minutes: 30 # Kill job if tests hang for 30 minutes
+    timeout-minutes: 30
     env:
-      PYTHONTRACEMALLOC: "10" # Enable tracemalloc with 10 frame depth for better error reporting
+      PYTHONTRACEMALLOC: "10"
     steps:
       - uses: actions/checkout@v4
 
@@ -388,21 +205,15 @@ jobs:
       - name: Install Python dependencies and wheels
         run: |
           uv sync --all-extras
-          # Debug: Show workflow version
-          Write-Host "CI workflow version: 2024-11-27-v6"
-          # Install pip into the venv so we can use it directly
           uv pip install pip
-          # List downloaded wheels for debugging
           Write-Host "Downloaded wheels:"
           $wheels = Get-ChildItem -Path wheels -Filter *.whl -Recurse
           $wheels | ForEach-Object { Write-Host "  $($_.FullName)" }
           Write-Host "Total wheels found: $($wheels.Count)"
-          # Install each wheel using pip directly (bypasses uv lockfile)
           foreach ($wheel in $wheels) {
             Write-Host "Installing: $($wheel.Name)"
             uv run python -m pip install $wheel.FullName --force-reinstall --no-deps
           }
-          # Verify installation
           Write-Host "Installed packages (classic*):"
           uv run python -m pip list | Select-String "classic"
         shell: pwsh

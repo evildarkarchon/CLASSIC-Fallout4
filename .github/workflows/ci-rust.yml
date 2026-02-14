@@ -1,0 +1,167 @@
+name: CI — Rust
+
+on:
+  push:
+    branches: [main, classic-next, develop, classic-9]
+  pull_request:
+    branches: [main, classic-next, develop, classic-9]
+
+env:
+  RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  format:
+    name: Formatting (rustfmt)
+    runs-on: windows-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+
+      - name: Run rustfmt check
+        run: cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
+
+  lint:
+    name: Linting (Clippy)
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-build-
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+
+  build:
+    name: Build
+    runs-on: windows-latest
+    timeout-minutes: 60
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-build-
+
+      - name: Build all Rust workspace
+        run: cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml
+
+  test:
+    name: Tests
+    runs-on: windows-latest
+    timeout-minutes: 120
+    env:
+      RUST_BACKTRACE: full
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-registry-
+
+      - name: Cache cargo index
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-index-
+
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: ClassicLib-rs/target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-${{ hashFiles('ClassicLib-rs/**/*.rs') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-cargo-test-
+
+      - name: Run Rust tests
+        run: cargo test --workspace --release --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
+
+      - name: Run Rust tests with all features
+        run: cargo test --workspace --release --all-features --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture
