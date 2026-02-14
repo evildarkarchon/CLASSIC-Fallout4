@@ -32,7 +32,7 @@ void MarkdownViewer::setupUi()
 
     // Toolbar
     {
-        auto* toolbar = new QHBoxLayout();
+        auto* toolbar = new QHBoxLayout(); 
         toolbar->setSpacing(8);
 
         m_btnCopyAll = new QPushButton(QStringLiteral("Copy All"));
@@ -122,7 +122,7 @@ void MarkdownViewer::setMarkdownContent(const QString& markdown)
         auto rustMarkdown = classic::toRustString(markdown);
         auto html = classic::markdown::markdown_to_html(rustMarkdown);
         m_browser->setHtml(classic::toQString(html));
-    } catch (const rust::Error& e) {
+    } catch (const rust::Error&) {
         // Fallback: show raw markdown if conversion fails
         m_browser->setPlainText(markdown);
     }

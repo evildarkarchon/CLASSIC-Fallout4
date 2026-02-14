@@ -49,7 +49,12 @@ corrosion_add_cxxbridge(classic_cxx_bridge
 )
 
 add_subdirectory(src)
-add_subdirectory(tests)
+
+# Enable CTest/BUILD_TESTING and register unit tests when enabled.
+include(CTest)
+if(BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
 
 # ── CPack ─────────────────────────────────────────────────────────────
 # Produces a distributable ZIP archive via: cmake --build build --target package

@@ -30,6 +30,18 @@ cargo build -p classic-gui --manifest-path ClassicLib-rs/Cargo.toml           # 
 .\rebuild_rust.ps1 -BuildOnly           # Build wheels without installing
 ```
 
+### C++ Build (classic-cli and classic-gui)
+The C++ projects require the MSVC toolchain. Either use the provided build scripts (which initialize the VS Dev environment automatically) or manually open a VS Developer PowerShell / Command Prompt before running CMake commands.
+```powershell
+# Option 1: Use the build scripts (recommended -- handles VS Dev Shell init)
+.\classic-cli\build_cli.ps1                # Build classic-cli
+.\classic-gui\build_gui.ps1                # Build classic-gui (Qt 6)
+
+# Option 2: Manual build (requires VS Dev Shell already initialized)
+cmake --preset default                     # Configure (vcpkg + Ninja + Corrosion)
+cmake --build build                        # Build
+```
+
 ### Testing
 ```powershell
 # Python tests
@@ -46,8 +58,8 @@ cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
 cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture  # With output
 cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml     # Single crate
 
-# C++ tests (Catch2 v3 via CTest) -- run from classic-cli/
-cmake --preset default                                               # Configure (installs vcpkg deps)
+# C++ tests (Catch2 v3 via CTest) -- run from classic-cli/ (requires VS Dev Shell)
+cmake --preset default                                               # Configure (vcpkg + Ninja + Corrosion)
 cmake --build build --config Release --target classic-cli-tests      # Build test executable
 ctest --test-dir build --build-config Release --output-on-failure    # Run all tests via CTest
 .\build\Release\classic-cli-tests.exe [thread_pool]                  # Run by tag
@@ -136,7 +148,8 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 
 ### C++ Style
 - C++20, MSVC on Windows (`/utf-8 /W4`)
-- CMake 3.25+ with vcpkg for package management
+- CMake 3.25+ with vcpkg + Corrosion (Ninja generator)
+- **Requires VS Dev Shell or the project build scripts** (`build_cli.ps1` / `build_gui.ps1`) which initialize it automatically
 - Catch2 v3 for unit tests (bridge-free components: ThreadPool, Progress, CliArgs)
 - Unit test tags: `[thread_pool]`, `[progress]`, `[cli_args]`
 - Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)

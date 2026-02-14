@@ -30,6 +30,18 @@ cargo build -p classic-gui --manifest-path ClassicLib-rs/Cargo.toml           # 
 .\rebuild_rust.ps1 -BuildOnly           # Build wheels without installing
 ```
 
+### C++ Build (classic-cli and classic-gui)
+The C++ projects require the MSVC toolchain. Either use the provided build scripts (which initialize the VS Dev environment automatically) or manually open a VS Developer PowerShell / Command Prompt before running CMake commands.
+```powershell
+# Option 1: Use the build scripts (recommended -- handles VS Dev Shell init)
+.\classic-cli\build_cli.ps1                # Build classic-cli
+.\classic-gui\build_gui.ps1                # Build classic-gui (Qt 6)
+
+# Option 2: Manual build (requires VS Dev Shell already initialized)
+cmake --preset default                     # Configure (vcpkg + Ninja + Corrosion)
+cmake --build build                        # Build
+```
+
 ### Testing
 ```powershell
 # Python tests
@@ -156,7 +168,8 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 
 ### C++ Style
 - C++20, MSVC on Windows (`/utf-8 /W4`)
-- CMake 3.25+ with vcpkg + Corrosion (Ninja generator, requires VS Dev Shell)
+- CMake 3.25+ with vcpkg + Corrosion (Ninja generator)
+- **Requires VS Dev Shell or the project build scripts** (`build_cli.ps1` / `build_gui.ps1`) which initialize it automatically
 - Catch2 v3 for unit tests (bridge-free components: ThreadPool, Progress, CliArgs)
 - Unit test tags: `[thread_pool]`, `[progress]`, `[cli_args]`
 - Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)

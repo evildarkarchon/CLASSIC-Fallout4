@@ -70,7 +70,7 @@ members = [
     "node-bindings/classic-node",
 
     # GUI Applications (v9.0.0 Slint)
-    "ui-applications/classic-gui",
+    "ui-applications/classic-gui-slint",
 
     # C++ Bindings (CXX FFI adapters)
     "cpp-bindings/classic-cpp-bridge",
