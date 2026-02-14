@@ -310,10 +310,10 @@ snapshot_report.html
 docs/CLASSIC_TUI_PRD.md
 TestAppSnapshots*.raw
 Performance CI Test.txt
-ui-applications/classic-gui/CLASSIC Data
-ClassicLib-rs/ui-applications/classic-gui/CLASSIC Data
 con
 
 # Git Worktrees
 .worktrees/
 !**/fixtures/*.log
+classic-gui/result.txt
+ClassicLib-rs/ui-applications/classic-gui-slint/CLASSIC Data/
