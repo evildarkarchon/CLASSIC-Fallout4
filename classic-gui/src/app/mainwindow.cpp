@@ -14,6 +14,7 @@
 #include <QSplitter>
 #include <QThread>
 #include <filesystem>
+#include <vector>
 
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
@@ -35,14 +36,209 @@
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/yaml.h"
 #include "classic_cxx_bridge/config.h"
+#include "classic_cxx_bridge/files.h"
+#include "classic_cxx_bridge/game.h"
+#include "classic_cxx_bridge/path.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/scangame.h"
 
+#include <QDateTime>
 #include <QDesktopServices>
 #include <QGroupBox>
 #include <QUrl>
 
 namespace fs = std::filesystem;
+
+namespace {
+QString settingsFilePath(const QString& dataRoot)
+{
+    return dataRoot + QStringLiteral("/CLASSIC Settings.yaml");
+}
+
+QString ignoreFilePath(const QString& dataRoot)
+{
+    return dataRoot + QStringLiteral("/CLASSIC Ignore.yaml");
+}
+
+bool ensureSettingsFileExists(
+    const QString& dataRoot,
+    const QString& dataDir,
+    QString* errorOut)
+{
+    if (dataRoot.isEmpty()) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
+        }
+        return false;
+    }
+    if (dataDir.isEmpty()) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("CLASSIC Data directory path is empty.");
+        }
+        return false;
+    }
+
+    const QString settingsPath = settingsFilePath(dataRoot);
+    if (QFile::exists(settingsPath)) {
+        return true;
+    }
+
+    // Migration path: if an older build wrote settings under CLASSIC Data,
+    // copy that file back to the canonical root location.
+    const QString legacySettingsPath = dataDir + QStringLiteral("/CLASSIC Settings.yaml");
+    if (QFile::exists(legacySettingsPath)) {
+        if (QFile::copy(legacySettingsPath, settingsPath)) {
+            return true;
+        }
+        if (errorOut) {
+            *errorOut = QStringLiteral("Failed to migrate settings from ")
+                + legacySettingsPath + QStringLiteral(" to ")
+                + settingsPath;
+        }
+        return false;
+    }
+
+    const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
+    if (!QFile::exists(mainYamlPath)) {
+        if (errorOut) {
+            *errorOut =
+                QStringLiteral("Missing template file: ") + mainYamlPath;
+        }
+        return false;
+    }
+
+    try {
+        auto mainOps = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(
+            *mainOps, std::string(mainYamlPath.toUtf8().constData()));
+
+        auto defaultSettings = classic::yaml::yaml_ops_get_string(
+            *mainOps, "CLASSIC_Info.default_settings", "");
+        if (defaultSettings.empty()) {
+            if (errorOut) {
+                *errorOut = QStringLiteral(
+                    "CLASSIC_Info.default_settings is missing in CLASSIC Main.yaml.");
+            }
+            return false;
+        }
+
+        QFile outFile(settingsPath);
+        if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
+            if (errorOut) {
+                *errorOut = QStringLiteral("Cannot create file: ")
+                    + settingsPath + QStringLiteral(" (")
+                    + outFile.errorString() + QStringLiteral(")");
+            }
+            return false;
+        }
+
+        const auto content = classic::toQString(defaultSettings).toUtf8();
+        if (outFile.write(content) == -1) {
+            if (errorOut) {
+                *errorOut = QStringLiteral("Failed writing file: ")
+                    + settingsPath + QStringLiteral(" (")
+                    + outFile.errorString() + QStringLiteral(")");
+            }
+            return false;
+        }
+        return true;
+
+    } catch (const std::exception& e) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("Template parse failed: ")
+                + QString::fromUtf8(e.what());
+        }
+        return false;
+    } catch (...) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("Unknown error creating default settings.");
+        }
+        return false;
+    }
+}
+
+bool ensureIgnoreFileExists(
+    const QString& dataRoot,
+    const QString& dataDir,
+    QString* errorOut)
+{
+    if (dataRoot.isEmpty()) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("CLASSIC root directory path is empty.");
+        }
+        return false;
+    }
+    if (dataDir.isEmpty()) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("CLASSIC Data directory path is empty.");
+        }
+        return false;
+    }
+
+    const QString ignorePath = ignoreFilePath(dataRoot);
+    if (QFile::exists(ignorePath)) {
+        return true;
+    }
+
+    const QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
+    if (!QFile::exists(mainYamlPath)) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("Missing template file: ") + mainYamlPath;
+        }
+        return false;
+    }
+
+    try {
+        auto mainOps = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(
+            *mainOps, std::string(mainYamlPath.toUtf8().constData()));
+
+        auto defaultIgnore = classic::yaml::yaml_ops_get_string(
+            *mainOps, "CLASSIC_Info.default_ignorefile", "");
+        if (defaultIgnore.empty()) {
+            if (errorOut) {
+                *errorOut = QStringLiteral(
+                    "CLASSIC_Info.default_ignorefile is missing in CLASSIC Main.yaml.");
+            }
+            return false;
+        }
+
+        QFile outFile(ignorePath);
+        if (!outFile.open(QFile::WriteOnly | QFile::Text | QFile::Truncate)) {
+            if (errorOut) {
+                *errorOut = QStringLiteral("Cannot create file: ")
+                    + ignorePath + QStringLiteral(" (")
+                    + outFile.errorString() + QStringLiteral(")");
+            }
+            return false;
+        }
+
+        const auto content = classic::toQString(defaultIgnore).toUtf8();
+        if (outFile.write(content) == -1) {
+            if (errorOut) {
+                *errorOut = QStringLiteral("Failed writing file: ")
+                    + ignorePath + QStringLiteral(" (")
+                    + outFile.errorString() + QStringLiteral(")");
+            }
+            return false;
+        }
+
+        return true;
+
+    } catch (const std::exception& e) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("Ignore template parse failed: ")
+                + QString::fromUtf8(e.what());
+        }
+        return false;
+    } catch (...) {
+        if (errorOut) {
+            *errorOut = QStringLiteral("Unknown error creating default ignore file.");
+        }
+        return false;
+    }
+}
+}  // namespace
 
 // ── Construction / Destruction ─────────────────────────────────────
 
@@ -437,6 +633,14 @@ void MainWindow::connectSignals()
     connect(m_btnExit, &QPushButton::clicked,
             this, &MainWindow::onExit);
 
+    // Per-tab window geometry
+    connect(m_tabWidget, &QTabWidget::currentChanged,
+            this, &MainWindow::onTabChanged);
+
+    // Custom scan folder validation on manual edit
+    connect(m_editCustomFolder, &QLineEdit::editingFinished,
+            this, &MainWindow::onCustomFolderEdited);
+
     // ScanController → MainWindow
     connect(m_scanController, &ScanController::scanProgress,
             this, &MainWindow::onScanProgress);
@@ -475,36 +679,38 @@ void MainWindow::connectSignals()
         dlg.exec();
     });
 
-    // Help button -- open the GitHub wiki in the default browser
+    // Help button -- show in-app help from YAML content
     connect(m_btnHelp, &QPushButton::clicked, this, [this]() {
-        QDesktopServices::openUrl(
-            QUrl(QStringLiteral("https://github.com/evildarkarchon/CLASSIC-Fallout4/wiki")));
-    });
-
-    // Open Crash Logs -- open the crash logs directory in file explorer
-    connect(m_btnOpenCrashLogs, &QPushButton::clicked, this, [this]() {
         if (m_dataDir.isEmpty()) {
             QMessageBox::warning(this, QStringLiteral("Error"),
                 QStringLiteral("CLASSIC Data directory not found."));
             return;
         }
 
-        // Read crash logs directory from YAML settings
-        QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
-        QString crashDir;
+        QString mainYamlPath = m_dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
         try {
             auto ops = classic::yaml::yaml_ops_new();
             classic::yaml::yaml_ops_load_file(*ops,
-                std::string(settingsPath.toUtf8().constData()));
-            auto dir = classic::yaml::yaml_ops_get_string(
-                *ops, "CLASSIC_Settings.Crash Logs Folder", "");
-            if (!dir.empty()) {
-                crashDir = classic::toQString(dir);
+                std::string(mainYamlPath.toUtf8().constData()));
+            auto helpText = classic::yaml::yaml_ops_get_string(
+                *ops, "CLASSIC_Interface.help_popup_main", "");
+            if (!helpText.empty()) {
+                QMessageBox::information(this,
+                    QStringLiteral("NEED HELP?"),
+                    classic::toQString(helpText));
+            } else {
+                QMessageBox::warning(this, QStringLiteral("Help"),
+                    QStringLiteral("Help content not available."));
             }
         } catch (...) {
-            // Ignore -- will show error below
+            QMessageBox::warning(this, QStringLiteral("Help"),
+                QStringLiteral("Failed to load help content."));
         }
+    });
 
+    // Open Crash Logs -- open the crash logs directory in file explorer
+    connect(m_btnOpenCrashLogs, &QPushButton::clicked, this, [this]() {
+        QString crashDir = readCrashLogsDir();
         if (crashDir.isEmpty()) {
             QMessageBox::warning(this, QStringLiteral("Error"),
                 QStringLiteral("Crash logs directory is not configured. "
@@ -535,8 +741,16 @@ void MainWindow::loadSettings()
     }
     m_dataDir = m_dataRoot + QStringLiteral("/CLASSIC Data");
 
-    // Load CLASSIC_Settings.yaml via CXX YAML bridge
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    QString bootstrapError;
+    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+        setStatusMessage(QStringLiteral("Settings bootstrap failed: ") + bootstrapError);
+    }
+    if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+        setStatusMessage(QStringLiteral("Ignore file bootstrap failed: ") + bootstrapError);
+    }
+
+    // Load CLASSIC Settings.yaml via CXX YAML bridge
+    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -562,33 +776,18 @@ void MainWindow::loadSettings()
             m_backupController->setGameRoot(classic::toQString(gameRoot));
         }
 
-        // Restore window geometry from settings (if saved previously)
-        auto getInt = [&](const char* key) -> int {
-            auto val = classic::yaml::yaml_ops_get_setting_value(*ops, key);
-            if (val.value_type == "integer") {
-                bool ok = false;
-                int result = QString::fromStdString(std::string(val.value)).toInt(&ok);
-                if (ok) return result;
-            }
-            return -1;
-        };
-
-        int wx = getInt("CLASSIC_Settings.Window X");
-        int wy = getInt("CLASSIC_Settings.Window Y");
-        int ww = getInt("CLASSIC_Settings.Window Width");
-        int wh = getInt("CLASSIC_Settings.Window Height");
-
-        if (ww > 0 && wh > 0) {
-            resize(ww, wh);
-        }
-        if (wx >= 0 && wy >= 0) {
-            move(wx, wy);
-        }
     } catch (const std::exception& e) {
         setStatusMessage(QStringLiteral("Settings load failed: ") + QString::fromUtf8(e.what()));
     } catch (...) {
         setStatusMessage(QStringLiteral("Settings load failed: unknown error"));
     }
+
+    // Restore per-tab window geometry for the current tab
+    // (has its own YAML load + error handling)
+    int initialTab = m_tabWidget ? m_tabWidget->currentIndex() : 0;
+    restoreTabGeometry(initialTab);
+    m_lastTabIndex = initialTab;
+    m_geometryInitialized = true;
 }
 
 void MainWindow::saveSettings()
@@ -597,7 +796,13 @@ void MainWindow::saveSettings()
         return;
     }
 
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    QString bootstrapError;
+    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+        setStatusMessage(QStringLiteral("Settings save failed: ") + bootstrapError);
+        return;
+    }
+
+    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -618,26 +823,16 @@ void MainWindow::saveSettings()
                 std::string(customValue.toUtf8().constData()));
         }
 
-        // Save window geometry
-        classic::yaml::yaml_ops_set_integer_setting(
-            *ops, "CLASSIC_Settings.Window X",
-            static_cast<int64_t>(pos().x()));
-        classic::yaml::yaml_ops_set_integer_setting(
-            *ops, "CLASSIC_Settings.Window Y",
-            static_cast<int64_t>(pos().y()));
-        classic::yaml::yaml_ops_set_integer_setting(
-            *ops, "CLASSIC_Settings.Window Width",
-            static_cast<int64_t>(size().width()));
-        classic::yaml::yaml_ops_set_integer_setting(
-            *ops, "CLASSIC_Settings.Window Height",
-            static_cast<int64_t>(size().height()));
-
         classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
     } catch (const std::exception& e) {
         setStatusMessage(QStringLiteral("Settings save failed: ") + QString::fromUtf8(e.what()));
     } catch (...) {
         setStatusMessage(QStringLiteral("Settings save failed: unknown error"));
     }
+
+    // Save per-tab window geometry (uses its own YAML load/save cycle)
+    int currentTab = m_tabWidget ? m_tabWidget->currentIndex() : 0;
+    saveTabGeometry(currentTab);
 }
 
 void MainWindow::initResultsReportDir()
@@ -646,7 +841,7 @@ void MainWindow::initResultsReportDir()
         return;
     }
 
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -670,7 +865,8 @@ void MainWindow::checkFirstRunPaths()
     // Read current game and docs paths from YAML settings
     QString gamePath;
     QString docsPath;
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    bool isVrMode = false;
+    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops,
@@ -687,8 +883,106 @@ void MainWindow::checkFirstRunPaths()
         if (!dp.empty()) {
             docsPath = classic::toQString(dp);
         }
+
+        auto gameVersion = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Game Version", "auto");
+        if (gameVersion == "VR") {
+            isVrMode = true;
+        }
+
+        auto vrMode = classic::yaml::yaml_ops_get_setting_value(
+            *ops, "CLASSIC_Settings.VR Mode");
+        if (vrMode.value_type == "bool" && vrMode.value == "true") {
+            isVrMode = true;
+        }
     } catch (...) {
         // If settings can't be read, fall through to path detection
+    }
+
+    // Fallback: import detected paths from CLASSIC Fallout4 Local.yaml if
+    // settings file does not contain them yet.
+    bool importedFromLocal = false;
+    if (gamePath.isEmpty() || docsPath.isEmpty()) {
+        const QString localYamlPath = m_dataDir + QStringLiteral("/CLASSIC Fallout4 Local.yaml");
+        try {
+            auto localOps = classic::yaml::yaml_ops_new();
+            classic::yaml::yaml_ops_load_file(
+                *localOps, std::string(localYamlPath.toUtf8().constData()));
+
+            if (gamePath.isEmpty()) {
+                auto gp = classic::yaml::yaml_ops_get_string(
+                    *localOps, "Game_Info.Root_Folder_Game", "");
+                if (!gp.empty()) {
+                    gamePath = classic::toQString(gp);
+                    importedFromLocal = true;
+                }
+            }
+
+            if (docsPath.isEmpty()) {
+                auto dp = classic::yaml::yaml_ops_get_string(
+                    *localOps, "Game_Info.Root_Folder_Docs", "");
+                if (!dp.empty()) {
+                    docsPath = classic::toQString(dp);
+                    importedFromLocal = true;
+                }
+            }
+        } catch (...) {
+            // Local YAML import is optional.
+        }
+    }
+
+    // Fallback: use Rust auto-detection (registry / docs discovery).
+    if (gamePath.isEmpty()) {
+        auto detected = classic::path::detect_fallout4_game_path(
+            std::string(gamePath.toUtf8().constData()), isVrMode);
+        if (!detected.empty()) {
+            gamePath = classic::toQString(detected);
+            importedFromLocal = true;
+        }
+    }
+    if (docsPath.isEmpty()) {
+        auto detected = classic::path::detect_fallout4_docs_path(
+            std::string(docsPath.toUtf8().constData()), isVrMode);
+        if (!detected.empty()) {
+            docsPath = classic::toQString(detected);
+            importedFromLocal = true;
+        }
+    }
+
+    if (importedFromLocal) {
+        try {
+            auto ops = classic::yaml::yaml_ops_new();
+            classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
+
+            if (!gamePath.isEmpty()) {
+                classic::yaml::yaml_ops_set_string_setting(
+                    *ops, "CLASSIC_Settings.Game Folder Path",
+                    std::string(gamePath.toUtf8().constData()));
+
+                auto exePath = classic::yaml::yaml_ops_get_string(
+                    *ops, "CLASSIC_Settings.Game EXE Path", "");
+                if (exePath.empty()) {
+                    auto defaultExe = gamePath + QStringLiteral("/Fallout4.exe");
+                    classic::yaml::yaml_ops_set_string_setting(
+                        *ops, "CLASSIC_Settings.Game EXE Path",
+                        std::string(defaultExe.toUtf8().constData()));
+                }
+            }
+
+            if (!docsPath.isEmpty()) {
+                classic::yaml::yaml_ops_set_string_setting(
+                    *ops, "CLASSIC_Settings.INI Folder Path",
+                    std::string(docsPath.toUtf8().constData()));
+            }
+
+            classic::yaml::yaml_ops_save_file(*ops, std::string(settingsPath.toUtf8().constData()));
+
+            if (m_backupController && !gamePath.isEmpty()) {
+                m_backupController->setGameRoot(gamePath);
+            }
+        } catch (...) {
+            // Keep going; manual prompt below remains fallback.
+        }
     }
 
     // Ask Rust whether path detection is needed
@@ -748,27 +1042,161 @@ QString MainWindow::findDataRoot() const
 {
     std::error_code ec;
 
-    // Check: Application exe directory for "CLASSIC Data/"
     QString appDir = QCoreApplication::applicationDirPath();
     fs::path appPath(appDir.toStdWString());
-    if (fs::is_directory(appPath / "CLASSIC Data", ec)) {
-        return appDir;
-    }
-
-    // Check: Current working directory for "CLASSIC Data/"
     fs::path cwd = fs::current_path(ec);
-    if (fs::is_directory(cwd / "CLASSIC Data", ec)) {
-        return QString::fromStdWString(cwd.wstring());
-    }
 
-    // Check: One level up from exe directory (common for build dirs)
-    fs::path parentPath = appPath.parent_path();
-    if (fs::is_directory(parentPath / "CLASSIC Data", ec)) {
-        return QString::fromStdWString(parentPath.wstring());
+    std::vector<fs::path> candidates;
+    candidates.push_back(appPath);                       // deployed exe dir
+    candidates.push_back(cwd);                           // launch cwd
+    candidates.push_back(appPath.parent_path());         // build dir parent
+    candidates.push_back(appPath.parent_path().parent_path()); // repo root from build/*
+    candidates.push_back(appPath.parent_path() / "install");   // classic-gui/install
+    candidates.push_back(cwd / "install");                    // cwd/install
+
+    for (const auto& base : candidates) {
+        if (base.empty()) {
+            continue;
+        }
+        if (fs::is_directory(base / "CLASSIC Data", ec)) {
+            return QString::fromStdWString(base.wstring());
+        }
     }
 
     // Fallback: return empty (caller should handle)
     return QString();
+}
+
+// ── Per-tab window geometry ────────────────────────────────────────
+
+void MainWindow::saveTabGeometry(int tabIndex)
+{
+    if (tabIndex < 0 || tabIndex >= TAB_COUNT || m_dataDir.isEmpty()) {
+        return;
+    }
+
+    QString settingsPath = settingsFilePath(m_dataRoot);
+    try {
+        auto ops = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*ops,
+            std::string(settingsPath.toUtf8().constData()));
+
+        auto prefix = std::string("UI.window_geometry.")
+            + kTabNames[tabIndex] + ".";
+
+        bool isMax = isMaximized();
+        classic::yaml::yaml_ops_set_bool_setting(*ops,
+            prefix + "maximized", isMax);
+
+        // Save the normal (non-maximized) size
+        QSize sz = isMax ? normalGeometry().size() : size();
+        classic::yaml::yaml_ops_set_integer_setting(*ops,
+            prefix + "width", static_cast<int64_t>(sz.width()));
+        classic::yaml::yaml_ops_set_integer_setting(*ops,
+            prefix + "height", static_cast<int64_t>(sz.height()));
+
+        classic::yaml::yaml_ops_save_file(*ops,
+            std::string(settingsPath.toUtf8().constData()));
+    } catch (...) {
+        // Non-critical -- geometry will use defaults next time
+    }
+}
+
+void MainWindow::restoreTabGeometry(int tabIndex)
+{
+    if (tabIndex < 0 || tabIndex >= TAB_COUNT) {
+        return;
+    }
+
+    int minW = kTabMinSizes[tabIndex].minWidth;
+    int minH = kTabMinSizes[tabIndex].minHeight;
+    setMinimumSize(minW, minH);
+
+    if (m_dataDir.isEmpty()) {
+        resize(minW, minH);
+        return;
+    }
+
+    QString settingsPath = settingsFilePath(m_dataRoot);
+    int savedW = -1, savedH = -1;
+    bool wasMax = false;
+
+    try {
+        auto ops = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*ops,
+            std::string(settingsPath.toUtf8().constData()));
+
+        auto prefix = std::string("UI.window_geometry.")
+            + kTabNames[tabIndex] + ".";
+
+        auto getInt = [&](const std::string& key) -> int {
+            auto val = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            if (val.value_type == "integer") {
+                bool ok = false;
+                int result = QString::fromStdString(
+                    std::string(val.value)).toInt(&ok);
+                if (ok) return result;
+            }
+            return -1;
+        };
+
+        savedW = getInt(prefix + "width");
+        savedH = getInt(prefix + "height");
+
+        auto maxVal = classic::yaml::yaml_ops_get_setting_value(
+            *ops, prefix + "maximized");
+        wasMax = (maxVal.value == "true");
+    } catch (...) {
+        // Fall through to defaults
+    }
+
+    int w = (savedW > 0) ? qMax(savedW, minW) : minW;
+    int h = (savedH > 0) ? qMax(savedH, minH) : minH;
+
+    if (wasMax) {
+        resize(w, h);
+        showMaximized();
+    } else {
+        if (isMaximized()) {
+            showNormal();
+        }
+        resize(w, h);
+    }
+}
+
+void MainWindow::onTabChanged(int index)
+{
+    if (!m_geometryInitialized) {
+        return;
+    }
+
+    // Save geometry for the outgoing tab
+    if (m_lastTabIndex >= 0) {
+        saveTabGeometry(m_lastTabIndex);
+    }
+
+    // Restore geometry for the incoming tab
+    restoreTabGeometry(index);
+    m_lastTabIndex = index;
+}
+
+QString MainWindow::readCrashLogsDir() const
+{
+    if (m_dataDir.isEmpty()) {
+        return {};
+    }
+    QString settingsPath = settingsFilePath(m_dataRoot);
+    try {
+        auto ops = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*ops,
+            std::string(settingsPath.toUtf8().constData()));
+        auto dir = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Crash Logs Folder", "");
+        if (!dir.empty()) {
+            return classic::toQString(dir);
+        }
+    } catch (...) {}
+    return {};
 }
 
 // ── Slot implementations ───────────────────────────────────────────
@@ -794,8 +1222,104 @@ void MainWindow::onBrowseCustom()
         m_editCustomFolder->text());
 
     if (!dir.isEmpty()) {
-        m_editCustomFolder->setText(dir);
+        if (validateCustomScanFolder(dir)) {
+            m_editCustomFolder->setText(dir);
+            saveSettings();
+        }
+    }
+}
+
+bool MainWindow::validateCustomScanFolder(const QString& path)
+{
+    if (path.isEmpty()) {
+        return true; // Empty is valid (clears the setting)
+    }
+
+    // Check if path exists and is a directory
+    if (!QDir(path).exists()) {
+        QMessageBox::warning(this, QStringLiteral("Invalid Path"),
+            QStringLiteral("The path '%1' does not exist or is not a directory.\n\n"
+                           "The custom scan path has been cleared.").arg(path));
+        m_editCustomFolder->clear();
+        return false;
+    }
+
+    // Check if path is a restricted Windows system directory
+    try {
+        if (classic::game::check_restricted_path(
+                std::string(path.toUtf8().constData()))) {
+            QMessageBox::warning(this, QStringLiteral("Invalid Custom Scan Path"),
+                QStringLiteral("The entered directory cannot be used as a custom scan path.\n\n"
+                               "System directories (Program Files, Windows, etc.) are restricted "
+                               "because they can interfere with the operation of the program.\n\n"
+                               "The custom scan path has been cleared."));
+            m_editCustomFolder->clear();
+            return false;
+        }
+    } catch (...) {
+        // If the bridge call fails, allow the path (non-critical check)
+    }
+
+    // Check if path is inside the Crash Logs directory
+    QString crashDir = readCrashLogsDir();
+    if (!crashDir.isEmpty()) {
+        QString normalizedPath = QDir::cleanPath(path).toLower();
+        QString normalizedCrashDir = QDir::cleanPath(crashDir).toLower();
+        if (normalizedPath == normalizedCrashDir
+            || normalizedPath.startsWith(normalizedCrashDir + QStringLiteral("/"))) {
+            QMessageBox::warning(this, QStringLiteral("Invalid Custom Scan Path"),
+                QStringLiteral("The entered directory cannot be used as a custom scan path.\n\n"
+                               "The 'Crash Logs' folder and its subfolders are managed by CLASSIC "
+                               "and cannot be set as custom scan directories.\n\n"
+                               "The custom scan path has been cleared."));
+            m_editCustomFolder->clear();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void MainWindow::onCustomFolderEdited()
+{
+    QString text = m_editCustomFolder->text().trimmed();
+
+    if (text.isEmpty()) {
+        // Clear the setting in YAML
+        if (!m_dataDir.isEmpty()) {
+            QString settingsPath = settingsFilePath(m_dataRoot);
+            try {
+                auto ops = classic::yaml::yaml_ops_new();
+                classic::yaml::yaml_ops_load_file(*ops,
+                    std::string(settingsPath.toUtf8().constData()));
+                classic::yaml::yaml_ops_set_string_setting(*ops,
+                    "CLASSIC_Settings.Custom Scan Folder", "");
+                classic::yaml::yaml_ops_save_file(*ops,
+                    std::string(settingsPath.toUtf8().constData()));
+            } catch (...) {}
+        }
+        return;
+    }
+
+    if (validateCustomScanFolder(text)) {
+        // Normalize and save
+        QString normalized = QDir::cleanPath(text);
+        m_editCustomFolder->setText(normalized);
         saveSettings();
+    } else {
+        // Clear YAML setting (UI was already cleared by validateCustomScanFolder)
+        if (!m_dataDir.isEmpty()) {
+            QString settingsPath = settingsFilePath(m_dataRoot);
+            try {
+                auto ops = classic::yaml::yaml_ops_new();
+                classic::yaml::yaml_ops_load_file(*ops,
+                    std::string(settingsPath.toUtf8().constData()));
+                classic::yaml::yaml_ops_set_string_setting(*ops,
+                    "CLASSIC_Settings.Custom Scan Folder", "");
+                classic::yaml::yaml_ops_save_file(*ops,
+                    std::string(settingsPath.toUtf8().constData()));
+            } catch (...) {}
+        }
     }
 }
 
@@ -805,6 +1329,24 @@ void MainWindow::onScanCrashLogs()
         QMessageBox::warning(this, QStringLiteral("Error"),
             QStringLiteral("Cannot find CLASSIC Data directory. "
                            "Ensure the application is in the correct location."));
+        return;
+    }
+    if (m_dataDir.isEmpty()) {
+        QMessageBox::warning(this, QStringLiteral("Error"),
+            QStringLiteral("Cannot find CLASSIC Data directory. "
+                           "Ensure the application is in the correct location."));
+        return;
+    }
+
+    QString bootstrapError;
+    if (!ensureSettingsFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+        QMessageBox::warning(this, QStringLiteral("Error"),
+            QStringLiteral("Failed to initialize CLASSIC Settings.yaml:\n") + bootstrapError);
+        return;
+    }
+    if (!ensureIgnoreFileExists(m_dataRoot, m_dataDir, &bootstrapError)) {
+        QMessageBox::warning(this, QStringLiteral("Error"),
+            QStringLiteral("Failed to initialize CLASSIC Ignore.yaml:\n") + bootstrapError);
         return;
     }
 
@@ -835,7 +1377,7 @@ void MainWindow::onScanGameFiles()
     QString gameRoot;
     QString gameName = QStringLiteral("Fallout4");
 
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    QString settingsPath = settingsFilePath(m_dataRoot);
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops,
@@ -917,7 +1459,7 @@ void MainWindow::onScanError(const QString& message)
 
 void MainWindow::onShowSettings()
 {
-    SettingsDialog dlg(m_dataDir, m_signalHub, this);
+    SettingsDialog dlg(m_dataRoot, m_signalHub, this);
     if (dlg.exec() == QDialog::Accepted) {
         emit m_signalHub->settingsChanged();
     }
@@ -938,12 +1480,54 @@ void MainWindow::onGameFilesScanFinished(const QString& output,
     }
     setStatusMessage(statusMsg);
 
-    // Show the results in a message box for now.
-    // A future phase may route this to the Results tab instead.
-    if (!output.isEmpty()) {
+    if (output.isEmpty()) {
+        return;
+    }
+
+    // Write results as a report file in the crash logs directory
+    // so the Results tab picks it up via file watching.
+    QString crashDir = readCrashLogsDir();
+    if (crashDir.isEmpty()) {
+        // Fall back to message box if crash logs dir is not configured
         QMessageBox::information(this,
-            QStringLiteral("Game Files Scan Results"),
-            output);
+            QStringLiteral("Game Files Scan Results"), output);
+        return;
+    }
+
+    // Ensure directory exists
+    QDir().mkpath(crashDir);
+
+    // Generate timestamped report filename
+    QString timestamp = QDateTime::currentDateTime().toString(
+        QStringLiteral("yyyy-MM-dd_HH-mm-ss"));
+    QString filename = QStringLiteral("GameFiles-%1-AUTOSCAN.md").arg(timestamp);
+    QString filePath = crashDir + QStringLiteral("/") + filename;
+
+    // Build markdown report
+    QString statusLabel = hasErrors
+        ? QStringLiteral("Issues Found")
+        : QStringLiteral("All Clear");
+    QString report = QStringLiteral(
+        "# Game Files Scan Report\n\n"
+        "**Date**: %1\n"
+        "**Checks**: %2\n"
+        "**Status**: %3\n\n"
+        "---\n\n"
+        "%4\n")
+        .arg(QDateTime::currentDateTime().toString(Qt::ISODate))
+        .arg(totalChecks)
+        .arg(statusLabel)
+        .arg(output);
+
+    // Write the report file via CXX bridge
+    try {
+        classic::files::write_file_string(
+            std::string(filePath.toUtf8().constData()),
+            std::string(report.toUtf8().constData()));
+    } catch (...) {
+        // Fall back to message box if file write fails
+        QMessageBox::information(this,
+            QStringLiteral("Game Files Scan Results"), output);
     }
 }
 
@@ -1054,7 +1638,7 @@ void MainWindow::onTogglePapyrusMonitor()
         }
 
         QString papyrusLogPath;
-        QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+        QString settingsPath = settingsFilePath(m_dataRoot);
         try {
             auto ops = classic::yaml::yaml_ops_new();
             classic::yaml::yaml_ops_load_file(*ops,

@@ -42,10 +42,15 @@ private:
     void initResultsReportDir();
     void checkFirstRunPaths();
     QString findDataRoot() const;
+    void saveTabGeometry(int tabIndex);
+    void restoreTabGeometry(int tabIndex);
+    bool validateCustomScanFolder(const QString& path);
+    QString readCrashLogsDir() const;
 
 private slots:
     void onBrowseStaging();
     void onBrowseCustom();
+    void onCustomFolderEdited();
     void onScanCrashLogs();
     void onScanGameFiles();
     void onExit();
@@ -60,6 +65,7 @@ private slots:
     void onOpenBackupsFolder();
     void onCheckUpdates();
     void onTogglePapyrusMonitor();
+    void onTabChanged(int index);
 
 private:
     // Tabs
@@ -97,4 +103,19 @@ private:
     // Data root paths
     QString m_dataRoot;
     QString m_dataDir;
+
+    // Per-tab window geometry
+    int m_lastTabIndex = -1;
+    bool m_geometryInitialized = false;
+
+    static constexpr int TAB_COUNT = 4;
+    static constexpr struct { int minWidth; int minHeight; } kTabMinSizes[TAB_COUNT] = {
+        {550, 350},  // Main Options
+        {750, 580},  // File Backup
+        {550, 350},  // Articles
+        {750, 450},  // Results
+    };
+    static constexpr const char* kTabNames[TAB_COUNT] = {
+        "main_tab", "backups_tab", "articles_tab", "results_tab"
+    };
 };

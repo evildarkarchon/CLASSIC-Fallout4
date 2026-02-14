@@ -51,6 +51,7 @@ pub mod files;
 pub mod game;
 pub mod markdown;
 pub mod message;
+pub mod path;
 pub mod perf;
 pub mod registry;
 pub mod runtime;

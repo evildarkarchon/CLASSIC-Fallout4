@@ -217,7 +217,7 @@ void SettingsDialog::loadSettings()
 {
     if (m_dataDir.isEmpty()) return;
 
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
@@ -283,7 +283,7 @@ void SettingsDialog::saveSettings()
 {
     if (m_dataDir.isEmpty()) return;
 
-    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC_Settings.yaml");
+    QString settingsPath = m_dataDir + QStringLiteral("/CLASSIC Settings.yaml");
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
