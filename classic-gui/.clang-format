@@ -1,0 +1,93 @@
+# clang-format configuration for CLASSIC Qt 6 GUI (C++20, MSVC + Qt 6)
+# Style: Custom braces (next line for function defs only), camelCase, m_ prefix members
+---
+Language: Cpp
+Standard: c++20
+ColumnLimit: 120
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+IndentCaseLabels: false
+IndentPPDirectives: None
+NamespaceIndentation: None
+
+# Braces: Custom (next line for function defs only, same line for everything else)
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: false
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: true
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  AfterExternBlock: false
+  BeforeCatch: false
+  BeforeElse: false
+  BeforeLambdaBody: false
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+
+# Pointers and references: int* p, const QString& s
+PointerAlignment: Left
+ReferenceAlignment: Left
+DerivePointerAlignment: false
+
+# Includes
+SortIncludes: CaseInsensitive
+IncludeBlocks: Preserve
+
+# Short forms
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+AllowShortEnumsOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortLambdasOnASingleLine: Inline
+
+# Alignment
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignTrailingComments:
+  Kind: Always
+AlignOperands: Align
+AlignAfterOpenBracket: Align
+
+# Spacing
+SpaceBeforeParens: ControlStatements
+SpaceAfterCStyleCast: false
+SpaceBeforeCpp11BracedList: false
+SpacesInAngles: Never
+
+# Line breaking
+BreakConstructorInitializers: BeforeComma
+PackConstructorInitializers: BinPack
+BinPackArguments: true
+BinPackParameters: true
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+# Classes
+AccessModifierOffset: -4
+
+# Qt-specific: treat Q_OBJECT, signals, slots as macros/keywords
+QualifierAlignment: Leave
+StatementAttributeLikeMacros:
+  - Q_EMIT
+  - Q_SIGNAL
+  - Q_SLOT
+
+# Misc
+Cpp11BracedListStyle: true
+FixNamespaceComments: true
+ReflowComments: true
+SeparateDefinitionBlocks: Leave
+InsertBraces: false
+RemoveSemicolon: false
