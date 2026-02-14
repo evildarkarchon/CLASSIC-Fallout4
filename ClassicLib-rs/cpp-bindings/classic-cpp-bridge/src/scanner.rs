@@ -5,6 +5,7 @@
 //! Placeholder — will be implemented by Wave 2 agent.
 
 use classic_config_core::YamlDataCore;
+use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
     AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
 };
@@ -122,6 +123,60 @@ fn detect_crash_pattern(content: &str) -> String {
     }
 }
 
+// ── Papyrus monitoring ────────────────────────────────────────────
+
+/// Opaque wrapper around `PapyrusAnalyzer` for CXX FFI.
+pub struct CxxPapyrusAnalyzer {
+    inner: PapyrusAnalyzer,
+}
+
+/// Convert `PapyrusStats` to the CXX-shared DTO.
+fn papyrus_stats_to_dto(stats: &PapyrusStats) -> ffi::PapyrusStatsDto {
+    ffi::PapyrusStatsDto {
+        dumps: stats.dumps as u32,
+        stacks: stats.stacks as u32,
+        warnings: stats.warnings as u32,
+        errors: stats.errors as u32,
+        lines_processed: stats.lines_processed as u32,
+        severity: stats.severity_level().to_string(),
+        dumps_stacks_ratio: stats.dumps_to_stacks_ratio(),
+        total_issues: stats.total_issues() as u32,
+    }
+}
+
+fn papyrus_analyzer_new(log_path: &str) -> Box<CxxPapyrusAnalyzer> {
+    Box::new(CxxPapyrusAnalyzer {
+        inner: PapyrusAnalyzer::new(PathBuf::from(log_path)),
+    })
+}
+
+fn papyrus_start_monitoring(analyzer: &mut CxxPapyrusAnalyzer) -> Result<(), String> {
+    analyzer
+        .inner
+        .start_monitoring()
+        .map_err(|e| format!("{e}"))
+}
+
+fn papyrus_check_updates(analyzer: &mut CxxPapyrusAnalyzer) -> ffi::PapyrusStatsDto {
+    // Poll for new data; if there are updates they're folded into internal stats.
+    // Errors are silently ignored -- C++ gets the last-known stats either way.
+    let _ = analyzer.inner.check_for_updates();
+    papyrus_stats_to_dto(analyzer.inner.stats())
+}
+
+fn papyrus_analyze_full(analyzer: &mut CxxPapyrusAnalyzer) -> Result<ffi::PapyrusStatsDto, String> {
+    let stats = analyzer.inner.analyze_full().map_err(|e| format!("{e}"))?;
+    Ok(papyrus_stats_to_dto(&stats))
+}
+
+fn papyrus_log_exists(analyzer: &CxxPapyrusAnalyzer) -> bool {
+    analyzer.inner.log_exists()
+}
+
+fn papyrus_reset(analyzer: &mut CxxPapyrusAnalyzer) {
+    analyzer.inner.reset();
+}
+
 #[cxx::bridge(namespace = "classic::scanner")]
 mod ffi {
     /// Result of scanning a single crash log.
@@ -134,6 +189,18 @@ mod ffi {
         formid_count: u32,
         plugin_count: u32,
         suspect_count: u32,
+    }
+
+    /// Papyrus log statistics transferred across the FFI boundary.
+    struct PapyrusStatsDto {
+        dumps: u32,
+        stacks: u32,
+        warnings: u32,
+        errors: u32,
+        lines_processed: u32,
+        severity: String,
+        dumps_stacks_ratio: f64,
+        total_issues: u32,
     }
 
     extern "Rust" {
@@ -168,12 +235,23 @@ mod ffi {
         // Utilities
         fn detect_vr_log(content: &str) -> bool;
         fn detect_crash_pattern(content: &str) -> String;
+
+        // Papyrus monitoring
+        type CxxPapyrusAnalyzer;
+        fn papyrus_analyzer_new(log_path: &str) -> Box<CxxPapyrusAnalyzer>;
+        fn papyrus_start_monitoring(analyzer: &mut CxxPapyrusAnalyzer) -> Result<()>;
+        fn papyrus_check_updates(analyzer: &mut CxxPapyrusAnalyzer) -> PapyrusStatsDto;
+        fn papyrus_analyze_full(analyzer: &mut CxxPapyrusAnalyzer) -> Result<PapyrusStatsDto>;
+        fn papyrus_log_exists(analyzer: &CxxPapyrusAnalyzer) -> bool;
+        fn papyrus_reset(analyzer: &mut CxxPapyrusAnalyzer);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Write;
+    use tempfile::NamedTempFile;
 
     #[test]
     fn test_orchestrator_new_minimal() {
@@ -222,5 +300,145 @@ mod tests {
         assert!(dto.success);
         assert_eq!(dto.report_lines, vec!["line1"]);
         assert!(dto.error_message.is_empty());
+    }
+
+    // ── Papyrus bridge tests ──────────────────────────────────────
+
+    #[test]
+    fn test_papyrus_analyzer_new() {
+        let analyzer = papyrus_analyzer_new("/some/path/Papyrus.0.log");
+        // Should not panic; analyzer wraps the path without file access
+        assert!(!papyrus_log_exists(&analyzer));
+    }
+
+    #[test]
+    fn test_papyrus_log_exists_with_real_file() {
+        let temp = NamedTempFile::new().unwrap();
+        let path = temp.path().to_str().unwrap();
+        let analyzer = papyrus_analyzer_new(path);
+        assert!(papyrus_log_exists(&analyzer));
+    }
+
+    #[test]
+    fn test_papyrus_analyze_full() {
+        let mut temp = NamedTempFile::new().unwrap();
+        writeln!(temp, "Dumping Stacks for thread 0x1234").unwrap();
+        writeln!(temp, "Dumping Stack for function foo").unwrap();
+        writeln!(temp, "[2024/01/01] warning: Variable not initialized").unwrap();
+        writeln!(temp, "[2024/01/01] error: Null reference").unwrap();
+        temp.flush().unwrap();
+
+        let path = temp.path().to_str().unwrap();
+        let mut analyzer = papyrus_analyzer_new(path);
+        let dto = papyrus_analyze_full(&mut analyzer).unwrap();
+
+        assert_eq!(dto.dumps, 1);
+        assert_eq!(dto.stacks, 1);
+        assert_eq!(dto.warnings, 1);
+        assert_eq!(dto.errors, 1);
+        assert_eq!(dto.lines_processed, 4);
+        assert_eq!(dto.total_issues, 2);
+        assert_eq!(dto.severity, "Warning");
+        assert!(dto.dumps_stacks_ratio > 0.0);
+    }
+
+    #[test]
+    fn test_papyrus_analyze_full_nonexistent() {
+        let mut analyzer = papyrus_analyzer_new("/nonexistent/Papyrus.0.log");
+        let result = papyrus_analyze_full(&mut analyzer);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_papyrus_start_monitoring_nonexistent() {
+        let mut analyzer = papyrus_analyzer_new("/nonexistent/Papyrus.0.log");
+        let result = papyrus_start_monitoring(&mut analyzer);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_papyrus_start_monitoring_and_check_updates() {
+        let mut temp = NamedTempFile::new().unwrap();
+        writeln!(temp, "Initial line").unwrap();
+        temp.flush().unwrap();
+
+        let path = temp.path().to_str().unwrap();
+        let mut analyzer = papyrus_analyzer_new(path);
+
+        // Start monitoring positions at end of file
+        papyrus_start_monitoring(&mut analyzer).unwrap();
+
+        // No new data yet -- stats should be empty
+        let dto = papyrus_check_updates(&mut analyzer);
+        assert_eq!(dto.dumps, 0);
+        assert_eq!(dto.lines_processed, 0);
+
+        // Append new data
+        writeln!(temp, "Dumping Stacks for thread 0xABC").unwrap();
+        writeln!(temp, "[2024/01/01] error: Something bad").unwrap();
+        temp.flush().unwrap();
+
+        // Now check_updates should pick up the new lines
+        let dto = papyrus_check_updates(&mut analyzer);
+        assert_eq!(dto.dumps, 1);
+        assert_eq!(dto.errors, 1);
+        assert_eq!(dto.lines_processed, 2);
+    }
+
+    #[test]
+    fn test_papyrus_reset() {
+        let mut temp = NamedTempFile::new().unwrap();
+        writeln!(temp, "Dumping Stacks").unwrap();
+        writeln!(temp, "[2024/01/01] error: Null ref").unwrap();
+        temp.flush().unwrap();
+
+        let path = temp.path().to_str().unwrap();
+        let mut analyzer = papyrus_analyzer_new(path);
+
+        // Analyze to populate stats
+        papyrus_analyze_full(&mut analyzer).unwrap();
+
+        // Reset clears everything
+        papyrus_reset(&mut analyzer);
+
+        // check_updates after reset should re-read from beginning
+        let dto = papyrus_check_updates(&mut analyzer);
+        assert_eq!(dto.dumps, 1);
+        assert_eq!(dto.errors, 1);
+        assert_eq!(dto.lines_processed, 2);
+    }
+
+    #[test]
+    fn test_papyrus_stats_dto_severity_ok() {
+        let stats = PapyrusStats {
+            dumps: 0,
+            stacks: 0,
+            warnings: 10,
+            errors: 0,
+            last_modified: None,
+            lines_processed: 100,
+        };
+        let dto = papyrus_stats_to_dto(&stats);
+        assert_eq!(dto.severity, "OK");
+        assert_eq!(dto.total_issues, 10);
+        assert_eq!(dto.dumps_stacks_ratio, 0.0);
+    }
+
+    #[test]
+    fn test_papyrus_stats_dto_severity_critical() {
+        let stats = PapyrusStats {
+            dumps: 5,
+            stacks: 2,
+            warnings: 0,
+            errors: 10,
+            last_modified: None,
+            lines_processed: 50,
+        };
+        let dto = papyrus_stats_to_dto(&stats);
+        assert_eq!(dto.severity, "Critical");
+        assert_eq!(dto.total_issues, 10);
+        assert_eq!(dto.dumps, 5);
+        assert_eq!(dto.stacks, 2);
+        assert_eq!(dto.dumps_stacks_ratio, 2.5);
     }
 }

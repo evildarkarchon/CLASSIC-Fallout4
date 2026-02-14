@@ -9,8 +9,15 @@
 
 class SignalHub;
 class ScanController;
+class GameFilesController;
+class BackupController;
+class ResultsController;
 class ThreadManager;
 struct FeatureContext;
+class ReportListWidget;
+class MarkdownViewer;
+class ReportMetadataWidget;
+class PapyrusDialog;
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -32,6 +39,8 @@ private:
     void connectSignals();
     void loadSettings();
     void saveSettings();
+    void initResultsReportDir();
+    void checkFirstRunPaths();
     QString findDataRoot() const;
 
 private slots:
@@ -43,6 +52,14 @@ private slots:
     void onScanProgress(float percent, const QString& status);
     void onScanCompleted();
     void onScanError(const QString& message);
+    void onShowSettings();
+    void onGameFilesScanFinished(const QString& output, bool hasErrors, uint32_t totalChecks);
+    void onGameFilesScanError(const QString& message);
+    void onBackupCompleted(const QString& message);
+    void onBackupError(const QString& error);
+    void onOpenBackupsFolder();
+    void onCheckUpdates();
+    void onTogglePapyrusMonitor();
 
 private:
     // Tabs
@@ -63,8 +80,19 @@ private:
 
     // Controllers
     ScanController* m_scanController = nullptr;
+    GameFilesController* m_gameFilesController = nullptr;
+    BackupController* m_backupController = nullptr;
+    ResultsController* m_resultsController = nullptr;
     SignalHub* m_signalHub = nullptr;
     ThreadManager* m_threadManager = nullptr;
+
+    // Results tab widgets
+    ReportListWidget* m_reportList = nullptr;
+    MarkdownViewer* m_markdownViewer = nullptr;
+    ReportMetadataWidget* m_reportMetadata = nullptr;
+
+    // Papyrus monitoring state
+    PapyrusDialog* m_papyrusDialog = nullptr;
 
     // Data root paths
     QString m_dataRoot;

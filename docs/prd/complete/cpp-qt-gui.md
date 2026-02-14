@@ -1,8 +1,8 @@
 # PRD: C++ Qt GUI for CLASSIC
 
-**Version**: 1.0
-**Date**: 2026-02-12
-**Status**: Draft
+**Version**: 1.1
+**Date**: 2026-02-14
+**Status**: Complete (All 8 phases implemented)
 **Goal**: Replace the PySide6 Python GUI with a native C++ Qt 6 Widgets GUI, consuming Rust business logic via CXX FFI, managed with vcpkg and CMake
 
 ---
@@ -685,7 +685,7 @@ add_subdirectory(tests)
 
 **Deliverables**: Clicking "Scan Crash Logs" discovers logs, scans them via Rust, generates reports.
 
-### Phase 4: Results Tab
+### Phase 4: Results Tab ✅ COMPLETE
 
 **Goal**: Full results viewing with report list, markdown rendering, and metadata.
 
@@ -704,7 +704,7 @@ add_subdirectory(tests)
 
 **Markdown rendering**: Uses `pulldown-cmark` via CXX bridge (same parser as Slint GUI). Rust converts markdown→HTML, C++ sets it on `QTextBrowser::setHtml()` with Slint-style CSS (see §2.8). No C/C++ markdown library needed.
 
-### Phase 5: Settings Dialog
+### Phase 5: Settings Dialog ✅ COMPLETE
 
 **Goal**: Full settings dialog with all sub-tabs, persisted to YAML.
 
@@ -721,7 +721,7 @@ add_subdirectory(tests)
 
 **Deliverables**: Settings dialog reads/writes all settings via Rust YAML operations.
 
-### Phase 6: File Backup Tab & Game File Scanning (Wave 3 Bindings)
+### Phase 6: File Backup Tab & Game File Scanning (Wave 3 Bindings) ✅ COMPLETE
 
 **Goal**: Full backup/restore/remove functionality and game file scanning workflow.
 
@@ -740,7 +740,7 @@ add_subdirectory(tests)
 
 **Deliverables**: All backup operations work via Rust file I/O. Game file scanning is fully functional.
 
-### Phase 7: Remaining Features (Waves 4-5 Bindings)
+### Phase 7: Remaining Features (Waves 4-5 Bindings) ✅ COMPLETE
 
 **Goal**: Feature parity with PySide6 GUI (excluding deferred pastebin integration).
 
@@ -757,7 +757,7 @@ add_subdirectory(tests)
 
 **Deliverables**: Complete feature parity with PySide6 GUI (pastebin integration deferred to a future phase).
 
-### Phase 8: Polish & Deployment
+### Phase 8: Polish & Deployment ✅ COMPLETE
 
 **Goal**: Production-ready release.
 

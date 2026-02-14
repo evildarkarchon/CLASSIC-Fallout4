@@ -7,7 +7,7 @@
 //!
 //! ```text
 //! C++ Qt App  <-->  CXX FFI  <-->  classic-cpp-bridge (staticlib)  <-->  ~20 -core crates
-//!                                   13 bridge modules
+//!                                   14 bridge modules
 //!                                   Opaque types + shared DTOs
 //!                                   block_on() for async wrapping
 //! ```
@@ -37,6 +37,9 @@
 //! ## Game Support (Wave 4)
 //! - [`game`] - Versions, XSE, paths
 //!
+//! ## Rendering (Wave 6)
+//! - [`markdown`] - Markdown-to-HTML conversion for report display
+//!
 //! ## Utilities (Wave 5)
 //! - [`update`] - GitHub update checking
 //! - [`message`] - Logging
@@ -46,6 +49,7 @@ pub mod config;
 pub mod database;
 pub mod files;
 pub mod game;
+pub mod markdown;
 pub mod message;
 pub mod perf;
 pub mod registry;

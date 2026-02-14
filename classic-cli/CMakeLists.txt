@@ -68,7 +68,39 @@ if(MSVC)
 endif()
 
 # ── Install ─────────────────────────────────────────────────────────
-install(TARGETS classic-cli RUNTIME DESTINATION bin)
+install(TARGETS classic-cli RUNTIME DESTINATION .)
+
+# CLASSIC Data — runtime data files (databases, graphics, help, game versions).
+# Only the subdirectories the app actually uses are installed; dev-only files
+# (Python/Pascal scripts, zip archive, local config) at the top level are skipped.
+set(CLASSIC_DATA_DIR "${CMAKE_SOURCE_DIR}/../CLASSIC Data")
+
+install(DIRECTORY "${CLASSIC_DATA_DIR}/databases/"
+    DESTINATION "CLASSIC Data/databases"
+    PATTERN "*.db-shm" EXCLUDE
+    PATTERN "*.db-wal" EXCLUDE
+    PATTERN "*.backup.*" EXCLUDE
+    PATTERN "*.sha256" EXCLUDE
+)
+install(DIRECTORY "${CLASSIC_DATA_DIR}/graphics/"
+    DESTINATION "CLASSIC Data/graphics"
+)
+install(DIRECTORY "${CLASSIC_DATA_DIR}/Help/"
+    DESTINATION "CLASSIC Data/Help"
+)
+install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
+    DESTINATION "CLASSIC Data/games"
+)
+
+# ── CPack ──────────────────────────────────────────────────────────
+set(CPACK_GENERATOR "ZIP")
+set(CPACK_PACKAGE_NAME "CLASSIC-CLI")
+set(CPACK_PACKAGE_VENDOR "CLASSIC Development Team")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "CLASSIC Crash Log Auto Scanner (CLI)")
+set(CPACK_PACKAGE_VERSION_MAJOR ${PROJECT_VERSION_MAJOR})
+set(CPACK_PACKAGE_VERSION_MINOR ${PROJECT_VERSION_MINOR})
+set(CPACK_PACKAGE_VERSION_PATCH ${PROJECT_VERSION_PATCH})
+include(CPack)
 
 # ── Unit Tests (Catch2) ──────────────────────────────────────────────
 # Only built when Catch2 is available. These tests cover components

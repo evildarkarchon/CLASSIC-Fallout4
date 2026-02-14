@@ -49,14 +49,14 @@ mod ffi {
 
 #[cfg(test)]
 mod tests {
+    use serial_test::serial;
+
     use super::*;
 
-    // NOTE: Tests use unique operation names to avoid interference from
-    // parallel execution. The perf metrics are a global singleton, so
-    // clear_metrics() in one test can wipe state from another.
-
     #[test]
+    #[serial]
     fn test_record_and_summary() {
+        perf_clear_metrics();
         perf_record_timing("cxx_rec_summary", 0.5);
         perf_record_timing("cxx_rec_summary", 1.0);
 
@@ -67,25 +67,27 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_operation_count() {
-        let before = perf_get_operation_count("cxx_count_op");
+        perf_clear_metrics();
         perf_record_timing("cxx_count_op", 0.1);
         perf_record_timing("cxx_count_op", 0.2);
         perf_record_timing("cxx_count_op", 0.3);
-        assert!(perf_get_operation_count("cxx_count_op") >= before + 3);
+        assert_eq!(perf_get_operation_count("cxx_count_op"), 3);
     }
 
     #[test]
+    #[serial]
     fn test_operation_average() {
-        // Use a unique name so no other test interferes
+        perf_clear_metrics();
         perf_record_timing("cxx_avg_op", 1.0);
         perf_record_timing("cxx_avg_op", 3.0);
         let avg = perf_get_operation_average("cxx_avg_op");
-        // Average of 1.0 and 3.0 is 2.0 (if no prior entries existed)
-        assert!(avg > 0.0);
+        assert!((avg - 2.0).abs() < f64::EPSILON);
     }
 
     #[test]
+    #[serial]
     fn test_clear_metrics() {
         perf_record_timing("cxx_clear_op", 1.0);
         assert!(perf_get_operation_count("cxx_clear_op") >= 1);
@@ -94,7 +96,9 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_missing_operation() {
+        perf_clear_metrics();
         assert_eq!(perf_get_operation_count("cxx_nonexistent_op"), 0);
         assert!((perf_get_operation_average("cxx_nonexistent_op")).abs() < f64::EPSILON);
     }

@@ -1,31 +1,38 @@
 <#
 .SYNOPSIS
-    Build the CLASSIC C++ CLI scanner.
+    Build the CLASSIC C++ Qt 6 GUI application.
 
 .DESCRIPTION
-    Builds the C++ CLI application using CMake + Ninja + Corrosion.
+    Builds the Qt 6 GUI using CMake + Ninja + Corrosion.
     Corrosion automatically builds the Rust static library (classic-cpp-bridge)
     as part of the CMake build process. Requires VS Dev Shell (auto-detected).
+
+    Qt 6 must be installed and its path configured in CMakePresets.json
+    (default: C:\Qt\6.10.2\msvc2022_64) or via CMAKE_PREFIX_PATH.
 
 .PARAMETER Clean
     Remove build directory before building.
 
 .PARAMETER Test
-    Run CTest (Catch2 unit tests) and integration tests after building.
+    Run CTest after building (if tests are available).
 
 .PARAMETER Install
-    Run cmake --install to create a deployable layout.
+    Run cmake --install to create a deployable layout with windeployqt.
 
 .PARAMETER Package
     Run CPack to produce a distributable ZIP archive.
-    Implies -Install.
+    Implies -Install (windeployqt must run first so Qt DLLs are included).
+
+.PARAMETER Preset
+    CMake preset name. Default: "default".
 
 .EXAMPLE
-    .\build_cli.ps1
-    .\build_cli.ps1 -Clean
-    .\build_cli.ps1 -Test
-    .\build_cli.ps1 -Clean -Test -Install
-    .\build_cli.ps1 -Package
+    .\build_gui.ps1
+    .\build_gui.ps1 -Clean
+    .\build_gui.ps1 -Test
+    .\build_gui.ps1 -Install
+    .\build_gui.ps1 -Package
+    .\build_gui.ps1 -Clean -Package
 #>
 
 [CmdletBinding()]
@@ -33,31 +40,25 @@ param(
     [switch]$Clean,
     [switch]$Test,
     [switch]$Install,
-    [switch]$Package
+    [switch]$Package,
+    [string]$Preset = "default"
 )
 
 $ErrorActionPreference = "Stop"
 
-# -Package implies -Install
+# -Package implies -Install (windeployqt must populate the install dir first)
 if ($Package) { $Install = $true }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-# Verify VCPKG_ROOT is set
-if (-not $env:VCPKG_ROOT) {
-    Write-Error "VCPKG_ROOT environment variable is not set. Install vcpkg and set VCPKG_ROOT."
-    exit 1
-}
-
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
-# Check if cl.exe is already in PATH (i.e., we're in a VS Dev Shell)
 $clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
 if (-not $clFound) {
     Write-Host "Initializing VS Dev Shell..." -ForegroundColor Yellow
     $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" `
         -latest -property installationPath 2>$null
     if (-not $vsPath) {
-        # Fallback: try without vswhere
+        # Fallback: known VS 2026 location
         $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community"
     }
     $devShell = Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1"
@@ -69,6 +70,13 @@ if (-not $clFound) {
     }
 }
 
+# ── Verify Ninja is available ────────────────────────────────────
+$ninjaFound = Get-Command ninja.exe -ErrorAction SilentlyContinue
+if (-not $ninjaFound) {
+    Write-Error "Ninja not found in PATH. Install Ninja or run from a VS Dev Shell that includes it."
+    exit 1
+}
+
 # ── Step 1: Clean (optional) ─────────────────────────────────────
 $buildDir = Join-Path $ScriptDir "build"
 
@@ -78,12 +86,11 @@ if ($Clean -and (Test-Path $buildDir)) {
 }
 
 # ── Step 2: CMake configure ─────────────────────────────────────
-Write-Host "`n=== Configuring CMake (Ninja) ===" -ForegroundColor Cyan
-
-$cmakeArgs = @("--preset", "default")
+Write-Host "`n=== Configuring CMake (Ninja + Qt 6) ===" -ForegroundColor Cyan
 
 Push-Location $ScriptDir
 try {
+    $cmakeArgs = @("--preset", $Preset)
     Write-Host "cmake $($cmakeArgs -join ' ')" -ForegroundColor DarkGray
     & cmake @cmakeArgs
     if ($LASTEXITCODE -ne 0) {
@@ -92,12 +99,9 @@ try {
     }
 
     # ── Step 3: CMake build ──────────────────────────────────────
-    Write-Host "`n=== Building C++ CLI (Corrosion handles Rust build) ===" -ForegroundColor Cyan
+    Write-Host "`n=== Building Qt 6 GUI (Corrosion handles Rust build) ===" -ForegroundColor Cyan
 
-    # Corrosion builds the Rust crate with PROFILE release and compiles
-    # the CXX bridge glue code, so a single cmake --build is all that's needed.
     $buildArgs = @("--build", "build")
-
     Write-Host "cmake $($buildArgs -join ' ')" -ForegroundColor DarkGray
     & cmake @buildArgs
     if ($LASTEXITCODE -ne 0) {
@@ -107,32 +111,20 @@ try {
 
     Write-Host "`n=== Build complete ===" -ForegroundColor Green
 
-    $exePath = Join-Path $buildDir "classic-cli.exe"
+    $exePath = Join-Path $buildDir "ClassicGui.exe"
     if (Test-Path $exePath) {
         Write-Host "Output: $exePath" -ForegroundColor Cyan
     }
 
     # ── Step 4: Tests (optional) ─────────────────────────────────
     if ($Test) {
-        # Catch2 unit tests via CTest
-        Write-Host "`n=== Running Catch2 unit tests (CTest) ===" -ForegroundColor Cyan
+        Write-Host "`n=== Running CTest ===" -ForegroundColor Cyan
         & ctest --test-dir build --output-on-failure
         if ($LASTEXITCODE -ne 0) {
-            Write-Error "Unit tests failed with exit code $LASTEXITCODE"
+            Write-Error "Tests failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
         }
-        Write-Host "Unit tests passed." -ForegroundColor Green
-
-        # Integration tests
-        $integrationScript = Join-Path $ScriptDir "test_cli.ps1"
-        if (Test-Path $integrationScript) {
-            Write-Host "`n=== Running integration tests ===" -ForegroundColor Cyan
-            & $integrationScript
-            if ($LASTEXITCODE -ne 0) {
-                Write-Error "Integration tests failed with exit code $LASTEXITCODE"
-                exit $LASTEXITCODE
-            }
-        }
+        Write-Host "Tests passed." -ForegroundColor Green
     }
 
     # ── Step 5: Install (optional) ───────────────────────────────

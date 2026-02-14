@@ -191,6 +191,46 @@ fn write_file_string(path: &str, content: &str) -> Result<(), String> {
         .map_err(|e| format!("{e}"))
 }
 
+// ── Report file helpers ───────────────────────────────────────────
+
+/// Discover AUTOSCAN report files in a directory.
+///
+/// Scans the given directory (non-recursively) for files matching
+/// `*-AUTOSCAN.md` and returns their full paths sorted by modification
+/// time (newest first).
+fn discover_report_files(directory: &str) -> Vec<String> {
+    let dir = Path::new(directory);
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+
+    let mut files: Vec<(std::time::SystemTime, String)> = entries
+        .filter_map(|e| e.ok())
+        .filter(|e| {
+            let name = e.file_name();
+            let name = name.to_string_lossy();
+            name.ends_with("-AUTOSCAN.md")
+        })
+        .filter_map(|e| {
+            let path = e.path();
+            let modified = e.metadata().ok()?.modified().ok()?;
+            Some((modified, path.to_string_lossy().to_string()))
+        })
+        .collect();
+
+    // Sort newest first
+    files.sort_by(|a, b| b.0.cmp(&a.0));
+    files.into_iter().map(|(_, path)| path).collect()
+}
+
+/// Read a report file with encoding detection.
+///
+/// Thin wrapper over `read_file_with_encoding` that provides a
+/// domain-specific name for the CXX bridge API.
+fn read_report_file(path: &str) -> Result<String, String> {
+    read_file_with_encoding(path)
+}
+
 #[cxx::bridge(namespace = "classic::files")]
 mod ffi {
     extern "Rust" {
@@ -236,6 +276,10 @@ mod ffi {
         fn calculate_file_similarity(path1: &str, path2: &str) -> Result<f64>;
         fn read_file_with_encoding(path: &str) -> Result<String>;
         fn write_file_string(path: &str, content: &str) -> Result<()>;
+
+        // Report file helpers
+        fn discover_report_files(directory: &str) -> Vec<String>;
+        fn read_report_file(path: &str) -> Result<String>;
     }
 }
 
@@ -304,5 +348,52 @@ mod tests {
             dir.path().to_str().unwrap(),
             dir.path().join("backups").to_str().unwrap(),
         );
+    }
+
+    #[test]
+    fn test_discover_report_files_empty_dir() {
+        let dir = tempfile::tempdir().unwrap();
+        let reports = discover_report_files(dir.path().to_str().unwrap());
+        assert!(reports.is_empty());
+    }
+
+    #[test]
+    fn test_discover_report_files_finds_autoscan() {
+        let dir = tempfile::tempdir().unwrap();
+        // Create matching and non-matching files
+        std::fs::write(dir.path().join("crash-2025-01-01-AUTOSCAN.md"), "report1").unwrap();
+        std::fs::write(dir.path().join("crash-2025-01-02-AUTOSCAN.md"), "report2").unwrap();
+        std::fs::write(dir.path().join("notes.md"), "not a report").unwrap();
+        std::fs::write(dir.path().join("crash.log"), "raw log").unwrap();
+
+        let reports = discover_report_files(dir.path().to_str().unwrap());
+        assert_eq!(reports.len(), 2, "Should find exactly 2 AUTOSCAN.md files");
+        for r in &reports {
+            assert!(r.contains("-AUTOSCAN.md"), "Path should match pattern: {r}");
+        }
+    }
+
+    #[test]
+    fn test_discover_report_files_nonexistent_dir() {
+        let reports = discover_report_files("nonexistent_directory_xyz_123");
+        assert!(reports.is_empty());
+    }
+
+    #[test]
+    fn test_read_report_file_round_trip() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("test-AUTOSCAN.md");
+        let path_str = path.to_str().unwrap();
+        std::fs::write(&path, "# Report\n\nSome content").unwrap();
+
+        let content = read_report_file(path_str).unwrap();
+        assert!(content.contains("# Report"));
+        assert!(content.contains("Some content"));
+    }
+
+    #[test]
+    fn test_read_report_file_nonexistent() {
+        let result = read_report_file("nonexistent_report_xyz.md");
+        assert!(result.is_err());
     }
 }

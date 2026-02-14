@@ -146,6 +146,27 @@ fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> 
     Ok(())
 }
 
+fn yaml_ops_set_integer_setting(ops: &mut YamlOps, key_path: &str, value: i64) -> Result<(), String> {
+    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
+    let updated = ops
+        .ops
+        .set_setting(doc, key_path, Yaml::Integer(value))
+        .map_err(|e| format!("{e}"))?;
+    ops.doc = Some(updated);
+    Ok(())
+}
+
+fn yaml_ops_set_vec_setting(ops: &mut YamlOps, key_path: &str, values: Vec<String>) -> Result<(), String> {
+    let doc = ops.doc.as_ref().ok_or("No YAML document loaded")?;
+    let yaml_array = Yaml::Array(values.into_iter().map(Yaml::String).collect());
+    let updated = ops
+        .ops
+        .set_setting(doc, key_path, yaml_array)
+        .map_err(|e| format!("{e}"))?;
+    ops.doc = Some(updated);
+    Ok(())
+}
+
 // ── Cache management ────────────────────────────────────────────────
 
 fn yaml_ops_clear_cache(ops: &YamlOps) {
@@ -197,6 +218,8 @@ mod ffi {
             value: &str,
         ) -> Result<()>;
         fn yaml_ops_set_bool_setting(ops: &mut YamlOps, key_path: &str, value: bool) -> Result<()>;
+        fn yaml_ops_set_integer_setting(ops: &mut YamlOps, key_path: &str, value: i64) -> Result<()>;
+        fn yaml_ops_set_vec_setting(ops: &mut YamlOps, key_path: &str, values: Vec<String>) -> Result<()>;
 
         // Cache management
         fn yaml_ops_clear_cache(ops: &YamlOps);
@@ -353,5 +376,50 @@ mod tests {
         let fcx = yaml_ops_get_setting_value(&ops, "settings.fcx_mode");
         assert_eq!(fcx.value, "true");
         assert_eq!(fcx.value_type, "bool");
+    }
+
+    #[test]
+    fn test_set_integer_setting() {
+        let mut ops = yaml_ops_new();
+        yaml_ops_parse(&mut ops, "max_scans: 4\n").unwrap();
+        yaml_ops_set_integer_setting(&mut ops, "max_scans", 8).unwrap();
+        let val = yaml_ops_get_setting_value(&ops, "max_scans");
+        assert_eq!(val.value, "8");
+        assert_eq!(val.value_type, "integer");
+    }
+
+    #[test]
+    fn test_set_integer_setting_no_document() {
+        let mut ops = yaml_ops_new();
+        assert!(yaml_ops_set_integer_setting(&mut ops, "key", 1).is_err());
+    }
+
+    #[test]
+    fn test_set_vec_setting() {
+        let mut ops = yaml_ops_new();
+        yaml_ops_parse(&mut ops, "items:\n  - old\n").unwrap();
+        yaml_ops_set_vec_setting(
+            &mut ops,
+            "items",
+            vec!["a".to_string(), "b".to_string(), "c".to_string()],
+        )
+        .unwrap();
+        let vec = yaml_ops_get_vec(&ops, "items");
+        assert_eq!(vec, vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn test_set_vec_setting_empty() {
+        let mut ops = yaml_ops_new();
+        yaml_ops_parse(&mut ops, "items:\n  - old\n").unwrap();
+        yaml_ops_set_vec_setting(&mut ops, "items", vec![]).unwrap();
+        let vec = yaml_ops_get_vec(&ops, "items");
+        assert!(vec.is_empty());
+    }
+
+    #[test]
+    fn test_set_vec_setting_no_document() {
+        let mut ops = yaml_ops_new();
+        assert!(yaml_ops_set_vec_setting(&mut ops, "key", vec!["a".to_string()]).is_err());
     }
 }

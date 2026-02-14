@@ -45,6 +45,7 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         update.rs
         message.rs
         perf.rs
+        markdown.rs
 )
 
 add_subdirectory(src)

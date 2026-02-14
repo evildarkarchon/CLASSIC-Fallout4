@@ -12,6 +12,14 @@ qt_add_executable(ClassicGui
     app/mainwindow.cpp
     app/errordialog.h
     app/errordialog.cpp
+    app/settingsdialog.h
+    app/settingsdialog.cpp
+    app/aboutdialog.h
+    app/aboutdialog.cpp
+    app/papyrusdialog.h
+    app/papyrusdialog.cpp
+    app/pathdialog.h
+    app/pathdialog.cpp
 
     # Core infrastructure
     core/rust_qt_bridge.h
@@ -25,10 +33,30 @@ qt_add_executable(ClassicGui
     # Workers (QThread worker objects)
     workers/scanworker.h
     workers/scanworker.cpp
+    workers/gamefilesworker.h
+    workers/gamefilesworker.cpp
+    workers/papyrusworker.h
+    workers/papyrusworker.cpp
+    workers/updateworker.h
+    workers/updateworker.cpp
+
+    # Widgets (reusable UI components)
+    widgets/reportlistwidget.h
+    widgets/reportlistwidget.cpp
+    widgets/markdownviewer.h
+    widgets/markdownviewer.cpp
+    widgets/reportmetadatawidget.h
+    widgets/reportmetadatawidget.cpp
 
     # Controllers (feature orchestration)
     controllers/scancontroller.h
     controllers/scancontroller.cpp
+    controllers/gamefilescontroller.h
+    controllers/gamefilescontroller.cpp
+    controllers/backupcontroller.h
+    controllers/backupcontroller.cpp
+    controllers/resultscontroller.h
+    controllers/resultscontroller.cpp
 
     # Qt resources
     ../resources/resources.qrc
@@ -77,6 +105,28 @@ install(TARGETS ClassicGui RUNTIME DESTINATION .)
 # relative to QCoreApplication::applicationDirPath())
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/styles/dark_theme.qss
         DESTINATION styles)
+
+# CLASSIC Data — runtime data files (databases, graphics, help, game versions).
+# Only the subdirectories the app actually uses are installed; dev-only files
+# (Python/Pascal scripts, zip archive, local config) at the top level are skipped.
+set(CLASSIC_DATA_DIR "${CMAKE_SOURCE_DIR}/../CLASSIC Data")
+
+install(DIRECTORY "${CLASSIC_DATA_DIR}/databases/"
+    DESTINATION "CLASSIC Data/databases"
+    PATTERN "*.db-shm" EXCLUDE
+    PATTERN "*.db-wal" EXCLUDE
+    PATTERN "*.backup.*" EXCLUDE
+    PATTERN "*.sha256" EXCLUDE
+)
+install(DIRECTORY "${CLASSIC_DATA_DIR}/graphics/"
+    DESTINATION "CLASSIC Data/graphics"
+)
+install(DIRECTORY "${CLASSIC_DATA_DIR}/Help/"
+    DESTINATION "CLASSIC Data/Help"
+)
+install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
+    DESTINATION "CLASSIC Data/games"
+)
 
 # Qt deploy — run windeployqt directly on the installed exe.
 # Unlike qt_generate_deploy_app_script() which forces a bin/ subdirectory,

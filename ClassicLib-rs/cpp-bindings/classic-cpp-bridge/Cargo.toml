@@ -14,6 +14,9 @@ crate-type = ["staticlib", "lib"]  # staticlib for C++ linking, lib for Rust tes
 # CXX FFI framework
 cxx = { workspace = true }
 
+# Markdown → HTML rendering
+pulldown-cmark = { workspace = true, features = ["html"] }
+
 # Async runtime (ONE RUNTIME RULE)
 tokio = { workspace = true }
 
@@ -52,6 +55,7 @@ classic-update-core = { path = "../../business-logic/classic-update-core" }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+serial_test = "3.2"
 
 [build-dependencies]
 cxx-build = { workspace = true }

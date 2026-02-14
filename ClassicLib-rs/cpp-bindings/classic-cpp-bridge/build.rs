@@ -13,6 +13,7 @@ fn main() {
         "src/update.rs",
         "src/message.rs",
         "src/perf.rs",
+        "src/markdown.rs",
     ])
     .std("c++17")
     .compile("classic-cpp-bridge");
