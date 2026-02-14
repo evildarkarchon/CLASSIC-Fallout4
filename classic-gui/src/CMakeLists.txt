@@ -3,7 +3,7 @@
 # All source files for the CLASSIC C++ Qt GUI application.
 # AUTOMOC/AUTOUIC/AUTORCC are enabled at the project level.
 
-qt_add_executable(ClassicGui
+qt_add_executable(ClassicGui WIN32
     # Entry point
     main.cpp
 
