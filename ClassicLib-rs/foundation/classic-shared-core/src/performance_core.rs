@@ -334,9 +334,11 @@ pub fn get_timer_start() -> Instant {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
     use std::thread;
 
     #[test]
+    #[serial]
     fn test_timer() {
         METRICS.clear();
 
@@ -350,6 +352,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_timed_macro() {
         timed!("macro_test", {
             thread::sleep(Duration::from_millis(5));
@@ -360,6 +363,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_timer_drop_records() {
         METRICS.clear();
         {
@@ -372,6 +376,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_timer_set_bytes() {
         METRICS.clear();
         let mut timer = Timer::start("bytes_test");
@@ -488,6 +493,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_time_operation() {
         METRICS.clear();
         let result = time_operation("sync_op", || 42);
@@ -496,6 +502,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_time_with_bytes() {
         METRICS.clear();
         let result = time_with_bytes("bytes_op", 2048, || "done");
@@ -505,6 +512,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_time_async() {
         METRICS.clear();
         let rt = crate::get_runtime();
