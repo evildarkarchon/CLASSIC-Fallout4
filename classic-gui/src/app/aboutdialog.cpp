@@ -35,14 +35,18 @@ AboutDialog::AboutDialog(QWidget* parent)
     // Description and version
     QString version = QApplication::applicationVersion();
     auto* descLabel = new QLabel(
-        QStringLiteral("Crash Log Auto Scanner & Setup Integrity Checker\n"
-                       "Version: %1\n\n"
-                       "Developed by evildarkarchon\n"
-                       "https://github.com/evildarkarchon/CLASSIC-Fallout4")
+        QStringLiteral("Crash Log Auto Scanner & Setup Integrity Checker<br>"
+                       "Version: %1<br><br>"
+                       "Developed by evildarkarchon<br>"
+                       "Based on the original CLASSIC by Poet<br>"
+                       "Special credits to wxMichael, kittivelae, and AtomicFallout757<br><br>"
+                       "<a href=\"https://github.com/evildarkarchon/CLASSIC-Fallout4\">"
+                       "https://github.com/evildarkarchon/CLASSIC-Fallout4</a>")
             .arg(version));
     descLabel->setAlignment(Qt::AlignCenter);
     descLabel->setWordWrap(true);
-    descLabel->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    descLabel->setTextFormat(Qt::RichText);
+    descLabel->setOpenExternalLinks(true);
     layout->addWidget(descLabel);
 
     layout->addStretch();
