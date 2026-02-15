@@ -1,4 +1,7 @@
 <!DOCTYPE RCC>
 <RCC version="1.0">
-    <qresource prefix="/"/>
+    <qresource prefix="/">
+        <file>icons/chevron-down.svg</file>
+        <file>icons/chevron-up.svg</file>
+    </qresource>
 </RCC>

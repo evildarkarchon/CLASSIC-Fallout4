@@ -289,9 +289,9 @@ void MainWindow::setStatusMessage(const QString& message)
 
 void MainWindow::setupUi()
 {
-    // Window geometry from PRD: 650x580 initial, 550x580 minimum
-    resize(650, 580);
-    setMinimumSize(550, 580);
+    // Main tab minimum/default geometry.
+    resize(kTabMinSizes[0].minWidth, kTabMinSizes[0].minHeight);
+    setMinimumSize(kTabMinSizes[0].minWidth, kTabMinSizes[0].minHeight);
     setWindowTitle(QStringLiteral("CLASSIC"));
 
     // Central tab widget
@@ -755,6 +755,9 @@ void MainWindow::loadSettings()
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
 
+        m_editStagingFolder->clear();
+        m_editCustomFolder->clear();
+
         auto staging = classic::yaml::yaml_ops_get_string(
             *ops, "CLASSIC_Settings.Staging Mods Folder", "");
         if (!staging.empty()) {
@@ -788,6 +791,12 @@ void MainWindow::loadSettings()
     restoreTabGeometry(initialTab);
     m_lastTabIndex = initialTab;
     m_geometryInitialized = true;
+
+    // Keep results directory watching in sync when settings are reloaded
+    // (e.g. after Settings dialog changes).
+    if (m_resultsController) {
+        initResultsReportDir();
+    }
 }
 
 void MainWindow::saveSettings()
@@ -837,23 +846,32 @@ void MainWindow::saveSettings()
 
 void MainWindow::initResultsReportDir()
 {
-    if (m_dataDir.isEmpty()) {
+    if (!m_resultsController) {
         return;
     }
 
-    QString settingsPath = settingsFilePath(m_dataRoot);
-    try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops, std::string(settingsPath.toUtf8().constData()));
-
-        auto crashLogsDir = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Crash Logs Folder", "");
-        if (!crashLogsDir.empty()) {
-            m_resultsController->setReportDirectory(classic::toQString(crashLogsDir));
-        }
-    } catch (...) {
-        // Not critical -- results tab will just be empty until a scan runs
+    const QString crashDir = QDir::cleanPath(readCrashLogsDir().trimmed());
+    if (crashDir.isEmpty()) {
+        m_resultsController->setReportDirectories(QStringList(), QString());
+        return;
     }
+
+    // Ensure the primary Crash Logs directory exists before watching.
+    QDir().mkpath(crashDir);
+
+    QStringList reportDirs;
+    reportDirs.append(crashDir);
+
+    if (m_editCustomFolder) {
+        const QString customDir = QDir::cleanPath(m_editCustomFolder->text().trimmed());
+        if (!customDir.isEmpty()
+            && QDir(customDir).exists()
+            && customDir.compare(crashDir, Qt::CaseInsensitive) != 0) {
+            reportDirs.append(customDir);
+        }
+    }
+
+    m_resultsController->setReportDirectories(reportDirs, crashDir);
 }
 
 void MainWindow::checkFirstRunPaths()
@@ -1182,21 +1200,24 @@ void MainWindow::onTabChanged(int index)
 
 QString MainWindow::readCrashLogsDir() const
 {
-    if (m_dataDir.isEmpty()) {
-        return {};
-    }
-    QString settingsPath = settingsFilePath(m_dataRoot);
-    try {
-        auto ops = classic::yaml::yaml_ops_new();
-        classic::yaml::yaml_ops_load_file(*ops,
-            std::string(settingsPath.toUtf8().constData()));
-        auto dir = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Crash Logs Folder", "");
-        if (!dir.empty()) {
-            return classic::toQString(dir);
+    if (!m_dataDir.isEmpty()) {
+        QString settingsPath = settingsFilePath(m_dataRoot);
+        try {
+            auto ops = classic::yaml::yaml_ops_new();
+            classic::yaml::yaml_ops_load_file(*ops,
+                std::string(settingsPath.toUtf8().constData()));
+            auto dir = classic::yaml::yaml_ops_get_string(
+                *ops, "CLASSIC_Settings.Crash Logs Folder", "");
+            if (!dir.empty()) {
+                return QDir::cleanPath(classic::toQString(dir));
+            }
+        } catch (...) {
+            // Fall through to default path below.
         }
-    } catch (...) {}
-    return {};
+    }
+
+    // Default to a local "Crash Logs" folder when settings are missing.
+    return QDir::cleanPath(QDir::current().filePath(QStringLiteral("Crash Logs")));
 }
 
 // ── Slot implementations ───────────────────────────────────────────

@@ -47,6 +47,8 @@ qt_add_executable(ClassicGui WIN32
     widgets/markdownviewer.cpp
     widgets/reportmetadatawidget.h
     widgets/reportmetadatawidget.cpp
+    widgets/toggleswitch.h
+    widgets/toggleswitch.cpp
 
     # Controllers (feature orchestration)
     controllers/scancontroller.h

@@ -110,7 +110,7 @@ private:
 
     static constexpr int TAB_COUNT = 4;
     static constexpr struct { int minWidth; int minHeight; } kTabMinSizes[TAB_COUNT] = {
-        {550, 350},  // Main Options
+        {640, 500},  // Main Options
         {750, 580},  // File Backup
         {550, 350},  // Articles
         {750, 450},  // Results

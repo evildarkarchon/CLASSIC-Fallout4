@@ -22,7 +22,8 @@ public:
                                ReportMetadataWidget* metadata,
                                QObject* parent = nullptr);
 
-    void setReportDirectory(const QString& dirPath);
+    void setReportDirectories(const QStringList& dirPaths,
+                              const QString& primaryDir = QString());
     void refreshReports();
 
 private slots:
@@ -44,6 +45,7 @@ private:
     ReportMetadataWidget* m_metadata = nullptr;
     QFileSystemWatcher m_watcher;
 
-    QString m_reportDir;
+    QStringList m_reportDirs;
+    QString m_primaryReportDir;
     static constexpr int kResultsTabIndex = 3;
 };

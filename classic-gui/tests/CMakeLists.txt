@@ -77,3 +77,17 @@ add_classic_gui_qt_test(classic-gui-test-markdownviewer
     ${CMAKE_SOURCE_DIR}/src/widgets/markdownviewer.cpp
 )
 link_classic_gui_rust_bridge(classic-gui-test-markdownviewer)
+
+add_classic_gui_qt_test(classic-gui-test-resultscontroller
+    test_resultscontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/controllers/resultscontroller.cpp
+    ${CMAKE_SOURCE_DIR}/src/core/signalhub.cpp
+    ${CMAKE_SOURCE_DIR}/src/widgets/reportlistwidget.cpp
+    ${CMAKE_SOURCE_DIR}/src/widgets/markdownviewer.cpp
+    ${CMAKE_SOURCE_DIR}/src/widgets/reportmetadatawidget.cpp
+)
+link_classic_gui_rust_bridge(classic-gui-test-resultscontroller)
+
+add_classic_gui_qt_test(classic-gui-test-mainwindow-geometry
+    test_mainwindow_geometry.cpp
+)

@@ -9,6 +9,8 @@
 #include <QApplication>
 #include <QClipboard>
 #include <QTabWidget>
+#include <QSet>
+#include <algorithm>
 
 #include "core/signalhub.h"
 #include "core/rust_qt_bridge.h"
@@ -61,7 +63,8 @@ ResultsController::ResultsController(SignalHub* signalHub,
 
 // ── Public interface ──────────────────────────────────────────────
 
-void ResultsController::setReportDirectory(const QString& dirPath)
+void ResultsController::setReportDirectories(const QStringList& dirPaths,
+                                             const QString& primaryDir)
 {
     // Remove previous watch paths
     auto dirs = m_watcher.directories();
@@ -69,10 +72,37 @@ void ResultsController::setReportDirectory(const QString& dirPath)
         m_watcher.removePaths(dirs);
     }
 
-    m_reportDir = dirPath;
+    m_reportDirs.clear();
+    m_primaryReportDir = QDir::cleanPath(primaryDir.trimmed());
 
-    if (!m_reportDir.isEmpty() && QDir(m_reportDir).exists()) {
-        m_watcher.addPath(m_reportDir);
+    if (!m_primaryReportDir.isEmpty()) {
+        // Crash Logs is the primary report source and should always exist.
+        QDir().mkpath(m_primaryReportDir);
+    }
+
+    QStringList candidateDirs = dirPaths;
+    if (!m_primaryReportDir.isEmpty()) {
+        candidateDirs.prepend(m_primaryReportDir);
+    }
+
+    QSet<QString> seen;
+    for (const auto& rawDir : candidateDirs) {
+        const QString cleaned = QDir::cleanPath(rawDir.trimmed());
+        if (cleaned.isEmpty()) {
+            continue;
+        }
+
+        const QString key = cleaned.toLower();
+        if (seen.contains(key)) {
+            continue;
+        }
+
+        seen.insert(key);
+        m_reportDirs.append(cleaned);
+
+        if (QDir(cleaned).exists()) {
+            m_watcher.addPath(cleaned);
+        }
     }
 
     refreshReports();
@@ -80,7 +110,7 @@ void ResultsController::setReportDirectory(const QString& dirPath)
 
 void ResultsController::refreshReports()
 {
-    if (m_reportDir.isEmpty()) {
+    if (m_reportDirs.isEmpty()) {
         m_reportList->clearReports();
         m_markdownViewer->clear();
         m_metadata->clear();
@@ -154,8 +184,13 @@ void ResultsController::onDeleteReport(const QString& filePath)
 
 void ResultsController::onOpenFolder()
 {
-    if (!m_reportDir.isEmpty()) {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(m_reportDir));
+    QString openDir = m_primaryReportDir;
+    if (openDir.isEmpty() && !m_reportDirs.isEmpty()) {
+        openDir = m_reportDirs.first();
+    }
+
+    if (!openDir.isEmpty()) {
+        QDesktopServices::openUrl(QUrl::fromLocalFile(openDir));
     }
 }
 
@@ -178,8 +213,10 @@ void ResultsController::onScanStarted()
 void ResultsController::onScanCompleted()
 {
     // Resume file watching
-    if (!m_reportDir.isEmpty() && QDir(m_reportDir).exists()) {
-        m_watcher.addPath(m_reportDir);
+    for (const auto& dir : m_reportDirs) {
+        if (QDir(dir).exists()) {
+            m_watcher.addPath(dir);
+        }
     }
 
     // Refresh the report list
@@ -200,19 +237,34 @@ void ResultsController::onDirectoryChanged()
 
 QStringList ResultsController::discoverReports() const
 {
-    // Use Rust bridge for discovery -- returns full paths sorted by
-    // modification time (newest first), which is more reliable than
-    // filename-based sorting for files without embedded timestamps.
+    // Discover report files in all configured directories.
+    // The Rust helper filters to *-AUTOSCAN.md for each directory.
     QStringList paths;
-    try {
-        auto rustPaths = classic::files::discover_report_files(
-            classic::toRustString(m_reportDir));
-        paths.reserve(static_cast<int>(rustPaths.size()));
-        for (const auto& rpath : rustPaths) {
-            paths.append(classic::toQString(rpath));
+    QSet<QString> seen;
+
+    for (const auto& dir : m_reportDirs) {
+        try {
+            auto rustPaths = classic::files::discover_report_files(
+                classic::toRustString(dir));
+            for (const auto& rpath : rustPaths) {
+                const QString path = QDir::cleanPath(classic::toQString(rpath));
+                const QString key = path.toLower();
+                if (seen.contains(key)) {
+                    continue;
+                }
+                seen.insert(key);
+                paths.append(path);
+            }
+        } catch (const rust::Error&) {
+            // Ignore individual directory discovery errors and continue.
         }
-    } catch (const rust::Error&) {
-        // Fall back to empty list on error
     }
+
+    // Global newest-first ordering across all directories.
+    std::sort(paths.begin(), paths.end(),
+              [](const QString& a, const QString& b) {
+                  return QFileInfo(a).lastModified() > QFileInfo(b).lastModified();
+              });
+
     return paths;
 }

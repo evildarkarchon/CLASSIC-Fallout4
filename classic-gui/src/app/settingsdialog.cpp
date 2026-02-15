@@ -9,6 +9,7 @@
 
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
+#include "widgets/toggleswitch.h"
 
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/yaml.h"
@@ -100,11 +101,11 @@ void SettingsDialog::setupScanningTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
-    m_chkFcxMode = new QCheckBox(QStringLiteral("FCX Mode"));
-    m_chkSimplifyLogs = new QCheckBox(QStringLiteral("Simplify Logs"));
-    m_chkShowFormIdValues = new QCheckBox(QStringLiteral("Show FormID Values"));
-    m_chkMoveUnsolvedLogs = new QCheckBox(QStringLiteral("Move Unsolved Logs"));
-    m_chkAutoSwitchAfterScan = new QCheckBox(QStringLiteral("Auto Switch to Results After Scan"));
+    m_chkFcxMode = new ToggleSwitch(QStringLiteral("FCX Mode"));
+    m_chkSimplifyLogs = new ToggleSwitch(QStringLiteral("Simplify Logs"));
+    m_chkShowFormIdValues = new ToggleSwitch(QStringLiteral("Show FormID Values"));
+    m_chkMoveUnsolvedLogs = new ToggleSwitch(QStringLiteral("Move Unsolved Logs"));
+    m_chkAutoSwitchAfterScan = new ToggleSwitch(QStringLiteral("Auto Switch to Results After Scan"));
 
     layout->addWidget(m_chkFcxMode);
     layout->addWidget(m_chkSimplifyLogs);
@@ -119,6 +120,7 @@ void SettingsDialog::setupScanningTab(QTabWidget* tabs)
         m_spinMaxConcurrentScans = new QSpinBox();
         m_spinMaxConcurrentScans->setRange(0, 32);
         m_spinMaxConcurrentScans->setValue(0);
+        m_spinMaxConcurrentScans->setButtonSymbols(QAbstractSpinBox::UpDownArrows);
         row->addWidget(label);
         row->addWidget(m_spinMaxConcurrentScans);
         row->addStretch();
@@ -191,7 +193,7 @@ void SettingsDialog::setupUpdatesTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
-    m_chkUpdateCheck = new QCheckBox(QStringLiteral("Check for Updates on Startup"));
+    m_chkUpdateCheck = new ToggleSwitch(QStringLiteral("Check for Updates on Startup"));
     layout->addWidget(m_chkUpdateCheck);
 
     {
