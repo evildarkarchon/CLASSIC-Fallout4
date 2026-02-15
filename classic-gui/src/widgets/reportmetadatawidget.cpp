@@ -31,8 +31,6 @@ void ReportMetadataWidget::setupUi()
 
     m_dateLabel = makeField(QStringLiteral("Date:"));
     m_sizeLabel = makeField(QStringLiteral("Size:"));
-    m_issuesLabel = makeField(QStringLiteral("Issues:"));
-    m_statusLabel = makeField(QStringLiteral("Status:"));
 
     layout->addStretch();
 
@@ -47,25 +45,16 @@ void ReportMetadataWidget::setupUi()
 // ── Public interface ──────────────────────────────────────────────
 
 void ReportMetadataWidget::setMetadata(const QString& date,
-                                       const QString& fileSize,
-                                       int issueCount,
-                                       const QString& status)
+                                       const QString& fileSize)
 {
     m_dateLabel->setText(QStringLiteral("<b>Date:</b> ") + date);
     m_sizeLabel->setText(QStringLiteral("<b>Size:</b> ") + fileSize);
-    m_issuesLabel->setText(
-        QStringLiteral("<b>Issues:</b> ") + QString::number(issueCount));
-    m_statusLabel->setText(
-        QStringLiteral("<b>Status:</b> ") + statusDotHtml(status)
-        + QStringLiteral(" ") + status);
 }
 
 void ReportMetadataWidget::clear()
 {
     m_dateLabel->setText(QStringLiteral("<b>Date:</b> --"));
     m_sizeLabel->setText(QStringLiteral("<b>Size:</b> --"));
-    m_issuesLabel->setText(QStringLiteral("<b>Issues:</b> --"));
-    m_statusLabel->setText(QStringLiteral("<b>Status:</b> --"));
 }
 
 // ── Static helpers ────────────────────────────────────────────────
@@ -99,50 +88,3 @@ QString ReportMetadataWidget::formatFileSize(qint64 bytes)
            + QStringLiteral(" MB");
 }
 
-int ReportMetadataWidget::extractIssueCount(const QString& reportContent)
-{
-    // Count lines containing "SUSPECT" or "[!]" as issue indicators
-    int count = 0;
-    const auto lines = reportContent.split(QLatin1Char('\n'));
-    for (const auto& line : lines) {
-        if (line.contains(QStringLiteral("SUSPECT"), Qt::CaseInsensitive)
-            || line.contains(QStringLiteral("[!]"))) {
-            ++count;
-        }
-    }
-    return count;
-}
-
-QString ReportMetadataWidget::determineStatus(const QString& reportContent)
-{
-    if (reportContent.contains(QStringLiteral("NO ISSUES FOUND"), Qt::CaseInsensitive)
-        || reportContent.contains(QStringLiteral("NO CRASH"), Qt::CaseInsensitive)) {
-        return QStringLiteral("Solved");
-    }
-
-    if (reportContent.contains(QStringLiteral("INCOMPLETE"), Qt::CaseInsensitive)
-        || reportContent.contains(QStringLiteral("TRUNCATED"), Qt::CaseInsensitive)) {
-        return QStringLiteral("Incomplete");
-    }
-
-    return QStringLiteral("Unsolved");
-}
-
-// ── Private helpers ───────────────────────────────────────────────
-
-QString ReportMetadataWidget::statusDotHtml(const QString& status)
-{
-    // Return a colored Unicode circle as an HTML span
-    QString color;
-    if (status == QStringLiteral("Solved")) {
-        color = QStringLiteral("#4CAF50");
-    } else if (status == QStringLiteral("Unsolved")) {
-        color = QStringLiteral("#f44336");
-    } else if (status == QStringLiteral("Incomplete")) {
-        color = QStringLiteral("#FFC107");
-    } else {
-        color = QStringLiteral("#e0e0e0");
-    }
-
-    return QStringLiteral("<span style='color: %1;'>&#9679;</span>").arg(color);
-}

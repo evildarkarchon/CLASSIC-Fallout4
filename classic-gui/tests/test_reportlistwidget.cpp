@@ -13,7 +13,7 @@ class ReportListWidgetTests : public QObject {
     Q_OBJECT
 
 private slots:
-    void setReports_sorts_reports_and_sets_status_color_and_tooltip();
+    void setReports_sorts_reports_and_sets_tooltip_without_status_coloring();
     void search_filter_rebuilds_visible_items();
     void selection_and_toolbar_buttons_emit_expected_signals();
 };
@@ -45,7 +45,7 @@ QPushButton* findButtonByText(ReportListWidget& widget, const QString& text)
 }
 } // namespace
 
-void ReportListWidgetTests::setReports_sorts_reports_and_sets_status_color_and_tooltip()
+void ReportListWidgetTests::setReports_sorts_reports_and_sets_tooltip_without_status_coloring()
 {
     QTemporaryDir tempDir;
     QVERIFY(tempDir.isValid());
@@ -84,17 +84,9 @@ void ReportListWidgetTests::setReports_sorts_reports_and_sets_status_color_and_t
     QCOMPARE(list->item(3)->text(),
              QStringLiteral("crash-2024-01-15-08-30-45.log"));
 
-    QHash<QString, QColor> expectedColors;
-    expectedColors.insert(solved, QColor(0x4C, 0xAF, 0x50));
-    expectedColors.insert(unsolved, QColor(0xF4, 0x43, 0x36));
-    expectedColors.insert(incomplete, QColor(0xFF, 0xC1, 0x07));
-    expectedColors.insert(unknown, QColor(0xE0, 0xE0, 0xE0));
-
     for (int i = 0; i < list->count(); ++i) {
         auto* item = list->item(i);
-        const QString path = item->data(Qt::UserRole).toString();
-        QVERIFY(expectedColors.contains(path));
-        QCOMPARE(item->foreground().color(), expectedColors.value(path));
+        QVERIFY(!item->data(Qt::ForegroundRole).isValid());
     }
 
     QCOMPARE(list->item(0)->toolTip(),

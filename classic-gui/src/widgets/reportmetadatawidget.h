@@ -10,22 +10,16 @@ class ReportMetadataWidget : public QWidget {
 public:
     explicit ReportMetadataWidget(QWidget* parent = nullptr);
 
-    void setMetadata(const QString& date, const QString& fileSize,
-                     int issueCount, const QString& status);
+    void setMetadata(const QString& date, const QString& fileSize);
     void clear();
 
     // Static helpers for metadata extraction
     static QString extractDate(const QString& filename);
     static QString formatFileSize(qint64 bytes);
-    static int extractIssueCount(const QString& reportContent);
-    static QString determineStatus(const QString& reportContent);
 
 private:
     void setupUi();
-    static QString statusDotHtml(const QString& status);
 
     QLabel* m_dateLabel = nullptr;
     QLabel* m_sizeLabel = nullptr;
-    QLabel* m_issuesLabel = nullptr;
-    QLabel* m_statusLabel = nullptr;
 };

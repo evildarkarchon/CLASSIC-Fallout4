@@ -151,9 +151,7 @@ void ResultsController::onReportSelected(const QString& filePath)
     QFileInfo info(filePath);
     QString date = ReportMetadataWidget::extractDate(info.fileName());
     QString size = ReportMetadataWidget::formatFileSize(info.size());
-    int issues = ReportMetadataWidget::extractIssueCount(content);
-    QString status = ReportMetadataWidget::determineStatus(content);
-    m_metadata->setMetadata(date, size, issues, status);
+    m_metadata->setMetadata(date, size);
 }
 
 void ResultsController::onDeleteReport(const QString& filePath)

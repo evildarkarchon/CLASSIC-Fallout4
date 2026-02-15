@@ -3,8 +3,6 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFileInfo>
-#include <QFile>
-#include <QTextStream>
 #include <QRegularExpression>
 #include <algorithm>
 
@@ -73,7 +71,6 @@ void ReportListWidget::setupUi()
 void ReportListWidget::setReports(const QStringList& reportPaths)
 {
     m_reportPaths = reportPaths;
-    m_statusCache.clear();
 
     // Sort newest first by filename (crash-YYYY-MM-DD-HH-MM-SS sorts lexicographically)
     std::sort(m_reportPaths.begin(), m_reportPaths.end(),
@@ -81,18 +78,12 @@ void ReportListWidget::setReports(const QStringList& reportPaths)
                   return QFileInfo(a).fileName() > QFileInfo(b).fileName();
               });
 
-    // Pre-cache status for each report
-    for (const auto& path : m_reportPaths) {
-        m_statusCache[path] = detectStatus(path);
-    }
-
     rebuildListItems(m_searchBar->text());
 }
 
 void ReportListWidget::clearReports()
 {
     m_reportPaths.clear();
-    m_statusCache.clear();
     m_listWidget->clear();
 }
 
@@ -144,61 +135,8 @@ void ReportListWidget::rebuildListItems(const QString& filter)
             item->setToolTip(QStringLiteral("Crash: ") + timestamp);
         }
 
-        // Status-based coloring
-        ReportStatus status = m_statusCache.value(path, ReportStatus::Unknown);
-        item->setForeground(colorForStatus(status));
-
         m_listWidget->addItem(item);
     }
-}
-
-ReportListWidget::ReportStatus
-ReportListWidget::detectStatus(const QString& filePath) const
-{
-    QFile file(filePath);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        return ReportStatus::Unknown;
-    }
-
-    QTextStream stream(&file);
-    QString content;
-    // Read first ~50 lines for status detection
-    for (int i = 0; i < 50 && !stream.atEnd(); ++i) {
-        content += stream.readLine() + QStringLiteral("\n");
-    }
-
-    if (content.contains(QStringLiteral("NO ISSUES FOUND"), Qt::CaseInsensitive)
-        || content.contains(QStringLiteral("NO CRASH"), Qt::CaseInsensitive)) {
-        return ReportStatus::Solved;
-    }
-
-    if (content.contains(QStringLiteral("INCOMPLETE"), Qt::CaseInsensitive)
-        || content.contains(QStringLiteral("TRUNCATED"), Qt::CaseInsensitive)) {
-        return ReportStatus::Incomplete;
-    }
-
-    // If the file has content with suspects/errors, it's unsolved
-    if (content.contains(QStringLiteral("SUSPECT"), Qt::CaseInsensitive)
-        || content.contains(QStringLiteral("CRASH"), Qt::CaseInsensitive)) {
-        return ReportStatus::Unsolved;
-    }
-
-    return ReportStatus::Unknown;
-}
-
-QColor ReportListWidget::colorForStatus(ReportStatus status)
-{
-    switch (status) {
-    case ReportStatus::Solved:
-        return QColor(0x4C, 0xAF, 0x50); // #4CAF50
-    case ReportStatus::Unsolved:
-        return QColor(0xF4, 0x43, 0x36); // #f44336
-    case ReportStatus::Incomplete:
-        return QColor(0xFF, 0xC1, 0x07); // #FFC107
-    case ReportStatus::Unknown:
-        return QColor(0xE0, 0xE0, 0xE0); // default light gray
-    }
-    return QColor(0xE0, 0xE0, 0xE0);
 }
 
 QString ReportListWidget::extractTimestamp(const QString& filename)

@@ -9,8 +9,6 @@ class ReportMetadataWidgetTests : public QObject {
 private slots:
     void extractDate_handles_valid_and_invalid_names();
     void formatFileSize_formats_bytes_kb_and_mb();
-    void extractIssueCount_counts_known_issue_markers();
-    void determineStatus_detects_solved_incomplete_and_unsolved();
     void setMetadata_and_clear_update_labels();
 };
 
@@ -34,76 +32,46 @@ void ReportMetadataWidgetTests::formatFileSize_formats_bytes_kb_and_mb()
              QStringLiteral("2.0 MB"));
 }
 
-void ReportMetadataWidgetTests::extractIssueCount_counts_known_issue_markers()
-{
-    const QString content = QStringLiteral(
-        "line 1\n"
-        "SUSPECT: plugin conflict\n"
-        "another line\n"
-        "[!] risky condition\n"
-        "suspect lower case too\n");
-
-    QCOMPARE(ReportMetadataWidget::extractIssueCount(content), 3);
-}
-
-void ReportMetadataWidgetTests::determineStatus_detects_solved_incomplete_and_unsolved()
-{
-    QCOMPARE(ReportMetadataWidget::determineStatus(
-                 QStringLiteral("NO ISSUES FOUND in this report")),
-             QStringLiteral("Solved"));
-
-    QCOMPARE(
-        ReportMetadataWidget::determineStatus(QStringLiteral("report TRUNCATED")),
-        QStringLiteral("Incomplete"));
-
-    QCOMPARE(
-        ReportMetadataWidget::determineStatus(QStringLiteral("SUSPECT section")),
-        QStringLiteral("Unsolved"));
-}
-
 void ReportMetadataWidgetTests::setMetadata_and_clear_update_labels()
 {
     ReportMetadataWidget widget;
     widget.setMetadata(QStringLiteral("2024-01-15 08:30:45"),
-                       QStringLiteral("1.5 KB"),
-                       2,
-                       QStringLiteral("Solved"));
+                       QStringLiteral("1.5 KB"));
 
     QLabel* dateLabel = nullptr;
     QLabel* sizeLabel = nullptr;
-    QLabel* issuesLabel = nullptr;
-    QLabel* statusLabel = nullptr;
     for (auto* label : widget.findChildren<QLabel*>()) {
         const QString text = label->text();
         if (text.startsWith(QStringLiteral("<b>Date:</b>"))) {
             dateLabel = label;
         } else if (text.startsWith(QStringLiteral("<b>Size:</b>"))) {
             sizeLabel = label;
-        } else if (text.startsWith(QStringLiteral("<b>Issues:</b>"))) {
-            issuesLabel = label;
-        } else if (text.startsWith(QStringLiteral("<b>Status:</b>"))) {
-            statusLabel = label;
         }
     }
 
     QVERIFY(dateLabel);
     QVERIFY(sizeLabel);
-    QVERIFY(issuesLabel);
-    QVERIFY(statusLabel);
 
     QCOMPARE(dateLabel->text(),
              QStringLiteral("<b>Date:</b> 2024-01-15 08:30:45"));
     QCOMPARE(sizeLabel->text(), QStringLiteral("<b>Size:</b> 1.5 KB"));
-    QCOMPARE(issuesLabel->text(), QStringLiteral("<b>Issues:</b> 2"));
-    QVERIFY(statusLabel->text().contains(QStringLiteral("Solved")));
-    QVERIFY(statusLabel->text().contains(QStringLiteral("#4CAF50"),
-                                         Qt::CaseInsensitive));
+
+    bool hasIssues = false;
+    bool hasStatus = false;
+    for (auto* label : widget.findChildren<QLabel*>()) {
+        if (label->text().startsWith(QStringLiteral("<b>Issues:</b>"))) {
+            hasIssues = true;
+        }
+        if (label->text().startsWith(QStringLiteral("<b>Status:</b>"))) {
+            hasStatus = true;
+        }
+    }
+    QVERIFY(!hasIssues);
+    QVERIFY(!hasStatus);
 
     widget.clear();
     QCOMPARE(dateLabel->text(), QStringLiteral("<b>Date:</b> --"));
     QCOMPARE(sizeLabel->text(), QStringLiteral("<b>Size:</b> --"));
-    QCOMPARE(issuesLabel->text(), QStringLiteral("<b>Issues:</b> --"));
-    QCOMPARE(statusLabel->text(), QStringLiteral("<b>Status:</b> --"));
 }
 
 QTEST_MAIN(ReportMetadataWidgetTests)

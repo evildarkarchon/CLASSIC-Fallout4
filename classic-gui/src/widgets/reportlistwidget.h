@@ -6,14 +6,11 @@
 #include <QPushButton>
 #include <QString>
 #include <QStringList>
-#include <QHash>
 
 class ReportListWidget : public QWidget {
     Q_OBJECT
 
 public:
-    enum class ReportStatus { Solved, Unsolved, Incomplete, Unknown };
-
     explicit ReportListWidget(QWidget* parent = nullptr);
 
     void setReports(const QStringList& reportPaths);
@@ -33,8 +30,6 @@ private slots:
 private:
     void setupUi();
     void rebuildListItems(const QString& filter);
-    ReportStatus detectStatus(const QString& filePath) const;
-    static QColor colorForStatus(ReportStatus status);
     static QString extractTimestamp(const QString& filename);
 
     QLineEdit* m_searchBar = nullptr;
@@ -44,5 +39,4 @@ private:
     QPushButton* m_btnOpenFolder = nullptr;
 
     QStringList m_reportPaths;
-    QHash<QString, ReportStatus> m_statusCache;
 };
