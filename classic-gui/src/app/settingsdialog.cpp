@@ -162,8 +162,14 @@ void SettingsDialog::setupPathsTab(QTabWidget* tabs)
 
     // FormID Databases section
     {
-        auto* group = new QGroupBox(QStringLiteral("FormID Databases"));
+        auto* group = new QGroupBox(QStringLiteral("Additional FormID Databases"));
         auto* groupLayout = new QVBoxLayout(group);
+
+        auto* helpLabel = new QLabel(
+            QStringLiteral("The built-in database is always included.\n"
+                           "Add extra databases here if needed."));
+        helpLabel->setWordWrap(true);
+        groupLayout->addWidget(helpLabel);
 
         m_listFormIdDbs = new QListWidget();
         groupLayout->addWidget(m_listFormIdDbs);
