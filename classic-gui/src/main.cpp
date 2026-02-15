@@ -46,24 +46,12 @@ static QString findDataDir()
 /// Find the CLASSIC.ico icon by searching common locations.
 static QString findIcon()
 {
-    // Check relative to CWD (development / distribution layout)
-    QDir cwd = QDir::current();
-    QString cwdIcon = cwd.filePath("CLASSIC Data/graphics/CLASSIC.ico");
-    if (QFile::exists(cwdIcon)) {
-        return cwdIcon;
-    }
-
-    // Check relative to executable
-    QString exeDir = QCoreApplication::applicationDirPath();
-    QString exeIcon = QDir(exeDir).filePath("CLASSIC Data/graphics/CLASSIC.ico");
-    if (QFile::exists(exeIcon)) {
-        return exeIcon;
-    }
-
-    // Check parent of executable (for build/ subdirectory layout)
-    QString parentIcon = QDir(exeDir + "/..").filePath("CLASSIC Data/graphics/CLASSIC.ico");
-    if (QFile::exists(parentIcon)) {
-        return parentIcon;
+    QString dataDir = findDataDir();
+    if (!dataDir.isEmpty()) {
+        QString iconPath = QDir(dataDir).filePath("graphics/CLASSIC.ico");
+        if (QFile::exists(iconPath)) {
+            return iconPath;
+        }
     }
 
     return {};
