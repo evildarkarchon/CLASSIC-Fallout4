@@ -808,10 +808,29 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
         X-Cell has equivalent functionality to Private Profile Redirector when the io feature (changed to profile in v1.2-b2+) is enabled.
         -----
   libdiskCacheEnabler | x-cell: |
-    Disk Cache Enabler ❌ CONFLICTS WITH : X-Cell
+    Disk Cache Enabler ❌ CONFLICTS WITH : Addictol
         X-Cell has equivalent functionality to Disk Cache Enabler when the io feature is enabled.
         -----
-
+  fallrimpriority | addictol: |
+    Fallout Priority ❌ CONFLICTS WITH : Addictol
+        Addictol has equivalent functionality to Fallout Priority when bThreads feature is enabled.
+        -----
+  prioritymod | addictol: |
+    Fallout Priority ❌ CONFLICTS WITH : Addictol
+        Addictol has equivalent functionality to Fallout Priority when bThreads is enabled.
+        -----
+  bakascrapheap | addictol: |
+    Baka ScrapHeap ❌ CONFLICTS WITH : Addictol
+        X-Cell/Addictol has equivalent functionality to Baka ScrapHeap when bMemoryManager is enabled.
+        -----
+  PrivateProfileRedirector | addictol: |
+    Private Profile Redirector ❌ CONFLICTS WITH : Addictol
+        X-Cell/Addictol has equivalent functionality to Private Profile Redirector when bProfile is enabled.
+        -----
+  libdiskCacheEnabler | addictol: |
+    Disk Cache Enabler ❌ CONFLICTS WITH : Addictol
+        X-Cell/Addictol has equivalent functionality to Disk Cache Enabler when bIOCacher is enabled.
+        -----
   SovietPowerArmor | OpenLexington: |
     Soviet Power Armor ❌ CONFLICTS WITH : Open Lexington
         Both mods modify the same location and can cause crashes.

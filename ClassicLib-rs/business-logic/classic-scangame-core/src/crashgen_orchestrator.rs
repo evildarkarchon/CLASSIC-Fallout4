@@ -254,6 +254,20 @@ mod tests {
     }
 
     #[test]
+    fn test_check_detects_addictol_conflicts() {
+        let temp = setup_with_og_config(
+            "[Patches]\nMemoryManager = true\nHavokMemorySystem = true\n",
+            &["Addictol.dll"],
+        );
+        let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();
+
+        assert!(!report.issues.is_empty());
+        let settings: Vec<&str> = report.issues.iter().map(|i| i.setting.as_str()).collect();
+        assert!(settings.contains(&"MemoryManager"));
+        assert!(settings.contains(&"HavokMemorySystem"));
+    }
+
+    #[test]
     fn test_check_vr_config() {
         let temp = setup_with_vr_config("[Patches]\nAchievements = true\n", &["achievements.dll"]);
         let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();

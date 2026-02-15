@@ -115,7 +115,7 @@ impl SettingsValidator {
         if has_old_xcell {
             Self::add_warning(
                 &mut lines,
-                "You have an old version of X-Cell installed, please update it to the latest version.",
+                "You have an old version of X-Cell/Addictol installed, please update it to the latest version.",
                 "Download the latest version from here: https://www.nexusmods.com/fallout4/mods/84214?tab=files",
                 separator,
             );
@@ -279,9 +279,9 @@ impl SettingsValidator {
             (true, true, false) => {
                 Self::add_warning(
                     lines,
-                    "X-Cell is installed, but MemoryManager parameter is set to TRUE",
+                    "X-Cell/Addictol is installed, but MemoryManager parameter is set to TRUE",
                     &format!(
-                        "Open {}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell.",
+                        "Open {}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell/Addictol.",
                         self.crashgen_name
                     ),
                     separator,
@@ -314,8 +314,8 @@ impl SettingsValidator {
             (false, true, true) => {
                 Self::add_warning(
                     lines,
-                    "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell",
-                    "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell.",
+                    "The Baka ScrapHeap Mod is installed, but is redundant with X-Cell/Addictol",
+                    "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with X-Cell/Addictol.",
                     separator,
                 );
             }
@@ -323,7 +323,7 @@ impl SettingsValidator {
                 Self::add_success(
                     lines,
                     &format!(
-                        "Memory Manager parameter is correctly configured for use with X-Cell in your {} settings!",
+                        "Memory Manager parameter is correctly configured for use with X-Cell/Addictol in your {} settings!",
                         self.crashgen_name
                     ),
                     separator,
@@ -371,11 +371,11 @@ impl SettingsValidator {
                 Self::add_warning(
                     lines,
                     &format!(
-                        "X-Cell is installed, but {} parameter is set to TRUE",
+                        "X-Cell/Addictol is installed, but {} parameter is set to TRUE",
                         setting_key
                     ),
                     &format!(
-                        "Open {}'s TOML file and change {} to FALSE, this prevents conflicts with X-Cell.",
+                        "Open {}'s TOML file and change {} to FALSE, this prevents conflicts with X-Cell/Addictol.",
                         self.crashgen_name, setting_key
                     ),
                     separator,
@@ -384,7 +384,7 @@ impl SettingsValidator {
                 Self::add_success(
                     lines,
                     &format!(
-                        "{} parameter is correctly configured for use with X-Cell in your {} settings!",
+                        "{} parameter is correctly configured for use with X-Cell/Addictol in your {} settings!",
                         display_name, self.crashgen_name
                     ),
                     separator,
@@ -436,7 +436,7 @@ mod tests {
 
         assert!(!fragment.is_empty());
         let lines = fragment.to_list();
-        assert!(lines.iter().any(|line| line.contains("X-Cell")));
+        assert!(lines.iter().any(|line| line.contains("X-Cell/Addictol")));
     }
 
     #[test]

@@ -325,6 +325,7 @@ impl CrashgenChecker {
             "x-cell-og.dll",
             "x-cell-ng2.dll",
             "x-cell-ae.dll",
+            "addictol.dll",
         ]);
         let has_achievements =
             self.has_plugin(&["achievements.dll", "achievementsmodsenablerloader.dll"]);
@@ -358,8 +359,8 @@ impl CrashgenChecker {
                 name: "Memory Manager".to_string(),
                 condition: has_xcell,
                 desired_value: Value::Boolean(false),
-                description: "The X-Cell Mod is installed".to_string(),
-                reason: "to prevent conflicts with X-Cell".to_string(),
+                description: "The X-Cell/Addictol Mod is installed".to_string(),
+                reason: "to prevent conflicts with X-Cell/Addictol".to_string(),
                 special_case: Some("bakascrapheap".to_string()),
             },
             TomlSetting {
@@ -368,8 +369,8 @@ impl CrashgenChecker {
                 name: "Havok Memory System".to_string(),
                 condition: has_xcell,
                 desired_value: Value::Boolean(false),
-                description: "The X-Cell Mod is installed".to_string(),
-                reason: "to prevent conflicts with X-Cell".to_string(),
+                description: "The X-Cell/Addictol Mod is installed".to_string(),
+                reason: "to prevent conflicts with X-Cell/Addictol".to_string(),
                 special_case: None,
             },
             TomlSetting {
@@ -378,8 +379,8 @@ impl CrashgenChecker {
                 name: "BS Texture Streamer Local Heap".to_string(),
                 condition: has_xcell,
                 desired_value: Value::Boolean(false),
-                description: "The X-Cell Mod is installed".to_string(),
-                reason: "to prevent conflicts with X-Cell".to_string(),
+                description: "The X-Cell/Addictol Mod is installed".to_string(),
+                reason: "to prevent conflicts with X-Cell/Addictol".to_string(),
                 special_case: None,
             },
             TomlSetting {
@@ -388,8 +389,8 @@ impl CrashgenChecker {
                 name: "Scaleform Allocator".to_string(),
                 condition: has_xcell,
                 desired_value: Value::Boolean(false),
-                description: "The X-Cell Mod is installed".to_string(),
-                reason: "to prevent conflicts with X-Cell".to_string(),
+                description: "The X-Cell/Addictol Mod is installed".to_string(),
+                reason: "to prevent conflicts with X-Cell/Addictol".to_string(),
                 special_case: None,
             },
             TomlSetting {
@@ -398,8 +399,8 @@ impl CrashgenChecker {
                 name: "Small Block Allocator".to_string(),
                 condition: has_xcell,
                 desired_value: Value::Boolean(false),
-                description: "The X-Cell Mod is installed".to_string(),
-                reason: "to prevent conflicts with X-Cell".to_string(),
+                description: "The X-Cell/Addictol Mod is installed".to_string(),
+                reason: "to prevent conflicts with X-Cell/Addictol".to_string(),
                 special_case: None,
             },
             TomlSetting {
@@ -655,5 +656,24 @@ mod tests {
         // Should detect Achievements issue
         assert!(!issues.is_empty());
         assert!(issues.iter().any(|i| i.setting == "Achievements"));
+    }
+
+    #[test]
+    fn test_issue_detection_addictol_conflict() {
+        let temp_dir = TempDir::new().unwrap();
+        let buffout_dir = temp_dir.path().join("Buffout4");
+        fs::create_dir(&buffout_dir).unwrap();
+
+        // Create config with MemoryManager enabled
+        let config_file = buffout_dir.join("config.toml");
+        fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
+
+        // Addictol is the renamed X-Cell DLL and should trigger the same checks
+        fs::write(temp_dir.path().join("Addictol.dll"), b"").unwrap();
+
+        let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
+        let (_report, issues) = checker.check().unwrap();
+
+        assert!(issues.iter().any(|i| i.setting == "MemoryManager"));
     }
 }

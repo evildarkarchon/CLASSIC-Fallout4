@@ -1034,6 +1034,7 @@ impl OrchestratorCore {
                 "x-cell-og.dll",
                 "x-cell-ng2.dll",
                 "x-cell-ae.dll",
+                "addictol.dll",
             ]
             .iter()
             .any(|dll| xse_modules_for_settings.contains(*dll));
