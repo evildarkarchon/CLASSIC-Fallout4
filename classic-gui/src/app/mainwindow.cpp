@@ -282,7 +282,9 @@ void MainWindow::setVersion(const QString& version)
 
 void MainWindow::setStatusMessage(const QString& message)
 {
-    statusBar()->showMessage(message);
+    QString fmt = message;
+    fmt.replace(QLatin1Char('%'), QStringLiteral("%%"));
+    m_progressBar->setFormat(fmt);
 }
 
 // ── UI Setup ───────────────────────────────────────────────────────
@@ -298,8 +300,13 @@ void MainWindow::setupUi()
     m_tabWidget = new QTabWidget(this);
     setCentralWidget(m_tabWidget);
 
-    // Status bar
-    statusBar()->showMessage(QStringLiteral("Ready"));
+    // Progress bar as unified status display (text renders on top of fill)
+    m_progressBar = new QProgressBar(this);
+    m_progressBar->setTextVisible(true);
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
+    m_progressBar->setFormat(QStringLiteral("Ready"));
+    statusBar()->addWidget(m_progressBar, 1);
 
     // Build each tab
     setupMainOptionsTab();
@@ -1450,9 +1457,13 @@ void MainWindow::onExit()
 void MainWindow::onScanProgress(float percent, const QString& status)
 {
     if (percent < 0.0f) {
-        // Indeterminate progress
+        // Indeterminate: range(0,0) triggers bouncing animation
+        m_progressBar->setRange(0, 0);
         setStatusMessage(status);
     } else {
+        // Determinate: fill bar to percentage
+        m_progressBar->setRange(0, 100);
+        m_progressBar->setValue(static_cast<int>(percent));
         setStatusMessage(
             QStringLiteral("Scanning: %1% - %2")
                 .arg(static_cast<int>(percent))
@@ -1464,6 +1475,8 @@ void MainWindow::onScanCompleted()
 {
     m_btnScanCrashLogs->setEnabled(true);
     m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
     setStatusMessage(QStringLiteral("Scan completed"));
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
@@ -1473,6 +1486,8 @@ void MainWindow::onScanError(const QString& message)
 {
     m_btnScanCrashLogs->setEnabled(true);
     m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
     setStatusMessage(QStringLiteral("Scan failed: ") + message);
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
@@ -1493,6 +1508,8 @@ void MainWindow::onGameFilesScanFinished(const QString& output,
                                           uint32_t totalChecks) {
     m_btnScanGameFiles->setEnabled(true);
     m_btnScanGameFiles->setText(QStringLiteral("SCAN GAME FILES"));
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
 
     QString statusMsg = QStringLiteral("Game files scan completed: %1 checks")
         .arg(totalChecks);
@@ -1555,6 +1572,8 @@ void MainWindow::onGameFilesScanFinished(const QString& output,
 void MainWindow::onGameFilesScanError(const QString& message) {
     m_btnScanGameFiles->setEnabled(true);
     m_btnScanGameFiles->setText(QStringLiteral("SCAN GAME FILES"));
+    m_progressBar->setRange(0, 100);
+    m_progressBar->setValue(0);
     setStatusMessage(QStringLiteral("Game files scan failed: ") + message);
 
     QMessageBox::critical(this,
