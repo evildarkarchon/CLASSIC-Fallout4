@@ -31,16 +31,63 @@ cargo build -p classic-gui --manifest-path ClassicLib-rs/Cargo.toml           # 
 ```
 
 ### C++ Build (classic-cli and classic-gui)
-The C++ projects require the MSVC toolchain. Either use the provided build scripts (which initialize the VS Dev environment automatically) or manually open a VS Developer PowerShell / Command Prompt before running CMake commands.
+
+**IMPORTANT: C++ builds require the MSVC toolchain (cl.exe, link.exe, Windows SDK headers/libs).** These tools are NOT on PATH by default. You MUST either use the build scripts (which auto-initialize the environment) or manually initialize VS Dev Shell before running any cmake commands. Without this, cmake will fail to find a C++ compiler and the build will error out immediately.
+
+**Prerequisites:**
+- Visual Studio with C++ Desktop workload (currently VS 2026 v18)
+- `VCPKG_ROOT` environment variable set (currently `C:\vcpkg`)
+- Ninja build system (included with VS Dev Shell initialization)
+
+#### Option 1: Build Scripts (Recommended -- handles everything automatically)
+The build scripts auto-detect VS via `vswhere.exe`, initialize the MSVC environment, and run cmake. **Always prefer these over raw cmake commands.**
+
 ```powershell
-# Option 1: Use the build scripts (recommended -- handles VS Dev Shell init)
+# PowerShell:
 .\classic-cli\build_cli.ps1                # Build classic-cli
 .\classic-gui\build_gui.ps1                # Build classic-gui (Qt 6)
-
-# Option 2: Manual build (requires VS Dev Shell already initialized)
-cmake --preset default                     # Configure (vcpkg + Ninja + Corrosion)
-cmake --build build                        # Build
+.\classic-cli\build_cli.ps1 -Test          # Build + run tests
+.\classic-cli\build_cli.ps1 -Clean         # Clean rebuild
 ```
+```bash
+# Bash (e.g., Git Bash, WSL, or VS Code bash terminal):
+powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+powershell -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+```
+
+#### Option 2: Manual cmake (requires VS Dev Shell initialized first)
+If you need to run cmake commands directly (e.g., building a specific target), you must initialize VS Dev Shell in the **same shell session**. The environment variables it sets (PATH, INCLUDE, LIB, etc.) are session-scoped and do not persist across separate commands.
+
+```powershell
+# Step 1: Initialize VS Dev Shell (must be done in the SAME PowerShell session as cmake)
+$vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
+if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
+& (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
+
+# Step 2: Verify initialization succeeded
+Get-Command cl.exe     # Should resolve to MSVC cl.exe
+Get-Command ninja.exe  # Should resolve to Ninja
+
+# Step 3: Now cmake commands will work (run from classic-cli/ or classic-gui/)
+cd classic-cli   # or classic-gui
+cmake --preset default
+cmake --build build
+```
+```bash
+# From bash: wrap VS Dev Shell init + cmake in a single PowerShell invocation
+# (cannot split across commands -- environment variables are session-scoped)
+powershell -ExecutionPolicy Bypass -Command '
+  $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
+  if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
+  & (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
+  cd classic-cli
+  cmake --preset default
+  cmake --build build
+'
+```
+
+**Why this complexity?** The MSVC compiler (`cl.exe`), linker (`link.exe`), and Windows SDK headers/libs are installed by Visual Studio but not added to the system PATH. `Launch-VsDevShell.ps1` sets ~15 environment variables (PATH, INCLUDE, LIB, LIBPATH, etc.) that cmake needs to locate the compiler and SDK. These are process-scoped, so each new shell/process starts without them.
 
 ### Testing
 ```powershell
@@ -58,15 +105,21 @@ cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml
 cargo test --workspace --manifest-path ClassicLib-rs/Cargo.toml -- --nocapture  # With output
 cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml     # Single crate
 
-# C++ tests (Catch2 v3 via CTest) -- run from classic-cli/ (requires VS Dev Shell)
-cmake --preset default                                               # Configure (vcpkg + Ninja + Corrosion)
-cmake --build build --config Release --target classic-cli-tests      # Build test executable
-ctest --test-dir build --build-config Release --output-on-failure    # Run all tests via CTest
-.\build\Release\classic-cli-tests.exe [thread_pool]                  # Run by tag
-.\build\Release\classic-cli-tests.exe -s                             # Verbose with SECTION names
+# C++ tests (Catch2 v3 via CTest) -- requires VS Dev Shell (use build script)
+# Recommended: use the build script with -Test flag (handles VS Dev Shell automatically):
+.\classic-cli\build_cli.ps1 -Test                                    # PowerShell
+# Or from bash:
+# powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+
+# Manual approach (must run in a single PowerShell session with VS Dev Shell):
+# See "C++ Build" section above for VS Dev Shell initialization commands,
+# then run from classic-cli/:
+#   cmake --preset default
+#   cmake --build build --target classic-cli-tests
+#   ctest --test-dir build --output-on-failure
 
 # C++ integration tests (PowerShell, requires built classic-cli.exe)
-.\test_cli.ps1                                                       # Full CLI integration suite
+.\classic-cli\test_cli.ps1                                           # Full CLI integration suite
 ```
 
 ### Linting & Formatting
@@ -148,8 +201,8 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 
 ### C++ Style
 - C++20, MSVC on Windows (`/utf-8 /W4`)
-- CMake 3.25+ with vcpkg + Corrosion (Ninja generator)
-- **Requires VS Dev Shell or the project build scripts** (`build_cli.ps1` / `build_gui.ps1`) which initialize it automatically
+- CMake 3.25+ with vcpkg + Corrosion (Ninja generator required -- NOT VS multi-config)
+- **VS Dev Shell is mandatory** for any C++ build/test command. Use the build scripts (`build_cli.ps1` / `build_gui.ps1`) which auto-initialize it via `vswhere.exe` + `Launch-VsDevShell.ps1`. See the "C++ Build" section above for details on manual initialization.
 - Catch2 v3 for unit tests (bridge-free components: ThreadPool, Progress, CliArgs)
 - Unit test tags: `[thread_pool]`, `[progress]`, `[cli_args]`
 - Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)
