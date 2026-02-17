@@ -77,9 +77,7 @@ void PapyrusWorker::onPollTimer()
             stats.warnings,
             stats.errors,
             stats.lines_processed,
-            classic::toQString(stats.severity),
-            stats.dumps_stacks_ratio,
-            stats.total_issues
+            stats.dumps_stacks_ratio
         );
     } catch (const rust::Error& e) {
         emit monitoringError(QString::fromUtf8(e.what()));

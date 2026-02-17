@@ -550,9 +550,7 @@ describe("analyzePapyrusLog", () => {
     expect(stats.errors).toBe(1);
     expect(stats.dumps).toBe(1);
     expect(stats.stacks).toBe(1);
-    expect(stats.totalIssues).toBe(3);
     expect(stats.linesProcessed).toBe(6);
-    expect(["OK", "Warning", "Critical"]).toContain(stats.severity);
   });
 
   test("analyzes an empty papyrus log", () => {
@@ -564,8 +562,6 @@ describe("analyzePapyrusLog", () => {
     expect(stats.stacks).toBe(0);
     expect(stats.warnings).toBe(0);
     expect(stats.errors).toBe(0);
-    expect(stats.totalIssues).toBe(0);
-    expect(stats.severity).toBe("OK");
   });
 
   test("throws for non-existent log file", () => {

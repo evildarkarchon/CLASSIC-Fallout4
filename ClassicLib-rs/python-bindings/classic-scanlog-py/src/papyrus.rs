@@ -58,28 +58,6 @@ impl PyPapyrusStats {
         self.inner.dumps_to_stacks_ratio()
     }
 
-    /// Get the total number of issues (warnings + errors)
-    fn total_issues(&self) -> usize {
-        self.inner.total_issues()
-    }
-
-    /// Calculate the error to warning ratio
-    ///
-    /// Returns 0.0 if there are no warnings
-    fn error_to_warning_ratio(&self) -> f64 {
-        self.inner.error_to_warning_ratio()
-    }
-
-    /// Determine the severity level based on error/warning counts
-    ///
-    /// Returns:
-    /// - "OK" if no errors, or errors are less than 25% of warnings
-    /// - "Warning" if errors are between 25-100% of warnings
-    /// - "Critical" if errors exceed warnings
-    fn severity_level(&self) -> &'static str {
-        self.inner.severity_level()
-    }
-
     /// String representation of statistics
     fn __repr__(&self) -> String {
         format!(

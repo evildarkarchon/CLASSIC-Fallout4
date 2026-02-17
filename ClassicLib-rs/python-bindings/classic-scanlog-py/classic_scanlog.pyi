@@ -1906,32 +1906,6 @@ class PapyrusStats:
 
         """
 
-    def total_issues(self) -> int:
-        """Get the total number of issues (warnings + errors).
-
-        Returns:
-            Sum of warnings and errors
-
-        """
-
-    def error_to_warning_ratio(self) -> float:
-        """Calculate the error to warning ratio.
-
-        Returns:
-            Ratio of errors to warnings, or 0.0 if no warnings
-
-        """
-
-    def severity_level(self) -> str:
-        """Determine the severity level based on error/warning counts.
-
-        Returns:
-            "OK" if no errors or errors < 25% of warnings
-            "Warning" if errors are 25-100% of warnings
-            "Critical" if errors exceed warnings
-
-        """
-
     def __repr__(self) -> str:
         """Return string representation of statistics."""
 

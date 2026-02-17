@@ -138,9 +138,7 @@ fn papyrus_stats_to_dto(stats: &PapyrusStats) -> ffi::PapyrusStatsDto {
         warnings: stats.warnings as u32,
         errors: stats.errors as u32,
         lines_processed: stats.lines_processed as u32,
-        severity: stats.severity_level().to_string(),
         dumps_stacks_ratio: stats.dumps_to_stacks_ratio(),
-        total_issues: stats.total_issues() as u32,
     }
 }
 
@@ -198,9 +196,7 @@ mod ffi {
         warnings: u32,
         errors: u32,
         lines_processed: u32,
-        severity: String,
         dumps_stacks_ratio: f64,
-        total_issues: u32,
     }
 
     extern "Rust" {
@@ -337,8 +333,6 @@ mod tests {
         assert_eq!(dto.warnings, 1);
         assert_eq!(dto.errors, 1);
         assert_eq!(dto.lines_processed, 4);
-        assert_eq!(dto.total_issues, 2);
-        assert_eq!(dto.severity, "Warning");
         assert!(dto.dumps_stacks_ratio > 0.0);
     }
 
@@ -409,7 +403,7 @@ mod tests {
     }
 
     #[test]
-    fn test_papyrus_stats_dto_severity_ok() {
+    fn test_papyrus_stats_dto_no_activity() {
         let stats = PapyrusStats {
             dumps: 0,
             stacks: 0,
@@ -419,13 +413,13 @@ mod tests {
             lines_processed: 100,
         };
         let dto = papyrus_stats_to_dto(&stats);
-        assert_eq!(dto.severity, "OK");
-        assert_eq!(dto.total_issues, 10);
         assert_eq!(dto.dumps_stacks_ratio, 0.0);
+        assert_eq!(dto.warnings, 10);
+        assert_eq!(dto.lines_processed, 100);
     }
 
     #[test]
-    fn test_papyrus_stats_dto_severity_critical() {
+    fn test_papyrus_stats_dto_with_activity() {
         let stats = PapyrusStats {
             dumps: 5,
             stacks: 2,
@@ -435,10 +429,9 @@ mod tests {
             lines_processed: 50,
         };
         let dto = papyrus_stats_to_dto(&stats);
-        assert_eq!(dto.severity, "Critical");
-        assert_eq!(dto.total_issues, 10);
         assert_eq!(dto.dumps, 5);
         assert_eq!(dto.stacks, 2);
+        assert_eq!(dto.errors, 10);
         assert_eq!(dto.dumps_stacks_ratio, 2.5);
     }
 }

@@ -4,11 +4,11 @@
 #include <QLabel>
 #include <QPushButton>
 
-/// Modal dialog displaying live Papyrus log monitoring statistics.
+/// Non-modal dialog displaying live Papyrus log monitoring statistics.
 ///
-/// Shows a grid of stat labels (dumps, stacks, warnings, errors, etc.)
-/// with a color-coded severity indicator. The dialog is updated externally
-/// via updateStats() -- typically called from a PapyrusWorker signal.
+/// Shows a grid of stat labels (dumps, stacks, warnings, errors, ratio, etc.).
+/// The dialog is updated externally via updateStats() -- typically called
+/// from a PapyrusWorker signal.
 class PapyrusDialog : public QDialog {
     Q_OBJECT
 
@@ -21,9 +21,7 @@ public:
                      uint32_t warnings,
                      uint32_t errors,
                      uint32_t linesProcessed,
-                     const QString& severity,
-                     double dumpsStacksRatio,
-                     uint32_t totalIssues);
+                     double dumpsStacksRatio);
 
     /// Set the status text ("Monitoring...", "Stopped", etc.).
     void setMonitoringStatus(const QString& status);
@@ -37,7 +35,6 @@ protected:
 
 private:
     void setupUi();
-    void applySeverityColor(const QString& severity);
 
     // Stat labels (right-hand value labels in the grid)
     QLabel* m_lblDumps = nullptr;
@@ -45,9 +42,7 @@ private:
     QLabel* m_lblWarnings = nullptr;
     QLabel* m_lblErrors = nullptr;
     QLabel* m_lblLinesProcessed = nullptr;
-    QLabel* m_lblSeverity = nullptr;
     QLabel* m_lblDumpsStacksRatio = nullptr;
-    QLabel* m_lblTotalIssues = nullptr;
 
     // Status and controls
     QLabel* m_lblStatus = nullptr;

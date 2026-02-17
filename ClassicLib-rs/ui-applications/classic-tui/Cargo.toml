@@ -1,0 +1,45 @@
+[package]
+name = "classic-tui"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Ratatui terminal UI for CLASSIC"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[[bin]]
+name = "classic-tui"
+path = "src/main.rs"
+
+[dependencies]
+ratatui = "0.30"
+crossterm = "0.28"
+
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+classic-scanlog-core = { path = "../../business-logic/classic-scanlog-core" }
+classic-config-core = { path = "../../business-logic/classic-config-core" }
+classic-file-io-core = { path = "../../business-logic/classic-file-io-core" }
+classic-path-core = { path = "../../business-logic/classic-path-core" }
+classic-scangame-core = { path = "../../business-logic/classic-scangame-core" }
+classic-update-core = { path = "../../business-logic/classic-update-core" }
+
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+tracing = { workspace = true }
+tracing-appender = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["fmt"] }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+directories = { workspace = true }
+pulldown-cmark = { workspace = true }
+
+open = "5"
+arboard = "3"
+rfd = "0.15"
+color-eyre = "0.6"
+
+[lints.rust]
+deprecated = "deny"
+unsafe_code = "deny"
+unused = "deny"
+missing_docs = "allow"

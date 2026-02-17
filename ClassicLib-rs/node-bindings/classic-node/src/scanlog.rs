@@ -425,10 +425,6 @@ pub struct JsPapyrusStats {
     pub warnings: u32,
     /// Number of error messages
     pub errors: u32,
-    /// Severity level: "OK", "Warning", or "Critical"
-    pub severity: String,
-    /// Total issues (warnings + errors)
-    pub total_issues: u32,
     /// Total lines processed from the log file
     pub lines_processed: u32,
 }
@@ -436,7 +432,7 @@ pub struct JsPapyrusStats {
 /// Analyze a Papyrus log file and return statistics.
 ///
 /// Reads the Papyrus log at the given path and collects statistics about
-/// dumps, stacks, warnings, errors, and overall severity.
+/// dumps, stacks, warnings, and errors.
 ///
 /// @param logPath - Absolute path to the Papyrus log file.
 /// @returns A `JsPapyrusStats` object with the analysis results.
@@ -450,8 +446,6 @@ pub fn analyze_papyrus_log(log_path: String) -> napi::Result<JsPapyrusStats> {
         stacks: stats.stacks as u32,
         warnings: stats.warnings as u32,
         errors: stats.errors as u32,
-        severity: stats.severity_level().to_string(),
-        total_issues: stats.total_issues() as u32,
         lines_processed: stats.lines_processed as u32,
     })
 }

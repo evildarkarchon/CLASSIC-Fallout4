@@ -63,46 +63,6 @@ impl PapyrusStats {
         }
     }
 
-    /// Get the total number of issues (warnings + errors)
-    pub fn total_issues(&self) -> usize {
-        self.warnings + self.errors
-    }
-
-    /// Calculate the error to warning ratio
-    ///
-    /// Returns 0.0 if there are no warnings
-    pub fn error_to_warning_ratio(&self) -> f64 {
-        if self.warnings == 0 {
-            if self.errors > 0 { f64::INFINITY } else { 0.0 }
-        } else {
-            self.errors as f64 / self.warnings as f64
-        }
-    }
-
-    /// Determine the severity level based on error/warning counts
-    ///
-    /// Returns:
-    /// - "OK" if no errors, or errors are less than 25% of warnings
-    /// - "Warning" if errors are between 25-100% of warnings
-    /// - "Critical" if errors exceed warnings
-    pub fn severity_level(&self) -> &'static str {
-        if self.errors == 0 {
-            "OK"
-        } else if self.warnings == 0 {
-            // Errors exist but no warnings - critical
-            "Critical"
-        } else {
-            let ratio = self.errors as f64 / self.warnings as f64;
-            if ratio <= 0.25 {
-                "OK"
-            } else if ratio <= 1.0 {
-                "Warning"
-            } else {
-                "Critical"
-            }
-        }
-    }
-
     /// Update statistics by processing a single new line
     ///
     /// This is used for incremental updates during "tail -f" style monitoring
@@ -335,14 +295,12 @@ impl PapyrusAnalyzer {
                      DUMPS/STACKS RATIO : {:.3}\n\
                      NUMBER OF WARNINGS : {}\n\
                      NUMBER OF ERRORS   : {}\n\
-                     SEVERITY           : {}\n\
                      LINES PROCESSED    : {}",
                     stats.dumps,
                     stats.stacks,
                     stats.dumps_to_stacks_ratio(),
                     stats.warnings,
                     stats.errors,
-                    stats.severity_level(),
                     stats.lines_processed
                 )
             }
@@ -367,34 +325,8 @@ mod tests {
         let mut stats = PapyrusStats::new();
         stats.dumps = 10;
         stats.stacks = 5;
-        stats.warnings = 20;
-        stats.errors = 5;
 
         assert_eq!(stats.dumps_to_stacks_ratio(), 2.0);
-        assert_eq!(stats.error_to_warning_ratio(), 0.25);
-        assert_eq!(stats.total_issues(), 25);
-        assert_eq!(stats.severity_level(), "OK");
-    }
-
-    #[test]
-    fn test_severity_levels() {
-        let mut stats = PapyrusStats::new();
-
-        // OK - no errors
-        stats.warnings = 10;
-        stats.errors = 0;
-        assert_eq!(stats.severity_level(), "OK");
-
-        // Warning - errors < warnings
-        stats.errors = 5;
-        assert_eq!(stats.severity_level(), "Warning");
-
-        // Critical - errors >= warnings
-        stats.errors = 10;
-        assert_eq!(stats.severity_level(), "Warning");
-
-        stats.errors = 15;
-        assert_eq!(stats.severity_level(), "Critical");
     }
 
     #[test]

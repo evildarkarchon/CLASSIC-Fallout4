@@ -71,6 +71,7 @@ members = [
 
     # GUI Applications (v9.0.0 Slint)
     "ui-applications/classic-gui-slint",
+    "ui-applications/classic-tui",
 
     # C++ Bindings (CXX FFI adapters)
     "cpp-bindings/classic-cpp-bridge",
