@@ -422,6 +422,13 @@ Version_Registry:
           name: "Buffout 4"
           description: "Buffout 4 NG"
           download_url: "https://www.nexusmods.com/fallout4/mods/64880"
+        - version: "1.0.0"
+          name: "Addictol"
+          description: "AIO Engine fixes and Crash Logger"
+          download_url: "https://www.nexusmods.com/fallout4/mods/84214"
+          compatible_range:
+           min: "1.10.163.0"
+           max: "1.11.999.999"
       address_library:
         filename: version-1-10-163-0.bin
         format: bin
@@ -482,6 +489,13 @@ Version_Registry:
           compatible_range:
             min: "1.10.984.0"
             max: "1.10.999.999"
+        - version: "1.0.0"
+          name: "Addictol"
+          description: "AIO Engine fixes and Crash Logger"
+          download_url: "https://www.nexusmods.com/fallout4/mods/84214"
+          compatible_range:
+           min: "1.10.163.0"
+           max: "1.11.999.999"
       address_library:
         filename: version-1-10-984-0.bin
         format: bin
@@ -535,13 +549,20 @@ Version_Registry:
       description: Anniversary Edition version (active development branch)
       exe_hash: # Placeholder - hash not yet available for AE version
       crashgen_versions: 
-        - version: "1.4.0"
+        - version: "1.7.1"
           name: "MiniBuff AE Crash Logger"
           description: "AE-compatible Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/99911"
           compatible_range:
             min: "1.11.137.0"
             max: "1.11.999.999"
+        - version: "1.0.0"
+          name: "Addictol"
+          description: "AIO Engine fixes and Crash Logger"
+          download_url: "https://www.nexusmods.com/fallout4/mods/84214"
+          compatible_range:
+           min: "1.10.163.0"
+           max: "1.11.999.999"
       address_library:
         filename: version-1-11-191-0.bin
         format: bin
