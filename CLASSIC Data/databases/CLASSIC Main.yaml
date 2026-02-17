@@ -428,7 +428,7 @@ Version_Registry:
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
            min: "1.10.163.0"
-           max: "1.11.999.999"
+           max: "1.11.163.999"
       address_library:
         filename: version-1-10-163-0.bin
         format: bin
@@ -494,8 +494,8 @@ Version_Registry:
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
-           min: "1.10.163.0"
-           max: "1.11.999.999"
+           min: "1.10.984.0"
+           max: "1.10.999.999"
       address_library:
         filename: version-1-10-984-0.bin
         format: bin
@@ -561,7 +561,7 @@ Version_Registry:
           description: "AIO Engine fixes and Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/84214"
           compatible_range:
-           min: "1.10.163.0"
+           min: "1.11.137.0"
            max: "1.11.999.999"
       address_library:
         filename: version-1-11-191-0.bin
@@ -569,7 +569,7 @@ Version_Registry:
         nexus_url: https://www.nexusmods.com/fallout4/mods/47327?tab=files
       xse:
         acronym: F4SE
-        compatible_version: "0.7.3"
+        compatible_version: "0.7.7"
         loader: f4se_loader.exe
       compatible_range:
         min: "1.11.137.0"
