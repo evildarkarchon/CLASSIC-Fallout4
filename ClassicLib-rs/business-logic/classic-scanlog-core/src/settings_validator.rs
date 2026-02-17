@@ -20,6 +20,15 @@ pub struct SettingsValidator {
 }
 
 impl SettingsValidator {
+    fn buffout_settings_checks_enabled(&self) -> bool {
+        let normalized: String = self
+            .crashgen_name
+            .chars()
+            .filter(|ch| !ch.is_whitespace())
+            .collect();
+        normalized.eq_ignore_ascii_case("Buffout4")
+    }
+
     /// Creates a new settings validator for crash generator configuration.
     ///
     /// This constructor initializes a validator that can check crash generator
@@ -65,6 +74,10 @@ impl SettingsValidator {
         xse_modules: HashSet<String>,
         crashgen: &HashMap<String, String>,
     ) -> Result<ReportFragment> {
+        if !self.buffout_settings_checks_enabled() {
+            return Ok(ReportFragment::empty());
+        }
+
         let mut lines = Vec::new();
 
         let achievements = crashgen
@@ -108,6 +121,10 @@ impl SettingsValidator {
         has_old_xcell: bool,
         has_baka_scrapheap: bool,
     ) -> Result<ReportFragment> {
+        if !self.buffout_settings_checks_enabled() {
+            return Ok(ReportFragment::empty());
+        }
+
         let mut lines = Vec::new();
         let separator = "\n\n-----\n";
 
@@ -156,6 +173,10 @@ impl SettingsValidator {
         crashgen: &HashMap<String, String>,
         crashgen_version: Option<(u32, u32, u32)>, // (major, minor, patch)
     ) -> Result<ReportFragment> {
+        if !self.buffout_settings_checks_enabled() {
+            return Ok(ReportFragment::empty());
+        }
+
         // Skip check for versions >= 1.29.0
         if let Some((major, minor, _)) = crashgen_version {
             if major > 1 || (major == 1 && minor >= 29) {
@@ -199,6 +220,10 @@ impl SettingsValidator {
         crashgen: &HashMap<String, String>,
         xse_modules: HashSet<String>,
     ) -> Result<ReportFragment> {
+        if !self.buffout_settings_checks_enabled() {
+            return Ok(ReportFragment::empty());
+        }
+
         let mut lines = Vec::new();
 
         if let Some(f4ee) = crashgen.get("F4EE") {
@@ -453,5 +478,38 @@ mod tests {
         assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("ArchiveLimit")));
+    }
+
+    #[test]
+    fn test_non_buffout_name_disables_buffout_checks() {
+        let validator = SettingsValidator::new("Crash Logger".to_string(), vec![]);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        crashgen.insert("MemoryManager".to_string(), "true".to_string());
+        crashgen.insert("ArchiveLimit".to_string(), "true".to_string());
+        crashgen.insert("F4EE".to_string(), "false".to_string());
+
+        let mut xse_modules = HashSet::new();
+        xse_modules.insert("achievements.dll".to_string());
+        xse_modules.insert("f4ee.dll".to_string());
+
+        let achievements = validator
+            .scan_buffout_achievements_setting(xse_modules.clone(), &crashgen)
+            .unwrap();
+        let memory = validator
+            .scan_buffout_memorymanagement_settings(&crashgen, true, false, false)
+            .unwrap();
+        let archive = validator
+            .scan_archivelimit_setting(&crashgen, Some((1, 28, 0)))
+            .unwrap();
+        let looksmenu = validator
+            .scan_buffout_looksmenu_setting(&crashgen, xse_modules)
+            .unwrap();
+
+        assert!(achievements.is_empty());
+        assert!(memory.is_empty());
+        assert!(archive.is_empty());
+        assert!(looksmenu.is_empty());
     }
 }

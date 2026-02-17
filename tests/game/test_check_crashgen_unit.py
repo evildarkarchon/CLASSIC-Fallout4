@@ -53,8 +53,8 @@ class TestCheckCrashgenSettingsNoPlugins:
 
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_uses_custom_crashgen_name(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
-        """check_crashgen_settings should use custom crashgen name from YAML."""
+    def test_skips_non_buffout_crashgen_name(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
+        """check_crashgen_settings should skip checks for non-Buffout crashgen names."""
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
             if "CRASHGEN_LogName" in key_path:
@@ -63,9 +63,10 @@ class TestCheckCrashgenSettingsNoPlugins:
 
         mock_yaml.side_effect = yaml_side_effect
 
-        message, _ = check_crashgen_settings()
+        message, issues = check_crashgen_settings()
 
-        assert "Custom Crashgen" in message
+        assert message == ""
+        assert issues == []
 
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
@@ -161,6 +162,33 @@ class TestCheckCrashgenSettingsRustDelegation:
         assert issues[0].setting == "Achievements"
         assert issues[0].current_value == "true"
         assert issues[0].recommended_value == "false"
+
+    @patch("classic_scangame.CrashgenCheckOrchestrator")
+    @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
+    @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
+    def test_does_not_delegate_for_non_buffout_name(
+        self,
+        mock_get_vr: MagicMock,
+        mock_yaml: MagicMock,
+        mock_orchestrator: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """check_crashgen_settings should skip Rust delegation for non-Buffout names."""
+        plugins_path = tmp_path / "plugins"
+        plugins_path.mkdir()
+
+        def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
+            if "Game_Folder_Plugins" in key_path:
+                return plugins_path
+            return "Crash Logger"
+
+        mock_yaml.side_effect = yaml_side_effect
+
+        message, issues = check_crashgen_settings()
+
+        mock_orchestrator.check.assert_not_called()
+        assert message == ""
+        assert issues == []
 
 
 # ==============================================================================

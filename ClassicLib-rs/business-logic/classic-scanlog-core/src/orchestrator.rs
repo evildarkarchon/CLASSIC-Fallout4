@@ -1016,7 +1016,7 @@ impl OrchestratorCore {
 
         // Add settings validation section
         if !crashgen_settings.is_empty() {
-            composer.add(report_gen.generate_settings_section_header());
+            let mut settings_fragments = Vec::new();
 
             // Achievements check
             if let Ok(achievements_fragment) =
@@ -1025,7 +1025,9 @@ impl OrchestratorCore {
                     &crashgen_settings,
                 )
             {
-                composer.add(achievements_fragment);
+                if !achievements_fragment.is_empty() {
+                    settings_fragments.push(achievements_fragment);
+                }
             }
 
             // Memory Manager check (check for X-Cell and Baka ScrapHeap)
@@ -1049,7 +1051,9 @@ impl OrchestratorCore {
                     has_baka_scrapheap,
                 )
             {
-                composer.add(memory_fragment);
+                if !memory_fragment.is_empty() {
+                    settings_fragments.push(memory_fragment);
+                }
             }
 
             // ArchiveLimit check
@@ -1057,7 +1061,9 @@ impl OrchestratorCore {
                 &crashgen_settings,
                 None, // Version parsing would go here
             ) {
-                composer.add(archive_fragment);
+                if !archive_fragment.is_empty() {
+                    settings_fragments.push(archive_fragment);
+                }
             }
 
             // LooksMenu check
@@ -1065,7 +1071,16 @@ impl OrchestratorCore {
                 &crashgen_settings,
                 xse_modules_for_settings.clone(),
             ) {
-                composer.add(looksmenu_fragment);
+                if !looksmenu_fragment.is_empty() {
+                    settings_fragments.push(looksmenu_fragment);
+                }
+            }
+
+            if !settings_fragments.is_empty() {
+                composer.add(report_gen.generate_settings_section_header());
+                for settings_fragment in settings_fragments {
+                    composer.add(settings_fragment);
+                }
             }
         }
 

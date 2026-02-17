@@ -10,7 +10,7 @@ from pathlib import Path
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_vr
 from ClassicLib.io.yaml import yaml_settings
-from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue
+from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue, ConfigIssueSeverity
 
 
 def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
@@ -26,12 +26,15 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
             - List of ConfigIssue objects for structured reporting
 
     """
-    from classic_scangame import CrashgenCheckOrchestrator
+    from classic_scangame import CrashgenCheckOrchestrator  # pyright: ignore[reportAttributeAccessIssue]
 
     # Resolve settings from YAML
     plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Plugins")
     crashgen_name_setting: str | None = yaml_settings(str, YAML.Game, f"Game{get_vr()}_Info.CRASHGEN_LogName")
     crashgen_name: str = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
+
+    if not _is_buffout_4_name(crashgen_name):
+        return "", []
 
     if not plugins_path:
         msg = (
@@ -61,9 +64,17 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
     return report.message, issues
 
 
-def _convert_severity(rust_severity: object) -> str:
+def _convert_severity(rust_severity: object) -> ConfigIssueSeverity:
     """Convert a Rust TomlIssueSeverity enum to a Python severity string."""
     name = getattr(rust_severity, "name", str(rust_severity)).lower()
-    if name in {"error", "warning", "info"}:
-        return name
+    if name == "error":
+        return "error"
+    if name == "info":
+        return "info"
     return "warning"
+
+
+def _is_buffout_4_name(crashgen_name: str) -> bool:
+    """Return True when crashgen name maps to Buffout 4 naming."""
+    normalized_name = "".join(crashgen_name.split()).casefold()
+    return normalized_name == "buffout4"
