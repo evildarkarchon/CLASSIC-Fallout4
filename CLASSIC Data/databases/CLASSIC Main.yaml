@@ -550,7 +550,7 @@ Version_Registry:
       exe_hash: # Placeholder - hash not yet available for AE version
       crashgen_versions: 
         - version: "1.7.1"
-          name: "MiniBuff AE Crash Logger"
+          name: "Buffout 4"
           description: "AE-compatible Crash Logger"
           download_url: "https://www.nexusmods.com/fallout4/mods/99911"
           compatible_range:
