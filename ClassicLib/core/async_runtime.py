@@ -11,15 +11,17 @@ Both helpers reject usage from an already-running async context.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from ClassicLib.core.async_bridge import AsyncBridge
+
+if TYPE_CHECKING:
+    from collections.abc import Coroutine
 
 T = TypeVar("T")
 
 
-def _ensure_sync_context(coro: Coroutine[Any, Any, T], caller: str) -> None:
+def _ensure_sync_context[T](coro: Coroutine[Any, Any, T], caller: str) -> None:
     """Validate helper usage from a synchronous context only.
 
     Args:
@@ -40,7 +42,7 @@ def _ensure_sync_context(coro: Coroutine[Any, Any, T], caller: str) -> None:
     raise RuntimeError(f"Cannot call {caller} from an async context. Use 'await' directly.")
 
 
-def run_sync(coro: Coroutine[Any, Any, T]) -> T:
+def run_sync[T](coro: Coroutine[Any, Any, T]) -> T:
     """Run a coroutine from synchronous main-thread code via AsyncBridge.
 
     Args:
@@ -54,7 +56,7 @@ def run_sync(coro: Coroutine[Any, Any, T]) -> T:
     return AsyncBridge.get_instance().run_async(coro)
 
 
-def run_worker_thread(coro: Coroutine[Any, Any, T]) -> T:
+def run_worker_thread[T](coro: Coroutine[Any, Any, T]) -> T:
     """Run a coroutine from synchronous worker-thread code via ``asyncio.run``.
 
     Args:

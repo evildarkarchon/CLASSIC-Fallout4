@@ -669,8 +669,9 @@ impl ClassicConfig {
 mod tests {
     use super::*;
     use std::env;
-    use std::sync::{Mutex, OnceLock};
+    use std::sync::OnceLock;
     use tempfile::tempdir;
+    use tokio::sync::Mutex;
 
     fn current_dir_lock() -> &'static Mutex<()> {
         static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
@@ -892,7 +893,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_load_or_default_no_file() {
-        let _lock = current_dir_lock().lock().unwrap();
+        let _lock = current_dir_lock().lock().await;
         let temp_dir = tempdir().unwrap();
         let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
 
@@ -903,7 +904,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_load_or_default_accepts_space_settings_filename() {
-        let _lock = current_dir_lock().lock().unwrap();
+        let _lock = current_dir_lock().lock().await;
         let temp_dir = tempdir().unwrap();
         let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
         let settings_path = temp_dir.path().join("CLASSIC Settings.yaml");
@@ -916,7 +917,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_load_or_default_accepts_legacy_underscore_settings_filename() {
-        let _lock = current_dir_lock().lock().unwrap();
+        let _lock = current_dir_lock().lock().await;
         let temp_dir = tempdir().unwrap();
         let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
         let settings_path = temp_dir.path().join("CLASSIC_Settings.yaml");
