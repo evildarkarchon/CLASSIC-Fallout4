@@ -13,6 +13,9 @@ use yaml_rust2::{Yaml, YamlEmitter, YamlLoader};
 // Import the LinkedHashMap type that yaml-rust2 uses
 type LinkedHashMap<K, V> = hashlink::LinkedHashMap<K, V>;
 
+const DEFAULT_CONFIG_FILENAME: &str = "CLASSIC Settings.yaml";
+const LEGACY_CONFIG_FILENAME: &str = "CLASSIC_Settings.yaml";
+
 /// YAML file source identifier - mirrors Python's YAML enum
 ///
 /// This enum provides a single source of truth for YAML file locations
@@ -550,25 +553,31 @@ impl ClassicConfig {
     /// Load configuration from default location or return defaults
     ///
     /// Searches for configuration in standard locations:
-    /// 1. Current directory: ./CLASSIC_Settings.yaml
-    /// 2. User config directory (future)
+    /// 1. Current directory: ./CLASSIC Settings.yaml
+    /// 2. Current directory: ./CLASSIC_Settings.yaml (legacy fallback)
+    /// 3. User config directory (future)
     ///
     /// # Returns
     /// * Configuration loaded from file (if exists)
     /// * Default configuration (if no file found)
     pub async fn load_or_default() -> Result<Self> {
-        let default_path = PathBuf::from("CLASSIC_Settings.yaml");
+        let default_paths = [
+            PathBuf::from(DEFAULT_CONFIG_FILENAME),
+            PathBuf::from(LEGACY_CONFIG_FILENAME),
+        ];
 
-        if default_path.exists() {
-            Self::load_from_yaml(&default_path).await
-        } else {
-            Ok(Self::default())
+        for path in &default_paths {
+            if path.exists() {
+                return Self::load_from_yaml(path).await;
+            }
         }
+
+        Ok(Self::default())
     }
 
     /// Get the default config path
     pub fn get_config_path(&self) -> PathBuf {
-        PathBuf::from("CLASSIC_Settings.yaml")
+        PathBuf::from(DEFAULT_CONFIG_FILENAME)
     }
 
     /// Validate configuration paths
@@ -626,7 +635,7 @@ impl ClassicConfig {
     /// This function updates the config in place. If Local.yaml doesn't exist,
     /// this is not an error - the config will retain its current paths.
     pub async fn load_local_yaml_paths(&mut self, game: &str) -> Result<()> {
-        let local_yaml_path = PathBuf::from(format!("CLASSIC Data/CLASSIC {} Local.yaml", game));
+        let local_yaml_path = YamlSource::GameLocal.path(game);
 
         // If Local.yaml doesn't exist, that's okay - just return without error
         if !local_yaml_path.exists() {
@@ -659,7 +668,32 @@ impl ClassicConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::env;
+    use std::sync::{Mutex, OnceLock};
     use tempfile::tempdir;
+
+    fn current_dir_lock() -> &'static Mutex<()> {
+        static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+        LOCK.get_or_init(|| Mutex::new(()))
+    }
+
+    struct CurrentDirGuard {
+        original_dir: PathBuf,
+    }
+
+    impl CurrentDirGuard {
+        fn change_to(path: &Path) -> Self {
+            let original_dir = env::current_dir().unwrap();
+            env::set_current_dir(path).unwrap();
+            Self { original_dir }
+        }
+    }
+
+    impl Drop for CurrentDirGuard {
+        fn drop(&mut self) {
+            env::set_current_dir(&self.original_dir).unwrap();
+        }
+    }
 
     #[test]
     fn test_default_config() {
@@ -858,10 +892,39 @@ mod tests {
 
     #[tokio::test]
     async fn test_load_or_default_no_file() {
-        // This test runs in a temp directory where config doesn't exist
+        let _lock = current_dir_lock().lock().unwrap();
+        let temp_dir = tempdir().unwrap();
+        let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
+
         let config = ClassicConfig::load_or_default().await.unwrap();
-        assert!(!config.fcx_mode); // Should be default
-        assert!(config.update_check); // Should be default (true)
+        assert!(!config.fcx_mode);
+        assert!(config.update_check);
+    }
+
+    #[tokio::test]
+    async fn test_load_or_default_accepts_space_settings_filename() {
+        let _lock = current_dir_lock().lock().unwrap();
+        let temp_dir = tempdir().unwrap();
+        let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
+        let settings_path = temp_dir.path().join("CLASSIC Settings.yaml");
+
+        std::fs::write(settings_path, "fcx_mode: true\n").unwrap();
+
+        let config = ClassicConfig::load_or_default().await.unwrap();
+        assert!(config.fcx_mode);
+    }
+
+    #[tokio::test]
+    async fn test_load_or_default_accepts_legacy_underscore_settings_filename() {
+        let _lock = current_dir_lock().lock().unwrap();
+        let temp_dir = tempdir().unwrap();
+        let _cwd_guard = CurrentDirGuard::change_to(temp_dir.path());
+        let settings_path = temp_dir.path().join("CLASSIC_Settings.yaml");
+
+        std::fs::write(settings_path, "fcx_mode: true\n").unwrap();
+
+        let config = ClassicConfig::load_or_default().await.unwrap();
+        assert!(config.fcx_mode);
     }
 
     #[test]

@@ -613,7 +613,7 @@ describe("ClassicConfigJs config path", () => {
     const config = new ClassicConfigJs();
     const path = config.getConfigPath();
     expect(typeof path).toBe("string");
-    expect(path).toContain("CLASSIC_Settings.yaml");
+    expect(path).toContain("CLASSIC Settings.yaml");
   });
 });
 
