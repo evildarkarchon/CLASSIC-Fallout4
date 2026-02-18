@@ -54,6 +54,27 @@ import threading
 import types
 from typing import TYPE_CHECKING, Any
 
+from ClassicLib.integration.factory_internal.detection import (
+    detect_component as _detect_component,
+)
+from ClassicLib.integration.factory_internal.detection import (
+    get_component as _get_component,
+)
+from ClassicLib.integration.factory_internal.detection import (
+    validate_rust_modules as _validate_rust_modules,
+)
+from ClassicLib.integration.factory_internal.status import (
+    COMPONENT_KEY_MAP,
+    compute_rust_component_status,
+)
+from ClassicLib.integration.factory_internal.wrappers import FcxHandlerWrapper
+from ClassicLib.integration.factory_internal.wrappers import (
+    SettingsValidatorWrapper as _SettingsValidatorWrapper,
+)
+from ClassicLib.integration.factory_internal.wrappers import (
+    SuspectScannerWrapper as _SuspectScannerWrapper,
+)
+
 if TYPE_CHECKING:
     from ClassicLib.integration.types import (
         DatabasePoolProtocol,
@@ -77,17 +98,6 @@ logger = logging.getLogger(__name__)
 # Startup validation
 # ---------------------------------------------------------------------------
 
-# Required Rust modules for CLASSIC to function.
-# Each tuple is (module_name, class_or_attr_name) checked via detect_component.
-_REQUIRED_RUST_MODULES: list[tuple[str, str | None]] = [
-    ("classic_scanlog", "LogParser"),
-    ("classic_scanlog", "PluginAnalyzer"),
-    ("classic_scanlog", "RecordScanner"),
-    ("classic_scanlog", "ReportGenerator"),
-    ("classic_file_io", "FileIOCore"),
-    ("classic_yaml", "YamlOperations"),
-]
-
 
 def validate_rust_modules() -> None:
     """Validate that all required Rust modules are importable at startup.
@@ -105,17 +115,7 @@ def validate_rust_modules() -> None:
         >>> validate_rust_modules()  # Raises RuntimeError if modules missing
 
     """
-    for module_name, class_name in _REQUIRED_RUST_MODULES:
-        available, _ = detect_component(module_name, class_name)
-        if not available:
-            component_label = f"{module_name}.{class_name}" if class_name else module_name
-            msg = (
-                f"Required Rust module '{component_label}' is not available. "
-                f"CLASSIC cannot start without its Rust extensions. "
-                f"Please reinstall CLASSIC or rebuild Rust modules with: ./rebuild_rust.ps1"
-            )
-            raise RuntimeError(msg)
-    logger.debug("All required Rust modules validated successfully")
+    _validate_rust_modules()
 
 
 # ---------------------------------------------------------------------------
@@ -139,17 +139,7 @@ def detect_component(module_name: str, class_name: str | None = None) -> tuple[b
         ...     ops = YamlOps()
 
     """
-    try:
-        module = __import__(module_name)
-
-        if class_name:
-            if not hasattr(module, class_name):
-                return (False, None)
-            return (True, getattr(module, class_name))
-
-        return (True, module)  # noqa: TRY300
-    except ImportError:
-        return (False, None)
+    return _detect_component(module_name, class_name)
 
 
 def is_component_available(module_name: str, class_name: str | None = None) -> bool:
@@ -189,29 +179,7 @@ def get_component(module_name: str, class_name: str) -> Any:
         >>> ops = YamlOps()
 
     """
-    available, component = detect_component(module_name, class_name)
-    if not available:
-        msg = f"Rust component {module_name}.{class_name} not available"
-        raise ImportError(msg)
-    return component
-
-
-# ---------------------------------------------------------------------------
-# Lazy import helpers
-# ---------------------------------------------------------------------------
-
-# ReportFragment is imported lazily to avoid circular imports
-_ReportFragment: type | None = None
-
-
-def _get_report_fragment() -> type:
-    """Lazily import ReportFragment to avoid circular imports."""
-    global _ReportFragment  # noqa: PLW0603 - Intentional lazy initialization pattern
-    if _ReportFragment is None:
-        from ClassicLib.scanning.logs.reporting import ReportFragment
-
-        _ReportFragment = ReportFragment
-    return _ReportFragment
+    return _get_component(module_name, class_name)
 
 
 # ---------------------------------------------------------------------------
@@ -223,10 +191,7 @@ _file_io_lock = threading.Lock()
 
 
 def reset_file_io_singleton() -> None:
-    """Reset the FileIO singleton instance (for test isolation).
-
-    Thread-safe reset of the cached FileIO instance.
-    """
+    """Reset the FileIO singleton instance (for test isolation)."""
     global _file_io_instance  # noqa: PLW0603
     with _file_io_lock:
         _file_io_instance = None
@@ -282,13 +247,10 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtoc
     """
     global _file_io_instance  # noqa: PLW0603
 
-    # Fast path - instance already exists
     if _file_io_instance is not None:
         return _file_io_instance
 
-    # Slow path - need to create instance
     with _file_io_lock:
-        # Double-check pattern
         if _file_io_instance is not None:
             return _file_io_instance
 
@@ -427,35 +389,6 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> SuspectScannerProtocol
     return _SuspectScannerWrapper(rust_scanner)
 
 
-class _SuspectScannerWrapper:
-    """Wrapper that converts Rust list[str] returns to ReportFragment."""
-
-    def __init__(self, rust_scanner: Any) -> None:
-        """Initialize with a Rust SuspectScanner instance."""
-        self._scanner = rust_scanner
-
-    def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[Any, bool]:
-        """Scan main error and convert Rust result to ReportFragment."""
-        ReportFragment = _get_report_fragment()
-        rust_result = self._scanner.suspect_scan_mainerror(crashlog_mainerror, max_warn_length)
-        return ReportFragment.from_lines(rust_result[0]), rust_result[1]
-
-    def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int) -> tuple[Any, bool]:
-        """Scan call stack and convert Rust result to ReportFragment."""
-        ReportFragment = _get_report_fragment()
-        rust_result = self._scanner.suspect_scan_stack(crashlog_mainerror, segment_callstack_intact, max_warn_length)
-        return ReportFragment.from_lines(rust_result[0]), rust_result[1]
-
-    @staticmethod
-    def check_dll_crash(crashlog_mainerror: str) -> Any:
-        """Check for DLL-related crashes (static method - calls Rust directly)."""
-        from classic_scanlog import SuspectScanner as RustSuspectScanner
-
-        ReportFragment = _get_report_fragment()
-        rust_result = RustSuspectScanner.check_dll_crash(crashlog_mainerror)
-        return ReportFragment.from_lines(rust_result)
-
-
 def get_settings_validator(yamldata: ClassicScanLogsInfo) -> SettingsValidatorProtocol:
     """Return a SettingsValidator wrapper for the given yamldata.
 
@@ -482,51 +415,6 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> SettingsValidatorPr
     logger.debug("Using Rust-accelerated SettingsValidator")
 
     return _SettingsValidatorWrapper(rust_validator)
-
-
-class _SettingsValidatorWrapper:
-    """Wrapper that converts between Python and Rust SettingsValidator APIs."""
-
-    def __init__(self, rust_validator: Any) -> None:
-        """Initialize with a Rust SettingsValidator instance."""
-        self._validator = rust_validator
-
-    @staticmethod
-    def _convert_crashgen(crashgen: dict[str, bool | int | str]) -> dict[str, str]:
-        """Convert crashgen dict values to strings for Rust."""
-        return {k: str(v).lower() if isinstance(v, bool) else str(v) for k, v in crashgen.items()}
-
-    def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, bool | int | str]) -> Any:
-        """Scan Buffout achievements setting."""
-        ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_buffout_achievements_setting(xsemodules, _SettingsValidatorWrapper._convert_crashgen(crashgen))
-        return ReportFragment.from_lines(lines)
-
-    def scan_buffout_memorymanagement_settings(
-        self,
-        crashgen: dict[str, bool | int | str],
-        has_xcell: bool,
-        has_old_xcell: bool,
-        has_baka_scrapheap: bool,
-    ) -> Any:
-        """Scan Buffout memory management settings."""
-        ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_buffout_memorymanagement_settings(
-            _SettingsValidatorWrapper._convert_crashgen(crashgen), has_xcell, has_old_xcell, has_baka_scrapheap
-        )
-        return ReportFragment.from_lines(lines)
-
-    def scan_archivelimit_setting(self, crashgen: dict[str, bool | int | str], crashgen_version: Any = None) -> Any:
-        """Scan archive limit setting."""
-        ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_archivelimit_setting(_SettingsValidatorWrapper._convert_crashgen(crashgen), crashgen_version)
-        return ReportFragment.from_lines(lines)
-
-    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, bool | int | str], xsemodules: set[str]) -> Any:
-        """Scan Buffout LooksMenu setting."""
-        ReportFragment = _get_report_fragment()
-        lines = self._validator.scan_buffout_looksmenu_setting(_SettingsValidatorWrapper._convert_crashgen(crashgen), xsemodules)
-        return ReportFragment.from_lines(lines)
 
 
 def get_gpu_detector() -> types.SimpleNamespace:
@@ -716,32 +604,6 @@ def get_fcx_handler(fcx_mode: bool | None) -> FCXHandlerProtocol:
 
     logger.debug("Using Rust-accelerated FcxModeHandler")
     return FcxHandlerWrapper(rust_handler, fcx_mode)
-
-
-class FcxHandlerWrapper:
-    """Wrapper that converts Rust FcxModeHandler to Python API."""
-
-    def __init__(self, rust_handler: Any, fcx_mode: bool | None) -> None:
-        """Initialize with a Rust FcxModeHandler instance."""
-        self._handler = rust_handler
-        self.fcx_mode = fcx_mode
-        self.game_files_check: str | None = None
-        self.main_files_check: str | None = None
-
-    def check_fcx_mode(self) -> None:
-        """Check FCX mode."""
-        self._handler.check_fcx_mode()
-
-    def get_fcx_messages(self) -> Any:
-        """Get FCX messages and convert to ReportFragment."""
-        ReportFragment = _get_report_fragment()
-        lines = self._handler.get_fcx_messages()
-        return ReportFragment.from_lines(lines)
-
-    @classmethod
-    def reset_fcx_checks(cls) -> None:
-        """Reset FCX checks (no-op for Rust - resets automatically)."""
-        # Rust implementation resets automatically, no-op for API compatibility
 
 
 # ---------------------------------------------------------------------------
@@ -1034,62 +896,6 @@ def get_path_operations() -> types.ModuleType:
 # Backward compatibility
 # ---------------------------------------------------------------------------
 
-# Component key -> (module_name, class_name) mapping for is_rust_accelerated shim
-_COMPONENT_KEY_MAP: dict[str, tuple[str, str | None]] = {
-    "parser": ("classic_scanlog", "LogParser"),
-    "formid_analyzer": ("classic_scanlog", "FormIDAnalyzer"),
-    "plugin_analyzer": ("classic_scanlog", "PluginAnalyzer"),
-    "record_scanner": ("classic_scanlog", "RecordScanner"),
-    "report_generation": ("classic_scanlog", "ReportGenerator"),
-    "suspect_scanner": ("classic_scanlog", "SuspectScanner"),
-    "settings_validator": ("classic_scanlog", "SettingsValidator"),
-    "gpu_detector": ("classic_scanlog", "GpuDetector"),
-    "fcx_handler": ("classic_scanlog", "FcxModeHandler"),
-    "orchestrator": ("classic_scanlog", "Orchestrator"),
-    "mod_detector": ("classic_scanlog", "detect_mods_batch"),
-    "database": ("classic_database", None),
-    "database_pool": ("classic_database", "DatabasePool"),
-    "file_io": ("classic_file_io", None),
-    "file_io_core": ("classic_file_io", "FileIOCore"),
-    "yaml": ("classic_yaml", None),
-    "yaml_operations": ("classic_yaml", "YamlOperations"),
-    "path": ("classic_path", None),
-    "path_operations": ("classic_path", "PathValidator"),
-    "yamldata": ("classic_config", "YamlData"),
-    "constants": ("classic_constants", None),
-    "version_utils": ("classic_version", None),
-    "pe_version": ("classic_version", "extract_pe_version"),
-    "similarity": ("classic_file_io", "calculate_similarity"),
-    "resource_mgmt": ("classic_resource", None),
-    "xse_utils": ("classic_xse", None),
-    "web_utils": ("classic_web", None),
-    "scangame": ("classic_scangame", None),
-    "ba2_scanner": ("classic_scangame", "BA2Scanner"),
-    "config_duplicates": ("classic_scangame", "ConfigDuplicateDetector"),
-    "unpacked_scanner": ("classic_scangame", "UnpackedScanner"),
-    "log_processor": ("classic_scangame", "LogProcessor"),
-    "ini_validator": ("classic_scangame", "IniValidator"),
-    "crashgen_checker": ("classic_scangame", "CrashgenChecker"),
-    "xse_checker": ("classic_scangame", "XseChecker"),
-    "integrity_checker": ("classic_scangame", "GameIntegrityChecker"),
-    "wrye_parser": ("classic_scangame", "WryeBashParser"),
-    "crashgen_orchestrator": ("classic_scangame", "CrashgenCheckOrchestrator"),
-    "config_file_cache": ("classic_scangame", "RustConfigFileCache"),
-    "mod_ini_scanner": ("classic_scangame", "RustModIniScanner"),
-    "game_scan_orchestrator": ("classic_scangame", "GameScanOrchestrator"),
-    "game_scan_config": ("classic_scangame", "GameScanConfig"),
-    "game_scan_result": ("classic_scangame", "GameScanResult"),
-    "mod_scan_result": ("classic_scangame", "ModScanResult"),
-    "dds_analyzer": ("classic_file_io", "DDSAnalyzer"),
-    "scan_report_builder": ("classic_scangame", "build_unpacked_report"),
-    "setup_checks": ("classic_scangame", "run_setup_checks"),
-    "papyrus_analyzer": ("classic_scanlog", "PapyrusAnalyzer"),
-    "papyrus_stats": ("classic_scanlog", "PapyrusStats"),
-    "report_fragment": ("classic_scanlog", "ReportFragment"),
-    "report_composer": ("classic_scanlog", "ReportComposer"),
-    "string_pool": ("classic_scanlog", "StringPool"),
-}
-
 
 def is_rust_accelerated(component_name: str) -> bool:
     """Check if a Rust component is available by legacy component key.
@@ -1105,7 +911,7 @@ def is_rust_accelerated(component_name: str) -> bool:
         True if the component is available, False otherwise.
 
     """
-    mapping = _COMPONENT_KEY_MAP.get(component_name)
+    mapping = COMPONENT_KEY_MAP.get(component_name)
     if mapping is None:
         return False
     module_name, class_name = mapping
@@ -1122,35 +928,8 @@ def get_rust_component_status() -> dict[str, Any]:
         dict[str, Any]: Status dictionary with availability info.
 
     """
-    components = {key: is_rust_accelerated(key) for key in _COMPONENT_KEY_MAP}
-    active_count = sum(1 for v in components.values() if v)
-    total_count = len(components)
-    percentage = (active_count / total_count * 100) if total_count > 0 else 0
-
-    if percentage >= 90:
-        level = "FULLY ACCELERATED"
-    elif percentage >= 70:
-        level = "HIGHLY ACCELERATED"
-    elif percentage >= 30:
-        level = "PARTIALLY ACCELERATED"
-    elif active_count > 0:
-        level = "MINIMAL ACCELERATION"
-    else:
-        level = "NO ACCELERATION"
-
-    return {
-        "available": components,
-        "initialized": {},
-        "failed": {},
-        "performance_gains": {},
-        "active_count": active_count,
-        "total_count": total_count,
-        "percentage": percentage,
-        "acceleration_active": active_count > 0,
-        "acceleration_level": level,
-        "versions": {},
-        "disabled": False,
-    }
+    components = {key: is_rust_accelerated(key) for key in COMPONENT_KEY_MAP}
+    return compute_rust_component_status(components)
 
 
 def print_rust_status() -> None:

@@ -24,7 +24,9 @@ import asyncio
 from pathlib import Path
 from typing import Any, TypeVar
 
+from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
+from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import Keys, is_registered, register
 from ClassicLib.io.yaml.cache import YamlSettingsCache
 
@@ -192,6 +194,25 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
         >>> # Equivalent to: yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.VR Mode")
 
     """
+    ensure_classic_settings_file_exists(strict=True)
+
+    return yaml_settings(_type, YAML.Settings, f"CLASSIC_Settings.{setting}")
+
+
+def ensure_classic_settings_file_exists(*, strict: bool = True) -> Path:
+    """Ensure CLASSIC Settings.yaml exists, creating it from defaults if needed.
+
+    Args:
+        strict: When True, invalid defaults raise ValueError. When False,
+            invalid defaults are logged and creation is skipped.
+
+    Returns:
+        Path to CLASSIC Settings.yaml.
+
+    Raises:
+        ValueError: If defaults are invalid and strict=True.
+
+    """
     # Import inside function to avoid circular imports (see CLAUDE.md)
     from ClassicLib.support.resources import ResourceLoader
 
@@ -199,24 +220,28 @@ def classic_settings[T](_type: type[T], setting: str) -> T | None:
     # regardless of where the application is launched from (BUG-02 fix)
     project_root = ResourceLoader.get_data_directory().parent
     settings_path = project_root / "CLASSIC Settings.yaml"
-    if not settings_path.exists():
-        # Get default settings from Main YAML
-        default_settings = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
-        if not isinstance(default_settings, str):
-            raise ValueError("Invalid Default Settings in 'CLASSIC Main.yaml'")
+    if settings_path.exists():
+        return settings_path
 
-        # Use FileIOCore for consistency
-        from ClassicLib.core.async_bridge import AsyncBridge
-        from ClassicLib.integration.factory import get_file_io
+    default_settings = yaml_settings(str, YAML.Main, "CLASSIC_Info.default_settings")
+    if not isinstance(default_settings, str):
+        message = "Invalid Default Settings in 'CLASSIC Main.yaml'"
+        if strict:
+            raise ValueError(message)
+        logger.warning(message)
+        return settings_path
 
-        io_core = get_file_io()
-        AsyncBridge.get_instance().run_async(io_core.write_file(settings_path, default_settings))
+    from ClassicLib.integration.factory import get_file_io
 
-    return yaml_settings(_type, YAML.Settings, f"CLASSIC_Settings.{setting}")
+    io_core = get_file_io()
+    run_sync(io_core.write_file(settings_path, default_settings))
+    logger.info(f"Created default settings file at {settings_path}")
+    return settings_path
 
 
 __all__ = [
     "classic_settings",
+    "ensure_classic_settings_file_exists",
     "yaml_cache",
     "yaml_settings",
 ]

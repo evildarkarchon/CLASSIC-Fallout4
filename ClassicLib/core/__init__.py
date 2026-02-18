@@ -10,6 +10,7 @@ This module provides the fundamental infrastructure used throughout CLASSIC:
 """
 
 from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.async_runtime import run_sync, run_worker_thread
 from ClassicLib.core.constants import (
     DB_PATHS,
     NULL_VERSION,
@@ -44,6 +45,8 @@ from ClassicLib.support.versions import (
 __all__ = [
     # AsyncBridge
     "AsyncBridge",
+    "run_sync",
+    "run_worker_thread",
     # Constants
     "DB_PATHS",
     "GameID",

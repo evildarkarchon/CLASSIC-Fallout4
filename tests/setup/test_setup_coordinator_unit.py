@@ -512,6 +512,28 @@ class TestInitializeApplication:
 
             mock_validate.assert_called_once()
 
+    @pytest.mark.unit
+    def test_initialize_application_bootstraps_settings_via_shared_helper(self, tmp_path: Path) -> None:
+        """initialize_application should use shared settings bootstrap helper."""
+        coordinator = SetupCoordinator()
+
+        mock_yaml_cache = MagicMock()
+        mock_yaml_cache.batch_get_settings_async = AsyncMock(return_value=("auto", False, "Fallout4", False, False))
+
+        with (
+            patch("ClassicLib.support.setup.configure_logging"),
+            patch("ClassicLib.support.setup.init_message_handler"),
+            patch("ClassicLib.support.setup.ResourceLoader"),
+            patch("ClassicLib.support.setup.yaml_cache", mock_yaml_cache),
+            patch("ClassicLib.support.setup.ensure_classic_settings_file_exists") as mock_ensure_settings,
+            patch.object(coordinator.path_validator, "validate_all_settings_paths"),
+            patch.object(SetupCoordinator, "_ensure_paths_configured"),
+            patch.object(SetupCoordinator, "_log_rust_acceleration_status"),
+        ):
+            coordinator.initialize_application(is_gui=False)
+
+            mock_ensure_settings.assert_called_once_with(strict=False)
+
 
 # ============================================================================
 # _ensure_paths_configured Tests

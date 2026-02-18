@@ -62,6 +62,7 @@ from ClassicLib.io.yaml.async_ import (
 from ClassicLib.io.yaml.cache import YamlSettingsCache
 from ClassicLib.io.yaml.convenience import (
     classic_settings,
+    ensure_classic_settings_file_exists,
     yaml_cache,
     yaml_settings,
 )
@@ -113,6 +114,7 @@ __all__ = [
     # ==========================================
     "YamlSettingsCache",
     "classic_settings",
+    "ensure_classic_settings_file_exists",
     "yaml_cache",
     "yaml_settings",
 ]

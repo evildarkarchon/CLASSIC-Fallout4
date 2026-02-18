@@ -14,6 +14,7 @@ from pathlib import Path
 from ClassicLib.core.constants import YAML, get_all_db_paths
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.io.database import query_legacy_entry_sync
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 
 # Constants for file patterns
@@ -398,26 +399,11 @@ def get_entry(formid: str, plugin: str) -> str | None:
         str | None: The retrieved entry if found, or None if no such entry exists.
 
     """
-    if (entry := query_cache.get((formid, plugin))) is not None:
-        return entry
-
-    # Use connection pool for better performance
-    pool = SyncDatabasePool.get_instance()
-
-    for db_path in get_all_db_paths():
-        if db_path.is_file():
-            try:
-                conn = pool.get_connection(db_path)
-                c: sqlite3.Cursor = conn.cursor()
-                c.execute(
-                    f"SELECT entry FROM {GlobalRegistry.get_game()} WHERE formid=? AND plugin=? COLLATE nocase",
-                    (formid, plugin),
-                )
-                entry = c.fetchone()
-                if entry:
-                    query_cache[formid, plugin] = entry[0]
-                    return entry[0]
-            except sqlite3.Error as e:
-                logger.error(f"Database query error in {db_path}: {e}")
-
-    return None
+    return query_legacy_entry_sync(
+        formid,
+        plugin,
+        query_cache=query_cache,
+        db_paths=get_all_db_paths(),
+        get_pool=SyncDatabasePool.get_instance,
+        game_table=GlobalRegistry.get_game(),
+    )

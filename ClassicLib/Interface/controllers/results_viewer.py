@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import get_local_dir
@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 def _read_file(path: Path) -> str:
-    """Read a file synchronously via AsyncBridge (GUI-only helper).
+    """Read a file synchronously via runtime boundary helper.
 
     Args:
         path: Path to the file to read.
@@ -55,7 +55,7 @@ def _read_file(path: Path) -> str:
 
     """
     io_core = get_file_io()
-    return AsyncBridge.get_instance().run_async(io_core.read_file(path))
+    return run_sync(io_core.read_file(path))
 
 
 class ResultsViewerController:

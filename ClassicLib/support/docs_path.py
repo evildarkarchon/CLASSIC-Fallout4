@@ -16,7 +16,7 @@ from pathlib import Path
 
 from iniparse import configparser  # pyright: ignore[reportMissingTypeStubs]
 
-from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
@@ -28,7 +28,7 @@ from ClassicLib.Utils.path_utils import remove_readonly
 
 
 def _read_lines(path: Path) -> list[str]:
-    """Read file lines synchronously via AsyncBridge (GUI-only helper).
+    """Read file lines synchronously via runtime boundary helper.
 
     Args:
         path: Path to the file to read.
@@ -38,11 +38,11 @@ def _read_lines(path: Path) -> list[str]:
 
     """
     io_core = get_file_io()
-    return AsyncBridge.get_instance().run_async(io_core.read_lines(path))
+    return run_sync(io_core.read_lines(path))
 
 
 def _write_file(path: Path, content: str) -> None:
-    """Write file synchronously via AsyncBridge (GUI-only helper).
+    """Write file synchronously via runtime boundary helper.
 
     Args:
         path: Path to the file to write.
@@ -50,11 +50,11 @@ def _write_file(path: Path, content: str) -> None:
 
     """
     io_core = get_file_io()
-    AsyncBridge.get_instance().run_async(io_core.write_file(path, content))
+    run_sync(io_core.write_file(path, content))
 
 
 def _append_file(path: Path, content: str) -> None:
-    """Append to file synchronously via AsyncBridge (GUI-only helper).
+    """Append to file synchronously via runtime boundary helper.
 
     Args:
         path: Path to the file to append to.
@@ -62,7 +62,7 @@ def _append_file(path: Path, content: str) -> None:
 
     """
     io_core = get_file_io()
-    AsyncBridge.get_instance().run_async(io_core.append_file(path, content))
+    run_sync(io_core.append_file(path, content))
 
 
 # Lazy imports for yaml functions to avoid circular imports

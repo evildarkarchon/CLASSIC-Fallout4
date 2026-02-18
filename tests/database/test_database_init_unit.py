@@ -3,7 +3,8 @@
 This module tests the database module's cleanup functions and exports.
 """
 
-import asyncio
+import sqlite3
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -104,6 +105,79 @@ class TestCleanupDatabasePoolsAsync:
             await cleanup_database_pools_async()
 
             mock_manager.close_pool.assert_called_once()
+
+
+class TestQueryLegacyEntrySync:
+    """Tests for query_legacy_entry_sync helper."""
+
+    def test_returns_cached_entry_without_pool_lookup(self) -> None:
+        """Cached results should return without touching the database pool."""
+        from ClassicLib.io.database import query_legacy_entry_sync
+
+        cache = {("0001", "Test.esp"): "Cached Entry"}
+        mock_get_pool = MagicMock()
+
+        result = query_legacy_entry_sync(
+            "0001",
+            "Test.esp",
+            query_cache=cache,
+            db_paths=[],
+            get_pool=mock_get_pool,
+            game_table="Fallout4",
+        )
+
+        assert result == "Cached Entry"
+        mock_get_pool.assert_not_called()
+
+    def test_queries_database_and_caches_result(self, tmp_path: Path) -> None:
+        """Uncached lookups should query databases and cache successful matches."""
+        from ClassicLib.io.database import query_legacy_entry_sync
+
+        db_path = tmp_path / "legacy.db"
+        conn = sqlite3.connect(db_path)
+        conn.execute("CREATE TABLE Fallout4 (formid TEXT, plugin TEXT, entry TEXT)")
+        conn.execute("INSERT INTO Fallout4 VALUES ('0002', 'Mod.esp', 'Database Entry')")
+        conn.commit()
+
+        mock_pool = MagicMock()
+        mock_pool.get_connection.return_value = conn
+        cache: dict[tuple[str, str], str] = {}
+
+        try:
+            result = query_legacy_entry_sync(
+                "0002",
+                "Mod.esp",
+                query_cache=cache,
+                db_paths=[db_path],
+                get_pool=lambda: mock_pool,
+                game_table="Fallout4",
+            )
+        finally:
+            conn.close()
+
+        assert result == "Database Entry"
+        assert cache[("0002", "Mod.esp")] == "Database Entry"
+
+    def test_handles_sqlite_error_and_returns_none(self, tmp_path: Path) -> None:
+        """SQLite failures should be handled and return None."""
+        from ClassicLib.io.database import query_legacy_entry_sync
+
+        db_path = tmp_path / "broken.db"
+        db_path.write_text("not a sqlite database")
+
+        mock_pool = MagicMock()
+        mock_pool.get_connection.side_effect = sqlite3.Error("open failed")
+
+        result = query_legacy_entry_sync(
+            "0003",
+            "Broken.esp",
+            query_cache={},
+            db_paths=[db_path],
+            get_pool=lambda: mock_pool,
+            game_table="Fallout4",
+        )
+
+        assert result is None
 
 
 class TestModuleExports:

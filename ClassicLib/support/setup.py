@@ -15,7 +15,7 @@ from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.performance import TimedBlock
 from ClassicLib.core.registry import GlobalRegistry
-from ClassicLib.io.yaml import yaml_cache, yaml_settings, yaml_settings_async
+from ClassicLib.io.yaml import ensure_classic_settings_file_exists, yaml_cache, yaml_settings
 from ClassicLib.messaging import MessageTarget, init_message_handler, msg_info, msg_success
 from ClassicLib.support.backup import BackupManager
 from ClassicLib.support.docs_path import docs_generate_paths, docs_path_find
@@ -191,23 +191,10 @@ class SetupCoordinator:
         # Settings will load lazily on first access, which is fine for startup performance
         # If prefetching is needed, it should be done async with asyncio.run() or after Qt starts
 
-        # Ensure CLASSIC Settings.yaml exists before batch loading
-        # This prevents crashes on first launch when the file is missing
-        # Use absolute path based on project root (not CWD) to ensure correct resolution
-        # regardless of where the application is launched from (BUG-02 fix)
-        project_root = ResourceLoader.get_data_directory().parent
-        settings_path = project_root / "CLASSIC Settings.yaml"
-        if not settings_path.exists():
-            from ClassicLib.integration.factory import get_file_io
-
-            async def _create_default_settings() -> None:
-                default_settings = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.default_settings")
-                if isinstance(default_settings, str):
-                    io_core = get_file_io()
-                    await io_core.write_file(settings_path, default_settings)
-                    logger.info(f"Created default settings file at {settings_path}")
-
-            asyncio.run(_create_default_settings())
+        # Ensure CLASSIC Settings.yaml exists before batch loading.
+        # Use non-strict mode here to preserve initialization behavior even if
+        # defaults are temporarily invalid.
+        ensure_classic_settings_file_exists(strict=False)
 
         # Batch load all application settings
         # Use asyncio.run() during initialization (before Qt event loop)

@@ -26,7 +26,7 @@ import hashlib
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry, get_game, get_vr
@@ -39,7 +39,7 @@ if TYPE_CHECKING:
 
 
 def _read_bytes(path: Path) -> bytes:
-    """Read file bytes synchronously via AsyncBridge (GUI-only helper).
+    """Read file bytes synchronously via runtime boundary helper.
 
     Args:
         path: Path to the file to read.
@@ -49,11 +49,11 @@ def _read_bytes(path: Path) -> bytes:
 
     """
     io_core = get_file_io()
-    return AsyncBridge.get_instance().run_async(io_core.read_bytes(path))
+    return run_sync(io_core.read_bytes(path))
 
 
 def _read_lines(path: Path) -> list[str]:
-    """Read file lines synchronously via AsyncBridge (GUI-only helper).
+    """Read file lines synchronously via runtime boundary helper.
 
     Args:
         path: Path to the file to read.
@@ -63,7 +63,7 @@ def _read_lines(path: Path) -> list[str]:
 
     """
     io_core = get_file_io()
-    return AsyncBridge.get_instance().run_async(io_core.read_lines(path))
+    return run_sync(io_core.read_lines(path))
 
 
 class Tokens:

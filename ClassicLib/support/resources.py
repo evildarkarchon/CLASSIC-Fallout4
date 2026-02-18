@@ -463,6 +463,128 @@ class ResourceLoader:
         return data_dir
 
     @staticmethod
+    def _resolve_game_identity(game_name: str | None, vr_suffix: str) -> tuple[str, str]:
+        """Resolve game name and VR suffix defaults from registry."""
+        resolved_game = game_name if game_name is not None else get_game()
+        resolved_suffix = vr_suffix or ("VR" if get_game_version() == "VR" else "")
+        return resolved_game, resolved_suffix
+
+    @staticmethod
+    def _existing_dir_from_string(path_value: str | None) -> Path | None:
+        """Convert string path to an existing directory, otherwise None."""
+        if not path_value:
+            return None
+
+        path = Path(path_value)
+        if path.exists() and path.is_dir():
+            return path
+        return None
+
+    @staticmethod
+    def _local_yaml_key(path_type: str, vr_suffix: str) -> str | None:
+        """Return Local.yaml key for a cached path type."""
+        if path_type == "GamePath":
+            return f"Game{vr_suffix}_Info.Root_Folder_Game"
+        if path_type == "DocsPath":
+            return f"Game{vr_suffix}_Info.Root_Folder_Docs"
+        return None
+
+    @staticmethod
+    def _read_cache_yaml_sync(game_name: str, vr_suffix: str, path_type: str, *, use_convenience: bool) -> Path | None:
+        """Read cached path from cache.yaml in sync context."""
+        try:
+            from ClassicLib.core.constants import YAML
+
+            if use_convenience:
+                from ClassicLib.io.yaml.convenience import yaml_settings
+            else:
+                from ClassicLib.io.yaml import yaml_settings
+
+            cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}")
+            return ResourceLoader._existing_dir_from_string(cached_path)
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.debug(f"Could not read from cache.yaml: {e}")
+            return None
+
+    @staticmethod
+    def _read_local_yaml_sync(local_key: str) -> Path | None:
+        """Read cached path from Local.yaml in sync context."""
+        try:
+            from ClassicLib.core.constants import YAML
+            from ClassicLib.io.yaml import yaml_settings
+
+            local_path = yaml_settings(str, YAML.Game_Local, local_key)
+            return ResourceLoader._existing_dir_from_string(local_path)
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.debug(f"Could not read from Local.yaml: {e}")
+            return None
+
+    @staticmethod
+    async def _read_yaml_async(game_name: str, vr_suffix: str, path_type: str, local_key: str) -> Path | None:
+        """Read cached path from cache.yaml and Local.yaml in async context."""
+        from ClassicLib.core.constants import YAML
+        from ClassicLib.io.yaml import yaml_settings_async
+
+        try:
+            cached_path = await yaml_settings_async(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}")
+            resolved = ResourceLoader._existing_dir_from_string(cached_path)
+            if resolved is not None:
+                return resolved
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.debug(f"Could not read from cache.yaml: {e}")
+
+        try:
+            local_path = await yaml_settings_async(str, YAML.Game_Local, local_key)
+            return ResourceLoader._existing_dir_from_string(local_path)
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.debug(f"Could not read from Local.yaml: {e}")
+            return None
+
+    @staticmethod
+    def _write_yaml_sync(path: Path, path_type: str, game_name: str, vr_suffix: str) -> None:
+        """Persist cache/local YAML path entries in sync context."""
+        from ClassicLib.core.constants import YAML
+        from ClassicLib.io.yaml import yaml_settings
+
+        try:
+            yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
+            logger.debug(f"Saved {path_type} to cache.yaml")
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.warning(f"Could not save to cache.yaml: {e}")
+
+        local_key = ResourceLoader._local_yaml_key(path_type, vr_suffix)
+        if local_key is None:
+            return
+
+        try:
+            yaml_settings(str, YAML.Game_Local, local_key, str(path))
+            logger.debug(f"Saved {path_type} to Local.yaml")
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.warning(f"Could not save to Local.yaml: {e}")
+
+    @staticmethod
+    async def _write_yaml_async(path: Path, path_type: str, game_name: str, vr_suffix: str) -> None:
+        """Persist cache/local YAML path entries in async context."""
+        from ClassicLib.core.constants import YAML
+        from ClassicLib.io.yaml import yaml_settings_async
+
+        try:
+            await yaml_settings_async(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
+            logger.debug(f"Saved {path_type} to cache.yaml")
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.warning(f"Could not save to cache.yaml: {e}")
+
+        local_key = ResourceLoader._local_yaml_key(path_type, vr_suffix)
+        if local_key is None:
+            return
+
+        try:
+            await yaml_settings_async(str, YAML.Game_Local, local_key, str(path))
+            logger.debug(f"Saved {path_type} to Local.yaml")
+        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
+            logger.warning(f"Could not save to Local.yaml: {e}")
+
+    @staticmethod
     def get_cached_game_path(game_name: str | None = None, vr_suffix: str = "") -> Path | None:
         """Fetch the cached game installation directory path based on the specified game name and
         optional VR (Virtual Reality) suffix. This method attempts multiple strategies to locate
@@ -487,47 +609,28 @@ class ResourceLoader:
             internal operations are logged.
 
         """
-        if game_name is None:
-            game_name = get_game()
-        if not vr_suffix:
-            vr_suffix = "VR" if get_game_version() == "VR" else ""
+        game_name, vr_suffix = ResourceLoader._resolve_game_identity(game_name, vr_suffix)
 
         # Strategy 1: Check environment variable (fastest for uvx)
         env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_PATH"
-        env_path = os.environ.get(env_var)
-        if env_path:
-            path = Path(env_path)
-            if path.exists() and path.is_dir():
-                logger.debug(f"Found game path from environment variable {env_var}: {path}")
-                return path
+        env_path = ResourceLoader._existing_dir_from_string(os.environ.get(env_var))
+        if env_path is not None:
+            logger.debug(f"Found game path from environment variable {env_var}: {env_path}")
+            return env_path
 
         # Strategy 2: Check persistent cache.yaml
-        try:
-            from ClassicLib.core.constants import YAML
-            from ClassicLib.io.yaml.convenience import yaml_settings
-
-            cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.GamePath")
-            if cached_path:
-                path = Path(cached_path)
-                if path.exists() and path.is_dir():
-                    logger.debug(f"Found game path in cache.yaml: {path}")
-                    return path
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.debug(f"Could not read from cache.yaml: {e}")
+        cache_path = ResourceLoader._read_cache_yaml_sync(game_name, vr_suffix, "GamePath", use_convenience=True)
+        if cache_path is not None:
+            logger.debug(f"Found game path in cache.yaml: {cache_path}")
+            return cache_path
 
         # Strategy 3: Check traditional Local.yaml
-        try:
-            from ClassicLib.core.constants import YAML
-            from ClassicLib.io.yaml import yaml_settings
-
-            local_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
-            if local_path:
-                path = Path(local_path)
-                if path.exists() and path.is_dir():
-                    logger.debug(f"Found game path in Local.yaml: {path}")
-                    return path
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.debug(f"Could not read from Local.yaml: {e}")
+        local_key = ResourceLoader._local_yaml_key("GamePath", vr_suffix)
+        if local_key is not None:
+            local_path = ResourceLoader._read_local_yaml_sync(local_key)
+            if local_path is not None:
+                logger.debug(f"Found game path in Local.yaml: {local_path}")
+                return local_path
 
         return None
 
@@ -547,46 +650,25 @@ class ResourceLoader:
             Path | None: The cached game path if found, otherwise None.
 
         """
-        from ClassicLib.core.constants import YAML
-        from ClassicLib.io.yaml import yaml_settings_async
-
-        if game_name is None:
-            game_name = get_game()
-        if not vr_suffix:
-            vr_suffix = "VR" if get_game_version() == "VR" else ""
+        game_name, vr_suffix = ResourceLoader._resolve_game_identity(game_name, vr_suffix)
 
         # Strategy 1: Check environment variable (fastest for uvx)
         env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_PATH"
-        env_path = os.environ.get(env_var)
-        if env_path:
-            path = Path(env_path)
-            if path.exists() and path.is_dir():  # noqa: ASYNC240
-                logger.debug(f"Found game path from environment variable {env_var}: {path}")
-                return path
+        env_path = ResourceLoader._existing_dir_from_string(os.environ.get(env_var))
+        if env_path is not None:
+            logger.debug(f"Found game path from environment variable {env_var}: {env_path}")
+            return env_path
 
-        # Strategy 2: Check persistent cache.yaml (async)
-        try:
-            cached_path = await yaml_settings_async(str, YAML.Cache, f"{game_name}{vr_suffix}.GamePath")
-            if cached_path:
-                path = Path(cached_path)
-                if path.exists() and path.is_dir():
-                    logger.debug(f"Found game path in cache.yaml: {path}")
-                    return path
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.debug(f"Could not read from cache.yaml: {e}")
+        local_key = ResourceLoader._local_yaml_key("GamePath", vr_suffix)
+        if local_key is None:
+            return None
 
-        # Strategy 3: Check traditional Local.yaml (async)
-        try:
-            local_path = await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
-            if local_path:
-                path = Path(local_path)
-                if path.exists() and path.is_dir():
-                    logger.debug(f"Found game path in Local.yaml: {path}")
-                    return path
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.debug(f"Could not read from Local.yaml: {e}")
+        resolved = await ResourceLoader._read_yaml_async(game_name, vr_suffix, "GamePath", local_key)
+        if resolved is None:
+            return None
 
-        return None
+        logger.debug(f"Found game path in cached YAML: {resolved}")
+        return resolved
 
     @staticmethod
     def get_cached_docs_path(game_name: str | None = None, vr_suffix: str = "") -> Path | None:
@@ -605,62 +687,36 @@ class ResourceLoader:
             Path | None: The cached documentation path if found, otherwise None.
 
         """
-        if game_name is None:
-            game_name = get_game()
-        if not vr_suffix:
-            vr_suffix = "VR" if get_game_version() == "VR" else ""
+        game_name, vr_suffix = ResourceLoader._resolve_game_identity(game_name, vr_suffix)
 
         # Strategy 1: Check environment variable
         env_var = f"CLASSIC_{game_name.upper()}{vr_suffix}_DOCS"
-        env_path = os.environ.get(env_var)
-        if env_path:
-            path = Path(env_path)
-            if path.exists() and path.is_dir():
-                logger.debug(f"Found docs path from environment variable {env_var}: {path}")
-                return path
-
-        # Check if we're in an async context (event loop running)
-        # If so, skip YAML cache access to avoid async/sync mixing
-        import asyncio
+        env_path = ResourceLoader._existing_dir_from_string(os.environ.get(env_var))
+        if env_path is not None:
+            logger.debug(f"Found docs path from environment variable {env_var}: {env_path}")
+            return env_path
 
         try:
             asyncio.get_running_loop()
-            in_async_context = True
+        except RuntimeError:
+            pass
+        else:
             logger.debug(
                 "Skipping YAML cache checks - called from async context. Use environment variable or ensure docs path is set before async operations."
             )
-        except RuntimeError:
-            # No running event loop - safe to use sync YAML access
-            in_async_context = False
+            return None
 
-        if not in_async_context:
-            # Strategy 2: Check persistent cache.yaml
-            try:
-                from ClassicLib.core.constants import YAML
-                from ClassicLib.io.yaml import yaml_settings
+        cache_path = ResourceLoader._read_cache_yaml_sync(game_name, vr_suffix, "DocsPath", use_convenience=False)
+        if cache_path is not None:
+            logger.debug(f"Found docs path in cache.yaml: {cache_path}")
+            return cache_path
 
-                cached_path = yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.DocsPath")
-                if cached_path:
-                    path = Path(cached_path)
-                    if path.exists() and path.is_dir():
-                        logger.debug(f"Found docs path in cache.yaml: {path}")
-                        return path
-            except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-                logger.debug(f"Could not read from cache.yaml: {e}")
-
-            # Strategy 3: Check traditional Local.yaml
-            try:
-                from ClassicLib.core.constants import YAML
-                from ClassicLib.io.yaml import yaml_settings
-
-                local_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs")
-                if local_path:
-                    path = Path(local_path)
-                    if path.exists() and path.is_dir():
-                        logger.debug(f"Found docs path in Local.yaml: {path}")
-                        return path
-            except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-                logger.debug(f"Could not read from Local.yaml: {e}")
+        local_key = ResourceLoader._local_yaml_key("DocsPath", vr_suffix)
+        if local_key is not None:
+            local_path = ResourceLoader._read_local_yaml_sync(local_key)
+            if local_path is not None:
+                logger.debug(f"Found docs path in Local.yaml: {local_path}")
+                return local_path
 
         return None
 
@@ -678,30 +734,8 @@ class ResourceLoader:
             vr_suffix (str, optional): A suffix representing a specific virtual reality context.
 
         """
-        if game_name is None:
-            game_name = get_game()
-        if not vr_suffix:
-            vr_suffix = "VR" if get_game_version() == "VR" else ""
-
-        from ClassicLib.core.constants import YAML
-        from ClassicLib.io.yaml import yaml_settings_async
-
-        # Save to persistent cache.yaml
-        try:
-            await yaml_settings_async(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
-            logger.debug(f"Saved {path_type} to cache.yaml")
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.warning(f"Could not save to cache.yaml: {e}")
-
-        # Save to Local.yaml for backward compatibility
-        try:
-            if path_type == "GamePath":
-                await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game", str(path))
-            elif path_type == "DocsPath":
-                await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs", str(path))
-            logger.debug(f"Saved {path_type} to Local.yaml")
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.warning(f"Could not save to Local.yaml: {e}")
+        game_name, vr_suffix = ResourceLoader._resolve_game_identity(game_name, vr_suffix)
+        await ResourceLoader._write_yaml_async(path, path_type, game_name, vr_suffix)
 
     @staticmethod
     def save_path_to_cache(path: Path, path_type: str, game_name: str | None = None, vr_suffix: str = "") -> None:
@@ -732,30 +766,8 @@ class ResourceLoader:
         except RuntimeError:
             pass  # No running event loop - use sync version below
 
-        if game_name is None:
-            game_name = get_game()
-        if not vr_suffix:
-            vr_suffix = "VR" if get_game_version() == "VR" else ""
-
-        from ClassicLib.core.constants import YAML
-        from ClassicLib.io.yaml import yaml_settings
-
-        # Save to persistent cache.yaml
-        try:
-            yaml_settings(str, YAML.Cache, f"{game_name}{vr_suffix}.{path_type}", str(path))
-            logger.debug(f"Saved {path_type} to cache.yaml")
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.warning(f"Could not save to cache.yaml: {e}")
-
-        # Save to Local.yaml for backward compatibility
-        try:
-            if path_type == "GamePath":
-                yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game", str(path))
-            elif path_type == "DocsPath":
-                yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs", str(path))
-            logger.debug(f"Saved {path_type} to Local.yaml")
-        except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
-            logger.warning(f"Could not save to Local.yaml: {e}")
+        game_name, vr_suffix = ResourceLoader._resolve_game_identity(game_name, vr_suffix)
+        ResourceLoader._write_yaml_sync(path, path_type, game_name, vr_suffix)
 
         # Suggest environment variable for faster future runs (disabled - too noisy)
         # if path_type == "GamePath":

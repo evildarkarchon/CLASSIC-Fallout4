@@ -21,6 +21,7 @@ import asyncio
 import logging
 import os
 import threading
+from collections.abc import Coroutine
 from pathlib import Path
 from typing import Any, ClassVar, TypeVar
 
@@ -108,6 +109,10 @@ class YamlSettingsCache:
                     self._bridge = AsyncBridge.get_instance()
         return self._bridge
 
+    def _run_sync(self, coro: Coroutine[Any, Any, T]) -> T:
+        """Execute async work from sync contexts through AsyncBridge."""
+        return self._get_bridge().run_async(coro)
+
     def _get_async_core(self) -> AsyncYamlSettingsCore:
         """Get or create AsyncYamlSettingsCore instance lazily (sync contexts only).
 
@@ -143,7 +148,7 @@ class YamlSettingsCache:
                 if self._async_core is None:
                     # Use AsyncBridge to run async initialization
                     # This works in sync contexts (GUI)
-                    self._async_core = self._get_bridge().run_async(get_async_yaml_core())
+                    self._async_core = self._run_sync(get_async_yaml_core())
         return self._async_core
 
     @classmethod
@@ -343,6 +348,11 @@ class YamlSettingsCache:
             logger.error(msg)
             raise RuntimeError(msg) from e
 
+    async def async_yaml_settings_async(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
+        """Read or write a YAML setting asynchronously via async core."""
+        core = await self._ensure_async_core_async()
+        return await core.async_yaml_settings(_type, yaml_store, key_path, new_value)
+
     def async_yaml_settings(self, _type: type[T], yaml_store: YAML, key_path: str, new_value: T | None = None) -> T | None:
         """Read or write a YAML setting synchronously.
 
@@ -362,7 +372,7 @@ class YamlSettingsCache:
             The value retrieved or the updated value, or None if not found.
 
         """
-        return self._get_bridge().run_async(self._get_async_core().async_yaml_settings(_type, yaml_store, key_path, new_value))
+        return self._run_sync(self.async_yaml_settings_async(_type, yaml_store, key_path, new_value))
 
     async def load_multiple_stores_async(self, stores: list[YAML]) -> dict[YAML, YAMLMapping]:
         """Asynchronously load multiple YAML stores.
@@ -394,7 +404,7 @@ class YamlSettingsCache:
             A dictionary mapping each input YAML store to its mapping.
 
         """
-        return self._get_bridge().run_async(self.load_multiple_stores_async(stores))
+        return self._run_sync(self.load_multiple_stores_async(stores))
 
     async def batch_get_settings_async(self, requests: list[tuple[type, YAML, str]]) -> list[Any]:
         """Execute batch async retrieval of settings.
@@ -422,7 +432,7 @@ class YamlSettingsCache:
             A list containing the results for each request.
 
         """
-        return self._get_bridge().run_async(self._get_async_core().batch_get_settings(requests))
+        return self._run_sync(self.batch_get_settings_async(requests))
 
     def prefetch_all_settings(self) -> None:
         """Load and cache the main YAML stores using Rust batch loading.

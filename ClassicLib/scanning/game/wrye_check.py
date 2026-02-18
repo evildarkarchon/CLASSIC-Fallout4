@@ -7,7 +7,7 @@ file reading, and surrounding message construction.
 
 from pathlib import Path
 
-from ClassicLib.core.async_bridge import AsyncBridge
+from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_game, get_vr
 from ClassicLib.integration.factory import get_file_io
@@ -15,9 +15,9 @@ from ClassicLib.io.yaml import yaml_settings
 
 
 def _read_file(path: Path) -> str:
-    """Read a file synchronously via AsyncBridge (GUI-only helper)."""
+    """Read a file synchronously via runtime boundary helper."""
     io_core = get_file_io()
-    return AsyncBridge.get_instance().run_async(io_core.read_file(path))
+    return run_sync(io_core.read_file(path))
 
 
 def scan_wryecheck() -> str:

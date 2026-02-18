@@ -555,6 +555,24 @@ class TestCrashlogsGetFiles:
 class TestGetEntry:
     """Tests for get_entry function."""
 
+    def test_delegates_to_database_layer_helper(self) -> None:
+        """get_entry should delegate lookup to io.database helper."""
+        from ClassicLib.scanning.logs import util_legacy as Util
+
+        Util.query_cache.clear()
+
+        with (
+            patch("ClassicLib.scanning.logs.util_legacy.query_legacy_entry_sync", return_value="delegated") as mock_query,
+            patch("ClassicLib.scanning.logs.util_legacy.get_all_db_paths", return_value=[]),
+            patch("ClassicLib.core.registry.GlobalRegistry.get_game", return_value="Fallout4"),
+        ):
+            result = Util.get_entry("12345", "Test.esp")
+
+            assert result == "delegated"
+            mock_query.assert_called_once()
+
+        Util.query_cache.clear()
+
     def test_returns_cached_entry(self) -> None:
         """get_entry should return cached entry if available."""
         from ClassicLib.scanning.logs import util_legacy as Util
