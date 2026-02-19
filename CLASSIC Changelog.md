@@ -4,7 +4,8 @@
 - Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.
 - Now a fully native-compiled application, no longer using Python with PyInstaller.
 - Changed button and tab colors to "Pip-Boy green".
-- 
+- Removed hardcoded fallbacks for the program's version. If it can't detect the version of the program, it will now display an error message.
+- More stuff I didn't write down.
 
 ### 8.1.1 CHANGES
 - Optimize the Form-ID database lookup code.
