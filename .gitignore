@@ -317,3 +317,9 @@ con
 !**/fixtures/*.log
 classic-gui/result.txt
 ClassicLib-rs/ui-applications/classic-gui-slint/CLASSIC Data/
+Qt6/
+styles/
+classic-gui/install/
+qt.conf
+!classic-gui/**/qt.conf
+*.pyinstaller
