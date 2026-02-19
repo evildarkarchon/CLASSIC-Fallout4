@@ -64,6 +64,10 @@ qt_add_executable(ClassicGui WIN32
     ../resources/resources.qrc
 )
 
+set_target_properties(ClassicGui PROPERTIES
+    OUTPUT_NAME "CLASSIC"
+)
+
 # ── Include directories ──────────────────────────────────────────────
 # Allow includes like "core/signalhub.h", "app/mainwindow.h"
 target_include_directories(ClassicGui PRIVATE
@@ -108,6 +112,11 @@ install(TARGETS ClassicGui RUNTIME DESTINATION .)
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/styles/dark_theme.qss
         DESTINATION styles)
 
+# qt.conf (next to CLASSIC.exe) tells Qt to resolve runtime assets from
+# the dedicated Qt6 folder while keeping Qt*.dll in the app directory.
+install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/qt.conf
+        DESTINATION .)
+
 # CLASSIC Data — runtime data files (databases, graphics, help, game versions).
 # Only the subdirectories the app actually uses are installed; dev-only files
 # (Python/Pascal scripts, zip archive, local config) at the top level are skipped.
@@ -132,8 +141,8 @@ install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
 
 # Qt deploy — run windeployqt directly on the installed exe.
 # Unlike qt_generate_deploy_app_script() which forces a bin/ subdirectory,
-# calling windeployqt on the exe directly gives a flat portable layout:
-# DLLs, plugins, and translations all land alongside ClassicGui.exe.
+# calling windeployqt on the installed exe keeps a portable layout while
+# placing plugin/translations assets under Qt6/ via explicit output dirs.
 find_program(WINDEPLOYQT_EXECUTABLE windeployqt
     HINTS "${Qt6_DIR}/../../../bin" "${QT_HOST_PATH}/bin"
 )
@@ -141,8 +150,27 @@ if(WINDEPLOYQT_EXECUTABLE)
     install(CODE "
         execute_process(
             COMMAND \"${WINDEPLOYQT_EXECUTABLE}\"
-                \"\${CMAKE_INSTALL_PREFIX}/ClassicGui.exe\"
+                --plugindir \"\${CMAKE_INSTALL_PREFIX}/Qt6/plugins\"
+                --translationdir \"\${CMAKE_INSTALL_PREFIX}/Qt6/translations\"
+                \"\${CMAKE_INSTALL_PREFIX}/CLASSIC.exe\"
             WORKING_DIRECTORY \"\${CMAKE_INSTALL_PREFIX}\"
         )
+
+        # Remove legacy root-level plugin/translations folders left by older
+        # flat deployments so install/ stays clean.
+        foreach(_legacy_dir generic iconengines imageformats networkinformation platforms tls translations)
+            if(EXISTS \"\${CMAKE_INSTALL_PREFIX}/\${_legacy_dir}\")
+                file(REMOVE_RECURSE \"\${CMAKE_INSTALL_PREFIX}/\${_legacy_dir}\")
+            endif()
+        endforeach()
+
+        # styles/ is app-owned for dark_theme.qss; remove stale plugin DLLs
+        # that older flat deployments may have placed there.
+        if(EXISTS \"\${CMAKE_INSTALL_PREFIX}/styles\")
+            file(GLOB _legacy_style_plugins \"\${CMAKE_INSTALL_PREFIX}/styles/*.dll\")
+            if(_legacy_style_plugins)
+                file(REMOVE \${_legacy_style_plugins})
+            endif()
+        endif()
     ")
 endif()

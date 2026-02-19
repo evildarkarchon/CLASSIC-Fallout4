@@ -75,7 +75,6 @@ ClassicLib-rs/
 └── ui-applications/              # Native applications
     ├── classic-cli/              # CLI application
     ├── classic-tui/              # TUI application
-    └── classic-gui-slint/        # Slint GUI
 ```
 
 ### Architecture Rules

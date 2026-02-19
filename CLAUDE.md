@@ -19,7 +19,7 @@ uv run python CLASSIC_ScanLogs.py   # Run CLI crash log scanner
 ```powershell
 cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml              # Build all Rust crates
 cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml    # Release build
-cargo build -p classic-gui --manifest-path ClassicLib-rs/Cargo.toml           # Build only the Slint GUI
+cargo build -p classic-tui --manifest-path ClassicLib-rs/Cargo.toml           # Build only the Rust TUI
 ```
 
 ### Rust Python Bindings (PyO3 via maturin)
@@ -157,7 +157,7 @@ The Rust workspace under `ClassicLib-rs/` follows a strict three-layer separatio
    - `classic-cli`: C++ CLI scanner built with CMake + vcpkg + Corrosion (fmt, CLI11, Catch2)
 
 4. **UI Applications** (`ClassicLib-rs/ui-applications/`)
-   - `classic-gui`: Pure Rust GUI using Slint framework (v9.0.0)
+   - `classic-tui`: Pure Rust terminal UI using Ratatui
 
 ### Python Library (`ClassicLib/`)
 
@@ -179,21 +179,14 @@ Python code organized into subpackages:
 
 The `ClassicLib/integration/factory.py` module provides `detect_component()` which tries to import a Rust module and returns `(available: bool, module)`. If Rust is unavailable, Python fallbacks are used automatically. Check availability via flags like `RUST_PERF_AVAILABLE`. Note: `classic_registry` is mandatory (no fallback).
 
-### Slint GUI Architecture (`ClassicLib-rs/ui-applications/classic-gui/`)
-
-- `.slint` files in `ui/` define the UI (main.slint + widgets/)
-- Shared types live in `ui/widgets/types.slint` to avoid circular imports
-- `src/` contains Rust modules: main, state, scan, worker, settings, results, dialogs, markdown, logging
-- Uses `classic-shared-core` with `gui-bridge` feature for AsyncBridge
-
 ## Key Conventions
 
 ### ONE RUNTIME RULE
 A single Tokio runtime is shared across the entire application via `classic_shared::get_runtime()`. Never create additional Tokio runtimes.
 
-### AsyncBridge (Slint-Tokio coordination)
-- `run_with_ui_update()`, `run_with_timeout()`, `run_cancellable()` bridge async Tokio work to Slint's UI thread
-- `EventLoopDispatcher` trait abstracts `slint::invoke_from_event_loop` for testability
+### AsyncBridge (Optional UI-Tokio coordination)
+- `run_with_ui_update()`, `run_with_timeout()`, `run_cancellable()` bridge async Tokio work to a UI thread
+- `EventLoopDispatcher` trait abstracts event-loop dispatching for testability
 - `BridgeError` enum: Timeout/Cancelled/DispatchFailed -- log-and-drop on dispatch failures (no `.expect()`)
 
 ### Rust Edition & Lints
@@ -230,12 +223,6 @@ Key markers: `unit`, `integration`, `slow`, `stress`, `performance`, `network`, 
 - **Never write to `NUL` or `nul`** -- on Windows this creates an undeletable file on the system drive. Use platform-appropriate alternatives.
 - CI runs on `windows-latest` exclusively
 - PySide6 uses `QT_QPA_PLATFORM=offscreen` for headless testing
-
-### Slint UI Gotchas
-- No CSS-style font-family fallback lists; use a single font name (Consolas on Windows)
-- Don't reference `root.width` inside `clamp()` -- causes binding loops; use fixed max values
-- Shared types between .slint files go in `widgets/types.slint`
-- Negative progress (-1.0) means indeterminate; 0-100 means determinate percentage
 
 ## CI Pipeline
 

@@ -4,6 +4,7 @@
 #include <QTabWidget>
 #include <QTemporaryDir>
 #include <QTextStream>
+#include <QWidget>
 #include <QtTest/QtTest>
 
 #include "controllers/resultscontroller.h"
@@ -18,6 +19,8 @@ class ResultsControllerTests : public QObject {
 private slots:
     void setReportDirectories_creates_primary_and_discovers_reports_from_both_dirs();
     void custom_directory_changes_trigger_refresh();
+    void scan_completed_switches_to_results_tab_when_auto_switch_enabled();
+    void scan_completed_does_not_switch_tabs_when_auto_switch_disabled();
 };
 
 namespace {
@@ -134,6 +137,66 @@ void ResultsControllerTests::custom_directory_changes_trigger_refresh()
     QVERIFY(!customReport.isEmpty());
 
     QTRY_COMPARE(list->count(), 2);
+}
+
+void ResultsControllerTests::scan_completed_switches_to_results_tab_when_auto_switch_enabled()
+{
+    QTabWidget tabWidget;
+    QWidget mainTab;
+    QWidget backupTab;
+    QWidget articlesTab;
+    QWidget resultsTab;
+    tabWidget.addTab(&mainTab, QStringLiteral("MAIN OPTIONS"));
+    tabWidget.addTab(&backupTab, QStringLiteral("FILE BACKUP"));
+    tabWidget.addTab(&articlesTab, QStringLiteral("ARTICLES"));
+    tabWidget.addTab(&resultsTab, QStringLiteral("RESULTS"));
+    tabWidget.setCurrentIndex(0);
+
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ResultsController controller(
+        &SignalHub::instance(),
+        &tabWidget,
+        &reportList,
+        &markdownViewer,
+        &metadata);
+
+    controller.setAutoSwitchToResults(true);
+    emit SignalHub::instance().scanCompleted();
+
+    QTRY_COMPARE(tabWidget.currentIndex(), 3);
+}
+
+void ResultsControllerTests::scan_completed_does_not_switch_tabs_when_auto_switch_disabled()
+{
+    QTabWidget tabWidget;
+    QWidget mainTab;
+    QWidget backupTab;
+    QWidget articlesTab;
+    QWidget resultsTab;
+    tabWidget.addTab(&mainTab, QStringLiteral("MAIN OPTIONS"));
+    tabWidget.addTab(&backupTab, QStringLiteral("FILE BACKUP"));
+    tabWidget.addTab(&articlesTab, QStringLiteral("ARTICLES"));
+    tabWidget.addTab(&resultsTab, QStringLiteral("RESULTS"));
+    tabWidget.setCurrentIndex(1);
+
+    ReportListWidget reportList;
+    MarkdownViewer markdownViewer;
+    ReportMetadataWidget metadata;
+
+    ResultsController controller(
+        &SignalHub::instance(),
+        &tabWidget,
+        &reportList,
+        &markdownViewer,
+        &metadata);
+
+    controller.setAutoSwitchToResults(false);
+    emit SignalHub::instance().scanCompleted();
+
+    QTRY_COMPARE(tabWidget.currentIndex(), 1);
 }
 
 QTEST_MAIN(ResultsControllerTests)

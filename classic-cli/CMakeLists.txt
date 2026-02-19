@@ -17,10 +17,18 @@ FetchContent_Declare(Corrosion
 )
 FetchContent_MakeAvailable(Corrosion)
 
+set(CLASSIC_RUST_PROFILE release)
+if(CMAKE_BUILD_TYPE)
+    string(TOLOWER "${CMAKE_BUILD_TYPE}" _classic_build_type)
+    if(_classic_build_type STREQUAL "debug")
+        set(CLASSIC_RUST_PROFILE dev)
+    endif()
+endif()
+
 corrosion_import_crate(
     MANIFEST_PATH ${CMAKE_SOURCE_DIR}/../ClassicLib-rs/Cargo.toml
     CRATES classic-cpp-bridge
-    PROFILE release
+    PROFILE ${CLASSIC_RUST_PROFILE}
 )
 
 # Generate CXX bridge headers + compiled C++ glue code.

@@ -36,20 +36,19 @@ xxhash-rust = { workspace = true }
 # Logging
 log = { workspace = true }
 
-# GUI bridge (optional - only for Slint GUI applications)
+# Optional UI bridge (Slint event-loop dispatcher)
 slint = { workspace = true, optional = true }
 tokio-util = { workspace = true, optional = true }
 
 [features]
-# Enable AsyncBridge for Slint GUI applications
+# Enable AsyncBridge with Slint event-loop dispatch support
 gui-bridge = ["slint", "tokio-util"]
 
 [dev-dependencies]
 criterion = { version = "0.8.1", features = ["html_reports"] }
 serial_test = "3.2"
 # Workaround: icu_properties (transitive via slint) requires zerovec/alloc
-# which is not activated when building classic-shared-core with gui-bridge in isolation
-# (classic-gui's richer slint features activate it transitively)
+# when building classic-shared-core with gui-bridge in isolation.
 zerovec = { version = "0.11", features = ["alloc"] }
 
 [[bench]]

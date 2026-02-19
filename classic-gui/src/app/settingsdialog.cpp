@@ -5,6 +5,7 @@
 #include <QFormLayout>
 #include <QGroupBox>
 #include <QFileDialog>
+#include <QApplication>
 #include <QMessageBox>
 
 #include "core/rust_qt_bridge.h"
@@ -90,6 +91,10 @@ void SettingsDialog::setupGeneralTab(QTabWidget* tabs)
         QStringLiteral("VR")
     });
     layout->addRow(QStringLiteral("Game Version:"), m_comboGameVersion);
+
+    // Keep startup update behavior in General so it's easy to find.
+    m_chkUpdateCheck = new ToggleSwitch(QStringLiteral("Check for Updates on Startup"));
+    layout->addRow(m_chkUpdateCheck);
 
     tabs->addTab(tab, QStringLiteral("General"));
 }
@@ -199,8 +204,10 @@ void SettingsDialog::setupUpdatesTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
-    m_chkUpdateCheck = new ToggleSwitch(QStringLiteral("Check for Updates on Startup"));
-    layout->addWidget(m_chkUpdateCheck);
+    auto* startupHint = new QLabel(
+        QStringLiteral("Startup update checks are configured in the General tab."));
+    startupHint->setWordWrap(true);
+    layout->addWidget(startupHint);
 
     {
         auto* row = new QHBoxLayout();
@@ -422,8 +429,9 @@ void SettingsDialog::onCheckForUpdates()
     m_lblUpdateStatus->setText(QStringLiteral("Checking for updates..."));
 
     try {
+        const QString currentVersion = QApplication::applicationVersion();
         auto result = classic::update::github_check_for_updates(
-            "evildarkarchon", "CLASSIC-Fallout4", "9.0.0");
+            "evildarkarchon", "CLASSIC-Fallout4", classic::toRustString(currentVersion));
 
         if (!result.error_message.empty()) {
             m_lblUpdateStatus->setText(

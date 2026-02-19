@@ -69,8 +69,7 @@ members = [
     # Node.js/Bun Bindings (NAPI-RS adapters)
     "node-bindings/classic-node",
 
-    # GUI Applications (v9.0.0 Slint)
-    "ui-applications/classic-gui-slint",
+    # UI Applications
     "ui-applications/classic-tui",
 
     # C++ Bindings (CXX FFI adapters)

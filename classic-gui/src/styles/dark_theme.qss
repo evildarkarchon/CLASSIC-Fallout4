@@ -30,15 +30,16 @@ QTabWidget::pane {
 QTabBar::tab {
     background-color: #333333;
     color: #aaaaaa;
-    padding: 8px 20px;
+    padding: 8px 12px;
     border: 1px solid #3c3c3c;
     border-bottom: none;
-    min-width: 100px;
+    min-width: 0px;
 }
 
 QTabBar::tab:selected {
-    background-color: #0078d4;
-    color: #ffffff;
+    background-color: #52ff52;
+    color: #0f1a0f;
+    border-color: #2fae2f;
 }
 
 QTabBar::tab:hover:!selected {
@@ -87,15 +88,15 @@ QPushButton:checked {
     border-color: #0078d4;
 }
 
-/* Primary scan buttons (large, bold, blue) */
+/* Primary scan buttons (large, bold, Pip-Boy green) */
 
 QPushButton#btnScanCrashLogs,
 QPushButton#btnScanGameFiles {
-    background-color: #0078d4;
-    color: #ffffff;
+    background-color: #52ff52;
+    color: #0f1a0f;
     font-size: 17px;
     font-weight: bold;
-    border: 1px solid #005a9e;
+    border: 1px solid #2fae2f;
     border-radius: 4px;
     min-height: 48px;
     padding: 8px 24px;
@@ -103,14 +104,14 @@ QPushButton#btnScanGameFiles {
 
 QPushButton#btnScanCrashLogs:hover,
 QPushButton#btnScanGameFiles:hover {
-    background-color: #1a8ae6;
-    border-color: #0078d4;
+    background-color: #72ff72;
+    border-color: #52ff52;
 }
 
 QPushButton#btnScanCrashLogs:pressed,
 QPushButton#btnScanGameFiles:pressed {
-    background-color: #005a9e;
-    border-color: #004578;
+    background-color: #3ac93a;
+    border-color: #238523;
 }
 
 QPushButton#btnScanCrashLogs:disabled,

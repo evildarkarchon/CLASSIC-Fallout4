@@ -5,6 +5,7 @@
 
 #include <QApplication>
 #include <QDir>
+#include <QFile>
 #include <QIcon>
 #include <QMessageBox>
 
@@ -46,9 +47,20 @@ static QString findDataDir()
 /// Find the CLASSIC.ico icon by searching common locations.
 static QString findIcon()
 {
-    QString dataDir = findDataDir();
-    if (!dataDir.isEmpty()) {
-        QString iconPath = QDir(dataDir).filePath("graphics/CLASSIC.ico");
+    QString iconRef = QStringLiteral("@Classic Data/graphics/CLASSIC.ico");
+    if (iconRef.startsWith(QLatin1Char('@'))) {
+        iconRef.remove(0, 1);
+    }
+
+    QDir cwd = QDir::current();
+    QString exeDir = QCoreApplication::applicationDirPath();
+    const QStringList candidates = {
+        cwd.filePath(iconRef),
+        QDir(exeDir).filePath(iconRef),
+        QDir(exeDir + "/..").filePath(iconRef),
+    };
+
+    for (const QString& iconPath : candidates) {
         if (QFile::exists(iconPath)) {
             return iconPath;
         }
@@ -61,7 +73,6 @@ int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("CLASSIC"));
-    app.setApplicationVersion(QStringLiteral("9.0.0"));
 
     // Set window icon
     QString iconPath = findIcon();
@@ -77,27 +88,82 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    // Read application version from CLASSIC Main.yaml
+    // Read application version from CLASSIC Main.yaml (single source of truth).
     QString dataDir = findDataDir();
-    if (!dataDir.isEmpty()) {
-        QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
-        if (QFile::exists(mainYamlPath)) {
-            try {
-                auto ops = classic::yaml::yaml_ops_new();
-                classic::yaml::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
-                auto version = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
-                if (!version.empty()) {
-                    QString qVersion = classic::toQString(version);
-                    // Strip "CLASSIC v" prefix (YAML stores "CLASSIC v9.0.0")
-                    if (qVersion.startsWith(QStringLiteral("CLASSIC v"))) {
-                        qVersion = qVersion.mid(9);
-                    }
-                    app.setApplicationVersion(qVersion);
-                }
-            } catch (...) {
-                // Keep default version set at startup.
-            }
+    if (dataDir.isEmpty()) {
+        QMessageBox::critical(
+            nullptr,
+            QStringLiteral("Fatal Configuration Error"),
+            QStringLiteral(
+                "Unable to locate the CLASSIC Data directory.\n\n"
+                "Cannot read CLASSIC_Info.version because CLASSIC Main.yaml is unavailable.\n"
+                "CLASSIC Main.yaml is the single source of truth for the application version."));
+        return 1;
+    }
+
+    QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
+    if (!QFile::exists(mainYamlPath)) {
+        QMessageBox::critical(
+            nullptr,
+            QStringLiteral("Fatal Configuration Error"),
+            QStringLiteral(
+                "Missing required file:\n%1\n\n"
+                "Cannot read CLASSIC_Info.version.\n"
+                "CLASSIC Main.yaml is the single source of truth for the application version.")
+                .arg(mainYamlPath));
+        return 1;
+    }
+
+    try {
+        auto ops = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
+        auto version = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
+        if (version.empty()) {
+            QMessageBox::critical(
+                nullptr,
+                QStringLiteral("Fatal Configuration Error"),
+                QStringLiteral(
+                    "Missing key 'CLASSIC_Info.version' in:\n%1\n\n"
+                    "CLASSIC Main.yaml is the single source of truth for the application version.")
+                    .arg(mainYamlPath));
+            return 1;
         }
+
+        QString qVersion = classic::toQString(version).trimmed();
+        // Strip "CLASSIC v" prefix (YAML commonly stores "CLASSIC vX.Y.Z")
+        if (qVersion.startsWith(QStringLiteral("CLASSIC v"))) {
+            qVersion = qVersion.mid(9).trimmed();
+        }
+
+        if (qVersion.isEmpty()) {
+            QMessageBox::critical(
+                nullptr,
+                QStringLiteral("Fatal Configuration Error"),
+                QStringLiteral(
+                    "Invalid value for 'CLASSIC_Info.version' in:\n%1\n\n"
+                    "Expected a non-empty version (for example: CLASSIC v9.0.0).")
+                    .arg(mainYamlPath));
+            return 1;
+        }
+
+        app.setApplicationVersion(qVersion);
+    } catch (const std::exception& e) {
+        QMessageBox::critical(
+            nullptr,
+            QStringLiteral("Fatal Configuration Error"),
+            QStringLiteral(
+                "Failed to read CLASSIC_Info.version from:\n%1\n\nDetails:\n%2")
+                .arg(mainYamlPath, QString::fromUtf8(e.what())));
+        return 1;
+    } catch (...) {
+        QMessageBox::critical(
+            nullptr,
+            QStringLiteral("Fatal Configuration Error"),
+            QStringLiteral(
+                "Failed to read CLASSIC_Info.version from:\n%1\n\n"
+                "An unknown error occurred while loading CLASSIC Main.yaml.")
+                .arg(mainYamlPath));
+        return 1;
     }
 
     // Register as GUI mode in the global registry

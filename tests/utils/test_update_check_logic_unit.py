@@ -202,8 +202,8 @@ class TestUpdateChecking:
         assert result is False
 
     @pytest.mark.asyncio
-    async def test_is_latest_version_unknown_local_version(self, mock_dependencies):
-        """Test when local version is unknown."""
+    async def test_is_latest_version_missing_local_version_is_fatal(self, mock_dependencies):
+        """Test missing CLASSIC_Info.version is treated as a fatal configuration error."""
 
         # Configure settings
         async def classic_settings_side_effect(type_arg, key, default=None):
@@ -212,10 +212,10 @@ class TestUpdateChecking:
 
         mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
 
-        # Mock unknown local version
+        # Mock missing local version
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
-                "CLASSIC_Info.version": None,  # Unknown version
+                "CLASSIC_Info.version": None,
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
@@ -223,15 +223,33 @@ class TestUpdateChecking:
         # Mock registry
         mock_dependencies["get_game"].return_value = "fallout4"
 
-        # Mock GithubClient returning a version
-        mock_release = _make_mock_release(name="v7.30.1", tag_name="v7.30.1")
-        mock_client = MagicMock()
-        mock_client.get_latest_release = AsyncMock(return_value=mock_release)
+        with pytest.raises(UpdateCheckError, match="Fatal configuration error: missing 'CLASSIC_Info.version'"):
+            await is_latest_version(quiet=False, gui_request=False)
 
-        with patch("ClassicLib.support.update.GithubClient", return_value=mock_client):
-            result = await is_latest_version(quiet=False, gui_request=False)
+    @pytest.mark.asyncio
+    async def test_is_latest_version_invalid_local_version_is_fatal(self, mock_dependencies):
+        """Test malformed CLASSIC_Info.version is treated as a fatal configuration error."""
 
-        assert result is False  # Assume outdated when local version unknown
+        # Configure settings
+        async def classic_settings_side_effect(type_arg, key, default=None):
+            settings_map = {"Update Check": True}
+            return settings_map.get(key, default)
+
+        mock_dependencies["classic_settings_async"].side_effect = classic_settings_side_effect
+
+        # Mock invalid local version format
+        async def yaml_settings_side_effect(type_cls, enum, key, default=None):
+            return {
+                "CLASSIC_Info.version": "CLASSIC definitely-not-a-version",
+            }.get(key, default)
+
+        mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
+
+        # Mock registry
+        mock_dependencies["get_game"].return_value = "fallout4"
+
+        with pytest.raises(UpdateCheckError, match="Fatal configuration error: unable to parse 'CLASSIC_Info.version'"):
+            await is_latest_version(quiet=False, gui_request=False)
 
 
 @pytest.mark.unit

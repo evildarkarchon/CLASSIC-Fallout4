@@ -32,7 +32,9 @@ void MarkdownViewer::setupUi()
 
     // Toolbar
     {
-        auto* toolbar = new QHBoxLayout(); 
+        auto* toolbar = new QHBoxLayout();
+        // Match the metadata bar horizontal insets so controls line up visually.
+        toolbar->setContentsMargins(12, 0, 12, 0);
         toolbar->setSpacing(8);
 
         m_btnCopyAll = new QPushButton(QStringLiteral("Copy All"));
@@ -41,7 +43,7 @@ void MarkdownViewer::setupUi()
         toolbar->addStretch();
 
         m_btnZoomOut = new QPushButton(QStringLiteral("-"));
-        m_btnZoomOut->setFixedWidth(32);
+        m_btnZoomOut->setMinimumWidth(44);
         toolbar->addWidget(m_btnZoomOut);
 
         m_zoomLabel = new QLabel(QStringLiteral("100%"));
@@ -50,11 +52,11 @@ void MarkdownViewer::setupUi()
         toolbar->addWidget(m_zoomLabel);
 
         m_btnZoomIn = new QPushButton(QStringLiteral("+"));
-        m_btnZoomIn->setFixedWidth(32);
+        m_btnZoomIn->setMinimumWidth(44);
         toolbar->addWidget(m_btnZoomIn);
 
         m_btnZoomReset = new QPushButton(QStringLiteral("Reset"));
-        m_btnZoomReset->setFixedWidth(50);
+        m_btnZoomReset->setMinimumWidth(80);
         toolbar->addWidget(m_btnZoomReset);
 
         mainLayout->addLayout(toolbar);

@@ -21,7 +21,6 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 #### 🛠️ Development
 **[development/](development/)** - Development guides for working with CLASSIC
 - **[Rust Integration Guide](development/RUST_INTEGRATION_GUIDE.md)** - Hybrid Python-Rust architecture
-- Slint GUI development patterns
 - Rust 2024 edition guide
 - Rust workspace architecture
 - PyO3 integration patterns
@@ -33,7 +32,6 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 - Classic core modularization plan
 - PyO3 async runtimes implementation plan
 - Rust CLI/TUI migration plan
-- Slint GUI implementation plan
 - TUI feature parity plan
 
 #### 🧪 Testing
@@ -142,7 +140,6 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 - **[Architecture Overview](architecture/ARCHITECTURE_OVERVIEW.md)** - System design with Mermaid diagrams
 - **[Rust Integration Guide](development/RUST_INTEGRATION_GUIDE.md)** - Hybrid Python-Rust architecture
 - **[Code Examples](examples/CODE_EXAMPLES.md)** - Practical code patterns
-- **[Slint GUI Development](development/slint_gui_development.md)** - New Slint GUI patterns
 - **[Rust 2024 Edition Guide](development/rust_2024_edition_guide.md)** - Modern Rust features
 - **[Async Development Guide](development/async_development_guide.md)** - Comprehensive async patterns
 

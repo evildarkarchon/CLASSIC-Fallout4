@@ -13,6 +13,7 @@ class MarkdownViewerTests : public QObject {
 
 private slots:
     void constructor_sets_default_state_and_stylesheet();
+    void toolbar_buttons_have_sufficient_width_for_theme_padding();
     void setMarkdownContent_renders_markdown_as_html();
     void clear_removes_content();
     void zoom_controls_update_label_and_font_with_bounds();
@@ -62,6 +63,24 @@ void MarkdownViewerTests::constructor_sets_default_state_and_stylesheet()
     QCOMPARE(zoomLabel->text(), QStringLiteral("100%"));
     QVERIFY(browser->document()->defaultStyleSheet().contains(
         QStringLiteral("body {")));
+}
+
+void MarkdownViewerTests::toolbar_buttons_have_sufficient_width_for_theme_padding()
+{
+    MarkdownViewer viewer;
+
+    auto* zoomOutButton = findButtonByText(viewer, QStringLiteral("-"));
+    auto* zoomInButton = findButtonByText(viewer, QStringLiteral("+"));
+    auto* zoomResetButton = findButtonByText(viewer, QStringLiteral("Reset"));
+    QVERIFY(zoomOutButton);
+    QVERIFY(zoomInButton);
+    QVERIFY(zoomResetButton);
+
+    // Global QPushButton theme uses 16px left/right padding.
+    // Keep compact controls wide enough so symbols/text stay visible.
+    QVERIFY2(zoomOutButton->minimumWidth() >= 44, "Zoom out button too narrow for themed padding");
+    QVERIFY2(zoomInButton->minimumWidth() >= 44, "Zoom in button too narrow for themed padding");
+    QVERIFY2(zoomResetButton->minimumWidth() >= 80, "Zoom reset button too narrow for themed padding");
 }
 
 void MarkdownViewerTests::setMarkdownContent_renders_markdown_as_html()

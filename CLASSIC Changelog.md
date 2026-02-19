@@ -1,5 +1,11 @@
 # CLASSIC CHANGELOG #
 
+### 9.0.0 CHANGES
+- Overhaul Crash Generator version detection logic, can be modified by game version without recompilation.
+- Now a fully native-compiled application, no longer using Python with PyInstaller.
+- Changed button and tab colors to "Pip-Boy green".
+- 
+
 ### 8.1.1 CHANGES
 - Optimize the Form-ID database lookup code.
 - Fix database connections not being properly closed on application exit, which caused .db-wal and .db-shm files to persist.

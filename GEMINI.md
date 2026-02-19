@@ -19,7 +19,7 @@ uv run python CLASSIC_ScanLogs.py   # Run CLI crash log scanner
 ```powershell
 cargo build --workspace --manifest-path ClassicLib-rs/Cargo.toml              # Build all Rust crates
 cargo build --workspace --release --manifest-path ClassicLib-rs/Cargo.toml    # Release build
-cargo build -p classic-gui --manifest-path ClassicLib-rs/Cargo.toml           # Build only the Slint GUI
+cargo build -p classic-tui --manifest-path ClassicLib-rs/Cargo.toml           # Build only the Rust TUI
 ```
 
 ### Rust Python Bindings (PyO3 via maturin)
@@ -161,7 +161,7 @@ The Rust workspace under `ClassicLib-rs/` follows a strict three-layer separatio
    - `classic-cli`: C++ CLI scanner built with CMake + vcpkg (fmt, CLI11, Catch2)
 
 4. **UI Applications** (`ClassicLib-rs/ui-applications/`)
-   - `classic-gui`: Pure Rust GUI using Slint framework (v9.0.0)
+   - `classic-tui`: Pure Rust terminal UI using Ratatui
 
 ### Python Library (`ClassicLib/`)
 

@@ -13,6 +13,7 @@
 #include <QSpacerItem>
 #include <QSplitter>
 #include <QThread>
+#include <QTimer>
 #include <filesystem>
 #include <vector>
 
@@ -45,6 +46,7 @@
 #include <QDateTime>
 #include <QDesktopServices>
 #include <QGroupBox>
+#include <QTabBar>
 #include <QUrl>
 
 namespace fs = std::filesystem;
@@ -258,6 +260,7 @@ MainWindow::MainWindow(QWidget* parent)
     m_resultsController = new ResultsController(
         m_signalHub, m_tabWidget, m_reportList,
         m_markdownViewer, m_reportMetadata, this);
+    m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
 
     connectSignals();
 
@@ -266,6 +269,11 @@ MainWindow::MainWindow(QWidget* parent)
 
     // Check if first-run path detection is needed
     checkFirstRunPaths();
+
+    // Startup update check (silent unless update/error), matching PySide6 behavior.
+    if (m_updateCheckOnStartup) {
+        QTimer::singleShot(0, this, [this]() { checkForUpdates(false); });
+    }
 }
 
 MainWindow::~MainWindow()
@@ -298,6 +306,10 @@ void MainWindow::setupUi()
 
     // Central tab widget
     m_tabWidget = new QTabWidget(this);
+    auto* tabBar = m_tabWidget->tabBar();
+    tabBar->setElideMode(Qt::ElideRight);
+    tabBar->setExpanding(true);
+    tabBar->setUsesScrollButtons(false);
     setCentralWidget(m_tabWidget);
 
     // Progress bar as unified status display (text renders on top of fill)
@@ -741,6 +753,9 @@ void MainWindow::connectSignals()
 
 void MainWindow::loadSettings()
 {
+    m_updateCheckOnStartup = true;
+    m_autoSwitchToResultsAfterScan = true;
+
     m_dataRoot = findDataRoot();
     if (m_dataRoot.isEmpty()) {
         m_dataDir = QString();
@@ -775,6 +790,19 @@ void MainWindow::loadSettings()
             *ops, "CLASSIC_Settings.Custom Scan Folder", "");
         if (!custom.empty()) {
             m_editCustomFolder->setText(classic::toQString(custom));
+        }
+
+        auto getBool = [&](const char* key, bool fallback) -> bool {
+            auto value = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            if (value.value_type == "bool") {
+                return value.value == "true";
+            }
+            return fallback;
+        };
+        m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
+        m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
+        if (m_resultsController) {
+            m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
         }
 
         // Update backup controller with the game root from settings.
@@ -1617,9 +1645,26 @@ void MainWindow::onOpenBackupsFolder() {
 
 void MainWindow::onCheckUpdates()
 {
-    m_btnCheckUpdates->setEnabled(false);
-    m_btnCheckUpdates->setText(QStringLiteral("CHECKING..."));
-    setStatusMessage(QStringLiteral("Checking for updates..."));
+    checkForUpdates(true);
+}
+
+void MainWindow::checkForUpdates(bool explicitCheck)
+{
+    if (m_threadManager->isRunning(QStringLiteral("updateCheck"))) {
+        if (explicitCheck) {
+            QMessageBox::information(
+                this,
+                QStringLiteral("Update Check"),
+                QStringLiteral("An update check is already in progress."));
+        }
+        return;
+    }
+
+    if (explicitCheck) {
+        m_btnCheckUpdates->setEnabled(false);
+        m_btnCheckUpdates->setText(QStringLiteral("CHECKING..."));
+        setStatusMessage(QStringLiteral("Checking for updates..."));
+    }
 
     // Create worker + thread for the background update check
     auto* thread = new QThread();
@@ -1627,10 +1672,12 @@ void MainWindow::onCheckUpdates()
 
     // Wire completion signal (queued connection across threads)
     connect(worker, &UpdateWorker::updateCheckCompleted, this,
-            [this](bool hasUpdate, const QString& latestVersion,
+            [this, explicitCheck](bool hasUpdate, const QString& latestVersion,
                    const QString& errorMessage) {
-                m_btnCheckUpdates->setEnabled(true);
-                m_btnCheckUpdates->setText(QStringLiteral("CHECK UPDATES"));
+                if (explicitCheck) {
+                    m_btnCheckUpdates->setEnabled(true);
+                    m_btnCheckUpdates->setText(QStringLiteral("CHECK UPDATES"));
+                }
 
                 if (!errorMessage.isEmpty()) {
                     setStatusMessage(QStringLiteral("Update check failed"));
@@ -1639,11 +1686,19 @@ void MainWindow::onCheckUpdates()
                 } else if (hasUpdate) {
                     setStatusMessage(
                         QStringLiteral("Update available: v") + latestVersion);
-                    QMessageBox::information(this, QStringLiteral("Update Available"),
+                    auto response = QMessageBox::question(
+                        this,
+                        QStringLiteral("Update Available"),
                         QStringLiteral("A new version is available: v%1\n\n"
-                                       "Visit the GitHub releases page to download.")
-                            .arg(latestVersion));
-                } else {
+                                       "Open the GitHub releases page now?")
+                            .arg(latestVersion),
+                        QMessageBox::Yes | QMessageBox::No,
+                        QMessageBox::Yes);
+                    if (response == QMessageBox::Yes) {
+                        QDesktopServices::openUrl(
+                            QUrl(QStringLiteral("https://github.com/evildarkarchon/CLASSIC-Fallout4/releases/latest")));
+                    }
+                } else if (explicitCheck) {
                     setStatusMessage(QStringLiteral("You are up to date"));
                     QMessageBox::information(this, QStringLiteral("Update Check"),
                         QStringLiteral("You are running the latest version."));

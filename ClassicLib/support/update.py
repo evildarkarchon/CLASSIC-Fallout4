@@ -145,17 +145,43 @@ class VersionChecker:
         return True
 
     @staticmethod
-    async def _parse_local_version() -> Version | None:
+    def _main_yaml_path_for_error() -> str:
+        """Return a best-effort path to CLASSIC Main.yaml for diagnostics."""
+        try:
+            from ClassicLib.support.resources import ResourceLoader
+
+            return str(ResourceLoader.get_data_directory() / "databases" / "CLASSIC Main.yaml")
+        except (ImportError, OSError, ValueError, TypeError):
+            return "CLASSIC Data/databases/CLASSIC Main.yaml"
+
+    @staticmethod
+    async def _parse_local_version() -> Version:
         classic_local_str: str | None = await yaml_settings_async(str, YAML.Main, "CLASSIC_Info.version")  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
         if not classic_local_str:
-            return None
+            main_yaml_path = VersionChecker._main_yaml_path_for_error()
+            raise UpdateCheckError(
+                "Fatal configuration error: missing 'CLASSIC_Info.version' in "
+                f"'{main_yaml_path}'. CLASSIC Main.yaml is the single source of truth for the app version."
+            )
 
         parts: list[str] = classic_local_str.rsplit(maxsplit=1)
         if not parts:
-            return None
+            main_yaml_path = VersionChecker._main_yaml_path_for_error()
+            raise UpdateCheckError(
+                "Fatal configuration error: malformed 'CLASSIC_Info.version' in "
+                f"'{main_yaml_path}'. Expected a value like 'CLASSIC v9.0.0'."
+            )
 
         parsed_version_str = parts[-1]
-        return try_parse_version(parsed_version_str) if parsed_version_str else None
+        parsed_version = try_parse_version(parsed_version_str) if parsed_version_str else None
+        if parsed_version is None:
+            main_yaml_path = VersionChecker._main_yaml_path_for_error()
+            raise UpdateCheckError(
+                "Fatal configuration error: unable to parse 'CLASSIC_Info.version' from "
+                f"'{main_yaml_path}'. Found '{classic_local_str}'."
+            )
+
+        return parsed_version
 
     async def _fetch_github_version(self) -> Version | None:
         """Fetch the latest stable GitHub version using Rust GithubClient.

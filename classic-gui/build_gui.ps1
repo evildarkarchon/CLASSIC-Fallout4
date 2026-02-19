@@ -16,6 +16,9 @@
 .PARAMETER Test
     Run CTest after building (if tests are available).
 
+.PARAMETER Debug
+    Build using a debug preset (build-debug directory).
+
 .PARAMETER Install
     Run cmake --install to create a deployable layout with windeployqt.
 
@@ -30,15 +33,17 @@
     .\build_gui.ps1
     .\build_gui.ps1 -Clean
     .\build_gui.ps1 -Test
+    .\build_gui.ps1 -Debug
+    .\build_gui.ps1 -Debug -Install
     .\build_gui.ps1 -Install
     .\build_gui.ps1 -Package
     .\build_gui.ps1 -Clean -Package
 #>
 
-[CmdletBinding()]
 param(
     [switch]$Clean,
     [switch]$Test,
+    [switch]$Debug,
     [switch]$Install,
     [switch]$Package,
     [string]$Preset = "default"
@@ -50,6 +55,24 @@ $ErrorActionPreference = "Stop"
 if ($Package) { $Install = $true }
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$effectivePreset = $Preset
+
+if ($Debug) {
+    switch ($Preset) {
+        "default" { $effectivePreset = "debug" }
+        "ci" { $effectivePreset = "ci-debug" }
+        "debug" { $effectivePreset = "debug" }
+        "ci-debug" { $effectivePreset = "ci-debug" }
+        default {
+            Write-Error "Debug mode supports -Preset default, ci, debug, or ci-debug. Received: '$Preset'."
+            exit 1
+        }
+    }
+}
+
+$isDebugPreset = $effectivePreset -in @("debug", "ci-debug")
+$buildDirName = if ($isDebugPreset) { "build-debug" } else { "build" }
+$buildDir = Join-Path $ScriptDir $buildDirName
 
 # ── Ensure VS Dev Shell environment (needed for Ninja + MSVC) ─────
 $clFound = Get-Command cl.exe -ErrorAction SilentlyContinue
@@ -78,8 +101,6 @@ if (-not $ninjaFound) {
 }
 
 # ── Step 1: Clean (optional) ─────────────────────────────────────
-$buildDir = Join-Path $ScriptDir "build"
-
 if ($Clean -and (Test-Path $buildDir)) {
     Write-Host "Cleaning build directory..." -ForegroundColor Yellow
     Remove-Item -Recurse -Force $buildDir
@@ -90,7 +111,7 @@ Write-Host "`n=== Configuring CMake (Ninja + Qt 6) ===" -ForegroundColor Cyan
 
 Push-Location $ScriptDir
 try {
-    $cmakeArgs = @("--preset", $Preset)
+    $cmakeArgs = @("--preset", $effectivePreset)
     Write-Host "cmake $($cmakeArgs -join ' ')" -ForegroundColor DarkGray
     & cmake @cmakeArgs
     if ($LASTEXITCODE -ne 0) {
@@ -101,7 +122,7 @@ try {
     # ── Step 3: CMake build ──────────────────────────────────────
     Write-Host "`n=== Building Qt 6 GUI (Corrosion handles Rust build) ===" -ForegroundColor Cyan
 
-    $buildArgs = @("--build", "build")
+    $buildArgs = @("--build", $buildDirName)
     Write-Host "cmake $($buildArgs -join ' ')" -ForegroundColor DarkGray
     & cmake @buildArgs
     if ($LASTEXITCODE -ne 0) {
@@ -111,7 +132,7 @@ try {
 
     Write-Host "`n=== Build complete ===" -ForegroundColor Green
 
-    $exePath = Join-Path $buildDir "ClassicGui.exe"
+    $exePath = Join-Path $buildDir "CLASSIC.exe"
     if (Test-Path $exePath) {
         Write-Host "Output: $exePath" -ForegroundColor Cyan
     }
@@ -119,7 +140,7 @@ try {
     # ── Step 4: Tests (optional) ─────────────────────────────────
     if ($Test) {
         Write-Host "`n=== Running CTest ===" -ForegroundColor Cyan
-        & ctest --test-dir build --output-on-failure
+        & ctest --test-dir $buildDirName --output-on-failure
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Tests failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
@@ -129,9 +150,10 @@ try {
 
     # ── Step 5: Install (optional) ───────────────────────────────
     if ($Install) {
-        $installDir = Join-Path $ScriptDir "install"
+        $installDirName = if ($isDebugPreset) { "install-debug" } else { "install" }
+        $installDir = Join-Path $ScriptDir $installDirName
         Write-Host "`n=== Installing to $installDir ===" -ForegroundColor Cyan
-        & cmake --install build --prefix $installDir
+        & cmake --install $buildDirName --prefix $installDir
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Install failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
@@ -141,13 +163,15 @@ try {
 
     # ── Step 6: Package (optional) ──────────────────────────────────
     if ($Package) {
+        $cpackConfig = Join-Path $buildDir "CPackConfig.cmake"
+        $packageDir = Join-Path $buildDir "packages"
         Write-Host "`n=== Packaging with CPack (ZIP) ===" -ForegroundColor Cyan
-        & cpack --config build/CPackConfig.cmake -B build/packages
+        & cpack --config $cpackConfig -B $packageDir
         if ($LASTEXITCODE -ne 0) {
             Write-Error "CPack failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
         }
-        $zipFile = Get-ChildItem -Path (Join-Path $buildDir "packages") -Filter "*.zip" |
+        $zipFile = Get-ChildItem -Path $packageDir -Filter "*.zip" |
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($zipFile) {
             Write-Host "Package: $($zipFile.FullName)" -ForegroundColor Green

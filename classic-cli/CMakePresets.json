@@ -13,6 +13,15 @@
           "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
         }
       }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug (vcpkg + Ninja)",
+      "inherits": "default",
+      "binaryDir": "${sourceDir}/build-debug",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     }
   ]
 }

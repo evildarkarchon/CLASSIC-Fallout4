@@ -13,16 +13,19 @@
 
 .EXAMPLE
     .\test_cli.ps1
+    .\test_cli.ps1 -BuildDir build-debug
     .\test_cli.ps1 -Verbose
 #>
 
 [CmdletBinding()]
-param()
+param(
+    [string]$BuildDir = "build"
+)
 
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ExePath = Join-Path $ScriptDir "build\classic-cli.exe"
+$ExePath = Join-Path $ScriptDir "$BuildDir\classic-cli.exe"
 $TestDataDir = Join-Path $ScriptDir "test_data"
 # Project root where "CLASSIC Data/" lives (needed for YAML config loading)
 $ProjectRoot = (Resolve-Path (Join-Path $ScriptDir "..")).Path

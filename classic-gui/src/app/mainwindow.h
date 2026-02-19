@@ -47,6 +47,7 @@ private:
     void restoreTabGeometry(int tabIndex);
     bool validateCustomScanFolder(const QString& path);
     QString readCrashLogsDir() const;
+    void checkForUpdates(bool explicitCheck);
 
 private slots:
     void onBrowseStaging();
@@ -105,6 +106,8 @@ private:
     // Data root paths
     QString m_dataRoot;
     QString m_dataDir;
+    bool m_updateCheckOnStartup = true;
+    bool m_autoSwitchToResultsAfterScan = true;
 
     // Per-tab window geometry
     int m_lastTabIndex = -1;

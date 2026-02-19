@@ -108,6 +108,11 @@ void ResultsController::setReportDirectories(const QStringList& dirPaths,
     refreshReports();
 }
 
+void ResultsController::setAutoSwitchToResults(bool enabled)
+{
+    m_autoSwitchToResults = enabled;
+}
+
 void ResultsController::refreshReports()
 {
     if (m_reportDirs.isEmpty()) {
@@ -220,8 +225,8 @@ void ResultsController::onScanCompleted()
     // Refresh the report list
     refreshReports();
 
-    // Auto-switch to Results tab
-    if (m_tabWidget) {
+    // Auto-switch to Results tab only when enabled in settings
+    if (m_autoSwitchToResults && m_tabWidget && m_tabWidget->count() > kResultsTabIndex) {
         m_tabWidget->setCurrentIndex(kResultsTabIndex);
     }
 }

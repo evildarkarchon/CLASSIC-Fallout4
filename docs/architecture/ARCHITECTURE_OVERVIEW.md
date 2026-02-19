@@ -590,8 +590,7 @@ CLASSIC-Fallout4/
 │   │
 │   └── ui-applications/        # Standalone apps
 │       ├── classic-cli/
-│       ├── classic-tui/
-│       └── classic-gui-slint/
+│       └── classic-tui/
 │
 ├── tests/                       # Test suite
 │   ├── conftest.py

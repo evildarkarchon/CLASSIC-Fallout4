@@ -167,23 +167,7 @@ Performance monitoring, debugging, and troubleshooting Rust acceleration.
 - Debugging techniques and tools
 - Performance profiling methods
 
-#### 10. [Slint GUI Development](development/slint_gui_development.md)
-Complete guide for developing the Slint-based Rust GUI.
-
-**Perfect for:**
-- Working on the Slint GUI application
-- Understanding dual event loop architecture
-- Using AsyncBridge for UI operations
-- Troubleshooting GUI-specific issues
-
-**Topics Covered:**
-- Dual event loop architecture (Slint + Tokio)
-- AsyncBridge API and patterns
-- Development guidelines and common patterns
-- Building and running the GUI
-- Troubleshooting GUI issues
-
-#### 11. [FCX Mode Read-Only Conversion](implementation/fcx_read_only_conversion.md)
+#### 10. [FCX Mode Read-Only Conversion](implementation/fcx_read_only_conversion.md)
 Implementation plan and documentation for converting FCX mode to read-only operation.
 
 **Perfect for:**
@@ -202,7 +186,7 @@ Implementation plan and documentation for converting FCX mode to read-only opera
 
 ### 📊 Strategic Documentation
 
-#### 12. [Rust Migration Plan](../RUST_MIGRATION_PLAN.md) - **COMPLETED ✅**
+#### 11. [Rust Migration Plan](../RUST_MIGRATION_PLAN.md) - **COMPLETED ✅**
 Complete strategic migration plan with final results and achievements.
 
 **Status:** PHASE 6 COMPLETE - All objectives exceeded
@@ -220,7 +204,7 @@ Complete strategic migration plan with final results and achievements.
 - Success metrics and final impact analysis
 - Lessons learned and future roadmap
 
-#### 13. [Project Integration Guide](../CLAUDE.md)
+#### 12. [Project Integration Guide](../CLAUDE.md)
 Updated project guide with comprehensive Rust acceleration information.
 
 **Enhanced with:**
@@ -233,7 +217,7 @@ Updated project guide with comprehensive Rust acceleration information.
 
 ### 🔧 Technical Reference
 
-#### 14. [Rust Architecture Overview](rust/rust_architecture.md)
+#### 13. [Rust Architecture Overview](rust/rust_architecture.md)
 Comprehensive overview of the Rust architecture, module structure, and integration patterns.
 
 **Topics Covered:**
@@ -243,7 +227,7 @@ Comprehensive overview of the Rust architecture, module structure, and integrati
 - Integration with Python components
 - Building and development workflows
 
-#### 15. [Native Async Pattern Guide](rust/rust_async_pattern.md)
+#### 14. [Native Async Pattern Guide](rust/rust_async_pattern.md)
 Detailed documentation of our native async solution that replaces PyO3-asyncio.
 
 **Topics Covered:**
@@ -254,7 +238,7 @@ Detailed documentation of our native async solution that replaces PyO3-asyncio.
 - Performance benchmarks and comparisons
 - Best practices and troubleshooting
 
-#### 16. [Detailed Module Documentation](rust/rust_modules_detailed.md)
+#### 15. [Detailed Module Documentation](rust/rust_modules_detailed.md)
 In-depth documentation for each Rust module with API references and examples.
 
 **Modules Documented:**
@@ -263,7 +247,7 @@ In-depth documentation for each Rust module with API references and examples.
 - ScanLog module (pattern matching, FormID analysis, 20-150x improvements)
 - Utils module (string processing, performance monitoring)
 
-#### 17. [Parser Module Deep Dive](rust/rust_parser_module.md)
+#### 16. [Parser Module Deep Dive](rust/rust_parser_module.md)
 Specialized documentation for the high-performance parser module.
 
 **Topics Covered:**
@@ -274,7 +258,7 @@ Specialized documentation for the high-performance parser module.
 
 ### 🔧 PyO3 0.27 Integration (Current)
 
-#### 18. [PyO3 0.27 Migration Guide](rust/PyO3-0.27-migration.md) - **MIGRATION COMPLETE ✅**
+#### 17. [PyO3 0.27 Migration Guide](rust/PyO3-0.27-migration.md) - **MIGRATION COMPLETE ✅**
 Comprehensive guide for PyO3 0.27 migration completed on September 27, 2025 and updated to 0.27 in January 2026.
 
 **Perfect for:**
@@ -299,7 +283,7 @@ Comprehensive guide for PyO3 0.27 migration completed on September 27, 2025 and 
 - ✅ Python API 100% backward compatible
 - ✅ No performance regressions
 
-#### 19. [PyO3 Quick Reference](rust/pyo3_quick_reference.md)
+#### 18. [PyO3 Quick Reference](rust/pyo3_quick_reference.md)
 Quick reference guide for common PyO3 patterns and idioms.
 
 **Perfect for:**

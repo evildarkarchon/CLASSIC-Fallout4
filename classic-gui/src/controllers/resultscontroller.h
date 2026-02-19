@@ -24,6 +24,7 @@ public:
 
     void setReportDirectories(const QStringList& dirPaths,
                               const QString& primaryDir = QString());
+    void setAutoSwitchToResults(bool enabled);
     void refreshReports();
 
 private slots:
@@ -47,5 +48,6 @@ private:
 
     QStringList m_reportDirs;
     QString m_primaryReportDir;
+    bool m_autoSwitchToResults = true;
     static constexpr int kResultsTabIndex = 3;
 };

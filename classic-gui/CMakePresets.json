@@ -12,12 +12,30 @@
             }
         },
         {
+            "name": "debug",
+            "displayName": "Debug (System Qt + Ninja)",
+            "inherits": "default",
+            "binaryDir": "${sourceDir}/build-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
             "name": "ci",
             "displayName": "CI (install-qt-action provides Qt)",
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "ci-debug",
+            "displayName": "CI Debug (install-qt-action provides Qt)",
+            "inherits": "ci",
+            "binaryDir": "${sourceDir}/build-debug",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         }
     ],
@@ -27,8 +45,16 @@
             "configurePreset": "default"
         },
         {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
             "name": "ci",
             "configurePreset": "ci"
+        },
+        {
+            "name": "ci-debug",
+            "configurePreset": "ci-debug"
         }
     ]
 }

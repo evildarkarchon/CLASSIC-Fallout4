@@ -13,6 +13,9 @@
 .PARAMETER Test
     Run CTest (Catch2 unit tests) and integration tests after building.
 
+.PARAMETER Debug
+    Build using the CMake debug preset (build-debug directory).
+
 .PARAMETER Install
     Run cmake --install to create a deployable layout.
 
@@ -24,14 +27,16 @@
     .\build_cli.ps1
     .\build_cli.ps1 -Clean
     .\build_cli.ps1 -Test
+    .\build_cli.ps1 -Debug
+    .\build_cli.ps1 -Debug -Install
     .\build_cli.ps1 -Clean -Test -Install
     .\build_cli.ps1 -Package
 #>
 
-[CmdletBinding()]
 param(
     [switch]$Clean,
     [switch]$Test,
+    [switch]$Debug,
     [switch]$Install,
     [switch]$Package
 )
@@ -70,7 +75,9 @@ if (-not $clFound) {
 }
 
 # ── Step 1: Clean (optional) ─────────────────────────────────────
-$buildDir = Join-Path $ScriptDir "build"
+$buildPreset = if ($Debug) { "debug" } else { "default" }
+$buildDirName = if ($Debug) { "build-debug" } else { "build" }
+$buildDir = Join-Path $ScriptDir $buildDirName
 
 if ($Clean -and (Test-Path $buildDir)) {
     Write-Host "Cleaning build directory..." -ForegroundColor Yellow
@@ -80,7 +87,7 @@ if ($Clean -and (Test-Path $buildDir)) {
 # ── Step 2: CMake configure ─────────────────────────────────────
 Write-Host "`n=== Configuring CMake (Ninja) ===" -ForegroundColor Cyan
 
-$cmakeArgs = @("--preset", "default")
+$cmakeArgs = @("--preset", $buildPreset)
 
 Push-Location $ScriptDir
 try {
@@ -96,7 +103,7 @@ try {
 
     # Corrosion builds the Rust crate with PROFILE release and compiles
     # the CXX bridge glue code, so a single cmake --build is all that's needed.
-    $buildArgs = @("--build", "build")
+    $buildArgs = @("--build", $buildDirName)
 
     Write-Host "cmake $($buildArgs -join ' ')" -ForegroundColor DarkGray
     & cmake @buildArgs
@@ -116,7 +123,7 @@ try {
     if ($Test) {
         # Catch2 unit tests via CTest
         Write-Host "`n=== Running Catch2 unit tests (CTest) ===" -ForegroundColor Cyan
-        & ctest --test-dir build --output-on-failure
+        & ctest --test-dir $buildDirName --output-on-failure
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Unit tests failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
@@ -127,7 +134,7 @@ try {
         $integrationScript = Join-Path $ScriptDir "test_cli.ps1"
         if (Test-Path $integrationScript) {
             Write-Host "`n=== Running integration tests ===" -ForegroundColor Cyan
-            & $integrationScript
+            & $integrationScript -BuildDir $buildDirName
             if ($LASTEXITCODE -ne 0) {
                 Write-Error "Integration tests failed with exit code $LASTEXITCODE"
                 exit $LASTEXITCODE
@@ -137,9 +144,10 @@ try {
 
     # ── Step 5: Install (optional) ───────────────────────────────
     if ($Install) {
-        $installDir = Join-Path $ScriptDir "install"
+        $installDirName = if ($Debug) { "install-debug" } else { "install" }
+        $installDir = Join-Path $ScriptDir $installDirName
         Write-Host "`n=== Installing to $installDir ===" -ForegroundColor Cyan
-        & cmake --install build --prefix $installDir
+        & cmake --install $buildDirName --prefix $installDir
         if ($LASTEXITCODE -ne 0) {
             Write-Error "Install failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
@@ -149,13 +157,15 @@ try {
 
     # ── Step 6: Package (optional) ──────────────────────────────────
     if ($Package) {
+        $cpackConfig = Join-Path $buildDir "CPackConfig.cmake"
+        $packageDir = Join-Path $buildDir "packages"
         Write-Host "`n=== Packaging with CPack (ZIP) ===" -ForegroundColor Cyan
-        & cpack --config build/CPackConfig.cmake -B build/packages
+        & cpack --config $cpackConfig -B $packageDir
         if ($LASTEXITCODE -ne 0) {
             Write-Error "CPack failed with exit code $LASTEXITCODE"
             exit $LASTEXITCODE
         }
-        $zipFile = Get-ChildItem -Path (Join-Path $buildDir "packages") -Filter "*.zip" |
+        $zipFile = Get-ChildItem -Path $packageDir -Filter "*.zip" |
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($zipFile) {
             Write-Host "Package: $($zipFile.FullName)" -ForegroundColor Green

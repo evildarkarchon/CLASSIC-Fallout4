@@ -162,14 +162,12 @@ class TestCheckCrashgenVersion:
     @pytest.mark.integration
     def test_newer_than_known_with_synthetic_registry_data(self, monkeypatch: pytest.MonkeyPatch):
         """Test NEWER_THAN_KNOWN using synthetic crashgen config data."""
-        stub_registry = _StubRegistry(
-            {
-                "TEST_GAME": (
-                    CrashgenConfig(version="1.7.1", name="Test Crash Logger"),
-                    CrashgenConfig(version="1.0.0", name="Test Addictol"),
-                )
-            }
-        )
+        stub_registry = _StubRegistry({
+            "TEST_GAME": (
+                CrashgenConfig(version="1.7.1", name="Test Crash Logger"),
+                CrashgenConfig(version="1.0.0", name="Test Addictol"),
+            )
+        })
         monkeypatch.setattr("ClassicLib.support.versions.core.get_version_registry", lambda: stub_registry)
 
         result = check_crashgen_version(Version("1.28.6"), "TEST_GAME")
@@ -179,14 +177,12 @@ class TestCheckCrashgenVersion:
     @pytest.mark.integration
     def test_valid_version_with_synthetic_registry_data(self, monkeypatch: pytest.MonkeyPatch):
         """Test VALID result using synthetic crashgen config data."""
-        stub_registry = _StubRegistry(
-            {
-                "TEST_GAME": (
-                    CrashgenConfig(version="1.7.1", name="Test Crash Logger"),
-                    CrashgenConfig(version="1.0.0", name="Test Addictol"),
-                )
-            }
-        )
+        stub_registry = _StubRegistry({
+            "TEST_GAME": (
+                CrashgenConfig(version="1.7.1", name="Test Crash Logger"),
+                CrashgenConfig(version="1.0.0", name="Test Addictol"),
+            )
+        })
         monkeypatch.setattr("ClassicLib.support.versions.core.get_version_registry", lambda: stub_registry)
 
         result = check_crashgen_version(Version("1.7.1"), "TEST_GAME")
@@ -924,4 +920,3 @@ class TestMatchedConfigDisplayName:
         assert result.matched_config is not None
         # Message should use "Buffout 4" (name matches log output)
         assert "Buffout 4" in result.message
-
