@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 
     from ClassicLib.scanning.logs.executor import ScanLogsExecutor as ScanLogsExecutorType
 
-from ClassicLib.core.constants import YAML, get_all_db_paths
+from ClassicLib.core.constants import YAML, get_all_db_paths, get_all_db_paths_async
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.io.yaml import classic_settings, yaml_settings
@@ -291,7 +291,7 @@ class ScanLogsExecutor:
 
             # Attach database pool for FormID value lookups if available
             if self.config.formid_db_exists and self.config.show_formid_values:
-                db_paths_str = [str(p) for p in get_all_db_paths() if p.is_file()]
+                db_paths_str = [str(p) for p in await get_all_db_paths_async() if p.is_file()]
                 if db_paths_str:
                     game = GlobalRegistry.get_game()
                     self._rust_orchestrator.attach_database(db_paths_str, game)

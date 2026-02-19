@@ -12,6 +12,7 @@ import os
 from unittest.mock import MagicMock, patch
 
 import pytest
+from PySide6.QtCore import Qt
 
 # Skip Qt-dependent tests in parallel workers
 pytestmark = pytest.mark.skipif(
@@ -144,6 +145,10 @@ class TestScanController:
         mock_qthread.assert_called_once()
         mock_worker.assert_called_once()
         mock_worker_instance.moveToThread.assert_called_once_with(mock_thread_instance)
+        mock_worker_instance.error_occurred.connect.assert_called_once_with(
+            controller._show_scan_error_dialog,
+            Qt.ConnectionType.QueuedConnection,
+        )
 
         # Verify thread manager interactions
         mock_context.thread_manager.register_thread.assert_called_once()
@@ -174,6 +179,10 @@ class TestScanController:
         mock_qthread.assert_called_once()
         mock_worker.assert_called_once()
         mock_worker_instance.moveToThread.assert_called_once_with(mock_thread_instance)
+        mock_worker_instance.error_occurred.connect.assert_called_once_with(
+            controller._show_scan_error_dialog,
+            Qt.ConnectionType.QueuedConnection,
+        )
 
         # Verify thread manager interactions
         mock_context.thread_manager.register_thread.assert_called_once()

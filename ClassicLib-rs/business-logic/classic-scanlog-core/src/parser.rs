@@ -93,6 +93,14 @@ pub struct LogParser {
 }
 
 impl LogParser {
+    /// Check whether a marker refers to the Compatibility section boundary.
+    ///
+    /// Some callers use a tab-prefixed marker (`"\t[Compatibility]"`), so we
+    /// normalize by trimming leading whitespace before comparison.
+    fn is_compatibility_marker(marker: &str) -> bool {
+        marker.trim_start() == "[Compatibility]"
+    }
+
     /// Creates a new high-performance log parser with optional custom segment boundaries.
     ///
     /// This function initializes a log parser with pre-compiled regex patterns for common
@@ -344,15 +352,19 @@ impl LogParser {
 
             let (start_boundary, end_boundary) = &self.segment_boundaries[current_boundary_idx];
 
-            // Use SIMD-optimized string search when possible
-            if self.fast_contains(
-                line,
-                if collecting {
-                    end_boundary
-                } else {
-                    start_boundary
-                },
-            ) {
+            // Use SIMD-optimized string search when possible.
+            // Addictol logs may start with [Patches] and omit [Compatibility].
+            let boundary_matched = if collecting {
+                self.fast_contains(line, end_boundary)
+            } else if current_boundary_idx == 0
+                && Self::is_compatibility_marker(start_boundary)
+            {
+                self.fast_contains(line, start_boundary) || self.fast_contains(line, "[Patches]")
+            } else {
+                self.fast_contains(line, start_boundary)
+            };
+
+            if boundary_matched {
                 if collecting {
                     // End of current segment
                     if !current_segment.is_empty() {
@@ -605,6 +617,16 @@ impl LogParser {
         let start_pos = lines
             .par_iter()
             .position_any(|line| self.fast_starts_with(line, start_marker))
+            .or_else(|| {
+                // Addictol logs may omit [Compatibility] and begin settings at [Patches].
+                if Self::is_compatibility_marker(start_marker) {
+                    lines
+                        .par_iter()
+                        .position_any(|line| line.trim_start().starts_with("[Patches]"))
+                } else {
+                    None
+                }
+            })
             .map(|pos| pos + 1)?; // Skip the marker line
 
         // Find end position using prefix matching
@@ -1454,6 +1476,29 @@ mod tests {
         ]
     }
 
+    fn create_sample_log_patches_only() -> Vec<Arc<str>> {
+        vec![
+            Arc::from("Unhandled exception at 0x7FF123456789| ACCESS_VIOLATION"),
+            Arc::from("Fallout 4 v1.11.191"),
+            Arc::from("Addictol v1.0.0 Feb 16 2026 08:02:06"),
+            Arc::from("[Patches]"),
+            Arc::from("bThreads: true"),
+            Arc::from("SYSTEM SPECS:"),
+            Arc::from("CPU: AMD Ryzen 7 5800XT"),
+            Arc::from("PROBABLE CALL STACK:"),
+            Arc::from("[0] 0x7FF7380973B8 Fallout4.exe+21773B8"),
+            Arc::from("MODULES:"),
+            Arc::from("Fallout4.exe v1.11.191"),
+            Arc::from("PLUGINS:"),
+            Arc::from("[00] Fallout4.esm"),
+            Arc::from("REGISTERS:"),
+            Arc::from("RAX: 0x0000000000000000"),
+            Arc::from("STACK:"),
+            Arc::from("0x000000000000: 0x12345678"),
+            Arc::from("EOF"),
+        ]
+    }
+
     #[test]
     fn test_parser_creation() {
         let parser = LogParser::new(None).unwrap();
@@ -1469,6 +1514,15 @@ mod tests {
     }
 
     #[test]
+    fn test_segment_parsing_with_patches_first_boundary() {
+        let parser = LogParser::new(None).unwrap();
+        let log_lines = create_sample_log_patches_only();
+        let segments = parser.parse_segments(&log_lines);
+        assert!(!segments.is_empty());
+        assert!(segments[0].iter().any(|line| line.contains("bThreads")));
+    }
+
+    #[test]
     fn test_section_extraction() {
         let parser = LogParser::new(None).unwrap();
         let log_lines_arc = create_sample_log();
@@ -1478,6 +1532,18 @@ mod tests {
         assert!(section.is_some());
         let section = section.unwrap();
         assert!(section.iter().any(|line| line.contains("CPU")));
+    }
+
+    #[test]
+    fn test_extract_section_compatibility_falls_back_to_patches() {
+        let parser = LogParser::new(None).unwrap();
+        let log_lines_arc = create_sample_log_patches_only();
+        let log_lines: Vec<String> = log_lines_arc.iter().map(|s| s.to_string()).collect();
+
+        let section = parser.extract_section(&log_lines, "[Compatibility]", "SYSTEM SPECS:");
+        assert!(section.is_some());
+        let section = section.unwrap();
+        assert!(section.iter().any(|line| line.contains("bThreads")));
     }
 
     #[test]

@@ -311,6 +311,61 @@ class TestScanLogsExecutorWarmUp:
 
 
 @pytest.mark.unit
+@pytest.mark.asyncio
+class TestScanLogsExecutorAsyncDbPaths:
+    """Test suite for async-safe database path resolution."""
+
+    async def test_initialize_uses_async_db_paths_in_async_context(self) -> None:
+        """Test _initialize_scan_resources uses async DB path helper.
+
+        Regression test for RuntimeError:
+        "yaml_settings() called from async context. Use 'await yaml_settings_async()' instead."
+        """
+        mock_yamldata = MagicMock()
+        mock_rust_config = MagicMock()
+        mock_yamldata.to_rust_config.return_value = mock_rust_config
+        mock_orchestrator = MagicMock()
+
+        sync_call_count = 0
+
+        def sync_db_paths_side_effect() -> list[Path]:
+            nonlocal sync_call_count
+            sync_call_count += 1
+            # First call is allowed during __init__ in sync-safe contexts.
+            if sync_call_count == 1:
+                return []
+            msg = "sync get_all_db_paths() called during async initialization"
+            raise RuntimeError(msg)
+
+        with (
+            patch("ClassicLib.scanning.logs.executor.crashlogs_get_files", return_value=[]),
+            patch("ClassicLib.scanning.logs.executor.yaml_settings", return_value=None),
+            patch("ClassicLib.scanning.logs.executor.get_all_db_paths", side_effect=sync_db_paths_side_effect),
+            patch(
+                "ClassicLib.scanning.logs.executor.get_all_db_paths_async",
+                new_callable=AsyncMock,
+                return_value=[],
+            ) as mock_get_all_db_paths_async,
+            patch(
+                "ClassicLib.scanning.logs.executor.ClassicScanLogsInfo.create_async",
+                new_callable=AsyncMock,
+                return_value=mock_yamldata,
+            ),
+            patch("ClassicLib.support.game_path.game_path_find_async", new_callable=AsyncMock),
+            patch("ClassicLib.support.game_path.game_generate_paths_async", new_callable=AsyncMock),
+            patch("ClassicLib.scanning.logs.executor.Orchestrator", return_value=mock_orchestrator),
+        ):
+            executor = ScanLogsExecutor(config=ScanConfig(show_formid_values=True))
+            executor.config.formid_db_exists = True
+
+            await executor._initialize_scan_resources()
+
+            # Sync helper should only be used once during __init__ setup.
+            assert sync_call_count == 1
+            mock_get_all_db_paths_async.assert_awaited_once()
+
+
+@pytest.mark.unit
 class TestScanLogsExecutorStatistics:
     """Test suite for statistics tracking."""
 

@@ -46,6 +46,76 @@ function Get-RustModuleInfo {
     return $null
 }
 
+function Test-IsTransientLinkerLock {
+    param (
+        [string]$Text
+    )
+
+    return ($Text -match "LNK1105" -and $Text -match "error code 1224") -or
+           $Text -match "cannot close file '.*lnk.*\.tmp'"
+}
+
+function Invoke-MaturinBuildWithRetry {
+    param (
+        [string]$WheelName,
+        [int]$MaxAttempts = 3
+    )
+
+    $tempRoot = Join-Path $PWD.Path ".maturin-temp"
+    if (-not (Test-Path $tempRoot)) {
+        New-Item -ItemType Directory -Path $tempRoot | Out-Null
+    }
+
+    $originalTemp = $env:TEMP
+    $originalTmp = $env:TMP
+
+    try {
+        for ($attempt = 1; $attempt -le $MaxAttempts; $attempt++) {
+            $attemptTemp = Join-Path $tempRoot ("{0}-{1}" -f $WheelName, $attempt)
+            New-Item -ItemType Directory -Path $attemptTemp -Force | Out-Null
+            $env:TEMP = $attemptTemp
+            $env:TMP = $attemptTemp
+
+            $previousNativeCommandPreference = $PSNativeCommandUseErrorActionPreference
+            $outputText = @()
+            try {
+                # Stream output directly so Ctrl+C is handled like a normal foreground command.
+                $PSNativeCommandUseErrorActionPreference = $false
+                & maturin build --release --out dist 2>&1 | Tee-Object -Variable outputText | ForEach-Object { Write-Host $_ }
+                $exitCode = $LASTEXITCODE
+            }
+            finally {
+                $PSNativeCommandUseErrorActionPreference = $previousNativeCommandPreference
+            }
+
+            if ($exitCode -in @(-1073741510, 3221225786)) {
+                throw [System.OperationCanceledException]::new("Build interrupted by Ctrl+C.")
+            }
+
+            $outputText = @($outputText | ForEach-Object { "$_" })
+
+            if ($exitCode -eq 0) {
+                return $true
+            }
+
+            $combinedOutput = ($outputText | Out-String)
+            if ((-not (Test-IsTransientLinkerLock -Text $combinedOutput)) -or $attempt -eq $MaxAttempts) {
+                return $false
+            }
+
+            $sleepSeconds = [int][Math]::Pow(2, $attempt)
+            Write-Warning "Detected transient Windows linker file lock while building $WheelName (attempt $attempt/$MaxAttempts). Retrying in $sleepSeconds second(s)..."
+            Start-Sleep -Seconds $sleepSeconds
+        }
+    }
+    finally {
+        $env:TEMP = $originalTemp
+        $env:TMP = $originalTmp
+    }
+
+    return $false
+}
+
 # Discover modules
 Write-Host "🔍 Discovering Rust Python modules..." -ForegroundColor Cyan
 $RustModules = @()
@@ -135,8 +205,8 @@ foreach ($module in $RustModules) {
     Push-Location $module.Dir
 
     # Build wheel
-    maturin build --release --out dist
-    if ($LASTEXITCODE -ne 0) {
+    $buildOk = Invoke-MaturinBuildWithRetry -WheelName $module.WheelName
+    if (-not $buildOk) {
         Pop-Location
         Write-Error "Failed to build $($module.WheelName)!"
         exit 1

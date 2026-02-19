@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QMutex, QThread, Slot
+from PySide6.QtCore import QObject, QMutex, QThread, Qt, Slot
 from PySide6.QtWidgets import QMessageBox
 
 from ClassicLib.core.constants import YAML
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from ClassicLib.Interface.shared.context import FeatureContext
 
 
-class ScanController:
+class ScanController(QObject):
     """Controller for scan operations (crash logs and game files).
 
     This controller manages scan-related operations including:
@@ -62,6 +62,7 @@ class ScanController:
                 signal_hub, and ui_widgets.
 
         """
+        super().__init__()
         self._ctx = context
         self._scan_mutex = QMutex()
         self._running_scans: set[str] = set()
@@ -122,7 +123,10 @@ class ScanController:
             return
 
         # Connect signals
-        self._crash_logs_worker.error_occurred.connect(self._show_scan_error_dialog)
+        self._crash_logs_worker.error_occurred.connect(
+            self._show_scan_error_dialog,
+            Qt.ConnectionType.QueuedConnection,
+        )
         self._crash_logs_thread.started.connect(self._crash_logs_worker.run)
         self._crash_logs_worker.finished.connect(self._crash_logs_thread.quit)
         self._crash_logs_worker.finished.connect(self._crash_logs_worker.deleteLater)
@@ -188,7 +192,10 @@ class ScanController:
             return
 
         # Connect signals
-        self._game_files_worker.error_occurred.connect(self._show_scan_error_dialog)
+        self._game_files_worker.error_occurred.connect(
+            self._show_scan_error_dialog,
+            Qt.ConnectionType.QueuedConnection,
+        )
         self._game_files_thread.started.connect(self._game_files_worker.run)
         self._game_files_worker.scan_finished.connect(self._game_files_thread.quit)
         self._game_files_worker.scan_finished.connect(self._game_files_worker.deleteLater)

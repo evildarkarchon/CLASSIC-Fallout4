@@ -5,6 +5,7 @@
 - Now a fully native-compiled application, no longer using Python with PyInstaller.
 - Changed button and tab colors to "Pip-Boy green".
 - Removed hardcoded fallbacks for the program's version. If it can't detect the version of the program, it will now display an error message.
+- Add architecture to scan Addictol crash logs.
 - More stuff I didn't write down.
 
 ### 8.1.1 CHANGES
