@@ -215,7 +215,7 @@ pub fn build_analysis_config_from_yaml(
         game_version_new: yaml.game_version_new.clone(),
         xse_acronym: yaml.xse_acronym.clone(),
         game_root_name: yaml.get_game_root_name(vr_mode).to_string(),
-        classic_version: format!("CLASSIC v{}", yaml.classic_version),
+        classic_version: yaml.classic_version.clone(),
         ignore_plugins: yaml.game_ignore_plugins.clone(),
         ignore_records: yaml.game_ignore_records.clone(),
         ignore_list: yaml.ignore_list.clone(),
@@ -1844,5 +1844,62 @@ impl OrchestratorCore {
         // 2. Suspect scanner must be available
         // Database pool is optional (degrades gracefully)
         self.plugin_analyzer.is_some() && self.suspect_scanner.is_some()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_yaml_data(classic_version: &str) -> classic_config_core::YamlDataCore {
+        classic_config_core::YamlDataCore {
+            classic_game_hints: Vec::new(),
+            classic_records_list: Vec::new(),
+            classic_version: classic_version.to_string(),
+            classic_version_date: String::new(),
+            crashgen_name: "Buffout 4".to_string(),
+            crashgen_name_vr: "Buffout 4 VR".to_string(),
+            crashgen_latest_og: String::new(),
+            crashgen_latest_vr: String::new(),
+            crashgen_ignore: Vec::new(),
+            crashgen_ignore_vr: Vec::new(),
+            warn_noplugins: String::new(),
+            warn_outdated: String::new(),
+            xse_acronym: "F4SE".to_string(),
+            game_ignore_plugins: Vec::new(),
+            game_ignore_records: Vec::new(),
+            ignore_list: Vec::new(),
+            suspects_error_list: IndexMap::new(),
+            suspects_stack_list: IndexMap::new(),
+            game_mods_conf: IndexMap::new(),
+            game_mods_core: IndexMap::new(),
+            game_mods_core_folon: IndexMap::new(),
+            game_mods_freq: IndexMap::new(),
+            game_mods_opc2: IndexMap::new(),
+            game_mods_solu: IndexMap::new(),
+            autoscan_text: String::new(),
+            game_version: String::new(),
+            game_version_new: String::new(),
+            game_version_vr: String::new(),
+            game_root_name: "Fallout4".to_string(),
+            game_root_name_vr: "Fallout4VR".to_string(),
+        }
+    }
+
+    #[test]
+    fn build_analysis_config_does_not_double_prefix_classic_version() {
+        let yaml = make_yaml_data("CLASSIC v9.0.0");
+
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            false,
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(config.classic_version, "CLASSIC v9.0.0");
     }
 }

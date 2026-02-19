@@ -177,8 +177,7 @@ class VersionChecker:
         if parsed_version is None:
             main_yaml_path = VersionChecker._main_yaml_path_for_error()
             raise UpdateCheckError(
-                "Fatal configuration error: unable to parse 'CLASSIC_Info.version' from "
-                f"'{main_yaml_path}'. Found '{classic_local_str}'."
+                f"Fatal configuration error: unable to parse 'CLASSIC_Info.version' from '{main_yaml_path}'. Found '{classic_local_str}'."
             )
 
         return parsed_version
