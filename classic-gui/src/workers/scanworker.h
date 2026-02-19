@@ -18,7 +18,9 @@ public slots:
                 bool vrMode,
                 bool showFormIdValues,
                 bool fcxMode,
-                bool simplifyLogs);
+                bool simplifyLogs,
+                bool moveUnsolvedLogs,
+                int maxConcurrentScans);
     void requestCancel();
 
 signals:

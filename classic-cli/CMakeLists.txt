@@ -52,6 +52,10 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         perf.rs
 )
 
+target_include_directories(classic_cxx_bridge PUBLIC
+    "${CMAKE_SOURCE_DIR}/../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include"
+)
+
 # ── CLI executable ──────────────────────────────────────────────────
 add_executable(classic-cli
     src/main.cpp

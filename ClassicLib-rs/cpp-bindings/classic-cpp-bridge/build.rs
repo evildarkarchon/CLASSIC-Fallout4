@@ -15,6 +15,7 @@ fn main() {
         "src/perf.rs",
         "src/markdown.rs",
     ])
+    .include("include")
     .std("c++17")
     .compile("classic-cpp-bridge");
 

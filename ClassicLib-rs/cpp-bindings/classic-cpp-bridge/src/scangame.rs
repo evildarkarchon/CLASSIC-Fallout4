@@ -11,6 +11,7 @@ use std::path::PathBuf;
 fn run_setup_checks(
     game_exe_path: &str,
     _game_root: &str,
+    docs_path: &str,
     game_name: &str,
 ) -> ffi::SetupCheckResult {
     let integrity = IntegrityConfig::new(
@@ -21,7 +22,11 @@ fn run_setup_checks(
     let config = SetupCheckConfig {
         integrity,
         game_name: game_name.to_string(),
-        docs_path: None,
+        docs_path: if docs_path.is_empty() {
+            None
+        } else {
+            Some(docs_path.to_string())
+        },
         xse_hashes: Vec::new(),
     };
     let results = run_combined_checks(&config);
@@ -67,6 +72,7 @@ mod ffi {
         fn run_setup_checks(
             game_exe_path: &str,
             game_root: &str,
+            docs_path: &str,
             game_name: &str,
         ) -> SetupCheckResult;
 
@@ -80,7 +86,7 @@ mod tests {
 
     #[test]
     fn test_run_setup_checks_nonexistent() {
-        let result = run_setup_checks("nonexistent_exe.exe", "nonexistent_root", "Fallout4");
+        let result = run_setup_checks("nonexistent_exe.exe", "nonexistent_root", "", "Fallout4");
         // Should complete without panic
         let _ = result.combined_output;
     }

@@ -19,6 +19,7 @@ pulldown-cmark = { workspace = true, features = ["html"] }
 
 # Async runtime (ONE RUNTIME RULE)
 tokio = { workspace = true }
+futures = { workspace = true }
 
 # Data structures
 indexmap = { workspace = true }

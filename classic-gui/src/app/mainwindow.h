@@ -108,9 +108,12 @@ private:
     QString m_dataDir;
     bool m_updateCheckOnStartup = true;
     bool m_autoSwitchToResultsAfterScan = true;
+    bool m_scanVrMode = false;
     bool m_showFormIdValues = false;
     bool m_fcxMode = false;
     bool m_simplifyLogs = false;
+    bool m_moveUnsolvedLogs = false;
+    int m_maxConcurrentScans = 0;
 
     // Per-tab window geometry
     int m_lastTabIndex = -1;

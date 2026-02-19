@@ -57,6 +57,10 @@ corrosion_add_cxxbridge(classic_cxx_bridge
         markdown.rs
 )
 
+target_include_directories(classic_cxx_bridge PUBLIC
+    "${CMAKE_SOURCE_DIR}/../ClassicLib-rs/cpp-bindings/classic-cpp-bridge/include"
+)
+
 add_subdirectory(src)
 
 # Enable CTest/BUILD_TESTING and register unit tests when enabled.

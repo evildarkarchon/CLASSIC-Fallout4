@@ -8,8 +8,9 @@ GameFilesWorker::GameFilesWorker(QObject* parent)
     : QObject(parent) {}
 
 void GameFilesWorker::doScan(const QString& gameExePath,
-                              const QString& gameRoot,
-                              const QString& gameName) {
+                             const QString& gameRoot,
+                             const QString& docsPath,
+                             const QString& gameName) {
     // Emit indeterminate progress -- the Rust side does not provide
     // granular progress callbacks for setup checks.
     emit progress(-1.0f, QStringLiteral("Running game file setup checks..."));
@@ -18,6 +19,7 @@ void GameFilesWorker::doScan(const QString& gameExePath,
         auto result = classic::scangame::run_setup_checks(
             classic::toRustString(gameExePath),
             classic::toRustString(gameRoot),
+            classic::toRustString(docsPath),
             classic::toRustString(gameName)
         );
 

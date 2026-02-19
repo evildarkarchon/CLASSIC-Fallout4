@@ -22,6 +22,8 @@ public:
                    bool showFormIdValues,
                    bool fcxMode,
                    bool simplifyLogs,
+                   bool moveUnsolvedLogs,
+                   int maxConcurrentScans,
                    const QString& customFolder);
     void cancelScan();
     bool isScanning() const;

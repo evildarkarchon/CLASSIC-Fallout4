@@ -22,6 +22,7 @@ public slots:
     /// signals back to the controller on the main thread.
     void doScan(const QString& gameExePath,
                 const QString& gameRoot,
+                const QString& docsPath,
                 const QString& gameName);
 
 signals:

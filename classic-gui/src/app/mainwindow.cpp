@@ -759,9 +759,12 @@ void MainWindow::loadSettings()
 {
     m_updateCheckOnStartup = true;
     m_autoSwitchToResultsAfterScan = true;
+    m_scanVrMode = false;
     m_showFormIdValues = false;
     m_fcxMode = false;
     m_simplifyLogs = false;
+    m_moveUnsolvedLogs = false;
+    m_maxConcurrentScans = 0;
 
     m_dataRoot = findDataRoot();
     if (m_dataRoot.isEmpty()) {
@@ -806,11 +809,30 @@ void MainWindow::loadSettings()
             }
             return fallback;
         };
+        auto getInt = [&](const char* key, int fallback) -> int {
+            auto value = classic::yaml::yaml_ops_get_setting_value(*ops, key);
+            if (value.value_type == "integer") {
+                bool ok = false;
+                const int parsed = QString::fromStdString(std::string(value.value)).toInt(&ok);
+                if (ok) {
+                    return parsed;
+                }
+            }
+            return fallback;
+        };
+
         m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
         m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
+
+        auto gameVersion = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Game Version", "auto");
+        m_scanVrMode = (gameVersion == "VR");
+
         m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
         m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
         m_simplifyLogs = getBool("CLASSIC_Settings.Simplify Logs", false);
+        m_moveUnsolvedLogs = getBool("CLASSIC_Settings.Move Unsolved Logs", false);
+        m_maxConcurrentScans = qMax(0, getInt("CLASSIC_Settings.Max Concurrent Scans", 0));
         if (m_resultsController) {
             m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
         }
@@ -953,11 +975,6 @@ void MainWindow::checkFirstRunPaths()
             isVrMode = true;
         }
 
-        auto vrMode = classic::yaml::yaml_ops_get_setting_value(
-            *ops, "CLASSIC_Settings.VR Mode");
-        if (vrMode.value_type == "bool" && vrMode.value == "true") {
-            isVrMode = true;
-        }
     } catch (...) {
         // If settings can't be read, fall through to path detection
     }
@@ -1428,10 +1445,12 @@ void MainWindow::onScanCrashLogs()
         m_dataRoot,
         m_dataDir,
         QStringLiteral("Fallout4"),
-        false,  // vrMode
+        m_scanVrMode,
         m_showFormIdValues,
         m_fcxMode,
         m_simplifyLogs,
+        m_moveUnsolvedLogs,
+        m_maxConcurrentScans,
         m_editCustomFolder->text()
     );
 }
@@ -1448,6 +1467,7 @@ void MainWindow::onScanGameFiles()
     // Read game paths from YAML settings for the scan
     QString gameExePath;
     QString gameRoot;
+    QString docsPath;
     QString gameName = QStringLiteral("Fallout4");
 
     QString settingsPath = settingsFilePath(m_dataRoot);
@@ -1466,6 +1486,12 @@ void MainWindow::onScanGameFiles()
             *ops, "CLASSIC_Settings.Game Folder Path", "");
         if (!root.empty()) {
             gameRoot = classic::toQString(root);
+        }
+
+        auto docs = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.INI Folder Path", "");
+        if (!docs.empty()) {
+            docsPath = classic::toQString(docs);
         }
     } catch (const std::exception&) {
         // Fall through -- paths may be empty
@@ -1490,7 +1516,7 @@ void MainWindow::onScanGameFiles()
     // Update backup controller with the game root (may have changed)
     m_backupController->setGameRoot(gameRoot);
 
-    m_gameFilesController->startScan(gameExePath, gameRoot, gameName);
+    m_gameFilesController->startScan(gameExePath, gameRoot, docsPath, gameName);
 }
 
 void MainWindow::onExit()

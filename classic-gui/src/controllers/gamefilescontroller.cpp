@@ -13,8 +13,9 @@ GameFilesController::GameFilesController(SignalHub* signalHub,
     , m_threadManager(threadManager) {}
 
 void GameFilesController::startScan(const QString& gameExePath,
-                                     const QString& gameRoot,
-                                     const QString& gameName) {
+                                    const QString& gameRoot,
+                                    const QString& docsPath,
+                                    const QString& gameName) {
     if (m_scanning) {
         return;
     }
@@ -42,8 +43,8 @@ void GameFilesController::startScan(const QString& gameExePath,
 
     // Start the worker thread; invoke doScan once the thread is running
     connect(thread, &QThread::started, worker,
-            [worker, gameExePath, gameRoot, gameName]() {
-                worker->doScan(gameExePath, gameRoot, gameName);
+            [worker, gameExePath, gameRoot, docsPath, gameName]() {
+                worker->doScan(gameExePath, gameRoot, docsPath, gameName);
             });
 
     m_threadManager->startWorker(QStringLiteral("game_files_scan"), thread, worker);

@@ -24,6 +24,8 @@ void ScanController::startScan(const QString& yamlRoot,
                                 bool showFormIdValues,
                                 bool fcxMode,
                                 bool simplifyLogs,
+                                bool moveUnsolvedLogs,
+                                int maxConcurrentScans,
                                 const QString& customFolder) {
     if (m_scanning) {
         return;
@@ -81,8 +83,8 @@ void ScanController::startScan(const QString& yamlRoot,
     }
 
     // Start the worker thread and invoke doScan once the thread is running
-    connect(thread, &QThread::started, worker, [worker, logPathsList, yamlRoot, yamlData, game, vrMode, showFormIdValues, fcxMode, simplifyLogs]() {
-        worker->doScan(logPathsList, yamlRoot, yamlData, game, vrMode, showFormIdValues, fcxMode, simplifyLogs);
+    connect(thread, &QThread::started, worker, [worker, logPathsList, yamlRoot, yamlData, game, vrMode, showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs, maxConcurrentScans]() {
+        worker->doScan(logPathsList, yamlRoot, yamlData, game, vrMode, showFormIdValues, fcxMode, simplifyLogs, moveUnsolvedLogs, maxConcurrentScans);
     });
 
     m_threadManager->startWorker(QStringLiteral("crash_scan"), thread, worker);

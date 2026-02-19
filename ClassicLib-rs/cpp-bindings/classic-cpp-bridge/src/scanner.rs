@@ -49,6 +49,7 @@ fn build_full_scan_config(
         ))
         .map_err(|e| format!("{e}"))?;
 
+    let remove_list = load_exclude_log_records(yaml_dir_data);
     let config = build_analysis_config_from_yaml(
         &yaml,
         game,
@@ -56,7 +57,7 @@ fn build_full_scan_config(
         show_formid_values,
         fcx_mode,
         simplify_logs,
-        Vec::new(),
+        remove_list,
     );
     let db_paths = resolve_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
     Ok(Box::new(FullScanConfig {
@@ -115,14 +116,119 @@ fn orchestrator_process_log(
 fn orchestrator_process_logs_batch(
     orch: &Orchestrator,
     log_paths: &[String],
+    max_concurrent: u32,
 ) -> Vec<ffi::ScanResult> {
     let paths: Vec<String> = log_paths.to_vec();
-    let results = get_runtime().block_on(orch.inner.process_logs_batch(paths, None));
+    let max_parallel = if max_concurrent == 0 {
+        None
+    } else {
+        Some(max_concurrent as usize)
+    };
+    let results = get_runtime().block_on(orch.inner.process_logs_batch(paths, max_parallel));
     results.into_iter().map(analysis_result_to_dto).collect()
+}
+
+fn effective_batch_concurrency(total_logs: usize, max_concurrent: u32) -> usize {
+    if total_logs == 0 {
+        return 1;
+    }
+    if max_concurrent > 0 {
+        return (max_concurrent as usize).max(1);
+    }
+
+    let cpu_count = std::thread::available_parallelism()
+        .map(std::num::NonZeroUsize::get)
+        .unwrap_or(4);
+
+    if total_logs < cpu_count {
+        total_logs.max(1)
+    } else {
+        cpu_count.max(4)
+    }
+}
+
+fn orchestrator_process_logs_batch_with_progress(
+    orch: &Orchestrator,
+    log_paths: &[String],
+    max_concurrent: u32,
+    callback: &ffi::ScanBatchProgressCallback,
+) -> Vec<ffi::BatchScanResult> {
+    use futures::stream::{self, StreamExt};
+
+    let total = log_paths.len();
+    if total == 0 {
+        return Vec::new();
+    }
+
+    let concurrency = effective_batch_concurrency(total, max_concurrent);
+    let indexed_paths: Vec<(u32, String)> = log_paths
+        .iter()
+        .cloned()
+        .enumerate()
+        .map(|(idx, path)| (idx as u32, path))
+        .collect();
+
+    get_runtime().block_on(async {
+        let mut completed = 0_u32;
+        let mut batch_results = Vec::with_capacity(indexed_paths.len());
+
+        let mut tasks = stream::iter(indexed_paths)
+            .map(|(input_index, log_path)| {
+                let log_path_for_error = log_path.clone();
+                async move {
+                    let result = match orch.inner.process_log(log_path.clone()).await {
+                        Ok(result) => result,
+                        Err(e) => AnalysisResult::failure(log_path_for_error, e.to_string()),
+                    };
+                    (input_index, log_path, result)
+                }
+            })
+            .buffer_unordered(concurrency);
+
+        while let Some((input_index, scanned_path, result)) = tasks.next().await {
+            completed += 1;
+            callback.on_batch_progress(
+                completed,
+                total as u32,
+                input_index,
+                scanned_path.as_str(),
+                result.success,
+            );
+            batch_results.push(analysis_result_to_batch_dto(
+                input_index,
+                completed,
+                total as u32,
+                result,
+            ));
+        }
+
+        batch_results
+    })
 }
 
 fn analysis_result_to_dto(r: AnalysisResult) -> ffi::ScanResult {
     ffi::ScanResult {
+        log_path: r.log_path,
+        success: r.success,
+        report_lines: r.report_lines,
+        error_message: r.error.unwrap_or_default(),
+        processing_time_ms: r.processing_time_ms,
+        formid_count: r.formid_count as u32,
+        plugin_count: r.plugin_count as u32,
+        suspect_count: r.suspect_count as u32,
+    }
+}
+
+fn analysis_result_to_batch_dto(
+    input_index: u32,
+    completed: u32,
+    total: u32,
+    r: AnalysisResult,
+) -> ffi::BatchScanResult {
+    ffi::BatchScanResult {
+        input_index,
+        completed,
+        total,
         log_path: r.log_path,
         success: r.success,
         report_lines: r.report_lines,
@@ -207,6 +313,24 @@ fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &st
             }
         })
         .collect()
+}
+
+fn load_exclude_log_records(yaml_dir_data: &str) -> Vec<String> {
+    let main_yaml = PathBuf::from(yaml_dir_data)
+        .join("databases")
+        .join("CLASSIC Main.yaml");
+
+    if !main_yaml.exists() {
+        return Vec::new();
+    }
+
+    let ops = YamlOperations::new();
+    let doc = match ops.load_yaml_file(Path::new(&main_yaml)) {
+        Ok(doc) => doc,
+        Err(_) => return Vec::new(),
+    };
+
+    ops.get_vec_value(&doc, "exclude_log_records")
 }
 
 fn resolve_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
@@ -295,6 +419,21 @@ mod ffi {
         suspect_count: u32,
     }
 
+    /// Batch scan result plus progress metadata for each completed log.
+    struct BatchScanResult {
+        input_index: u32,
+        completed: u32,
+        total: u32,
+        log_path: String,
+        success: bool,
+        report_lines: Vec<String>,
+        error_message: String,
+        processing_time_ms: u64,
+        formid_count: u32,
+        plugin_count: u32,
+        suspect_count: u32,
+    }
+
     /// Papyrus log statistics transferred across the FFI boundary.
     struct PapyrusStatsDto {
         dumps: u32,
@@ -303,6 +442,19 @@ mod ffi {
         errors: u32,
         lines_processed: u32,
         dumps_stacks_ratio: f64,
+    }
+
+    unsafe extern "C++" {
+        include!("classic_cxx_bridge/scan_progress_callback.h");
+        type ScanBatchProgressCallback;
+        fn on_batch_progress(
+            self: &ScanBatchProgressCallback,
+            completed: u32,
+            total: u32,
+            input_index: u32,
+            log_path: &str,
+            success: bool,
+        );
     }
 
     extern "Rust" {
@@ -332,7 +484,14 @@ mod ffi {
         fn orchestrator_process_logs_batch(
             orch: &Orchestrator,
             log_paths: &[String],
+            max_concurrent: u32,
         ) -> Vec<ScanResult>;
+        fn orchestrator_process_logs_batch_with_progress(
+            orch: &Orchestrator,
+            log_paths: &[String],
+            max_concurrent: u32,
+            callback: &ScanBatchProgressCallback,
+        ) -> Vec<BatchScanResult>;
 
         // Utilities
         fn detect_vr_log(content: &str) -> bool;
@@ -434,6 +593,25 @@ mod tests {
         let folon = data.join("databases").join("FOLON FormIDs.db");
 
         assert_eq!(paths, vec![main, folon, custom]);
+    }
+
+    #[test]
+    fn test_load_exclude_log_records_reads_main_yaml_setting() {
+        let temp = tempdir().unwrap();
+        let data = temp.path();
+        std::fs::create_dir_all(data.join("databases")).unwrap();
+
+        std::fs::write(
+            data.join("databases").join("CLASSIC Main.yaml"),
+            "exclude_log_records:\n  - '(void*)'\n  - 'Basic Render Driver'\n",
+        )
+        .unwrap();
+
+        let records = load_exclude_log_records(&data.to_string_lossy());
+        assert_eq!(
+            records,
+            vec!["(void*)".to_string(), "Basic Render Driver".to_string()]
+        );
     }
 
     #[test]
