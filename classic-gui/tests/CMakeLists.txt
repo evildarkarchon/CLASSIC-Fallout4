@@ -91,3 +91,7 @@ link_classic_gui_rust_bridge(classic-gui-test-resultscontroller)
 add_classic_gui_qt_test(classic-gui-test-mainwindow-geometry
     test_mainwindow_geometry.cpp
 )
+
+add_classic_gui_qt_test(classic-gui-test-scan-settings-wiring
+    test_scan_settings_wiring.cpp
+)

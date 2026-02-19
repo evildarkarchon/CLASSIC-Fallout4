@@ -30,7 +30,10 @@ void ScanWorker::doScan(const QStringList& logPaths,
                         const QString& yamlRoot,
                         const QString& yamlData,
                         const QString& game,
-                        bool vrMode) {
+                        bool vrMode,
+                        bool showFormIdValues,
+                        bool fcxMode,
+                        bool simplifyLogs) {
     m_cancelled = false;
 
     int total = logPaths.size();
@@ -45,9 +48,9 @@ void ScanWorker::doScan(const QStringList& logPaths,
             classic::toRustString(yamlData),
             classic::toRustString(game),
             vrMode,
-            false,  // show_formid_values
-            false,  // fcx_mode
-            false   // simplify_logs
+            showFormIdValues,
+            fcxMode,
+            simplifyLogs
         );
 
         auto orch = classic::scanner::orchestrator_new(*config);

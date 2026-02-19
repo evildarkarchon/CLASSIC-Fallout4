@@ -759,6 +759,9 @@ void MainWindow::loadSettings()
 {
     m_updateCheckOnStartup = true;
     m_autoSwitchToResultsAfterScan = true;
+    m_showFormIdValues = false;
+    m_fcxMode = false;
+    m_simplifyLogs = false;
 
     m_dataRoot = findDataRoot();
     if (m_dataRoot.isEmpty()) {
@@ -805,6 +808,9 @@ void MainWindow::loadSettings()
         };
         m_updateCheckOnStartup = getBool("CLASSIC_Settings.Update Check", true);
         m_autoSwitchToResultsAfterScan = getBool("CLASSIC_Settings.Auto Switch After Scan", true);
+        m_showFormIdValues = getBool("CLASSIC_Settings.Show FormID Values", false);
+        m_fcxMode = getBool("CLASSIC_Settings.FCX Mode", false);
+        m_simplifyLogs = getBool("CLASSIC_Settings.Simplify Logs", false);
         if (m_resultsController) {
             m_resultsController->setAutoSwitchToResults(m_autoSwitchToResultsAfterScan);
         }
@@ -1423,6 +1429,9 @@ void MainWindow::onScanCrashLogs()
         m_dataDir,
         QStringLiteral("Fallout4"),
         false,  // vrMode
+        m_showFormIdValues,
+        m_fcxMode,
+        m_simplifyLogs,
         m_editCustomFolder->text()
     );
 }

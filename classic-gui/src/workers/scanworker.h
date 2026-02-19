@@ -15,7 +15,10 @@ public slots:
                 const QString& yamlRoot,
                 const QString& yamlData,
                 const QString& game,
-                bool vrMode);
+                bool vrMode,
+                bool showFormIdValues,
+                bool fcxMode,
+                bool simplifyLogs);
     void requestCancel();
 
 signals:

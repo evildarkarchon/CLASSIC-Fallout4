@@ -19,6 +19,9 @@ public:
                    const QString& yamlData,
                    const QString& game,
                    bool vrMode,
+                   bool showFormIdValues,
+                   bool fcxMode,
+                   bool simplifyLogs,
                    const QString& customFolder);
     void cancelScan();
     bool isScanning() const;
