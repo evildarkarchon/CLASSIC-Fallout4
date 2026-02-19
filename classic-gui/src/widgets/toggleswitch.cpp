@@ -47,7 +47,7 @@ void ToggleSwitch::paintEvent(QPaintEvent* event)
         trackRect.moveLeft(width() - kTrackWidth);
     }
 
-    QColor trackColor = isChecked() ? QColor(0x00, 0x78, 0xD4) : QColor(0x55, 0x55, 0x55);
+    QColor trackColor = isChecked() ? QColor(0x2F, 0xAE, 0x2F) : QColor(0x55, 0x55, 0x55);
     if (!isEnabled()) {
         trackColor = QColor(0x3C, 0x3C, 0x3C);
     } else if (underMouse()) {
@@ -72,7 +72,7 @@ void ToggleSwitch::paintEvent(QPaintEvent* event)
     painter.drawEllipse(thumbRect);
 
     if (hasFocus()) {
-        QPen focusPen(QColor(0x66, 0xB5, 0xFF));
+        QPen focusPen(QColor(0x52, 0xFF, 0x52));
         focusPen.setWidth(1);
         painter.setPen(focusPen);
         painter.setBrush(Qt::NoBrush);

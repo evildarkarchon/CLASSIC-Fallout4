@@ -47,6 +47,8 @@ qt_add_executable(ClassicGui WIN32
     widgets/markdownviewer.cpp
     widgets/reportmetadatawidget.h
     widgets/reportmetadatawidget.cpp
+    widgets/adaptiveprogressbar.h
+    widgets/adaptiveprogressbar.cpp
     widgets/toggleswitch.h
     widgets/toggleswitch.cpp
 
@@ -67,6 +69,25 @@ qt_add_executable(ClassicGui WIN32
 set_target_properties(ClassicGui PROPERTIES
     OUTPUT_NAME "CLASSIC"
 )
+
+# Embed the application icon into the Windows executable so Explorer shows
+# CLASSIC.ico instead of the generic binary icon.
+if(WIN32)
+    set(CLASSIC_GUI_EXE_ICON "${CMAKE_SOURCE_DIR}/../CLASSIC Data/graphics/CLASSIC.ico")
+    if(EXISTS "${CLASSIC_GUI_EXE_ICON}")
+        string(REPLACE "/" "\\\\" CLASSIC_GUI_EXE_ICON_RC "${CLASSIC_GUI_EXE_ICON}")
+        configure_file(
+            "${CMAKE_CURRENT_SOURCE_DIR}/classic_gui_icon.rc.in"
+            "${CMAKE_CURRENT_BINARY_DIR}/classic_gui_icon.rc"
+            @ONLY
+        )
+        target_sources(ClassicGui PRIVATE
+            "${CMAKE_CURRENT_BINARY_DIR}/classic_gui_icon.rc"
+        )
+    else()
+        message(WARNING "CLASSIC GUI executable icon not found: ${CLASSIC_GUI_EXE_ICON}")
+    endif()
+endif()
 
 # ── Include directories ──────────────────────────────────────────────
 # Allow includes like "core/signalhub.h", "app/mainwindow.h"

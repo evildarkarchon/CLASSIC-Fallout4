@@ -193,6 +193,28 @@ fn write_file_string(path: &str, content: &str) -> Result<(), String> {
 
 // ── Report file helpers ───────────────────────────────────────────
 
+/// Write an AUTOSCAN report adjacent to the source crash log.
+///
+/// Derives output path as:
+/// `.../crash-*.log` -> `.../crash-*-AUTOSCAN.md`
+/// and writes the provided markdown content using encoding-aware FileIOCore.
+fn write_autoscan_report(log_path: &str, content: &str) -> Result<String, String> {
+    let log_path = Path::new(log_path);
+    let stem = log_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .unwrap_or("unknown");
+    let autoscan_name = format!("{}-AUTOSCAN.md", stem);
+    let autoscan_path = log_path.with_file_name(autoscan_name);
+
+    let io = FileIOCore::new("utf-8", "replace", 4, 8);
+    get_runtime()
+        .block_on(io.write_file(&autoscan_path, content))
+        .map_err(|e| format!("{e}"))?;
+
+    Ok(autoscan_path.to_string_lossy().to_string())
+}
+
 /// Discover AUTOSCAN report files in a directory.
 ///
 /// Scans the given directory (non-recursively) for files matching
@@ -278,6 +300,7 @@ mod ffi {
         fn write_file_string(path: &str, content: &str) -> Result<()>;
 
         // Report file helpers
+        fn write_autoscan_report(log_path: &str, content: &str) -> Result<String>;
         fn discover_report_files(directory: &str) -> Vec<String>;
         fn read_report_file(path: &str) -> Result<String>;
     }
@@ -395,5 +418,26 @@ mod tests {
     fn test_read_report_file_nonexistent() {
         let result = read_report_file("nonexistent_report_xyz.md");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_write_autoscan_report_writes_next_to_source_log() {
+        let dir = tempfile::tempdir().unwrap();
+        let custom_dir = dir.path().join("CustomScan");
+        std::fs::create_dir_all(&custom_dir).unwrap();
+
+        let log_path = custom_dir.join("crash-2026-02-19-00-00-00.log");
+        std::fs::write(&log_path, "raw log").unwrap();
+
+        let out_path =
+            write_autoscan_report(log_path.to_str().unwrap(), "# report body").unwrap();
+        let out_path = std::path::PathBuf::from(out_path);
+
+        assert_eq!(out_path.parent(), log_path.parent());
+        assert_eq!(
+            out_path.file_name().and_then(|n| n.to_str()),
+            Some("crash-2026-02-19-00-00-00-AUTOSCAN.md")
+        );
+        assert!(out_path.exists());
     }
 }

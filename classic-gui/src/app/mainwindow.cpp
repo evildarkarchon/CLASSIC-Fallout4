@@ -291,7 +291,11 @@ void MainWindow::setVersion(const QString& version)
 void MainWindow::setStatusMessage(const QString& message)
 {
     QString fmt = message;
-    fmt.replace(QLatin1Char('%'), QStringLiteral("%%"));
+    // QProgressBar format strings treat %p/%v/%m as placeholders.
+    // Escape only those tokens so normal percent signs render once.
+    fmt.replace(QStringLiteral("%p"), QStringLiteral("%%p"));
+    fmt.replace(QStringLiteral("%v"), QStringLiteral("%%v"));
+    fmt.replace(QStringLiteral("%m"), QStringLiteral("%%m"));
     m_progressBar->setFormat(fmt);
 }
 
@@ -313,7 +317,7 @@ void MainWindow::setupUi()
     setCentralWidget(m_tabWidget);
 
     // Progress bar as unified status display (text renders on top of fill)
-    m_progressBar = new QProgressBar(this);
+    m_progressBar = new AdaptiveProgressBar(this);
     m_progressBar->setTextVisible(true);
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
@@ -1281,6 +1285,7 @@ void MainWindow::onBrowseCustom()
         if (validateCustomScanFolder(dir)) {
             m_editCustomFolder->setText(dir);
             saveSettings();
+            initResultsReportDir();
         }
     }
 }
@@ -1354,6 +1359,7 @@ void MainWindow::onCustomFolderEdited()
                     std::string(settingsPath.toUtf8().constData()));
             } catch (...) {}
         }
+        initResultsReportDir();
         return;
     }
 
@@ -1362,6 +1368,7 @@ void MainWindow::onCustomFolderEdited()
         QString normalized = QDir::cleanPath(text);
         m_editCustomFolder->setText(normalized);
         saveSettings();
+        initResultsReportDir();
     } else {
         // Clear YAML setting (UI was already cleared by validateCustomScanFolder)
         if (!m_dataDir.isEmpty()) {
@@ -1376,6 +1383,7 @@ void MainWindow::onCustomFolderEdited()
                     std::string(settingsPath.toUtf8().constData()));
             } catch (...) {}
         }
+        initResultsReportDir();
     }
 }
 

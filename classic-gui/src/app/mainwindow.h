@@ -5,8 +5,8 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QLabel>
-#include <QProgressBar>
 #include <QStatusBar>
+#include "widgets/adaptiveprogressbar.h"
 
 class SignalHub;
 class ScanController;
@@ -85,7 +85,7 @@ private:
     QPushButton* m_btnCheckUpdates = nullptr;
     QPushButton* m_btnPapyrusMonitor = nullptr;
     QPushButton* m_btnExit = nullptr;
-    QProgressBar* m_progressBar = nullptr;
+    AdaptiveProgressBar* m_progressBar = nullptr;
 
     // Controllers
     ScanController* m_scanController = nullptr;

@@ -4,6 +4,20 @@
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/config.h"
+#include "classic_cxx_bridge/files.h"
+
+#include <string>
+
+namespace {
+std::string join_report_lines(const rust::Vec<rust::String>& report_lines) {
+    std::string content;
+    for (const auto& line : report_lines) {
+        content += std::string(line.data(), line.size());
+        content += '\n';
+    }
+    return content;
+}
+}
 
 ScanWorker::ScanWorker(QObject* parent)
     : QObject(parent) {}
@@ -53,12 +67,29 @@ void ScanWorker::doScan(const QStringList& logPaths,
                     classic::toRustString(logPaths[i])
                 );
 
-                if (result.success) {
+                bool scan_success = result.success;
+
+                if (scan_success && !result.report_lines.empty()) {
+                    try {
+                        const auto report_content = join_report_lines(result.report_lines);
+                        const std::string result_log_path(result.log_path.data(), result.log_path.size());
+                        const auto report_log_path =
+                            result_log_path.empty() ? std::string(logPaths[i].toUtf8().constData()) : result_log_path;
+                        classic::files::write_autoscan_report(
+                            report_log_path,
+                            report_content
+                        );
+                    } catch (const rust::Error&) {
+                        scan_success = false;
+                    }
+                }
+
+                if (scan_success) {
                     ++successCount;
                 } else {
                     ++errorCount;
                 }
-                emit logScanned(i, result.success, logPaths[i]);
+                emit logScanned(i, scan_success, logPaths[i]);
 
             } catch (const rust::Error&) {
                 ++errorCount;

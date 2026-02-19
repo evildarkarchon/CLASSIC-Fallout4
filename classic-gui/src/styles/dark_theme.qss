@@ -436,16 +436,17 @@ QSplitter::handle:hover {
 /* ── Progress bar ─────────────────────────────────────────────────── */
 
 QProgressBar {
-    background-color: #1e1e1e;
-    border: 1px solid #3c3c3c;
+    background-color: #1b261b;
+    border: 1px solid #2fae2f;
     border-radius: 4px;
     text-align: center;
-    color: #e0e0e0;
+    color: #52ff52;
     min-height: 20px;
 }
 
 QProgressBar::chunk {
-    background-color: #0078d4;
+    background-color: #52ff52;
+    border: 1px solid #2fae2f;
     border-radius: 3px;
 }
 

@@ -84,6 +84,46 @@ _DEFAULT_FORMID_DATABASES: dict[str, list[str]] = {
 }
 
 
+def _get_hardcoded_db_paths() -> list[Path]:
+    """Get always-on hardcoded FormID DB paths for the current game.
+
+    These paths are resolved from ``_DEFAULT_FORMID_DATABASES`` and loaded
+    alongside the Main FormID database in ``get_all_db_paths()`` even when
+    the user-configured YAML list is empty.
+
+    Returns:
+        Existing absolute paths for hardcoded extra databases.
+
+    """
+    from ClassicLib.core.registry import GlobalRegistry
+    from ClassicLib.support.resources import ResourceLoader
+
+    data_dir = ResourceLoader.get_data_directory()
+    game = GlobalRegistry.get_game()
+    raw_paths = _DEFAULT_FORMID_DATABASES.get(game, [])
+
+    resolved: list[Path] = []
+    for entry in raw_paths:
+        p = Path(entry)
+        if not p.is_absolute():
+            p = data_dir / p
+        if p.is_file():
+            resolved.append(p)
+
+    return resolved
+
+
+def _dedupe_paths(paths: list[Path]) -> list[Path]:
+    """Return paths in original order with duplicates removed."""
+    seen: set[Path] = set()
+    unique: list[Path] = []
+    for path in paths:
+        if path not in seen:
+            seen.add(path)
+            unique.append(path)
+    return unique
+
+
 def get_main_db_path() -> Path:
     """Get the absolute path to the Main FormID database for the current game.
 
@@ -147,18 +187,19 @@ def get_user_db_paths() -> list[Path]:
 
 
 def get_all_db_paths() -> list[Path]:
-    """Get all FormID database paths (Main + user-configured).
+    """Get all FormID database paths (Main + hardcoded + user-configured).
 
-    Combines the Main database path with user-configured paths. The Main
-    database is always first in the list regardless of whether it exists
-    on disk (existence checking is the caller's responsibility for Main).
+    Combines the Main database path with hardcoded game-specific databases
+    (e.g. FOLON for Fallout 4) and user-configured paths. The Main database
+    is always first in the list regardless of whether it exists on disk
+    (existence checking is the caller's responsibility for Main).
 
     Returns:
-        A list of paths with the Main database first, followed by
-        user-configured databases.
+        A de-duplicated list with the Main database first, followed by
+        hardcoded and user-configured databases.
 
     """
-    return [get_main_db_path(), *get_user_db_paths()]
+    return _dedupe_paths([get_main_db_path(), *_get_hardcoded_db_paths(), *get_user_db_paths()])
 
 
 async def get_user_db_paths_async() -> list[Path]:
@@ -202,15 +243,16 @@ async def get_user_db_paths_async() -> list[Path]:
 async def get_all_db_paths_async() -> list[Path]:
     """Async version of get_all_db_paths for use in async contexts.
 
-    Combines the Main database path with user-configured paths. Uses
-    ``yaml_settings_async`` internally so it's safe to call from async code.
+    Combines the Main database path with hardcoded game-specific databases
+    and user-configured paths. Uses ``yaml_settings_async`` internally so
+    it's safe to call from async code.
 
     Returns:
-        A list of paths with the Main database first, followed by
-        user-configured databases.
+        A de-duplicated list with the Main database first, followed by
+        hardcoded and user-configured databases.
 
     """
-    return [get_main_db_path(), *(await get_user_db_paths_async())]
+    return _dedupe_paths([get_main_db_path(), *_get_hardcoded_db_paths(), *(await get_user_db_paths_async())])
 
 
 # For backward compatibility, create a property-like object

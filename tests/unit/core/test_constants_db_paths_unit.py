@@ -261,6 +261,10 @@ class TestGetAllDbPaths:
                 return_value=main_db,
             ),
             patch(
+                "ClassicLib.core.constants._get_hardcoded_db_paths",
+                return_value=[],
+            ),
+            patch(
                 "ClassicLib.core.constants.get_user_db_paths",
                 return_value=[user_db],
             ),
@@ -281,6 +285,10 @@ class TestGetAllDbPaths:
                 return_value=main_db,
             ),
             patch(
+                "ClassicLib.core.constants._get_hardcoded_db_paths",
+                return_value=[],
+            ),
+            patch(
                 "ClassicLib.core.constants.get_user_db_paths",
                 return_value=[],
             ),
@@ -288,6 +296,29 @@ class TestGetAllDbPaths:
             result = get_all_db_paths()
 
         assert result == [main_db]
+
+    def test_includes_hardcoded_folon_alongside_main(self, tmp_path: Path) -> None:
+        """Fallout4 loads FOLON FormIDs.db even when YAML user list is empty."""
+        from ClassicLib.core.constants import get_all_db_paths
+
+        main_db = tmp_path / "databases" / "Fallout4 FormIDs Main.db"
+        folon_db = tmp_path / "databases" / "FOLON FormIDs.db"
+        main_db.parent.mkdir(parents=True, exist_ok=True)
+        main_db.touch()
+        folon_db.touch()
+
+        with (
+            patch(_REGISTRY) as mock_registry,
+            patch(_RESOURCE_LOADER) as mock_loader,
+            patch(_YAML_SETTINGS) as mock_yaml,
+        ):
+            mock_registry.get_game.return_value = "Fallout4"
+            mock_loader.get_data_directory.return_value = tmp_path
+            mock_yaml.return_value = []
+
+            result = get_all_db_paths()
+
+        assert result == [main_db, folon_db]
 
 
 @pytest.mark.unit

@@ -5,16 +5,23 @@
 //! Placeholder — will be implemented by Wave 2 agent.
 
 use classic_config_core::YamlDataCore;
+use classic_database_core::DatabasePool;
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
+    build_analysis_config_from_yaml, AnalysisConfig, AnalysisResult, OrchestratorCore,
 };
 use classic_shared_core::get_runtime;
+use classic_yaml_core::YamlOperations;
+use std::collections::HashSet;
+use std::path::Path;
 use std::path::PathBuf;
+use std::sync::Arc;
+use std::time::Duration;
 
 /// Opaque wrapper holding a fully-loaded AnalysisConfig (from YAML).
 pub struct FullScanConfig {
     inner: AnalysisConfig,
+    db_paths: Vec<PathBuf>,
 }
 
 /// Opaque wrapper around OrchestratorCore.
@@ -51,13 +58,34 @@ fn build_full_scan_config(
         simplify_logs,
         Vec::new(),
     );
-    Ok(Box::new(FullScanConfig { inner: config }))
+    let db_paths = resolve_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
+    Ok(Box::new(FullScanConfig {
+        inner: config,
+        db_paths,
+    }))
 }
 
 // ── Orchestrator ────────────────────────────────────────────────────
 
 fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String> {
-    let orch = OrchestratorCore::new(config.inner.clone()).map_err(|e| format!("{e}"))?;
+    let mut orch = OrchestratorCore::new(config.inner.clone()).map_err(|e| format!("{e}"))?;
+
+    // Match Python behavior: when FormID values are enabled, initialize DB pool
+    // with Main + hardcoded + user-configured database paths.
+    if config.inner.show_formid_values {
+        let pool = Arc::new(DatabasePool::new(
+            None,
+            Duration::from_secs(300),
+            config.inner.game.clone(),
+        ));
+
+        get_runtime()
+            .block_on(pool.initialize(config.db_paths.clone()))
+            .map_err(|e| format!("{e}"))?;
+
+        orch.attach_database_pool(pool);
+    }
+
     Ok(Box::new(Orchestrator { inner: orch }))
 }
 
@@ -121,6 +149,84 @@ fn detect_crash_pattern(content: &str) -> String {
         Ok(header) => header.get("main_error").cloned().unwrap_or_default(),
         Err(_) => String::new(),
     }
+}
+
+// ── FormID database path resolution ─────────────────────────────────
+
+fn hardcoded_formid_db_relpaths(game: &str) -> &'static [&'static str] {
+    match game {
+        "Fallout4" | "Fallout4VR" => &["databases/FOLON FormIDs.db"],
+        _ => &[],
+    }
+}
+
+fn normalize_path(path: PathBuf) -> PathBuf {
+    path.components().collect()
+}
+
+fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
+    let mut seen = HashSet::new();
+    let mut deduped = Vec::with_capacity(paths.len());
+    for path in paths {
+        let normalized = normalize_path(path);
+        if seen.insert(normalized.clone()) {
+            deduped.push(normalized);
+        }
+    }
+    deduped
+}
+
+fn load_user_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
+    let settings = PathBuf::from(yaml_dir_root).join("CLASSIC Settings.yaml");
+    let legacy_settings = PathBuf::from(yaml_dir_root).join("CLASSIC_Settings.yaml");
+
+    let settings_path = if settings.exists() {
+        settings
+    } else if legacy_settings.exists() {
+        legacy_settings
+    } else {
+        return Vec::new();
+    };
+
+    let ops = YamlOperations::new();
+    let doc = match ops.load_yaml_file(Path::new(&settings_path)) {
+        Ok(doc) => doc,
+        Err(_) => return Vec::new(),
+    };
+
+    let key_path = format!("CLASSIC_Settings.FormID Databases.{game}");
+    let raw_paths = ops.get_vec_value(&doc, &key_path);
+    raw_paths
+        .into_iter()
+        .map(PathBuf::from)
+        .map(|p| {
+            if p.is_absolute() {
+                normalize_path(p)
+            } else {
+                normalize_path(PathBuf::from(yaml_dir_data).join(p))
+            }
+        })
+        .collect()
+}
+
+fn resolve_formid_db_paths(yaml_dir_root: &str, yaml_dir_data: &str, game: &str) -> Vec<PathBuf> {
+    let data_dir = PathBuf::from(yaml_dir_data);
+    let main_db = data_dir
+        .join("databases")
+        .join(format!("{game} FormIDs Main.db"));
+
+    let hardcoded = hardcoded_formid_db_relpaths(game)
+        .iter()
+        .map(|rel| data_dir.join(rel))
+        .collect::<Vec<_>>();
+
+    let user_paths = load_user_formid_db_paths(yaml_dir_root, yaml_dir_data, game);
+
+    let mut all_paths = Vec::with_capacity(1 + hardcoded.len() + user_paths.len());
+    all_paths.push(main_db);
+    all_paths.extend(hardcoded);
+    all_paths.extend(user_paths);
+    dedupe_paths(all_paths)
 }
 
 // ── Papyrus monitoring ────────────────────────────────────────────
@@ -247,6 +353,7 @@ mod ffi {
 mod tests {
     use super::*;
     use std::io::Write;
+    use tempfile::tempdir;
     use tempfile::NamedTempFile;
 
     #[test]
@@ -286,6 +393,48 @@ mod tests {
             false,
         );
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_resolve_formid_db_paths_includes_main_and_hardcoded_folon() {
+        let temp = tempdir().unwrap();
+        let root = temp.path();
+        let data = root.join("CLASSIC Data");
+        std::fs::create_dir_all(data.join("databases")).unwrap();
+
+        // Explicit empty user list should still include hardcoded FOLON path.
+        std::fs::write(
+            root.join("CLASSIC Settings.yaml"),
+            "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4: []\n",
+        )
+        .unwrap();
+
+        let paths =
+            resolve_formid_db_paths(&root.to_string_lossy(), &data.to_string_lossy(), "Fallout4");
+        let main = data.join("databases").join("Fallout4 FormIDs Main.db");
+        let folon = data.join("databases").join("FOLON FormIDs.db");
+
+        assert_eq!(paths, vec![main, folon]);
+    }
+
+    #[test]
+    fn test_resolve_formid_db_paths_deduplicates_hardcoded_and_user_paths() {
+        let temp = tempdir().unwrap();
+        let root = temp.path();
+        let data = root.join("CLASSIC Data");
+        std::fs::create_dir_all(data.join("databases")).unwrap();
+        let custom = data.join("databases").join("custom.db");
+
+        let settings_yaml =
+        "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4:\n      - databases/FOLON FormIDs.db\n      - databases/custom.db\n";
+        std::fs::write(root.join("CLASSIC Settings.yaml"), settings_yaml).unwrap();
+
+        let paths =
+            resolve_formid_db_paths(&root.to_string_lossy(), &data.to_string_lossy(), "Fallout4");
+        let main = data.join("databases").join("Fallout4 FormIDs Main.db");
+        let folon = data.join("databases").join("FOLON FormIDs.db");
+
+        assert_eq!(paths, vec![main, folon, custom]);
     }
 
     #[test]
