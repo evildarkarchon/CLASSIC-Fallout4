@@ -21,9 +21,12 @@ use crate::record_scanner::RecordScanner;
 use crate::report::ReportGenerator;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
-use crate::version::{CrashgenVersion, crashgen_version_gen};
+use crate::version::{
+    CrashgenVersion, CrashgenVersionStatus, check_crashgen_version_status, crashgen_version_gen,
+};
 use classic_database_core::DatabasePool;
 use classic_file_io_core::FileIOCore;
+use classic_version_registry_core::{GameVersion as RegistryGameVersion, get_version_registry};
 use indexmap::IndexMap;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -853,6 +856,10 @@ impl OrchestratorCore {
             .cloned()
             .unwrap_or_default();
 
+        // Get detected game version from header info (used for list-based version validation)
+        let detected_game_version_str =
+            header_info.get("game_version").cloned().unwrap_or_default();
+
         // Get main error - from header parsing or fallback to first "Unhandled exception" line
         let main_error = header_info.get("main_error").cloned().unwrap_or_else(|| {
             // Fallback: search processed_lines for Unhandled exception
@@ -863,14 +870,22 @@ impl OrchestratorCore {
                 .unwrap_or_default()
         });
 
-        // Check crashgen version status
-        let (_, is_outdated) = self.check_crashgen_version(&crashgen_version_str);
+        // Check crashgen version status using list-based validation for the detected game version
+        let crashgen_status = if crashgen_version_str.trim().is_empty() {
+            None
+        } else {
+            let (_parsed, status) = self.check_crashgen_version_for_detected_game(
+                &crashgen_version_str,
+                &detected_game_version_str,
+            );
+            Some(status)
+        };
 
         // Generate error section
-        composer.add(report_gen.generate_error_section(
+        composer.add(report_gen.generate_error_section_with_status(
             &main_error,
             &crashgen_version_str,
-            is_outdated,
+            crashgen_status,
         ));
 
         // Store plugins for mod detection - IndexMap preserves load order for Python parity
@@ -1568,31 +1583,6 @@ impl OrchestratorCore {
         FcxModeHandler::new(self.config.fcx_mode)
     }
 
-    /// Parses crashgen version from a crash log and checks if it's outdated.
-    ///
-    /// # Arguments
-    ///
-    /// * `crashgen_version_str` - The crashgen version string from the crash log
-    ///
-    /// # Returns
-    ///
-    /// A tuple of (parsed_version, is_outdated).
-    ///
-    /// # Note
-    ///
-    /// This method uses the legacy single-version comparison. For list-based version
-    /// checking that supports multiple valid versions, use `check_crashgen_version_list`.
-    #[allow(deprecated)]
-    pub fn check_crashgen_version(&self, crashgen_version_str: &str) -> (CrashgenVersion, bool) {
-        let current = crashgen_version_gen(crashgen_version_str);
-        let latest = crashgen_version_gen(&self.config.crashgen_latest);
-        let latest_vr = crashgen_version_gen(&self.config.crashgen_latest_vr);
-
-        let is_outdated = current.is_outdated(&latest, &latest_vr, self.config.vr_mode);
-
-        (current, is_outdated)
-    }
-
     /// Checks crashgen version against a list of valid versions.
     ///
     /// This is the new list-based version validation that supports multiple valid
@@ -1610,11 +1600,56 @@ impl OrchestratorCore {
         &self,
         crashgen_version_str: &str,
         valid_versions: &[&str],
-    ) -> (CrashgenVersion, crate::version::CrashgenVersionStatus) {
+    ) -> (CrashgenVersion, CrashgenVersionStatus) {
         let current = crashgen_version_gen(crashgen_version_str);
-        let status =
-            crate::version::check_crashgen_version_status(crashgen_version_str, valid_versions);
+        let status = check_crashgen_version_status(crashgen_version_str, valid_versions);
         (current, status)
+    }
+
+    /// Checks crashgen version using the detected game version and registry-backed valid versions.
+    pub fn check_crashgen_version_for_detected_game(
+        &self,
+        crashgen_version_str: &str,
+        detected_game_version_str: &str,
+    ) -> (CrashgenVersion, CrashgenVersionStatus) {
+        let current = crashgen_version_gen(crashgen_version_str);
+
+        let Some(detected_game_version) =
+            self.parse_detected_game_version(detected_game_version_str)
+        else {
+            return (current, CrashgenVersionStatus::NoSupportedVersion);
+        };
+
+        let registry = get_version_registry();
+        let match_result = registry.match_version(
+            &detected_game_version,
+            &self.config.game,
+            self.config.vr_mode,
+        );
+
+        let valid_versions: Vec<&str> = match match_result.version_info {
+            Some(ref version_info) => version_info.get_crashgen_version_strings(),
+            None => Vec::new(),
+        };
+
+        let status = check_crashgen_version_status(crashgen_version_str, &valid_versions);
+        (current, status)
+    }
+
+    /// Parse the detected game version header into a registry-compatible version object.
+    fn parse_detected_game_version(
+        &self,
+        detected_game_version_str: &str,
+    ) -> Option<RegistryGameVersion> {
+        let parsed = crashgen_version_gen(detected_game_version_str);
+        if parsed.major == 0 && parsed.minor == 0 && parsed.patch == 0 {
+            return None;
+        }
+
+        let major = u32::try_from(parsed.major).ok()?;
+        let minor = u32::try_from(parsed.minor).ok()?;
+        let patch = u32::try_from(parsed.patch).ok()?;
+        Some(RegistryGameVersion::new(major, minor, patch, 0))
     }
 
     /// Checks if the game is running FOLON (Fallout: London) based on plugins.
@@ -1901,5 +1936,18 @@ mod tests {
         );
 
         assert_eq!(config.classic_version, "CLASSIC v9.0.0");
+    }
+
+    #[test]
+    fn check_crashgen_version_for_detected_game_validates_addictol_for_ae() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), false);
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        let (_parsed, status) = orchestrator.check_crashgen_version_for_detected_game(
+            "Addictol v1.0.0 Feb 16 2026 08:02:06",
+            "Fallout 4 v1.11.191",
+        );
+
+        assert_eq!(status, crate::version::CrashgenVersionStatus::Valid);
     }
 }

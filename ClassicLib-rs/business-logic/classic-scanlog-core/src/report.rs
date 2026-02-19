@@ -7,6 +7,7 @@
 //! - Efficient string building strategies
 
 // Error types not needed in pure Rust - using standard Result
+use crate::version::CrashgenVersionStatus;
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use parking_lot::RwLock;
@@ -435,6 +436,23 @@ impl ReportGenerator {
         crashgen_version: &str,
         is_outdated: bool,
     ) -> ReportFragment {
+        let status = if is_outdated {
+            Some(CrashgenVersionStatus::Outdated)
+        } else {
+            Some(CrashgenVersionStatus::Valid)
+        };
+        self.generate_error_section_with_status(main_error, crashgen_version, status)
+    }
+
+    /// Generate an error section using list-based crashgen status.
+    ///
+    /// This is the preferred non-legacy version status path.
+    pub fn generate_error_section_with_status(
+        &self,
+        main_error: &str,
+        crashgen_version: &str,
+        status: Option<CrashgenVersionStatus>,
+    ) -> ReportFragment {
         let mut lines = vec![
             "### Error Information\n\n".to_string(),
             format!("**Main Error:** {}\n\n", main_error),
@@ -444,17 +462,37 @@ impl ReportGenerator {
             ),
         ];
 
-        // Add version status - matches Python output exactly
-        if is_outdated {
-            lines.push(format!(
-                "***❌ WARNING: YOUR {} IS OUTDATED! PLEASE UPDATE TO THE LATEST VERSION!***\n\n",
-                self.crashgen_name
-            ));
-        } else {
-            lines.push(format!(
-                "✅ *You have the latest version of {}!*\n\n",
-                self.crashgen_name
-            ));
+        match status {
+            Some(CrashgenVersionStatus::Valid) => {
+                lines.push(format!(
+                    "✅ *You have a valid version of {}!*\n\n",
+                    self.crashgen_name
+                ));
+            }
+            Some(CrashgenVersionStatus::NewerThanKnown) => {
+                lines.push(format!(
+                    "✅ *Your {} version is newer than known versions.*\n\n",
+                    self.crashgen_name
+                ));
+            }
+            Some(CrashgenVersionStatus::Outdated) => {
+                lines.push(format!(
+                    "***❌ WARNING: YOUR {} IS OUTDATED! PLEASE UPDATE TO A VALID VERSION!***\n\n",
+                    self.crashgen_name
+                ));
+            }
+            Some(CrashgenVersionStatus::NoSupportedVersion) => {
+                lines.push(
+                    "⚠️ *No supported crash log generator for this game version yet.*\n\n"
+                        .to_string(),
+                );
+            }
+            None => {
+                lines.push(format!(
+                    "⚠️ *Unable to verify {} version.*\n\n",
+                    self.crashgen_name
+                ));
+            }
         }
 
         lines.push("---\n\n".to_string());
@@ -619,6 +657,7 @@ impl ReportGenerator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::version::CrashgenVersionStatus;
 
     #[test]
     fn test_string_pool() {
@@ -660,5 +699,21 @@ mod tests {
         let text = composer.build_string();
         assert!(text.contains("Line 0"));
         assert!(text.contains("Line 19"));
+    }
+
+    #[test]
+    fn test_generate_error_section_uses_list_based_valid_message() {
+        let generator =
+            ReportGenerator::with_config("CLASSIC v9.0.0".to_string(), "Buffout 4".to_string());
+
+        let section = generator.generate_error_section_with_status(
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\"",
+            "Addictol v1.0.0",
+            Some(CrashgenVersionStatus::Valid),
+        );
+
+        let text = section.to_list().join("");
+        assert!(text.contains("valid version of Buffout 4"));
+        assert!(!text.contains("latest version of Buffout 4"));
     }
 }

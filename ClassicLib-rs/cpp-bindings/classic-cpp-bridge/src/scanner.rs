@@ -8,7 +8,7 @@ use classic_config_core::YamlDataCore;
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::papyrus::{PapyrusAnalyzer, PapyrusStats};
 use classic_scanlog_core::{
-    build_analysis_config_from_yaml, AnalysisConfig, AnalysisResult, OrchestratorCore,
+    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
 };
 use classic_shared_core::get_runtime;
 use classic_yaml_core::YamlOperations;
@@ -353,8 +353,8 @@ mod ffi {
 mod tests {
     use super::*;
     use std::io::Write;
-    use tempfile::tempdir;
     use tempfile::NamedTempFile;
+    use tempfile::tempdir;
 
     #[test]
     fn test_orchestrator_new_minimal() {
@@ -425,8 +425,7 @@ mod tests {
         std::fs::create_dir_all(data.join("databases")).unwrap();
         let custom = data.join("databases").join("custom.db");
 
-        let settings_yaml =
-        "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4:\n      - databases/FOLON FormIDs.db\n      - databases/custom.db\n";
+        let settings_yaml = "CLASSIC_Settings:\n  FormID Databases:\n    Fallout4:\n      - databases/FOLON FormIDs.db\n      - databases/custom.db\n";
         std::fs::write(root.join("CLASSIC Settings.yaml"), settings_yaml).unwrap();
 
         let paths =

@@ -163,7 +163,7 @@ pub fn create_fo4_ae() -> VersionInfo {
             AddressLibFormat::Bin,
             "https://www.nexusmods.com/fallout4/mods/47327?tab=files",
         )),
-        xse: Some(XseConfig::new("F4SE", "0.7.3", "f4se_loader.exe")),
+        xse: Some(XseConfig::new("F4SE", "0.7.7", "f4se_loader.exe")),
         // Generous compatible range: 1.11.137.0 through 1.11.999.0 (future-proof for active branch)
         compatible_range: Some(CompatibleRange::new(
             GameVersion::new(1, 11, 137, 0),
@@ -172,16 +172,28 @@ pub fn create_fo4_ae() -> VersionInfo {
         priority: 300, // Highest priority - most recent version branch
         deprecated: false,
         exe_hash: None, // AE exe hash not yet available
-        crashgen_versions: vec![CrashgenConfig::with_range(
-            "1.4.0",
-            "MiniBuff AE Crash Logger",
-            "AE-compatible Crash Logger",
-            "https://www.nexusmods.com/fallout4/mods/99911",
-            CompatibleRange::new(
-                GameVersion::new(1, 11, 137, 0),
-                GameVersion::new(1, 11, 999, 999),
+        crashgen_versions: vec![
+            CrashgenConfig::with_range(
+                "1.7.1",
+                "Buffout 4",
+                "AE-compatible Crash Logger",
+                "https://www.nexusmods.com/fallout4/mods/99911",
+                CompatibleRange::new(
+                    GameVersion::new(1, 11, 137, 0),
+                    GameVersion::new(1, 11, 999, 999),
+                ),
             ),
-        )],
+            CrashgenConfig::with_range(
+                "1.0.0",
+                "Addictol",
+                "AIO Engine fixes and Crash Logger",
+                "https://www.nexusmods.com/fallout4/mods/84214",
+                CompatibleRange::new(
+                    GameVersion::new(1, 11, 137, 0),
+                    GameVersion::new(1, 11, 999, 999),
+                ),
+            ),
+        ],
     }
 }
 
@@ -334,16 +346,25 @@ mod tests {
         assert!(!range.contains(&GameVersion::new(1, 10, 984, 0))); // NG version
         assert!(!range.contains(&GameVersion::new(1, 12, 0, 0))); // Outside range
 
-        // AE supports MiniBuff AE Crash Logger
-        assert_eq!(ae.crashgen_versions.len(), 1);
-        assert_eq!(ae.crashgen_versions[0].version, "1.4.0");
-        assert_eq!(ae.crashgen_versions[0].name, "MiniBuff AE Crash Logger");
-        // AE crashgen has compatible_range matching AE's version-level range
-        let ae_cg_range = ae.crashgen_versions[0].compatible_range.as_ref().unwrap();
-        assert_eq!(ae_cg_range.min_version, GameVersion::new(1, 11, 137, 0));
-        assert_eq!(ae_cg_range.max_version, GameVersion::new(1, 11, 999, 999));
+        // AE supports both Buffout 4 and Addictol
+        assert_eq!(ae.crashgen_versions.len(), 2);
+        assert_eq!(ae.crashgen_versions[0].version, "1.7.1");
+        assert_eq!(ae.crashgen_versions[0].name, "Buffout 4");
+        assert_eq!(ae.crashgen_versions[1].version, "1.0.0");
+        assert_eq!(ae.crashgen_versions[1].name, "Addictol");
+
+        // Both AE crashgen configs have compatible_range matching AE's version-level range
+        let ae_cg_range_0 = ae.crashgen_versions[0].compatible_range.as_ref().unwrap();
+        assert_eq!(ae_cg_range_0.min_version, GameVersion::new(1, 11, 137, 0));
+        assert_eq!(ae_cg_range_0.max_version, GameVersion::new(1, 11, 999, 999));
         assert!(ae.crashgen_versions[0].is_compatible_with(&GameVersion::new(1, 11, 191, 0)));
         assert!(!ae.crashgen_versions[0].is_compatible_with(&GameVersion::new(1, 10, 984, 0)));
+
+        let ae_cg_range_1 = ae.crashgen_versions[1].compatible_range.as_ref().unwrap();
+        assert_eq!(ae_cg_range_1.min_version, GameVersion::new(1, 11, 137, 0));
+        assert_eq!(ae_cg_range_1.max_version, GameVersion::new(1, 11, 999, 999));
+        assert!(ae.crashgen_versions[1].is_compatible_with(&GameVersion::new(1, 11, 191, 0)));
+        assert!(!ae.crashgen_versions[1].is_compatible_with(&GameVersion::new(1, 10, 984, 0)));
     }
 
     #[test]
@@ -415,12 +436,13 @@ mod tests {
     fn test_ae_get_compatible_crashgens_filters_by_range() {
         let ae = create_fo4_ae();
 
-        // AE game version (1.11.191.0) — MiniBuff should be compatible
+        // AE game version (1.11.191.0) — both Buffout 4 and Addictol should be compatible
         let compatible = ae.get_compatible_crashgens(None);
-        assert_eq!(compatible.len(), 1);
-        assert_eq!(compatible[0].version, "1.4.0");
+        assert_eq!(compatible.len(), 2);
+        assert_eq!(compatible[0].version, "1.7.1");
+        assert_eq!(compatible[1].version, "1.0.0");
 
-        // NG game version — MiniBuff should NOT be compatible
+        // NG game version — neither AE crashgen should be compatible
         let ng_version = GameVersion::new(1, 10, 984, 0);
         let compatible = ae.get_compatible_crashgens(Some(&ng_version));
         assert!(compatible.is_empty());

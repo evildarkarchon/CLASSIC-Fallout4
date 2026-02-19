@@ -57,6 +57,12 @@ static COMMON_PATTERNS: Lazy<HashMap<&'static str, Regex>> = Lazy::new(|| {
     patterns
 });
 
+/// Pattern for crash generator header lines like "Addictol v1.0.0".
+static CRASHGEN_HEADER_PATTERN: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"^[A-Za-z][A-Za-z0-9 _.\-]{1,80}\s+v\d+\.\d+(?:\.\d+){0,2}\b")
+        .expect("Invalid crashgen header regex")
+});
+
 /// Segment boundary definitions for different crash log formats
 static SEGMENT_BOUNDARIES: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|| {
     vec![
@@ -773,27 +779,26 @@ impl LogParser {
 
         // Single pass for all header info
         for line in lines.iter().take(50) {
+            let trimmed = line.trim();
+
             // Game version detection
-            if line.starts_with("Fallout 4 v")
-                || line.starts_with("Skyrim Special Edition v")
-                || line.starts_with("Skyrim SE v")
-                || line.starts_with("Skyrim VR v")
-            {
-                game_version = line.trim().to_string();
+            if Self::is_game_version_line(trimmed) {
+                game_version = trimmed.to_string();
             }
 
             // Crash generator detection
-            if line.contains("Crash Log")
-                || line.contains("Buffout")
-                || line.contains("Crashgen")
-                || line.contains("Trainwreck")
-            {
-                crashgen_version = line.trim().to_string();
+            if Self::is_crashgen_version_line(trimmed) {
+                crashgen_version = trimmed.to_string();
             }
 
             // Main error detection
-            if line.starts_with("Unhandled exception") || line.contains("EXCEPTION_") {
-                main_error = line.replace('|', "\n").trim().to_string();
+            if trimmed.starts_with("Unhandled exception") || trimmed.contains("EXCEPTION_") {
+                main_error = trimmed.replace('|', "\n");
+            }
+
+            if main_error != "UNKNOWN" && game_version != "UNKNOWN" && crashgen_version != "UNKNOWN"
+            {
+                break;
             }
         }
 
@@ -1002,41 +1007,38 @@ impl LogParser {
     /// Parse and analyze crash header information
     pub fn parse_crash_header(&self, lines: &[String]) -> Result<HashMap<String, String>> {
         let mut header_info = HashMap::new();
+        for line in lines.iter().take(50) {
+            let trimmed = line.trim();
 
-        // Use parallel search for common header patterns
-        let results: Vec<_> = lines
-            .par_iter()
-            .take(50) // Headers are usually in the first 50 lines
-            .filter_map(|line| {
-                // Game version
-                if line.starts_with("Fallout 4 v") || line.starts_with("Skyrim SE v") {
-                    return Some(("game_version".to_string(), line.trim().to_string()));
+            // Game version
+            if Self::is_game_version_line(trimmed) {
+                header_info.insert("game_version".to_string(), trimmed.to_string());
+            }
+
+            // Crash generator version
+            if Self::is_crashgen_version_line(trimmed) {
+                header_info.insert("crashgen_version".to_string(), trimmed.to_string());
+            }
+
+            // Main error
+            if trimmed.starts_with("Unhandled exception") {
+                let replaced = trimmed.replacen('|', "\n", 1);
+                header_info.insert("main_error".to_string(), replaced);
+            }
+
+            // System info patterns
+            if trimmed.contains("at address") {
+                if let Some(caps) = COMMON_PATTERNS["address"].captures(trimmed) {
+                    header_info.insert("crash_address".to_string(), caps[0].to_string());
                 }
+            }
 
-                // Crash generator version
-                if line.contains("Crash Logger") || line.contains("Buffout") {
-                    return Some(("crashgen_version".to_string(), line.trim().to_string()));
-                }
-
-                // Main error
-                if line.starts_with("Unhandled exception") {
-                    let replaced = line.replacen('|', "\n", 1);
-                    return Some(("main_error".to_string(), replaced));
-                }
-
-                // System info patterns
-                if let Some(caps) = COMMON_PATTERNS["address"].captures(line) {
-                    if line.contains("at address") {
-                        return Some(("crash_address".to_string(), caps[0].to_string()));
-                    }
-                }
-
-                None
-            })
-            .collect();
-
-        for (key, value) in results {
-            header_info.insert(key, value);
+            if header_info.contains_key("game_version")
+                && header_info.contains_key("crashgen_version")
+                && header_info.contains_key("main_error")
+            {
+                break;
+            }
         }
 
         Ok(header_info)
@@ -1045,6 +1047,37 @@ impl LogParser {
 
 // Private implementation methods
 impl LogParser {
+    /// Check whether a line is a game version header.
+    fn is_game_version_line(line: &str) -> bool {
+        line.starts_with("Fallout 4 v")
+            || line.starts_with("Fallout 4 VR v")
+            || line.starts_with("Skyrim Special Edition v")
+            || line.starts_with("Skyrim SE v")
+            || line.starts_with("Skyrim VR v")
+    }
+
+    /// Check whether a line is a crash generator version header.
+    fn is_crashgen_version_line(line: &str) -> bool {
+        if line.is_empty() || Self::is_game_version_line(line) {
+            return false;
+        }
+
+        if line.starts_with("Unhandled exception")
+            || line.starts_with('[')
+            || line.starts_with('\t')
+        {
+            return false;
+        }
+
+        line.contains("Crash Log")
+            || line.contains("Crash Logger")
+            || line.contains("Buffout")
+            || line.contains("Crashgen")
+            || line.contains("Trainwreck")
+            || line.contains("Addictol")
+            || CRASHGEN_HEADER_PATTERN.is_match(line)
+    }
+
     /// SIMD-optimized string contains check
     fn fast_contains(&self, haystack: &str, needle: &str) -> bool {
         // Use memchr for single-byte patterns
@@ -1457,5 +1490,21 @@ mod tests {
         ];
         let formids = parser.extract_formids(&lines);
         assert_eq!(formids.len(), 2);
+    }
+
+    #[test]
+    fn test_parse_crash_header_detects_addictol_version_line() {
+        let parser = LogParser::new(None).unwrap();
+        let lines = vec![
+            "Fallout 4 v1.11.191".to_string(),
+            "Addictol v1.0.0 Feb 16 2026 08:02:06".to_string(),
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7380973B8 Fallout4.exe+21773B8".to_string(),
+        ];
+
+        let header = parser.parse_crash_header(&lines).unwrap();
+        assert_eq!(
+            header.get("crashgen_version"),
+            Some(&"Addictol v1.0.0 Feb 16 2026 08:02:06".to_string())
+        );
     }
 }

@@ -774,11 +774,13 @@ mod tests {
         assert_eq!(ng_configs.len(), 1);
         assert_eq!(ng_configs[0].version, "1.37.0");
 
-        // AE has MiniBuff AE Crash Logger
+        // AE has both Buffout 4 and Addictol
         let ae_configs = registry.get_crashgen_versions("FO4_AE");
-        assert_eq!(ae_configs.len(), 1);
-        assert_eq!(ae_configs[0].version, "1.4.0");
-        assert_eq!(ae_configs[0].name, "MiniBuff AE Crash Logger");
+        assert_eq!(ae_configs.len(), 2);
+        assert_eq!(ae_configs[0].version, "1.7.1");
+        assert_eq!(ae_configs[0].name, "Buffout 4");
+        assert_eq!(ae_configs[1].version, "1.0.0");
+        assert_eq!(ae_configs[1].name, "Addictol");
 
         // VR uses Buffout 4 (name matches log output)
         let vr_configs = registry.get_crashgen_versions("FO4_VR");
@@ -801,9 +803,9 @@ mod tests {
         let ng_versions = registry.get_crashgen_version_strings("FO4_NG");
         assert_eq!(ng_versions, vec!["1.37.0"]);
 
-        // AE has MiniBuff AE Crash Logger
+        // AE has both Buffout 4 and Addictol
         let ae_versions = registry.get_crashgen_version_strings("FO4_AE");
-        assert_eq!(ae_versions, vec!["1.4.0"]);
+        assert_eq!(ae_versions, vec!["1.7.1", "1.0.0"]);
 
         // VR uses Buffout 4 NG
         let vr_versions = registry.get_crashgen_version_strings("FO4_VR");

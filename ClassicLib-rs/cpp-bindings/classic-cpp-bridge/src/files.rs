@@ -429,8 +429,7 @@ mod tests {
         let log_path = custom_dir.join("crash-2026-02-19-00-00-00.log");
         std::fs::write(&log_path, "raw log").unwrap();
 
-        let out_path =
-            write_autoscan_report(log_path.to_str().unwrap(), "# report body").unwrap();
+        let out_path = write_autoscan_report(log_path.to_str().unwrap(), "# report body").unwrap();
         let out_path = std::path::PathBuf::from(out_path);
 
         assert_eq!(out_path.parent(), log_path.parent());
