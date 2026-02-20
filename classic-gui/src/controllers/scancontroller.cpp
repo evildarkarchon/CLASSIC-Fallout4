@@ -66,6 +66,7 @@ void ScanController::startScan(const QString& yamlRoot,
         }
         return;
     }
+    emit scanDiscovered(logPathsList.size());
 
     // Create worker and thread
     auto* worker = new ScanWorker();
@@ -74,6 +75,7 @@ void ScanController::startScan(const QString& yamlRoot,
 
     // Connect worker signals to controller slots
     connect(worker, &ScanWorker::progress, this, &ScanController::scanProgress);
+    connect(worker, &ScanWorker::logScanned, this, &ScanController::scanLogScanned);
     connect(worker, &ScanWorker::finished, this, &ScanController::onWorkerFinished);
     connect(worker, &ScanWorker::error, this, &ScanController::onWorkerError);
 

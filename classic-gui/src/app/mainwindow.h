@@ -6,6 +6,7 @@
 #include <QPushButton>
 #include <QLabel>
 #include <QStatusBar>
+#include <QElapsedTimer>
 #include "widgets/adaptiveprogressbar.h"
 
 class SignalHub;
@@ -57,8 +58,10 @@ private slots:
     void onScanGameFiles();
     void onExit();
     void onScanProgress(float percent, const QString& status);
-    void onScanCompleted();
+    void onScanCompleted(int total, int success, int errors);
     void onScanError(const QString& message);
+    void onCrashScanDiscovered(int totalLogs);
+    void onCrashLogScanned(int index, bool success, const QString& logPath);
     void onShowSettings();
     void onGameFilesScanFinished(const QString& output, bool hasErrors, uint32_t totalChecks);
     void onGameFilesScanError(const QString& message);
@@ -114,6 +117,10 @@ private:
     bool m_simplifyLogs = false;
     bool m_moveUnsolvedLogs = false;
     int m_maxConcurrentScans = 0;
+    QElapsedTimer m_crashScanTimer;
+    int m_crashScanTotalLogs = 0;
+    int m_crashScanLogsCompleted = 0;
+    bool m_crashScanInProgress = false;
 
     // Per-tab window geometry
     int m_lastTabIndex = -1;

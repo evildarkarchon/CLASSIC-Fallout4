@@ -9,6 +9,7 @@ private slots:
     void main_tab_minimum_geometry_constant_matches_default_layout();
     void tab_bar_configuration_is_responsive_for_narrow_windows();
     void custom_folder_handlers_refresh_results_directories();
+    void crash_scan_status_bar_tracks_scan_statistics();
 };
 
 void MainWindowGeometryTests::main_tab_minimum_geometry_constant_matches_default_layout()
@@ -76,6 +77,35 @@ void MainWindowGeometryTests::custom_folder_handlers_refresh_results_directories
     QVERIFY2(
         editedBody.contains(QStringLiteral("initResultsReportDir();")),
         "onCustomFolderEdited should refresh Results report directories after updating custom path");
+}
+
+void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
+{
+    const QString headerPath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.h");
+    QFile headerFile(headerPath);
+    QVERIFY2(headerFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(headerPath)));
+
+    const QString headerText = QString::fromUtf8(headerFile.readAll());
+    QVERIFY2(headerText.contains(QStringLiteral("QElapsedTimer m_crashScanTimer")),
+             "MainWindow should keep a crash-scan elapsed timer for status updates");
+    QVERIFY2(headerText.contains(QStringLiteral("int m_crashScanLogsCompleted")),
+             "MainWindow should track completed crash-log count for status updates");
+    QVERIFY2(headerText.contains(QStringLiteral("int m_crashScanTotalLogs")),
+             "MainWindow should track total crash-log count for status updates");
+
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("logs scanned")),
+             "Crash scan status text should include scanned-log statistics");
+    QVERIFY2(sourceText.contains(QStringLiteral("elapsed")),
+             "Crash scan status text should include elapsed time statistics");
+    QVERIFY2(sourceText.contains(QStringLiteral("progressCompletedEstimate")),
+             "Crash scan status should derive scanned-log stats from streaming progress updates");
 }
 
 QTEST_MAIN(MainWindowGeometryTests)

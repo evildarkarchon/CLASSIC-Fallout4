@@ -45,6 +45,7 @@
 
 #include <QDateTime>
 #include <QDesktopServices>
+#include <QElapsedTimer>
 #include <QGroupBox>
 #include <QTabBar>
 #include <QUrl>
@@ -52,6 +53,12 @@
 namespace fs = std::filesystem;
 
 namespace {
+QString format_elapsed_seconds(const QElapsedTimer& timer)
+{
+    const qint64 elapsedMs = timer.isValid() ? timer.elapsed() : 0;
+    return QString::number(static_cast<double>(elapsedMs) / 1000.0, 'f', 1);
+}
+
 QString settingsFilePath(const QString& dataRoot)
 {
     return dataRoot + QStringLiteral("/CLASSIC Settings.yaml");
@@ -667,10 +674,12 @@ void MainWindow::connectSignals()
     // ScanController → MainWindow
     connect(m_scanController, &ScanController::scanProgress,
             this, &MainWindow::onScanProgress);
+    connect(m_scanController, &ScanController::scanDiscovered,
+            this, &MainWindow::onCrashScanDiscovered);
+    connect(m_scanController, &ScanController::scanLogScanned,
+            this, &MainWindow::onCrashLogScanned);
     connect(m_scanController, &ScanController::scanFinished,
-            this, [this](int /*total*/, int /*success*/, int /*errors*/) {
-                onScanCompleted();
-            });
+            this, &MainWindow::onScanCompleted);
     connect(m_scanController, &ScanController::scanError,
             this, &MainWindow::onScanError);
 
@@ -1439,7 +1448,12 @@ void MainWindow::onScanCrashLogs()
 
     m_btnScanCrashLogs->setEnabled(false);
     m_btnScanCrashLogs->setText(QStringLiteral("SCANNING..."));
-    setStatusMessage(QStringLiteral("Scanning crash logs..."));
+    m_crashScanTotalLogs = 0;
+    m_crashScanLogsCompleted = 0;
+    m_crashScanInProgress = true;
+    m_crashScanTimer.start();
+    setStatusMessage(QStringLiteral("Scanning crash logs... 0 logs scanned | elapsed %1s")
+        .arg(format_elapsed_seconds(m_crashScanTimer)));
 
     m_scanController->startScan(
         m_dataRoot,
@@ -1527,6 +1541,43 @@ void MainWindow::onExit()
 
 void MainWindow::onScanProgress(float percent, const QString& status)
 {
+    if (m_crashScanInProgress) {
+        if (percent >= 0.0f && m_crashScanTotalLogs > 0) {
+            const int progressCompletedEstimate = qBound(
+                0,
+                qRound((percent * static_cast<float>(m_crashScanTotalLogs)) / 100.0f),
+                m_crashScanTotalLogs);
+            m_crashScanLogsCompleted = qMax(m_crashScanLogsCompleted, progressCompletedEstimate);
+        }
+
+        const int completedLogs =
+            (m_crashScanTotalLogs > 0) ? qMin(m_crashScanLogsCompleted, m_crashScanTotalLogs) : m_crashScanLogsCompleted;
+        const QString scanStats =
+            (m_crashScanTotalLogs > 0)
+                ? QStringLiteral("%1/%2 logs scanned").arg(completedLogs).arg(m_crashScanTotalLogs)
+                : QStringLiteral("%1 logs scanned").arg(completedLogs);
+
+        if (percent < 0.0f) {
+            // Indeterminate: range(0,0) triggers bouncing animation
+            m_progressBar->setRange(0, 0);
+            setStatusMessage(QStringLiteral("%1 | elapsed %2s | %3")
+                .arg(scanStats)
+                .arg(format_elapsed_seconds(m_crashScanTimer))
+                .arg(status));
+        } else {
+            // Determinate: fill bar to percentage
+            m_progressBar->setRange(0, 100);
+            m_progressBar->setValue(static_cast<int>(percent));
+            setStatusMessage(
+                QStringLiteral("Scanning: %1% | %2 | elapsed %3s | %4")
+                    .arg(static_cast<int>(percent))
+                    .arg(scanStats)
+                    .arg(format_elapsed_seconds(m_crashScanTimer))
+                    .arg(status));
+        }
+        return;
+    }
+
     if (percent < 0.0f) {
         // Indeterminate: range(0,0) triggers bouncing animation
         m_progressBar->setRange(0, 0);
@@ -1542,13 +1593,34 @@ void MainWindow::onScanProgress(float percent, const QString& status)
     }
 }
 
-void MainWindow::onScanCompleted()
+void MainWindow::onCrashScanDiscovered(int totalLogs)
+{
+    m_crashScanTotalLogs = totalLogs;
+}
+
+void MainWindow::onCrashLogScanned(int /*index*/, bool /*success*/, const QString& /*logPath*/)
+{
+    if (m_crashScanTotalLogs > 0) {
+        m_crashScanLogsCompleted = qMin(m_crashScanLogsCompleted + 1, m_crashScanTotalLogs);
+    } else {
+        ++m_crashScanLogsCompleted;
+    }
+}
+
+void MainWindow::onScanCompleted(int total, int success, int errors)
 {
     m_btnScanCrashLogs->setEnabled(true);
     m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
-    setStatusMessage(QStringLiteral("Scan completed"));
+    m_crashScanInProgress = false;
+    m_crashScanTotalLogs = total;
+    m_crashScanLogsCompleted = total;
+    setStatusMessage(QStringLiteral("Scan completed: %1 logs scanned in %2s (%3 succeeded, %4 failed)")
+        .arg(total)
+        .arg(format_elapsed_seconds(m_crashScanTimer))
+        .arg(success)
+        .arg(errors));
 
     // Auto-switch to Results tab is handled by ResultsController::onScanCompleted()
 }
@@ -1559,7 +1631,10 @@ void MainWindow::onScanError(const QString& message)
     m_btnScanCrashLogs->setText(QStringLiteral("SCAN CRASH LOGS"));
     m_progressBar->setRange(0, 100);
     m_progressBar->setValue(0);
-    setStatusMessage(QStringLiteral("Scan failed: ") + message);
+    m_crashScanInProgress = false;
+    setStatusMessage(QStringLiteral("Scan failed after %1s: %2")
+        .arg(format_elapsed_seconds(m_crashScanTimer))
+        .arg(message));
 
     QMessageBox::critical(this, QStringLiteral("Scan Error"), message);
 }
