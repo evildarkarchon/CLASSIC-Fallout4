@@ -32,7 +32,7 @@ from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import get_local_dir
 from ClassicLib.integration.factory import get_file_io, is_component_available
-from ClassicLib.Interface.widgets.ResultsViewerWidgets import (
+from ClassicLib.Interface.widgets.results_viewer_widgets import (
     MarkdownViewer,
     ReportListWidget,
     ReportMetadataWidget,

@@ -5,6 +5,7 @@ to perform long-running operations without blocking the GUI.
 """
 
 import traceback
+from datetime import UTC
 
 from PySide6.QtCore import QObject, Signal, Slot
 
@@ -79,7 +80,7 @@ class CrashLogsScanWorker(QObject):
         # Dual timer verification (perf_counter vs wall clock)
         perf_start = time.perf_counter()
         wall_start = time.time()
-        start_datetime = datetime.now()
+        start_datetime = datetime.now(UTC)
 
         logger.debug(f"Starting crash logs scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
@@ -134,7 +135,7 @@ class CrashLogsScanWorker(QObject):
         # Calculate timings with both methods for verification
         perf_elapsed = time.perf_counter() - perf_start
         wall_elapsed = time.time() - wall_start
-        end_datetime = datetime.now()
+        end_datetime = datetime.now(UTC)
         datetime_elapsed = (end_datetime - start_datetime).total_seconds()
 
         logger.info(
@@ -224,7 +225,7 @@ class GameFilesScanWorker(QObject):
         # Dual timer verification (perf_counter vs wall clock)
         perf_start = time.perf_counter()
         wall_start = time.time()
-        start_datetime = datetime.now()
+        start_datetime = datetime.now(UTC)
 
         logger.debug(f"Starting game files scan at {start_datetime.strftime('%H:%M:%S.%f')[:-3]}")
 
@@ -247,7 +248,7 @@ class GameFilesScanWorker(QObject):
         # Calculate timings with both methods for verification
         perf_elapsed = time.perf_counter() - perf_start
         wall_elapsed = time.time() - wall_start
-        end_datetime = datetime.now()
+        end_datetime = datetime.now(UTC)
         datetime_elapsed = (end_datetime - start_datetime).total_seconds()
 
         logger.info(

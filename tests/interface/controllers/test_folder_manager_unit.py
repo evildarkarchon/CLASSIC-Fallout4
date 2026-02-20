@@ -229,7 +229,7 @@ class TestFolderManager:
         mock_context.ui_widgets.mods_folder_edit.setText.assert_not_called()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.dialog.SettingsDialog")
+    @patch("ClassicLib.Interface.settings.dialog.SettingsDialog")
     def test_open_settings_creates_dialog(self, mock_dialog_class, mock_context):
         """Test open_settings creates and shows settings dialog."""
         from PySide6.QtWidgets import QDialog
@@ -247,7 +247,7 @@ class TestFolderManager:
         mock_dialog.exec.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.dialog.SettingsDialog")
+    @patch("ClassicLib.Interface.settings.dialog.SettingsDialog")
     def test_open_settings_applies_changes_on_accept(self, mock_dialog_class, mock_context):
         """Test open_settings applies changes when accepted."""
         from PySide6.QtWidgets import QDialog

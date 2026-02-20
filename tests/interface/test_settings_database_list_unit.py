@@ -17,7 +17,7 @@ PySide6 = pytest.importorskip("PySide6")
 from PySide6.QtWidgets import QApplication, QListWidget, QPushButton
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.Interface.Settings.dialog import SettingsDialog
+from ClassicLib.Interface.settings.dialog import SettingsDialog
 
 
 @pytest.mark.unit
@@ -157,7 +157,7 @@ class TestDatabaseListAddRemove:
             "C:/databases/extra.sqlite",
         ]
         with patch(
-            "ClassicLib.Interface.Settings.dialog.QFileDialog.getOpenFileNames",
+            "ClassicLib.Interface.settings.dialog.QFileDialog.getOpenFileNames",
             return_value=(mock_files, ""),
         ):
             gui_settings_dialog._add_databases()
@@ -181,7 +181,7 @@ class TestDatabaseListAddRemove:
             "C:/databases/extra.sqlite",
         ]
         with patch(
-            "ClassicLib.Interface.Settings.dialog.QFileDialog.getOpenFileNames",
+            "ClassicLib.Interface.settings.dialog.QFileDialog.getOpenFileNames",
             return_value=(mock_files, ""),
         ):
             gui_settings_dialog._add_databases()
@@ -196,7 +196,7 @@ class TestDatabaseListAddRemove:
         assert isinstance(db_list, QListWidget)
 
         with patch(
-            "ClassicLib.Interface.Settings.dialog.QFileDialog.getOpenFileNames",
+            "ClassicLib.Interface.settings.dialog.QFileDialog.getOpenFileNames",
             return_value=([], ""),
         ):
             gui_settings_dialog._add_databases()

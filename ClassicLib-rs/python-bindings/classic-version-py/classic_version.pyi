@@ -37,12 +37,10 @@ Usage:
     assert formatted == "v1.10.163"
 """
 
-from __future__ import annotations
-
 __version__: str
 
 # Type alias for version tuples
-Version = tuple[int, int, int]
+type Version = tuple[int, int, int]
 
 def parse_version(version_str: str) -> Version:
     """Parse a version string into a semantic version.

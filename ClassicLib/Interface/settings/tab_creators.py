@@ -26,7 +26,7 @@ from PySide6.QtWidgets import (
 )
 
 if TYPE_CHECKING:
-    from ClassicLib.Interface.Settings.path_manager import PathManager
+    from ClassicLib.Interface.settings.path_manager import PathManager
 
 
 def get_game_version_options() -> list[tuple[str, str]]:

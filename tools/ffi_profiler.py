@@ -369,7 +369,7 @@ class FFIProfiler:
                             input_size += self._get_data_size(value)
                             input_types.append(self._get_data_type(value))
                 except Exception:  # noqa: BLE001
-                    pass
+                    _ = None  # pass
 
                 # Store call start info in frame for retrieval on return
                 frame.ffi_profile_data = {

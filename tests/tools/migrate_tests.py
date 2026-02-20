@@ -297,6 +297,7 @@ def update_imports_in_other_files(original_file: Path, created_files: dict[str, 
             if import_pattern.search(content):
                 print(f"   ⚠️  {test_file.name} may need import updates")
         except Exception:
+            _ = None
             continue
 
 

@@ -113,7 +113,7 @@ class TestBug02PathResolution:
             assert str(tmp_path) not in str(e), f"classic_settings() is resolving relative to CWD ({tmp_path}), not project root"
         except Exception:
             # Other errors are acceptable (missing YAML data, etc.)
-            pass
+            _ = None  # pass
 
     @pytest.mark.unit
     def test_resource_loader_path_absolute(self) -> None:

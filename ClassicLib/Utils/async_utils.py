@@ -17,7 +17,7 @@ from collections.abc import Awaitable, Callable, Iterable
 from concurrent.futures import Executor
 from functools import partial, wraps
 from types import TracebackType
-from typing import Any, ParamSpec, TypeVar, cast
+from typing import Any, ParamSpec, Self, TypeVar, cast
 
 # -----------------------------------------------------------------------------
 # Type Definitions
@@ -719,7 +719,7 @@ class AsyncTimer:
         self.start_time: float | None = None
         self.end_time: float | None = None
 
-    async def __aenter__(self) -> "AsyncTimer":
+    async def __aenter__(self) -> Self:
         self.start_time = time.perf_counter()
         return self
 
@@ -744,7 +744,7 @@ class Throttler:
         self.semaphore = asyncio.Semaphore(rate_limit)
         self.tasks: set[asyncio.Task[Any]] = set()
 
-    async def __aenter__(self) -> "Throttler":
+    async def __aenter__(self) -> Self:
         await self.semaphore.acquire()
         return self
 

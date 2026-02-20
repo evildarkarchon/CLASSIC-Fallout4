@@ -1,3 +1,4 @@
+
 """Efficient bridge between synchronous and asynchronous code.
 
 This module provides a high-performance bridge for running async code from sync contexts
@@ -57,16 +58,16 @@ See Also:
     - docs/testing_async_bridge.md - Testing guide
 
 """
-
 import asyncio
 import atexit
 import logging
 import sys
 import threading
 import time
+import types
 from collections.abc import Callable, Coroutine
 from concurrent.futures import TimeoutError as FutureTimeoutError
-from typing import Any, ClassVar, TypeVar
+from typing import Any, ClassVar, Self, TypeVar
 
 # Module exports
 __all__ = [
@@ -505,7 +506,7 @@ class AsyncBridge:
                 else:
                     logger.debug(f"AsyncBridge: Thread {self._thread_id} stopped gracefully")
 
-    def __enter__(self) -> "AsyncBridge":
+    def __enter__(self) -> Self:
         """Context manager entry - ensures loop is running.
 
         Usage:
@@ -520,7 +521,7 @@ class AsyncBridge:
         logger.debug(f"AsyncBridge: Entered context for thread {self._thread_id}")
         return self
 
-    def __exit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: Any) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None) -> None:
         """Context manager exit - shutdown loop."""
         logger.debug(f"AsyncBridge: Exiting context for thread {self._thread_id}")
         self.shutdown()

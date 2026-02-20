@@ -14,7 +14,7 @@ pytestmark = [
 
 from PySide6.QtWidgets import QApplication
 
-from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
 
 class TestPapyrusMonitorThreadSafety:
@@ -39,7 +39,7 @@ class TestPapyrusMonitorThreadSafety:
         worker.stop()
         assert worker._should_run is False
 
-    @patch("ClassicLib.Interface.widgets.Papyrus.papyrus_logging")
+    @patch("ClassicLib.Interface.widgets.papyrus.papyrus_logging")
     def test_papyrus_monitor_run_loop(self, mock_logging: MagicMock, app: QApplication) -> None:
         """Test the run loop respects thread-safe stop."""
         # Create a mock that simulates papyrus_logging and allows controlled stopping
@@ -107,7 +107,7 @@ class TestGracefulShutdown:
         # Test thread cleanup on close
         from PySide6.QtCore import QThread
 
-        from ClassicLib.Interface.workers.ThreadManager import ThreadManager, ThreadType
+        from ClassicLib.Interface.workers.thread_manager import ThreadManager, ThreadType
 
         thread_manager = ThreadManager()
 

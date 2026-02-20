@@ -12,7 +12,7 @@ the worker thread and the main GUI thread.
 """
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 from PySide6.QtCore import QMutex, QObject, QThread, Signal, Slot
 
@@ -109,7 +109,7 @@ class PapyrusMonitorWorker(QObject):
 
     # noinspection GrazieInspection
     def __init__(self) -> None:
-        """Initialize the CLASSIC_Interface instance.
+        """Initialize the classic_interface instance.
 
         This constructor sets up the initial state of the instance, including:
         - Setting the `_should_run` flag to True.
@@ -228,7 +228,7 @@ class PapyrusMonitorWorker(QObject):
         ratio: float = 0.0 if stats["dumps"] == 0 else stats["dumps"] / stats["stacks"]
 
         return PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(UTC),
             dumps=stats["dumps"],
             stacks=stats["stacks"],
             warnings=stats["warnings"],

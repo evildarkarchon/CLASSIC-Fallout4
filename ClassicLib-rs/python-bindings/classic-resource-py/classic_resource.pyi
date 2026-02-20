@@ -33,7 +33,6 @@ Usage:
     )
 """
 
-from __future__ import annotations
 
 __version__: str
 
@@ -97,21 +96,7 @@ class ResourceType:
     def __eq__(self, other: object) -> bool:
         """Compare resource types for equality."""
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this ResourceType.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this ResourceType.
-
-        Returns:
-            The resource type name as a string.
-
-        """
 
 class ResourceInfo:
     """Resource file information.
@@ -132,21 +117,7 @@ class ResourceInfo:
     def size(self) -> int:
         """Get the file size in bytes."""
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this ResourceInfo.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this ResourceInfo.
-
-        Returns:
-            A formatted string with path, type, and size.
-
-        """
 
 def detect_resource_type(path: str) -> ResourceType:
     """Detect the resource type from a file path.

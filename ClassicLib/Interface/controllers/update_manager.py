@@ -20,8 +20,8 @@ from PySide6.QtWidgets import QMessageBox
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.Interface.workers.ThreadManager import ThreadType
-from ClassicLib.Interface.workers.Workers import UpdateCheckWorker
+from ClassicLib.Interface.workers.thread_manager import ThreadType
+from ClassicLib.Interface.workers.workers import UpdateCheckWorker
 from ClassicLib.io.yaml import yaml_settings
 
 if TYPE_CHECKING:
@@ -266,7 +266,7 @@ class UpdateManager:
                 QMessageBox.StandardButton.Ok,
             )
         else:
-            update_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.update_popup_text") or ""
+            update_popup_text: str = yaml_settings(str, YAML.Main, "classic_interface.update_popup_text") or ""
             result = QMessageBox.question(
                 self._ctx.main_window,
                 "CLASSIC UPDATE",

@@ -43,7 +43,7 @@ def test_folder_management_detects_rust():
     except ImportError:
         pytest.skip("Rust path module not available")
 
-    from ClassicLib.Interface.shared.FolderManagement import _RUST_PATH_AVAILABLE
+    from ClassicLib.Interface.shared.folder_management import _RUST_PATH_AVAILABLE
 
     if not _RUST_PATH_AVAILABLE:
         pytest.skip("Rust path operations not available in this environment")
@@ -58,7 +58,7 @@ def test_folder_management_detects_rust():
 @pytest.mark.rust
 def test_is_valid_directory_with_rust():
     """Test directory validation with Rust acceleration."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     # Test with existing directory
     assert _is_valid_directory("C:/Windows"), "C:/Windows should be valid"
@@ -94,7 +94,7 @@ def test_is_valid_directory_fallback():
 @pytest.mark.rust
 def test_normalize_path_with_rust():
     """Test path normalization with Rust acceleration."""
-    from ClassicLib.Interface.shared.FolderManagement import _normalize_path
+    from ClassicLib.Interface.shared.folder_management import _normalize_path
 
     # Test basic normalization
     test_path = "C:/Windows/System32"
@@ -133,7 +133,7 @@ def test_normalize_path_fallback():
 @pytest.mark.unit
 def test_folder_management_mixin_exists():
     """Test that FolderManagementMixin can be imported."""
-    from ClassicLib.Interface.shared.FolderManagement import FolderManagementMixin
+    from ClassicLib.Interface.shared.folder_management import FolderManagementMixin
 
     assert FolderManagementMixin is not None, "FolderManagementMixin should be importable"
     assert hasattr(FolderManagementMixin, "validate_scan_folder_text"), "Should have validation method"
@@ -145,7 +145,7 @@ def test_folder_management_mixin_exists():
 @pytest.mark.unit
 def test_empty_path():
     """Test handling of empty path."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     assert not _is_valid_directory(""), "Empty string should be invalid"
 
@@ -153,7 +153,7 @@ def test_empty_path():
 @pytest.mark.unit
 def test_none_path():
     """Test handling of None path."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     # Should handle None gracefully (convert to string "None")
     assert not _is_valid_directory("None"), "None should be invalid"
@@ -162,7 +162,7 @@ def test_none_path():
 @pytest.mark.unit
 def test_relative_path():
     """Test handling of relative paths."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory, _normalize_path
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory, _normalize_path
 
     # Current directory should be valid
     assert _is_valid_directory("."), "Current directory should be valid"
@@ -175,7 +175,7 @@ def test_relative_path():
 @pytest.mark.unit
 def test_path_with_spaces():
     """Test handling of paths with spaces."""
-    from ClassicLib.Interface.shared.FolderManagement import _normalize_path
+    from ClassicLib.Interface.shared.folder_management import _normalize_path
 
     # Test path with spaces (common on Windows)
     test_path = "C:/Program Files"
@@ -191,7 +191,7 @@ def test_path_with_spaces():
 @pytest.mark.skipif(os.name != "nt", reason="Windows-specific test")
 def test_windows_drive_letter():
     """Test handling of Windows drive letters."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     # Test C: drive (should exist on Windows)
     assert _is_valid_directory("C:/"), "C: drive should be valid on Windows"
@@ -202,7 +202,7 @@ def test_windows_drive_letter():
 @pytest.mark.skipif(os.name != "nt", reason="Windows-specific test")
 def test_windows_unc_path():
     """Test handling of Windows UNC paths."""
-    from ClassicLib.Interface.shared.FolderManagement import _normalize_path
+    from ClassicLib.Interface.shared.folder_management import _normalize_path
 
     # Test UNC path format (may not be accessible, just test parsing)
     unc_path = "//server/share"
@@ -224,7 +224,7 @@ def test_rust_validation_performance():
     """Test that Rust validation is reasonably fast."""
     import time
 
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     # Time multiple validations
     start = time.perf_counter()
@@ -243,7 +243,7 @@ def test_rust_validation_performance():
 @pytest.mark.unit
 def test_invalid_path_characters():
     """Test handling of paths with invalid characters."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     # Path with invalid Windows characters
     invalid_path = "C:/Invalid<>Path"
@@ -256,7 +256,7 @@ def test_invalid_path_characters():
 @pytest.mark.unit
 def test_very_long_path():
     """Test handling of very long paths."""
-    from ClassicLib.Interface.shared.FolderManagement import _normalize_path
+    from ClassicLib.Interface.shared.folder_management import _normalize_path
 
     # Create a very long path (Windows has 260 char limit historically)
     long_path = "C:/" + "/".join(["very_long_directory_name"] * 20)
@@ -276,7 +276,7 @@ def test_very_long_path():
 @pytest.mark.unit
 def test_common_windows_directories():
     """Test validation of common Windows system directories."""
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     common_dirs = [
         "C:/Windows",
@@ -294,7 +294,7 @@ def test_temp_directory():
     """Test validation of temp directory."""
     import tempfile
 
-    from ClassicLib.Interface.shared.FolderManagement import _is_valid_directory
+    from ClassicLib.Interface.shared.folder_management import _is_valid_directory
 
     temp_dir = tempfile.gettempdir()
     assert _is_valid_directory(temp_dir), "Temp directory should be valid"

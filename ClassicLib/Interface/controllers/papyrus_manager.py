@@ -17,9 +17,9 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QThread
 
 from ClassicLib.core.logger import logger
-from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
-from ClassicLib.Interface.workers.ThreadManager import ThreadType
+from ClassicLib.Interface.dialogs.papyrus_dialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
+from ClassicLib.Interface.workers.thread_manager import ThreadType
 
 if TYPE_CHECKING:
     from ClassicLib.Interface.shared.context import FeatureContext

@@ -64,7 +64,7 @@ def configure_logging(classic_logger: Logger) -> None:
         log_dir.mkdir(parents=True, exist_ok=True)
 
         # Create timestamped log file
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d_%H%M%S")
         log_file = log_dir / f"classic_{timestamp}.log"
 
         file_handler = logging.FileHandler(log_file, encoding="utf-8")

@@ -74,7 +74,7 @@ def mock_scan_settings(mock_paths):
         return return_val
 
     with (
-        patch("CLASSIC_ScanGame.get_scan_settings", return_value=return_val) as mock_get,
+        patch("classic_scangame.get_scan_settings", return_value=return_val) as mock_get,
         patch("ClassicLib.scanning.game.core.ScanGameCore.get_scan_settings", side_effect=async_get_settings) as mock_core_get,
     ):
         yield mock_core_get
@@ -84,7 +84,7 @@ def mock_scan_settings(mock_paths):
 def mock_issue_messages():
     """Mock get_issue_messages function."""
     with (
-        patch("CLASSIC_ScanGame.get_issue_messages") as mock_get,
+        patch("classic_scangame.get_issue_messages") as mock_get,
         patch("ClassicLib.scanning.game.core.ScanGameCore.get_issue_messages") as mock_core_get,
     ):
         return_val = {

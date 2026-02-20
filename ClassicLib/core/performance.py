@@ -1,14 +1,15 @@
+
 """Performance monitoring utilities for tracking optimization improvements.
 
 This module provides decorators and utilities for measuring and logging
 performance metrics throughout the application, particularly for YAML
 operations and async improvements.
 """
-
 import functools
 import time
+import types
 from collections.abc import Callable
-from typing import Any, TypeVar
+from typing import Any, Self, TypeVar
 
 from ClassicLib.core.logger import logger
 
@@ -286,7 +287,7 @@ class TimedBlock:
         self.log_level = log_level
         self.start_time: float = 0
 
-    def __enter__(self) -> "TimedBlock":
+    def __enter__(self) -> Self:
         """Acts as a context manager for measuring the execution time of a block of code.
 
         This method is invoked when entering the context of the `TimedBlock` instance using the `with` statement.
@@ -299,7 +300,7 @@ class TimedBlock:
         self.start_time = time.perf_counter()
         return self
 
-    def __exit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None) -> None:
         """Context manager exit method that handles logging and performance metrics based
         on the elapsed time. Logs the elapsed time of the operation and stores the
         metric upon successful execution, or an error message if an exception is

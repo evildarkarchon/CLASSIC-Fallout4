@@ -19,7 +19,7 @@ except ImportError:
 
 # Import async utilities if available
 try:
-    from ClassicLib.io.files.Async import read_lines_with_encoding_async  # pyright: ignore[reportUnknownVariableType]
+    from ClassicLib.io.files.async_files import read_lines_with_encoding_async  # pyright: ignore[reportUnknownVariableType]
 
     ASYNC_ENCODING_AVAILABLE = True
 except ImportError:

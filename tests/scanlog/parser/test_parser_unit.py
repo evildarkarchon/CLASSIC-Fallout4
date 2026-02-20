@@ -122,7 +122,7 @@ class TestParseCrashHeader:
         """Test parsing tolerates a leading quote/backtick before version lines."""
         crash_data = [
             "`Fallout 4 v1.10.163",
-            "\"Buffout 4 v1.28.6",
+            '"Buffout 4 v1.28.6',
             'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6|More Info',
         ]
 

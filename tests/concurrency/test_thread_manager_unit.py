@@ -14,7 +14,7 @@ pytestmark = [
 from PySide6.QtCore import QThread
 from PySide6.QtWidgets import QApplication
 
-from ClassicLib.Interface.workers.ThreadManager import ThreadManager, ThreadType
+from ClassicLib.Interface.workers.thread_manager import ThreadManager, ThreadType
 from tests.fixtures.concurrency_fixtures import ThreadTestWorker
 
 

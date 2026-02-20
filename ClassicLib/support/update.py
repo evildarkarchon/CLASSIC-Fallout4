@@ -232,7 +232,7 @@ class VersionChecker:
         self._log_if_not_quiet(f"Update check failed: {error_msg}", msg_error)
 
         if not self.quiet and isinstance(error, (RuntimeError, UpdateCheckError)):
-            unable_msg = await yaml_settings_async(str, YAML.Main, f"CLASSIC_Interface.update_unable_{get_game()}")  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
+            unable_msg = await yaml_settings_async(str, YAML.Main, f"classic_interface.update_unable_{get_game()}")  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
             if unable_msg:
                 msg_error(unable_msg)
 
@@ -302,7 +302,7 @@ class VersionChecker:
 
         if is_outdated:
             if not self.quiet:
-                warning_msg = str(await yaml_settings_async(str, YAML.Main, f"CLASSIC_Interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
+                warning_msg = str(await yaml_settings_async(str, YAML.Main, f"classic_interface.update_warning_{get_game()}"))  # type: ignore[arg-type]  # yaml_settings_async handles type conversion
                 msg_warning(warning_msg)
 
             if self.gui_request:

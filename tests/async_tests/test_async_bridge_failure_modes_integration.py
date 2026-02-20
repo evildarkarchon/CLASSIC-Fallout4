@@ -34,7 +34,7 @@ class TestAsyncBridgeFailureModes:
                 try:
                     instance.shutdown()
                 except Exception:
-                    pass
+                    _ = None  # pass
             # Clear the instances dict
             AsyncBridge._instances.clear()
 

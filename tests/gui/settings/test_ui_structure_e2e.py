@@ -9,7 +9,7 @@ import pytest
 pytestmark = [pytest.mark.gui, pytest.mark.e2e]
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.Interface.Settings.dialog import SettingsDialog
+from ClassicLib.Interface.settings.dialog import SettingsDialog
 
 
 class TestEdgeCases:

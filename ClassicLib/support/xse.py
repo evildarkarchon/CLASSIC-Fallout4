@@ -478,7 +478,7 @@ def enb_check_presence() -> str:
 
     **Workflow integration:** This function is called during FCX Mode
     initialization, AFTER game path detection succeeds. Typical call site:
-    - FCX Mode init in CLASSIC_Interface.py or setup_fcx_mode()
+    - FCX Mode init in classic_interface.py or setup_fcx_mode()
     - After GlobalRegistry.Keys.GAME_PATH is populated
 
     Returns:

@@ -5,8 +5,8 @@ This package provides threading utilities:
 - Workers: Background worker classes
 """
 
-from ClassicLib.Interface.workers.ThreadManager import ThreadManager
-from ClassicLib.Interface.workers.Workers import (
+from ClassicLib.Interface.workers.thread_manager import ThreadManager
+from ClassicLib.Interface.workers.workers import (
     CrashLogsScanWorker,
     GameFilesScanWorker,
     UpdateCheckWorker,

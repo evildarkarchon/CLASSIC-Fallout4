@@ -18,7 +18,7 @@ import pytest
 from PySide6.QtWidgets import QComboBox, QWidget
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.Interface.Settings.dialog import SettingsDialog
+from ClassicLib.Interface.settings.dialog import SettingsDialog
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.messaging import init_message_handler
 
@@ -36,7 +36,7 @@ def set_game_version_by_value(combo: QComboBox, value: str) -> bool:
     Returns:
         True if the value was found and selected, False otherwise.
     """
-    from ClassicLib.Interface.Settings.tab_creators import ensure_game_version_options
+    from ClassicLib.Interface.settings.tab_creators import ensure_game_version_options
 
     version_options = ensure_game_version_options()
     for i, (_, stored_value) in enumerate(version_options):
@@ -55,7 +55,7 @@ def get_game_version_value(combo: QComboBox) -> str:
     Returns:
         The stored value (e.g., "VR", "Original", "NextGen", "auto").
     """
-    from ClassicLib.Interface.Settings.tab_creators import ensure_game_version_options
+    from ClassicLib.Interface.settings.tab_creators import ensure_game_version_options
 
     version_options = ensure_game_version_options()
     current_index = combo.currentIndex()
@@ -172,7 +172,7 @@ def gui_settings_mock_cache(monkeypatch: pytest.MonkeyPatch) -> Generator[MockSe
 
     # Reset GAME_VERSION_OPTIONS global to ensure fresh population
     # This is necessary for test isolation when tests run in parallel
-    import ClassicLib.Interface.Settings.tab_creators as tab_creators_module
+    import ClassicLib.Interface.settings.tab_creators as tab_creators_module
 
     original_version_options = tab_creators_module.GAME_VERSION_OPTIONS
     tab_creators_module.GAME_VERSION_OPTIONS = []

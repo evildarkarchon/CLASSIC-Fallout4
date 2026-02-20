@@ -40,7 +40,6 @@ Usage:
     message = checker.run_full_check()
 """
 
-from __future__ import annotations
 
 from enum import Enum
 from pathlib import Path
@@ -592,7 +591,7 @@ class XseChecker:
 
     """
 
-    def __init__(self, plugins_path: Path, is_vr_mode: bool = False, game_version: GameVersion = GameVersion.Original) -> None:
+    def __init__(self, plugins_path: Path, is_vr_mode: bool = False, game_version: GameVersion = ...) -> None:
         """Create a new XseChecker instance.
 
         Args:

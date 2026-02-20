@@ -28,7 +28,6 @@ Usage:
     asyncio.run(check_updates())
 """
 
-from __future__ import annotations
 
 __version__: str
 

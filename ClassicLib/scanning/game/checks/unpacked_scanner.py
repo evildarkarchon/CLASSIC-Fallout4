@@ -1,4 +1,4 @@
-"""Unpacked mod scanner component for CLASSIC_ScanGame.
+"""Unpacked mod scanner component for classic_scangame.
 
 This module provides specialized scanning functionality for unpacked (loose) mod files,
 handling directory traversal, file type detection, cleanup operations, and issue tracking.

@@ -15,7 +15,7 @@ IMPORTANT Usage Patterns:
 - Testing/benchmarking: Sync wrappers work via asyncio.run() fallback
 
 Phase 4: Uses AsyncBridge.run_async() directly for GUI sync wrappers.
-Phase 5: CLI entry point converted to async-first pattern (following CLASSIC_ScanLogs.py).
+Phase 5: CLI entry point converted to async-first pattern (following classic_scanlogs.py).
 """
 
 import asyncio
@@ -184,7 +184,7 @@ async def main() -> None:
     """Serve as main entry point for game scanning - Async-First Pattern.
 
     This CLI entry point uses native async operations with a single asyncio.run()
-    call, following the same pattern as CLASSIC_ScanLogs.py.
+    call, following the same pattern as classic_scanlogs.py.
 
     For GUI workers, use the sync wrappers (game_combined_result(), etc.) instead.
     """

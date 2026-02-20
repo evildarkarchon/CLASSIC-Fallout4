@@ -15,7 +15,7 @@ This file contains e2e tests that test complete workflows from entry to output.
 import asyncio
 import logging
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 import pytest
@@ -56,7 +56,9 @@ class TestStandardErrorHandling:
                 self.errors = []
 
             def log_error(self, error: Exception, context: dict, severity: ErrorSeverity):
-                record = ErrorRecord(message=str(error), error=error, severity=severity, context=context, timestamp=datetime.now())
+                record = ErrorRecord(
+                    message=str(error), error=error, severity=severity, context=context, timestamp=datetime.now(timezone.utc)
+                )
                 self.errors.append(record)
                 logger = logging.getLogger(__name__)
                 log_method = getattr(logger, severity.value, logger.error)

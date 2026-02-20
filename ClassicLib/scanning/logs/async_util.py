@@ -80,7 +80,7 @@ async def read_file_async(file_path: Path) -> list[str]:
     try:
         # Try to use async encoding detection if available
         try:
-            from ClassicLib.io.files.Async import read_lines_with_encoding_async  # pyright: ignore[reportUnknownVariableType]
+            from ClassicLib.io.files.async_files import read_lines_with_encoding_async  # pyright: ignore[reportUnknownVariableType]
 
             return await read_lines_with_encoding_async(file_path)
         except ImportError:

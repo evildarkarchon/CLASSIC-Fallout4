@@ -26,8 +26,8 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib.core.logger import logger
-from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
-from ClassicLib.Interface.workers.ThreadManager import ThreadType
+from ClassicLib.Interface.dialogs.pastebin import PastebinFetchWorker
+from ClassicLib.Interface.workers.thread_manager import ThreadType
 
 if TYPE_CHECKING:
     from ClassicLib.Interface.shared.context import FeatureContext

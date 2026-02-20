@@ -4,7 +4,7 @@ import time
 from collections.abc import Callable
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Self
 
 
 @dataclass
@@ -36,12 +36,12 @@ class PerformanceTimer:
         self.start_time: float | None = None
         self.end_time: float | None = None
 
-    def __enter__(self) -> "PerformanceTimer":
+    def __enter__(self) -> Self:
         """Start timing."""
         self.start_time = time.perf_counter()
         return self
 
-    def __exit__(self, *args: Any) -> None:
+    def __exit__(self, *args: object) -> None:
         """Stop timing."""
         self.end_time = time.perf_counter()
 

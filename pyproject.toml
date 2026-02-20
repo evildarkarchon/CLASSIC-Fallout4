@@ -55,11 +55,11 @@ all = [
 
 [project.scripts]
 # Entry points are in the root directory, not in src/
-classic = "CLASSIC_Interface:main"
-classic-gui = "CLASSIC_Interface:main"
+classic = "classic_interface:main"
+classic-gui = "classic_interface:main"
 classic-tui = "ClassicLib.TUI:main"
-classic-cli = "CLASSIC_ScanLogs:main"
-classic-scan = "CLASSIC_ScanGame:main"
+classic-cli = "classic_scanlogs:main"
+classic-scan = "classic_scangame:main"
 
 [dependency-groups]
 dev = [
@@ -389,7 +389,7 @@ omit = [
     "migrate_to_uv.py",
     "pyinstaller_rust_helper.py",
     # Experimental QML interface (not the primary interface)
-    "CLASSIC_Interface_QML.py",
+    "classic_interface_qml.py",
     # PySide6 generated files and internal modules
     "pyscript",
     "shibokensupport/*",
@@ -475,3 +475,5 @@ min_confidence = 80
 
 [tool.pyrefly]
 use_untyped_imports = true
+[tool.ruff.lint.pep8-naming]
+ignore-names = ["ClassicLib", "CLASSIC*"]

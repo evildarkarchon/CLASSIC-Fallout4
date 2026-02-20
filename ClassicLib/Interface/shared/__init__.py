@@ -8,9 +8,9 @@ This package provides shared interface components:
 """
 
 from ClassicLib.Interface.shared.context import FeatureContext, UIWidgets
-from ClassicLib.Interface.shared.FolderManagement import FolderManagementMixin
+from ClassicLib.Interface.shared.folder_management import FolderManagementMixin
 from ClassicLib.Interface.shared.signal_hub import SignalHub
-from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
+from ClassicLib.Interface.shared.style_sheets import DARK_MODE
 
 __all__ = [
     "DARK_MODE",

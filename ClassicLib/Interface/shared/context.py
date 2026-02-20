@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     )
 
     from ClassicLib.Interface.shared.signal_hub import SignalHub
-    from ClassicLib.Interface.workers.ThreadManager import ThreadManager
+    from ClassicLib.Interface.workers.thread_manager import ThreadManager
 
 
 @dataclass

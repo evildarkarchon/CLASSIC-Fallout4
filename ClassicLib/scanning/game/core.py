@@ -1,4 +1,4 @@
-"""Async-first core implementation for CLASSIC_ScanGame.py operations.
+"""Async-first core implementation for classic_scangame.py operations.
 
 This module provides the primary async implementations that are used by both
 sync adapters (for backwards compatibility) and async callers directly.
@@ -8,7 +8,7 @@ All I/O-intensive operations are implemented asynchronously for optimal performa
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import cast
+from typing import Self, cast
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import GlobalRegistry, get, register
@@ -53,7 +53,7 @@ class ScanGameCore:
 
     """
 
-    def __new__(cls) -> "ScanGameCore":
+    def __new__(cls) -> Self:
         """Create a new instance of the ScanGameCore class or retrieves an existing one
         from a shared store. Implements a Singleton pattern to ensure only one
         instance of the class exists.

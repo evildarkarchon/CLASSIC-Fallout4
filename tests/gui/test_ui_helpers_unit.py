@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib import init_message_handler
-from ClassicLib.Interface.widgets.UIHelpers import (
+from ClassicLib.Interface.widgets.ui_helpers import (
     BOTTOM_BUTTON_STYLE,
     CHECKBOX_STYLE,
     ENABLED_BUTTON_STYLE,
@@ -270,8 +270,8 @@ class TestSetupFolderSection:
         callback = Mock()
 
         with (
-            patch("ClassicLib.Interface.widgets.UIHelpers.isinstance", return_value=False),
-            patch("ClassicLib.Interface.widgets.UIHelpers.msg_warning") as mock_warning,
+            patch("ClassicLib.Interface.widgets.ui_helpers.isinstance", return_value=False),
+            patch("ClassicLib.Interface.widgets.ui_helpers.msg_warning") as mock_warning,
         ):
             result = setup_folder_section(mock_layout, "Test:", "test", callback)
 
@@ -381,7 +381,7 @@ class TestOpenUrl:
 
     def test_open_url_calls_desktop_services(self):
         """Test that open_url properly calls QDesktopServices."""
-        with patch("ClassicLib.Interface.widgets.UIHelpers.QDesktopServices.openUrl") as mock_open:
+        with patch("ClassicLib.Interface.widgets.ui_helpers.QDesktopServices.openUrl") as mock_open:
             test_url = "https://example.com"
             open_url(test_url)
 
@@ -396,7 +396,7 @@ class TestOpenUrl:
 
     def test_open_url_various_protocols(self):
         """Test opening URLs with various protocols."""
-        with patch("ClassicLib.Interface.widgets.UIHelpers.QDesktopServices.openUrl") as mock_open:
+        with patch("ClassicLib.Interface.widgets.ui_helpers.QDesktopServices.openUrl") as mock_open:
             urls = ["http://example.com", "https://secure.example.com", "file:///C:/path/to/file.txt", "mailto:test@example.com"]
 
             for url in urls:

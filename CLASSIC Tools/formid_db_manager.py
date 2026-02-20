@@ -342,15 +342,15 @@ class FormIDManager(QMainWindow):
             cursor = conn.cursor()
 
             # Check table existence
-            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{game}'")
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (game,))
             table_exists = cursor.fetchone() is not None
 
             # Check legacy index existence
-            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='index' AND name='{game}_index'")
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='index' AND name=?", (f"{game}_index",))
             index_exists = cursor.fetchone() is not None
 
             # Check covering index existence (includes entry column for index-only queries)
-            cursor.execute(f"SELECT name FROM sqlite_master WHERE type='index' AND name='{game}_covering_idx'")
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='index' AND name=?", (f"{game}_covering_idx",))
             covering_index_exists = cursor.fetchone() is not None
 
             # Create table if needed

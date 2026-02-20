@@ -151,7 +151,7 @@ class TestFormIDDatabaseFixture:
                     entries.append((plugin, formid, entry))
 
                 cursor.executemany(
-                    f"INSERT INTO {TEST_GAME_TABLE} (plugin, formid, entry) VALUES (?, ?, ?)",
+                    f"INSERT INTO {TEST_GAME_TABLE} (plugin, formid, entry) VALUES (?, ?, ?)",  # noqa: S608
                     entries,
                 )
 
@@ -236,7 +236,7 @@ class TestFormIDDatabaseFixture:
         try:
             cursor = conn.cursor()
             cursor.execute(
-                f"SELECT formid, plugin FROM {TEST_GAME_TABLE} ORDER BY RANDOM() LIMIT ?",
+                f"SELECT formid, plugin FROM {TEST_GAME_TABLE} ORDER BY RANDOM() LIMIT ?",  # noqa: S608
                 (count,),
             )
             return [(row[0], row[1]) for row in cursor.fetchall()]

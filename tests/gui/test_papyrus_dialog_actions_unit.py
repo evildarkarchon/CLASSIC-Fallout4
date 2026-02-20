@@ -1,3 +1,5 @@
+from datetime import timezone
+
 """
 Unit tests for PapyrusDialog action handling and integration scenarios.
 
@@ -12,8 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
+from ClassicLib.Interface.dialogs.papyrus_dialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.papyrus import PapyrusStats
 
 is_xdist = os.environ.get("PYTEST_XDIST_WORKER") is not None
 skip_xdist = pytest.mark.skipif(is_xdist, reason="Qt GUI tests unstable in xdist workers on Windows")
@@ -143,7 +145,9 @@ class TestDialogIntegrationScenarios:
     def test_complete_stats_update_cycle(self, mock_dialog):
         """Test complete statistics update cycle with various scenarios."""
         # Scenario 1: Normal operation
-        normal_stats = PapyrusStats(timestamp=datetime(2024, 1, 15, 12, 0, 0), dumps=2, stacks=20, warnings=0, errors=0, ratio=0.1)
+        normal_stats = PapyrusStats(
+            timestamp=datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc), dumps=2, stacks=20, warnings=0, errors=0, ratio=0.1
+        )
 
         with (
             patch.object(mock_dialog, "_update_status_indicators") as mock_status,
@@ -157,7 +161,9 @@ class TestDialogIntegrationScenarios:
             mock_message.assert_called_once_with(normal_stats)
 
         # Scenario 2: Problem detected
-        problem_stats = PapyrusStats(timestamp=datetime(2024, 1, 15, 12, 5, 0), dumps=15, stacks=20, warnings=3, errors=1, ratio=0.75)
+        problem_stats = PapyrusStats(
+            timestamp=datetime(2024, 1, 15, 12, 5, 0, tzinfo=timezone.utc), dumps=15, stacks=20, warnings=3, errors=1, ratio=0.75
+        )
 
         mock_dialog.update_stats(problem_stats)
 
@@ -167,12 +173,12 @@ class TestDialogIntegrationScenarios:
     def test_dialog_lifecycle_with_monitoring(self, mock_dialog):
         """Test complete dialog lifecycle with monitoring start/stop."""
         # Simulate monitoring start
-        initial_stats = PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
+        initial_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
         mock_dialog.update_stats(initial_stats)
 
         # Simulate some monitoring activity
-        active_stats = PapyrusStats(timestamp=datetime.now(), dumps=5, stacks=15, warnings=1, errors=0, ratio=0.33)
+        active_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=5, stacks=15, warnings=1, errors=0, ratio=0.33)
 
         mock_dialog.update_stats(active_stats)
 
@@ -190,7 +196,7 @@ class TestDialogIntegrationScenarios:
     def test_rapid_stats_updates(self, mock_dialog):
         """Test handling of rapid statistics updates."""
         # Simulate rapid updates
-        timestamps = [datetime(2024, 1, 15, 12, 0, i) for i in range(10)]
+        timestamps = [datetime(2024, 1, 15, 12, 0, i, tzinfo=timezone.utc) for i in range(10)]
 
         for i, timestamp in enumerate(timestamps):
             stats = PapyrusStats(timestamp=timestamp, dumps=i, stacks=i * 2, warnings=i // 3, errors=i // 5, ratio=min(i / 10.0, 1.0))
@@ -211,7 +217,7 @@ class TestDialogIntegrationScenarios:
         assert len(error_calls) > 0
 
         # Recovery with normal stats
-        recovery_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
+        recovery_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
 
         with patch.object(mock_dialog, "_update_status_indicators"), patch.object(mock_dialog, "_update_message"):
             mock_dialog.update_stats(recovery_stats)
@@ -222,7 +228,9 @@ class TestDialogIntegrationScenarios:
     def test_boundary_condition_handling(self, mock_dialog):
         """Test handling of boundary conditions in statistics."""
         # Test with maximum reasonable values
-        max_stats = PapyrusStats(timestamp=datetime.now(), dumps=999999, stacks=1000000, warnings=50000, errors=10000, ratio=0.999999)
+        max_stats = PapyrusStats(
+            timestamp=datetime.now(timezone.utc), dumps=999999, stacks=1000000, warnings=50000, errors=10000, ratio=0.999999
+        )
 
         mock_dialog.update_stats(max_stats)
 
@@ -232,7 +240,7 @@ class TestDialogIntegrationScenarios:
 
         # Test with zero denominators (edge case for ratio)
         zero_denominator_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=5,
             stacks=0,
             warnings=0,

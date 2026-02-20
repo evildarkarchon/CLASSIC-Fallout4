@@ -25,7 +25,7 @@ from PySide6.QtCore import QObject, QThread
 @pytest.mark.unit
 def test_crash_logs_worker_exists():
     """Test that CrashLogsScanWorker can be imported."""
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     assert CrashLogsScanWorker is not None, "CrashLogsScanWorker should be importable"
     assert hasattr(CrashLogsScanWorker, "run"), "Should have run method"
@@ -35,7 +35,7 @@ def test_crash_logs_worker_exists():
 @pytest.mark.unit
 def test_worker_signals():
     """Test that worker has all required signals."""
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -55,7 +55,7 @@ def test_worker_uses_asyncio_run():
     AsyncBridge because AsyncBridge is a main-thread singleton, and accessing it from
     worker threads causes cross-thread QObject parenting errors.
     """
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     # Create worker
     worker = CrashLogsScanWorker()
@@ -93,7 +93,7 @@ def test_worker_uses_asyncio_run():
                             worker._perform_crash_logs_scan()
                         except Exception:
                             # We expect some errors since we're mocking heavily
-                            pass
+                            _ = None  # pass
 
                         # Verify asyncio.run() was called (worker uses it directly)
                         assert mock_asyncio_run.called, "Should call asyncio.run() for thread-safe async execution"
@@ -103,7 +103,7 @@ def test_worker_uses_asyncio_run():
 def test_no_manual_event_loop_creation():
     """Test that worker doesn't create manual event loops."""
 
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -128,7 +128,7 @@ def test_no_manual_event_loop_creation():
                                 try:
                                     worker._perform_crash_logs_scan()
                                 except Exception:
-                                    pass
+                                    _ = None  # pass
 
                                 # Verify new_event_loop was NOT called
                                 assert not mock_new_loop.called, "Should NOT create manual event loop"
@@ -157,7 +157,7 @@ def test_rust_acceleration_detection():
 def test_rust_status_logging():
     """Test that Rust acceleration status is logged."""
     from ClassicLib.core.logger import logger
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -186,7 +186,7 @@ def test_rust_status_logging():
                                 try:
                                     worker._perform_crash_logs_scan()
                                 except Exception:
-                                    pass
+                                    _ = None  # pass
 
                             # Check if Rust acceleration was logged
                             info_calls = [str(call) for call in mock_log_info.call_args_list]
@@ -201,7 +201,7 @@ def test_rust_status_logging():
 @pytest.mark.unit
 def test_success_signal_emission():
     """Test that finished signal is emitted on successful scan."""
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -221,7 +221,7 @@ def test_success_signal_emission():
 @pytest.mark.unit
 def test_error_signal_emission():
     """Test that error signals are emitted on scan failure."""
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -252,7 +252,7 @@ def test_error_signal_emission():
 @pytest.mark.unit
 def test_finished_signal_always_emitted():
     """Test that finished signal is always emitted, even on error."""
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -280,7 +280,7 @@ def test_finished_signal_always_emitted():
 def test_performance_metrics_logged():
     """Test that performance metrics are logged."""
     from ClassicLib.core.logger import logger
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 
@@ -303,7 +303,7 @@ def test_performance_metrics_logged():
                                 try:
                                     worker._perform_crash_logs_scan()
                                 except Exception:
-                                    pass
+                                    _ = None  # pass
 
                                 # Check for performance logging
                                 info_calls = [str(call) for call in mock_log_info.call_args_list]
@@ -324,7 +324,7 @@ def test_performance_metrics_logged():
 @pytest.mark.unit
 def test_worker_is_qobject():
     """Test that worker is a QObject and can be moved to thread."""
-    from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker
+    from ClassicLib.Interface.workers.workers import CrashLogsScanWorker
 
     worker = CrashLogsScanWorker()
 

@@ -1,4 +1,4 @@
-"""BA2 archive scanner component for CLASSIC_ScanGame.
+"""BA2 archive scanner component for classic_scangame.
 
 This module provides specialized scanning functionality for Bethesda BA2 archive files,
 including texture (DX10) and general (GNRL) format processing. It handles subprocess

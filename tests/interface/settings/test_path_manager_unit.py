@@ -28,7 +28,7 @@ class TestPathManagerInit:
     def test_init_with_default_yaml_store(self, qt_parent_widget):
         """Test PathManager initializes with default YAML.Settings store."""
         from ClassicLib.core.constants import YAML
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
 
@@ -40,7 +40,7 @@ class TestPathManagerInit:
     def test_init_with_custom_yaml_store(self, qt_parent_widget):
         """Test PathManager initializes with custom YAML store."""
         from ClassicLib.core.constants import YAML
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget, yaml_store=YAML.Game_Local)
 
@@ -51,7 +51,7 @@ class TestPathManagerInit:
         """Test set_ini_folder_input stores the widget reference."""
         from PySide6.QtWidgets import QLineEdit
 
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
         line_edit = QLineEdit()
@@ -67,7 +67,7 @@ class TestPathManagerBrowse:
     @pytest.fixture
     def manager_with_input(self, qt_parent_widget):
         """Create PathManager with a mock line edit input."""
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
         mock_input = MagicMock()
@@ -78,7 +78,7 @@ class TestPathManagerBrowse:
     @pytest.mark.unit
     def test_browse_returns_early_without_input(self, qt_parent_widget):
         """Test browse_ini_folder returns early when no input widget set."""
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
         # ini_folder_input is None by default
@@ -87,7 +87,7 @@ class TestPathManagerBrowse:
         manager.browse_ini_folder()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
+    @patch("ClassicLib.Interface.settings.path_manager.QFileDialog")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_sets_selected_folder(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder sets selected folder to input widget."""
@@ -100,7 +100,7 @@ class TestPathManagerBrowse:
         manager_with_input.ini_folder_input.setText.assert_called_once_with("/new/selected/path")
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
+    @patch("ClassicLib.Interface.settings.path_manager.QFileDialog")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_handles_cancelled_dialog(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder handles cancelled dialog (empty string)."""
@@ -112,7 +112,7 @@ class TestPathManagerBrowse:
         manager_with_input.ini_folder_input.setText.assert_not_called()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
+    @patch("ClassicLib.Interface.settings.path_manager.QFileDialog")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_uses_game_name_from_registry(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder uses game name from GlobalRegistry for dialog title."""
@@ -127,7 +127,7 @@ class TestPathManagerBrowse:
         assert "Skyrim" in dialog_title
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.QFileDialog")
+    @patch("ClassicLib.Interface.settings.path_manager.QFileDialog")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_game")
     def test_browse_fallback_to_game_on_registry_error(self, mock_get_game, mock_dialog, manager_with_input):
         """Test browse_ini_folder falls back to 'Game' when registry raises."""
@@ -148,7 +148,7 @@ class TestPathManagerReset:
     @pytest.fixture
     def manager_with_mock_input(self, qt_parent_widget):
         """Create PathManager with a mock line edit input."""
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
         mock_input = MagicMock()
@@ -156,9 +156,9 @@ class TestPathManagerReset:
         return manager
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_success")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_success")
     @patch("ClassicLib.support.docs_path.docs_path_find")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_reset_clears_settings_and_runs_autodetect(
         self,
@@ -181,8 +181,8 @@ class TestPathManagerReset:
         assert mock_yaml.call_count == 3
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_error")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     def test_reset_handles_import_error(self, mock_yaml, mock_msg_error, manager_with_mock_input):
         """Test reset_ini_folder handles ImportError gracefully."""
         mock_yaml.side_effect = ImportError("Module not found")
@@ -192,8 +192,8 @@ class TestPathManagerReset:
         mock_msg_error.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_error")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     def test_reset_handles_os_error(self, mock_yaml, mock_msg_error, manager_with_mock_input):
         """Test reset_ini_folder handles OSError gracefully."""
         mock_yaml.side_effect = OSError("File system error")
@@ -210,7 +210,7 @@ class TestPathManagerAutodetect:
     @pytest.fixture
     def manager_with_mock_input(self, qt_parent_widget):
         """Create PathManager with a mock line edit input."""
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
         mock_input = MagicMock()
@@ -220,7 +220,7 @@ class TestPathManagerAutodetect:
     @pytest.mark.unit
     def test_autodetect_returns_early_without_input(self, qt_parent_widget):
         """Test autodetect_ini_folder returns early when no input widget set."""
-        from ClassicLib.Interface.Settings.path_manager import PathManager
+        from ClassicLib.Interface.settings.path_manager import PathManager
 
         manager = PathManager(qt_parent_widget)
         # ini_folder_input is None by default
@@ -229,8 +229,8 @@ class TestPathManagerAutodetect:
         manager.autodetect_ini_folder()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_success")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_success")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_updates_input_on_success(
@@ -251,8 +251,8 @@ class TestPathManagerAutodetect:
         mock_msg_success.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_warning")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_warning")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_clears_input_when_detection_fails(
@@ -273,8 +273,8 @@ class TestPathManagerAutodetect:
         mock_msg_warning.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_warning")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_warning")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_clears_input_when_detection_returns_none(
@@ -295,7 +295,7 @@ class TestPathManagerAutodetect:
         mock_msg_warning.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_error")
     @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_handles_type_error(
@@ -314,7 +314,7 @@ class TestPathManagerAutodetect:
         assert "Invalid type" in str(mock_msg_error.call_args)
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_error")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_error")
     @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_handles_value_error(
@@ -332,8 +332,8 @@ class TestPathManagerAutodetect:
         mock_msg_error.assert_called_once()
 
     @pytest.mark.unit
-    @patch("ClassicLib.Interface.Settings.path_manager.msg_success")
-    @patch("ClassicLib.Interface.Settings.path_manager.yaml_settings")
+    @patch("ClassicLib.Interface.settings.path_manager.msg_success")
+    @patch("ClassicLib.Interface.settings.path_manager.yaml_settings")
     @patch("ClassicLib.support.docs_path.docs_path_find")
     @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
     def test_autodetect_handles_vr_suffix(

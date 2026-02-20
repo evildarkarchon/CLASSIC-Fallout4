@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     # For type checking, always import the functions/modules
     import aiofiles
 
-    from ClassicLib.io.files.Async import (
+    from ClassicLib.io.files.async_files import (
         open_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
         read_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
     )
@@ -35,7 +35,7 @@ from ClassicLib.io.files.path_utils import ensure_path
 
 # Import async utilities if available
 try:
-    from ClassicLib.io.files.Async import (
+    from ClassicLib.io.files.async_files import (
         open_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
         read_file_with_encoding_async,  # pyright: ignore[reportUnknownVariableType]
     )

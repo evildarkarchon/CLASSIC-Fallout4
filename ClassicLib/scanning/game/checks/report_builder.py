@@ -1,4 +1,4 @@
-"""Report builder component for CLASSIC_ScanGame.
+"""Report builder component for classic_scangame.
 
 This module provides report generation functionality for mod scanning operations,
 formatting detected issues into human-readable reports for both unpacked and

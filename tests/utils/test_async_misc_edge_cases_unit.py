@@ -9,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 
-from ClassicLib.Utils.Async import (
+from ClassicLib.Utils.async_utils import (
     AsyncLazyLoader,
     AsyncTimer,
     run_in_executor,
@@ -74,7 +74,7 @@ class TestThrottleEdgeCases:
     @pytest.fixture(autouse=True)
     async def cleanup_throttlers(self):
         """Clean up throttlers before and after each test."""
-        from ClassicLib.Utils.Async import _throttler_registry, reset_throttlers
+        from ClassicLib.Utils.async_utils import _throttler_registry, reset_throttlers
 
         reset_throttlers()
         yield
@@ -113,7 +113,7 @@ class TestThrottleEdgeCases:
     @pytest.mark.asyncio
     async def test_throttle_state_persistence(self):
         """Test that throttle maintains state between calls."""
-        from ClassicLib.Utils.Async import _throttler_registry
+        from ClassicLib.Utils.async_utils import _throttler_registry
 
         # First set of operations
         for _i in range(2):

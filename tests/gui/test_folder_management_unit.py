@@ -18,7 +18,7 @@ pytestmark = pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not Non
 from PySide6.QtCore import QUrl
 from PySide6.QtWidgets import QFileDialog, QLineEdit, QMessageBox
 
-from ClassicLib.Interface.shared.FolderManagement import FolderManagementMixin
+from ClassicLib.Interface.shared.folder_management import FolderManagementMixin
 
 
 @pytest.mark.unit
@@ -144,8 +144,8 @@ class TestFolderManagementMixin:
 
         # Mock the helper functions directly to avoid Path mocking complexity
         with (
-            patch("ClassicLib.Interface.shared.FolderManagement._is_valid_directory", return_value=True),
-            patch("ClassicLib.Interface.shared.FolderManagement._normalize_path", return_value=Path(test_path)),
+            patch("ClassicLib.Interface.shared.folder_management._is_valid_directory", return_value=True),
+            patch("ClassicLib.Interface.shared.folder_management._normalize_path", return_value=Path(test_path)),
             patch("ClassicLib.scanning.logs.util_legacy.is_valid_custom_scan_path", return_value=True),
             patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_settings,
         ):
@@ -179,7 +179,7 @@ class TestFolderManagementMixin:
 
         # Mock helper function to return False (path doesn't exist)
         with (
-            patch("ClassicLib.Interface.shared.FolderManagement._is_valid_directory", return_value=False),
+            patch("ClassicLib.Interface.shared.folder_management._is_valid_directory", return_value=False),
             patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_settings,
         ):
             mock_widget.validate_scan_folder_text()
@@ -206,7 +206,7 @@ class TestFolderManagementMixin:
 
         # Mock the helper functions directly - path exists but is restricted
         with (
-            patch("ClassicLib.Interface.shared.FolderManagement._is_valid_directory", return_value=True),
+            patch("ClassicLib.Interface.shared.folder_management._is_valid_directory", return_value=True),
             patch("ClassicLib.scanning.logs.util_legacy.is_valid_custom_scan_path", return_value=False),
             patch("ClassicLib.io.yaml.yaml_settings") as mock_yaml_settings,
         ):
@@ -319,7 +319,7 @@ class TestFolderManagementMixin:
         settings_file.write_text("test settings")
 
         with (
-            patch("ClassicLib.Interface.shared.FolderManagement.get_local_dir", return_value=settings_dir),
+            patch("ClassicLib.Interface.shared.folder_management.get_local_dir", return_value=settings_dir),
             patch.object(mock_widget, "_open_file_with_notepadpp") as mock_open,
         ):
             mock_widget.open_settings()
@@ -335,7 +335,7 @@ class TestFolderManagementMixin:
         mock_critical = Mock(return_value=QMessageBox.StandardButton.Ok)
         monkeypatch.setattr(QMessageBox, "critical", mock_critical)
 
-        with patch("ClassicLib.Interface.shared.FolderManagement.get_local_dir", return_value=settings_dir):
+        with patch("ClassicLib.Interface.shared.folder_management.get_local_dir", return_value=settings_dir):
             mock_widget.open_settings()
 
             # Verify error dialog was shown
@@ -350,9 +350,9 @@ class TestFolderManagementMixin:
         backup_dir.mkdir()
 
         mock_open_url = Mock()
-        monkeypatch.setattr("ClassicLib.Interface.shared.FolderManagement.QDesktopServices.openUrl", mock_open_url)
+        monkeypatch.setattr("ClassicLib.Interface.shared.folder_management.QDesktopServices.openUrl", mock_open_url)
 
-        with patch("ClassicLib.Interface.shared.FolderManagement.get_local_dir", return_value=tmp_path):
+        with patch("ClassicLib.Interface.shared.folder_management.get_local_dir", return_value=tmp_path):
             mock_widget.open_backup_folder()
 
             # Verify folder was opened
@@ -367,8 +367,8 @@ class TestFolderManagementMixin:
     def test_open_backup_folder_not_exists(self, mock_widget, tmp_path):
         """Test opening backup folder when it doesn't exist shows error."""
         with (
-            patch("ClassicLib.Interface.shared.FolderManagement.get_local_dir", return_value=tmp_path),
-            patch("ClassicLib.Interface.shared.FolderManagement.msg_error") as mock_error,
+            patch("ClassicLib.Interface.shared.folder_management.get_local_dir", return_value=tmp_path),
+            patch("ClassicLib.Interface.shared.folder_management.msg_error") as mock_error,
         ):
             mock_widget.open_backup_folder()
 
@@ -381,9 +381,9 @@ class TestFolderManagementMixin:
         crash_logs_dir.mkdir()
 
         mock_open_url = Mock()
-        monkeypatch.setattr("ClassicLib.Interface.shared.FolderManagement.QDesktopServices.openUrl", mock_open_url)
+        monkeypatch.setattr("ClassicLib.Interface.shared.folder_management.QDesktopServices.openUrl", mock_open_url)
 
-        with patch("ClassicLib.Interface.shared.FolderManagement.get_local_dir", return_value=tmp_path):
+        with patch("ClassicLib.Interface.shared.folder_management.get_local_dir", return_value=tmp_path):
             mock_widget.open_crash_logs_folder()
 
             # Verify folder was opened
@@ -392,9 +392,9 @@ class TestFolderManagementMixin:
     def test_open_crash_logs_folder_creates_if_missing(self, mock_widget, tmp_path, monkeypatch):
         """Test that crash logs folder is created if it doesn't exist."""
         mock_open_url = Mock()
-        monkeypatch.setattr("ClassicLib.Interface.shared.FolderManagement.QDesktopServices.openUrl", mock_open_url)
+        monkeypatch.setattr("ClassicLib.Interface.shared.folder_management.QDesktopServices.openUrl", mock_open_url)
 
-        with patch("ClassicLib.Interface.shared.FolderManagement.get_local_dir", return_value=tmp_path):
+        with patch("ClassicLib.Interface.shared.folder_management.get_local_dir", return_value=tmp_path):
             mock_widget.open_crash_logs_folder()
 
             # Verify folder was created
@@ -442,7 +442,7 @@ class TestFolderManagementMixin:
 
         # Mock QDesktopServices.openUrl to prevent actual file opening
         mock_open_url = Mock()
-        monkeypatch.setattr("ClassicLib.Interface.shared.FolderManagement.QDesktopServices.openUrl", mock_open_url)
+        monkeypatch.setattr("ClassicLib.Interface.shared.folder_management.QDesktopServices.openUrl", mock_open_url)
 
         # Mock Path.exists for the notepad++ check
         original_exists = Path.exists
@@ -475,7 +475,7 @@ class TestFolderManagementMixin:
         monkeypatch.setattr(subprocess, "Popen", mock_popen)
 
         mock_open_url = Mock()
-        monkeypatch.setattr("ClassicLib.Interface.shared.FolderManagement.QDesktopServices.openUrl", mock_open_url)
+        monkeypatch.setattr("ClassicLib.Interface.shared.folder_management.QDesktopServices.openUrl", mock_open_url)
 
         with patch("pathlib.Path") as mock_path_class:
 

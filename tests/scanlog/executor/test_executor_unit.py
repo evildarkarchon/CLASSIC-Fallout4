@@ -477,7 +477,7 @@ class TestScanLogsExecutorSyncWrapper:
             try:
                 executor.scan_sync()
             except Exception:
-                pass  # May fail in test context, that's OK
+                _ = None  # pass  # May fail in test context, that's OK
 
             # AsyncBridge should have been used
             mock_bridge_cls.get_instance.assert_called()

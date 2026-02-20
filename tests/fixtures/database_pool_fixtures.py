@@ -66,7 +66,7 @@ async def _cleanup_pool_async() -> None:
             await manager.close_pool()
         except Exception:
             # Ignore errors during cleanup
-            pass
+            _ = None  # pass
 
 
 @pytest.fixture(autouse=True)

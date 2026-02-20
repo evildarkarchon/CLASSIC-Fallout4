@@ -1,3 +1,4 @@
+
 """Protocol types for the integration layer factory functions.
 
 These Protocol classes define the structural interfaces that both Rust and
@@ -14,6 +15,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
+    import types
     from collections.abc import AsyncIterator, Iterator
     from pathlib import Path
 
@@ -167,7 +169,7 @@ class DatabasePoolProtocol(Protocol):
     """
 
     async def __aenter__(self) -> Any: ...
-    async def __aexit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None: ...
+    async def __aexit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None) -> None: ...
     async def initialize(self) -> None: ...
     async def close(self) -> None: ...
     async def get_entry(self, formid: str, plugin: str) -> Any: ...
@@ -190,7 +192,6 @@ class ModDetectorResult(Protocol):
     This is typed as dict[str, Any] in the factory.
     """
 
-    ...
 
 
 class OrchestratorProtocol(Protocol):

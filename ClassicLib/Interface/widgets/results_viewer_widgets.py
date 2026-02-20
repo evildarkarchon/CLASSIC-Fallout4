@@ -15,7 +15,7 @@ Note:
 from __future__ import annotations
 
 import re
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path  # noqa: TC003
 
 from PySide6.QtCore import Qt
@@ -219,7 +219,7 @@ class ReportListWidget(QListWidget):
             second = time[4:6]
 
             try:
-                dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second))
+                dt = datetime(int(year), int(month), int(day), int(hour), int(minute), int(second), tzinfo=UTC)
                 return dt.strftime("%Y-%m-%d %H:%M:%S")
             except ValueError:
                 pass  # Invalid date/time, fall through to file modification time

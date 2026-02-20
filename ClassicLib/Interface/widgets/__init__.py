@@ -10,9 +10,9 @@ This package provides reusable widgets:
 
 from ClassicLib.Interface.widgets.markdown_viewer import MarkdownViewer
 from ClassicLib.Interface.widgets.metadata_widget import ReportMetadataWidget
-from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker, PapyrusStats
-from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
-from ClassicLib.Interface.widgets.UIHelpers import (
+from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker, PapyrusStats
+from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
+from ClassicLib.Interface.widgets.ui_helpers import (
     BOTTOM_BUTTON_STYLE,
     CHECKBOX_STYLE,
     ENABLED_BUTTON_STYLE,

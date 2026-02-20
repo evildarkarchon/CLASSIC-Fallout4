@@ -1,3 +1,5 @@
+from datetime import timezone
+
 """
 Unit tests for PapyrusDialog UI, accessibility, and layout.
 
@@ -12,8 +14,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
+from ClassicLib.Interface.dialogs.papyrus_dialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.papyrus import PapyrusStats
 
 is_xdist = os.environ.get("PYTEST_XDIST_WORKER") is not None
 skip_xdist = pytest.mark.skipif(is_xdist, reason="Qt GUI tests unstable in xdist workers on Windows")
@@ -58,10 +60,10 @@ class TestDialogAccessibilityAndUsability:
     def test_timestamp_format_readability(self, mock_dialog):
         """Test that timestamp is formatted for readability."""
         test_times = [
-            datetime(2024, 1, 15, 9, 5, 3),  # Single digit minutes/seconds
-            datetime(2024, 1, 15, 23, 59, 59),  # Late night
-            datetime(2024, 1, 15, 0, 0, 0),  # Midnight
-            datetime(2024, 1, 15, 12, 30, 45),  # Noon
+            datetime(2024, 1, 15, 9, 5, 3, tzinfo=timezone.utc),  # Single digit minutes/seconds
+            datetime(2024, 1, 15, 23, 59, 59, tzinfo=timezone.utc),  # Late night
+            datetime(2024, 1, 15, 0, 0, 0, tzinfo=timezone.utc),  # Midnight
+            datetime(2024, 1, 15, 12, 30, 45, tzinfo=timezone.utc),  # Noon
         ]
 
         expected_formats = ["09:05:03", "23:59:59", "00:00:00", "12:30:45"]
@@ -78,7 +80,7 @@ class TestDialogAccessibilityAndUsability:
     def test_status_indicator_symbols(self, mock_dialog):
         """Test that status indicators use appropriate symbols."""
         # Test good status symbols
-        good_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
+        good_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
 
         mock_dialog._update_status_indicators(good_stats)
 
@@ -88,7 +90,7 @@ class TestDialogAccessibilityAndUsability:
             label.setText.assert_called_with("✓")
 
         # Test warning symbols
-        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=6, stacks=10, warnings=2, errors=0, ratio=0.6)
+        warning_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=6, stacks=10, warnings=2, errors=0, ratio=0.6)
 
         mock_dialog._update_status_indicators(warning_stats)
 
@@ -100,7 +102,7 @@ class TestDialogAccessibilityAndUsability:
         ratio_label.setText.assert_called_with("⚠️")
 
         # Test error symbols
-        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=9, stacks=10, warnings=0, errors=3, ratio=0.9)
+        error_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=9, stacks=10, warnings=0, errors=3, ratio=0.9)
 
         mock_dialog._update_status_indicators(error_stats)
 
@@ -114,25 +116,25 @@ class TestDialogAccessibilityAndUsability:
     def test_message_color_coding_consistency(self, mock_dialog):
         """Test that message colors are consistent with severity."""
         # Test error colors (highest severity)
-        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=0, errors=1, ratio=0.2)
+        error_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=5, warnings=0, errors=1, ratio=0.2)
 
         mock_dialog._update_message(error_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: red; font-weight: bold;")
 
         # Test warning colors (medium severity)
-        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=1, errors=0, ratio=0.2)
+        warning_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=5, warnings=1, errors=0, ratio=0.2)
 
         mock_dialog._update_message(warning_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: orange; font-weight: bold;")
 
         # Test caution colors (low severity)
-        caution_stats = PapyrusStats(timestamp=datetime.now(), dumps=6, stacks=10, warnings=0, errors=0, ratio=0.6)
+        caution_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=6, stacks=10, warnings=0, errors=0, ratio=0.6)
 
         mock_dialog._update_message(caution_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: orange;")
 
         # Test normal colors (no issues)
-        normal_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
+        normal_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=10, warnings=0, errors=0, ratio=0.1)
 
         mock_dialog._update_message(normal_stats)
         mock_dialog.message_label.setStyleSheet.assert_called_with("color: green;")

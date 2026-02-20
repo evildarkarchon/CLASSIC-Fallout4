@@ -38,7 +38,7 @@ def qt_application_session():
         try:
             app.processEvents()
         except:
-            pass  # App may already be deleted
+            _ = None  # pass  # App may already be deleted
 
 
 @pytest.fixture(scope="function")
@@ -62,7 +62,7 @@ def qt_application(qt_application_session):
         try:
             app.processEvents()
         except:
-            pass  # App may be in an invalid state
+            _ = None  # pass  # App may be in an invalid state
 
         # Clean up AsyncBridge singleton to prevent state pollution between tests
         try:
@@ -82,13 +82,13 @@ def qt_application(qt_application_session):
                         try:
                             instance.shutdown()
                         except:
-                            pass  # Ignore shutdown errors
+                            _ = None  # pass  # Ignore shutdown errors
 
                     # Clear instances
                     with AsyncBridge._lock:
                         AsyncBridge._instances.clear()
         except:
-            pass  # Ignore if AsyncBridge not yet imported or other errors
+            _ = None  # pass  # Ignore if AsyncBridge not yet imported or other errors
 
 
 @pytest.fixture(scope="function")

@@ -270,7 +270,7 @@ def print_next_steps() -> None:
     print("   • PyCharm: Point interpreter to .venv/Scripts/python.exe (Windows) or .venv/bin/python (Unix)\n")
 
     print("2. Common uv commands:")
-    print("   • Run the application:     uv run python CLASSIC_Interface.py")
+    print("   • Run the application:     uv run python classic_interface.py")
     print("   • Run tests:               uv run pytest")
     print("   • Add a package:           uv add package-name")
     print("   • Update dependencies:     uv lock --upgrade")
@@ -290,7 +290,7 @@ def main() -> int:
     print("This script will help you migrate from Poetry to uv package manager.\n")
 
     # Check if we're in the right directory
-    if not Path("CLASSIC_Interface.py").exists():
+    if not Path("classic_interface.py").exists():
         print_error("This script must be run from the CLASSIC-Fallout4 project root directory.")
         return 1
 
@@ -320,7 +320,7 @@ def main() -> int:
         # Step 5: Verify installation
         if not verify_installation():
             print_warning("Some checks failed, but migration may still be successful.")
-            print_info("Try running: uv run python CLASSIC_Interface.py")
+            print_info("Try running: uv run python classic_interface.py")
 
         # Step 6: Print next steps
         print_next_steps()

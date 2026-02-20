@@ -68,7 +68,7 @@ def create_test_database(db_path: Path, table_name: str = "Fallout4") -> None:
         ("00056789", "AnotherMod.esp", "Custom Armor"),
     ]
 
-    cursor.executemany(f"INSERT OR REPLACE INTO {table_name} (formid, plugin, entry) VALUES (?, ?, ?)", test_data)
+    cursor.executemany(f"INSERT OR REPLACE INTO {table_name} (formid, plugin, entry) VALUES (?, ?, ?)", test_data)  # noqa: S608
 
     conn.commit()
     conn.close()

@@ -32,7 +32,6 @@ Usage:
     yaml_ops.save_yaml_file("output.yaml", {"key": "value"})
 """
 
-from __future__ import annotations
 
 from pathlib import Path
 from typing import Any

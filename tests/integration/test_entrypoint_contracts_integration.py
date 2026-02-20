@@ -20,11 +20,11 @@ def test_console_script_targets_are_stable() -> None:
     scripts = data["project"]["scripts"]
 
     expected = {
-        "classic": "CLASSIC_Interface:main",
-        "classic-gui": "CLASSIC_Interface:main",
+        "classic": "classic_interface:main",
+        "classic-gui": "classic_interface:main",
         "classic-tui": "ClassicLib.TUI:main",
-        "classic-cli": "CLASSIC_ScanLogs:main",
-        "classic-scan": "CLASSIC_ScanGame:main",
+        "classic-cli": "classic_scanlogs:main",
+        "classic-scan": "classic_scangame:main",
     }
 
     assert scripts == expected
@@ -33,9 +33,9 @@ def test_console_script_targets_are_stable() -> None:
 @pytest.mark.parametrize(
     ("module_name", "callable_name"),
     [
-        ("CLASSIC_Interface", "main"),
-        ("CLASSIC_ScanLogs", "main"),
-        ("CLASSIC_ScanGame", "main"),
+        ("classic_interface", "main"),
+        ("classic_scanlogs", "main"),
+        ("classic_scangame", "main"),
         ("ClassicLib.TUI", "main"),
     ],
 )

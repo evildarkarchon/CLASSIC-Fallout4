@@ -172,7 +172,7 @@ class FolderManager:
         Displays the settings dialog and applies any changes if the user
         accepts the dialog.
         """
-        from ClassicLib.Interface.Settings.dialog import SettingsDialog
+        from ClassicLib.Interface.settings.dialog import SettingsDialog
 
         dialog = SettingsDialog(self._ctx.main_window)
         if dialog.exec() == QDialog.DialogCode.Accepted:

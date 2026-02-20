@@ -86,7 +86,7 @@ class TestGUIToRustIntegration:
         crash_log = IntegrationTestHelpers.create_synthetic_crash_log()
 
         # Mock GUI components
-        with patch("CLASSIC_Interface.MainWindow"):
+        with patch("classic_interface.MainWindow"):
             # Simulate GUI triggering scan
             async def gui_scan_operation():
                 # GUI would call parser through AsyncBridge

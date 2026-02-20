@@ -6,7 +6,7 @@ interface. The dialog updates in real-time and includes mechanisms for halting t
 monitoring process and visually indicating the status of metrics.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QCloseEvent, QFont
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
+from ClassicLib.Interface.widgets.papyrus import PapyrusStats
 
 
 class PapyrusMonitorDialog(QDialog):
@@ -116,7 +116,7 @@ class PapyrusMonitorDialog(QDialog):
         main_layout.addLayout(button_layout)
 
         # Initialize with default values
-        self.update_stats(PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0))
+        self.update_stats(PapyrusStats(timestamp=datetime.now(UTC), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0))
 
     def update_stats(self, stats: PapyrusStats) -> None:
         """Update the UI with the latest statistics and modifies status indicators

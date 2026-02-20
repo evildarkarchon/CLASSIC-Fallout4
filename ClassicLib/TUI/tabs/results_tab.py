@@ -3,6 +3,7 @@
 This tab provides a report browser with list selection and Markdown rendering.
 """
 
+from datetime import UTC
 from pathlib import Path
 from typing import ClassVar, override
 
@@ -284,7 +285,7 @@ class ResultsTab(Horizontal):
             self.query_one("#report-filename", Label).update(path.name)
 
             # Update metadata
-            modified = datetime.fromtimestamp(stat.st_mtime).strftime("%Y-%m-%d %H:%M")
+            modified = datetime.fromtimestamp(stat.st_mtime, tz=UTC).strftime("%Y-%m-%d %H:%M")
             meta = f"Size: {stat.st_size:,} bytes  │  Modified: {modified}"
             self.query_one("#report-metadata", Static).update(meta)
 

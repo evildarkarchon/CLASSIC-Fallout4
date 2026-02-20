@@ -36,8 +36,8 @@ from ClassicLib.Interface.controllers.update_manager import UpdateManager
 from ClassicLib.Interface.controllers.window_geometry import WindowGeometryManager
 from ClassicLib.Interface.shared.context import FeatureContext
 from ClassicLib.Interface.shared.signal_hub import SignalHub
-from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
-from ClassicLib.Interface.workers.ThreadManager import get_thread_manager
+from ClassicLib.Interface.shared.style_sheets import DARK_MODE
+from ClassicLib.Interface.workers.thread_manager import get_thread_manager
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 from ClassicLib.messaging import init_message_handler, msg_error
 from ClassicLib.support.setup import SetupCoordinator

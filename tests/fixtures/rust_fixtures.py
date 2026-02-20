@@ -11,6 +11,7 @@ import asyncio
 import time
 from collections.abc import Generator
 from pathlib import Path
+from typing import Self
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -24,7 +25,7 @@ CLASSIC_Info:
   version: "7.31.0"
   version_date: "2024-01-01"
 catch_log_records: []
-CLASSIC_Interface:
+classic_interface:
   autoscan_text_Fallout4: "Autoscan report"
 """
 
@@ -77,7 +78,7 @@ class PerformanceTimer:
         self.elapsed: float = 0.0
         self.start_time: float = 0.0
 
-    def __enter__(self) -> "PerformanceTimer":
+    def __enter__(self) -> Self:
         self.start_time = time.perf_counter()
         return self
 

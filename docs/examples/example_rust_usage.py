@@ -12,8 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).parent
 sys.path.insert(0, str(project_root))
 
-from ClassicLib.ResourceLoader import ResourceLoader  # noqa: E402
-from ClassicLib.rust_loader import is_rust_available  # noqa: E402
+from ClassicLib.ResourceLoader import ResourceLoader
+from ClassicLib.rust_loader import is_rust_available
 
 
 def main() -> None:

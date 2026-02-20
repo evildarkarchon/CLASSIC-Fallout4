@@ -380,8 +380,6 @@ class XseVersion:
 
         """
 
-    def __repr__(self) -> str: ...
-    def __str__(self) -> str: ...
 
 class IniCheckResult:
     """Python wrapper for INI check result."""
@@ -414,8 +412,6 @@ class IniCheckResult:
 
         """
 
-    def __repr__(self) -> str: ...
-    def __str__(self) -> str: ...
 
 class DocumentsChecker:
     """Python wrapper for documents configuration checker."""

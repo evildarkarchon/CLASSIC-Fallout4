@@ -153,7 +153,7 @@ class TestRustOrchestratorIntegration:
             assert any(not r.success for r in results)
         except Exception:
             # Expected behavior if it fails fast
-            pass
+            _ = None  # pass
 
     def test_empty_log_list(self, orchestrator):
         """Test processing empty log list."""

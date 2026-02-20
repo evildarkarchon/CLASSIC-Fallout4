@@ -34,7 +34,6 @@ Usage:
     logger.log_message(msg)
 """
 
-from __future__ import annotations
 
 from enum import IntEnum
 
@@ -85,21 +84,7 @@ class MessageType(IntEnum):
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this MessageType.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this MessageType.
-
-        Returns:
-            The name of the message type.
-
-        """
 
 class MessageTarget(IntEnum):
     """Message target enumeration for routing messages.
@@ -173,21 +158,7 @@ class MessageTarget(IntEnum):
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this MessageTarget.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this MessageTarget.
-
-        Returns:
-            The name of the message target.
-
-        """
 
 class Message:
     """Message data structure with content, type, target, and optional metadata.
@@ -363,21 +334,7 @@ class Message:
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this Message.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this Message.
-
-        Returns:
-            The message content.
-
-        """
 
 class Logger:
     """Centralized logging facility that integrates with Rust's log crate.

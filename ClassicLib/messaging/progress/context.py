@@ -1,3 +1,4 @@
+
 """Progress context manager for unified progress tracking.
 
 This module provides the ProgressContext class which adapts to either
@@ -7,9 +8,11 @@ The handler provides the appropriate progress implementation.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
+    import types
+
     from ClassicLib.messaging.handler import MessageHandler
     from ClassicLib.messaging.progress.base import ProgressHandler
 
@@ -50,7 +53,7 @@ class ProgressContext:
 
         self._progress_handler: ProgressHandler | None = None
 
-    def __enter__(self) -> ProgressContext:
+    def __enter__(self) -> Self:
         """Enter the progress context.
 
         Returns:
@@ -91,7 +94,7 @@ class ProgressContext:
         self,
         exc_type: type[BaseException] | None,
         _exc_val: BaseException | None,
-        _exc_tb: Any,
+        _exc_tb: types.TracebackType | None,
     ) -> None:
         """Exit the progress context.
 

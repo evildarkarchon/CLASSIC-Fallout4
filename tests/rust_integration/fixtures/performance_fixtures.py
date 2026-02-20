@@ -85,7 +85,7 @@ class PerformanceTestFixtures:
             try:
                 target_function(test_data)
             except Exception:
-                pass  # Ignore warmup errors
+                _ = None  # pass  # Ignore warmup errors
 
         # Timed runs
         times = []

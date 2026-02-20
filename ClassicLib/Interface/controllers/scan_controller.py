@@ -14,14 +14,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QObject, QMutex, QThread, Qt, Slot
+from PySide6.QtCore import QMutex, QObject, Qt, QThread, Slot
 from PySide6.QtWidgets import QMessageBox
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.Interface.dialogs.Dialogs import CustomErrorDialog
-from ClassicLib.Interface.workers.ThreadManager import ThreadType
-from ClassicLib.Interface.workers.Workers import CrashLogsScanWorker, GameFilesScanWorker
+from ClassicLib.Interface.dialogs.dialogs import CustomErrorDialog
+from ClassicLib.Interface.workers.thread_manager import ThreadType
+from ClassicLib.Interface.workers.workers import CrashLogsScanWorker, GameFilesScanWorker
 from ClassicLib.io.yaml import yaml_settings
 
 if TYPE_CHECKING:

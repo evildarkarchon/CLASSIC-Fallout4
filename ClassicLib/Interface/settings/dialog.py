@@ -27,9 +27,9 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.Interface.Settings.path_manager import PathManager
-from ClassicLib.Interface.Settings.tab_creators import TabCreator, ensure_game_version_options
-from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
+from ClassicLib.Interface.settings.path_manager import PathManager
+from ClassicLib.Interface.settings.tab_creators import TabCreator, ensure_game_version_options
+from ClassicLib.Interface.shared.style_sheets import DARK_MODE
 from ClassicLib.io.yaml import yaml_cache, yaml_settings
 from ClassicLib.messaging import msg_error, msg_success
 

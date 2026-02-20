@@ -147,7 +147,7 @@ def _reset_module_singletons() -> None:
 
     # ThreadManager (GUI-only, but reset for completeness)
     try:
-        import ClassicLib.Interface.workers.ThreadManager as tm_mod
+        import ClassicLib.Interface.workers.thread_manager as tm_mod
 
         tm_mod._thread_manager = None
     except (ImportError, AttributeError):
@@ -220,7 +220,7 @@ def _reset_lazy_import_caches() -> None:
 
     # Version tooltip and game version options (GUI lazy caches)
     try:
-        import ClassicLib.Interface.Settings.tab_creators as tc_mod
+        import ClassicLib.Interface.settings.tab_creators as tc_mod
 
         tc_mod._VERSION_TOOLTIP = ""
         tc_mod.GAME_VERSION_OPTIONS = []

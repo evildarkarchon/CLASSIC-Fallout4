@@ -6,7 +6,7 @@ and async_filter functions.
 
 import pytest
 
-from ClassicLib.Utils.Async import (
+from ClassicLib.Utils.async_utils import (
     async_filter,
     async_map,
 )

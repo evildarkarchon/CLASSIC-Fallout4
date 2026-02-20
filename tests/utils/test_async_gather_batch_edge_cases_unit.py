@@ -8,7 +8,7 @@ import asyncio
 
 import pytest
 
-from ClassicLib.Utils.Async import (
+from ClassicLib.Utils.async_utils import (
     batch_process,
     gather_with_concurrency,
 )

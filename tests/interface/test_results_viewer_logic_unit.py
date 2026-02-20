@@ -27,7 +27,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_valid_format(self):
         """Test timestamp extraction from valid crash log filename."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         result = ReportListWidget._extract_timestamp("crash-2024-03-15-143022")
         assert result == "2024-03-15 14:30:22"
@@ -35,7 +35,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_different_date(self):
         """Test timestamp extraction with different date."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         result = ReportListWidget._extract_timestamp("crash-2023-12-01-090000")
         assert result == "2023-12-01 09:00:00"
@@ -43,7 +43,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_midnight(self):
         """Test timestamp extraction at midnight."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         result = ReportListWidget._extract_timestamp("crash-2024-01-01-000000")
         assert result == "2024-01-01 00:00:00"
@@ -51,7 +51,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_end_of_day(self):
         """Test timestamp extraction at end of day."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         result = ReportListWidget._extract_timestamp("crash-2024-06-30-235959")
         assert result == "2024-06-30 23:59:59"
@@ -59,7 +59,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_invalid_format(self):
         """Test timestamp extraction returns None for invalid format."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         result = ReportListWidget._extract_timestamp("some-random-filename")
         assert result is None
@@ -67,7 +67,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_partial_match(self):
         """Test timestamp extraction returns None for partial match."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         result = ReportListWidget._extract_timestamp("crash-2024-03-15")
         assert result is None
@@ -75,7 +75,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_with_suffix(self):
         """Test timestamp extraction works with -AUTOSCAN suffix."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         # The method receives the stem (without extension), but may have -AUTOSCAN
         result = ReportListWidget._extract_timestamp("crash-2024-03-15-143022-AUTOSCAN")
@@ -85,7 +85,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_invalid_date(self):
         """Test timestamp extraction with invalid date values."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         # Invalid month (13)
         result = ReportListWidget._extract_timestamp("crash-2024-13-15-143022")
@@ -94,7 +94,7 @@ class TestExtractTimestamp:
     @pytest.mark.unit
     def test_extract_timestamp_invalid_time(self):
         """Test timestamp extraction with invalid time values."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         # Invalid hour (25)
         result = ReportListWidget._extract_timestamp("crash-2024-03-15-253022")
@@ -107,7 +107,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_solved(self):
         """Test status detection for solved reports."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\nStatus: SOLVED\n\nRecommendations applied.")
@@ -123,7 +123,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_solved_recommendations(self):
         """Test status detection when RECOMMENDATIONS keyword present."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\n## RECOMMENDATIONS\n\n- Fix mod A")
@@ -139,7 +139,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_unsolved(self):
         """Test status detection for unsolved reports."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\nStatus: UNSOLVED\n\nNo known cause.")
@@ -155,7 +155,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_unsolved_alternative(self):
         """Test status detection with alternative unsolved phrase."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\nThe cause could not be determined.")
@@ -171,7 +171,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_incomplete(self):
         """Test status detection for incomplete reports."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\nStatus: INCOMPLETE\n\nMissing data.")
@@ -187,7 +187,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_unknown(self):
         """Test status detection returns unknown for no indicators."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\nSome generic content without status.")
@@ -203,7 +203,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_nonexistent_file(self):
         """Test status detection for nonexistent file."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         fake_path = Path("/nonexistent/path/to/report.md")
         result = ReportListWidget._determine_report_status(fake_path)
@@ -212,7 +212,7 @@ class TestDetermineReportStatus:
     @pytest.mark.unit
     def test_determine_status_case_insensitive(self):
         """Test status detection is case insensitive."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         with tempfile.NamedTemporaryFile(mode="w", suffix=".md", delete=False) as f:
             f.write("# Crash Report\n\nstatus: solved\n\nAll fixed.")

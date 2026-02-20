@@ -1460,7 +1460,10 @@ fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
         r"My Games\Fallout4"
     };
     let finder = DocsPathFinder::new(relative_docs);
-    finder.find_docs_path(None).ok().map(|path| path.join("F4SE"))
+    finder
+        .find_docs_path(None)
+        .ok()
+        .map(|path| path.join("F4SE"))
 }
 
 fn xse_folder_from_local_yaml(vr_mode: bool) -> Option<PathBuf> {
@@ -1801,11 +1804,11 @@ mod tests {
     #[test]
     fn resolve_xse_folder_uses_docs_root_for_fo4() {
         let mut app = App::new_for_testing();
-        app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
+        app.config.paths.docs_root =
+            Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
         app.config.vr_mode = false;
 
-        let folder = super::resolve_xse_folder_for_scan(&app.config)
-            .expect("expected xse folder");
+        let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");
         assert_eq!(
             folder,
             PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\F4SE")
@@ -1815,11 +1818,12 @@ mod tests {
     #[test]
     fn resolve_xse_folder_uses_docs_root_for_fo4_vr() {
         let mut app = App::new_for_testing();
-        app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR"));
+        app.config.paths.docs_root = Some(PathBuf::from(
+            r"C:\Users\Test\Documents\My Games\Fallout4VR",
+        ));
         app.config.vr_mode = true;
 
-        let folder = super::resolve_xse_folder_for_scan(&app.config)
-            .expect("expected xse folder");
+        let folder = super::resolve_xse_folder_for_scan(&app.config).expect("expected xse folder");
         assert_eq!(
             folder,
             PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")

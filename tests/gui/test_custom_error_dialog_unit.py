@@ -24,7 +24,7 @@ from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication, QDialog, QLabel, QMainWindow, QPushButton, QTextEdit
 
-from ClassicLib.Interface.dialogs.Dialogs import CustomErrorDialog
+from ClassicLib.Interface.dialogs.dialogs import CustomErrorDialog
 
 
 @pytest.mark.unit

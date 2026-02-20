@@ -30,7 +30,7 @@ from PySide6.QtWidgets import (
 )
 
 from ClassicLib.core.logger import logger
-from ClassicLib.Interface.widgets.UIHelpers import (
+from ClassicLib.Interface.widgets.ui_helpers import (
     BOTTOM_BUTTON_STYLE,
     add_main_button,
     create_separator,

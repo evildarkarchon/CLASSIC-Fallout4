@@ -268,7 +268,7 @@ def ensure_async_bridge_cleanup() -> Generator[None, None, None]:
                     instance.shutdown()
 
             except Exception:  # noqa: BLE001
-                pass
+                _ = None  # pass
 
             # Clear thread-local storage
 

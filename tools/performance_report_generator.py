@@ -24,7 +24,7 @@ import json
 import shutil
 import subprocess
 import sys
-from datetime import datetime
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -56,7 +56,7 @@ class PerformanceReportGenerator:
         self.verbose = verbose
         self.benchmark_results = {}
         self.analysis_results = {}
-        self.generation_timestamp = datetime.now()
+        self.generation_timestamp = datetime.now(UTC)
 
         # Ensure output directory exists
         self.output_dir.mkdir(exist_ok=True)
@@ -68,7 +68,7 @@ class PerformanceReportGenerator:
     def log(self, message: str, level: str = "INFO"):
         """Log messages with timestamp if verbose mode enabled."""
         if self.verbose:
-            timestamp = datetime.now().strftime("%H:%M:%S")
+            timestamp = datetime.now(UTC).strftime("%H:%M:%S")
             print(f"[{timestamp}] {level}: {message}")
 
     def check_rust_availability(self) -> dict[str, Any]:

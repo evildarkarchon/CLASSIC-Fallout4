@@ -77,7 +77,7 @@ class TestEncodingOperations:
                 assert isinstance(result, str)
         except (UnicodeDecodeError, Exception):
             # It's okay if it fails on binary data
-            pass
+            _ = None  # pass
 
     def test_open_file_with_encoding_empty_file(self, tmp_path: Path) -> None:
         """Test open_file_with_encoding with empty file."""

@@ -277,7 +277,7 @@ class ClassicBackend(QObject):
             List of dicts with 'display' and 'value' keys for ComboBox population.
 
         """
-        from ClassicLib.Interface.Settings.tab_creators import ensure_game_version_options
+        from ClassicLib.Interface.settings.tab_creators import ensure_game_version_options
 
         options = ensure_game_version_options()
         return [{"display": display, "value": value} for display, value in options]

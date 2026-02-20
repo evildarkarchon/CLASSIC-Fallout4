@@ -24,11 +24,11 @@ package_data = {
 # Entry points matching the pyproject.toml scripts (using root modules)
 entry_points = {
     "console_scripts": [
-        "classic=CLASSIC_Interface:main",
-        "classic-gui=CLASSIC_Interface:main",
-        "classic-qml=CLASSIC_Interface_QML:main",
-        "classic-cli=CLASSIC_ScanLogs:main",
-        "classic-scan=CLASSIC_ScanGame:main",
+        "classic=classic_interface:main",
+        "classic-gui=classic_interface:main",
+        "classic-qml=classic_interface_qml:main",
+        "classic-cli=classic_scanlogs:main",
+        "classic-scan=classic_scangame:main",
     ],
 }
 
@@ -38,5 +38,5 @@ setup(
     package_data=package_data,
     include_package_data=True,
     entry_points=entry_points,
-    py_modules=["CLASSIC_Interface", "CLASSIC_Interface_QML", "CLASSIC_ScanLogs", "CLASSIC_ScanGame"],
+    py_modules=["classic_interface", "classic_interface_qml", "classic_scanlogs", "classic_scangame"],
 )

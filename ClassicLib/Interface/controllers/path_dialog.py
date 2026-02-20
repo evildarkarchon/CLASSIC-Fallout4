@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QDialog, QMessageBox
 
 from ClassicLib.core.registry import GlobalRegistry
-from ClassicLib.Interface.dialogs.PathDialog import ManualPathDialog
+from ClassicLib.Interface.dialogs.path_dialog import ManualPathDialog
 from ClassicLib.messaging import msg_info
 
 if TYPE_CHECKING:

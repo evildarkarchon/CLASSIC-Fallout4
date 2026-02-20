@@ -1,4 +1,4 @@
-"""Tests for CLASSIC_ScanLogs.py scan logs entry point.
+"""Tests for classic_scanlogs.py scan logs entry point.
 
 This module tests the scan logs CLI entry point, argument parsing,
 and configuration creation.
@@ -17,11 +17,11 @@ pytestmark = [pytest.mark.unit]
 
 
 class TestClassicScanLogs:
-    """Test suite for CLASSIC_ScanLogs.py entry point."""
+    """Test suite for classic_scanlogs.py entry point."""
 
     def test_parse_arguments(self) -> None:
         """Test argument parsing."""
-        from CLASSIC_ScanLogs import parse_arguments
+        from classic_scanlogs import parse_arguments
 
         # Test with no arguments
         with patch("argparse.ArgumentParser.parse_args") as mock_parse:
@@ -29,12 +29,12 @@ class TestClassicScanLogs:
             args = parse_arguments()
             assert isinstance(args, argparse.Namespace)
 
-    @patch("CLASSIC_ScanLogs.classic_settings_async")
-    @patch("CLASSIC_ScanLogs.yaml_settings_async")
+    @patch("classic_scanlogs.classic_settings_async")
+    @patch("classic_scanlogs.yaml_settings_async")
     @pytest.mark.asyncio
     async def test_create_config_from_args(self, mock_yaml, mock_classic) -> None:
         """Test configuration creation from arguments."""
-        from CLASSIC_ScanLogs import create_config_from_args_async
+        from classic_scanlogs import create_config_from_args_async
         from ClassicLib.scanning.logs.models import ScanConfig
 
         # Mock defaults - Return True so False argument triggers change
@@ -92,8 +92,8 @@ class TestClassicScanLogs:
 
     @patch("ClassicLib.io.database.cleanup_database_pools_async")
     @patch("ClassicLib.messaging.msg_info")  # Patch msg_info to prevent handler error
-    @patch("CLASSIC_ScanLogs.ScanLogsExecutor")
-    @patch("CLASSIC_ScanLogs.create_config_from_args_async")
+    @patch("classic_scanlogs.ScanLogsExecutor")
+    @patch("classic_scanlogs.create_config_from_args_async")
     @pytest.mark.asyncio
     async def test_main_execution_flow(self, mock_create_config, mock_executor_cls, mock_msg_info, mock_cleanup) -> None:
         """Test main execution flow by testing run_scan() directly.
@@ -101,7 +101,7 @@ class TestClassicScanLogs:
         Since main() is now sync and calls asyncio.run() internally, we test
         run_scan(args) which contains the actual async logic.
         """
-        from CLASSIC_ScanLogs import run_scan
+        from classic_scanlogs import run_scan
 
         # Setup mocks
         mock_executor = MagicMock()

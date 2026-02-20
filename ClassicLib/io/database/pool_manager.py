@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Self
 
 from ClassicLib.core.logger import logger
 
@@ -62,7 +62,7 @@ class DatabasePoolManager:
     _creation_lock: ClassVar[threading.Lock] = threading.Lock()  # For __new__ thread safety
     _using_rust: bool = False
 
-    def __new__(cls) -> DatabasePoolManager:
+    def __new__(cls) -> Self:
         """Ensure only one instance of DatabasePoolManager exists.
 
         Thread-safe singleton creation using a threading lock.

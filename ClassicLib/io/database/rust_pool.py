@@ -1,3 +1,4 @@
+
 """Rust-accelerated async database pool wrapper.
 
 This module provides a Python wrapper around the high-performance Rust
@@ -37,7 +38,7 @@ CLI Usage:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self
 
 from ClassicLib.core.constants import get_all_db_paths_async
 from ClassicLib.core.logger import logger
@@ -46,6 +47,7 @@ from ClassicLib.integration.exceptions import RustDatabaseError, RustError
 from ClassicLib.integration.factory import detect_component
 
 if TYPE_CHECKING:
+    import types
     from collections.abc import Sequence
 
     from classic_database import DatabasePool as DatabasePoolType
@@ -145,7 +147,7 @@ class RustAsyncDatabasePool:
         self.query_cache: dict[tuple[str, str], Any] = {}  # Dummy for compatibility
         self._initialized = False
 
-    async def __aenter__(self) -> RustAsyncDatabasePool:
+    async def __aenter__(self) -> Self:
         """Enter async context manager.
 
         Returns:
@@ -155,7 +157,7 @@ class RustAsyncDatabasePool:
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
+    async def __aexit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None) -> None:
         """Exit async context manager, cleaning up resources.
 
         Args:

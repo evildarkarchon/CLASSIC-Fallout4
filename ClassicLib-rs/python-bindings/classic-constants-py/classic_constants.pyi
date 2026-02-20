@@ -41,7 +41,6 @@ Usage:
     print(classic_version.is_known_fallout4_version((1, 10, 163)))
 """
 
-from __future__ import annotations
 
 __version__: str
 
@@ -137,21 +136,7 @@ class YamlFile:
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this YamlFile.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this YamlFile.
-
-        Returns:
-            The variant name as a string.
-
-        """
 
 class GameId:
     """Game identifiers for supported Bethesda games.
@@ -245,21 +230,7 @@ class GameId:
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this GameId.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this GameId.
-
-        Returns:
-            The game identifier as a string.
-
-        """
 
 class Fallout4Version:
     """Fallout 4 version variants enumeration.
@@ -580,21 +551,7 @@ class Fallout4Version:
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this Fallout4Version.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this Fallout4Version.
-
-        Returns:
-            The version identifier as a string.
-
-        """
 
 def must_not_be_none(key: str) -> bool:
     """Check if a settings key should not allow None values.

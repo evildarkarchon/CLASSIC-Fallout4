@@ -28,7 +28,7 @@ import operator
 import re
 import shutil
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Pattern to match baseline directories: baseline-YYYY-MM-DD-HHMMSS
@@ -51,7 +51,7 @@ def parse_baseline_timestamp(name: str) -> datetime | None:
 
     try:
         year, month, day, hour, minute, second = map(int, match.groups())
-        return datetime(year, month, day, hour, minute, second)
+        return datetime(year, month, day, hour, minute, second, tzinfo=UTC)
     except ValueError:
         # Invalid date values (e.g., month 13)
         return None

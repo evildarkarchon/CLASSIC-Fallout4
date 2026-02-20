@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path  # noqa: TC003 - used at runtime for dict keys
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Self
 
 import aiosqlite
 
@@ -35,6 +35,7 @@ from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 
 if TYPE_CHECKING:
+    import types
     from collections.abc import Sequence
 
 # Cache TTL constants (in seconds)
@@ -81,7 +82,7 @@ class AsyncDatabasePool:
         self.query_cache: dict[tuple[str, str], str] = {}
         self._lock = asyncio.Lock()
 
-    async def __aenter__(self) -> AsyncDatabasePool:
+    async def __aenter__(self) -> Self:
         """Enter async context manager.
 
         Returns:
@@ -91,7 +92,9 @@ class AsyncDatabasePool:
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type: Any, _exc_val: Any, _exc_tb: Any) -> None:
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None
+    ) -> None:
         """Exit async context manager, cleaning up resources.
 
         Args:

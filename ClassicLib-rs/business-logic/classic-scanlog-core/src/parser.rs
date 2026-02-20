@@ -356,9 +356,7 @@ impl LogParser {
             // Addictol logs may start with [Patches] and omit [Compatibility].
             let boundary_matched = if collecting {
                 self.fast_contains(line, end_boundary)
-            } else if current_boundary_idx == 0
-                && Self::is_compatibility_marker(start_boundary)
-            {
+            } else if current_boundary_idx == 0 && Self::is_compatibility_marker(start_boundary) {
                 self.fast_contains(line, start_boundary) || self.fast_contains(line, "[Patches]")
             } else {
                 self.fast_contains(line, start_boundary)

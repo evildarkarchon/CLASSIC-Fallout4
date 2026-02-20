@@ -150,7 +150,7 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.0",
-                "CLASSIC_Interface.update_warning_fallout4": "Update warning message",
+                "classic_interface.update_warning_fallout4": "Update warning message",
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect
@@ -183,7 +183,7 @@ class TestUpdateChecking:
         async def yaml_settings_side_effect(type_cls, enum, key, default=None):
             return {
                 "CLASSIC_Info.version": "CLASSIC v7.30.1",
-                "CLASSIC_Interface.update_unable_fallout4": "Unable to check updates",
+                "classic_interface.update_unable_fallout4": "Unable to check updates",
             }.get(key, default)
 
         mock_dependencies["yaml_settings_async"].side_effect = yaml_settings_side_effect

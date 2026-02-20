@@ -41,7 +41,6 @@ Usage:
     asyncio.run(main())
 """
 
-from __future__ import annotations
 
 from typing import Any
 

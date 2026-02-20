@@ -529,7 +529,7 @@ class DataOptimizer:
                     metadata["encoding"] = "utf-8"
                     self.optimization_stats["compression"] += 1
             except Exception:
-                pass
+                _ = None  # pass
 
         # Record size reduction
         optimized_size = sys.getsizeof(data)  # pyright: ignore[reportUnknownArgumentType]

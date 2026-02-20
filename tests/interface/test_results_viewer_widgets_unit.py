@@ -34,7 +34,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_creation(self, qtbot):
         """Test ReportListWidget can be created."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -46,7 +46,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_populate(self, qtbot):
         """Test populating the report list."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -70,7 +70,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_filter(self, qtbot):
         """Test filtering reports by search text."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)
@@ -96,7 +96,7 @@ class TestReportListWidgetQt:
     @pytest.mark.unit
     def test_report_list_widget_get_report_path(self, qtbot):
         """Test getting report path from list item."""
-        from ClassicLib.Interface.widgets.ResultsViewerWidgets import ReportListWidget
+        from ClassicLib.Interface.widgets.results_viewer_widgets import ReportListWidget
 
         widget = ReportListWidget()
         qtbot.addWidget(widget)

@@ -523,7 +523,7 @@ _async_yaml_core: AsyncYamlSettingsCore | None = None
 # Use threading.Lock for synchronization of lazy asyncio.Lock creation
 # This prevents the issue where asyncio.Lock created at module level
 # gets bound to a different event loop than where it's used
-import threading  # noqa: E402 - Intentional late import for lazy lock creation
+import threading
 
 _core_lock_threading = threading.Lock()
 _core_lock: asyncio.Lock | None = None

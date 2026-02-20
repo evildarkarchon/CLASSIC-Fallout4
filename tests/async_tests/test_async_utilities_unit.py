@@ -192,7 +192,7 @@ class TestAsyncUtilityFunctions:
             assert "valid.log" in result or len(result) == 0
         except Exception:
             # If exception is raised, it should be handled appropriately
-            pass
+            _ = None  # pass
 
     @pytest.mark.timing
     @pytest.mark.asyncio

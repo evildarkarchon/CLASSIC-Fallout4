@@ -8,7 +8,7 @@ import asyncio
 
 import pytest
 
-from ClassicLib.Utils.Async import (
+from ClassicLib.Utils.async_utils import (
     async_retry,
     async_timeout,
     run_with_timeout,

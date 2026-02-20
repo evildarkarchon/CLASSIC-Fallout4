@@ -1,3 +1,5 @@
+from datetime import timezone
+
 """
 Unit tests for PapyrusDialog update functionality.
 
@@ -12,8 +14,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
+from ClassicLib.Interface.dialogs.papyrus_dialog import PapyrusMonitorDialog
+from ClassicLib.Interface.widgets.papyrus import PapyrusStats
 
 is_xdist = os.environ.get("PYTEST_XDIST_WORKER") is not None
 skip_xdist = pytest.mark.skipif(is_xdist, reason="Qt GUI tests unstable in xdist workers on Windows")
@@ -58,12 +60,14 @@ class TestStatsUpdateFunctionality:
     @pytest.fixture
     def sample_stats(self):
         """Create sample PapyrusStats for testing."""
-        return PapyrusStats(timestamp=datetime(2024, 1, 15, 10, 30, 45), dumps=5, stacks=10, warnings=2, errors=1, ratio=0.5)
+        return PapyrusStats(
+            timestamp=datetime(2024, 1, 15, 10, 30, 45, tzinfo=timezone.utc), dumps=5, stacks=10, warnings=2, errors=1, ratio=0.5
+        )
 
     @pytest.fixture
     def zero_stats(self):
         """Create zero PapyrusStats for testing initial state."""
-        return PapyrusStats(timestamp=datetime.now(), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
+        return PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=0, stacks=0, warnings=0, errors=0, ratio=0.0)
 
     def test_update_stats_timestamp(self, mock_dialog, sample_stats):
         """Test that timestamp is updated correctly."""
@@ -113,7 +117,7 @@ class TestStatsUpdateFunctionality:
         test_ratios = [(0.123456789, "0.123"), (0.999, "0.999"), (1.0, "1.000"), (0.0, "0.000"), (0.5, "0.500")]
 
         for ratio, expected in test_ratios:
-            stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=2, warnings=0, errors=0, ratio=ratio)
+            stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=2, warnings=0, errors=0, ratio=ratio)
 
             mock_dialog.update_stats(stats)
 
@@ -152,7 +156,7 @@ class TestStatusIndicatorUpdates:
     def test_update_status_indicators_good_ratio(self, mock_dialog):
         """Test status indicators with good ratio (< 0.5)."""
         good_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=1,
             stacks=5,
             warnings=0,
@@ -179,7 +183,7 @@ class TestStatusIndicatorUpdates:
     def test_update_status_indicators_warning_ratio(self, mock_dialog):
         """Test status indicators with warning ratio (0.5 - 0.8)."""
         warning_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=6,
             stacks=10,
             warnings=0,
@@ -197,7 +201,7 @@ class TestStatusIndicatorUpdates:
     def test_update_status_indicators_critical_ratio(self, mock_dialog):
         """Test status indicators with critical ratio (> 0.8)."""
         critical_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=9,
             stacks=10,
             warnings=0,
@@ -214,7 +218,7 @@ class TestStatusIndicatorUpdates:
 
     def test_update_status_indicators_with_warnings(self, mock_dialog):
         """Test status indicators when warnings are present."""
-        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=3, errors=0, ratio=0.2)
+        warning_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=5, warnings=3, errors=0, ratio=0.2)
 
         mock_dialog._update_status_indicators(warning_stats)
 
@@ -230,7 +234,7 @@ class TestStatusIndicatorUpdates:
 
     def test_update_status_indicators_with_errors(self, mock_dialog):
         """Test status indicators when errors are present."""
-        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=0, errors=2, ratio=0.2)
+        error_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=5, warnings=0, errors=2, ratio=0.2)
 
         mock_dialog._update_status_indicators(error_stats)
 
@@ -242,7 +246,7 @@ class TestStatusIndicatorUpdates:
     def test_update_status_indicators_multiple_issues(self, mock_dialog):
         """Test status indicators with multiple issues."""
         multi_issue_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=8,
             stacks=10,
             warnings=5,
@@ -292,7 +296,7 @@ class TestMessageUpdates:
 
     def test_update_message_with_errors(self, mock_dialog):
         """Test message when errors are present."""
-        error_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=2, errors=3, ratio=0.2)
+        error_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=5, warnings=2, errors=3, ratio=0.2)
 
         mock_dialog._update_message(error_stats)
 
@@ -302,7 +306,7 @@ class TestMessageUpdates:
 
     def test_update_message_with_warnings_no_errors(self, mock_dialog):
         """Test message when warnings are present but no errors."""
-        warning_stats = PapyrusStats(timestamp=datetime.now(), dumps=1, stacks=5, warnings=4, errors=0, ratio=0.2)
+        warning_stats = PapyrusStats(timestamp=datetime.now(timezone.utc), dumps=1, stacks=5, warnings=4, errors=0, ratio=0.2)
 
         mock_dialog._update_message(warning_stats)
 
@@ -313,7 +317,7 @@ class TestMessageUpdates:
     def test_update_message_high_ratio_no_errors_warnings(self, mock_dialog):
         """Test message with high ratio but no errors/warnings."""
         high_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=9,
             stacks=10,
             warnings=0,
@@ -330,7 +334,7 @@ class TestMessageUpdates:
     def test_update_message_medium_ratio_no_issues(self, mock_dialog):
         """Test message with medium ratio but no other issues."""
         medium_ratio_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=6,
             stacks=10,
             warnings=0,
@@ -347,7 +351,7 @@ class TestMessageUpdates:
     def test_update_message_all_good(self, mock_dialog):
         """Test message when all stats are good."""
         good_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=1,
             stacks=10,
             warnings=0,
@@ -365,7 +369,7 @@ class TestMessageUpdates:
         """Test message priority order: errors > warnings > high ratio > medium ratio > normal."""
         # Test that errors take priority over all else
         all_issues_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=9,
             stacks=10,
             warnings=5,
@@ -384,7 +388,7 @@ class TestMessageUpdates:
         """Test message with edge case ratio values."""
         # Test exactly at 0.5 boundary
         edge_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=5,
             stacks=10,
             warnings=0,
@@ -399,7 +403,7 @@ class TestMessageUpdates:
 
         # Test exactly at 0.8 boundary
         edge_stats = PapyrusStats(
-            timestamp=datetime.now(),
+            timestamp=datetime.now(timezone.utc),
             dumps=8,
             stacks=10,
             warnings=0,

@@ -11,7 +11,7 @@ This test module verifies that:
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -28,7 +28,7 @@ from PySide6.QtCore import QObject, QThread
 @pytest.mark.unit
 def test_papyrus_monitor_worker_exists():
     """Test that PapyrusMonitorWorker can be imported."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     assert PapyrusMonitorWorker is not None, "PapyrusMonitorWorker should be importable"
     assert hasattr(PapyrusMonitorWorker, "run"), "Should have run method"
@@ -40,7 +40,7 @@ def test_papyrus_monitor_worker_exists():
 @pytest.mark.unit
 def test_worker_signals():
     """Test that worker has all required signals."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -52,7 +52,7 @@ def test_worker_signals():
 @pytest.mark.unit
 def test_worker_initialization():
     """Test that worker initializes with correct default state."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -198,7 +198,7 @@ def test_papyrus_logging_handles_none_path():
 @pytest.mark.unit
 def test_parse_stats():
     """Test that _parse_stats correctly parses log message."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     message = """NUMBER OF DUMPS    : 5
 NUMBER OF STACKS   : 10
@@ -221,7 +221,7 @@ NUMBER OF ERRORS   : 2
 @pytest.mark.unit
 def test_parse_stats_zero_dumps():
     """Test that _parse_stats handles zero dumps correctly."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     message = "NUMBER OF STACKS   : 0\n"
 
@@ -238,7 +238,7 @@ def test_parse_stats_zero_dumps():
 @pytest.mark.unit
 def test_monitoring_loop_emits_stats_signal():
     """Test that monitoring loop emits statsUpdated signal."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -259,7 +259,7 @@ def test_monitoring_loop_emits_stats_signal():
         worker.stop()
         return mock_message, 1
 
-    with patch("ClassicLib.Interface.widgets.Papyrus.papyrus_logging", side_effect=mock_logging), patch.object(QThread, "msleep"):
+    with patch("ClassicLib.Interface.widgets.papyrus.papyrus_logging", side_effect=mock_logging), patch.object(QThread, "msleep"):
         worker.run()
 
     # Verify signal was emitted
@@ -270,7 +270,7 @@ def test_monitoring_loop_emits_stats_signal():
 @pytest.mark.unit
 def test_monitoring_loop_does_not_emit_duplicate_stats():
     """Test that monitoring loop doesn't emit signal for unchanged stats."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -289,7 +289,7 @@ def test_monitoring_loop_does_not_emit_duplicate_stats():
             worker.stop()
         return mock_message, 1
 
-    with patch("ClassicLib.Interface.widgets.Papyrus.papyrus_logging", side_effect=mock_logging), patch.object(QThread, "msleep"):
+    with patch("ClassicLib.Interface.widgets.papyrus.papyrus_logging", side_effect=mock_logging), patch.object(QThread, "msleep"):
         worker.run()
 
     # Verify signal was only emitted once (stats didn't change)
@@ -299,7 +299,7 @@ def test_monitoring_loop_does_not_emit_duplicate_stats():
 @pytest.mark.unit
 def test_monitoring_loop_emits_error_signal():
     """Test that monitoring loop emits error signal on exception."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -309,7 +309,7 @@ def test_monitoring_loop_emits_error_signal():
 
     # Mock papyrus_logging to raise an error
     with (
-        patch("ClassicLib.Interface.widgets.Papyrus.papyrus_logging", side_effect=ValueError("Test error")),
+        patch("ClassicLib.Interface.widgets.papyrus.papyrus_logging", side_effect=ValueError("Test error")),
         patch.object(QThread, "msleep"),
     ):
         worker.run()
@@ -325,7 +325,7 @@ def test_monitoring_loop_emits_error_signal():
 @pytest.mark.unit
 def test_stop_mechanism():
     """Test that stop() safely stops the monitoring loop."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -342,7 +342,7 @@ def test_stop_mechanism():
 @pytest.mark.unit
 def test_stop_is_thread_safe():
     """Test that stop() is thread-safe (uses mutex)."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -361,7 +361,7 @@ def test_stop_is_thread_safe():
 @pytest.mark.unit
 def test_worker_is_qobject():
     """Test that worker is a QObject and can be moved to thread."""
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker
+    from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker
 
     worker = PapyrusMonitorWorker()
 
@@ -385,10 +385,10 @@ def test_papyrus_stats_equality():
     """Test that PapyrusStats equality works correctly."""
     from datetime import datetime
 
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
+    from ClassicLib.Interface.widgets.papyrus import PapyrusStats
 
     stats1 = PapyrusStats(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(timezone.utc),
         dumps=1,
         stacks=2,
         warnings=3,
@@ -397,7 +397,7 @@ def test_papyrus_stats_equality():
     )
 
     stats2 = PapyrusStats(
-        timestamp=datetime.now(),  # Different timestamp
+        timestamp=datetime.now(timezone.utc),  # Different timestamp
         dumps=1,
         stacks=2,
         warnings=3,
@@ -406,7 +406,7 @@ def test_papyrus_stats_equality():
     )
 
     stats3 = PapyrusStats(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(timezone.utc),
         dumps=2,  # Different dumps
         stacks=2,
         warnings=3,
@@ -426,10 +426,10 @@ def test_papyrus_stats_hash():
     """Test that PapyrusStats hashing works correctly."""
     from datetime import datetime
 
-    from ClassicLib.Interface.widgets.Papyrus import PapyrusStats
+    from ClassicLib.Interface.widgets.papyrus import PapyrusStats
 
     stats1 = PapyrusStats(
-        timestamp=datetime.now(),
+        timestamp=datetime.now(timezone.utc),
         dumps=1,
         stacks=2,
         warnings=3,
@@ -438,7 +438,7 @@ def test_papyrus_stats_hash():
     )
 
     stats2 = PapyrusStats(
-        timestamp=datetime.now(),  # Different timestamp
+        timestamp=datetime.now(timezone.utc),  # Different timestamp
         dumps=1,
         stacks=2,
         warnings=3,

@@ -28,12 +28,10 @@ Usage:
             print(f"F4SE version: {version[0]}.{version[1]}.{version[2]}")
 """
 
-from __future__ import annotations
-
 __version__: str
 
 # Type alias for version tuples
-Version = tuple[int, int, int]
+type Version = tuple[int, int, int]
 
 class XseType:
     """XSE type enumeration for Python.
@@ -95,21 +93,7 @@ class XseType:
     def __eq__(self, other: object) -> bool:
         """Compare XSE types for equality."""
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this XseType.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this XseType.
-
-        Returns:
-            The XSE type name as a string.
-
-        """
 
 class XseInfo:
     """XSE installation information for Python.
@@ -154,21 +138,7 @@ class XseInfo:
     def loader_path(self) -> str:
         """Get the full path to the loader executable."""
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this XseInfo.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this XseInfo.
-
-        Returns:
-            A formatted string with type, installation status, and version.
-
-        """
 
 def parse_xse_type(type_name: str) -> XseType:
     """Parse an XSE type from a string.

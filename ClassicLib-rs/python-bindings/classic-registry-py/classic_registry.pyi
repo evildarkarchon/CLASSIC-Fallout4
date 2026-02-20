@@ -37,7 +37,6 @@ Usage:
     print(is_gui_mode())  # True/False
 """
 
-from __future__ import annotations
 
 from typing import Any
 

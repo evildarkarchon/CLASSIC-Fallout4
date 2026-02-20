@@ -17,8 +17,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtWidgets import QDialog, QMessageBox
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.Interface.dialogs.Dialogs import CustomAboutDialog
-from ClassicLib.Interface.Settings.dialog import SettingsDialog
+from ClassicLib.Interface.dialogs.dialogs import CustomAboutDialog
+from ClassicLib.Interface.settings.dialog import SettingsDialog
 from ClassicLib.io.yaml import yaml_settings
 
 if TYPE_CHECKING:
@@ -66,7 +66,7 @@ class HelpAboutController:
         modal information dialog. The help text provides guidance on
         using the main CLASSIC interface features.
         """
-        help_popup_text: str = yaml_settings(str, YAML.Main, "CLASSIC_Interface.help_popup_main") or ""
+        help_popup_text: str = yaml_settings(str, YAML.Main, "classic_interface.help_popup_main") or ""
         QMessageBox.information(
             self._ctx.main_window,
             "NEED HELP?",

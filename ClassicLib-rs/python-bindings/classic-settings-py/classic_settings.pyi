@@ -32,7 +32,6 @@ Usage:
         cached = classic_settings.get_cached("config")
 """
 
-from __future__ import annotations
 
 from typing import Any
 

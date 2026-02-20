@@ -14,13 +14,13 @@ Subpackages:
 - Settings: Settings dialog and management
 """
 
-from ClassicLib.Interface.dialogs.PapyrusDialog import PapyrusMonitorDialog
-from ClassicLib.Interface.dialogs.Pastebin import PastebinFetchWorker
-from ClassicLib.Interface.dialogs.PathDialog import ManualPathDialog
+from ClassicLib.Interface.dialogs.papyrus_dialog import PapyrusMonitorDialog
+from ClassicLib.Interface.dialogs.pastebin import PastebinFetchWorker
+from ClassicLib.Interface.dialogs.path_dialog import ManualPathDialog
 from ClassicLib.Interface.shared.context import FeatureContext, UIWidgets
 from ClassicLib.Interface.shared.signal_hub import SignalHub
-from ClassicLib.Interface.shared.StyleSheets import DARK_MODE
-from ClassicLib.Interface.widgets.Papyrus import PapyrusMonitorWorker, PapyrusStats
+from ClassicLib.Interface.shared.style_sheets import DARK_MODE
+from ClassicLib.Interface.widgets.papyrus import PapyrusMonitorWorker, PapyrusStats
 
 __all__ = [
     # Infrastructure

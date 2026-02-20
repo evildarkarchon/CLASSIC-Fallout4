@@ -33,7 +33,6 @@ Usage:
     )
 """
 
-from __future__ import annotations
 
 __version__: str
 
@@ -87,21 +86,7 @@ class ModSite:
     def __eq__(self, other: object) -> bool:
         """Compare mod sites for equality."""
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this ModSite.
 
-        Returns:
-            A string representation suitable for debugging.
-
-        """
-
-    def __str__(self) -> str:
-        """Return the string representation of this ModSite.
-
-        Returns:
-            The mod site name as a string.
-
-        """
 
 def get_user_agent() -> str:
     """Get the default user agent string for CLASSIC.

@@ -9,7 +9,6 @@ This standalone module provides high-performance crash log analysis with:
 - Report generation (75x speedup)
 """
 
-from __future__ import annotations
 
 from collections.abc import Callable
 from typing import Any
@@ -886,13 +885,6 @@ class AnalysisResult:
 
         """
 
-    def __repr__(self) -> str:
-        """Return string representation.
-
-        Returns:
-            String showing key statistics
-
-        """
 
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary.
@@ -1604,11 +1596,7 @@ class GpuVendor:
 
         """
 
-    def __str__(self) -> str:
-        """Return string representation of the vendor."""
 
-    def __repr__(self) -> str:
-        """Python repr() representation."""
 
 class GpuInfo:
     """Detected GPU information from crash log.
@@ -1644,11 +1632,7 @@ class GpuInfo:
 
         """
 
-    def __str__(self) -> str:
-        """Return string representation of GPU info."""
 
-    def __repr__(self) -> str:
-        """Python repr() representation."""
 
 class GpuDetector:
     """GPU vendor detection from system info.
@@ -1751,8 +1735,6 @@ class ConfigIssue:
 
         """
 
-    def __repr__(self) -> str:
-        """Return string representation."""
 
 class FcxModeHandler:
     """FCX mode state management.
@@ -1906,8 +1888,6 @@ class PapyrusStats:
 
         """
 
-    def __repr__(self) -> str:
-        """Return string representation of statistics."""
 
 class PapyrusAnalyzer:
     """Analyzer for Papyrus script logs.
@@ -2001,8 +1981,6 @@ class PapyrusAnalyzer:
 
         """
 
-    def __repr__(self) -> str:
-        """Return string representation."""
 
 def papyrus_logging(log_path: str) -> tuple[str, int]:
     """Provide convenience wrapper to analyze a Papyrus log file.

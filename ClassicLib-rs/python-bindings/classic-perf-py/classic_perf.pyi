@@ -35,7 +35,6 @@ Usage:
     classic_perf.clear_metrics()
 """
 
-from __future__ import annotations
 
 __version__: str
 
@@ -69,18 +68,6 @@ class MetricsSummary:
     min: float
     max: float
 
-    def __repr__(self) -> str:
-        """Get a string representation of the metrics summary.
-
-        Returns:
-            Formatted string showing all statistics.
-
-        Example:
-            >>> stats = MetricsSummary(...)
-            >>> print(repr(stats))
-            MetricsSummary(count=2, total=0.300s, average=0.150s, min=0.100s, max=0.200s)
-
-        """
 
 class Timer:
     """RAII timer that automatically records timing on drop.
@@ -146,13 +133,6 @@ class Timer:
 
         """
 
-    def __repr__(self) -> str:
-        """Return the debug representation of this Timer.
-
-        Returns:
-            A string representation suitable for debugging.
-
-        """
 
 def record_timing(name: str, duration_secs: float) -> None:
     """Record a timing measurement.

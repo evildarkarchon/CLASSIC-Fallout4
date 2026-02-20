@@ -645,7 +645,7 @@ class PerformanceProfiler:
 
                 time.sleep(0.1)
             except Exception:
-                pass
+                _ = None  # pass
 
     def _calculate_cpu_stats(self) -> dict[str, float]:
         """Calculate CPU usage statistics."""

@@ -1,4 +1,4 @@
-"""Tests for CLASSIC_Interface.py GUI entry point.
+"""Tests for classic_interface.py GUI entry point.
 
 This module tests the GUI application initialization, window setup,
 and component integration for the main CLASSIC interface.
@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.gui, pytest.mark.unit]
 
 @pytest.mark.skipif(os.environ.get("PYTEST_XDIST_WORKER") is not None, reason="Qt GUI tests unstable in xdist workers on Windows")
 class TestClassicInterface:
-    """Test suite for CLASSIC_Interface.py GUI entry point."""
+    """Test suite for classic_interface.py GUI entry point."""
 
     @pytest.fixture(autouse=True)
     def setup(self, qt_application) -> Generator[None, None, None]:
@@ -46,18 +46,18 @@ class TestClassicInterface:
                         try:
                             instance.shutdown()
                         except Exception:
-                            pass  # Ignore shutdown errors
+                            _ = None  # pass  # Ignore shutdown errors
                     with AsyncBridge._lock:
                         AsyncBridge._instances.clear()
         except Exception:
-            pass  # Ignore if AsyncBridge not available
+            _ = None  # pass  # Ignore if AsyncBridge not available
 
         # Patch AsyncBridge to prevent new background threads from starting
         patcher = patch("ClassicLib.core.async_bridge.AsyncBridge")
         patcher.start()
 
         # Patch yaml_settings/classic_settings at controller module level.
-        # Tests already patch these at the CLASSIC_Interface level, but controllers
+        # Tests already patch these at the classic_interface level, but controllers
         # import them directly from ClassicLib.io.yaml, bypassing those patches.
         # Without these patches, controller methods hit the real Rust YAML loader
         # which fails on CI because CLASSIC Settings.yaml doesn't exist.
@@ -82,8 +82,8 @@ class TestClassicInterface:
         yaml_patcher.stop()
         patcher.stop()
 
-    @patch("CLASSIC_Interface.SetupCoordinator")
-    @patch("CLASSIC_Interface.QApplication")
+    @patch("classic_interface.SetupCoordinator")
+    @patch("classic_interface.QApplication")
     def test_main_entry_point_initialization(self, mock_qapp: Mock, mock_setup_coordinator: Mock) -> None:
         """Test that the main entry point initializes correctly."""
         # Arrange
@@ -94,16 +94,16 @@ class TestClassicInterface:
         mock_setup_coordinator.return_value = mock_coordinator_instance
 
         # Act
-        with patch("CLASSIC_Interface.MainWindow") as mock_window_class, patch.object(sys, "exit") as mock_exit:
+        with patch("classic_interface.MainWindow") as mock_window_class, patch.object(sys, "exit") as mock_exit:
             mock_window = MagicMock()
             mock_window_class.return_value = mock_window
             mock_app_instance.exec.return_value = 0
 
             # Simulate running main function
             with patch.object(sys, "argv", ["test"]):
-                import CLASSIC_Interface
+                import classic_interface
 
-                CLASSIC_Interface.main()
+                classic_interface.main()
 
         # Assert
         mock_setup_coordinator.assert_called_once()
@@ -112,12 +112,12 @@ class TestClassicInterface:
         mock_window.show.assert_called_once()
         mock_exit.assert_called_once_with(0)
 
-    @patch("CLASSIC_Interface.QTimer")
-    @patch("CLASSIC_Interface.GlobalRegistry")
-    @patch("CLASSIC_Interface.init_message_handler")
-    @patch("CLASSIC_Interface.yaml_settings")
-    @patch("CLASSIC_Interface.classic_settings")
-    @patch("CLASSIC_Interface.get_thread_manager")
+    @patch("classic_interface.QTimer")
+    @patch("classic_interface.GlobalRegistry")
+    @patch("classic_interface.init_message_handler")
+    @patch("classic_interface.yaml_settings")
+    @patch("classic_interface.classic_settings")
+    @patch("classic_interface.get_thread_manager")
     def test_main_window_initialization(
         self,
         mock_get_thread_manager: Mock,
@@ -128,7 +128,7 @@ class TestClassicInterface:
         mock_qtimer: Mock,
     ) -> None:
         """Test MainWindow initialization and component setup."""
-        from CLASSIC_Interface import MainWindow
+        from classic_interface import MainWindow
 
         # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
@@ -140,7 +140,7 @@ class TestClassicInterface:
         mock_qtimer.return_value = mock_timer_instance
 
         # Act - patch UISetupController to avoid complex UI initialization
-        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+        with patch("classic_interface.UISetupController") as mock_ui_setup:
             mock_ui_setup_instance = MagicMock()
             mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
@@ -157,7 +157,7 @@ class TestClassicInterface:
 
     def test_main_window_composition_architecture(self) -> None:
         """Test that MainWindow uses composition-based controller architecture."""
-        from CLASSIC_Interface import MainWindow
+        from classic_interface import MainWindow
         from ClassicLib.Interface.controllers.backup_manager import BackupManager
         from ClassicLib.Interface.controllers.folder_manager import FolderManager
         from ClassicLib.Interface.controllers.help_about import HelpAboutController
@@ -191,11 +191,11 @@ class TestClassicInterface:
         assert WindowGeometryManager is not None
         assert UISetupController is not None
 
-    @patch("CLASSIC_Interface.QTimer")
-    @patch("CLASSIC_Interface.classic_settings")
-    @patch("CLASSIC_Interface.yaml_settings")
-    @patch("CLASSIC_Interface.GlobalRegistry")
-    @patch("CLASSIC_Interface.get_thread_manager")
+    @patch("classic_interface.QTimer")
+    @patch("classic_interface.classic_settings")
+    @patch("classic_interface.yaml_settings")
+    @patch("classic_interface.GlobalRegistry")
+    @patch("classic_interface.get_thread_manager")
     def test_main_window_update_check_timer(
         self,
         mock_get_thread_manager: Mock,
@@ -205,7 +205,7 @@ class TestClassicInterface:
         mock_qtimer: Mock,
     ) -> None:
         """Test update check timer initialization."""
-        from CLASSIC_Interface import MainWindow
+        from classic_interface import MainWindow
 
         # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
@@ -217,7 +217,7 @@ class TestClassicInterface:
         mock_qtimer.return_value = mock_timer_instance
 
         # Act - patch UISetupController to avoid complex UI initialization
-        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+        with patch("classic_interface.UISetupController") as mock_ui_setup:
             mock_ui_setup_instance = MagicMock()
             mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
@@ -227,12 +227,12 @@ class TestClassicInterface:
         assert hasattr(window, "update_manager")
         mock_qtimer.singleShot.assert_called_once()
 
-    @patch("CLASSIC_Interface.QTimer")
-    @patch("CLASSIC_Interface.logger")
-    @patch("CLASSIC_Interface.classic_settings")
-    @patch("CLASSIC_Interface.yaml_settings")
-    @patch("CLASSIC_Interface.GlobalRegistry")
-    @patch("CLASSIC_Interface.get_thread_manager")
+    @patch("classic_interface.QTimer")
+    @patch("classic_interface.logger")
+    @patch("classic_interface.classic_settings")
+    @patch("classic_interface.yaml_settings")
+    @patch("classic_interface.GlobalRegistry")
+    @patch("classic_interface.get_thread_manager")
     def test_main_window_close_event(
         self,
         mock_get_thread_manager: Mock,
@@ -243,7 +243,7 @@ class TestClassicInterface:
         mock_qtimer: Mock,
     ) -> None:
         """Test proper cleanup during window close."""
-        from CLASSIC_Interface import MainWindow
+        from classic_interface import MainWindow
 
         # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
@@ -256,7 +256,7 @@ class TestClassicInterface:
         mock_qtimer.return_value = mock_timer_instance
 
         # Create window with mocked UISetupController
-        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+        with patch("classic_interface.UISetupController") as mock_ui_setup:
             mock_ui_setup_instance = MagicMock()
             mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
@@ -283,8 +283,8 @@ class TestClassicInterface:
         mock_event.accept.assert_called_once()
         mock_logger.info.assert_any_call("Resource cleanup completed")
 
-    @patch("CLASSIC_Interface.SetupCoordinator")
-    @patch("CLASSIC_Interface.QApplication")
+    @patch("classic_interface.SetupCoordinator")
+    @patch("classic_interface.QApplication")
     def test_keyboard_interrupt_handling(self, mock_qapp: Mock, mock_setup_coordinator: Mock) -> None:
         """Test proper handling of keyboard interrupt."""
         # Arrange
@@ -293,18 +293,18 @@ class TestClassicInterface:
         mock_app_instance.exec.side_effect = KeyboardInterrupt()
 
         # Act & Assert
-        with patch("CLASSIC_Interface.MainWindow"), patch.object(sys, "exit"), patch.object(sys, "argv", ["test"]):
-            import CLASSIC_Interface
+        with patch("classic_interface.MainWindow"), patch.object(sys, "exit"), patch.object(sys, "argv", ["test"]):
+            import classic_interface
 
-            CLASSIC_Interface.main()
+            classic_interface.main()
 
         # Should exit with code 1 on KeyboardInterrupt
         mock_app_instance.exit.assert_called_once_with(1)
 
-    @patch("CLASSIC_Interface.msg_error")
-    @patch("CLASSIC_Interface.QMessageBox")
-    @patch("CLASSIC_Interface.SetupCoordinator")
-    @patch("CLASSIC_Interface.QApplication")
+    @patch("classic_interface.msg_error")
+    @patch("classic_interface.QMessageBox")
+    @patch("classic_interface.SetupCoordinator")
+    @patch("classic_interface.QApplication")
     def test_unhandled_exception_handling(
         self, mock_qapp: Mock, mock_setup_coordinator: Mock, mock_msgbox: Mock, mock_msg_error: Mock
     ) -> None:
@@ -317,13 +317,13 @@ class TestClassicInterface:
 
         # Act
         with (
-            patch("CLASSIC_Interface.MainWindow", side_effect=test_exception),
+            patch("classic_interface.MainWindow", side_effect=test_exception),
             patch.object(sys, "argv", ["test"]),
             patch.object(sys, "exit") as mock_exit,
         ):
-            import CLASSIC_Interface
+            import classic_interface
 
-            CLASSIC_Interface.main()
+            classic_interface.main()
 
         # Assert
         mock_msg_error.assert_called_once()
@@ -331,11 +331,11 @@ class TestClassicInterface:
         mock_msgbox.critical.assert_called_once()
         mock_exit.assert_called_once_with(1)
 
-    @patch("CLASSIC_Interface.QTimer")
-    @patch("CLASSIC_Interface.GlobalRegistry")
-    @patch("CLASSIC_Interface.classic_settings")
-    @patch("CLASSIC_Interface.yaml_settings")
-    @patch("CLASSIC_Interface.get_thread_manager")
+    @patch("classic_interface.QTimer")
+    @patch("classic_interface.GlobalRegistry")
+    @patch("classic_interface.classic_settings")
+    @patch("classic_interface.yaml_settings")
+    @patch("classic_interface.get_thread_manager")
     def test_controller_initialization(
         self,
         mock_get_thread_manager: Mock,
@@ -345,7 +345,7 @@ class TestClassicInterface:
         mock_qtimer: Mock,
     ) -> None:
         """Test that all controllers are properly initialized."""
-        from CLASSIC_Interface import MainWindow
+        from classic_interface import MainWindow
 
         # Arrange - QApplication is managed by qt_application fixture via setup
         mock_yaml_settings.return_value = "1.0.0"
@@ -358,7 +358,7 @@ class TestClassicInterface:
         mock_qtimer.return_value = mock_timer_instance
 
         # Act - patch UISetupController to avoid complex UI initialization
-        with patch("CLASSIC_Interface.UISetupController") as mock_ui_setup:
+        with patch("classic_interface.UISetupController") as mock_ui_setup:
             mock_ui_setup_instance = MagicMock()
             mock_ui_setup.return_value = mock_ui_setup_instance
             window = MainWindow()
