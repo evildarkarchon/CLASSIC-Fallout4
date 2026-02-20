@@ -802,20 +802,21 @@ impl LogParser {
         // Single pass for all header info
         for line in lines.iter().take(50) {
             let trimmed = line.trim();
+            let normalized = Self::normalize_header_line(trimmed);
 
             // Game version detection
-            if Self::is_game_version_line(trimmed) {
-                game_version = trimmed.to_string();
+            if Self::is_game_version_line(normalized) {
+                game_version = normalized.to_string();
             }
 
             // Crash generator detection
-            if Self::is_crashgen_version_line(trimmed) {
-                crashgen_version = trimmed.to_string();
+            if Self::is_crashgen_version_line(normalized) {
+                crashgen_version = normalized.to_string();
             }
 
             // Main error detection
-            if trimmed.starts_with("Unhandled exception") || trimmed.contains("EXCEPTION_") {
-                main_error = trimmed.replace('|', "\n");
+            if normalized.starts_with("Unhandled exception") || normalized.contains("EXCEPTION_") {
+                main_error = normalized.replace('|', "\n");
             }
 
             if main_error != "UNKNOWN" && game_version != "UNKNOWN" && crashgen_version != "UNKNOWN"
@@ -1031,26 +1032,27 @@ impl LogParser {
         let mut header_info = HashMap::new();
         for line in lines.iter().take(50) {
             let trimmed = line.trim();
+            let normalized = Self::normalize_header_line(trimmed);
 
             // Game version
-            if Self::is_game_version_line(trimmed) {
-                header_info.insert("game_version".to_string(), trimmed.to_string());
+            if Self::is_game_version_line(normalized) {
+                header_info.insert("game_version".to_string(), normalized.to_string());
             }
 
             // Crash generator version
-            if Self::is_crashgen_version_line(trimmed) {
-                header_info.insert("crashgen_version".to_string(), trimmed.to_string());
+            if Self::is_crashgen_version_line(normalized) {
+                header_info.insert("crashgen_version".to_string(), normalized.to_string());
             }
 
             // Main error
-            if trimmed.starts_with("Unhandled exception") {
-                let replaced = trimmed.replacen('|', "\n", 1);
+            if normalized.starts_with("Unhandled exception") {
+                let replaced = normalized.replacen('|', "\n", 1);
                 header_info.insert("main_error".to_string(), replaced);
             }
 
             // System info patterns
-            if trimmed.contains("at address") {
-                if let Some(caps) = COMMON_PATTERNS["address"].captures(trimmed) {
+            if normalized.contains("at address") {
+                if let Some(caps) = COMMON_PATTERNS["address"].captures(normalized) {
                     header_info.insert("crash_address".to_string(), caps[0].to_string());
                 }
             }
@@ -1069,8 +1071,23 @@ impl LogParser {
 
 // Private implementation methods
 impl LogParser {
+    /// Normalize a header line by removing leading quote-like noise.
+    ///
+    /// Some logs include accidental leading characters (for example: `"` or `` ` ``)
+    /// before the game/crashgen header. This normalizes those lines so detection remains robust.
+    fn normalize_header_line(line: &str) -> &str {
+        line.trim_start_matches(|c: char| {
+            matches!(
+                c,
+                '`' | '\'' | '"' | '\u{2018}' | '\u{2019}' | '\u{201C}' | '\u{201D}' | '\u{FEFF}'
+            )
+        })
+        .trim_start()
+    }
+
     /// Check whether a line is a game version header.
     fn is_game_version_line(line: &str) -> bool {
+        let line = Self::normalize_header_line(line);
         line.starts_with("Fallout 4 v")
             || line.starts_with("Fallout 4 VR v")
             || line.starts_with("Skyrim Special Edition v")
@@ -1080,6 +1097,7 @@ impl LogParser {
 
     /// Check whether a line is a crash generator version header.
     fn is_crashgen_version_line(line: &str) -> bool {
+        let line = Self::normalize_header_line(line);
         if line.is_empty() || Self::is_game_version_line(line) {
             return false;
         }
@@ -1568,6 +1586,26 @@ mod tests {
         ];
 
         let header = parser.parse_crash_header(&lines).unwrap();
+        assert_eq!(
+            header.get("crashgen_version"),
+            Some(&"Addictol v1.0.0 Feb 16 2026 08:02:06".to_string())
+        );
+    }
+
+    #[test]
+    fn test_parse_crash_header_tolerates_leading_quote_noise() {
+        let parser = LogParser::new(None).unwrap();
+        let lines = vec![
+            "`Fallout 4 v1.11.191".to_string(),
+            "\"Addictol v1.0.0 Feb 16 2026 08:02:06".to_string(),
+            "Unhandled exception \"EXCEPTION_ACCESS_VIOLATION\" at 0x7FF7380973B8 Fallout4.exe+21773B8".to_string(),
+        ];
+
+        let header = parser.parse_crash_header(&lines).unwrap();
+        assert_eq!(
+            header.get("game_version"),
+            Some(&"Fallout 4 v1.11.191".to_string())
+        );
         assert_eq!(
             header.get("crashgen_version"),
             Some(&"Addictol v1.0.0 Feb 16 2026 08:02:06".to_string())

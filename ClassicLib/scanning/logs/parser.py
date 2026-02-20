@@ -47,6 +47,16 @@ else:
 
 # Pre-compiled regex patterns for better performance
 _MODULE_NAME_PATTERN = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
+_LEADING_HEADER_NOISE = "\"'`\ufeff\u2018\u2019\u201c\u201d"
+
+
+def _normalize_header_line(line: str) -> str:
+    """Normalize a crash-header line before version detection.
+
+    Removes accidental leading quote-like characters so small formatting mistakes
+    do not break game/crashgen version extraction.
+    """
+    return line.lstrip().lstrip(_LEADING_HEADER_NOISE).lstrip()
 
 
 def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name: str) -> tuple[str, str, str]:
@@ -73,12 +83,13 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
     main_error = "UNKNOWN"
 
     for line in crash_data:
-        if game_root_name and line.startswith(game_root_name):
-            game_version: str = line.strip()
-        if line.startswith(crashgen_name):
-            crashgen_version: str = line.strip()
-        if line.startswith("Unhandled exception"):
-            main_error: str = line.replace("|", "\n", 1)
+        normalized_line = _normalize_header_line(line)
+        if game_root_name and normalized_line.startswith(game_root_name):
+            game_version = normalized_line.strip()
+        if normalized_line.startswith(crashgen_name):
+            crashgen_version = normalized_line.strip()
+        if normalized_line.startswith("Unhandled exception"):
+            main_error = normalized_line.replace("|", "\n", 1)
 
     return game_version or "UNKNOWN", crashgen_version or "UNKNOWN", main_error or "UNKNOWN"
 
