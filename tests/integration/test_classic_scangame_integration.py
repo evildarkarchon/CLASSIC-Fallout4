@@ -1,4 +1,4 @@
-"""Tests for classic_scangame.py game scanning entry point.
+"""Tests for classic_scan_game.py game scanning entry point.
 
 This module tests the game file integrity checks, mod scanning operations,
 and synchronous adapters for async operations using AsyncBridge.
@@ -15,12 +15,12 @@ pytestmark = [pytest.mark.unit]
 
 
 class TestClassicScanGame:
-    """Test suite for classic_scangame.py game scanning entry point."""
+    """Test suite for classic_scan_game.py game scanning entry point."""
 
-    @patch("classic_scangame.ScanGameCore")
+    @patch("classic_scan_game.ScanGameCore")
     def test_get_scan_game_core_singleton(self, mock_scan_game_core: Mock) -> None:
         """Test that get_scan_game_core returns singleton instance."""
-        from classic_scangame import get_scan_game_core
+        from classic_scan_game import get_scan_game_core
 
         # Arrange
         mock_instance = MagicMock()
@@ -35,11 +35,11 @@ class TestClassicScanGame:
         assert core1 == mock_instance
         assert core2 == mock_instance
 
-    @patch("classic_scangame.AsyncBridge")
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.AsyncBridge")
+    @patch("classic_scan_game.get_scan_game_core")
     def test_check_log_errors_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock) -> None:
         """Test check_log_errors sync adapter for async operation."""
-        from classic_scangame import check_log_errors
+        from classic_scan_game import check_log_errors
 
         # Arrange
         test_path = Path("/test/logs")
@@ -66,10 +66,10 @@ class TestClassicScanGame:
         call_args = mock_bridge_instance.run_async.call_args[0][0]
         assert hasattr(call_args, "__await__")  # It's a coroutine
 
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.get_scan_game_core")
     async def test_get_scan_settings(self, mock_get_core: Mock) -> None:
         """Test get_scan_settings returns proper tuple."""
-        from classic_scangame import get_scan_settings
+        from classic_scan_game import get_scan_settings
 
         # Arrange
         expected_xse = "F4SE"
@@ -91,10 +91,10 @@ class TestClassicScanGame:
         mock_get_core.assert_called_once()
         mock_core.get_scan_settings.assert_called_once()
 
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.get_scan_game_core")
     def test_get_issue_messages(self, mock_get_core: Mock) -> None:
         """Test get_issue_messages returns issue message dictionary."""
-        from classic_scangame import get_issue_messages
+        from classic_scan_game import get_issue_messages
 
         # Arrange
         xse_acronym = "F4SE"
@@ -112,11 +112,11 @@ class TestClassicScanGame:
         mock_get_core.assert_called_once()
         mock_core.get_issue_messages.assert_called_once_with(xse_acronym, mode)
 
-    @patch("classic_scangame.AsyncBridge")
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.AsyncBridge")
+    @patch("classic_scan_game.get_scan_game_core")
     def test_scan_mods_unpacked_sync_adapter(self, mock_get_core: Mock, mock_async_bridge: Mock) -> None:
         """Test scan_mods_unpacked sync adapter for async operation."""
-        from classic_scangame import scan_mods_unpacked
+        from classic_scan_game import scan_mods_unpacked
 
         # Arrange
         expected_result = "Scanned 42 unpacked mods"
@@ -168,11 +168,11 @@ class TestClassicScanGame:
         assert ScanGameCore is not None
         assert SetupCoordinator is not None
 
-    @patch("classic_scangame.AsyncBridge")
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.AsyncBridge")
+    @patch("classic_scan_game.get_scan_game_core")
     def test_check_log_errors_with_string_path(self, mock_get_core: Mock, mock_async_bridge: Mock) -> None:
         """Test check_log_errors accepts string paths as well as Path objects."""
-        from classic_scangame import check_log_errors
+        from classic_scan_game import check_log_errors
 
         # Arrange
         test_path_str = "/test/logs"
@@ -196,10 +196,10 @@ class TestClassicScanGame:
         assert result == expected_result
         mock_bridge_instance.run_async.assert_called_once()
 
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.get_scan_game_core")
     async def test_get_scan_settings_with_none_mods_path(self, mock_get_core: Mock) -> None:
         """Test get_scan_settings when mods path is None."""
-        from classic_scangame import get_scan_settings
+        from classic_scan_game import get_scan_settings
 
         # Arrange
         mock_core = MagicMock()
@@ -218,10 +218,10 @@ class TestClassicScanGame:
         assert config == {"setting": "value"}
         assert mods_path is None
 
-    @patch("classic_scangame.AsyncBridge")
+    @patch("classic_scan_game.AsyncBridge")
     def test_async_bridge_singleton_usage(self, mock_async_bridge: Mock) -> None:
         """Test that AsyncBridge singleton is used consistently."""
-        from classic_scangame import check_log_errors, scan_mods_unpacked
+        from classic_scan_game import check_log_errors, scan_mods_unpacked
 
         # Arrange
         mock_bridge_instance = MagicMock()
@@ -234,7 +234,7 @@ class TestClassicScanGame:
 
         mock_bridge_instance.run_async.side_effect = run_async_side_effect
 
-        with patch("classic_scangame.get_scan_game_core") as mock_get_core:
+        with patch("classic_scan_game.get_scan_game_core") as mock_get_core:
             mock_core = MagicMock()
             mock_get_core.return_value = mock_core
 
@@ -246,10 +246,10 @@ class TestClassicScanGame:
         assert mock_async_bridge.get_instance.call_count == 2
         assert mock_bridge_instance.run_async.call_count == 2
 
-    @patch("classic_scangame.get_scan_game_core")
+    @patch("classic_scan_game.get_scan_game_core")
     def test_get_issue_messages_empty_response(self, mock_get_core: Mock) -> None:
         """Test get_issue_messages with empty response."""
-        from classic_scangame import get_issue_messages
+        from classic_scan_game import get_issue_messages
 
         # Arrange
         mock_core = MagicMock()
@@ -266,25 +266,25 @@ class TestClassicScanGame:
     def test_async_first_orchestrator_pattern(self) -> None:
         """Test that module follows async-first orchestrator pattern."""
         # This test verifies the module's design pattern
-        import classic_scangame
+        import classic_scan_game
 
         # Check for async adapters
-        assert hasattr(classic_scangame, "check_log_errors")
-        assert hasattr(classic_scangame, "scan_mods_unpacked")
+        assert hasattr(classic_scan_game, "check_log_errors")
+        assert hasattr(classic_scan_game, "scan_mods_unpacked")
 
         # Check for delegate functions
-        assert hasattr(classic_scangame, "get_scan_game_core")
-        assert hasattr(classic_scangame, "get_scan_settings")
-        assert hasattr(classic_scangame, "get_issue_messages")
+        assert hasattr(classic_scan_game, "get_scan_game_core")
+        assert hasattr(classic_scan_game, "get_scan_settings")
+        assert hasattr(classic_scan_game, "get_issue_messages")
 
         # Verify docstrings are present
-        assert classic_scangame.check_log_errors.__doc__ is not None
-        assert classic_scangame.scan_mods_unpacked.__doc__ is not None
+        assert classic_scan_game.check_log_errors.__doc__ is not None
+        assert classic_scan_game.scan_mods_unpacked.__doc__ is not None
 
-    @patch("classic_scangame.ScanGameCore")
+    @patch("classic_scan_game.ScanGameCore")
     def test_scan_game_core_creation_error_handling(self, mock_scan_game_core: Mock) -> None:
         """Test error handling when ScanGameCore creation fails."""
-        from classic_scangame import get_scan_game_core
+        from classic_scan_game import get_scan_game_core
 
         # Arrange
         mock_scan_game_core.side_effect = Exception("Core initialization failed")

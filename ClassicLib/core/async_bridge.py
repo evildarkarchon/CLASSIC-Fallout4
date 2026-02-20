@@ -1,4 +1,3 @@
-
 """Efficient bridge between synchronous and asynchronous code.
 
 This module provides a high-performance bridge for running async code from sync contexts
@@ -58,6 +57,7 @@ See Also:
     - docs/testing_async_bridge.md - Testing guide
 
 """
+
 import asyncio
 import atexit
 import logging

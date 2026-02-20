@@ -1,4 +1,3 @@
-
 """Rust-accelerated async database pool wrapper.
 
 This module provides a Python wrapper around the high-performance Rust
@@ -157,7 +156,9 @@ class RustAsyncDatabasePool:
         await self.initialize()
         return self
 
-    async def __aexit__(self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None) -> None:
+    async def __aexit__(
+        self, exc_type: type[BaseException] | None, _exc_val: BaseException | None, _exc_tb: types.TracebackType | None
+    ) -> None:
         """Exit async context manager, cleaning up resources.
 
         Args:

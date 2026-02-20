@@ -28,7 +28,6 @@ Usage:
     asyncio.run(check_updates())
 """
 
-
 __version__: str
 
 class GithubAsset:

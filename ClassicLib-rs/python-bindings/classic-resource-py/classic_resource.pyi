@@ -33,7 +33,6 @@ Usage:
     )
 """
 
-
 __version__: str
 
 class ResourceType:
@@ -96,8 +95,6 @@ class ResourceType:
     def __eq__(self, other: object) -> bool:
         """Compare resource types for equality."""
 
-
-
 class ResourceInfo:
     """Resource file information.
 
@@ -116,8 +113,6 @@ class ResourceInfo:
 
     def size(self) -> int:
         """Get the file size in bytes."""
-
-
 
 def detect_resource_type(path: str) -> ResourceType:
     """Detect the resource type from a file path.

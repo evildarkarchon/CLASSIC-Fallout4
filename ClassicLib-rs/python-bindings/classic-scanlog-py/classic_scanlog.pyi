@@ -9,7 +9,6 @@ This standalone module provides high-performance crash log analysis with:
 - Report generation (75x speedup)
 """
 
-
 from collections.abc import Callable
 from typing import Any
 
@@ -885,7 +884,6 @@ class AnalysisResult:
 
         """
 
-
     def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary.
 
@@ -1596,8 +1594,6 @@ class GpuVendor:
 
         """
 
-
-
 class GpuInfo:
     """Detected GPU information from crash log.
 
@@ -1631,8 +1627,6 @@ class GpuInfo:
             Dictionary with keys: 'primary', 'secondary', 'manufacturer', 'rival'
 
         """
-
-
 
 class GpuDetector:
     """GPU vendor detection from system info.
@@ -1734,7 +1728,6 @@ class ConfigIssue:
             Formatted markdown string describing the issue
 
         """
-
 
 class FcxModeHandler:
     """FCX mode state management.
@@ -1888,7 +1881,6 @@ class PapyrusStats:
 
         """
 
-
 class PapyrusAnalyzer:
     """Analyzer for Papyrus script logs.
 
@@ -1980,7 +1972,6 @@ class PapyrusAnalyzer:
             IOError: If failed to read the file or file was truncated
 
         """
-
 
 def papyrus_logging(log_path: str) -> tuple[str, int]:
     """Provide convenience wrapper to analyze a Papyrus log file.

@@ -34,7 +34,6 @@ Usage:
     logger.log_message(msg)
 """
 
-
 from enum import IntEnum
 
 __version__: str
@@ -83,8 +82,6 @@ class MessageType(IntEnum):
             'Warning'
 
         """
-
-
 
 class MessageTarget(IntEnum):
     """Message target enumeration for routing messages.
@@ -157,8 +154,6 @@ class MessageTarget(IntEnum):
             False
 
         """
-
-
 
 class Message:
     """Message data structure with content, type, target, and optional metadata.
@@ -333,8 +328,6 @@ class Message:
             details: The new details for the message, or None to clear them.
 
         """
-
-
 
 class Logger:
     """Centralized logging facility that integrates with Rust's log crate.

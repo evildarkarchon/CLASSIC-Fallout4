@@ -430,7 +430,6 @@ class RuntimeStats:
     worker_threads: int
     is_healthy: bool
 
-
 def get_runtime_stats() -> RuntimeStats:
     """Get Tokio runtime statistics.
 

@@ -35,7 +35,6 @@ Usage:
     classic_perf.clear_metrics()
 """
 
-
 __version__: str
 
 class MetricsSummary:
@@ -67,7 +66,6 @@ class MetricsSummary:
     average: float
     min: float
     max: float
-
 
 class Timer:
     """RAII timer that automatically records timing on drop.
@@ -132,7 +130,6 @@ class Timer:
             >>> timer.finish()
 
         """
-
 
 def record_timing(name: str, duration_secs: float) -> None:
     """Record a timing measurement.

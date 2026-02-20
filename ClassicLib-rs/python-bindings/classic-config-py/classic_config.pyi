@@ -20,7 +20,6 @@ Usage:
     records = yaml_data.game_ignore_records
 """
 
-
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any

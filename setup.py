@@ -28,7 +28,7 @@ entry_points = {
         "classic-gui=classic_interface:main",
         "classic-qml=classic_interface_qml:main",
         "classic-cli=classic_scanlogs:main",
-        "classic-scan=classic_scangame:main",
+        "classic-scan=classic_scan_game:main",
     ],
 }
 
@@ -38,5 +38,5 @@ setup(
     package_data=package_data,
     include_package_data=True,
     entry_points=entry_points,
-    py_modules=["classic_interface", "classic_interface_qml", "classic_scanlogs", "classic_scangame"],
+    py_modules=["classic_interface", "classic_interface_qml", "classic_scan_game", "classic_scanlogs"],
 )

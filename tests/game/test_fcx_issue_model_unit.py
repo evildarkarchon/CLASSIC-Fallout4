@@ -221,9 +221,9 @@ class TestGenerateGameCombinedResultTuple:
         """Test that CLI wrapper unpacks tuple and returns only string for backward compatibility."""
         from unittest.mock import patch
 
-        from classic_scangame import game_combined_result
+        from classic_scan_game import game_combined_result
 
-        with patch("classic_scangame.generate_game_combined_result") as mock_generate:
+        with patch("classic_scan_game.generate_game_combined_result") as mock_generate:
             # Mock to return tuple
             mock_generate.return_value = ("Test report content\n", [])
 

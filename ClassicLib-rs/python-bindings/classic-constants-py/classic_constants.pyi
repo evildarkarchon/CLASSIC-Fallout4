@@ -41,7 +41,6 @@ Usage:
     print(classic_version.is_known_fallout4_version((1, 10, 163)))
 """
 
-
 __version__: str
 
 # Null version constant
@@ -136,8 +135,6 @@ class YamlFile:
 
         """
 
-
-
 class GameId:
     """Game identifiers for supported Bethesda games.
 
@@ -229,8 +226,6 @@ class GameId:
             Hash value suitable for use in sets and dicts.
 
         """
-
-
 
 class Fallout4Version:
     """Fallout 4 version variants enumeration.
@@ -550,8 +545,6 @@ class Fallout4Version:
             Hash value suitable for use in sets and dicts.
 
         """
-
-
 
 def must_not_be_none(key: str) -> bool:
     """Check if a settings key should not allow None values.

@@ -1,10 +1,10 @@
-
 """Performance monitoring utilities for tracking optimization improvements.
 
 This module provides decorators and utilities for measuring and logging
 performance metrics throughout the application, particularly for YAML
 operations and async improvements.
 """
+
 import functools
 import time
 import types

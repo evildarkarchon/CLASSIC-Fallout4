@@ -93,8 +93,6 @@ class XseType:
     def __eq__(self, other: object) -> bool:
         """Compare XSE types for equality."""
 
-
-
 class XseInfo:
     """XSE installation information for Python.
 
@@ -137,8 +135,6 @@ class XseInfo:
 
     def loader_path(self) -> str:
         """Get the full path to the loader executable."""
-
-
 
 def parse_xse_type(type_name: str) -> XseType:
     """Parse an XSE type from a string.

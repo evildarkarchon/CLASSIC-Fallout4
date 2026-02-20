@@ -37,7 +37,6 @@ Usage:
     print(is_gui_mode())  # True/False
 """
 
-
 from typing import Any
 
 __version__: str

@@ -33,7 +33,6 @@ Usage:
         print(f"Worker threads: {info.worker_threads}")
 """
 
-
 from enum import Enum
 
 __version__: str
@@ -85,7 +84,6 @@ class BridgeMetrics:
     loops_created: int
     loops_cleaned: int
 
-
 class RuntimeInfo:
     """Runtime information.
 
@@ -99,7 +97,6 @@ class RuntimeInfo:
 
     available: bool
     worker_threads: int
-
 
 def record_operation(operation: BridgeOperationType, duration_secs: float, success: bool) -> None:
     """Record a bridge operation for metrics.

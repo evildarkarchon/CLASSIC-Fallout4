@@ -32,7 +32,6 @@ Usage:
         cached = classic_settings.get_cached("config")
 """
 
-
 from typing import Any
 
 __version__: str

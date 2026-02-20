@@ -380,7 +380,6 @@ class XseVersion:
 
         """
 
-
 class IniCheckResult:
     """Python wrapper for INI check result."""
 
@@ -411,7 +410,6 @@ class IniCheckResult:
             True if there's an issue, False otherwise.
 
         """
-
 
 class DocumentsChecker:
     """Python wrapper for documents configuration checker."""

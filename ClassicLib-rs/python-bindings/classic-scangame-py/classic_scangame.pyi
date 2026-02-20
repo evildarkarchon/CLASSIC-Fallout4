@@ -40,7 +40,6 @@ Usage:
     message = checker.run_full_check()
 """
 
-
 from enum import Enum
 from pathlib import Path
 

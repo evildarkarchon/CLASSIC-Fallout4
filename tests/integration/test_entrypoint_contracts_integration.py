@@ -24,7 +24,7 @@ def test_console_script_targets_are_stable() -> None:
         "classic-gui": "classic_interface:main",
         "classic-tui": "ClassicLib.TUI:main",
         "classic-cli": "classic_scanlogs:main",
-        "classic-scan": "classic_scangame:main",
+        "classic-scan": "classic_scan_game:main",
     }
 
     assert scripts == expected
@@ -35,7 +35,7 @@ def test_console_script_targets_are_stable() -> None:
     [
         ("classic_interface", "main"),
         ("classic_scanlogs", "main"),
-        ("classic_scangame", "main"),
+        ("classic_scan_game", "main"),
         ("ClassicLib.TUI", "main"),
     ],
 )

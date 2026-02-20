@@ -33,7 +33,6 @@ Usage:
     )
 """
 
-
 __version__: str
 
 # Constants
@@ -85,8 +84,6 @@ class ModSite:
 
     def __eq__(self, other: object) -> bool:
         """Compare mod sites for equality."""
-
-
 
 def get_user_agent() -> str:
     """Get the default user agent string for CLASSIC.

@@ -1,4 +1,3 @@
-
 """Progress context manager for unified progress tracking.
 
 This module provides the ProgressContext class which adapts to either

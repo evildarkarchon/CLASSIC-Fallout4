@@ -59,7 +59,7 @@ classic = "classic_interface:main"
 classic-gui = "classic_interface:main"
 classic-tui = "ClassicLib.TUI:main"
 classic-cli = "classic_scanlogs:main"
-classic-scan = "classic_scangame:main"
+classic-scan = "classic_scan_game:main"
 
 [dependency-groups]
 dev = [
