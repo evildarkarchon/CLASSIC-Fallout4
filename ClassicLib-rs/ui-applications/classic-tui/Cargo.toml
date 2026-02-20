@@ -32,6 +32,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 directories = { workspace = true }
 pulldown-cmark = { workspace = true }
+yaml-rust2 = { workspace = true }
 
 open = "5"
 arboard = "3"

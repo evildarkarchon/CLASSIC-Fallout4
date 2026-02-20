@@ -3,11 +3,11 @@ use std::hash::{Hash, Hasher};
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
-use classic_config_core::ClassicConfig;
+use classic_config_core::{ClassicConfig, YamlSource};
 use classic_file_io_core::BackupManager;
 use classic_file_io_core::BackupType;
 use classic_file_io_core::LogCollector;
-use classic_path_core::validate_custom_scan_path;
+use classic_path_core::{DocsPathFinder, validate_custom_scan_path};
 use classic_scanlog_core::{AnalysisConfig, OrchestratorCore};
 use classic_shared_core::get_runtime;
 use classic_update_core::GithubClient;
@@ -16,6 +16,7 @@ use ratatui::backend::Backend;
 use ratatui::layout::Rect;
 use tokio::sync::mpsc;
 use tokio_util::sync::CancellationToken;
+use yaml_rust2::YamlLoader;
 
 use crate::results_markdown::{MarkdownLink, render_markdown};
 use crate::state::{
@@ -547,10 +548,11 @@ impl App {
 
         let tx = self.async_tx.clone();
         let custom_folder = self.config.paths.scan_custom.clone();
+        let xse_folder = resolve_xse_folder_for_scan(&self.config);
         let base_folder = std::env::current_dir().unwrap_or_default();
 
         get_runtime().spawn(async move {
-            let collector = LogCollector::new(base_folder, None, custom_folder);
+            let collector = LogCollector::new(base_folder, xse_folder, custom_folder);
             let log_paths = match collector.collect_all().await {
                 Ok(paths) => paths,
                 Err(error) => {
@@ -1441,6 +1443,44 @@ enum BackupOperation {
     Remove,
 }
 
+fn resolve_xse_folder_for_scan(config: &ClassicConfig) -> Option<PathBuf> {
+    if let Some(xse_from_local) = xse_folder_from_local_yaml(config.vr_mode) {
+        return Some(xse_from_local);
+    }
+
+    if let Some(docs_root) = &config.paths.docs_root
+        && !docs_root.as_os_str().is_empty()
+    {
+        return Some(docs_root.join("F4SE"));
+    }
+
+    let relative_docs = if config.vr_mode {
+        r"My Games\Fallout4VR"
+    } else {
+        r"My Games\Fallout4"
+    };
+    let finder = DocsPathFinder::new(relative_docs);
+    finder.find_docs_path(None).ok().map(|path| path.join("F4SE"))
+}
+
+fn xse_folder_from_local_yaml(vr_mode: bool) -> Option<PathBuf> {
+    let local_yaml_path = YamlSource::GameLocal.path("Fallout4");
+    let content = std::fs::read_to_string(local_yaml_path).ok()?;
+    parse_xse_folder_from_local_yaml(&content, vr_mode)
+}
+
+fn parse_xse_folder_from_local_yaml(content: &str, vr_mode: bool) -> Option<PathBuf> {
+    let docs = YamlLoader::load_from_str(content).ok()?;
+    let doc = docs.first()?;
+    let section = if vr_mode { "GameVR_Info" } else { "Game_Info" };
+    let xse = doc[section]["Docs_Folder_XSE"].as_str()?;
+    if xse.trim().is_empty() {
+        None
+    } else {
+        Some(PathBuf::from(xse))
+    }
+}
+
 fn discover_result_reports(custom_scan: Option<PathBuf>) -> Vec<ReportEntry> {
     let mut entries = Vec::new();
     let mut seen = HashSet::new();
@@ -1756,5 +1796,63 @@ mod tests {
 
         let after = app.results.filtered_indices.len();
         assert!(after > before);
+    }
+
+    #[test]
+    fn resolve_xse_folder_uses_docs_root_for_fo4() {
+        let mut app = App::new_for_testing();
+        app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4"));
+        app.config.vr_mode = false;
+
+        let folder = super::resolve_xse_folder_for_scan(&app.config)
+            .expect("expected xse folder");
+        assert_eq!(
+            folder,
+            PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4\F4SE")
+        );
+    }
+
+    #[test]
+    fn resolve_xse_folder_uses_docs_root_for_fo4_vr() {
+        let mut app = App::new_for_testing();
+        app.config.paths.docs_root = Some(PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR"));
+        app.config.vr_mode = true;
+
+        let folder = super::resolve_xse_folder_for_scan(&app.config)
+            .expect("expected xse folder");
+        assert_eq!(
+            folder,
+            PathBuf::from(r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE")
+        );
+    }
+
+    #[test]
+    fn parse_xse_folder_from_local_yaml_reads_game_info() {
+        let yaml = r#"
+Game_Info:
+  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4\F4SE
+"#;
+        let parsed = super::parse_xse_folder_from_local_yaml(yaml, false);
+        assert_eq!(
+            parsed,
+            Some(PathBuf::from(
+                r"C:\Users\Test\Documents\My Games\Fallout4\F4SE"
+            ))
+        );
+    }
+
+    #[test]
+    fn parse_xse_folder_from_local_yaml_reads_game_vr_info() {
+        let yaml = r#"
+GameVR_Info:
+  Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4VR\F4SE
+"#;
+        let parsed = super::parse_xse_folder_from_local_yaml(yaml, true);
+        assert_eq!(
+            parsed,
+            Some(PathBuf::from(
+                r"C:\Users\Test\Documents\My Games\Fallout4VR\F4SE"
+            ))
+        );
     }
 }

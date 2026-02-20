@@ -18,6 +18,7 @@
 #include "classic_cxx_bridge/config.h"
 #include "classic_cxx_bridge/scanner.h"
 #include "classic_cxx_bridge/files.h"
+#include "classic_cxx_bridge/yaml.h"
 
 #include <fmt/core.h>
 #include <chrono>
@@ -92,6 +93,25 @@ static std::string filename_from_path(const std::string& path) {
     return (pos != std::string::npos) ? path.substr(pos + 1) : path;
 }
 
+static std::string resolve_xse_folder_for_scan(const CliArgs& args, const DataDirs& dirs) {
+    // Mirror Python: read Docs_Folder_XSE from CLASSIC <Game> Local.yaml.
+    // Key path is VR-aware: Game_Info.* or GameVR_Info.*
+    fs::path local_yaml = fs::path(dirs.data) / ("CLASSIC " + args.game + " Local.yaml");
+
+    try {
+        auto yaml = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*yaml, local_yaml.string());
+
+        std::string key_path = args.vr_mode
+            ? "GameVR_Info.Docs_Folder_XSE"
+            : "Game_Info.Docs_Folder_XSE";
+        auto xse_path = classic::yaml::yaml_ops_get_string(*yaml, key_path, "");
+        return std::string(xse_path.data(), xse_path.size());
+    } catch (const rust::Error&) {
+        return "";
+    }
+}
+
 // ── Scan pipeline (inner) ──────────────────────────────────────────
 // Factored out so rust::Box<T> objects can be constructed in-place
 // rather than pre-declared (rust::Box is non-nullable, no nullptr init).
@@ -118,12 +138,14 @@ static int scan_with_config(
     // Discover crash logs
     // Mirrors Python's _crashlogs_get_files_rust():
     //   base_folder  = cwd (where "Crash Logs/" subdirectory is managed)
-    //   custom_folder = --scan-path (searched directly, no file moving)
+    //   custom_folder = --scan-path (searched directly, in addition to Crash Logs)
+    //   xse_folder = Game{VR}_Info.Docs_Folder_XSE from CLASSIC <Game> Local.yaml
     std::error_code ec;
     std::string base_dir = fs::current_path(ec).string();
     std::string custom_dir = args.scan_path; // empty string = no custom folder
+    std::string xse_dir = resolve_xse_folder_for_scan(args, dirs);
 
-    auto collector = classic::files::log_collector_new(base_dir, "", custom_dir);
+    auto collector = classic::files::log_collector_new(base_dir, xse_dir, custom_dir);
     auto log_paths = classic::files::log_collector_collect_all(*collector);
 
     if (log_paths.empty()) {
