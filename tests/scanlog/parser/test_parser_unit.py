@@ -118,6 +118,24 @@ class TestParseCrashHeader:
         assert game_version == "UNKNOWN"
         assert crashgen_version == "Buffout 4 v1.28.6"
 
+    def test_parse_header_tolerates_leading_quote_noise(self) -> None:
+        """Test parsing tolerates a leading quote/backtick before version lines."""
+        crash_data = [
+            "`Fallout 4 v1.10.163",
+            "\"Buffout 4 v1.28.6",
+            'Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF6|More Info',
+        ]
+
+        game_version, crashgen_version, main_error = parse_crash_header(
+            crash_data,
+            crashgen_name="Buffout 4",
+            game_root_name="Fallout 4",
+        )
+
+        assert game_version == "Fallout 4 v1.10.163"
+        assert crashgen_version == "Buffout 4 v1.28.6"
+        assert "EXCEPTION_ACCESS_VIOLATION" in main_error
+
 
 @pytest.mark.unit
 class TestExtractSegments:
