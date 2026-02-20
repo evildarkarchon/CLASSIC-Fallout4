@@ -247,6 +247,7 @@ mod ffi {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     #[test]
     fn test_yaml_ops_new() {
@@ -349,8 +350,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn test_cache_management() {
         let ops = yaml_ops_new();
+        yaml_ops_clear_cache(&ops); // Clear first to ensure a clean state
         assert_eq!(yaml_ops_cache_size(&ops), 0);
         yaml_ops_clear_cache(&ops); // Should not panic on empty cache
     }
