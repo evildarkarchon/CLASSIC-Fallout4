@@ -6,9 +6,45 @@
 
 #include "rust/cxx.h"
 #include "classic_cxx_bridge/files.h"
+#include "classic_cxx_bridge/yaml.h"
 
 #include <QThread>
 #include <QDir>
+#include <QFileInfo>
+
+namespace {
+
+rust::String resolveXseFolderFromLocalYaml(
+    const QString& yamlData,
+    const QString& game,
+    bool vrMode)
+{
+    const QString localYamlPath = QDir(yamlData).filePath(
+        QStringLiteral("CLASSIC %1 Local.yaml").arg(game));
+
+    try {
+        auto ops = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*ops, classic::toRustString(localYamlPath));
+
+        const char* keyPath = vrMode
+            ? "GameVR_Info.Docs_Folder_XSE"
+            : "Game_Info.Docs_Folder_XSE";
+        auto xsePath = classic::yaml::yaml_ops_get_string(*ops, keyPath, "");
+        return xsePath;
+    } catch (const rust::Error&) {
+        return rust::String();
+    }
+}
+
+bool isCrashLogPath(const QString& path)
+{
+    const QFileInfo info(path);
+    const QString name = info.fileName();
+    return name.startsWith(QStringLiteral("crash-"), Qt::CaseInsensitive)
+        && name.endsWith(QStringLiteral(".log"), Qt::CaseInsensitive);
+}
+
+} // namespace
 
 ScanController::ScanController(SignalHub* signalHub,
                                ThreadManager* threadManager,
@@ -38,16 +74,20 @@ void ScanController::startScan(const QString& yamlRoot,
     QStringList logPathsList;
     try {
         auto baseDir = QDir::currentPath();
+        auto xseFolder = resolveXseFolderFromLocalYaml(yamlData, game, vrMode);
         auto collector = classic::files::log_collector_new(
             classic::toRustString(baseDir),
-            rust::String(),  // xse_folder (empty)
+            xseFolder,
             classic::toRustString(customFolder)
         );
-        auto rustPaths = classic::files::log_collector_collect_crash_logs(*collector);
+        auto rustPaths = classic::files::log_collector_collect_all(*collector);
 
         logPathsList.reserve(static_cast<int>(rustPaths.size()));
         for (const auto& rpath : rustPaths) {
-            logPathsList.append(classic::toQString(rpath));
+            const QString qpath = classic::toQString(rpath);
+            if (isCrashLogPath(qpath)) {
+                logPathsList.append(qpath);
+            }
         }
     } catch (const rust::Error& e) {
         m_scanning = false;
