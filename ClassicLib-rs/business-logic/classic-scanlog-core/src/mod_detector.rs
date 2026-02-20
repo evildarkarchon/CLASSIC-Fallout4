@@ -438,7 +438,6 @@ pub fn detect_mods_important(
             if let Some(gpu) = gpu_rival {
                 if mod_warning.to_lowercase().contains(gpu) {
                     // GPU mismatch warning (e.g., NVIDIA mod installed but user has AMD)
-                    lines.push("\n\n".to_string());
                     lines.push(format!(
                         "❓ {} is installed, BUT IT SEEMS YOU DON'T HAVE AN {} GPU?\n",
                         mod_display_name,
@@ -446,16 +445,16 @@ pub fn detect_mods_important(
                     ));
                     lines.push("IF THIS IS CORRECT, COMPLETELY UNINSTALL THIS MOD TO AVOID ANY PROBLEMS! \n\n".to_string());
                 } else {
-                    lines.push(format!("\n✔️ {} is installed!\n\n", mod_display_name));
+                    lines.push(format!("✔️ {} is installed!\n\n", mod_display_name));
                 }
             } else {
-                lines.push(format!("\n✔️ {} is installed!\n\n", mod_display_name));
+                lines.push(format!("✔️ {} is installed!\n\n", mod_display_name));
             }
         } else if let Some(gpu) = gpu_rival {
             // Mod not installed - show warning if gpu_rival is set and mod is NOT for the rival GPU
             // (i.e., show "not installed" for non-GPU mods and for mods matching user's GPU)
             if !mod_warning.is_empty() && !mod_warning.to_lowercase().contains(gpu) {
-                lines.push(format!("\n❌ {} is not installed!\n", mod_display_name));
+                lines.push(format!("❌ {} is not installed!\n", mod_display_name));
                 lines.push(mod_warning.to_string());
                 lines.push("\n\n".to_string());
             }
@@ -956,6 +955,25 @@ mod tests {
         assert!(output.contains("✔️"));
         // Should have at least one installed mod shown
         assert!(output.contains("installed"));
+    }
+
+    #[test]
+    fn test_detect_mods_important_no_leading_newline_before_first_entry() {
+        let mut yaml_dict = IndexMap::new();
+        yaml_dict.insert(
+            "enginefixes.esp | Engine Fixes".to_string(),
+            "Highly recommended for stability.".to_string(),
+        );
+
+        let mut plugins = IndexMap::new();
+        plugins.insert("EngineFixes.esp".to_string(), "05".to_string());
+
+        let xse_modules: HashSet<String> = HashSet::new();
+        let result = detect_mods_important(yaml_dict, plugins, None, xse_modules).unwrap();
+        let output = result.join("");
+
+        assert!(!output.starts_with('\n'));
+        assert!(output.starts_with("✔️ "));
     }
 
     // ============================================

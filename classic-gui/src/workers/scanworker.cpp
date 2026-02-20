@@ -13,9 +13,14 @@
 namespace {
 std::string join_report_lines(const rust::Vec<rust::String>& report_lines) {
     std::string content;
+    std::size_t total_size = 0;
+    for (const auto& line : report_lines) {
+        total_size += line.size();
+    }
+    content.reserve(total_size);
+
     for (const auto& line : report_lines) {
         content += std::string(line.data(), line.size());
-        content += '\n';
     }
     return content;
 }

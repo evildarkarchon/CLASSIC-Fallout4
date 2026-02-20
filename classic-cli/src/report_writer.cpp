@@ -9,11 +9,16 @@
 
 bool write_report(const std::string& log_path,
                   const std::vector<std::string>& report_lines) {
-    // Join lines into a single report string
+    // Preserve Rust-provided line endings verbatim (matches Rust join("") path).
     std::string content;
+    std::size_t total_size = 0;
+    for (const auto& line : report_lines) {
+        total_size += line.size();
+    }
+    content.reserve(total_size);
+
     for (const auto& line : report_lines) {
         content += line;
-        content += '\n';
     }
 
     // Write via Rust bridge; output path derivation lives in Rust for reuse.
