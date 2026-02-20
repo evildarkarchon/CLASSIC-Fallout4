@@ -76,18 +76,18 @@ def test_is_valid_directory_with_rust():
 @pytest.mark.unit
 def test_is_valid_directory_fallback():
     """Test directory validation falls back to Python when Rust unavailable."""
-    from ClassicLib.Interface.shared import FolderManagement
+    from ClassicLib.Interface.shared import folder_management
 
     # Temporarily disable Rust
-    original = FolderManagement._RUST_PATH_AVAILABLE
-    FolderManagement._RUST_PATH_AVAILABLE = False
+    original = folder_management._RUST_PATH_AVAILABLE
+    folder_management._RUST_PATH_AVAILABLE = False
 
     try:
         # Should still work with Python
-        assert FolderManagement._is_valid_directory("C:/Windows"), "Python fallback should work"
+        assert folder_management._is_valid_directory("C:/Windows"), "Python fallback should work"
     finally:
         # Restore Rust
-        FolderManagement._RUST_PATH_AVAILABLE = original
+        folder_management._RUST_PATH_AVAILABLE = original
 
 
 @pytest.mark.unit
@@ -111,20 +111,20 @@ def test_normalize_path_with_rust():
 @pytest.mark.unit
 def test_normalize_path_fallback():
     """Test path normalization falls back to Python when Rust unavailable."""
-    from ClassicLib.Interface.shared import FolderManagement
+    from ClassicLib.Interface.shared import folder_management
 
     # Temporarily disable Rust
-    original = FolderManagement._RUST_PATH_AVAILABLE
-    FolderManagement._RUST_PATH_AVAILABLE = False
+    original = folder_management._RUST_PATH_AVAILABLE
+    folder_management._RUST_PATH_AVAILABLE = False
 
     try:
         # Should still work with Python
-        normalized = FolderManagement._normalize_path("C:/Windows")
+        normalized = folder_management._normalize_path("C:/Windows")
         assert isinstance(normalized, Path), "Python fallback should return Path"
         assert normalized.is_absolute(), "Should be absolute path"
     finally:
         # Restore Rust
-        FolderManagement._RUST_PATH_AVAILABLE = original
+        folder_management._RUST_PATH_AVAILABLE = original
 
 
 # Test FolderManagementMixin integration
