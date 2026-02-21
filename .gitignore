@@ -323,3 +323,4 @@ classic-gui/install/
 qt.conf
 !classic-gui/**/qt.conf
 *.pyinstaller
+.coverage.*
