@@ -19,6 +19,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 use thiserror::Error;
@@ -158,8 +159,16 @@ pub struct DatabasePool {
     cache_ttl: Arc<RwLock<Duration>>,
     /// Maximum number of connections per pool
     max_connections: Arc<RwLock<Option<usize>>>,
-    /// Performance statistics for monitoring
-    stats: Arc<RwLock<PoolStatistics>>,
+    /// Total number of queries executed
+    stat_total_queries: Arc<AtomicU64>,
+    /// Number of queries served from cache
+    stat_cache_hits: Arc<AtomicU64>,
+    /// Number of queries that required database access
+    stat_cache_misses: Arc<AtomicU64>,
+    /// Total number of connections created
+    stat_total_connections: Arc<AtomicU64>,
+    /// Number of currently active connections
+    stat_active_connections: Arc<AtomicU64>,
     /// Active game table name (e.g., "Fallout4", "Skyrim")
     game_table: Arc<RwLock<String>>,
     /// List of database file paths currently loaded
@@ -188,7 +197,11 @@ impl DatabasePool {
             query_cache: Arc::new(DashMap::new()),
             cache_ttl: Arc::new(RwLock::new(cache_ttl)),
             max_connections: Arc::new(RwLock::new(Some(max_conn))),
-            stats: Arc::new(RwLock::new(PoolStatistics::default())),
+            stat_total_queries: Arc::new(AtomicU64::new(0)),
+            stat_cache_hits: Arc::new(AtomicU64::new(0)),
+            stat_cache_misses: Arc::new(AtomicU64::new(0)),
+            stat_total_connections: Arc::new(AtomicU64::new(0)),
+            stat_active_connections: Arc::new(AtomicU64::new(0)),
             game_table: Arc::new(RwLock::new(game_table)),
             db_paths: Arc::new(RwLock::new(Vec::new())),
         }
@@ -243,10 +256,8 @@ impl DatabasePool {
                 max_conn, path
             );
 
-            if let Ok(mut s) = self.stats.write() {
-                s.total_connections += 1;
-                s.active_connections += 1;
-            }
+            self.stat_total_connections.fetch_add(1, Ordering::Relaxed);
+            self.stat_active_connections.fetch_add(1, Ordering::Relaxed);
         }
 
         if let Ok(mut paths) = self.db_paths.write() {
@@ -281,22 +292,20 @@ impl DatabasePool {
         // Check cache first
         if let Some(entry) = self.query_cache.get(&cache_key) {
             if !entry.is_expired() {
-                if let Ok(mut stats) = self.stats.write() {
-                    stats.cache_hits += 1;
-                    stats.total_queries += 1;
-                }
+                self.stat_cache_hits.fetch_add(1, Ordering::Relaxed);
+                self.stat_total_queries.fetch_add(1, Ordering::Relaxed);
                 debug!("Cache hit for FormID: {} Plugin: {}", formid, plugin);
                 return Ok(Some(entry.value.clone()));
             } else {
+                // Expired entry: evict and fall through — counted as a cache miss below.
                 self.query_cache.remove(&cache_key);
                 debug!("Cache expired for FormID: {} Plugin: {}", formid, plugin);
             }
         }
 
-        if let Ok(mut stats) = self.stats.write() {
-            stats.cache_misses += 1;
-            stats.total_queries += 1;
-        }
+        // Covers both cold-miss and expired-miss paths.
+        self.stat_cache_misses.fetch_add(1, Ordering::Relaxed);
+        self.stat_total_queries.fetch_add(1, Ordering::Relaxed);
 
         // Query databases using sqlx (TRUE ASYNC - no spawn_blocking!)
         let query_str = format!(
@@ -420,34 +429,29 @@ impl DatabasePool {
 
         // Check cache first using optimized key generation
         for (formid, plugin) in &formid_plugin_pairs {
-            let cache_key = CacheKey::new(&game_table, formid, plugin);
             let legacy_key = format!("{}:{}:{}", game_table, formid, plugin.to_lowercase());
 
             if let Some(entry) = self.query_cache.get(&legacy_key) {
                 if !entry.is_expired() {
                     let result_key = format!("{}:{}", formid, plugin);
                     results.insert(result_key, entry.value.clone());
-                    if let Ok(mut s) = self.stats.write() {
-                        s.cache_hits += 1;
-                    }
+                    self.stat_cache_hits.fetch_add(1, Ordering::Relaxed);
                     continue;
                 } else {
+                    // Expired entry: evict and fall through — counted as a cache miss below.
                     self.query_cache.remove(&legacy_key);
                 }
             }
 
             uncached_pairs.push((formid.clone(), plugin.clone()));
-            if let Ok(mut s) = self.stats.write() {
-                s.cache_misses += 1;
-            }
-
-            // Silence unused variable warning - cache_key used for future optimization
-            let _ = cache_key;
+            // Covers both cold-miss and expired-miss paths.
+            self.stat_cache_misses.fetch_add(1, Ordering::Relaxed);
         }
 
-        if let Ok(mut s) = self.stats.write() {
-            s.total_queries += formid_plugin_pairs.len() as u64;
-        }
+        // stat_total_queries counts every pair in the batch regardless of cache status,
+        // so total = cache_hits + cache_misses = formid_plugin_pairs.len().
+        self.stat_total_queries
+            .fetch_add(formid_plugin_pairs.len() as u64, Ordering::Relaxed);
 
         if uncached_pairs.is_empty() {
             return Ok(results);
@@ -669,10 +673,13 @@ impl DatabasePool {
 
     /// Get current performance statistics
     pub fn get_stats(&self) -> Result<PoolStatistics, DatabaseError> {
-        self.stats
-            .read()
-            .map(|s| s.clone())
-            .map_err(|e| DatabaseError::QueryError(format!("Failed to read stats: {}", e)))
+        Ok(PoolStatistics {
+            total_queries: self.stat_total_queries.load(Ordering::Relaxed),
+            cache_hits: self.stat_cache_hits.load(Ordering::Relaxed),
+            cache_misses: self.stat_cache_misses.load(Ordering::Relaxed),
+            total_connections: self.stat_total_connections.load(Ordering::Relaxed),
+            active_connections: self.stat_active_connections.load(Ordering::Relaxed),
+        })
     }
 
     /// Check if any database pools are available
@@ -691,11 +698,8 @@ impl DatabasePool {
         let cache_size = self.query_cache.len();
 
         // Capture current stats before closing for logging
-        let (active_before, total_queries) = self
-            .stats
-            .read()
-            .map(|s| (s.active_connections, s.total_queries))
-            .unwrap_or((0, 0));
+        let active_before = self.stat_active_connections.load(Ordering::Relaxed);
+        let total_queries = self.stat_total_queries.load(Ordering::Relaxed);
 
         info!(
             "Closing all database connections: {} pool(s), {} cached queries, {} active connection(s)",
@@ -716,9 +720,7 @@ impl DatabasePool {
         self.pools.clear();
 
         // Reset connection stats (queries stats preserved for debugging)
-        if let Ok(mut stats) = self.stats.write() {
-            stats.active_connections = 0;
-        }
+        self.stat_active_connections.store(0, Ordering::Relaxed);
 
         info!(
             "Database pool closed successfully. Total queries processed: {}",
@@ -775,7 +777,7 @@ impl Drop for DatabasePool {
         // When multiple clones exist, other clones may still call close() later.
         if Arc::strong_count(&self.pools) == 1 && !self.pools.is_empty() {
             let pool_count = self.pools.len();
-            let active_connections = self.stats.read().map(|s| s.active_connections).unwrap_or(0);
+            let active_connections = self.stat_active_connections.load(Ordering::Relaxed);
 
             warn!(
                 "DatabasePool dropped without calling close(). \

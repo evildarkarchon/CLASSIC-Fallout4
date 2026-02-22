@@ -19,7 +19,7 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::fs;
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::io::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, BufReader};
 use tokio::sync::{RwLock, Semaphore};
 use walkdir::WalkDir;
 
@@ -890,9 +890,9 @@ impl FileIOCore {
         }
 
         // Read first 2KB for header analysis
-        let mut file = File::open(path)?;
+        let mut file = tokio::fs::File::open(path).await?;
         let mut buffer = vec![0u8; 2048];
-        let bytes_read = file.read(&mut buffer)?;
+        let bytes_read = file.read(&mut buffer).await?;
         buffer.truncate(bytes_read);
 
         let header =

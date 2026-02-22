@@ -5,8 +5,6 @@
 
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
-use parking_lot::RwLock;
-use std::sync::Arc;
 
 /// Types of bridge operations that can be tracked.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -51,13 +49,6 @@ pub struct BridgeMetrics {
     pub loops_cleaned: u64,
 }
 
-/// Per-thread metrics storage.
-#[derive(Debug)]
-struct ThreadMetrics {
-    /// Operation counts and timings
-    operations: DashMap<BridgeOperation, OperationStats>,
-}
-
 /// Statistics for a single operation type.
 #[derive(Debug, Clone, Default)]
 struct OperationStats {
@@ -72,11 +63,7 @@ struct OperationStats {
 }
 
 /// Global metrics storage.
-static METRICS: Lazy<Arc<RwLock<ThreadMetrics>>> = Lazy::new(|| {
-    Arc::new(RwLock::new(ThreadMetrics {
-        operations: DashMap::new(),
-    }))
-});
+static METRICS: Lazy<DashMap<BridgeOperation, OperationStats>> = Lazy::new(DashMap::new);
 
 /// Record a bridge operation.
 ///
@@ -91,14 +78,18 @@ static METRICS: Lazy<Arc<RwLock<ThreadMetrics>>> = Lazy::new(|| {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_pybridge_core::{record_bridge_operation, BridgeOperation};
+/// ```ignore
+/// use classic_pybridge::{record_bridge_operation, BridgeOperation};
 ///
 /// record_bridge_operation(BridgeOperation::RunAsync, 0.123, true);
 /// ```
 pub fn record_bridge_operation(operation: BridgeOperation, duration_secs: f64, success: bool) {
-    let metrics = METRICS.read();
-    let mut stats = metrics.operations.entry(operation).or_default();
+    // `entry().or_default()` returns a `RefMut` that holds the DashMap shard lock for its
+    // entire lifetime. All field updates below are collectively atomic per call — two
+    // threads recording the same operation will serialize on the shard lock rather than
+    // racing. This differs from the `Arc<AtomicU64>` approach in pool_sqlx.rs; both are
+    // correct, but the locking here is implicit rather than explicit.
+    let mut stats = METRICS.entry(operation).or_default();
 
     stats.count += 1;
     if success {
@@ -119,18 +110,17 @@ pub fn record_bridge_operation(operation: BridgeOperation, duration_secs: f64, s
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_pybridge_core::get_bridge_metrics;
+/// ```ignore
+/// use classic_pybridge::get_bridge_metrics;
 ///
 /// let metrics = get_bridge_metrics();
 /// println!("Total run_async calls: {}", metrics.run_async_count);
 /// ```
 pub fn get_bridge_metrics() -> BridgeMetrics {
-    let metrics = METRICS.read();
     let mut result = BridgeMetrics::default();
 
     // Aggregate run_async stats
-    if let Some(stats) = metrics.operations.get(&BridgeOperation::RunAsync) {
+    if let Some(stats) = METRICS.get(&BridgeOperation::RunAsync) {
         result.run_async_count = stats.count;
         result.run_async_success = stats.success;
         result.run_async_failure = stats.failure;
@@ -138,10 +128,7 @@ pub fn get_bridge_metrics() -> BridgeMetrics {
     }
 
     // Aggregate timeout stats
-    if let Some(stats) = metrics
-        .operations
-        .get(&BridgeOperation::RunAsyncWithTimeout)
-    {
+    if let Some(stats) = METRICS.get(&BridgeOperation::RunAsyncWithTimeout) {
         result.timeout_count = stats.count;
         result.timeout_success = stats.success;
         result.timeout_failure = stats.failure;
@@ -149,12 +136,12 @@ pub fn get_bridge_metrics() -> BridgeMetrics {
     }
 
     // Aggregate loop creation stats
-    if let Some(stats) = metrics.operations.get(&BridgeOperation::LoopCreation) {
+    if let Some(stats) = METRICS.get(&BridgeOperation::LoopCreation) {
         result.loops_created = stats.count;
     }
 
     // Aggregate loop cleanup stats
-    if let Some(stats) = metrics.operations.get(&BridgeOperation::LoopCleanup) {
+    if let Some(stats) = METRICS.get(&BridgeOperation::LoopCleanup) {
         result.loops_cleaned = stats.count;
     }
 
@@ -168,14 +155,13 @@ pub fn get_bridge_metrics() -> BridgeMetrics {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_pybridge_core::clear_bridge_metrics;
+/// ```ignore
+/// use classic_pybridge::clear_bridge_metrics;
 ///
 /// clear_bridge_metrics();
 /// ```
 pub fn clear_bridge_metrics() {
-    let metrics = METRICS.read();
-    metrics.operations.clear();
+    METRICS.clear();
 }
 
 #[cfg(test)]

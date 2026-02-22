@@ -7,7 +7,10 @@ use classic_shared_core::get_runtime;
 use classic_update_core::GithubClient;
 
 fn github_has_update(current: &str, latest: &str) -> bool {
-    let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+    let client = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
+        Ok(client) => client,
+        Err(_) => return false,
+    };
     client.has_update(current, latest).unwrap_or_default()
 }
 
@@ -16,7 +19,17 @@ fn github_check_for_updates(
     repo: &str,
     current_version: &str,
 ) -> ffi::UpdateCheckResult {
-    let client = GithubClient::new(owner, repo);
+    let client = match GithubClient::new(owner, repo) {
+        Ok(client) => client,
+        Err(e) => {
+            return ffi::UpdateCheckResult {
+                has_update: false,
+                latest_version: String::new(),
+                release_notes: String::new(),
+                error_message: format!("{e}"),
+            };
+        }
+    };
     match get_runtime().block_on(client.get_latest_release()) {
         Ok(release) => {
             let has_update = client

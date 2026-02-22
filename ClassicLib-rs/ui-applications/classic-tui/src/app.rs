@@ -663,11 +663,13 @@ impl App {
         let current_version = env!("CARGO_PKG_VERSION").to_string();
 
         get_runtime().spawn(async move {
-            let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
-            let message = match client.get_latest_release().await {
-                Ok(latest) => match client.has_update(&current_version, &latest.tag_name) {
-                    Ok(true) => format!("Update available: {}", latest.tag_name),
-                    Ok(false) => "You are up to date".to_string(),
+            let message = match GithubClient::new("evildarkarchon", "CLASSIC-Fallout4") {
+                Ok(client) => match client.get_latest_release().await {
+                    Ok(latest) => match client.has_update(&current_version, &latest.tag_name) {
+                        Ok(true) => format!("Update available: {}", latest.tag_name),
+                        Ok(false) => "You are up to date".to_string(),
+                        Err(error) => format!("Update check failed: {error}"),
+                    },
                     Err(error) => format!("Update check failed: {error}"),
                 },
                 Err(error) => format!("Update check failed: {error}"),

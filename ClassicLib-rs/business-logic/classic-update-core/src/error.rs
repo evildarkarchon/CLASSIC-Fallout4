@@ -5,9 +5,16 @@ use thiserror::Error;
 /// Errors that can occur during update operations.
 #[derive(Debug, Error)]
 pub enum UpdateError {
-    /// HTTP request error occurred
+    /// Failed to create the HTTP client itself (e.g., invalid TLS config, bad proxy settings).
+    /// Uses `#[from]` so `reqwest::Error` converts automatically via `?` at the build site.
+    #[error("Failed to create HTTP client: {0}")]
+    ClientBuild(#[from] reqwest::Error),
+
+    /// HTTP-layer error during a request or response (e.g., network failure, timeout, bad status).
+    /// Mapped explicitly via `.map_err(UpdateError::HttpError)` — NOT auto-converted via `?`,
+    /// because `#[from]` is already claimed by `ClientBuild` for the same `reqwest::Error` source type.
     #[error("HTTP error: {0}")]
-    HttpError(#[from] reqwest::Error),
+    HttpError(reqwest::Error),
 
     /// Failed to parse JSON response
     #[error("JSON parsing error: {0}")]

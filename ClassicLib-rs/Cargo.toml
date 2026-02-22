@@ -15,7 +15,6 @@ members = [
     # Phase 1 - Core Infrastructure (Business Logic)
     "business-logic/classic-registry-core",
     "business-logic/classic-perf-core",
-    "business-logic/classic-pybridge-core",
     "business-logic/classic-settings-core",
     "business-logic/classic-message-core",
 

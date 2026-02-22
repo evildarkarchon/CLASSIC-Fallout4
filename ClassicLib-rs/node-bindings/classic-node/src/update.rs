@@ -155,7 +155,7 @@ impl GithubClient {
     /// @param token - Optional GitHub personal access token. If omitted, falls
     ///                back to the `GITHUB_TOKEN` environment variable.
     #[napi(constructor)]
-    pub fn new(owner: String, repo: String, token: Option<String>) -> Self {
+    pub fn new(owner: String, repo: String, token: Option<String>) -> napi::Result<Self> {
         // Filter empty strings — empty should behave like None and fall through
         // to the env-var-based constructor.
         let token = token.filter(|t| !t.is_empty());
@@ -164,8 +164,10 @@ impl GithubClient {
             core::GithubClient::with_token(owner, repo, Some(t))
         } else {
             core::GithubClient::new(owner, repo)
-        };
-        Self { inner }
+        }
+        .map_err(to_napi_err)?;
+
+        Ok(Self { inner })
     }
 
     /// Get the repository owner.
@@ -264,7 +266,7 @@ impl GithubClient {
 #[napi]
 pub fn has_update(current_version: String, latest_version: String) -> napi::Result<bool> {
     // GithubClient::has_update does not use any network — safe to create a throwaway.
-    let client = core::GithubClient::new("_", "_");
+    let client = core::GithubClient::new("_", "_").map_err(to_napi_err)?;
     client
         .has_update(&current_version, &latest_version)
         .map_err(to_napi_err)
@@ -280,7 +282,7 @@ pub fn has_update(current_version: String, latest_version: String) -> napi::Resu
 /// @throws on HTTP errors, rate limiting, or if no releases exist.
 #[napi]
 pub async fn get_latest_release(owner: String, repo: String) -> napi::Result<JsGithubRelease> {
-    let client = core::GithubClient::new(owner, repo);
+    let client = core::GithubClient::new(owner, repo).map_err(to_napi_err)?;
     let handle = classic_shared_core::get_runtime().handle().clone();
 
     handle
@@ -306,7 +308,7 @@ pub async fn check_for_updates(
     repo: String,
     current_version: String,
 ) -> napi::Result<JsUpdateCheckResult> {
-    let client = core::GithubClient::new(&owner, &repo);
+    let client = core::GithubClient::new(&owner, &repo).map_err(to_napi_err)?;
     let handle = classic_shared_core::get_runtime().handle().clone();
 
     let current = current_version.clone();
@@ -317,7 +319,7 @@ pub async fn check_for_updates(
         .map_err(to_napi_err)?;
 
     // Compare versions (synchronous, no network)
-    let temp_client = core::GithubClient::new("_", "_");
+    let temp_client = core::GithubClient::new("_", "_").map_err(to_napi_err)?;
     let update_available = temp_client
         .has_update(&current, &release.tag_name)
         .map_err(to_napi_err)?;

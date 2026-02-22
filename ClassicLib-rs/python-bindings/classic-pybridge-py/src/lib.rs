@@ -5,6 +5,9 @@
 
 use pyo3::prelude::*;
 
+mod metrics;
+mod runtime;
+
 /// Bridge operation type for metrics tracking.
 #[pyclass]
 #[derive(Clone)]
@@ -19,17 +22,15 @@ pub enum BridgeOperationType {
     LoopCleanup,
 }
 
-impl From<BridgeOperationType> for classic_pybridge_core::BridgeOperation {
+impl From<BridgeOperationType> for metrics::BridgeOperation {
     fn from(op: BridgeOperationType) -> Self {
         match op {
-            BridgeOperationType::RunAsync => classic_pybridge_core::BridgeOperation::RunAsync,
+            BridgeOperationType::RunAsync => metrics::BridgeOperation::RunAsync,
             BridgeOperationType::RunAsyncWithTimeout => {
-                classic_pybridge_core::BridgeOperation::RunAsyncWithTimeout
+                metrics::BridgeOperation::RunAsyncWithTimeout
             }
-            BridgeOperationType::LoopCreation => {
-                classic_pybridge_core::BridgeOperation::LoopCreation
-            }
-            BridgeOperationType::LoopCleanup => classic_pybridge_core::BridgeOperation::LoopCleanup,
+            BridgeOperationType::LoopCreation => metrics::BridgeOperation::LoopCreation,
+            BridgeOperationType::LoopCleanup => metrics::BridgeOperation::LoopCleanup,
         }
     }
 }
@@ -87,23 +88,6 @@ impl BridgeMetrics {
     }
 }
 
-impl From<classic_pybridge_core::BridgeMetrics> for BridgeMetrics {
-    fn from(metrics: classic_pybridge_core::BridgeMetrics) -> Self {
-        Self {
-            run_async_count: metrics.run_async_count,
-            run_async_success: metrics.run_async_success,
-            run_async_failure: metrics.run_async_failure,
-            run_async_total_time: metrics.run_async_total_time,
-            timeout_count: metrics.timeout_count,
-            timeout_success: metrics.timeout_success,
-            timeout_failure: metrics.timeout_failure,
-            timeout_total_time: metrics.timeout_total_time,
-            loops_created: metrics.loops_created,
-            loops_cleaned: metrics.loops_cleaned,
-        }
-    }
-}
-
 /// Record a bridge operation for metrics.
 ///
 /// This function records timing and success/failure information for
@@ -123,7 +107,7 @@ impl From<classic_pybridge_core::BridgeMetrics> for BridgeMetrics {
 ///     ... )
 #[pyfunction]
 fn record_operation(operation: BridgeOperationType, duration_secs: f64, success: bool) {
-    classic_pybridge_core::record_bridge_operation(operation.into(), duration_secs, success);
+    metrics::record_bridge_operation(operation.into(), duration_secs, success);
 }
 
 /// Get bridge metrics summary.
@@ -141,7 +125,20 @@ fn record_operation(operation: BridgeOperationType, duration_secs: f64, success:
 ///     >>> print(f"Success rate: {metrics.run_async_success}/{metrics.run_async_count}")
 #[pyfunction]
 fn get_metrics() -> BridgeMetrics {
-    classic_pybridge_core::get_bridge_metrics().into()
+    let metrics = metrics::get_bridge_metrics();
+
+    BridgeMetrics {
+        run_async_count: metrics.run_async_count,
+        run_async_success: metrics.run_async_success,
+        run_async_failure: metrics.run_async_failure,
+        run_async_total_time: metrics.run_async_total_time,
+        timeout_count: metrics.timeout_count,
+        timeout_success: metrics.timeout_success,
+        timeout_failure: metrics.timeout_failure,
+        timeout_total_time: metrics.timeout_total_time,
+        loops_created: metrics.loops_created,
+        loops_cleaned: metrics.loops_cleaned,
+    }
 }
 
 /// Clear all bridge metrics.
@@ -157,7 +154,7 @@ fn get_metrics() -> BridgeMetrics {
 ///     0
 #[pyfunction]
 fn clear_metrics() {
-    classic_pybridge_core::clear_bridge_metrics();
+    metrics::clear_bridge_metrics();
 }
 
 /// Check if runtime is available.
@@ -171,7 +168,7 @@ fn clear_metrics() {
 ///     True
 #[pyfunction]
 fn is_runtime_available() -> bool {
-    classic_pybridge_core::is_runtime_available()
+    runtime::is_runtime_available()
 }
 
 /// Runtime information.
@@ -196,15 +193,6 @@ impl RuntimeInfo {
     }
 }
 
-impl From<classic_pybridge_core::RuntimeInfo> for RuntimeInfo {
-    fn from(info: classic_pybridge_core::RuntimeInfo) -> Self {
-        Self {
-            available: info.available,
-            worker_threads: info.worker_threads,
-        }
-    }
-}
-
 /// Get runtime information.
 ///
 /// Returns:
@@ -217,7 +205,12 @@ impl From<classic_pybridge_core::RuntimeInfo> for RuntimeInfo {
 ///     8
 #[pyfunction]
 fn get_runtime_info() -> RuntimeInfo {
-    classic_pybridge_core::get_runtime_info().into()
+    let runtime_info = runtime::get_runtime_info();
+
+    RuntimeInfo {
+        available: runtime_info.available,
+        worker_threads: runtime_info.worker_threads,
+    }
 }
 
 /// Python module for async bridge utilities.
@@ -268,4 +261,31 @@ fn classic_pybridge(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add("__version__", env!("CARGO_PKG_VERSION"))?;
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+
+    #[test]
+    #[serial]
+    fn test_basic_metrics() {
+        metrics::clear_bridge_metrics();
+
+        metrics::record_bridge_operation(metrics::BridgeOperation::RunAsync, 0.1, true);
+        metrics::record_bridge_operation(metrics::BridgeOperation::RunAsync, 0.2, true);
+        metrics::record_bridge_operation(metrics::BridgeOperation::RunAsync, 0.15, false);
+
+        let metrics = metrics::get_bridge_metrics();
+        assert_eq!(metrics.run_async_count, 3);
+        assert_eq!(metrics.run_async_success, 2);
+        assert_eq!(metrics.run_async_failure, 1);
+    }
+
+    #[test]
+    fn test_runtime_available() {
+        let available = runtime::is_runtime_available();
+        assert!(available);
+    }
 }

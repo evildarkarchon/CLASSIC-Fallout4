@@ -25,8 +25,8 @@ pub struct RuntimeInfo {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_pybridge_core::is_runtime_available;
+/// ```ignore
+/// use classic_pybridge::is_runtime_available;
 ///
 /// if is_runtime_available() {
 ///     println!("Runtime is ready");
@@ -48,8 +48,8 @@ pub fn is_runtime_available() -> bool {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_pybridge_core::get_runtime_info;
+/// ```ignore
+/// use classic_pybridge::get_runtime_info;
 ///
 /// let info = get_runtime_info();
 /// println!("Worker threads: {}", info.worker_threads);
@@ -83,8 +83,8 @@ pub fn get_runtime_info() -> RuntimeInfo {
 ///
 /// # Examples
 ///
-/// ```rust
-/// use classic_pybridge_core::execute_on_runtime;
+/// ```ignore
+/// use classic_pybridge::execute_on_runtime;
 ///
 /// async fn async_work() -> i32 {
 ///     42

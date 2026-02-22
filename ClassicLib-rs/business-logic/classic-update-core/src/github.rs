@@ -21,7 +21,7 @@
 //! use classic_update_core::github::GithubClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+//! let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")?;
 //!
 //! // Check latest release
 //! let latest = client.get_latest_release().await?;
@@ -152,9 +152,9 @@ impl GithubClient {
     /// ```rust
     /// use classic_update_core::github::GithubClient;
     ///
-    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4").unwrap();
     /// ```
-    pub fn new(owner: impl Into<String>, repo: impl Into<String>) -> Self {
+    pub fn new(owner: impl Into<String>, repo: impl Into<String>) -> Result<Self> {
         // Load .env file if present (silently ignores if not found)
         let _ = dotenvy::dotenv();
 
@@ -166,15 +166,15 @@ impl GithubClient {
             .timeout(Self::API_TIMEOUT)
             .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
             .build()
-            .expect("Failed to create HTTP client");
+            ?;
 
-        Self {
+        Ok(Self {
             owner: owner.into(),
             repo: repo.into(),
             client,
             base_url: Self::GITHUB_API_BASE.to_string(),
             token,
-        }
+        })
     }
 
     /// Creates a new GitHub client with an explicit token.
@@ -193,26 +193,26 @@ impl GithubClient {
     /// ```rust
     /// use classic_update_core::github::GithubClient;
     ///
-    /// let client = GithubClient::with_token("evildarkarchon", "CLASSIC-Fallout4", Some("ghp_xxx".to_string()));
+    /// let client = GithubClient::with_token("evildarkarchon", "CLASSIC-Fallout4", Some("ghp_xxx".to_string())).unwrap();
     /// ```
     pub fn with_token(
         owner: impl Into<String>,
         repo: impl Into<String>,
         token: Option<String>,
-    ) -> Self {
+    ) -> Result<Self> {
         let client = Client::builder()
             .timeout(Self::API_TIMEOUT)
             .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
             .build()
-            .expect("Failed to create HTTP client");
+            ?;
 
-        Self {
+        Ok(Self {
             owner: owner.into(),
             repo: repo.into(),
             client,
             base_url: Self::GITHUB_API_BASE.to_string(),
             token: token.filter(|t| !t.is_empty()),
-        }
+        })
     }
 
     /// Builds a request with optional authentication headers.
@@ -232,8 +232,8 @@ impl GithubClient {
     ///
     /// # Errors
     ///
-    /// - `UpdateError::HttpError` if the HTTP request fails
-    /// - `UpdateError::JsonError` if the response cannot be parsed
+    /// - `UpdateError::HttpError` if the HTTP request or JSON deserialization fails
+    ///   (note: `reqwest`'s `.json()` wraps serde errors in `reqwest::Error`)
     /// - `UpdateError::GithubError` if the API returns an error
     /// - `UpdateError::NotFound` if no releases exist
     ///
@@ -243,7 +243,7 @@ impl GithubClient {
     /// use classic_update_core::github::GithubClient;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")?;
     /// let latest = client.get_latest_release().await?;
     /// println!("Latest version: {}", latest.tag_name);
     /// # Ok(())
@@ -255,11 +255,15 @@ impl GithubClient {
             self.base_url, self.owner, self.repo
         );
 
-        let response = self.build_request(&url).send().await?;
+        let response = self
+            .build_request(&url)
+            .send()
+            .await
+            .map_err(UpdateError::HttpError)?;
 
         match response.status() {
             reqwest::StatusCode::OK => {
-                let release: GithubRelease = response.json().await?;
+                let release: GithubRelease = response.json().await.map_err(UpdateError::HttpError)?;
                 Ok(release)
             }
             reqwest::StatusCode::NOT_FOUND => {
@@ -286,8 +290,8 @@ impl GithubClient {
     ///
     /// # Errors
     ///
-    /// - `UpdateError::HttpError` if the HTTP request fails
-    /// - `UpdateError::JsonError` if the response cannot be parsed
+    /// - `UpdateError::HttpError` if the HTTP request or JSON deserialization fails
+    ///   (note: `reqwest`'s `.json()` wraps serde errors in `reqwest::Error`)
     /// - `UpdateError::GithubError` if the API returns an error
     ///
     /// # Examples
@@ -296,7 +300,7 @@ impl GithubClient {
     /// use classic_update_core::github::GithubClient;
     ///
     /// # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")?;
     /// let releases = client.get_all_releases(false, false).await?;
     /// for release in releases {
     ///     println!("{}: {}", release.tag_name, release.name);
@@ -314,11 +318,16 @@ impl GithubClient {
             self.base_url, self.owner, self.repo
         );
 
-        let response = self.build_request(&url).send().await?;
+        let response = self
+            .build_request(&url)
+            .send()
+            .await
+            .map_err(UpdateError::HttpError)?;
 
         match response.status() {
             reqwest::StatusCode::OK => {
-                let mut releases: Vec<GithubRelease> = response.json().await?;
+                let mut releases: Vec<GithubRelease> =
+                    response.json().await.map_err(UpdateError::HttpError)?;
 
                 // Filter based on preferences
                 releases.retain(|r| {
@@ -356,7 +365,7 @@ impl GithubClient {
     /// use classic_update_core::github::GithubClient;
     ///
     /// # fn example() -> Result<(), Box<dyn std::error::Error>> {
-    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")?;
     ///
     /// assert!(client.has_update("v8.0.0", "v8.1.0")?);
     /// assert!(!client.has_update("v8.1.0", "v8.0.0")?);
@@ -423,7 +432,7 @@ impl GithubClient {
     /// ```rust
     /// use classic_update_core::github::GithubClient;
     ///
-    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+    /// let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4").unwrap();
     /// assert_eq!(client.repo_url(), "https://github.com/evildarkarchon/CLASSIC-Fallout4");
     /// ```
     pub fn repo_url(&self) -> String {
@@ -437,7 +446,8 @@ mod tests {
 
     #[test]
     fn test_client_creation() {
-        let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+        let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")
+            .expect("client creation should succeed");
         assert_eq!(client.owner(), "evildarkarchon");
         assert_eq!(client.repo(), "CLASSIC-Fallout4");
         assert_eq!(
@@ -460,7 +470,7 @@ mod tests {
 
     #[test]
     fn test_has_update() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Newer version available
         assert!(client.has_update("8.0.0", "8.1.0").unwrap());
@@ -478,7 +488,7 @@ mod tests {
 
     #[test]
     fn test_client_clone() {
-        let client1 = GithubClient::new("owner", "repo");
+        let client1 = GithubClient::new("owner", "repo").expect("client creation should succeed");
         let client2 = client1.clone();
 
         assert_eq!(client1.owner(), client2.owner());
@@ -487,7 +497,8 @@ mod tests {
 
     #[test]
     fn test_client_with_token() {
-        let client = GithubClient::with_token("owner", "repo", Some("test_token".to_string()));
+        let client = GithubClient::with_token("owner", "repo", Some("test_token".to_string()))
+            .expect("client creation with token should succeed");
         assert_eq!(client.owner(), "owner");
         assert_eq!(client.repo(), "repo");
         assert!(client.token.is_some());
@@ -496,13 +507,15 @@ mod tests {
 
     #[test]
     fn test_client_with_empty_token() {
-        let client = GithubClient::with_token("owner", "repo", Some("".to_string()));
+        let client = GithubClient::with_token("owner", "repo", Some("".to_string()))
+            .expect("client creation with empty token should succeed");
         assert!(client.token.is_none()); // Empty tokens should be filtered out
     }
 
     #[test]
     fn test_client_without_token() {
-        let client = GithubClient::with_token("owner", "repo", None);
+        let client = GithubClient::with_token("owner", "repo", None)
+            .expect("client creation without token should succeed");
         assert!(client.token.is_none());
     }
 
@@ -553,7 +566,7 @@ mod tests {
 
     #[test]
     fn test_has_update_prerelease_versions() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Prerelease < release of same version
         assert!(client.has_update("1.0.0-alpha", "1.0.0").unwrap());
@@ -574,7 +587,7 @@ mod tests {
 
     #[test]
     fn test_has_update_patch_versions() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Patch version updates
         assert!(client.has_update("1.0.0", "1.0.1").unwrap());
@@ -584,7 +597,7 @@ mod tests {
 
     #[test]
     fn test_has_update_minor_versions() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Minor version updates
         assert!(client.has_update("1.0.0", "1.1.0").unwrap());
@@ -597,7 +610,7 @@ mod tests {
 
     #[test]
     fn test_has_update_major_versions() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Major version updates
         assert!(client.has_update("1.0.0", "2.0.0").unwrap());
@@ -607,7 +620,7 @@ mod tests {
 
     #[test]
     fn test_has_update_invalid_versions() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Invalid current version
         assert!(client.has_update("invalid", "1.0.0").is_err());
@@ -637,14 +650,14 @@ mod tests {
         ];
 
         for (owner, repo, expected_url) in cases {
-            let client = GithubClient::new(owner, repo);
+            let client = GithubClient::new(owner, repo).expect("client creation should succeed");
             assert_eq!(client.repo_url(), expected_url);
         }
     }
 
     #[test]
     fn test_client_debug_impl() {
-        let client = GithubClient::new("owner", "repo");
+        let client = GithubClient::new("owner", "repo").expect("client creation should succeed");
 
         // Debug should work without panicking
         let debug_str = format!("{:?}", client);
@@ -779,7 +792,7 @@ mod tests {
 
     #[test]
     fn test_version_with_build_metadata() {
-        let client = GithubClient::new("test", "repo");
+        let client = GithubClient::new("test", "repo").expect("client creation should succeed");
 
         // Build metadata should be ignored in semver comparisons per spec
         // Same base version with different build metadata - should NOT show as update
@@ -800,8 +813,9 @@ mod tests {
     #[test]
     fn test_client_string_ownership() {
         // Test that Into<String> works with both &str and String
-        let client1 = GithubClient::new("owner", "repo");
-        let client2 = GithubClient::new(String::from("owner"), String::from("repo"));
+        let client1 = GithubClient::new("owner", "repo").expect("client creation should succeed");
+        let client2 = GithubClient::new(String::from("owner"), String::from("repo"))
+            .expect("client creation should succeed");
 
         assert_eq!(client1.owner(), client2.owner());
         assert_eq!(client1.repo(), client2.repo());
@@ -809,12 +823,14 @@ mod tests {
 
     #[test]
     fn test_with_token_string_ownership() {
-        let client1 = GithubClient::with_token("o", "r", Some("token".to_string()));
+        let client1 = GithubClient::with_token("o", "r", Some("token".to_string()))
+            .expect("client creation should succeed");
         let client2 = GithubClient::with_token(
             String::from("o"),
             String::from("r"),
             Some(String::from("token")),
-        );
+        )
+        .expect("client creation should succeed");
 
         assert_eq!(client1.owner(), client2.owner());
         assert!(client1.token.is_some());

@@ -617,13 +617,11 @@ impl OrchestratorCore {
     /// let db_pool = DatabasePool::new(Some(10), Duration::from_secs(300), "Fallout4".to_string());
     ///
     /// let orchestrator = OrchestratorCore::new(config)?
-    ///     .with_database_pool(Arc::new(db_pool));
+    ///     .with_database_pool(Arc::new(db_pool))?;
     /// # Ok(())
     /// # }
     /// ```
-    #[must_use]
-    pub fn with_database_pool(mut self, pool: Arc<DatabasePool>) -> Self {
-        // Update the FormID analyzer with the database pool
+    pub fn with_database_pool(mut self, pool: Arc<DatabasePool>) -> Result<Self> {
         self.formid_analyzer = FormIDAnalyzerCore::new(
             Some(pool.clone()),
             self.config.show_formid_values,
@@ -631,21 +629,9 @@ impl OrchestratorCore {
             self.config.mods_core.clone(),
             self.config.mods_freq.clone(),
             self.config.mods_conf.clone(),
-        )
-        .unwrap_or_else(|_| {
-            // Fallback without database pool if creation fails
-            FormIDAnalyzerCore::new(
-                None,
-                self.config.show_formid_values,
-                self.config.crashgen_name.clone(),
-                self.config.mods_core.clone(),
-                self.config.mods_freq.clone(),
-                self.config.mods_conf.clone(),
-            )
-            .expect("FormID analyzer creation should not fail")
-        });
+        )?;
         self.db_pool = Some(pool);
-        self
+        Ok(self)
     }
 
     /// Attaches a database pool for async FormID lookups on an existing orchestrator.
@@ -657,7 +643,7 @@ impl OrchestratorCore {
     /// # Arguments
     ///
     /// * `pool` - The database connection pool to use for FormID lookups
-    pub fn attach_database_pool(&mut self, pool: Arc<DatabasePool>) {
+    pub fn attach_database_pool(&mut self, pool: Arc<DatabasePool>) -> Result<()> {
         self.formid_analyzer = FormIDAnalyzerCore::new(
             Some(pool.clone()),
             self.config.show_formid_values,
@@ -665,20 +651,9 @@ impl OrchestratorCore {
             self.config.mods_core.clone(),
             self.config.mods_freq.clone(),
             self.config.mods_conf.clone(),
-        )
-        .unwrap_or_else(|_| {
-            // Fallback without database pool if creation fails
-            FormIDAnalyzerCore::new(
-                None,
-                self.config.show_formid_values,
-                self.config.crashgen_name.clone(),
-                self.config.mods_core.clone(),
-                self.config.mods_freq.clone(),
-                self.config.mods_conf.clone(),
-            )
-            .expect("FormID analyzer creation should not fail")
-        });
+        )?;
         self.db_pool = Some(pool);
+        Ok(())
     }
 
     /// Returns whether this orchestrator has a database pool attached.

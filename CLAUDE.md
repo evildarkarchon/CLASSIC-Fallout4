@@ -151,6 +151,7 @@ The Rust workspace under `ClassicLib-rs/` follows a strict three-layer separatio
 
 3. **Bindings** (`ClassicLib-rs/python-bindings/`, `ClassicLib-rs/node-bindings/`, `ClassicLib-rs/cpp-bindings/`) - Thin PyO3/NAPI-RS/CXX adapters
    - Each `*-py` crate wraps its corresponding `*-core` crate as a `cdylib`
+   - **Exception**: `classic-pybridge-py` has no `-core` counterpart -- its bridge metrics and runtime helpers live directly in the binding crate, since the functionality is exclusively Python-facing and doesn't warrant a separate intermediate crate.
    - Python imports them directly: `import classic_yaml`, `import classic_scanlog`
    - `classic-node`: NAPI-RS bindings for Node.js/Bun (tested in CI with Bun)
    - `classic-cpp-bridge`: CXX bridge exposing Rust core crates to C++ (staticlib)

@@ -919,7 +919,9 @@ impl PyRustOrchestrator {
                 })
         })?;
 
-        self.inner.attach_database_pool(Arc::new(pool));
+        self.inner
+            .attach_database_pool(Arc::new(pool))
+            .map_err(crate::to_pyerr)?;
         Ok(())
     }
 

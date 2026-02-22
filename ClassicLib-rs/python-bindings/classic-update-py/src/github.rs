@@ -231,7 +231,7 @@ impl PyGithubClient {
     ///     >>> client = classic_update.GithubClient("evildarkarchon", "CLASSIC-Fallout4", token="ghp_xxx")
     #[new]
     #[pyo3(signature = (owner, repo, token=None))]
-    fn new(owner: String, repo: String, token: Option<String>) -> Self {
+    fn new(owner: String, repo: String, token: Option<String>) -> PyResult<Self> {
         // Filter empty strings before checking - empty string should behave like None
         // and fall through to new() which loads .env and checks GITHUB_TOKEN env var
         let token = token.filter(|t| !t.is_empty());
@@ -240,8 +240,12 @@ impl PyGithubClient {
             core::GithubClient::with_token(owner, repo, Some(t))
         } else {
             core::GithubClient::new(owner, repo)
-        };
-        Self { inner }
+        }
+        .map_err(|e| {
+            pyo3::exceptions::PyRuntimeError::new_err(format!("GitHub client initialization failed: {e}"))
+        })?;
+
+        Ok(Self { inner })
     }
 
     /// Gets the latest release for the repository (async).

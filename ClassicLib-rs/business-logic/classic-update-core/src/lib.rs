@@ -21,7 +21,7 @@
 //! use classic_update_core::github::GithubClient;
 //!
 //! # async fn example() -> Result<(), Box<dyn std::error::Error>> {
-//! let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4");
+//! let client = GithubClient::new("evildarkarchon", "CLASSIC-Fallout4")?;
 //!
 //! // Check latest release
 //! let latest = client.get_latest_release().await?;
@@ -92,7 +92,7 @@ mod tests {
     #[test]
     fn test_re_exports_github_client() {
         // Test that GithubClient is re-exported
-        let client = GithubClient::new("owner", "repo");
+        let client = GithubClient::new("owner", "repo").expect("client creation should succeed");
         assert_eq!(client.owner(), "owner");
         assert_eq!(client.repo(), "repo");
     }
@@ -159,6 +159,6 @@ mod tests {
         let _: error::Result<()> = Ok(());
 
         // Verify github module is accessible
-        let _client = github::GithubClient::new("a", "b");
+        let _client = github::GithubClient::new("a", "b").expect("client creation should succeed");
     }
 }

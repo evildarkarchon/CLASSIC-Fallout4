@@ -4,7 +4,7 @@ version = "9.0.0"
 edition = "2024"
 rust-version = "1.85"
 authors = ["CLASSIC Development Team"]
-description = "Python bindings for classic-pybridge-core"
+description = "Python bindings for async bridge utilities"
 license = "MIT"
 
 [lib]
@@ -15,8 +15,22 @@ crate-type = ["cdylib", "rlib"]
 # PyO3 bindings
 pyo3 = { workspace = true, features = ["extension-module"] }
 
-# Core async bridge utilities
-classic-pybridge-core = { path = "../../business-logic/classic-pybridge-core" }
+# Shared runtime access
+classic-shared-core = { path = "../../foundation/classic-shared-core" }
+
+# Performance monitoring
+classic-perf-core = { path = "../../business-logic/classic-perf-core" }
+
+# Thread safety and metrics storage
+parking_lot = { workspace = true }
+dashmap = { workspace = true }
+once_cell = { workspace = true }
+
+# System info
+num_cpus = { workspace = true }
+
+[dev-dependencies]
+serial_test = "3.2"
 
 [lints.rust]
 deprecated = "deny"
