@@ -100,9 +100,11 @@ install(DIRECTORY "${CLASSIC_DATA_DIR}/graphics/"
 install(DIRECTORY "${CLASSIC_DATA_DIR}/Help/"
     DESTINATION "CLASSIC Data/Help"
 )
-install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
-    DESTINATION "CLASSIC Data/games"
-)
+if(EXISTS "${CLASSIC_DATA_DIR}/games")
+    install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
+        DESTINATION "CLASSIC Data/games"
+    )
+endif()
 
 # ── CPack ──────────────────────────────────────────────────────────
 set(CPACK_GENERATOR "ZIP")

@@ -156,9 +156,11 @@ install(DIRECTORY "${CLASSIC_DATA_DIR}/graphics/"
 install(DIRECTORY "${CLASSIC_DATA_DIR}/Help/"
     DESTINATION "CLASSIC Data/Help"
 )
-install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
-    DESTINATION "CLASSIC Data/games"
-)
+if(EXISTS "${CLASSIC_DATA_DIR}/games")
+    install(DIRECTORY "${CLASSIC_DATA_DIR}/games/"
+        DESTINATION "CLASSIC Data/games"
+    )
+endif()
 
 # Qt deploy — run windeployqt directly on the installed exe.
 # Unlike qt_generate_deploy_app_script() which forces a bin/ subdirectory,
