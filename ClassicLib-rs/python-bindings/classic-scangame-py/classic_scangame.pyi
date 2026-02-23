@@ -517,6 +517,7 @@ class GameVersion(Enum):
     Null = "Null"
     Original = "Original"
     NextGen = "NextGen"
+    AnniversaryEdition = "AnniversaryEdition"
     Vr = "Vr"
 
 class ValidationResult(Enum):
@@ -626,6 +627,117 @@ def check_xse_plugins(plugins_path: Path, is_vr_mode: bool, game_version: GameVe
 
     Returns:
         Formatted validation message.
+
+    """
+
+# ============================================================================
+# ENB Detection
+# ============================================================================
+
+class EnbResult(Enum):
+    """Result of ENB binary check."""
+
+    Present = "Present"
+    Partial = "Partial"
+    NotInstalled = "NotInstalled"
+
+class EnbConfigResult(Enum):
+    """Result of ENB config check."""
+
+    Valid = "Valid"
+    NotFound = "NotFound"
+    Unreadable = "Unreadable"
+
+class EnbValidationResult:
+    """Combined result of ENB validation.
+
+    Attributes:
+        binaries: Whether ENB binaries are present.
+        config: Whether ENB config is valid.
+
+    """
+
+    binaries: EnbResult
+    config: EnbConfigResult
+
+    def is_present(self) -> bool:
+        """Check if ENB is present (binaries exist).
+
+        Returns:
+            True if ENB binaries are Present or Partial.
+
+        """
+
+    def is_fully_configured(self) -> bool:
+        """Check if ENB is fully configured (binaries + config).
+
+        Returns:
+            True if binaries are Present and config is Valid.
+
+        """
+
+class EnbChecker:
+    """Checks for ENB installation in a game directory.
+
+    Example:
+        >>> checker = EnbChecker("C:/Games/Fallout4")
+        >>> result = checker.validate()
+        >>> if result.is_present():
+        ...     print("ENB detected")
+
+    """
+
+    def __init__(self, game_path: str) -> None:
+        """Create a new EnbChecker instance.
+
+        Args:
+            game_path: Path to the game root directory.
+
+        """
+
+    def check_binaries(self) -> EnbResult:
+        """Check if ENB binaries exist.
+
+        Returns:
+            EnbResult indicating the status of ENB binaries.
+
+        """
+
+    def check_config(self) -> EnbConfigResult:
+        """Check if ENB config exists.
+
+        Returns:
+            EnbConfigResult indicating the status of ENB config.
+
+        """
+
+    def validate(self) -> EnbValidationResult:
+        """Perform combined validation.
+
+        Returns:
+            EnbValidationResult with binaries and config status.
+
+        """
+
+    def format_message(self, result: EnbValidationResult) -> str:
+        """Format a user-friendly message.
+
+        Args:
+            result: Validation result to format.
+
+        Returns:
+            Formatted message string.
+
+        """
+
+def check_enb(game_path: str) -> EnbValidationResult:
+    """Convenience function to check ENB installation.
+
+    Args:
+        game_path: Path to the game root directory.
+
+    Returns:
+        EnbValidationResult with binaries and config status.
 
     """
 

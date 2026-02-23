@@ -7,7 +7,6 @@ Once validated, the paths are registered and stored in YAML settings.
 There is no Python fallback - if the Rust module is unavailable, ImportError propagates.
 
 Functions:
-    _game_path_find_registry: Retrieves the game's installation path via Rust registry lookup.
     game_path_find: Coordinates the process of finding, validating, and configuring the game's
         installation path using multiple strategies.
     game_generate_paths: Configures game paths and files necessary for the current game version.
@@ -54,44 +53,6 @@ def _log_version_warning(game_version: "Version", match_message: str = "") -> bo
     supported = [str(v.version) for v in registry.get_all_for_game("Fallout4")]
     logger.warning(f"Unknown game version detected: {game_version}. Supported versions: {', '.join(supported)}. {match_message}")
     return True
-
-
-def _game_path_find_registry(exe_name: str) -> Path | None:
-    """Find the installation path of a game via Rust registry lookup.
-
-    Uses Rust GamePathFinder for registry queries. On success, saves the path
-    to cache and registers it globally.
-
-    Args:
-        exe_name: The name of the game's executable file.
-
-    Returns:
-        A Path object representing the game's valid installation directory if found,
-        otherwise None.
-
-    """
-    try:
-        finder = RustGamePathFinder(
-            exe_name,
-            None,  # xse_loader not needed for registry lookup
-            GlobalRegistry.get_game(),
-            bool(GlobalRegistry.get_vr()),
-        )
-        # Try to find via registry (cached_path=None, xse_log_path=None)
-        path_str = finder.find_game_path(cached_path=None, xse_log_path=None)
-    except FileNotFoundError:
-        logger.debug("Registry lookup failed: game not found")
-        return None
-    except (ValueError, OSError, RuntimeError) as e:
-        logger.debug(f"Registry lookup error: {e}")
-        return None
-
-    game_path = Path(path_str)
-    from ClassicLib.support.resources import ResourceLoader
-
-    ResourceLoader.save_path_to_cache(game_path, "GamePath")
-    GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, game_path)
-    return game_path
 
 
 class GamePathFinder:

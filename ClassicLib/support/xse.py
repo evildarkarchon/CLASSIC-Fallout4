@@ -37,6 +37,8 @@ from ClassicLib.messaging import msg_warning
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from classic_scangame import EnbValidationResult, GameVersion
+
 
 def _read_bytes(path: Path) -> bytes:
     """Read file bytes synchronously via runtime boundary helper.
@@ -96,27 +98,32 @@ def _is_fcx_mode_enabled() -> bool:
     return yaml_settings(bool, YAML.Settings, "FCX_Mode", False)
 
 
-def _get_rust_game_version() -> object:
-    """Convert GlobalRegistry game version to Rust GameVersion enum.
+def _get_rust_game_version() -> GameVersion:
+    """Map the detected VersionInfo to the Rust GameVersion enum.
+
+    Uses the Version Registry as the single source of truth. The VersionInfo
+    short_name (OG, NG, AE, VR) is mapped to the corresponding GameVersion
+    variant. Falls back to GameVersion.Original when detection fails.
 
     Returns:
         GameVersion: The corresponding Rust GameVersion enum value.
 
     """
     from classic_scangame import GameVersion
+    from ClassicLib.support.versions import get_detected_version_info
 
-    version = GlobalRegistry.get_game_version()
+    short_name_map: dict[str, GameVersion] = {
+        "VR": GameVersion.Vr,
+        "OG": GameVersion.Original,
+        "NG": GameVersion.NextGen,
+        "AE": GameVersion.AnniversaryEdition,
+    }
 
-    if version == "VR":
-        return GameVersion.Vr
-    if version == "Original":
+    version_info = get_detected_version_info()
+    if version_info is None:
         return GameVersion.Original
-    if version == "NextGen":
-        return GameVersion.NextGen
-    if version == "AnniversaryEdition":
-        return GameVersion.AnniversaryEdition
-    # For "auto", default to Original (detection happens elsewhere)
-    return GameVersion.Original
+
+    return short_name_map.get(version_info.short_name, GameVersion.Original)
 
 
 # noinspection DuplicatedCode
@@ -237,7 +244,7 @@ def _check_address_library_rust(plugins_folder: str | None) -> str:
         is_vr = GlobalRegistry.is_vr_version()
         game_version = _get_rust_game_version()
 
-        checker = XseChecker(plugins_folder, is_vr, game_version)
+        checker = XseChecker(Path(plugins_folder), is_vr, game_version)
         result = checker.check()
         message = checker.validate()
 
@@ -561,7 +568,7 @@ async def enb_check_presence_async() -> str:
 
     try:
 
-        def _check_enb() -> tuple[object, str]:
+        def _check_enb() -> tuple[EnbValidationResult, str]:
             from classic_scangame import EnbChecker
 
             checker = EnbChecker(str(game_path))

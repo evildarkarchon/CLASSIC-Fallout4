@@ -6,12 +6,10 @@ ensuring proper operation on Windows and Linux systems.
 The implementation uses RustGamePathFinder exclusively.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.support.game_path import game_path_find
 
 pytestmark = pytest.mark.unit
@@ -21,16 +19,14 @@ class TestMultiPlatformSupport:
     """Tests for cross-platform compatibility."""
 
     @patch("platform.system", return_value="Linux")
-    @patch("ClassicLib.support.game_path._game_path_find_registry")
     @patch("ClassicLib.support.game_path.RustGamePathFinder")
-    def test_linux_skips_registry(
+    def test_linux_uses_rust_finder(
         self,
         mock_rust_finder_cls: MagicMock,
-        mock_registry: MagicMock,
         mock_platform: MagicMock,
         message_handler,
     ) -> None:
-        """Test that Linux systems skip Windows registry detection."""
+        """Test that Linux systems use Rust finder for path detection."""
         # Mock Rust finder to succeed via find_game_path
         mock_rust_finder = MagicMock()
         mock_rust_finder.find_game_path.return_value = "/fake/path"
@@ -50,8 +46,8 @@ class TestMultiPlatformSupport:
                 with patch("ClassicLib.support.resources.ResourceLoader.save_path_to_cache"):
                     game_path_find()
 
-        # Registry function should not be called on Linux
-        mock_registry.assert_not_called()
+        # Rust finder should be used for path detection
+        mock_rust_finder.find_game_path.assert_called_once()
 
     @patch("platform.system", return_value="Windows")
     @patch("ClassicLib.support.game_path.RustGamePathFinder")

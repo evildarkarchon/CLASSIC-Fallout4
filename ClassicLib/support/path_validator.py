@@ -24,9 +24,8 @@ from ClassicLib.core.registry import get_game
 from ClassicLib.integration.factory import get_path_operations
 from ClassicLib.messaging import msg_warning
 
-# Get Rust module if available, None otherwise
+# Rust path module is required (ImportError propagates if unavailable)
 classic_path = get_path_operations()
-_HAS_RUST_PATH = classic_path is not None
 
 
 class PathValidator:
@@ -64,20 +63,7 @@ class PathValidator:
         if not path or (isinstance(path, str) and not path.strip()):
             return False
 
-        # Use Rust acceleration when available
-        if _HAS_RUST_PATH and classic_path is not None:
-            assert classic_path is not None  # Type narrowing for type checker
-            try:
-                return classic_path.PathValidator.is_valid_path(str(path))
-            except (ValueError, OSError, RuntimeError):
-                pass  # Fall through to Python implementation
-
-        # Pure Python implementation
-        try:
-            path_obj = Path(path) if isinstance(path, str) else path
-            return path_obj.exists()
-        except (OSError, ValueError):
-            return False
+        return classic_path.PathValidator.is_valid_path(str(path))
 
     @staticmethod
     def is_restricted_path(path: str | Path | None) -> bool:
@@ -106,24 +92,7 @@ class PathValidator:
         if path is None or (isinstance(path, str) and not path.strip()):
             return True
 
-        # Use Rust acceleration when available
-        if _HAS_RUST_PATH and classic_path is not None:
-            assert classic_path is not None  # Type narrowing for type checker
-            try:
-                return classic_path.PathValidator.is_restricted_path(str(path))
-            except (ValueError, OSError, RuntimeError):
-                pass  # Fall through to Python implementation
-
-        # Pure Python implementation
-        from ClassicLib.scanning.logs.util_legacy import is_valid_custom_scan_path
-
-        try:
-            # Use the existing utility function to check if path is valid
-            # (returns False for restricted paths)
-            return not is_valid_custom_scan_path(path)
-        except Exception:  # noqa: BLE001
-            # If there's any error checking, consider it restricted
-            return True
+        return classic_path.PathValidator.is_restricted_path(str(path))
 
     @staticmethod
     def validate_custom_scan_path() -> None:

@@ -1,81 +1,15 @@
 """
 Unit tests for game_path_registry - unit logic testing.
 
-This file contains unit tests for registry-based game path detection.
-The implementation uses RustGamePathFinder exclusively.
+This file contains unit tests for Rust-based game path detection
+via the GamePathFinder class.
 """
 
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from ClassicLib.core.registry import GlobalRegistry
-from ClassicLib.support.game_path import _game_path_find_registry
-
 pytestmark = pytest.mark.unit
-
-
-class TestRegistryDetection:
-    """Tests for Rust-based registry game path detection."""
-
-    @patch("ClassicLib.support.game_path.RustGamePathFinder")
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
-    def test_registry_detection_not_found(
-        self,
-        mock_get_vr: MagicMock,
-        mock_get_game: MagicMock,
-        mock_rust_finder_cls: MagicMock,
-        message_handler,
-    ) -> None:
-        """Test registry detection when game is not found."""
-        mock_rust_finder = MagicMock()
-        mock_rust_finder.find_game_path.side_effect = FileNotFoundError("Game not found")
-        mock_rust_finder_cls.return_value = mock_rust_finder
-
-        result = _game_path_find_registry("Fallout4.exe")
-
-        assert result is None
-        mock_rust_finder_cls.assert_called_once()
-
-    @patch("ClassicLib.support.game_path.RustGamePathFinder")
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
-    def test_registry_detection_value_error(
-        self,
-        mock_get_vr: MagicMock,
-        mock_get_game: MagicMock,
-        mock_rust_finder_cls: MagicMock,
-        message_handler,
-    ) -> None:
-        """Test registry detection when path validation fails."""
-        mock_rust_finder = MagicMock()
-        mock_rust_finder.find_game_path.side_effect = ValueError("Invalid path")
-        mock_rust_finder_cls.return_value = mock_rust_finder
-
-        result = _game_path_find_registry("Fallout4.exe")
-
-        assert result is None
-
-    @patch("ClassicLib.support.game_path.RustGamePathFinder")
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
-    def test_registry_detection_os_error(
-        self,
-        mock_get_vr: MagicMock,
-        mock_get_game: MagicMock,
-        mock_rust_finder_cls: MagicMock,
-        message_handler,
-    ) -> None:
-        """Test registry detection when OS error occurs."""
-        mock_rust_finder = MagicMock()
-        mock_rust_finder.find_game_path.side_effect = OSError("Registry access denied")
-        mock_rust_finder_cls.return_value = mock_rust_finder
-
-        result = _game_path_find_registry("Fallout4.exe")
-
-        assert result is None
 
 
 class TestGamePathFindWithRustFinder:

@@ -68,9 +68,8 @@ def _append_file(path: Path, content: str) -> None:
 # Lazy imports for yaml functions to avoid circular imports
 # These are imported inside functions that use them
 
-# Get Rust module if available, None otherwise
+# Rust path module is required (ImportError propagates if unavailable)
 classic_path = get_path_operations()
-_HAS_RUST_PATH = classic_path is not None
 
 
 class DocumentsPathManager:
@@ -221,46 +220,14 @@ class DocumentsPathManager:
             self._get_manual_docs_path()
 
     def _find_windows_docs_path(self) -> None:
-        """Find the Windows documents path using the registry.
+        """Find the Windows documents path using Rust registry queries."""
+        # DocsPathFinder expects a relative path like "My Games\\Fallout4"
+        relative_path = f"My Games\\{self.docs_name}"
+        finder = classic_path.DocsPathFinder(relative_path)
 
-        **Performance**: Uses Rust acceleration when available for 10-50x faster registry queries.
-        """
-        # Try Rust acceleration first if available
-        if _HAS_RUST_PATH:
-            assert classic_path is not None  # Type narrowing for type checker
-            try:
-                # DocsPathFinder expects a relative path like "My Games\\Fallout4"
-                relative_path = f"My Games\\{self.docs_name}"
-                finder = classic_path.DocsPathFinder(relative_path)
-
-                # Try to find docs path (cached_path=None to use auto-detection)
-                docs_path_str = finder.find_docs_path(cached_path=None)
-            except FileNotFoundError:
-                logger.debug("Rust docs path lookup failed, falling back to Python implementation")
-            except (ValueError, OSError, RuntimeError) as e:
-                logger.debug(f"Rust docs path lookup error: {e}, falling back to Python implementation")
-            else:
-                self._update_game_setting("Root_Folder_Docs", docs_path_str)
-                return
-
-        # Python fallback implementation
-        import winreg
-
-        documents_path: Path = Path.home() / "Documents"
-
-        try:
-            # Open the registry key to get the user's documents path
-            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders") as key:  # type: ignore[reportAttributeAccessIssue]
-                documents_path = Path(winreg.QueryValueEx(key, "Personal")[0])  # type: ignore[reportAttributeAccessIssue]
-        except (OSError, UnboundLocalError):
-            # Fallback to a default path if registry key is not found
-            pass  # We already initialized documents_path with the default value
-
-        # Construct the full path to the game's documents folder
-        win_docs: str = str(documents_path / "My Games" / self.docs_name)
-
-        # Update the YAML settings with the documents path
-        self._update_game_setting("Root_Folder_Docs", win_docs)
+        # Find docs path (cached_path=None to use auto-detection)
+        docs_path_str = finder.find_docs_path(cached_path=None)
+        self._update_game_setting("Root_Folder_Docs", docs_path_str)
 
     def _find_linux_docs_path(self) -> None:
         """Identify and sets the Linux file path to game-specific documents.
