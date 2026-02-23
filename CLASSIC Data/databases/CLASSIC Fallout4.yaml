@@ -839,8 +839,9 @@ Mods_CONF: # 2) MODS THAT CONFLICT WITH OTHER MODS
 
 Mods_SOLU: # 3) MODS WITH SOLUTIONS & COMMUNITY PATCHES
   DLCUltraHighResolution: |
-    High Resolution DLC. I STRONGLY ADVISE AGAINST USING IT!
-        - Right click on Fallout 4 in your Steam Library folder, then select Properties
+    High Resolution DLC. I STRONGLY ADVISE AGAINST USING IT, ESPECIALLY ON LOW-END GPUs!
+        - This DLC is overly large, does not provide any meaningful visual improvements, and has various issues of its own.
+          Right click on Fallout 4 in your Steam Library folder, then select Properties
           Switch to the DLC tab and uncheck / disable the High Resolution Texture Pack.
         -----
 
