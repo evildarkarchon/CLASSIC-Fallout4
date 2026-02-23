@@ -5,8 +5,8 @@
 
 use classic_scangame_core::integrity::IntegrityConfig;
 use classic_scangame_core::setup::{
-    SetupCheckConfig, SetupCheckResults, get_config_suffix, migrate_vr_setting,
-    needs_path_detection, resolve_effective_game_version, run_combined_checks,
+    SetupCheckConfig, SetupCheckResults, migrate_vr_setting, needs_path_detection,
+    resolve_effective_game_version, run_combined_checks,
 };
 use classic_shared::without_gil;
 use pyo3::prelude::*;
@@ -232,25 +232,6 @@ fn needs_path_detection_py(game_path: Option<&str>, docs_path: Option<&str>) -> 
     needs_path_detection(game_path, docs_path)
 }
 
-/// Get the VR suffix for configuration keys.
-///
-/// Args:
-///     game_version: The effective game version
-///
-/// Returns:
-///     "VR" if version is VR, empty string otherwise
-///
-/// Example:
-///     >>> get_config_suffix_py("VR")
-///     'VR'
-///     >>> get_config_suffix_py("Original")
-///     ''
-#[pyfunction]
-#[pyo3(name = "get_config_suffix")]
-fn get_config_suffix_py(game_version: &str) -> &'static str {
-    get_config_suffix(game_version)
-}
-
 /// Register setup functions with the Python module
 pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PySetupCheckConfig>()?;
@@ -259,6 +240,5 @@ pub fn register_setup(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(migrate_vr_setting_py, m)?)?;
     m.add_function(wrap_pyfunction!(resolve_effective_game_version_py, m)?)?;
     m.add_function(wrap_pyfunction!(needs_path_detection_py, m)?)?;
-    m.add_function(wrap_pyfunction!(get_config_suffix_py, m)?)?;
     Ok(())
 }

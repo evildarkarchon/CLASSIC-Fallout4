@@ -42,18 +42,18 @@ class TestBackupConfiguration:
     @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_load_backup_configuration_vr_mode(self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, manager: BackupManager) -> None:
-        """Test loading configuration in VR mode."""
+        """Test loading configuration in VR mode uses Game_Info (not GameVR_Info)."""
         # Setup mock returns
         mock_yaml_settings.side_effect = [["*.dll"], "C:/Games/Fallout4VR", "C:/Documents/F4SEVR/f4sevr.log", "0.1.2"]
 
         # Load configuration
         manager.load_backup_configuration()
 
-        # Verify VR suffix was used in calls
+        # Verify Game_Info prefix is always used (GameVR_Info was removed)
         calls = mock_yaml_settings.call_args_list
-        assert calls[1][0] == (str, YAML.Game_Local, "GameVR_Info.Root_Folder_Game")
-        assert calls[2][0] == (str, YAML.Game_Local, "GameVR_Info.Docs_File_XSE")
-        assert calls[3][0] == (str, YAML.Game, "GameVR_Info.XSE_Ver_Latest")
+        assert calls[1][0] == (str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
+        assert calls[2][0] == (str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
+        assert calls[3][0] == (str, YAML.Game, "Game_Info.XSE_Ver_Latest")
 
     @patch("ClassicLib.io.yaml.yaml_settings")
     @patch.object(GlobalRegistry, "get_vr", return_value="")

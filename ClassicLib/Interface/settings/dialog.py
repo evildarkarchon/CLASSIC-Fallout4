@@ -243,13 +243,8 @@ class SettingsDialog(QDialog):
 
         if not ini_path:
             # Try to get from Game_Local YAML if not set in settings
-            from ClassicLib.core.registry import GlobalRegistry
-
             try:
-                # Use VersionRegistry-based config suffix
-                vr_suffix = GlobalRegistry.get_config_suffix()
-                root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
-                ini_path = yaml_settings(str, YAML.Game_Local, root_docs_key) or ""
+                ini_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs") or ""
             except (ImportError, TypeError, ValueError):
                 pass  # Registry not initialized, use default
 
@@ -417,13 +412,8 @@ class SettingsDialog(QDialog):
 
                 # Also update Game_Local YAML if path is set
                 if ini_path:
-                    from ClassicLib.core.registry import GlobalRegistry
-
                     try:
-                        # Use VersionRegistry-based config suffix
-                        vr_suffix = GlobalRegistry.get_config_suffix()
-                        root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
-                        yaml_settings(str, YAML.Game_Local, root_docs_key, ini_path)
+                        yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs", ini_path)
                     except (ImportError, TypeError, ValueError):
                         pass  # Registry not initialized, skip Game_Local update
 

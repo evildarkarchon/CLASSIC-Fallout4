@@ -583,8 +583,8 @@ class TestEnsurePathsConfigured:
             mock_game_find.assert_not_called()
 
     @pytest.mark.unit
-    def test_ensure_paths_configured_uses_vr_suffix(self) -> None:
-        """_ensure_paths_configured should use VR suffix for VR mode."""
+    def test_ensure_paths_configured_uses_game_info_in_vr_mode(self) -> None:
+        """_ensure_paths_configured should use Game_Info even in VR mode (GameVR_Info was removed)."""
         mock_yaml_settings = MagicMock(return_value=None)
 
         with (
@@ -598,10 +598,10 @@ class TestEnsurePathsConfigured:
         ):
             SetupCoordinator._ensure_paths_configured(is_gui=False)
 
-            # Verify yaml_settings was called with VR suffix
+            # Verify yaml_settings was called with Game_Info prefix (not GameVR_Info)
             calls = mock_yaml_settings.call_args_list
-            assert any("GameVR_Info.Root_Folder_Game" in str(call) for call in calls)
-            assert any("GameVR_Info.Root_Folder_Docs" in str(call) for call in calls)
+            assert any("Game_Info.Root_Folder_Game" in str(call) for call in calls)
+            assert any("Game_Info.Root_Folder_Docs" in str(call) for call in calls)
 
 
 # ============================================================================

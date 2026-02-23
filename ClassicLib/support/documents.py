@@ -27,9 +27,15 @@ class DocumentsChecker:
 
         """
         from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.versions import get_version_registry
 
         message_list: list[str] = []
-        docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{get_vr()}_Info.Main_Docs_Name")
+
+        # Get docs_name from Version Registry (static metadata)
+        registry = get_version_registry()
+        is_vr = get_vr() == "VR"
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        docs_name: str | None = version_info.docs_name if version_info else None
 
         if not isinstance(docs_name, str):
             raise TypeError("Document name must be a string")

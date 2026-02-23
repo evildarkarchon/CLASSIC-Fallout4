@@ -72,8 +72,6 @@ fn registry_key_game() -> String {
 }
 
 fn registry_key_vr() -> String {
-    // Keys::VR is deprecated since v8.0.0; use GAME_VERSION for new code.
-    // We expose the raw key string for C++ backward compatibility.
     Keys::GAME_VERSION.to_string()
 }
 

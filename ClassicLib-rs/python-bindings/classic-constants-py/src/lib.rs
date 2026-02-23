@@ -613,42 +613,6 @@ impl PyFallout4Version {
         self.inner.short_name()
     }
 
-    /// Get the YAML config section name for this version.
-    ///
-    /// # Returns
-    ///
-    /// The section name in YAML config files.
-    ///
-    /// # Examples
-    ///
-    /// ```python
-    /// from classic_constants import Fallout4Version
-    ///
-    /// assert Fallout4Version.Original.config_section() == "Game_Info"
-    /// assert Fallout4Version.Vr.config_section() == "GameVR_Info"
-    /// ```
-    fn config_section(&self) -> &'static str {
-        self.inner.config_section()
-    }
-
-    /// Get the config key suffix for this version.
-    ///
-    /// # Returns
-    ///
-    /// The suffix used in configuration keys ("" or "VR").
-    ///
-    /// # Examples
-    ///
-    /// ```python
-    /// from classic_constants import Fallout4Version
-    ///
-    /// assert Fallout4Version.Original.config_suffix() == ""
-    /// assert Fallout4Version.Vr.config_suffix() == "VR"
-    /// ```
-    fn config_suffix(&self) -> &'static str {
-        self.inner.config_suffix()
-    }
-
     /// Get the script extender acronym for this version.
     ///
     /// # Returns

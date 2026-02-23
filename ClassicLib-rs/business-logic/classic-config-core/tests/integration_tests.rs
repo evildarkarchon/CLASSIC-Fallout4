@@ -40,13 +40,6 @@ Game_Info:
   CRASHGEN_Ignore:
     - "OGIgnoreItem1"
   Main_Root_Name: "Fallout4"
-GameVR_Info:
-  GameVersion: "1.2.72"
-  CRASHGEN_LatestVer: "3.0.0"
-  CRASHGEN_LogName: "crash-vr"
-  CRASHGEN_Ignore:
-    - "VRIgnoreItem1"
-  Main_Root_Name: "Fallout4VR"
 Game_Hints:
   - "Hint 1"
   - "Hint 2"
@@ -140,13 +133,9 @@ mod config_loading_workflows {
         assert_eq!(config.classic_game_hints, vec!["Hint 1", "Hint 2"]);
         assert_eq!(config.warn_noplugins, "No plugins found!");
 
-        // OG crashgen fields (always populated)
+        // Crashgen fields (from Game_Info)
         assert_eq!(config.crashgen_name, "crash-og");
         assert_eq!(config.game_root_name, "Fallout4");
-
-        // VR fields (always populated via dual-loading)
-        assert_eq!(config.crashgen_name_vr, "crash-vr");
-        assert_eq!(config.game_root_name_vr, "Fallout4VR");
 
         // Ignore YAML
         assert_eq!(config.ignore_list, vec!["IgnoreItem1", "IgnoreItem2"]);
@@ -188,9 +177,9 @@ mod config_loading_workflows {
         assert_eq!(config.xse_acronym, "F4SE");
     }
 
-    /// Test VR dual-loading configuration — both OG and VR fields loaded regardless of vr_mode
+    /// Test vr_mode parameter does not affect loading (VR metadata now in Version Registry)
     #[tokio::test]
-    async fn test_vr_dual_loading_configuration_workflow() {
+    async fn test_vr_mode_does_not_affect_loading_workflow() {
         let temp_dir = tempdir().expect("Failed to create temp dir");
         let databases_dir = temp_dir.path().join("databases");
         fs::create_dir_all(&databases_dir).expect("Failed to create databases dir");
@@ -210,27 +199,20 @@ mod config_loading_workflows {
 
         let yaml_dirs = vec![temp_dir.path().to_path_buf(), temp_dir.path().to_path_buf()];
 
-        // Load with VR mode enabled — should still load both OG and VR
+        // Load with VR mode enabled — should produce same result as vr_mode=false
         let config = YamlDataCore::load_from_yaml_files(yaml_dirs, "Fallout4".to_string(), true)
             .await
             .expect("VR config load should succeed");
 
-        // Both OG and VR fields should be populated regardless of vr_mode
+        // Game_Info fields populated
         assert_eq!(config.crashgen_name, "crash-og");
-        assert_eq!(config.crashgen_name_vr, "crash-vr");
         assert_eq!(config.crashgen_ignore, vec!["OGIgnoreItem1"]);
-        assert_eq!(config.crashgen_ignore_vr, vec!["VRIgnoreItem1"]);
         assert_eq!(config.game_root_name, "Fallout4");
-        assert_eq!(config.game_root_name_vr, "Fallout4VR");
-        assert_eq!(config.game_version_vr, "1.2.72");
         assert_eq!(config.crashgen_latest_og, "4.0.0");
-        assert_eq!(config.crashgen_latest_vr, "3.0.0");
 
-        // VR-aware accessors should return the correct variant
-        assert_eq!(config.get_crashgen_name(false), "crash-og");
-        assert_eq!(config.get_crashgen_name(true), "crash-vr");
-        assert_eq!(config.get_game_root_name(false), "Fallout4");
-        assert_eq!(config.get_game_root_name(true), "Fallout4VR");
+        // Accessors return Game_Info values
+        assert_eq!(config.get_crashgen_name(), "crash-og");
+        assert_eq!(config.get_game_root_name(), "Fallout4");
     }
 }
 
@@ -328,9 +310,9 @@ mod from_content_workflows {
         assert!(!config.ignore_list.is_empty());
     }
 
-    /// Test from_content dual-loads both OG and VR fields regardless of vr_mode
+    /// Test from_content produces identical results regardless of vr_mode
     #[test]
-    fn test_from_content_dual_vr_loading() {
+    fn test_from_content_vr_mode_ignored() {
         let vr_config = YamlDataCore::from_yaml_content(
             minimal_main_yaml(),
             minimal_game_yaml(),
@@ -352,11 +334,10 @@ mod from_content_workflows {
         // Both configs should have identical fields — vr_mode no longer affects loading
         assert_eq!(vr_config.crashgen_name, og_config.crashgen_name);
         assert_eq!(vr_config.crashgen_name, "crash-og");
-        assert_eq!(vr_config.crashgen_name_vr, "crash-vr");
 
-        // VR-aware accessors provide mode-specific access
-        assert_eq!(vr_config.get_crashgen_name(false), "crash-og");
-        assert_eq!(vr_config.get_crashgen_name(true), "crash-vr");
+        // Accessors return Game_Info values
+        assert_eq!(vr_config.get_crashgen_name(), "crash-og");
+        assert_eq!(og_config.get_crashgen_name(), "crash-og");
     }
 
     /// Test from_content extracts all mod databases

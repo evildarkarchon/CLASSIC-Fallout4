@@ -208,7 +208,7 @@ def find_segments(
     """
     try:
         return _rust_parser.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
-    except Exception as e:  # noqa: BLE001 - Surface parser failures explicitly (Rust is required)
+    except Exception as e:
         logger.error("Rust parser failed in find_segments: %s", e)
         raise
 
@@ -291,4 +291,9 @@ def detect_vr_log(crash_data: list[str] | str) -> bool:
 
     """
     content = "\n".join(crash_data) if isinstance(crash_data, list) else crash_data
-    return _rust_parser.detect_vr_log(content)
+    try:
+        return _rust_parser.detect_vr_log(content)
+    except AttributeError:
+        # Rust parser doesn't expose detect_vr_log yet; use Python fallback
+        content_lower = content.lower()
+        return "fallout4vr.exe" in content_lower or "fallout4vr.esm" in content_lower

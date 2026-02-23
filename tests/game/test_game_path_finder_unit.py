@@ -285,6 +285,7 @@ class TestGetPathFromUserConsole:
 class TestGamePathFinderInit:
     """Tests for GamePathFinder.__init__() constructor."""
 
+    @patch("ClassicLib.support.game_path.get_version_registry")
     @patch("ClassicLib.support.game_path.RustGamePathFinder")
     @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
@@ -295,13 +296,20 @@ class TestGamePathFinderInit:
         mock_get_game: MagicMock,
         mock_yaml: MagicMock,
         mock_rust_finder_cls: MagicMock,
+        mock_get_registry: MagicMock,
         message_handler,
     ) -> None:
         """Test __init__ properly initializes all attributes."""
+        # XSE acronyms now come from version registry, not YAML
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
+        # Only 2 YAML calls remain: xse_file and game_name
         mock_yaml.side_effect = [
             "C:/Docs/Fallout4/F4SE/f4se.log",
-            "F4SE",
-            "F4SE",
             "Fallout 4",
         ]
 
@@ -313,6 +321,7 @@ class TestGamePathFinderInit:
         assert finder.xse_acronym_base == "F4SE"
         assert finder.game_name == "Fallout 4"
 
+    @patch("ClassicLib.support.game_path.get_version_registry")
     @patch("ClassicLib.support.game_path.RustGamePathFinder")
     @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
@@ -323,13 +332,27 @@ class TestGamePathFinderInit:
         mock_get_game: MagicMock,
         mock_yaml: MagicMock,
         mock_rust_finder_cls: MagicMock,
+        mock_get_registry: MagicMock,
         message_handler,
     ) -> None:
         """Test __init__ handles VR mode correctly."""
+        # VR mode: get_by_id("FO4_VR") returns VR acronym, get_by_id("FO4_OG") returns base
+        mock_vr_info = MagicMock()
+        mock_vr_info.xse.acronym = "F4SEVR"
+        mock_og_info = MagicMock()
+        mock_og_info.xse.acronym = "F4SE"
+
+        def get_by_id_side_effect(version_id):
+            if version_id == "FO4_VR":
+                return mock_vr_info
+            return mock_og_info
+
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.side_effect = get_by_id_side_effect
+        mock_get_registry.return_value = mock_registry
+
         mock_yaml.side_effect = [
             "C:/Docs/Fallout4VR/F4SEVR/f4sevr.log",
-            "F4SEVR",
-            "F4SE",
             "Fallout 4 VR",
         ]
 
@@ -338,6 +361,7 @@ class TestGamePathFinderInit:
         assert finder.exe_name == "Fallout4VR.exe"
         assert finder.xse_acronym == "F4SEVR"
 
+    @patch("ClassicLib.support.game_path.get_version_registry")
     @patch("ClassicLib.support.game_path.RustGamePathFinder")
     @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
@@ -348,14 +372,20 @@ class TestGamePathFinderInit:
         mock_get_game: MagicMock,
         mock_yaml: MagicMock,
         mock_rust_finder_cls: MagicMock,
+        mock_get_registry: MagicMock,
         message_handler,
     ) -> None:
         """Test __init__ raises TypeError for invalid YAML types."""
+        # XSE acronym from registry is valid, but game_name from YAML is invalid
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
         mock_yaml.side_effect = [
             "C:/Docs/f4se.log",
-            123,  # Invalid type
-            "F4SE",
-            "Fallout 4",
+            123,  # Invalid type for game_name
         ]
 
         with pytest.raises(TypeError):

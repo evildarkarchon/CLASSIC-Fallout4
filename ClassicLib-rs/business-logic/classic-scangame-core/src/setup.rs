@@ -328,34 +328,6 @@ pub fn needs_path_detection(game_path: Option<&str>, docs_path: Option<&str>) ->
     (needs_game, needs_docs)
 }
 
-/// Determine the VR suffix for configuration keys based on game version.
-///
-/// Returns "VR" if the game version is VR, otherwise returns an empty string.
-/// This is used to construct YAML config keys like "Game_Info" vs "GameVR_Info".
-///
-/// # Arguments
-///
-/// * `game_version` - The effective game version
-///
-/// # Returns
-///
-/// `"VR"` if the game is VR, `""` otherwise.
-///
-/// # Examples
-///
-/// ```rust
-/// use classic_scangame_core::setup::get_config_suffix;
-///
-/// assert_eq!(get_config_suffix("VR"), "VR");
-/// assert_eq!(get_config_suffix("Original"), "");
-/// assert_eq!(get_config_suffix("NextGen"), "");
-/// assert_eq!(get_config_suffix("auto"), "");
-/// ```
-#[must_use]
-pub fn get_config_suffix(game_version: &str) -> &'static str {
-    if game_version == "VR" { "VR" } else { "" }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -449,22 +421,6 @@ mod tests {
     #[test]
     fn test_needs_path_detection_empty_strings() {
         assert_eq!(needs_path_detection(Some(""), Some("")), (true, true));
-    }
-
-    // ========================================================================
-    // Config Suffix Tests
-    // ========================================================================
-
-    #[test]
-    fn test_config_suffix_vr() {
-        assert_eq!(get_config_suffix("VR"), "VR");
-    }
-
-    #[test]
-    fn test_config_suffix_non_vr() {
-        assert_eq!(get_config_suffix("Original"), "");
-        assert_eq!(get_config_suffix("NextGen"), "");
-        assert_eq!(get_config_suffix("auto"), "");
     }
 
     // ========================================================================

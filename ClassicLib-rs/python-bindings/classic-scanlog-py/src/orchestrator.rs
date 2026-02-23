@@ -17,7 +17,7 @@ use std::time::Duration;
 fn parse_checks(raw_checks: &[String]) -> Vec<CheckId> {
     raw_checks
         .iter()
-        .filter_map(|check| CheckId::from_str(check))
+        .filter_map(|check| CheckId::parse(check))
         .collect()
 }
 

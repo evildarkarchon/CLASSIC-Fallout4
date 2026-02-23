@@ -98,12 +98,10 @@ class TestGenerateGameCombinedResultAsync:
     @patch("ClassicLib.scanning.game.orchestrator.check_crashgen_settings")
     @patch("ClassicLib.scanning.game.orchestrator.check_xse_plugins")
     @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
     @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_runs_all_checks_concurrently(
         self,
         mock_yaml: MagicMock,
-        mock_get_vr: MagicMock,
         mock_get_file_io: MagicMock,
         mock_xse: MagicMock,
         mock_crashgen: MagicMock,
@@ -166,12 +164,10 @@ class TestGenerateGameCombinedResultAsync:
     @patch("ClassicLib.scanning.game.orchestrator.check_crashgen_settings")
     @patch("ClassicLib.scanning.game.orchestrator.check_xse_plugins")
     @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
     @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_returns_combined_config_issues(
         self,
         mock_yaml: MagicMock,
-        mock_get_vr: MagicMock,
         mock_get_file_io: MagicMock,
         mock_xse: MagicMock,
         mock_crashgen: MagicMock,
@@ -238,9 +234,8 @@ class TestGenerateGameCombinedResultAsync:
 
     @pytest.mark.asyncio
     @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
     @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
-    async def test_returns_tuple_type(self, mock_yaml: MagicMock, mock_get_vr: MagicMock, mock_get_file_io: MagicMock) -> None:
+    async def test_returns_tuple_type(self, mock_yaml: MagicMock, mock_get_file_io: MagicMock) -> None:
         """generate_game_combined_result_async should return tuple[str, list[ConfigIssue]]."""
         mock_yaml.return_value = None
 
@@ -606,10 +601,9 @@ class TestErrorHandling:
 
     @pytest.mark.asyncio
     @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
     @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_generate_game_returns_empty_on_os_error(
-        self, mock_yaml: MagicMock, mock_get_vr: MagicMock, mock_get_file_io: MagicMock
+        self, mock_yaml: MagicMock, mock_get_file_io: MagicMock
     ) -> None:
         """generate_game_combined_result_async should return empty on OSError."""
         mock_yaml.side_effect = OSError("File system error")
@@ -622,10 +616,9 @@ class TestErrorHandling:
 
     @pytest.mark.asyncio
     @patch("ClassicLib.scanning.game.orchestrator.get_file_io")
-    @patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value="")
     @patch("ClassicLib.scanning.game.orchestrator.yaml_settings")
     async def test_generate_game_returns_empty_on_runtime_error(
-        self, mock_yaml: MagicMock, mock_get_vr: MagicMock, mock_get_file_io: MagicMock
+        self, mock_yaml: MagicMock, mock_get_file_io: MagicMock
     ) -> None:
         """generate_game_combined_result_async should return empty on RuntimeError."""
         mock_yaml.side_effect = RuntimeError("Runtime error")

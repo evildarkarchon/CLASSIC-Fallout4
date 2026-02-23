@@ -31,7 +31,7 @@ impl CheckId {
     /// Parse a check identifier string (case-insensitive, underscore/space agnostic).
     ///
     /// Returns `None` for unrecognized names.
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         let normalized: String = s.chars().filter(|c| *c != '_' && *c != ' ').collect();
         match normalized.to_lowercase().as_str() {
             "achievements" => Some(Self::Achievements),
@@ -229,23 +229,23 @@ mod tests {
     #[test]
     fn test_check_id_from_str() {
         assert_eq!(
-            CheckId::from_str("achievements"),
+            CheckId::parse("achievements"),
             Some(CheckId::Achievements)
         );
         assert_eq!(
-            CheckId::from_str("memory_management"),
+            CheckId::parse("memory_management"),
             Some(CheckId::MemoryManagement)
         );
         assert_eq!(
-            CheckId::from_str("MemoryManagement"),
+            CheckId::parse("MemoryManagement"),
             Some(CheckId::MemoryManagement)
         );
         assert_eq!(
-            CheckId::from_str("archive_limit"),
+            CheckId::parse("archive_limit"),
             Some(CheckId::ArchiveLimit)
         );
-        assert_eq!(CheckId::from_str("looksmenu"), Some(CheckId::LooksMenu));
-        assert_eq!(CheckId::from_str("looks_menu"), Some(CheckId::LooksMenu));
-        assert_eq!(CheckId::from_str("unknown_check"), None);
+        assert_eq!(CheckId::parse("looksmenu"), Some(CheckId::LooksMenu));
+        assert_eq!(CheckId::parse("looks_menu"), Some(CheckId::LooksMenu));
+        assert_eq!(CheckId::parse("unknown_check"), None);
     }
 }

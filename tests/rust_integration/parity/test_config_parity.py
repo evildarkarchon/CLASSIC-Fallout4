@@ -106,16 +106,6 @@ def create_mock_yaml_config():
             "  CRASHGEN_LatestVer: 1.2.9\n"
             "  XSE_Acronym: F4SE\n"
             "\n"
-            "GameVR_Info:\n"
-            "  Main_Root_Name: Fallout 4 VR\n"
-            "  Main_Docs_Name: Fallout4VR\n"
-            "  GameVersion: 1.2.72\n"
-            "  CRASHGEN_Acronym: BO4 NG\n"
-            "  CRASHGEN_LogName: Buffout 4\n"
-            "  CRASHGEN_DLL_File: buffout4.dll\n"
-            "  CRASHGEN_LatestVer: 1.37.0\n"
-            "  XSE_Acronym: F4SEVR\n"
-            "\n"
             "Mods_CORE:\n"
             '  ModA: "PatternA"\n'
             "\n"
@@ -147,12 +137,10 @@ class TestYamlData:
         assert yaml_data.classic_version_date == "25.08.24"
         assert yaml_data.game_version == "1.10.163"
         assert yaml_data.game_version_new == "1.10.163"  # From Game_Info.GameVersionNEW
-        assert yaml_data.game_version_vr == "1.2.72"  # From GameVR_Info.GameVersion
 
         # Test Crash generator settings
         assert yaml_data.crashgen_name == "Buffout 4"  # From Game_Info.CRASHGEN_LogName
         assert yaml_data.crashgen_latest_og == "1.2.9"  # From Game_Info.CRASHGEN_LatestVer
-        assert yaml_data.crashgen_latest_vr == "1.37.0"  # From GameVR_Info.CRASHGEN_LatestVer
 
         # Test Script extender configuration
         assert yaml_data.xse_acronym == "F4SE"  # From Game_Info.XSE_Acronym
@@ -240,10 +228,8 @@ class TestYamlData:
         assert instance1.classic_version_date == instance2.classic_version_date
         assert instance1.game_version == instance2.game_version
         assert instance1.game_version_new == instance2.game_version_new
-        assert instance1.game_version_vr == instance2.game_version_vr
         assert instance1.crashgen_name == instance2.crashgen_name
         assert instance1.crashgen_latest_og == instance2.crashgen_latest_og
-        assert instance1.crashgen_latest_vr == instance2.crashgen_latest_vr
         assert instance1.xse_acronym == instance2.xse_acronym
         assert instance1.ignore_list == instance2.ignore_list
         assert instance1.game_mods_core == instance2.game_mods_core
@@ -265,17 +251,15 @@ class TestYamlData:
 
     def test_different_vr_mode_instance(self, create_mock_yaml_config: Path, setup_global_registry):
         """
-        Test that different VR mode parameters result in distinct YamlData instances
-        with potentially different data.
+        Test that different VR mode parameters result in distinct YamlData instances.
+        With GameVR_Info removed, both VR and non-VR use Game_Info for game version.
         """
         yaml_dirs: list[str | Path] = [str(create_mock_yaml_config), str(create_mock_yaml_config / "CLASSIC Data")]
 
         # Non-VR instance
         non_vr_data = classic_config.create_yamldata(yaml_dirs, "Fallout4", False)
-        assert non_vr_data.game_version == "1.10.163"  # Non-VR specific version
+        assert non_vr_data.game_version == "1.10.163"  # From Game_Info.GameVersion
 
-        # VR instance
+        # VR instance - still loads from Game_Info (GameVR_Info was removed)
         vr_data = classic_config.create_yamldata(yaml_dirs, "Fallout4", True)
-        assert vr_data.game_version == "1.10.163"  # Non-VR specific version
-        assert vr_data.game_version_vr == "1.2.72"  # VR specific version
-        assert non_vr_data.game_version != vr_data.game_version_vr  # They should be different
+        assert vr_data.game_version == "1.10.163"  # Same Game_Info.GameVersion

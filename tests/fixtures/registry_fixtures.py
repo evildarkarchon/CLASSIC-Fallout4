@@ -635,10 +635,9 @@ def yaml_cache_fixture(tmp_path: Path) -> Generator[Any, None, None]:
         # Mock the async_yaml_settings method to return test values
         def async_yaml_settings_side_effect(_type: Any, _yaml_store: Any, key_path: str, _new_value: Any = None) -> Any:
             # Return sensible defaults for common settings
-            defaults = {
+            # Note: CRASHGEN_LogName and XSE_Acronym now come from the Version Registry, not YAML
+            defaults: dict[str, Any] = {
                 "FCX Mode": False,
-                "Game_Info.CRASHGEN_LogName": "Buffout 4",
-                "Game_Info.XSE_Acronym": "F4SE",
             }
             return defaults.get(key_path)
 
@@ -683,9 +682,8 @@ def mock_yaml_settings(monkeypatch: pytest.MonkeyPatch) -> Generator[Any, None, 
     # Common default return values
     def yaml_side_effect(_type: Any, _yaml_store: Any, key_path: str, _new_value: Any = None) -> Any:
         # Provide sensible defaults for common settings
-        defaults = {
-            "Game_Info.CRASHGEN_LogName": "Buffout 4",
-            "Game_Info.XSE_Acronym": "F4SE",
+        # Note: CRASHGEN_LogName and XSE_Acronym now come from the Version Registry, not YAML
+        defaults: dict[str, Any] = {
             "exclude_log_records": (),
             "exclude_log_files": [],
             "exclude_log_errors": [],

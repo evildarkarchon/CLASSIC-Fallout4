@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, Any
 from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import GlobalRegistry, get_game, get_vr
+from ClassicLib.core.registry import GlobalRegistry, get_game
 from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.messaging import msg_warning
@@ -141,7 +141,6 @@ def xse_check_integrity() -> str:
     messages: list[str] = []
 
     # Load configuration settings
-    game_vr: str = get_vr()
     game_name: str = get_game()
 
     # Get error patterns to search for in logs
@@ -150,7 +149,7 @@ def xse_check_integrity() -> str:
         raise TypeError("Error patterns setting must be a list")
 
     # Get XSE-related settings
-    xse_config: dict[Any, Any] = _load_xse_config(game_vr)
+    xse_config: dict[Any, Any] = _load_xse_config()
 
     # Check address library using Rust XseChecker if FCX Mode is enabled
     if _is_fcx_mode_enabled():
@@ -185,7 +184,6 @@ async def xse_check_integrity_async() -> str:
     messages: list[str] = []
 
     # Load configuration settings
-    game_vr: str = get_vr()
     game_name: str = get_game()
 
     # Get error patterns to search for in logs
@@ -194,7 +192,7 @@ async def xse_check_integrity_async() -> str:
         raise TypeError("Error patterns setting must be a list")
 
     # Get XSE-related settings
-    xse_config: dict[Any, Any] = await _load_xse_config_async(game_vr)
+    xse_config: dict[Any, Any] = await _load_xse_config_async()
 
     # Check address library using Rust XseChecker if FCX Mode is enabled
     fcx_mode = await yaml_settings_async(bool, YAML.Settings, "FCX_Mode", False)
@@ -254,16 +252,12 @@ def _check_address_library_rust(plugins_folder: str | None) -> str:
         return f"XSE validation error: {e}\n"
 
 
-# noinspection PyUnusedLocal
-def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
-    """Load the configuration related to a game's XSE (eXtensible Script Engine) details and
+def _load_xse_config() -> dict[str, str | Path | None]:
+    """Load the configuration related to the game's XSE (eXtensible Script Engine) details and
     various associated components from a YAML settings file.
 
     This function retrieves and organizes information such as the acronym, full name,
-    latest version, log file path, and address library file path for the specified game's XSE.
-
-    Args:
-        game_vr (str): The unique identifier for the game version for which the XSE configuration should be loaded.
+    latest version, log file path, and address library file path for the game's XSE.
 
     Returns:
         dict: A dictionary containing the following keys:
@@ -275,12 +269,24 @@ def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
             - plugins_folder (str | None): Path to the F4SE/SKSE plugins folder for Rust validation.
 
     """
-    xse_acronym: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
-    xse_full_name: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
-    xse_latest_version: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
-    xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
-    adlib_file_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
-    plugins_folder: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_Folder_Plugins")
+    # Get XSE static metadata from Version Registry.
+    # XSE acronym/full_name/version are identical across FO4_OG / FO4_NG / FO4_AE;
+    # FO4_OG is used as the canonical non-VR source for these static fields.
+    from ClassicLib.support.versions import get_version_registry
+
+    registry = get_version_registry()
+    is_vr = GlobalRegistry.is_vr_version()
+    version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+    xse_config = version_info.xse if version_info else None
+
+    xse_acronym: str | None = xse_config.acronym if xse_config else None
+    xse_full_name: str | None = xse_config.full_name if xse_config else None
+    xse_latest_version: str | None = xse_config.compatible_version if xse_config else None
+
+    # Runtime paths still come from YAML cache
+    xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
+    adlib_file_str: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib")
+    plugins_folder: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Game_Folder_Plugins")
 
     adlib_file: Path | None = Path(adlib_file_str) if adlib_file_str else None
 
@@ -294,24 +300,32 @@ def _load_xse_config(game_vr: str) -> dict[str, str | Path | None]:
     }
 
 
-async def _load_xse_config_async(game_vr: str) -> dict[str, str | Path | None]:
+async def _load_xse_config_async() -> dict[str, str | Path | None]:
     """Async version of _load_xse_config.
-
-    Args:
-        game_vr: The unique identifier for the game version.
 
     Returns:
         dict: XSE configuration dictionary.
 
     """
     from ClassicLib.io.yaml.async_.core import yaml_settings_async
+    from ClassicLib.support.versions import get_version_registry
 
-    xse_acronym: str | None = await yaml_settings_async(str, YAML.Game, f"Game{game_vr}_Info.XSE_Acronym")
-    xse_full_name: str | None = await yaml_settings_async(str, YAML.Game, f"Game{game_vr}_Info.XSE_FullName")
-    xse_latest_version: str | None = await yaml_settings_async(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
-    xse_log_file: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
-    adlib_file_str: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_File_AddressLib")
-    plugins_folder: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{game_vr}_Info.Game_Folder_Plugins")
+    # Get XSE static metadata from Version Registry.
+    # XSE acronym/full_name/version are identical across FO4_OG / FO4_NG / FO4_AE;
+    # FO4_OG is used as the canonical non-VR source for these static fields.
+    registry = get_version_registry()
+    is_vr = GlobalRegistry.is_vr_version()
+    version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+    xse_config = version_info.xse if version_info else None
+
+    xse_acronym: str | None = xse_config.acronym if xse_config else None
+    xse_full_name: str | None = xse_config.full_name if xse_config else None
+    xse_latest_version: str | None = xse_config.compatible_version if xse_config else None
+
+    # Runtime paths still come from YAML cache
+    xse_log_file: str | None = await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
+    adlib_file_str: str | None = await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_File_AddressLib")
+    plugins_folder: str | None = await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_Folder_Plugins")
 
     adlib_file: Path | None = Path(adlib_file_str) if adlib_file_str else None
 
@@ -491,8 +505,7 @@ def enb_check_presence() -> str:
 
     game_path = GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH)
     if not game_path:
-        vr_suffix = GlobalRegistry.get_config_suffix()
-        game_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
+        game_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
 
     if not game_path:
         GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
@@ -538,8 +551,7 @@ async def enb_check_presence_async() -> str:
 
     game_path = GlobalRegistry.get(GlobalRegistry.Keys.GAME_PATH)
     if not game_path:
-        vr_suffix = GlobalRegistry.get_config_suffix()
-        game_path = await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
+        game_path = await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
 
     if not game_path:
         GlobalRegistry.register(GlobalRegistry.Keys.ENB_PRESENT, False)
@@ -648,7 +660,7 @@ def _get_scripts_folder_path() -> str:
         str: The path of the game's scripts folder.
 
     """
-    game_folder_scripts: str | None = yaml_settings(str, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Scripts")
+    game_folder_scripts: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Game_Folder_Scripts")
     if game_folder_scripts is None:
         raise ValueError("Game scripts folder path cannot be None")
     return game_folder_scripts

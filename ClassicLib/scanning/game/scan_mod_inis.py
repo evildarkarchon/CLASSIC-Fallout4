@@ -8,14 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.core.registry import get_game, get_vr
+from ClassicLib.core.registry import get_game
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue, ConfigIssueSeverity
 
 
 def _get_game_root() -> Path | None:
     """Resolve the game root path from YAML settings."""
-    return yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Root_Folder_Game")
+    return yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Game")
 
 
 def _run_rust_scan() -> Any:

@@ -196,7 +196,14 @@ impl VersionRegistry {
                 .filter(|(_, v)| !v.is_empty())
                 .collect();
 
-            XseConfig::with_script_hashes(acronym, compatible_version, loader, script_hashes)
+            let full_name = yaml_ops.get_string_value(&xse_yaml, "full_name", "");
+            let file_count = yaml_ops
+                .get_setting(&xse_yaml, "file_count")
+                .and_then(|v| v.as_i64())
+                .map(|v| v as u32)
+                .unwrap_or(0);
+
+            XseConfig::with_script_hashes(acronym, full_name, compatible_version, loader, file_count, script_hashes)
         });
 
         // Parse compatible range
@@ -245,6 +252,12 @@ impl VersionRegistry {
             display_name: yaml_ops.get_string_value(yaml, "display_name", ""),
             short_name: yaml_ops.get_string_value(yaml, "short_name", ""),
             description: yaml_ops.get_string_value(yaml, "description", ""),
+            docs_name: yaml_ops.get_string_value(yaml, "docs_name", ""),
+            steam_id: yaml_ops
+                .get_setting(yaml, "steam_id")
+                .and_then(|v| v.as_i64())
+                .map(|v| v as u32)
+                .unwrap_or(0),
             address_library,
             xse,
             compatible_range,
@@ -298,6 +311,8 @@ impl VersionRegistry {
                 }
 
                 let name = yaml_ops.get_string_value(yaml, "name", "");
+                let acronym = yaml_ops.get_string_value(yaml, "acronym", "");
+                let dll_file = yaml_ops.get_string_value(yaml, "dll_file", "");
                 let description = yaml_ops.get_string_value(yaml, "description", "");
                 let download_url = yaml_ops.get_string_value(yaml, "download_url", "");
 
@@ -314,6 +329,8 @@ impl VersionRegistry {
                 Some(CrashgenConfig {
                     version,
                     name,
+                    acronym,
+                    dll_file,
                     description,
                     download_url,
                     compatible_range,

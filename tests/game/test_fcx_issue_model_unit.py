@@ -177,10 +177,7 @@ class TestGenerateGameCombinedResultTuple:
         from ClassicLib.scanning.game import generate_game_combined_result_async
 
         # Mock settings to return None (early return path)
-        with (
-            patch("ClassicLib.scanning.game.orchestrator.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value=""),
-        ):
+        with patch("ClassicLib.scanning.game.orchestrator.yaml_settings") as mock_yaml_settings:
             mock_yaml_settings.return_value = None
 
             # Call async function
@@ -201,10 +198,7 @@ class TestGenerateGameCombinedResultTuple:
         from ClassicLib.scanning.game import generate_game_combined_result
 
         # Mock settings to return None (early return path)
-        with (
-            patch("ClassicLib.scanning.game.orchestrator.yaml_settings") as mock_yaml_settings,
-            patch("ClassicLib.scanning.game.orchestrator.get_vr", return_value=""),
-        ):
+        with patch("ClassicLib.scanning.game.orchestrator.yaml_settings") as mock_yaml_settings:
             mock_yaml_settings.return_value = None
 
             # Call sync function

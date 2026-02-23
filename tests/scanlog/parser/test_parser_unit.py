@@ -11,6 +11,7 @@ import pytest
 
 pytestmark = [pytest.mark.unit]
 
+from ClassicLib.scanning.logs import parser as parser_module
 from ClassicLib.scanning.logs.parser import (
     extract_module_names,
     extract_segments,
@@ -19,7 +20,6 @@ from ClassicLib.scanning.logs.parser import (
     is_rust_parser_available,
     parse_crash_header,
 )
-from ClassicLib.scanning.logs import parser as parser_module
 
 
 @pytest.mark.unit

@@ -64,8 +64,7 @@ class GameIntegrityChecker:
         from ClassicLib.io.yaml import yaml_settings
         from ClassicLib.support.versions import get_version_registry
 
-        vr_suffix: str = GlobalRegistry.get_vr()
-        is_vr: bool = vr_suffix == "VR"
+        is_vr: bool = GlobalRegistry.is_vr_version()
 
         # Get valid exe hashes from VersionRegistry
         registry = get_version_registry()
@@ -73,9 +72,9 @@ class GameIntegrityChecker:
 
         # Load settings from YAML
         self._config = {
-            "steam_ini_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-            "game_exe_path": yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
-            "root_name": yaml_settings(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
+            "steam_ini_path": yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_SteamINI"),
+            "game_exe_path": yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_EXE"),
+            "root_name": yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name"),
             "root_warn": yaml_settings(str, YAML.Main, "Warnings_GAME.warn_root_path"),
         }
 
@@ -99,8 +98,7 @@ class GameIntegrityChecker:
         from ClassicLib.io.yaml import yaml_settings_async
         from ClassicLib.support.versions import get_version_registry
 
-        vr_suffix: str = GlobalRegistry.get_vr()
-        is_vr: bool = vr_suffix == "VR"
+        is_vr: bool = GlobalRegistry.is_vr_version()
 
         # Get valid exe hashes from VersionRegistry
         registry = get_version_registry()
@@ -108,9 +106,9 @@ class GameIntegrityChecker:
 
         # Load settings from YAML asynchronously
         self._config = {
-            "steam_ini_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_SteamINI"),
-            "game_exe_path": await yaml_settings_async(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE"),
-            "root_name": await yaml_settings_async(str, YAML.Game, f"Game{vr_suffix}_Info.Main_Root_Name"),
+            "steam_ini_path": await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_File_SteamINI"),
+            "game_exe_path": await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_File_EXE"),
+            "root_name": await yaml_settings_async(str, YAML.Game, "Game_Info.Main_Root_Name"),
             "root_warn": await yaml_settings_async(str, YAML.Main, "Warnings_GAME.warn_root_path"),
         }
 

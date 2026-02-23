@@ -13,7 +13,6 @@ import pytest
 pytestmark = [pytest.mark.unit]
 
 from ClassicLib.core.constants import YAML
-from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.support.documents import DocumentsChecker
 
 
@@ -25,14 +24,18 @@ class TestDocumentsChecker:
         """Create a DocumentsChecker instance for testing."""
         return DocumentsChecker()
 
-    @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     def test_check_folder_configuration_no_onedrive(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test folder configuration check when OneDrive is NOT present."""
-        # Mock docs name without OneDrive
-        mock_yaml_settings.return_value = "C:/Users/TestUser/Documents/My Games/Fallout4"
+        # Mock Version Registry to return docs_name without OneDrive
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/Users/TestUser/Documents/My Games/Fallout4"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         # Check folder configuration
         result = checker.check_folder_configuration()
@@ -40,21 +43,26 @@ class TestDocumentsChecker:
         # Should return empty string (no warning)
         assert result == ""
 
-        # Verify yaml_settings was called correctly
-        mock_yaml_settings.assert_called_once_with(str, YAML.Game, "Game_Info.Main_Docs_Name")
+        # Verify OG version was requested from registry
+        mock_registry.get_by_id.assert_called_once_with("FO4_OG")
 
     @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     @patch("ClassicLib.support.documents.logger")
     def test_check_folder_configuration_with_onedrive(
-        self, mock_logger: MagicMock, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_logger: MagicMock, mock_get_vr: MagicMock, mock_get_registry: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test folder configuration check when OneDrive IS present."""
-        # Mock docs name with OneDrive and warning message
-        mock_yaml_settings.side_effect = [
-            "C:/Users/TestUser/OneDrive/Documents/My Games/Fallout4",  # docs_name
-            "WARNING: OneDrive detected! This may cause issues.",  # docs_warn
-        ]
+        # Mock Version Registry to return docs_name with OneDrive
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/Users/TestUser/OneDrive/Documents/My Games/Fallout4"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
+        # Mock yaml_settings for the warning message lookup
+        mock_yaml_settings.return_value = "WARNING: OneDrive detected! This may cause issues."
 
         # Check folder configuration
         result = checker.check_folder_configuration()
@@ -67,61 +75,79 @@ class TestDocumentsChecker:
             "OneDrive detected in documents path: C:/Users/TestUser/OneDrive/Documents/My Games/Fallout4"
         )
 
-    @patch("ClassicLib.io.yaml.yaml_settings")
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.support.documents.get_vr", return_value="VR")
     def test_check_folder_configuration_vr_mode(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, checker: DocumentsChecker
     ) -> None:
-        """Test folder configuration check in VR mode."""
-        # Mock docs name for VR
-        mock_yaml_settings.return_value = "C:/Users/TestUser/Documents/My Games/Fallout4VR"
+        """Test folder configuration check in VR mode uses Version Registry."""
+        # Mock Version Registry to return VR docs name
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/Users/TestUser/Documents/My Games/Fallout4VR"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         # Check folder configuration
         checker.check_folder_configuration()
 
-        # Verify VR suffix was used
-        mock_yaml_settings.assert_called_once_with(str, YAML.Game, "GameVR_Info.Main_Docs_Name")
+        # Verify VR version was requested from the registry
+        mock_registry.get_by_id.assert_called_once_with("FO4_VR")
 
-    @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     def test_check_folder_configuration_docs_name_type_error(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test TypeError when docs_name is not a string."""
-        # Mock docs_name as non-string
-        mock_yaml_settings.return_value = None
+        # Mock Version Registry to return None docs_name
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = None
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         # Should raise TypeError
         with pytest.raises(TypeError, match="Document name must be a string"):
             checker.check_folder_configuration()
 
     @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     def test_check_folder_configuration_docs_warn_type_error(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test TypeError when docs_warn is not a string."""
-        # Mock docs_name with OneDrive and non-string warning
-        mock_yaml_settings.side_effect = [
-            "C:/Users/TestUser/OneDrive/Documents",  # docs_name
-            123,  # Invalid type for docs_warn
-        ]
+        # Mock Version Registry to return docs_name with OneDrive
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/Users/TestUser/OneDrive/Documents"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
+        # Mock yaml_settings to return non-string warning
+        mock_yaml_settings.return_value = 123  # Invalid type for docs_warn
 
         # Should raise TypeError
         with pytest.raises(TypeError, match="Document warning must be a string"):
             checker.check_folder_configuration()
 
     @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     def test_check_folder_configuration_case_insensitive(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test that OneDrive detection is case-insensitive."""
-        # Mock docs name with mixed case OneDrive
-        mock_yaml_settings.side_effect = [
-            "C:/Users/TestUser/OnEDriVe/Documents/My Games",  # Mixed case
-            "OneDrive warning",
-        ]
+        # Mock Version Registry to return docs_name with mixed case OneDrive
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/Users/TestUser/OnEDriVe/Documents/My Games"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
+        # Mock yaml_settings for warning
+        mock_yaml_settings.return_value = "OneDrive warning"
 
         # Check folder configuration
         result = checker.check_folder_configuration()
@@ -150,7 +176,7 @@ class TestDocumentsChecker:
 
     @patch.object(DocumentsChecker, "check_folder_configuration")
     @patch.object(DocumentsChecker, "validate_ini_file")
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
+    @patch("ClassicLib.support.documents.get_game", return_value="Fallout4")
     def test_run_all_checks_with_results(
         self, mock_get_game: MagicMock, mock_validate_ini: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker
     ) -> None:
@@ -201,7 +227,7 @@ class TestDocumentsChecker:
 
     @patch.object(DocumentsChecker, "check_folder_configuration")
     @patch.object(DocumentsChecker, "validate_ini_file")
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
+    @patch("ClassicLib.support.documents.get_game", return_value="Fallout4")
     def test_run_all_checks_all_empty(
         self, mock_get_game: MagicMock, mock_validate_ini: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker
     ) -> None:
@@ -218,7 +244,7 @@ class TestDocumentsChecker:
 
     @patch.object(DocumentsChecker, "check_folder_configuration")
     @patch.object(DocumentsChecker, "validate_ini_file")
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
+    @patch("ClassicLib.support.documents.get_game", return_value="Fallout4")
     def test_run_all_checks_mixed_results(
         self, mock_get_game: MagicMock, mock_validate_ini: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker
     ) -> None:
@@ -243,7 +269,7 @@ class TestDocumentsChecker:
             checker.validate_ini_file("Fallout4.ini")
 
     @patch.object(DocumentsChecker, "check_folder_configuration", side_effect=Exception("Folder check failed"))
-    @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
+    @patch("ClassicLib.support.documents.get_game", return_value="Fallout4")
     def test_run_all_checks_exception(self, mock_get_game: MagicMock, mock_check_folder: MagicMock, checker: DocumentsChecker) -> None:
         """Test that exceptions in run_all_checks are propagated."""
         # Should raise the exception
@@ -251,16 +277,21 @@ class TestDocumentsChecker:
             checker.run_all_checks()
 
     @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     def test_check_folder_configuration_onedrive_in_middle(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test OneDrive detection when it's in the middle of the path."""
-        # Mock docs name with OneDrive in middle of path
-        mock_yaml_settings.side_effect = [
-            "C:/Users/OneDrive User/Documents/My Games",  # OneDrive in username
-            "OneDrive warning",
-        ]
+        # Mock Version Registry to return docs_name with OneDrive in middle
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/Users/OneDrive User/Documents/My Games"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
+        # Mock yaml_settings for warning
+        mock_yaml_settings.return_value = "OneDrive warning"
 
         # Check folder configuration
         result = checker.check_folder_configuration()
@@ -269,13 +300,21 @@ class TestDocumentsChecker:
         assert result == "OneDrive warning"
 
     @patch("ClassicLib.io.yaml.yaml_settings")
-    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch("ClassicLib.support.documents.get_vr", return_value="")
     def test_check_folder_configuration_multiple_onedrive(
-        self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self, mock_get_vr: MagicMock, mock_get_registry: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
     ) -> None:
         """Test OneDrive detection with multiple occurrences."""
-        # Mock docs name with multiple OneDrive occurrences
-        mock_yaml_settings.side_effect = ["C:/OneDrive/Users/TestUser/OneDrive/Documents", "Multiple OneDrive warning"]
+        # Mock Version Registry to return docs_name with multiple OneDrive
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "C:/OneDrive/Users/TestUser/OneDrive/Documents"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
+        # Mock yaml_settings for warning
+        mock_yaml_settings.return_value = "Multiple OneDrive warning"
 
         # Check folder configuration
         result = checker.check_folder_configuration()

@@ -221,10 +221,8 @@ class TestCheckXsePlugins:
     """
 
     @patch("ClassicLib.scanning.game.check_xse_plugins.yaml_settings")
-    @patch("ClassicLib.scanning.game.check_xse_plugins.get_vr", return_value="")
     def test_returns_error_when_no_plugins_or_exe(
         self,
-        mock_get_vr: MagicMock,
         mock_yaml_settings: MagicMock,
     ) -> None:
         """check_xse_plugins should return error when neither plugins path nor exe exist."""
@@ -240,10 +238,8 @@ class TestCheckXsePlugins:
     @patch("ClassicLib.scanning.game.check_xse_plugins.classic_settings")
     @patch("ClassicLib.scanning.game.check_xse_plugins.read_game_exe_version")
     @patch("ClassicLib.scanning.game.check_xse_plugins.yaml_settings")
-    @patch("ClassicLib.scanning.game.check_xse_plugins.get_vr", return_value="")
     def test_delegates_to_rust_xse_checker(
         self,
-        mock_get_vr: MagicMock,
         mock_yaml_settings: MagicMock,
         mock_read_version: MagicMock,
         mock_classic_settings: MagicMock,

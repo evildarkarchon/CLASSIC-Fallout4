@@ -9,6 +9,7 @@ from packaging.version import Version
 from ClassicLib.support.versions import (
     AddressLibraryConfig,
     CompatibleRange,
+    CrashgenConfig,
     MatchConfidence,
     MatchResult,
     VersionInfo,
@@ -47,6 +48,46 @@ class TestVersionInfoModel:
         assert info.is_vr is False
         assert info.version == Version("1.10.163.0")
         assert info.version_string == "1.10.163.0"
+
+    @pytest.mark.unit
+    def test_version_info_docs_name(self):
+        """Test VersionInfo docs_name property."""
+        info = VersionInfo(
+            id="TEST_VERSION",
+            game="Fallout4",
+            is_vr=False,
+            version=Version("1.10.163.0"),
+            docs_name="Fallout4 OG",
+        )
+
+        assert info.docs_name == "Fallout4 OG"
+
+    @pytest.mark.unit
+    def test_version_info_docs_name_default(self):
+        """Test VersionInfo docs_name defaults to empty string."""
+        info = VersionInfo(id="TEST", game="Fallout4", version=Version("1.0.0"))
+
+        assert info.docs_name == ""
+
+    @pytest.mark.unit
+    def test_version_info_steam_id(self):
+        """Test VersionInfo steam_id property."""
+        info = VersionInfo(
+            id="TEST_VERSION",
+            game="Fallout4",
+            is_vr=False,
+            version=Version("1.10.163.0"),
+            steam_id=377160,
+        )
+
+        assert info.steam_id == 377160
+
+    @pytest.mark.unit
+    def test_version_info_steam_id_default(self):
+        """Test VersionInfo steam_id defaults to 0."""
+        info = VersionInfo(id="TEST", game="Fallout4", version=Version("1.0.0"))
+
+        assert info.steam_id == 0
 
     @pytest.mark.unit
     def test_version_info_with_address_library(self):
@@ -393,6 +434,43 @@ class TestXseConfig:
         assert config.loader == "f4se_loader.exe"
 
     @pytest.mark.unit
+    def test_xse_config_full_name(self):
+        """Test XseConfig full_name property."""
+        config = XseConfig(
+            acronym="F4SE",
+            compatible_version="0.6.23",
+            loader="f4se_loader.exe",
+            full_name="Fallout 4 Script Extender",
+        )
+
+        assert config.full_name == "Fallout 4 Script Extender"
+
+    @pytest.mark.unit
+    def test_xse_config_full_name_default(self):
+        """Test XseConfig full_name defaults to empty string."""
+        config = XseConfig(acronym="F4SE")
+
+        assert config.full_name == ""
+
+    @pytest.mark.unit
+    def test_xse_config_file_count(self):
+        """Test XseConfig file_count property."""
+        config = XseConfig(
+            acronym="F4SE",
+            compatible_version="0.6.23",
+            file_count=5,
+        )
+
+        assert config.file_count == 5
+
+    @pytest.mark.unit
+    def test_xse_config_file_count_default(self):
+        """Test XseConfig file_count defaults to 0."""
+        config = XseConfig(acronym="F4SE")
+
+        assert config.file_count == 0
+
+    @pytest.mark.unit
     def test_xse_config_parsed_version(self):
         """Test XseConfig compatible_version_parsed property."""
         config = XseConfig(
@@ -402,6 +480,61 @@ class TestXseConfig:
 
         parsed = config.compatible_version_parsed
         assert parsed == Version("0.6.23")
+
+
+class TestCrashgenConfig:
+    """Test CrashgenConfig data model."""
+
+    @pytest.mark.unit
+    def test_crashgen_config_creation(self):
+        """Test creating CrashgenConfig."""
+        config = CrashgenConfig(
+            version="1.26.6",
+            name="Buffout 4",
+            description="Crash logger for Fallout 4",
+            download_url="https://example.com/buffout4",
+        )
+
+        assert config.version == "1.26.6"
+        assert config.name == "Buffout 4"
+        assert config.description == "Crash logger for Fallout 4"
+        assert config.download_url == "https://example.com/buffout4"
+
+    @pytest.mark.unit
+    def test_crashgen_config_acronym(self):
+        """Test CrashgenConfig acronym property."""
+        config = CrashgenConfig(
+            version="1.26.6",
+            name="Buffout 4",
+            acronym="B4",
+        )
+
+        assert config.acronym == "B4"
+
+    @pytest.mark.unit
+    def test_crashgen_config_acronym_default(self):
+        """Test CrashgenConfig acronym defaults to empty string."""
+        config = CrashgenConfig(version="1.26.6")
+
+        assert config.acronym == ""
+
+    @pytest.mark.unit
+    def test_crashgen_config_dll_file(self):
+        """Test CrashgenConfig dll_file property."""
+        config = CrashgenConfig(
+            version="1.26.6",
+            name="Buffout 4",
+            dll_file="Buffout4.dll",
+        )
+
+        assert config.dll_file == "Buffout4.dll"
+
+    @pytest.mark.unit
+    def test_crashgen_config_dll_file_default(self):
+        """Test CrashgenConfig dll_file defaults to empty string."""
+        config = CrashgenConfig(version="1.26.6")
+
+        assert config.dll_file == ""
 
 
 class TestGetAddressLibraryFilename:

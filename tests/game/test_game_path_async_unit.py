@@ -90,6 +90,7 @@ class TestGamePathFinderCreateAsync:
         assert finder.exe_name == "Fallout4VR.exe"
         assert finder.xse_acronym == "F4SEVR"
 
+    @patch("ClassicLib.support.game_path.get_version_registry")
     @patch("ClassicLib.io.yaml.yaml_settings_async")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
@@ -98,18 +99,23 @@ class TestGamePathFinderCreateAsync:
         mock_get_vr: MagicMock,
         mock_get_game: MagicMock,
         mock_yaml_async: AsyncMock,
+        mock_get_registry: MagicMock,
         message_handler,
     ) -> None:
         """Test create_async raises TypeError when YAML settings have invalid types."""
+        # XSE acronyms now come from version registry; make game_name invalid instead
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         async def yaml_side_effect(*args, **kwargs):
             key = args[2] if len(args) > 2 else ""
             if "Docs_File_XSE" in key:
                 return "C:/Docs/Fallout4/F4SE/f4se.log"
-            elif "XSE_Acronym" in key:
-                return 123  # Invalid type
             elif "Main_Root_Name" in key:
-                return "Fallout 4"
+                return 123  # Invalid type for game_name
             return "F4SE"
 
         mock_yaml_async.side_effect = yaml_side_effect

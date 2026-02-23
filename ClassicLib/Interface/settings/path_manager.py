@@ -117,7 +117,6 @@ class PathManager:
 
         """
         from ClassicLib.core.logger import logger
-        from ClassicLib.core.registry import GlobalRegistry
 
         try:
             # Clear the INI Folder Path setting in CLASSIC Settings.yaml
@@ -125,9 +124,7 @@ class PathManager:
             logger.info("Cleared INI Folder Path setting for autodetection")
 
             # Clear the Root_Folder_Docs in Game_Local YAML to trigger fresh detection
-            vr_suffix = GlobalRegistry.get_vr()
-            root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
-            yaml_settings(str, YAML.Game_Local, root_docs_key, "")
+            yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs", "")
             logger.info("Cleared Root_Folder_Docs for fresh autodetection")
 
             # Run the autodetection
@@ -154,7 +151,6 @@ class PathManager:
 
         """
         from ClassicLib.core.logger import logger
-        from ClassicLib.core.registry import GlobalRegistry
         from ClassicLib.support.docs_path import docs_path_find
 
         if not self.ini_folder_input:
@@ -166,9 +162,7 @@ class PathManager:
             logger.info("Ran INI folder autodetection")
 
             # Retrieve the newly detected path from Game_Local YAML
-            vr_suffix = GlobalRegistry.get_vr()
-            root_docs_key = f"Game{vr_suffix}_Info.Root_Folder_Docs"
-            detected_path = yaml_settings(str, YAML.Game_Local, root_docs_key)
+            detected_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
 
             # Update the UI with the detected path
             if detected_path:

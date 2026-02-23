@@ -69,7 +69,7 @@ class TestYamlDataIntegration:
         # Crashgen configuration
         assert hasattr(yamldata, "crashgen_name")
         assert hasattr(yamldata, "crashgen_latest_og")
-        assert hasattr(yamldata, "crashgen_latest_vr")
+        assert hasattr(yamldata, "crashgen_registry")
 
         # XSE configuration
         assert hasattr(yamldata, "xse_acronym")
@@ -92,7 +92,9 @@ class TestYamlDataIntegration:
         # Game versions
         assert hasattr(yamldata, "game_version")
         assert hasattr(yamldata, "game_version_new")
-        assert hasattr(yamldata, "game_version_vr")
+
+        # Game root name
+        assert hasattr(yamldata, "game_root_name")
 
     def test_yamldata_field_types(self, rust_yaml_files):
         """Test fields have correct Python types."""
@@ -164,10 +166,13 @@ class TestYamlDataIntegration:
         # Load with VR mode
         yamldata_vr = YamlData(yaml_dirs, "Fallout4", True)
 
-        # Verify VR-specific fields
-        assert yamldata_vr.game_version_vr != "", "Should load VR version"
-        # crashgen_latest_vr should be populated
-        assert yamldata_vr.crashgen_latest_vr != "", "Should have VR crash gen version"
+        # Verify VR mode loads successfully (VR-specific fields like
+        # crashgen_latest_vr and game_version_vr were removed in favor
+        # of the crashgen_registry and version registry patterns)
+        assert yamldata_vr is not None
+        assert isinstance(yamldata_vr, YamlData)
+        # crashgen_latest_og should still be present
+        assert hasattr(yamldata_vr, "crashgen_latest_og")
 
     @pytest.mark.performance
     def test_yamldata_performance(self, rust_yaml_files):

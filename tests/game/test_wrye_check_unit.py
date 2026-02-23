@@ -25,8 +25,7 @@ class TestScanWryecheck:
 
     @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
-    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
-    def test_returns_string(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_returns_string(self, mock_get_game: MagicMock, mock_yaml: MagicMock) -> None:
         """scan_wryecheck should return a string."""
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
@@ -44,8 +43,7 @@ class TestScanWryecheck:
 
     @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
-    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
-    def test_returns_warning_when_report_missing(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_returns_warning_when_report_missing(self, mock_get_game: MagicMock, mock_yaml: MagicMock) -> None:
         """scan_wryecheck should return warning when report file is missing."""
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
@@ -77,10 +75,8 @@ class TestScanWryecheck:
     @patch("ClassicLib.scanning.game.wrye_check._read_file")
     @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
-    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
     def test_delegates_to_rust_parser_when_report_found(
         self,
-        mock_get_vr: MagicMock,
         mock_get_game: MagicMock,
         mock_yaml: MagicMock,
         mock_read_file: MagicMock,
@@ -122,10 +118,8 @@ class TestScanWryecheck:
     @patch("ClassicLib.scanning.game.wrye_check._read_file")
     @patch("ClassicLib.scanning.game.wrye_check.yaml_settings")
     @patch("ClassicLib.scanning.game.wrye_check.get_game", return_value="Fallout4")
-    @patch("ClassicLib.scanning.game.wrye_check.get_vr", return_value="")
     def test_includes_resource_links(
         self,
-        mock_get_vr: MagicMock,
         mock_get_game: MagicMock,
         mock_yaml: MagicMock,
         mock_read_file: MagicMock,

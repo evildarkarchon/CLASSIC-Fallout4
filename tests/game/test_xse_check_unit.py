@@ -53,12 +53,24 @@ class TestTokens:
 class TestLoadXseConfig:
     """Tests for the _load_xse_config function."""
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.support.xse.yaml_settings")
-    def test_load_xse_config_returns_dict_with_expected_keys(self, mock_yaml_settings: MagicMock) -> None:
+    @patch("ClassicLib.support.xse.GlobalRegistry")
+    def test_load_xse_config_returns_dict_with_expected_keys(
+        self, mock_registry_cls: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock
+    ) -> None:
         """_load_xse_config should return a dict with all expected keys."""
+        mock_registry_cls.is_vr_version.return_value = False
         mock_yaml_settings.return_value = "test_value"
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
+        mock_version_info.xse.full_name = "Fallout 4 Script Extender"
+        mock_version_info.xse.compatible_version = "0.6.23"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
-        result = _load_xse_config("")
+        result = _load_xse_config()
 
         assert isinstance(result, dict)
         assert "acronym" in result
@@ -67,24 +79,43 @@ class TestLoadXseConfig:
         assert "log_file" in result
         assert "adlib_file" in result
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.support.xse.yaml_settings")
-    def test_load_xse_config_uses_game_vr_in_key_paths(self, mock_yaml_settings: MagicMock) -> None:
-        """_load_xse_config should use game_vr suffix in YAML key paths."""
+    @patch("ClassicLib.support.xse.GlobalRegistry")
+    def test_load_xse_config_uses_version_registry_for_vr(
+        self, mock_registry_cls: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock
+    ) -> None:
+        """_load_xse_config should use Version Registry for XSE metadata, not GameVR_Info YAML paths."""
+        mock_registry_cls.is_vr_version.return_value = True
         mock_yaml_settings.return_value = None
-        game_vr = "VR"
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SEVR"
+        mock_version_info.xse.full_name = "Fallout 4 VR Script Extender"
+        mock_version_info.xse.compatible_version = "0.1.2"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
-        _load_xse_config(game_vr)
+        _load_xse_config()
 
-        # Verify the YAML settings were called with VR suffix
-        calls = mock_yaml_settings.call_args_list
-        key_paths = [call[0][2] for call in calls]
+        # Verify the VR version was requested from the registry
+        mock_registry.get_by_id.assert_called_once_with("FO4_VR")
 
-        assert any("GameVR_Info.XSE_Acronym" in key for key in key_paths)
-        assert any("GameVR_Info.XSE_FullName" in key for key in key_paths)
-
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.support.xse.yaml_settings")
-    def test_load_xse_config_converts_adlib_file_to_path(self, mock_yaml_settings: MagicMock) -> None:
+    @patch("ClassicLib.support.xse.GlobalRegistry")
+    def test_load_xse_config_converts_adlib_file_to_path(
+        self, mock_registry_cls: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock
+    ) -> None:
         """_load_xse_config should convert adlib_file string to Path."""
+        mock_registry_cls.is_vr_version.return_value = False
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
+        mock_version_info.xse.full_name = "Fallout 4 Script Extender"
+        mock_version_info.xse.compatible_version = "0.6.23"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         def yaml_side_effect(_type, _store, key_path, *args):
             if "Game_File_AddressLib" in key_path:
@@ -93,17 +124,30 @@ class TestLoadXseConfig:
 
         mock_yaml_settings.side_effect = yaml_side_effect
 
-        result = _load_xse_config("")
+        result = _load_xse_config()
 
         assert isinstance(result["adlib_file"], Path)
         assert result["adlib_file"] == Path(r"C:\Game\Data\AddressLib.bin")
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.support.xse.yaml_settings")
-    def test_load_xse_config_returns_none_adlib_when_not_configured(self, mock_yaml_settings: MagicMock) -> None:
+    @patch("ClassicLib.support.xse.GlobalRegistry")
+    def test_load_xse_config_returns_none_adlib_when_not_configured(
+        self, mock_registry_cls: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock
+    ) -> None:
         """_load_xse_config should return None for adlib_file when not configured."""
+        mock_registry_cls.is_vr_version.return_value = False
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
+        mock_version_info.xse.full_name = "Fallout 4 Script Extender"
+        mock_version_info.xse.compatible_version = "0.6.23"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
         mock_yaml_settings.return_value = None
 
-        result = _load_xse_config("")
+        result = _load_xse_config()
 
         assert result["adlib_file"] is None
 
@@ -313,7 +357,6 @@ class TestCheckXseInstallation:
 class TestXseCheckIntegrity:
     """Tests for the xse_check_integrity function."""
 
-    @patch("ClassicLib.support.xse.get_vr")
     @patch("ClassicLib.support.xse.get_game")
     @patch("ClassicLib.support.xse.yaml_settings")
     @patch("ClassicLib.support.xse._load_xse_config")
@@ -326,10 +369,8 @@ class TestXseCheckIntegrity:
         mock_load_config: MagicMock,
         mock_yaml: MagicMock,
         mock_get_game: MagicMock,
-        mock_get_vr: MagicMock,
     ) -> None:
         """xse_check_integrity should return a string result."""
-        mock_get_vr.return_value = ""
         mock_get_game.return_value = "Fallout4"
         mock_yaml.return_value = ["error", "warning"]
         mock_load_config.return_value = {
@@ -344,17 +385,14 @@ class TestXseCheckIntegrity:
 
         assert isinstance(result, str)
 
-    @patch("ClassicLib.support.xse.get_vr")
     @patch("ClassicLib.support.xse.get_game")
     @patch("ClassicLib.support.xse.yaml_settings")
     def test_xse_check_integrity_raises_type_error_when_patterns_not_list(
         self,
         mock_yaml: MagicMock,
         mock_get_game: MagicMock,
-        mock_get_vr: MagicMock,
     ) -> None:
         """xse_check_integrity should raise TypeError when error patterns is not a list."""
-        mock_get_vr.return_value = ""
         mock_get_game.return_value = "Fallout4"
         mock_yaml.return_value = "not a list"  # Invalid type
 
@@ -439,30 +477,24 @@ class TestGetExpectedScriptHashes:
 class TestGetScriptsFolderPath:
     """Tests for the _get_scripts_folder_path function."""
 
-    @patch("ClassicLib.support.xse.get_vr")
     @patch("ClassicLib.support.xse.yaml_settings")
     def test_get_scripts_folder_path_returns_string(
         self,
         mock_yaml: MagicMock,
-        mock_get_vr: MagicMock,
     ) -> None:
         """_get_scripts_folder_path should return a string path."""
-        mock_get_vr.return_value = ""
         mock_yaml.return_value = r"C:\Game\Data\Scripts"
 
         result = _get_scripts_folder_path()
 
         assert result == r"C:\Game\Data\Scripts"
 
-    @patch("ClassicLib.support.xse.get_vr")
     @patch("ClassicLib.support.xse.yaml_settings")
     def test_get_scripts_folder_path_raises_value_error_when_none(
         self,
         mock_yaml: MagicMock,
-        mock_get_vr: MagicMock,
     ) -> None:
         """_get_scripts_folder_path should raise ValueError when path is None."""
-        mock_get_vr.return_value = ""
         mock_yaml.return_value = None
 
         with pytest.raises(ValueError, match="cannot be None"):

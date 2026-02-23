@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 
 from ClassicLib.core.constants import NULL_VERSION, YAML, Version
-from ClassicLib.core.registry import get_vr
 from ClassicLib.io.yaml import classic_settings, yaml_settings
 from ClassicLib.support.versions import VersionInfo, get_version_registry
 from ClassicLib.Utils.version_utils import read_game_exe_version
@@ -161,9 +160,9 @@ def check_xse_plugins() -> str:
     from classic_scangame import GameVersion as RustGameVersion
     from classic_scangame import XseChecker
 
-    plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Plugins")
+    plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Game_Folder_Plugins")
 
-    game_exe_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{get_vr()}_Info.Game_File_EXE")
+    game_exe_path_str: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_EXE")
     if not game_exe_path_str:
         # Rust XseChecker handles VersionNotDetected, but we need plugins_path for it.
         # Fall back to Rust with Null version if we have plugins_path.

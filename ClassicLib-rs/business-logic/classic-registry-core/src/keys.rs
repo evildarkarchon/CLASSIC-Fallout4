@@ -62,18 +62,8 @@ impl Keys {
     ///
     /// Stores the VR variant of the game (e.g., "SkyrimVR", "Fallout4VR").
     ///
-    /// # Deprecation Notice
-    ///
-    /// This key is deprecated. Use [`Keys::GAME_VERSION`] instead, which stores
-    /// a `Fallout4Version` enum that includes VR as a version variant rather
-    /// than a separate mode toggle.
-    ///
-    /// The `get_vr()` function will continue to work during the transition period
-    /// by mapping the new version system to the legacy VR suffix format.
-    #[deprecated(
-        since = "8.0.0",
-        note = "Use GAME_VERSION instead; VR is now a version variant"
-    )]
+    /// Used by `get_vr()` to check legacy VR mode. Callers that need to
+    /// distinguish game versions should prefer [`Keys::GAME_VERSION`].
     pub const VR: &'static str = "gamevars_vr";
 
     /// Current game identifier.
@@ -152,9 +142,7 @@ mod tests {
     use super::*;
 
     #[test]
-    #[allow(deprecated)]
     fn test_keys_are_unique() {
-        // Ensure all keys are distinct (including deprecated ones during transition)
         let keys = vec![
             Keys::YAML_CACHE,
             Keys::MANUAL_DOCS_GUI,
@@ -163,7 +151,7 @@ mod tests {
             Keys::DOCS_PATH,
             Keys::IS_GUI_MODE,
             Keys::OPEN_FILE_FUNC,
-            Keys::VR, // Deprecated but still included for backward compatibility
+            Keys::VR,
             Keys::GAME,
             Keys::GAME_VERSION,
             Keys::VERSION_AUTO_DETECTED,
@@ -193,9 +181,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(deprecated)]
-    fn test_deprecated_vr_key_still_accessible() {
-        // During migration period, the VR key should still be usable
+    fn test_vr_key_accessible() {
         assert_eq!(Keys::VR, "gamevars_vr");
     }
 }

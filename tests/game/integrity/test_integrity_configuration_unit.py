@@ -53,7 +53,7 @@ class TestConfigurationLoading:
     def test_load_configuration_vr_mode(
         self, mock_get_vr: MagicMock, mock_yaml_settings: MagicMock, mock_get_registry: MagicMock, checker: GameIntegrityChecker
     ) -> None:
-        """Test loading configuration in VR mode."""
+        """Test loading configuration in VR mode uses Game_Info (not GameVR_Info)."""
         # Setup mock returns
         mock_registry = MagicMock()
         mock_registry.get_all_exe_hashes.return_value = {"hash_vr"}
@@ -69,11 +69,11 @@ class TestConfigurationLoading:
         # Load configuration
         checker.load_configuration()
 
-        # Verify VR suffix was used in calls
+        # Verify Game_Info prefix is always used (GameVR_Info was removed)
         calls = mock_yaml_settings.call_args_list
-        assert calls[0][0] == (str, YAML.Game_Local, "GameVR_Info.Game_File_SteamINI")
-        assert calls[1][0] == (str, YAML.Game_Local, "GameVR_Info.Game_File_EXE")
-        assert calls[2][0] == (str, YAML.Game, "GameVR_Info.Main_Root_Name")
+        assert calls[0][0] == (str, YAML.Game_Local, "Game_Info.Game_File_SteamINI")
+        assert calls[1][0] == (str, YAML.Game_Local, "Game_Info.Game_File_EXE")
+        assert calls[2][0] == (str, YAML.Game, "Game_Info.Main_Root_Name")
 
     @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.io.yaml.yaml_settings")

@@ -7,7 +7,7 @@ It verifies path validation, YAML settings updates, and signal emissions.
 
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -61,44 +61,37 @@ class TestManualDocsPath:
 
         # Mock yaml_settings to capture the call
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            # Mock GlobalRegistry.get_vr() to return empty string (non-VR)
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = ""
+            manual_docs_path.get_manual_docs_path_gui(str(valid_dir))
 
-                manual_docs_path.get_manual_docs_path_gui(str(valid_dir))
+            # Verify yaml_settings was called with correct parameters
+            mock_yaml_settings.assert_called_once()
+            call_args = mock_yaml_settings.call_args[0]
 
-                # Verify yaml_settings was called with correct parameters
-                mock_yaml_settings.assert_called_once()
-                call_args = mock_yaml_settings.call_args[0]
+            # First arg is type (str)
+            assert call_args[0] is str
 
-                # First arg is type (str)
-                assert call_args[0] is str
+            # Second arg is YAML store (Game_Local)
+            from ClassicLib.core.constants import YAML
 
-                # Second arg is YAML store (Game_Local)
-                from ClassicLib.core.constants import YAML
+            assert call_args[1] == YAML.Game_Local
 
-                assert call_args[1] == YAML.Game_Local
+            # Third arg is key path
+            assert call_args[2] == "Game_Info.Root_Folder_Docs"
 
-                # Third arg is key path
-                assert call_args[2] == "Game_Info.Root_Folder_Docs"
+            # Fourth arg is the path value
+            assert call_args[3] == str(valid_dir)
 
-                # Fourth arg is the path value
-                assert call_args[3] == str(valid_dir)
-
-    def test_get_manual_docs_path_gui_valid_directory_vr_mode(self, manual_docs_path, tmp_path):
-        """Test get_manual_docs_path_gui with VR mode enabled."""
+    def test_get_manual_docs_path_gui_valid_directory_always_uses_game_info(self, manual_docs_path, tmp_path):
+        """Test get_manual_docs_path_gui always uses Game_Info prefix (GameVR_Info was removed)."""
         valid_dir = tmp_path / "valid_docs_vr"
         valid_dir.mkdir()
 
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = "VR"
+            manual_docs_path.get_manual_docs_path_gui(str(valid_dir))
 
-                manual_docs_path.get_manual_docs_path_gui(str(valid_dir))
-
-                # Verify key path includes VR suffix
-                call_args = mock_yaml_settings.call_args[0]
-                assert call_args[2] == "GameVR_Info.Root_Folder_Docs"
+            # Verify Game_Info prefix is always used (GameVR_Info was removed)
+            call_args = mock_yaml_settings.call_args[0]
+            assert call_args[2] == "Game_Info.Root_Folder_Docs"
 
     def test_get_manual_docs_path_gui_invalid_directory(self, manual_docs_path):
         """Test get_manual_docs_path_gui with an invalid/nonexistent path."""
@@ -129,17 +122,14 @@ class TestManualDocsPath:
         This test verifies that behavior matches the implementation.
         """
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = ""
+            manual_docs_path.get_manual_docs_path_gui("")
 
-                manual_docs_path.get_manual_docs_path_gui("")
-
-                # Empty string resolves to "." (current dir) which is valid
-                # So yaml_settings IS called with "." as the path
-                if mock_yaml_settings.called:
-                    call_args = mock_yaml_settings.call_args[0]
-                    # The path should be "." (empty string stripped is empty, Path("") is ".")
-                    assert call_args[3] == "."
+            # Empty string resolves to "." (current dir) which is valid
+            # So yaml_settings IS called with "." as the path
+            if mock_yaml_settings.called:
+                call_args = mock_yaml_settings.call_args[0]
+                # The path should be "." (empty string stripped is empty, Path("") is ".")
+                assert call_args[3] == "."
 
     def test_get_manual_docs_path_gui_file_instead_of_directory(self, manual_docs_path, tmp_path):
         """Test get_manual_docs_path_gui with a file path instead of directory."""
@@ -199,37 +189,31 @@ class TestManualDocsPath:
         valid_dir.mkdir()
 
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = ""
+            manual_docs_path.get_game_path_gui(str(valid_dir))
 
-                manual_docs_path.get_game_path_gui(str(valid_dir))
+            # Verify yaml_settings was called with correct parameters
+            mock_yaml_settings.assert_called_once()
+            call_args = mock_yaml_settings.call_args[0]
 
-                # Verify yaml_settings was called with correct parameters
-                mock_yaml_settings.assert_called_once()
-                call_args = mock_yaml_settings.call_args[0]
+            assert call_args[0] is str
 
-                assert call_args[0] is str
+            from ClassicLib.core.constants import YAML
 
-                from ClassicLib.core.constants import YAML
+            assert call_args[1] == YAML.Game_Local
+            assert call_args[2] == "Game_Info.Root_Folder_Game"
+            assert call_args[3] == str(valid_dir)
 
-                assert call_args[1] == YAML.Game_Local
-                assert call_args[2] == "Game_Info.Root_Folder_Game"
-                assert call_args[3] == str(valid_dir)
-
-    def test_get_game_path_gui_valid_directory_vr_mode(self, manual_docs_path, tmp_path):
-        """Test get_game_path_gui with VR mode enabled."""
+    def test_get_game_path_gui_valid_directory_always_uses_game_info(self, manual_docs_path, tmp_path):
+        """Test get_game_path_gui always uses Game_Info prefix (GameVR_Info was removed)."""
         valid_dir = tmp_path / "game_folder_vr"
         valid_dir.mkdir()
 
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = "VR"
+            manual_docs_path.get_game_path_gui(str(valid_dir))
 
-                manual_docs_path.get_game_path_gui(str(valid_dir))
-
-                # Verify key path includes VR suffix
-                call_args = mock_yaml_settings.call_args[0]
-                assert call_args[2] == "GameVR_Info.Root_Folder_Game"
+            # Verify Game_Info prefix is always used (GameVR_Info was removed)
+            call_args = mock_yaml_settings.call_args[0]
+            assert call_args[2] == "Game_Info.Root_Folder_Game"
 
     def test_get_game_path_gui_invalid_directory(self, manual_docs_path):
         """Test get_game_path_gui with an invalid/nonexistent path."""
@@ -258,15 +242,12 @@ class TestManualDocsPath:
         resolves to current directory (.), so the implementation treats "" as valid.
         """
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = ""
+            manual_docs_path.get_game_path_gui("")
 
-                manual_docs_path.get_game_path_gui("")
-
-                # Empty string resolves to "." (current dir) which is valid
-                if mock_yaml_settings.called:
-                    call_args = mock_yaml_settings.call_args[0]
-                    assert call_args[3] == "."
+            # Empty string resolves to "." (current dir) which is valid
+            if mock_yaml_settings.called:
+                call_args = mock_yaml_settings.call_args[0]
+                assert call_args[3] == "."
 
     def test_get_game_path_gui_file_instead_of_directory(self, manual_docs_path, tmp_path):
         """Test get_game_path_gui with a file path instead of directory."""
@@ -355,19 +336,16 @@ class TestManualDocsPath:
         dir2.mkdir()
 
         with patch("ClassicLib.support.gui_components.yaml_settings") as mock_yaml_settings:
-            with patch("ClassicLib.support.gui_components.GlobalRegistry") as mock_registry:
-                mock_registry.get_vr.return_value = ""
+            manual_docs_path.get_manual_docs_path_gui(str(dir1))
+            manual_docs_path.get_game_path_gui(str(dir2))
 
-                manual_docs_path.get_manual_docs_path_gui(str(dir1))
-                manual_docs_path.get_game_path_gui(str(dir2))
+            # Both calls should have been made
+            assert mock_yaml_settings.call_count == 2
 
-                # Both calls should have been made
-                assert mock_yaml_settings.call_count == 2
-
-                # Verify the correct paths were saved
-                calls = mock_yaml_settings.call_args_list
-                assert calls[0][0][3] == str(dir1)
-                assert calls[1][0][3] == str(dir2)
+            # Verify the correct paths were saved
+            calls = mock_yaml_settings.call_args_list
+            assert calls[0][0][3] == str(dir1)
+            assert calls[1][0][3] == str(dir2)
 
 
 @pytest.mark.unit

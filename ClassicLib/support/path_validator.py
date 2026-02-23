@@ -18,7 +18,7 @@ from pathlib import Path
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import get_game, get_vr
+from ClassicLib.core.registry import get_game
 
 # Import factory for Rust acceleration
 from ClassicLib.integration.factory import get_path_operations
@@ -246,11 +246,10 @@ class PathValidator:
         """
         from ClassicLib.io.yaml import yaml_settings
 
-        vr_suffix = get_vr()
         game_name = get_game()
 
         # Get the game root path from settings
-        game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
+        game_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Game")
 
         if game_path:
             # Determine expected executable based on game
@@ -260,7 +259,7 @@ class PathValidator:
                 path=game_path,
                 setting_name="game root folder",
                 yaml_type=YAML.Game_Local,
-                setting_key=f"Game{vr_suffix}_Info.Root_Folder_Game",
+                setting_key="Game_Info.Root_Folder_Game",
                 required_files=[game_exe],
                 path_description="game root folder",
             )
@@ -276,10 +275,8 @@ class PathValidator:
         """
         from ClassicLib.io.yaml import yaml_settings
 
-        vr_suffix = get_vr()
-
         # Get the documents path from settings
-        docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs")
+        docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
 
         if docs_path:
             # Documents folder just needs to exist and be a directory
@@ -288,7 +285,7 @@ class PathValidator:
                 path=docs_path,
                 setting_name="documents folder",
                 yaml_type=YAML.Game_Local,
-                setting_key=f"Game{vr_suffix}_Info.Root_Folder_Docs",
+                setting_key="Game_Info.Root_Folder_Docs",
                 required_files=None,  # Don't require specific files
                 path_description="documents folder",
             )

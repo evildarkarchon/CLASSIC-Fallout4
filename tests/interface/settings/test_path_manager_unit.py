@@ -296,18 +296,14 @@ class TestPathManagerAutodetect:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.settings.path_manager.msg_error")
-    @patch("ClassicLib.support.docs_path.docs_path_find")
-    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find", side_effect=TypeError("Invalid type"))
     def test_autodetect_handles_type_error(
         self,
-        mock_get_vr,
         mock_docs_find,
         mock_msg_error,
         manager_with_mock_input,
     ):
         """Test autodetect_ini_folder handles TypeError gracefully."""
-        mock_get_vr.side_effect = TypeError("Invalid type")
-
         manager_with_mock_input.autodetect_ini_folder()
 
         mock_msg_error.assert_called_once()
@@ -315,18 +311,14 @@ class TestPathManagerAutodetect:
 
     @pytest.mark.unit
     @patch("ClassicLib.Interface.settings.path_manager.msg_error")
-    @patch("ClassicLib.support.docs_path.docs_path_find")
-    @patch("ClassicLib.core.registry.GlobalRegistry.get_vr")
+    @patch("ClassicLib.support.docs_path.docs_path_find", side_effect=ValueError("Invalid value"))
     def test_autodetect_handles_value_error(
         self,
-        mock_get_vr,
         mock_docs_find,
         mock_msg_error,
         manager_with_mock_input,
     ):
         """Test autodetect_ini_folder handles ValueError gracefully."""
-        mock_get_vr.side_effect = ValueError("Invalid value")
-
         manager_with_mock_input.autodetect_ini_folder()
 
         mock_msg_error.assert_called_once()
@@ -344,12 +336,12 @@ class TestPathManagerAutodetect:
         mock_msg_success,
         manager_with_mock_input,
     ):
-        """Test autodetect_ini_folder handles VR suffix correctly."""
+        """Test autodetect_ini_folder uses Game_Info even in VR mode (GameVR_Info was removed)."""
         mock_get_vr.return_value = "VR"
         mock_yaml.return_value = "/detected/vr/folder"
 
         manager_with_mock_input.autodetect_ini_folder()
 
-        # Verify the yaml_settings call uses correct VR key
+        # Verify the yaml_settings call uses Game_Info (not GameVR_Info)
         yaml_call_args = mock_yaml.call_args[0]
-        assert "GameVR_Info.Root_Folder_Docs" == yaml_call_args[2]
+        assert "Game_Info.Root_Folder_Docs" == yaml_call_args[2]

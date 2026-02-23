@@ -481,12 +481,12 @@ class ResourceLoader:
         return None
 
     @staticmethod
-    def _local_yaml_key(path_type: str, vr_suffix: str) -> str | None:
+    def _local_yaml_key(path_type: str) -> str | None:
         """Return Local.yaml key for a cached path type."""
         if path_type == "GamePath":
-            return f"Game{vr_suffix}_Info.Root_Folder_Game"
+            return "Game_Info.Root_Folder_Game"
         if path_type == "DocsPath":
-            return f"Game{vr_suffix}_Info.Root_Folder_Docs"
+            return "Game_Info.Root_Folder_Docs"
         return None
 
     @staticmethod
@@ -552,7 +552,7 @@ class ResourceLoader:
         except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Could not save to cache.yaml: {e}")
 
-        local_key = ResourceLoader._local_yaml_key(path_type, vr_suffix)
+        local_key = ResourceLoader._local_yaml_key(path_type)
         if local_key is None:
             return
 
@@ -574,7 +574,7 @@ class ResourceLoader:
         except (ImportError, KeyError, AttributeError, TypeError, ValueError, OSError) as e:
             logger.warning(f"Could not save to cache.yaml: {e}")
 
-        local_key = ResourceLoader._local_yaml_key(path_type, vr_suffix)
+        local_key = ResourceLoader._local_yaml_key(path_type)
         if local_key is None:
             return
 
@@ -625,7 +625,7 @@ class ResourceLoader:
             return cache_path
 
         # Strategy 3: Check traditional Local.yaml
-        local_key = ResourceLoader._local_yaml_key("GamePath", vr_suffix)
+        local_key = ResourceLoader._local_yaml_key("GamePath")
         if local_key is not None:
             local_path = ResourceLoader._read_local_yaml_sync(local_key)
             if local_path is not None:
@@ -659,7 +659,7 @@ class ResourceLoader:
             logger.debug(f"Found game path from environment variable {env_var}: {env_path}")
             return env_path
 
-        local_key = ResourceLoader._local_yaml_key("GamePath", vr_suffix)
+        local_key = ResourceLoader._local_yaml_key("GamePath")
         if local_key is None:
             return None
 
@@ -711,7 +711,7 @@ class ResourceLoader:
             logger.debug(f"Found docs path in cache.yaml: {cache_path}")
             return cache_path
 
-        local_key = ResourceLoader._local_yaml_key("DocsPath", vr_suffix)
+        local_key = ResourceLoader._local_yaml_key("DocsPath")
         if local_key is not None:
             local_path = ResourceLoader._read_local_yaml_sync(local_key)
             if local_path is not None:

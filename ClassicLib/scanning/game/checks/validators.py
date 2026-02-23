@@ -8,9 +8,8 @@ and stability during usage.
 
 from pathlib import Path
 
-from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_vr
-from ClassicLib.io.yaml import classic_settings_async, yaml_settings_async
+from ClassicLib.io.yaml import classic_settings_async
 
 
 class ScanValidators:
@@ -46,15 +45,15 @@ class ScanValidators:
         if self._scan_settings_cache is not None:
             return self._scan_settings_cache
 
-        # Get XSE acronym from YAML (still needed for display purposes)
-        xse_acronym_setting: str | None = await yaml_settings_async(str, YAML.Game, f"Game{get_vr()}_Info.XSE_Acronym")
-        xse_acronym: str = xse_acronym_setting if isinstance(xse_acronym_setting, str) else "XSE"
-
-        # Get script hashes from VersionRegistry
+        # Get XSE acronym from Version Registry (static metadata)
         from ClassicLib.support.versions import get_version_registry
 
         registry = get_version_registry()
         is_vr = get_vr() == "VR"
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        xse_acronym: str = version_info.xse.acronym if version_info and version_info.xse else "XSE"
+
+        # Get script hashes from VersionRegistry
         xse_scriptfiles: dict[str, set[str]] = registry.get_all_script_hashes("Fallout4", is_vr)
 
         # Get mods path

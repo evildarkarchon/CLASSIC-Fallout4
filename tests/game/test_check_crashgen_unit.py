@@ -26,11 +26,17 @@ pytestmark = pytest.mark.unit
 class TestCheckCrashgenSettingsNoPlugins:
     """Tests for check_crashgen_settings when plugins path is unavailable."""
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_returns_notice_when_no_plugins_path(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_returns_notice_when_no_plugins_path(self, mock_get_vr: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock) -> None:
         """check_crashgen_settings should return notice when plugins path is None."""
         mock_yaml.return_value = None
+        mock_version_info = MagicMock()
+        mock_version_info.crashgen_versions = []
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         message, issues = check_crashgen_settings()
 
@@ -38,11 +44,17 @@ class TestCheckCrashgenSettingsNoPlugins:
         assert "settings check will be skipped" in message
         assert issues == []
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_returns_tuple(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_returns_tuple(self, mock_get_vr: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock) -> None:
         """check_crashgen_settings should return a (str, list) tuple."""
         mock_yaml.return_value = None
+        mock_version_info = MagicMock()
+        mock_version_info.crashgen_versions = []
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         result = check_crashgen_settings()
 
@@ -51,35 +63,53 @@ class TestCheckCrashgenSettingsNoPlugins:
         assert isinstance(result[0], str)
         assert isinstance(result[1], list)
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_non_buffout_crashgen_proceeds_with_registry_routing(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_non_buffout_crashgen_proceeds_with_registry_routing(
+        self, mock_get_vr: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock
+    ) -> None:
         """check_crashgen_settings no longer gates on Buffout name.
 
         With registry-aware routing, all crashgen names proceed to the Rust
         CrashgenCheckOrchestrator. When plugins_path is None the function
         returns the "config not found" notice (not an empty string).
         """
+        # Mock the version registry to return a custom crashgen name.
+        # get_detected_version_info() returns None here (yaml_settings returns None →
+        # Game_File_EXE path missing → early return), so the fallback registry.get_by_id()
+        # path is taken, which returns mock_version_info with our custom crashgen name.
+        mock_crashgen_version = MagicMock()
+        mock_crashgen_version.name = "Custom Crashgen"
+        mock_version_info = MagicMock()
+        mock_version_info.crashgen_versions = [mock_crashgen_version]
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
-        def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
-            if "CRASHGEN_LogName" in key_path:
-                return "Custom Crashgen"
-            return None
-
-        mock_yaml.side_effect = yaml_side_effect
+        # plugins_path resolves to None (yaml_settings returns None) →
+        # early-return notice branch, which embeds crashgen_name in the message.
+        mock_yaml.return_value = None
 
         message, issues = check_crashgen_settings()
 
         # No longer returns "" for non-Buffout names; instead falls through to
-        # plugins_path check (which is None here → returns the notice message).
-        assert "Custom Crashgen" in message or message == ""
+        # plugins_path check (which is None here -> returns the notice message).
+        assert "Custom Crashgen" in message
         assert issues == []
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_defaults_crashgen_name_to_buffout4(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
+    def test_defaults_crashgen_name_to_buffout4(self, mock_get_vr: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock) -> None:
         """check_crashgen_settings should default name to Buffout4."""
         mock_yaml.return_value = None
+        # When no crashgen_versions, defaults to "Buffout4"
+        mock_version_info = MagicMock()
+        mock_version_info.crashgen_versions = []
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         message, _ = check_crashgen_settings()
 
@@ -94,6 +124,7 @@ class TestCheckCrashgenSettingsNoPlugins:
 class TestCheckCrashgenSettingsRustDelegation:
     """Tests for check_crashgen_settings when it delegates to Rust."""
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("classic_scangame.CrashgenCheckOrchestrator")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
@@ -102,11 +133,21 @@ class TestCheckCrashgenSettingsRustDelegation:
         mock_get_vr: MagicMock,
         mock_yaml: MagicMock,
         mock_orchestrator: MagicMock,
+        mock_get_registry: MagicMock,
         tmp_path: Path,
     ) -> None:
         """check_crashgen_settings should delegate to Rust CrashgenCheckOrchestrator."""
         plugins_path = tmp_path / "plugins"
         plugins_path.mkdir()
+
+        # Mock version registry to return Buffout4 as crashgen name
+        mock_crashgen_version = MagicMock()
+        mock_crashgen_version.name = "Buffout4"
+        mock_version_info = MagicMock()
+        mock_version_info.crashgen_versions = [mock_crashgen_version]
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
             if "Game_Folder_Plugins" in key_path:
@@ -126,6 +167,7 @@ class TestCheckCrashgenSettingsRustDelegation:
         assert message == "All settings OK"
         assert issues == []
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("classic_scangame.CrashgenCheckOrchestrator")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
@@ -134,11 +176,21 @@ class TestCheckCrashgenSettingsRustDelegation:
         mock_get_vr: MagicMock,
         mock_yaml: MagicMock,
         mock_orchestrator: MagicMock,
+        mock_get_registry: MagicMock,
         tmp_path: Path,
     ) -> None:
         """check_crashgen_settings should convert Rust issues to ConfigIssue."""
         plugins_path = tmp_path / "plugins"
         plugins_path.mkdir()
+
+        # Mock version registry
+        mock_crashgen_version = MagicMock()
+        mock_crashgen_version.name = "Buffout4"
+        mock_version_info_obj = MagicMock()
+        mock_version_info_obj.crashgen_versions = [mock_crashgen_version]
+        mock_registry_obj = MagicMock()
+        mock_registry_obj.get_by_id.return_value = mock_version_info_obj
+        mock_get_registry.return_value = mock_registry_obj
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
             if "Game_Folder_Plugins" in key_path:
@@ -170,6 +222,7 @@ class TestCheckCrashgenSettingsRustDelegation:
         assert issues[0].current_value == "true"
         assert issues[0].recommended_value == "false"
 
+    @patch("ClassicLib.support.versions.get_version_registry")
     @patch("classic_scangame.CrashgenCheckOrchestrator")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
@@ -178,6 +231,7 @@ class TestCheckCrashgenSettingsRustDelegation:
         mock_get_vr: MagicMock,
         mock_yaml: MagicMock,
         mock_orchestrator: MagicMock,
+        mock_get_registry: MagicMock,
         tmp_path: Path,
     ) -> None:
         """check_crashgen_settings now delegates for all crashgen names via registry routing.
@@ -187,6 +241,15 @@ class TestCheckCrashgenSettingsRustDelegation:
         """
         plugins_path = tmp_path / "plugins"
         plugins_path.mkdir()
+
+        # Mock version registry to return "Crash Logger" as crashgen name
+        mock_crashgen_version = MagicMock()
+        mock_crashgen_version.name = "Crash Logger"
+        mock_version_info = MagicMock()
+        mock_version_info.crashgen_versions = [mock_crashgen_version]
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
             if "Game_Folder_Plugins" in key_path:

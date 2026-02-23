@@ -32,17 +32,31 @@ class TestDocumentPathManager:
         assert manager.manual_docs_gui is None
         assert isinstance(manager.docs_name, str)
 
-    @patch("ClassicLib.io.yaml.yaml_settings")
-    def test_get_docs_name_from_settings(self, mock_yaml_settings: MagicMock) -> None:
-        """Test _get_docs_name retrieves from YAML settings."""
-        mock_yaml_settings.return_value = "Fallout4Custom"
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch.object(GlobalRegistry, "get_vr", return_value="")
+    def test_get_docs_name_from_version_registry(self, mock_get_vr: MagicMock, mock_get_registry: MagicMock) -> None:
+        """Test _get_docs_name retrieves from Version Registry."""
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = "Fallout4Custom"
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
         result = DocumentsPathManager._get_docs_name()
         assert result == "Fallout4Custom"
+        mock_registry.get_by_id.assert_called_once_with("FO4_OG")
 
-    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
+    @patch("ClassicLib.support.versions.get_version_registry")
+    @patch.object(GlobalRegistry, "get_vr", return_value="")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
-    def test_get_docs_name_fallback(self, mock_get_game: MagicMock, mock_yaml_settings: MagicMock) -> None:
-        """Test _get_docs_name falls back to GlobalRegistry game name."""
+    def test_get_docs_name_fallback(self, mock_get_game: MagicMock, mock_get_vr: MagicMock, mock_get_registry: MagicMock) -> None:
+        """Test _get_docs_name falls back to GlobalRegistry game name when version info has no docs_name."""
+        mock_version_info = MagicMock()
+        mock_version_info.docs_name = None
+        mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
+        mock_get_registry.return_value = mock_registry
+
         result = DocumentsPathManager._get_docs_name()
         assert result == "Fallout4"
 

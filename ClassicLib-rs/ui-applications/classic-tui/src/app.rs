@@ -1474,11 +1474,12 @@ fn xse_folder_from_local_yaml(vr_mode: bool) -> Option<PathBuf> {
     parse_xse_folder_from_local_yaml(&content, vr_mode)
 }
 
-fn parse_xse_folder_from_local_yaml(content: &str, vr_mode: bool) -> Option<PathBuf> {
+fn parse_xse_folder_from_local_yaml(content: &str, _vr_mode: bool) -> Option<PathBuf> {
     let docs = YamlLoader::load_from_str(content).ok()?;
     let doc = docs.first()?;
-    let section = if vr_mode { "GameVR_Info" } else { "Game_Info" };
-    let xse = doc[section]["Docs_Folder_XSE"].as_str()?;
+    // GameVR_Info has been deprecated; all config now uses Game_Info.
+    // VR-specific metadata is provided by the Version Registry.
+    let xse = doc["Game_Info"]["Docs_Folder_XSE"].as_str()?;
     if xse.trim().is_empty() {
         None
     } else {
@@ -1848,9 +1849,10 @@ Game_Info:
     }
 
     #[test]
-    fn parse_xse_folder_from_local_yaml_reads_game_vr_info() {
+    fn parse_xse_folder_from_local_yaml_vr_mode_uses_game_info() {
+        // Even in VR mode, we now read from Game_Info (GameVR_Info is deprecated)
         let yaml = r#"
-GameVR_Info:
+Game_Info:
   Docs_Folder_XSE: C:\Users\Test\Documents\My Games\Fallout4VR\F4SE
 "#;
         let parsed = super::parse_xse_folder_from_local_yaml(yaml, true);

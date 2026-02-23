@@ -112,12 +112,16 @@ class DocumentsPathManager:
             default game name is returned.
 
         """
-        from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.versions import get_version_registry
 
-        docs_name: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Docs_Name")
-        if not isinstance(docs_name, str):
-            docs_name = GlobalRegistry.get_game()
-        return docs_name
+        registry = get_version_registry()
+        is_vr = GlobalRegistry.get_vr() == "VR"
+        # docs_name is identical across FO4_OG / FO4_NG / FO4_AE ("Fallout4");
+        # FO4_OG is used as the canonical non-VR source for this static field.
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        if version_info and version_info.docs_name:
+            return version_info.docs_name
+        return GlobalRegistry.get_game()
 
     @staticmethod
     def _get_game_setting_path(setting_name: str) -> str:
@@ -135,7 +139,7 @@ class DocumentsPathManager:
         """
         from ClassicLib.io.yaml import yaml_settings
 
-        path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}")
+        path: str | None = yaml_settings(str, YAML.Game_Local, f"Game_Info.{setting_name}")
         if not isinstance(path, str):
             raise TypeError(f"Expected string value for {setting_name}")
         return path
@@ -151,7 +155,7 @@ class DocumentsPathManager:
         """
         from ClassicLib.io.yaml import yaml_settings
 
-        yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.{setting_name}", value)
+        yaml_settings(str, YAML.Game_Local, f"Game_Info.{setting_name}", value)
 
     def find_docs_path(self) -> None:
         """Validate and determines the path used for documentation files in the system,
@@ -197,7 +201,7 @@ class DocumentsPathManager:
             # Continue to auto-detection
 
         # Check if path already exists and is accessible
-        docs_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        docs_path: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
         if isinstance(docs_path, str) and docs_path.strip():
             is_valid, error_msg = validate_path(docs_path, check_write=True, check_read=True)
             if is_valid and Path(docs_path).is_dir():
@@ -212,7 +216,7 @@ class DocumentsPathManager:
             self._find_linux_docs_path()
 
         # Check if path was found successfully
-        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        docs_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
         if not isinstance(docs_path, str) or not Path(docs_path).is_dir():
             self._get_manual_docs_path()
 
@@ -261,21 +265,26 @@ class DocumentsPathManager:
     def _find_linux_docs_path(self) -> None:
         """Identify and sets the Linux file path to game-specific documents.
 
-        This method retrieves the Steam ID from the YAML settings and locates the corresponding directory
+        This method retrieves the Steam ID from the Version Registry and locates the corresponding directory
         within the Steam library in a Linux environment. If the Steam ID is invalid or the library configuration
         file is missing, the function either raises an error or exits gracefully. Upon successfully locating
         the path, it updates the game settings with the found directory path.
 
         Raises:
-            TypeError: If the Steam ID retrieved from the YAML settings is not an integer.
+            TypeError: If the Steam ID cannot be retrieved from the Version Registry.
 
         """
-        from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.versions import get_version_registry
 
-        # Retrieve the Steam ID from YAML settings
-        game_sid: int | None = yaml_settings(int, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_SteamID")
-        if not isinstance(game_sid, int):
+        # Retrieve the Steam ID from Version Registry.
+        # steam_id is identical across FO4_OG / FO4_NG / FO4_AE (377160);
+        # FO4_OG is used as the canonical non-VR source for this static field.
+        registry = get_version_registry()
+        is_vr = GlobalRegistry.get_vr() == "VR"
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        if not version_info or not version_info.steam_id:
             raise TypeError("Invalid Steam ID")
+        game_sid: int = version_info.steam_id
 
         # Path to the Steam library folders configuration file
         libraryfolders_path: Path = Path.home() / ".local/share/Steam/steamapps/common/libraryfolders.vdf"
@@ -326,11 +335,20 @@ class DocumentsPathManager:
         logger.debug("- - - INITIATED DOCS PATH GENERATION")
 
         from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.versions import get_version_registry
 
-        # Get required settings
-        xse_acronym: str | None = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
-        docs_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        # Get XSE acronyms from Version Registry.
+        # XSE acronym is identical for non-VR editions (always "F4SE");
+        # FO4_OG is used as the canonical non-VR source for this static field.
+        registry = get_version_registry()
+        is_vr = GlobalRegistry.get_vr() == "VR"
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        # Base acronym is always the non-VR XSE acronym (used for folder paths)
+        base_version_info = registry.get_by_id("FO4_OG")
+
+        xse_acronym: str | None = version_info.xse.acronym if version_info and version_info.xse else None
+        xse_acronym_base: str | None = base_version_info.xse.acronym if base_version_info and base_version_info.xse else None
+        docs_path_str: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
 
         if not (
             isinstance(xse_acronym, str) and isinstance(xse_acronym_base, str) and isinstance(docs_path_str, str) and docs_path_str.strip()
@@ -370,7 +388,7 @@ class DocumentsPathManager:
 
         from ClassicLib.io.yaml import yaml_settings
 
-        folder_docs: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Docs")
+        folder_docs: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
 
         if not self.docs_name:
             raise TypeError("Invalid docs_name")

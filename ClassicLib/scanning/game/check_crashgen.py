@@ -30,11 +30,22 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
 
     """
     from classic_scangame import CrashgenCheckOrchestrator  # pyright: ignore[reportAttributeAccessIssue]
+    from ClassicLib.support.versions import get_version_registry
+    from ClassicLib.support.versions.core import get_detected_version_info
 
-    # Resolve settings from YAML
-    plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Plugins")
-    crashgen_name_setting: str | None = yaml_settings(str, YAML.Game, f"Game{get_vr()}_Info.CRASHGEN_LogName")
-    crashgen_name: str = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
+    # Resolve runtime path from YAML cache
+    plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Game_Folder_Plugins")
+
+    # Get crashgen display name from Version Registry (static metadata).
+    # Use the detected version so NG/AE users get their edition's crashgen name
+    # (e.g. "Buffout 4 NG") rather than always falling back to OG's first entry.
+    # Fall back to FO4_OG if detection is unavailable (e.g. EXE not yet found).
+    registry = get_version_registry()
+    is_vr = get_vr() == "VR"
+    version_info = get_detected_version_info() or registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+    crashgen_name: str = "Buffout4"
+    if version_info and version_info.crashgen_versions:
+        crashgen_name = version_info.crashgen_versions[0].name
 
     if not plugins_path:
         msg = (

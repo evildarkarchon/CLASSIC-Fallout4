@@ -122,10 +122,19 @@ class GamePathFinder:
 
         """
         self.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
-        self.xse_file = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
-        self.xse_acronym = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        self.xse_acronym_base = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
-        self.game_name = yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Root_Name")
+        self.xse_file = yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
+
+        # Get XSE acronyms from Version Registry (static metadata).
+        # XSE acronym is identical across FO4_OG / FO4_NG / FO4_AE ("F4SE");
+        # FO4_OG is used as the canonical non-VR source for these static fields.
+        registry = get_version_registry()
+        is_vr = GlobalRegistry.get_vr() == "VR"
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        base_version_info = registry.get_by_id("FO4_OG")
+        self.xse_acronym = version_info.xse.acronym if version_info and version_info.xse else None
+        self.xse_acronym_base = base_version_info.xse.acronym if base_version_info and base_version_info.xse else None
+
+        self.game_name = yaml_settings(str, YAML.Game, "Game_Info.Main_Root_Name")
 
         if not all(isinstance(val, str) for val in [self.xse_acronym, self.xse_acronym_base, self.game_name]):
             raise TypeError("Required YAML settings are not strings")
@@ -159,10 +168,19 @@ class GamePathFinder:
 
         # Initialize attributes using async yaml operations
         instance.exe_name = f"{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe"
-        instance.xse_file = await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_XSE")
-        instance.xse_acronym = await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-        instance.xse_acronym_base = await yaml_settings_async(str, YAML.Game, "Game_Info.XSE_Acronym")
-        instance.game_name = await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.Main_Root_Name")
+        instance.xse_file = await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
+
+        # Get XSE acronyms from Version Registry (static metadata).
+        # XSE acronym is identical across FO4_OG / FO4_NG / FO4_AE ("F4SE");
+        # FO4_OG is used as the canonical non-VR source for these static fields.
+        registry = get_version_registry()
+        is_vr = GlobalRegistry.get_vr() == "VR"
+        version_info = registry.get_by_id("FO4_VR" if is_vr else "FO4_OG")
+        base_version_info = registry.get_by_id("FO4_OG")
+        instance.xse_acronym = version_info.xse.acronym if version_info and version_info.xse else None
+        instance.xse_acronym_base = base_version_info.xse.acronym if base_version_info and base_version_info.xse else None
+
+        instance.game_name = await yaml_settings_async(str, YAML.Game, "Game_Info.Main_Root_Name")
 
         if not all(isinstance(val, str) for val in [instance.xse_acronym, instance.xse_acronym_base, instance.game_name]):
             raise TypeError("Required YAML settings are not strings")
@@ -267,7 +285,7 @@ class GamePathFinder:
             else:
                 logger.debug(f"Using cached game path: {cached_path}")
                 GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
-                yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path))
+                yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Game", str(cached_path))
                 return
 
         # Try Rust finder with all strategies
@@ -308,9 +326,7 @@ class GamePathFinder:
                 else:
                     logger.debug(f"Using cached game path: {cached_path}")
                     GlobalRegistry.register(GlobalRegistry.Keys.GAME_PATH, cached_path)
-                    await yaml_settings_async(
-                        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game", str(cached_path)
-                    )
+                    await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Root_Folder_Game", str(cached_path))
                     return
 
         # Try Rust finder with all strategies
@@ -369,42 +385,40 @@ def game_generate_paths() -> None:
 
     logger.debug("- - - INITIATED GAME PATH GENERATION")
 
-    game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
-    yaml_settings(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_acronym_base: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Acronym")
+    game_path: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
+    # Get base XSE acronym from Version Registry (always non-VR, used for folder paths).
+    # XSE acronym is identical across FO4_OG / FO4_NG / FO4_AE ("F4SE");
+    # FO4_OG is used as the canonical non-VR source so the plugins folder path is consistent.
+    registry = get_version_registry()
+    base_version_info = registry.get_by_id("FO4_OG")
+    xse_acronym_base: str | None = base_version_info.xse.acronym if base_version_info and base_version_info.xse else None
     if not (isinstance(game_path, str) and game_path.strip() and isinstance(xse_acronym_base, str)):
         raise TypeError
 
-    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
-    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
-    yaml_settings(
-        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins"
-    )
-    yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
+    yaml_settings(str, YAML.Game_Local, "Game_Info.Game_Folder_Data", rf"{game_path}\Data")
+    yaml_settings(str, YAML.Game_Local, "Game_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
+    yaml_settings(str, YAML.Game_Local, "Game_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins")
+    yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
     yaml_settings(
         str,
         YAML.Game_Local,
-        f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
+        "Game_Info.Game_File_EXE",
         rf"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe",
     )
-    game_version: Version = read_game_exe_version(
-        Path(cast("str", yaml_settings(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
-    )
+    game_version: Version = read_game_exe_version(Path(cast("str", yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_EXE"))))
     match GlobalRegistry.get_game():
         case "Fallout4":
-            vr_suffix = GlobalRegistry.get_vr()
-            is_vr = bool(vr_suffix)
+            is_vr = GlobalRegistry.is_vr_version()
             registry = get_version_registry()
 
             if game_version == NULL_VERSION:
                 default_id = "FO4_VR" if is_vr else "FO4_OG"
                 default_info = registry.get_by_id(default_id)
                 if default_info and default_info.address_library:
-                    yaml_key = f"Game{vr_suffix}_Info"
                     yaml_settings(
                         str,
                         YAML.Game_Local,
-                        f"{yaml_key}.Game_File_AddressLib",
+                        "Game_Info.Game_File_AddressLib",
                         rf"{game_path}\Data\{xse_acronym_base}\plugins\{default_info.address_library.filename}",
                     )
                 return
@@ -415,11 +429,10 @@ def game_generate_paths() -> None:
                 _log_version_warning(game_version, match_result.message)
 
             if match_result.version_info and match_result.version_info.address_library:
-                yaml_key = f"Game{vr_suffix}_Info"
                 yaml_settings(
                     str,
                     YAML.Game_Local,
-                    f"{yaml_key}.Game_File_AddressLib",
+                    "Game_Info.Game_File_AddressLib",
                     rf"{game_path}\Data\{xse_acronym_base}\plugins\{match_result.version_info.address_library.filename}",
                 )
         case _:
@@ -441,42 +454,42 @@ async def game_generate_paths_async() -> None:
 
     logger.debug("- - - INITIATED GAME PATH GENERATION (ASYNC)")
 
-    game_path: str | None = await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Root_Folder_Game")
-    await yaml_settings_async(str, YAML.Game, f"Game{GlobalRegistry.get_vr()}_Info.XSE_Acronym")
-    xse_acronym_base: str | None = await yaml_settings_async(str, YAML.Game, "Game_Info.XSE_Acronym")
+    game_path: str | None = await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
+    # Get base XSE acronym from Version Registry (always non-VR, used for folder paths).
+    # XSE acronym is identical across FO4_OG / FO4_NG / FO4_AE ("F4SE");
+    # FO4_OG is used as the canonical non-VR source so the plugins folder path is consistent.
+    registry = get_version_registry()
+    base_version_info = registry.get_by_id("FO4_OG")
+    xse_acronym_base: str | None = base_version_info.xse.acronym if base_version_info and base_version_info.xse else None
     if not (isinstance(game_path, str) and game_path.strip() and isinstance(xse_acronym_base, str)):
         raise TypeError
 
-    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Data", rf"{game_path}\Data")
-    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
-    await yaml_settings_async(
-        str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins"
-    )
-    await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
+    await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_Folder_Data", rf"{game_path}\Data")
+    await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_Folder_Scripts", rf"{game_path}\Data\Scripts")
+    await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_Folder_Plugins", rf"{game_path}\Data\{xse_acronym_base}\Plugins")
+    await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_File_SteamINI", rf"{game_path}\steam_api.ini")
     await yaml_settings_async(
         str,
         YAML.Game_Local,
-        f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE",
+        "Game_Info.Game_File_EXE",
         rf"{game_path}\{GlobalRegistry.get_game()}{GlobalRegistry.get_vr()}.exe",
     )
     game_version: Version = read_game_exe_version(
-        Path(cast("str", await yaml_settings_async(str, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Game_File_EXE")))
+        Path(cast("str", await yaml_settings_async(str, YAML.Game_Local, "Game_Info.Game_File_EXE")))
     )
     match GlobalRegistry.get_game():
         case "Fallout4":
-            vr_suffix = GlobalRegistry.get_vr()
-            is_vr = bool(vr_suffix)
+            is_vr = GlobalRegistry.is_vr_version()
             registry = get_version_registry()
 
             if game_version == NULL_VERSION:
                 default_id = "FO4_VR" if is_vr else "FO4_OG"
                 default_info = registry.get_by_id(default_id)
                 if default_info and default_info.address_library:
-                    yaml_key = f"Game{vr_suffix}_Info"
                     await yaml_settings_async(
                         str,
                         YAML.Game_Local,
-                        f"{yaml_key}.Game_File_AddressLib",
+                        "Game_Info.Game_File_AddressLib",
                         rf"{game_path}\Data\{xse_acronym_base}\plugins\{default_info.address_library.filename}",
                     )
                 return
@@ -487,11 +500,10 @@ async def game_generate_paths_async() -> None:
                 _log_version_warning(game_version, match_result.message)
 
             if match_result.version_info and match_result.version_info.address_library:
-                yaml_key = f"Game{vr_suffix}_Info"
                 await yaml_settings_async(
                     str,
                     YAML.Game_Local,
-                    f"{yaml_key}.Game_File_AddressLib",
+                    "Game_Info.Game_File_AddressLib",
                     rf"{game_path}\Data\{xse_acronym_base}\plugins\{match_result.version_info.address_library.filename}",
                 )
         case _:

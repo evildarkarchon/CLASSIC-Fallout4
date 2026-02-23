@@ -215,11 +215,10 @@ def get_detected_version_info() -> VersionInfo | None:
 
     # Auto mode - detect from game executable
     registry = get_version_registry()
-    vr_suffix = GlobalRegistry.get_vr()
-    is_vr = vr_suffix == "VR"
+    is_vr = GlobalRegistry.is_vr_version()
 
     # Get the game executable path
-    exe_path_str: str | None = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Game_File_EXE")
+    exe_path_str: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Game_File_EXE")
     if not exe_path_str:
         return None
 

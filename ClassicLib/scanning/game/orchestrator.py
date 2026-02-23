@@ -11,7 +11,6 @@ from pathlib import Path
 from ClassicLib.core.async_bridge import AsyncBridge
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import get_vr
 from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.scanning.game.check_crashgen import check_crashgen_settings
@@ -57,8 +56,8 @@ class GameIntegrityOrchestratorCore:
         """
         try:
             # Get required paths
-            docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Root_Folder_Docs")
-            game_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Root_Folder_Game")
+            docs_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
+            game_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Game")
 
             if not (game_path and docs_path):
                 return "", []

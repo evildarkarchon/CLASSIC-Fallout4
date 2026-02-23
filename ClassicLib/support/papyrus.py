@@ -12,7 +12,6 @@ from pathlib import Path
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import GlobalRegistry
 
 
 def papyrus_logging() -> tuple[str, int]:
@@ -29,7 +28,7 @@ def papyrus_logging() -> tuple[str, int]:
     """
     from ClassicLib.io.yaml import yaml_settings
 
-    papyrus_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{GlobalRegistry.get_vr()}_Info.Docs_File_PapyrusLog")
+    papyrus_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_File_PapyrusLog")
 
     if papyrus_path and papyrus_path.exists():
         from classic_scanlog import papyrus_logging as rust_papyrus_logging

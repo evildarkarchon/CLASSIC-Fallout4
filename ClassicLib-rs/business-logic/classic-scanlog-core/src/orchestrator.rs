@@ -214,14 +214,14 @@ pub fn build_analysis_config_from_yaml(
     AnalysisConfig {
         game: game.to_string(),
         vr_mode,
-        crashgen_name: yaml.get_crashgen_name(vr_mode).to_string(),
+        crashgen_name: yaml.get_crashgen_name().to_string(),
         crashgen_latest: yaml.crashgen_latest_og.clone(),
-        crashgen_latest_vr: yaml.crashgen_latest_vr.clone(),
+        crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
         game_version: yaml.game_version.clone(),
-        game_version_vr: yaml.game_version_vr.clone(),
+        game_version_vr: String::new(), // VR-specific data now provided by Version Registry
         game_version_new: yaml.game_version_new.clone(),
         xse_acronym: yaml.xse_acronym.clone(),
-        game_root_name: yaml.get_game_root_name(vr_mode).to_string(),
+        game_root_name: yaml.get_game_root_name().to_string(),
         classic_version: yaml.classic_version.clone(),
         ignore_plugins: yaml.game_ignore_plugins.clone(),
         ignore_records: yaml.game_ignore_records.clone(),
@@ -259,7 +259,7 @@ fn build_crashgen_registry(
         let checks: Vec<CheckId> = raw_entry
             .checks
             .iter()
-            .filter_map(|s| CheckId::from_str(s))
+            .filter_map(|s| CheckId::parse(s))
             .collect();
 
         let entry = CrashgenEntry {
@@ -1248,8 +1248,6 @@ impl OrchestratorCore {
         // FormIDs are ALWAYS shown regardless of show_formid_values setting.
         let callstack_segment_opt = segments.get(segment_key::CALLSTACK);
         if let Some(callstack_segment) = callstack_segment_opt.filter(|v| !v.is_empty()) {
-            let callstack_segment = callstack_segment;
-
             // Convert Arc<str> to String for FormID extraction
             let callstack_lines: Vec<String> =
                 callstack_segment.iter().map(|s| s.to_string()).collect();
@@ -1280,7 +1278,6 @@ impl OrchestratorCore {
                 .get(segment_key::CALLSTACK)
                 .filter(|v| !v.is_empty())
             {
-                let callstack_segment = callstack_segment;
                 let callstack_lines: Vec<String> =
                     callstack_segment.iter().map(|s| s.to_string()).collect();
 
@@ -1923,11 +1920,8 @@ mod tests {
             classic_version: classic_version.to_string(),
             classic_version_date: String::new(),
             crashgen_name: "Buffout 4".to_string(),
-            crashgen_name_vr: "Buffout 4 VR".to_string(),
             crashgen_latest_og: String::new(),
-            crashgen_latest_vr: String::new(),
             crashgen_ignore: Vec::new(),
-            crashgen_ignore_vr: Vec::new(),
             warn_noplugins: String::new(),
             warn_outdated: String::new(),
             xse_acronym: "F4SE".to_string(),
@@ -1945,9 +1939,7 @@ mod tests {
             autoscan_text: String::new(),
             game_version: String::new(),
             game_version_new: String::new(),
-            game_version_vr: String::new(),
             game_root_name: "Fallout4".to_string(),
-            game_root_name_vr: "Fallout4VR".to_string(),
             crashgen_registry: std::collections::HashMap::new(),
         }
     }

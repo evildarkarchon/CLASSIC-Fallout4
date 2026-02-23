@@ -9,7 +9,7 @@ from pathlib import Path
 
 from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
-from ClassicLib.core.registry import get_game, get_vr
+from ClassicLib.core.registry import get_game
 from ClassicLib.integration.factory import get_file_io
 from ClassicLib.io.yaml import yaml_settings
 
@@ -38,7 +38,7 @@ def scan_wryecheck() -> str:
 
     # Load settings from YAML
     missing_html_setting: str | None = yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")
-    plugin_check_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Docs_File_WryeBashPC")
+    plugin_check_path: Path | None = yaml_settings(Path, YAML.Game_Local, "Game_Info.Docs_File_WryeBashPC")
     warnings_dict: dict[str, str] | None = yaml_settings(dict[str, str], YAML.Main, "Warnings_WRYE")
 
     missing_html_message: str | None = missing_html_setting if isinstance(missing_html_setting, str) else None

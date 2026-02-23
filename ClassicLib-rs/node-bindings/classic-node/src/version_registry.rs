@@ -32,10 +32,14 @@ pub struct JsAddressLibraryConfig {
 pub struct JsXseConfig {
     /// XSE acronym (e.g., "F4SE", "F4SEVR")
     pub acronym: String,
+    /// Full display name (e.g., "Fallout 4 Script Extender (F4SE)")
+    pub full_name: String,
     /// Compatible XSE version string (e.g., "0.6.23")
     pub compatible_version: String,
     /// Loader executable name (e.g., "f4se_loader.exe")
     pub loader: String,
+    /// Expected number of script files (e.g., 29)
+    pub file_count: u32,
 }
 
 /// Crash generator configuration for a specific version.
@@ -45,6 +49,10 @@ pub struct JsCrashgenConfig {
     pub version: String,
     /// Display name (e.g., "Buffout 4", "Buffout 4 NG")
     pub name: String,
+    /// Short identifier/acronym (e.g., "BO4", "BO4 NG")
+    pub acronym: String,
+    /// DLL filename (e.g., "buffout4.dll")
+    pub dll_file: String,
     /// Description of this crash generator version
     pub description: String,
     /// Nexus Mods or other download URL
@@ -70,6 +78,10 @@ pub struct JsVersionInfo {
     pub short_name: String,
     /// Description of this version
     pub description: String,
+    /// My Documents subfolder name (e.g., "Fallout4", "Fallout4VR")
+    pub docs_name: String,
+    /// Steam application ID (e.g., 377160, 611660)
+    pub steam_id: u32,
     /// Address Library configuration, if applicable
     pub address_library: Option<JsAddressLibraryConfig>,
     /// Script Extender configuration, if applicable
@@ -113,6 +125,8 @@ fn core_version_info_to_js(info: &classic_version_registry_core::VersionInfo) ->
         display_name: info.display_name.clone(),
         short_name: info.short_name.clone(),
         description: info.description.clone(),
+        docs_name: info.docs_name.clone(),
+        steam_id: info.steam_id,
         address_library: info
             .address_library
             .as_ref()
@@ -123,8 +137,10 @@ fn core_version_info_to_js(info: &classic_version_registry_core::VersionInfo) ->
             }),
         xse: info.xse.as_ref().map(|x| JsXseConfig {
             acronym: x.acronym.clone(),
+            full_name: x.full_name.clone(),
             compatible_version: x.compatible_version.clone(),
             loader: x.loader.clone(),
+            file_count: x.file_count,
         }),
         priority: info.priority,
         deprecated: info.deprecated,
@@ -136,6 +152,8 @@ fn core_crashgen_to_js(config: &classic_version_registry_core::CrashgenConfig) -
     JsCrashgenConfig {
         version: config.version.clone(),
         name: config.name.clone(),
+        acronym: config.acronym.clone(),
+        dll_file: config.dll_file.clone(),
         description: config.description.clone(),
         download_url: config.download_url.clone(),
         has_compatible_range: config.compatible_range.is_some(),

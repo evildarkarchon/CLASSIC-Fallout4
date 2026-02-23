@@ -41,57 +41,60 @@ class TestGetScanSettings:
 
         validators = ScanValidators()
 
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = {"script1.pex": {"hash1", "hash2"}}
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = Path("C:/mods")
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        result = await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = Path("C:/mods")
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    result = await validators.get_scan_settings()
 
         assert isinstance(result, tuple)
         assert len(result) == 3
 
     @pytest.mark.asyncio
     async def test_returns_xse_acronym(self) -> None:
-        """Test returns XSE acronym as first element."""
+        """Test returns XSE acronym as first element from Version Registry."""
         from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        result = await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = None
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    result = await validators.get_scan_settings()
 
         assert result[0] == "F4SE"
 
     @pytest.mark.asyncio
     async def test_returns_default_xse_acronym_when_none(self) -> None:
-        """Test returns 'XSE' when yaml returns None."""
+        """Test returns 'XSE' when version info has no XSE data."""
         from ClassicLib.scanning.game.checks.validators import ScanValidators
 
         validators = ScanValidators()
 
+        mock_version_info = MagicMock()
+        mock_version_info.xse = None
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = None  # Return None
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        result = await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = None
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    result = await validators.get_scan_settings()
 
         assert result[0] == "XSE"
 
@@ -103,16 +106,17 @@ class TestGetScanSettings:
         validators = ScanValidators()
 
         expected_hashes = {"script1.pex": {"hash1"}, "script2.pex": {"hash2"}}
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = expected_hashes
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        result = await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = None
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    result = await validators.get_scan_settings()
 
         assert result[1] == expected_hashes
 
@@ -124,16 +128,17 @@ class TestGetScanSettings:
         validators = ScanValidators()
         expected_path = Path("C:/Games/Fallout4/Mods")
 
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = expected_path
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        result = await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = expected_path
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    result = await validators.get_scan_settings()
 
         assert result[2] == expected_path
 
@@ -144,19 +149,20 @@ class TestGetScanSettings:
 
         validators = ScanValidators()
 
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        # First call
-                        result1 = await validators.get_scan_settings()
-                        # Second call should use cache
-                        result2 = await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = None
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value=""):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    # First call
+                    result1 = await validators.get_scan_settings()
+                    # Second call should use cache
+                    result2 = await validators.get_scan_settings()
 
         assert result1 is result2
         assert validators._scan_settings_cache is not None
@@ -168,19 +174,22 @@ class TestGetScanSettings:
 
         validators = ScanValidators()
 
+        mock_version_info = MagicMock()
+        mock_version_info.xse.acronym = "F4SE"
         mock_registry = MagicMock()
+        mock_registry.get_by_id.return_value = mock_version_info
         mock_registry.get_all_script_hashes.return_value = {}
 
-        with patch("ClassicLib.scanning.game.checks.validators.yaml_settings_async", new_callable=AsyncMock) as mock_yaml:
-            mock_yaml.return_value = "F4SE"
-            with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
-                mock_classic.return_value = None
-                with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value="VR"):
-                    with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
-                        await validators.get_scan_settings()
+        with patch("ClassicLib.scanning.game.checks.validators.classic_settings_async", new_callable=AsyncMock) as mock_classic:
+            mock_classic.return_value = None
+            with patch("ClassicLib.scanning.game.checks.validators.get_vr", return_value="VR"):
+                with patch("ClassicLib.support.versions.get_version_registry", return_value=mock_registry):
+                    await validators.get_scan_settings()
 
         # Should pass is_vr=True when VR mode
         mock_registry.get_all_script_hashes.assert_called_once_with("Fallout4", True)
+        # Should request VR version info
+        mock_registry.get_by_id.assert_called_once_with("FO4_VR")
 
 
 class TestGetIssueMessages:

@@ -19,6 +19,8 @@ fn version_registry_get_by_id(id: &str) -> ffi::VersionInfoDto {
             version_string: info.version_string(),
             short_name: info.short_name.clone(),
             game: info.game.clone(),
+            docs_name: info.docs_name.clone(),
+            steam_id: info.steam_id,
             is_vr: info.is_vr,
             found: true,
         },
@@ -27,6 +29,8 @@ fn version_registry_get_by_id(id: &str) -> ffi::VersionInfoDto {
             version_string: String::new(),
             short_name: String::new(),
             game: String::new(),
+            docs_name: String::new(),
+            steam_id: 0,
             is_vr: false,
             found: false,
         },
@@ -68,6 +72,69 @@ fn version_registry_match_version(
             confidence: "None".to_string(),
             message: format!("Failed to parse version: {e}"),
             is_match: false,
+        },
+    }
+}
+
+fn version_registry_get_xse_config(id: &str) -> ffi::XseConfigDto {
+    let registry = get_version_registry();
+    match registry.get_by_id(id).and_then(|info| info.xse.as_ref()) {
+        Some(xse) => ffi::XseConfigDto {
+            acronym: xse.acronym.clone(),
+            full_name: xse.full_name.clone(),
+            compatible_version: xse.compatible_version.clone(),
+            loader: xse.loader.clone(),
+            file_count: xse.file_count,
+            found: true,
+        },
+        None => ffi::XseConfigDto {
+            acronym: String::new(),
+            full_name: String::new(),
+            compatible_version: String::new(),
+            loader: String::new(),
+            file_count: 0,
+            found: false,
+        },
+    }
+}
+
+fn version_registry_get_crashgen_configs(id: &str) -> Vec<ffi::CrashgenConfigDto> {
+    let registry = get_version_registry();
+    registry
+        .get_crashgen_versions(id)
+        .iter()
+        .map(|c| ffi::CrashgenConfigDto {
+            version: c.version.clone(),
+            name: c.name.clone(),
+            acronym: c.acronym.clone(),
+            dll_file: c.dll_file.clone(),
+            description: c.description.clone(),
+            download_url: c.download_url.clone(),
+        })
+        .collect()
+}
+
+fn version_registry_get_crashgen_config(
+    id: &str,
+    crashgen_version: &str,
+) -> ffi::CrashgenConfigDto {
+    let registry = get_version_registry();
+    match registry.get_crashgen_for_version(id, crashgen_version) {
+        Some(c) => ffi::CrashgenConfigDto {
+            version: c.version.clone(),
+            name: c.name.clone(),
+            acronym: c.acronym.clone(),
+            dll_file: c.dll_file.clone(),
+            description: c.description.clone(),
+            download_url: c.download_url.clone(),
+        },
+        None => ffi::CrashgenConfigDto {
+            version: String::new(),
+            name: String::new(),
+            acronym: String::new(),
+            dll_file: String::new(),
+            description: String::new(),
+            download_url: String::new(),
         },
     }
 }
@@ -182,8 +249,28 @@ mod ffi {
         version_string: String,
         short_name: String,
         game: String,
+        docs_name: String,
+        steam_id: u32,
         is_vr: bool,
         found: bool,
+    }
+
+    struct XseConfigDto {
+        acronym: String,
+        full_name: String,
+        compatible_version: String,
+        loader: String,
+        file_count: u32,
+        found: bool,
+    }
+
+    struct CrashgenConfigDto {
+        version: String,
+        name: String,
+        acronym: String,
+        dll_file: String,
+        description: String,
+        download_url: String,
     }
 
     struct MatchResultDto {
@@ -211,6 +298,12 @@ mod ffi {
             game: &str,
             is_vr: bool,
         ) -> MatchResultDto;
+        fn version_registry_get_xse_config(id: &str) -> XseConfigDto;
+        fn version_registry_get_crashgen_configs(id: &str) -> Vec<CrashgenConfigDto>;
+        fn version_registry_get_crashgen_config(
+            id: &str,
+            crashgen_version: &str,
+        ) -> CrashgenConfigDto;
 
         // Version parsing
         fn parse_game_version(version_str: &str) -> GameVersionDto;
@@ -249,9 +342,25 @@ mod tests {
     }
 
     #[test]
+    fn test_version_registry_get_by_id_docs_name() {
+        let info = version_registry_get_by_id("FO4_OG");
+        assert!(info.found);
+        assert!(!info.docs_name.is_empty());
+    }
+
+    #[test]
+    fn test_version_registry_get_by_id_steam_id() {
+        let info = version_registry_get_by_id("FO4_OG");
+        assert!(info.found);
+        assert!(info.steam_id > 0);
+    }
+
+    #[test]
     fn test_version_registry_get_by_id_missing() {
         let info = version_registry_get_by_id("NONEXISTENT");
         assert!(!info.found);
+        assert!(info.docs_name.is_empty());
+        assert_eq!(info.steam_id, 0);
     }
 
     #[test]
@@ -260,6 +369,60 @@ mod tests {
         assert!(count > 0);
         let ids = version_registry_get_all_ids();
         assert_eq!(ids.len(), count);
+    }
+
+    #[test]
+    fn test_version_registry_get_xse_config_found() {
+        let xse = version_registry_get_xse_config("FO4_OG");
+        assert!(xse.found);
+        assert!(!xse.acronym.is_empty());
+        assert!(!xse.full_name.is_empty());
+        assert!(!xse.compatible_version.is_empty());
+        assert!(!xse.loader.is_empty());
+        assert!(xse.file_count > 0);
+    }
+
+    #[test]
+    fn test_version_registry_get_xse_config_missing() {
+        let xse = version_registry_get_xse_config("NONEXISTENT");
+        assert!(!xse.found);
+        assert!(xse.acronym.is_empty());
+        assert!(xse.full_name.is_empty());
+        assert_eq!(xse.file_count, 0);
+    }
+
+    #[test]
+    fn test_version_registry_get_crashgen_configs() {
+        let configs = version_registry_get_crashgen_configs("FO4_OG");
+        assert!(!configs.is_empty());
+        for c in &configs {
+            assert!(!c.version.is_empty());
+            assert!(!c.name.is_empty());
+        }
+    }
+
+    #[test]
+    fn test_version_registry_get_crashgen_configs_missing() {
+        let configs = version_registry_get_crashgen_configs("NONEXISTENT");
+        assert!(configs.is_empty());
+    }
+
+    #[test]
+    fn test_version_registry_get_crashgen_config_found() {
+        let c = version_registry_get_crashgen_config("FO4_OG", "1.28.6");
+        assert_eq!(c.version, "1.28.6");
+        assert!(!c.name.is_empty());
+        assert!(!c.acronym.is_empty());
+        assert!(!c.dll_file.is_empty());
+    }
+
+    #[test]
+    fn test_version_registry_get_crashgen_config_missing() {
+        let c = version_registry_get_crashgen_config("FO4_OG", "9.99.99");
+        assert!(c.version.is_empty());
+        assert!(c.name.is_empty());
+        assert!(c.acronym.is_empty());
+        assert!(c.dll_file.is_empty());
     }
 
     #[test]

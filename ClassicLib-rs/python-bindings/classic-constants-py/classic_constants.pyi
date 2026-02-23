@@ -457,32 +457,6 @@ class Fallout4Version:
 
         """
 
-    def config_section(self) -> str:
-        """Get the YAML config section name for this version.
-
-        Returns:
-            The section name in YAML config files.
-
-        Example:
-            >>> from classic_constants import Fallout4Version
-            >>> assert Fallout4Version.Original.config_section() == "Game_Info"
-            >>> assert Fallout4Version.Vr.config_section() == "GameVR_Info"
-
-        """
-
-    def config_suffix(self) -> str:
-        """Get the config key suffix for this version.
-
-        Returns:
-            The suffix used in configuration keys ("" or "VR").
-
-        Example:
-            >>> from classic_constants import Fallout4Version
-            >>> assert Fallout4Version.Original.config_suffix() == ""
-            >>> assert Fallout4Version.Vr.config_suffix() == "VR"
-
-        """
-
     def xse_acronym(self) -> str:
         """Get the script extender acronym for this version.
 

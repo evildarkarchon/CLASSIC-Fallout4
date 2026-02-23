@@ -38,11 +38,6 @@ Game_Info:
   XSE_Acronym: "F4SE"
   GameVersion: "1.10.163"
   GameVersionNEW: "1.10.984"
-GameVR_Info:
-  CRASHGEN_LogName: "Buffout 4 VR"
-  CRASHGEN_LatestVer: "1.28.6"
-  GameVersion: "1.2.72"
-  CRASHGEN_Ignore: []
 Warnings_CRASHGEN:
   Warn_NOPlugins: "No plugins warning"
   Warn_Outdated: "Outdated warning"

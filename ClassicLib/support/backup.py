@@ -12,7 +12,6 @@ from pathlib import Path
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.Utils.file_utils import open_file_with_encoding
 from ClassicLib.Utils.string_utils import normalize_list
 
@@ -52,12 +51,10 @@ class BackupManager:
         """
         from ClassicLib.io.yaml import yaml_settings
 
-        game_vr: str = GlobalRegistry.get_vr()
-
         backup_list: list[str] | None = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
-        game_path: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Root_Folder_Game")
-        xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, f"Game{game_vr}_Info.Docs_File_XSE")
-        xse_ver_latest: str | None = yaml_settings(str, YAML.Game, f"Game{game_vr}_Info.XSE_Ver_Latest")
+        game_path: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
+        xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
+        xse_ver_latest: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Ver_Latest")
 
         # Validate types
         if not isinstance(backup_list, list):

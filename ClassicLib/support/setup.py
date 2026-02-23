@@ -73,9 +73,6 @@ class SetupCoordinator:
         with TimedBlock("File Generation", log_level="debug"):
             self.file_generator.generate_all_files()
 
-        # Get config suffix from GAME_VERSION using VersionRegistry-based function
-        vr_suffix = GlobalRegistry.get_config_suffix()
-
         # Batch load version, game information, game path, and debug setting
         # Use asyncio.run() during initialization (before Qt event loop)
         # AsyncBridge is ONLY for Qt worker threads, NOT for initialization
@@ -83,7 +80,7 @@ class SetupCoordinator:
             requests = [
                 (str, YAML.Main, "CLASSIC_Info.version"),
                 (str, YAML.Game, "Game_Info.Main_Root_Name"),
-                (str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game"),
+                (str, YAML.Game_Local, "Game_Info.Root_Folder_Game"),
                 (bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"),
             ]
 
@@ -126,8 +123,8 @@ class SetupCoordinator:
             This method is kept for backward compatibility.
 
         This method provides the configuration suffix ("" or "VR") based on the
-        current GAME_VERSION setting. It's used for constructing YAML config keys
-        like "Game_Info" or "GameVR_Info".
+        current GAME_VERSION setting. Note: Runtime path cache keys now always
+        use "Game_Info" regardless of VR status.
 
         Returns:
             str: "VR" if game version is VR, otherwise empty string "".
@@ -266,12 +263,9 @@ class SetupCoordinator:
             is_gui: Whether running in GUI mode (affects path detection UI).
 
         """
-        # Get config suffix using VersionRegistry-based function
-        vr_suffix = GlobalRegistry.get_config_suffix()
-
         # Check if paths are configured
-        game_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Game")
-        docs_path = yaml_settings(str, YAML.Game_Local, f"Game{vr_suffix}_Info.Root_Folder_Docs")
+        game_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
+        docs_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")
 
         # Detect docs path if missing
         if not docs_path:

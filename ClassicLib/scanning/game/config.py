@@ -11,7 +11,6 @@ from typing import Any
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
-from ClassicLib.core.registry import get_vr
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.scanning.game.models.fcx_issue import ConfigIssueSeverity
 
@@ -35,7 +34,7 @@ class ConfigFileCache:
     def __init__(self) -> None:
         from classic_scangame import RustConfigFileCache
 
-        game_root = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Root_Folder_Game")
+        game_root = yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Game")
         if game_root is None:
             raise FileNotFoundError
 

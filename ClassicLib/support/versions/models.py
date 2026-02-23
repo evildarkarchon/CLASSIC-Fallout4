@@ -93,10 +93,12 @@ class XseConfig:
         compatible_version: Compatible XSE version string.
         loader: Loader executable name.
         script_hashes: Tuples of (filename, sha256_hash).
+        full_name: Full display name of the script extender (e.g., "Fallout 4 Script Extender").
+        file_count: Expected number of XSE files to validate installation.
 
     """
 
-    __slots__ = ("_acronym", "_compatible_version", "_loader", "_rust_obj", "_script_hashes")
+    __slots__ = ("_acronym", "_compatible_version", "_file_count", "_full_name", "_loader", "_rust_obj", "_script_hashes")
 
     def __init__(
         self,
@@ -104,6 +106,8 @@ class XseConfig:
         compatible_version: str = "",
         loader: str = "",
         script_hashes: tuple[tuple[str, str], ...] = (),
+        full_name: str = "",
+        file_count: int = 0,
         *,
         _rust_obj: _rust.XseConfig | None = None,
     ) -> None:
@@ -112,6 +116,8 @@ class XseConfig:
         self._compatible_version = compatible_version
         self._loader = loader
         self._script_hashes = script_hashes
+        self._full_name = full_name
+        self._file_count = file_count
 
     @property
     def acronym(self) -> str:
@@ -136,6 +142,18 @@ class XseConfig:
         if self._rust_obj is not None:
             return tuple(self._rust_obj.script_hashes)
         return self._script_hashes
+
+    @property
+    def full_name(self) -> str:
+        if self._rust_obj is not None:
+            return self._rust_obj.full_name
+        return self._full_name
+
+    @property
+    def file_count(self) -> int:
+        if self._rust_obj is not None:
+            return self._rust_obj.file_count
+        return self._file_count
 
     @property
     def compatible_version_parsed(self) -> Version:
@@ -206,10 +224,12 @@ class CrashgenConfig:
         description: Description of this crash generator version.
         download_url: Download URL.
         compatible_range: Optional game version range restriction.
+        acronym: Short acronym for the crash generator (e.g., "B4").
+        dll_file: DLL filename for the crash generator (e.g., "Buffout4.dll").
 
     """
 
-    __slots__ = ("_compatible_range", "_description", "_download_url", "_name", "_rust_obj", "_version")
+    __slots__ = ("_acronym", "_compatible_range", "_description", "_dll_file", "_download_url", "_name", "_rust_obj", "_version")
 
     def __init__(
         self,
@@ -218,6 +238,8 @@ class CrashgenConfig:
         description: str = "",
         download_url: str = "",
         compatible_range: CompatibleRange | None = None,
+        acronym: str = "",
+        dll_file: str = "",
         *,
         _rust_obj: _rust.CrashgenConfig | None = None,
     ) -> None:
@@ -227,6 +249,8 @@ class CrashgenConfig:
         self._description = description
         self._download_url = download_url
         self._compatible_range = compatible_range
+        self._acronym = acronym
+        self._dll_file = dll_file
 
     @property
     def version(self) -> str:
@@ -251,6 +275,18 @@ class CrashgenConfig:
         if self._rust_obj is not None:
             return self._rust_obj.download_url
         return self._download_url
+
+    @property
+    def acronym(self) -> str:
+        if self._rust_obj is not None:
+            return self._rust_obj.acronym
+        return self._acronym
+
+    @property
+    def dll_file(self) -> str:
+        if self._rust_obj is not None:
+            return self._rust_obj.dll_file
+        return self._dll_file
 
     @property
     def compatible_range(self) -> CompatibleRange | None:
@@ -284,6 +320,10 @@ class VersionInfo:
     Wraps the Rust VersionInfo when returned from the registry. Can also be
     constructed directly (for tests or hardcoded defaults).
 
+    Attributes:
+        docs_name: Documentation-friendly name for this version (e.g., "Fallout4 OG").
+        steam_id: Steam application ID for this game version.
+
     """
 
     __slots__ = (
@@ -293,6 +333,7 @@ class VersionInfo:
         "_deprecated",
         "_description",
         "_display_name",
+        "_docs_name",
         "_exe_hash",
         "_game",
         "_id",
@@ -300,6 +341,7 @@ class VersionInfo:
         "_priority",
         "_rust_obj",
         "_short_name",
+        "_steam_id",
         "_version",
         "_xse",
     )
@@ -313,6 +355,8 @@ class VersionInfo:
         display_name: str = "",
         short_name: str = "",
         description: str = "",
+        docs_name: str = "",
+        steam_id: int = 0,
         address_library: AddressLibraryConfig | None = None,
         xse: XseConfig | None = None,
         compatible_range: CompatibleRange | None = None,
@@ -331,6 +375,8 @@ class VersionInfo:
         self._display_name = display_name
         self._short_name = short_name
         self._description = description
+        self._docs_name = docs_name
+        self._steam_id = steam_id
         self._address_library = address_library
         self._xse = xse
         self._compatible_range = compatible_range
@@ -388,6 +434,18 @@ class VersionInfo:
         if self._rust_obj is not None:
             return self._rust_obj.description
         return self._description
+
+    @property
+    def docs_name(self) -> str:
+        if self._rust_obj is not None:
+            return self._rust_obj.docs_name
+        return self._docs_name
+
+    @property
+    def steam_id(self) -> int:
+        if self._rust_obj is not None:
+            return self._rust_obj.steam_id
+        return self._steam_id
 
     @property
     def address_library(self) -> AddressLibraryConfig | None:
