@@ -10,6 +10,7 @@
 //! - Incomplete/failed log detection with statistics
 //! - Full analysis pipeline integration
 
+use crate::crashgen_registry::{CrashgenEntry, CrashgenRegistry};
 use crate::error::Result;
 use crate::fcx_handler::FcxModeHandler;
 use crate::formid_analyzer::FormIDAnalyzerCore;
@@ -19,6 +20,7 @@ use crate::parser::LogParser;
 use crate::plugin_analyzer::PluginAnalyzer;
 use crate::record_scanner::RecordScanner;
 use crate::report::ReportGenerator;
+use crate::segment_key;
 use crate::settings_validator::SettingsValidator;
 use crate::suspect_scanner::SuspectScanner;
 use crate::version::{
@@ -113,8 +115,10 @@ pub struct AnalysisConfig {
     /// Named records list for RecordScanner
     pub classic_records_list: Vec<String>,
 
-    /// Settings to ignore when validating crashgen configuration
-    pub crashgen_ignore: Vec<String>,
+    /// Per-crashgen settings registry loaded from YAML.
+    ///
+    /// Used by the orchestrator to resolve the `CrashgenEntry` for `SettingsValidator`.
+    pub crashgen_registry: CrashgenRegistry,
 }
 
 impl AnalysisConfig {
@@ -178,7 +182,7 @@ impl AnalysisConfig {
             mods_opc2: IndexMap::new(),
             mods_core_folon: IndexMap::new(),
             classic_records_list: Vec::new(),
-            crashgen_ignore: Vec::new(),
+            crashgen_registry: CrashgenRegistry::default(),
         }
     }
 }
@@ -235,8 +239,43 @@ pub fn build_analysis_config_from_yaml(
         mods_opc2: yaml.game_mods_opc2.clone(),
         mods_core_folon: yaml.game_mods_core_folon.clone(),
         classic_records_list: yaml.classic_records_list.clone(),
-        crashgen_ignore: yaml.get_crashgen_ignore(vr_mode).to_vec(),
+        crashgen_registry: build_crashgen_registry(&yaml.crashgen_registry),
     }
+}
+
+/// Build a `CrashgenRegistry` from raw `CrashgenEntryRaw` data loaded from YAML.
+fn build_crashgen_registry(
+    raw: &std::collections::HashMap<String, classic_config_core::CrashgenEntryRaw>,
+) -> CrashgenRegistry {
+    use crate::crashgen_registry::CheckId;
+    use std::collections::HashMap;
+
+    let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
+    let mut default_entry = CrashgenEntry::default_entry();
+
+    for (name, raw_entry) in raw {
+        let ignore_keys: std::collections::HashSet<String> =
+            raw_entry.ignore_keys.iter().cloned().collect();
+        let checks: Vec<CheckId> = raw_entry
+            .checks
+            .iter()
+            .filter_map(|s| CheckId::from_str(s))
+            .collect();
+
+        let entry = CrashgenEntry {
+            display_section: raw_entry.display_section.clone(),
+            ignore_keys,
+            checks,
+        };
+
+        if name == "default" {
+            default_entry = entry;
+        } else {
+            entries.insert(name.clone(), entry);
+        }
+    }
+
+    CrashgenRegistry::new(entries, default_entry)
 }
 
 /// Analysis result for a single crash log
@@ -479,6 +518,15 @@ pub struct OrchestratorCore {
 }
 
 impl OrchestratorCore {
+    /// Build a settings validator from `AnalysisConfig`.
+    fn settings_validator_from_config(config: &AnalysisConfig) -> SettingsValidator {
+        let entry = config
+            .crashgen_registry
+            .lookup(&config.crashgen_name)
+            .clone();
+        SettingsValidator::new(config.crashgen_name.clone(), entry)
+    }
+
     /// Creates a new crash log analysis orchestrator with the specified configuration.
     ///
     /// This constructor initializes the orchestrator with:
@@ -565,9 +613,9 @@ impl OrchestratorCore {
             None
         };
 
-        // Initialize settings validator
-        let settings_validator =
-            SettingsValidator::new(config.crashgen_name.clone(), config.crashgen_ignore.clone());
+        // Resolve per-crashgen registry entry and build the settings validator.
+        // The entry is resolved once at construction time from the crashgen name.
+        let settings_validator = Self::settings_validator_from_config(&config);
 
         Ok(Self {
             config,
@@ -797,8 +845,8 @@ impl OrchestratorCore {
             .map(|s| Arc::from(s.as_str()))
             .collect();
 
-        // Parse log into segments
-        let segments = self.parser.parse_segments(&lines);
+        // Parse log into named segments using anchor-first segmentation (task 4.1)
+        let segments = self.parser.parse_all_sections_arc(&lines);
 
         // Create ReportGenerator and ReportComposer for proper formatting
         let report_gen = self.create_report_generator();
@@ -868,22 +916,13 @@ impl OrchestratorCore {
 
         // Extract plugins from segments (if plugin analyzer is available)
         if let Some(ref analyzer) = self.plugin_analyzer {
-            // Find plugin segment - scan backwards from end to find segment with game plugins
-            // Game plugins have format: "[XX] PluginName.esp" or "[FE:XXX] PluginName.esl"
-            // The Rust parser may return different segment counts depending on crash log format
-            let plugin_segment_opt = segments.iter().rev().find(|seg| {
-                // Check if segment contains game plugin entries
-                seg.iter().any(|line| {
-                    let trimmed = line.trim();
-                    // Game plugins start with [XX] or [FE:XXX] and end with .esp/.esm/.esl
-                    trimmed.starts_with('[')
-                        && (trimmed.contains(".esp")
-                            || trimmed.contains(".esm")
-                            || trimmed.contains(".esl"))
-                })
-            });
+            // Direct named-key access for plugins segment (task 4.6)
+            let plugin_segment = segments
+                .get(segment_key::PLUGINS)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
 
-            if let Some(plugin_segment) = plugin_segment_opt {
+            if !plugin_segment.is_empty() {
                 // Convert Arc<str> to String for compatibility
                 let plugin_lines: Vec<String> =
                     plugin_segment.iter().map(|s| s.to_string()).collect();
@@ -908,15 +947,12 @@ impl OrchestratorCore {
         let mut suspect_fragments: Vec<ReportFragment> = Vec::new();
 
         if let Some(ref scanner) = self.suspect_scanner {
-            // Use the main_error extracted from header parsing (not segments[0]!)
-            // segments[0] contains crashgen settings, not the main error line
-
-            // Extract callstack (segment 2: PROBABLE CALL STACK)
-            let callstack = if segments.len() > 2 {
-                segments[2].join("\n")
-            } else {
-                String::new()
-            };
+            // Use the main_error extracted from header parsing (not settings segment!)
+            // Extract callstack using named key (task 4.4)
+            let callstack = segments
+                .get(segment_key::CALLSTACK)
+                .map(|v| v.iter().map(|s| s.as_ref()).collect::<Vec<_>>().join("\n"))
+                .unwrap_or_default();
 
             let max_warn_length = 50; // Default width for formatting
 
@@ -967,18 +1003,31 @@ impl OrchestratorCore {
         };
         composer.add(fcx_handler.get_fcx_messages());
 
-        // Extract XSE modules for settings validation (segment 3)
-        let xse_modules_for_settings: HashSet<String> = if segments.len() > 3 {
-            extract_module_names(&segments[3])
-        } else {
-            HashSet::new()
+        // Extract XSE modules for settings validation (tasks 4.5).
+        // Combine MODULES + XSE_MODULES to preserve backward compat (in the old
+        // segmentation both DLLs and XSE plugins were in one combined segment).
+        let combined_modules: Vec<Arc<str>> = {
+            let mods = segments
+                .get(segment_key::MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            let xse = segments
+                .get(segment_key::XSE_MODULES)
+                .map(Vec::as_slice)
+                .unwrap_or_default();
+            mods.iter().chain(xse.iter()).cloned().collect()
         };
+        let xse_modules_for_settings: HashSet<String> = extract_module_names(&combined_modules);
 
-        // Parse crashgen settings from Compatibility segment (segment 0)
+        // Parse crashgen settings from settings segment (task 4.2)
         // Format: "key: value" (TOML-like with colon separator)
         // Skip section headers like [Compatibility], [Crashlog], [Fixes], etc.
-        let crashgen_settings: HashMap<String, String> = if !segments.is_empty() {
-            segments[0]
+        let settings_segment = segments
+            .get(segment_key::SETTINGS)
+            .map(Vec::as_slice)
+            .unwrap_or_default();
+        let crashgen_settings: HashMap<String, String> = if !settings_segment.is_empty() {
+            settings_segment
                 .iter()
                 .filter_map(|line| {
                     let line = line.trim();
@@ -1076,23 +1125,23 @@ impl OrchestratorCore {
 
         // Mod detection (if we have plugin data)
         if let Some(ref plugins) = plugins_map {
-            // Extract GPU info from system segment (segment 1)
-            let gpu_rival_string: Option<String> = if segments.len() > 1 {
-                let system_segment: Vec<String> =
-                    segments[1].iter().map(|s| s.to_string()).collect();
-                let gpu_info = GpuDetector::get_gpu_info(&system_segment);
-                gpu_info.rival
-            } else {
-                None
+            // Extract GPU info from system segment (task 4.3)
+            let gpu_rival_string: Option<String> = {
+                let system_segment: Vec<String> = segments
+                    .get(segment_key::SYSTEM)
+                    .map(|v| v.iter().map(|s| s.to_string()).collect())
+                    .unwrap_or_default();
+                if system_segment.is_empty() {
+                    None
+                } else {
+                    let gpu_info = GpuDetector::get_gpu_info(&system_segment);
+                    gpu_info.rival
+                }
             };
             let gpu_rival = gpu_rival_string.as_deref();
 
-            // Extract XSE modules from MODULES segment (segment 3)
-            let xse_modules: HashSet<String> = if segments.len() > 3 {
-                extract_module_names(&segments[3])
-            } else {
-                HashSet::new()
-            };
+            // Extract XSE modules from combined MODULES+XSE_MODULES (task 4.5)
+            let xse_modules: HashSet<String> = extract_module_names(&combined_modules);
 
             // Check for conflicting mods
             if !self.config.mods_conf.is_empty() {
@@ -1173,12 +1222,11 @@ impl OrchestratorCore {
             if let Some(ref plugins) = plugins_map {
                 // Only show section if we have plugins to check (matches Python behavior)
                 if !plugins.is_empty() {
-                    // Get callstack segment (segment 2) for plugin matching
-                    let segment_callstack_lower: Vec<String> = if segments.len() > 2 {
-                        segments[2].iter().map(|s| s.to_lowercase()).collect()
-                    } else {
-                        Vec::new()
-                    };
+                    // Get callstack segment using named key (task 4.4)
+                    let segment_callstack_lower: Vec<String> = segments
+                        .get(segment_key::CALLSTACK)
+                        .map(|v| v.iter().map(|s| s.to_lowercase()).collect())
+                        .unwrap_or_default();
 
                     // Convert plugins to lowercase set for matching
                     let crashlog_plugins_lower: HashSet<String> =
@@ -1196,12 +1244,11 @@ impl OrchestratorCore {
             }
         }
 
-        // Extract FormIDs from callstack segment (segment 2 includes registers/stack
-        // since it spans from PROBABLE CALL STACK: to MODULES:)
+        // Extract FormIDs from callstack segment (task 4.4)
         // FormIDs are ALWAYS shown regardless of show_formid_values setting.
-        // The show_formid_values setting only controls whether database descriptions are included.
-        if segments.len() > 2 {
-            let callstack_segment = &segments[2];
+        let callstack_segment_opt = segments.get(segment_key::CALLSTACK);
+        if let Some(callstack_segment) = callstack_segment_opt.filter(|v| !v.is_empty()) {
+            let callstack_segment = callstack_segment;
 
             // Convert Arc<str> to String for FormID extraction
             let callstack_lines: Vec<String> =
@@ -1227,10 +1274,13 @@ impl OrchestratorCore {
             }
         }
 
-        // Add Named Records section (scan callstack for named records)
+        // Add Named Records section (scan callstack for named records) (task 4.4)
         if let Some(ref record_scanner) = self.record_scanner {
-            if segments.len() > 2 {
-                let callstack_segment = &segments[2];
+            if let Some(callstack_segment) = segments
+                .get(segment_key::CALLSTACK)
+                .filter(|v| !v.is_empty())
+            {
+                let callstack_segment = callstack_segment;
                 let callstack_lines: Vec<String> =
                     callstack_segment.iter().map(|s| s.to_string()).collect();
 
@@ -1479,18 +1529,27 @@ impl OrchestratorCore {
 
     /// Detects if a crash log is incomplete (missing plugin segment).
     ///
-    /// This matches Python's `_detect_incomplete_log()` logic.
+    /// Uses the named segment map: checks whether the `plugins` segment is empty.
     ///
     /// # Arguments
     ///
-    /// * `segment_plugin` - The plugin segment from the parsed crash log
+    /// * `segments` - Named segment map from `parse_all_sections_arc`
     ///
     /// # Returns
     ///
-    /// `true` if the log is incomplete (plugin segment is empty or too short).
-    pub fn detect_incomplete_log(&self, segment_plugin: &[String]) -> bool {
-        // Python considers log incomplete if plugin segment is missing or empty
-        segment_plugin.is_empty() || segment_plugin.len() < 2
+    /// `true` if the plugins segment is empty or absent.
+    pub fn detect_incomplete_log(&self, segments: &HashMap<String, Vec<Arc<str>>>) -> bool {
+        segments
+            .get(segment_key::PLUGINS)
+            .map(|p| p.is_empty())
+            .unwrap_or(true)
+    }
+
+    /// Compat overload: detect incomplete log from a plain string slice.
+    ///
+    /// Used by callers that still pass a `&[String]` plugins segment.
+    pub fn detect_incomplete_log_slice(&self, segment_plugin: &[String]) -> bool {
+        segment_plugin.is_empty()
     }
 
     /// Detects if a crash log has failed (too short to analyze).
@@ -1526,13 +1585,9 @@ impl OrchestratorCore {
     ///
     /// # Returns
     ///
-    /// A `SettingsValidator` instance configured with the crashgen name
-    /// and ignore settings from the analysis configuration.
+    /// A `SettingsValidator` instance configured from the crashgen registry entry.
     pub fn create_settings_validator(&self) -> SettingsValidator {
-        SettingsValidator::new(
-            self.config.crashgen_name.clone(),
-            self.config.crashgen_ignore.clone(),
-        )
+        Self::settings_validator_from_config(&self.config)
     }
 
     /// Creates a RecordScanner configured for this orchestrator.
@@ -1893,6 +1948,7 @@ mod tests {
             game_version_vr: String::new(),
             game_root_name: "Fallout4".to_string(),
             game_root_name_vr: "Fallout4VR".to_string(),
+            crashgen_registry: std::collections::HashMap::new(),
         }
     }
 
@@ -1924,5 +1980,15 @@ mod tests {
         );
 
         assert_eq!(status, crate::version::CrashgenVersionStatus::Valid);
+    }
+
+    #[test]
+    fn detect_incomplete_log_slice_matches_named_segment_semantics() {
+        let config = AnalysisConfig::new("Fallout4".to_string(), false);
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+
+        // One plugin line should be considered complete by both APIs.
+        let one_plugin = vec!["[00] Fallout4.esm".to_string()];
+        assert!(!orchestrator.detect_incomplete_log_slice(&one_plugin));
     }
 }

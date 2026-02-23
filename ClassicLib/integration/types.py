@@ -33,7 +33,7 @@ class LogParserProtocol(Protocol):
         crashgen_name: str,
         xse_acronym: str,
         game_root_name: str,
-    ) -> tuple[str, str, str, list[list[str]]]: ...
+    ) -> tuple[str, str, str, dict[str, list[str]]]: ...
 
     def extract_section(
         self,
@@ -41,6 +41,10 @@ class LogParserProtocol(Protocol):
         start_marker: str,
         end_marker: str,
     ) -> list[str] | None: ...
+
+    def get_stats(self) -> dict[str, int]: ...
+
+    def detect_vr_log(self, content: str) -> bool: ...
 
 
 class FileIOProtocol(Protocol):

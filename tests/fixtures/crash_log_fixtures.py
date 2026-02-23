@@ -415,16 +415,20 @@ PROBABLE CALL STACK:
 def segment_boundaries() -> list[tuple[str, str]]:
     """Provide standard segment boundaries for crash log parsing.
 
+    NOTE: The anchor-first segmentation no longer uses [Compatibility] as a
+    boundary. This fixture returns the game-output anchors only (retained for
+    tests that still call extract_segments directly).
+
     Returns:
         list[tuple[str, str]]: List of (start_marker, end_marker) tuples.
     """
     return [
-        ("\t[Compatibility]", "SYSTEM SPECS:"),
         ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
         ("PROBABLE CALL STACK:", "MODULES:"),
-        ("MODULES:", "F4SE PLUGINS:"),
-        ("F4SE PLUGINS:", "PLUGINS:"),
-        ("PLUGINS:", "EOF"),
+        ("MODULES:", "PLUGINS:"),
+        ("PLUGINS:", "REGISTERS:"),
+        ("REGISTERS:", "STACK:"),
+        ("STACK:", "EOF"),
     ]
 
 

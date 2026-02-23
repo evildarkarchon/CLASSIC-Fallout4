@@ -127,7 +127,7 @@ fn segment_parsing_benchmarks(c: &mut Criterion) {
                 let parser = LogParser::new(None).expect("parser creation should succeed");
                 b.iter(|| {
                     parser.clear_caches();
-                    parser.parse_segments(lines)
+                    parser.parse_all_sections_arc(lines)
                 });
             },
         );
@@ -139,8 +139,8 @@ fn segment_parsing_benchmarks(c: &mut Criterion) {
             |b, lines| {
                 let parser = LogParser::new(None).expect("parser creation should succeed");
                 // Prime the cache
-                parser.parse_segments(lines);
-                b.iter(|| parser.parse_segments(lines));
+                parser.parse_all_sections_arc(lines);
+                b.iter(|| parser.parse_all_sections_arc(lines));
             },
         );
     }
@@ -409,7 +409,7 @@ fn full_pipeline_benchmarks(c: &mut Criterion) {
                     let lines = log_to_lines(content);
 
                     // Parse segments
-                    let _segments = parser.parse_segments(&lines);
+                    let _segments = parser.parse_all_sections_arc(&lines);
 
                     // Pattern matching
                     let _matches = pattern_matcher.find_all(content);

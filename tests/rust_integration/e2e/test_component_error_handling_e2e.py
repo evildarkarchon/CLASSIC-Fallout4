@@ -198,27 +198,28 @@ class TestComponentErrorHandling:
         # Get segments for downstream components
         segments = results.get("parser", (None, None, None, []))[3]
 
+        # segments is now a dict[str, list[str]] with named keys
+        callstack_seg = segments.get("callstack", []) if isinstance(segments, dict) else corrupted_crash_data
+        plugins_seg = segments.get("plugins", []) if isinstance(segments, dict) else corrupted_crash_data
+
         if "formid_analyzer" in available_components and segments:
             try:
                 formid_analyzer = get_formid_analyzer(mock_yamldata, True, True)
-                callstack = segments[0] if segments else corrupted_crash_data
-                results["formid_analyzer"] = formid_analyzer.extract_formids(callstack)
+                results["formid_analyzer"] = formid_analyzer.extract_formids(callstack_seg)
             except Exception as e:
                 errors["formid_analyzer"] = str(e)
 
         if "plugin_analyzer" in available_components:
             try:
                 plugin_analyzer = get_plugin_analyzer(mock_yamldata)
-                plugin_data = segments[-1] if segments else corrupted_crash_data
-                results["plugin_analyzer"] = plugin_analyzer.loadorder_scan_log(plugin_data)
+                results["plugin_analyzer"] = plugin_analyzer.loadorder_scan_log(plugins_seg)
             except Exception as e:
                 errors["plugin_analyzer"] = str(e)
 
         if "record_scanner" in available_components and segments:
             try:
                 record_scanner = get_record_scanner(mock_yamldata)
-                callstack = segments[0] if segments else corrupted_crash_data
-                results["record_scanner"] = record_scanner.scan_named_records(callstack)
+                results["record_scanner"] = record_scanner.scan_named_records(callstack_seg)
             except Exception as e:
                 errors["record_scanner"] = str(e)
 

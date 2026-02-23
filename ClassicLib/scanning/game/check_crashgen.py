@@ -20,6 +20,9 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
     check (path resolution, plugin detection, TOML validation), then
     converts the result to backward-compatible Python types.
 
+    Note: The Buffout-4-only name gate has been removed. The Rust orchestrator
+    now handles per-crashgen routing via the CrashgenRegistry.
+
     Returns:
         tuple[str, list[ConfigIssue]]: A tuple containing:
             - Formatted message string with detected issues and recommendations
@@ -32,9 +35,6 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
     plugins_path: Path | None = yaml_settings(Path, YAML.Game_Local, f"Game{get_vr()}_Info.Game_Folder_Plugins")
     crashgen_name_setting: str | None = yaml_settings(str, YAML.Game, f"Game{get_vr()}_Info.CRASHGEN_LogName")
     crashgen_name: str = crashgen_name_setting if isinstance(crashgen_name_setting, str) else "Buffout4"
-
-    if not _is_buffout_4_name(crashgen_name):
-        return "", []
 
     if not plugins_path:
         msg = (
@@ -72,9 +72,3 @@ def _convert_severity(rust_severity: object) -> ConfigIssueSeverity:
     if name == "info":
         return "info"
     return "warning"
-
-
-def _is_buffout_4_name(crashgen_name: str) -> bool:
-    """Return True when crashgen name maps to Buffout 4 naming."""
-    normalized_name = "".join(crashgen_name.split()).casefold()
-    return normalized_name == "buffout4"

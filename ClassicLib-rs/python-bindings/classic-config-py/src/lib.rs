@@ -254,6 +254,26 @@ impl PyYamlData {
         Ok(py_set.unbind().into())
     }
 
+    #[getter]
+    fn crashgen_registry(&self, py: Python<'_>) -> PyResult<Py<PyDict>> {
+        let registry = PyDict::new(py);
+
+        for (name, entry) in &self.inner.crashgen_registry {
+            let entry_dict = PyDict::new(py);
+            entry_dict.set_item("display_section", &entry.display_section)?;
+
+            // Sort ignore keys for deterministic Python output across runs.
+            let mut ignore_keys: Vec<&str> = entry.ignore_keys.iter().map(String::as_str).collect();
+            ignore_keys.sort_unstable();
+            entry_dict.set_item("ignore_keys", PyList::new(py, &ignore_keys)?)?;
+
+            entry_dict.set_item("checks", PyList::new(py, &entry.checks)?)?;
+            registry.set_item(name, entry_dict)?;
+        }
+
+        Ok(registry.unbind())
+    }
+
     // ========================================================================
     // Warning Properties
     // ========================================================================

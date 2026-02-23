@@ -127,14 +127,13 @@ class MockDataFactory:
         # Plugin limits configuration
         mock_yaml.plugin_limits = {"esp_limit": 255, "esl_limit": 2048, "warn_at_esp": 200, "warn_at_esl": 1500}
 
-        # Segment configuration for parsing
+        # Segment configuration for parsing (anchor-first: no [Compatibility] boundary)
         mock_yaml.log_segments = {
-            "compatibility": {"start_marker": "\t[Compatibility]", "end_marker": "SYSTEM SPECS:"},
+            "settings": {"start_marker": None, "end_marker": "SYSTEM SPECS:"},
             "system_specs": {"start_marker": "SYSTEM SPECS:", "end_marker": "PROBABLE CALL STACK:"},
             "call_stack": {"start_marker": "PROBABLE CALL STACK:", "end_marker": "MODULES:"},
-            "modules": {"start_marker": "MODULES:", "end_marker": "F4SE PLUGINS:"},
-            "f4se_plugins": {"start_marker": "F4SE PLUGINS:", "end_marker": "PLUGINS:"},
-            "plugins": {"start_marker": "PLUGINS:", "end_marker": "EOF"},
+            "modules": {"start_marker": "MODULES:", "end_marker": "PLUGINS:"},
+            "plugins": {"start_marker": "PLUGINS:", "end_marker": "REGISTERS:"},
         }
 
         # Output formatting configuration
@@ -319,7 +318,16 @@ class MockDataFactory:
                 "game_version": "Fallout 4 v1.10.163",
                 "crashgen_version": "Buffout 4 v1.28.6",
                 "main_error": "EXCEPTION_ACCESS_VIOLATION",
-                "segments": [[], [], ["mock_callstack"], [], [], ["mock_plugins"]],
+                "segments": {
+                    "settings": [],
+                    "system": [],
+                    "callstack": ["mock_callstack"],
+                    "modules": [],
+                    "xse_modules": [],
+                    "plugins": ["mock_plugins"],
+                    "registers": [],
+                    "stack_dump": [],
+                },
                 "formids": ["0x12345678", "0xABCDEF01"],
                 "plugins": {"00": "Fallout4.esm", "01": "TestMod.esp"},
                 "problematic_plugins": ["TestMod.esp"],
@@ -333,7 +341,16 @@ class MockDataFactory:
             return_value={
                 "game_version": "Fallout 4 v1.10.163",
                 "crashgen_version": "Buffout 4 v1.28.6",
-                "segments": [[], [], [], [], [], []],
+                "segments": {
+                    "settings": [],
+                    "system": [],
+                    "callstack": [],
+                    "modules": [],
+                    "xse_modules": [],
+                    "plugins": [],
+                    "registers": [],
+                    "stack_dump": [],
+                },
             }
         )
 

@@ -17,9 +17,8 @@ maintaining full API compatibility.
 - Provides robust error handling and malformed log recovery
 
 ⚡ RUST INTEGRATION:
-- Automatic Rust acceleration when available (transparent to users)
-- Intelligent fallback to Python when Rust components unavailable
-- Centralized integration through RustIntegration module
+- Rust parsing is required and always active
+- Centralized integration through the factory layer
 - Production-tested reliability with comprehensive error handling
 
 📊 IMPACT:
@@ -32,18 +31,13 @@ from typing import Any
 
 import regex as re
 
-from ClassicLib.integration.factory import get_parser, is_component_available
+from ClassicLib.integration.factory import get_parser
 
 logger = logging.getLogger(__name__)
 
 # Use centralized factory for getting the appropriate parser
 _rust_parser = get_parser()
-_rust_available = is_component_available("classic_scanlog", "LogParser")
-
-if _rust_available:
-    logger.info("Rust LogParser loaded successfully via factory - 150x speedup enabled")
-else:
-    logger.debug("Rust LogParser not available. Using pure Python implementation.")
+logger.info("Rust LogParser loaded successfully via factory - 150x speedup enabled")
 
 # Pre-compiled regex patterns for better performance
 _MODULE_NAME_PATTERN = re.compile(r"(.*?\.dll)\s*v?.*", re.IGNORECASE)
@@ -94,147 +88,129 @@ def parse_crash_header(crash_data: list[str], crashgen_name: str, game_root_name
     return game_version or "UNKNOWN", crashgen_version or "UNKNOWN", main_error or "UNKNOWN"
 
 
-def extract_segments(crash_data: list[str], segment_boundaries: list[tuple[str, str]], eof_marker: str) -> list[list[str]]:
-    """Extract segments of data from the crash_data based on provided segment boundaries and an EOF marker.
+def extract_segments(crash_data: list[str], _segment_boundaries: list[tuple[str, str]], _eof_marker: str) -> dict[str, list[str]]:
+    """Extract segments of data from crash_data using anchor-first segmentation.
 
-    This function processes a list of crash data lines and extracts segments defined by start
-    and end boundaries. It supports dynamic handling of multiple segment boundaries and handles
-    edge cases, such as EOF markers or overlapping boundaries.
+    Uses game-output anchors exclusively (SYSTEM SPECS:, PROBABLE CALL STACK:,
+    MODULES:, PLUGINS:, REGISTERS:, STACK:). Crashgen-owned headers like
+    [Compatibility] and [Patches] are treated as regular content lines in
+    the settings segment, not as boundaries.
+
+    The ``segment_boundaries`` and ``eof_marker`` parameters are accepted for
+    API compatibility but are ignored — anchor-first logic is always applied.
 
     Args:
-        crash_data: List of strings where each string represents a line of crash data.
-        segment_boundaries: A list of tuples, where each tuple contains the start and end boundary
-            markers for a segment.
-        eof_marker: Marker string to indicate the end of the file. If encountered while collecting data
-            for a segment, all remaining lines will be appended to that segment.
+        crash_data: List of strings representing lines of crash data.
+        segment_boundaries: Ignored; kept for API compat.
+        eof_marker: Ignored; kept for API compat.
 
     Returns:
-        List of lists, where each inner list represents a segment of extracted data.
+        dict[str, list[str]] with all 8 named keys always present:
+        ``settings``, ``system``, ``callstack``, ``modules``, ``xse_modules``,
+        ``plugins``, ``registers``, ``stack_dump``.
 
     """
-    # Try to use Rust parser if available for significant speedup
-    if _rust_available and _rust_parser:
-        try:
-            # The simplified Rust parser only has parse_segments which uses default boundaries
-            # We need to extract sections individually using extract_section
-            segments = []
+    # Python anchor-first implementation (performance-critical path is via find_segments)
+    return _extract_segments_python(crash_data)
 
-            for start_marker, end_marker in segment_boundaries:
-                section = _rust_parser.extract_section(crash_data, start_marker, end_marker)
-                segments.append(section or [])
 
-            # If we got valid segments, return them
-            if any(segments):
-                return segments
-        except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust parser fails
-            logger.debug(f"Rust parser failed for segments, falling back to Python: {e}")
+# Named keys for the 8 segments (mirrors Rust segment_key module)
+_SEGMENT_KEYS = ("settings", "system", "callstack", "modules", "xse_modules", "plugins", "registers", "stack_dump")
+# Game-output anchors in order (paired with their key)
+_GAME_ANCHORS = [
+    ("SYSTEM SPECS:", "system"),
+    ("PROBABLE CALL STACK:", "callstack"),
+    ("MODULES:", "modules"),
+    ("PLUGINS:", "plugins"),
+    ("REGISTERS:", "registers"),
+    ("STACK:", "stack_dump"),
+]
+# Pattern for XSE sub-header within MODULES section.
+# Require at least two characters before ':' to avoid over-matching one-letter labels (e.g., "A:").
+_XSE_SUBHEADER_RE = re.compile(r"^[A-Z][A-Z0-9 ]{1,}:\s*$")
 
-    # Python fallback implementation (original code)
-    segments: list[list[str]] = []
-    total_lines: int = len(crash_data)
-    current_index = 0
-    segment_index = 0
-    collecting = False
-    segment_start_index = 0
-    current_boundary: str = segment_boundaries[0][0]  # Start with first boundary
 
-    while current_index < total_lines:
-        line: str = crash_data[current_index]
+def _is_xse_subheader(trimmed: str) -> bool:
+    """Return True when a trimmed line looks like a crashgen XSE plugin sub-header."""
+    if not trimmed:
+        return False
+    # Defensive guard: game-output anchors are never crashgen sub-headers.
+    # Main segmentation checks these first, but keep this explicit for parity with Rust.
+    if any(trimmed.startswith(anchor) for anchor, _ in _GAME_ANCHORS):
+        return False
+    if trimmed.startswith("["):
+        return True
+    return bool(_XSE_SUBHEADER_RE.match(trimmed))
 
-        # Check if we've hit a boundary
-        if line.startswith(current_boundary):
-            if collecting:
-                # End of current segment
-                segment_end_index: int = current_index - 1 if current_index > 0 else current_index
-                segments.append(crash_data[segment_start_index:segment_end_index])
-                segment_index += 1
 
-                # Check if we've processed all segments
-                if segment_index == len(segment_boundaries):
-                    break
-            else:
-                # Start of a new segment
-                segment_start_index = current_index + 1 if total_lines > current_index else current_index
+def _extract_segments_python(crash_data: list[str]) -> dict[str, list[str]]:
+    """Pure-Python anchor-first segmentation.
 
-            # Toggle collection state and update boundary
-            collecting: bool = not collecting
-            current_boundary = segment_boundaries[segment_index][int(collecting)]
+    Collects lines into named segments based on game-output anchors only.
+    The settings segment starts from line 1 (no start anchor needed).
+    """
+    result: dict[str, list[str]] = {k: [] for k in _SEGMENT_KEYS}
 
-            # Handle special cases
-            if collecting and current_boundary == eof_marker:
-                # Add all remaining lines
-                segments.append(crash_data[segment_start_index:])
-                break
+    current_key = "settings"
+    xse_subheader_found = False
 
-            if not collecting:
-                # Don't increment index in case the current line is also the next start boundary
-                current_index -= 1
+    for line in crash_data:
+        trimmed = line.strip()
 
-        # Check if we've reached the end while still collecting
-        if collecting and current_index == total_lines - 1:
-            segments.append(crash_data[segment_start_index:])
+        # Check game-output anchors first (most important to check before xse sub-header)
+        matched_anchor = False
+        for anchor, key in _GAME_ANCHORS:
+            if trimmed.startswith(anchor):
+                current_key = key
+                if key == "modules":
+                    xse_subheader_found = False
+                matched_anchor = True
+                break  # Skip adding this anchor line to any segment
 
-        current_index += 1
+        if matched_anchor:
+            continue
 
-    return segments
+        # Within MODULES section, detect XSE plugin sub-header
+        if current_key == "modules" and not xse_subheader_found and _is_xse_subheader(trimmed):
+            xse_subheader_found = True
+            current_key = "xse_modules"
+            continue  # sub-header line itself is excluded
+
+        result[current_key].append(line)
+
+    return result
 
 
 def find_segments(
     crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
-) -> tuple[str, str, str, list[list[str]]]:
-    """Parse crash report data to identify and extract specific segments of information. Each segment
-    corresponds to a defined boundary within the crash report. The function also extracts metadata
-    such as game version, crash generation version, and the main error message.
+) -> tuple[str, str, str, dict[str, list[str]]]:
+    """Parse crash report data to identify and extract specific segments of information.
+
+    Uses anchor-first segmentation: game-output anchors (SYSTEM SPECS:, PROBABLE
+    CALL STACK:, MODULES:, PLUGINS:, REGISTERS:, STACK:) define boundaries.
+    Crashgen-owned headers like [Compatibility] and [Patches] are content lines.
 
     Arguments:
         crash_data: List of strings representing the input crash report data.
-        crashgen_name: Name of the crash generator tool.
-        xse_acronym: Acronym of the plugin or extension system for identifying specific segments.
-        game_root_name: Name of the game's root directory for metadata extraction.
+        crashgen_name: Name of the crash generator tool (used for header extraction).
+        xse_acronym: Acronym of the script extender (used for header extraction).
+        game_root_name: Name of the game's root directory (used for header extraction).
 
     Returns:
         A tuple containing:
             - game_version: Extracted game version from the crash report header.
             - crashgen_version: Version of the crash generation tool as extracted.
             - main_error: The primary error message derived from the header.
-            - processed_segments: A list of lists representing stripped contents of each segmented portion
-              of the crash report. Missing segments are represented as empty lists.
+            - segments: dict[str, list[str]] with all 8 named keys always present:
+              ``settings``, ``system``, ``callstack``, ``modules``, ``xse_modules``,
+              ``plugins``, ``registers``, ``stack_dump``.
 
     """
-    # Use Rust parser if available for 150x speedup
-    if _rust_available and hasattr(_rust_parser, "find_segments"):
-        try:
-            return _rust_parser.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
-        except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust parser fails
-            logger.warning(f"Rust parser failed, falling back to Python: {e}")
-            # Fall through to Python implementation
-
-    # Python fallback implementation
-    # Define segment boundaries
-    segment_boundaries: list[tuple[str, str]] = [
-        ("\t[Compatibility]", "SYSTEM SPECS:"),  # segment_crashgen
-        ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),  # segment_system
-        ("PROBABLE CALL STACK:", "MODULES:"),  # segment_callstack
-        ("MODULES:", f"{xse_acronym.upper()} PLUGINS:"),  # segment_allmodules
-        (f"{xse_acronym.upper()} PLUGINS:", "PLUGINS:"),  # segment_xsemodules
-        ("PLUGINS:", "EOF"),  # segment_plugins
-    ]
-
-    # Extract metadata
-    game_version, crashgen_version, main_error = parse_crash_header(crash_data, crashgen_name, game_root_name)
-
-    # Parse segments
-    segments: list[list[str]] = extract_segments(crash_data, segment_boundaries, "EOF")
-
-    # Process segments to strip whitespace
-    processed_segments: list[list[str]] = [[line.strip() for line in segment] for segment in segments] if segments else segments
-
-    # Ensure all expected segments exist (add empty lists for missing segments)
-    missing_segments_count: int = len(segment_boundaries) - len(processed_segments)
-    if missing_segments_count > 0:
-        processed_segments.extend([[]] * missing_segments_count)  # pyright: ignore[reportUnknownArgumentType]
-
-    return game_version, crashgen_version, main_error, processed_segments
+    try:
+        return _rust_parser.find_segments(crash_data, crashgen_name, xse_acronym, game_root_name)
+    except Exception as e:  # noqa: BLE001 - Surface parser failures explicitly (Rust is required)
+        logger.error("Rust parser failed in find_segments: %s", e)
+        raise
 
 
 def extract_module_names(module_texts: set[str]) -> set[str]:
@@ -277,7 +253,7 @@ def is_rust_parser_available() -> bool:
         bool: True if Rust parser is loaded, False otherwise
 
     """
-    return _rust_available
+    return True
 
 
 def get_parser_stats() -> dict[str, Any]:
@@ -287,17 +263,16 @@ def get_parser_stats() -> dict[str, Any]:
         dict: Statistics including cache sizes and parser type
 
     """
-    stats = {
-        "parser_type": "rust" if _rust_available else "python",
-        "rust_available": _rust_available,
+    stats: dict[str, Any] = {
+        "parser_type": "rust",
+        "rust_available": True,
     }
 
-    if _rust_available and _rust_parser:
-        try:
-            rust_stats = _rust_parser.get_stats()
-            stats.update(rust_stats)
-        except Exception:  # noqa: BLE001 - Intentional: stats collection is optional
-            _ = None  # pass  # Stats collection failures are non-critical
+    try:
+        rust_stats = _rust_parser.get_stats()
+        stats.update(rust_stats)
+    except Exception:  # noqa: BLE001 - Intentional: stats collection is optional
+        _ = None  # pass  # Stats collection failures are non-critical
 
     return stats
 
@@ -315,15 +290,5 @@ def detect_vr_log(crash_data: list[str] | str) -> bool:
         True if VR indicators are found, False otherwise
 
     """
-    # Try to use Rust implementation if available
-    if _rust_available and hasattr(_rust_parser, "detect_vr_log"):
-        try:
-            content = "\n".join(crash_data) if isinstance(crash_data, list) else crash_data
-            return _rust_parser.detect_vr_log(content)
-        except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback
-            logger.debug(f"Rust VR detection failed, falling back to Python: {e}")
-
-    # Python fallback implementation
-    content = "\n".join(crash_data).lower() if isinstance(crash_data, list) else crash_data.lower()
-
-    return "fallout4vr.exe" in content or "fallout4vr.esm" in content
+    content = "\n".join(crash_data) if isinstance(crash_data, list) else crash_data
+    return _rust_parser.detect_vr_log(content)

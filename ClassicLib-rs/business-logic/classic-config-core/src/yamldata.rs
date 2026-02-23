@@ -8,8 +8,82 @@
 
 use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
+use std::collections::HashMap;
 use std::path::PathBuf;
-use yaml_rust2::YamlLoader;
+use yaml_rust2::{Yaml, YamlLoader};
+
+/// Raw per-crashgen settings configuration deserialized from YAML.
+///
+/// This is a simple transport type used to carry `Crashgen_Registry` data
+/// from `YamlDataCore` into the crash-log analysis layer (`classic-scanlog-core`),
+/// which converts it to the `CrashgenRegistry` / `CrashgenEntry` types.
+#[derive(Debug, Clone)]
+pub struct CrashgenEntryRaw {
+    /// Bracket header used by this crashgen (e.g., `"[Compatibility]"`), for display only.
+    pub display_section: String,
+    /// Settings keys to skip in `check_disabled_settings()`.
+    pub ignore_keys: Vec<String>,
+    /// String names of named checks (e.g., `"achievements"`, `"memory_management"`).
+    pub checks: Vec<String>,
+}
+
+/// Parse the `Crashgen_Registry` top-level key from a game YAML document.
+///
+/// Returns a map of crashgen name → raw entry data (including the `"default"` key if present).
+/// Missing or malformed entries are silently skipped.
+fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw> {
+    let mut result = HashMap::new();
+
+    let registry_node = match &game_data["Crashgen_Registry"] {
+        Yaml::Hash(map) => map,
+        _ => return result,
+    };
+
+    for (name_yaml, entry_yaml) in registry_node {
+        let name = match name_yaml {
+            Yaml::String(s) => s.clone(),
+            _ => continue,
+        };
+
+        let display_section = match &entry_yaml["display_section"] {
+            Yaml::String(s) => s.clone(),
+            _ => String::new(),
+        };
+
+        let ignore_keys: Vec<String> = match &entry_yaml["ignore_keys"] {
+            Yaml::Array(arr) => arr
+                .iter()
+                .filter_map(|v| match v {
+                    Yaml::String(s) => Some(s.clone()),
+                    _ => None,
+                })
+                .collect(),
+            _ => Vec::new(),
+        };
+
+        let checks: Vec<String> = match &entry_yaml["checks"] {
+            Yaml::Array(arr) => arr
+                .iter()
+                .filter_map(|v| match v {
+                    Yaml::String(s) => Some(s.clone()),
+                    _ => None,
+                })
+                .collect(),
+            _ => Vec::new(),
+        };
+
+        result.insert(
+            name,
+            CrashgenEntryRaw {
+                display_section,
+                ignore_keys,
+                checks,
+            },
+        );
+    }
+
+    result
+}
 
 /// The `YamlDataCore` structure represents the core data configuration for YAML-based game settings and diagnostics.
 /// It stores various pieces of information related to game configurations, crash generation, warnings, mod databases,
@@ -144,6 +218,13 @@ pub struct YamlDataCore {
     pub game_root_name: String,
     /// Main root name for the game (VR, from GameVR_Info.Main_Root_Name)
     pub game_root_name_vr: String,
+
+    /// Per-crashgen settings registry loaded from `Crashgen_Registry` in the game YAML.
+    ///
+    /// Maps crashgen names (including `"default"`) to their raw configuration data.
+    /// Converted to `CrashgenRegistry` by `build_analysis_config_from_yaml` in
+    /// `classic-scanlog-core`.
+    pub crashgen_registry: HashMap<String, CrashgenEntryRaw>,
 }
 
 impl YamlDataCore {
@@ -360,6 +441,9 @@ impl YamlDataCore {
 
             // Ignore YAML values
             ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
+
+            // Per-crashgen registry (game YAML)
+            crashgen_registry: parse_crashgen_registry(game_data),
         })
     }
 
@@ -526,6 +610,9 @@ impl YamlDataCore {
 
             // Ignore YAML values
             ignore_list: yaml_ops.get_vec_value(ignore_data, &format!("CLASSIC_Ignore_{}", game)),
+
+            // Per-crashgen registry (game YAML)
+            crashgen_registry: parse_crashgen_registry(game_data),
         })
     }
 }

@@ -554,5 +554,5 @@ class CrashLogFactory:
         return {
             "expected_formids": formid_count,
             "expected_plugins": plugin_count,
-            "expected_segments": 6,  # Standard Buffout 4 segments
+            "expected_segments": 8,  # 8 named segments in anchor-first schema
         }

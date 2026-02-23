@@ -277,6 +277,22 @@ class TestYamlDataIntegration:
         for item in yamldata.ignore_list:
             assert isinstance(item, str), f"Ignore item should be string, got {type(item)}"
 
+    def test_crashgen_registry_ignore_keys_are_sorted(self, rust_yaml_files):
+        """crashgen_registry.ignore_keys should be deterministic (sorted) for stable Python output."""
+        root_dir = rust_yaml_files["root_dir"]
+        data_dir = rust_yaml_files["data_dir"]
+        yaml_dirs = [str(root_dir), str(data_dir)]
+
+        yamldata = YamlData(yaml_dirs, "Fallout4", False)
+        registry = yamldata.crashgen_registry
+
+        assert isinstance(registry, dict)
+        assert "Buffout 4" in registry
+
+        ignore_keys = registry["Buffout 4"]["ignore_keys"]
+        assert isinstance(ignore_keys, list)
+        assert ignore_keys == sorted(ignore_keys)
+
     def test_yamldata_mod_databases_structure(self, rust_yaml_files):
         """Test mod databases have correct structure."""
         root_dir = rust_yaml_files["root_dir"]

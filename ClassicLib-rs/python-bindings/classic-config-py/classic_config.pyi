@@ -203,6 +203,15 @@ class YamlData:
 
         """
 
+    @property
+    def crashgen_registry(self) -> dict[str, dict[str, str | list[str]]]:
+        """Per-crashgen settings registry loaded from game YAML.
+
+        Maps crashgen names (including ``"default"``) to entry dictionaries
+        with keys ``display_section`` (str), ``ignore_keys`` (list[str]),
+        and ``checks`` (list[str]).
+        """
+
     # Game root names
     @property
     def game_root_name(self) -> str:

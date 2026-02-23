@@ -118,12 +118,13 @@ class TestComponentDataFlow:
             game_root_name=mock_yamldata.game_root_name,
         )
 
-        # Validate parser output structure
-        assert isinstance(segments, list), "Segments should be a list"
-        assert len(segments) >= 3, "Should have at least 3 segments (compatibility, system, callstack)"
+        # Validate parser output structure — now a dict with 8 named keys
+        assert isinstance(segments, dict), "Segments should be a dict"
+        assert "callstack" in segments, "Should have callstack key"
+        assert "plugins" in segments, "Should have plugins key"
 
-        # Extract call stack segment (typically index 2)
-        callstack_segment = segments[2] if len(segments) > 2 else []
+        # Extract call stack segment by named key
+        callstack_segment = segments.get("callstack", [])
 
         # Pass to FormID analyzer
         formid_analyzer = get_formid_analyzer(yamldata=mock_yamldata, show_values=True, db_exists=True)
@@ -157,8 +158,8 @@ class TestComponentDataFlow:
             game_root_name=mock_yamldata.game_root_name,
         )
 
-        # Extract plugins segment (typically the last segment)
-        plugins_segment = segments[-1] if segments else []
+        # Extract plugins segment by named key
+        plugins_segment = segments.get("plugins", []) if isinstance(segments, dict) else []
 
         # Pass to Plugin analyzer
         plugin_analyzer = get_plugin_analyzer(mock_yamldata)
@@ -196,8 +197,8 @@ class TestComponentDataFlow:
             game_root_name=mock_yamldata.game_root_name,
         )
 
-        # Extract call stack segment
-        callstack_segment = segments[2] if len(segments) > 2 else []
+        # Extract call stack segment by named key
+        callstack_segment = segments.get("callstack", []) if isinstance(segments, dict) else []
 
         # Pass to Record scanner
         record_scanner = get_record_scanner(mock_yamldata)
@@ -243,18 +244,19 @@ class TestComponentDataFlow:
             # Process through all analyzers
             results = {}
 
-            if len(segments) > 2:
-                callstack_segment = segments[2]
+            # Use named keys (anchor-first segmentation)
+            callstack_segment = segments.get("callstack", []) if isinstance(segments, dict) else []
+            plugins_segment = segments.get("plugins", []) if isinstance(segments, dict) else []
 
+            if callstack_segment:
                 # FormID analysis
                 results["formids"] = formid_analyzer.extract_formids(callstack_segment)
 
                 # Record scanning
                 results["records_fragment"], results["record_matches"] = record_scanner.scan_named_records(callstack_segment)
 
-            # Plugin analysis (last segment)
-            if segments:
-                plugins_segment = segments[-1]
+            # Plugin analysis
+            if plugins_segment:
                 results["plugins"], _, _ = plugin_analyzer.loadorder_scan_log(plugins_segment)
 
         # Validate complete chain results

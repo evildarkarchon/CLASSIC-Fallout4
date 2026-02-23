@@ -1,80 +1,56 @@
 //! Settings Validator - Crash generator settings validation
 //!
 //! This module validates crash generator settings for:
-//! - Buffout achievements compatibility
-//! - Memory management settings (with X-Cell/ScrapHeap detection)
-//! - Archive limit settings
-//! - LooksMenu (F4EE) compatibility
-//! - Disabled settings detection
+//! - Achievements mod compatibility (named check — only when registered)
+//! - Memory management settings with X-Cell/ScrapHeap detection (named check)
+//! - Archive limit settings (named check)
+//! - LooksMenu (F4EE) compatibility (named check)
+//! - Disabled settings detection (universal — runs for all crashgens)
+//!
+//! Named checks run only when their `CheckId` is listed in the crashgen's
+//! registry entry. `check_disabled_settings()` always runs for every crashgen.
 
+use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
+use crate::report::ReportFragment;
 use std::collections::{HashMap, HashSet};
 
-use crate::report::ReportFragment;
-
-/// High-performance settings validator
+/// Settings validator driven by per-crashgen registry entries.
+///
+/// Constructed with a pre-resolved `CrashgenEntry` (looked up from the
+/// `CrashgenRegistry` before the scan begins). Named checks are gated on
+/// the entry's `checks` list; `check_disabled_settings()` always runs.
 #[derive(Clone)]
 pub struct SettingsValidator {
+    /// Resolved crashgen name for use in human-readable messages.
     crashgen_name: String,
-    crashgen_ignore: HashSet<String>,
+    /// Pre-resolved registry entry for this crashgen.
+    entry: CrashgenEntry,
 }
 
 impl SettingsValidator {
-    fn buffout_settings_checks_enabled(&self) -> bool {
-        let normalized: String = self
-            .crashgen_name
-            .chars()
-            .filter(|ch| !ch.is_whitespace())
-            .collect();
-        normalized.eq_ignore_ascii_case("Buffout4")
-    }
-
-    /// Creates a new settings validator for crash generator configuration.
-    ///
-    /// This constructor initializes a validator that can check crash generator
-    /// settings for common misconfigurations and compatibility issues with
-    /// installed mods like X-Cell, ScrapHeap, and Achievements mods.
+    /// Creates a new settings validator from a pre-resolved crashgen name and entry.
     ///
     /// # Arguments
     ///
-    /// * `crashgen_name` - The name of the crash generator (e.g., "Buffout 4")
-    /// * `crashgen_ignore` - List of setting names to ignore during validation
-    ///
-    /// # Returns
-    ///
-    /// A new `SettingsValidator` instance ready to validate crash generator settings.
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// use classic_scanlog_core::settings_validator::SettingsValidator;
-    ///
-    /// let validator = SettingsValidator::new(
-    ///     "Buffout 4".to_string(),
-    ///     vec!["SomeIgnoredSetting".to_string()]
-    /// );
-    /// ```
-    pub fn new(crashgen_name: String, crashgen_ignore: Vec<String>) -> Self {
+    /// * `crashgen_name` - Display name of the crash generator (e.g., `"Buffout 4"`)
+    /// * `entry` - Pre-resolved `CrashgenEntry` from the `CrashgenRegistry`
+    pub fn new(crashgen_name: String, entry: CrashgenEntry) -> Self {
         Self {
             crashgen_name,
-            crashgen_ignore: crashgen_ignore.into_iter().collect(),
+            entry,
         }
     }
 
-    /// Scan Buffout achievements setting for conflicts
+    /// Scan for Achievements mod conflicts.
     ///
-    /// Args:
-    ///     xse_modules: Set of loaded XSE plugin modules
-    ///     crashgen: Crash generator configuration settings
-    ///
-    /// Returns:
-    ///     ReportFragment containing validation results
+    /// Runs only when `CheckId::Achievements` is in the crashgen's registry checks.
     pub fn scan_buffout_achievements_setting(
         &self,
         xse_modules: HashSet<String>,
         crashgen: &HashMap<String, String>,
     ) -> Result<ReportFragment> {
-        if !self.buffout_settings_checks_enabled() {
+        if !self.entry.checks.contains(&CheckId::Achievements) {
             return Ok(ReportFragment::empty());
         }
 
@@ -104,16 +80,9 @@ impl SettingsValidator {
         Ok(ReportFragment::from_lines(lines))
     }
 
-    /// Analyze and validate memory management settings
+    /// Analyze and validate memory management settings.
     ///
-    /// Args:
-    ///     crashgen: Crash generator configuration settings
-    ///     has_xcell: Whether X-Cell mod is installed
-    ///     has_old_xcell: Whether outdated X-Cell is installed
-    ///     has_baka_scrapheap: Whether Baka ScrapHeap mod is installed
-    ///
-    /// Returns:
-    ///     ReportFragment containing validation results
+    /// Runs only when `CheckId::MemoryManagement` is in the crashgen's registry checks.
     pub fn scan_buffout_memorymanagement_settings(
         &self,
         crashgen: &HashMap<String, String>,
@@ -121,7 +90,7 @@ impl SettingsValidator {
         has_old_xcell: bool,
         has_baka_scrapheap: bool,
     ) -> Result<ReportFragment> {
-        if !self.buffout_settings_checks_enabled() {
+        if !self.entry.checks.contains(&CheckId::MemoryManagement) {
             return Ok(ReportFragment::empty());
         }
 
@@ -160,20 +129,15 @@ impl SettingsValidator {
         Ok(ReportFragment::from_lines(lines))
     }
 
-    /// Scan and validate ArchiveLimit setting
+    /// Scan and validate the ArchiveLimit setting.
     ///
-    /// Args:
-    ///     crashgen: Crash generator configuration settings
-    ///     crashgen_version: Version of the crash generator (optional)
-    ///
-    /// Returns:
-    ///     ReportFragment containing validation results
+    /// Runs only when `CheckId::ArchiveLimit` is in the crashgen's registry checks.
     pub fn scan_archivelimit_setting(
         &self,
         crashgen: &HashMap<String, String>,
-        crashgen_version: Option<(u32, u32, u32)>, // (major, minor, patch)
+        crashgen_version: Option<(u32, u32, u32)>,
     ) -> Result<ReportFragment> {
-        if !self.buffout_settings_checks_enabled() {
+        if !self.entry.checks.contains(&CheckId::ArchiveLimit) {
             return Ok(ReportFragment::empty());
         }
 
@@ -207,20 +171,17 @@ impl SettingsValidator {
         Ok(ReportFragment::from_lines(lines))
     }
 
-    /// Analyze LooksMenu (F4EE) setting for compatibility
+    /// Analyze LooksMenu (F4EE) setting for compatibility.
     ///
-    /// Args:
-    ///     crashgen: Crash generator configuration settings
-    ///     xse_modules: Set of loaded XSE plugin modules
-    ///
-    /// Returns:
-    ///     ReportFragment containing validation results
+    /// Runs only when `CheckId::LooksMenu` is in the crashgen's registry checks.
+    /// The warning message references `self.entry.display_section` instead of
+    /// the hardcoded string `[Compatibility]`.
     pub fn scan_buffout_looksmenu_setting(
         &self,
         crashgen: &HashMap<String, String>,
         xse_modules: HashSet<String>,
     ) -> Result<ReportFragment> {
-        if !self.buffout_settings_checks_enabled() {
+        if !self.entry.checks.contains(&CheckId::LooksMenu) {
             return Ok(ReportFragment::empty());
         }
 
@@ -228,9 +189,17 @@ impl SettingsValidator {
 
         if let Some(f4ee) = crashgen.get("F4EE") {
             let f4ee_enabled = f4ee.parse::<bool>().unwrap_or(false);
+            let display_section = if self.entry.display_section.is_empty() {
+                "[Compatibility]".to_string()
+            } else {
+                self.entry.display_section.clone()
+            };
 
             if !f4ee_enabled && xse_modules.contains("f4ee.dll") {
-                lines.push("# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under [Compatibility] is set to FALSE # \n".to_string());
+                lines.push(format!(
+                    "# ❌ CAUTION : Looks Menu is installed, but F4EE parameter under {} is set to FALSE # \n",
+                    display_section
+                ));
                 lines.push(format!(
                     " FIX: Open {}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu.\n\n-----\n",
                     self.crashgen_name
@@ -246,13 +215,11 @@ impl SettingsValidator {
         Ok(ReportFragment::from_lines(lines))
     }
 
-    /// Check for disabled settings in crash generator configuration
+    /// Check for disabled settings in crash generator configuration.
     ///
-    /// Args:
-    ///     crashgen: Crash generator configuration settings
-    ///
-    /// Returns:
-    ///     ReportFragment containing notices about disabled settings
+    /// This check runs universally for every crashgen (not gated on named checks).
+    /// Uses `self.entry.ignore_keys` as the skip set — for the default entry this
+    /// is empty, so all disabled settings are flagged.
     pub fn check_disabled_settings(
         &self,
         crashgen: &HashMap<String, String>,
@@ -263,7 +230,7 @@ impl SettingsValidator {
             let setting_name = key.clone();
 
             if let Ok(false) = value.parse::<bool>() {
-                if !self.crashgen_ignore.contains(&setting_name) {
+                if !self.entry.ignore_keys.contains(&setting_name) {
                     lines.push(format!(
                         "* NOTICE : {} is disabled in your {} settings, is this intentional? * \n\n-----\n",
                         setting_name, self.crashgen_name
@@ -297,7 +264,6 @@ impl SettingsValidator {
         has_baka: bool,
         separator: &str,
     ) {
-        // Create configuration tuple for cleaner logic
         let config = (mem_enabled, has_xcell, has_baka);
 
         match config {
@@ -424,10 +390,220 @@ impl SettingsValidator {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::crashgen_registry::{CheckId, CrashgenEntry};
+
+    fn make_buffout_entry() -> CrashgenEntry {
+        CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: [
+                "F4EE",
+                "WaitForDebugger",
+                "Achievements",
+                "InputSwitch",
+                "AutoOpen",
+                "PromptUpload",
+                "MemoryManagerDebug",
+                "BSTextureStreamerLocalHeap",
+                "ArchiveLimit",
+                "MemoryManager",
+            ]
+            .iter()
+            .map(|s| s.to_string())
+            .collect(),
+            checks: vec![
+                CheckId::Achievements,
+                CheckId::MemoryManagement,
+                CheckId::ArchiveLimit,
+                CheckId::LooksMenu,
+            ],
+        }
+    }
+
+    fn make_addictol_entry() -> CrashgenEntry {
+        CrashgenEntry {
+            display_section: "[Patches]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![],
+        }
+    }
 
     #[test]
-    fn test_achievements_validation() {
-        let validator = SettingsValidator::new("Buffout 4".to_string(), vec![]);
+    fn test_buffout_entry_runs_all_4_named_checks() {
+        let validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        crashgen.insert("MemoryManager".to_string(), "true".to_string());
+        crashgen.insert("ArchiveLimit".to_string(), "true".to_string());
+        crashgen.insert("F4EE".to_string(), "false".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("achievements.dll".to_string());
+        xse.insert("f4ee.dll".to_string());
+
+        // All 4 named checks should return non-empty fragments
+        let ach = validator
+            .scan_buffout_achievements_setting(xse.clone(), &crashgen)
+            .unwrap();
+        let mem = validator
+            .scan_buffout_memorymanagement_settings(&crashgen, false, false, false)
+            .unwrap();
+        let arc = validator
+            .scan_archivelimit_setting(&crashgen, Some((1, 28, 0)))
+            .unwrap();
+        let lm = validator
+            .scan_buffout_looksmenu_setting(&crashgen, xse)
+            .unwrap();
+
+        assert!(!ach.is_empty(), "Achievements check should run");
+        assert!(!mem.is_empty(), "MemoryManagement check should run");
+        assert!(!arc.is_empty(), "ArchiveLimit check should run");
+        assert!(!lm.is_empty(), "LooksMenu check should run");
+    }
+
+    #[test]
+    fn test_addictol_entry_runs_0_named_checks() {
+        let validator = SettingsValidator::new("Addictol".to_string(), make_addictol_entry());
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        crashgen.insert("MemoryManager".to_string(), "true".to_string());
+        crashgen.insert("ArchiveLimit".to_string(), "true".to_string());
+        crashgen.insert("F4EE".to_string(), "false".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("achievements.dll".to_string());
+        xse.insert("f4ee.dll".to_string());
+
+        // All 4 named checks should return empty (not registered)
+        let ach = validator
+            .scan_buffout_achievements_setting(xse.clone(), &crashgen)
+            .unwrap();
+        let mem = validator
+            .scan_buffout_memorymanagement_settings(&crashgen, false, false, false)
+            .unwrap();
+        let arc = validator
+            .scan_archivelimit_setting(&crashgen, Some((1, 28, 0)))
+            .unwrap();
+        let lm = validator
+            .scan_buffout_looksmenu_setting(&crashgen, xse)
+            .unwrap();
+
+        assert!(
+            ach.is_empty(),
+            "Achievements check should NOT run for Addictol"
+        );
+        assert!(
+            mem.is_empty(),
+            "MemoryManagement check should NOT run for Addictol"
+        );
+        assert!(
+            arc.is_empty(),
+            "ArchiveLimit check should NOT run for Addictol"
+        );
+        assert!(lm.is_empty(), "LooksMenu check should NOT run for Addictol");
+    }
+
+    #[test]
+    fn test_both_entries_run_check_disabled_settings() {
+        let mut crashgen = HashMap::new();
+        crashgen.insert("SomeSetting".to_string(), "false".to_string());
+
+        // Buffout with ignore list: SomeSetting not in ignore list → should flag
+        let buffout_validator =
+            SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
+        let buffout_result = buffout_validator
+            .check_disabled_settings(&crashgen)
+            .unwrap();
+        assert!(
+            !buffout_result.is_empty(),
+            "Buffout should flag disabled SomeSetting"
+        );
+
+        // Addictol with empty ignore list: should also flag
+        let addictol_validator =
+            SettingsValidator::new("Addictol".to_string(), make_addictol_entry());
+        let addictol_result = addictol_validator
+            .check_disabled_settings(&crashgen)
+            .unwrap();
+        assert!(
+            !addictol_result.is_empty(),
+            "Addictol should flag disabled SomeSetting"
+        );
+    }
+
+    #[test]
+    fn test_default_entry_runs_only_check_disabled_settings() {
+        let default_entry = CrashgenEntry::default_entry();
+        let validator = SettingsValidator::new("UnknownCrashgen".to_string(), default_entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        crashgen.insert("SomeSetting".to_string(), "false".to_string());
+
+        let xse = HashSet::new();
+
+        // Named checks should all be empty
+        let ach = validator
+            .scan_buffout_achievements_setting(xse.clone(), &crashgen)
+            .unwrap();
+        assert!(
+            ach.is_empty(),
+            "Achievements should not run for default entry"
+        );
+
+        // check_disabled_settings should run (and flag SomeSetting)
+        let disabled = validator.check_disabled_settings(&crashgen).unwrap();
+        assert!(
+            !disabled.is_empty(),
+            "check_disabled_settings should run for default entry"
+        );
+    }
+
+    #[test]
+    fn test_ignore_keys_skip_settings_in_check_disabled() {
+        let entry = make_buffout_entry();
+        // F4EE is in ignore_keys
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("F4EE".to_string(), "false".to_string()); // in ignore list
+        crashgen.insert("SomeOtherKey".to_string(), "false".to_string()); // not in ignore list
+
+        let result = validator.check_disabled_settings(&crashgen).unwrap();
+        let lines = result.to_list();
+
+        // F4EE should be skipped
+        assert!(!lines.iter().any(|l| l.contains("F4EE")));
+        // SomeOtherKey should be flagged
+        assert!(lines.iter().any(|l| l.contains("SomeOtherKey")));
+    }
+
+    #[test]
+    fn test_looksmenu_uses_display_section_from_entry() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![CheckId::LooksMenu],
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("F4EE".to_string(), "false".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("f4ee.dll".to_string());
+
+        let result = validator
+            .scan_buffout_looksmenu_setting(&crashgen, xse)
+            .unwrap();
+        let lines = result.to_list();
+        assert!(lines.iter().any(|l| l.contains("[Compatibility]")));
+    }
+
+    #[test]
+    fn test_achievements_validation_still_works() {
+        let validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
 
         let mut crashgen = HashMap::new();
         crashgen.insert("Achievements".to_string(), "true".to_string());
@@ -446,7 +622,7 @@ mod tests {
 
     #[test]
     fn test_memory_management_xcell_conflict() {
-        let validator = SettingsValidator::new("Buffout 4".to_string(), vec![]);
+        let validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
 
         let mut crashgen = HashMap::new();
         crashgen.insert("MemoryManager".to_string(), "true".to_string());
@@ -466,7 +642,7 @@ mod tests {
 
     #[test]
     fn test_archive_limit_warning() {
-        let validator = SettingsValidator::new("Buffout 4".to_string(), vec![]);
+        let validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
 
         let mut crashgen = HashMap::new();
         crashgen.insert("ArchiveLimit".to_string(), "true".to_string());
@@ -478,38 +654,5 @@ mod tests {
         assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("ArchiveLimit")));
-    }
-
-    #[test]
-    fn test_non_buffout_name_disables_buffout_checks() {
-        let validator = SettingsValidator::new("Crash Logger".to_string(), vec![]);
-
-        let mut crashgen = HashMap::new();
-        crashgen.insert("Achievements".to_string(), "true".to_string());
-        crashgen.insert("MemoryManager".to_string(), "true".to_string());
-        crashgen.insert("ArchiveLimit".to_string(), "true".to_string());
-        crashgen.insert("F4EE".to_string(), "false".to_string());
-
-        let mut xse_modules = HashSet::new();
-        xse_modules.insert("achievements.dll".to_string());
-        xse_modules.insert("f4ee.dll".to_string());
-
-        let achievements = validator
-            .scan_buffout_achievements_setting(xse_modules.clone(), &crashgen)
-            .unwrap();
-        let memory = validator
-            .scan_buffout_memorymanagement_settings(&crashgen, true, false, false)
-            .unwrap();
-        let archive = validator
-            .scan_archivelimit_setting(&crashgen, Some((1, 28, 0)))
-            .unwrap();
-        let looksmenu = validator
-            .scan_buffout_looksmenu_setting(&crashgen, xse_modules)
-            .unwrap();
-
-        assert!(achievements.is_empty());
-        assert!(memory.is_empty());
-        assert!(archive.is_empty());
-        assert!(looksmenu.is_empty());
     }
 }

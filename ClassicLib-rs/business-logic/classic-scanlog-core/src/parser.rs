@@ -20,8 +20,11 @@ use std::num::NonZeroUsize;
 use std::sync::Arc;
 
 // Type aliases for complex cache types (Clippy type_complexity fix)
-/// Cache for parsed segments indexed by hash, containing vectors of segment lines
-type SegmentCache = Arc<RwLock<LruCache<u64, Vec<Vec<Arc<str>>>>>>;
+/// Cache for parsed named segments indexed by hash.
+///
+/// Keys are the xxhash3 of the log (calculated from line count + sample lines).
+/// Values are `HashMap<String, Vec<Arc<str>>>` as produced by `parse_all_sections_arc`.
+type SegmentCache = Arc<RwLock<LruCache<u64, HashMap<String, Vec<Arc<str>>>>>>;
 
 /// Cache for pattern matches indexed by cache key, containing tuples of (line_num, pattern_name, matched_text)
 type PatternCache = Arc<RwLock<LruCache<String, Vec<(usize, String, String)>>>>;
@@ -63,10 +66,10 @@ static CRASHGEN_HEADER_PATTERN: Lazy<Regex> = Lazy::new(|| {
         .expect("Invalid crashgen header regex")
 });
 
-/// Segment boundary definitions for different crash log formats
+/// Legacy segment boundary definitions (kept for `parse_complete` backward compat only).
+#[allow(dead_code)]
 static SEGMENT_BOUNDARIES: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|| {
     vec![
-        ("[Compatibility]", "SYSTEM SPECS:"),
         ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
         ("PROBABLE CALL STACK:", "MODULES:"),
         ("MODULES:", "PLUGINS:"),
@@ -78,7 +81,6 @@ static SEGMENT_BOUNDARIES: Lazy<Vec<(&'static str, &'static str)>> = Lazy::new(|
 
 /// High-performance log parser with parallel processing and SIMD optimizations
 pub struct LogParser {
-    segment_boundaries: Vec<(String, String)>,
     compiled_patterns: Arc<Vec<Regex>>,
     /// Bounded LRU cache for parsed segments (prevents memory leaks)
     segment_cache: SegmentCache,
@@ -101,45 +103,6 @@ impl LogParser {
         marker.trim_start() == "[Compatibility]"
     }
 
-    /// Creates a new high-performance log parser with optional custom segment boundaries.
-    ///
-    /// This function initializes a log parser with pre-compiled regex patterns for common
-    /// crash log patterns (errors, FormIDs, plugins, addresses, etc.). It includes caching
-    /// infrastructure for segments and pattern matches to improve performance on repeated
-    /// parsing operations.
-    ///
-    /// # Arguments
-    ///
-    /// * `custom_boundaries` - Optional custom segment boundaries. If `None`, uses default
-    ///   boundaries for standard Bethesda crash logs (Compatibility, System Specs, Call Stack,
-    ///   Modules, Plugins, Registers, Stack).
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Result` containing:
-    /// - `Ok(LogParser)`: Successfully initialized parser.
-    /// - `Err(ScanLogError)`: Failed to compile patterns (rare, only if regex patterns are invalid).
-    ///
-    /// # Example
-    ///
-    /// ```rust
-    /// # use classic_scanlog_core::LogParser;
-    /// // Create with default boundaries
-    /// let parser = LogParser::new(None).unwrap();
-    ///
-    /// // Create with custom boundaries
-    /// let custom = vec![
-    ///     ("START".to_string(), "MIDDLE".to_string()),
-    ///     ("MIDDLE".to_string(), "END".to_string()),
-    /// ];
-    /// let custom_parser = LogParser::new(Some(custom)).unwrap();
-    /// ```
-    ///
-    /// # Performance
-    ///
-    /// The parser uses SIMD-optimized string searching (via memchr/memmem) and maintains
-    /// caches for parsed segments and pattern matches, providing 15-30x speedup over
-    /// Python implementations.
     /// Creates a new high-performance log parser with optional custom segment boundaries
     /// and configurable cache sizes.
     ///
@@ -162,15 +125,9 @@ impl LogParser {
     /// The parser uses SIMD-optimized string searching (via memchr/memmem) and maintains
     /// LRU caches for parsed segments and pattern matches, providing 15-30x speedup over
     /// Python implementations while preventing memory leaks.
-    pub fn new(custom_boundaries: Option<Vec<(String, String)>>) -> Result<Self> {
-        let segment_boundaries = if let Some(boundaries) = custom_boundaries {
-            boundaries
-        } else {
-            SEGMENT_BOUNDARIES
-                .iter()
-                .map(|(start, end)| (start.to_string(), end.to_string()))
-                .collect()
-        };
+    pub fn new(_custom_boundaries: Option<Vec<(String, String)>>) -> Result<Self> {
+        // Note: custom_boundaries are accepted for API compat but ignored.
+        // The primary API is now parse_all_sections_arc (anchor-first segmentation).
 
         // Initialize with common patterns
         let patterns: Vec<Regex> = COMMON_PATTERNS.values().cloned().collect();
@@ -180,7 +137,6 @@ impl LogParser {
         let pattern_cache_size = NonZeroUsize::new(500).unwrap(); // ~5-20MB typical
 
         Ok(Self {
-            segment_boundaries,
             compiled_patterns: Arc::new(patterns),
             segment_cache: Arc::new(RwLock::new(LruCache::new(segment_cache_size))),
             pattern_cache: Arc::new(RwLock::new(LruCache::new(pattern_cache_size))),
@@ -282,56 +238,28 @@ impl LogParser {
         self.pattern_cache.write().clear();
     }
 
-    /// Parses log lines into segments using SIMD-optimized boundary detection with caching.
+    /// Parse all crash log sections using anchor-first segmentation.
     ///
-    /// This function divides a crash log into structured segments based on boundary markers
-    /// (e.g., "SYSTEM SPECS:", "PROBABLE CALL STACK:", "MODULES:", etc.). The segments
-    /// are cached based on a hash of the input lines, making repeated parsing of the same
-    /// log nearly instant. Uses SIMD-optimized string searching (memchr/memmem) for
-    /// finding boundaries.
-    ///
-    /// # Arguments
-    ///
-    /// * `lines` - A slice of strings representing the lines of the crash log.
+    /// This is the primary segmentation API. Uses game-output anchors exclusively
+    /// (`SYSTEM SPECS:`, `PROBABLE CALL STACK:`, `MODULES:`, `PLUGINS:`,
+    /// `REGISTERS:`, `STACK:`) to define segment boundaries. Crashgen-owned
+    /// bracket headers (e.g., `[Compatibility]`, `[Patches]`) are treated as
+    /// regular content lines within the settings segment.
     ///
     /// # Returns
     ///
-    /// A vector of segments, where each segment is a vector of strings (lines).
-    /// The segments correspond to the boundaries defined when creating the parser.
+    /// A `HashMap<String, Vec<Arc<str>>>` with all 8 named keys always present:
+    /// `settings`, `system`, `callstack`, `modules`, `xse_modules`, `plugins`,
+    /// `registers`, `stack_dump`. Keys for absent sections map to empty `Vec`.
     ///
-    /// # Example
+    /// # Caching
     ///
-    /// ```rust
-    /// # use classic_scanlog_core::LogParser;
-    /// # use std::sync::Arc;
-    /// let parser = LogParser::new(None).unwrap();
-    /// let log_lines: Vec<Arc<str>> = vec![
-    ///     Arc::from("Fallout 4 v1.10.163"),
-    ///     Arc::from("[Compatibility]"),
-    ///     Arc::from("F4SE: true"),
-    ///     Arc::from("SYSTEM SPECS:"),
-    ///     Arc::from("CPU: AMD Ryzen 9"),
-    ///     Arc::from("PROBABLE CALL STACK:"),
-    ///     // ... more lines
-    /// ];
-    ///
-    /// let segments = parser.parse_segments(&log_lines);
-    /// for (i, segment) in segments.iter().enumerate() {
-    ///     println!("Segment {}: {} lines", i, segment.len());
-    /// }
-    /// ```
-    ///
-    /// # Performance
-    ///
-    /// - First parse: O(n) with SIMD-optimized boundary detection
-    /// - Cached parse: O(1) cache lookup
-    /// - Typical speedup: 20-40x faster than Python string operations
-    /// - Memory optimized: Uses `Arc<str>` for shared ownership, eliminating clones
-    pub fn parse_segments(&self, lines: &[Arc<str>]) -> Vec<Vec<Arc<str>>> {
-        // Calculate a hash for cache lookup
+    /// Results are cached by xxhash3 of the input (see `calculate_hash`).
+    /// Subsequent calls with the same log are O(1) cache lookups.
+    pub fn parse_all_sections_arc(&self, lines: &[Arc<str>]) -> HashMap<String, Vec<Arc<str>>> {
         let cache_key = self.calculate_hash(lines);
 
-        // Check cache first with read lock
+        // Check cache first
         {
             let cache = self.segment_cache.read();
             if let Some(cached) = cache.peek(&cache_key) {
@@ -339,84 +267,222 @@ impl LogParser {
             }
         }
 
-        let mut segments = Vec::new();
-        let mut current_segment = Vec::new();
-        let mut current_boundary_idx = 0;
-        let mut collecting = false;
+        let result = Self::parse_all_sections_impl(lines);
 
-        // Use SIMD-optimized search for boundary detection
-        for line in lines.iter() {
-            if current_boundary_idx >= self.segment_boundaries.len() {
-                break;
-            }
-
-            let (start_boundary, end_boundary) = &self.segment_boundaries[current_boundary_idx];
-
-            // Use SIMD-optimized string search when possible.
-            // Addictol logs may start with [Patches] and omit [Compatibility].
-            let boundary_matched = if collecting {
-                self.fast_contains(line, end_boundary)
-            } else if current_boundary_idx == 0 && Self::is_compatibility_marker(start_boundary) {
-                self.fast_contains(line, start_boundary) || self.fast_contains(line, "[Patches]")
-            } else {
-                self.fast_contains(line, start_boundary)
-            };
-
-            if boundary_matched {
-                if collecting {
-                    // End of current segment
-                    if !current_segment.is_empty() {
-                        segments.push(current_segment.clone());
-                        current_segment.clear();
-                    }
-                    current_boundary_idx += 1;
-                    collecting = false;
-
-                    // Check if this line is also the start of the next segment
-                    if current_boundary_idx < self.segment_boundaries.len() {
-                        let (next_start, _next_end) =
-                            &self.segment_boundaries[current_boundary_idx];
-                        if self.fast_contains(line, next_start) {
-                            collecting = true;
-                        }
-                    }
-                } else {
-                    // Start of new segment
-                    collecting = true;
-                }
-            } else if collecting {
-                current_segment.push(Arc::clone(line));
-            }
-        }
-
-        // Add any remaining segment
-        if !current_segment.is_empty() {
-            segments.push(current_segment);
-        }
-
-        // Cache the result with write lock
+        // Store in cache
         {
             let mut cache = self.segment_cache.write();
-            cache.put(cache_key, segments.clone());
+            cache.put(cache_key, result.clone());
         }
 
-        segments
+        result
     }
 
-    /// Parse segments in parallel for large logs
+    /// Internal single-pass anchor-first segmentation implementation.
+    fn parse_all_sections_impl(lines: &[Arc<str>]) -> HashMap<String, Vec<Arc<str>>> {
+        use crate::segment_key;
+
+        // Pre-allocate all 8 named keys (guarantees they're always present)
+        let mut result: HashMap<String, Vec<Arc<str>>> = HashMap::with_capacity(8);
+        for key in segment_key::ALL_KEYS {
+            result.insert(key.to_string(), Vec::new());
+        }
+
+        /// Internal state machine for section tracking
+        #[derive(PartialEq)]
+        enum Section {
+            Settings,
+            System,
+            Callstack,
+            Modules,
+            XseModules,
+            Plugins,
+            Registers,
+            StackDump,
+        }
+
+        let mut current_section = Section::Settings;
+        let mut xse_subheader_found = false;
+
+        for line in lines {
+            let trimmed = line.trim();
+
+            // Check game-output anchors first (before xse_subheader check)
+            if trimmed.starts_with("SYSTEM SPECS:") {
+                current_section = Section::System;
+                continue;
+            } else if trimmed.starts_with("PROBABLE CALL STACK:") {
+                current_section = Section::Callstack;
+                continue;
+            } else if trimmed.starts_with("MODULES:") {
+                current_section = Section::Modules;
+                xse_subheader_found = false;
+                continue;
+            } else if trimmed.starts_with("PLUGINS:") {
+                current_section = Section::Plugins;
+                continue;
+            } else if trimmed.starts_with("REGISTERS:") {
+                current_section = Section::Registers;
+                continue;
+            } else if trimmed.starts_with("STACK:") {
+                current_section = Section::StackDump;
+                continue;
+            }
+
+            // Within the MODULES section, detect XSE sub-header boundary.
+            // Only applies before the first sub-header is found.
+            if current_section == Section::Modules
+                && !xse_subheader_found
+                && Self::is_xse_subheader(trimmed)
+            {
+                xse_subheader_found = true;
+                current_section = Section::XseModules;
+                continue; // Sub-header line itself is excluded from both sections
+            }
+
+            // Append line to the current section's Vec
+            let key = match current_section {
+                Section::Settings => segment_key::SETTINGS,
+                Section::System => segment_key::SYSTEM,
+                Section::Callstack => segment_key::CALLSTACK,
+                Section::Modules => segment_key::MODULES,
+                Section::XseModules => segment_key::XSE_MODULES,
+                Section::Plugins => segment_key::PLUGINS,
+                Section::Registers => segment_key::REGISTERS,
+                Section::StackDump => segment_key::STACK_DUMP,
+            };
+
+            result.get_mut(key).unwrap().push(Arc::clone(line));
+        }
+
+        result
+    }
+
+    /// Detect whether a trimmed line is a crashgen-owned XSE plugin sub-header.
+    ///
+    /// A sub-header is any line that:
+    /// - Starts with `[` (e.g., `[F4SE PLUGINS]`), OR
+    /// - Matches `ALL-CAPS-WORD(S):` with only optional trailing whitespace
+    ///   (e.g., `F4SE PLUGINS:`, `SKSE64 PLUGINS:`, `NEWMOD PLUGINS:`)
+    ///
+    /// Game-output anchors are never passed to this function because they are
+    /// detected earlier in the main loop.
+    fn is_xse_subheader(trimmed: &str) -> bool {
+        if trimmed.is_empty() {
+            return false;
+        }
+        // Defensive guard: game-output anchors are never crashgen sub-headers.
+        // In normal parse flow these are filtered before this function is called,
+        // but we keep this explicit to avoid accidental over-matching in future call sites.
+        if Self::is_game_anchor(trimmed) {
+            return false;
+        }
+        // Bracket-style sub-header: [F4SE PLUGINS] etc.
+        if trimmed.starts_with('[') {
+            return true;
+        }
+        // ALL-CAPS colon-terminated pattern: F4SE PLUGINS:  or  SKSE64 PLUGINS:
+        if let Some(colon_pos) = trimmed.rfind(':') {
+            let after_colon = trimmed[colon_pos + 1..].trim();
+            if after_colon.is_empty() {
+                let before_colon = &trimmed[..colon_pos];
+                let before_colon_trimmed = before_colon.trim();
+                return !before_colon_trimmed.is_empty()
+                    && before_colon_trimmed.len() >= 2
+                    && before_colon_trimmed.starts_with(|c: char| c.is_ascii_uppercase())
+                    && before_colon_trimmed
+                        .chars()
+                        .all(|c| c.is_ascii_uppercase() || c.is_ascii_digit() || c == ' ');
+            }
+        }
+        false
+    }
+
+    /// Check whether a trimmed line is one of the game-output section anchors.
+    fn is_game_anchor(trimmed: &str) -> bool {
+        trimmed.starts_with("SYSTEM SPECS:")
+            || trimmed.starts_with("PROBABLE CALL STACK:")
+            || trimmed.starts_with("MODULES:")
+            || trimmed.starts_with("PLUGINS:")
+            || trimmed.starts_with("REGISTERS:")
+            || trimmed.starts_with("STACK:")
+    }
+
+    /// Convert named section map to deprecated positional segment vector.
+    fn named_sections_to_positional(
+        sections: &HashMap<String, Vec<Arc<str>>>,
+    ) -> Vec<Vec<Arc<str>>> {
+        use crate::segment_key;
+        vec![
+            sections
+                .get(segment_key::SETTINGS)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::SYSTEM)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::CALLSTACK)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::MODULES)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::XSE_MODULES)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::PLUGINS)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::REGISTERS)
+                .cloned()
+                .unwrap_or_default(),
+            sections
+                .get(segment_key::STACK_DUMP)
+                .cloned()
+                .unwrap_or_default(),
+        ]
+    }
+
+    /// Deprecated: parses log lines into a positional segment vector.
+    ///
+    /// This method is a backward-compatibility shim over `parse_all_sections_arc`.
+    /// It reconstructs the old positional `Vec<Vec<Arc<str>>>` from the named map.
+    /// Use `parse_all_sections_arc` for all new code.
+    ///
+    /// # TODO: Remove once all callers have migrated to `parse_all_sections_arc`.
+    #[deprecated(
+        since = "9.0.0",
+        note = "Use parse_all_sections_arc instead. This shim will be removed."
+    )]
+    pub fn parse_segments(&self, lines: &[Arc<str>]) -> Vec<Vec<Arc<str>>> {
+        let sections = self.parse_all_sections_arc(lines);
+        Self::named_sections_to_positional(&sections)
+    }
+
+    /// Deprecated: parse segments in parallel (delegates to `parse_all_sections_arc`).
+    ///
+    /// Segment parsing requires maintaining state across the entire log and cannot
+    /// be meaningfully parallelised at the line level. This method is kept for API
+    /// compatibility and simply delegates to `parse_all_sections_arc`.
+    ///
+    /// # TODO: Remove once all callers have migrated to `parse_all_sections_arc`.
+    #[deprecated(
+        since = "9.0.0",
+        note = "Use parse_all_sections_arc instead. Parallelism at the segment level is not meaningful."
+    )]
     pub fn parse_segments_parallel(
         &self,
         lines: &[Arc<str>],
-        chunk_size: Option<usize>,
+        _chunk_size: Option<usize>,
     ) -> Vec<Vec<Arc<str>>> {
-        let chunk_size = chunk_size.unwrap_or(1000);
-
-        if lines.len() < chunk_size {
-            return self.parse_segments(lines);
-        }
-
-        // For segment parsing, we need to maintain state across the entire log
-        self.parse_segments(lines)
+        let sections = self.parse_all_sections_arc(lines);
+        Self::named_sections_to_positional(&sections)
     }
 
     /// Finds all pattern matches in the log lines with parallel processing and caching.
@@ -701,18 +767,40 @@ impl LogParser {
     ///     println!("System specs: {:?}", specs);
     /// }
     /// ```
+    /// Gets a specific section by name using anchor-first segmentation.
+    ///
+    /// For the `"SETTINGS"` or `"COMPATIBILITY"` section, returns lines from the
+    /// start of the log until `SYSTEM SPECS:` (anchor-first approach).
     pub fn get_section(&self, lines: &[String], section_name: &str) -> Option<Vec<String>> {
-        let (start, end) = match section_name.to_uppercase().as_str() {
-            "COMPATIBILITY" => ("[Compatibility]", "SYSTEM SPECS:"),
-            "SYSTEM" | "SPECS" => ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
-            "CALLSTACK" | "STACK" => ("PROBABLE CALL STACK:", "MODULES:"),
-            "MODULES" => ("MODULES:", "PLUGINS:"),
-            "PLUGINS" => ("PLUGINS:", "REGISTERS:"),
-            "REGISTERS" => ("REGISTERS:", "STACK:"),
-            "MEMORY" | "STACK_DUMP" => ("STACK:", "EOF"),
+        // Convert to Arc<str> and use the new primary API for consistency
+        let arc_lines: Vec<Arc<str>> = lines.iter().map(|s| Arc::from(s.as_str())).collect();
+        let sections = self.parse_all_sections_arc(&arc_lines);
+
+        use crate::segment_key;
+        let key = match section_name.to_uppercase().as_str() {
+            "SETTINGS" | "COMPATIBILITY" => segment_key::SETTINGS,
+            "SYSTEM" | "SPECS" => segment_key::SYSTEM,
+            "CALLSTACK" | "STACK" => segment_key::CALLSTACK,
+            "MODULES" => segment_key::MODULES,
+            "XSE_MODULES" | "XSEMODULES" => segment_key::XSE_MODULES,
+            "PLUGINS" => segment_key::PLUGINS,
+            "REGISTERS" => segment_key::REGISTERS,
+            "MEMORY" | "STACK_DUMP" => segment_key::STACK_DUMP,
             _ => return None,
         };
-        self.extract_section(lines, start, end)
+
+        let section: Vec<String> = sections
+            .get(key)
+            .unwrap_or(&Vec::new())
+            .iter()
+            .map(|s| s.to_string())
+            .collect();
+
+        if section.is_empty() {
+            None
+        } else {
+            Some(section)
+        }
     }
 
     /// Parses and extracts all important sections from the log in a single parallel operation.
@@ -765,23 +853,21 @@ impl LogParser {
     ///
     /// All sections are extracted in parallel using Rayon, making this significantly
     /// faster than sequential extraction when you need multiple sections.
+    /// Parses and extracts all named sections from the log using anchor-first segmentation.
+    ///
+    /// This is the String-facing version used by the Python binding. Converts to
+    /// `Arc<str>` internally, delegates to `parse_all_sections_arc`, then converts
+    /// back to `String` for the return value.
+    ///
+    /// All 8 named keys are always present: `settings`, `system`, `callstack`,
+    /// `modules`, `xse_modules`, `plugins`, `registers`, `stack_dump`. Keys for
+    /// absent sections map to empty `Vec`.
     pub fn parse_all_sections(&self, lines: &[String]) -> HashMap<String, Vec<String>> {
-        let sections = vec![
-            ("compatibility", "[Compatibility]", "SYSTEM SPECS:"),
-            ("system", "SYSTEM SPECS:", "PROBABLE CALL STACK:"),
-            ("callstack", "PROBABLE CALL STACK:", "MODULES:"),
-            ("modules", "MODULES:", "PLUGINS:"),
-            ("plugins", "PLUGINS:", "REGISTERS:"),
-            ("registers", "REGISTERS:", "STACK:"),
-            ("stack_dump", "STACK:", "EOF"),
-        ];
-
-        sections
-            .par_iter()
-            .filter_map(|(name, start, end)| {
-                self.extract_section(lines, start, end)
-                    .map(|section| (name.to_string(), section))
-            })
+        let arc_lines: Vec<Arc<str>> = lines.iter().map(|s| Arc::from(s.as_str())).collect();
+        let arc_result = self.parse_all_sections_arc(&arc_lines);
+        arc_result
+            .into_iter()
+            .map(|(k, v)| (k, v.iter().map(|s| s.to_string()).collect()))
             .collect()
     }
 
@@ -1001,10 +1087,10 @@ impl LogParser {
         use std::time::Instant;
         let mut results = HashMap::new();
 
-        // Benchmark segment parsing
+        // Benchmark named section parsing (replaces deprecated parse_segments benchmark)
         let start = Instant::now();
         for _ in 0..iterations {
-            let _ = self.parse_segments(lines);
+            let _ = self.parse_all_sections_arc(lines);
         }
         let elapsed = start.elapsed().as_secs_f64() / iterations as f64;
         results.insert("parse_segments_avg_ms".to_string(), elapsed * 1000.0);
@@ -1116,7 +1202,10 @@ impl LogParser {
             || CRASHGEN_HEADER_PATTERN.is_match(line)
     }
 
-    /// SIMD-optimized string contains check
+    /// SIMD-optimized string contains check.
+    ///
+    /// Kept for potential use by `parse_complete` and other methods.
+    #[allow(dead_code)]
     fn fast_contains(&self, haystack: &str, needle: &str) -> bool {
         // Use memchr for single-byte patterns
         if needle.len() == 1 {
@@ -1326,13 +1415,14 @@ impl StreamingLogParser {
     }
 
     fn is_boundary_marker(&self, line: &str) -> bool {
+        // Only game-output anchors are boundary markers.
+        // Crashgen-owned headers like [Compatibility] and [Patches] are NOT boundaries.
         line.contains("SYSTEM SPECS:")
             || line.contains("PROBABLE CALL STACK:")
             || line.contains("MODULES:")
             || line.contains("PLUGINS:")
             || line.contains("REGISTERS:")
             || line.contains("STACK:")
-            || line.contains("[Compatibility]")
     }
 
     fn start_section(&mut self, line: &str) {
@@ -1522,20 +1612,284 @@ mod tests {
     }
 
     #[test]
-    fn test_segment_parsing() {
+    #[allow(deprecated)]
+    fn test_segment_parsing_deprecated_shim() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = create_sample_log();
         let segments = parser.parse_segments(&log_lines);
+        // Shim returns positional Vec; settings (segment 0) should have content
         assert!(!segments.is_empty());
     }
 
     #[test]
+    #[allow(deprecated)]
     fn test_segment_parsing_with_patches_first_boundary() {
         let parser = LogParser::new(None).unwrap();
         let log_lines = create_sample_log_patches_only();
+        // Anchor-first: [Patches] is just content in the settings segment
         let segments = parser.parse_segments(&log_lines);
         assert!(!segments.is_empty());
-        assert!(segments[0].iter().any(|line| line.contains("bThreads")));
+        // settings segment (index 0) should contain the [Patches] line
+        assert!(
+            segments[0]
+                .iter()
+                .any(|line| line.contains("[Patches]") || line.contains("bThreads"))
+        );
+    }
+
+    #[test]
+    #[allow(deprecated)]
+    fn test_deprecated_parse_segments_preserves_xse_modules_slot() {
+        let parser = LogParser::new(None).unwrap();
+        let log_lines = make_log_with_known_header();
+        let segments = parser.parse_segments(&log_lines);
+
+        // Deprecated positional layout should preserve a dedicated xse_modules slot
+        // between modules and plugins.
+        assert!(segments.len() >= 6);
+        assert!(segments[3].iter().any(|line| line.contains("module.dll")));
+        assert!(
+            segments[4]
+                .iter()
+                .any(|line| line.contains("f4se_plugin.dll"))
+        );
+        assert!(segments[5].iter().any(|line| line.contains("Fallout4.esm")));
+    }
+
+    // ===== Tests for parse_all_sections_arc (anchor-first segmentation) =====
+
+    fn make_log_with_known_header() -> Vec<Arc<str>> {
+        vec![
+            Arc::from("Buffout 4 v1.28.6"),
+            Arc::from("[Compatibility]"),
+            Arc::from("F4EE: true"),
+            Arc::from("SYSTEM SPECS:"),
+            Arc::from("CPU: AMD Ryzen 9"),
+            Arc::from("PROBABLE CALL STACK:"),
+            Arc::from("[0] 0x7FF1 func"),
+            Arc::from("MODULES:"),
+            Arc::from("module.dll v1.0"),
+            Arc::from("F4SE PLUGINS:"),
+            Arc::from("f4se_plugin.dll v1.0"),
+            Arc::from("PLUGINS:"),
+            Arc::from("[00] Fallout4.esm"),
+            Arc::from("REGISTERS:"),
+            Arc::from("RAX: 0x0"),
+            Arc::from("STACK:"),
+            Arc::from("0x000: 0x123"),
+        ]
+    }
+
+    fn make_log_with_unknown_header() -> Vec<Arc<str>> {
+        vec![
+            Arc::from("UnknownCrashgen v2.0"),
+            Arc::from("[NewForkHeader]"),
+            Arc::from("Setting: true"),
+            Arc::from("SYSTEM SPECS:"),
+            Arc::from("CPU: Intel i9"),
+            Arc::from("PROBABLE CALL STACK:"),
+            Arc::from("[0] 0x7FF2 func"),
+            Arc::from("MODULES:"),
+            Arc::from("kernel32.dll v10.0"),
+            Arc::from("NEWMOD PLUGINS:"),
+            Arc::from("plugin.dll v1.0"),
+            Arc::from("PLUGINS:"),
+            Arc::from("[00] Fallout4.esm"),
+            Arc::from("REGISTERS:"),
+            Arc::from("RAX: 0x0"),
+            Arc::from("STACK:"),
+            Arc::from("0x000: 0xABC"),
+        ]
+    }
+
+    fn make_log_no_header() -> Vec<Arc<str>> {
+        vec![
+            Arc::from("UnknownCrashgen v1.0"),
+            Arc::from("Setting: false"),
+            Arc::from("SYSTEM SPECS:"),
+            Arc::from("CPU: Intel i7"),
+            Arc::from("PROBABLE CALL STACK:"),
+            Arc::from("MODULES:"),
+            Arc::from("PLUGINS:"),
+            Arc::from("[00] Fallout4.esm"),
+            Arc::from("REGISTERS:"),
+            Arc::from("STACK:"),
+        ]
+    }
+
+    #[test]
+    fn test_all_sections_all_8_keys_always_present() {
+        let parser = LogParser::new(None).unwrap();
+        let log = make_log_with_known_header();
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+        for key in segment_key::ALL_KEYS {
+            assert!(sections.contains_key(*key), "Missing key: {key}");
+        }
+        assert_eq!(sections.len(), 8);
+    }
+
+    #[test]
+    fn test_all_sections_known_header_segments_correctly() {
+        let parser = LogParser::new(None).unwrap();
+        let log = make_log_with_known_header();
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+
+        // Settings section contains pre-SYSTEM SPECS: lines including [Compatibility]
+        let settings = &sections[segment_key::SETTINGS];
+        assert!(settings.iter().any(|l| l.trim() == "[Compatibility]"));
+        assert!(settings.iter().any(|l| l.contains("F4EE")));
+
+        // System section has CPU info
+        let system = &sections[segment_key::SYSTEM];
+        assert!(system.iter().any(|l| l.contains("CPU")));
+
+        // Plugins section has Fallout4.esm
+        let plugins = &sections[segment_key::PLUGINS];
+        assert!(plugins.iter().any(|l| l.contains("Fallout4.esm")));
+
+        // modules: DLLs before F4SE PLUGINS:
+        let modules = &sections[segment_key::MODULES];
+        assert!(modules.iter().any(|l| l.contains("module.dll")));
+
+        // xse_modules: content after F4SE PLUGINS:
+        let xse_modules = &sections[segment_key::XSE_MODULES];
+        assert!(xse_modules.iter().any(|l| l.contains("f4se_plugin.dll")));
+    }
+
+    #[test]
+    fn test_all_sections_unknown_header_same_structure_as_known() {
+        let parser = LogParser::new(None).unwrap();
+        let known = parser.parse_all_sections_arc(&make_log_with_known_header());
+        let unknown = parser.parse_all_sections_arc(&make_log_with_unknown_header());
+        use crate::segment_key;
+
+        // Both should have content in settings
+        assert!(!known[segment_key::SETTINGS].is_empty());
+        assert!(!unknown[segment_key::SETTINGS].is_empty());
+
+        // Both should have the same named keys
+        for key in segment_key::ALL_KEYS {
+            assert!(known.contains_key(*key));
+            assert!(unknown.contains_key(*key));
+        }
+
+        // Unknown header [NewForkHeader] ends up in settings segment
+        assert!(
+            unknown[segment_key::SETTINGS]
+                .iter()
+                .any(|l| l.contains("[NewForkHeader]"))
+        );
+    }
+
+    #[test]
+    fn test_all_sections_no_header_produces_valid_settings() {
+        let parser = LogParser::new(None).unwrap();
+        let log = make_log_no_header();
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+        // settings should have some content (the header-less lines before SYSTEM SPECS:)
+        let settings = &sections[segment_key::SETTINGS];
+        // Has UnknownCrashgen header and Setting: false lines
+        assert!(settings.iter().any(|l| l.contains("Setting: false")));
+    }
+
+    #[test]
+    fn test_all_sections_xse_modules_split_on_unknown_sub_header() {
+        let parser = LogParser::new(None).unwrap();
+        let log = make_log_with_unknown_header();
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+        // NEWMOD PLUGINS: is detected as XSE sub-header
+        let xse = &sections[segment_key::XSE_MODULES];
+        assert!(xse.iter().any(|l| l.contains("plugin.dll")));
+        let modules = &sections[segment_key::MODULES];
+        assert!(modules.iter().any(|l| l.contains("kernel32.dll")));
+    }
+
+    #[test]
+    fn test_all_sections_no_xse_subheader_leaves_xse_modules_empty() {
+        let parser = LogParser::new(None).unwrap();
+        // Log with no sub-header in MODULES section
+        let log: Vec<Arc<str>> = vec![
+            Arc::from("MODULES:"),
+            Arc::from("module1.dll"),
+            Arc::from("module2.dll"),
+            Arc::from("PLUGINS:"),
+            Arc::from("[00] Plugin.esp"),
+        ];
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+        assert!(sections[segment_key::XSE_MODULES].is_empty());
+        assert_eq!(sections[segment_key::MODULES].len(), 2);
+    }
+
+    #[test]
+    fn test_all_sections_missing_anchor_produces_empty_list() {
+        let parser = LogParser::new(None).unwrap();
+        // Log with no REGISTERS: section
+        let log: Vec<Arc<str>> = vec![
+            Arc::from("MODULES:"),
+            Arc::from("PLUGINS:"),
+            Arc::from("[00] Fallout4.esm"),
+            Arc::from("STACK:"),
+            Arc::from("dump line"),
+        ];
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+        // registers should be empty (no REGISTERS: anchor)
+        assert!(sections[segment_key::REGISTERS].is_empty());
+        // stack_dump should have content
+        assert!(!sections[segment_key::STACK_DUMP].is_empty());
+    }
+
+    #[test]
+    fn test_is_xse_subheader() {
+        // bracket-style
+        assert!(LogParser::is_xse_subheader("[F4SE PLUGINS]"));
+        assert!(LogParser::is_xse_subheader("[SKSE64 PLUGINS]"));
+        // ALL-CAPS colon-terminated
+        assert!(LogParser::is_xse_subheader("F4SE PLUGINS:"));
+        assert!(LogParser::is_xse_subheader("SKSE64 PLUGINS:"));
+        assert!(LogParser::is_xse_subheader("NEWMOD PLUGINS:"));
+        // Single-letter labels are too broad and must NOT split sections
+        assert!(!LogParser::is_xse_subheader("A:"));
+        // NOT a sub-header (lowercase/mixed)
+        assert!(!LogParser::is_xse_subheader("module.dll v1.0"));
+        assert!(!LogParser::is_xse_subheader("F4SE_plugin.dll"));
+        // Game anchors are never considered sub-headers
+        assert!(!LogParser::is_xse_subheader("PLUGINS:"));
+        assert!(!LogParser::is_xse_subheader("SYSTEM SPECS:"));
+        // Empty
+        assert!(!LogParser::is_xse_subheader(""));
+    }
+
+    #[test]
+    fn test_all_sections_anchor_whitespace_insensitive() {
+        let parser = LogParser::new(None).unwrap();
+        // Log with leading whitespace on anchor lines
+        let log: Vec<Arc<str>> = vec![
+            Arc::from("setting line"),
+            Arc::from("\tSYSTEM SPECS:"),
+            Arc::from("CPU: test"),
+            Arc::from("  PROBABLE CALL STACK:"),
+            Arc::from("[0] frame"),
+        ];
+        let sections = parser.parse_all_sections_arc(&log);
+        use crate::segment_key;
+        // System section should have CPU line
+        assert!(
+            sections[segment_key::SYSTEM]
+                .iter()
+                .any(|l| l.contains("CPU"))
+        );
+        // Callstack should have frame
+        assert!(
+            sections[segment_key::CALLSTACK]
+                .iter()
+                .any(|l| l.contains("[0]"))
+        );
     }
 
     #[test]
@@ -1551,7 +1905,28 @@ mod tests {
     }
 
     #[test]
-    fn test_extract_section_compatibility_falls_back_to_patches() {
+    fn test_addictol_patches_header_in_settings_segment() {
+        // With anchor-first segmentation, [Patches] is just content in the settings
+        // segment — it does NOT need a [Compatibility] fallback in extract_section.
+        let parser = LogParser::new(None).unwrap();
+        let log_lines_arc = create_sample_log_patches_only();
+
+        let sections = parser.parse_all_sections_arc(&log_lines_arc);
+        use crate::segment_key;
+
+        // Settings segment should contain both [Patches] and bThreads lines
+        let settings = &sections[segment_key::SETTINGS];
+        assert!(!settings.is_empty(), "Settings segment should not be empty");
+        assert!(
+            settings
+                .iter()
+                .any(|l| l.trim() == "[Patches]" || l.contains("[Patches]"))
+        );
+        assert!(settings.iter().any(|l| l.contains("bThreads")));
+    }
+
+    #[test]
+    fn test_extract_section_compatibility_falls_back_to_patches_marker() {
         let parser = LogParser::new(None).unwrap();
         let log_lines_arc = create_sample_log_patches_only();
         let log_lines: Vec<String> = log_lines_arc.iter().map(|s| s.to_string()).collect();
@@ -1560,6 +1935,22 @@ mod tests {
         assert!(section.is_some());
         let section = section.unwrap();
         assert!(section.iter().any(|line| line.contains("bThreads")));
+    }
+
+    #[test]
+    fn test_get_section_stack_alias_returns_callstack() {
+        let parser = LogParser::new(None).unwrap();
+        let log_lines_arc = create_sample_log();
+        let log_lines: Vec<String> = log_lines_arc.iter().map(|s| s.to_string()).collect();
+
+        let section = parser.get_section(&log_lines, "STACK");
+        assert!(section.is_some());
+        let section = section.unwrap();
+        assert!(
+            section
+                .iter()
+                .any(|line| line.contains("Fallout4.exe+0123456"))
+        );
     }
 
     #[test]

@@ -335,12 +335,17 @@ class LogParser:
         """
 
 class ScanOutput:
-    """Result of optimized complete log parsing."""
+    """Result of optimized complete log parsing.
+
+    ``segments`` is a ``dict[str, list[str]]`` with all 8 named keys always
+    present: ``settings``, ``system``, ``callstack``, ``modules``,
+    ``xse_modules``, ``plugins``, ``registers``, ``stack_dump``.
+    """
 
     game_version: str
     crashgen_version: str
     main_error: str
-    segments: list[list[str]]
+    segments: dict[str, list[str]]
 
 # =============================================================================
 # Pattern Matching

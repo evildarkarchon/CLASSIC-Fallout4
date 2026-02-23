@@ -191,6 +191,34 @@ class TestRustParserIntegration:
         assert any("GPU:" in line for line in section)
         assert any("RAM:" in line for line in section)
 
+    def test_extract_section_compatibility_falls_back_to_patches(self):
+        """Legacy marker extraction should treat [Patches] as [Compatibility]."""
+        parser = classic_scanlog.LogParser()  # pyright: ignore[reportOptionalMemberAccess]
+        log_lines = [
+            "Fallout 4 v1.10.163",
+            "Addictol v1.0.0",
+            "[Patches]",
+            "bThreads: true",
+            "SYSTEM SPECS:",
+            "CPU: AMD Ryzen 9 5900X",
+        ]
+
+        section = parser.extract_section(log_lines, "[Compatibility]", "SYSTEM SPECS:")
+
+        assert section is not None
+        assert any("bThreads" in line for line in section)
+
+    def test_get_section_stack_alias_maps_to_callstack(self):
+        """STACK alias should continue to return callstack for compatibility."""
+        parser = classic_scanlog.LogParser()  # pyright: ignore[reportOptionalMemberAccess]
+        log_lines = create_sample_crash_log()
+
+        section = parser.get_section(log_lines, "STACK")
+
+        assert section is not None
+        assert any("Fallout4.exe+0123456" in line for line in section)
+        assert not any("0x000000000000:" in line for line in section)
+
     def test_batch_section_extraction(self):
         """Test extracting multiple sections in parallel."""
         parser = classic_scanlog.LogParser()  # pyright: ignore[reportOptionalMemberAccess]
@@ -318,3 +346,26 @@ class TestRustParserWithRealLogs:
 
         print(f"Processed {len(log_lines)} lines from file in {total_time:.3f}s")
         assert len(segments) > 0
+
+    def test_parse_complete_returns_dict_segments(self):
+        """Task 5.3: parse_complete returns ScanOutput with dict[str, list[str]] segments."""
+        parser = classic_scanlog.LogParser()  # pyright: ignore[reportOptionalMemberAccess]
+        log_lines = create_sample_crash_log()
+
+        scan_output = parser.parse_complete(log_lines, [], "")
+
+        # segments should be a dict (not a list)
+        assert isinstance(scan_output.segments, dict)
+
+        # All 8 named keys should be present
+        expected_keys = {"settings", "system", "callstack", "modules", "xse_modules", "plugins", "registers", "stack_dump"}
+        for key in expected_keys:
+            assert key in scan_output.segments, f"Missing key: {key}"
+
+        # Callstack key should be accessible by name
+        callstack = scan_output.segments["callstack"]
+        assert isinstance(callstack, list)
+
+        # Plugins key should be accessible by name
+        plugins = scan_output.segments["plugins"]
+        assert isinstance(plugins, list)

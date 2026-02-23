@@ -19,6 +19,7 @@ from ClassicLib.scanning.logs.parser import (
     is_rust_parser_available,
     parse_crash_header,
 )
+from ClassicLib.scanning.logs import parser as parser_module
 
 
 @pytest.mark.unit
@@ -142,7 +143,11 @@ class TestExtractSegments:
     """Test suite for extract_segments function."""
 
     def test_extract_segments_basic(self) -> None:
-        """Test extracting segments with simple boundaries."""
+        """Test extracting segments returns named dict with 8 keys.
+
+        Boundaries parameter is ignored (anchor-first always used).
+        Content that doesn't hit a game anchor ends up in 'settings'.
+        """
         crash_data = [
             "Header line",
             "START_A",
@@ -160,69 +165,65 @@ class TestExtractSegments:
 
         segments = extract_segments(crash_data, boundaries, "EOF")
 
-        assert len(segments) >= 2
-        # First segment should contain Content A
-        if segments[0]:
-            assert any("Content A" in line for line in segments[0])
+        # Result is always a dict with 8 named keys
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        # Non-anchor content ends up in settings
+        settings = segments["settings"]
+        assert any("Content A" in line or "Header" in line for line in settings)
 
     def test_extract_segments_with_eof_marker(self) -> None:
-        """Test segment extraction handles EOF marker correctly."""
+        """Test segment extraction with content before game anchors."""
         crash_data = [
             "START_A",
             "Content line",
             "EOF",
             "After EOF",
         ]
-        boundaries = [
-            ("START_A", "EOF"),
-        ]
+        # boundaries/eof are ignored — anchor-first always applies
+        segments = extract_segments(crash_data, [], "EOF")
 
-        segments = extract_segments(crash_data, boundaries, "EOF")
-
-        assert len(segments) >= 1
-        # Segment should include content up to EOF
-        if segments[0]:
-            assert any("Content" in line for line in segments[0])
+        # Result is always a dict with 8 named keys
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        # Content with no game anchors lands in settings
+        settings = segments["settings"]
+        assert any("Content" in line for line in settings)
 
     def test_extract_segments_empty_data(self) -> None:
-        """Test extracting segments from empty crash data."""
-        boundaries = [("START", "END")]
+        """Test extracting segments from empty crash data returns empty dict."""
+        segments = extract_segments([], [], "EOF")
 
-        segments = extract_segments([], boundaries, "EOF")
-
-        assert segments == []
+        # Returns a dict with 8 keys, all empty
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        assert all(v == [] for v in segments.values())
 
     def test_extract_segments_no_boundaries_found(self) -> None:
-        """Test extraction when no boundaries are found in data."""
+        """Test that content without game anchors lands in settings segment."""
         crash_data = [
             "Line 1",
             "Line 2",
             "Line 3",
         ]
-        boundaries = [("NONEXISTENT_START", "NONEXISTENT_END")]
+        segments = extract_segments(crash_data, [("NONEXISTENT_START", "NONEXISTENT_END")], "EOF")
 
-        segments = extract_segments(crash_data, boundaries, "EOF")
-
-        # Should return empty or no segments when boundaries not found
-        assert segments == [] or all(not seg for seg in segments)
+        # All content lands in settings when no game anchors present
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        assert len(segments["settings"]) == 3
+        assert all(v == [] for k, v in segments.items() if k != "settings")
 
     def test_extract_segments_real_crash_log(self, sample_crash_log_lines: list[str]) -> None:
         """Test segment extraction on realistic crash log data."""
-        boundaries = [
-            ("\t[Compatibility]", "SYSTEM SPECS:"),
-            ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
-            ("PROBABLE CALL STACK:", "MODULES:"),
-            ("MODULES:", "F4SE PLUGINS:"),
-            ("F4SE PLUGINS:", "PLUGINS:"),
-            ("PLUGINS:", "EOF"),
-        ]
+        # Boundaries parameter is ignored — anchor-first always applied
+        segments = extract_segments(sample_crash_log_lines, [], "EOF")
 
-        segments = extract_segments(sample_crash_log_lines, boundaries, "EOF")
-
-        # Should have some segments extracted
-        assert len(segments) > 0
-        # At least one segment should have content
-        assert any(seg for seg in segments if seg)
+        # Result is always a dict with 8 named keys
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        # At least some segments should have content
+        assert any(v for v in segments.values())
 
 
 @pytest.mark.unit
@@ -316,10 +317,12 @@ class TestFindSegments:
         assert crashgen_version == "Buffout 4 v1.28.6"
         assert "EXCEPTION_ACCESS_VIOLATION" in main_error
 
-        # Check segments structure
-        assert len(segments) == 6  # Should have 6 segments
-        assert isinstance(segments, list)
-        assert all(isinstance(seg, list) for seg in segments)
+        # Check segments structure — now a dict with 8 named keys
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        expected_keys = {"settings", "system", "callstack", "modules", "xse_modules", "plugins", "registers", "stack_dump"}
+        assert set(segments.keys()) == expected_keys
+        assert all(isinstance(v, list) for v in segments.values())
 
     def test_find_segments_empty_data(self) -> None:
         """Test find_segments handles empty crash data."""
@@ -333,7 +336,10 @@ class TestFindSegments:
         assert game_version == "UNKNOWN"
         assert crashgen_version == "UNKNOWN"
         assert main_error == "UNKNOWN"
-        assert len(segments) == 6  # Should still have 6 empty segments
+        # Should have 8 named keys, all empty
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        assert all(v == [] for v in segments.values())
 
     def test_find_segments_malformed_log(self, malformed_crash_log_content: str) -> None:
         """Test find_segments handles malformed crash logs gracefully."""
@@ -346,8 +352,9 @@ class TestFindSegments:
             game_root_name="Fallout 4",
         )
 
-        # Should still return valid structure
-        assert len(segments) == 6
+        # Should still return valid structure with 8 named keys
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
         # Metadata may be partial
         assert "Fallout 4" in game_version or game_version == "UNKNOWN"
 
@@ -361,8 +368,8 @@ class TestFindSegments:
         )
 
         # Check that non-empty segments have stripped content
-        for segment in segments:
-            for line in segment:
+        for segment_lines in segments.values():
+            for line in segment_lines:
                 # Lines should be stripped (no leading/trailing whitespace)
                 assert line == line.strip()
 
@@ -393,9 +400,38 @@ class TestFindSegments:
             game_root_name="Fallout 4",
         )
 
-        # Should have 6 segments in order:
-        # 0: crashgen settings, 1: system, 2: callstack, 3: allmodules, 4: xse, 5: plugins
-        assert len(segments) == 6
+        # Should have 8 named segments with anchor-first schema
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
+        # Settings section includes [Compatibility] header and Setting1
+        assert any("Setting1" in line for line in segments["settings"])
+        # System section has OS info
+        assert any("OS:" in line for line in segments["system"])
+        # Callstack has address
+        assert any("Address" in line for line in segments["callstack"])
+        # Modules has the DLL
+        assert any("test.dll" in line for line in segments["modules"])
+        # XSE modules has the plugin
+        assert any("plugin.dll" in line for line in segments["xse_modules"])
+        # Plugins has the ESM
+        assert any("Test.esm" in line for line in segments["plugins"])
+
+    def test_find_segments_propagates_rust_errors(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        """find_segments should not silently fall back when Rust parser fails."""
+
+        class _FailingParser:
+            def find_segments(self, *_args: object, **_kwargs: object) -> tuple[str, str, str, dict[str, list[str]]]:
+                raise RuntimeError("simulated rust failure")
+
+        monkeypatch.setattr(parser_module, "_rust_parser", _FailingParser())
+
+        with pytest.raises(RuntimeError, match="simulated rust failure"):
+            find_segments(
+                ["Fallout 4 v1.10.163", "Buffout 4 v1.28.6"],
+                crashgen_name="Buffout 4",
+                xse_acronym="F4SE",
+                game_root_name="Fallout 4",
+            )
 
 
 @pytest.mark.unit
@@ -414,6 +450,6 @@ class TestParserUtilities:
 
         assert isinstance(stats, dict)
         assert "parser_type" in stats
-        assert stats["parser_type"] in ("rust", "python")
+        assert stats["parser_type"] == "rust"
         assert "rust_available" in stats
-        assert isinstance(stats["rust_available"], bool)
+        assert stats["rust_available"] is True

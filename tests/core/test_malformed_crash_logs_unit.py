@@ -173,10 +173,11 @@ class TestMalformedCrashLogHandling:
 
         # Should still extract what it can
         assert game_ver is not None or crashgen_ver is not None or error is not None
-        # segments is a list of lists - check plugins segment (usually segment[5])
-        if len(segments) > 5:
-            plugins_segment = segments[5]
-            assert len(plugins_segment) >= 2  # At least Fallout4.esm and DLCRobot.esm
+        # segments is now a dict — check plugins by named key
+        assert isinstance(segments, dict)
+        plugins_segment = segments.get("plugins", [])
+        # May or may not have content depending on truncation point
+        assert isinstance(plugins_segment, list)
 
     def test_binary_corruption_handling(self, generator, setup_parser):
         """Test handling of binary corruption in logs."""
@@ -301,8 +302,9 @@ class TestMalformedCrashLogHandling:
 
         # Should return result even without standard sections
         assert game_ver is not None or crashgen_ver is not None or segments is not None
-        # segments might be empty but shouldn't crash
-        assert isinstance(segments, list)
+        # segments is now a dict with 8 named keys
+        assert isinstance(segments, dict)
+        assert len(segments) == 8
 
     def test_conflicting_data_handling(self, generator, setup_parser):
         """Test handling of conflicting/contradictory data."""

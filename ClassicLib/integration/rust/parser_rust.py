@@ -13,16 +13,6 @@ from ClassicLib.integration.factory import detect_component
 
 logger = logging.getLogger(__name__)
 
-# Segment boundary definitions used by parse_complete
-SEGMENT_BOUNDARIES_TEMPLATE = [
-    ("\t[Compatibility]", "SYSTEM SPECS:"),
-    ("SYSTEM SPECS:", "PROBABLE CALL STACK:"),
-    ("PROBABLE CALL STACK:", "MODULES:"),
-    ("MODULES:", "{xse} PLUGINS:"),
-    ("{xse} PLUGINS:", "PLUGINS:"),
-    ("PLUGINS:", "EOF"),
-]
-
 
 class RustLogParser:
     """Wrapper for Rust LogParser. Rust is required.
@@ -48,37 +38,37 @@ class RustLogParser:
         self,
         crash_data: list[str],
         crashgen_name: str,  # noqa: ARG002
-        xse_acronym: str,
+        xse_acronym: str,  # noqa: ARG002
         game_root_name: str,  # noqa: ARG002
-    ) -> tuple[str, str, str, list[list[str]]]:
-        """Find and extract crash log segments.
+    ) -> tuple[str, str, str, dict[str, list[str]]]:
+        """Find and extract crash log segments using anchor-first segmentation.
 
         Args:
             crash_data: Crash log lines.
-            crashgen_name: Crash generator name.
-            xse_acronym: XSE acronym (e.g. "F4SE").
-            game_root_name: Game root folder name.
+            crashgen_name: Crash generator name (unused; registry-driven routing).
+            xse_acronym: XSE acronym (unused; anchor-first detection is XSE-agnostic).
+            game_root_name: Game root folder name (unused; header parsing is separate).
 
         Returns:
-            Tuple of (game_version, crashgen_version, main_error, segments).
+            Tuple of (game_version, crashgen_version, main_error, segments) where
+            ``segments`` is a ``dict[str, list[str]]`` with all 8 named keys always
+            present: ``settings``, ``system``, ``callstack``, ``modules``,
+            ``xse_modules``, ``plugins``, ``registers``, ``stack_dump``.
 
         Raises:
             RuntimeError: If Rust parser fails.
 
         """
-        xse_upper = xse_acronym.upper()
-        segment_boundaries = [(s.replace("{xse}", xse_upper), e.replace("{xse}", xse_upper)) for s, e in SEGMENT_BOUNDARIES_TEMPLATE]
         try:
-            scan_output = self._rust_parser.parse_complete(crash_data, segment_boundaries, xse_acronym)
+            # parse_complete now returns a ScanOutput with segments as dict[str, list[str]].
+            # The segment_boundaries parameter is accepted but ignored (anchor-first is always used).
+            scan_output = self._rust_parser.parse_complete(crash_data, [], "")
         except (RustParseError, RustError, AttributeError, TypeError, ValueError) as e:
             msg = f"Rust parser failed: {e}"
             raise RuntimeError(msg) from e
 
-        segments = scan_output.segments
-        # Pad missing segments with empty lists
-        missing = len(segment_boundaries) - len(segments)
-        if missing > 0:
-            segments.extend([[]] * missing)
+        # segments is now a dict[str, list[str]] with all 8 keys guaranteed present.
+        segments: dict[str, list[str]] = scan_output.segments
 
         return scan_output.game_version, scan_output.crashgen_version, scan_output.main_error, segments
 

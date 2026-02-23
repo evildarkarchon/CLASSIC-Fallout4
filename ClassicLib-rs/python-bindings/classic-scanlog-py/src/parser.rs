@@ -3,7 +3,7 @@
 use classic_scanlog_core::LogParser;
 use classic_shared::without_gil;
 use pyo3::prelude::*;
-use pyo3::types::{PyList, PyString};
+use pyo3::types::{PyDict, PyList, PyString};
 use std::collections::HashMap;
 use std::sync::Arc;
 
@@ -24,9 +24,12 @@ pub struct ScanOutput {
     /// Main error message or exception extracted from the log
     #[pyo3(get)]
     pub main_error: String,
-    /// List of log segments, where each segment is a list of lines
+    /// Named segment map: `dict[str, list[str]]`.
+    ///
+    /// Keys: `settings`, `system`, `callstack`, `modules`, `xse_modules`,
+    /// `plugins`, `registers`, `stack_dump`. All 8 keys are always present.
     #[pyo3(get)]
-    pub segments: Py<PyList>,
+    pub segments: Py<PyDict>,
 }
 
 /// Python-facing log parser wrapper
@@ -89,9 +92,13 @@ impl PyLogParser {
         self.inner.clear_caches();
     }
 
-    /// Parse log into segments using SIMD-optimized boundary detection
+    /// Parse log into segments (deprecated positional Vec interface).
     ///
-    /// For large logs (>1000 lines), this releases the GIL to allow other Python threads to run.
+    /// Returns a `list[list[str]]` for backward compatibility.
+    /// For new code, use `parse_all_sections()` which returns a `dict[str, list[str]]`.
+    ///
+    /// For large logs (>1000 lines), this releases the GIL.
+    #[allow(deprecated)]
     pub fn parse_segments<'py>(
         &self,
         py: Python<'py>,
@@ -121,6 +128,7 @@ impl PyLogParser {
     /// Parse segments in parallel for large logs
     ///
     /// This operation always releases the GIL to allow other Python threads to run concurrently.
+    #[allow(deprecated)]
     #[pyo3(name = "parse_segments_parallel", signature = (lines, chunk_size=None))]
     pub fn parse_segments_parallel<'py>(
         &self,
@@ -218,34 +226,59 @@ impl PyLogParser {
         self.inner.parse_all_sections(&lines)
     }
 
-    /// Optimized batch operation: complete log analysis in single FFI call
+    /// Optimized batch operation: complete log analysis in single FFI call.
+    ///
+    /// The returned `ScanOutput.segments` is now a `dict[str, list[str]]` with
+    /// all 8 named keys always present (see `segment_key` constants).
+    ///
+    /// The `segment_boundaries` parameter is accepted for API compatibility but
+    /// is ignored — anchor-first segmentation is always used.
     #[pyo3(name = "parse_complete")]
     pub fn parse_complete<'py>(
         &self,
         py: Python<'py>,
         lines: Vec<String>,
-        segment_boundaries: Vec<(String, String)>,
-        xse_acronym: String,
+        _segment_boundaries: Vec<(String, String)>,
+        _xse_acronym: String,
     ) -> PyResult<ScanOutput> {
-        let (game_ver, crashgen_ver, main_err, segments) = self
-            .inner
-            .parse_complete(&lines, &segment_boundaries, &xse_acronym)
-            .map_err(crate::to_pyerr)?;
+        // Parse header metadata
+        let (game_ver, crashgen_ver, main_err) = {
+            let header = self
+                .inner
+                .parse_crash_header(&lines)
+                .map_err(crate::to_pyerr)?;
+            let gv = header
+                .get("game_version")
+                .cloned()
+                .unwrap_or_else(|| "UNKNOWN".to_string());
+            let cv = header
+                .get("crashgen_version")
+                .cloned()
+                .unwrap_or_else(|| "UNKNOWN".to_string());
+            let me = header
+                .get("main_error")
+                .cloned()
+                .unwrap_or_else(|| "UNKNOWN".to_string());
+            (gv, cv, me)
+        };
 
-        // Manually convert segments to PyList with zero-copy optimization and trimming
-        let mut outer_items = Vec::with_capacity(segments.len());
-        for segment in segments {
-            let inner_items = segment.iter().map(|line| PyString::new(py, line.trim()));
-            let inner_list = PyList::new(py, inner_items)?;
-            outer_items.push(inner_list);
+        // Parse sections using anchor-first segmentation, returning dict[str, list[str]]
+        let arc_lines: Vec<Arc<str>> = lines.iter().map(|s| Arc::from(s.as_str())).collect();
+        let named_sections = self.inner.parse_all_sections_arc(&arc_lines);
+
+        // Build PyDict: str → list[str]
+        let segments_dict = PyDict::new(py);
+        for (key, section_lines) in &named_sections {
+            let py_lines: Vec<&str> = section_lines.iter().map(|s| s.trim()).collect();
+            let inner_list = PyList::new(py, py_lines)?;
+            segments_dict.set_item(key.as_str(), inner_list)?;
         }
-        let segments_list = PyList::new(py, outer_items)?;
 
         Ok(ScanOutput {
             game_version: game_ver,
             crashgen_version: crashgen_ver,
             main_error: main_err,
-            segments: segments_list.unbind(),
+            segments: segments_dict.unbind(),
         })
     }
 

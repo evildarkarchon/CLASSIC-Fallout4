@@ -13,16 +13,6 @@ Game_Info:
   CRASHGEN_LogName: Buffout 4
   CRASHGEN_DLL_File: buffout4.dll
   CRASHGEN_LatestVer: Buffout 4 v1.28.6
-  CRASHGEN_Ignore:
-    - F4EE
-    - WaitForDebugger
-    - Achievements
-    - InputSwitch
-    - AutoOpen
-    - PromptUpload
-    - MemoryManagerDebug
-    - BSTextureStreamerLocalHeap
-    - ArchiveLimit
 
   XSE_Acronym: F4SE
   XSE_FullName: Fallout 4 Script Extender (F4SE)
@@ -104,17 +94,6 @@ GameVR_Info:
   CRASHGEN_LogName: Buffout 4
   CRASHGEN_DLL_File: buffout4.dll
   CRASHGEN_LatestVer: Buffout 4 v1.37.0 Mar 12 2025 22:11:48
-  CRASHGEN_Ignore:
-    - F4EE
-    - WaitForDebugger
-    - Achievements
-    - InputSwitch
-    - MemoryManager
-    - AutoOpen
-    - PromptUpload
-    - MemoryManagerDebug
-    - BSTextureStreamerLocalHeap
-    - ArchiveLimit
 
   XSE_Acronym: F4SEVR
   XSE_FullName: Fallout 4 Script Extender VR (F4SEVR)
@@ -151,6 +130,43 @@ GameVR_Info:
     Utility.pex: 9bff49b59e18636ea84033f362b45f1962c2b3740eb36ad9e9dcae94556f3490
     WaterType.pex: 8711f4a818c1fed8b549f9cfb0fc49186bf6875cd2c8b0146c4e3154da91028f
     Weapon.pex: e9a18d4f7e3aa6b67fb79dee501b221e62e4fbe10baad0b47fb087735f7fb7a9
+
+# =============== PER-CRASHGEN SETTINGS REGISTRY ==============
+# Per-crashgen configuration for settings validation.
+# Each entry declares:
+#   display_section: bracket header used by this crashgen (for display only)
+#   ignore_keys:     settings keys to skip in check_disabled_settings()
+#   checks:          named checks to run for this crashgen
+# The "default" entry applies to any crashgen not explicitly listed.
+# Adding a new crashgen or assigning an existing named check requires only a YAML change.
+
+Crashgen_Registry:
+  "Buffout 4":
+    display_section: "[Compatibility]"
+    ignore_keys:
+      - F4EE
+      - WaitForDebugger
+      - Achievements
+      - InputSwitch
+      - AutoOpen
+      - PromptUpload
+      - MemoryManagerDebug
+      - BSTextureStreamerLocalHeap
+      - ArchiveLimit
+      - MemoryManager
+    checks:
+      - achievements
+      - memory_management
+      - archive_limit
+      - looksmenu
+  "Addictol":
+    display_section: "[Patches]"
+    ignore_keys: []
+    checks: []
+  default:
+    display_section: ""
+    ignore_keys: []
+    checks: []
 
 # =============== GAME FILES BACKUP ==============
 

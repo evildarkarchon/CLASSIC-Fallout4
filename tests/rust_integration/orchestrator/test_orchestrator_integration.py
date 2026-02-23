@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -185,6 +186,78 @@ class TestAnalysisConfigUnit:
 
         assert config is not None
         assert config.show_formid_values is True
+
+    def test_from_yamldata_uses_crashgen_registry_for_named_checks(self, tmp_path):
+        """from_yamldata should preserve crashgen registry named checks for orchestrator."""
+        assert AnalysisConfig is not None
+        assert Orchestrator is not None
+
+        yamldata = SimpleNamespace(
+            crashgen_name="Buffout 4",
+            crashgen_name_vr="Buffout 4",
+            crashgen_latest_og="Buffout 4 v1.28.6",
+            crashgen_latest_vr="Buffout 4 v1.37.0",
+            game_version="Fallout 4 v1.10.163",
+            game_version_vr="Fallout 4 v1.2.72",
+            game_version_new="Fallout 4 v1.10.984",
+            xse_acronym="F4SE",
+            game_root_name="Fallout4",
+            game_root_name_vr="Fallout4VR",
+            game_ignore_plugins=[],
+            game_ignore_records=[],
+            ignore_list=[],
+            suspects_error_list={},
+            suspects_stack_list={},
+            game_mods_core={},
+            game_mods_freq={},
+            game_mods_conf={},
+            game_mods_solu={},
+            game_mods_opc2={},
+            game_mods_core_folon={},
+            classic_records_list=[],
+            classic_version="CLASSIC v9.0.0",
+            crashgen_registry={
+                "Buffout 4": {
+                    "display_section": "[Compatibility]",
+                    "ignore_keys": [],
+                    "checks": ["achievements"],
+                },
+                "default": {
+                    "display_section": "",
+                    "ignore_keys": [],
+                    "checks": [],
+                },
+            },
+        )
+
+        config = AnalysisConfig.from_yamldata(yamldata, "Fallout4", False)
+        orchestrator = Orchestrator(config)
+
+        log_path = tmp_path / "registry-check.log"
+        log_path.write_text(
+            """Fallout 4 v1.10.163
+Buffout 4 v1.28.6
+Unhandled exception "EXCEPTION_ACCESS_VIOLATION" at 0x7FF66DF19300 Fallout4.exe+0DB9300
+[Compatibility]
+Achievements: true
+SYSTEM SPECS:
+CPU: Test CPU
+PROBABLE CALL STACK:
+[0] 0x7FF66DF19300 Fallout4.exe+0DB9300
+MODULES:
+achievements.dll
+PLUGINS:
+[00] Fallout4.esm
+REGISTERS:
+RAX: 0x0000000000000000
+STACK:
+0x000000000000: 0x12345678
+""",
+            encoding="utf-8",
+        )
+
+        result = orchestrator.process_log(str(log_path))
+        assert any("Achievements Mod" in line for line in result.report_lines)
 
 
 @pytest.mark.rust

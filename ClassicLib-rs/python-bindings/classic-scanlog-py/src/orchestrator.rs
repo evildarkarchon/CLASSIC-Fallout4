@@ -1,14 +1,135 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
 use classic_database_core::DatabasePool;
-use classic_scanlog_core::{AnalysisConfig, AnalysisResult, OrchestratorCore};
+use classic_scanlog_core::{
+    AnalysisConfig, AnalysisResult, CheckId, CrashgenEntry, CrashgenRegistry, OrchestratorCore,
+};
 use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::prelude::*;
+use pyo3::types::{PyAny, PyDict};
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
+
+fn parse_checks(raw_checks: &[String]) -> Vec<CheckId> {
+    raw_checks
+        .iter()
+        .filter_map(|check| CheckId::from_str(check))
+        .collect()
+}
+
+fn parse_crashgen_registry_from_py(registry_any: &Bound<'_, PyAny>) -> Option<CrashgenRegistry> {
+    let registry_dict = registry_any.cast::<PyDict>().ok()?;
+    if registry_dict.is_empty() {
+        return None;
+    }
+
+    let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
+    let mut default_entry = CrashgenEntry::default_entry();
+
+    for (name_any, entry_any) in registry_dict.iter() {
+        let name = match name_any.extract::<String>() {
+            Ok(n) => n,
+            Err(_) => continue,
+        };
+
+        let entry_dict = match entry_any.cast::<PyDict>() {
+            Ok(d) => d,
+            Err(_) => continue,
+        };
+
+        let display_section = entry_dict
+            .get_item("display_section")
+            .ok()
+            .flatten()
+            .and_then(|v| v.extract::<String>().ok())
+            .unwrap_or_default();
+
+        let ignore_keys: HashSet<String> = entry_dict
+            .get_item("ignore_keys")
+            .ok()
+            .flatten()
+            .and_then(|v| v.extract::<Vec<String>>().ok())
+            .unwrap_or_default()
+            .into_iter()
+            .collect();
+
+        let checks = entry_dict
+            .get_item("checks")
+            .ok()
+            .flatten()
+            .and_then(|v| v.extract::<Vec<String>>().ok())
+            .map(|raw| parse_checks(&raw))
+            .unwrap_or_default();
+
+        let entry = CrashgenEntry {
+            display_section,
+            ignore_keys,
+            checks,
+        };
+
+        if name == "default" {
+            default_entry = entry;
+        } else {
+            entries.insert(name, entry);
+        }
+    }
+
+    Some(CrashgenRegistry::new(entries, default_entry))
+}
+
+fn build_legacy_crashgen_registry(
+    yamldata: &Bound<'_, PyAny>,
+    crashgen_name: &str,
+    vr_mode: bool,
+) -> CrashgenRegistry {
+    let legacy_ignore: Vec<String> = if vr_mode {
+        yamldata
+            .getattr("crashgen_ignore_vr")
+            .ok()
+            .and_then(|attr| attr.extract::<Vec<String>>().ok())
+            .unwrap_or_default()
+    } else {
+        yamldata
+            .getattr("crashgen_ignore")
+            .ok()
+            .and_then(|attr| attr.extract::<Vec<String>>().ok())
+            .unwrap_or_default()
+    };
+
+    let normalized: String = crashgen_name
+        .chars()
+        .filter(|c| !c.is_whitespace())
+        .collect::<String>()
+        .to_lowercase();
+    let checks = if normalized == "buffout4" {
+        vec![
+            CheckId::Achievements,
+            CheckId::MemoryManagement,
+            CheckId::ArchiveLimit,
+            CheckId::LooksMenu,
+        ]
+    } else {
+        Vec::new()
+    };
+
+    let entry = CrashgenEntry {
+        display_section: if normalized == "buffout4" {
+            "[Compatibility]".to_string()
+        } else {
+            String::new()
+        },
+        ignore_keys: legacy_ignore.into_iter().collect(),
+        checks,
+    };
+
+    let mut entries = HashMap::new();
+    entries.insert(crashgen_name.to_string(), entry);
+    CrashgenRegistry::new(entries, CrashgenEntry::default_entry())
+}
 
 // =============================================================================
 // Cancellation Token
@@ -196,14 +317,16 @@ impl PyAnalysisConfig {
             .and_then(|attr| attr.extract::<Vec<String>>().ok())
             .unwrap_or_default();
 
-        // Select OG or VR crashgen_ignore based on vr_mode
-        config.crashgen_ignore = if vr_mode {
-            yamldata.getattr("crashgen_ignore_vr")
-        } else {
-            yamldata.getattr("crashgen_ignore")
-        }
-        .and_then(|attr| attr.extract::<Vec<String>>())
-        .unwrap_or_default();
+        // Prefer explicit per-crashgen registry from YamlData when available.
+        // Fall back to legacy crashgen_ignore semantics for compatibility with
+        // older YamlData providers that don't expose crashgen_registry.
+        config.crashgen_registry = yamldata
+            .getattr("crashgen_registry")
+            .ok()
+            .and_then(|attr| parse_crashgen_registry_from_py(&attr))
+            .unwrap_or_else(|| {
+                build_legacy_crashgen_registry(yamldata, &config.crashgen_name, vr_mode)
+            });
 
         // Extract CLASSIC version for report header (e.g., "CLASSIC v8.2.0")
         config.classic_version = yamldata
@@ -575,16 +698,20 @@ impl PyAnalysisConfig {
         self.inner.classic_records_list = value;
     }
 
-    /// Get the list of crashgen settings to ignore during validation
+    /// Get the list of crashgen settings to ignore during validation.
+    ///
+    /// Deprecated: Returns an empty list. Use the Crashgen_Registry in YAML instead.
     #[getter]
     pub fn crashgen_ignore(&self) -> Vec<String> {
-        self.inner.crashgen_ignore.clone()
+        Vec::new() // Superseded by per-crashgen registry entries
     }
 
-    /// Set the list of crashgen settings to ignore during validation
+    /// Set the list of crashgen settings to ignore during validation.
+    ///
+    /// Deprecated: No-op. Use the Crashgen_Registry in YAML instead.
     #[setter]
-    pub fn set_crashgen_ignore(&mut self, value: Vec<String>) {
-        self.inner.crashgen_ignore = value;
+    pub fn set_crashgen_ignore(&mut self, _value: Vec<String>) {
+        // No-op: superseded by per-crashgen registry entries
     }
 }
 

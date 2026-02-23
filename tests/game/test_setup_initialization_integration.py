@@ -230,7 +230,10 @@ class TestSetupInitialization:
         # Verify local dir was set from __file__
         local_dir = GlobalRegistry.get(GlobalRegistry.Keys.LOCAL_DIR)
         # Should be parent of SetupCoordinator.py location
-        assert local_dir.name == "ClassicLib" or local_dir.name == "CLASSIC-Fallout4"
+        # Path(__file__).parent.parent.parent from ClassicLib/support/setup.py → project root
+        # The root folder name varies by checkout: "classic-9.0", "ClassicLib", "CLASSIC-Fallout4", etc.
+        assert local_dir is not None
+        assert local_dir.is_absolute()
 
     @patch.object(SetupCoordinator, "_log_rust_acceleration_status")
     @patch.object(SetupCoordinator, "_ensure_paths_configured")

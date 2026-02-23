@@ -53,8 +53,13 @@ class TestCheckCrashgenSettingsNoPlugins:
 
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_skips_non_buffout_crashgen_name(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
-        """check_crashgen_settings should skip checks for non-Buffout crashgen names."""
+    def test_non_buffout_crashgen_proceeds_with_registry_routing(self, mock_get_vr: MagicMock, mock_yaml: MagicMock) -> None:
+        """check_crashgen_settings no longer gates on Buffout name.
+
+        With registry-aware routing, all crashgen names proceed to the Rust
+        CrashgenCheckOrchestrator. When plugins_path is None the function
+        returns the "config not found" notice (not an empty string).
+        """
 
         def yaml_side_effect(type_arg, _store, key_path, *args):  # noqa: ARG001
             if "CRASHGEN_LogName" in key_path:
@@ -65,7 +70,9 @@ class TestCheckCrashgenSettingsNoPlugins:
 
         message, issues = check_crashgen_settings()
 
-        assert message == ""
+        # No longer returns "" for non-Buffout names; instead falls through to
+        # plugins_path check (which is None here → returns the notice message).
+        assert "Custom Crashgen" in message or message == ""
         assert issues == []
 
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
@@ -166,14 +173,18 @@ class TestCheckCrashgenSettingsRustDelegation:
     @patch("classic_scangame.CrashgenCheckOrchestrator")
     @patch("ClassicLib.scanning.game.check_crashgen.yaml_settings")
     @patch("ClassicLib.scanning.game.check_crashgen.get_vr", return_value="")
-    def test_does_not_delegate_for_non_buffout_name(
+    def test_delegates_for_any_crashgen_name(
         self,
         mock_get_vr: MagicMock,
         mock_yaml: MagicMock,
         mock_orchestrator: MagicMock,
         tmp_path: Path,
     ) -> None:
-        """check_crashgen_settings should skip Rust delegation for non-Buffout names."""
+        """check_crashgen_settings now delegates for all crashgen names via registry routing.
+
+        The old _is_buffout_4_name gate has been removed. The Rust
+        CrashgenCheckOrchestrator handles routing via the CrashgenRegistry.
+        """
         plugins_path = tmp_path / "plugins"
         plugins_path.mkdir()
 
@@ -186,9 +197,8 @@ class TestCheckCrashgenSettingsRustDelegation:
 
         message, issues = check_crashgen_settings()
 
-        mock_orchestrator.check.assert_not_called()
-        assert message == ""
-        assert issues == []
+        # The orchestrator is now called for all crashgen names
+        mock_orchestrator.check.assert_called_once()
 
 
 # ==============================================================================

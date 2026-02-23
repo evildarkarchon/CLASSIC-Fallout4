@@ -1,6 +1,7 @@
 //! Python bindings for SettingsValidator - Thin wrapper over classic-scanlog-core
 
-use classic_scanlog_core::SettingsValidator;
+use classic_scanlog_core::settings_validator::SettingsValidator;
+use classic_scanlog_core::CrashgenEntry;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
 
@@ -12,12 +13,46 @@ pub struct PySettingsValidator {
 
 #[pymethods]
 impl PySettingsValidator {
-    /// Create a new instance
-
+    /// Create a new SettingsValidator with a crashgen name and ignore list.
+    ///
+    /// For backward compatibility, this accepts `crashgen_ignore` as a plain
+    /// `Vec<String>` and builds a default-like `CrashgenEntry` from it. Named
+    /// checks (achievements, memory_management, archive_limit, looksmenu) are
+    /// only run when the crashgen name is "Buffout 4" (case-insensitive).
     #[new]
     pub fn new(crashgen_name: String, crashgen_ignore: Vec<String>) -> Self {
+        use classic_scanlog_core::CheckId;
+
+        // For the Python binding path, infer checks from the crashgen name
+        // (preserves old buffout_settings_checks_enabled() behavior).
+        let normalized: String = crashgen_name
+            .chars()
+            .filter(|c| !c.is_whitespace())
+            .collect::<String>()
+            .to_lowercase();
+        let checks = if normalized == "buffout4" {
+            vec![
+                CheckId::Achievements,
+                CheckId::MemoryManagement,
+                CheckId::ArchiveLimit,
+                CheckId::LooksMenu,
+            ]
+        } else {
+            vec![]
+        };
+
+        let entry = CrashgenEntry {
+            display_section: if normalized == "buffout4" {
+                "[Compatibility]".to_string()
+            } else {
+                String::new()
+            },
+            ignore_keys: crashgen_ignore.into_iter().collect(),
+            checks,
+        };
+
         Self {
-            inner: SettingsValidator::new(crashgen_name, crashgen_ignore),
+            inner: SettingsValidator::new(crashgen_name, entry),
         }
     }
 

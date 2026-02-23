@@ -120,9 +120,10 @@ class TestRustFFIPropertyBased:
         try:
             lines = text_input.splitlines() if isinstance(text_input, str) else []
             game_ver, crashgen_ver, error, segments = parser.find_segments(lines, "Buffout 4", "F4SE", "Fallout4.exe")
-            # Result should be a valid structure even for invalid input
+            # Result should be a valid structure even for invalid input — now a dict
             assert segments is not None
-            assert isinstance(segments, list)
+            assert isinstance(segments, dict)
+            assert len(segments) == 8
         except Exception as e:
             # Should only raise known exception types
             assert isinstance(e, (ValueError, TypeError, RuntimeError, AttributeError))
@@ -140,12 +141,12 @@ class TestRustFFIPropertyBased:
 
         try:
             game_ver, crashgen_ver, error, segments = parser.find_segments(log_lines, "Buffout 4", "F4SE", "Fallout4.exe")
-            # Verify basic structure
-            if segments:
-                assert isinstance(segments, list)
-                # Check for expected keys in parsed result
-                # segments is a list of lists of strings
-                assert isinstance(segments[0], list)
+            # Verify basic structure — segments is now a dict[str, list[str]]
+            assert isinstance(segments, dict)
+            assert len(segments) == 8
+            # Each value should be a list of strings
+            for v in segments.values():
+                assert isinstance(v, list)
         except Exception as e:
             # Parser should handle gracefully
             assert isinstance(e, (ValueError, RuntimeError))

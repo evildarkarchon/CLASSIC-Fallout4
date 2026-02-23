@@ -51,6 +51,17 @@ Crashlog_Records_Exclude: []
 Crashlog_Error_Check:
   "Error Pattern": "Error Description"
 Crashlog_Stack_Check: {}
+Crashgen_Registry:
+  Buffout 4:
+    display_section: "[ Compatibility ]"
+    ignore_keys:
+      - "zeta_key"
+      - "alpha_key"
+    checks: []
+  default:
+    display_section: ""
+    ignore_keys: []
+    checks: []
 Mods_CONF:
   "ConflictingMod.esp": "Reason"
 Mods_CORE: {}

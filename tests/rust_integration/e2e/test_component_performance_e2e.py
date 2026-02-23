@@ -98,7 +98,7 @@ class TestComponentPerformance:
                     xse_acronym=mock_yamldata.xse_acronym,
                     game_root_name=mock_yamldata.game_root_name,
                 )
-                segments = result[3]
+                segments = result[3]  # dict[str, list[str]]
 
             component_times["parser"] = timer.elapsed
             assert timer.elapsed < 0.1, f"Parser too slow for large data: {timer.elapsed:.3f}s"
@@ -106,7 +106,8 @@ class TestComponentPerformance:
         # Measure FormID analyzer performance
         if "formid_analyzer" in available_components and segments:
             formid_analyzer = get_formid_analyzer(mock_yamldata, True, True)
-            callstack = segments[2] if len(segments) > 2 else large_crash_data
+            # segments is dict[str, list[str]] - use named key, not integer index
+            callstack = segments.get("callstack", large_crash_data)
 
             with PerformanceTimer() as timer:
                 formids = formid_analyzer.extract_formids(callstack)
@@ -118,7 +119,8 @@ class TestComponentPerformance:
         # Measure Plugin analyzer performance
         if "plugin_analyzer" in available_components:
             plugin_analyzer = get_plugin_analyzer(mock_yamldata)
-            plugin_data = segments[-1] if segments else large_crash_data
+            # segments is dict[str, list[str]] - use named key, not integer index
+            plugin_data = segments.get("plugins", large_crash_data) if segments else large_crash_data
 
             with PerformanceTimer() as timer:
                 plugins, _, _ = plugin_analyzer.loadorder_scan_log(plugin_data)
@@ -167,16 +169,18 @@ class TestComponentPerformance:
                     xse_acronym=mock_yamldata.xse_acronym,
                     game_root_name=mock_yamldata.game_root_name,
                 )
-                segments = result[3]
+                segments = result[3]  # dict[str, list[str]]
 
             if "formid_analyzer" in available_components and segments:
                 formid_analyzer = get_formid_analyzer(mock_yamldata, True, True)
-                callstack = segments[2] if len(segments) > 2 else large_crash_data
+                # segments is dict[str, list[str]] - use named key, not integer index
+                callstack = segments.get("callstack", large_crash_data)
                 formid_analyzer.extract_formids(callstack)
 
             if "plugin_analyzer" in available_components:
                 plugin_analyzer = get_plugin_analyzer(mock_yamldata)
-                plugin_data = segments[-1] if segments else large_crash_data
+                # segments is dict[str, list[str]] - use named key, not integer index
+                plugin_data = segments.get("plugins", large_crash_data) if segments else large_crash_data
                 _, _, _ = plugin_analyzer.loadorder_scan_log(plugin_data)
 
         final_memory = process.memory_info().rss
