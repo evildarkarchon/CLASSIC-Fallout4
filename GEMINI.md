@@ -24,10 +24,10 @@ cargo build -p classic-tui --manifest-path ClassicLib-rs/Cargo.toml           # 
 
 ### Rust Python Bindings (PyO3 via maturin)
 ```powershell
-.\rebuild_rust.ps1                      # Build + install all PyO3 bindings into venv
-.\rebuild_rust.ps1 classic_yaml         # Build + install a single binding
-.\rebuild_rust.ps1 -Clean               # Clean rebuild
-.\rebuild_rust.ps1 -BuildOnly           # Build wheels without installing
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1                      # Build + install all PyO3 bindings into venv
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 classic_yaml         # Build + install a single binding
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Clean               # Clean rebuild
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -BuildOnly           # Build wheels without installing
 ```
 
 ### C++ Build (classic-cli and classic-gui)
@@ -42,46 +42,34 @@ cargo build -p classic-tui --manifest-path ClassicLib-rs/Cargo.toml           # 
 #### Option 1: Build Scripts (Recommended -- handles everything automatically)
 The build scripts auto-detect VS via `vswhere.exe`, initialize the MSVC environment, and run cmake. **Always prefer these over raw cmake commands.**
 
-```powershell
-# PowerShell:
-.\classic-cli\build_cli.ps1                # Build classic-cli
-.\classic-gui\build_gui.ps1                # Build classic-gui (Qt 6)
-.\classic-cli\build_cli.ps1 -Test          # Build + run tests
-.\classic-cli\build_cli.ps1 -Clean         # Clean rebuild
-```
+Since Claude Code runs bash, invoke PowerShell 7 explicitly:
 ```bash
-# Bash (e.g., Git Bash, WSL, or VS Code bash terminal):
-powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
-powershell -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
-powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+# Build classic-cli
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+
+# Build classic-gui (Qt 6)
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+
+# Build + run tests
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+
+# Clean rebuild
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
 ```
 
 #### Option 2: Manual cmake (requires VS Dev Shell initialized first)
 If you need to run cmake commands directly (e.g., building a specific target), you must initialize VS Dev Shell in the **same shell session**. The environment variables it sets (PATH, INCLUDE, LIB, etc.) are session-scoped and do not persist across separate commands.
 
-```powershell
-# Step 1: Initialize VS Dev Shell (must be done in the SAME PowerShell session as cmake)
-$vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
-if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
-& (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
+**This means you CANNOT run VS Dev Shell init as one bash command and cmake as another -- they must be in the same PowerShell invocation.**
 
-# Step 2: Verify initialization succeeded
-Get-Command cl.exe     # Should resolve to MSVC cl.exe
-Get-Command ninja.exe  # Should resolve to Ninja
-
-# Step 3: Now cmake commands will work (run from classic-cli/ or classic-gui/)
-cd classic-cli   # or classic-gui
-cmake --preset default
-cmake --build build
-```
 ```bash
-# From bash: wrap VS Dev Shell init + cmake in a single PowerShell invocation
-# (cannot split across commands -- environment variables are session-scoped)
-powershell -ExecutionPolicy Bypass -Command '
+# Single PowerShell invocation that inits VS Dev Shell + runs cmake:
+pwsh -ExecutionPolicy Bypass -Command '
   $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
   if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
   & (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
-  cd classic-cli
+  Write-Host "cl.exe: $(Get-Command cl.exe | Select-Object -ExpandProperty Source)"
+  cd classic-cli   # or classic-gui
   cmake --preset default
   cmake --build build
 '
@@ -107,19 +95,21 @@ cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml     
 
 # C++ tests (Catch2 v3 via CTest) -- requires VS Dev Shell (use build script)
 # Recommended: use the build script with -Test flag (handles VS Dev Shell automatically):
-.\classic-cli\build_cli.ps1 -Test                                    # PowerShell
-# Or from bash:
-# powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 
 # Manual approach (must run in a single PowerShell session with VS Dev Shell):
-# See "C++ Build" section above for VS Dev Shell initialization commands,
-# then run from classic-cli/:
-#   cmake --preset default
-#   cmake --build build --target classic-cli-tests
-#   ctest --test-dir build --output-on-failure
+pwsh -ExecutionPolicy Bypass -Command '
+  $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
+  if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
+  & (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
+  cd classic-cli
+  cmake --preset default
+  cmake --build build --target classic-cli-tests
+  ctest --test-dir build --output-on-failure
+'
 
 # C++ integration tests (PowerShell, requires built classic-cli.exe)
-.\classic-cli\test_cli.ps1                                           # Full CLI integration suite
+pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ```
 
 ### Linting & Formatting
@@ -133,6 +123,12 @@ uv run vulture ClassicLib/ vulture_whitelist.py --min-confidence 80  # Dead code
 # Rust
 cargo fmt --all --manifest-path ClassicLib-rs/Cargo.toml -- --check
 cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings
+```
+
+### PyInstaller Executables
+```powershell
+pwsh -ExecutionPolicy Bypass -File build_all.ps1                   # Build all exe variants
+uv run pyinstaller --clean .\CLASSIC.spec  # Build single spec
 ```
 
 ## Architecture
@@ -159,7 +155,7 @@ The Rust workspace under `ClassicLib-rs/` follows a strict three-layer separatio
    - Python imports them directly: `import classic_yaml`, `import classic_scanlog`
    - `classic-node`: NAPI-RS bindings for Node.js/Bun (tested in CI with Bun)
    - `classic-cpp-bridge`: CXX bridge exposing Rust core crates to C++ (staticlib)
-   - `classic-cli`: C++ CLI scanner built with CMake + vcpkg (fmt, CLI11, Catch2)
+   - `classic-cli`: C++ CLI scanner built with CMake + vcpkg + Corrosion (fmt, CLI11, Catch2)
 
 4. **UI Applications** (`ClassicLib-rs/ui-applications/`)
    - `classic-tui`: Pure Rust terminal UI using Ratatui
@@ -177,6 +173,8 @@ Python code organized into subpackages:
 - `Utils/` - File, path, string, version, web utilities
 - `Interface/` - PySide6 GUI components
 - `TUI/` - Textual-based terminal UI (entry point: `classic-tui`)
+- `_async_utils/` - Async utility helpers
+- `acceleration/` - Rust acceleration utilities
 
 ### Rust Acceleration Pattern
 
@@ -186,6 +184,11 @@ The `ClassicLib/integration/factory.py` module provides `detect_component()` whi
 
 ### ONE RUNTIME RULE
 A single Tokio runtime is shared across the entire application via `classic_shared::get_runtime()`. Never create additional Tokio runtimes.
+
+### AsyncBridge (Optional UI-Tokio coordination)
+- `run_with_ui_update()`, `run_with_timeout()`, `run_cancellable()` bridge async Tokio work to a UI thread
+- `EventLoopDispatcher` trait abstracts event-loop dispatching for testability
+- `BridgeError` enum: Timeout/Cancelled/DispatchFailed -- log-and-drop on dispatch failures (no `.expect()`)
 
 ### Rust Edition & Lints
 - Rust 2024 edition, MSRV 1.85.0
@@ -224,10 +227,9 @@ Key markers: `unit`, `integration`, `slow`, `stress`, `performance`, `network`, 
 
 ## CI Pipeline
 
-GitHub Actions on `windows-latest` with parallel jobs:
-1. **Format**: ruff format + rustfmt (non-blocking)
-2. **Lint**: ruff check + clippy + vulture (blocking)
-3. **Build Rust** -> **Build Python Bindings** (maturin) -> **Python Tests** (unit, integration, rust-integration)
-4. **Rust Tests** (independent, parallel with Python pipeline)
-5. **Node.js Bindings** (Bun): build NAPI-RS binary + run Bun tests (independent)
-6. **Benchmarks** (`benchmarks.yml`): separate workflow for performance tracking
+GitHub Actions on `windows-latest`, split into per-language workflows for independent notifications:
+
+1. **`ci-rust.yml`** — Rust: format (rustfmt) → lint (clippy) → build → test (with all features)
+2. **`ci-python.yml`** — Python: format (ruff) → lint (ruff) → dead code (vulture) → build Rust → build PyO3 bindings (maturin) → pytest (unit, integration, rust-integration)
+3. **`ci-typescript.yml`** — TypeScript: build NAPI-RS binary → Bun tests
+4. **`benchmarks.yml`** — Benchmarks: separate workflow for performance tracking

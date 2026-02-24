@@ -212,12 +212,12 @@ A single Tokio runtime is shared across the entire application via `classic_shar
 - Integration tests via `test_cli.ps1` (full binary exercising Rust CXX bridge)
 - Test source: `classic-cli/tests/`
 
-### Test Isolation
+### Test Isolation (Python)
 - An autouse `reset_all_singletons` fixture clears all caches/singletons between tests
 - An autouse `prevent_manual_input` fixture mocks `builtins.input` to prevent CI hangs
 - Tests use organized fixtures from `tests/fixtures/` (imported via conftest.py)
 
-### Test Markers
+### Test Markers (Python)
 Key markers: `unit`, `integration`, `slow`, `stress`, `performance`, `network`, `gui`, `rust`, `parity`, `tui`, `snapshot`. Custom CLI flags: `--skip-slow`, `--skip-network`, `--skip-performance`, `--skip-stress`.
 
 ### Windows-Specific
