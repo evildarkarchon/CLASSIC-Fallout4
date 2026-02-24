@@ -24,10 +24,10 @@ cargo build -p classic-tui --manifest-path ClassicLib-rs/Cargo.toml           # 
 
 ### Rust Python Bindings (PyO3 via maturin)
 ```powershell
-.\rebuild_rust.ps1                      # Build + install all PyO3 bindings into venv
-.\rebuild_rust.ps1 classic_yaml         # Build + install a single binding
-.\rebuild_rust.ps1 -Clean               # Clean rebuild
-.\rebuild_rust.ps1 -BuildOnly           # Build wheels without installing
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1                      # Build + install all PyO3 bindings into venv
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 classic_yaml         # Build + install a single binding
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -Clean               # Clean rebuild
+pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1 -BuildOnly           # Build wheels without installing
 ```
 
 ### C++ Build (classic-cli and classic-gui)
@@ -42,19 +42,19 @@ cargo build -p classic-tui --manifest-path ClassicLib-rs/Cargo.toml           # 
 #### Option 1: Build Scripts (Recommended -- handles everything automatically)
 The build scripts auto-detect VS via `vswhere.exe`, initialize the MSVC environment, and run cmake. **Always prefer these over raw cmake commands.**
 
-Since Claude Code runs bash, invoke PowerShell explicitly:
+Since Claude Code runs bash, invoke PowerShell 7 explicitly:
 ```bash
 # Build classic-cli
-powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1
 
 # Build classic-gui (Qt 6)
-powershell -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1
 
 # Build + run tests
-powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 
 # Clean rebuild
-powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Clean
 ```
 
 #### Option 2: Manual cmake (requires VS Dev Shell initialized first)
@@ -64,7 +64,7 @@ If you need to run cmake commands directly (e.g., building a specific target), y
 
 ```bash
 # Single PowerShell invocation that inits VS Dev Shell + runs cmake:
-powershell -ExecutionPolicy Bypass -Command '
+pwsh -ExecutionPolicy Bypass -Command '
   $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
   if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
   & (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
@@ -95,10 +95,10 @@ cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml     
 
 # C++ tests (Catch2 v3 via CTest) -- requires VS Dev Shell (use build script)
 # Recommended: use the build script with -Test flag (handles VS Dev Shell automatically):
-powershell -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
 
 # Manual approach (must run in a single PowerShell session with VS Dev Shell):
-powershell -ExecutionPolicy Bypass -Command '
+pwsh -ExecutionPolicy Bypass -Command '
   $vsPath = & "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath 2>$null
   if (-not $vsPath) { $vsPath = "C:\Program Files\Microsoft Visual Studio\18\Community" }
   & (Join-Path $vsPath "Common7\Tools\Launch-VsDevShell.ps1") -Arch amd64 -SkipAutomaticLocation | Out-Null
@@ -109,7 +109,7 @@ powershell -ExecutionPolicy Bypass -Command '
 '
 
 # C++ integration tests (PowerShell, requires built classic-cli.exe)
-powershell -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
+pwsh -ExecutionPolicy Bypass -File classic-cli/test_cli.ps1
 ```
 
 ### Linting & Formatting
@@ -127,7 +127,7 @@ cargo clippy --workspace --all-targets --all-features --manifest-path ClassicLib
 
 ### PyInstaller Executables
 ```powershell
-.\build_all.ps1                   # Build all exe variants
+pwsh -ExecutionPolicy Bypass -File build_all.ps1                   # Build all exe variants
 uv run pyinstaller --clean .\CLASSIC.spec  # Build single spec
 ```
 
