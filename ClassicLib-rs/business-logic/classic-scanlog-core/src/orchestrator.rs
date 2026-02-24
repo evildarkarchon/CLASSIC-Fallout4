@@ -1055,70 +1055,91 @@ impl OrchestratorCore {
 
         // Add settings validation section
         if !crashgen_settings.is_empty() {
-            let mut settings_fragments = Vec::new();
+            // If Addictol is detected in XSE modules, skip all Buffout TOML checks.
+            // Some Addictol versions mask themselves as Buffout in the crash log header,
+            // so we detect via DLL presence rather than relying on the header.
+            let has_addictol = xse_modules_for_settings.contains("addictol.dll");
 
-            // Achievements check
-            if let Ok(achievements_fragment) =
-                self.settings_validator.scan_buffout_achievements_setting(
-                    xse_modules_for_settings.clone(),
-                    &crashgen_settings,
-                )
-            {
-                if !achievements_fragment.is_empty() {
-                    settings_fragments.push(achievements_fragment);
-                }
-            }
-
-            // Memory Manager check (check for X-Cell and Baka ScrapHeap)
-            let has_xcell = [
-                "x-cell-fo4.dll",
-                "x-cell-og.dll",
-                "x-cell-ng2.dll",
-                "x-cell-ae.dll",
-                "addictol.dll",
-            ]
-            .iter()
-            .any(|dll| xse_modules_for_settings.contains(*dll));
-            let has_old_xcell = false; // Would need version check
-            let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
-            if let Ok(memory_fragment) = self
-                .settings_validator
-                .scan_buffout_memorymanagement_settings(
-                    &crashgen_settings,
-                    has_xcell,
-                    has_old_xcell,
-                    has_baka_scrapheap,
-                )
-            {
-                if !memory_fragment.is_empty() {
-                    settings_fragments.push(memory_fragment);
-                }
-            }
-
-            // ArchiveLimit check
-            if let Ok(archive_fragment) = self.settings_validator.scan_archivelimit_setting(
-                &crashgen_settings,
-                None, // Version parsing would go here
-            ) {
-                if !archive_fragment.is_empty() {
-                    settings_fragments.push(archive_fragment);
-                }
-            }
-
-            // LooksMenu check
-            if let Ok(looksmenu_fragment) = self.settings_validator.scan_buffout_looksmenu_setting(
-                &crashgen_settings,
-                xse_modules_for_settings.clone(),
-            ) {
-                if !looksmenu_fragment.is_empty() {
-                    settings_fragments.push(looksmenu_fragment);
-                }
-            }
-
-            if !settings_fragments.is_empty() {
+            if has_addictol {
+                let warning = ReportFragment::from_lines(vec![
+                    format!(
+                        "# ⚠️ NOTICE : Addictol detected — skipping {} TOML settings checks. #\n",
+                        self.config.crashgen_name
+                    ),
+                    format!(
+                        "  {} and Addictol are incompatible. If both are installed, remove one to avoid conflicts.\n\n-----\n",
+                        self.config.crashgen_name
+                    ),
+                ]);
                 composer.add(report_gen.generate_settings_section_header());
-                for settings_fragment in settings_fragments {
-                    composer.add(settings_fragment);
+                composer.add(warning);
+            } else {
+                let mut settings_fragments = Vec::new();
+
+                // Achievements check
+                if let Ok(achievements_fragment) =
+                    self.settings_validator.scan_buffout_achievements_setting(
+                        xse_modules_for_settings.clone(),
+                        &crashgen_settings,
+                    )
+                {
+                    if !achievements_fragment.is_empty() {
+                        settings_fragments.push(achievements_fragment);
+                    }
+                }
+
+                // Memory Manager check (check for X-Cell and Baka ScrapHeap)
+                let has_xcell = [
+                    "x-cell-fo4.dll",
+                    "x-cell-og.dll",
+                    "x-cell-ng2.dll",
+                    "x-cell-ae.dll",
+                ]
+                .iter()
+                .any(|dll| xse_modules_for_settings.contains(*dll));
+                let has_old_xcell = false; // Would need version check
+                let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
+                if let Ok(memory_fragment) = self
+                    .settings_validator
+                    .scan_buffout_memorymanagement_settings(
+                        &crashgen_settings,
+                        has_xcell,
+                        has_old_xcell,
+                        has_baka_scrapheap,
+                    )
+                {
+                    if !memory_fragment.is_empty() {
+                        settings_fragments.push(memory_fragment);
+                    }
+                }
+
+                // ArchiveLimit check
+                if let Ok(archive_fragment) = self.settings_validator.scan_archivelimit_setting(
+                    &crashgen_settings,
+                    None, // Version parsing would go here
+                ) {
+                    if !archive_fragment.is_empty() {
+                        settings_fragments.push(archive_fragment);
+                    }
+                }
+
+                // LooksMenu check
+                if let Ok(looksmenu_fragment) =
+                    self.settings_validator.scan_buffout_looksmenu_setting(
+                        &crashgen_settings,
+                        xse_modules_for_settings.clone(),
+                    )
+                {
+                    if !looksmenu_fragment.is_empty() {
+                        settings_fragments.push(looksmenu_fragment);
+                    }
+                }
+
+                if !settings_fragments.is_empty() {
+                    composer.add(report_gen.generate_settings_section_header());
+                    for settings_fragment in settings_fragments {
+                        composer.add(settings_fragment);
+                    }
                 }
             }
         }

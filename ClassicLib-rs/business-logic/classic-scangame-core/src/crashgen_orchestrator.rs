@@ -254,17 +254,17 @@ mod tests {
     }
 
     #[test]
-    fn test_check_detects_addictol_conflicts() {
+    fn test_addictol_skips_all_checks() {
         let temp = setup_with_og_config(
             "[Patches]\nMemoryManager = true\nHavokMemorySystem = true\n",
             &["Addictol.dll"],
         );
         let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();
 
-        assert!(!report.issues.is_empty());
-        let settings: Vec<&str> = report.issues.iter().map(|i| i.setting.as_str()).collect();
-        assert!(settings.contains(&"MemoryManager"));
-        assert!(settings.contains(&"HavokMemorySystem"));
+        // Addictol detected — all Buffout TOML checks should be skipped
+        assert!(report.issues.is_empty(), "No issues when Addictol is present");
+        assert!(report.message.contains("Addictol detected"));
+        assert!(report.message.contains("incompatible"));
     }
 
     #[test]

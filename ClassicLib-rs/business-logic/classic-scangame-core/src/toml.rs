@@ -325,7 +325,6 @@ impl CrashgenChecker {
             "x-cell-og.dll",
             "x-cell-ng2.dll",
             "x-cell-ae.dll",
-            "addictol.dll",
         ]);
         let has_achievements =
             self.has_plugin(&["achievements.dll", "achievementsmodsenablerloader.dll"]);
@@ -560,6 +559,21 @@ impl CrashgenChecker {
             return Ok((self.message_list.join(""), Vec::new()));
         }
 
+        // If Addictol is installed, skip all Buffout TOML checks.
+        // Some Addictol versions mask themselves as Buffout in the crash log header,
+        // so we detect via DLL presence rather than relying on the header.
+        if self.has_plugin(&["addictol.dll"]) {
+            self.message_list.push(format!(
+                "# ⚠️ NOTICE : Addictol detected — skipping {} TOML settings checks. #\n",
+                self.crashgen_name
+            ));
+            self.message_list.push(format!(
+                "  {} and Addictol are incompatible. If both are installed, remove one to avoid conflicts.\n-----\n",
+                self.crashgen_name
+            ));
+            return Ok((self.message_list.join(""), Vec::new()));
+        }
+
         // Load TOML data
         self.load_toml()?;
 
@@ -659,17 +673,37 @@ mod tests {
     }
 
     #[test]
-    fn test_issue_detection_addictol_conflict() {
+    fn test_addictol_skips_all_toml_checks() {
         let temp_dir = TempDir::new().unwrap();
         let buffout_dir = temp_dir.path().join("Buffout4");
         fs::create_dir(&buffout_dir).unwrap();
 
-        // Create config with MemoryManager enabled
+        // Create config with MemoryManager enabled (would normally be flagged)
         let config_file = buffout_dir.join("config.toml");
         fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
 
-        // Addictol is the renamed X-Cell DLL and should trigger the same checks
+        // Addictol DLL present — all Buffout TOML checks should be skipped
         fs::write(temp_dir.path().join("Addictol.dll"), b"").unwrap();
+
+        let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
+        let (report, issues) = checker.check().unwrap();
+
+        assert!(issues.is_empty(), "No issues should be reported when Addictol is detected");
+        assert!(report.contains("Addictol detected"), "Report should mention Addictol");
+        assert!(report.contains("incompatible"), "Report should warn about incompatibility");
+    }
+
+    #[test]
+    fn test_xcell_still_triggers_memory_checks_without_addictol() {
+        let temp_dir = TempDir::new().unwrap();
+        let buffout_dir = temp_dir.path().join("Buffout4");
+        fs::create_dir(&buffout_dir).unwrap();
+
+        let config_file = buffout_dir.join("config.toml");
+        fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
+
+        // Only X-Cell DLL, no Addictol
+        fs::write(temp_dir.path().join("x-cell-fo4.dll"), b"").unwrap();
 
         let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
         let (_report, issues) = checker.check().unwrap();
