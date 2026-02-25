@@ -852,6 +852,23 @@ impl OrchestratorCore {
         let report_gen = self.create_report_generator();
         let mut composer = ReportComposer::new();
 
+        // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP
+        // This restores the scope of the old positional segments[2], which spanned
+        // from "PROBABLE CALL STACK:" to "MODULES:" and included all three sections.
+        let combined_crash_data: Vec<Arc<str>> = {
+            let mut combined = Vec::new();
+            if let Some(v) = segments.get(segment_key::CALLSTACK) {
+                combined.extend(v.iter().cloned());
+            }
+            if let Some(v) = segments.get(segment_key::REGISTERS) {
+                combined.extend(v.iter().cloned());
+            }
+            if let Some(v) = segments.get(segment_key::STACK_DUMP) {
+                combined.extend(v.iter().cloned());
+            }
+            combined
+        };
+
         // Statistics
         let mut formid_count = 0;
         let mut plugin_count = 0;
@@ -948,11 +965,12 @@ impl OrchestratorCore {
 
         if let Some(ref scanner) = self.suspect_scanner {
             // Use the main_error extracted from header parsing (not settings segment!)
-            // Extract callstack using named key (task 4.4)
-            let callstack = segments
-                .get(segment_key::CALLSTACK)
-                .map(|v| v.iter().map(|s| s.as_ref()).collect::<Vec<_>>().join("\n"))
-                .unwrap_or_default();
+            // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP) for suspect scanning
+            let callstack = combined_crash_data
+                .iter()
+                .map(|s| s.as_ref())
+                .collect::<Vec<_>>()
+                .join("\n");
 
             let max_warn_length = 50; // Default width for formatting
 
@@ -1055,27 +1073,36 @@ impl OrchestratorCore {
 
         // Add settings validation section
         if !crashgen_settings.is_empty() {
-            // If Addictol is detected in XSE modules, skip all Buffout TOML checks.
+            // If Addictol is detected in XSE modules, route settings validation to the
+            // Addictol scaffold path instead of Buffout checks.
             // Some Addictol versions mask themselves as Buffout in the crash log header,
             // so we detect via DLL presence rather than relying on the header.
             let has_addictol = xse_modules_for_settings.contains("addictol.dll");
+            let has_buffout = xse_modules_for_settings.contains("buffout4.dll");
+            let mut settings_fragments = Vec::new();
 
             if has_addictol {
-                let warning = ReportFragment::from_lines(vec![
-                    format!(
-                        "# ⚠️ NOTICE : Addictol detected — skipping {} TOML settings checks. #\n",
-                        self.config.crashgen_name
-                    ),
-                    format!(
-                        "  {} and Addictol are incompatible. If both are installed, remove one to avoid conflicts.\n\n-----\n",
-                        self.config.crashgen_name
-                    ),
-                ]);
-                composer.add(report_gen.generate_settings_section_header());
-                composer.add(warning);
-            } else {
-                let mut settings_fragments = Vec::new();
+                if has_buffout {
+                    // Both present: warn about incompatibility
+                    settings_fragments.push(ReportFragment::from_lines(vec![
+                        format!(
+                            "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
+                            self.config.crashgen_name
+                        ),
+                        "  Running Addictol TOML checks scaffold instead of Buffout checks.\n\n-----\n"
+                            .to_string(),
+                    ]));
+                }
 
+                if let Ok(addictol_fragment) = self
+                    .settings_validator
+                    .scan_addictol_settings_scaffold(&crashgen_settings)
+                {
+                    if !addictol_fragment.is_empty() {
+                        settings_fragments.push(addictol_fragment);
+                    }
+                }
+            } else {
                 // Achievements check
                 if let Ok(achievements_fragment) =
                     self.settings_validator.scan_buffout_achievements_setting(
@@ -1134,12 +1161,12 @@ impl OrchestratorCore {
                         settings_fragments.push(looksmenu_fragment);
                     }
                 }
+            }
 
-                if !settings_fragments.is_empty() {
-                    composer.add(report_gen.generate_settings_section_header());
-                    for settings_fragment in settings_fragments {
-                        composer.add(settings_fragment);
-                    }
+            if !settings_fragments.is_empty() {
+                composer.add(report_gen.generate_settings_section_header());
+                for settings_fragment in settings_fragments {
+                    composer.add(settings_fragment);
                 }
             }
         }
@@ -1243,11 +1270,12 @@ impl OrchestratorCore {
             if let Some(ref plugins) = plugins_map {
                 // Only show section if we have plugins to check (matches Python behavior)
                 if !plugins.is_empty() {
-                    // Get callstack segment using named key (task 4.4)
-                    let segment_callstack_lower: Vec<String> = segments
-                        .get(segment_key::CALLSTACK)
-                        .map(|v| v.iter().map(|s| s.to_lowercase()).collect())
-                        .unwrap_or_default();
+                    // Use combined crash data (CALLSTACK + REGISTERS + STACK_DUMP)
+                    // to find plugin references in the full crash scope
+                    let segment_callstack_lower: Vec<String> = combined_crash_data
+                        .iter()
+                        .map(|s| s.to_lowercase())
+                        .collect();
 
                     // Convert plugins to lowercase set for matching
                     let crashlog_plugins_lower: HashSet<String> =
@@ -1267,11 +1295,10 @@ impl OrchestratorCore {
 
         // Extract FormIDs from callstack segment (task 4.4)
         // FormIDs are ALWAYS shown regardless of show_formid_values setting.
-        let callstack_segment_opt = segments.get(segment_key::CALLSTACK);
-        if let Some(callstack_segment) = callstack_segment_opt.filter(|v| !v.is_empty()) {
-            // Convert Arc<str> to String for FormID extraction
+        if !combined_crash_data.is_empty() {
+            // Convert combined crash data to String for FormID extraction
             let callstack_lines: Vec<String> =
-                callstack_segment.iter().map(|s| s.to_string()).collect();
+                combined_crash_data.iter().map(|s| s.to_string()).collect();
 
             // Extract FormIDs using FormIDAnalyzerCore
             let formids = self.formid_analyzer.extract_formids(callstack_lines);
@@ -1295,12 +1322,9 @@ impl OrchestratorCore {
 
         // Add Named Records section (scan callstack for named records) (task 4.4)
         if let Some(ref record_scanner) = self.record_scanner {
-            if let Some(callstack_segment) = segments
-                .get(segment_key::CALLSTACK)
-                .filter(|v| !v.is_empty())
-            {
+            if !combined_crash_data.is_empty() {
                 let callstack_lines: Vec<String> =
-                    callstack_segment.iter().map(|s| s.to_string()).collect();
+                    combined_crash_data.iter().map(|s| s.to_string()).collect();
 
                 let (record_report, _matches) = record_scanner.scan_named_records(&callstack_lines);
                 if !record_report.is_empty() {

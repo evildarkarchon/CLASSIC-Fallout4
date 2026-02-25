@@ -563,14 +563,23 @@ impl CrashgenChecker {
         // Some Addictol versions mask themselves as Buffout in the crash log header,
         // so we detect via DLL presence rather than relying on the header.
         if self.has_plugin(&["addictol.dll"]) {
-            self.message_list.push(format!(
-                "# ⚠️ NOTICE : Addictol detected — skipping {} TOML settings checks. #\n",
-                self.crashgen_name
-            ));
-            self.message_list.push(format!(
-                "  {} and Addictol are incompatible. If both are installed, remove one to avoid conflicts.\n-----\n",
-                self.crashgen_name
-            ));
+            if self.has_plugin(&["buffout4.dll"]) {
+                // Both present: warn about incompatibility
+                self.message_list.push(format!(
+                    "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
+                    self.crashgen_name
+                ));
+                self.message_list.push(format!(
+                    "  Skipping {} TOML settings checks.\n-----\n",
+                    self.crashgen_name
+                ));
+            } else {
+                // Addictol only: skip silently
+                self.message_list.push(format!(
+                    "# [!] NOTICE : Addictol detected — skipping {} TOML settings checks. #\n-----\n",
+                    self.crashgen_name
+                ));
+            }
             return Ok((self.message_list.join(""), Vec::new()));
         }
 
@@ -682,7 +691,7 @@ mod tests {
         let config_file = buffout_dir.join("config.toml");
         fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
 
-        // Addictol DLL present — all Buffout TOML checks should be skipped
+        // Addictol DLL only (no Buffout4 DLL) — skip silently, no incompatibility warning
         fs::write(temp_dir.path().join("Addictol.dll"), b"").unwrap();
 
         let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
@@ -690,7 +699,29 @@ mod tests {
 
         assert!(issues.is_empty(), "No issues should be reported when Addictol is detected");
         assert!(report.contains("Addictol detected"), "Report should mention Addictol");
-        assert!(report.contains("incompatible"), "Report should warn about incompatibility");
+        assert!(!report.contains("incompatible"), "Should NOT warn about incompatibility when only Addictol is present");
+    }
+
+    #[test]
+    fn test_addictol_and_buffout_shows_incompatibility_warning() {
+        let temp_dir = TempDir::new().unwrap();
+        let buffout_dir = temp_dir.path().join("Buffout4");
+        fs::create_dir(&buffout_dir).unwrap();
+
+        // Create config with MemoryManager enabled (would normally be flagged)
+        let config_file = buffout_dir.join("config.toml");
+        fs::write(&config_file, "[Patches]\nMemoryManager = true\n").unwrap();
+
+        // Both Addictol AND Buffout4 DLLs present — should warn about incompatibility
+        fs::write(temp_dir.path().join("Addictol.dll"), b"").unwrap();
+        fs::write(temp_dir.path().join("Buffout4.dll"), b"").unwrap();
+
+        let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
+        let (report, issues) = checker.check().unwrap();
+
+        assert!(issues.is_empty(), "No issues should be reported — TOML checks are skipped");
+        assert!(report.contains("incompatible"), "Should warn about incompatibility when both are present");
+        assert!(report.contains("remove one to avoid crashes"), "Should have clear removal guidance");
     }
 
     #[test]

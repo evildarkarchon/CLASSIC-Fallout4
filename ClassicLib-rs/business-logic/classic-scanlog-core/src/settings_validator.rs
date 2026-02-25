@@ -215,6 +215,20 @@ impl SettingsValidator {
         Ok(ReportFragment::from_lines(lines))
     }
 
+    /// Scaffold for Addictol-specific TOML checks.
+    ///
+    /// This intentionally returns an informational fragment only. Concrete Addictol
+    /// checks will be added in follow-up work and should be implemented here.
+    pub fn scan_addictol_settings_scaffold(
+        &self,
+        _crashgen: &HashMap<String, String>,
+    ) -> Result<ReportFragment> {
+        Ok(ReportFragment::from_lines(vec![
+            "# [!] NOTICE : Addictol detected — using Addictol TOML checks scaffold (rules pending). # \n\n-----\n"
+                .to_string(),
+        ]))
+    }
+
     /// Check for disabled settings in crash generator configuration.
     ///
     /// This check runs universally for every crashgen (not gated on named checks).
@@ -654,5 +668,27 @@ mod tests {
         assert!(!fragment.is_empty());
         let lines = fragment.to_list();
         assert!(lines.iter().any(|line| line.contains("ArchiveLimit")));
+    }
+
+    #[test]
+    fn test_addictol_scaffold_returns_notice_fragment() {
+        let validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
+        let crashgen = HashMap::new();
+
+        let fragment = validator.scan_addictol_settings_scaffold(&crashgen).unwrap();
+        let lines = fragment.to_list();
+
+        assert!(
+            !fragment.is_empty(),
+            "Addictol scaffold should return an informational notice"
+        );
+        assert!(
+            lines.iter().any(|line| line.contains("Addictol detected")),
+            "Scaffold notice should mention Addictol detection"
+        );
+        assert!(
+            lines.iter().any(|line| line.contains("scaffold")),
+            "Scaffold notice should indicate scaffold mode"
+        );
     }
 }

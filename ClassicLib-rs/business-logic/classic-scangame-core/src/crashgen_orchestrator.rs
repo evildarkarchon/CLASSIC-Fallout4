@@ -261,10 +261,24 @@ mod tests {
         );
         let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();
 
-        // Addictol detected — all Buffout TOML checks should be skipped
+        // Addictol only (no Buffout4 DLL) — skip silently, no incompatibility warning
         assert!(report.issues.is_empty(), "No issues when Addictol is present");
         assert!(report.message.contains("Addictol detected"));
-        assert!(report.message.contains("incompatible"));
+        assert!(!report.message.contains("incompatible"), "Should NOT warn about incompatibility when only Addictol is present");
+    }
+
+    #[test]
+    fn test_addictol_and_buffout_shows_incompatibility_warning() {
+        let temp = setup_with_og_config(
+            "[Patches]\nMemoryManager = true\nHavokMemorySystem = true\n",
+            &["Addictol.dll", "Buffout4.dll"],
+        );
+        let report = CrashgenCheckOrchestrator::check(temp.path(), "Buffout4").unwrap();
+
+        // Both present — should warn about incompatibility
+        assert!(report.issues.is_empty(), "No issues — TOML checks are skipped");
+        assert!(report.message.contains("incompatible"), "Should warn about incompatibility when both are present");
+        assert!(report.message.contains("remove one to avoid crashes"), "Should have clear removal guidance");
     }
 
     #[test]
