@@ -259,6 +259,334 @@
       "nodeArity": 2
     },
     {
+      "id": "config-fileio-config-interface",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "FileIoConfig",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config-path-config-interface",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "PathConfig",
+      "nodeExport": "JsPathConfig",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config-yaml-file-enum",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "JsYamlFile",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config-get-all-yaml-files",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getAllYamlFiles",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-yaml-file-description",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlFileDescription",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-default-cache-ttl-const",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "DEFAULT_CACHE_TTL",
+      "nodeKind": "const"
+    },
+    {
+      "id": "config-batch-cache-ttl-const",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "BATCH_CACHE_TTL",
+      "nodeKind": "const"
+    },
+    {
+      "id": "config-max-cache-ttl-const",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "MAX_CACHE_TTL",
+      "nodeKind": "const"
+    },
+    {
+      "id": "config-get-default-cache-ttl",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getDefaultCacheTtl",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-batch-cache-ttl",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getBatchCacheTtl",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-max-cache-ttl",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getMaxCacheTtl",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-generate-local-yaml",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "generateLocalYaml",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-settings-cache-stats-interface",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "SettingsCacheStats",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "config-load-settings-sync",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "loadSettingsSync",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-load-settings-async",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "loadSettingsAsync",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-cached",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getCached",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-is-cached",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "isCached",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-invalidate-settings",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "invalidateSettings",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-clear-settings-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "clearSettingsCache",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-settings-cache-size",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "settingsCacheSize",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-settings-cache-keys",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "settingsCacheKeys",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-get-settings-cache-stats",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "getSettingsCacheStats",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-reset-settings-cache-stats",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "config",
+      "nodeExport": "resetSettingsCacheStats",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-validate-settings-path",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "PathConfig",
+      "nodeExport": "validateSettingsPath",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-validate-settings-paths",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "PathConfig",
+      "nodeExport": "validateSettingsPaths",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-document-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "YamlDocument",
+      "nodeKind": "class"
+    },
+    {
+      "id": "config-yaml-parse",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlParse",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-stringify",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlStringify",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-load-file",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlLoadFile",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-string-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetStringValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-vec-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetVecValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-hashmap-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetHashmapValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-save-file",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlSaveFile",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-set-setting",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlSetSetting",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-settings-batch",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetSettingsBatch",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-set-settings-batch",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlSetSettingsBatch",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-indexmap-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetIndexmapValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-hashmap-vec-value",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "yamldata",
+      "nodeExport": "yamlGetHashmapVecValue",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-clear-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "clear_global_yaml_cache",
+      "nodeExport": "yamlClearCache",
+      "nodeKind": "function"
+    },
+    {
+      "id": "config-yaml-get-cache-stats",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "clear_global_yaml_cache",
+      "nodeExport": "yamlGetCacheStats",
+      "nodeKind": "function"
+    },
+    {
       "id": "version-registry-get-by-id",
       "tier": "tier1",
       "ownerModule": "version_registry",

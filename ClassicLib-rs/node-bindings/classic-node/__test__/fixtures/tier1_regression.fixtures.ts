@@ -5,6 +5,13 @@ export const dtsSignatureFragments = [
   "export declare function getAllVersionsForGame(game: string, isVr?: boolean | undefined | null): Array<JsVersionInfo>",
   "export declare function getAllExeHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Array<string>",
   "export declare function getAllScriptHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Record<string, Array<string>>",
+  "export interface FileIoConfig {",
+  "export const DEFAULT_CACHE_TTL: number",
+  "export declare class YamlDocument {",
+  "export declare function loadSettingsSync(key: string, path: string): any",
+  "export declare function loadSettingsAsync(key: string, path: string): Promise<any>",
+  "export declare function getSettingsCacheStats(): SettingsCacheStats",
+  "export declare function yamlGetCacheStats(): any",
 ] as const;
 
 export const confidenceValues = [

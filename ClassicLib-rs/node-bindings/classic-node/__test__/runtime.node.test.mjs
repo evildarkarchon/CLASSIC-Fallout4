@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
+import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 const require = createRequire(import.meta.url);
 const classic = require("../index.js");
@@ -68,6 +71,64 @@ test("runs Tier-1 sync APIs in Node runtime", () => {
 
   const sourceName = classic.getYamlSourceDisplayName("Main");
   assert.equal(sourceName, "Main Database");
+});
+
+test("runs Tier-1 config/cache APIs in Node runtime", () => {
+  assert.equal(classic.DEFAULT_CACHE_TTL, classic.getDefaultCacheTtl());
+  assert.equal(classic.BATCH_CACHE_TTL, classic.getBatchCacheTtl());
+  assert.equal(classic.MAX_CACHE_TTL, classic.getMaxCacheTtl());
+
+  const yamlFiles = classic.getAllYamlFiles();
+  assert.equal(Array.isArray(yamlFiles), true);
+  assert.equal(yamlFiles.includes("Main"), true);
+  assert.equal(
+    classic.getYamlFileDescription("Main").includes("CLASSIC Main.yaml"),
+    true,
+  );
+
+  const yaml = classic.yamlStringify({ root: { enabled: true } });
+  const parsed = classic.yamlParse(yaml);
+  assert.equal(parsed.root.enabled, true);
+});
+
+test("runs Tier-1 settings cache and path validators in Node runtime", () => {
+  const dir = mkdtempSync(join(tmpdir(), "classic-node-runtime-"));
+  const gameDir = join(dir, "game");
+  const docsDir = join(dir, "docs");
+  const settingsPath = join(dir, "settings.yaml");
+
+  try {
+    mkdirSync(gameDir, { recursive: true });
+    mkdirSync(docsDir, { recursive: true });
+    writeFileSync(join(gameDir, "Fallout4.exe"), "stub", "utf8");
+    writeFileSync(settingsPath, "root:\n  enabled: true\n", "utf8");
+
+    classic.clearSettingsCache();
+    classic.resetSettingsCacheStats();
+
+    const docs = classic.loadSettingsSync("runtime-node", settingsPath);
+    assert.equal(Array.isArray(docs), true);
+    assert.equal(docs[0].root.enabled, true);
+    assert.equal(classic.isCached("runtime-node"), true);
+    assert.equal(classic.settingsCacheSize(), 1);
+
+    const cached = classic.getCached("runtime-node");
+    assert.equal(Array.isArray(cached), true);
+    assert.equal(cached[0].root.enabled, true);
+
+    const stats = classic.getSettingsCacheStats();
+    assert.equal(typeof stats.hits, "number");
+    assert.equal(typeof stats.size, "number");
+
+    classic.validateSettingsPath(gameDir, "gamePath", ["Fallout4.exe"]);
+    classic.validateSettingsPaths(gameDir, docsDir, null, "Fallout4.exe");
+
+    assert.equal(classic.invalidateSettings("runtime-node"), true);
+    assert.equal(classic.isCached("runtime-node"), false);
+  } finally {
+    classic.clearSettingsCache();
+    rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 test("supports optional params and stable string mappings in Node runtime", () => {
