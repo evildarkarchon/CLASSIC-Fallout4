@@ -190,6 +190,13 @@ describe("parseLogSegments", () => {
     expect(joined).toContain("nvwgf2umx.dll");
   });
 
+  test("extracts header compatibility settings", () => {
+    const segments = parseLogSegments(SAMPLE_CRASH_LOG);
+    expect(segments.header.length).toBeGreaterThan(0);
+    const joined = segments.header.join("\n");
+    expect(joined).toContain("Achievements: true");
+  });
+
   test("returns empty segments for empty content", () => {
     const segments = parseLogSegments("");
     expect(segments.segmentCount).toBe(0);

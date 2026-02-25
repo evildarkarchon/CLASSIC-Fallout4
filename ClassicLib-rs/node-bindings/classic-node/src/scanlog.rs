@@ -14,10 +14,21 @@
 use classic_scanlog_core::OrchestratorCore;
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
+use classic_scanlog_core::segment_key;
 
 /// Convert any Display error to a napi::Error.
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
+}
+
+/// Detect crashgen settings section markers within parser `settings` lines.
+///
+/// The parser's `settings` segment now includes all pre-`SYSTEM SPECS:` lines.
+/// For Node's `header` field we preserve legacy behavior by only exposing lines
+/// after known crashgen settings markers.
+fn is_settings_header_marker(line: &str) -> bool {
+    let trimmed = line.trim();
+    trimmed.eq_ignore_ascii_case("[Compatibility]") || trimmed.eq_ignore_ascii_case("[Patches]")
 }
 
 /// JavaScript-compatible analysis configuration.
@@ -181,17 +192,49 @@ pub fn parse_log_segments(content: String) -> napi::Result<JsLogSegments> {
     let lines: Vec<String> = content.lines().map(String::from).collect();
 
     let all_sections = parser.parse_all_sections(&lines);
+    let header = all_sections
+        .get(segment_key::SETTINGS)
+        .and_then(|settings| {
+            settings
+                .iter()
+                .position(|line| is_settings_header_marker(line))
+                .map(|idx| settings[idx + 1..].to_vec())
+        })
+        .unwrap_or_default();
+    let system = all_sections
+        .get(segment_key::SYSTEM)
+        .cloned()
+        .unwrap_or_default();
+    let stack = all_sections
+        .get(segment_key::CALLSTACK)
+        .cloned()
+        .unwrap_or_default();
+    let modules = all_sections
+        .get(segment_key::MODULES)
+        .cloned()
+        .unwrap_or_default();
+    let plugins = all_sections
+        .get(segment_key::PLUGINS)
+        .cloned()
+        .unwrap_or_default();
+    let segment_count = [
+        header.as_slice(),
+        system.as_slice(),
+        stack.as_slice(),
+        modules.as_slice(),
+        plugins.as_slice(),
+    ]
+    .iter()
+    .filter(|section| !section.is_empty())
+    .count() as u32;
 
     Ok(JsLogSegments {
-        header: all_sections
-            .get("compatibility")
-            .cloned()
-            .unwrap_or_default(),
-        system: all_sections.get("system").cloned().unwrap_or_default(),
-        stack: all_sections.get("callstack").cloned().unwrap_or_default(),
-        modules: all_sections.get("modules").cloned().unwrap_or_default(),
-        plugins: all_sections.get("plugins").cloned().unwrap_or_default(),
-        segment_count: all_sections.len() as u32,
+        header,
+        system,
+        stack,
+        modules,
+        plugins,
+        segment_count,
     })
 }
 
