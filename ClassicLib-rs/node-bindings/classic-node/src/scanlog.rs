@@ -11,6 +11,7 @@
 //! Parsing utilities (`parseLogSegments`, `extractFormIds`, `extractPluginList`,
 //! `detectCrashPattern`) are synchronous and operate on string content directly.
 
+use classic_config_core::YamlDataCore;
 use classic_scanlog_core::OrchestratorCore;
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
@@ -51,6 +52,19 @@ pub struct JsAnalysisConfig {
     pub fcx_mode: bool,
     /// Whether to simplify logs
     pub simplify_logs: bool,
+}
+
+/// Optional settings used when building analysis config from YAML content.
+#[napi(object)]
+pub struct JsAnalysisBuildOptions {
+    /// Whether to include FormID value lookups in reports.
+    pub show_formid_values: Option<bool>,
+    /// Whether FCX mode is enabled.
+    pub fcx_mode: Option<bool>,
+    /// Whether to simplify logs by removing configured strings.
+    pub simplify_logs: Option<bool>,
+    /// Strings to remove when simplify logs is enabled.
+    pub remove_list: Option<Vec<String>>,
 }
 
 /// JavaScript-compatible analysis result.
@@ -110,6 +124,151 @@ pub fn create_analysis_config(game: String, vr_mode: bool) -> JsAnalysisConfig {
         fcx_mode: false,
         simplify_logs: false,
     }
+}
+
+fn resolve_build_options(
+    options: Option<JsAnalysisBuildOptions>,
+) -> (bool, bool, bool, Vec<String>) {
+    let Some(options) = options else {
+        return (false, false, false, Vec::new());
+    };
+
+    (
+        options.show_formid_values.unwrap_or(false),
+        options.fcx_mode.unwrap_or(false),
+        options.simplify_logs.unwrap_or(false),
+        options.remove_list.unwrap_or_default(),
+    )
+}
+
+fn build_core_config_from_yaml_content(
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    vr_mode: bool,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<orchestrator::AnalysisConfig> {
+    let (show_formid_values, fcx_mode, simplify_logs, remove_list) = resolve_build_options(options);
+    let yaml = YamlDataCore::from_yaml_content(
+        &main_content,
+        &game_content,
+        &ignore_content,
+        game.clone(),
+        vr_mode,
+    )
+    .map_err(to_napi_err)?;
+
+    Ok(orchestrator::build_analysis_config_from_yaml(
+        &yaml,
+        &game,
+        vr_mode,
+        show_formid_values,
+        fcx_mode,
+        simplify_logs,
+        remove_list,
+    ))
+}
+
+/// Build an analysis config from raw YAML content (high-level config path).
+#[napi]
+pub fn create_analysis_config_from_yaml_content(
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    vr_mode: bool,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<JsAnalysisConfig> {
+    let core_config = build_core_config_from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        vr_mode,
+        options,
+    )?;
+
+    Ok(JsAnalysisConfig {
+        game: core_config.game,
+        vr_mode: core_config.vr_mode,
+        crashgen_name: core_config.crashgen_name,
+        xse_acronym: core_config.xse_acronym,
+        classic_version: core_config.classic_version,
+        fcx_mode: core_config.fcx_mode,
+        simplify_logs: core_config.simplify_logs,
+    })
+}
+
+/// Process a single crash log using configuration built directly from YAML content.
+#[napi]
+pub async fn process_log_with_yaml_content(
+    log_path: String,
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    vr_mode: bool,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<JsAnalysisResult> {
+    let core_config = build_core_config_from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        vr_mode,
+        options,
+    )?;
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    let result = handle
+        .spawn(async move {
+            let orchestrator = OrchestratorCore::new(core_config)
+                .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
+            orchestrator
+                .process_log(log_path)
+                .await
+                .map_err(|e| format!("Analysis error: {e}"))
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(_core_result_to_js(&result))
+}
+
+/// Process multiple crash logs using configuration built directly from YAML content.
+#[napi]
+pub async fn process_logs_batch_with_yaml_content(
+    log_paths: Vec<String>,
+    main_content: String,
+    game_content: String,
+    ignore_content: String,
+    game: String,
+    vr_mode: bool,
+    options: Option<JsAnalysisBuildOptions>,
+) -> napi::Result<Vec<JsAnalysisResult>> {
+    let core_config = build_core_config_from_yaml_content(
+        main_content,
+        game_content,
+        ignore_content,
+        game,
+        vr_mode,
+        options,
+    )?;
+    let handle = classic_shared_core::get_runtime().handle().clone();
+
+    let results = handle
+        .spawn(async move {
+            let orchestrator = OrchestratorCore::new(core_config)
+                .map_err(|e| format!("Failed to create orchestrator: {e}"))?;
+            Ok::<_, String>(orchestrator.process_logs_batch(log_paths, None).await)
+        })
+        .await
+        .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+        .map_err(to_napi_err)?;
+
+    Ok(results.iter().map(_core_result_to_js).collect())
 }
 
 // ============================================================================

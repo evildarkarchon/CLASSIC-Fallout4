@@ -233,3 +233,27 @@ GitHub Actions on `windows-latest`, split into per-language workflows for indepe
 2. **`ci-python.yml`** — Python: format (ruff) → lint (ruff) → dead code (vulture) → build Rust → build PyO3 bindings (maturin) → pytest (unit, integration, rust-integration)
 3. **`ci-typescript.yml`** — TypeScript: build NAPI-RS binary → Bun tests
 4. **`benchmarks.yml`** — Benchmarks: separate workflow for performance tracking
+
+## Node API Parity Contributor Checklist
+
+When a PR changes Rust public APIs or Node binding exports, parity updates are required in the same PR.
+
+Trigger paths (minimum):
+- `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`
+- `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`
+- `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
+- `ClassicLib-rs/node-bindings/classic-node/src/`
+- `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
+
+Checklist:
+1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/node_api_parity/phase5/tier2_backlog_and_governance.md`.
+2. If promoting to Tier-1, update `docs/implementation/node_api_parity/phase1/parity_contract.json`.
+3. Regenerate and commit `ClassicLib-rs/node-bindings/classic-node/index.d.ts`.
+4. Run from `ClassicLib-rs/node-bindings/classic-node`:
+   - `bun run parity:gate:local`
+   - `bun run test:bun`
+   - `bun run test:node`
+5. Confirm CI `ci-typescript.yml` passes parity jobs before merge.
+
+Release gate policy:
+- Do not tag a release unless Tier-1 parity gate passes and `index.d.ts` freshness gate passes in CI.

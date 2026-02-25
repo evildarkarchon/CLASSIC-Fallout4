@@ -4,6 +4,7 @@
 //! to JavaScript/TypeScript.
 
 use napi::bindgen_prelude::*;
+use std::collections::{BTreeSet, HashMap};
 
 use classic_version_registry_core::{GameVersion, MatchConfidence, get_version_registry};
 
@@ -40,6 +41,17 @@ pub struct JsXseConfig {
     pub loader: String,
     /// Expected number of script files (e.g., 29)
     pub file_count: u32,
+    /// Expected script hashes as [filename, sha256] pairs.
+    pub script_hashes: Vec<(String, String)>,
+}
+
+/// Version range for compatibility matching.
+#[napi(object)]
+pub struct JsCompatibleRange {
+    /// Minimum version string (inclusive)
+    pub min_version: String,
+    /// Maximum version string (inclusive)
+    pub max_version: String,
 }
 
 /// Crash generator configuration for a specific version.
@@ -86,10 +98,14 @@ pub struct JsVersionInfo {
     pub address_library: Option<JsAddressLibraryConfig>,
     /// Script Extender configuration, if applicable
     pub xse: Option<JsXseConfig>,
+    /// Compatible range for this version, if present
+    pub compatible_range: Option<JsCompatibleRange>,
     /// Priority for matching (higher = preferred)
     pub priority: i32,
     /// Whether this version is deprecated
     pub deprecated: bool,
+    /// Known executable SHA-256 hash for this version, if available
+    pub exe_hash: Option<String>,
 }
 
 /// Result of version matching.
@@ -109,6 +125,17 @@ pub struct JsMatchResult {
     pub should_warn: bool,
     /// Whether this is a valid match (version_info is present and not Unknown)
     pub is_valid: bool,
+}
+
+/// Unknown-version handling policy from the version registry.
+#[napi(object)]
+pub struct JsUnknownVersionHandling {
+    /// Strategy: "nearest_match", "strict", or "default_only"
+    pub strategy: String,
+    /// Log level for unknown-version messaging.
+    pub log_level: String,
+    /// Per-game default version IDs.
+    pub defaults: HashMap<String, String>,
 }
 
 // ============================================================================
@@ -141,9 +168,18 @@ fn core_version_info_to_js(info: &classic_version_registry_core::VersionInfo) ->
             compatible_version: x.compatible_version.clone(),
             loader: x.loader.clone(),
             file_count: x.file_count,
+            script_hashes: x.script_hashes.clone(),
         }),
+        compatible_range: info
+            .compatible_range
+            .as_ref()
+            .map(|range| JsCompatibleRange {
+                min_version: range.min_version.to_string(),
+                max_version: range.max_version.to_string(),
+            }),
         priority: info.priority,
         deprecated: info.deprecated,
+        exe_hash: info.exe_hash.clone(),
     }
 }
 
@@ -168,6 +204,28 @@ fn confidence_to_string(confidence: &MatchConfidence) -> String {
         MatchConfidence::Nearest => "nearest".to_string(),
         MatchConfidence::Default => "default".to_string(),
         MatchConfidence::Unknown => "unknown".to_string(),
+    }
+}
+
+fn unknown_strategy_to_string(
+    strategy: &classic_version_registry_core::UnknownVersionStrategy,
+) -> String {
+    match strategy {
+        classic_version_registry_core::UnknownVersionStrategy::NearestMatch => {
+            "nearest_match".to_string()
+        }
+        classic_version_registry_core::UnknownVersionStrategy::Strict => "strict".to_string(),
+        classic_version_registry_core::UnknownVersionStrategy::DefaultOnly => {
+            "default_only".to_string()
+        }
+    }
+}
+
+fn log_level_to_string(log_level: &classic_version_registry_core::LogLevel) -> String {
+    match log_level {
+        classic_version_registry_core::LogLevel::Debug => "debug".to_string(),
+        classic_version_registry_core::LogLevel::Warning => "warning".to_string(),
+        classic_version_registry_core::LogLevel::Error => "error".to_string(),
     }
 }
 
@@ -361,6 +419,96 @@ pub fn get_crashgen_for_version(id: String, crashgen_version: String) -> Option<
     registry
         .get_crashgen_for_version(&id, &crashgen_version)
         .map(core_crashgen_to_js)
+}
+
+/// Get all known executable hashes for the selected game/mode.
+///
+/// @param game - Optional game identifier (defaults to "Fallout4")
+/// @param is_vr - Optional VR filter (if omitted, includes all game modes)
+/// @returns Unique executable SHA-256 hashes.
+#[napi]
+pub fn get_all_exe_hashes(game: Option<String>, is_vr: Option<bool>) -> Vec<String> {
+    let game = game.unwrap_or_else(|| "Fallout4".to_string());
+    let registry = get_version_registry();
+
+    let mut hashes: BTreeSet<String> = BTreeSet::new();
+    for version in registry.get_all_for_game(&game, is_vr) {
+        if let Some(exe_hash) = &version.exe_hash {
+            hashes.insert(exe_hash.clone());
+        }
+    }
+
+    hashes.into_iter().collect()
+}
+
+/// Get all known script hashes grouped by script filename.
+///
+/// @param game - Optional game identifier (defaults to "Fallout4")
+/// @param is_vr - Optional VR filter (if omitted, includes all game modes)
+/// @returns Map of script filename to unique SHA-256 hashes.
+#[napi]
+pub fn get_all_script_hashes(
+    game: Option<String>,
+    is_vr: Option<bool>,
+) -> HashMap<String, Vec<String>> {
+    let game = game.unwrap_or_else(|| "Fallout4".to_string());
+    let registry = get_version_registry();
+
+    let mut aggregate: HashMap<String, BTreeSet<String>> = HashMap::new();
+    for version in registry.get_all_for_game(&game, is_vr) {
+        if let Some(xse) = &version.xse {
+            for (script_name, hash_val) in &xse.script_hashes {
+                aggregate
+                    .entry(script_name.clone())
+                    .or_default()
+                    .insert(hash_val.clone());
+            }
+        }
+    }
+
+    aggregate
+        .into_iter()
+        .map(|(script_name, hashes)| (script_name, hashes.into_iter().collect()))
+        .collect()
+}
+
+/// Get script hashes for a specific version ID.
+///
+/// @param id - The version ID (e.g., "FO4_OG")
+/// @returns Map of script filename to SHA-256 hash for that version.
+#[napi]
+pub fn get_script_hashes_for_version(id: String) -> HashMap<String, String> {
+    let registry = get_version_registry();
+    registry
+        .get_by_id(&id)
+        .and_then(|version| version.xse.as_ref())
+        .map(|xse| xse.script_hashes.iter().cloned().collect())
+        .unwrap_or_default()
+}
+
+/// Get unknown-version handling configuration.
+#[napi]
+pub fn get_unknown_version_handling() -> JsUnknownVersionHandling {
+    let registry = get_version_registry();
+    let handling = registry.unknown_version_handling();
+    JsUnknownVersionHandling {
+        strategy: unknown_strategy_to_string(&handling.strategy),
+        log_level: log_level_to_string(&handling.log_level),
+        defaults: handling.defaults.clone(),
+    }
+}
+
+/// Get the default version ID used for unknown versions for a game.
+///
+/// @param game - Game identifier (e.g., "Fallout4")
+/// @returns Default version ID or null if not configured.
+#[napi]
+pub fn get_unknown_version_default(game: String) -> Option<String> {
+    let registry = get_version_registry();
+    registry
+        .unknown_version_handling()
+        .get_default(&game)
+        .map(String::from)
 }
 
 // ============================================================================

@@ -236,6 +236,31 @@ uv run pytest -n 4 -m "integration" --maxfail=3
 uv run pytest tests/rust_integration/ -v
 ```
 
+### Node parity checks (required when Rust API surfaces change)
+
+If your PR changes Rust public exports for Node-mapped crates, or changes Node binding exports/signatures, run parity checks before push.
+
+Trigger paths:
+- `ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs`
+- `ClassicLib-rs/business-logic/classic-config-core/src/lib.rs`
+- `ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs`
+- `ClassicLib-rs/node-bindings/classic-node/src/`
+- `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
+
+From `ClassicLib-rs/node-bindings/classic-node`:
+
+```bash
+bun run parity:gate:local
+bun run test:bun
+bun run test:node
+```
+
+If the change promotes deferred APIs to Tier-1, also update:
+- `docs/implementation/node_api_parity/phase1/parity_contract.json`
+- `docs/implementation/node_api_parity/phase5/tier2_backlog_and_governance.md`
+
+Release policy: do not cut/tag a release if Tier-1 parity or `index.d.ts` freshness gates are failing in `ci-typescript.yml`.
+
 ## Release Process
 
 **Note**: The release process is currently **manual** due to large files that cannot be stored on GitHub.

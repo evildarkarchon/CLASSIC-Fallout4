@@ -201,16 +201,13 @@ describe("YamlData game properties", () => {
     expect(data.gameVersionNew).toBe("1.10.984");
   });
 
-  test("gameVersionVr returns correct VR version", () => {
-    expect(data.gameVersionVr).toBe("1.2.72");
-  });
-
   test("crashgenLatestOg returns correct version", () => {
     expect(data.crashgenLatestOg).toBe("4.0.0");
   });
 
-  test("crashgenLatestVr returns correct version", () => {
-    expect(data.crashgenLatestVr).toBe("3.0.0");
+  test("does not expose deprecated VR YAML metadata fields", () => {
+    expect((data as unknown as Record<string, unknown>).gameVersionVr).toBeUndefined();
+    expect((data as unknown as Record<string, unknown>).crashgenLatestVr).toBeUndefined();
   });
 
   test("warnNoplugins returns correct warning", () => {
@@ -363,7 +360,7 @@ describe("YamlData VR mode", () => {
     clearYamlCache();
   });
 
-  test("VR mode reads from GameVR_Info section via accessor", () => {
+  test("VR mode keeps shared YAML metadata and defers VR version metadata", () => {
     const data = YamlData.fromYamlContent(
       MAIN_YAML,
       GAME_YAML,
@@ -371,14 +368,12 @@ describe("YamlData VR mode", () => {
       "Fallout4",
       true,
     );
-    // Dual-loading always populates both OG and VR fields;
-    // use VR-aware accessor methods to get the correct value.
-    expect(data.getCrashgenName(true)).toBe("crash-vr");
-    expect(data.getCrashgenIgnore(true)).toEqual(["VRIgnoreItem1"]);
-    // Raw properties always hold the OG values
+    // VR-specific static metadata is no longer sourced from YAML.
+    // YamlData exposes shared config, while version-specific metadata now
+    // comes from the version-registry APIs.
+    expect(data.getCrashgenName()).toBe("crash-og");
+    expect(data.getCrashgenIgnore()).toEqual([]);
     expect(data.crashgenName).toBe("crash-og");
-    // VR-specific raw properties hold the VR values
-    expect(data.crashgenNameVr).toBe("crash-vr");
   });
 
   test("non-VR mode reads from Game_Info section via accessor", () => {
@@ -389,8 +384,7 @@ describe("YamlData VR mode", () => {
       "Fallout4",
       false,
     );
-    // Game_Info.CRASHGEN_LogName is "crash-og" in our test fixture
-    expect(data.getCrashgenName(false)).toBe("crash-og");
+    expect(data.getCrashgenName()).toBe("crash-og");
     expect(data.crashgenName).toBe("crash-og");
   });
 });

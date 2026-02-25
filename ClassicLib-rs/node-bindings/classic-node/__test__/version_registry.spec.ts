@@ -12,6 +12,11 @@ import {
   getCrashgenVersions,
   getCrashgenVersionStrings,
   getCrashgenForVersion,
+  getAllExeHashes,
+  getAllScriptHashes,
+  getScriptHashesForVersion,
+  getUnknownVersionHandling,
+  getUnknownVersionDefault,
   isVersionCompatible,
   parseGameVersion,
   gameVersionDistance,
@@ -443,6 +448,50 @@ describe("Version Registry bindings", () => {
     test("returns null for unknown version ID", () => {
       const config = getCrashgenForVersion("FO4_MISSING", "1.28.6");
       expect(config).toBeNull();
+    });
+  });
+
+  describe("hash and unknown-version APIs", () => {
+    test("getAllExeHashes returns unique hashes", () => {
+      const hashes = getAllExeHashes("Fallout4");
+      expect(Array.isArray(hashes)).toBe(true);
+      expect(hashes.length).toBeGreaterThan(0);
+      expect(new Set(hashes).size).toBe(hashes.length);
+    });
+
+    test("getAllScriptHashes returns grouped script hashes", () => {
+      const scriptHashes = getAllScriptHashes("Fallout4");
+      expect(typeof scriptHashes).toBe("object");
+      const keys = Object.keys(scriptHashes);
+      expect(keys.length).toBeGreaterThan(0);
+      for (const key of keys) {
+        expect(Array.isArray(scriptHashes[key])).toBe(true);
+      }
+    });
+
+    test("getScriptHashesForVersion returns hashes for FO4_OG", () => {
+      const hashes = getScriptHashesForVersion("FO4_OG");
+      expect(typeof hashes).toBe("object");
+      expect(Object.keys(hashes).length).toBeGreaterThan(0);
+    });
+
+    test("getUnknownVersionHandling returns policy config", () => {
+      const handling = getUnknownVersionHandling();
+      expect([
+        "nearest_match",
+        "strict",
+        "default_only",
+      ]).toContain(handling.strategy);
+      expect(["debug", "warning", "error"]).toContain(handling.logLevel);
+      expect(typeof handling.defaults).toBe("object");
+    });
+
+    test("getUnknownVersionDefault returns configured default for Fallout4", () => {
+      const fallback = getUnknownVersionDefault("Fallout4");
+      if (fallback !== null) {
+        expect(typeof fallback).toBe("string");
+        expect(fallback.length).toBeGreaterThan(0);
+      }
     });
   });
 

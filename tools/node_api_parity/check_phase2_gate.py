@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Run the Phase 2 Tier-1 Node parity gate."""
+
+from __future__ import annotations
+
+import argparse
+import json
+from pathlib import Path
+from typing import Any
+
+from generate_phase1_baseline import (
+    generate_diff_report,
+    parse_node_surface,
+    parse_rust_surface,
+    render_diff_markdown,
+    write_json,
+)
+
+
+def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
+    """Render a concise Tier-1 gate report for CI diagnostics."""
+    summary = diff_report["summary"]
+    failing_rows = [row for row in diff_report["contract_results"] if row["status"] != "matched"]
+
+    lines: list[str] = []
+    lines.append("# Tier-1 Parity Gate Report")
+    lines.append("")
+    lines.append(f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**")
+    lines.append(f"- Tier-1 matched: **{summary['tier1_matched']}**")
+    lines.append(f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**")
+    lines.append(f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**")
+    lines.append(f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**")
+    lines.append("")
+
+    if not failing_rows:
+        lines.append("## Result")
+        lines.append("")
+        lines.append("Tier-1 gate passed.")
+        lines.append("")
+        return "\n".join(lines)
+
+    lines.append("## Result")
+    lines.append("")
+    lines.append("Tier-1 drift detected. Review failing contract rows below.")
+    lines.append("")
+    lines.append("| ID | Owner Module | Rust Symbol | Node Export | Status | Reason |")
+    lines.append("|---|---|---|---|---|---|")
+    for row in failing_rows:
+        lines.append(
+            "| `{id}` | `{owner_module}` | `{rust_symbol}` | `{node_export}` | `{status}` | {reason} |".format(
+                id=row["id"],
+                owner_module=row["owner_module"],
+                rust_symbol=row["rust_symbol"],
+                node_export=row["node_export"],
+                status=row["status"],
+                reason=row.get("reason", "-"),
+            )
+        )
+    lines.append("")
+    return "\n".join(lines)
+
+
+def main() -> int:
+    """CLI entrypoint."""
+    parser = argparse.ArgumentParser(description="Run Tier-1 parity gate for classic-node.")
+    parser.add_argument(
+        "--repo-root",
+        default=str(Path(__file__).resolve().parents[2]),
+        help="Repository root path.",
+    )
+    parser.add_argument(
+        "--contract",
+        default="docs/implementation/node_api_parity/phase1/parity_contract.json",
+        help="Path to parity contract JSON, relative to repo root.",
+    )
+    parser.add_argument(
+        "--index-dts",
+        default="ClassicLib-rs/node-bindings/classic-node/index.d.ts",
+        help="Path to Node index.d.ts, relative to repo root.",
+    )
+    parser.add_argument(
+        "--output-dir",
+        default="ClassicLib-rs/node-bindings/classic-node/parity-artifacts",
+        help="Directory for generated gate artifacts, relative to repo root.",
+    )
+    args = parser.parse_args()
+
+    repo_root = Path(args.repo_root).resolve()
+    contract_path = repo_root / args.contract
+    output_dir = repo_root / args.output_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    contract = json.loads(contract_path.read_text(encoding="utf-8"))
+    tier1_mappings: list[dict[str, Any]] = contract["tier1Mappings"]
+    tier1_rust_symbols = {mapping["rustSymbol"] for mapping in tier1_mappings}
+    tier1_node_exports = {mapping["nodeExport"] for mapping in tier1_mappings}
+    tier1_owner_map = {mapping["nodeExport"]: mapping["ownerModule"] for mapping in tier1_mappings}
+
+    rust_manifest = parse_rust_surface(repo_root, tier1_rust_symbols)
+    node_manifest = parse_node_surface(
+        repo_root,
+        tier1_node_exports=tier1_node_exports,
+        tier1_owner_map=tier1_owner_map,
+        index_dts_rel=args.index_dts,
+    )
+    diff_report = generate_diff_report(contract, rust_manifest, node_manifest)
+
+    write_json(output_dir / "rust_api_surface.json", rust_manifest)
+    write_json(output_dir / "node_api_surface.json", node_manifest)
+    write_json(output_dir / "parity_diff_report.json", diff_report)
+    (output_dir / "parity_diff_report.md").write_text(render_diff_markdown(diff_report), encoding="utf-8")
+    (output_dir / "tier1_gate_report.md").write_text(render_tier1_gate_markdown(diff_report), encoding="utf-8")
+
+    summary = diff_report["summary"]
+    tier1_drift_count = summary["tier1_missing_rust"] + summary["tier1_missing_node"] + summary["tier1_signature_mismatch"]
+
+    print("Phase 2 parity gate artifacts generated:")
+    print(f"- {output_dir / 'rust_api_surface.json'}")
+    print(f"- {output_dir / 'node_api_surface.json'}")
+    print(f"- {output_dir / 'parity_diff_report.json'}")
+    print(f"- {output_dir / 'parity_diff_report.md'}")
+    print(f"- {output_dir / 'tier1_gate_report.md'}")
+
+    if tier1_drift_count > 0:
+        print(
+            "Tier-1 parity drift detected: "
+            f"missing_rust={summary['tier1_missing_rust']}, "
+            f"missing_node={summary['tier1_missing_node']}, "
+            f"signature_mismatch={summary['tier1_signature_mismatch']}"
+        )
+        return 1
+
+    print("Tier-1 parity gate passed.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

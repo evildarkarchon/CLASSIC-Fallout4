@@ -4,9 +4,12 @@ import { join } from "path";
 import { tmpdir } from "os";
 import {
   createAnalysisConfig,
+  createAnalysisConfigFromYamlContent,
   getVersion,
   processLog,
   processLogsBatch,
+  processLogWithYamlContent,
+  processLogsBatchWithYamlContent,
   parseLogSegments,
   extractFormIds,
   extractPluginList,
@@ -72,6 +75,41 @@ const PLUGIN_CONTENT = `PLUGINS:
 [04] TestMod.esp
 `;
 
+const MAIN_YAML = `
+CLASSIC_Info:
+  version: "9.0.0"
+  version_date: "2026-02-25"
+catch_log_records:
+  - "LAND"
+`;
+
+const GAME_YAML = `
+Game_Info:
+  XSE_Acronym: "F4SE"
+  GameVersion: "1.10.163"
+  GameVersionNEW: "1.10.984"
+  CRASHGEN_LatestVer: "1.37.0"
+  CRASHGEN_LogName: "Buffout 4"
+  Main_Root_Name: "Fallout4"
+Warnings_CRASHGEN:
+  Warn_NOPlugins: "No plugins found"
+  Warn_Outdated: "Outdated"
+Crashlog_Plugins_Exclude: []
+Crashlog_Records_Exclude: []
+Crashlog_Error_Check: {}
+Crashlog_Stack_Check: {}
+Mods_CONF: {}
+Mods_CORE: {}
+Mods_CORE_FOLON: {}
+Mods_FREQ: {}
+Mods_OPC2: {}
+Mods_SOLU: {}
+`;
+
+const IGNORE_YAML = `
+CLASSIC_Ignore_Fallout4: []
+`;
+
 // ============================================================================
 // Version & Config
 // ============================================================================
@@ -102,6 +140,21 @@ describe("Scanlog bindings", () => {
     expect(config.classicVersion).toBe("CLASSIC");
     expect(config.fcxMode).toBe(false);
     expect(config.simplifyLogs).toBe(false);
+  });
+
+  test("createAnalysisConfigFromYamlContent builds config from YAML", () => {
+    const config = createAnalysisConfigFromYamlContent(
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      false,
+    );
+    expect(config.game).toBe("Fallout4");
+    expect(config.vrMode).toBe(false);
+    expect(config.crashgenName).toBe("Buffout 4");
+    expect(config.xseAcronym).toBe("F4SE");
+    expect(config.classicVersion).toBe("9.0.0");
   });
 });
 
@@ -148,6 +201,38 @@ describe("processLogsBatch", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBeDefined();
     }
+  });
+});
+
+describe("YAML-backed analysis entry points", () => {
+  test("processLogWithYamlContent rejects for a non-existent file", async () => {
+    try {
+      await processLogWithYamlContent(
+        "Z:\\nonexistent\\crash.log",
+        MAIN_YAML,
+        GAME_YAML,
+        IGNORE_YAML,
+        "Fallout4",
+        false,
+      );
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect(err).toBeDefined();
+      const message = err instanceof Error ? err.message : String(err);
+      expect(message.length).toBeGreaterThan(0);
+    }
+  });
+
+  test("processLogsBatchWithYamlContent returns empty array for empty input", async () => {
+    const results = await processLogsBatchWithYamlContent(
+      [],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      false,
+    );
+    expect(results).toEqual([]);
   });
 });
 

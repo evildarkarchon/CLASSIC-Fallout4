@@ -14,7 +14,14 @@
   "scripts": {
     "build": "napi build --release --platform --manifest-path ./Cargo.toml",
     "build:debug": "napi build --platform --manifest-path ./Cargo.toml",
-    "test": "bun test"
+    "parity:gate": "python ../../../tools/node_api_parity/check_phase2_gate.py --repo-root ../../..",
+    "dts:freshness:check": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../.. --check-only",
+    "dts:freshness:local": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../..",
+    "parity:gate:ci": "bun run parity:gate && bun run dts:freshness:check",
+    "parity:gate:local": "bun run dts:freshness:local && bun run parity:gate",
+    "test:bun": "bun test",
+    "test:node": "node --test __test__/runtime.node.test.mjs",
+    "test": "bun run test:bun"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0",

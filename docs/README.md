@@ -80,6 +80,7 @@ Welcome to the CLASSIC documentation! This directory contains comprehensive docu
 - Rust/Python verification reports
 - ScanLog verification
 - Max connections summary
+- Node API parity governance and Tier-2 backlog (`implementation/node_api_parity/phase5/tier2_backlog_and_governance.md`)
 
 #### 🔄 Migration
 **[migration/](migration/)** - Migration guides and patterns

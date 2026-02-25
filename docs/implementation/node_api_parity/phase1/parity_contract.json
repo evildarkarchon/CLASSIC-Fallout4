@@ -1,0 +1,353 @@
+{
+  "contractVersion": "1.0.0",
+  "phase": "phase1",
+  "description": "Hybrid-tiered Node vs Rust parity contract for high-level APIs.",
+  "tierDefinitions": {
+    "tier1": "Must-have high-level APIs required by app workflows and cross-language integration.",
+    "tier2": "Lower-level or advanced APIs intentionally triaged for later parity work."
+  },
+  "ownerModules": {
+    "scanlog": {
+      "description": "Crash log orchestration, parsing, and crash analysis APIs."
+    },
+    "config": {
+      "description": "YAML data and runtime configuration APIs."
+    },
+    "version_registry": {
+      "description": "Game version lookup and compatibility APIs."
+    },
+    "aux": {
+      "description": "Non-phase1 exports outside scanlog/config/version-registry."
+    }
+  },
+  "squads": {
+    "scanlog_config": {
+      "name": "Squad A (scanlog/config)",
+      "ownerModules": [
+        "scanlog",
+        "config"
+      ]
+    },
+    "version_registry_aux": {
+      "name": "Squad B (version-registry/aux)",
+      "ownerModules": [
+        "version_registry",
+        "aux"
+      ]
+    }
+  },
+  "tier1Mappings": [
+    {
+      "id": "scanlog-analysis-config",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "AnalysisConfig",
+      "nodeExport": "createAnalysisConfig",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-process-log",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLog",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-process-batch",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLogsBatch",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-parse-segments",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogParser",
+      "nodeExport": "parseLogSegments",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-extract-formids",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogParser",
+      "nodeExport": "extractFormIds",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-extract-plugins",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "LogParser",
+      "nodeExport": "extractPluginList",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-detect-vr",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "detect_vr_log",
+      "nodeExport": "detectVrLog",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-detect-gpu",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "GpuInfo",
+      "nodeExport": "detectGpuInfo",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-parse-crashgen-version",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashgenVersion",
+      "nodeExport": "parseCrashgenVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-crashgen-version-status",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "check_crashgen_version_status",
+      "nodeExport": "checkCrashgenVersionStatus",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "scanlog-papyrus-analysis",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "PapyrusStats",
+      "nodeExport": "analyzePapyrusLog",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "config-yamldata-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlDataCore",
+      "nodeExport": "YamlData",
+      "nodeKind": "class"
+    },
+    {
+      "id": "config-create-yamldata-content",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlDataCore",
+      "nodeExport": "createYamlDataFromContent",
+      "nodeKind": "function",
+      "nodeArity": 5
+    },
+    {
+      "id": "config-classic-config-class",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "ClassicConfig",
+      "nodeExport": "ClassicConfigJs",
+      "nodeKind": "class"
+    },
+    {
+      "id": "config-create-default-config",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "ClassicConfig",
+      "nodeExport": "createDefaultConfig",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "config-clear-yaml-cache",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "clear_global_yaml_cache",
+      "nodeExport": "clearYamlCache",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "config-yaml-source-enum",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "JsYamlSource",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "config-yaml-source-path",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlSourcePath",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "config-yaml-source-display-name",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlSourceDisplayName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "config-yaml-source-display-name-with-game",
+      "tier": "tier1",
+      "ownerModule": "config",
+      "rustSymbol": "YamlSource",
+      "nodeExport": "getYamlSourceDisplayNameWithGame",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-get-by-id",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getVersionById",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-by-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getVersionByVersionString",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-by-short-name",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionInfo",
+      "nodeExport": "getVersionByShortName",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-all",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAllVersions",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-get-all-for-game",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAllVersionsForGame",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-get-correct-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getCorrectVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-get-wrong-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getWrongVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-match-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "MatchResult",
+      "nodeExport": "matchVersion",
+      "nodeKind": "function",
+      "nodeArity": 3
+    },
+    {
+      "id": "version-registry-address-lib-filename",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "VersionRegistry",
+      "nodeExport": "getAddressLibraryFilename",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-crashgen-versions",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "getCrashgenVersions",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-crashgen-version-strings",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "getCrashgenVersionStrings",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-crashgen-for-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CrashgenConfig",
+      "nodeExport": "getCrashgenForVersion",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-is-compatible",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "isVersionCompatible",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "version-registry-parse-version",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "parseGameVersion",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-version-distance",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "GameVersion",
+      "nodeExport": "gameVersionDistance",
+      "nodeKind": "function",
+      "nodeArity": 2
+    }
+  ]
+}
