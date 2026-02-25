@@ -137,6 +137,50 @@
       "nodeArity": 1
     },
     {
+      "id": "scanlog-analysis-config-from-yaml-content",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "build_analysis_config_from_yaml",
+      "nodeExport": "createAnalysisConfigFromYamlContent",
+      "nodeKind": "function",
+      "nodeArity": 6
+    },
+    {
+      "id": "scanlog-process-log-with-yaml-content",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLogWithYamlContent",
+      "nodeKind": "function",
+      "nodeArity": 7
+    },
+    {
+      "id": "scanlog-process-batch-with-yaml-content",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "OrchestratorCore",
+      "nodeExport": "processLogsBatchWithYamlContent",
+      "nodeKind": "function",
+      "nodeArity": 7
+    },
+    {
+      "id": "scanlog-detect-crash-pattern",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "PatternMatcher",
+      "nodeExport": "detectCrashPattern",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "scanlog-crashgen-version-status-enum",
+      "tier": "tier1",
+      "ownerModule": "scanlog",
+      "rustSymbol": "CrashgenVersionStatus",
+      "nodeExport": "JsCrashgenVersionStatus",
+      "nodeKind": "const_enum"
+    },
+    {
       "id": "config-yamldata-class",
       "tier": "tier1",
       "ownerModule": "config",

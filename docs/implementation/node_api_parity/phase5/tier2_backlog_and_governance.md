@@ -8,6 +8,16 @@ Source baseline: `docs/implementation/node_api_parity/phase1/parity_diff_report.
 - Tier-1 drift: `0` (all matched)
 - Deferred Tier-2 gaps: `315`
 
+Phase 0 setup artifacts:
+
+- Locked wave/subwave manifest: `docs/implementation/node_api_parity/phase5/tier2_wave_manifest.json`
+- Per-wave acceptance template: `docs/implementation/node_api_parity/phase5/per_wave_acceptance_template.md`
+- Gate contract baseline: `docs/implementation/node_api_parity/phase5/phase0_gate_contract_baseline.md`
+
+Manifest regeneration command:
+
+- `python tools/node_api_parity/generate_phase0_wave_manifest.py --repo-root .`
+
 Tier-2 remains intentionally deferred so we can preserve guaranteed parity for high-value workflow APIs while avoiding churn on low-level or internal-style surfaces.
 
 ## Tier-2 Deferred Backlog (Published)

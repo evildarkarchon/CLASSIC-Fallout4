@@ -570,6 +570,19 @@ pub struct JsCrashgenVersionInfo {
     pub patch: u32,
 }
 
+/// Crashgen version validation status returned to JavaScript.
+#[napi(string_enum)]
+pub enum JsCrashgenVersionStatus {
+    /// Detected version matches one of the supported versions.
+    Valid,
+    /// Detected version is older than the supported range.
+    Outdated,
+    /// Detected version is newer than any known supported version.
+    NewerThanKnown,
+    /// No supported versions were provided or version parsing failed.
+    NoSupportedVersion,
+}
+
 /// Parse a crash generator version string into components.
 ///
 /// Accepts various formats: "1.28.0", "v1.28.0", "Buffout 4 v1.28.0".
@@ -596,18 +609,25 @@ pub fn parse_crashgen_version(version_str: String) -> Option<JsCrashgenVersionIn
 /// @param validVersions - Array of valid version strings to check against.
 /// @returns A status string indicating the validation result.
 #[napi]
-pub fn check_crashgen_version_status(detected: String, valid_versions: Vec<String>) -> String {
+pub fn check_crashgen_version_status(
+    detected: String,
+    valid_versions: Vec<String>,
+) -> JsCrashgenVersionStatus {
     let valid_refs: Vec<&str> = valid_versions.iter().map(|s| s.as_str()).collect();
     let status =
         classic_scanlog_core::version::check_crashgen_version_status(&detected, &valid_refs);
     match status {
-        classic_scanlog_core::version::CrashgenVersionStatus::Valid => "Valid".to_string(),
-        classic_scanlog_core::version::CrashgenVersionStatus::Outdated => "Outdated".to_string(),
+        classic_scanlog_core::version::CrashgenVersionStatus::Valid => {
+            JsCrashgenVersionStatus::Valid
+        }
+        classic_scanlog_core::version::CrashgenVersionStatus::Outdated => {
+            JsCrashgenVersionStatus::Outdated
+        }
         classic_scanlog_core::version::CrashgenVersionStatus::NewerThanKnown => {
-            "NewerThanKnown".to_string()
+            JsCrashgenVersionStatus::NewerThanKnown
         }
         classic_scanlog_core::version::CrashgenVersionStatus::NoSupportedVersion => {
-            "NoSupportedVersion".to_string()
+            JsCrashgenVersionStatus::NoSupportedVersion
         }
     }
 }

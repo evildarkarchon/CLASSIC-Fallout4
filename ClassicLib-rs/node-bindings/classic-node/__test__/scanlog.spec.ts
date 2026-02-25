@@ -75,6 +75,12 @@ const PLUGIN_CONTENT = `PLUGINS:
 [04] TestMod.esp
 `;
 
+const SETTINGS_MARKER_CONTENT = `Fallout 4 v1.10.163
+[Compatibility]
+Achievements: true
+MemoryManager: false
+`;
+
 const MAIN_YAML = `
 CLASSIC_Info:
   version: "9.0.0"
@@ -156,6 +162,22 @@ describe("Scanlog bindings", () => {
     expect(config.xseAcronym).toBe("F4SE");
     expect(config.classicVersion).toBe("9.0.0");
   });
+
+  test("createAnalysisConfigFromYamlContent applies optional build flags", () => {
+    const config = createAnalysisConfigFromYamlContent(
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      false,
+      {
+        fcxMode: true,
+        simplifyLogs: true,
+      },
+    );
+    expect(config.fcxMode).toBe(true);
+    expect(config.simplifyLogs).toBe(true);
+  });
 });
 
 // ============================================================================
@@ -205,6 +227,24 @@ describe("processLogsBatch", () => {
 });
 
 describe("YAML-backed analysis entry points", () => {
+  test("processLogWithYamlContent rejects for invalid YAML payload", async () => {
+    try {
+      await processLogWithYamlContent(
+        "Z:\\nonexistent\\crash.log",
+        "this: [is: not: yaml",
+        GAME_YAML,
+        IGNORE_YAML,
+        "Fallout4",
+        false,
+      );
+      expect(true).toBe(false);
+    } catch (err: unknown) {
+      expect(err).toBeDefined();
+      const message = err instanceof Error ? err.message : String(err);
+      expect(message).toMatch(/yaml/i);
+    }
+  });
+
   test("processLogWithYamlContent rejects for a non-existent file", async () => {
     try {
       await processLogWithYamlContent(
@@ -233,6 +273,22 @@ describe("YAML-backed analysis entry points", () => {
       false,
     );
     expect(results).toEqual([]);
+  });
+
+  test("processLogsBatchWithYamlContent returns per-log failures", async () => {
+    const results = await processLogsBatchWithYamlContent(
+      ["Z:\\nonexistent\\a.log", "Z:\\nonexistent\\b.log"],
+      MAIN_YAML,
+      GAME_YAML,
+      IGNORE_YAML,
+      "Fallout4",
+      false,
+    );
+    expect(results.length).toBe(2);
+    for (const result of results) {
+      expect(result.success).toBe(false);
+      expect(result.error).toBeDefined();
+    }
   });
 });
 
@@ -280,6 +336,11 @@ describe("parseLogSegments", () => {
     expect(segments.header.length).toBeGreaterThan(0);
     const joined = segments.header.join("\n");
     expect(joined).toContain("Achievements: true");
+  });
+
+  test("uses compatibility marker to build header section", () => {
+    const segments = parseLogSegments(SETTINGS_MARKER_CONTENT);
+    expect(segments.header).toEqual(["Achievements: true", "MemoryManager: false"]);
   });
 
   test("returns empty segments for empty content", () => {
@@ -606,6 +667,14 @@ describe("checkCrashgenVersionStatus", () => {
       "1.37.0",
     ]);
     expect(status).toBe("Valid");
+  });
+
+  test("treats unparsable detected version as Outdated", () => {
+    const status = checkCrashgenVersionStatus("invalid-version", [
+      "1.28.6",
+      "1.37.0",
+    ]);
+    expect(status).toBe("Outdated");
   });
 });
 
