@@ -187,11 +187,42 @@ impl AnalysisConfig {
     }
 }
 
+/// Resolve registry-backed static metadata for a game/mode pair.
+///
+/// This prefers explicit defaults from `unknown_version_handling.defaults` and
+/// falls back to highest-priority registry entry for `(game, vr_mode)`.
+fn resolve_registry_version_info(game: &str, vr_mode: bool) -> Option<classic_version_registry_core::VersionInfo> {
+    let registry = get_version_registry();
+
+    // Prefer explicit defaults from registry config.
+    let mut default_keys = Vec::new();
+    if vr_mode {
+        default_keys.push(format!("{game}VR"));
+    }
+    default_keys.push(game.to_string());
+
+    for key in &default_keys {
+        if let Some(default_id) = registry.unknown_version_handling().get_default(key)
+            && let Some(info) = registry.get_by_id(default_id)
+            && info.game == game
+            && info.is_vr == vr_mode
+        {
+            return Some(info.clone());
+        }
+    }
+
+    // Fallback: highest-priority entry for this game/mode.
+    registry
+        .get_all_for_game(game, Some(vr_mode))
+        .first()
+        .map(|info| (*info).clone())
+}
+
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
 ///
 /// This is the canonical way to create an `AnalysisConfig` from loaded YAML data.
-/// It uses VR-aware accessors to select the correct crashgen name, ignore list,
-/// and game root name based on the `vr_mode` parameter.
+/// Static metadata is sourced from Version Registry (single source of truth),
+/// with YAML used only as a compatibility fallback when registry data is absent.
 ///
 /// # Arguments
 ///
@@ -211,16 +242,47 @@ pub fn build_analysis_config_from_yaml(
     simplify_logs: bool,
     remove_list: Vec<String>,
 ) -> AnalysisConfig {
+    let registry_info = resolve_registry_version_info(game, vr_mode);
+    let registry_crashgen = registry_info.as_ref().and_then(|info| info.crashgen_versions.first());
+
+    let crashgen_name = registry_crashgen
+        .map(|c| c.name.as_str())
+        .filter(|name| !name.is_empty())
+        .unwrap_or_else(|| yaml.get_crashgen_name())
+        .to_string();
+    let crashgen_latest = registry_crashgen
+        .map(|c| c.version.as_str())
+        .filter(|version| !version.is_empty())
+        .unwrap_or(yaml.crashgen_latest_og.as_str())
+        .to_string();
+    let xse_acronym = registry_info
+        .as_ref()
+        .and_then(|info| info.xse.as_ref())
+        .map(|xse| xse.acronym.as_str())
+        .filter(|acronym| !acronym.is_empty())
+        .unwrap_or(yaml.xse_acronym.as_str())
+        .to_string();
+    let game_version = registry_info
+        .as_ref()
+        .map(|info| info.version.to_string())
+        .filter(|version| !version.is_empty())
+        .unwrap_or(yaml.game_version.clone());
+    let game_version_new = registry_info
+        .as_ref()
+        .map(|info| info.version.to_string())
+        .filter(|version| !version.is_empty())
+        .unwrap_or(yaml.game_version_new.clone());
+
     AnalysisConfig {
         game: game.to_string(),
         vr_mode,
-        crashgen_name: yaml.get_crashgen_name().to_string(),
-        crashgen_latest: yaml.crashgen_latest_og.clone(),
+        crashgen_name,
+        crashgen_latest,
         crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
-        game_version: yaml.game_version.clone(),
+        game_version,
         game_version_vr: String::new(), // VR-specific data now provided by Version Registry
-        game_version_new: yaml.game_version_new.clone(),
-        xse_acronym: yaml.xse_acronym.clone(),
+        game_version_new,
+        xse_acronym,
         game_root_name: yaml.get_game_root_name().to_string(),
         classic_version: yaml.classic_version.clone(),
         ignore_plugins: yaml.game_ignore_plugins.clone(),
@@ -2004,6 +2066,55 @@ mod tests {
         );
 
         assert_eq!(config.classic_version, "CLASSIC v9.0.0");
+    }
+
+    #[test]
+    fn build_analysis_config_uses_registry_metadata_when_yaml_game_info_is_missing() {
+        let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+        yaml.crashgen_name.clear();
+        yaml.crashgen_latest_og.clear();
+        yaml.xse_acronym.clear();
+        yaml.game_version.clear();
+        yaml.game_version_new.clear();
+        yaml.crashgen_registry.insert(
+            "Buffout 4".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: "[Compatibility]".to_string(),
+                ignore_keys: vec![],
+                checks: vec!["achievements".to_string()],
+            },
+        );
+        yaml.crashgen_registry.insert(
+            "default".to_string(),
+            classic_config_core::CrashgenEntryRaw {
+                display_section: String::new(),
+                ignore_keys: vec![],
+                checks: vec![],
+            },
+        );
+
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            false,
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
+
+        assert_eq!(config.crashgen_name, "Buffout 4");
+        assert!(!config.crashgen_latest.is_empty());
+        assert_eq!(config.xse_acronym, "F4SE");
+        assert!(!config.game_version.is_empty());
+        assert!(!config.game_version_new.is_empty());
+        assert!(
+            !config
+                .crashgen_registry
+                .lookup(&config.crashgen_name)
+                .checks
+                .is_empty()
+        );
     }
 
     #[test]
