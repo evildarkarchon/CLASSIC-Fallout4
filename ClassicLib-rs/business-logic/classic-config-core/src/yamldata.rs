@@ -34,46 +34,79 @@ pub struct CrashgenEntryRaw {
 fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw> {
     let mut result = HashMap::new();
 
-    let registry_node = match &game_data["Crashgen_Registry"] {
-        Yaml::Hash(map) => map,
-        _ => return result,
+    let Some(registry_node) = game_data["Crashgen_Registry"].as_hash() else {
+        return result;
     };
 
+    fn parse_string_list_field(
+        entry_name: &str,
+        field_name: &str,
+        field_yaml: &Yaml,
+    ) -> Vec<String> {
+        if let Some(items) = field_yaml.as_vec() {
+            items
+                .iter()
+                .enumerate()
+                .filter_map(|(index, item)| match item.as_str() {
+                    Some(text) => Some(text.to_string()),
+                    None => {
+                        log::debug!(
+                            "Skipping non-string Crashgen_Registry.{}.{} item at index {}: {:?}",
+                            entry_name,
+                            field_name,
+                            index,
+                            item
+                        );
+                        None
+                    }
+                })
+                .collect()
+        } else {
+            if !matches!(field_yaml, Yaml::BadValue) {
+                log::debug!(
+                    "Crashgen_Registry.{}.{} is malformed (expected array), using empty list: {:?}",
+                    entry_name,
+                    field_name,
+                    field_yaml
+                );
+            }
+            Vec::new()
+        }
+    }
+
     for (name_yaml, entry_yaml) in registry_node {
-        let name = match name_yaml {
-            Yaml::String(s) => s.clone(),
-            _ => continue,
+        let Some(name) = name_yaml.as_str() else {
+            log::debug!(
+                "Skipping Crashgen_Registry entry with non-string key: {:?}",
+                name_yaml
+            );
+            continue;
         };
 
-        let display_section = match &entry_yaml["display_section"] {
-            Yaml::String(s) => s.clone(),
-            _ => String::new(),
-        };
+        if entry_yaml.as_hash().is_none() {
+            log::debug!(
+                "Skipping Crashgen_Registry.{} because entry is malformed (expected mapping): {:?}",
+                name,
+                entry_yaml
+            );
+            continue;
+        }
 
-        let ignore_keys: Vec<String> = match &entry_yaml["ignore_keys"] {
-            Yaml::Array(arr) => arr
-                .iter()
-                .filter_map(|v| match v {
-                    Yaml::String(s) => Some(s.clone()),
-                    _ => None,
-                })
-                .collect(),
-            _ => Vec::new(),
-        };
+        let display_field = &entry_yaml["display_section"];
+        let display_section = display_field.as_str().unwrap_or("").to_string();
+        if !matches!(display_field, Yaml::BadValue) && display_field.as_str().is_none() {
+            log::debug!(
+                "Crashgen_Registry.{}.display_section is malformed (expected string), using empty string: {:?}",
+                name,
+                display_field
+            );
+        }
 
-        let checks: Vec<String> = match &entry_yaml["checks"] {
-            Yaml::Array(arr) => arr
-                .iter()
-                .filter_map(|v| match v {
-                    Yaml::String(s) => Some(s.clone()),
-                    _ => None,
-                })
-                .collect(),
-            _ => Vec::new(),
-        };
+        let ignore_keys = parse_string_list_field(name, "ignore_keys", &entry_yaml["ignore_keys"]);
+        let checks = parse_string_list_field(name, "checks", &entry_yaml["checks"]);
 
         result.insert(
-            name,
+            name.to_string(),
             CrashgenEntryRaw {
                 display_section,
                 ignore_keys,
@@ -83,6 +116,122 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
     }
 
     result
+}
+
+#[cfg(test)]
+mod crashgen_registry_tests {
+    use super::*;
+
+    fn parse_yaml_document(yaml_content: &str) -> Yaml {
+        YamlLoader::load_from_str(yaml_content)
+            .unwrap()
+            .into_iter()
+            .next()
+            .unwrap()
+    }
+
+    #[test]
+    fn test_parse_crashgen_registry_parses_valid_entry() {
+        let game_data = parse_yaml_document(
+            r#"
+Crashgen_Registry:
+  crash-og:
+    display_section: "[Compatibility]"
+    ignore_keys:
+      - "Achievements"
+      - "MemoryManager"
+    checks:
+      - "achievements"
+      - "memory_management"
+"#,
+        );
+
+        let registry = parse_crashgen_registry(&game_data);
+        let entry = registry.get("crash-og").expect("missing crash-og entry");
+
+        assert_eq!(entry.display_section, "[Compatibility]");
+        assert_eq!(
+            entry.ignore_keys,
+            vec!["Achievements".to_string(), "MemoryManager".to_string()]
+        );
+        assert_eq!(
+            entry.checks,
+            vec!["achievements".to_string(), "memory_management".to_string()]
+        );
+    }
+
+    #[test]
+    fn test_parse_crashgen_registry_skips_malformed_keys_and_entries() {
+        let game_data = parse_yaml_document(
+            r#"
+Crashgen_Registry:
+  valid:
+    display_section: "[Valid]"
+  123:
+    display_section: "[InvalidKey]"
+  malformed_entry: "not-a-mapping"
+"#,
+        );
+
+        let registry = parse_crashgen_registry(&game_data);
+
+        assert_eq!(registry.len(), 1);
+        assert!(registry.contains_key("valid"));
+        assert!(!registry.contains_key("malformed_entry"));
+    }
+
+    #[test]
+    fn test_parse_crashgen_registry_non_array_fields_default_to_empty_lists() {
+        let game_data = parse_yaml_document(
+            r#"
+Crashgen_Registry:
+  crash-og:
+    display_section: "[Compatibility]"
+    ignore_keys: "not-an-array"
+    checks: 99
+"#,
+        );
+
+        let registry = parse_crashgen_registry(&game_data);
+        let entry = registry.get("crash-og").expect("missing crash-og entry");
+
+        assert!(entry.ignore_keys.is_empty());
+        assert!(entry.checks.is_empty());
+    }
+
+    #[test]
+    fn test_parse_crashgen_registry_mixed_array_types_keep_only_strings() {
+        let game_data = parse_yaml_document(
+            r#"
+Crashgen_Registry:
+  crash-og:
+    ignore_keys:
+      - "AchievementWarnings"
+      - 42
+      - true
+      - "MemoryManager"
+    checks:
+      - "achievements"
+      - false
+      - "memory_management"
+"#,
+        );
+
+        let registry = parse_crashgen_registry(&game_data);
+        let entry = registry.get("crash-og").expect("missing crash-og entry");
+
+        assert_eq!(
+            entry.ignore_keys,
+            vec![
+                "AchievementWarnings".to_string(),
+                "MemoryManager".to_string()
+            ]
+        );
+        assert_eq!(
+            entry.checks,
+            vec!["achievements".to_string(), "memory_management".to_string()]
+        );
+    }
 }
 
 /// The `YamlDataCore` structure represents the core data configuration for YAML-based game settings and diagnostics.
