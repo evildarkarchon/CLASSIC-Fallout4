@@ -2152,6 +2152,7 @@ mod tests {
         // - game_version_new must represent NextGen (1.10.984)
         assert_eq!(config.game_version, "1.10.163");
         assert_eq!(config.game_version_new, "1.10.984");
+        assert_eq!(config.game_version_vr, "1.2.72");
         assert!(
             !config
                 .crashgen_registry
@@ -2159,6 +2160,24 @@ mod tests {
                 .checks
                 .is_empty()
         );
+    }
+
+    #[test]
+    fn orchestrator_plugin_limit_matches_vr_version_from_built_config() {
+        let mut yaml = make_yaml_data("CLASSIC v9.0.0");
+        yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
+
+        let config =
+            build_analysis_config_from_yaml(&yaml, "Fallout4", false, false, false, false, Vec::new());
+        let orchestrator = OrchestratorCore::new(config).unwrap();
+        let analyzer = orchestrator.plugin_analyzer.as_ref().unwrap();
+
+        let (triggered, disabled) = analyzer
+            .check_plugin_limit(vec!["[FF] PluginLimit.esp".to_string()], "1.2.72", "1.36.0")
+            .unwrap();
+
+        assert!(triggered);
+        assert!(!disabled);
     }
 
     #[test]
