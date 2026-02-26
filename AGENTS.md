@@ -257,3 +257,45 @@ Checklist:
 
 Release gate policy:
 - Do not tag a release unless Tier-1 parity gate passes and `index.d.ts` freshness gate passes in CI.
+
+## Cursor Cloud specific instructions
+
+### Platform notes
+
+This project's CI runs exclusively on `windows-latest`. On the Linux Cloud Agent VM:
+
+- **`classic-path-core`** has Linux-specific compilation fixes applied (unused import, `.map_err()` type mismatch, dead code warnings). These are minimal `cfg_attr`/`allow` changes.
+- **`classic-scangame-core`** and **`classic-resource-core`** depend on `ba2` -> `directxtex` (DirectX), which cannot build on Linux. Exclude them: `--exclude classic-scangame-core --exclude classic-resource-core`.
+- **`classic-tui`** (Rust TUI) requires `wayland-client` dev headers (`libwayland-dev`). Not installed by default; the Python TUI (`ClassicLib.TUI`) is the simpler alternative.
+- **C++ targets** (`classic-cli`, `classic-gui`) require MSVC and cannot build on Linux.
+
+### Running services
+
+- **PySide6 GUI**: Requires `QT_QPA_PLATFORM=offscreen` and `libegl1 libopengl0` system packages. Launch with minimal registry init (see setup session) since `SetupCoordinator.initialize_application()` prompts for game paths interactively on Linux (no Fallout 4/Skyrim installed).
+- **CLI scanner** (`CLASSIC_ScanLogs.py`): Has pre-existing sync-in-async-context bugs that prevent execution (`yaml_settings()` called from async context in `executor.py` and `util_legacy.py`). These are code issues, not environment issues.
+
+### Quick reference
+
+Standard commands from AGENTS.md/CLAUDE.md apply. Key Linux-specific adjustments:
+
+| Task | Command |
+|---|---|
+| Python deps | `uv sync --all-extras` |
+| Python lint | `uv run ruff check .` and `uv run ruff format --check .` |
+| Python tests | `QT_QPA_PLATFORM=offscreen uv run pytest -m unit --skip-slow --skip-network --skip-performance --skip-stress --no-cov --ignore=tests/integration/test_rust_scanners_integration.py --ignore=tests/integration/test_scangame_factory_integration.py` |
+| Rust build | `cargo build --workspace --exclude classic-scangame-core --exclude classic-resource-core --exclude classic-tui --exclude classic-node --exclude classic-cpp-bridge --manifest-path ClassicLib-rs/Cargo.toml` (excludes Windows/wayland-dependent crates) |
+| Rust lint | `cargo clippy -p <crate> --all-targets --all-features --manifest-path ClassicLib-rs/Cargo.toml -- -D warnings` |
+| Rust tests | `cargo test -p <crate> --manifest-path ClassicLib-rs/Cargo.toml` (test individual core crates; PyO3 binding crate tests fail to link without Python shared lib) |
+| Build PyO3 bindings | From each binding crate dir: `maturin build --release --out dist` then `uv pip install dist/*.whl --force-reinstall` (the `.venv/bin/maturin` path must be used) |
+
+### PyO3 binding installation
+
+The `rebuild_rust.ps1` script is Windows-only. On Linux, build each binding crate individually:
+
+```bash
+cd ClassicLib-rs/python-bindings/<crate-name>  # or foundation/<crate-name>
+/workspace/.venv/bin/maturin build --release --out dist
+uv pip install dist/*.whl --force-reinstall
+```
+
+There are 18 binding crates total (1 foundation + 17 python-bindings). Crates depending on `classic-scangame-core` or `classic-resource-core` (`classic-scangame-py`, `classic-resource-py`) cannot build on Linux.
