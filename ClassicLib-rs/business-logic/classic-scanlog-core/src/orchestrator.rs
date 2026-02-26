@@ -973,19 +973,15 @@ impl OrchestratorCore {
         // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP
         // This restores the scope of the old positional segments[2], which spanned
         // from "PROBABLE CALL STACK:" to "MODULES:" and included all three sections.
-        let combined_crash_data: Vec<Arc<str>> = {
-            let mut combined = Vec::new();
-            if let Some(v) = segments.get(segment_key::CALLSTACK) {
-                combined.extend(v.iter().cloned());
-            }
-            if let Some(v) = segments.get(segment_key::REGISTERS) {
-                combined.extend(v.iter().cloned());
-            }
-            if let Some(v) = segments.get(segment_key::STACK_DUMP) {
-                combined.extend(v.iter().cloned());
-            }
-            combined
-        };
+        let combined_crash_data: Vec<Arc<str>> = [
+            segment_key::CALLSTACK,
+            segment_key::REGISTERS,
+            segment_key::STACK_DUMP,
+        ]
+        .into_iter()
+        .filter_map(|key| segments.get(key))
+        .flat_map(|segment_lines| segment_lines.iter().cloned())
+        .collect();
 
         // Statistics
         let mut formid_count = 0;
