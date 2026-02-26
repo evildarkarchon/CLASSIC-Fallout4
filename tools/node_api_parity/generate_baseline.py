@@ -485,7 +485,22 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
     """Render a concise Markdown parity diff summary."""
     summary = diff_report["summary"]
     lines: list[str] = []
-    lines.extend(("# Rust↔Node Parity Diff Baseline (Phase 1)", "", f"- Generated: `{diff_report['generated_at_utc']}`", f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**", f"- Tier-1 matched: **{summary['tier1_matched']}**", f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**", f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**", f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**", f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**", "", "## Tier-1 Contract Evaluation", "", "| ID | Owner Module | Rust Symbol | Node Export | Status |", "|---|---|---|---|---|"))
+    lines.extend((
+        "# Rust↔Node Parity Diff Baseline (Phase 1)",
+        "",
+        f"- Generated: `{diff_report['generated_at_utc']}`",
+        f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**",
+        f"- Tier-1 matched: **{summary['tier1_matched']}**",
+        f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
+        f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
+        f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+        f"- Total gaps (Tier-1 + Tier-2): **{summary['total_gaps']}**",
+        "",
+        "## Tier-1 Contract Evaluation",
+        "",
+        "| ID | Owner Module | Rust Symbol | Node Export | Status |",
+        "|---|---|---|---|---|",
+    ))
     for row in diff_report["contract_results"]:
         lines.append(f"| `{row['id']}` | `{row['owner_module']}` | `{row['rust_symbol']}` | `{row['node_export']}` | `{row['status']}` |")
 
@@ -494,7 +509,11 @@ def render_diff_markdown(diff_report: dict[str, Any]) -> str:
         tier_counts = diff_report["gap_counts_by_owner_tier"].get(owner, {})
         lines.append(f"| `{owner}` | {tier_counts.get('tier1', 0)} | {tier_counts.get('tier2', 0)} |")
 
-    lines.extend(("", "Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.", ""))
+    lines.extend((
+        "",
+        "Detailed, per-gap annotations (including `tier`, `owner_module`, and `squad`) are in `parity_diff_report.json`.",
+        "",
+    ))
     return "\n".join(lines)
 
 
@@ -506,7 +525,13 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
         by_squad_module[gap["squad"]][gap["owner_module"]].append(gap)
 
     lines: list[str] = []
-    lines.extend(("# Phase 1 Engineering Handoff Map", "", f"- Generated: `{diff_report['generated_at_utc']}`", f"- Total gaps handed off: **{len(gaps)}**", ""))
+    lines.extend((
+        "# Phase 1 Engineering Handoff Map",
+        "",
+        f"- Generated: `{diff_report['generated_at_utc']}`",
+        f"- Total gaps handed off: **{len(gaps)}**",
+        "",
+    ))
 
     for squad in ("Squad A (scanlog/config)", "Squad B (version-registry/aux)"):
         lines.extend((f"## {squad}", ""))
@@ -519,7 +544,16 @@ def render_handoff_markdown(diff_report: dict[str, Any]) -> str:
             module_gaps = module_map[owner_module]
             tier1_count = sum(1 for gap in module_gaps if gap["tier"] == "tier1")
             tier2_count = sum(1 for gap in module_gaps if gap["tier"] == "tier2")
-            lines.extend((f"### `{owner_module}`", "", f"- Total gaps: **{len(module_gaps)}**", f"- Tier 1 gaps: **{tier1_count}**", f"- Tier 2 gaps: **{tier2_count}**", "", "| Gap Type | Tier | Rust Symbol | Node Export |", "|---|---|---|---|"))
+            lines.extend((
+                f"### `{owner_module}`",
+                "",
+                f"- Total gaps: **{len(module_gaps)}**",
+                f"- Tier 1 gaps: **{tier1_count}**",
+                f"- Tier 2 gaps: **{tier2_count}**",
+                "",
+                "| Gap Type | Tier | Rust Symbol | Node Export |",
+                "|---|---|---|---|",
+            ))
             for gap in module_gaps:
                 lines.append(
                     f"| `{gap['gap_type']}` | `{gap['tier']}` | `{gap.get('rust_symbol') or '-'}` | `{gap.get('node_export') or '-'}` |"

@@ -23,13 +23,29 @@ def render_tier1_gate_markdown(diff_report: dict[str, Any]) -> str:
     failing_rows = [row for row in diff_report["contract_results"] if row["status"] != "matched"]
 
     lines: list[str] = []
-    lines.extend(("# Tier-1 Parity Gate Report", "", f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**", f"- Tier-1 matched: **{summary['tier1_matched']}**", f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**", f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**", f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**", ""))
+    lines.extend((
+        "# Tier-1 Parity Gate Report",
+        "",
+        f"- Tier-1 contract rows: **{summary['tier1_contract_total']}**",
+        f"- Tier-1 matched: **{summary['tier1_matched']}**",
+        f"- Tier-1 missing Rust: **{summary['tier1_missing_rust']}**",
+        f"- Tier-1 missing Node: **{summary['tier1_missing_node']}**",
+        f"- Tier-1 signature mismatch: **{summary['tier1_signature_mismatch']}**",
+        "",
+    ))
 
     if not failing_rows:
         lines.extend(("## Result", "", "Tier-1 gate passed.", ""))
         return "\n".join(lines)
 
-    lines.extend(("## Result", "", "Tier-1 drift detected. Review failing contract rows below.", "", "| ID | Owner Module | Rust Symbol | Node Export | Status | Reason |", "|---|---|---|---|---|---|"))
+    lines.extend((
+        "## Result",
+        "",
+        "Tier-1 drift detected. Review failing contract rows below.",
+        "",
+        "| ID | Owner Module | Rust Symbol | Node Export | Status | Reason |",
+        "|---|---|---|---|---|---|",
+    ))
     for row in failing_rows:
         lines.append(
             "| `{id}` | `{owner_module}` | `{rust_symbol}` | `{node_export}` | `{status}` | {reason} |".format(
