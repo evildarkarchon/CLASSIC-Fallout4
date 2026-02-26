@@ -57,6 +57,7 @@ pub struct GamePathFinder {
     xse_loader: Option<String>,
 
     /// Game name for registry queries (e.g., "Fallout4")
+    #[cfg_attr(not(target_os = "windows"), allow(dead_code))]
     game_name: String,
 
     /// Whether this is a VR version of the game

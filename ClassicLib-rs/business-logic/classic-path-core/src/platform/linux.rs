@@ -167,6 +167,7 @@ fn extract_vdf_value(line: &str) -> Option<String> {
 /// let docs_path = construct_proton_docs_path(&library, 377160, "My Games/Fallout4");
 /// # Ok::<(), Box<dyn std::error::Error>>(())
 /// ```
+#[allow(dead_code)]
 pub fn construct_proton_docs_path(
     library_path: &PathBuf,
     game_steam_id: u32,
