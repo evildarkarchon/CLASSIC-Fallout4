@@ -15,7 +15,6 @@ from packaging.version import Version
 
 from ClassicLib.scanning.game.check_xse_plugins import (
     AddressLibVersionInfo,
-    _determine_relevant_versions,
     _version_info_to_address_lib_info,
     check_xse_plugins,
     get_all_address_lib_info,
@@ -127,84 +126,6 @@ class TestGetAllAddressLibInfo:
 
         assert "OG" in result
         assert "NOLIB" not in result
-
-
-# ==============================================================================
-# _determine_relevant_versions Tests
-# ==============================================================================
-
-
-class TestDetermineRelevantVersions:
-    """Tests for the _determine_relevant_versions function."""
-
-    @patch("ClassicLib.scanning.game.check_xse_plugins.get_version_registry")
-    def test_returns_tuple_of_two_lists(self, mock_get_registry: MagicMock) -> None:
-        """_determine_relevant_versions should return tuple of two lists."""
-        mock_correct = MagicMock()
-        mock_correct.version = Version("1.10.163.0")
-        mock_correct.display_name = "Correct"
-        mock_correct.description = "Test"
-        mock_correct.address_library.filename = "correct.bin"
-        mock_correct.address_library.nexus_url = "https://example.com/correct"
-
-        mock_wrong = MagicMock()
-        mock_wrong.version = Version("1.2.72.0")
-        mock_wrong.display_name = "Wrong"
-        mock_wrong.description = "VR Test"
-        mock_wrong.address_library.filename = "wrong.csv"
-        mock_wrong.address_library.nexus_url = "https://example.com/wrong"
-
-        mock_registry = MagicMock()
-        mock_registry.get_correct_versions.return_value = [mock_correct]
-        mock_registry.get_wrong_versions.return_value = [mock_wrong]
-        mock_get_registry.return_value = mock_registry
-
-        correct, wrong = _determine_relevant_versions(is_vr_mode=False)
-
-        assert isinstance(correct, list)
-        assert isinstance(wrong, list)
-
-    @patch("ClassicLib.scanning.game.check_xse_plugins.get_version_registry")
-    def test_calls_registry_with_vr_mode_parameter(self, mock_get_registry: MagicMock) -> None:
-        """_determine_relevant_versions should call registry with is_vr_mode parameter."""
-        mock_version = MagicMock()
-        mock_version.version = Version("1.10.163.0")
-        mock_version.display_name = "Fallout 4"
-        mock_version.description = "Test"
-        mock_version.address_library.filename = "version.bin"
-        mock_version.address_library.nexus_url = "https://example.com"
-
-        mock_registry = MagicMock()
-        mock_registry.get_correct_versions.return_value = [mock_version]
-        mock_registry.get_wrong_versions.return_value = []
-        mock_get_registry.return_value = mock_registry
-
-        correct, _ = _determine_relevant_versions(is_vr_mode=False)
-
-        mock_registry.get_correct_versions.assert_called_once_with(False)
-        assert len(correct) == 1
-
-    @patch("ClassicLib.scanning.game.check_xse_plugins.get_version_registry")
-    def test_filters_versions_without_address_library(self, mock_get_registry: MagicMock) -> None:
-        """_determine_relevant_versions should filter out versions without address_library."""
-        mock_with_lib = MagicMock()
-        mock_with_lib.version = Version("1.10.163.0")
-        mock_with_lib.display_name = "With Lib"
-        mock_with_lib.description = "Test"
-        mock_with_lib.address_library.filename = "with.bin"
-        mock_with_lib.address_library.nexus_url = "https://example.com"
-
-        mock_without_lib = MagicMock()
-        mock_without_lib.address_library = None
-
-        mock_registry = MagicMock()
-        mock_registry.get_correct_versions.return_value = [mock_with_lib, mock_without_lib]
-        mock_registry.get_wrong_versions.return_value = []
-        mock_get_registry.return_value = mock_registry
-
-        correct, _ = _determine_relevant_versions(is_vr_mode=False)
-
-        assert len(correct) == 1
 
 
 # ==============================================================================

@@ -3,13 +3,23 @@
 Modal settings dialog for application configuration.
 """
 
-from typing import ClassVar, override
+from typing import ClassVar, TypedDict, override
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Checkbox, Input, Label, Select
+
+
+class _OriginalValues(TypedDict):
+    """Type-safe container for original settings values."""
+
+    mods_path: str
+    scan_path: str
+    game: str
+    update_check: bool
+    auto_switch: bool
 
 
 class SettingsScreen(ModalScreen[bool]):
@@ -23,7 +33,7 @@ class SettingsScreen(ModalScreen[bool]):
     Returns True if settings were saved, False if cancelled.
     """
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("escape", "cancel", "Cancel"),
     ]
 
@@ -89,7 +99,13 @@ class SettingsScreen(ModalScreen[bool]):
     def __init__(self) -> None:
         """Initialize the settings screen."""
         super().__init__()
-        self._original_values: dict[str, str | bool] = {}
+        self._original_values: _OriginalValues = {
+            "mods_path": "",
+            "scan_path": "",
+            "game": "Fallout4",
+            "update_check": True,
+            "auto_switch": True,
+        }
 
     @override
     def compose(self) -> ComposeResult:

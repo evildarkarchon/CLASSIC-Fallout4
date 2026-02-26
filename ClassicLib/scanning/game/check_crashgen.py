@@ -29,7 +29,7 @@ def check_crashgen_settings() -> tuple[str, list[ConfigIssue]]:
             - List of ConfigIssue objects for structured reporting
 
     """
-    from classic_scangame import CrashgenCheckOrchestrator  # pyright: ignore[reportAttributeAccessIssue]
+    from classic_scangame import CrashgenCheckOrchestrator
     from ClassicLib.support.versions import get_version_registry
     from ClassicLib.support.versions.core import get_detected_version_info
 

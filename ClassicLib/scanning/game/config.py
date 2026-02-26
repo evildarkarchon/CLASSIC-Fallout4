@@ -7,10 +7,11 @@ maintains API compatibility with callers expecting ConfigFileCache.
 
 from collections.abc import ItemsView
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
+from ClassicLib.integration.factory import get_component
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.scanning.game.models.fcx_issue import ConfigIssueSeverity
 
@@ -32,7 +33,7 @@ class ConfigFileCache:
     """
 
     def __init__(self) -> None:
-        from classic_scangame import RustConfigFileCache
+        RustConfigFileCache = get_component("classic_scangame", "RustConfigFileCache")
 
         game_root = yaml_settings(Path, YAML.Game_Local, "Game_Info.Root_Folder_Game")
         if game_root is None:
@@ -176,8 +177,9 @@ def mod_toml_config(toml_path: Path, section: str, key: str, new_value: Any = No
     if section not in data:
         return None
     section_item = data[section]
-    if not hasattr(section_item, "__getitem__") or not hasattr(section_item, "__contains__"):
+    if not isinstance(section_item, dict):
         return None
-    if key not in section_item:
+    section_map = cast("dict[str, Any]", section_item)
+    if key not in section_map:
         return None
-    return section_item[key]
+    return section_map[key]

@@ -12,6 +12,7 @@ This test module verifies that:
 
 import os
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -37,18 +38,11 @@ def test_rust_path_available():
 @pytest.mark.unit
 @pytest.mark.rust
 def test_folder_management_detects_rust():
-    """Test that FolderManagement detects Rust availability."""
-    try:
-        import classic_path
-    except ImportError:
-        pytest.skip("Rust path module not available")
+    """Test that FolderManagement exposes Rust path operations."""
+    from ClassicLib.Interface.shared import folder_management
 
-    from ClassicLib.Interface.shared.folder_management import _RUST_PATH_AVAILABLE
-
-    if not _RUST_PATH_AVAILABLE:
-        pytest.skip("Rust path operations not available in this environment")
-
-    assert _RUST_PATH_AVAILABLE, "Rust path should be available"
+    assert hasattr(folder_management, "classic_path"), "classic_path module should be loaded"
+    assert hasattr(folder_management.classic_path, "PathValidator"), "PathValidator should be available on classic_path"
 
 
 # Test path validation functions
@@ -74,20 +68,13 @@ def test_is_valid_directory_with_rust():
 
 
 @pytest.mark.unit
-def test_is_valid_directory_fallback():
-    """Test directory validation falls back to Python when Rust unavailable."""
+@patch("ClassicLib.Interface.shared.folder_management.classic_path.PathValidator.is_valid_path", return_value=False)
+def test_is_valid_directory_respects_rust_validator(mock_is_valid_path):
+    """Test directory validation result follows Rust validator output."""
     from ClassicLib.Interface.shared import folder_management
 
-    # Temporarily disable Rust
-    original = folder_management._RUST_PATH_AVAILABLE
-    folder_management._RUST_PATH_AVAILABLE = False
-
-    try:
-        # Should still work with Python
-        assert folder_management._is_valid_directory("C:/Windows"), "Python fallback should work"
-    finally:
-        # Restore Rust
-        folder_management._RUST_PATH_AVAILABLE = original
+    assert not folder_management._is_valid_directory("C:/Windows")
+    mock_is_valid_path.assert_called_once_with("C:/Windows")
 
 
 @pytest.mark.unit
@@ -109,22 +96,15 @@ def test_normalize_path_with_rust():
 
 
 @pytest.mark.unit
-def test_normalize_path_fallback():
-    """Test path normalization falls back to Python when Rust unavailable."""
+@patch("ClassicLib.Interface.shared.folder_management.classic_path.PathValidator.is_valid_path", return_value=True)
+def test_normalize_path_calls_rust_validator(mock_is_valid_path):
+    """Test path normalization validates path through Rust first."""
     from ClassicLib.Interface.shared import folder_management
 
-    # Temporarily disable Rust
-    original = folder_management._RUST_PATH_AVAILABLE
-    folder_management._RUST_PATH_AVAILABLE = False
-
-    try:
-        # Should still work with Python
-        normalized = folder_management._normalize_path("C:/Windows")
-        assert isinstance(normalized, Path), "Python fallback should return Path"
-        assert normalized.is_absolute(), "Should be absolute path"
-    finally:
-        # Restore Rust
-        folder_management._RUST_PATH_AVAILABLE = original
+    normalized = folder_management._normalize_path("C:/Windows")
+    assert isinstance(normalized, Path)
+    assert normalized.is_absolute(), "Should be absolute path"
+    mock_is_valid_path.assert_called_once_with("C:/Windows")
 
 
 # Test FolderManagementMixin integration

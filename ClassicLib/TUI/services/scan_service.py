@@ -58,21 +58,13 @@ class ScanService:
             True if scan completed successfully, False otherwise.
 
         """
-        from ClassicLib.scanning.game import (
-            generate_game_combined_result_async,
-            generate_mods_combined_result_async,
-            write_combined_results_async,
-        )
+        from ClassicLib.scanning.game import write_combined_results_async
 
         self.reset()
 
         try:
-            # Generate game integrity results
-            game_results = await generate_game_combined_result_async()
-            mods_results = await generate_mods_combined_result_async()
-
-            # Write combined results to file
-            await write_combined_results_async(game_results, mods_results)
+            # Generate and write combined results to file
+            await write_combined_results_async()
         except (OSError, PermissionError, FileNotFoundError) as e:
             logger.error(f"Game files scan failed: {e}")
             return False

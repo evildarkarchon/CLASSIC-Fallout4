@@ -4,7 +4,7 @@ This tab provides folder configuration, scan controls, Pastebin fetch,
 and Papyrus monitoring.
 """
 
-from typing import override
+from typing import TYPE_CHECKING, cast, override
 
 from textual import work
 from textual.app import ComposeResult
@@ -13,6 +13,9 @@ from textual.widgets import Button, Input, Label
 
 from ClassicLib.TUI.widgets.folder_input import FolderInput
 from ClassicLib.TUI.widgets.papyrus_monitor import PapyrusMonitor
+
+if TYPE_CHECKING:
+    from ClassicLib.TUI.app import CLASSICApp
 
 
 class MainTab(Vertical):
@@ -141,9 +144,9 @@ class MainTab(Vertical):
         elif button_id == "btn-pastebin-fetch":
             self._fetch_pastebin()
         elif button_id == "btn-help":
-            self.app.action_show_help()
+            self._classic_app.action_show_help()
         elif button_id == "btn-settings":
-            self.app.action_show_settings()
+            self._classic_app.action_show_settings()
         elif button_id == "btn-logs-folder":
             self._open_logs_folder()
         elif button_id == "btn-update":
@@ -184,11 +187,11 @@ class MainTab(Vertical):
             button.remove_class("-success")
             monitor.stop_monitoring()
 
-    def _on_scan_complete(self, result: bool) -> None:
+    def _on_scan_complete(self, result: bool | None) -> None:
         """Handle scan completion.
 
         Args:
-            result: True if scan completed successfully, False otherwise.
+            result: True if scan completed successfully, False/None otherwise.
 
         """
         if result:
@@ -197,7 +200,12 @@ class MainTab(Vertical):
 
             auto_switch = classic_settings(bool, "Auto Switch After Scan")
             if auto_switch:
-                self.app.switch_to_results_tab()
+                self._classic_app.switch_to_results_tab()
+
+    @property
+    def _classic_app(self) -> "CLASSICApp":
+        """Return the running app typed as CLASSICApp for app-specific actions."""
+        return cast("CLASSICApp", self.app)
 
     def _fetch_pastebin(self) -> None:
         """Fetch content from Pastebin URL/ID."""

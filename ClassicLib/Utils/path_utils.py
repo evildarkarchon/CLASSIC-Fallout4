@@ -4,7 +4,7 @@ import stat
 import sys
 from pathlib import Path
 
-from classic_path import PathValidator
+import classic_path
 
 
 def validate_path(path: Path | str, check_write: bool = False, check_read: bool = True) -> tuple[bool, str]:
@@ -22,7 +22,7 @@ def validate_path(path: Path | str, check_write: bool = False, check_read: bool 
 
     """
     try:
-        PathValidator.validate_path_with_permissions(str(path), check_read, check_write)
+        classic_path.PathValidator.validate_path_with_permissions(str(path), check_read, check_write)
     except Exception as e:  # noqa: BLE001
         return False, str(e)
     else:
@@ -44,7 +44,7 @@ def remove_readonly(file_path: Path) -> None:
         return
 
     try:
-        PathValidator.remove_readonly_attribute(str(file_path))
+        classic_path.remove_readonly(str(file_path))
     except Exception:  # noqa: BLE001
         # Fallback to Python for edge cases where Rust binding fails at runtime
         try:

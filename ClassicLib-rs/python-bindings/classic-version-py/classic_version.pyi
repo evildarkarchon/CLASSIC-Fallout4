@@ -41,6 +41,7 @@ __version__: str
 
 # Type alias for version tuples
 type Version = tuple[int, int, int]
+type PeVersion = tuple[int, int, int, int]
 
 def parse_version(version_str: str) -> Version:
     """Parse a version string into a semantic version.
@@ -229,5 +230,31 @@ def format_version(version: Version, prefix: str | None = None) -> str:
         >>> assert formatted == "Version 1.10.163"
         >>> formatted = classic_version.format_version((1, 10, 163), prefix="")
         >>> assert formatted == "1.10.163"
+
+    """
+
+def extract_pe_version(path: str) -> PeVersion:
+    """Extract file version from a PE executable or DLL.
+
+    Args:
+        path: Path to a PE file (.exe or .dll).
+
+    Returns:
+        A 4-part version tuple (major, minor, patch, build).
+
+    Raises:
+        FileNotFoundError: If path is invalid or file does not exist.
+        ValueError: If file is not a valid PE or has no version info.
+
+    """
+
+def is_valid_pe_path(path: str) -> bool:
+    """Check whether path is a valid PE file path.
+
+    Args:
+        path: The path to validate.
+
+    Returns:
+        True if path exists, is a file, and has .exe/.dll extension.
 
     """

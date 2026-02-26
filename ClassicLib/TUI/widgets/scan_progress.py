@@ -6,7 +6,7 @@ Modal overlay shown during scan operations with progress bar and cancel button.
 from typing import ClassVar, Literal
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label, ProgressBar, Static
@@ -24,7 +24,7 @@ class ScanProgressModal(ModalScreen[bool]):
 
     """
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("escape", "cancel", "Cancel"),
     ]
 

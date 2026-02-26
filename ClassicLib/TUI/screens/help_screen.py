@@ -6,7 +6,7 @@ Modal help overlay with keyboard shortcuts and usage guide.
 from typing import ClassVar, override
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Vertical, VerticalScroll
 from textual.screen import ModalScreen
 from textual.widgets import Button, Label, Markdown, TabbedContent, TabPane
@@ -102,7 +102,7 @@ class HelpScreen(ModalScreen[None]):
     Displays keyboard shortcuts, usage guide, and feature descriptions.
     """
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("escape", "close", "Close"),
     ]
 

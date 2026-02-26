@@ -52,7 +52,7 @@ from __future__ import annotations
 import logging
 import threading
 import types
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from ClassicLib.integration.factory_internal.detection import (
     detect_component as _detect_component,
@@ -226,7 +226,7 @@ def get_parser() -> LogParserProtocol:
         from ClassicLib.integration.rust.parser_rust import RustLogParser
 
         logger.debug("Using RustLogParser wrapper (150x speedup potential)")
-        return RustLogParser()
+        return cast("LogParserProtocol", RustLogParser())
     except ImportError as e:
         msg = f"Required Rust module for parser not available: {e}. Reinstall CLASSIC."
         raise RuntimeError(msg) from e
@@ -729,7 +729,7 @@ def get_wrye_parser(wrye_warnings: dict[str, str] | None = None) -> Any:
         Any: A WryeBashParser instance from the Rust classic_scangame module.
 
     """
-    from classic_scangame import WryeBashParser
+    WryeBashParser = get_component("classic_scangame", "WryeBashParser")
 
     logger.debug("Using Rust WryeBashParser for Wrye Bash report parsing")
     return WryeBashParser(wrye_warnings)
@@ -743,7 +743,7 @@ def get_crashgen_orchestrator() -> Any:
             Call CrashgenCheckOrchestrator.check(path, name) for full validation.
 
     """
-    from classic_scangame import CrashgenCheckOrchestrator
+    CrashgenCheckOrchestrator = get_component("classic_scangame", "CrashgenCheckOrchestrator")
 
     logger.debug("Using Rust CrashgenCheckOrchestrator for crashgen validation")
     return CrashgenCheckOrchestrator
@@ -760,7 +760,7 @@ def get_config_file_cache(game_root: Any, duplicate_whitelist: list[str] | None 
         Any: A RustConfigFileCache instance from the Rust classic_scangame module.
 
     """
-    from classic_scangame import RustConfigFileCache
+    RustConfigFileCache = get_component("classic_scangame", "RustConfigFileCache")
 
     logger.debug("Using Rust ConfigFileCache for INI/CONF file scanning")
     return RustConfigFileCache(game_root, duplicate_whitelist)
@@ -774,7 +774,7 @@ def get_mod_ini_scanner() -> Any:
             Call RustModIniScanner.scan(game_root, game_name) to scan.
 
     """
-    from classic_scangame import RustModIniScanner
+    RustModIniScanner = get_component("classic_scangame", "RustModIniScanner")
 
     logger.debug("Using Rust ModIniScanner for mod INI scanning")
     return RustModIniScanner
@@ -790,7 +790,7 @@ def get_game_scan_orchestrator(config: Any) -> Any:
         Any: A GameScanOrchestrator instance from Rust classic_scangame.
 
     """
-    from classic_scangame import GameScanOrchestrator
+    GameScanOrchestrator = get_component("classic_scangame", "GameScanOrchestrator")
 
     logger.debug("Using Rust GameScanOrchestrator for game integrity scanning")
     return GameScanOrchestrator(config)
@@ -805,7 +805,7 @@ def get_game_scan_config(**kwargs: Any) -> Any:
         Any: A GameScanConfig instance from Rust classic_scangame.
 
     """
-    from classic_scangame import GameScanConfig
+    GameScanConfig = get_component("classic_scangame", "GameScanConfig")
 
     return GameScanConfig(**kwargs)
 
@@ -820,7 +820,7 @@ def get_dds_analyzer(game_target: str = "fallout4") -> Any:
         Any: A DDSAnalyzer instance from Rust classic_file_io.
 
     """
-    from classic_file_io import DDSAnalyzer
+    DDSAnalyzer = get_component("classic_file_io", "DDSAnalyzer")
 
     logger.debug("Using Rust DDSAnalyzer for DDS texture validation")
     return DDSAnalyzer(game_target)

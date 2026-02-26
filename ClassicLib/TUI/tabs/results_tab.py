@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import ClassVar, override
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Label, ListItem, ListView, Markdown, Static
 
@@ -28,7 +28,7 @@ class ResultsTab(Horizontal):
         - Ctrl+E: Open in external editor
     """
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("ctrl+r", "refresh_reports", "Refresh"),
         Binding("delete", "delete_report", "Delete"),
         Binding("ctrl+c", "copy_report", "Copy"),

@@ -7,7 +7,7 @@ with TabbedContent, so this is a placeholder for potential future use.
 from textual.screen import Screen
 
 
-class MainScreen(Screen):
+class MainScreen(Screen[None]):
     """Main tabbed container screen.
 
     Note: This is a placeholder. The actual tabbed interface is

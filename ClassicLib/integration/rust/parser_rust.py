@@ -93,6 +93,47 @@ class RustLogParser:
             msg = f"Rust extract_section failed: {e}"
             raise RuntimeError(msg) from e
 
+    def get_stats(self) -> dict[str, int]:
+        """Get parser performance statistics from Rust implementation.
+
+        Returns:
+            Statistics dictionary from Rust parser.
+
+        Raises:
+            RuntimeError: If Rust stats retrieval fails.
+
+        """
+        try:
+            return self._rust_parser.get_stats()
+        except (RustParseError, RustError, AttributeError, TypeError, ValueError) as e:
+            msg = f"Rust get_stats failed: {e}"
+            raise RuntimeError(msg) from e
+
+    def detect_vr_log(self, content: str) -> bool:
+        """Detect whether crash log content is from Fallout 4 VR.
+
+        Uses Rust detection when available. Falls back to a lightweight Python
+        check if the bound Rust parser does not expose detect_vr_log.
+
+        Args:
+            content: Full crash log content.
+
+        Returns:
+            True when VR indicators are present, else False.
+
+        Raises:
+            RuntimeError: If Rust VR detection fails unexpectedly.
+
+        """
+        try:
+            return self._rust_parser.detect_vr_log(content)
+        except AttributeError:
+            content_lower = content.lower()
+            return "fallout4vr.exe" in content_lower or "fallout4vr.esm" in content_lower
+        except (RustParseError, RustError, TypeError, ValueError) as e:
+            msg = f"Rust detect_vr_log failed: {e}"
+            raise RuntimeError(msg) from e
+
     @property
     def is_rust_accelerated(self) -> bool:
         """Whether Rust acceleration is active."""

@@ -59,11 +59,13 @@ class RustAcceleratedReportGenerator:
         self._generator = RustReportGenerator()  # type: ignore[misc]
         self.yamldata = yamldata
 
-    def generate_header(self, crashlog_filename: str) -> Any:
+    def generate_header(self, crashlog_filename: str, version: str = "") -> Any:  # noqa: ARG002 - protocol compatibility
         """Generate a header fragment for the crash log report.
 
         Args:
             crashlog_filename: The filename of the crash log to be processed.
+            version: Compatibility-only argument to match ReportGeneratorProtocol.
+                The Rust backend does not require this value.
 
         Returns:
             RustAcceleratedReportFragment: An instance containing the generated

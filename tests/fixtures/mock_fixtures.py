@@ -163,18 +163,19 @@ def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
 
 @pytest.fixture
 def disable_rust_acceleration(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Force tests to use Python implementations by disabling Rust acceleration.
+    """Best-effort helper for legacy tests that need to bypass Rust path operations.
 
-    This prevents tests from hitting the real system via Rust extensions when
-    they expect to be using mocked Python logic (e.g., for registry checks).
+    Notes:
+        - Rust path acceleration is now the default architecture.
+        - Some modules no longer expose legacy `_HAS_RUST_PATH` flags.
+        - Use `raising=False` so this fixture remains safe across mixed test suites.
     """
-    # Patch for GamePath
-    monkeypatch.setattr("ClassicLib.support.game_path._HAS_RUST_PATH", False)
-    monkeypatch.setattr("ClassicLib.support.game_path.classic_path", None)
+    # Legacy compatibility flags (where present)
+    monkeypatch.setattr("ClassicLib.support.game_path._HAS_RUST_PATH", False, raising=False)
+    monkeypatch.setattr("ClassicLib.support.docs_path._HAS_RUST_PATH", False, raising=False)
+    monkeypatch.setattr("ClassicLib.support.path_validator._HAS_RUST_PATH", False, raising=False)
 
-    # Patch for DocsPath
-    monkeypatch.setattr("ClassicLib.support.docs_path._HAS_RUST_PATH", False)
-    monkeypatch.setattr("ClassicLib.support.docs_path.classic_path", None)
-
-    # Patch for factory if needed (to be safe)
-    monkeypatch.setattr("ClassicLib.integration.factory.get_path_operations", lambda: None)
+    # Best-effort module stubs for tests that patch call sites directly.
+    monkeypatch.setattr("ClassicLib.support.game_path.classic_path", None, raising=False)
+    monkeypatch.setattr("ClassicLib.support.docs_path.classic_path", None, raising=False)
+    monkeypatch.setattr("ClassicLib.support.path_validator.classic_path", None, raising=False)

@@ -253,30 +253,44 @@ impl PyAnalysisConfig {
         // Create base config
         let mut config = AnalysisConfig::new(game, vr_mode);
 
-        // Select OG or VR field based on vr_mode
+        let crashgen_name_og = yamldata.getattr("crashgen_name")?.extract::<String>()?;
         config.crashgen_name = if vr_mode {
-            yamldata.getattr("crashgen_name_vr")
+            yamldata
+                .getattr("crashgen_name_vr")
+                .ok()
+                .and_then(|attr| attr.extract::<String>().ok())
+                .unwrap_or_else(|| crashgen_name_og.clone())
         } else {
-            yamldata.getattr("crashgen_name")
-        }?
-        .extract::<String>()?;
+            crashgen_name_og
+        };
 
         config.crashgen_latest = yamldata
             .getattr("crashgen_latest_og")?
             .extract::<String>()?;
         config.game_version = yamldata.getattr("game_version")?.extract::<String>()?;
-        config.game_version_vr = yamldata.getattr("game_version_vr")?.extract::<String>()?;
+        config.game_version_vr = yamldata
+            .getattr("game_version_vr")
+            .ok()
+            .and_then(|attr| attr.extract::<String>().ok())
+            .unwrap_or_default();
         config.game_version_new = yamldata.getattr("game_version_new")?.extract::<String>()?;
         config.xse_acronym = yamldata.getattr("xse_acronym")?.extract::<String>()?;
 
-        // Select OG or VR game root name
+        // Select OG or VR game root name, falling back to OG when VR field is absent.
+        let game_root_name_og = yamldata
+            .getattr("game_root_name")
+            .ok()
+            .and_then(|attr| attr.extract::<String>().ok())
+            .unwrap_or_default();
         config.game_root_name = if vr_mode {
-            yamldata.getattr("game_root_name_vr")
+            yamldata
+                .getattr("game_root_name_vr")
+                .ok()
+                .and_then(|attr| attr.extract::<String>().ok())
+                .unwrap_or_else(|| game_root_name_og.clone())
         } else {
-            yamldata.getattr("game_root_name")
-        }?
-        .extract::<String>()
-        .unwrap_or_default();
+            game_root_name_og
+        };
 
         config.ignore_plugins = yamldata
             .getattr("game_ignore_plugins")?

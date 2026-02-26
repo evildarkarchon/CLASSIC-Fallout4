@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import ClassVar
 
 from textual.app import App, ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.widgets import Footer, Header, TabbedContent, TabPane
 
 from ClassicLib.TUI.tabs.articles_tab import ArticlesTab
@@ -33,7 +33,7 @@ class CLASSICApp(App[None]):
     TITLE = "CLASSIC - Crash Log Auto Scanner & Setup Integrity Checker"
     CSS_PATH = Path(__file__).parent / "styles" / "classic.tcss"
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("f1", "show_help", "Help"),
         Binding("f5", "crash_scan", "Crash Scan"),
         Binding("f6", "game_scan", "Game Scan"),

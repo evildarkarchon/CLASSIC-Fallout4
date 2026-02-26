@@ -12,12 +12,16 @@ Functions:
 import contextlib
 import hashlib
 import os
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from io import TextIOWrapper
+from operator import attrgetter
 from pathlib import Path
+from typing import cast
 
 import chardet
-from classic_file_io import calculate_similarity as _rust_calculate_similarity
+import classic_file_io as _classic_file_io
+
+_rust_calculate_similarity = cast("Callable[[str, str], float]", attrgetter("calculate_similarity")(_classic_file_io))
 
 
 def calculate_similarity(file1: Path, file2: Path) -> float:
@@ -89,10 +93,11 @@ def open_file_with_encoding(file_path: Path | str | os.PathLike[str]) -> Iterato
             raw_data = raw_file.read(10240)
             if raw_data:
                 result = chardet.detect(raw_data)
-                if result and result.get("encoding"):
-                    detected_encoding = result["encoding"]
+                if result:
+                    detected_encoding = result.get("encoding")
+                    confidence = result.get("confidence", 0)
                     # Use detected encoding if confidence is high enough
-                    if result.get("confidence", 0) > 0.7:
+                    if isinstance(detected_encoding, str) and confidence > 0.7:
                         encoding = detected_encoding
     except OSError:
         pass  # Can't read for detection, fall back to UTF-8

@@ -4,10 +4,11 @@ This tab provides a compact table-based backup management interface
 for XSE, ReShade, Vulkan, and ENB files.
 """
 
+from pathlib import Path
 from typing import ClassVar, Literal, override
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Vertical
 from textual.widgets import Button, DataTable, Label, Static
 
@@ -28,7 +29,7 @@ class BackupTab(Vertical):
         - O: Open backup folder
     """
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("b", "backup_selected", "Backup"),
         Binding("r", "restore_selected", "Restore"),
         Binding("d", "delete_selected", "Delete"),
@@ -104,7 +105,7 @@ class BackupTab(Vertical):
         else:
             from ClassicLib.core.registry import GlobalRegistry
 
-            backup_base = GlobalRegistry.get_local_dir() / "CLASSIC Backup" / "Game Files"
+            backup_base = Path(GlobalRegistry.get_local_dir()) / "CLASSIC Backup" / "Game Files"
 
         table = self.query_one("#backup-table", DataTable)
         table.clear()
@@ -160,8 +161,9 @@ class BackupTab(Vertical):
 
         """
         table = self.query_one("#backup-table", DataTable)
-        if table.cursor_row is not None and table.cursor_row < len(self.BACKUP_TYPES):
-            return self.BACKUP_TYPES[table.cursor_row][0]
+        row = table.cursor_row
+        if 0 <= row < len(self.BACKUP_TYPES):
+            return self.BACKUP_TYPES[row][0]
         return None
 
     def _perform_backup_operation(
@@ -200,7 +202,7 @@ class BackupTab(Vertical):
 
         from ClassicLib.core.registry import GlobalRegistry
 
-        backup_dir = GlobalRegistry.get_local_dir() / "CLASSIC Backup"
+        backup_dir = Path(GlobalRegistry.get_local_dir()) / "CLASSIC Backup"
         backup_dir.mkdir(parents=True, exist_ok=True)
 
         if sys.platform == "win32":

@@ -10,7 +10,7 @@ from pathlib import Path
 from ClassicLib.core.async_runtime import run_sync
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_game
-from ClassicLib.integration.factory import get_file_io
+from ClassicLib.integration.factory import get_component, get_file_io
 from ClassicLib.io.yaml import yaml_settings
 
 
@@ -34,7 +34,7 @@ def scan_wryecheck() -> str:
         ValueError: If required warnings setting is missing from YAML config.
 
     """
-    from classic_scangame import WryeBashParser
+    WryeBashParser = get_component("classic_scangame", "WryeBashParser")
 
     # Load settings from YAML
     missing_html_setting: str | None = yaml_settings(str, YAML.Game, "Warnings_MODS.Warn_WRYE_MissingHTML")

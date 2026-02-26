@@ -127,26 +127,14 @@ class YamlData:
     def game_version_new(self) -> str:
         """Latest available game version string."""
 
-    @property
-    def game_version_vr(self) -> str:
-        """VR game version string."""
-
     # Crash generator settings
     @property
     def crashgen_name(self) -> str:
         """Crash generator/logger name for OG/non-VR (e.g., 'Buffout 4')."""
 
     @property
-    def crashgen_name_vr(self) -> str:
-        """Crash generator/logger name for VR mode."""
-
-    @property
     def crashgen_latest_og(self) -> str:
         """Latest crash generator version for regular game."""
-
-    @property
-    def crashgen_latest_vr(self) -> str:
-        """Latest crash generator version for VR game."""
 
     # Script extender configuration
     @property
@@ -195,15 +183,6 @@ class YamlData:
         """
 
     @property
-    def crashgen_ignore_vr(self) -> set[str]:
-        """Set of crash generator-specific patterns to ignore (VR).
-
-        Returns:
-            Set of ignore pattern strings
-
-        """
-
-    @property
     def crashgen_registry(self) -> dict[str, dict[str, str | list[str]]]:
         """Per-crashgen settings registry loaded from game YAML.
 
@@ -216,10 +195,6 @@ class YamlData:
     @property
     def game_root_name(self) -> str:
         """Game root name (OG/non-VR, from Game_Info.Main_Root_Name)."""
-
-    @property
-    def game_root_name_vr(self) -> str:
-        """Game root name (VR, from GameVR_Info.Main_Root_Name)."""
 
     # Mod detection lists
     @property

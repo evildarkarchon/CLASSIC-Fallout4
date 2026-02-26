@@ -95,21 +95,6 @@ class _LazyAddressLibInfo:
 ALL_ADDRESS_LIB_INFO: dict[str, AddressLibVersionInfo] = _LazyAddressLibInfo()  # type: ignore[assignment]
 
 
-def _determine_relevant_versions(is_vr_mode: bool) -> tuple[list[AddressLibVersionInfo], list[AddressLibVersionInfo]]:
-    """Determine correct and wrong address library versions based on VR mode."""
-    registry = get_version_registry()
-
-    correct_versions: list[AddressLibVersionInfo] = [
-        _version_info_to_address_lib_info(v) for v in registry.get_correct_versions(is_vr_mode) if v.address_library
-    ]
-
-    wrong_versions: list[AddressLibVersionInfo] = [
-        _version_info_to_address_lib_info(v) for v in registry.get_wrong_versions(is_vr_mode) if v.address_library
-    ]
-
-    return correct_versions, wrong_versions
-
-
 # ---------------------------------------------------------------------------
 # Version mapping for Rust XseChecker
 # ---------------------------------------------------------------------------

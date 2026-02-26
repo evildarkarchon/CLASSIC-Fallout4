@@ -125,7 +125,8 @@ class BackupService:
         if not list_name:
             return BackupInfo(backup_type, exists=False, file_count=0, path=None)
 
-        backup_dir = GlobalRegistry.get_local_dir() / "CLASSIC Backup" / "Game Files" / list_name
+        local_dir = Path(GlobalRegistry.get_local_dir())
+        backup_dir = local_dir / "CLASSIC Backup" / "Game Files" / list_name
 
         if backup_dir.exists():
             files = list(backup_dir.iterdir())

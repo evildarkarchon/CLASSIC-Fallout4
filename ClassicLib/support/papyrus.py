@@ -34,7 +34,7 @@ def papyrus_logging() -> tuple[str, int]:
         from classic_scanlog import papyrus_logging as rust_papyrus_logging
 
         logger.debug("Papyrus log analysis delegated to Rust (Streaming I/O)")
-        return rust_papyrus_logging(papyrus_path)
+        return rust_papyrus_logging(str(papyrus_path))
 
     # Log not found -- return guidance message (no Rust call needed)
     message_output = (

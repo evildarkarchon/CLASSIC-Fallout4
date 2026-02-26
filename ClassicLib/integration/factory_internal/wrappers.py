@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 from ClassicLib.integration.factory_internal.report_fragment import get_report_fragment_type
@@ -82,6 +83,9 @@ class FcxHandlerWrapper:
 
     def check_fcx_mode(self) -> None:
         self._handler.check_fcx_mode()
+
+    async def check_fcx_mode_async(self) -> None:
+        await asyncio.to_thread(self.check_fcx_mode)
 
     def get_fcx_messages(self) -> Any:
         report_fragment_type = get_report_fragment_type()

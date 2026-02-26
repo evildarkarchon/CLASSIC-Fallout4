@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import AsyncIterator, Iterator
 
+    from ClassicLib.io.files.core import FileIOCore as PythonFileIOCore
+
 from ClassicLib.integration.exceptions import RustError, RustIOError, RustParseError
 from ClassicLib.integration.factory import detect_component
 
@@ -69,8 +71,8 @@ class FileIOCore:
         """Initialize with encoding preferences and Rust/Python backend."""
         self.default_encoding = encoding
         self.default_errors = errors
-        self._rust_core = None
-        self._python_core = None
+        self._rust_core: Any | None = None
+        self._python_core: PythonFileIOCore | None = None
         if RUST_AVAILABLE and _rust_io:
             try:
                 self._rust_core = _rust_io(encoding=encoding, errors=errors, cache_size=100, max_concurrent_io=50)
@@ -86,6 +88,13 @@ class FileIOCore:
         """Check if Rust acceleration is active."""
         return self._rust_core is not None
 
+    def _get_python_core(self) -> PythonFileIOCore:
+        """Return the Python fallback core when Rust backend is unavailable."""
+        if self._python_core is None:
+            msg = "Python FileIOCore fallback is not initialized."
+            raise RuntimeError(msg)
+        return self._python_core
+
     async def read_file(self, path: Path | str) -> str:
         """Read file contents as string."""
         if self._rust_core:
@@ -95,7 +104,8 @@ class FileIOCore:
                 if _RustFileIOIOError and isinstance(e, _RustFileIOIOError):
                     raise _translate_rust_io_error(e, path) from e
                 raise
-        return await self._python_core.read_file(Path(path))
+        python_core = self._get_python_core()
+        return await python_core.read_file(Path(path))
 
     async def read_lines(self, path: Path | str) -> list[str]:
         """Read file as list of lines."""
@@ -106,7 +116,8 @@ class FileIOCore:
                 if _RustFileIOIOError and isinstance(e, _RustFileIOIOError):
                     raise _translate_rust_io_error(e, path) from e
                 raise
-        return await self._python_core.read_lines(Path(path))
+        python_core = self._get_python_core()
+        return await python_core.read_lines(Path(path))
 
     async def stream_lines(self, path: Path | str) -> AsyncIterator[str]:
         """Stream lines from file asynchronously."""
@@ -115,7 +126,8 @@ class FileIOCore:
             async for line in streamer:
                 yield line
             return
-        async for line in self._python_core.stream_lines(Path(path)):
+        python_core = self._get_python_core()
+        async for line in python_core.stream_lines(Path(path)):
             yield line
 
     def stream_lines_sync(self, path: Path | str) -> Iterator[str]:
@@ -138,7 +150,8 @@ class FileIOCore:
                 if _RustFileIOIOError and isinstance(e, _RustFileIOIOError):
                     raise _translate_rust_io_error(e, path) from e
                 raise
-        return await self._python_core.read_bytes(Path(path))
+        python_core = self._get_python_core()
+        return await python_core.read_bytes(Path(path))
 
     async def read_file_mmap(self, path: Path | str) -> str:
         """Read file using memory mapping (optimized for large files)."""
@@ -157,28 +170,32 @@ class FileIOCore:
         if self._rust_core:
             await self._rust_core.write_file(str(path), content)
             return
-        await self._python_core.write_file(Path(path), content)
+        python_core = self._get_python_core()
+        await python_core.write_file(Path(path), content)
 
     async def write_lines(self, path: Path | str, lines: list[str]) -> None:
         """Write list of lines to file."""
         if self._rust_core:
             await self._rust_core.write_lines(str(path), lines)
             return
-        await self._python_core.write_lines(Path(path), lines)
+        python_core = self._get_python_core()
+        await python_core.write_lines(Path(path), lines)
 
     async def write_bytes(self, path: Path | str, content: bytes) -> None:
         """Write raw bytes to file."""
         if self._rust_core:
             await self._rust_core.write_bytes(str(path), content)
             return
-        await self._python_core.write_bytes(Path(path), content)
+        python_core = self._get_python_core()
+        await python_core.write_bytes(Path(path), content)
 
     async def append_file(self, path: Path | str, content: str) -> None:
         """Append content to file."""
         if self._rust_core:
             await self._rust_core.append_file(str(path), content)
             return
-        await self._python_core.append_file(Path(path), content)
+        python_core = self._get_python_core()
+        await python_core.append_file(Path(path), content)
 
     def read_dds_header(self, path: Path | str) -> tuple[int, int] | None:
         """Read DDS header, returning (width, height) or None."""
@@ -231,14 +248,16 @@ class FileIOCore:
         if self._rust_core:
             result = await self._rust_core.py_read_multiple_files([str(p) for p in paths])
             return {Path(k).name: v for k, v in result.items()}
-        return await self._python_core.read_multiple_files(paths)
+        python_core = self._get_python_core()
+        return await python_core.read_multiple_files(paths)
 
     async def write_multiple_files(self, files: dict[Path | str, str]) -> None:
         """Write multiple files."""
         if self._rust_core:
             await self._rust_core.py_write_multiple_files({str(k): v for k, v in files.items()})
             return
-        await self._python_core.write_multiple_files(files)
+        python_core = self._get_python_core()
+        await python_core.write_multiple_files(files)
 
     def file_exists(self, path: Path | str) -> bool:
         """Check if file exists."""

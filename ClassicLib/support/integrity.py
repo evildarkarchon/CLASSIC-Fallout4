@@ -10,7 +10,7 @@ VersionRegistry integration.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Protocol, cast
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
@@ -18,6 +18,9 @@ from ClassicLib.core.registry import GlobalRegistry
 
 if TYPE_CHECKING:
     import classic_scangame
+
+    class _SupportsRootWarn(Protocol):
+        def with_root_warn(self, root_warn: str) -> object: ...
 
 
 class GameIntegrityChecker:
@@ -150,7 +153,7 @@ class GameIntegrityChecker:
 
         root_warn = self._config.get("root_warn")
         if root_warn:
-            config.with_root_warn(root_warn)
+            cast("_SupportsRootWarn", config).with_root_warn(root_warn)
 
         return classic_scangame.GameIntegrityChecker(config)
 
@@ -183,7 +186,8 @@ class GameIntegrityChecker:
             installation location is recommended and message provides details.
 
         """
-        exe_path = Path(self._config["game_exe_path"]) if self._config.get("game_exe_path") else None
+        exe_path_str = self._config.get("game_exe_path")
+        exe_path = Path(exe_path_str) if exe_path_str else None
 
         if not exe_path or not exe_path.is_file():
             return False, ""

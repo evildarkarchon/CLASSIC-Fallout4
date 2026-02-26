@@ -134,12 +134,11 @@ class TestPathDetection:
                         # it should call manual input method
                         assert mock_input.called
 
-    @patch("ClassicLib.support.docs_path._HAS_RUST_PATH", False)
-    @patch("winreg.OpenKey")
-    @patch("winreg.QueryValueEx")
-    def test_find_windows_docs_path_success(self, mock_query: MagicMock, mock_open: MagicMock) -> None:  # noqa: ARG002
-        """Test _find_windows_docs_path successfully retrieves Windows documents path."""
-        mock_query.return_value = ("C:\\Users\\Test\\Documents", None)
+    @patch("ClassicLib.support.docs_path.classic_path.DocsPathFinder")
+    def test_find_windows_docs_path_success(self, mock_docs_finder: MagicMock) -> None:
+        """Test _find_windows_docs_path uses Rust DocsPathFinder successfully."""
+        finder_instance = mock_docs_finder.return_value
+        finder_instance.find_docs_path.return_value = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
 
         manager = DocumentsPathManager()
         manager.docs_name = "Fallout4"
@@ -149,22 +148,22 @@ class TestPathDetection:
 
             expected_path = "C:\\Users\\Test\\Documents\\My Games\\Fallout4"
             mock_update.assert_called_once_with("Root_Folder_Docs", expected_path)
+            mock_docs_finder.assert_called_once_with("My Games\\Fallout4")
+            finder_instance.find_docs_path.assert_called_once_with(cached_path=None)
 
-    @patch("winreg.OpenKey", side_effect=OSError("Registry key not found"))
-    def test_find_windows_docs_path_registry_failure(self, mock_open: MagicMock) -> None:  # noqa: ARG002
-        """Test _find_windows_docs_path handles registry access failure."""
+    @patch("ClassicLib.support.docs_path.classic_path.DocsPathFinder")
+    def test_find_windows_docs_path_finder_failure(self, mock_docs_finder: MagicMock) -> None:
+        """Test _find_windows_docs_path propagates Rust finder errors."""
+        finder_instance = mock_docs_finder.return_value
+        finder_instance.find_docs_path.side_effect = FileNotFoundError("Could not detect docs path")
+
         manager = DocumentsPathManager()
         manager.docs_name = "Fallout4"
 
         with patch.object(manager, "_update_game_setting") as mock_update:
-            manager._find_windows_docs_path()
-
-            # Should still update with default path
-            mock_update.assert_called_once()
-            # Path should contain user home directory fallback
-            args = mock_update.call_args[0]
-            assert "Documents" in args[1]
-            assert "My Games" in args[1]
+            with pytest.raises(FileNotFoundError, match="Could not detect docs path"):
+                manager._find_windows_docs_path()
+            mock_update.assert_not_called()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="Linux-specific test")
     @patch("ClassicLib.io.yaml.yaml_settings")

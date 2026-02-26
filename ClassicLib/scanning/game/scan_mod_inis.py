@@ -9,6 +9,7 @@ from typing import Any
 
 from ClassicLib.core.constants import YAML
 from ClassicLib.core.registry import get_game
+from ClassicLib.integration.factory import get_mod_ini_scanner
 from ClassicLib.io.yaml import yaml_settings
 from ClassicLib.scanning.game.models.fcx_issue import ConfigIssue, ConfigIssueSeverity
 
@@ -20,13 +21,12 @@ def _get_game_root() -> Path | None:
 
 def _run_rust_scan() -> Any:
     """Run the Rust ModIniScanner and return the raw result."""
-    from classic_scangame import RustModIniScanner
-
     game_root = _get_game_root()
     if not game_root:
         return None
 
-    return RustModIniScanner.scan(game_root, get_game())
+    rust_mod_ini_scanner = get_mod_ini_scanner()
+    return rust_mod_ini_scanner.scan(game_root, get_game())
 
 
 async def scan_mod_inis_async() -> str:  # noqa: RUF029

@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import ClassVar
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingType
 from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, DirectoryTree, Static
@@ -21,7 +21,7 @@ class FolderBrowserModal(ModalScreen[Path | None]):
 
     """
 
-    BINDINGS: ClassVar[list[Binding]] = [
+    BINDINGS: ClassVar[list[BindingType]] = [
         Binding("escape", "cancel", "Cancel"),
         Binding("enter", "select", "Select"),
     ]
