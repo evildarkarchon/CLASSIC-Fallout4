@@ -389,12 +389,98 @@ def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> SuspectScannerProtocol
     return _SuspectScannerWrapper(rust_scanner)
 
 
+def _normalize_crashgen_name(name: str) -> str:
+    """Normalize a crashgen name for robust matching."""
+    return "".join(ch for ch in name if not ch.isspace()).lower()
+
+
+def _coerce_ignore_keys(raw_ignore_keys: Any) -> list[str]:
+    """Convert registry ignore_keys data to a normalized list[str]."""
+    if not isinstance(raw_ignore_keys, (list, tuple, set)):
+        return []
+
+    ignore_keys: list[str] = []
+    seen: set[str] = set()
+    for item in raw_ignore_keys:
+        if not isinstance(item, str):
+            continue
+        key = item.strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        ignore_keys.append(key)
+    return ignore_keys
+
+
+def _resolve_crashgen_name_for_settings(yamldata: ClassicScanLogsInfo) -> str:
+    """Resolve crashgen name with Version Registry fallback."""
+    crashgen_name = getattr(yamldata, "crashgen_name", "")
+    if isinstance(crashgen_name, str) and crashgen_name.strip():
+        return crashgen_name
+
+    from ClassicLib.core.registry import get_game, is_vr_version
+    from ClassicLib.support.versions import get_detected_version_info, get_version_registry
+
+    version_info = get_detected_version_info()
+    if version_info is None:
+        registry = get_version_registry()
+        candidates = registry.get_all_for_game(get_game(), is_vr_version())
+        if candidates:
+            version_info = candidates[0]
+
+    if version_info is not None and version_info.crashgen_versions:
+        crashgen_config = version_info.crashgen_versions[0]
+        if crashgen_config.name:
+            return crashgen_config.name
+
+    return "Buffout 4"
+
+
+def _extract_crashgen_ignore_keys_from_registry(yamldata: ClassicScanLogsInfo, crashgen_name: str) -> list[str]:
+    """Resolve ignore keys from Crashgen_Registry for the selected crashgen."""
+    crashgen_registry = getattr(yamldata, "crashgen_registry", None)
+    if not isinstance(crashgen_registry, dict):
+        return []
+
+    normalized_target = _normalize_crashgen_name(crashgen_name)
+    default_entry: dict[str, Any] | None = None
+    prefix_match_ignore_keys: list[str] = []
+    prefix_match_len = -1
+
+    for entry_name, entry in crashgen_registry.items():
+        if not isinstance(entry_name, str) or not isinstance(entry, dict):
+            continue
+
+        if entry_name.strip().lower() == "default":
+            default_entry = entry
+            continue
+
+        normalized_entry = _normalize_crashgen_name(entry_name)
+        if normalized_entry == normalized_target:
+            return _coerce_ignore_keys(entry.get("ignore_keys"))
+
+        # Allow "Buffout 4" registry entries to match names like "Buffout 4 NG".
+        if normalized_entry and normalized_target.startswith(normalized_entry) and len(normalized_entry) > prefix_match_len:
+            prefix_match_ignore_keys = _coerce_ignore_keys(entry.get("ignore_keys"))
+            prefix_match_len = len(normalized_entry)
+
+    if prefix_match_len >= 0:
+        return prefix_match_ignore_keys
+
+    if default_entry is not None:
+        return _coerce_ignore_keys(default_entry.get("ignore_keys"))
+
+    return []
+
+
 def get_settings_validator(yamldata: ClassicScanLogsInfo) -> SettingsValidatorProtocol:
     """Return a SettingsValidator wrapper for the given yamldata.
 
-    This function extracts crashgen_name and crashgen_ignore from yamldata
-    and constructs a Rust SettingsValidator. The returned wrapper converts
-    dict values to strings (for Rust) and Rust list[str] returns to ReportFragment.
+    This function resolves crashgen_name (with Version Registry fallback),
+    then reads ignore keys from the per-crashgen `Crashgen_Registry`
+    configuration and constructs a Rust SettingsValidator. The returned
+    wrapper converts dict values to strings (for Rust) and Rust list[str]
+    returns to ReportFragment.
 
     Args:
         yamldata: An instance of ClassicScanLogsInfo.
@@ -408,11 +494,11 @@ def get_settings_validator(yamldata: ClassicScanLogsInfo) -> SettingsValidatorPr
     """
     from classic_scanlog import SettingsValidator as RustSettingsValidator
 
-    crashgen_name = getattr(yamldata, "crashgen_name", "Buffout 4")
-    crashgen_ignore = getattr(yamldata, "crashgen_ignore", [])
+    crashgen_name = _resolve_crashgen_name_for_settings(yamldata)
+    crashgen_ignore = _extract_crashgen_ignore_keys_from_registry(yamldata, crashgen_name)
 
     rust_validator = RustSettingsValidator(crashgen_name, crashgen_ignore)
-    logger.debug("Using Rust-accelerated SettingsValidator")
+    logger.debug("Using Rust-accelerated SettingsValidator (%d ignore keys)", len(crashgen_ignore))
 
     return _SettingsValidatorWrapper(rust_validator)
 

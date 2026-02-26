@@ -3,6 +3,7 @@
 This module tests the factory functions for analyzer components.
 """
 
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -152,6 +153,60 @@ class TestGetSettingsValidator:
         result = get_settings_validator(mock_yamldata)
 
         assert result is not None
+
+    def test_uses_crashgen_registry_ignore_keys(self) -> None:
+        """Test validator constructor receives ignore keys from Crashgen_Registry."""
+        from ClassicLib.integration.factory import get_settings_validator
+
+        mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = "Buffout 4"
+        mock_yamldata.crashgen_ignore = []
+        mock_yamldata.crashgen_registry = {
+            "Buffout 4": {
+                "display_section": "[Compatibility]",
+                "ignore_keys": ["F4EE", "WaitForDebugger"],
+                "checks": ["achievements"],
+            },
+            "default": {"display_section": "", "ignore_keys": [], "checks": []},
+        }
+
+        with patch("classic_scanlog.SettingsValidator", autospec=True) as mock_validator_cls:
+            mock_validator = MagicMock()
+            mock_validator_cls.return_value = mock_validator
+
+            result = get_settings_validator(mock_yamldata)
+
+        assert result is not None
+        mock_validator_cls.assert_called_once_with("Buffout 4", ["F4EE", "WaitForDebugger"])
+
+    def test_falls_back_to_version_registry_crashgen_name(self) -> None:
+        """Test crashgen name fallback uses Version Registry when yamldata has no name."""
+        from ClassicLib.integration.factory import get_settings_validator
+
+        mock_yamldata = MagicMock()
+        mock_yamldata.crashgen_name = ""
+        mock_yamldata.crashgen_ignore = []
+        mock_yamldata.crashgen_registry = {
+            "Buffout 4": {
+                "display_section": "[Compatibility]",
+                "ignore_keys": ["F4EE"],
+                "checks": ["achievements"],
+            },
+            "default": {"display_section": "", "ignore_keys": [], "checks": []},
+        }
+
+        detected = SimpleNamespace(crashgen_versions=[SimpleNamespace(name="Buffout 4")])
+        with (
+            patch("ClassicLib.support.versions.get_detected_version_info", return_value=detected),
+            patch("classic_scanlog.SettingsValidator", autospec=True) as mock_validator_cls,
+        ):
+            mock_validator = MagicMock()
+            mock_validator_cls.return_value = mock_validator
+
+            result = get_settings_validator(mock_yamldata)
+
+        assert result is not None
+        mock_validator_cls.assert_called_once_with("Buffout 4", ["F4EE"])
 
 
 class TestGetGpuDetector:
