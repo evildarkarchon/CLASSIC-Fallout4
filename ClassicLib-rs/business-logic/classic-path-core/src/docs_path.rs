@@ -188,7 +188,7 @@ impl DocsPathFinder {
     fn find_docs_path_linux(&self) -> DocsPathResult<PathBuf> {
         use crate::platform::linux::get_home_directory;
 
-        let home = get_home_directory().map_err(|e| DocsPathError::PathError(e))?;
+        let home = get_home_directory()?;
 
         // For Linux, use Wine's compatibility folder structure
         let docs_path = home.join(".local/share").join(&self.relative_path);
