@@ -13,6 +13,7 @@
 use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
 use crate::report::ReportFragment;
+use log::warn;
 use std::collections::{HashMap, HashSet};
 
 const DEFAULT_DISPLAY_SECTION: &str = "[Compatibility]";
@@ -190,7 +191,16 @@ impl SettingsValidator {
         let mut lines = Vec::new();
 
         if let Some(f4ee) = crashgen.get("F4EE") {
-            let f4ee_enabled = f4ee.parse::<bool>().unwrap_or(false);
+            let f4ee_enabled = match f4ee.parse::<bool>() {
+                Ok(value) => value,
+                Err(parse_error) => {
+                    warn!(
+                        "Invalid boolean value for F4EE in {} settings: {:?} ({})",
+                        self.crashgen_name, f4ee, parse_error
+                    );
+                    false
+                }
+            };
             let display_section = if self.entry.display_section.is_empty() {
                 DEFAULT_DISPLAY_SECTION
             } else {
@@ -615,6 +625,32 @@ mod tests {
             .unwrap();
         let lines = result.to_list();
         assert!(lines.iter().any(|l| l.contains("[Compatibility]")));
+    }
+
+    #[test]
+    fn test_looksmenu_invalid_f4ee_value_falls_back_to_false() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![CheckId::LooksMenu],
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("F4EE".to_string(), "yes".to_string());
+
+        let mut xse = HashSet::new();
+        xse.insert("f4ee.dll".to_string());
+
+        let result = validator
+            .scan_buffout_looksmenu_setting(&crashgen, xse)
+            .unwrap();
+        let lines = result.to_list();
+
+        assert!(
+            lines.iter().any(|line| line.contains("CAUTION")),
+            "Invalid F4EE value should be treated as disabled and surface caution when LooksMenu is installed"
+        );
     }
 
     #[test]

@@ -184,7 +184,7 @@ def _extract_segments_python(crash_data: list[str]) -> dict[str, list[str]]:
 def find_segments(
     crash_data: list[str], crashgen_name: str, xse_acronym: str, game_root_name: str
 ) -> tuple[str, str, str, dict[str, list[str]]]:
-    """Parse crash report data to identify and extract specific segments of information.
+    """Parse crash-report data into header metadata and named segments.
 
     Uses anchor-first segmentation: game-output anchors (SYSTEM SPECS:, PROBABLE
     CALL STACK:, MODULES:, PLUGINS:, REGISTERS:, STACK:) define boundaries.
@@ -197,13 +197,11 @@ def find_segments(
         game_root_name: Name of the game's root directory (used for header extraction).
 
     Returns:
-        A tuple containing:
-            - game_version: Extracted game version from the crash report header.
-            - crashgen_version: Version of the crash generation tool as extracted.
-            - main_error: The primary error message derived from the header.
-            - segments: dict[str, list[str]] with all 8 named keys always present:
-              ``settings``, ``system``, ``callstack``, ``modules``, ``xse_modules``,
-              ``plugins``, ``registers``, ``stack_dump``.
+        tuple[str, str, str, dict[str, list[str]]]:
+            ``(game_version, crashgen_version, main_error, segments)``, where
+            ``segments`` is a dictionary with all 8 named keys always present:
+            ``settings``, ``system``, ``callstack``, ``modules``, ``xse_modules``,
+            ``plugins``, ``registers``, ``stack_dump``.
 
     """
     try:
