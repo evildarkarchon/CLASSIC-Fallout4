@@ -204,7 +204,7 @@ def cleanup_database_pools() -> None:
     Example:
         >>> cleanup_database_pools()
 
-    """  # noqa: D401
+    """
     logger.debug("Starting sync database pool cleanup")
 
     _close_legacy_sync_pool(use_stderr=True)
@@ -241,7 +241,7 @@ def _atexit_cleanup() -> None:
 
     This is a fallback to ensure database connections are closed even if
     the application doesn't explicitly call cleanup functions.
-    """  # noqa: D401
+    """
     with contextlib.suppress(Exception):
         cleanup_database_pools()
 
