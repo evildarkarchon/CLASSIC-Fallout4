@@ -45,18 +45,36 @@
 //! - [`message`] - Logging
 //! - [`perf`] - Performance monitoring
 
+#[cfg(windows)]
 pub mod config;
+#[cfg(windows)]
 pub mod database;
+#[cfg(windows)]
 pub mod files;
+#[cfg(windows)]
 pub mod game;
+#[cfg(windows)]
 pub mod markdown;
+#[cfg(windows)]
 pub mod message;
+#[cfg(windows)]
 pub mod path;
+#[cfg(windows)]
 pub mod perf;
+#[cfg(windows)]
 pub mod registry;
+#[cfg(windows)]
 pub mod runtime;
+#[cfg(windows)]
 pub mod scangame;
+#[cfg(windows)]
 pub mod scanner;
+#[cfg(windows)]
 pub mod types;
+#[cfg(windows)]
 pub mod update;
+#[cfg(windows)]
 pub mod yaml;
+
+#[cfg(not(windows))]
+pub const CPP_BRIDGE_UNAVAILABLE: &str = "classic-cpp-bridge is only available on Windows targets";

@@ -14,12 +14,15 @@
 //! Uses the `ba2` crate (v3.0.1) for low-level archive parsing, with business logic
 //! for CLASSIC-specific validation rules and issue detection.
 
-use std::fs::File;
 use std::path::{Path, PathBuf};
 
+#[cfg(windows)]
 use ba2::fo4::{Archive, FileHeader};
+#[cfg(windows)]
 use ba2::{ByteSlice, Reader};
 use rayon::prelude::*;
+#[cfg(windows)]
+use std::fs::File;
 use thiserror::Error;
 
 /// Errors that can occur during BA2 scanning
@@ -40,6 +43,10 @@ pub enum BA2Error {
     /// File not found in archive
     #[error("File not found: {0}")]
     FileNotFound(String),
+
+    /// BA2 archive scanning is not available on this platform.
+    #[error("BA2 archive scanning is not supported on this platform")]
+    UnsupportedPlatform,
 }
 
 /// Result type for BA2 operations
@@ -153,6 +160,7 @@ impl BA2Scanner {
     /// }
     /// # Ok::<(), Box<dyn std::error::Error>>(())
     /// ```
+    #[cfg(windows)]
     pub fn scan_archive(&self, path: &Path) -> Result<BA2Issues> {
         // Open archive with memory-mapped I/O
         let file = File::open(path)?;
@@ -195,6 +203,16 @@ impl BA2Scanner {
         Ok(issues)
     }
 
+    /// Scan a single BA2 archive and detect issues.
+    ///
+    /// On non-Windows platforms this returns `BA2Error::UnsupportedPlatform`.
+    #[cfg(not(windows))]
+    pub fn scan_archive(&self, _path: &Path) -> Result<BA2Issues> {
+        // Keep the same API surface cross-platform while making unsupported behavior explicit.
+        let _ = &self.xse_patterns;
+        Err(BA2Error::UnsupportedPlatform)
+    }
+
     /// Scan multiple archives in parallel
     ///
     /// Uses Rayon for parallel processing to maximize throughput.
@@ -227,6 +245,7 @@ impl BA2Scanner {
     }
 
     /// Scan a DX10 texture file and detect issues
+    #[cfg(windows)]
     fn scan_dx10_texture(
         &self,
         file_name: &str,
@@ -260,6 +279,7 @@ impl BA2Scanner {
     }
 
     /// Scan a GNRL general file and detect issues
+    #[cfg(windows)]
     fn scan_gnrl_file(
         &self,
         file_name: &str,
@@ -349,6 +369,8 @@ impl Default for BA2Scanner {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(windows))]
+    use std::path::Path;
 
     #[test]
     fn test_ba2_issues_default() {
@@ -378,5 +400,13 @@ mod tests {
 
         let custom_scanner = BA2Scanner::with_xse_patterns(vec!["f4se".to_string()]);
         assert_eq!(custom_scanner.xse_patterns.len(), 1);
+    }
+
+    #[cfg(not(windows))]
+    #[test]
+    fn test_scan_archive_unsupported_platform() {
+        let scanner = BA2Scanner::new();
+        let result = scanner.scan_archive(Path::new("mod.ba2"));
+        assert!(matches!(result, Err(BA2Error::UnsupportedPlatform)));
     }
 }

@@ -22,9 +22,6 @@ anyhow = { workspace = true }
 # File I/O
 walkdir = { workspace = true }
 
-# BA2 archive support
-ba2 = { workspace = true }
-
 # Serialization
 serde = { workspace = true, features = ["derive"] }
 

@@ -36,8 +36,10 @@ yaml-rust2 = { workspace = true }
 
 open = "5"
 arboard = "3"
-rfd = "0.15"
 color-eyre = "0.6"
+
+[target.'cfg(not(target_os = "linux"))'.dependencies]
+rfd = "0.15"
 
 [lints.rust]
 deprecated = "deny"

@@ -485,27 +485,37 @@ impl App {
     }
 
     fn open_folder_dialog_for_focus(&mut self) {
-        let initial = match self.main_focus {
-            MainFocus::StagingBrowse => self.staging_mods_input.value.trim(),
-            MainFocus::CustomBrowse => self.custom_scan_input.value.trim(),
-            _ => "",
-        };
-
-        let mut dialog = rfd::FileDialog::new();
-        if !initial.is_empty() {
-            dialog = dialog.set_directory(initial);
+        #[cfg(target_os = "linux")]
+        {
+            self.scan_status =
+                "Folder browser is unavailable on this Linux build. Enter the path manually."
+                    .to_string();
         }
 
-        if let Some(path) = dialog.pick_folder() {
-            let value = path.to_string_lossy().to_string();
-            match self.main_focus {
-                MainFocus::StagingBrowse => self.staging_mods_input.set_value(value),
-                MainFocus::CustomBrowse => self.custom_scan_input.set_value(value),
-                _ => {}
+        #[cfg(not(target_os = "linux"))]
+        {
+            let initial = match self.main_focus {
+                MainFocus::StagingBrowse => self.staging_mods_input.value.trim(),
+                MainFocus::CustomBrowse => self.custom_scan_input.value.trim(),
+                _ => "",
+            };
+
+            let mut dialog = rfd::FileDialog::new();
+            if !initial.is_empty() {
+                dialog = dialog.set_directory(initial);
             }
 
-            if let Err(error) = self.save_paths_from_inputs() {
-                self.scan_status = error;
+            if let Some(path) = dialog.pick_folder() {
+                let value = path.to_string_lossy().to_string();
+                match self.main_focus {
+                    MainFocus::StagingBrowse => self.staging_mods_input.set_value(value),
+                    MainFocus::CustomBrowse => self.custom_scan_input.set_value(value),
+                    _ => {}
+                }
+
+                if let Err(error) = self.save_paths_from_inputs() {
+                    self.scan_status = error;
+                }
             }
         }
     }

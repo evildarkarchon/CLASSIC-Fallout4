@@ -24,7 +24,6 @@ futures = { workspace = true }
 # File operations
 walkdir = { workspace = true }
 ddsfile = { workspace = true }
-ba2 = { workspace = true }
 
 # Configuration file processing
 sha2 = { workspace = true }
@@ -74,6 +73,9 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
+
+[target.'cfg(windows)'.dependencies]
+ba2 = { workspace = true }
 
 [lints.rust]
 deprecated = "deny"

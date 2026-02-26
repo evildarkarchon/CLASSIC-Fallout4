@@ -1,3 +1,4 @@
+#[cfg(windows)]
 fn main() {
     cxx_build::bridges([
         "src/types.rs",
@@ -19,5 +20,10 @@ fn main() {
     .std("c++17")
     .compile("classic-cpp-bridge");
 
+    println!("cargo:rerun-if-changed=src/");
+}
+
+#[cfg(not(windows))]
+fn main() {
     println!("cargo:rerun-if-changed=src/");
 }
