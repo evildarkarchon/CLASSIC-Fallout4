@@ -970,9 +970,9 @@ impl OrchestratorCore {
         let report_gen = self.create_report_generator();
         let mut composer = ReportComposer::new();
 
-        // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP
-        // This restores the scope of the old positional segments[2], which spanned
-        // from "PROBABLE CALL STACK:" to "MODULES:" and included all three sections.
+        // Build combined crash data from CALLSTACK + REGISTERS + STACK_DUMP.
+        // This combined scope is intentionally used for suspect, plugin, FormID,
+        // and named-record scanning in the current Rust implementation.
         let combined_crash_data: Vec<Arc<str>> = [
             segment_key::CALLSTACK,
             segment_key::REGISTERS,
