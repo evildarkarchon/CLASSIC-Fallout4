@@ -1,380 +1,266 @@
 <#
 .SYNOPSIS
-    Compare benchmark results against a saved baseline.
+    Compare Criterion baseline vs current run per scenario.
 
 .DESCRIPTION
-    Runs Criterion benchmarks against a specified baseline and displays
-    the percentage changes with color coding for regressions and improvements.
+    Produces per-scenario absolute and relative deltas from Criterion `estimates.json`
+    files. By default this script first runs a candidate benchmark pass against
+    the provided baseline using `run_benchmarks.ps1`, then reads:
 
-    Uses critcmp for detailed comparison if installed, otherwise parses
-    Criterion's native comparison output.
+    - `<scenario>/new/estimates.json` (candidate)
+    - `<scenario>/<baseline>/estimates.json` (reference)
+
+    for each discovered scenario under `ClassicLib-rs/target/criterion`.
 
 .PARAMETER Baseline
-    Name of the baseline to compare against (required).
-    Example: baseline-2026-02-04-120000
+    Baseline name to compare against (required).
+
+.PARAMETER Mode
+    quick (default) or thorough benchmark mode for candidate run.
+
+.PARAMETER Suite
+    Benchmark suite to run before comparison.
+
+.PARAMETER WarningThreshold
+    Regression percentage threshold for warning classification (default: 5).
+
+.PARAMETER FailThreshold
+    Regression percentage threshold for fail classification (default: 10).
 
 .PARAMETER ExportJson
-    Path to export comparison results as JSON.
+    Optional path to export comparison report JSON.
 
-.PARAMETER Threshold
-    Percentage threshold for highlighting changes (default: 10).
-    Changes greater than this are marked as regression/improvement.
+.PARAMETER ScenarioFilter
+    Optional regex filter applied to scenario IDs.
 
-.PARAMETER BenchName
-    Optional filter for specific benchmark name pattern.
+.PARAMETER BenchFilter
+    Optional benchmark filter passed to `run_benchmarks.ps1` when candidate
+    execution is enabled.
 
-.PARAMETER Quick
-    Use quick benchmark mode (50 samples instead of 200).
+.PARAMETER NoRun
+    Skip candidate benchmark execution and compare existing artifacts only.
 
-.EXAMPLE
-    .\compare_baselines.ps1 -Baseline baseline-2026-02-04-120000
-
-.EXAMPLE
-    .\compare_baselines.ps1 -Baseline baseline-2026-02-04-120000 -ExportJson results.json
+.PARAMETER FailOnRegression
+    Return non-zero exit code if one or more scenarios classify as fail.
 
 .EXAMPLE
-    .\compare_baselines.ps1 -Baseline baseline-2026-02-04-120000 -Threshold 5 -Quick
+    .\scripts\bench\compare_baselines.ps1 -Baseline "db-baseline-main"
 
-.NOTES
-    Requires:
-    - Rust and Cargo installed
-    - Criterion benchmark suite in ClassicLib-rs/ directory
-    - Optional: critcmp (cargo install critcmp) for enhanced comparison
+.EXAMPLE
+    .\scripts\bench\compare_baselines.ps1 -Baseline "db-baseline-main" -Mode thorough -Suite rust-db-baseline -ExportJson .\target\db-delta.json
 #>
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true, HelpMessage = "Baseline name to compare against")]
+    [Parameter(Mandatory = $true)]
     [string]$Baseline,
 
-    [Parameter(Mandatory = $false, HelpMessage = "Export results to JSON file")]
+    [Parameter()]
+    [ValidateSet('quick', 'thorough')]
+    [string]$Mode = 'quick',
+
+    [Parameter()]
+    [ValidateSet('all', 'rust-db-baseline')]
+    [string]$Suite = 'rust-db-baseline',
+
+    [Parameter()]
+    [double]$WarningThreshold = 5,
+
+    [Parameter()]
+    [double]$FailThreshold = 10,
+
+    [Parameter()]
     [string]$ExportJson,
 
-    [Parameter(Mandatory = $false, HelpMessage = "Percentage threshold for highlighting")]
-    [int]$Threshold = 10,
+    [Parameter()]
+    [string]$ScenarioFilter,
 
-    [Parameter(Mandatory = $false, HelpMessage = "Filter benchmarks by name pattern")]
-    [string]$BenchName,
+    [Parameter()]
+    [string]$BenchFilter,
 
-    [Parameter(Mandatory = $false, HelpMessage = "Use quick benchmark mode")]
-    [switch]$Quick
+    [Parameter()]
+    [switch]$NoRun,
+
+    [Parameter()]
+    [switch]$FailOnRegression
 )
 
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-# Colors for output
-$ColorReset = "`e[0m"
-$ColorRed = "`e[31m"
-$ColorGreen = "`e[32m"
-$ColorYellow = "`e[33m"
-$ColorCyan = "`e[36m"
-$ColorBold = "`e[1m"
-
-function Write-ColorLine {
-    param(
-        [string]$Text,
-        [string]$Color = $ColorReset
-    )
-    Write-Host "${Color}${Text}${ColorReset}"
+if ($WarningThreshold -lt 0 -or $FailThreshold -lt 0) {
+    Write-Error 'Threshold values must be non-negative.'
+    exit 1
 }
-
-function Test-CritcmpInstalled {
-    try {
-        $null = Get-Command critcmp -ErrorAction Stop
-        return $true
-    }
-    catch {
-        return $false
-    }
-}
-
-function Get-BaselinePath {
-    param([string]$BaselineName)
-
-    $criterionDir = Join-Path $PSScriptRoot "../../ClassicLib-rs/target/criterion"
-    $baselinePath = Join-Path $criterionDir $BaselineName
-
-    if (Test-Path $baselinePath) {
-        return $baselinePath
-    }
-
-    return $null
-}
-
-function Parse-PercentageChange {
-    param([string]$Text)
-
-    # Match patterns like "+5.2%", "-3.1%", "0.0%"
-    if ($Text -match '([+-]?\d+\.?\d*)%') {
-        return [double]$Matches[1]
-    }
-    return $null
-}
-
-function Format-ChangeText {
-    param(
-        [double]$Change,
-        [int]$Threshold
-    )
-
-    $absChange = [Math]::Abs($Change)
-    $sign = if ($Change -ge 0) { "+" } else { "" }
-
-    if ($Change -gt $Threshold) {
-        # Regression (slower)
-        return "${ColorRed}${sign}${Change:F1}% [REGRESSION]${ColorReset}"
-    }
-    elseif ($Change -lt - $Threshold) {
-        # Improvement (faster)
-        return "${ColorGreen}${sign}${Change:F1}% [IMPROVED]${ColorReset}"
-    }
-    else {
-        # Within threshold
-        return "${ColorYellow}${sign}${Change:F1}% (within threshold)${ColorReset}"
-    }
-}
-
-function Run-CritcmpComparison {
-    param(
-        [string]$Baseline,
-        [string]$BenchFilter,
-        [int]$Threshold,
-        [string]$ExportPath
-    )
-
-    Write-ColorLine "`nUsing critcmp for detailed comparison..." $ColorCyan
-
-    $critcmpArgs = @($Baseline)
-
-    if ($BenchFilter) {
-        $critcmpArgs += "--filter"
-        $critcmpArgs += $BenchFilter
-    }
-
-    Push-Location (Join-Path $PSScriptRoot "../../rust")
-    try {
-        $output = & critcmp @critcmpArgs 2>&1
-        $exitCode = $LASTEXITCODE
-
-        if ($exitCode -ne 0) {
-            Write-ColorLine "critcmp failed with exit code $exitCode" $ColorRed
-            Write-Host $output
-            return @()
-        }
-
-        # Parse and colorize critcmp output
-        $results = @()
-        foreach ($line in $output -split "`n") {
-            if ($line -match '^\s*(\S+)\s+(\d+\.?\d*\s*\w+)\s+(\d+\.?\d*\s*\w+)\s+([+-]?\d+\.?\d*)%') {
-                $benchName = $Matches[1]
-                $currentTime = $Matches[2]
-                $baselineTime = $Matches[3]
-                $change = [double]$Matches[4]
-
-                $results += @{
-                    Name          = $benchName
-                    Current       = $currentTime
-                    Baseline      = $baselineTime
-                    ChangePercent = $change
-                }
-
-                $changeText = Format-ChangeText -Change $change -Threshold $Threshold
-                Write-Host "  ${benchName}:"
-                Write-Host "    Current:  $currentTime"
-                Write-Host "    Baseline: $baselineTime"
-                Write-Host "    Change:   $changeText"
-                Write-Host ""
-            }
-            else {
-                # Pass through header lines, etc.
-                Write-Host $line
-            }
-        }
-
-        return $results
-    }
-    finally {
-        Pop-Location
-    }
-}
-
-function Run-CriterionComparison {
-    param(
-        [string]$Baseline,
-        [string]$BenchFilter,
-        [int]$Threshold,
-        [bool]$QuickMode
-    )
-
-    Write-ColorLine "`nRunning Criterion benchmarks with baseline comparison..." $ColorCyan
-    Write-ColorLine "This may take a while depending on benchmark count and mode." $ColorYellow
-
-    $env:BENCH_MODE = if ($QuickMode) { "quick" } else { "thorough" }
-
-    $cargoArgs = @("bench")
-
-    if ($BenchFilter) {
-        $cargoArgs += "--bench"
-        $cargoArgs += "performance_benchmarks"
-        $cargoArgs += "--"
-        $cargoArgs += $BenchFilter
-    }
-
-    $cargoArgs += "--"
-    $cargoArgs += "--baseline"
-    $cargoArgs += $Baseline
-
-    Push-Location (Join-Path $PSScriptRoot "../../rust")
-    try {
-        Write-Host "Running: cargo $($cargoArgs -join ' ')"
-        Write-Host ""
-
-        $output = & cargo @cargoArgs 2>&1 | Out-String
-        $exitCode = $LASTEXITCODE
-
-        Write-Host $output
-
-        if ($exitCode -ne 0) {
-            Write-ColorLine "`nBenchmark run failed with exit code $exitCode" $ColorRed
-            return @()
-        }
-
-        # Parse Criterion output for comparison results
-        $results = @()
-        $currentBench = $null
-
-        foreach ($line in $output -split "`n") {
-            # Match benchmark name
-            if ($line -match '^Benchmarking\s+(.+)$') {
-                $currentBench = $Matches[1].Trim()
-            }
-            # Match comparison line like "Performance has regressed."
-            # or "Performance has improved." or "No change in performance"
-            elseif ($line -match 'change:\s*\[([+-]?\d+\.?\d*)%\s+([+-]?\d+\.?\d*)%\]') {
-                $lowChange = [double]$Matches[1]
-                $highChange = [double]$Matches[2]
-                $avgChange = ($lowChange + $highChange) / 2
-
-                if ($currentBench) {
-                    $results += @{
-                        Name          = $currentBench
-                        ChangePercent = $avgChange
-                        ChangeLow     = $lowChange
-                        ChangeHigh    = $highChange
-                    }
-                }
-            }
-        }
-
-        return $results
-    }
-    finally {
-        Pop-Location
-        $env:BENCH_MODE = $null
-    }
-}
-
-function Export-ResultsToJson {
-    param(
-        [array]$Results,
-        [string]$Path,
-        [string]$Baseline,
-        [int]$Threshold
-    )
-
-    $export = @{
-        timestamp  = (Get-Date -Format "o")
-        baseline   = $Baseline
-        threshold  = $Threshold
-        benchmarks = $Results
-        summary    = @{
-            total        = $Results.Count
-            regressions  = ($Results | Where-Object { $_.ChangePercent -gt $Threshold }).Count
-            improvements = ($Results | Where-Object { $_.ChangePercent -lt - $Threshold }).Count
-            unchanged    = ($Results | Where-Object { [Math]::Abs($_.ChangePercent) -le $Threshold }).Count
-        }
-    }
-
-    $export | ConvertTo-Json -Depth 10 | Set-Content -Path $Path -Encoding UTF8
-    Write-ColorLine "`nResults exported to: $Path" $ColorGreen
-}
-
-# Main execution
-Write-ColorLine "Benchmark Comparison: current vs $Baseline" $ColorBold
-Write-ColorLine ("=" * 60) $ColorCyan
-
-# Verify baseline exists
-$baselinePath = Get-BaselinePath -BaselineName $Baseline
-if (-not $baselinePath) {
-    Write-ColorLine "Error: Baseline not found: $Baseline" $ColorRed
-    Write-Host ""
-    Write-Host "Available baselines:"
-
-    $criterionDir = Join-Path $PSScriptRoot "../../ClassicLib-rs/target/criterion"
-    if (Test-Path $criterionDir) {
-        Get-ChildItem $criterionDir -Directory | Where-Object { $_.Name -match '^baseline-' } | ForEach-Object {
-            Write-Host "  $($_.Name)"
-        }
-    }
-    else {
-        Write-Host "  (no criterion directory found)"
-    }
-
+if ($FailThreshold -lt $WarningThreshold) {
+    Write-Error 'FailThreshold must be greater than or equal to WarningThreshold.'
     exit 1
 }
 
-Write-ColorLine "Baseline found: $baselinePath" $ColorGreen
-Write-ColorLine "Threshold: ${Threshold}% for regression/improvement marking" $ColorYellow
-Write-Host ""
+function Get-ScenarioId {
+    param(
+        [string]$CriterionDir,
+        [string]$NewEstimatesPath
+    )
+
+    $newDir = Split-Path $NewEstimatesPath -Parent
+    $scenarioDir = Split-Path $newDir -Parent
+    $relative = [System.IO.Path]::GetRelativePath($CriterionDir, $scenarioDir)
+    return $relative -replace '\\', '/'
+}
+
+function Get-MeanNs {
+    param($EstimateObject)
+    return [double]$EstimateObject.mean.point_estimate
+}
+
+function Get-DeltaClassification {
+    param(
+        [double]$DeltaPercent,
+        [double]$WarningThreshold,
+        [double]$FailThreshold
+    )
+
+    if ($DeltaPercent -gt $FailThreshold) {
+        return 'fail'
+    }
+    if ($DeltaPercent -gt $WarningThreshold) {
+        return 'warning'
+    }
+    if ($DeltaPercent -lt - $WarningThreshold) {
+        return 'improved'
+    }
+    return 'within_threshold'
+}
+
+function Format-Ns {
+    param([double]$Value)
+    if ($Value -lt 1000) { return ('{0:N2} ns' -f $Value) }
+    if ($Value -lt 1000000) { return ('{0:N2} us' -f ($Value / 1000.0)) }
+    if ($Value -lt 1000000000) { return ('{0:N2} ms' -f ($Value / 1000000.0)) }
+    return ('{0:N2} s' -f ($Value / 1000000000.0))
+}
+
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "../..")
+$rustDir = Join-Path $repoRoot "ClassicLib-rs"
+$criterionDir = Join-Path $rustDir "target/criterion"
+$runnerScript = Join-Path $PSScriptRoot "run_benchmarks.ps1"
+
+if (-not $NoRun) {
+    Write-Host "Running candidate benchmarks before comparison..." -ForegroundColor Cyan
+    if ($BenchFilter) {
+        & $runnerScript -Mode $Mode -Compare -BaselineName $Baseline -Suite $Suite -Filter $BenchFilter
+    }
+    else {
+        & $runnerScript -Mode $Mode -Compare -BaselineName $Baseline -Suite $Suite
+    }
+    if ($LASTEXITCODE -ne 0) {
+        Write-Error "Candidate benchmark run failed with exit code $LASTEXITCODE."
+        exit $LASTEXITCODE
+    }
+}
+
+if (-not (Test-Path $criterionDir)) {
+    Write-Error "Criterion directory not found: $criterionDir"
+    exit 1
+}
+
+$newEstimateFiles = Get-ChildItem -Path $criterionDir -Recurse -Filter estimates.json |
+Where-Object { $_.FullName -like "*\new\estimates.json" }
+
+if (-not $newEstimateFiles) {
+    Write-Error "No candidate estimates found under $criterionDir"
+    exit 1
+}
 
 $results = @()
+foreach ($newFile in $newEstimateFiles) {
+    $scenarioId = Get-ScenarioId -CriterionDir $criterionDir -NewEstimatesPath $newFile.FullName
 
-# Use critcmp if available, otherwise fall back to Criterion's native comparison
-if (Test-CritcmpInstalled) {
-    $results = Run-CritcmpComparison -Baseline $Baseline -BenchFilter $BenchName -Threshold $Threshold -ExportPath $ExportJson
-}
-else {
-    Write-ColorLine "Note: critcmp not installed. Using Criterion's native comparison." $ColorYellow
-    Write-ColorLine "For enhanced comparison, install: cargo install critcmp" $ColorYellow
-    Write-Host ""
-
-    $results = Run-CriterionComparison -Baseline $Baseline -BenchFilter $BenchName -Threshold $Threshold -QuickMode $Quick
-}
-
-# Summary
-if ($results.Count -gt 0) {
-    Write-Host ""
-    Write-ColorLine ("=" * 60) $ColorCyan
-    Write-ColorLine "Summary" $ColorBold
-
-    $regressions = $results | Where-Object { $_.ChangePercent -gt $Threshold }
-    $improvements = $results | Where-Object { $_.ChangePercent -lt - $Threshold }
-    $unchanged = $results | Where-Object { [Math]::Abs($_.ChangePercent) -le $Threshold }
-
-    Write-Host "  Total benchmarks: $($results.Count)"
-
-    if ($regressions.Count -gt 0) {
-        Write-ColorLine "  Regressions:      $($regressions.Count)" $ColorRed
-    }
-    else {
-        Write-Host "  Regressions:      0"
+    if ($ScenarioFilter -and ($scenarioId -notmatch $ScenarioFilter)) {
+        continue
     }
 
-    if ($improvements.Count -gt 0) {
-        Write-ColorLine "  Improvements:     $($improvements.Count)" $ColorGreen
-    }
-    else {
-        Write-Host "  Improvements:     0"
+    $scenarioDir = Split-Path (Split-Path $newFile.FullName -Parent) -Parent
+    $baselineFile = Join-Path $scenarioDir "$Baseline/estimates.json"
+    if (-not (Test-Path $baselineFile)) {
+        continue
     }
 
-    Write-Host "  Unchanged:        $($unchanged.Count)"
+    $currentEstimate = Get-Content -Path $newFile.FullName -Raw | ConvertFrom-Json
+    $baselineEstimate = Get-Content -Path $baselineFile -Raw | ConvertFrom-Json
 
-    # Export to JSON if requested
-    if ($ExportJson) {
-        Export-ResultsToJson -Results $results -Path $ExportJson -Baseline $Baseline -Threshold $Threshold
+    $currentMean = Get-MeanNs -EstimateObject $currentEstimate
+    $baselineMean = Get-MeanNs -EstimateObject $baselineEstimate
+    if ($baselineMean -eq 0) {
+        continue
+    }
+
+    $deltaNs = $currentMean - $baselineMean
+    $deltaPercent = ($deltaNs / $baselineMean) * 100.0
+    $classification = Get-DeltaClassification -DeltaPercent $deltaPercent -WarningThreshold $WarningThreshold -FailThreshold $FailThreshold
+
+    $results += [PSCustomObject]@{
+        scenario_id      = $scenarioId
+        baseline_mean_ns = $baselineMean
+        current_mean_ns  = $currentMean
+        delta_ns         = $deltaNs
+        delta_percent    = $deltaPercent
+        classification   = $classification
     }
 }
-else {
-    Write-ColorLine "`nNo benchmark comparison results available." $ColorYellow
-    Write-Host "Make sure benchmarks have been run with the specified baseline."
+
+$results = $results | Sort-Object scenario_id
+if (-not $results -or $results.Count -eq 0) {
+    Write-Error "No comparable scenarios found for baseline '$Baseline'."
+    exit 1
 }
+
+Write-Host ""
+Write-Host "Benchmark Comparison: baseline='$Baseline' mode='$Mode' suite='$Suite'" -ForegroundColor Cyan
+Write-Host "Thresholds: warning>${WarningThreshold}% fail>${FailThreshold}%" -ForegroundColor Yellow
+Write-Host ("=" * 100) -ForegroundColor DarkGray
+
+foreach ($row in $results) {
+    $deltaSign = if ($row.delta_percent -ge 0) { "+" } else { "" }
+    $deltaText = "{0}{1:N2}%" -f $deltaSign, $row.delta_percent
+
+    $color = switch ($row.classification) {
+        'fail' { 'Red' }
+        'warning' { 'Yellow' }
+        'improved' { 'Green' }
+        default { 'Gray' }
+    }
+
+    Write-Host ("[{0}] {1}" -f $row.classification.ToUpper(), $row.scenario_id) -ForegroundColor $color
+    Write-Host ("  baseline={0} current={1} delta={2} ({3})" -f (Format-Ns $row.baseline_mean_ns), (Format-Ns $row.current_mean_ns), (Format-Ns $row.delta_ns), $deltaText)
+}
+
+$failCount = ($results | Where-Object { $_.classification -eq 'fail' }).Count
+$warnCount = ($results | Where-Object { $_.classification -eq 'warning' }).Count
+$improvedCount = ($results | Where-Object { $_.classification -eq 'improved' }).Count
+$stableCount = ($results | Where-Object { $_.classification -eq 'within_threshold' }).Count
+
+Write-Host ("-" * 100) -ForegroundColor DarkGray
+Write-Host "Summary: total=$($results.Count) fail=$failCount warning=$warnCount improved=$improvedCount within_threshold=$stableCount"
+
+if ($ExportJson) {
+    $report = [PSCustomObject]@{
+        generated_at_utc  = (Get-Date).ToUniversalTime().ToString("o")
+        baseline_name     = $Baseline
+        candidate_name    = 'new'
+        bench_mode        = $Mode
+        suite             = $Suite
+        bench_filter      = $BenchFilter
+        warning_threshold = $WarningThreshold
+        fail_threshold    = $FailThreshold
+        scenarios         = $results
+    }
+    $report | ConvertTo-Json -Depth 10 | Set-Content -Path $ExportJson -Encoding UTF8
+    Write-Host "Exported comparison JSON: $ExportJson" -ForegroundColor Green
+}
+
+if ($FailOnRegression -and $failCount -gt 0) {
+    exit 2
+}
+
+exit 0

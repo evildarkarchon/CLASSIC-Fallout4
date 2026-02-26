@@ -137,6 +137,9 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 # Run all benchmarks in thorough mode for baselines
 .\scripts\bench\run_benchmarks.ps1 -Mode thorough
 
+# Run Rust DB baseline suite only (database + scanlog FormID resolution)
+.\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode quick
+
 # Run specific crate benchmarks
 .\scripts\bench\run_benchmarks.ps1 -Crate classic-yaml-core
 
@@ -152,6 +155,9 @@ All benchmarks support two modes controlled by the `BENCH_MODE` environment vari
 
 # Save baseline with custom name (recommended)
 .\scripts\bench\run_benchmarks.ps1 -Mode thorough -SaveBaseline -BaselineName "pre-optimization"
+
+# Save Rust DB baseline suite with canonical scenario filter
+.\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -Filter "db_|scanlog_formid_resolution" -SaveBaseline -BaselineName "db-baseline-main"
 ```
 
 Baseline location: `ClassicLib-rs/target/criterion/{baseline-name}/`
@@ -217,11 +223,14 @@ After implementing optimizations, verify improvements without introducing regres
 # Compare current performance against saved baseline
 .\scripts\bench\compare_baselines.ps1 -Baseline "pre-optimization"
 
-# Compare with custom threshold (highlight >5% changes)
-.\scripts\bench\compare_baselines.ps1 -Baseline "pre-optimization" -Threshold 5
+# Compare with custom thresholds
+.\scripts\bench\compare_baselines.ps1 -Baseline "pre-optimization" -WarningThreshold 5 -FailThreshold 10
 
 # Export comparison to JSON
 .\scripts\bench\compare_baselines.ps1 -Baseline "pre-optimization" -ExportJson results.json
+
+# Rust DB baseline-focused comparison (absolute + relative per-scenario deltas)
+.\scripts\bench\compare_baselines.ps1 -Suite rust-db-baseline -Baseline "db-baseline-main" -BenchFilter "db_|scanlog_formid_resolution" -ScenarioFilter "^(db_|scanlog_formid_resolution)" -ExportJson db-delta-report.json
 ```
 
 ### Interpreting Results
@@ -260,6 +269,7 @@ Pull requests automatically run benchmarks and compare against the `main` baseli
 | Save baseline | `.\scripts\bench\run_benchmarks.ps1 -SaveBaseline -BaselineName "name"` |
 | Compare | `.\scripts\bench\compare_baselines.ps1 -Baseline "name"` |
 | List benchmarks | `.\scripts\bench\run_benchmarks.ps1 -List` |
+| DB baseline suite | `.\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Filter "db_|scanlog_formid_resolution"` |
 
 ### Environment Variables
 

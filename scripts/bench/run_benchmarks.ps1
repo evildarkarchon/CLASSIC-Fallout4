@@ -1,73 +1,50 @@
 <#
 .SYNOPSIS
-    Runs Criterion benchmarks with configurable modes and baseline management.
+    Runs Criterion benchmarks with repeatable suite targeting.
 
 .DESCRIPTION
-    This script provides a convenient interface for running Cargo benchmarks
-    with environment-controlled mode switching and baseline comparison support.
+    Wrapper around `cargo bench` with consistent mode handling and baseline options.
+    Supports running either all workspace benchmarks or the Rust DB baseline suite.
 
     Modes:
-    - quick (default): Fast iteration during development (50 samples, 3s measurement)
-    - thorough: Comprehensive measurement for baselines (200 samples, 10s measurement)
+    - quick (default): sample_size=50, measurement_time=3s
+    - thorough: sample_size=200, measurement_time=10s
 
 .PARAMETER Mode
-    Benchmark mode: 'quick' (default) or 'thorough'.
-    Sets the BENCH_MODE environment variable.
+    Benchmark mode: quick (default) or thorough.
 
 .PARAMETER SaveBaseline
-    Save benchmark results as a baseline for future comparison.
-    Uses timestamp-based naming by default.
+    Save benchmark outputs as a named Criterion baseline.
 
 .PARAMETER BaselineName
-    Custom name for the baseline. If not specified with -SaveBaseline,
-    uses format: baseline-yyyy-MM-dd-HHmmss
+    Baseline name used with -SaveBaseline or -Compare.
+    If omitted with -SaveBaseline, a timestamped name is generated.
 
 .PARAMETER Compare
-    Compare current results against a named baseline.
-    Requires -BaselineName to specify which baseline to compare against.
+    Run benchmarks and compare against an existing Criterion baseline.
+
+.PARAMETER Suite
+    Benchmark suite to run:
+    - all (default): cargo bench across the workspace
+    - rust-db-baseline: targeted DB baseline benches only
 
 .PARAMETER Crate
-    Run benchmarks for a specific crate only.
-    Example: -Crate classic-yaml-core
+    Optional crate override. When set, runs only that crate's benchmarks.
 
 .PARAMETER Filter
-    Filter benchmarks by name pattern.
-    Example: -Filter "parse_yaml"
+    Optional benchmark filter passed after `--`.
 
 .PARAMETER List
-    List available benchmarks without running them.
+    List benchmarks instead of running measurements.
 
 .EXAMPLE
-    .\run_benchmarks.ps1
-    # Runs all benchmarks in quick mode
+    .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode quick
 
 .EXAMPLE
-    .\run_benchmarks.ps1 -Mode thorough
-    # Runs all benchmarks in thorough mode (more samples, longer measurement)
+    .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -SaveBaseline -BaselineName "db-baseline-main"
 
 .EXAMPLE
-    .\run_benchmarks.ps1 -SaveBaseline
-    # Runs benchmarks and saves baseline with timestamp name
-
-.EXAMPLE
-    .\run_benchmarks.ps1 -SaveBaseline -BaselineName "pre-optimization"
-    # Runs benchmarks and saves with custom baseline name
-
-.EXAMPLE
-    .\run_benchmarks.ps1 -Compare -BaselineName "pre-optimization"
-    # Runs benchmarks and compares against the named baseline
-
-.EXAMPLE
-    .\run_benchmarks.ps1 -Mode thorough -SaveBaseline -Crate classic-yaml-core
-    # Thorough benchmark of specific crate, saving baseline
-
-.EXAMPLE
-    .\run_benchmarks.ps1 -List
-    # Lists available benchmarks without running them
-
-.NOTES
-    This script should be run from the project root directory.
-    Benchmark results are stored in ClassicLib-rs/target/criterion/ (gitignored).
+    .\scripts\bench\run_benchmarks.ps1 -Suite rust-db-baseline -Mode thorough -Compare -BaselineName "db-baseline-main"
 #>
 
 [CmdletBinding()]
@@ -86,6 +63,10 @@ param(
     [switch]$Compare,
 
     [Parameter()]
+    [ValidateSet('all', 'rust-db-baseline')]
+    [string]$Suite = 'all',
+
+    [Parameter()]
     [string]$Crate,
 
     [Parameter()]
@@ -95,131 +76,164 @@ param(
     [switch]$List
 )
 
-# Ensure we're in the project root or can find the rust directory
-$rustDir = $null
-$searchPaths = @(
+$ErrorActionPreference = 'Stop'
+
+if ($SaveBaseline -and $Compare) {
+    Write-Error 'Use either -SaveBaseline or -Compare, not both.'
+    exit 1
+}
+
+if ($Compare -and [string]::IsNullOrWhiteSpace($BaselineName)) {
+    Write-Error '-Compare requires -BaselineName.'
+    exit 1
+}
+
+if ($SaveBaseline -and [string]::IsNullOrWhiteSpace($BaselineName)) {
+    $BaselineName = "baseline-$(Get-Date -Format 'yyyy-MM-dd-HHmmss')"
+}
+
+# Resolve ClassicLib-rs from script location first, then fallback to CWD.
+$rustDirCandidates = @(
     (Join-Path $PSScriptRoot "../../ClassicLib-rs"),
     (Join-Path (Get-Location) "ClassicLib-rs"),
     (Get-Location)
 )
 
-foreach ($path in $searchPaths) {
-    $testPath = Resolve-Path $path -ErrorAction SilentlyContinue
-    if ($testPath -and (Test-Path (Join-Path $testPath "Cargo.toml"))) {
-        $rustDir = $testPath
+$rustDir = $null
+foreach ($candidate in $rustDirCandidates) {
+    $resolved = Resolve-Path $candidate -ErrorAction SilentlyContinue
+    if ($resolved -and (Test-Path (Join-Path $resolved "Cargo.toml"))) {
+        $rustDir = $resolved.Path
         break
     }
 }
 
 if (-not $rustDir) {
-    Write-Error "Could not find ClassicLib-rs/ directory with Cargo.toml. Run this script from the project root."
+    Write-Error "Could not locate ClassicLib-rs/Cargo.toml."
     exit 1
+}
+
+function Build-BenchArgs {
+    param(
+        [string[]]$TargetArgs
+    )
+
+    $commandArgs = @('bench')
+    if ($TargetArgs -and $TargetArgs.Count -gt 0) {
+        $commandArgs += $TargetArgs
+    }
+
+    if ($SaveBaseline) {
+        $commandArgs += @('--', '--save-baseline', $BaselineName)
+    }
+    elseif ($Compare) {
+        $commandArgs += @('--', '--baseline', $BaselineName)
+    }
+
+    if ($Filter) {
+        if ($commandArgs -notcontains '--') {
+            $commandArgs += '--'
+        }
+        $commandArgs += $Filter
+    }
+
+    if ($List) {
+        if ($commandArgs -notcontains '--') {
+            $commandArgs += '--'
+        }
+        $commandArgs += '--list'
+    }
+
+    return $commandArgs
+}
+
+$targets = @()
+if ($Crate) {
+    $targets += @{
+        Label = "crate:$Crate"
+        Args  = @('-p', $Crate)
+    }
+}
+elseif ($Suite -eq 'rust-db-baseline') {
+    $targets += @{
+        Label = 'classic-database-core/database_benchmarks'
+        Args  = @('-p', 'classic-database-core', '--bench', 'database_benchmarks')
+    }
+    $targets += @{
+        Label = 'classic-scanlog-core/scanlog_benchmarks'
+        Args  = @('-p', 'classic-scanlog-core', '--bench', 'scanlog_benchmarks')
+    }
+}
+else {
+    $targets += @{
+        Label = 'workspace-all'
+        Args  = @()
+    }
 }
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host " CLASSIC Benchmark Runner" -ForegroundColor Cyan
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
-
-# Set BENCH_MODE environment variable
-$env:BENCH_MODE = $Mode
 Write-Host "[Config] Mode: $Mode" -ForegroundColor Yellow
-
-if ($Mode -eq 'quick') {
-    Write-Host "         Sample size: 50, Measurement time: 3s" -ForegroundColor DarkGray
-} else {
-    Write-Host "         Sample size: 200, Measurement time: 10s" -ForegroundColor DarkGray
-}
-
-# Build the cargo bench command
-$benchArgs = @("bench")
-
-# Handle baseline options
-if ($SaveBaseline) {
-    if (-not $BaselineName) {
-        $BaselineName = "baseline-$(Get-Date -Format 'yyyy-MM-dd-HHmmss')"
-    }
-    $benchArgs += @("--", "--save-baseline", $BaselineName)
-    Write-Host "[Config] Saving baseline: $BaselineName" -ForegroundColor Yellow
-}
-elseif ($Compare) {
-    if (-not $BaselineName) {
-        Write-Error "-Compare requires -BaselineName to specify which baseline to compare against."
-        exit 1
-    }
-    $benchArgs += @("--", "--baseline", $BaselineName)
-    Write-Host "[Config] Comparing against baseline: $BaselineName" -ForegroundColor Yellow
-}
-
-# Handle crate-specific benchmarks
+Write-Host "[Config] Suite: $Suite" -ForegroundColor Yellow
 if ($Crate) {
-    # Insert -p before the -- separator
-    $dashIndex = [Array]::IndexOf($benchArgs, "--")
-    if ($dashIndex -ge 0) {
-        $benchArgs = $benchArgs[0..($dashIndex-1)] + @("-p", $Crate) + $benchArgs[$dashIndex..($benchArgs.Length-1)]
-    } else {
-        $benchArgs += @("-p", $Crate)
-    }
-    Write-Host "[Config] Crate: $Crate" -ForegroundColor Yellow
+    Write-Host "[Config] Crate override: $Crate" -ForegroundColor Yellow
 }
-
-# Handle filter
 if ($Filter) {
-    # Filter goes after -- separator
-    if ($benchArgs -notcontains "--") {
-        $benchArgs += "--"
-    }
-    $benchArgs += $Filter
     Write-Host "[Config] Filter: $Filter" -ForegroundColor Yellow
 }
-
-# Handle list mode
-if ($List) {
-    if ($benchArgs -notcontains "--") {
-        $benchArgs += "--"
-    }
-    $benchArgs += "--list"
-    Write-Host "[Config] Listing benchmarks only" -ForegroundColor Yellow
+if ($SaveBaseline) {
+    Write-Host "[Config] Save baseline: $BaselineName" -ForegroundColor Yellow
 }
-
-Write-Host ""
-Write-Host "[Command] cargo $($benchArgs -join ' ')" -ForegroundColor DarkGray
+if ($Compare) {
+    Write-Host "[Config] Compare baseline: $BaselineName" -ForegroundColor Yellow
+}
+if ($List) {
+    Write-Host "[Config] List only: enabled" -ForegroundColor Yellow
+}
 Write-Host "[Directory] $rustDir" -ForegroundColor DarkGray
 Write-Host ""
-Write-Host "----------------------------------------" -ForegroundColor Cyan
-Write-Host ""
 
-# Run cargo bench
-$startTime = Get-Date
+$env:BENCH_MODE = $Mode
+$start = Get-Date
+$exitCode = 0
+
 Push-Location $rustDir
 try {
-    & cargo $benchArgs
-    $exitCode = $LASTEXITCODE
+    foreach ($target in $targets) {
+        $benchArgs = Build-BenchArgs -TargetArgs $target.Args
+        Write-Host "----------------------------------------" -ForegroundColor Cyan
+        Write-Host "[Target] $($target.Label)" -ForegroundColor Cyan
+        Write-Host "[Command] cargo $($benchArgs -join ' ')" -ForegroundColor DarkGray
+        Write-Host ""
+
+        & cargo @benchArgs
+        if ($LASTEXITCODE -ne 0) {
+            $exitCode = $LASTEXITCODE
+            break
+        }
+    }
 }
 finally {
     Pop-Location
+    $env:BENCH_MODE = $null
 }
 
-$endTime = Get-Date
-$duration = $endTime - $startTime
-
+$duration = (Get-Date) - $start
 Write-Host ""
 Write-Host "----------------------------------------" -ForegroundColor Cyan
-Write-Host ""
-
 if ($exitCode -eq 0) {
     Write-Host "[Done] Benchmarks completed successfully" -ForegroundColor Green
-} else {
-    Write-Host "[Error] Benchmarks failed with exit code $exitCode" -ForegroundColor Red
+    if ($SaveBaseline) {
+        Write-Host "[Baseline] Saved as: $BaselineName" -ForegroundColor Green
+        Write-Host "[Location] $rustDir/target/criterion/$BaselineName" -ForegroundColor DarkGray
+    }
 }
-
+else {
+    Write-Host "[Error] Benchmarks failed (exit code $exitCode)" -ForegroundColor Red
+}
 Write-Host "[Duration] $($duration.ToString('hh\:mm\:ss\.fff'))" -ForegroundColor DarkGray
-
-if ($SaveBaseline) {
-    Write-Host "[Baseline] Saved as: $BaselineName" -ForegroundColor Green
-    Write-Host "[Location] $rustDir/target/criterion/$BaselineName" -ForegroundColor DarkGray
-}
-
 Write-Host ""
 
 exit $exitCode
