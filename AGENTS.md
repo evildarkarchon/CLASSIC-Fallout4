@@ -257,6 +257,13 @@ Checklist:
 
 Release gate policy:
 - Do not tag a release unless Tier-1 parity gate passes and `index.d.ts` freshness gate passes in CI.
+GitHub Actions on `windows-latest` with parallel jobs:
+1. **Format**: ruff format + rustfmt (non-blocking)
+2. **Lint**: ruff check + clippy + vulture (blocking)
+3. **Build Rust** -> **Build Python Bindings** (maturin) -> **Python Tests** (unit, integration, rust-integration)
+4. **Rust Tests** (independent, parallel with Python pipeline)
+5. **Node.js Bindings** (Bun): build NAPI-RS binary + run Bun tests (independent)
+6. **Benchmarks** (`benchmarks.yml`): separate workflow for performance tracking
 
 ## Cursor Cloud specific instructions
 
