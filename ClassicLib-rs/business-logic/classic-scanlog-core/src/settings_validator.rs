@@ -15,6 +15,8 @@ use crate::error::Result;
 use crate::report::ReportFragment;
 use std::collections::{HashMap, HashSet};
 
+const DEFAULT_DISPLAY_SECTION: &str = "[Compatibility]";
+
 /// Settings validator driven by per-crashgen registry entries.
 ///
 /// Constructed with a pre-resolved `CrashgenEntry` (looked up from the
@@ -190,9 +192,9 @@ impl SettingsValidator {
         if let Some(f4ee) = crashgen.get("F4EE") {
             let f4ee_enabled = f4ee.parse::<bool>().unwrap_or(false);
             let display_section = if self.entry.display_section.is_empty() {
-                "[Compatibility]".to_string()
+                DEFAULT_DISPLAY_SECTION
             } else {
-                self.entry.display_section.clone()
+                self.entry.display_section.as_str()
             };
 
             if !f4ee_enabled && xse_modules.contains("f4ee.dll") {
