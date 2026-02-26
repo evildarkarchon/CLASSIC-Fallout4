@@ -304,7 +304,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def main() -> int:
     """CLI entrypoint."""
-    parser = argparse.ArgumentParser(description="Generate Phase 0 wave/subwave manifest from handoff_map.md.")
+    parser = argparse.ArgumentParser(description="Generate wave/subwave manifest from handoff_map.md.")
     parser.add_argument(
         "--repo-root",
         default=str(Path(__file__).resolve().parents[2]),
@@ -312,12 +312,12 @@ def main() -> int:
     )
     parser.add_argument(
         "--handoff-map",
-        default="docs/implementation/node_api_parity/phase1/handoff_map.md",
+        default="docs/implementation/node_api_parity/baseline/handoff_map.md",
         help="Path to handoff_map.md relative to repo root.",
     )
     parser.add_argument(
         "--output",
-        default="docs/implementation/node_api_parity/phase5/tier2_wave_manifest.json",
+        default="docs/implementation/node_api_parity/governance/tier2_wave_manifest.json",
         help="Output manifest path relative to repo root.",
     )
     args = parser.parse_args()
@@ -336,10 +336,10 @@ def main() -> int:
 
     print(f"- {output_path}")
     if validation["locked"]:
-        print("Phase 0 baseline lock passed (315-item baseline and module counts verified).")
+        print("Baseline lock passed (315-item baseline and module counts verified).")
         return 0
 
-    print("Phase 0 baseline lock FAILED:")
+    print("Baseline lock FAILED:")
     for error in validation["errors"]:
         print(f"- {error}")
     return 1

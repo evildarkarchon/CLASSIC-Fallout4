@@ -570,7 +570,7 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def main() -> int:
     """CLI entrypoint."""
-    parser = argparse.ArgumentParser(description="Generate Phase 1 Rust/Node API surfaces and parity diff artifacts.")
+    parser = argparse.ArgumentParser(description="Generate Rust/Node API surfaces and parity diff artifacts.")
     parser.add_argument(
         "--repo-root",
         default=str(Path(__file__).resolve().parents[2]),
@@ -578,7 +578,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--contract",
-        default="docs/implementation/node_api_parity/phase1/parity_contract.json",
+        default="docs/implementation/node_api_parity/baseline/parity_contract.json",
         help="Path to parity contract JSON, relative to repo root.",
     )
     parser.add_argument(
@@ -588,7 +588,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--output-dir",
-        default="docs/implementation/node_api_parity/phase1",
+        default="docs/implementation/node_api_parity/baseline",
         help="Directory for generated output files, relative to repo root.",
     )
     args = parser.parse_args()

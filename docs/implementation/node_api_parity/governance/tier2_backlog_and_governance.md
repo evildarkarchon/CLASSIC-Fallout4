@@ -1,22 +1,21 @@
-# Node Bindings Tier-2 Backlog And Governance (Phase 5)
+# Node Bindings Tier-2 Backlog And Governance
 
 ## Status Baseline
 
-Source baseline: `docs/implementation/node_api_parity/phase1/parity_diff_report.md` and `docs/implementation/node_api_parity/phase1/handoff_map.md`.
+Source baseline: `parity_diff_report.md` and `handoff_map.md`.
 
-- Tier-1 contract rows: `35`
+- Last refreshed from baseline artifacts: `2026-02-26T00:44:49.305404+00:00`
+- Tier-1 contract rows: `262`
 - Tier-1 drift: `0` (all matched)
-- Deferred Tier-2 gaps: `315`
+- Deferred Tier-2 gaps: `83`
 
-Phase 0 setup artifacts:
+Wave-planning setup artifacts:
 
-- Locked wave/subwave manifest: `docs/implementation/node_api_parity/phase5/tier2_wave_manifest.json`
-- Per-wave acceptance template: `docs/implementation/node_api_parity/phase5/per_wave_acceptance_template.md`
-- Gate contract baseline: `docs/implementation/node_api_parity/phase5/phase0_gate_contract_baseline.md`
+- Locked wave/subwave manifest: `tier2_wave_manifest.json`
+- Per-wave acceptance template: `per_wave_acceptance_template.md`
+- Gate contract baseline: `gate_contract_baseline.md`
 
-Manifest regeneration command:
-
-- `python tools/node_api_parity/generate_phase0_wave_manifest.py --repo-root .`
+Manifest regeneration scripts are maintained in `tools/node_api_parity/`.
 
 Tier-2 remains intentionally deferred so we can preserve guaranteed parity for high-value workflow APIs while avoiding churn on low-level or internal-style surfaces.
 
@@ -24,17 +23,17 @@ Tier-2 remains intentionally deferred so we can preserve guaranteed parity for h
 
 The complete, machine-readable backlog is tracked in:
 
-- `docs/implementation/node_api_parity/phase1/parity_diff_report.json`
-- `docs/implementation/node_api_parity/phase1/handoff_map.md`
+- `parity_diff_report.json`
+- `handoff_map.md`
 
 Working summary by owner module:
 
 | Owner Module | Tier-2 Gap Count | Deferred Rationale | Representative Deferred APIs |
 |---|---:|---|---|
-| `scanlog` | 72 | Advanced parser/scanner internals and helper types are not required for current cross-language app workflows. | `StreamingLogParser`, `ReportGenerator`, `PatternMatcher`, `detect_mods_batch` |
-| `config` | 58 | Low-level YAML/settings/cache internals are intentionally not part of the guaranteed Tier-1 workflow surface. | `ConfigError`, `PathConfig`, `yamlParse`, `loadSettingsAsync` |
-| `version_registry` | 43 | Extended matching/tuning internals are stable in Rust but not required for immediate Node workflow parity. | `VersionMatcher`, `AddressLibraryConfig`, `UnknownVersionStrategy`, `get_version_registry` |
-| `aux` | 142 | Utility-heavy and integration-adjacent exports are broad and currently outside Tier-1 guarantees. | `GithubClient`, `JsFileIO`, `runGameChecks`, `validateUrl` |
+| `scanlog` | 70 | Advanced parser/scanner internals and helper types are not required for current cross-language app workflows. | `StreamingLogParser`, `ReportGenerator`, `PatternMatcher`, `detect_mods_batch` |
+| `config` | 13 | Remaining low-level YAML/settings internals are intentionally outside the guaranteed Tier-1 workflow surface. | `ConfigError`, `CrashgenEntryRaw`, `detectConfigDuplicates`, `needsPathDetection` |
+| `version_registry` | 0 | No deferred Tier-2 gaps currently. | `-` |
+| `aux` | 0 | No deferred Tier-2 gaps currently. | `-` |
 
 ## Tier-2 To Tier-1 Promotion Criteria
 
@@ -44,7 +43,7 @@ An API can be promoted only when all criteria below are met:
 2. **Rust stability**: Rust API shape is expected to remain stable for at least one release cycle.
 3. **Node design clarity**: Node naming/signature is finalized and reviewed for consistency with existing exports.
 4. **Typing coverage**: `index.d.ts` declarations are generated and pass freshness checks.
-5. **Parity contract update**: API is added to `docs/implementation/node_api_parity/phase1/parity_contract.json` with owner and expected signature metadata.
+5. **Parity contract update**: API is added to `parity_contract.json` with owner and expected signature metadata.
 6. **Verification coverage**: Tier-1 parity gate and runtime tests (`bun` + `node`) include the new surface.
 
 Promotion implementation requirements:

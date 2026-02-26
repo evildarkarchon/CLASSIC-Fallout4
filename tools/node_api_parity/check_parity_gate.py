@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the Phase 2 Tier-1 Node parity gate."""
+"""Run the Tier-1 Node parity gate."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from generate_phase1_baseline import (
+from generate_baseline import (
     generate_diff_report,
     parse_node_surface,
     parse_rust_surface,
@@ -70,7 +70,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--contract",
-        default="docs/implementation/node_api_parity/phase1/parity_contract.json",
+        default="docs/implementation/node_api_parity/baseline/parity_contract.json",
         help="Path to parity contract JSON, relative to repo root.",
     )
     parser.add_argument(

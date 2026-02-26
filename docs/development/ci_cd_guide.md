@@ -256,8 +256,8 @@ bun run test:node
 ```
 
 If the change promotes deferred APIs to Tier-1, also update:
-- `docs/implementation/node_api_parity/phase1/parity_contract.json`
-- `docs/implementation/node_api_parity/phase5/tier2_backlog_and_governance.md`
+- `docs/implementation/node_api_parity/baseline/parity_contract.json`
+- `docs/implementation/node_api_parity/governance/tier2_backlog_and_governance.md`
 
 Release policy: do not cut/tag a release if Tier-1 parity or `index.d.ts` freshness gates are failing in `ci-typescript.yml`.
 

@@ -2,9 +2,14 @@ import { describe, test, expect } from "bun:test";
 import { readFileSync } from "fs";
 import { join } from "path";
 import {
+  CRASH_AUTOSCAN_PATTERN,
+  calculateTextSimilarity,
+  checkDriveExists,
   createAnalysisConfigFromYamlContent,
   getAllVersionsForGame,
   getAllExeHashes,
+  getAllGameIds,
+  getGameName,
   getAllScriptHashes,
   matchVersion,
   getUnknownVersionHandling,
@@ -78,6 +83,25 @@ describe("Tier-1 drift regression pack", () => {
     expect(vrOnly).toHaveLength(1);
     expect(exeHashesDefault).toEqual(exeHashesNamedDefault);
     expect(scriptHashesDefault).toEqual(scriptHashesNamedDefault);
+  });
+
+  test("phase4c aux residual exports keep stable behavior", () => {
+    expect(CRASH_AUTOSCAN_PATTERN).toContain("AUTOSCAN");
+
+    const identicalRatio = calculateTextSimilarity("a\nb\nc", "a\nb\nc");
+    const differentRatio = calculateTextSimilarity("a\nb\nc", "x\ny\nz");
+    expect(identicalRatio).toBe(1);
+    expect(differentRatio).toBeGreaterThanOrEqual(0);
+    expect(differentRatio).toBeLessThanOrEqual(1);
+
+    expect(() => checkDriveExists("C:\\Games")).not.toThrow();
+
+    const ids = getAllGameIds();
+    expect(ids).toContain("Fallout4");
+    expect(ids).toContain("Fallout4VR");
+    for (const id of ids) {
+      expect(getGameName(id).length).toBeGreaterThan(0);
+    }
   });
 
   test("matchVersion confidence string mapping remains stable", () => {

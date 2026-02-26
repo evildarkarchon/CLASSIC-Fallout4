@@ -246,8 +246,8 @@ Trigger paths (minimum):
 - `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
 
 Checklist:
-1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/node_api_parity/phase5/tier2_backlog_and_governance.md`.
-2. If promoting to Tier-1, update `docs/implementation/node_api_parity/phase1/parity_contract.json`.
+1. Classify affected APIs as Tier-1 or Tier-2 using `docs/implementation/node_api_parity/governance/tier2_backlog_and_governance.md`.
+2. If promoting to Tier-1, update `docs/implementation/node_api_parity/baseline/parity_contract.json`.
 3. Regenerate and commit `ClassicLib-rs/node-bindings/classic-node/index.d.ts`.
 4. Run from `ClassicLib-rs/node-bindings/classic-node`:
    - `bun run parity:gate:local`

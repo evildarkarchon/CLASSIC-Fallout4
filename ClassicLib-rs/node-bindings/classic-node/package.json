@@ -14,7 +14,7 @@
   "scripts": {
     "build": "napi build --release --platform --manifest-path ./Cargo.toml",
     "build:debug": "napi build --platform --manifest-path ./Cargo.toml",
-    "parity:gate": "python ../../../tools/node_api_parity/check_phase2_gate.py --repo-root ../../..",
+    "parity:gate": "python ../../../tools/node_api_parity/check_parity_gate.py --repo-root ../../..",
     "dts:freshness:check": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../.. --check-only",
     "dts:freshness:local": "python ../../../tools/node_api_parity/check_dts_freshness.py --repo-root ../../..",
     "parity:gate:ci": "bun run parity:gate && bun run dts:freshness:check",

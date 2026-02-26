@@ -1,4 +1,4 @@
-# Node Bindings Parity Contract (Phase 1)
+# Node Bindings Parity Contract
 
 ## Scope
 
@@ -10,7 +10,7 @@ This contract defines how API parity is measured between:
   - `classic-version-registry-core`
 - Node surface exported by `ClassicLib-rs/node-bindings/classic-node/index.d.ts`
 
-Phase 1 establishes a hybrid-tiered baseline: Tier-1 is enforced now, Tier-2 is intentionally triaged.
+This contract establishes a hybrid-tiered baseline: Tier-1 is enforced now, Tier-2 is intentionally triaged.
 
 ## Tier Definitions
 
@@ -22,11 +22,11 @@ Phase 1 establishes a hybrid-tiered baseline: Tier-1 is enforced now, Tier-2 is 
 
 - **Tier 2 (defer-capable)**
   - Lower-level internals and advanced APIs not required for immediate workflow parity.
-  - Still inventoried and reported as gaps/backlog, but not Phase 1 blockers.
+  - Still inventoried and reported as gaps/backlog, but not Tier-1 blockers.
 
 ## Acceptance Criteria
 
-Phase 1 contract/inventory is accepted when all of the following exist:
+Contract/inventory is accepted when all of the following exist:
 
 1. **Machine-readable manifests generated**
    - `rust_api_surface.json`
@@ -62,6 +62,6 @@ Phase 1 contract/inventory is accepted when all of the following exist:
 
 The machine-readable contract and Tier-1 mappings are stored in:
 
-- `docs/implementation/node_api_parity/phase1/parity_contract.json`
+- `parity_contract.json`
 
 The extractor/diff tooling consumes that file directly.

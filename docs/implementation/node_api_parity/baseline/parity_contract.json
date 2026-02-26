@@ -2107,6 +2107,132 @@
       "nodeExport": "xseTypeName",
       "nodeKind": "function",
       "nodeArity": 1
+    },
+    {
+      "id": "aux-phase4c-crash-autoscan-pattern",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "CRASH_AUTOSCAN_PATTERN",
+      "nodeKind": "const"
+    },
+    {
+      "id": "version-registry-phase4c-js-compatible-range",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "CompatibleRange",
+      "nodeExport": "JsCompatibleRange",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-js-dds-analyzer-alias",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDDSAnalyzer",
+      "nodeKind": "type"
+    },
+    {
+      "id": "aux-phase4c-js-dds-analyzer-class",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDdsAnalyzer",
+      "nodeKind": "class"
+    },
+    {
+      "id": "aux-phase4c-js-dds-batch-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDdsBatchResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-js-dds-issue",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "FileIOCore",
+      "nodeExport": "JsDdsIssue",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-js-game-id",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsGameId",
+      "nodeKind": "const_enum"
+    },
+    {
+      "id": "aux-phase4c-js-ini-check-result",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "JsIniCheckResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "version-registry-phase4c-js-match-result",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "MatchResult",
+      "nodeExport": "JsMatchResult",
+      "nodeKind": "interface"
+    },
+    {
+      "id": "aux-phase4c-calculate-text-similarity",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "calculate_similarity",
+      "nodeExport": "calculateTextSimilarity",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4c-check-drive-exists",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "checkDriveExists",
+      "nodeKind": "function",
+      "nodeArity": 1
+    },
+    {
+      "id": "version-registry-phase4c-get-all-exe-hashes",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "get_version_registry",
+      "nodeExport": "getAllExeHashes",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4c-get-all-game-ids",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getAllGameIds",
+      "nodeKind": "function",
+      "nodeArity": 0
+    },
+    {
+      "id": "version-registry-phase4c-get-all-script-hashes",
+      "tier": "tier1",
+      "ownerModule": "version_registry",
+      "rustSymbol": "get_version_registry",
+      "nodeExport": "getAllScriptHashes",
+      "nodeKind": "function",
+      "nodeArity": 2
+    },
+    {
+      "id": "aux-phase4c-get-game-name",
+      "tier": "tier1",
+      "ownerModule": "aux",
+      "rustSymbol": "path_core",
+      "nodeExport": "getGameName",
+      "nodeKind": "function",
+      "nodeArity": 1
     }
   ]
 }

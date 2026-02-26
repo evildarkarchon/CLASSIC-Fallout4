@@ -2,7 +2,7 @@
   "manifest_version": "1.0",
   "generated_at_utc": "2026-02-25T12:57:12.518158+00:00",
   "source": {
-    "handoff_map_path": "J:/classic-9.0/docs/implementation/node_api_parity/phase1/handoff_map.md",
+    "handoff_map_path": "J:/classic-9.0/docs/implementation/node_api_parity/baseline/handoff_map.md",
     "handoff_map_sha256": "b129bbb8ae6f138575260377e5d9b0debab4e880bbc10cfd87d276be23cd1b19",
     "handoff_generated_at": "2026-02-25T11:51:14.966043+00:00",
     "handoff_declared_total_gaps": 315

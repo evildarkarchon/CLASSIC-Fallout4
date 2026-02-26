@@ -5,7 +5,12 @@ export const dtsSignatureFragments = [
   "export declare function getAllVersionsForGame(game: string, isVr?: boolean | undefined | null): Array<JsVersionInfo>",
   "export declare function getAllExeHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Array<string>",
   "export declare function getAllScriptHashes(game?: string | undefined | null, isVr?: boolean | undefined | null): Record<string, Array<string>>",
+  "export declare function getAllGameIds(): Array<JsGameId>",
+  "export declare function getGameName(id: JsGameId): string",
+  "export declare function checkDriveExists(path: string): void",
+  "export declare function calculateTextSimilarity(text1: string, text2: string): number",
   "export interface FileIoConfig {",
+  "export const CRASH_AUTOSCAN_PATTERN: string",
   "export const DEFAULT_CACHE_TTL: number",
   "export declare class YamlDocument {",
   "export declare function loadSettingsSync(key: string, path: string): any",
@@ -13,6 +18,10 @@ export const dtsSignatureFragments = [
   "export declare function getSettingsCacheStats(): SettingsCacheStats",
   "export declare function yamlGetCacheStats(): any",
   "export declare class JsFileIO {",
+  "export type JsDDSAnalyzer = JsDdsAnalyzer",
+  "export interface JsDdsIssue {",
+  "export interface JsDdsBatchResult {",
+  "export interface JsIniCheckResult {",
   "export declare class GamePathFinder {",
   "export declare function normalizePath(path: string): string",
   "export declare function validatePathsBatch(paths: Array<string>): Record<string, boolean>",
@@ -35,6 +44,9 @@ export const dtsSignatureFragments = [
   "export declare function checkForUpdates(owner: string, repo: string, currentVersion: string): Promise<JsUpdateCheckResult>",
   "export declare function runGameChecks(config: JsGameScanConfig): Promise<JsGameScanResult>",
   "export interface JsBa2ScanResult {",
+  "export declare const enum JsGameId {",
+  "export interface JsCompatibleRange {",
+  "export interface JsMatchResult {",
 ] as const;
 
 export const confidenceValues = [

@@ -7,7 +7,7 @@ Use this template for every promotion wave and subwave PR.
 - Wave ID: `<wave1|wave2|wave3|wave4.1|wave4.2|wave4.3>`
 - Branch/PR: `<link-or-branch>`
 - Owner squad: `<Squad A|Squad B>`
-- Manifest source: `docs/implementation/node_api_parity/phase5/tier2_wave_manifest.json`
+- Manifest source: `tier2_wave_manifest.json`
 - Scope query:
   - `wave=<...>` and (if aux) `subwave=<...>`
 - Locked counts:
@@ -18,7 +18,7 @@ Use this template for every promotion wave and subwave PR.
 ## 2) Implementation Contract
 
 - [ ] Add/update exact `#[napi]` exports for all scoped rows.
-- [ ] Promote corresponding rows in `docs/implementation/node_api_parity/phase1/parity_contract.json` from `tier2` to `tier1`.
+- [ ] Promote corresponding rows in `parity_contract.json` from `tier2` to `tier1`.
 - [ ] Regenerate and commit `ClassicLib-rs/node-bindings/classic-node/index.d.ts`.
 - [ ] Add/refresh tests in `ClassicLib-rs/node-bindings/classic-node/__test__/`.
 
@@ -42,11 +42,11 @@ Record evidence:
 
 ## 4) Docs Refresh Checklist
 
-- [ ] `docs/implementation/node_api_parity/phase1/parity_contract.json`
-- [ ] `docs/implementation/node_api_parity/phase1/parity_diff_report.md`
-- [ ] `docs/implementation/node_api_parity/phase1/handoff_map.md`
-- [ ] `docs/implementation/node_api_parity/phase5/tier2_backlog_and_governance.md`
-- [ ] `docs/implementation/node_api_parity/phase5/tier2_wave_manifest.json` (if wave scope changed)
+- [ ] `parity_contract.json`
+- [ ] `parity_diff_report.md`
+- [ ] `handoff_map.md`
+- [ ] `tier2_backlog_and_governance.md`
+- [ ] `tier2_wave_manifest.json` (if wave scope changed)
 
 ## 5) Acceptance Decision
 
