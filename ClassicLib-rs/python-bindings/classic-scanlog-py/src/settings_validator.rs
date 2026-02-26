@@ -1,7 +1,7 @@
 //! Python bindings for SettingsValidator - Thin wrapper over classic-scanlog-core
 
-use classic_scanlog_core::settings_validator::SettingsValidator;
 use classic_scanlog_core::CrashgenEntry;
+use classic_scanlog_core::settings_validator::SettingsValidator;
 use pyo3::prelude::*;
 use std::collections::{HashMap, HashSet};
 

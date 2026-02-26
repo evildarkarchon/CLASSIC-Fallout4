@@ -25,7 +25,13 @@ class TestGamePathGeneration:
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="VR")
     def test_generate_paths_fallout4_vr(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_get_version: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock, tmp_path: Path
+        self,
+        mock_get_vr: MagicMock,
+        mock_get_game: MagicMock,
+        mock_get_version: MagicMock,
+        mock_yaml: MagicMock,
+        mock_get_registry: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test game_generate_paths for Fallout 4 VR."""
         # Mock version registry

@@ -39,7 +39,13 @@ class TestGamePathGeneration:
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_fallout4_og_version(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_get_version: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock, tmp_path: Path
+        self,
+        mock_get_vr: MagicMock,
+        mock_get_game: MagicMock,
+        mock_get_version: MagicMock,
+        mock_yaml: MagicMock,
+        mock_get_registry: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test game_generate_paths for Fallout 4 OG version."""
         mock_get_registry.return_value = _make_version_registry_mock()
@@ -66,7 +72,13 @@ class TestGamePathGeneration:
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_fallout4_ng_version(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_get_version: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock, tmp_path: Path
+        self,
+        mock_get_vr: MagicMock,
+        mock_get_game: MagicMock,
+        mock_get_version: MagicMock,
+        mock_yaml: MagicMock,
+        mock_get_registry: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test game_generate_paths for Fallout 4 NG version."""
         mock_get_registry.return_value = _make_version_registry_mock()
@@ -91,7 +103,9 @@ class TestGamePathGeneration:
     @patch("ClassicLib.support.game_path.yaml_settings")
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
-    def test_generate_paths_missing_game_path(self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock) -> None:
+    def test_generate_paths_missing_game_path(
+        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock
+    ) -> None:
         """Test game_generate_paths with missing game path."""
         mock_get_registry.return_value = _make_version_registry_mock()
         mock_yaml.return_value = None
@@ -125,7 +139,13 @@ class TestGamePathGeneration:
     @patch.object(GlobalRegistry, "get_game", return_value="Fallout4")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_null_version_uses_default(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_get_version: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock, tmp_path: Path
+        self,
+        mock_get_vr: MagicMock,
+        mock_get_game: MagicMock,
+        mock_get_version: MagicMock,
+        mock_yaml: MagicMock,
+        mock_get_registry: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test game_generate_paths uses default when version detection fails."""
         mock_get_registry.return_value = _make_version_registry_mock()
@@ -153,7 +173,13 @@ class TestGamePathGeneration:
     @patch.object(GlobalRegistry, "get_game", return_value="Starfield")
     @patch.object(GlobalRegistry, "get_vr", return_value="")
     def test_generate_paths_unsupported_game_raises_error(
-        self, mock_get_vr: MagicMock, mock_get_game: MagicMock, mock_get_version: MagicMock, mock_yaml: MagicMock, mock_get_registry: MagicMock, tmp_path: Path
+        self,
+        mock_get_vr: MagicMock,
+        mock_get_game: MagicMock,
+        mock_get_version: MagicMock,
+        mock_yaml: MagicMock,
+        mock_get_registry: MagicMock,
+        tmp_path: Path,
     ) -> None:
         """Test game_generate_paths raises ValueError for unsupported games."""
         mock_get_registry.return_value = _make_version_registry_mock("SFSE")

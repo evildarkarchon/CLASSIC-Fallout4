@@ -8,6 +8,7 @@ features, paths, and updates.
 
 from __future__ import annotations
 
+from contextlib import suppress
 from typing import ClassVar
 
 from PySide6.QtCore import Qt
@@ -243,10 +244,8 @@ class SettingsDialog(QDialog):
 
         if not ini_path:
             # Try to get from Game_Local YAML if not set in settings
-            try:
+            with suppress(ImportError, TypeError, ValueError):
                 ini_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs") or ""
-            except (ImportError, TypeError, ValueError):
-                pass  # Registry not initialized, use default
 
         self.ini_folder_input.setText(ini_path)
 
@@ -412,10 +411,8 @@ class SettingsDialog(QDialog):
 
                 # Also update Game_Local YAML if path is set
                 if ini_path:
-                    try:
+                    with suppress(ImportError, TypeError, ValueError):
                         yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs", ini_path)
-                    except (ImportError, TypeError, ValueError):
-                        pass  # Registry not initialized, skip Game_Local update
 
             # Save Max Concurrent Scans spinbox
             max_concurrent_widget = self.settings_widgets.get("max_concurrent_scans")

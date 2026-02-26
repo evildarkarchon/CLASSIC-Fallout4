@@ -84,7 +84,8 @@ fn orchestrator_new(config: &FullScanConfig) -> Result<Box<Orchestrator>, String
             .block_on(pool.initialize(config.db_paths.clone()))
             .map_err(|e| format!("{e}"))?;
 
-        orch.attach_database_pool(pool).map_err(|e| format!("{e}"))?;
+        orch.attach_database_pool(pool)
+            .map_err(|e| format!("{e}"))?;
     }
 
     Ok(Box::new(Orchestrator { inner: orch }))

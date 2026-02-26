@@ -51,7 +51,12 @@ class TestDocumentsChecker:
     @patch("ClassicLib.support.documents.get_vr", return_value="")
     @patch("ClassicLib.support.documents.logger")
     def test_check_folder_configuration_with_onedrive(
-        self, mock_logger: MagicMock, mock_get_vr: MagicMock, mock_get_registry: MagicMock, mock_yaml_settings: MagicMock, checker: DocumentsChecker
+        self,
+        mock_logger: MagicMock,
+        mock_get_vr: MagicMock,
+        mock_get_registry: MagicMock,
+        mock_yaml_settings: MagicMock,
+        checker: DocumentsChecker,
     ) -> None:
         """Test folder configuration check when OneDrive IS present."""
         # Mock Version Registry to return docs_name with OneDrive

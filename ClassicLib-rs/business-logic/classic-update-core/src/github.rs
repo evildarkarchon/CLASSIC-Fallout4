@@ -165,8 +165,7 @@ impl GithubClient {
         let client = Client::builder()
             .timeout(Self::API_TIMEOUT)
             .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
-            .build()
-            ?;
+            .build()?;
 
         Ok(Self {
             owner: owner.into(),
@@ -203,8 +202,7 @@ impl GithubClient {
         let client = Client::builder()
             .timeout(Self::API_TIMEOUT)
             .user_agent(format!("CLASSIC-Update/{}", env!("CARGO_PKG_VERSION")))
-            .build()
-            ?;
+            .build()?;
 
         Ok(Self {
             owner: owner.into(),
@@ -263,7 +261,8 @@ impl GithubClient {
 
         match response.status() {
             reqwest::StatusCode::OK => {
-                let release: GithubRelease = response.json().await.map_err(UpdateError::HttpError)?;
+                let release: GithubRelease =
+                    response.json().await.map_err(UpdateError::HttpError)?;
                 Ok(release)
             }
             reqwest::StatusCode::NOT_FOUND => {

@@ -117,7 +117,6 @@ class AddressLibraryConfig:
     def nexus_url(self) -> str:
         """Nexus Mods download URL."""
 
-
 class XseConfig:
     """Script Extender (XSE) configuration for a game version.
 
@@ -152,7 +151,6 @@ class XseConfig:
     def script_hashes(self) -> list[tuple[str, str]]:
         """List of (filename, sha256_hash) pairs for XSE script files."""
 
-
 class CompatibleRange:
     """Version range for compatibility matching.
 
@@ -184,7 +182,6 @@ class CompatibleRange:
             ValueError: If the version string is invalid.
 
         """
-
 
 class CrashgenConfig:
     """Crash generator configuration for a specific version.
@@ -238,7 +235,6 @@ class CrashgenConfig:
 
         """
 
-
 class UnknownVersionHandling:
     """Configuration for handling unknown/unsupported versions.
 
@@ -271,7 +267,6 @@ class UnknownVersionHandling:
             Default version ID string, or None.
 
         """
-
 
 class MatchConfidence:
     """Confidence level for version matching results.
@@ -349,7 +344,6 @@ class MatchResult:
     @property
     def is_valid(self) -> bool:
         """Whether this is a valid match (version_info present and not Unknown)."""
-
 
 class VersionInfo:
     """Complete version information for a game version.
@@ -450,9 +444,7 @@ class VersionInfo:
 
         """
 
-    def get_compatible_crashgens(
-        self, game_version_str: str | None = None
-    ) -> list[CrashgenConfig]:
+    def get_compatible_crashgens(self, game_version_str: str | None = None) -> list[CrashgenConfig]:
         """Get crash generators compatible with a specific game version.
 
         Args:
@@ -554,9 +546,7 @@ class VersionRegistry:
 
         """
 
-    def get_all_for_game(
-        self, game: str, is_vr: bool | None = None
-    ) -> list[VersionInfo]:
+    def get_all_for_game(self, game: str, is_vr: bool | None = None) -> list[VersionInfo]:
         """Get all versions for a specific game.
 
         Args:
@@ -619,9 +609,7 @@ class VersionRegistry:
 
         """
 
-    def get_address_library_filename(
-        self, version_str: str, is_vr: bool = False
-    ) -> str | None:
+    def get_address_library_filename(self, version_str: str, is_vr: bool = False) -> str | None:
         """Get Address Library filename for a version.
 
         Args:
@@ -660,9 +648,7 @@ class VersionRegistry:
 
         """
 
-    def get_crashgen_for_version(
-        self, version_id: str, crashgen_version: str
-    ) -> CrashgenConfig | None:
+    def get_crashgen_for_version(self, version_id: str, crashgen_version: str) -> CrashgenConfig | None:
         """Get a specific crash generator by version ID and crashgen version.
 
         Args:
@@ -676,9 +662,7 @@ class VersionRegistry:
 
     # === Hash API ===
 
-    def get_all_exe_hashes(
-        self, game: str = "Fallout4", is_vr: bool | None = None
-    ) -> set[str]:
+    def get_all_exe_hashes(self, game: str = "Fallout4", is_vr: bool | None = None) -> set[str]:
         """Get all known exe hashes for a game.
 
         Args:
@@ -690,9 +674,7 @@ class VersionRegistry:
 
         """
 
-    def get_all_script_hashes(
-        self, game: str = "Fallout4", is_vr: bool | None = None
-    ) -> dict[str, set[str]]:
+    def get_all_script_hashes(self, game: str = "Fallout4", is_vr: bool | None = None) -> dict[str, set[str]]:
         """Get all valid script hashes for all versions of a game.
 
         Args:
@@ -704,9 +686,7 @@ class VersionRegistry:
 
         """
 
-    def get_script_hashes_for_version(
-        self, version_id: str
-    ) -> dict[str, str]:
+    def get_script_hashes_for_version(self, version_id: str) -> dict[str, str]:
         """Get script hashes for a specific version.
 
         Args:
@@ -723,7 +703,6 @@ class VersionRegistry:
     @property
     def unknown_version_handling(self) -> UnknownVersionHandling:
         """Gets the unknown version handling configuration."""
-
 
 def match_version_string(
     version_str: str,

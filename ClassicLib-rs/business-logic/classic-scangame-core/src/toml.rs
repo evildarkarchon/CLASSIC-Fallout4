@@ -697,9 +697,18 @@ mod tests {
         let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
         let (report, issues) = checker.check().unwrap();
 
-        assert!(issues.is_empty(), "No issues should be reported when Addictol is detected");
-        assert!(report.contains("Addictol detected"), "Report should mention Addictol");
-        assert!(!report.contains("incompatible"), "Should NOT warn about incompatibility when only Addictol is present");
+        assert!(
+            issues.is_empty(),
+            "No issues should be reported when Addictol is detected"
+        );
+        assert!(
+            report.contains("Addictol detected"),
+            "Report should mention Addictol"
+        );
+        assert!(
+            !report.contains("incompatible"),
+            "Should NOT warn about incompatibility when only Addictol is present"
+        );
     }
 
     #[test]
@@ -719,9 +728,18 @@ mod tests {
         let mut checker = CrashgenChecker::new(temp_dir.path(), "Buffout4");
         let (report, issues) = checker.check().unwrap();
 
-        assert!(issues.is_empty(), "No issues should be reported — TOML checks are skipped");
-        assert!(report.contains("incompatible"), "Should warn about incompatibility when both are present");
-        assert!(report.contains("remove one to avoid crashes"), "Should have clear removal guidance");
+        assert!(
+            issues.is_empty(),
+            "No issues should be reported — TOML checks are skipped"
+        );
+        assert!(
+            report.contains("incompatible"),
+            "Should warn about incompatibility when both are present"
+        );
+        assert!(
+            report.contains("remove one to avoid crashes"),
+            "Should have clear removal guidance"
+        );
     }
 
     #[test]

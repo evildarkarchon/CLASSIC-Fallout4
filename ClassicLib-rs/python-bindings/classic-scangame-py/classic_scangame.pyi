@@ -731,7 +731,7 @@ class EnbChecker:
         """
 
 def check_enb(game_path: str) -> EnbValidationResult:
-    """Convenience function to check ENB installation.
+    """Check ENB installation.
 
     Args:
         game_path: Path to the game root directory.

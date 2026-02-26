@@ -350,7 +350,10 @@ pub fn get_wrong_versions(is_vr: bool) -> Vec<JsVersionInfo> {
 /// @param is_vr - Optional VR filter. If omitted, includes all versions for the game.
 /// @returns Snapshot with selected versions and unknown-version handling config.
 #[napi]
-pub fn get_version_registry(game: Option<String>, is_vr: Option<bool>) -> JsVersionRegistrySnapshot {
+pub fn get_version_registry(
+    game: Option<String>,
+    is_vr: Option<bool>,
+) -> JsVersionRegistrySnapshot {
     let game = game.unwrap_or_else(|| "Fallout4".to_string());
     let registry = core_get_version_registry();
     let versions = registry

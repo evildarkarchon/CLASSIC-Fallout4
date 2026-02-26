@@ -85,7 +85,7 @@ def main() -> int:
     diff_path = output_dir / "index_dts.diff"
     summary_path = output_dir / "dts_freshness_report.json"
 
-    is_fresh = diff_output.strip() == ""
+    is_fresh = not diff_output.strip()
     diff_path.write_text(diff_output, encoding="utf-8")
     write_json(
         summary_path,

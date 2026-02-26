@@ -713,7 +713,9 @@ mod tests {
         let validator = SettingsValidator::new("Buffout 4".to_string(), make_buffout_entry());
         let crashgen = HashMap::new();
 
-        let fragment = validator.scan_addictol_settings_scaffold(&crashgen).unwrap();
+        let fragment = validator
+            .scan_addictol_settings_scaffold(&crashgen)
+            .unwrap();
         let lines = fragment.to_list();
 
         assert!(

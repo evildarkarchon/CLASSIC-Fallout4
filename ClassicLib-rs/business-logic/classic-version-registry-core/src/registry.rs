@@ -203,7 +203,14 @@ impl VersionRegistry {
                 .map(|v| v as u32)
                 .unwrap_or(0);
 
-            XseConfig::with_script_hashes(acronym, full_name, compatible_version, loader, file_count, script_hashes)
+            XseConfig::with_script_hashes(
+                acronym,
+                full_name,
+                compatible_version,
+                loader,
+                file_count,
+                script_hashes,
+            )
         });
 
         // Parse compatible range

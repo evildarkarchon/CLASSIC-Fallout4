@@ -228,10 +228,7 @@ mod tests {
 
     #[test]
     fn test_check_id_from_str() {
-        assert_eq!(
-            CheckId::parse("achievements"),
-            Some(CheckId::Achievements)
-        );
+        assert_eq!(CheckId::parse("achievements"), Some(CheckId::Achievements));
         assert_eq!(
             CheckId::parse("memory_management"),
             Some(CheckId::MemoryManagement)
@@ -240,10 +237,7 @@ mod tests {
             CheckId::parse("MemoryManagement"),
             Some(CheckId::MemoryManagement)
         );
-        assert_eq!(
-            CheckId::parse("archive_limit"),
-            Some(CheckId::ArchiveLimit)
-        );
+        assert_eq!(CheckId::parse("archive_limit"), Some(CheckId::ArchiveLimit));
         assert_eq!(CheckId::parse("looksmenu"), Some(CheckId::LooksMenu));
         assert_eq!(CheckId::parse("looks_menu"), Some(CheckId::LooksMenu));
         assert_eq!(CheckId::parse("unknown_check"), None);
