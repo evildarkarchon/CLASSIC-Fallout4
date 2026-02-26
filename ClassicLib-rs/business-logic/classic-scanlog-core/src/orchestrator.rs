@@ -191,7 +191,10 @@ impl AnalysisConfig {
 ///
 /// This prefers explicit defaults from `unknown_version_handling.defaults` and
 /// falls back to highest-priority registry entry for `(game, vr_mode)`.
-fn resolve_registry_version_info(game: &str, vr_mode: bool) -> Option<classic_version_registry_core::VersionInfo> {
+fn resolve_registry_version_info(
+    game: &str,
+    vr_mode: bool,
+) -> Option<classic_version_registry_core::VersionInfo> {
     let registry = get_version_registry();
 
     // Prefer explicit defaults from registry config.
@@ -265,6 +268,15 @@ fn resolve_registry_game_versions(
     (fallback.clone(), fallback)
 }
 
+/// Resolve VR game version string for a game from Version Registry.
+///
+/// This is used to preserve plugin-limit matching behavior where callers may
+/// provide a VR game version string directly (e.g., "1.2.72" for Fallout 4 VR).
+fn resolve_registry_game_version_vr(game: &str) -> Option<String> {
+    resolve_registry_version_info(game, true)
+        .map(|info| format_registry_game_version(&info.version))
+}
+
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
 ///
 /// This is the canonical way to create an `AnalysisConfig` from loaded YAML data.
@@ -292,7 +304,10 @@ pub fn build_analysis_config_from_yaml(
     let registry_info = resolve_registry_version_info(game, vr_mode);
     let (registry_game_version, registry_game_version_new) =
         resolve_registry_game_versions(game, vr_mode, &registry_info);
-    let registry_crashgen = registry_info.as_ref().and_then(|info| info.crashgen_versions.first());
+    let game_version_vr = resolve_registry_game_version_vr(game).unwrap_or_default();
+    let registry_crashgen = registry_info
+        .as_ref()
+        .and_then(|info| info.crashgen_versions.first());
 
     let crashgen_name = registry_crashgen
         .map(|c| c.name.as_str())
@@ -321,7 +336,7 @@ pub fn build_analysis_config_from_yaml(
         crashgen_latest,
         crashgen_latest_vr: String::new(), // VR-specific data now provided by Version Registry
         game_version,
-        game_version_vr: String::new(), // VR-specific data now provided by Version Registry
+        game_version_vr,
         game_version_new,
         xse_acronym,
         game_root_name: yaml.get_game_root_name().to_string(),
@@ -2167,8 +2182,15 @@ mod tests {
         let mut yaml = make_yaml_data("CLASSIC v9.0.0");
         yaml.game_ignore_plugins.push("Fallout4.esm".to_string());
 
-        let config =
-            build_analysis_config_from_yaml(&yaml, "Fallout4", false, false, false, false, Vec::new());
+        let config = build_analysis_config_from_yaml(
+            &yaml,
+            "Fallout4",
+            false,
+            false,
+            false,
+            false,
+            Vec::new(),
+        );
         let orchestrator = OrchestratorCore::new(config).unwrap();
         let analyzer = orchestrator.plugin_analyzer.as_ref().unwrap();
 
