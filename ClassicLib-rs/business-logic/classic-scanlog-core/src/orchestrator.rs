@@ -218,6 +218,53 @@ fn resolve_registry_version_info(game: &str, vr_mode: bool) -> Option<classic_ve
         .map(|info| (*info).clone())
 }
 
+/// Format registry `GameVersion` using legacy 3-part style when build is 0.
+///
+/// CLASSIC historically stores configured game versions as `major.minor.patch`.
+/// Keeping this format preserves string-based comparisons in plugin-limit logic.
+fn format_registry_game_version(version: &RegistryGameVersion) -> String {
+    if version.build == 0 {
+        format!("{}.{}.{}", version.major, version.minor, version.patch)
+    } else {
+        version.to_string()
+    }
+}
+
+/// Resolve baseline (`game_version`) and newer (`game_version_new`) version strings.
+///
+/// For non-VR Fallout 4, this preserves legacy semantics:
+/// - `game_version` => OG (`short_name = "OG"`)
+/// - `game_version_new` => NG (`short_name = "NG"`)
+///
+/// For all other modes/games, both values fall back to the resolved registry entry.
+fn resolve_registry_game_versions(
+    game: &str,
+    vr_mode: bool,
+    fallback_info: &Option<classic_version_registry_core::VersionInfo>,
+) -> (Option<String>, Option<String>) {
+    let fallback = fallback_info
+        .as_ref()
+        .map(|info| format_registry_game_version(&info.version));
+
+    if game == "Fallout4" && !vr_mode {
+        let registry = get_version_registry();
+        let game_versions = registry.get_all_for_game(game, Some(false));
+
+        let og = game_versions
+            .iter()
+            .find(|info| info.short_name.eq_ignore_ascii_case("OG"))
+            .map(|info| format_registry_game_version(&info.version));
+        let ng = game_versions
+            .iter()
+            .find(|info| info.short_name.eq_ignore_ascii_case("NG"))
+            .map(|info| format_registry_game_version(&info.version));
+
+        return (og.or_else(|| fallback.clone()), ng.or(fallback));
+    }
+
+    (fallback.clone(), fallback)
+}
+
 /// Build an `AnalysisConfig` from a [`YamlDataCore`] instance and runtime settings.
 ///
 /// This is the canonical way to create an `AnalysisConfig` from loaded YAML data.
@@ -243,6 +290,8 @@ pub fn build_analysis_config_from_yaml(
     remove_list: Vec<String>,
 ) -> AnalysisConfig {
     let registry_info = resolve_registry_version_info(game, vr_mode);
+    let (registry_game_version, registry_game_version_new) =
+        resolve_registry_game_versions(game, vr_mode, &registry_info);
     let registry_crashgen = registry_info.as_ref().and_then(|info| info.crashgen_versions.first());
 
     let crashgen_name = registry_crashgen
@@ -262,16 +311,8 @@ pub fn build_analysis_config_from_yaml(
         .filter(|acronym| !acronym.is_empty())
         .unwrap_or(yaml.xse_acronym.as_str())
         .to_string();
-    let game_version = registry_info
-        .as_ref()
-        .map(|info| info.version.to_string())
-        .filter(|version| !version.is_empty())
-        .unwrap_or(yaml.game_version.clone());
-    let game_version_new = registry_info
-        .as_ref()
-        .map(|info| info.version.to_string())
-        .filter(|version| !version.is_empty())
-        .unwrap_or(yaml.game_version_new.clone());
+    let game_version = registry_game_version.unwrap_or(yaml.game_version.clone());
+    let game_version_new = registry_game_version_new.unwrap_or(yaml.game_version_new.clone());
 
     AnalysisConfig {
         game: game.to_string(),
@@ -2106,8 +2147,11 @@ mod tests {
         assert_eq!(config.crashgen_name, "Buffout 4");
         assert!(!config.crashgen_latest.is_empty());
         assert_eq!(config.xse_acronym, "F4SE");
-        assert!(!config.game_version.is_empty());
-        assert!(!config.game_version_new.is_empty());
+        // Keep OG and NG split for plugin-limit behavior:
+        // - game_version must represent Original (1.10.163)
+        // - game_version_new must represent NextGen (1.10.984)
+        assert_eq!(config.game_version, "1.10.163");
+        assert_eq!(config.game_version_new, "1.10.984");
         assert!(
             !config
                 .crashgen_registry
