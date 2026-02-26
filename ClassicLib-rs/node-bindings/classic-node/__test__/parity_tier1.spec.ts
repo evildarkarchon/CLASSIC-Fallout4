@@ -22,12 +22,57 @@ import {
   invalidateSettings,
   isCached,
   loadSettingsSync,
+  loadBatchSync,
+  loadBatchAsync,
   resetSettingsCacheStats,
   settingsCacheKeys,
   settingsCacheSize,
   clearSettingsCache,
   validateSettingsPath,
   validateSettingsPaths,
+  normalizePath,
+  joinPaths,
+  validatePathsBatch,
+  isRuntimeAvailable,
+  getRuntimeInfo,
+  clearAllMetrics,
+  recordTimingMetric,
+  getMetricsSummary,
+  createMessage,
+  formatMessage,
+  stripEmojiText,
+  JsMessageType,
+  JsMessageTarget,
+  JsFileIO,
+  detectEncoding,
+  JsDatabasePool,
+  detectResourceType,
+  parseResourceType,
+  isSupportedResource,
+  getResourceExtensions,
+  createResourceInfo,
+  parseXseType,
+  xseTypeForGame,
+  xseLoaderName,
+  xseDllPrefix,
+  getModSiteUrl,
+  getModSiteName,
+  getModSiteGameUrl,
+  getUserAgent,
+  getUserAgentPrefix,
+  getUserAgentWithSuffix,
+  isValidUrl,
+  validateUrl,
+  joinUrl,
+  buildUrlWithQuery,
+  GithubClient,
+  hasUpdate,
+  JsEnbChecker,
+  checkEnb,
+  JsLogProcessor,
+  processGameLogs,
+  scanAllBa2Archives,
+  scanUnpackedFiles,
   getVersionById,
   getAllVersionsForGame,
   getVersionByVersionString,
@@ -237,6 +282,136 @@ describe("Tier-1 parity fixture suites", () => {
         expect(() =>
           validateSettingsPaths(gameDir, docsDir, null, "Fallout4.exe"),
         ).not.toThrow();
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe("aux foundation parity", () => {
+    test("shared runtime/path/metrics APIs keep stable callable shape", () => {
+      const normalized = normalizePath(".");
+      expect(typeof normalized).toBe("string");
+      expect(normalized.length).toBeGreaterThan(0);
+
+      const joined = joinPaths(["C:\\", "Games", "Fallout4"]);
+      expect(joined.includes("Games")).toBe(true);
+      expect(joined.includes("Fallout4")).toBe(true);
+
+      const batch = validatePathsBatch([".", "Z:\\nonexistent\\classic-tier1"]);
+      expect(batch["."]).toBe(true);
+      expect(batch["Z:\\nonexistent\\classic-tier1"]).toBe(false);
+
+      expect(isRuntimeAvailable()).toBe(true);
+      const runtime = getRuntimeInfo();
+      expect(runtime.available).toBe(true);
+      expect(runtime.threadCount).toBeGreaterThan(0);
+
+      clearAllMetrics();
+      recordTimingMetric("tier1_aux_metrics", 12.5);
+      const summary = getMetricsSummary();
+      expect(summary.timings.tier1_aux_metrics.count).toBe(1);
+    });
+
+    test("message APIs preserve enum and formatting semantics", () => {
+      const message = createMessage(
+        JsMessageType.Info,
+        "Tier1 message [ok]",
+        JsMessageTarget.All,
+      );
+      expect(message.messageType).toBe("Info");
+      expect(message.target).toBe("All");
+      expect(formatMessage(message).includes("Tier1 message")).toBe(true);
+      expect(stripEmojiText("Done [ok]")).toBe("Done [ok]");
+    });
+
+    test("settings batch APIs remain stable in sync + async modes", async () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-tier1-batch-"));
+      const pathA = join(dir, "a.yaml");
+      const pathB = join(dir, "b.yaml");
+      try {
+        writeFileSync(pathA, "alpha: 1\n", "utf-8");
+        writeFileSync(pathB, "beta: 2\n", "utf-8");
+        clearSettingsCache();
+
+        expect(loadBatchSync([pathA, pathB])).toBe(2);
+        clearSettingsCache();
+
+        expect(await loadBatchAsync([pathA, pathB])).toBe(2);
+      } finally {
+        clearSettingsCache();
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+
+    test("file foundations keep JsFileIO + detectEncoding behavior", async () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-tier1-fileio-"));
+      const filePath = join(dir, "encoding.txt");
+      try {
+        const io = new JsFileIO();
+        await io.writeFile(filePath, "hello world");
+        expect(await io.readFile(filePath)).toBe("hello world");
+        expect(detectEncoding(filePath)).toBe("UTF-8");
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  });
+
+  describe("aux scanner stack parity", () => {
+    test("database/resource/xse/web/update APIs keep stable callable shape", async () => {
+      const pool = new JsDatabasePool("Fallout4");
+      expect(pool.getGameTable()).toBe("Fallout4");
+      expect(await pool.getEntry("012345", "Test.esm")).toBeNull();
+
+      expect(detectResourceType("mods/MyMod.esp")).toBe("plugin");
+      expect(parseResourceType("TEXTURE")).toBe("texture");
+      expect(isSupportedResource("meshes/body.nif")).toBe(true);
+      expect(getResourceExtensions("plugin")).toContain("esp");
+      expect(createResourceInfo("textures/armor.dds").resourceType).toBe("texture");
+
+      expect(parseXseType("f4se")).toBe("F4SE");
+      expect(xseTypeForGame("Fallout4")).toBe("F4SE");
+      expect(xseLoaderName("F4SE")).toContain("loader");
+      expect(xseDllPrefix("F4SE")).toContain("f4se");
+
+      expect(getModSiteUrl("NexusMods")).toContain("nexusmods.com");
+      expect(getModSiteName("NexusMods")).toBe("Nexus Mods");
+      expect(getModSiteGameUrl("NexusMods", "Fallout4")).toContain("fallout4");
+      expect(getUserAgentPrefix()).toBe("CLASSIC");
+      expect(getUserAgent()).toContain("CLASSIC/");
+      expect(getUserAgentWithSuffix("Tier1")).toContain("Tier1");
+      expect(isValidUrl("https://www.nexusmods.com")).toBe(true);
+      expect(validateUrl("https://example.com")).toContain("https://example.com");
+      expect(joinUrl("https://example.com", "api/v1")).toContain("/api/v1");
+      expect(
+        buildUrlWithQuery("https://example.com/search", [{ key: "q", value: "tier1" }]),
+      ).toContain("q=tier1");
+
+      const client = new GithubClient("owner", "repo");
+      expect(client.repoUrl()).toContain("github.com/owner/repo");
+      expect(hasUpdate("1.0.0", "1.0.1")).toBe(true);
+    });
+
+    test("scangame scanner stack keeps stable local semantics", () => {
+      const dir = mkdtempSync(join(tmpdir(), "classic-tier1-scanner-stack-"));
+      const logPath = join(dir, "stack.log");
+      try {
+        writeFileSync(logPath, "INFO: start\nERROR: scanner stack parity\n", "utf-8");
+
+        const enbChecker = new JsEnbChecker(dir);
+        expect(enbChecker.checkBinaries()).toBe("NotInstalled");
+        expect(checkEnb(dir).isPresent).toBe(false);
+
+        const logProcessor = new JsLogProcessor(["error"], [], []);
+        expect(logProcessor.processLogs(dir)).toContain("TOTAL NUMBER OF DETECTED LOG ERRORS");
+        expect(processGameLogs(dir, ["error"], [], [])).toContain("TOTAL NUMBER OF DETECTED LOG ERRORS");
+
+        expect(scanAllBa2Archives(dir)).toEqual([]);
+
+        const unpacked = scanUnpackedFiles(dir, []);
+        expect(Array.isArray(unpacked.texFrmt)).toBe(true);
+        expect(Array.isArray(unpacked.sndFrmt)).toBe(true);
       } finally {
         rmSync(dir, { recursive: true, force: true });
       }

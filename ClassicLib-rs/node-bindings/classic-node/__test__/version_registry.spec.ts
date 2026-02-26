@@ -4,6 +4,7 @@ import {
   getVersionByVersionString,
   getVersionByShortName,
   getAllVersions,
+  getVersionRegistry,
   getAllVersionsForGame,
   getCorrectVersions,
   getWrongVersions,
@@ -204,6 +205,33 @@ describe("Version Registry bindings", () => {
     });
   });
 
+  describe("getVersionRegistry", () => {
+    test("returns snapshot for Fallout4 with all versions", () => {
+      const snapshot = getVersionRegistry("Fallout4");
+      expect(snapshot.game).toBe("Fallout4");
+      expect(snapshot.versions).toHaveLength(4);
+      expect(snapshot.unknownVersionHandling).toBeDefined();
+      expect(["nearest_match", "strict", "default_only"]).toContain(
+        snapshot.unknownVersionHandling.strategy,
+      );
+    });
+
+    test("supports VR filter in snapshot", () => {
+      const snapshot = getVersionRegistry("Fallout4", true);
+      expect(snapshot.versions).toHaveLength(1);
+      for (const version of snapshot.versions) {
+        expect(version.isVr).toBe(true);
+      }
+    });
+
+    test("returns empty version list for unknown game", () => {
+      const snapshot = getVersionRegistry("UnknownGame");
+      expect(snapshot.game).toBe("UnknownGame");
+      expect(snapshot.versions).toEqual([]);
+      expect(snapshot.unknownVersionHandling).toBeDefined();
+    });
+  });
+
   describe("getAllVersionsForGame", () => {
     test("returns all Fallout4 versions when is_vr is omitted", () => {
       const versions = getAllVersionsForGame("Fallout4");
@@ -318,6 +346,13 @@ describe("Version Registry bindings", () => {
 
     test("throws for invalid version string", () => {
       expect(() => matchVersion("invalid", "Fallout4", false)).toThrow();
+    });
+
+    test("defaults for unknown game return unknown confidence", () => {
+      const result = matchVersion("1.10.163.0", "UnknownGame", false);
+      expect(result.confidence).toBe("unknown");
+      expect(result.isValid).toBe(false);
+      expect(result.versionInfo).toBeUndefined();
     });
   });
 
@@ -493,6 +528,11 @@ describe("Version Registry bindings", () => {
         expect(fallback.length).toBeGreaterThan(0);
       }
     });
+
+    test("getUnknownVersionDefault returns null for unknown game", () => {
+      const fallback = getUnknownVersionDefault("UnknownGame");
+      expect(fallback).toBeNull();
+    });
   });
 
   // ============================================================================
@@ -576,6 +616,10 @@ describe("Version Registry bindings", () => {
     test("major version difference is large", () => {
       const dist = gameVersionDistance("1.10.163.0", "2.0.0.0");
       expect(dist).toBeGreaterThan(1_000_000);
+    });
+
+    test("distance ignores build component changes", () => {
+      expect(gameVersionDistance("1.10.163.0", "1.10.163.99")).toBe(0);
     });
 
     test("throws for invalid version", () => {

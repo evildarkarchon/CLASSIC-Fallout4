@@ -147,6 +147,128 @@ test("supports optional params and stable string mappings in Node runtime", () =
   );
 });
 
+test("runs Phase 4A aux foundation APIs in Node runtime", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-foundation-"));
+  const settingsA = join(dir, "a.yaml");
+  const settingsB = join(dir, "b.yaml");
+  const textFile = join(dir, "text.txt");
+
+  try {
+    writeFileSync(settingsA, "alpha: 1\n", "utf8");
+    writeFileSync(settingsB, "beta: 2\n", "utf8");
+    writeFileSync(textFile, "hello world", "utf8");
+
+    const normalized = classic.normalizePath(".");
+    assert.equal(typeof normalized, "string");
+    assert.equal(classic.joinPaths(["C:\\", "Games", "Fallout4"]).includes("Games"), true);
+    const batch = classic.validatePathsBatch([".", "Z:\\nonexistent\\classic-node"]);
+    assert.equal(batch["."], true);
+    assert.equal(batch["Z:\\nonexistent\\classic-node"], false);
+
+    assert.equal(classic.isRuntimeAvailable(), true);
+    const runtime = classic.getRuntimeInfo();
+    assert.equal(runtime.available, true);
+    assert.equal(runtime.threadCount > 0, true);
+
+    classic.clearAllMetrics();
+    classic.recordTimingMetric("phase4a_runtime_node", 5.0);
+    const metrics = classic.getMetricsSummary();
+    assert.equal(metrics.timings.phase4a_runtime_node.count, 1);
+
+    const message = classic.createMessage(
+      classic.JsMessageType.Info,
+      "phase4a ready",
+      classic.JsMessageTarget.All,
+    );
+    assert.equal(message.messageType, "Info");
+    assert.equal(classic.formatMessage(message).includes("phase4a"), true);
+    assert.equal(classic.stripEmojiText("Ready [ok]"), "Ready [ok]");
+
+    classic.clearSettingsCache();
+    assert.equal(classic.loadBatchSync([settingsA, settingsB]), 2);
+    classic.clearSettingsCache();
+    assert.equal(await classic.loadBatchAsync([settingsA, settingsB]), 2);
+
+    const io = new classic.JsFileIO();
+    await io.writeFile(textFile, "hello world");
+    assert.equal(await io.readFile(textFile), "hello world");
+    assert.equal(classic.detectEncoding(textFile), "UTF-8");
+  } finally {
+    classic.clearSettingsCache();
+    classic.clearAllMetrics();
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test("runs Phase 4B aux scanner stack APIs in Node runtime", async () => {
+  const dir = mkdtempSync(join(tmpdir(), "classic-node-aux-scanner-stack-"));
+  const logPath = join(dir, "runtime.log");
+
+  try {
+    writeFileSync(logPath, "INFO: start\nERROR: runtime scanner stack\n", "utf8");
+
+    const pool = new classic.JsDatabasePool("Fallout4");
+    assert.equal(pool.getGameTable(), "Fallout4");
+    assert.equal(await pool.getEntry("012345", "Test.esm"), null);
+
+    assert.equal(classic.detectResourceType("mods/Test.esp"), "plugin");
+    assert.equal(classic.parseResourceType("TEXTURE"), "texture");
+    assert.equal(classic.isSupportedResource("meshes/body.nif"), true);
+    assert.equal(classic.getResourceExtensions("plugin").includes("esp"), true);
+    assert.equal(classic.createResourceInfo("textures/armor.dds").resourceType, "texture");
+
+    assert.equal(classic.parseXseType("f4se"), "F4SE");
+    assert.equal(classic.xseTypeForGame("Fallout4"), "F4SE");
+    assert.equal(classic.xseLoaderName("F4SE").includes("loader"), true);
+    assert.equal(classic.xseDllPrefix("F4SE").includes("f4se"), true);
+
+    assert.equal(classic.getModSiteUrl("NexusMods").includes("nexusmods.com"), true);
+    assert.equal(classic.getModSiteName("NexusMods"), "Nexus Mods");
+    assert.equal(
+      classic.getModSiteGameUrl("NexusMods", "Fallout4").includes("fallout4"),
+      true,
+    );
+    assert.equal(classic.getUserAgentPrefix(), "CLASSIC");
+    assert.equal(classic.getUserAgent().includes("CLASSIC/"), true);
+    assert.equal(classic.getUserAgentWithSuffix("NodeRuntime").includes("NodeRuntime"), true);
+    assert.equal(classic.isValidUrl("https://example.com"), true);
+    assert.equal(classic.validateUrl("https://example.com").includes("https://example.com"), true);
+    assert.equal(classic.joinUrl("https://example.com", "api/v1").includes("/api/v1"), true);
+    assert.equal(
+      classic
+        .buildUrlWithQuery("https://example.com/search", [{ key: "q", value: "node" }])
+        .includes("q=node"),
+      true,
+    );
+
+    const enbChecker = new classic.JsEnbChecker(dir);
+    assert.equal(enbChecker.checkBinaries(), "NotInstalled");
+    assert.equal(classic.checkEnb(dir).isPresent, false);
+
+    const logProcessor = new classic.JsLogProcessor(["error"], [], []);
+    assert.equal(logProcessor.processLogs(dir).includes("TOTAL NUMBER OF DETECTED LOG ERRORS"), true);
+    assert.equal(classic.processGameLogs(dir, ["error"], [], []).includes("TOTAL NUMBER OF DETECTED LOG ERRORS"), true);
+    assert.deepEqual(classic.scanAllBa2Archives(dir), []);
+
+    const unpacked = classic.scanUnpackedFiles(dir, []);
+    assert.equal(Array.isArray(unpacked.texFrmt), true);
+    assert.equal(Array.isArray(unpacked.sndFrmt), true);
+
+    const client = new classic.GithubClient("owner", "repo");
+    assert.equal(client.repoUrl().includes("github.com/owner/repo"), true);
+    assert.equal(classic.hasUpdate("1.0.0", "1.0.1"), true);
+
+    const releasePromise = classic.getLatestRelease("owner", "repo");
+    const updatePromise = classic.checkForUpdates("owner", "repo", "1.0.0");
+    assert.equal(releasePromise instanceof Promise, true);
+    assert.equal(updatePromise instanceof Promise, true);
+    releasePromise.catch(() => { });
+    updatePromise.catch(() => { });
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
 test("runs Tier-1 async API in Node runtime", async () => {
   const results = await classic.processLogsBatchWithYamlContent(
     [],

@@ -16,12 +16,32 @@ RUST_TARGET_CRATES: dict[str, str] = {
     "classic-scanlog-core": "ClassicLib-rs/business-logic/classic-scanlog-core/src/lib.rs",
     "classic-config-core": "ClassicLib-rs/business-logic/classic-config-core/src/lib.rs",
     "classic-version-registry-core": "ClassicLib-rs/business-logic/classic-version-registry-core/src/lib.rs",
+    "classic-file-io-core": "ClassicLib-rs/business-logic/classic-file-io-core/src/lib.rs",
+    "classic-path-core": "ClassicLib-rs/business-logic/classic-path-core/src/lib.rs",
+    "classic-settings-core": "ClassicLib-rs/business-logic/classic-settings-core/src/lib.rs",
+    "classic-message-core": "ClassicLib-rs/business-logic/classic-message-core/src/lib.rs",
+    "classic-perf-core": "ClassicLib-rs/business-logic/classic-perf-core/src/lib.rs",
+    "classic-registry-core": "ClassicLib-rs/business-logic/classic-registry-core/src/lib.rs",
+    "classic-shared-core": "ClassicLib-rs/foundation/classic-shared-core/src/lib.rs",
 }
 
 RUST_OWNER_BY_CRATE: dict[str, str] = {
     "classic-scanlog-core": "scanlog",
     "classic-config-core": "config",
     "classic-version-registry-core": "version_registry",
+    "classic-file-io-core": "aux",
+    "classic-path-core": "aux",
+    "classic-settings-core": "aux",
+    "classic-message-core": "aux",
+    "classic-perf-core": "aux",
+    "classic-registry-core": "aux",
+    "classic-shared-core": "aux",
+}
+
+RUST_FULL_INVENTORY_CRATES: set[str] = {
+    "classic-scanlog-core",
+    "classic-config-core",
+    "classic-version-registry-core",
 }
 
 SQUAD_BY_OWNER: dict[str, str] = {
@@ -30,6 +50,15 @@ SQUAD_BY_OWNER: dict[str, str] = {
     "version_registry": "Squad B (version-registry/aux)",
     "aux": "Squad B (version-registry/aux)",
 }
+
+
+def include_rust_symbol(
+    crate_name: str,
+    symbol: str,
+    tier1_rust_symbols: set[str],
+) -> bool:
+    """Whether a Rust symbol should be included in parity inventory output."""
+    return crate_name in RUST_FULL_INVENTORY_CRATES or symbol in tier1_rust_symbols
 
 
 def snake_to_camel(name: str) -> str:
@@ -136,6 +165,8 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
 
         for match in re.finditer(r"(?m)^\s*pub\s+mod\s+([A-Za-z0-9_]+)\s*;", content):
             symbol = match.group(1)
+            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
+                continue
             entries.append({
                 "symbol": symbol,
                 "kind": "module",
@@ -148,6 +179,8 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
 
         for match in re.finditer(r"(?m)^\s*pub\s+fn\s+([A-Za-z0-9_]+)\s*\((.*?)\)", content):
             symbol = match.group(1)
+            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
+                continue
             arity = count_top_level_params(match.group(2))
             entries.append({
                 "symbol": symbol,
@@ -166,6 +199,8 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
         ):
             kind = match.group(1)
             symbol = match.group(2)
+            if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
+                continue
             entries.append({
                 "symbol": symbol,
                 "kind": kind,
@@ -179,6 +214,8 @@ def parse_rust_surface(repo_root: Path, tier1_rust_symbols: set[str]) -> dict[st
         for match in re.finditer(r"pub\s+use\s+([^;]+);", content, flags=re.MULTILINE | re.DOTALL):
             use_body = match.group(1)
             for symbol, source_expr in expand_pub_use_statement(use_body):
+                if not include_rust_symbol(crate_name, symbol, tier1_rust_symbols):
+                    continue
                 entries.append({
                     "symbol": symbol,
                     "kind": "reexport",
