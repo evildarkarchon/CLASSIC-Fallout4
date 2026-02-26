@@ -49,12 +49,19 @@ class BackupManager:
             TypeError: If any of the settings have invalid types.
 
         """
+        from ClassicLib.core.registry import GlobalRegistry
         from ClassicLib.io.yaml import yaml_settings
+        from ClassicLib.support.versions import get_version_registry
 
         backup_list: list[str] | None = yaml_settings(list[str], YAML.Main, "CLASSIC_AutoBackup")
         game_path: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Game")
         xse_log_file: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Docs_File_XSE")
-        xse_ver_latest: str | None = yaml_settings(str, YAML.Game, "Game_Info.XSE_Ver_Latest")
+
+        registry = get_version_registry()
+        version_id = "FO4_VR" if GlobalRegistry.is_vr_version() else "FO4_OG"
+        version_info = registry.get_by_id(version_id)
+        xse_config = version_info.xse if version_info else None
+        xse_ver_latest: str | None = xse_config.compatible_version if xse_config else None
 
         # Validate types
         if not isinstance(backup_list, list):
