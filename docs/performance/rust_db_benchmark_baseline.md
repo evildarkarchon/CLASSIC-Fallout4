@@ -167,3 +167,14 @@ For follow-up Rust DB optimization work:
 
 - Include a benchmark delta report against the latest agreed baseline.
 - Call out any `warning` or `fail` scenarios and planned follow-up actions.
+
+### Tuning Notes: FormID Batch Lookup Integration (2026-02-26)
+
+- `classic-scanlog-core::formid_match` now stages candidate rows and resolves value descriptions via one `DatabasePool::get_entries_batch` path.
+- Batch size is set locally in scanlog-core to `100` (`FORMID_BATCH_LOOKUP_SIZE`) to stay aligned with current DB-core defaults while keeping query payloads bounded.
+- Quick-mode comparison against baseline `db-baseline-local-v2` (export: `ClassicLib-rs/target/criterion/formid-batch-delta.json`) showed large cold-path gains:
+  - `cold_small_32`: `-89.44%`
+  - `cold_medium_128`: `-90.25%`
+  - `cold_large_512`: `-90.67%`
+- Trade-off observed: `warm_medium_128` regressed (`+98.62%`, classified `fail`), likely from fixed batch orchestration overhead when cache is already hot.
+- Follow-up tuning direction: add adaptive fast-path gating (e.g., bypass batching for very small/hot candidate sets) and re-run thorough-mode comparisons before changing thresholds.
