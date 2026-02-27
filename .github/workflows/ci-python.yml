@@ -221,8 +221,11 @@ jobs:
       - name: Verify Rust acceleration
         shell: bash
         run: |
-          uv run python -c "import classic_yaml; print(f'Rust YAML version: {classic_yaml.__version__}')"
-          uv run python -c "from ClassicLib.integration.factory import detect_component; avail = [c for c in ['classic_yaml', 'classic_scanlog', 'classic_fileio'] if detect_component(c)[0]]; print('Rust components:', avail if avail else 'none')"
+          uv run python -c "from ClassicLib.integration.factory import get_binding_contract, validate_rust_modules; validate_rust_modules('startup_all'); print(f\"Validated startup_all Rust bindings: {len(get_binding_contract('startup_all'))}\")"
+
+      - name: Run phase-1 logging contract checks
+        run: uv run pytest tests/parity/test_logging_contract_phase1.py -m unit --maxfail=1 --tb=short --no-cov
+        timeout-minutes: 10
 
       - name: Run pytest (unit tests)
         run: uv run pytest -m "unit and not slow and not stress" --maxfail=5 --tb=short --timeout=300 --skip-slow --skip-network --skip-performance --skip-stress --timeout-method=thread --junitxml=test-results/unit.xml --no-cov

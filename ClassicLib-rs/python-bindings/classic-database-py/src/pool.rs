@@ -10,7 +10,8 @@
 //! - `MAX_CACHE_TTL_SECS` (3600): For very large batches (60 minutes)
 
 use classic_database_core::{
-    BATCH_CACHE_TTL_SECS, DEFAULT_CACHE_TTL_SECS, DatabasePool, MAX_CACHE_TTL_SECS,
+    BATCH_CACHE_TTL_SECS, DEFAULT_CACHE_CLEANUP_INTERVAL_SECS, DEFAULT_CACHE_CLEANUP_OP_THRESHOLD,
+    DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY, DatabasePool, MAX_CACHE_TTL_SECS,
 };
 use pyo3::prelude::*;
 use pyo3::types::PyList;
@@ -43,6 +44,27 @@ pub fn py_get_max_cache_ttl() -> u64 {
     MAX_CACHE_TTL_SECS
 }
 
+/// Get the default query cache capacity.
+#[pyfunction]
+#[pyo3(name = "get_default_query_cache_capacity")]
+pub fn py_get_default_query_cache_capacity() -> usize {
+    DEFAULT_QUERY_CACHE_CAPACITY
+}
+
+/// Get the default proactive cleanup operation threshold.
+#[pyfunction]
+#[pyo3(name = "get_default_cache_cleanup_threshold")]
+pub fn py_get_default_cache_cleanup_threshold() -> u64 {
+    DEFAULT_CACHE_CLEANUP_OP_THRESHOLD
+}
+
+/// Get the default proactive cleanup interval in seconds.
+#[pyfunction]
+#[pyo3(name = "get_default_cache_cleanup_interval")]
+pub fn py_get_default_cache_cleanup_interval() -> u64 {
+    DEFAULT_CACHE_CLEANUP_INTERVAL_SECS
+}
+
 /// Python-facing database pool wrapper
 ///
 /// This wrapper is Send-safe because the inner DatabasePool uses Arc, DashMap,
@@ -59,7 +81,7 @@ impl PyDatabasePool {
     ///
     /// # Arguments
     ///
-    /// * `max_connections` - Optional maximum number of database connections (defaults to auto-calculated)
+    /// * `max_connections` - Optional global connection budget across active database pools
     /// * `cache_ttl_seconds` - Optional cache TTL in seconds (defaults to 1800 / 30 min for batch operations)
     /// * `game_table` - Optional game table name (defaults to "Fallout4")
     ///
@@ -81,19 +103,31 @@ impl PyDatabasePool {
     /// pool = DatabasePool(cache_ttl_seconds=get_batch_cache_ttl())
     /// ```
     #[new]
-    #[pyo3(signature = (max_connections=None, cache_ttl_seconds=None, game_table=None))]
+    #[pyo3(signature = (max_connections=None, cache_ttl_seconds=None, game_table=None, cache_capacity=None, cleanup_threshold=None, cleanup_interval_seconds=None))]
     pub fn new(
         max_connections: Option<usize>,
         cache_ttl_seconds: Option<u64>,
         game_table: Option<String>,
+        cache_capacity: Option<usize>,
+        cleanup_threshold: Option<u64>,
+        cleanup_interval_seconds: Option<u64>,
     ) -> Self {
         // Default to batch TTL (30 min) for better cross-log cache performance
         let ttl = Duration::from_secs(cache_ttl_seconds.unwrap_or(BATCH_CACHE_TTL_SECS));
         let table = game_table.unwrap_or_else(|| "Fallout4".to_string());
+        let inner = DatabasePool::new(max_connections, ttl, table);
 
-        Self {
-            inner: DatabasePool::new(max_connections, ttl, table),
+        if let Some(capacity) = cache_capacity {
+            inner.set_cache_capacity(capacity);
         }
+        if let Some(threshold) = cleanup_threshold {
+            inner.set_cache_cleanup_threshold(threshold);
+        }
+        if let Some(interval) = cleanup_interval_seconds {
+            inner.set_cache_cleanup_interval(Duration::from_secs(interval));
+        }
+
+        Self { inner }
     }
 
     /// Initialize database connections for given paths
@@ -232,22 +266,73 @@ impl PyDatabasePool {
         self.inner.set_cache_ttl(Duration::from_secs(seconds));
     }
 
-    /// Get current max_connections setting
+    /// Get current cache capacity.
+    #[pyo3(name = "get_cache_capacity")]
+    pub fn py_get_cache_capacity(&self) -> usize {
+        self.inner.get_cache_capacity()
+    }
+
+    /// Set cache capacity.
+    #[pyo3(name = "set_cache_capacity")]
+    pub fn py_set_cache_capacity(&self, capacity: usize) {
+        self.inner.set_cache_capacity(capacity);
+    }
+
+    /// Get proactive cleanup threshold (operations).
+    #[pyo3(name = "get_cache_cleanup_threshold")]
+    pub fn py_get_cache_cleanup_threshold(&self) -> u64 {
+        self.inner.get_cache_cleanup_threshold()
+    }
+
+    /// Set proactive cleanup threshold (operations).
+    #[pyo3(name = "set_cache_cleanup_threshold")]
+    pub fn py_set_cache_cleanup_threshold(&self, threshold: u64) {
+        self.inner.set_cache_cleanup_threshold(threshold);
+    }
+
+    /// Get proactive cleanup interval in seconds.
+    #[pyo3(name = "get_cache_cleanup_interval")]
+    pub fn py_get_cache_cleanup_interval(&self) -> u64 {
+        self.inner.get_cache_cleanup_interval().as_secs()
+    }
+
+    /// Set proactive cleanup interval in seconds.
+    #[pyo3(name = "set_cache_cleanup_interval")]
+    pub fn py_set_cache_cleanup_interval(&self, seconds: u64) {
+        self.inner
+            .set_cache_cleanup_interval(Duration::from_secs(seconds));
+    }
+
+    /// Get current global connection budget setting.
     #[pyo3(name = "get_max_connections")]
     pub fn py_get_max_connections(&self) -> Option<usize> {
         self.inner.get_max_connections()
     }
 
-    /// Set max_connections (for runtime adjustment)
+    /// Set global connection budget (config-only).
+    ///
+    /// Existing pools are not rebuilt automatically. Call `rebalance_connections()`
+    /// to apply the updated budget immediately.
     #[pyo3(name = "set_max_connections")]
     pub fn py_set_max_connections(&self, max_connections: usize) {
         self.inner.set_max_connections(max_connections);
     }
 
-    /// Recalculate max_connections based on current system resources
+    /// Recalculate global connection budget from current system resources.
     #[pyo3(name = "recalculate_max_connections")]
     pub fn py_recalculate_max_connections(&self) {
         self.inner.recalculate_max_connections();
+    }
+
+    /// Explicitly rebalance active pools using the current global budget.
+    ///
+    /// Returns a Python coroutine - use with await in Python.
+    #[pyo3(name = "rebalance_connections")]
+    pub fn py_rebalance_connections<'py>(&self, py: Python<'py>) -> PyResult<Bound<'py, PyAny>> {
+        let inner = self.inner.clone();
+        future_into_py(py, async move {
+            inner.rebalance_connections().await.map_err(to_pyerr)
+        })
     }
 
     /// Get pool statistics as a dictionary
@@ -261,6 +346,73 @@ impl PyDatabasePool {
         result.insert("cache_misses".to_string(), stats.cache_misses);
         result.insert("total_connections".to_string(), stats.total_connections);
         result.insert("active_connections".to_string(), stats.active_connections);
+        result.insert("cache_evictions".to_string(), stats.cache_evictions);
+        result.insert("cleanup_runs".to_string(), stats.cleanup_runs);
+        result.insert("cleanup_removed".to_string(), stats.cleanup_removed);
+        result.insert(
+            "configured_connection_budget".to_string(),
+            stats.configured_connection_budget,
+        );
+        result.insert(
+            "effective_connection_budget".to_string(),
+            stats.effective_connection_budget,
+        );
+        result.insert("active_pool_count".to_string(), stats.active_pool_count);
+        result.insert("min_pool_allocation".to_string(), stats.min_pool_allocation);
+        result.insert("max_pool_allocation".to_string(), stats.max_pool_allocation);
+        result.insert("allocation_spread".to_string(), stats.allocation_spread);
+        result.insert(
+            "stable_shape_selections".to_string(),
+            stats.stable_shape_selections,
+        );
+        result.insert(
+            "stable_shape_padding_pairs".to_string(),
+            stats.stable_shape_padding_pairs,
+        );
+        result.insert(
+            "stable_shape_bucket_8".to_string(),
+            stats.stable_shape_bucket_8,
+        );
+        result.insert(
+            "stable_shape_bucket_16".to_string(),
+            stats.stable_shape_bucket_16,
+        );
+        result.insert(
+            "stable_shape_bucket_32".to_string(),
+            stats.stable_shape_bucket_32,
+        );
+        result.insert(
+            "stable_shape_bucket_64".to_string(),
+            stats.stable_shape_bucket_64,
+        );
+        result.insert(
+            "stable_shape_bucket_128".to_string(),
+            stats.stable_shape_bucket_128,
+        );
+        result.insert(
+            "stable_shape_bucket_256".to_string(),
+            stats.stable_shape_bucket_256,
+        );
+        result.insert(
+            "stable_shape_bucket_512".to_string(),
+            stats.stable_shape_bucket_512,
+        );
+        result.insert(
+            "stable_shape_bucket_1024".to_string(),
+            stats.stable_shape_bucket_1024,
+        );
+        result.insert(
+            "cache_capacity".to_string(),
+            self.inner.get_cache_capacity() as u64,
+        );
+        result.insert(
+            "cleanup_threshold".to_string(),
+            self.inner.get_cache_cleanup_threshold(),
+        );
+        result.insert(
+            "cleanup_interval_seconds".to_string(),
+            self.inner.get_cache_cleanup_interval().as_secs(),
+        );
 
         if stats.total_queries > 0 {
             let hit_rate = (stats.cache_hits as f64 / stats.total_queries as f64) * 100.0;

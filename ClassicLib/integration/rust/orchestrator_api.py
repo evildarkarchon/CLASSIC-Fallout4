@@ -49,31 +49,20 @@ CLI Usage:
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from ClassicLib.integration.factory import detect_component
+from ClassicLib.integration.factory import get_component
 
 # Always import for type checking, conditionally at runtime
 if TYPE_CHECKING:
     from classic_config import YamlData
     from classic_scanlog import AnalysisConfig, AnalysisResult, Orchestrator
 
-    RUST_AVAILABLE: bool
 else:
-    # Centralized detection of Rust orchestrator components
-    _has_yamldata, YamlData = detect_component("classic_config", "YamlData")
-    _has_config, AnalysisConfig = detect_component("classic_scanlog", "AnalysisConfig")
-    _has_result, AnalysisResult = detect_component("classic_scanlog", "AnalysisResult")
-    _has_orchestrator, Orchestrator = detect_component("classic_scanlog", "Orchestrator")
-
-    RUST_AVAILABLE = _has_yamldata and _has_config and _has_result and _has_orchestrator
-
-    if not RUST_AVAILABLE:
-        # Runtime fallbacks - never used due to RUST_AVAILABLE check
-        YamlData = Any  # type: ignore[misc, assignment]
-        AnalysisConfig = Any  # type: ignore[misc, assignment]
-        AnalysisResult = Any  # type: ignore[misc, assignment]
-        Orchestrator = Any  # type: ignore[misc, assignment]
+    YamlData = get_component("classic_config", "YamlData")
+    AnalysisConfig = get_component("classic_scanlog", "AnalysisConfig")
+    AnalysisResult = get_component("classic_scanlog", "AnalysisResult")
+    Orchestrator = get_component("classic_scanlog", "Orchestrator")
 
 from ClassicLib.integration.factory import get_yamldata
 
@@ -155,20 +144,15 @@ class ClassicOrchestrator:
         """Initialize the class and sets up the required components for configuration
         and data orchestration.
 
-        The constructor ensures the availability of Rust components and reliably
-        constructs instances of `YamlData`, `AnalysisConfig`, and `Orchestrator`.
-        It uses a fallback mechanism to handle scenarios where Rust components are
-        not available.
+        The constructor requires Rust components and constructs instances of
+        `YamlData`, `AnalysisConfig`, and `Orchestrator`.
 
         Raises:
             RuntimeError: If Rust components are unavailable or missing. Provides
             instructions to install required modules.
 
         """
-        if not RUST_AVAILABLE:
-            raise RuntimeError("Rust components not available. Install classic_scanlog and classic_config modules.")
-
-        # Get YamlData from factory (uses Rust if available, Python fallback otherwise)
+        # Get YamlData from factory (Rust-only path)
         self.yamldata = get_yamldata()
 
         # Create AnalysisConfig from YamlData with game/VR context

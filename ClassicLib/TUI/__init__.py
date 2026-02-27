@@ -12,6 +12,7 @@ Example:
 
 """
 
+import ClassicLib.startup_validation as _startup_validation  # noqa: F401
 from ClassicLib.TUI.app import CLASSICApp
 from ClassicLib.TUI.test_mode import initialize_test_mode
 

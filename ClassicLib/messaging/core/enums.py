@@ -1,11 +1,7 @@
 """Message type and target enums for the MessageHandler system.
 
 This module provides enumerations for message categorization and routing.
-When Rust acceleration is available, these can interoperate with the
-Rust enums via the classic_message module.
-
-Attributes:
-    RUST_ENUMS: Whether Rust enum integration is available.
+These interoperate directly with Rust enums via the `classic_message` module.
 
 """
 
@@ -14,22 +10,11 @@ from __future__ import annotations
 from enum import Enum, auto
 from typing import TYPE_CHECKING, Any
 
+from classic_message import MessageTarget as RustMessageTarget
+from classic_message import MessageType as RustMessageType
+
 if TYPE_CHECKING:
     from typing import Self
-
-# Try to import Rust enums for interop
-try:
-    from classic_message import MessageTarget as RustMessageTarget
-    from classic_message import MessageType as RustMessageType
-
-    _RUST_ENUMS_AVAILABLE = True
-except ImportError:
-    _RUST_ENUMS_AVAILABLE = False
-    RustMessageType = None  # type: ignore[assignment, misc]
-    RustMessageTarget = None  # type: ignore[assignment, misc]
-
-# Export as module constant
-RUST_ENUMS: bool = _RUST_ENUMS_AVAILABLE
 
 
 class MessageType(Enum):
@@ -54,16 +39,13 @@ class MessageType(Enum):
     DEBUG = auto()
     CRITICAL = auto()
 
-    def to_rust(self) -> Any | None:
-        """Convert to Rust MessageType if available.
+    def to_rust(self) -> Any:
+        """Convert to Rust MessageType.
 
         Returns:
-            Rust MessageType enum value or None if Rust unavailable.
+            Rust MessageType enum value.
 
         """
-        if not RUST_ENUMS or RustMessageType is None:
-            return None
-
         mapping = {
             MessageType.INFO: RustMessageType.Info,
             MessageType.WARNING: RustMessageType.Warning,
@@ -73,7 +55,7 @@ class MessageType(Enum):
             MessageType.DEBUG: RustMessageType.Debug,
             MessageType.CRITICAL: RustMessageType.Critical,
         }
-        return mapping.get(self)
+        return mapping[self]
 
     @classmethod
     def from_rust(cls, rust_type: Any) -> Self:
@@ -89,10 +71,6 @@ class MessageType(Enum):
             ValueError: If unknown Rust type.
 
         """
-        if not RUST_ENUMS:
-            msg = "Rust enums not available"
-            raise ValueError(msg)
-
         # Use the name for mapping
         name = str(rust_type).lower()
         for member in cls:
@@ -158,16 +136,13 @@ class MessageTarget(Enum):
         normalized = self.normalize()
         return normalized != MessageTarget.LOG_ONLY
 
-    def to_rust(self) -> Any | None:
-        """Convert to Rust MessageTarget if available.
+    def to_rust(self) -> Any:
+        """Convert to Rust MessageTarget.
 
         Returns:
-            Rust MessageTarget enum value or None if Rust unavailable.
+            Rust MessageTarget enum value.
 
         """
-        if not RUST_ENUMS or RustMessageTarget is None:
-            return None
-
         # Normalize first, then map
         normalized = self.normalize()
         mapping = {
@@ -176,7 +151,7 @@ class MessageTarget(Enum):
             MessageTarget.CONSOLE: RustMessageTarget.Console,
             MessageTarget.LOG_ONLY: RustMessageTarget.LogOnly,
         }
-        return mapping.get(normalized)
+        return mapping[normalized]
 
     @classmethod
     def from_rust(cls, rust_target: Any) -> MessageTarget:
@@ -192,10 +167,6 @@ class MessageTarget(Enum):
             ValueError: If unknown Rust target.
 
         """
-        if not RUST_ENUMS:
-            msg = "Rust enums not available"
-            raise ValueError(msg)
-
         # Use string representation for mapping
         name = str(rust_target).lower()
         # Map to canonical names

@@ -14,8 +14,8 @@ pytestmark = [pytest.mark.unit]
 class TestGetConstants:
     """Tests for get_constants function."""
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    def test_raises_on_import_error(self) -> None:
+        """Test raises ImportError when required binding is missing."""
         import builtins
 
         from ClassicLib.integration.factory import get_constants
@@ -28,16 +28,15 @@ class TestGetConstants:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_constants()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_constants"):
+                get_constants()
 
 
 class TestGetVersionUtils:
     """Tests for get_version_utils function."""
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    def test_raises_on_import_error(self) -> None:
+        """Test raises ImportError when required binding is missing."""
         import builtins
 
         from ClassicLib.integration.factory import get_version_utils
@@ -50,16 +49,15 @@ class TestGetVersionUtils:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_version_utils()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_version"):
+                get_version_utils()
 
 
 class TestGetResourceMgmt:
     """Tests for get_resource_mgmt function."""
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    def test_raises_on_import_error(self) -> None:
+        """Test raises ImportError when required binding is missing."""
         import builtins
 
         from ClassicLib.integration.factory import get_resource_mgmt
@@ -72,16 +70,15 @@ class TestGetResourceMgmt:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_resource_mgmt()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_resource"):
+                get_resource_mgmt()
 
 
 class TestGetXseUtils:
     """Tests for get_xse_utils function."""
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    def test_raises_on_import_error(self) -> None:
+        """Test raises ImportError when required binding is missing."""
         import builtins
 
         from ClassicLib.integration.factory import get_xse_utils
@@ -94,16 +91,15 @@ class TestGetXseUtils:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_xse_utils()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_xse"):
+                get_xse_utils()
 
 
 class TestGetWebUtils:
     """Tests for get_web_utils function."""
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    def test_raises_on_import_error(self) -> None:
+        """Test raises ImportError when required binding is missing."""
         import builtins
 
         from ClassicLib.integration.factory import get_web_utils
@@ -116,9 +112,8 @@ class TestGetWebUtils:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_web_utils()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_web"):
+                get_web_utils()
 
 
 class TestGetPathOperations:

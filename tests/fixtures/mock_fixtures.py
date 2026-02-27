@@ -163,19 +163,5 @@ def mock_registry_entries() -> Generator[dict[str, dict[str, str]], None, None]:
 
 @pytest.fixture
 def disable_rust_acceleration(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Best-effort helper for legacy tests that need to bypass Rust path operations.
-
-    Notes:
-        - Rust path acceleration is now the default architecture.
-        - Some modules no longer expose legacy `_HAS_RUST_PATH` flags.
-        - Use `raising=False` so this fixture remains safe across mixed test suites.
-    """
-    # Legacy compatibility flags (where present)
-    monkeypatch.setattr("ClassicLib.support.game_path._HAS_RUST_PATH", False, raising=False)
-    monkeypatch.setattr("ClassicLib.support.docs_path._HAS_RUST_PATH", False, raising=False)
-    monkeypatch.setattr("ClassicLib.support.path_validator._HAS_RUST_PATH", False, raising=False)
-
-    # Best-effort module stubs for tests that patch call sites directly.
-    monkeypatch.setattr("ClassicLib.support.game_path.classic_path", None, raising=False)
-    monkeypatch.setattr("ClassicLib.support.docs_path.classic_path", None, raising=False)
-    monkeypatch.setattr("ClassicLib.support.path_validator.classic_path", None, raising=False)
+    """Legacy compatibility fixture (no-op under mandatory Rust contract)."""
+    _ = monkeypatch

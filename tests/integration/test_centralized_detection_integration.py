@@ -60,10 +60,57 @@ def test_get_component_success():
 @pytest.mark.rust
 def test_get_component_failure():
     """Test get_component raises for missing component."""
+    from ClassicLib.integration.exceptions import RustBindingImportError
     from ClassicLib.integration.factory import get_component
 
-    with pytest.raises(ImportError, match="Rust component.*not available"):
+    with pytest.raises(RustBindingImportError, match="nonexistent_module.FakeClass"):
         get_component("nonexistent_module", "FakeClass")
+
+
+@pytest.mark.integration
+@pytest.mark.rust
+def test_validate_rust_modules_reports_import_failures():
+    """Startup contract validation should classify missing imports."""
+    import builtins
+
+    from ClassicLib.integration.exceptions import RustBindingImportError
+    from ClassicLib.integration.factory import validate_rust_modules
+
+    original_import = builtins.__import__
+
+    def mock_import(name, *args, **kwargs):
+        if name == "classic_yaml":
+            raise ImportError("No module named 'classic_yaml'")
+        return original_import(name, *args, **kwargs)
+
+    with pytest.raises(RustBindingImportError, match="classic_yaml.YamlOperations"):
+        with pytest.MonkeyPatch.context() as patcher:
+            patcher.setattr(builtins, "__import__", mock_import)
+            validate_rust_modules("startup_all")
+
+
+@pytest.mark.integration
+@pytest.mark.rust
+def test_validate_rust_modules_reports_init_failures():
+    """Startup contract validation should classify invalid binding initialization."""
+    import builtins
+    import types
+
+    from ClassicLib.integration.exceptions import RustBindingInitError
+    from ClassicLib.integration.factory_internal.detection import validate_rust_modules
+
+    original_import = builtins.__import__
+
+    def mock_import(name, *args, **kwargs):
+        if name == "classic_yaml":
+            module = types.SimpleNamespace(YamlOperations=None)
+            return module
+        return original_import(name, *args, **kwargs)
+
+    with pytest.raises(RustBindingInitError, match="classic_yaml.YamlOperations"):
+        with pytest.MonkeyPatch.context() as patcher:
+            patcher.setattr(builtins, "__import__", mock_import)
+            validate_rust_modules("startup_all")
 
 
 @pytest.mark.integration
@@ -110,19 +157,19 @@ def test_wrapper_modules_use_centralized_detection():
     """Verify wrapper modules use centralized detection."""
     # Import remaining wrapper modules and check they work
     from ClassicLib.integration.factory import is_component_available
-    from ClassicLib.integration.rust.file_io_rust import RUST_AVAILABLE as file_io_avail
-    from ClassicLib.integration.rust.mod_detector_rust import RUST_AVAILABLE as mod_avail
-    from ClassicLib.integration.rust.orchestrator_api import RUST_AVAILABLE as orch_avail
+    from ClassicLib.integration.rust.file_io_rust import FileIOCore
+    from ClassicLib.integration.rust.mod_detector_rust import is_rust_accelerated
+    from ClassicLib.integration.rust.orchestrator_api import ClassicOrchestrator
     from ClassicLib.integration.rust.parser_rust import RustLogParser
-    from ClassicLib.integration.rust.report_rust import RUST_AVAILABLE as report_avail
-    from ClassicLib.io.database.rust_pool import RUST_AVAILABLE as database_avail
+    from ClassicLib.integration.rust.report_rust import ReportGenerator
+    from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
-    # All should be True in test environment with Rust built
-    assert file_io_avail is True
-    assert database_avail is True
-    assert mod_avail is True
-    assert report_avail is True
-    assert orch_avail is True
+    # Wrappers should resolve to concrete Rust-backed implementations
+    assert FileIOCore is not None
+    assert RustAsyncDatabasePool is not None
+    assert ReportGenerator is not None
+    assert ClassicOrchestrator is not None
+    assert is_rust_accelerated() is True
 
     # Test factory-based components (wrappers deleted, now use factory detection)
     assert is_component_available("classic_scanlog", "SuspectScanner") is True

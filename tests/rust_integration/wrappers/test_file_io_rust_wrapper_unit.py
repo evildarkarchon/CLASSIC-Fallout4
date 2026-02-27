@@ -1,14 +1,13 @@
 """Unit tests for ClassicLib.rust.file_io_rust module.
 
 This module tests the FileIOCore Rust wrapper class, which provides
-high-performance file I/O with automatic fallback to Python.
+high-performance file I/O through required Rust bindings.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import TYPE_CHECKING
-from unittest.mock import patch
 
 import pytest
 
@@ -98,19 +97,6 @@ class TestFileIOCoreInit:
     def test_is_rust_accelerated_property(self, file_io_core: "FileIOCore") -> None:
         """Test is_rust_accelerated property works."""
         assert isinstance(file_io_core.is_rust_accelerated, bool)
-
-    @pytest.mark.unit
-    def test_init_fallback_when_rust_unavailable(self) -> None:
-        """Test Python fallback is created when Rust unavailable."""
-        with patch("ClassicLib.integration.rust.file_io_rust.RUST_AVAILABLE", False):
-            with patch("ClassicLib.integration.rust.file_io_rust._rust_io", None):
-                from ClassicLib.integration.rust.file_io_rust import FileIOCore
-
-                io = FileIOCore.__new__(FileIOCore)
-                io.default_encoding = "utf-8"
-                io.default_errors = "ignore"
-                io._rust_core = None
-                assert io._rust_core is None
 
 
 # ============================================================================
@@ -399,19 +385,3 @@ class TestCrashLogOperations:
         await file_io_core.write_crash_report(log_path, ["# Report\n", "Content\n"])
         md_path = tmp_path / "crash.md"
         assert md_path.exists()
-
-
-# ============================================================================
-# RUST_AVAILABLE flag Tests
-# ============================================================================
-
-
-class TestRustAvailableFlag:
-    """Tests for RUST_AVAILABLE module flag."""
-
-    @pytest.mark.unit
-    def test_rust_available_is_bool(self) -> None:
-        """Test RUST_AVAILABLE is a boolean."""
-        from ClassicLib.integration.rust.file_io_rust import RUST_AVAILABLE
-
-        assert isinstance(RUST_AVAILABLE, bool)

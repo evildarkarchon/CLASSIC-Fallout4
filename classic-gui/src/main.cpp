@@ -13,10 +13,14 @@
 
 #include "core/rust_qt_bridge.h"
 
+#include "classic_cxx_bridge/message.h"
 #include "classic_cxx_bridge/registry.h"
 #include "classic_cxx_bridge/runtime.h"
 #include "classic_cxx_bridge/yaml.h"
 #include "rust/cxx.h"
+
+#include <cstdlib>
+#include <string>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -69,10 +73,27 @@ static QString findIcon()
     return {};
 }
 
+static std::string startupCorrelationId()
+{
+    char* value = nullptr;
+    size_t valueLen = 0;
+    if (_dupenv_s(&value, &valueLen, "CLASSIC_CORRELATION_ID") != 0 || value == nullptr) {
+        return {};
+    }
+
+    std::string correlationId(value);
+    free(value);
+    if (correlationId.empty()) {
+        return {};
+    }
+    return correlationId;
+}
+
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
     app.setApplicationName(QStringLiteral("CLASSIC"));
+    const std::string correlationId = startupCorrelationId();
 
     // Set window icon
     QString iconPath = findIcon();
@@ -82,8 +103,15 @@ int main(int argc, char* argv[])
 
     // Initialize Rust runtime (ONE RUNTIME RULE: single Tokio runtime for the process)
     try {
+        classic::message::init_logging();
         classic::runtime::init_runtime();
+        classic::message::log_startup_binding_contract_validated("classic-gui.startup", 3, correlationId);
+        classic::message::log_startup_acceleration_status(1, 1, "MANDATORY", correlationId);
     } catch (const rust::Error& e) {
+        classic::message::log_startup_binding_contract_failed(
+            "classic-gui.startup", "classic::runtime::init_runtime", "runtime_init",
+            "Run classic-gui/build_gui.ps1 to rebuild the C++ bridge and verify runtime dependencies.", e.what(),
+            correlationId);
         QMessageBox::critical(nullptr, "Fatal Error", QString("Failed to initialize Rust runtime:\n%1").arg(e.what()));
         return 1;
     }
@@ -91,25 +119,29 @@ int main(int argc, char* argv[])
     // Read application version from CLASSIC Main.yaml (single source of truth).
     QString dataDir = findDataDir();
     if (dataDir.isEmpty()) {
+        classic::message::log_startup_binding_contract_failed(
+            "classic-gui.startup", "CLASSIC Data directory", "config_missing",
+            "Place the 'CLASSIC Data' directory next to the executable or run from the project root.",
+            "Unable to locate CLASSIC Data directory", correlationId);
         QMessageBox::critical(
-            nullptr,
-            QStringLiteral("Fatal Configuration Error"),
-            QStringLiteral(
-                "Unable to locate the CLASSIC Data directory.\n\n"
-                "Cannot read CLASSIC_Info.version because CLASSIC Main.yaml is unavailable.\n"
-                "CLASSIC Main.yaml is the single source of truth for the application version."));
+            nullptr, QStringLiteral("Fatal Configuration Error"),
+            QStringLiteral("Unable to locate the CLASSIC Data directory.\n\n"
+                           "Cannot read CLASSIC_Info.version because CLASSIC Main.yaml is unavailable.\n"
+                           "CLASSIC Main.yaml is the single source of truth for the application version."));
         return 1;
     }
 
     QString mainYamlPath = dataDir + QStringLiteral("/databases/CLASSIC Main.yaml");
     if (!QFile::exists(mainYamlPath)) {
+        classic::message::log_startup_binding_contract_failed(
+            "classic-gui.startup", "CLASSIC Main.yaml", "config_missing",
+            "Restore CLASSIC Main.yaml under CLASSIC Data/databases before starting the GUI.",
+            mainYamlPath.toStdString(), correlationId);
         QMessageBox::critical(
-            nullptr,
-            QStringLiteral("Fatal Configuration Error"),
-            QStringLiteral(
-                "Missing required file:\n%1\n\n"
-                "Cannot read CLASSIC_Info.version.\n"
-                "CLASSIC Main.yaml is the single source of truth for the application version.")
+            nullptr, QStringLiteral("Fatal Configuration Error"),
+            QStringLiteral("Missing required file:\n%1\n\n"
+                           "Cannot read CLASSIC_Info.version.\n"
+                           "CLASSIC Main.yaml is the single source of truth for the application version.")
                 .arg(mainYamlPath));
         return 1;
     }
@@ -119,12 +151,14 @@ int main(int argc, char* argv[])
         classic::yaml::yaml_ops_load_file(*ops, std::string(mainYamlPath.toUtf8().constData()));
         auto version = classic::yaml::yaml_ops_get_string(*ops, "CLASSIC_Info.version", "");
         if (version.empty()) {
+            classic::message::log_startup_binding_contract_failed(
+                "classic-gui.startup", "CLASSIC_Info.version", "config_invalid",
+                "Add a non-empty CLASSIC_Info.version key to CLASSIC Main.yaml.", "Missing CLASSIC_Info.version key",
+                correlationId);
             QMessageBox::critical(
-                nullptr,
-                QStringLiteral("Fatal Configuration Error"),
-                QStringLiteral(
-                    "Missing key 'CLASSIC_Info.version' in:\n%1\n\n"
-                    "CLASSIC Main.yaml is the single source of truth for the application version.")
+                nullptr, QStringLiteral("Fatal Configuration Error"),
+                QStringLiteral("Missing key 'CLASSIC_Info.version' in:\n%1\n\n"
+                               "CLASSIC Main.yaml is the single source of truth for the application version.")
                     .arg(mainYamlPath));
             return 1;
         }
@@ -136,33 +170,35 @@ int main(int argc, char* argv[])
         }
 
         if (qVersion.isEmpty()) {
-            QMessageBox::critical(
-                nullptr,
-                QStringLiteral("Fatal Configuration Error"),
-                QStringLiteral(
-                    "Invalid value for 'CLASSIC_Info.version' in:\n%1\n\n"
-                    "Expected a non-empty version (for example: CLASSIC v9.0.0).")
-                    .arg(mainYamlPath));
+            classic::message::log_startup_binding_contract_failed(
+                "classic-gui.startup", "CLASSIC_Info.version", "config_invalid",
+                "Set CLASSIC_Info.version to a non-empty value (for example: CLASSIC v9.0.0).",
+                "CLASSIC_Info.version was empty after normalization", correlationId);
+            QMessageBox::critical(nullptr, QStringLiteral("Fatal Configuration Error"),
+                                  QStringLiteral("Invalid value for 'CLASSIC_Info.version' in:\n%1\n\n"
+                                                 "Expected a non-empty version (for example: CLASSIC v9.0.0).")
+                                      .arg(mainYamlPath));
             return 1;
         }
 
         app.setApplicationVersion(qVersion);
     } catch (const std::exception& e) {
-        QMessageBox::critical(
-            nullptr,
-            QStringLiteral("Fatal Configuration Error"),
-            QStringLiteral(
-                "Failed to read CLASSIC_Info.version from:\n%1\n\nDetails:\n%2")
-                .arg(mainYamlPath, QString::fromUtf8(e.what())));
+        classic::message::log_startup_binding_contract_failed(
+            "classic-gui.startup", "CLASSIC Main.yaml", "config_read",
+            "Check CLASSIC Main.yaml syntax and ensure the file is readable.", e.what(), correlationId);
+        QMessageBox::critical(nullptr, QStringLiteral("Fatal Configuration Error"),
+                              QStringLiteral("Failed to read CLASSIC_Info.version from:\n%1\n\nDetails:\n%2")
+                                  .arg(mainYamlPath, QString::fromUtf8(e.what())));
         return 1;
     } catch (...) {
-        QMessageBox::critical(
-            nullptr,
-            QStringLiteral("Fatal Configuration Error"),
-            QStringLiteral(
-                "Failed to read CLASSIC_Info.version from:\n%1\n\n"
-                "An unknown error occurred while loading CLASSIC Main.yaml.")
-                .arg(mainYamlPath));
+        classic::message::log_startup_binding_contract_failed(
+            "classic-gui.startup", "CLASSIC Main.yaml", "config_read",
+            "Check CLASSIC Main.yaml syntax and file permissions, then retry startup.",
+            "Unknown error while loading CLASSIC Main.yaml", correlationId);
+        QMessageBox::critical(nullptr, QStringLiteral("Fatal Configuration Error"),
+                              QStringLiteral("Failed to read CLASSIC_Info.version from:\n%1\n\n"
+                                             "An unknown error occurred while loading CLASSIC Main.yaml.")
+                                  .arg(mainYamlPath));
         return 1;
     }
 

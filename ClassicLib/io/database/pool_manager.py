@@ -1,11 +1,7 @@
 """Unified database pool manager.
 
-This module provides the singleton DatabasePoolManager which automatically
-selects between Rust-accelerated and Python fallback database pool
-implementations.
-
-The manager prefers Rust when available (25x faster) and falls back to
-Python's aiosqlite implementation transparently.
+This module provides the singleton DatabasePoolManager for the mandatory
+Rust-accelerated database pool implementation.
 
 Example:
     >>> from ClassicLib.Database import DatabasePoolManager
@@ -20,7 +16,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from typing import TYPE_CHECKING, Any, ClassVar, Self
+from typing import TYPE_CHECKING, Any, ClassVar, Self, cast
 
 from ClassicLib.core.logger import logger
 
@@ -34,9 +30,8 @@ if TYPE_CHECKING:
 class DatabasePoolManager:
     """Singleton manager for database pool instances.
 
-    Automatically selects between Rust-accelerated and Python fallback
-    implementations based on availability. Ensures database connections
-    are reused across multiple orchestrator instances.
+    Uses Rust-accelerated implementation and reuses database connections
+    across multiple orchestrator instances.
 
     Thread Safety:
         Uses threading.Lock for instance creation (synchronous) and
@@ -60,7 +55,7 @@ class DatabasePoolManager:
     _pool: Any = None  # Can be RustAsyncDatabasePool or AsyncDatabasePool
     _lock: ClassVar[asyncio.Lock | None] = None  # For async operations
     _creation_lock: ClassVar[threading.Lock] = threading.Lock()  # For __new__ thread safety
-    _using_rust: bool = False
+    _using_rust: bool = True
 
     def __new__(cls) -> Self:
         """Ensure only one instance of DatabasePoolManager exists.
@@ -75,19 +70,18 @@ class DatabasePoolManager:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
                 cls._lock = None
-        return cls._instance
+        return cast("Self", cls._instance)
 
     async def get_pool(self) -> PoolType:
         """Get or create the singleton database pool.
 
-        Uses Rust DatabasePool when available (25x faster), otherwise falls
-        back to Python AsyncDatabasePool (aiosqlite).
+        Uses required Rust DatabasePool.
 
         Returns:
             The singleton database pool instance (Rust or Python).
 
         Raises:
-            ImportError: If neither implementation is available.
+            ImportError: If required Rust implementation is unavailable.
 
         """
         # Thread-safe async lock creation using the threading lock
@@ -104,31 +98,15 @@ class DatabasePoolManager:
 
         async with lock:
             if self._pool is None:
-                # Try to use Rust DatabasePool first
-                try:
-                    from ClassicLib.integration.factory import is_component_available
+                from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
-                    if is_component_available("classic_database", "DatabasePool"):
-                        from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
-
-                        # Match max_connections to max_concurrent for optimal performance
-                        # Default scan config has max_concurrent=50, so use 50 connections
-                        rust_pool = RustAsyncDatabasePool(max_connections=50, cache_ttl_seconds=300)
-                        await rust_pool.initialize()
-                        self._pool = rust_pool
-                        self._using_rust = True
-                        logger.debug("Created singleton Rust DatabasePool (25x acceleration, 50 connections)")
-                        return self._pool
-                except ImportError as e:
-                    logger.debug(f"Rust DatabasePool not available, using Python: {e}")
-
-                # Fallback to Python AsyncDatabasePool
-                from ClassicLib.io.database.async_pool import AsyncDatabasePool
-
-                self._pool = AsyncDatabasePool(max_connections=50)
-                await self._pool.initialize()
-                self._using_rust = False
-                logger.debug("Created singleton Python database pool (aiosqlite, 50 connections)")
+                # Match global connection budget to max_concurrent for scan workloads.
+                # Default scan config has max_concurrent=50, so use a budget of 50.
+                rust_pool = RustAsyncDatabasePool(max_connections=50, cache_ttl_seconds=300)
+                await rust_pool.initialize()
+                self._pool = rust_pool
+                self._using_rust = True
+                logger.debug("Created singleton Rust DatabasePool (global budget=50)")
             return self._pool
 
     async def close_pool(self) -> None:
@@ -175,4 +153,4 @@ class DatabasePoolManager:
                 cls._pool = None
             cls._instance = None
             cls._lock = None
-            cls._using_rust = False
+            cls._using_rust = True

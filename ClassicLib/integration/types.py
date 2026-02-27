@@ -160,8 +160,6 @@ class GpuDetectorProtocol(Protocol):
     a module-level function.
     """
 
-    RUST_AVAILABLE: bool
-
     def get_gpu_info(self, segment_system: list[str]) -> dict[str, str | None]: ...
 
 

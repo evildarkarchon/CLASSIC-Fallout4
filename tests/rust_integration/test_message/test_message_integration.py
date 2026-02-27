@@ -265,6 +265,53 @@ class TestIntegration:
             assert msg.msg_type().name() is not None
 
 
+class TestContractLoggingParity:
+    """Test contract-aware structured logging helpers."""
+
+    def test_format_contract_event_required_fields(self):
+        """Contract event formatter should include required fields."""
+        formatted = classic_message.format_contract_event(
+            "integration.startup",
+            "classic.startup.binding_contract.validated",
+            "info",
+            "success",
+            {"contract": "startup_all", "checked_bindings": "29"},
+        )
+
+        assert "event=classic.startup.binding_contract.validated" in formatted
+        assert "severity=info" in formatted
+        assert "component=integration.startup" in formatted
+        assert "outcome=success" in formatted
+        assert "contract=startup_all" in formatted
+
+    def test_format_contract_event_redacts_sensitive_fields(self):
+        """Contract event formatter should redact secret-like and path-like fields."""
+        formatted = classic_message.format_contract_event(
+            "integration.startup",
+            "classic.startup.binding_contract.failed",
+            "error",
+            "failure",
+            {
+                "api_key": "secret-value",
+                "install_path": r"C:\Users\alice\Documents\My Games\Fallout4",
+            },
+        )
+
+        assert "api_key=[REDACTED]" in formatted
+        assert "install_path=<path-redacted>" in formatted
+
+    def test_format_contract_event_rejects_unknown_severity(self):
+        """Contract formatter should reject unknown severity values."""
+        with pytest.raises(ValueError, match="Invalid contract severity"):
+            classic_message.format_contract_event(
+                "integration.startup",
+                "classic.startup.binding_contract.validated",
+                "notice",
+                "success",
+                {},
+            )
+
+
 class TestModuleInfo:
     """Test module information and Rust acceleration detection."""
 

@@ -29,8 +29,8 @@ class TestGetFormidAnalyzer:
 
         assert result is not None
 
-    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
-        """Test raises RuntimeError when Rust import fails."""
+    def test_raises_import_error_when_rust_unavailable(self) -> None:
+        """Test raises ImportError when Rust import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_formid_analyzer
@@ -50,7 +50,7 @@ class TestGetFormidAnalyzer:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            with pytest.raises(RuntimeError, match="Required Rust module for FormIDAnalyzer"):
+            with pytest.raises(ImportError, match="No module"):
                 get_formid_analyzer(mock_yamldata, show_values=True, db_exists=True)
 
 
@@ -67,8 +67,8 @@ class TestGetPluginAnalyzer:
 
         assert result is not None
 
-    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
-        """Test raises RuntimeError when Rust import fails."""
+    def test_raises_import_error_when_rust_unavailable(self) -> None:
+        """Test raises ImportError when Rust import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_plugin_analyzer
@@ -82,7 +82,7 @@ class TestGetPluginAnalyzer:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            with pytest.raises(RuntimeError, match="Required Rust module for plugin analyzer"):
+            with pytest.raises(ImportError, match="No module"):
                 get_plugin_analyzer(mock_yamldata)
 
 
@@ -102,8 +102,8 @@ class TestGetRecordScanner:
 
         assert result is not None
 
-    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
-        """Test raises RuntimeError when Rust import fails."""
+    def test_raises_import_error_when_rust_unavailable(self) -> None:
+        """Test raises ImportError when Rust import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_record_scanner
@@ -117,7 +117,7 @@ class TestGetRecordScanner:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            with pytest.raises(RuntimeError, match="Required Rust module for RecordScanner"):
+            with pytest.raises(ImportError, match="No module"):
                 get_record_scanner(mock_yamldata)
 
 

@@ -18,7 +18,6 @@ from __future__ import annotations
 
 # Re-export everything from the new package structure
 from ClassicLib.integration.rust.report import (
-    RUST_AVAILABLE,
     ParallelReportProcessor,
     ReportComposer,
     ReportFragment,
@@ -30,7 +29,6 @@ from ClassicLib.integration.rust.report import (
 )
 
 __all__ = [
-    "RUST_AVAILABLE",
     "ParallelReportProcessor",
     "ReportComposer",
     "ReportFragment",

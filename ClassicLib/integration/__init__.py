@@ -21,6 +21,9 @@ from ClassicLib.integration.diagnostics import (
 
 # Exception types for Rust integration errors
 from ClassicLib.integration.exceptions import (
+    RustBindingError,
+    RustBindingImportError,
+    RustBindingInitError,
     RustConcurrencyError,
     RustConfigError,
     RustDatabaseError,
@@ -33,8 +36,10 @@ from ClassicLib.integration.exceptions import (
 # Centralized component detection
 from ClassicLib.integration.factory import (
     detect_component,
+    get_binding_contract,
     get_component,
     is_component_available,
+    validate_rust_modules,
 )
 
 # Note: We don't import other submodules here to avoid circular dependencies.
@@ -44,6 +49,9 @@ from ClassicLib.integration.factory import (
 __all__ = [
     # Exception types
     "RustError",
+    "RustBindingError",
+    "RustBindingImportError",
+    "RustBindingInitError",
     "RustIOError",
     "RustParseError",
     "RustConfigError",
@@ -54,6 +62,8 @@ __all__ = [
     "detect_component",
     "is_component_available",
     "get_component",
+    "get_binding_contract",
+    "validate_rust_modules",
     # Runtime diagnostics (Phase 3)
     "get_runtime_stats",
     "is_runtime_healthy",

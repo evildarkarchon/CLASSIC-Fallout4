@@ -16,7 +16,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal
 
 from ClassicLib.integration.exceptions import RustError, RustParseError
-from ClassicLib.integration.factory import detect_component
+from ClassicLib.integration.factory import get_component
 
 if TYPE_CHECKING:
     from ClassicLib.scanning.logs.reporting import ReportFragment
@@ -24,8 +24,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 # Detect Rust-specific exception types for classic_scanlog
-_, _rust_scanlog_error = detect_component("classic_scanlog", "RustScanLogError")
-_, _rust_parse_error = detect_component("classic_scanlog", "RustParseError")
+try:
+    _rust_scanlog_error = get_component("classic_scanlog", "RustScanLogError")
+except ImportError:
+    _rust_scanlog_error = None
+try:
+    _rust_parse_error = get_component("classic_scanlog", "RustParseError")
+except ImportError:
+    _rust_parse_error = None
 
 
 def _get_rust_exception_types() -> tuple[tuple[type[BaseException], ...], tuple[type[BaseException], ...]]:
@@ -54,29 +60,17 @@ parse_errors: tuple[type[BaseException], ...]
 rust_errors: tuple[type[BaseException], ...]
 parse_errors, rust_errors = _get_rust_exception_types()
 
-# Centralized detection of Rust mod detector functions
-_has_single, _rust_detect_single = detect_component("classic_scanlog", "detect_mods_single")
-_has_double, _rust_detect_double = detect_component("classic_scanlog", "detect_mods_double")
-_has_important, _rust_detect_important = detect_component("classic_scanlog", "detect_mods_important")
-_has_batch, _rust_detect_batch = detect_component("classic_scanlog", "detect_mods_batch")
+_rust_detect_single = get_component("classic_scanlog", "detect_mods_single")
+_rust_detect_double = get_component("classic_scanlog", "detect_mods_double")
+_rust_detect_important = get_component("classic_scanlog", "detect_mods_important")
+_rust_detect_batch = get_component("classic_scanlog", "detect_mods_batch")
 
-RUST_AVAILABLE = _has_single or _has_double or _has_important or _has_batch
-
-if _has_single:
-    logger.debug("✅ Rust detect_mods_single available (35x speedup)")
-if _has_double:
-    logger.debug("✅ Rust detect_mods_double available (35x speedup)")
-if _has_important:
-    logger.debug("✅ Rust detect_mods_important available (35x speedup)")
-if _has_batch:
-    logger.debug("✅ Rust detect_mods_batch available (35x speedup)")
+logger.debug("✅ Rust mod detector functions available (35x speedup)")
 
 
 def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
     """Determine modifications from the provided YAML dictionary and crash log plugins.
-    This function attempts to leverage a Rust implementation if available for better
-    performance. If the Rust implementation is unavailable or fails, it will fall back
-    to a Python-based detection mechanism.
+    Uses required Rust implementation for performance and deterministic behavior.
 
     Args:
         yaml_dict (dict[str, str]): Dictionary containing YAML configuration data.
@@ -88,10 +82,6 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     """
     from ClassicLib.scanning.logs.reporting import ReportFragment
 
-    if not (RUST_AVAILABLE and _rust_detect_single):
-        msg = "Required Rust module classic_scanlog.detect_mods_single not available. Reinstall CLASSIC."
-        raise RuntimeError(msg)
-
     # Rust returns Vec<String>, convert to ReportFragment
     # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
     lines = _rust_detect_single(yaml_dict, crashlog_plugins)
@@ -99,13 +89,7 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
 
 def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> ReportFragment:
-    """Detect mod conflicts by leveraging Rust-based or Python fallback implementations.
-
-    This function attempts to use the Rust-based conflict detection if available,
-    offering potentially faster performance. If the Rust implementation is not
-    available or fails, the function falls back to a Python-based implementation.
-    The detection generates a processed ReportFragment containing relevant
-    information about the detected mod conflicts.
+    """Detect mod conflicts using the required Rust implementation.
 
     Args:
         yaml_dict (dict[str, str]): A dictionary containing YAML configuration details.
@@ -116,10 +100,6 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     """
     from ClassicLib.scanning.logs.reporting import ReportFragment
-
-    if not (RUST_AVAILABLE and _rust_detect_double):
-        msg = "Required Rust module classic_scanlog.detect_mods_double not available. Reinstall CLASSIC."
-        raise RuntimeError(msg)
 
     # Rust returns Vec<String>, convert to ReportFragment
     # Rust function expects (yaml_dict, crashlog_plugins) - both as dicts
@@ -133,12 +113,7 @@ def detect_mods_important(
     gpu_rival: Literal["nvidia", "amd"] | None,
     xse_modules: set[str] | None = None,
 ) -> ReportFragment:
-    """Detect important modifications (mods) using either Rust or Python implementation.
-
-    This function attempts to use a Rust-based implementation for performance benefits.
-    If the Rust module is not available or encounters an error, it falls back to a
-    Python implementation. The function analyzes provided configuration data and
-    plugin crash logs to identify important modifications.
+    """Detect important modifications (mods) using required Rust implementation.
 
     Args:
         yaml_dict (dict[str, str]): A dictionary containing YAML configuration data.
@@ -157,10 +132,6 @@ def detect_mods_important(
     # Default to empty set if not provided
     if xse_modules is None:
         xse_modules = set()
-
-    if not (RUST_AVAILABLE and _rust_detect_important):
-        msg = "Required Rust module classic_scanlog.detect_mods_important not available. Reinstall CLASSIC."
-        raise RuntimeError(msg)
 
     # Rust returns Vec<String>, convert to ReportFragment
     # Rust function expects (yaml_dict, crashlog_plugins, gpu_rival, xse_modules)
@@ -191,12 +162,12 @@ def get_mod_detector_status() -> dict[str, Any]:
 
     """
     return {
-        "rust_available": RUST_AVAILABLE,
-        "single_function": _rust_detect_single is not None,
-        "double_function": _rust_detect_double is not None,
-        "important_function": _rust_detect_important is not None,
-        "batch_function": _rust_detect_batch is not None,
-        "performance_gain": "35x" if RUST_AVAILABLE else "1x",
+        "rust_available": True,
+        "single_function": True,
+        "double_function": True,
+        "important_function": True,
+        "batch_function": True,
+        "performance_gain": "35x",
     }
 
 
@@ -211,4 +182,4 @@ def is_rust_accelerated() -> bool:
         bool: True if Rust acceleration is available, otherwise False.
 
     """
-    return RUST_AVAILABLE
+    return True

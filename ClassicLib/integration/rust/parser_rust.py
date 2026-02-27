@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 
 from ClassicLib.integration.exceptions import RustError, RustParseError
-from ClassicLib.integration.factory import detect_component
+from ClassicLib.integration.factory import get_component
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +22,7 @@ class RustLogParser:
 
     def __init__(self) -> None:
         """Initialize with Rust parser. Raises RuntimeError if unavailable."""
-        rust_available, LogParser = detect_component("classic_scanlog", "LogParser")
-        if not rust_available or not LogParser:
-            msg = "Required Rust module classic_scanlog.LogParser not available. Reinstall CLASSIC."
-            raise RuntimeError(msg)
+        LogParser = get_component("classic_scanlog", "LogParser")
 
         try:
             self._rust_parser = LogParser()

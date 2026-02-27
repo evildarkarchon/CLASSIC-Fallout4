@@ -330,8 +330,9 @@ impl FormIDAnalyzerCore {
         if should_lookup_values
             && !lookup_pairs.is_empty()
             && let Some(pool) = self.db_pool.as_ref()
-            && let Ok(batch_results) =
-                pool.get_entries_batch(lookup_pairs, None, FORMID_BATCH_LOOKUP_SIZE).await
+            && let Ok(batch_results) = pool
+                .get_entries_batch(lookup_pairs, None, FORMID_BATCH_LOOKUP_SIZE)
+                .await
         {
             resolved_descriptions = batch_results;
         }
@@ -797,7 +798,8 @@ mod tests {
         table_name: &str,
         entries: &[(&str, &str, &str)],
     ) -> (NamedTempFile, PathBuf) {
-        let temp_file = NamedTempFile::with_suffix(".db").expect("failed to create temp sqlite file");
+        let temp_file =
+            NamedTempFile::with_suffix(".db").expect("failed to create temp sqlite file");
         let db_path = temp_file.path().to_path_buf();
         let conn_str = format!("sqlite://{}?mode=rwc", db_path.display());
 
@@ -839,7 +841,9 @@ mod tests {
         (temp_file, db_path)
     }
 
-    async fn create_test_pool_with_entries(entries: &[(&str, &str, &str)]) -> (Arc<DatabasePool>, NamedTempFile) {
+    async fn create_test_pool_with_entries(
+        entries: &[(&str, &str, &str)],
+    ) -> (Arc<DatabasePool>, NamedTempFile) {
         let table_name = "Fallout4";
         let (temp_file, db_path) = create_formid_test_database(table_name, entries).await;
 
@@ -855,7 +859,10 @@ mod tests {
         (db_pool, temp_file)
     }
 
-    fn build_test_analyzer(db_pool: Option<Arc<DatabasePool>>, show_formid_values: bool) -> FormIDAnalyzerCore {
+    fn build_test_analyzer(
+        db_pool: Option<Arc<DatabasePool>>,
+        show_formid_values: bool,
+    ) -> FormIDAnalyzerCore {
         FormIDAnalyzerCore::new(
             db_pool,
             show_formid_values,
@@ -868,7 +875,11 @@ mod tests {
     }
 
     fn report_rows(lines: &[String]) -> Vec<&str> {
-        lines.iter().map(String::as_str).filter(|line| line.starts_with("- ")).collect()
+        lines
+            .iter()
+            .map(String::as_str)
+            .filter(|line| line.starts_with("- "))
+            .collect()
     }
 
     #[tokio::test]
@@ -898,7 +909,10 @@ mod tests {
             create_test_pool_with_entries(&[("ABCDEF", "Duplicate.esp", "Duplicate Entry")]).await;
         let analyzer = build_test_analyzer(Some(db_pool), true);
 
-        let formids = vec!["Form ID: 02ABCDEF".to_string(), "Form ID: 02ABCDEF".to_string()];
+        let formids = vec![
+            "Form ID: 02ABCDEF".to_string(),
+            "Form ID: 02ABCDEF".to_string(),
+        ];
         let mut crashlog_plugins = IndexMap::new();
         crashlog_plugins.insert("Duplicate.esp".to_string(), "02".to_string());
 
@@ -908,10 +922,13 @@ mod tests {
             .expect("formid_match should succeed");
 
         let rows = report_rows(&lines);
-        assert_eq!(rows.len(), 1, "Duplicate FormIDs should collapse to one output row");
         assert_eq!(
-            rows[0],
-            "- Duplicate.esp | 02ABCDEF | Duplicate Entry | 2\n",
+            rows.len(),
+            1,
+            "Duplicate FormIDs should collapse to one output row"
+        );
+        assert_eq!(
+            rows[0], "- Duplicate.esp | 02ABCDEF | Duplicate Entry | 2\n",
             "Collapsed duplicate row should preserve resolved value and aggregated count"
         );
     }
@@ -922,7 +939,10 @@ mod tests {
             create_test_pool_with_entries(&[("AAAAAA", "HasEntry.esp", "Found Entry")]).await;
         let analyzer = build_test_analyzer(Some(db_pool), true);
 
-        let formids = vec!["Form ID: 03AAAAAA".to_string(), "Form ID: 04BBBBBB".to_string()];
+        let formids = vec![
+            "Form ID: 03AAAAAA".to_string(),
+            "Form ID: 04BBBBBB".to_string(),
+        ];
         let mut crashlog_plugins = IndexMap::new();
         crashlog_plugins.insert("HasEntry.esp".to_string(), "03".to_string());
         crashlog_plugins.insert("MissingEntry.esp".to_string(), "04".to_string());
@@ -970,7 +990,11 @@ mod tests {
             .expect("formid_match should succeed");
 
         let rows = report_rows(&lines);
-        assert_eq!(rows.len(), 130, "All candidates should be rendered even across multiple batches");
+        assert_eq!(
+            rows.len(),
+            130,
+            "All candidates should be rendered even across multiple batches"
+        );
         assert!(
             rows.iter().any(|row| row.contains("Entry 0")),
             "Expected resolved output for the first candidate"

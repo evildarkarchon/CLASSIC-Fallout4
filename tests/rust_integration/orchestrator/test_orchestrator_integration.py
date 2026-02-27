@@ -259,6 +259,46 @@ STACK:
         result = orchestrator.process_log(str(log_path))
         assert any("Achievements Mod" in line for line in result.report_lines)
 
+    def test_from_yamldata_registry_fallback_when_legacy_game_info_missing(self):
+        """from_yamldata should populate metadata via Version Registry fallback when legacy keys are absent."""
+        assert AnalysisConfig is not None
+
+        yamldata = SimpleNamespace(
+            game_root_name="Fallout4",
+            game_ignore_plugins=[],
+            game_ignore_records=[],
+            ignore_list=[],
+            suspects_error_list={},
+            suspects_stack_list={},
+            game_mods_core={},
+            game_mods_freq={},
+            game_mods_conf={},
+            game_mods_solu={},
+            game_mods_opc2={},
+            game_mods_core_folon={},
+            classic_records_list=[],
+            classic_version="CLASSIC v9.0.0",
+            crashgen_registry={
+                "Buffout 4": {
+                    "display_section": "[Compatibility]",
+                    "ignore_keys": [],
+                    "checks": ["achievements"],
+                },
+                "default": {
+                    "display_section": "",
+                    "ignore_keys": [],
+                    "checks": [],
+                },
+            },
+        )
+
+        config = AnalysisConfig.from_yamldata(yamldata, "Fallout4", False)
+        assert config.crashgen_name != ""
+        assert config.xse_acronym != ""
+        assert config.game_version != ""
+        assert config.game_version_new != ""
+        assert config.game_version_vr != ""
+
 
 @pytest.mark.rust
 @pytest.mark.unit

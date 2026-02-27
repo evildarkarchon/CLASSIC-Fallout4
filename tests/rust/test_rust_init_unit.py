@@ -157,23 +157,14 @@ class TestPrintRustModuleStatus:
 
 
 class TestRustModulesAvailable:
-    """Tests for RUST_MODULES_AVAILABLE constant."""
+    """Tests for mandatory Rust module behavior."""
 
-    def test_is_boolean(self) -> None:
-        """Test that RUST_MODULES_AVAILABLE is a boolean."""
-        from ClassicLib.integration.rust import RUST_MODULES_AVAILABLE
-
-        assert isinstance(RUST_MODULES_AVAILABLE, bool)
-
-    def test_consistency_with_components(self) -> None:
-        """Test that RUST_MODULES_AVAILABLE is consistent with component availability."""
-        from ClassicLib.integration.rust import RUST_MODULES_AVAILABLE, get_rust_component_summary
+    def test_all_required_components_report_loaded(self) -> None:
+        """Summary should report mandatory Rust components as loaded."""
+        from ClassicLib.integration.rust import get_rust_component_summary
 
         summary = get_rust_component_summary()
-
-        # If RUST_MODULES_AVAILABLE is True, at least some components should be loaded
-        if RUST_MODULES_AVAILABLE:
-            assert any(summary.values()), "RUST_MODULES_AVAILABLE is True but no components are loaded"
+        assert all(summary.values()), "All Rust components should be available in mandatory mode"
 
 
 class TestModuleExports:
@@ -193,36 +184,19 @@ class TestModuleExports:
         key_components = [
             "RustLogParser",
             "FileIOCore",
-            "RUST_MODULES_AVAILABLE",
         ]
 
         for component in key_components:
             assert component in __all__, f"Key component {component} not in __all__"
 
 
-class TestFallbackBehavior:
-    """Tests for module fallback behavior when imports fail."""
+class TestMandatoryBehavior:
+    """Tests for mandatory Rust module behavior."""
 
-    def test_module_handles_missing_rust(self) -> None:
-        """Test that module gracefully handles missing Rust components."""
-        # This tests the current state - components may be None if Rust isn't available
+    def test_module_reports_all_required_components(self) -> None:
+        """Rust module summary should report all required components as loaded."""
         from ClassicLib.integration import rust
 
-        # Module should load without errors
-        assert rust is not None
-
-        # get_rust_component_summary should work regardless
         summary = rust.get_rust_component_summary()
         assert isinstance(summary, dict)
-
-    def test_none_components_indicate_unavailable(self) -> None:
-        """Test that None components correctly indicate unavailability."""
-        from ClassicLib.integration.rust import RustLogParser, get_rust_component_summary
-
-        summary = get_rust_component_summary()
-
-        # If RustLogParser is None, parser should be False
-        if RustLogParser is None:
-            assert summary["parser"] is False
-        else:
-            assert summary["parser"] is True
+        assert all(summary.values())

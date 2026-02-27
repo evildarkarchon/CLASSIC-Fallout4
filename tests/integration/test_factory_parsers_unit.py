@@ -13,8 +13,8 @@ pytestmark = [pytest.mark.unit]
 class TestGetParser:
     """Tests for get_parser function."""
 
-    def test_raises_runtime_error_on_import_error(self) -> None:
-        """Test raises RuntimeError when Rust import fails."""
+    def test_raises_import_error_on_import_error(self) -> None:
+        """Test raises ImportError when Rust import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_parser
@@ -27,7 +27,7 @@ class TestGetParser:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            with pytest.raises(RuntimeError, match="Required Rust module for parser"):
+            with pytest.raises(ImportError, match="No module"):
                 get_parser()
 
     def test_parser_has_find_segments_method(self) -> None:

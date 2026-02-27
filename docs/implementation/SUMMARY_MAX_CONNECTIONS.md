@@ -1,153 +1,66 @@
-# Dynamic max_connections Implementation Summary
+# Global DB Connection Budget Summary
 
-## Changes Made
+## Behavior Change
 
-### 1. Core Rust Logic (`ClassicLib-rs/business-logic/classic-database-core/src/pool.rs`)
+`classic-database-core::DatabasePool` now treats `max_connections` as a **global connection budget** shared across all active database pools in an instance.
 
-**Added dynamic max_connections calculation:**
-- Changed `_max_connections: usize` to `max_connections: Arc<RwLock<Option<usize>>>`
-- Added `calculate_max_connections()` static method that calculates optimal connections based on CPU cores (2x cores, clamped between 4-32)
-- Modified `new()` to accept `Option<usize>` for max_connections parameter
-- Auto-calculates when `None` is provided
+Previously, the same `max_connections` value was applied to every pool independently (effectively multiplying total connections by DB count).
 
-**New public methods:**
-- `get_max_connections()` - Returns current max_connections value
-- `set_max_connections(max_conn: usize)` - Manually set max_connections
-- `recalculate_max_connections()` - Recalculate based on current system resources
+## Allocation Policy
 
-### 2. Python Bindings (`ClassicLib-rs/python-bindings/classic-database-py/src/pool.rs`)
+For `N` active DB paths and configured budget `B`:
 
-**Updated Python interface:**
-- Changed `new()` signature from `max_connections=10` to `max_connections=None`
-- Passes `Option<usize>` directly to core (no unwrap_or(10))
-- Added Python methods:
-  - `get_max_connections()` → returns `Option[int]`
-  - `set_max_connections(max_connections: int)`
-  - `recalculate_max_connections()`
+1. **Configured budget** = `B` (from constructor / `set_max_connections()` / `recalculate_max_connections()`).
+2. **Effective budget** = `max(B, N)` (low-budget clamp keeps each pool nonzero).
+3. **Deterministic split**:
+   - `base = effective_budget / N`
+   - `remainder = effective_budget % N`
+   - Each pool gets `base`, and the first `remainder` pools (stable sorted path order) get `+1`.
 
-### 3. Dependencies
+This guarantees:
 
-**Added to workspace (`Cargo.toml`):**
-```toml
-num_cpus = "1.16"
-```
+- Nonzero allocation per active DB pool.
+- Sum of per-pool allocations equals effective budget.
+- Stable remainder distribution across rebuilds.
 
-**Added to `ClassicLib-rs/business-logic/classic-database-core/Cargo.toml`:**
-```toml
-num_cpus = { workspace = true }
-```
+## Runtime Update Semantics
 
-### 4. Tests
+- `set_max_connections(value)` updates configuration only.
+- `recalculate_max_connections()` updates configuration only (CPU-based policy, clamped to `8..64`).
+- Existing pools keep their current allocations until:
+  - `initialize(...)` is called, or
+  - `rebalance_connections()` is called.
 
-**Added new test (`ClassicLib-rs/business-logic/classic-database-core/src/pool.rs`):**
-```rust
-#[test]
-fn test_pool_auto_max_connections() {
-    let pool = DatabasePool::new(None, Duration::from_secs(300), "Fallout4".to_string());
-    
-    // Verify max_connections was calculated
-    let max_conn = pool.max_connections.read().unwrap();
-    assert!(max_conn.is_some());
-    let conn = max_conn.unwrap();
-    assert!(conn >= 4 && conn <= 32);
-}
-```
+Use `rebalance_connections()` for immediate reallocation of currently tracked DB paths.
 
-## Usage Examples
+## Observability Fields
 
-### Python (Auto-calculated)
-```python
-from classic_core.database import RustDatabasePool
+`PoolStatistics` now includes connection-budget metrics:
 
-# Auto-calculate max_connections based on CPU cores
-pool = RustDatabasePool()
-print(f"Auto max_connections: {pool.get_max_connections()}")
-```
+- `configured_connection_budget`
+- `effective_connection_budget`
+- `active_pool_count`
+- `min_pool_allocation`
+- `max_pool_allocation`
+- `allocation_spread`
 
-### Python (Explicit value)
-```python
-# Explicitly set max_connections
-pool = RustDatabasePool(max_connections=20)
-print(f"Explicit max_connections: {pool.get_max_connections()}")
-```
+Bindings (Python / Node) surface these fields through `get_stats()`.
 
-### Python (Runtime adjustment)
-```python
-pool = RustDatabasePool()
+## Binding Surface Additions
 
-# Manually set
-pool.set_max_connections(15)
-print(f"After manual set: {pool.get_max_connections()}")
+- Python `DatabasePool`:
+  - `rebalance_connections()` (async)
+  - updated global-budget docs for `set_max_connections()`
+- Node `JsDatabasePool`:
+  - `rebalanceConnections()` (async)
+  - `JsPoolStatistics` now includes budget/allocation fields
 
-# Recalculate based on current system
-pool.recalculate_max_connections()
-print(f"After recalculation: {pool.get_max_connections()}")
-```
+## Compatibility
 
-### Rust (Direct API)
-```rust
-use classic_database_core::DatabasePool;
-use std::time::Duration;
+Lookup behavior remains compatible:
 
-// Auto-calculate
-let pool = DatabasePool::new(None, Duration::from_secs(300), "Fallout4".to_string());
+- single lookup (`get_entry`)
+- batch lookup (`get_entries_batch` / `batch_lookup`)
+- missing-entry semantics
 
-// Explicit value
-let pool2 = DatabasePool::new(Some(20), Duration::from_secs(300), "Fallout4".to_string());
-
-// Runtime adjustment
-pool.set_max_connections(15);
-pool.recalculate_max_connections();
-```
-
-## Benefits
-
-1. **Auto-tuning**: Automatically scales to available system resources
-2. **Runtime adjustment**: Can change max_connections without restarting
-3. **Backwards compatible**: Existing code can pass explicit values
-4. **Cached**: Calculation happens once and is cached in `Arc<RwLock<>>`
-5. **Thread-safe**: All access is protected by RwLock
-
-## Algorithm
-
-```rust
-fn calculate_max_connections() -> usize {
-    let cpus = num_cpus::get();
-    let optimal = cpus * 2;  // 2 connections per CPU core
-    optimal.clamp(4, 32)     // Min 4, Max 32
-}
-```
-
-This ensures:
-- Minimum of 4 connections even on dual-core systems
-- Maximum of 32 to avoid excessive overhead
-- Scales with CPU count for optimal parallelism
-
-## Testing
-
-All tests pass:
-```
-running 3 tests
-test pool::tests::test_cache_entry_expiry ... ok
-test pool::tests::test_pool_creation ... ok
-test pool::tests::test_pool_auto_max_connections ... ok
-
-test result: ok. 3 passed; 0 failed
-```
-
-## Build Status
-
-✅ Rust core compiles successfully  
-✅ Python bindings compile successfully  
-✅ Tests pass  
-✅ Wheel builds successfully  
-
-## Next Steps
-
-To fully test the Python integration, you may need to:
-1. Rebuild using `maturin build --release`
-2. Install with `uv pip install --force-reinstall`
-3. Clear any cached `.pyd` files
-4. Test with Python import
-
-The core functionality is complete and tested in Rust.
+Only connection budgeting semantics changed from per-pool cap to global budget allocation.

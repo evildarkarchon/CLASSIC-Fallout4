@@ -618,15 +618,16 @@ def parity_async_bridge():
 
 def skip_if_rust_unavailable(component: str):
     """
-    Pytest decorator to skip tests if specific Rust component is unavailable.
+    Compatibility marker for legacy tests.
 
     Args:
         component: Name of the Rust component to check
 
     Returns:
-        Pytest skipif marker
+        Pytest skipif marker (never skips in mandatory Rust mode).
     """
-    return pytest.mark.skipif(not RUST_AVAILABLE.get(component, False), reason=f"Rust {component} component not available")
+    _ = component
+    return pytest.mark.skipif(False, reason="Rust bindings are mandatory")
 
 
 def requires_crash_logs_directory():

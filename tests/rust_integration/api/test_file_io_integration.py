@@ -17,9 +17,6 @@ import pytest
 
 from ClassicLib.integration.factory import get_file_io, is_rust_accelerated
 
-# Check if Rust file I/O is available
-RUST_AVAILABLE = {"file_io_core": is_rust_accelerated("file_io_core")}
-
 
 @pytest.fixture
 def temp_dir(tmp_path):
@@ -265,7 +262,6 @@ class TestRustFileIOCore:
         assert "# Crash Report" in content
         assert "Error occurred" in content
 
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_memory_mapped_reading(self, temp_dir):
         """Test memory-mapped file reading for large files."""
@@ -279,7 +275,6 @@ class TestRustFileIOCore:
     @pytest.mark.skip(
         reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing."
     )
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_header_parsing(self, mock_dds_file):
         """Test DDS header parsing.
@@ -299,7 +294,6 @@ class TestRustFileIOCore:
     @pytest.mark.skip(
         reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing."
     )
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_header_invalid_dimensions(self, mock_invalid_dds_file):
         """Test DDS header parsing with invalid dimensions.
@@ -317,7 +311,6 @@ class TestRustFileIOCore:
     @pytest.mark.skip(
         reason="Rust DDS parser uses ddsfile crate which requires fully valid DDS files, not mock headers. Needs real game DDS files for testing."
     )
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_dds_batch_processing(self, tmp_path):
         """Test batch DDS header processing.
@@ -346,7 +339,6 @@ class TestRustFileIOCore:
             dims = results[str(path)]
             assert dims == ((i + 1) * 512, (i + 1) * 256)
 
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     @pytest.mark.asyncio
     async def test_directory_traversal(self, temp_dir):
         """Test parallel directory traversal."""
@@ -376,7 +368,6 @@ class TestRustFileIOCore:
         deep_paths = [f for f in shallow_files if "deep.txt" in f]
         assert len(deep_paths) == 0
 
-    @pytest.mark.skipif(not RUST_AVAILABLE.get("file_io_core"), reason="Rust FileIOCore not available")
     def test_caching_behavior(self, temp_dir):
         """Test that caching improves performance."""
         io = get_file_io()
@@ -455,28 +446,15 @@ class TestRustIntegration:
     def test_rust_detection(self):
         """Test that Rust modules are properly detected."""
         io = get_file_io()
-        # Check if Rust is being used (if available)
-        if RUST_AVAILABLE.get("file_io_core"):
-            assert io.is_rust_accelerated
-        else:
-            assert not io.is_rust_accelerated
+        assert io.is_rust_accelerated
+        assert is_rust_accelerated("file_io_core") is True
 
-    def test_python_fallback(self):
-        """Test that FileIOCore implementation is available.
-
-        Note: This test verifies that a FileIOCore implementation is available,
-        whether Rust-accelerated or Python fallback. Testing actual fallback
-        behavior requires Rust to not be installed, which can't be easily mocked.
-        """
+    def test_file_io_core_is_required(self):
+        """FileIOCore should always be Rust-accelerated in current architecture."""
         io = get_file_io()
-        assert io is not None  # Factory returns implementation directly
-
-        # Verify that the object has the is_rust_accelerated attribute
+        assert io is not None
         assert hasattr(io, "is_rust_accelerated")
-
-        # The value will be True if Rust is available, False otherwise
-        # Both cases are valid - we just verify the attribute exists
-        assert isinstance(io.is_rust_accelerated, bool)
+        assert io.is_rust_accelerated is True
 
     @pytest.mark.asyncio
     async def test_api_compatibility(self, temp_dir):

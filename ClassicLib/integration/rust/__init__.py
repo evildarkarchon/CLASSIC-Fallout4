@@ -26,60 +26,29 @@ Performance Gains:
 
 from __future__ import annotations
 
-import logging
-
-logger = logging.getLogger(__name__)
-
-# Import all Rust wrapper components
-try:
-    from ClassicLib.integration.rust.file_io_rust import FileIOCore
-    from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
-    from ClassicLib.integration.rust.mod_detector_rust import (
-        detect_mods_double,
-        detect_mods_important,
-        detect_mods_single,
-        get_mod_detector_status,
-    )
-    from ClassicLib.integration.rust.parser_rust import RustLogParser
-    from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
-    from ClassicLib.integration.rust.record_rust import RustRecordScanner
-    from ClassicLib.integration.rust.report_rust import RUST_AVAILABLE as REPORT_RUST_AVAILABLE  # noqa: F401
-    from ClassicLib.integration.rust.report_rust import (
-        ParallelReportProcessor,
-        ReportComposer,
-        ReportFragment,
-        ReportGenerator,
-        RustAcceleratedReportComposer,
-        RustAcceleratedReportFragment,
-        RustAcceleratedReportGenerator,
-        StringPool,
-    )
-    from ClassicLib.io.database import AsyncDatabasePool, DatabasePoolManager
-    from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
-
-    RUST_MODULES_AVAILABLE = True
-    logger.debug("Rust acceleration modules loaded successfully")
-
-except ImportError as e:
-    logger.warning(f"Some Rust modules could not be loaded: {e}")
-    RUST_MODULES_AVAILABLE = False
-
-    # Provide None for missing components
-    RustLogParser = None
-    FormIDAnalyzer = None
-    RustPluginAnalyzer = None
-    RustRecordScanner = None
-    FileIOCore = None
-    RustAsyncDatabasePool = None
-    RustAcceleratedReportFragment = None
-    RustAcceleratedReportComposer = None
-    RustAcceleratedReportGenerator = None
-    ParallelReportProcessor = None
-    ReportFragment = None
-    ReportComposer = None
-    ReportGenerator = None
-    StringPool = None
-
+from ClassicLib.integration.rust.file_io_rust import FileIOCore
+from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
+from ClassicLib.integration.rust.mod_detector_rust import (
+    detect_mods_double,
+    detect_mods_important,
+    detect_mods_single,
+    get_mod_detector_status,
+)
+from ClassicLib.integration.rust.parser_rust import RustLogParser
+from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
+from ClassicLib.integration.rust.record_rust import RustRecordScanner
+from ClassicLib.integration.rust.report_rust import (
+    ParallelReportProcessor,
+    ReportComposer,
+    ReportFragment,
+    ReportGenerator,
+    RustAcceleratedReportComposer,
+    RustAcceleratedReportFragment,
+    RustAcceleratedReportGenerator,
+    StringPool,
+)
+from ClassicLib.io.database import AsyncDatabasePool, DatabasePoolManager
+from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
 # Export all components
 __all__ = [
@@ -111,8 +80,6 @@ __all__ = [
     "ReportComposer",
     "ReportGenerator",
     "StringPool",
-    # Status
-    "RUST_MODULES_AVAILABLE",
 ]
 
 
@@ -126,14 +93,14 @@ def get_rust_component_summary() -> dict[str, bool]:
     from ClassicLib.integration.factory import is_component_available
 
     return {
-        "parser": RustLogParser is not None,
-        "formid_analyzer": FormIDAnalyzer is not None,
-        "plugin_analyzer": RustPluginAnalyzer is not None,
-        "record_scanner": RustRecordScanner is not None,
-        "file_io": FileIOCore is not None,
-        "database": RustAsyncDatabasePool is not None,
-        "report_generation": ReportFragment is not None,
-        "mod_detector": "detect_mods_single" in globals(),
+        "parser": True,
+        "formid_analyzer": True,
+        "plugin_analyzer": True,
+        "record_scanner": True,
+        "file_io": True,
+        "database": True,
+        "report_generation": True,
+        "mod_detector": True,
         # Use factory detection for components without wrappers
         "suspect_scanner": is_component_available("classic_scanlog", "SuspectScanner"),
         "fcx_handler": is_component_available("classic_scanlog", "FcxModeHandler"),

@@ -21,12 +21,11 @@ class TestGetDatabasePool:
 
         assert result is not None
 
-    def test_returns_python_pool_on_import_error(self) -> None:
-        """Test returns Python pool when Rust import fails."""
+    def test_raises_import_error_on_rust_import_failure(self) -> None:
+        """Test raises ImportError when required Rust pool import fails."""
         import builtins
 
         from ClassicLib.integration.factory import get_database_pool
-        from ClassicLib.io.database.async_pool import AsyncDatabasePool
 
         original_import = builtins.__import__
 
@@ -36,9 +35,8 @@ class TestGetDatabasePool:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_database_pool()
-
-        assert isinstance(result, AsyncDatabasePool)
+            with pytest.raises(ImportError, match="No module"):
+                get_database_pool()
 
     def test_accepts_max_connections_parameter(self) -> None:
         """Test accepts max_connections parameter."""

@@ -74,8 +74,8 @@ class TestGetFileIO:
         finally:
             factory_module._file_io_instance = original
 
-    def test_raises_runtime_error_when_rust_unavailable(self) -> None:
-        """Test raises RuntimeError when Rust import fails."""
+    def test_raises_import_error_when_rust_unavailable(self) -> None:
+        """Test raises ImportError when Rust import fails."""
         import builtins
 
         original = factory_module._file_io_instance
@@ -92,7 +92,7 @@ class TestGetFileIO:
                 return original_import(name, *args, **kwargs)
 
             with patch.object(builtins, "__import__", mock_import):
-                with pytest.raises(RuntimeError, match="Required Rust module for FileIO"):
+                with pytest.raises(ImportError, match="No module"):
                     get_file_io()
         finally:
             factory_module._file_io_instance = original
@@ -101,8 +101,8 @@ class TestGetFileIO:
 class TestGetYamlOperations:
     """Tests for get_yaml_operations function."""
 
-    def test_returns_none_on_import_error(self) -> None:
-        """Test returns None when import fails."""
+    def test_raises_import_error_on_import_failure(self) -> None:
+        """Test raises ImportError when required YAML binding is missing."""
         import builtins
 
         from ClassicLib.integration.factory import get_yaml_operations
@@ -115,9 +115,8 @@ class TestGetYamlOperations:
             return original_import(name, *args, **kwargs)
 
         with patch.object(builtins, "__import__", mock_import):
-            result = get_yaml_operations()
-
-        assert result is None
+            with pytest.raises(ImportError, match="classic_yaml"):
+                get_yaml_operations()
 
 
 class TestModuleCaching:

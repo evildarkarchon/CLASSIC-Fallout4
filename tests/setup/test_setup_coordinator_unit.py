@@ -627,6 +627,7 @@ class TestLogRustAccelerationStatus:
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
+            patch("ClassicLib.integration.factory.validate_rust_modules"),
             patch("ClassicLib.integration.factory.detect_component", mock_detect),
             patch.object(SetupCoordinator, "_log_active_acceleration") as mock_log_active,
             patch("ClassicLib.support.setup.logger"),
@@ -636,65 +637,27 @@ class TestLogRustAccelerationStatus:
             mock_log_active.assert_called_once()
 
     @pytest.mark.unit
-    def test_log_rust_acceleration_status_no_acceleration(self) -> None:
-        """_log_rust_acceleration_status should log when no acceleration available."""
+    def test_log_rust_acceleration_status_binding_failure(self) -> None:
+        """_log_rust_acceleration_status should surface mandatory binding failures."""
         coordinator = SetupCoordinator()
 
         mock_yaml_settings_fn = MagicMock(return_value=True)
-
-        # detect_component returns (False, None) for all components
-        mock_detect = MagicMock(return_value=(False, None))
+        from ClassicLib.integration.exceptions import RustBindingImportError
 
         with (
             patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
             patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch("ClassicLib.integration.factory.detect_component", mock_detect),
-            patch.object(SetupCoordinator, "_log_no_acceleration") as mock_log_none,
+            patch(
+                "ClassicLib.integration.factory.validate_rust_modules",
+                side_effect=RustBindingImportError("classic_yaml.YamlOperations", "No module"),
+            ),
+            patch.object(SetupCoordinator, "_log_binding_failure") as mock_log_failure,
             patch("ClassicLib.support.setup.logger"),
         ):
-            coordinator._log_rust_acceleration_status()
+            with pytest.raises(RustBindingImportError):
+                coordinator._log_rust_acceleration_status()
 
-            mock_log_none.assert_called_once_with(True, False)
-
-    @pytest.mark.unit
-    def test_log_rust_acceleration_status_handles_import_error(self) -> None:
-        """_log_rust_acceleration_status should handle ImportError gracefully."""
-        coordinator = SetupCoordinator()
-
-        mock_yaml_settings_fn = MagicMock(return_value=True)
-
-        with (
-            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
-            patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch(
-                "ClassicLib.integration.factory.detect_component",
-                side_effect=ImportError("Module not found"),
-            ),
-            patch.object(SetupCoordinator, "_log_import_error") as mock_log_import,
-        ):
-            coordinator._log_rust_acceleration_status()
-
-            mock_log_import.assert_called_once_with(True, False)
-
-    @pytest.mark.unit
-    def test_log_rust_acceleration_status_handles_generic_exception(self) -> None:
-        """_log_rust_acceleration_status should handle unexpected exceptions."""
-        coordinator = SetupCoordinator()
-
-        mock_yaml_settings_fn = MagicMock(return_value=True)
-
-        with (
-            patch("ClassicLib.support.setup.yaml_settings", mock_yaml_settings_fn),
-            patch.object(GlobalRegistry, "is_gui_mode", return_value=False),
-            patch(
-                "ClassicLib.integration.factory.detect_component",
-                side_effect=RuntimeError("Unexpected error"),
-            ),
-            patch.object(SetupCoordinator, "_log_status_check_error") as mock_log_error,
-        ):
-            coordinator._log_rust_acceleration_status()
-
-            mock_log_error.assert_called_once()
+            mock_log_failure.assert_called_once()
 
 
 # ============================================================================
@@ -784,29 +747,18 @@ class TestLogStatusHelpers:
             mock_logger.info.assert_called()
 
     @pytest.mark.unit
-    def test_log_no_acceleration(self) -> None:
-        """_log_no_acceleration should log fallback message."""
+    def test_log_binding_failure(self) -> None:
+        """_log_binding_failure should emit an error status message."""
+        test_error = RuntimeError("binding failure")
         with (
             patch.object(SetupCoordinator, "_display_status_message") as mock_display,
             patch("ClassicLib.support.setup.logger") as mock_logger,
         ):
-            SetupCoordinator._log_no_acceleration(debug_enabled=True, is_gui=False)
+            SetupCoordinator._log_binding_failure(test_error, debug_enabled=True, is_gui=False)
 
             mock_display.assert_called_once()
-            assert "fallback" in mock_display.call_args[0][0].lower()
-            mock_logger.warning.assert_called()
-
-    @pytest.mark.unit
-    def test_log_import_error(self) -> None:
-        """_log_import_error should log import error message."""
-        with (
-            patch.object(SetupCoordinator, "_display_status_message") as mock_display,
-            patch("ClassicLib.support.setup.logger") as mock_logger,
-        ):
-            SetupCoordinator._log_import_error(debug_enabled=True, is_gui=False)
-
-            mock_display.assert_called_once()
-            mock_logger.debug.assert_called_once()
+            assert "failed validation" in mock_display.call_args[0][0]
+            mock_logger.error.assert_called_once()
 
     @pytest.mark.unit
     def test_log_status_check_error(self) -> None:

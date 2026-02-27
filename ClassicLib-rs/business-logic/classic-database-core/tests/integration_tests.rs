@@ -250,6 +250,136 @@ mod cache_workflows {
         pool.close().await.expect("Close should succeed");
     }
 
+    /// Validate hit/miss parity between single and batch lookup paths.
+    #[tokio::test]
+    async fn test_single_and_batch_cache_hit_miss_parity() {
+        let table_name = "SingleBatchParityWorkflowTable";
+        let entries = [("PARITY001", "Parity.esp", "Parity Entry")];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries)
+            .await
+            .expect("Failed to create test database");
+
+        let single_pool =
+            DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        single_pool
+            .initialize(vec![db_path.clone()])
+            .await
+            .expect("Initialize should succeed");
+
+        let single_first = single_pool
+            .get_entry("PARITY001", "Parity.esp", None)
+            .await
+            .expect("Single lookup should succeed");
+        assert_eq!(single_first, Some("Parity Entry".to_string()));
+
+        let single_second = single_pool
+            .get_entry("PARITY001", "PARITY.ESP", None)
+            .await
+            .expect("Single lookup should succeed");
+        assert_eq!(single_second, Some("Parity Entry".to_string()));
+
+        let single_stats = single_pool.get_stats().expect("Stats should be available");
+        assert_eq!(single_stats.cache_misses, 1);
+        assert_eq!(single_stats.cache_hits, 1);
+        single_pool.close().await.expect("Close should succeed");
+
+        let batch_pool =
+            DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        batch_pool
+            .initialize(vec![db_path])
+            .await
+            .expect("Initialize should succeed");
+
+        let first_batch = batch_pool
+            .get_entries_batch(
+                vec![("PARITY001".to_string(), "Parity.esp".to_string())],
+                None,
+                100,
+            )
+            .await
+            .expect("Batch lookup should succeed");
+        assert_eq!(
+            first_batch.get("PARITY001:Parity.esp"),
+            Some(&"Parity Entry".to_string())
+        );
+
+        let second_batch = batch_pool
+            .get_entries_batch(
+                vec![("PARITY001".to_string(), "PARITY.ESP".to_string())],
+                None,
+                100,
+            )
+            .await
+            .expect("Batch lookup should succeed");
+        assert_eq!(
+            second_batch.get("PARITY001:PARITY.ESP"),
+            Some(&"Parity Entry".to_string())
+        );
+
+        let batch_stats = batch_pool.get_stats().expect("Stats should be available");
+        assert_eq!(batch_stats.cache_misses, 1);
+        assert_eq!(batch_stats.cache_hits, 1);
+        batch_pool.close().await.expect("Close should succeed");
+    }
+
+    /// Verify lookup behavior parity remains unchanged with eviction enabled.
+    #[tokio::test]
+    async fn test_lookup_parity_with_eviction_enabled() {
+        let table_name = "ParityEvictionTable";
+        let entries = [
+            ("PAR001", "Parity.esp", "Parity Entry 1"),
+            ("PAR002", "Parity.esp", "Parity Entry 2"),
+            ("PAR003", "Parity.esp", "Parity Entry 3"),
+        ];
+        let (_temp_file, db_path) = create_test_database(table_name, &entries)
+            .await
+            .expect("Failed to create test database");
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        pool.set_cache_capacity(2);
+        pool.initialize(vec![db_path])
+            .await
+            .expect("Initialize should succeed");
+
+        // Fill and overflow cache deterministically.
+        assert_eq!(
+            pool.get_entry("PAR001", "Parity.esp", None)
+                .await
+                .expect("Lookup should succeed"),
+            Some("Parity Entry 1".to_string())
+        );
+        assert_eq!(
+            pool.get_entry("PAR002", "Parity.esp", None)
+                .await
+                .expect("Lookup should succeed"),
+            Some("Parity Entry 2".to_string())
+        );
+        assert_eq!(
+            pool.get_entry("PAR003", "Parity.esp", None)
+                .await
+                .expect("Lookup should succeed"),
+            Some("Parity Entry 3".to_string())
+        );
+
+        // Previously evicted entry should still be retrievable from DB.
+        assert_eq!(
+            pool.get_entry("PAR001", "Parity.esp", None)
+                .await
+                .expect("Lookup should succeed"),
+            Some("Parity Entry 1".to_string())
+        );
+
+        // Missing entry semantics remain unchanged.
+        assert_eq!(
+            pool.get_entry("PAR999", "Parity.esp", None)
+                .await
+                .expect("Lookup should succeed"),
+            None
+        );
+
+        pool.close().await.expect("Close should succeed");
+    }
+
     /// Test cache TTL expiration
     #[tokio::test]
     async fn test_cache_ttl_workflow() {
@@ -412,6 +542,167 @@ mod multi_database {
             .expect("Batch lookup should succeed");
 
         assert_eq!(results.len(), 4, "Should find all 4 entries");
+
+        pool.close().await.expect("Close should succeed");
+    }
+
+    /// Test multi-DB batch lookup across partial/final stable-shape chunks.
+    #[tokio::test]
+    async fn test_multi_database_partial_batch_chunks() {
+        let table_name = "MultiPartialBatchTable";
+
+        let entries1: Vec<_> = (0..12)
+            .map(|i| {
+                (
+                    format!("MPART{:04}", i),
+                    "Plugin.esp".to_string(),
+                    format!("DB1 Entry {}", i),
+                )
+            })
+            .collect();
+        let entries1_refs: Vec<(&str, &str, &str)> = entries1
+            .iter()
+            .map(|(a, b, c)| (a.as_str(), b.as_str(), c.as_str()))
+            .collect();
+        let (_temp1, db1_path) = create_test_database(table_name, &entries1_refs)
+            .await
+            .expect("Failed to create DB1");
+
+        let entries2: Vec<_> = (12..17)
+            .map(|i| {
+                (
+                    format!("MPART{:04}", i),
+                    "Plugin.esp".to_string(),
+                    format!("DB2 Entry {}", i),
+                )
+            })
+            .collect();
+        let entries2_refs: Vec<(&str, &str, &str)> = entries2
+            .iter()
+            .map(|(a, b, c)| (a.as_str(), b.as_str(), c.as_str()))
+            .collect();
+        let (_temp2, db2_path) = create_test_database(table_name, &entries2_refs)
+            .await
+            .expect("Failed to create DB2");
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        pool.initialize(vec![db1_path, db2_path])
+            .await
+            .expect("Initialize should succeed");
+
+        let pairs: Vec<(String, String)> = (0..17)
+            .map(|i| (format!("MPART{:04}", i), "Plugin.esp".to_string()))
+            .collect();
+        let results = pool
+            .get_entries_batch(pairs, None, 10)
+            .await
+            .expect("Batch lookup should succeed");
+        assert_eq!(
+            results.len(),
+            17,
+            "Should find all entries across databases"
+        );
+        assert_eq!(
+            results.get("MPART0011:Plugin.esp"),
+            Some(&"DB1 Entry 11".to_string())
+        );
+        assert_eq!(
+            results.get("MPART0016:Plugin.esp"),
+            Some(&"DB2 Entry 16".to_string())
+        );
+
+        let stats = pool.get_stats().expect("Stats should be available");
+        assert_eq!(stats.stable_shape_selections, 2);
+        assert_eq!(stats.stable_shape_bucket_16, 1);
+        assert_eq!(stats.stable_shape_bucket_8, 1);
+        assert_eq!(stats.stable_shape_padding_pairs, 7);
+
+        pool.close().await.expect("Close should succeed");
+    }
+
+    /// Test budget observability fields with multiple DB files.
+    #[tokio::test]
+    async fn test_multi_database_budget_observability() {
+        let table_name = "MultiBudgetTable";
+
+        let entries1 = [("MBUD001", "Plugin.esp", "DB1 Entry")];
+        let (_temp1, db1_path) = create_test_database(table_name, &entries1)
+            .await
+            .expect("Failed to create DB1");
+
+        let entries2 = [("MBUD002", "Plugin.esp", "DB2 Entry")];
+        let (_temp2, db2_path) = create_test_database(table_name, &entries2)
+            .await
+            .expect("Failed to create DB2");
+
+        let entries3 = [("MBUD003", "Plugin.esp", "DB3 Entry")];
+        let (_temp3, db3_path) = create_test_database(table_name, &entries3)
+            .await
+            .expect("Failed to create DB3");
+
+        let pool = DatabasePool::new(Some(7), Duration::from_secs(300), table_name.to_string());
+        pool.initialize(vec![db1_path, db2_path, db3_path])
+            .await
+            .expect("Initialize should succeed");
+
+        let stats = pool.get_stats().expect("Stats should be available");
+        assert_eq!(stats.configured_connection_budget, 7);
+        assert_eq!(stats.effective_connection_budget, 7);
+        assert_eq!(stats.active_pool_count, 3);
+        assert_eq!(stats.min_pool_allocation, 2);
+        assert_eq!(stats.max_pool_allocation, 3);
+        assert_eq!(stats.allocation_spread, 1);
+
+        pool.close().await.expect("Close should succeed");
+    }
+
+    /// Test runtime budget update requires explicit rebalance.
+    #[tokio::test]
+    async fn test_runtime_budget_update_requires_rebalance() {
+        let table_name = "MultiRebalanceTable";
+
+        let entries1 = [("MREB001", "Plugin.esp", "DB1 Entry")];
+        let (_temp1, db1_path) = create_test_database(table_name, &entries1)
+            .await
+            .expect("Failed to create DB1");
+
+        let entries2 = [("MREB002", "Plugin.esp", "DB2 Entry")];
+        let (_temp2, db2_path) = create_test_database(table_name, &entries2)
+            .await
+            .expect("Failed to create DB2");
+
+        let pool = DatabasePool::new(Some(4), Duration::from_secs(300), table_name.to_string());
+        pool.initialize(vec![db1_path.clone(), db2_path.clone()])
+            .await
+            .expect("Initialize should succeed");
+
+        let initial = pool.get_stats().expect("Stats should be available");
+        assert_eq!(initial.effective_connection_budget, 4);
+        assert_eq!(initial.min_pool_allocation, 2);
+        assert_eq!(initial.max_pool_allocation, 2);
+
+        pool.set_max_connections(10);
+        let after_set = pool.get_stats().expect("Stats should be available");
+        assert_eq!(
+            after_set.effective_connection_budget, 4,
+            "set_max_connections should be config-only"
+        );
+
+        pool.rebalance_connections()
+            .await
+            .expect("Rebalance should succeed");
+        let after_rebalance = pool.get_stats().expect("Stats should be available");
+        assert_eq!(after_rebalance.configured_connection_budget, 10);
+        assert_eq!(after_rebalance.effective_connection_budget, 10);
+        assert_eq!(after_rebalance.min_pool_allocation, 5);
+        assert_eq!(after_rebalance.max_pool_allocation, 5);
+
+        // Lookup semantics remain unchanged after rebalance.
+        let value = pool
+            .get_entry("MREB001", "Plugin.esp", None)
+            .await
+            .expect("Lookup should succeed");
+        assert_eq!(value, Some("DB1 Entry".to_string()));
 
         pool.close().await.expect("Close should succeed");
     }

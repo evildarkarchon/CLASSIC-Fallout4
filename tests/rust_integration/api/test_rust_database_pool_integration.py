@@ -10,6 +10,7 @@ import asyncio
 import sqlite3
 import time
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -17,24 +18,30 @@ import pytest
 # Import via the integration layer
 from ClassicLib.integration.factory import get_database_pool, is_rust_accelerated
 
+RustAsyncDatabasePool: Any | None = None
+DatabasePoolManager: Any | None = None
+RustDatabasePool: Any | None = None
+
 # Try to import Rust wrapper classes for type checking
 try:
-    from ClassicLib.io.database import DatabasePoolManager
-    from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
+    from ClassicLib.io.database import DatabasePoolManager as _DatabasePoolManager
+    from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool as _RustAsyncDatabasePool
+
+    DatabasePoolManager = _DatabasePoolManager
+    RustAsyncDatabasePool = _RustAsyncDatabasePool
 
     RUST_WRAPPER_AVAILABLE = True
 except ImportError:
-    RustAsyncDatabasePool = None
-    DatabasePoolManager = None
     RUST_WRAPPER_AVAILABLE = False
 
 # Try to import the Rust core module
 try:
-    from classic_database import DatabasePool as RustDatabasePool
+    from classic_database import DatabasePool as _RustDatabasePool
+
+    RustDatabasePool = _RustDatabasePool
 
     RUST_CORE_AVAILABLE = True
 except ImportError:
-    RustDatabasePool = None
     RUST_CORE_AVAILABLE = False
 
 # Check if Rust database pool is available via the integration layer
@@ -87,7 +94,7 @@ class TestRustDatabasePool:
 
     async def test_pool_creation(self):
         """Test creating a new database pool with custom parameters."""
-        if not RustDatabasePool:
+        if RustDatabasePool is None:
             pytest.skip("RustDatabasePool not available")
         pool = RustDatabasePool(5, 60, "fallout4")  # (max_connections, cache_ttl_seconds, game_table)
         stats = pool.get_stats()
@@ -95,6 +102,28 @@ class TestRustDatabasePool:
         assert stats["total_queries"] == 0
         assert stats["cache_hits"] == 0
         assert stats["cache_misses"] == 0
+        assert "cache_evictions" in stats
+        assert "cleanup_runs" in stats
+        assert "cleanup_removed" in stats
+        assert "configured_connection_budget" in stats
+        assert "effective_connection_budget" in stats
+        assert "active_pool_count" in stats
+        assert "min_pool_allocation" in stats
+        assert "max_pool_allocation" in stats
+        assert "allocation_spread" in stats
+        assert "stable_shape_selections" in stats
+        assert "stable_shape_padding_pairs" in stats
+        assert "stable_shape_bucket_8" in stats
+        assert "stable_shape_bucket_16" in stats
+        assert "stable_shape_bucket_32" in stats
+        assert "stable_shape_bucket_64" in stats
+        assert "stable_shape_bucket_128" in stats
+        assert "stable_shape_bucket_256" in stats
+        assert "stable_shape_bucket_512" in stats
+        assert "stable_shape_bucket_1024" in stats
+        assert "cache_capacity" in stats
+        assert "cleanup_threshold" in stats
+        assert "cleanup_interval_seconds" in stats
         # Note: cache_size may not be in stats depending on implementation
         if "cache_size" in stats:
             assert stats["cache_size"] == 0
@@ -219,6 +248,56 @@ class TestRustDatabasePool:
         # If it was a cache hit, total_queries shouldn't increase
         assert stats["cache_hits"] > 0
 
+    async def test_cache_policy_runtime_configuration(self, tmp_path):
+        """Test runtime cache capacity/cleanup policy configuration APIs."""
+        db_path = tmp_path / "test.db"
+        create_test_database(db_path)
+
+        pool = RustDatabasePool(10, 300, "fallout4")  # pyright: ignore[reportOptionalCall]
+        await pool.initialize([str(db_path)])
+
+        pool.set_cache_capacity(77)
+        pool.set_cache_cleanup_threshold(55)
+        pool.set_cache_cleanup_interval(9)
+
+        assert pool.get_cache_capacity() == 77
+        assert pool.get_cache_cleanup_threshold() == 55
+        assert pool.get_cache_cleanup_interval() == 9
+
+        stats = pool.get_stats()
+        assert stats["cache_capacity"] == 77
+        assert stats["cleanup_threshold"] == 55
+        assert stats["cleanup_interval_seconds"] == 9
+
+    async def test_runtime_budget_update_requires_rebalance(self, tmp_path):
+        """Verify set_max_connections is config-only until explicit rebalance."""
+        db1_path = tmp_path / "budget_main.db"
+        db2_path = tmp_path / "budget_local.db"
+        create_test_database(db1_path)
+        create_test_database(db2_path)
+
+        pool = RustDatabasePool(4, 300, "fallout4")  # pyright: ignore[reportOptionalCall]
+        await pool.initialize([str(db1_path), str(db2_path)])
+
+        initial = pool.get_stats()
+        assert initial["configured_connection_budget"] == 4
+        assert initial["effective_connection_budget"] == 4
+        assert initial["min_pool_allocation"] == 2
+        assert initial["max_pool_allocation"] == 2
+
+        pool.set_max_connections(10)
+        after_set = pool.get_stats()
+        assert after_set["configured_connection_budget"] == 10
+        assert after_set["effective_connection_budget"] == 4
+
+        await pool.rebalance_connections()
+        after_rebalance = pool.get_stats()
+        assert after_rebalance["configured_connection_budget"] == 10
+        assert after_rebalance["effective_connection_budget"] == 10
+        assert after_rebalance["active_pool_count"] == 2
+        assert after_rebalance["min_pool_allocation"] == 5
+        assert after_rebalance["max_pool_allocation"] == 5
+
     async def test_multiple_databases(self, tmp_path):
         """Test querying across multiple databases."""
         db1_path = tmp_path / "main.db"
@@ -306,18 +385,64 @@ class MockRustPool:
     """
 
     def __init__(self, *args, **kwargs):
+        configured_budget = int(args[0]) if args else 10
         self.stats = {
             "total_queries": 0,
             "cache_hits": 0,
             "cache_misses": 0,
             "cache_size": 0,
-            "total_connections": 1,
+            "total_connections": 0,
             "active_connections": 0,
+            "cache_evictions": 0,
+            "cleanup_runs": 0,
+            "cleanup_removed": 0,
+            "configured_connection_budget": configured_budget,
+            "effective_connection_budget": 0,
+            "active_pool_count": 0,
+            "min_pool_allocation": 0,
+            "max_pool_allocation": 0,
+            "allocation_spread": 0,
+            "stable_shape_selections": 0,
+            "stable_shape_padding_pairs": 0,
+            "stable_shape_bucket_8": 0,
+            "stable_shape_bucket_16": 0,
+            "stable_shape_bucket_32": 0,
+            "stable_shape_bucket_64": 0,
+            "stable_shape_bucket_128": 0,
+            "stable_shape_bucket_256": 0,
+            "stable_shape_bucket_512": 0,
+            "stable_shape_bucket_1024": 0,
+            "cache_capacity": 10000,
+            "cleanup_threshold": 256,
+            "cleanup_interval_seconds": 5,
             "cache_hit_rate": 0.0,
         }
+        self._last_pool_count = 0
 
     async def initialize(self, paths):
-        pass
+        self._last_pool_count = len(paths)
+        self.stats["total_connections"] = len(paths)
+        self.stats["active_connections"] = len(paths)
+        self.stats["active_pool_count"] = len(paths)
+
+        if len(paths) == 0:
+            self.stats["effective_connection_budget"] = 0
+            self.stats["min_pool_allocation"] = 0
+            self.stats["max_pool_allocation"] = 0
+            self.stats["allocation_spread"] = 0
+            return
+
+        configured = int(self.stats["configured_connection_budget"])
+        effective = max(configured, len(paths))
+        base = effective // len(paths)
+        remainder = effective % len(paths)
+        min_alloc = base
+        max_alloc = base + (1 if remainder > 0 else 0)
+
+        self.stats["effective_connection_budget"] = effective
+        self.stats["min_pool_allocation"] = min_alloc
+        self.stats["max_pool_allocation"] = max_alloc
+        self.stats["allocation_spread"] = max_alloc - min_alloc
 
     async def get_entry(self, formid, plugin, game):
         self.stats["total_queries"] += 1
@@ -369,6 +494,36 @@ class MockRustPool:
         # SYNC method - matches RustAsyncDatabasePool.set_cache_ttl()
         pass
 
+    def get_cache_capacity(self):
+        return self.stats["cache_capacity"]
+
+    def set_cache_capacity(self, capacity):
+        self.stats["cache_capacity"] = capacity
+
+    def get_cache_cleanup_threshold(self):
+        return self.stats["cleanup_threshold"]
+
+    def set_cache_cleanup_threshold(self, threshold):
+        self.stats["cleanup_threshold"] = threshold
+
+    def get_cache_cleanup_interval(self):
+        return self.stats["cleanup_interval_seconds"]
+
+    def set_cache_cleanup_interval(self, seconds):
+        self.stats["cleanup_interval_seconds"] = seconds
+
+    def get_max_connections(self):
+        return self.stats["configured_connection_budget"]
+
+    def set_max_connections(self, max_connections):
+        self.stats["configured_connection_budget"] = max_connections
+
+    def recalculate_max_connections(self):
+        self.stats["configured_connection_budget"] = 8
+
+    async def rebalance_connections(self):
+        await self.initialize([object()] * self._last_pool_count)
+
     async def optimize(self):
         pass
 
@@ -396,7 +551,7 @@ class TestRustAsyncDatabasePool:
                 await pool.initialize()
 
             # Verify it's the Rust implementation if available
-            if RUST_AVAILABLE and RustAsyncDatabasePool:
+            if RUST_AVAILABLE and RustAsyncDatabasePool is not None:
                 assert isinstance(pool, RustAsyncDatabasePool)
 
     async def test_async_context_manager(self, tmp_path):
@@ -482,12 +637,66 @@ class TestRustAsyncDatabasePool:
 
             # Update TTL
             pool.set_cache_ttl(300)
+            pool.set_cache_capacity(2048)
+            pool.set_cache_cleanup_threshold(512)
+            pool.set_cache_cleanup_interval(12)
+            assert pool.get_cache_capacity() == 2048
+            assert pool.get_cache_cleanup_threshold() == 512
+            assert pool.get_cache_cleanup_interval() == 12
 
             # Get stats
             stats = pool.get_stats()
             assert "total_queries" in stats
             assert "cache_hits" in stats
             assert "cache_hit_rate" in stats
+            assert "configured_connection_budget" in stats
+            assert "effective_connection_budget" in stats
+            assert "active_pool_count" in stats
+            assert "min_pool_allocation" in stats
+            assert "max_pool_allocation" in stats
+            assert "allocation_spread" in stats
+            assert "stable_shape_selections" in stats
+            assert "stable_shape_padding_pairs" in stats
+            assert "stable_shape_bucket_8" in stats
+            assert "stable_shape_bucket_16" in stats
+            assert "stable_shape_bucket_32" in stats
+            assert "stable_shape_bucket_64" in stats
+            assert "stable_shape_bucket_128" in stats
+            assert "stable_shape_bucket_256" in stats
+            assert "stable_shape_bucket_512" in stats
+            assert "stable_shape_bucket_1024" in stats
+            assert "cache_capacity" in stats
+            assert "cleanup_threshold" in stats
+            assert "cleanup_interval_seconds" in stats
+
+    async def test_async_budget_rebalance_api(self, tmp_path):
+        """Test global budget config update and explicit rebalance API."""
+        if not RUST_WRAPPER_AVAILABLE:
+            pytest.skip("RustAsyncDatabasePool not available")
+
+        dummy_db = tmp_path / "dummy.db"
+        dummy_db.touch()
+
+        with (
+            patch("ClassicLib.io.database.rust_pool.DatabasePool", side_effect=MockRustPool),
+            patch("ClassicLib.io.database.rust_pool.get_all_db_paths_async", return_value=[dummy_db]),
+        ):
+            pool = RustAsyncDatabasePool(max_connections=4)  # pyright: ignore[reportOptionalCall]
+            await pool.initialize()
+
+            assert pool.get_max_connections() == 4
+            before = pool.get_stats()
+            assert before["effective_connection_budget"] == 4
+
+            pool.set_max_connections(12)
+            after_set = pool.get_stats()
+            assert after_set["configured_connection_budget"] == 12
+            assert after_set["effective_connection_budget"] == 4
+
+            await pool.rebalance_connections()
+            after_rebalance = pool.get_stats()
+            assert after_rebalance["configured_connection_budget"] == 12
+            assert after_rebalance["effective_connection_budget"] == 12
 
     async def test_async_optimization(self, tmp_path):
         """Test async database optimization."""

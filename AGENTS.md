@@ -178,7 +178,7 @@ Python code organized into subpackages:
 
 ### Rust Acceleration Pattern
 
-The `ClassicLib/integration/factory.py` module provides `detect_component()` which tries to import a Rust module and returns `(available: bool, module)`. If Rust is unavailable, Python fallbacks are used automatically. Check availability via flags like `RUST_PERF_AVAILABLE`. Note: `classic_registry` is mandatory (no fallback).
+The `ClassicLib/integration/factory.py` module provides `detect_component()` for diagnostics and `validate_rust_modules("startup_all")` for mandatory startup validation. Python fallback execution paths are removed; if a required Rust binding is missing, startup fails with typed binding diagnostics.
 
 ## Key Conventions
 

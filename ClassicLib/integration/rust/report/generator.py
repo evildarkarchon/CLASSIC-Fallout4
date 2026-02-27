@@ -8,20 +8,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from ClassicLib.integration.factory import detect_component
+from ClassicLib.integration.factory import get_component
 
 if TYPE_CHECKING:
     from classic_scanlog import ReportGenerator as RustReportGenerator
 
     from ClassicLib.integration.rust.report.fragment import RustAcceleratedReportFragment
-
-    RUST_AVAILABLE: bool = True
 else:
-    _has_generator, RustReportGenerator = detect_component("classic_scanlog", "ReportGenerator")
-    RUST_AVAILABLE = _has_generator
-
-    if not RUST_AVAILABLE:
-        RustReportGenerator = None  # type: ignore[assignment, misc]
+    RustReportGenerator = get_component("classic_scanlog", "ReportGenerator")
 
 
 def _get_fragment_class() -> type[RustAcceleratedReportFragment]:
@@ -39,8 +33,7 @@ def _get_fragment_class() -> type[RustAcceleratedReportFragment]:
 class RustAcceleratedReportGenerator:
     """Rust-only ReportGenerator wrapper.
 
-    Delegates all report section generation to Rust implementation.
-    Raises RuntimeError if Rust module is not available.
+    Delegates all report section generation to required Rust implementation.
     """
 
     def __init__(self, yamldata: Any = None) -> None:
@@ -49,13 +42,7 @@ class RustAcceleratedReportGenerator:
         Args:
             yamldata: Optional configuration data (kept for API compatibility).
 
-        Raises:
-            RuntimeError: If Rust module is not available.
-
         """
-        if not RUST_AVAILABLE:
-            msg = "Required Rust module for ReportGenerator not available. Reinstall CLASSIC."
-            raise RuntimeError(msg)
         self._generator = RustReportGenerator()  # type: ignore[misc]
         self.yamldata = yamldata
 
@@ -234,6 +221,5 @@ class RustAcceleratedReportGenerator:
 
 
 __all__ = [
-    "RUST_AVAILABLE",
     "RustAcceleratedReportGenerator",
 ]

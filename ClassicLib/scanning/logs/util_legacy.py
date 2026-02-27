@@ -359,24 +359,13 @@ def crashlogs_get_files() -> list[Path]:
     handles file copying and renaming operations and supports the inclusion of custom and additional
     directories specified in settings.
 
-    This function automatically uses Rust acceleration when available (10x faster), falling back to
-    Python implementation for maximum compatibility.
+    This function uses the required Rust log collector implementation.
 
     Returns:
         list[Path]: A list of `Path` objects representing all discovered and processed crash log files.
 
     """
-    # Try Rust acceleration first
-    try:
-        return _crashlogs_get_files_rust()
-    except ImportError:
-        # Rust not available, use Python fallback
-        logger.debug("Rust acceleration not available, using Python implementation")
-        return _crashlogs_get_files_python()
-    except Exception as e:  # noqa: BLE001 - Intentional: graceful fallback if Rust log collection fails
-        # Rust failed for some reason, fall back to Python
-        logger.warning(f"Rust log collection failed ({e}), falling back to Python implementation")
-        return _crashlogs_get_files_python()
+    return _crashlogs_get_files_rust()
 
 
 query_cache: dict[tuple[str, str], str] = {}

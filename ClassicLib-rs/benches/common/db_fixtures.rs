@@ -98,8 +98,8 @@ impl DeterministicDbFixture {
         let mut db_paths = Vec::with_capacity(config.database_count);
 
         for db_index in 0..config.database_count {
-            let temp_file =
-                NamedTempFile::with_suffix(".db").map_err(|err| format!("create temp db: {err}"))?;
+            let temp_file = NamedTempFile::with_suffix(".db")
+                .map_err(|err| format!("create temp db: {err}"))?;
             let db_path = temp_file.path().to_path_buf();
             let conn_str = format!("sqlite://{}?mode=rwc", db_path.display());
 
@@ -186,7 +186,10 @@ impl DeterministicDbFixture {
 
     /// Deterministic lookup miss pair.
     pub fn miss_pair(&self) -> (String, String) {
-        ("FFFFFF".to_string(), "MissingBenchmarkPlugin.esp".to_string())
+        (
+            "FFFFFF".to_string(),
+            "MissingBenchmarkPlugin.esp".to_string(),
+        )
     }
 
     /// Deterministic hit-only lookup pairs of requested size.
@@ -224,9 +227,7 @@ impl DeterministicDbFixture {
             .enumerate()
             .map(|(idx, (suffix, plugin))| {
                 let prefix = prefix_for_plugin(&plugin).unwrap_or("00");
-                format!(
-                    "\t[{idx:03}] BenchmarkFrame -> Form ID: 0x{prefix}{suffix} ({plugin})"
-                )
+                format!("\t[{idx:03}] BenchmarkFrame -> Form ID: 0x{prefix}{suffix} ({plugin})")
             })
             .collect()
     }
@@ -256,6 +257,9 @@ fn record_for_index(index: usize) -> FixtureRecord {
     FixtureRecord {
         suffix: suffix.clone(),
         plugin: plugin_spec.plugin.to_string(),
-        entry: format!("BenchmarkEntry_{index:06}_{}_{}", plugin_spec.prefix, suffix),
+        entry: format!(
+            "BenchmarkEntry_{index:06}_{}_{}",
+            plugin_spec.prefix, suffix
+        ),
     }
 }

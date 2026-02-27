@@ -179,6 +179,8 @@ uv sync --all-extras
 
 **Note**: For development, it's recommended to use `uv sync --all-extras` to ensure you have all optional dependencies (tqdm for CLI progress bars, pywin32 for Windows features) available for testing all interfaces.
 
+**Rust bindings are mandatory for Python execution**: before running CLI/GUI/tests from source, build/install bindings with `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1`.
+
 To verify VS Code is using this venv: press `F1` and search `>python.setInterpreter`, then select `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (Unix).
 
 ### Running the Application

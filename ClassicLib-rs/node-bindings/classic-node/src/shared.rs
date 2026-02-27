@@ -3,6 +3,7 @@
 //! Provides path utilities, string interning, performance metrics, registry access,
 //! and runtime diagnostics to JavaScript/TypeScript.
 
+use crate::logging_contract;
 use classic_perf_core::{clear_metrics, get_summary, record_timing};
 use classic_registry_core::{clear_all, register, unregister};
 use classic_shared_core::path_core::PathHandler;
@@ -237,10 +238,21 @@ pub fn is_runtime_available() -> bool {
     // Accessing the runtime through get_runtime() will lazily initialize it.
     // If it panics (which it shouldn't), this would fail - but LazyLock
     // makes it safe. We simply verify we can access it.
-    std::panic::catch_unwind(|| {
+    let available = std::panic::catch_unwind(|| {
         let _ = classic_shared_core::get_runtime();
     })
-    .is_ok()
+    .is_ok();
+
+    let thread_count = if available {
+        std::thread::available_parallelism()
+            .map(|n| n.get() as u32)
+            .unwrap_or(4)
+    } else {
+        0
+    };
+
+    logging_contract::emit_node_runtime_startup_diagnostics(available, thread_count, None);
+    available
 }
 
 /// Get runtime diagnostic information.
@@ -260,6 +272,8 @@ pub fn get_runtime_info() -> RuntimeInfo {
     } else {
         0
     };
+
+    logging_contract::emit_node_runtime_startup_diagnostics(available, thread_count, None);
 
     RuntimeInfo {
         available,

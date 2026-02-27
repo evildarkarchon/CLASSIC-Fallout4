@@ -212,10 +212,10 @@ class TestRustAcceleratedReportFragment:
 
         py_fragment = PyReportFragment.from_lines(sample_lines)
 
-        wrapped = RustAcceleratedReportFragment.wrap_fragment(py_fragment, use_rust=False)
+        rust_fragment = RustAcceleratedReportFragment.from_lines(py_fragment.to_list())
+        wrapped = RustAcceleratedReportFragment.wrap_fragment(rust_fragment._fragment, use_rust=True)
 
-        # Use to_list() to get the length since Python fallback may not support len()
-        assert len(wrapped.to_list()) == len(sample_lines)
+        assert wrapped.to_list() == sample_lines
 
 
 # ============================================================================
@@ -568,43 +568,6 @@ class TestParallelReportProcessor:
         result = processor.combine_fragments_parallel([frag])
 
         assert result.to_list() == sample_lines
-
-
-# ============================================================================
-# RUST_AVAILABLE Export Tests
-# ============================================================================
-
-
-class TestRustAvailableExport:
-    """Tests for RUST_AVAILABLE module-level exports."""
-
-    @pytest.mark.unit
-    def test_fragment_rust_available_is_bool(self) -> None:
-        """Test fragment module exports RUST_AVAILABLE."""
-        from ClassicLib.integration.rust.report.fragment import RUST_AVAILABLE
-
-        assert isinstance(RUST_AVAILABLE, bool)
-
-    @pytest.mark.unit
-    def test_composer_rust_available_is_bool(self) -> None:
-        """Test composer module exports RUST_AVAILABLE."""
-        from ClassicLib.integration.rust.report.composer import RUST_AVAILABLE
-
-        assert isinstance(RUST_AVAILABLE, bool)
-
-    @pytest.mark.unit
-    def test_generator_rust_available_is_bool(self) -> None:
-        """Test generator module exports RUST_AVAILABLE."""
-        from ClassicLib.integration.rust.report.generator import RUST_AVAILABLE
-
-        assert isinstance(RUST_AVAILABLE, bool)
-
-    @pytest.mark.unit
-    def test_parallel_rust_available_is_bool(self) -> None:
-        """Test parallel module exports RUST_AVAILABLE."""
-        from ClassicLib.integration.rust.report.parallel import RUST_AVAILABLE
-
-        assert isinstance(RUST_AVAILABLE, bool)
 
 
 # ============================================================================

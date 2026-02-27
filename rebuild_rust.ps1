@@ -14,6 +14,9 @@ param (
 
 $ErrorActionPreference = "Stop"
 
+Write-Host "Rust bindings are mandatory prerequisites for CLASSIC Python entrypoints." -ForegroundColor Cyan
+Write-Host "This script rebuilds/installs required bindings used by startup-all validation." -ForegroundColor Cyan
+
 # Function to parse Cargo.toml
 function Get-RustModuleInfo {
     param ($CargoPath)
@@ -237,7 +240,7 @@ foreach ($module in $RustModules) {
 
 # Skip verification in BuildOnly mode
 if ($BuildOnly) {
-    Write-Host "✨ Build complete! (verification skipped)" -ForegroundColor Green
+    Write-Host "✨ Wheel build complete. Install these wheels before running CLASSIC Python entrypoints." -ForegroundColor Green
     exit 0
 }
 

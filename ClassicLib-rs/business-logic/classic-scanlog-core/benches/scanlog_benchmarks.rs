@@ -29,11 +29,11 @@ mod common;
 mod db_fixtures;
 
 use classic_database_core::DatabasePool;
-use classic_shared_core::get_runtime;
 use classic_scanlog_core::{
     FormIDAnalyzerCore, LogParser, PatternMatcher, RecordScanner, contains_plugin, contains_record,
     detect_plugins_batch, scan_records_batch,
 };
+use classic_shared_core::get_runtime;
 use indexmap::IndexMap;
 
 // =============================================================================
@@ -239,7 +239,8 @@ fn formid_resolution_db_benchmarks(c: &mut Criterion) {
     )
     .expect("analyzer creation should succeed");
 
-    let crashlog_plugins: IndexMap<String, String> = fixture.plugin_prefix_pairs().into_iter().collect();
+    let crashlog_plugins: IndexMap<String, String> =
+        fixture.plugin_prefix_pairs().into_iter().collect();
 
     for (scenario_id, formid_count) in [
         ("cold_small_32", 32usize),

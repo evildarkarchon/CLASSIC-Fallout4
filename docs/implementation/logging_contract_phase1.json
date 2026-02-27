@@ -1,0 +1,71 @@
+{
+  "version": "phase1-v1",
+  "scope": {
+    "included": [
+      "python",
+      "rust"
+    ],
+    "deferred": [
+      "cpp",
+      "node"
+    ]
+  },
+  "required_fields": [
+    "event",
+    "severity",
+    "component",
+    "outcome"
+  ],
+  "optional_fields": [
+    "contract",
+    "checked_bindings",
+    "missing_binding",
+    "failure_type",
+    "failure_hint",
+    "error",
+    "correlation_id",
+    "active_components",
+    "total_components",
+    "acceleration_level"
+  ],
+  "severity_map": {
+    "Info": "info",
+    "Success": "info",
+    "Warning": "warning",
+    "Error": "error",
+    "Critical": "error",
+    "Debug": "debug",
+    "Progress": "debug"
+  },
+  "canonical_events": {
+    "startup_binding_contract_validated": "classic.startup.binding_contract.validated",
+    "startup_binding_contract_failed": "classic.startup.binding_contract.failed",
+    "startup_acceleration_status": "classic.startup.acceleration.status"
+  },
+  "redaction": {
+    "secret_keys": [
+      "password",
+      "passwd",
+      "secret",
+      "token",
+      "api_key",
+      "apikey",
+      "authorization",
+      "cookie",
+      "session",
+      "credential",
+      "private_key"
+    ],
+    "path_keys": [
+      "path",
+      "file",
+      "filename",
+      "filepath",
+      "directory",
+      "dir",
+      "location"
+    ],
+    "secret_mask": "[REDACTED]",
+    "path_mask": "<path-redacted>"
+  }
+}

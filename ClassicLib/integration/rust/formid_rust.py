@@ -11,7 +11,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from ClassicLib.integration.exceptions import RustError, RustParseError
-from ClassicLib.integration.factory import detect_component
+from ClassicLib.integration.factory import get_component
 
 if TYPE_CHECKING:
     from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
@@ -43,10 +43,7 @@ class FormIDAnalyzer:
         self.formid_db_exists = formid_db_exists
 
         # Try Rust FormIDAnalyzerCore (optimized version with yamldata params)
-        rust_available, FormIDAnalyzerCore = detect_component("classic_scanlog", "FormIDAnalyzerCore")
-        if not rust_available or FormIDAnalyzerCore is None:
-            msg = "FormIDAnalyzerCore not found in classic_scanlog module. Reinstall CLASSIC."
-            raise RuntimeError(msg)
+        FormIDAnalyzerCore = get_component("classic_scanlog", "FormIDAnalyzerCore")
 
         try:
             self._rust_analyzer = FormIDAnalyzerCore(
@@ -118,7 +115,8 @@ class FormIDAnalyzer:
             msg = f"Rust formid_match failed: {e}"
             raise RuntimeError(msg) from e
 
-    def extract_formids_batch(self, segments: list[list[str]]) -> list[list[str]]:
+    @staticmethod
+    def extract_formids_batch(segments: list[list[str]]) -> list[list[str]]:
         """Extract FormIDs from multiple segments.
 
         Args:
@@ -132,15 +130,11 @@ class FormIDAnalyzer:
 
         """
         try:
-            rust_available, extract_batch = detect_component("classic_scanlog", "extract_formids_batch")
-            if rust_available and extract_batch:
-                return extract_batch(segments)
-        except (RustParseError, RustError, AttributeError, TypeError, ValueError) as e:
+            extract_batch = get_component("classic_scanlog", "extract_formids_batch")
+            return extract_batch(segments)
+        except (ImportError, RustParseError, RustError, AttributeError, TypeError, ValueError) as e:
             msg = f"Rust batch extraction failed: {e}"
             raise RuntimeError(msg) from e
-
-        # Fallback to sequential processing with Rust
-        return [self.extract_formids(segment) for segment in segments]
 
     @property
     def is_rust_accelerated(self) -> bool:

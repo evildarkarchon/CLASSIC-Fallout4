@@ -23,6 +23,12 @@ Use these scenario IDs exactly in benchmark output and comparison reports.
 | `db_batch_lookup/large_1024` | `classic-database-core` | Batch lookup, large class | `DatabasePool::get_entries_batch` | 1024 pairs |
 | `db_multi_db_fallback/secondary_only_hit` | `classic-database-core` | Multi-DB lookup with result present in non-primary fixture DB | `DatabasePool::get_entries_batch` | 1 pair |
 | `db_multi_db_fallback/miss_all` | `classic-database-core` | Multi-DB miss path (all DBs checked) | `DatabasePool::get_entry` | 1 lookup |
+| `db_multi_db_budget/secondary_only_hit/budget_1` | `classic-database-core` | Multi-DB lookup under low global budget (clamped) | `DatabasePool::get_entries_batch` | 1 pair |
+| `db_multi_db_budget/secondary_only_hit/budget_2` | `classic-database-core` | Multi-DB lookup at floor-equivalent global budget | `DatabasePool::get_entries_batch` | 1 pair |
+| `db_multi_db_budget/secondary_only_hit/budget_8` | `classic-database-core` | Multi-DB lookup with higher global budget | `DatabasePool::get_entries_batch` | 1 pair |
+| `db_multi_db_budget/miss_all/budget_1` | `classic-database-core` | Multi-DB miss path under low global budget (clamped) | `DatabasePool::get_entry` | 1 lookup |
+| `db_multi_db_budget/miss_all/budget_2` | `classic-database-core` | Multi-DB miss path at floor-equivalent global budget | `DatabasePool::get_entry` | 1 lookup |
+| `db_multi_db_budget/miss_all/budget_8` | `classic-database-core` | Multi-DB miss path with higher global budget | `DatabasePool::get_entry` | 1 lookup |
 | `scanlog_formid_resolution/cold_small_32` | `classic-scanlog-core` | FormID extract + DB-backed resolve with cold cache | `FormIDAnalyzerCore::extract_formids` + `formid_match` (`show_formid_values=true`) | 32 FormIDs |
 | `scanlog_formid_resolution/cold_medium_128` | `classic-scanlog-core` | FormID extract + DB-backed resolve with cold cache | Same as above | 128 FormIDs |
 | `scanlog_formid_resolution/cold_large_512` | `classic-scanlog-core` | FormID extract + DB-backed resolve with cold cache | Same as above | 512 FormIDs |
@@ -178,3 +184,84 @@ For follow-up Rust DB optimization work:
   - `cold_large_512`: `-90.67%`
 - Trade-off observed: `warm_medium_128` regressed (`+98.62%`, classified `fail`), likely from fixed batch orchestration overhead when cache is already hot.
 - Follow-up tuning direction: add adaptive fast-path gating (e.g., bypass batching for very small/hot candidate sets) and re-run thorough-mode comparisons before changing thresholds.
+
+### Tuning Notes: Bounded Query Cache Lifecycle (2026-02-27)
+
+`classic-database-core::DatabasePool` now enforces a bounded cache with deterministic eviction and hybrid proactive cleanup. New `get_stats()` lifecycle fields:
+
+- `cache_evictions`: Entries evicted to enforce cache capacity.
+- `cleanup_runs`: Number of proactive expired-entry cleanup passes.
+- `cleanup_removed`: Total expired entries removed by proactive cleanup.
+- `cache_capacity`: Active cache capacity setting.
+- `cleanup_threshold`: Active lookup-operation threshold before cleanup is considered.
+- `cleanup_interval_seconds`: Active minimum interval gate between cleanup runs.
+
+#### Safe defaults for long-running scans
+
+- `cache_capacity`: `10_000` entries.
+- `cleanup_threshold`: `256` lookup operations.
+- `cleanup_interval_seconds`: `5` seconds.
+
+These defaults cap memory growth while avoiding over-aggressive cleanup churn in hot paths.
+
+#### Operational guidance
+
+- If `cache_evictions` climbs rapidly with stable/low `cache_hits`, increase `cache_capacity` to preserve reuse.
+- If stale entries accumulate (high `cache_size`, low `cleanup_removed`), reduce `cleanup_threshold` or shorten `cleanup_interval_seconds`.
+- If CPU overhead increases from maintenance work, raise `cleanup_threshold` and/or `cleanup_interval_seconds` first before raising capacity.
+
+#### Benchmark delta snapshot (quick mode)
+
+Run:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode quick -Baseline "db-baseline-main" -BenchFilter "db_|scanlog_formid_resolution" -ScenarioFilter "^(db_|scanlog_formid_resolution)" -ExportJson "ClassicLib-rs/target/criterion/db-delta-report.json"
+```
+
+Result summary from `ClassicLib-rs/target/criterion/db-delta-report.json`:
+
+- Total scenarios: `12`
+- `improved`: `6`
+- `within_threshold`: `4`
+- `warning`: `1` (`db_single_lookup/cold_miss`, `+7.00%`)
+- `fail`: `1` (`db_multi_db_fallback/miss_all`, `+16.88%`)
+
+Interpretation: bounded-cache changes improve most cold/warm scanlog formid-resolution scenarios, but miss-heavy multi-db fallback paths need follow-up tuning before treating the change as a net benchmark win.
+
+### Tuning Notes: Global DB Connection Budgeting (2026-02-26)
+
+`classic-database-core::DatabasePool` now treats `max_connections` as a global budget distributed deterministically across active DB pools, with low-budget clamp to keep each active pool nonzero.
+
+#### Multi-DB budget scenario sweep (quick mode)
+
+Run:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File scripts/bench/run_benchmarks.ps1 -Suite rust-db-baseline -Mode quick -Filter "db_multi_db_budget"
+```
+
+Observed timing bands (quick mode):
+
+- `db_multi_db_budget/secondary_only_hit/budget_1`: ~`120-123 us`
+- `db_multi_db_budget/secondary_only_hit/budget_2`: ~`122-127 us`
+- `db_multi_db_budget/secondary_only_hit/budget_8`: ~`108-113 us`
+- `db_multi_db_budget/miss_all/budget_1`: ~`189-198 us`
+- `db_multi_db_budget/miss_all/budget_2`: ~`202-210 us`
+- `db_multi_db_budget/miss_all/budget_8`: ~`199-202 us`
+
+Interpretation: higher budget improves secondary-hit throughput; miss-all paths remain sensitive and should be tracked with baseline comparisons.
+
+#### Baseline comparison focus (`db_multi_db_fallback`)
+
+Run:
+
+```powershell
+pwsh -ExecutionPolicy Bypass -File scripts/bench/compare_baselines.ps1 -Suite rust-db-baseline -Mode quick -Baseline "db-baseline-main" -BenchFilter "db_multi_db_fallback" -ScenarioFilter "^db_multi_db_fallback/" -ExportJson "ClassicLib-rs/target/criterion/db-multi-db-delta-report.json"
+```
+
+Quick-mode result summary (`db-multi-db-delta-report.json`):
+
+- `db_multi_db_fallback/secondary_only_hit`: `+0.73%` (`within_threshold`)
+- `db_multi_db_fallback/miss_all`: `+14.13%` (`fail`)
+
+Operational guidance: keep global-budget allocator enabled for safety and determinism; prioritize follow-up optimization on miss-heavy multi-db fallback path before raising regression thresholds.

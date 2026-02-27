@@ -454,7 +454,7 @@ class TestIsValidCustomScanPath:
 class TestCrashlogsGetFiles:
     """Tests for crashlogs_get_files function and its implementations."""
 
-    def test_python_fallback_creates_directories(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_python_helper_creates_directories(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_crashlogs_get_files_python should create required directories."""
         from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_python
 
@@ -469,7 +469,7 @@ class TestCrashlogsGetFiles:
             assert (tmp_path / "Crash Logs").exists()
             assert (tmp_path / "Crash Logs" / "Pastebin").exists()
 
-    def test_python_fallback_finds_crash_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_python_helper_finds_crash_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_crashlogs_get_files_python should find crash log files."""
         from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_python
 
@@ -490,7 +490,7 @@ class TestCrashlogsGetFiles:
             assert len(result) == 2
             assert all(isinstance(p, Path) for p in result)
 
-    def test_python_fallback_includes_custom_folder(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_python_helper_includes_custom_folder(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
         """_crashlogs_get_files_python should include files from custom folder."""
         from ClassicLib.scanning.logs.util_legacy import _crashlogs_get_files_python
 
@@ -512,8 +512,8 @@ class TestCrashlogsGetFiles:
 
             assert any("crash-custom.log" in str(p) for p in result)
 
-    def test_crashlogs_get_files_falls_back_to_python(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """crashlogs_get_files should fall back to Python if Rust unavailable."""
+    def test_crashlogs_get_files_raises_when_rust_missing(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """crashlogs_get_files should fail fast when Rust collector is unavailable."""
         from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
         monkeypatch.chdir(tmp_path)
@@ -528,10 +528,8 @@ class TestCrashlogsGetFiles:
             patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
             patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
-            result = crashlogs_get_files()
-
-            assert len(result) == 1
-            assert "crash-test.log" in str(result[0])
+            with pytest.raises(ImportError, match="No Rust"):
+                crashlogs_get_files()
 
     def test_crashlogs_get_files_uses_rust_when_available(self, tmp_path: Path) -> None:
         """crashlogs_get_files should use Rust implementation when available."""
@@ -735,8 +733,8 @@ class TestIsValidCustomScanPathEdgeCases:
 class TestCrashlogsGetFilesEdgeCases:
     """Additional edge case tests for crashlogs_get_files."""
 
-    def test_crashlogs_get_files_falls_back_on_general_exception(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-        """crashlogs_get_files should fall back to Python on any exception from Rust."""
+    def test_crashlogs_get_files_propagates_rust_exception(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """crashlogs_get_files should propagate Rust collector failures."""
         from ClassicLib.scanning.logs.util_legacy import crashlogs_get_files
 
         monkeypatch.chdir(tmp_path)
@@ -754,11 +752,8 @@ class TestCrashlogsGetFilesEdgeCases:
             patch("ClassicLib.scanning.logs.util_legacy.classic_settings", return_value=None),
             patch("ClassicLib.scanning.logs.util_legacy.yaml_settings", return_value=None),
         ):
-            result = crashlogs_get_files()
-
-            # Should have fallen back to Python and found the file
-            assert len(result) == 1
-            assert "crash-fallback.log" in str(result[0])
+            with pytest.raises(RuntimeError, match="Rust operation failed"):
+                crashlogs_get_files()
 
     def test_rust_implementation_path_conversion(self, tmp_path: Path) -> None:
         """_crashlogs_get_files_rust should convert string paths to Path objects."""

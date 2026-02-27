@@ -11,6 +11,7 @@ This document describes the different caching patterns used in the CLASSIC Rust 
 | Dynamic Registry | `classic-registry-core` | `String` | `Arc<dyn Any>` | Manual | Application state |
 | Path Hash Cache | `classic-file-io-core` | `PathBuf` | `String` | Manual | File integrity |
 | Time Series Metrics | `classic-perf-core` | `String` | `Vec<f64>` | Manual | Performance data |
+| Typed FormID Lookup Cache | `classic-database-core` | `CacheKey` | `CacheEntry` | TTL + capacity eviction | FormID DB lookups |
 
 ## Pattern Details
 
@@ -215,6 +216,48 @@ clear_metrics();
 
 ---
 
+### 6. Typed FormID Lookup Cache
+
+**Location**: `ClassicLib-rs/business-logic/classic-database-core/src/pool_sqlx.rs`
+
+**Purpose**: Cache FormID database lookups with explicit key normalization semantics and lower allocation pressure on hot paths.
+
+**Data Structure**:
+```rust
+struct CacheKey {
+    hash: u64,
+    game_table: String,
+    formid: String,
+    plugin: String, // normalized to lowercase
+}
+
+query_cache: DashMap<CacheKey, CacheEntry>
+```
+
+**Normalization Contract**:
+- `plugin` is normalized once via `CacheKey::normalize_plugin()` (lowercase) and then reused.
+- `game_table` and `formid` are not normalized; they remain exact-match components.
+- Equivalent cache keys require matching `game_table`, `formid`, and normalized `plugin`.
+- Distinct non-equivalent components remain separate cache entries, even with hash collisions.
+
+**Performance Trade-offs**:
+- **Benefit**: avoids repeated `format!("{table}:{formid}:{plugin}")` churn in single/batch lookups.
+- **Benefit**: avoids repeated `to_lowercase()` work inside tight loops by sharing normalization helpers.
+- **Benefit**: precomputed `hash` reduces repeated hashing overhead during map operations.
+- **Cost**: key storage keeps owned `String` components for collision-safe equality checks.
+
+**Example Usage**:
+```rust
+let normalized = CacheKey::normalize_plugin(plugin);
+let key = CacheKey::from_normalized_plugin(game_table, formid, &normalized);
+
+if let Some(entry) = query_cache.get(&key) {
+    // cache hit
+}
+```
+
+---
+
 ## Choosing the Right Pattern
 
 ### Decision Tree
@@ -242,7 +285,6 @@ clear_metrics();
 | Store GUI mode flag | Dynamic Registry |
 | Cache file SHA256 hashes | Path Hash Cache |
 | Track operation performance | Time Series Metrics |
-
 ---
 
 ## Implementation Guidelines

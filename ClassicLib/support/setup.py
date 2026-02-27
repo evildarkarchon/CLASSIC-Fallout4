@@ -15,6 +15,11 @@ from ClassicLib.core.constants import YAML
 from ClassicLib.core.logger import logger
 from ClassicLib.core.performance import TimedBlock
 from ClassicLib.core.registry import GlobalRegistry
+from ClassicLib.integration.factory_internal.logging_contract import (
+    EVENT_STARTUP_ACCELERATION_STATUS,
+    EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+    format_contract_event,
+)
 from ClassicLib.io.yaml import ensure_classic_settings_file_exists, yaml_cache, yaml_settings
 from ClassicLib.messaging import MessageTarget, init_message_handler, msg_info, msg_success
 from ClassicLib.support.backup import BackupManager
@@ -177,6 +182,11 @@ class SetupCoordinator:
         # In GUI mode, the MainWindow should initialize its own handler with itself as parent
         init_message_handler(parent=parent, is_gui_mode=is_gui)
 
+        # Validate mandatory Rust bindings before touching core workflows.
+        from ClassicLib.integration.factory import validate_rust_modules
+
+        validate_rust_modules("startup_all")
+
         # Get and configure YAML cache (already registered as singleton)
         GlobalRegistry.register(GlobalRegistry.Keys.IS_GUI_MODE, is_gui)
 
@@ -291,27 +301,24 @@ class SetupCoordinator:
         debug_enabled = bool(yaml_settings(bool, YAML.Settings, "CLASSIC_Settings.Debug Messages"))
         is_gui = GlobalRegistry.is_gui_mode()
 
-        try:
-            from ClassicLib.integration.factory import detect_component
+        from ClassicLib.integration.exceptions import RustBindingError
+        from ClassicLib.integration.factory import detect_component, validate_rust_modules
 
+        try:
+            validate_rust_modules("startup_all")
             known = ["classic_yaml", "classic_scanlog", "classic_file_io", "classic_database", "classic_path"]
             available = [m for m in known if detect_component(m)[0]]
-            if available:
-                status = {
-                    "active_count": len(available),
-                    "total_count": len(known),
-                    "percentage": len(available) / len(known) * 100,
-                    "acceleration_level": "ACCELERATED",
-                    "performance_gains": dict.fromkeys(available, "active"),
-                }
-                self._log_active_acceleration(status, debug_enabled, is_gui)
-            else:
-                self._log_no_acceleration(debug_enabled, is_gui)
-
-        except ImportError:
-            self._log_import_error(debug_enabled, is_gui)
-        except Exception as e:  # noqa: BLE001 - Rust status check is optional, should not crash app
-            self._log_status_check_error(e, debug_enabled, is_gui)
+            status = {
+                "active_count": len(available),
+                "total_count": len(known),
+                "percentage": len(available) / len(known) * 100,
+                "acceleration_level": "MANDATORY",
+                "performance_gains": dict.fromkeys(available, "active"),
+            }
+            self._log_active_acceleration(status, debug_enabled, is_gui)
+        except RustBindingError as error:
+            self._log_binding_failure(error, debug_enabled, is_gui)
+            raise
 
     @staticmethod
     def _log_active_acceleration(status: dict[str, Any], debug_enabled: bool, is_gui: bool) -> None:
@@ -331,25 +338,40 @@ class SetupCoordinator:
             for component, speedup in status["performance_gains"].items():
                 logger.debug(f"      ✅ {component}: {speedup}")
 
-    @staticmethod
-    def _log_no_acceleration(debug_enabled: bool, is_gui: bool) -> None:
-        """Log status when no Rust acceleration is available."""
-        status_msg = "⚠️  No Rust acceleration - using Python fallback (slower performance)"
-        if debug_enabled:
-            SetupCoordinator._display_status_message(status_msg, "WARNING", is_gui)
+        logger.info(
+            format_contract_event(
+                component="integration.startup",
+                event=EVENT_STARTUP_ACCELERATION_STATUS,
+                severity="info",
+                outcome="success",
+                context={
+                    "active_components": status["active_count"],
+                    "total_components": status["total_count"],
+                    "acceleration_level": status["acceleration_level"],
+                },
+            )
+        )
 
-        logger.warning("   To enable: Build and install the Rust extension:")
-        logger.warning("      cd classic-rust")
-        logger.warning("      maturin build --release --out dist")
-        logger.warning("      uv pip install dist/classic-*.whl --force-reinstall")
-
     @staticmethod
-    def _log_import_error(debug_enabled: bool, is_gui: bool) -> None:
-        """Log status when Rust integration module is not available."""
-        status_msg = "Using Python implementation (Rust extension not installed)"
+    def _log_binding_failure(error: Exception, debug_enabled: bool, is_gui: bool) -> None:
+        """Log status when mandatory Rust bindings fail startup validation."""
+        from ClassicLib.integration.exceptions import get_rust_rebuild_remediation
+
+        status_msg = f"❌ Required Rust bindings failed validation: {error}"
         if debug_enabled:
-            SetupCoordinator._display_status_message(status_msg, "INFO", is_gui)
-        logger.debug("Rust integration module not available - using pure Python implementation")
+            SetupCoordinator._display_status_message(status_msg, "ERROR", is_gui)
+        logger.error(
+            format_contract_event(
+                component="integration.startup",
+                event=EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+                severity="error",
+                outcome="failure",
+                context={
+                    "failure_hint": get_rust_rebuild_remediation(),
+                    "error": str(error),
+                },
+            )
+        )
 
     @staticmethod
     def _log_status_check_error(error: Exception, debug_enabled: bool, is_gui: bool) -> None:

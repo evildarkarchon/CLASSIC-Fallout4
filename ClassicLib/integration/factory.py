@@ -1,9 +1,7 @@
-"""Factory module for dynamic Rust/Python implementation selection.
+"""Factory module for required Rust implementation loading.
 
-Provides factory functions that return the best available implementation
-(Rust-accelerated or Python fallback) for each component. Each factory
-function uses a direct try-import pattern -- Python's sys.modules handles
-caching, so no custom detection layers are needed.
+Provides factory functions that resolve mandatory Rust bindings for each
+component. CLASSIC no longer supports Python fallback execution paths.
 
 Also provides ``detect_component`` and ``is_component_available`` utilities
 used by the integration/rust/ wrapper modules.
@@ -54,14 +52,26 @@ import threading
 import types
 from typing import TYPE_CHECKING, Any, cast
 
+from ClassicLib.integration.exceptions import (
+    RustBindingError,
+    RustBindingImportError,
+    RustBindingInitError,
+    get_rust_rebuild_remediation,
+)
+from ClassicLib.integration.factory_internal.detection import detect_component as _detect_component
 from ClassicLib.integration.factory_internal.detection import (
-    detect_component as _detect_component,
+    get_binding_contract as _get_binding_contract,
 )
 from ClassicLib.integration.factory_internal.detection import (
     get_component as _get_component,
 )
 from ClassicLib.integration.factory_internal.detection import (
     validate_rust_modules as _validate_rust_modules,
+)
+from ClassicLib.integration.factory_internal.logging_contract import (
+    EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+    EVENT_STARTUP_BINDING_CONTRACT_VALIDATED,
+    format_contract_event,
 )
 from ClassicLib.integration.factory_internal.status import (
     COMPONENT_KEY_MAP,
@@ -99,8 +109,8 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
-def validate_rust_modules() -> None:
-    """Validate that all required Rust modules are importable at startup.
+def validate_rust_modules(contract: str = "startup_all") -> None:
+    """Validate a required Rust binding contract at startup.
 
     Checks each required Rust native module and raises a clear error if any
     are missing. Call this early in both GUI and CLI entry points to provide
@@ -115,7 +125,43 @@ def validate_rust_modules() -> None:
         >>> validate_rust_modules()  # Raises RuntimeError if modules missing
 
     """
-    _validate_rust_modules()
+    try:
+        _validate_rust_modules(contract)
+    except RustBindingError as error:
+        logger.error(
+            format_contract_event(
+                component="integration.startup",
+                event=EVENT_STARTUP_BINDING_CONTRACT_FAILED,
+                severity="error",
+                outcome="failure",
+                context={
+                    "contract": contract,
+                    "missing_binding": error.binding,
+                    "failure_type": error.failure_type,
+                    "failure_hint": get_rust_rebuild_remediation(),
+                    "error": error.details,
+                },
+            )
+        )
+        raise
+
+    logger.info(
+        format_contract_event(
+            component="integration.startup",
+            event=EVENT_STARTUP_BINDING_CONTRACT_VALIDATED,
+            severity="info",
+            outcome="success",
+            context={
+                "contract": contract,
+                "checked_bindings": len(_get_binding_contract(contract)),
+            },
+        )
+    )
+
+
+def get_binding_contract(contract: str = "startup_all") -> list[tuple[str, str | None]]:
+    """Return named startup binding contracts used by entrypoints."""
+    return _get_binding_contract(contract)
 
 
 # ---------------------------------------------------------------------------
@@ -161,7 +207,7 @@ def is_component_available(module_name: str, class_name: str | None = None) -> b
     return available
 
 
-def get_component(module_name: str, class_name: str) -> Any:
+def get_component(module_name: str, class_name: str | None = None) -> Any:
     """Get a Rust component or raise ImportError.
 
     Args:
@@ -222,14 +268,10 @@ def get_parser() -> LogParserProtocol:
         RuntimeError: If Rust parser module is not available.
 
     """
-    try:
-        from ClassicLib.integration.rust.parser_rust import RustLogParser
+    from ClassicLib.integration.rust.parser_rust import RustLogParser
 
-        logger.debug("Using RustLogParser wrapper (150x speedup potential)")
-        return cast("LogParserProtocol", RustLogParser())
-    except ImportError as e:
-        msg = f"Required Rust module for parser not available: {e}. Reinstall CLASSIC."
-        raise RuntimeError(msg) from e
+    logger.debug("Using RustLogParser wrapper (150x speedup potential)")
+    return cast("LogParserProtocol", RustLogParser())
 
 
 def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtocol:
@@ -254,37 +296,23 @@ def get_file_io(encoding: str = "utf-8", errors: str = "ignore") -> FileIOProtoc
         if _file_io_instance is not None:
             return _file_io_instance
 
-        try:
-            from ClassicLib.integration.rust.file_io_rust import FileIOCore
+        from ClassicLib.integration.rust.file_io_rust import FileIOCore
 
-            logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
-            _file_io_instance = FileIOCore(encoding, errors)
-        except ImportError as e:
-            msg = f"Required Rust module for FileIO not available: {e}. Reinstall CLASSIC."
-            raise RuntimeError(msg) from e
-        else:
-            return _file_io_instance
+        logger.debug("Using Rust FileIOCore (10-20x file ops, 30-40x DDS processing)")
+        _file_io_instance = FileIOCore(encoding, errors)
+        return _file_io_instance
 
 
-def get_yaml_operations() -> YamlOperationsProtocol | None:
-    """Retrieve the appropriate YAML operations implementation.
-
-    Returns:
-        Any: An instance of Rust YamlOperations if available, or None
-        if Python implementation is used.
-
-    """
+def get_yaml_operations() -> YamlOperationsProtocol:
+    """Retrieve required Rust YAML operations implementation."""
     try:
-        import classic_yaml
-
-        if hasattr(classic_yaml, "YamlOperations"):
-            logger.debug("Using Rust YAML Operations (15-30x parsing, 10-20x writing speedup)")
-            return classic_yaml.YamlOperations()
-    except (ImportError, AttributeError) as e:
-        logger.warning(f"Failed to get Rust YAML Operations: {e}")
-
-    logger.debug("Using Python YAML implementation (ruamel.yaml)")
-    return None
+        YamlOperations = get_component("classic_yaml", "YamlOperations")
+        logger.debug("Using Rust YAML Operations")
+        return YamlOperations()
+    except (RustBindingImportError, RustBindingInitError):
+        raise
+    except Exception as exc:
+        raise RustBindingInitError("classic_yaml.YamlOperations", str(exc)) from exc
 
 
 def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exists: bool) -> FormIDAnalyzerProtocol:
@@ -299,14 +327,10 @@ def get_formid_analyzer(yamldata: ClassicScanLogsInfo, show_values: bool, db_exi
         Any: An instance of RustFormIDAnalyzer or FormIDAnalyzer.
 
     """
-    try:
-        from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
+    from ClassicLib.integration.rust.formid_rust import FormIDAnalyzer
 
-        logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
-        return FormIDAnalyzer(yamldata, show_values, db_exists)
-    except ImportError as e:
-        msg = f"Required Rust module for FormIDAnalyzer not available: {e}. Reinstall CLASSIC."
-        raise RuntimeError(msg) from e
+    logger.debug("Using Rust FormIDAnalyzer wrapper (50x speedup potential)")
+    return FormIDAnalyzer(yamldata, show_values, db_exists)
 
 
 def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> PluginAnalyzerProtocol:
@@ -319,14 +343,10 @@ def get_plugin_analyzer(yamldata: ClassicScanLogsInfo) -> PluginAnalyzerProtocol
         Any: An instance of the selected plugin analyzer.
 
     """
-    try:
-        from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
+    from ClassicLib.integration.rust.plugin_rust import RustPluginAnalyzer
 
-        logger.debug("Using RustPluginAnalyzer wrapper (30x speedup potential)")
-        return RustPluginAnalyzer(yamldata)
-    except ImportError as e:
-        msg = f"Required Rust module for plugin analyzer not available: {e}. Reinstall CLASSIC."
-        raise RuntimeError(msg) from e
+    logger.debug("Using RustPluginAnalyzer wrapper (30x speedup potential)")
+    return RustPluginAnalyzer(yamldata)
 
 
 def get_record_scanner(yamldata: ClassicScanLogsInfo) -> RecordScannerProtocol:
@@ -339,14 +359,10 @@ def get_record_scanner(yamldata: ClassicScanLogsInfo) -> RecordScannerProtocol:
         Any: An instance of RustRecordScanner or RecordScanner.
 
     """
-    try:
-        from ClassicLib.integration.rust.record_rust import RustRecordScanner
+    from ClassicLib.integration.rust.record_rust import RustRecordScanner
 
-        logger.debug("Using RustRecordScanner wrapper (40x speedup potential)")
-        return RustRecordScanner(yamldata)
-    except ImportError as e:
-        msg = f"Required Rust module for RecordScanner not available: {e}. Reinstall CLASSIC."
-        raise RuntimeError(msg) from e
+    logger.debug("Using RustRecordScanner wrapper (40x speedup potential)")
+    return RustRecordScanner(yamldata)
 
 
 def get_suspect_scanner(yamldata: ClassicScanLogsInfo) -> SuspectScannerProtocol:
@@ -526,29 +542,36 @@ def get_gpu_detector() -> types.SimpleNamespace:
     return types.SimpleNamespace(get_gpu_info=get_gpu_info)
 
 
-def get_database_pool(max_connections: int = 10, cache_ttl_seconds: int = 300) -> DatabasePoolProtocol:
+def get_database_pool(
+    max_connections: int = 10,
+    cache_ttl_seconds: int = 300,
+    cache_capacity: int | None = None,
+    cleanup_threshold: int | None = None,
+    cleanup_interval_seconds: int | None = None,
+) -> DatabasePoolProtocol:
     """Retrieve a database connection pool.
 
     Args:
-        max_connections: Maximum number of connections. Defaults to 10.
+        max_connections: Global connection budget across active DB files. Defaults to 10.
         cache_ttl_seconds: Cache time-to-live in seconds. Defaults to 300.
+        cache_capacity: Optional maximum number of cache entries.
+        cleanup_threshold: Optional proactive cleanup threshold (operation count).
+        cleanup_interval_seconds: Optional proactive cleanup interval in seconds.
 
     Returns:
         Any: The database pool instance.
 
     """
-    try:
-        from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
+    from ClassicLib.io.database.rust_pool import RustAsyncDatabasePool
 
-        logger.debug("Using Rust DatabasePool (25x speedup)")
-        return RustAsyncDatabasePool(max_connections, cache_ttl_seconds)
-    except ImportError as e:
-        logger.warning(f"Failed to import Rust DatabasePool: {e}")
-
-    from ClassicLib.io.database.async_pool import AsyncDatabasePool
-
-    logger.debug("Using Python AsyncDatabasePool implementation")
-    return AsyncDatabasePool(max_connections)
+    logger.debug("Using Rust DatabasePool")
+    return RustAsyncDatabasePool(
+        max_connections=max_connections,
+        cache_ttl_seconds=cache_ttl_seconds,
+        cache_capacity=cache_capacity,
+        cleanup_threshold=cleanup_threshold,
+        cleanup_interval_seconds=cleanup_interval_seconds,
+    )
 
 
 def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> ReportGeneratorProtocol:
@@ -561,14 +584,10 @@ def get_report_generator(yamldata: ClassicScanLogsInfo | None = None) -> ReportG
         Any: An instance of the chosen report generator.
 
     """
-    try:
-        from ClassicLib.integration.rust.report_rust import RustAcceleratedReportGenerator
+    from ClassicLib.integration.rust.report_rust import RustAcceleratedReportGenerator
 
-        logger.debug("Using Rust ReportGenerator (75x speedup potential)")
-        return RustAcceleratedReportGenerator(yamldata)
-    except (ImportError, AttributeError) as e:
-        msg = f"Required Rust module for ReportGenerator not available: {e}. Reinstall CLASSIC."
-        raise RuntimeError(msg) from e
+    logger.debug("Using Rust ReportGenerator (75x speedup potential)")
+    return RustAcceleratedReportGenerator(yamldata)
 
 
 def get_mod_detector() -> dict[str, Any]:  # Returns dict of callable functions
@@ -578,15 +597,11 @@ def get_mod_detector() -> dict[str, Any]:  # Returns dict of callable functions
         dict[str, Any]: A dictionary containing mod detection functions.
 
     """
-    try:
-        from ClassicLib.integration.rust.mod_detector_rust import (
-            detect_mods_double,
-            detect_mods_important,
-            detect_mods_single,
-        )
-    except (ImportError, AttributeError) as e:
-        msg = f"Required Rust module for mod detector not available: {e}. Reinstall CLASSIC."
-        raise RuntimeError(msg) from e
+    from ClassicLib.integration.rust.mod_detector_rust import (
+        detect_mods_double,
+        detect_mods_important,
+        detect_mods_single,
+    )
 
     logger.debug("Using Rust mod detector functions (35x speedup)")
     return {
@@ -628,42 +643,19 @@ def get_orchestrator(
     return ClassicOrchestrator()  # type: ignore[return-value]
 
 
-def get_yamldata() -> Any:  # Returns Rust YamlData (both paths are now Rust-backed)
-    """Load YAML data using Rust YamlData.
+def get_yamldata() -> Any:
+    """Load YAML data using required Rust YamlData."""
+    YamlData = get_component("classic_config", "YamlData")
 
-    Returns:
-        Any: A YamlData instance (direct or via ClassicScanLogsInfo thin wrapper).
+    from ClassicLib.core.registry import get_game, get_vr
+    from ClassicLib.support.resources import ResourceLoader
 
-    """
-    try:
-        from classic_config import YamlData
-
-        from ClassicLib.core.registry import get_game, get_vr
-        from ClassicLib.support.resources import ResourceLoader
-
-        logger.debug("Using Rust YamlData (15-30x faster YAML loading)")
-
-        data_dir = ResourceLoader.get_data_directory()
-        yaml_dirs = [
-            str(data_dir.parent),
-            str(data_dir),
-        ]
-
-        game = get_game()
-        vr_mode = get_vr() == "VR"
-
-        return YamlData(yaml_dirs=yaml_dirs, game=game, vr_mode=vr_mode)
-    except (ImportError, AttributeError, TypeError, ValueError, OSError) as e:
-        logger.warning(f"Failed to initialize Rust YamlData: {e}")
-
-    try:
-        from ClassicLib.scanning.logs.scanloginfo import ClassicScanLogsInfo
-
-        logger.debug("Using Python ClassicScanLogsInfo implementation")
-        return ClassicScanLogsInfo()
-    except (TypeError, RuntimeError) as e:
-        msg = f"YAML data initialization failed (both Rust and Python backends unavailable): {e}"
-        raise RuntimeError(msg) from e
+    logger.debug("Using Rust YamlData")
+    data_dir = ResourceLoader.get_data_directory()
+    yaml_dirs = [str(data_dir.parent), str(data_dir)]
+    game = get_game()
+    vr_mode = get_vr() == "VR"
+    return YamlData(yaml_dirs=yaml_dirs, game=game, vr_mode=vr_mode)
 
 
 def get_fcx_handler(fcx_mode: bool | None) -> FCXHandlerProtocol:
@@ -863,99 +855,39 @@ def get_papyrus_analyzer(log_path: Any = None) -> Any:
     raise ValueError(msg)
 
 
-def get_constants() -> Any | None:
-    """Retrieve the Rust-based constants module if available.
-
-    Returns:
-        Any | None: The classic_constants module if available, None otherwise.
-
-    """
-    try:
-        import classic_constants
-    except ImportError as e:
-        logger.warning(f"Failed to import classic_constants: {e}")
-    else:
-        logger.debug("Using Rust constants module")
-        return classic_constants
-
-    logger.debug("Constants module not available")
-    return None
+def get_constants() -> Any:
+    """Retrieve required Rust constants module."""
+    constants = get_component("classic_constants")
+    logger.debug("Using Rust constants module")
+    return constants
 
 
-def get_version_utils() -> Any | None:
-    """Retrieve the Rust-based version utilities module if available.
-
-    Returns:
-        Any | None: The classic_version module if available, None otherwise.
-
-    """
-    try:
-        import classic_version
-    except ImportError as e:
-        logger.warning(f"Failed to import classic_version: {e}")
-    else:
-        logger.debug("Using Rust version utilities module")
-        return classic_version
-
-    logger.debug("Version utilities module not available")
-    return None
+def get_version_utils() -> Any:
+    """Retrieve required Rust version utilities module."""
+    version = get_component("classic_version")
+    logger.debug("Using Rust version utilities module")
+    return version
 
 
-def get_resource_mgmt() -> Any | None:
-    """Retrieve the Rust-based resource management module if available.
-
-    Returns:
-        Any | None: The classic_resource module if available, None otherwise.
-
-    """
-    try:
-        import classic_resource
-    except ImportError as e:
-        logger.warning(f"Failed to import classic_resource: {e}")
-    else:
-        logger.debug("Using Rust resource management module")
-        return classic_resource
-
-    logger.debug("Resource management module not available")
-    return None
+def get_resource_mgmt() -> Any:
+    """Retrieve required Rust resource management module."""
+    resource = get_component("classic_resource")
+    logger.debug("Using Rust resource management module")
+    return resource
 
 
-def get_xse_utils() -> Any | None:
-    """Retrieve the Rust-based XSE utilities module if available.
-
-    Returns:
-        Any | None: The classic_xse module if available, None otherwise.
-
-    """
-    try:
-        import classic_xse
-    except ImportError as e:
-        logger.warning(f"Failed to import classic_xse: {e}")
-    else:
-        logger.debug("Using Rust XSE utilities module")
-        return classic_xse
-
-    logger.debug("XSE utilities module not available")
-    return None
+def get_xse_utils() -> Any:
+    """Retrieve required Rust XSE utilities module."""
+    xse = get_component("classic_xse")
+    logger.debug("Using Rust XSE utilities module")
+    return xse
 
 
-def get_web_utils() -> Any | None:
-    """Retrieve the Rust-based web utilities module if available.
-
-    Returns:
-        Any | None: The classic_web module if available, None otherwise.
-
-    """
-    try:
-        import classic_web
-    except ImportError as e:
-        logger.warning(f"Failed to import classic_web: {e}")
-    else:
-        logger.debug("Using Rust web utilities module")
-        return classic_web
-
-    logger.debug("Web utilities module not available")
-    return None
+def get_web_utils() -> Any:
+    """Retrieve required Rust web utilities module."""
+    web = get_component("classic_web")
+    logger.debug("Using Rust web utilities module")
+    return web
 
 
 def get_path_operations() -> types.ModuleType:
@@ -1033,6 +965,7 @@ def print_rust_status() -> None:
 __all__ = [
     # Startup validation
     "validate_rust_modules",
+    "get_binding_contract",
     # Detection utilities
     "detect_component",
     "is_component_available",

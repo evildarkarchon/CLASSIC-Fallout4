@@ -1,11 +1,8 @@
 """Rust integration exception types.
 
-This module defines a typed exception hierarchy for Rust errors, replacing
-generic RuntimeError with specific exception types that preserve context
-and allow targeted error handling.
-
-All Rust errors should inherit from RustError and map to appropriate subtypes
-based on the error category (I/O, parsing, configuration, etc.).
+This module defines a typed exception hierarchy for Rust errors, including
+startup binding validation failures (import vs initialization) so entrypoints
+can report precise, actionable diagnostics.
 """
 
 
@@ -25,6 +22,36 @@ class RustError(Exception):
         ...     print(f"Other Rust error: {e}")
 
     """
+
+
+def get_rust_rebuild_remediation() -> str:
+    """Return standardized remediation text for missing/broken Rust bindings."""
+    return "Rebuild and reinstall Rust bindings with `pwsh -ExecutionPolicy Bypass -File rebuild_rust.ps1`."
+
+
+class RustBindingError(RustError):
+    """Base error for required Rust binding failures."""
+
+    def __init__(self, binding: str, failure_type: str, details: str) -> None:
+        self.binding = binding
+        self.failure_type = failure_type
+        self.details = details
+        message = f"Rust binding failure ({failure_type}) for '{binding}': {details}. {get_rust_rebuild_remediation()}"
+        super().__init__(message)
+
+
+class RustBindingImportError(RustBindingError, ImportError):
+    """Raised when a required Rust binding cannot be imported."""
+
+    def __init__(self, binding: str, details: str) -> None:
+        super().__init__(binding=binding, failure_type="import", details=details)
+
+
+class RustBindingInitError(RustBindingError, RuntimeError):
+    """Raised when a required Rust binding imports but cannot initialize."""
+
+    def __init__(self, binding: str, details: str) -> None:
+        super().__init__(binding=binding, failure_type="initialization", details=details)
 
 
 class RustIOError(RustError, IOError):
@@ -145,6 +172,10 @@ class RustConcurrencyError(RustError):
 # Export all exception types
 __all__ = [
     "RustError",
+    "RustBindingError",
+    "RustBindingImportError",
+    "RustBindingInitError",
+    "get_rust_rebuild_remediation",
     "RustIOError",
     "RustParseError",
     "RustConfigError",

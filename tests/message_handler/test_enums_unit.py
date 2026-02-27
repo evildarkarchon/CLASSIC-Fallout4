@@ -20,28 +20,6 @@ if TYPE_CHECKING:
 
 
 @pytest.fixture
-def mock_rust_unavailable() -> Generator[None, None, None]:
-    """Mock Rust enums as unavailable.
-
-    Yields:
-        None after patching the module to disable Rust.
-
-    """
-    with patch.dict(
-        "ClassicLib.messaging.core.enums.__dict__",
-        {
-            "RUST_ENUMS": False,
-            "_RUST_ENUMS_AVAILABLE": False,
-            "RustMessageType": None,
-            "RustMessageTarget": None,
-        },
-    ):
-        # Need to reload the module to pick up patched values
-        # Instead, we'll patch at the point of use
-        yield
-
-
-@pytest.fixture
 def mock_rust_available() -> Generator[tuple[MagicMock, MagicMock], None, None]:
     """Mock Rust enums as available with fake Rust types.
 
@@ -67,8 +45,6 @@ def mock_rust_available() -> Generator[tuple[MagicMock, MagicMock], None, None]:
 
     with patch.multiple(
         "ClassicLib.messaging.core.enums",
-        RUST_ENUMS=True,
-        _RUST_ENUMS_AVAILABLE=True,
         RustMessageType=mock_rust_type,
         RustMessageTarget=mock_rust_target,
     ):
@@ -337,13 +313,12 @@ class TestMessageTypeToRust:
     """Tests for MessageType.to_rust() method."""
 
     @pytest.mark.unit
-    def test_to_rust_returns_none_when_rust_unavailable(self) -> None:
-        """to_rust() should return None when Rust is unavailable."""
+    def test_to_rust_returns_rust_value(self) -> None:
+        """to_rust() should map values to Rust enums."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        with patch("ClassicLib.messaging.core.enums.RUST_ENUMS", False):
-            result = MessageType.INFO.to_rust()
-            assert result is None
+        result = MessageType.INFO.to_rust()
+        assert result is not None
 
     @pytest.mark.unit
     def test_to_rust_maps_info_correctly(self, mock_rust_available: tuple[MagicMock, MagicMock]) -> None:
@@ -420,13 +395,11 @@ class TestMessageTypeFromRust:
     """Tests for MessageType.from_rust() method."""
 
     @pytest.mark.unit
-    def test_from_rust_raises_when_rust_unavailable(self) -> None:
-        """from_rust() should raise ValueError when Rust is unavailable."""
+    def test_from_rust_resolves_values(self) -> None:
+        """from_rust() should resolve canonical Rust enum names."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        with patch("ClassicLib.messaging.core.enums.RUST_ENUMS", False):
-            with pytest.raises(ValueError, match="Rust enums not available"):
-                MessageType.from_rust("Info")
+        assert MessageType.from_rust("Info") is MessageType.INFO
 
     @pytest.mark.unit
     def test_from_rust_maps_info_correctly(self, mock_rust_available: tuple[MagicMock, MagicMock]) -> None:
@@ -434,8 +407,7 @@ class TestMessageTypeFromRust:
         from ClassicLib.messaging.core.enums import MessageType
 
         # The from_rust uses str(rust_type).lower() for matching
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="info")
+        mock_rust_value = "info"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.INFO
@@ -445,8 +417,7 @@ class TestMessageTypeFromRust:
         """from_rust() should map 'warning' string to WARNING."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="warning")
+        mock_rust_value = "warning"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.WARNING
@@ -456,8 +427,7 @@ class TestMessageTypeFromRust:
         """from_rust() should map 'error' string to ERROR."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="error")
+        mock_rust_value = "error"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.ERROR
@@ -467,8 +437,7 @@ class TestMessageTypeFromRust:
         """from_rust() should map 'success' string to SUCCESS."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="success")
+        mock_rust_value = "success"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.SUCCESS
@@ -478,8 +447,7 @@ class TestMessageTypeFromRust:
         """from_rust() should map 'progress' string to PROGRESS."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="progress")
+        mock_rust_value = "progress"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.PROGRESS
@@ -489,8 +457,7 @@ class TestMessageTypeFromRust:
         """from_rust() should map 'debug' string to DEBUG."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="debug")
+        mock_rust_value = "debug"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.DEBUG
@@ -500,8 +467,7 @@ class TestMessageTypeFromRust:
         """from_rust() should map 'critical' string to CRITICAL."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="critical")
+        mock_rust_value = "critical"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.CRITICAL
@@ -511,8 +477,7 @@ class TestMessageTypeFromRust:
         """from_rust() should raise ValueError for unknown Rust type."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="unknown_type")
+        mock_rust_value = "unknown_type"
 
         with pytest.raises(ValueError, match="Unknown Rust MessageType"):
             MessageType.from_rust(mock_rust_value)
@@ -522,8 +487,7 @@ class TestMessageTypeFromRust:
         """from_rust() should handle case-insensitive matching."""
         from ClassicLib.messaging.core.enums import MessageType
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="INFO")
+        mock_rust_value = "INFO"
 
         result = MessageType.from_rust(mock_rust_value)
         assert result is MessageType.INFO
@@ -536,13 +500,12 @@ class TestMessageTargetToRust:
     """Tests for MessageTarget.to_rust() method."""
 
     @pytest.mark.unit
-    def test_to_rust_returns_none_when_rust_unavailable(self) -> None:
-        """to_rust() should return None when Rust is unavailable."""
+    def test_to_rust_returns_rust_value(self) -> None:
+        """to_rust() should map values to Rust enums."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        with patch("ClassicLib.messaging.core.enums.RUST_ENUMS", False):
-            result = MessageTarget.ALL.to_rust()
-            assert result is None
+        result = MessageTarget.ALL.to_rust()
+        assert result is not None
 
     @pytest.mark.unit
     def test_to_rust_maps_all_correctly(self, mock_rust_available: tuple[MagicMock, MagicMock]) -> None:
@@ -589,21 +552,18 @@ class TestMessageTargetFromRust:
     """Tests for MessageTarget.from_rust() method."""
 
     @pytest.mark.unit
-    def test_from_rust_raises_when_rust_unavailable(self) -> None:
-        """from_rust() should raise ValueError when Rust is unavailable."""
+    def test_from_rust_resolves_values(self) -> None:
+        """from_rust() should resolve canonical Rust enum names."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        with patch("ClassicLib.messaging.core.enums.RUST_ENUMS", False):
-            with pytest.raises(ValueError, match="Rust enums not available"):
-                MessageTarget.from_rust("All")
+        assert MessageTarget.from_rust("All") is MessageTarget.ALL
 
     @pytest.mark.unit
     def test_from_rust_maps_all_correctly(self, mock_rust_available: tuple[MagicMock, MagicMock]) -> None:
         """from_rust() should map 'all' string to ALL."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="all")
+        mock_rust_value = "all"
 
         result = MessageTarget.from_rust(mock_rust_value)
         assert result is MessageTarget.ALL
@@ -613,8 +573,7 @@ class TestMessageTargetFromRust:
         """from_rust() should map 'gui' string to GUI."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="gui")
+        mock_rust_value = "gui"
 
         result = MessageTarget.from_rust(mock_rust_value)
         assert result is MessageTarget.GUI
@@ -624,8 +583,7 @@ class TestMessageTargetFromRust:
         """from_rust() should map 'console' string to CONSOLE."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="console")
+        mock_rust_value = "console"
 
         result = MessageTarget.from_rust(mock_rust_value)
         assert result is MessageTarget.CONSOLE
@@ -635,8 +593,7 @@ class TestMessageTargetFromRust:
         """from_rust() should map 'cli' string to CONSOLE."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="cli")
+        mock_rust_value = "cli"
 
         result = MessageTarget.from_rust(mock_rust_value)
         assert result is MessageTarget.CONSOLE
@@ -646,8 +603,7 @@ class TestMessageTargetFromRust:
         """from_rust() should map 'log_only' string to LOG_ONLY."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="log_only")
+        mock_rust_value = "log_only"
 
         result = MessageTarget.from_rust(mock_rust_value)
         assert result is MessageTarget.LOG_ONLY
@@ -657,8 +613,7 @@ class TestMessageTargetFromRust:
         """from_rust() should raise ValueError for unknown Rust target."""
         from ClassicLib.messaging.core.enums import MessageTarget
 
-        mock_rust_value = MagicMock()
-        mock_rust_value.__str__ = MagicMock(return_value="unknown_target")
+        mock_rust_value = "unknown_target"
 
         with pytest.raises(ValueError, match="Unknown Rust MessageTarget"):
             MessageTarget.from_rust(mock_rust_value)
@@ -668,11 +623,12 @@ class TestMessageTargetFromRust:
 
 
 class TestModuleLevelConstants:
-    """Tests for module-level constants."""
+    """Tests for module-level enum exports."""
 
     @pytest.mark.unit
-    def test_rust_enums_constant_is_boolean(self) -> None:
-        """RUST_ENUMS module constant should be a boolean."""
-        from ClassicLib.messaging.core.enums import RUST_ENUMS
+    def test_module_exports_enum_types(self) -> None:
+        """Enum classes should remain importable from module."""
+        from ClassicLib.messaging.core import enums
 
-        assert isinstance(RUST_ENUMS, bool)
+        assert hasattr(enums, "MessageType")
+        assert hasattr(enums, "MessageTarget")

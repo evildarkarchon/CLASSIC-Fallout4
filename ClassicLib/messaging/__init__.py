@@ -33,7 +33,7 @@ from .core.enums import MessageTarget, MessageType
 from .core.message import Message
 
 # Formatting utilities (Rust-accelerated)
-from .formatting import RUST_AVAILABLE, format_log_message, strip_emoji
+from .formatting import format_log_message, strip_emoji
 
 # Main handler and convenience functions
 from .handler import (
@@ -62,7 +62,6 @@ __all__ = [
     "CLIProgressBar",
     "ProgressContext",
     # Formatting utilities
-    "RUST_AVAILABLE",
     "format_log_message",
     "strip_emoji",
     # Main handler

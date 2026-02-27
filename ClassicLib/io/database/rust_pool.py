@@ -43,7 +43,7 @@ from ClassicLib.core.constants import get_all_db_paths_async
 from ClassicLib.core.logger import logger
 from ClassicLib.core.registry import GlobalRegistry
 from ClassicLib.integration.exceptions import RustDatabaseError, RustError
-from ClassicLib.integration.factory import detect_component
+from ClassicLib.integration.factory import get_component
 
 if TYPE_CHECKING:
     import types
@@ -53,15 +53,22 @@ if TYPE_CHECKING:
 else:
     DatabasePoolType = None  # type: ignore[misc,assignment]
 
-# Centralized detection of Rust DatabasePool
-RUST_AVAILABLE, DatabasePool = detect_component("classic_database", "DatabasePool")
-if not RUST_AVAILABLE:
-    DatabasePool = None  # type: ignore[assignment]
+# Resolve required Rust DatabasePool binding
+DatabasePool = get_component("classic_database", "DatabasePool")
 
 # Detect Rust-specific exception types for classic_database
-_, _rust_db_error = detect_component("classic_database", "RustDatabaseError")
-_, _rust_db_io_error = detect_component("classic_database", "RustDatabaseIOError")
-_, _rust_db_query_error = detect_component("classic_database", "RustDatabaseQueryError")
+try:
+    _rust_db_error = get_component("classic_database", "RustDatabaseError")
+except ImportError:
+    _rust_db_error = None
+try:
+    _rust_db_io_error = get_component("classic_database", "RustDatabaseIOError")
+except ImportError:
+    _rust_db_io_error = None
+try:
+    _rust_db_query_error = get_component("classic_database", "RustDatabaseQueryError")
+except ImportError:
+    _rust_db_query_error = None
 
 
 def _get_rust_exception_types() -> tuple[tuple[type, ...], tuple[type, ...], tuple[type, ...]]:
@@ -101,7 +108,7 @@ class RustAsyncDatabasePool:
     25x faster than the pure Python implementation.
 
     Attributes:
-        max_connections: Maximum number of database connections.
+        max_connections: Global connection budget distributed across active databases.
         cache_ttl: Time-to-live for cache entries in seconds.
         connections: Dummy dict for API compatibility.
         query_cache: Dummy dict for API compatibility.
@@ -117,12 +124,22 @@ class RustAsyncDatabasePool:
 
     """
 
-    def __init__(self, max_connections: int = 10, cache_ttl_seconds: int = 300) -> None:
+    def __init__(
+        self,
+        max_connections: int = 10,
+        cache_ttl_seconds: int = 300,
+        cache_capacity: int | None = None,
+        cleanup_threshold: int | None = None,
+        cleanup_interval_seconds: int | None = None,
+    ) -> None:
         """Initialize the Rust database pool wrapper.
 
         Args:
-            max_connections: Maximum number of database connections.
+            max_connections: Global connection budget distributed across active databases.
             cache_ttl_seconds: TTL for cache entries in seconds.
+            cache_capacity: Optional maximum number of cache entries.
+            cleanup_threshold: Optional operation threshold for proactive cleanup.
+            cleanup_interval_seconds: Optional minimum proactive cleanup interval in seconds.
 
         Raises:
             ImportError: If the Rust database module is not available.
@@ -130,16 +147,26 @@ class RustAsyncDatabasePool:
         """
         self.max_connections = max_connections
         self.cache_ttl = cache_ttl_seconds
+        self.cache_capacity = cache_capacity
+        self.cleanup_threshold = cleanup_threshold
+        self.cleanup_interval_seconds = cleanup_interval_seconds
 
-        if RUST_AVAILABLE:
-            # Get game table from GlobalRegistry
-            game_table = GlobalRegistry.get_game()
-            self._rust_pool: DatabasePoolType = DatabasePool(  # pyright: ignore[reportOptionalCall, reportInvalidTypeForm]
-                max_connections, cache_ttl_seconds, game_table
-            )
-            logger.debug(f"Initialized Rust database pool (max_conn={max_connections}, ttl={cache_ttl_seconds}s, table={game_table})")
-        else:
-            raise ImportError("Rust database module not available. Please rebuild with maturin.")
+        # Get game table from GlobalRegistry
+        game_table = GlobalRegistry.get_game()
+        self._rust_pool: DatabasePoolType = DatabasePool(  # pyright: ignore[reportInvalidTypeForm]
+            max_connections,
+            cache_ttl_seconds,
+            game_table,
+            cache_capacity,
+            cleanup_threshold,
+            cleanup_interval_seconds,
+        )
+        logger.debug(
+            "Initialized Rust database pool "
+            f"(global_budget={max_connections}, ttl={cache_ttl_seconds}s, "
+            f"table={game_table}, cache_capacity={cache_capacity}, "
+            f"cleanup_threshold={cleanup_threshold}, cleanup_interval_seconds={cleanup_interval_seconds})"
+        )
 
         # Compatibility attributes for existing code
         self.connections: dict[Any, Any] = {}  # Dummy for compatibility
@@ -299,6 +326,50 @@ class RustAsyncDatabasePool:
         """
         self._rust_pool.set_cache_ttl(seconds)
 
+    def get_cache_capacity(self) -> int:
+        """Get configured cache capacity."""
+        return self._rust_pool.get_cache_capacity()
+
+    def set_cache_capacity(self, capacity: int) -> None:
+        """Set cache capacity."""
+        self._rust_pool.set_cache_capacity(capacity)
+
+    def get_cache_cleanup_threshold(self) -> int:
+        """Get proactive cleanup threshold (operation count)."""
+        return self._rust_pool.get_cache_cleanup_threshold()
+
+    def set_cache_cleanup_threshold(self, threshold: int) -> None:
+        """Set proactive cleanup threshold (operation count)."""
+        self._rust_pool.set_cache_cleanup_threshold(threshold)
+
+    def get_cache_cleanup_interval(self) -> int:
+        """Get proactive cleanup interval in seconds."""
+        return self._rust_pool.get_cache_cleanup_interval()
+
+    def set_cache_cleanup_interval(self, seconds: int) -> None:
+        """Set proactive cleanup interval in seconds."""
+        self._rust_pool.set_cache_cleanup_interval(seconds)
+
+    def get_max_connections(self) -> int | None:
+        """Get configured global connection budget."""
+        return self._rust_pool.get_max_connections()
+
+    def set_max_connections(self, max_connections: int) -> None:
+        """Update global connection budget configuration.
+
+        This is config-only until `rebalance_connections()` or next initialize.
+        """
+        self.max_connections = max_connections
+        self._rust_pool.set_max_connections(max_connections)
+
+    async def rebalance_connections(self) -> None:
+        """Explicitly rebuild active pools with current global budget."""
+        if hasattr(self._rust_pool, "rebalance_connections"):
+            await self._rust_pool.rebalance_connections()
+            return
+
+        logger.debug("Rust pool does not expose rebalance_connections(); skipping explicit rebalance")
+
     def get_stats(self) -> dict[str, Any]:
         """Get pool statistics.
 
@@ -349,4 +420,4 @@ def is_rust_available() -> bool:
         True if Rust implementation is available, False otherwise.
 
     """
-    return RUST_AVAILABLE
+    return True

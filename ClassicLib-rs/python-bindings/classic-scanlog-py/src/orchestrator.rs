@@ -1,34 +1,28 @@
 //! Python bindings for OrchestratorCore - Thin wrapper over classic-scanlog-core
 
+use classic_config_core::{CrashgenEntryRaw, YamlDataCore};
 use classic_database_core::DatabasePool;
 use classic_scanlog_core::{
-    AnalysisConfig, AnalysisResult, CheckId, CrashgenEntry, CrashgenRegistry, OrchestratorCore,
+    AnalysisConfig, AnalysisResult, OrchestratorCore, build_analysis_config_from_yaml,
 };
 use classic_shared::{pyany_to_indexmap_str, pyany_to_indexmap_vecstr, without_gil};
 use classic_shared_core::get_runtime;
+use indexmap::IndexMap;
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-fn parse_checks(raw_checks: &[String]) -> Vec<CheckId> {
-    raw_checks
-        .iter()
-        .filter_map(|check| CheckId::parse(check))
-        .collect()
-}
-
-fn parse_crashgen_registry_from_py(registry_any: &Bound<'_, PyAny>) -> Option<CrashgenRegistry> {
-    let registry_dict = registry_any.cast::<PyDict>().ok()?;
-    if registry_dict.is_empty() {
-        return None;
-    }
-
-    let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
-    let mut default_entry = CrashgenEntry::default_entry();
+fn parse_crashgen_registry_from_py(
+    registry_any: &Bound<'_, PyAny>,
+) -> HashMap<String, CrashgenEntryRaw> {
+    let Ok(registry_dict) = registry_any.cast::<PyDict>() else {
+        return HashMap::new();
+    };
+    let mut entries: HashMap<String, CrashgenEntryRaw> = HashMap::new();
 
     for (name_any, entry_any) in registry_dict.iter() {
         let name = match name_any.extract::<String>() {
@@ -48,7 +42,7 @@ fn parse_crashgen_registry_from_py(registry_any: &Bound<'_, PyAny>) -> Option<Cr
             .and_then(|v| v.extract::<String>().ok())
             .unwrap_or_default();
 
-        let ignore_keys: HashSet<String> = entry_dict
+        let ignore_keys = entry_dict
             .get_item("ignore_keys")
             .ok()
             .flatten()
@@ -57,78 +51,100 @@ fn parse_crashgen_registry_from_py(registry_any: &Bound<'_, PyAny>) -> Option<Cr
             .into_iter()
             .collect();
 
-        let checks = entry_dict
+        let checks: Vec<String> = entry_dict
             .get_item("checks")
             .ok()
             .flatten()
             .and_then(|v| v.extract::<Vec<String>>().ok())
-            .map(|raw| parse_checks(&raw))
             .unwrap_or_default();
 
-        let entry = CrashgenEntry {
+        let entry = CrashgenEntryRaw {
             display_section,
             ignore_keys,
             checks,
         };
 
-        if name == "default" {
-            default_entry = entry;
-        } else {
-            entries.insert(name, entry);
-        }
+        entries.insert(name, entry);
     }
 
-    Some(CrashgenRegistry::new(entries, default_entry))
+    entries
 }
 
-fn build_legacy_crashgen_registry(
+fn extract_string_attr(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> String {
+    yamldata
+        .getattr(attr_name)
+        .ok()
+        .and_then(|attr| attr.extract::<String>().ok())
+        .unwrap_or_default()
+}
+
+fn extract_vec_string_attr(yamldata: &Bound<'_, PyAny>, attr_name: &str) -> Vec<String> {
+    yamldata
+        .getattr(attr_name)
+        .ok()
+        .and_then(|attr| attr.extract::<Vec<String>>().ok())
+        .unwrap_or_default()
+}
+
+fn extract_indexmap_str_attr(
     yamldata: &Bound<'_, PyAny>,
-    crashgen_name: &str,
-    vr_mode: bool,
-) -> CrashgenRegistry {
-    let legacy_ignore: Vec<String> = if vr_mode {
-        yamldata
-            .getattr("crashgen_ignore_vr")
-            .ok()
-            .and_then(|attr| attr.extract::<Vec<String>>().ok())
-            .unwrap_or_default()
-    } else {
-        yamldata
-            .getattr("crashgen_ignore")
-            .ok()
-            .and_then(|attr| attr.extract::<Vec<String>>().ok())
-            .unwrap_or_default()
-    };
+    attr_name: &str,
+) -> IndexMap<String, String> {
+    yamldata
+        .getattr(attr_name)
+        .map(|attr| pyany_to_indexmap_str(&attr))
+        .unwrap_or_default()
+}
 
-    let normalized: String = crashgen_name
-        .chars()
-        .filter(|c| !c.is_whitespace())
-        .collect::<String>()
-        .to_lowercase();
-    let checks = if normalized == "buffout4" {
-        vec![
-            CheckId::Achievements,
-            CheckId::MemoryManagement,
-            CheckId::ArchiveLimit,
-            CheckId::LooksMenu,
-        ]
-    } else {
-        Vec::new()
-    };
+fn extract_indexmap_vecstr_attr(
+    yamldata: &Bound<'_, PyAny>,
+    attr_name: &str,
+) -> IndexMap<String, Vec<String>> {
+    yamldata
+        .getattr(attr_name)
+        .map(|attr| pyany_to_indexmap_vecstr(&attr))
+        .unwrap_or_default()
+}
 
-    let entry = CrashgenEntry {
-        display_section: if normalized == "buffout4" {
-            "[Compatibility]".to_string()
-        } else {
-            String::new()
-        },
-        ignore_keys: legacy_ignore.into_iter().collect(),
-        checks,
-    };
+fn adapt_yamldata_to_core(yamldata: &Bound<'_, PyAny>) -> YamlDataCore {
+    let crashgen_registry = yamldata
+        .getattr("crashgen_registry")
+        .ok()
+        .map(|attr| parse_crashgen_registry_from_py(&attr))
+        .unwrap_or_default();
+    let mut classic_version = extract_string_attr(yamldata, "classic_version");
+    if classic_version.is_empty() {
+        classic_version = "CLASSIC".to_string();
+    }
 
-    let mut entries = HashMap::new();
-    entries.insert(crashgen_name.to_string(), entry);
-    CrashgenRegistry::new(entries, CrashgenEntry::default_entry())
+    YamlDataCore {
+        classic_game_hints: extract_vec_string_attr(yamldata, "classic_game_hints"),
+        classic_records_list: extract_vec_string_attr(yamldata, "classic_records_list"),
+        classic_version,
+        classic_version_date: extract_string_attr(yamldata, "classic_version_date"),
+        crashgen_name: extract_string_attr(yamldata, "crashgen_name"),
+        crashgen_latest_og: extract_string_attr(yamldata, "crashgen_latest_og"),
+        crashgen_ignore: extract_vec_string_attr(yamldata, "crashgen_ignore"),
+        warn_noplugins: extract_string_attr(yamldata, "warn_noplugins"),
+        warn_outdated: extract_string_attr(yamldata, "warn_outdated"),
+        xse_acronym: extract_string_attr(yamldata, "xse_acronym"),
+        game_ignore_plugins: extract_vec_string_attr(yamldata, "game_ignore_plugins"),
+        game_ignore_records: extract_vec_string_attr(yamldata, "game_ignore_records"),
+        ignore_list: extract_vec_string_attr(yamldata, "ignore_list"),
+        suspects_error_list: extract_indexmap_str_attr(yamldata, "suspects_error_list"),
+        suspects_stack_list: extract_indexmap_vecstr_attr(yamldata, "suspects_stack_list"),
+        game_mods_conf: extract_indexmap_str_attr(yamldata, "game_mods_conf"),
+        game_mods_core: extract_indexmap_str_attr(yamldata, "game_mods_core"),
+        game_mods_core_folon: extract_indexmap_str_attr(yamldata, "game_mods_core_folon"),
+        game_mods_freq: extract_indexmap_str_attr(yamldata, "game_mods_freq"),
+        game_mods_opc2: extract_indexmap_str_attr(yamldata, "game_mods_opc2"),
+        game_mods_solu: extract_indexmap_str_attr(yamldata, "game_mods_solu"),
+        autoscan_text: extract_string_attr(yamldata, "autoscan_text"),
+        game_version: extract_string_attr(yamldata, "game_version"),
+        game_version_new: extract_string_attr(yamldata, "game_version_new"),
+        game_root_name: extract_string_attr(yamldata, "game_root_name"),
+        crashgen_registry,
+    }
 }
 
 // =============================================================================
@@ -250,105 +266,16 @@ impl PyAnalysisConfig {
         fcx_mode: bool,
         simplify_logs: bool,
     ) -> PyResult<Self> {
-        // Create base config
-        let mut config = AnalysisConfig::new(game, vr_mode);
-
-        let crashgen_name_og = yamldata.getattr("crashgen_name")?.extract::<String>()?;
-        config.crashgen_name = if vr_mode {
-            yamldata
-                .getattr("crashgen_name_vr")
-                .ok()
-                .and_then(|attr| attr.extract::<String>().ok())
-                .unwrap_or_else(|| crashgen_name_og.clone())
-        } else {
-            crashgen_name_og
-        };
-
-        config.crashgen_latest = yamldata
-            .getattr("crashgen_latest_og")?
-            .extract::<String>()?;
-        config.game_version = yamldata.getattr("game_version")?.extract::<String>()?;
-        config.game_version_vr = yamldata
-            .getattr("game_version_vr")
-            .ok()
-            .and_then(|attr| attr.extract::<String>().ok())
-            .unwrap_or_default();
-        config.game_version_new = yamldata.getattr("game_version_new")?.extract::<String>()?;
-        config.xse_acronym = yamldata.getattr("xse_acronym")?.extract::<String>()?;
-
-        // Select OG or VR game root name, falling back to OG when VR field is absent.
-        let game_root_name_og = yamldata
-            .getattr("game_root_name")
-            .ok()
-            .and_then(|attr| attr.extract::<String>().ok())
-            .unwrap_or_default();
-        config.game_root_name = if vr_mode {
-            yamldata
-                .getattr("game_root_name_vr")
-                .ok()
-                .and_then(|attr| attr.extract::<String>().ok())
-                .unwrap_or_else(|| game_root_name_og.clone())
-        } else {
-            game_root_name_og
-        };
-
-        config.ignore_plugins = yamldata
-            .getattr("game_ignore_plugins")?
-            .extract::<Vec<String>>()?;
-        config.ignore_records = yamldata
-            .getattr("game_ignore_records")?
-            .extract::<Vec<String>>()?;
-        config.ignore_list = yamldata.getattr("ignore_list")?.extract::<Vec<String>>()?;
-
-        config.show_formid_values = show_formid_values;
-        config.fcx_mode = fcx_mode;
-        config.simplify_logs = simplify_logs;
-
-        // Extract dictionaries (preserving insertion order with IndexMap)
-        config.suspects_error = pyany_to_indexmap_str(&yamldata.getattr("suspects_error_list")?);
-        config.suspects_stack = pyany_to_indexmap_vecstr(&yamldata.getattr("suspects_stack_list")?);
-
-        config.mods_core = pyany_to_indexmap_str(&yamldata.getattr("game_mods_core")?);
-        config.mods_freq = pyany_to_indexmap_str(&yamldata.getattr("game_mods_freq")?);
-        config.mods_conf = pyany_to_indexmap_str(&yamldata.getattr("game_mods_conf")?);
-        config.mods_solu = pyany_to_indexmap_str(&yamldata.getattr("game_mods_solu")?);
-        config.mods_opc2 = pyany_to_indexmap_str(&yamldata.getattr("game_mods_opc2")?);
-
-        config.crashgen_latest_vr = yamldata
-            .getattr("crashgen_latest_vr")
-            .ok()
-            .and_then(|attr| attr.extract::<String>().ok())
-            .unwrap_or_default();
-
-        config.mods_core_folon = yamldata
-            .getattr("game_mods_core_folon")
-            .map(|attr| pyany_to_indexmap_str(&attr))
-            .unwrap_or_default();
-
-        config.classic_records_list = yamldata
-            .getattr("classic_records_list")
-            .ok()
-            .and_then(|attr| attr.extract::<Vec<String>>().ok())
-            .unwrap_or_default();
-
-        // Prefer explicit per-crashgen registry from YamlData when available.
-        // Fall back to legacy crashgen_ignore semantics for compatibility with
-        // older YamlData providers that don't expose crashgen_registry.
-        config.crashgen_registry = yamldata
-            .getattr("crashgen_registry")
-            .ok()
-            .and_then(|attr| parse_crashgen_registry_from_py(&attr))
-            .unwrap_or_else(|| {
-                build_legacy_crashgen_registry(yamldata, &config.crashgen_name, vr_mode)
-            });
-
-        // Extract CLASSIC version for report header (e.g., "CLASSIC v8.2.0")
-        config.classic_version = yamldata
-            .getattr("classic_version")
-            .ok()
-            .and_then(|attr| attr.extract::<String>().ok())
-            .unwrap_or_else(|| "CLASSIC".to_string());
-
+        let yaml_core = adapt_yamldata_to_core(yamldata);
+        let config = build_analysis_config_from_yaml(
+            &yaml_core,
+            &game,
+            vr_mode,
+            show_formid_values,
+            fcx_mode,
+            simplify_logs,
+            Vec::new(),
+        );
         Ok(Self { inner: config })
     }
 

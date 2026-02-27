@@ -44,6 +44,19 @@ Usage:
 from typing import Any
 
 __version__: str
+DEFAULT_CACHE_TTL: int
+BATCH_CACHE_TTL: int
+MAX_CACHE_TTL: int
+DEFAULT_QUERY_CACHE_CAPACITY: int
+DEFAULT_CACHE_CLEANUP_THRESHOLD: int
+DEFAULT_CACHE_CLEANUP_INTERVAL: int
+
+def get_default_cache_ttl() -> int: ...
+def get_batch_cache_ttl() -> int: ...
+def get_max_cache_ttl() -> int: ...
+def get_default_query_cache_capacity() -> int: ...
+def get_default_cache_cleanup_threshold() -> int: ...
+def get_default_cache_cleanup_interval() -> int: ...
 
 class DatabasePool:
     """High-performance async database pool with TTL caching.
@@ -65,16 +78,28 @@ class DatabasePool:
     - Query statistics tracking
     """
 
-    def __init__(self, max_connections: int | None = None, cache_ttl_seconds: int | None = 300, game_table: str | None = None) -> None:
+    def __init__(
+        self,
+        max_connections: int | None = None,
+        cache_ttl_seconds: int | None = 300,
+        game_table: str | None = None,
+        cache_capacity: int | None = None,
+        cleanup_threshold: int | None = None,
+        cleanup_interval_seconds: int | None = None,
+    ) -> None:
         """Create a new database pool.
 
         Initializes the connection pool configuration. Connections are created
         lazily when initialize() is called with database paths.
 
         Args:
-            max_connections: Maximum number of pooled connections (default: auto-calculated based on CPU cores)
+            max_connections: Global connection budget shared across active database pools
+                (default: auto-calculated based on CPU cores)
             cache_ttl_seconds: Cache TTL in seconds (default: 300). Set to None for default.
             game_table: Database table name for the game (default: "Fallout4")
+            cache_capacity: Maximum number of cache entries before eviction policy applies.
+            cleanup_threshold: Number of lookup operations before proactive cleanup is considered.
+            cleanup_interval_seconds: Minimum interval between proactive cleanup runs.
 
         Example:
             >>> pool = DatabasePool(max_connections=8, cache_ttl_seconds=600, game_table="Skyrim")
@@ -237,11 +262,29 @@ class DatabasePool:
 
         """
 
+    def get_cache_capacity(self) -> int:
+        """Get the maximum number of entries allowed in the query cache."""
+
+    def set_cache_capacity(self, capacity: int) -> None:
+        """Set the maximum number of entries allowed in the query cache."""
+
+    def get_cache_cleanup_threshold(self) -> int:
+        """Get proactive cleanup trigger threshold (lookup operations)."""
+
+    def set_cache_cleanup_threshold(self, threshold: int) -> None:
+        """Set proactive cleanup trigger threshold (lookup operations)."""
+
+    def get_cache_cleanup_interval(self) -> int:
+        """Get proactive cleanup minimum interval in seconds."""
+
+    def set_cache_cleanup_interval(self, seconds: int) -> None:
+        """Set proactive cleanup minimum interval in seconds."""
+
     def get_max_connections(self) -> int | None:
-        """Get the current maximum number of connections.
+        """Get the current global connection budget.
 
         Returns:
-            Maximum number of connections in the pool, or None if auto-calculated
+            Configured global connection budget, or None if auto-calculated
 
         Example:
             >>> pool = DatabasePool(max_connections=8)
@@ -251,30 +294,38 @@ class DatabasePool:
         """
 
     def set_max_connections(self, max_connections: int) -> None:
-        """Set the maximum number of connections.
+        """Set the global connection budget.
 
-        Adjusts the connection pool size. New connections are created as
-        needed up to the new limit.
+        Updates configuration for the next initialize/rebalance cycle.
+        Existing pools are not rebuilt automatically.
 
         Args:
-            max_connections: New maximum number of connections
+            max_connections: New global connection budget
 
         Example:
             >>> pool = DatabasePool()
-            >>> pool.set_max_connections(16)  # Increase pool size
+            >>> pool.set_max_connections(16)  # Update config only
+            >>> await pool.rebalance_connections()  # Apply immediately
 
         """
 
     def recalculate_max_connections(self) -> None:
-        """Recalculate optimal maximum connections based on CPU cores.
+        """Recalculate optimal global connection budget based on CPU cores.
 
-        Automatically determines the optimal connection pool size based on
+        Automatically determines the optimal connection budget based on
         the number of available CPU cores and updates the pool configuration.
 
         Example:
             >>> pool = DatabasePool()
             >>> pool.recalculate_max_connections()
+            >>> await pool.rebalance_connections()
 
+        """
+
+    async def rebalance_connections(self) -> None:
+        """Rebuild active pools using the current global connection budget.
+
+        Applies budget updates immediately to all currently tracked databases.
         """
 
     def get_stats(self) -> dict[str, int]:
@@ -290,6 +341,28 @@ class DatabasePool:
                 - 'cache_misses': Number of cache misses
                 - 'total_connections': Total connections in pool
                 - 'active_connections': Currently active connections
+                - 'cache_evictions': Entries evicted due to capacity pressure
+                - 'cleanup_runs': Number of proactive cleanup runs
+                - 'cleanup_removed': Entries removed by proactive cleanup
+                - 'configured_connection_budget': Configured global connection budget
+                - 'effective_connection_budget': Effective budget applied to active pools
+                - 'active_pool_count': Number of active database pools
+                - 'min_pool_allocation': Smallest per-pool allocation
+                - 'max_pool_allocation': Largest per-pool allocation
+                - 'allocation_spread': Difference between max and min pool allocation
+                - 'stable_shape_selections': Number of stable query-shape bucket selections
+                - 'stable_shape_padding_pairs': Total padded pair slots used for stable shapes
+                - 'stable_shape_bucket_8': Number of 8-slot bucket selections
+                - 'stable_shape_bucket_16': Number of 16-slot bucket selections
+                - 'stable_shape_bucket_32': Number of 32-slot bucket selections
+                - 'stable_shape_bucket_64': Number of 64-slot bucket selections
+                - 'stable_shape_bucket_128': Number of 128-slot bucket selections
+                - 'stable_shape_bucket_256': Number of 256-slot bucket selections
+                - 'stable_shape_bucket_512': Number of 512-slot bucket selections
+                - 'stable_shape_bucket_1024': Number of 1024-slot bucket selections
+                - 'cache_capacity': Current cache capacity
+                - 'cleanup_threshold': Current proactive cleanup operation threshold
+                - 'cleanup_interval_seconds': Current proactive cleanup interval in seconds
                 - 'cache_hit_rate': Cache hit rate percentage (0-100)
 
         Example:

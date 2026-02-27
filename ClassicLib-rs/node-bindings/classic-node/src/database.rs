@@ -28,7 +28,11 @@
 //! ```
 
 use classic_database_core::{
-    BATCH_CACHE_TTL_SECS, DEFAULT_CACHE_TTL_SECS, DatabasePool, MAX_CACHE_TTL_SECS,
+    BATCH_CACHE_TTL_SECS,
+    DEFAULT_CACHE_CLEANUP_INTERVAL_SECS as CORE_DEFAULT_CACHE_CLEANUP_INTERVAL_SECS,
+    DEFAULT_CACHE_CLEANUP_OP_THRESHOLD as CORE_DEFAULT_CACHE_CLEANUP_OP_THRESHOLD,
+    DEFAULT_CACHE_TTL_SECS, DEFAULT_QUERY_CACHE_CAPACITY as CORE_DEFAULT_QUERY_CACHE_CAPACITY,
+    DatabasePool, MAX_CACHE_TTL_SECS,
 };
 use napi::bindgen_prelude::*;
 use std::collections::HashMap;
@@ -56,6 +60,18 @@ pub const BATCH_CACHE_TTL: u32 = BATCH_CACHE_TTL_SECS as u32;
 #[napi]
 pub const MAX_CACHE_TTL: u32 = MAX_CACHE_TTL_SECS as u32;
 
+/// Default query cache capacity.
+#[napi]
+pub const DEFAULT_QUERY_CACHE_CAPACITY: u32 = CORE_DEFAULT_QUERY_CACHE_CAPACITY as u32;
+
+/// Default proactive cleanup operation threshold.
+#[napi]
+pub const DEFAULT_CACHE_CLEANUP_THRESHOLD: u32 = CORE_DEFAULT_CACHE_CLEANUP_OP_THRESHOLD as u32;
+
+/// Default proactive cleanup interval in seconds.
+#[napi]
+pub const DEFAULT_CACHE_CLEANUP_INTERVAL: u32 = CORE_DEFAULT_CACHE_CLEANUP_INTERVAL_SECS as u32;
+
 // ============================================================================
 // 2. Cache TTL Helper Functions
 // ============================================================================
@@ -78,6 +94,24 @@ pub fn get_max_cache_ttl() -> u32 {
     MAX_CACHE_TTL_SECS as u32
 }
 
+/// Get default query cache capacity.
+#[napi]
+pub fn get_default_query_cache_capacity() -> u32 {
+    CORE_DEFAULT_QUERY_CACHE_CAPACITY as u32
+}
+
+/// Get default proactive cleanup threshold (operations).
+#[napi]
+pub fn get_default_cache_cleanup_threshold() -> u32 {
+    CORE_DEFAULT_CACHE_CLEANUP_OP_THRESHOLD as u32
+}
+
+/// Get default proactive cleanup interval in seconds.
+#[napi]
+pub fn get_default_cache_cleanup_interval() -> u32 {
+    CORE_DEFAULT_CACHE_CLEANUP_INTERVAL_SECS as u32
+}
+
 // ============================================================================
 // 3. DTO Structs
 // ============================================================================
@@ -97,6 +131,30 @@ pub struct JsPoolStatistics {
     pub total_connections: u32,
     /// Number of currently active connections
     pub active_connections: u32,
+    /// Number of cache entries evicted due to capacity pressure
+    pub cache_evictions: u32,
+    /// Number of proactive cleanup runs performed
+    pub cleanup_runs: u32,
+    /// Number of entries removed by proactive cleanup
+    pub cleanup_removed: u32,
+    /// Configured global connection budget
+    pub configured_connection_budget: u32,
+    /// Effective global budget after allocation/clamp policy
+    pub effective_connection_budget: u32,
+    /// Number of active pools in the allocation plan
+    pub active_pool_count: u32,
+    /// Minimum per-pool allocation
+    pub min_pool_allocation: u32,
+    /// Maximum per-pool allocation
+    pub max_pool_allocation: u32,
+    /// Difference between max/min per-pool allocation
+    pub allocation_spread: u32,
+    /// Current cache capacity
+    pub cache_capacity: u32,
+    /// Current proactive cleanup threshold (operation count)
+    pub cleanup_threshold: u32,
+    /// Current proactive cleanup interval in seconds
+    pub cleanup_interval_seconds: u32,
     /// Cache hit rate as a percentage (0-100)
     pub cache_hit_rate: f64,
 }
@@ -138,13 +196,17 @@ impl JsDatabasePool {
     /// Create a new database pool.
     ///
     /// @param gameTable - The game table name (e.g., "Fallout4", "Skyrim").
-    /// @param maxConnections - Optional maximum connections per pool (auto-calculated if omitted).
+    /// @param maxConnections - Optional global connection budget across active pools
+    ///                         (auto-calculated if omitted).
     /// @param cacheTtlSeconds - Optional cache TTL in seconds (defaults to 1800 / 30 min for batch ops).
     #[napi(constructor)]
     pub fn new(
         game_table: String,
         max_connections: Option<u32>,
         cache_ttl_seconds: Option<u32>,
+        cache_capacity: Option<u32>,
+        cleanup_threshold: Option<u32>,
+        cleanup_interval_seconds: Option<u32>,
     ) -> Self {
         let ttl = Duration::from_secs(
             cache_ttl_seconds
@@ -152,10 +214,19 @@ impl JsDatabasePool {
                 .unwrap_or(BATCH_CACHE_TTL_SECS),
         );
         let max_conn = max_connections.map(|c| c as usize);
+        let inner = DatabasePool::new(max_conn, ttl, game_table);
 
-        Self {
-            inner: DatabasePool::new(max_conn, ttl, game_table),
+        if let Some(capacity) = cache_capacity {
+            inner.set_cache_capacity(capacity as usize);
         }
+        if let Some(threshold) = cleanup_threshold {
+            inner.set_cache_cleanup_threshold(threshold as u64);
+        }
+        if let Some(interval) = cleanup_interval_seconds {
+            inner.set_cache_cleanup_interval(Duration::from_secs(interval as u64));
+        }
+
+        Self { inner }
     }
 
     /// Initialize database connections for the given file paths.
@@ -339,13 +410,50 @@ impl JsDatabasePool {
             .set_cache_ttl(Duration::from_secs(seconds as u64));
     }
 
+    /// Get configured cache capacity.
+    #[napi]
+    pub fn get_cache_capacity(&self) -> u32 {
+        self.inner.get_cache_capacity() as u32
+    }
+
+    /// Set cache capacity.
+    #[napi]
+    pub fn set_cache_capacity(&self, capacity: u32) {
+        self.inner.set_cache_capacity(capacity as usize);
+    }
+
+    /// Get proactive cleanup threshold (operation count).
+    #[napi]
+    pub fn get_cache_cleanup_threshold(&self) -> u32 {
+        self.inner.get_cache_cleanup_threshold() as u32
+    }
+
+    /// Set proactive cleanup threshold (operation count).
+    #[napi]
+    pub fn set_cache_cleanup_threshold(&self, threshold: u32) {
+        self.inner.set_cache_cleanup_threshold(threshold as u64);
+    }
+
+    /// Get proactive cleanup interval in seconds.
+    #[napi]
+    pub fn get_cache_cleanup_interval(&self) -> u32 {
+        self.inner.get_cache_cleanup_interval().as_secs() as u32
+    }
+
+    /// Set proactive cleanup interval in seconds.
+    #[napi]
+    pub fn set_cache_cleanup_interval(&self, seconds: u32) {
+        self.inner
+            .set_cache_cleanup_interval(Duration::from_secs(seconds as u64));
+    }
+
     /// Get the current number of entries in the query cache.
     #[napi]
     pub fn cache_size(&self) -> u32 {
         self.inner.cache_size() as u32
     }
 
-    /// Get the maximum number of connections per pool.
+    /// Get the configured global connection budget.
     ///
     /// Returns `undefined` if not configured (should not happen after construction).
     #[napi]
@@ -353,22 +461,36 @@ impl JsDatabasePool {
         self.inner.get_max_connections().map(|c| c as u32)
     }
 
-    /// Set the maximum number of connections per pool.
+    /// Set the global connection budget (config-only).
     ///
-    /// Only affects pools created after this call; existing pools keep their size.
+    /// Existing pools are not rebuilt automatically. Call `rebalanceConnections()`
+    /// to apply immediately.
     ///
-    /// @param maxConnections - New maximum connection count.
+    /// @param maxConnections - New global connection budget.
     #[napi]
     pub fn set_max_connections(&self, max_connections: u32) {
         self.inner.set_max_connections(max_connections as usize);
     }
 
-    /// Recalculate optimal connection count based on current CPU cores.
+    /// Recalculate optimal global connection budget based on current CPU cores.
     ///
-    /// Sets max_connections to `CPU_cores * 4`, clamped to 8-64.
+    /// Sets the configured budget to `CPU_cores * 4`, clamped to 8-64.
     #[napi]
     pub fn recalculate_max_connections(&self) {
         self.inner.recalculate_max_connections();
+    }
+
+    /// Explicitly rebuild active pools using the current global budget.
+    #[napi]
+    pub async fn rebalance_connections(&self) -> Result<()> {
+        let inner = self.inner.clone();
+
+        let handle = classic_shared_core::get_runtime().handle().clone();
+        handle
+            .spawn(async move { inner.rebalance_connections().await })
+            .await
+            .map_err(|e| to_napi_err(format!("Runtime error: {e}")))?
+            .map_err(to_napi_err)
     }
 
     /// Check if any database pools are available.
@@ -398,6 +520,18 @@ impl JsDatabasePool {
             cache_misses: stats.cache_misses as u32,
             total_connections: stats.total_connections as u32,
             active_connections: stats.active_connections as u32,
+            cache_evictions: stats.cache_evictions as u32,
+            cleanup_runs: stats.cleanup_runs as u32,
+            cleanup_removed: stats.cleanup_removed as u32,
+            configured_connection_budget: stats.configured_connection_budget as u32,
+            effective_connection_budget: stats.effective_connection_budget as u32,
+            active_pool_count: stats.active_pool_count as u32,
+            min_pool_allocation: stats.min_pool_allocation as u32,
+            max_pool_allocation: stats.max_pool_allocation as u32,
+            allocation_spread: stats.allocation_spread as u32,
+            cache_capacity: self.inner.get_cache_capacity() as u32,
+            cleanup_threshold: self.inner.get_cache_cleanup_threshold() as u32,
+            cleanup_interval_seconds: self.inner.get_cache_cleanup_interval().as_secs() as u32,
             cache_hit_rate,
         })
     }
