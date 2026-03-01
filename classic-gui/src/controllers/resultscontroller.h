@@ -30,7 +30,7 @@ public:
 private slots:
     void onReportSelected(const QString& filePath);
     void onDeleteReport(const QString& filePath);
-    void onOpenFolder();
+    void onOpenFolder(const QString& filePath);
     void onCopyAll();
     void onScanStarted();
     void onScanCompleted();
@@ -38,6 +38,8 @@ private slots:
 
 private:
     QStringList discoverReports() const;
+    virtual bool openFolderInFileBrowser(const QString& folderPath);
+    virtual bool revealFileInFileBrowser(const QString& filePath);
 
     SignalHub* m_signalHub = nullptr;
     QTabWidget* m_tabWidget = nullptr;

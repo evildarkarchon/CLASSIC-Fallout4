@@ -173,6 +173,7 @@ void ReportListWidgetTests::selection_and_toolbar_buttons_emit_expected_signals(
 
     QTest::mouseClick(openFolderButton, Qt::LeftButton);
     QTRY_COMPARE(openFolderSpy.count(), 1);
+    QCOMPARE(openFolderSpy.takeFirst().at(0).toString(), widget.currentReportPath());
 }
 
 QTEST_MAIN(ReportListWidgetTests)

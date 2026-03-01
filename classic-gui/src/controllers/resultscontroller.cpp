@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QDesktopServices>
+#include <QProcess>
 #include <QUrl>
 #include <QApplication>
 #include <QClipboard>
@@ -185,15 +186,28 @@ void ResultsController::onDeleteReport(const QString& filePath)
     }
 }
 
-void ResultsController::onOpenFolder()
+void ResultsController::onOpenFolder(const QString& filePath)
 {
+    const QString selectedPath = QDir::cleanPath(filePath.trimmed());
+    const QFileInfo selectedInfo(selectedPath);
+    if (!selectedPath.isEmpty() && selectedInfo.exists() && selectedInfo.isFile()) {
+        if (revealFileInFileBrowser(selectedInfo.absoluteFilePath())) {
+            return;
+        }
+
+        const QString selectedDir = selectedInfo.absolutePath();
+        if (!selectedDir.isEmpty() && openFolderInFileBrowser(selectedDir)) {
+            return;
+        }
+    }
+
     QString openDir = m_primaryReportDir;
     if (openDir.isEmpty() && !m_reportDirs.isEmpty()) {
         openDir = m_reportDirs.first();
     }
 
     if (!openDir.isEmpty()) {
-        QDesktopServices::openUrl(QUrl::fromLocalFile(openDir));
+        openFolderInFileBrowser(openDir);
     }
 }
 
@@ -270,4 +284,21 @@ QStringList ResultsController::discoverReports() const
               });
 
     return paths;
+}
+
+bool ResultsController::openFolderInFileBrowser(const QString& folderPath)
+{
+    return QDesktopServices::openUrl(QUrl::fromLocalFile(folderPath));
+}
+
+bool ResultsController::revealFileInFileBrowser(const QString& filePath)
+{
+#ifdef Q_OS_WIN
+    const QString nativePath = QDir::toNativeSeparators(QDir::cleanPath(filePath));
+    const QString selectArg = QStringLiteral("/select,%1").arg(nativePath);
+    return QProcess::startDetached(QStringLiteral("explorer.exe"), {selectArg});
+#else
+    const QFileInfo info(filePath);
+    return QDesktopServices::openUrl(QUrl::fromLocalFile(info.absolutePath()));
+#endif
 }

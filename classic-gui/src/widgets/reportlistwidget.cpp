@@ -62,8 +62,9 @@ void ReportListWidget::setupUi()
             emit deleteRequested(path);
         }
     });
-    connect(m_btnOpenFolder, &QPushButton::clicked,
-            this, &ReportListWidget::openFolderRequested);
+    connect(m_btnOpenFolder, &QPushButton::clicked, this, [this]() {
+        emit openFolderRequested(currentReportPath());
+    });
 }
 
 // ── Public interface ──────────────────────────────────────────────
