@@ -28,6 +28,8 @@ private slots:
 };
 
 namespace {
+const QString kOpenFolderButtonObjectName = QStringLiteral("reportListOpenFolderButton");
+
 QString writeTextFile(const QString& filePath, const QString& content)
 {
     const QFileInfo info(filePath);
@@ -46,17 +48,6 @@ QString writeTextFile(const QString& filePath, const QString& content)
 QListWidget* findReportList(ReportListWidget& widget)
 {
     return widget.findChild<QListWidget*>();
-}
-
-QPushButton* findButtonByText(ReportListWidget& widget, const QString& text)
-{
-    for (auto* button : widget.findChildren<QPushButton*>()) {
-        if (button->text() == text) {
-            return button;
-        }
-    }
-
-    return nullptr;
 }
 
 class TestableResultsController final : public ResultsController {
@@ -274,10 +265,10 @@ void ResultsControllerTests::open_folder_reveals_selected_report_when_file_exist
     list->setCurrentRow(0);
     QTRY_VERIFY(!reportList.currentReportPath().isEmpty());
 
-    auto* openFolderButton = findButtonByText(reportList, QStringLiteral("Open Folder"));
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
     QVERIFY(openFolderButton);
 
-    QTest::mouseClick(openFolderButton, Qt::LeftButton);
+    openFolderButton->click();
 
     QTRY_COMPARE(controller.revealFileCalls, 1);
     QCOMPARE(controller.revealedFilePath, QDir::cleanPath(customReport));
@@ -318,10 +309,10 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_no_select
     list->setCurrentItem(nullptr);
     QCOMPARE(reportList.currentReportPath(), QString());
 
-    auto* openFolderButton = findButtonByText(reportList, QStringLiteral("Open Folder"));
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
     QVERIFY(openFolderButton);
 
-    QTest::mouseClick(openFolderButton, Qt::LeftButton);
+    openFolderButton->click();
 
     QTRY_COMPARE(controller.openFolderCalls, 1);
     QCOMPARE(controller.openedFolderPath, QDir::cleanPath(crashDir));
@@ -364,10 +355,10 @@ void ResultsControllerTests::open_folder_falls_back_to_crash_logs_when_selected_
     QTRY_VERIFY(!reportList.currentReportPath().isEmpty());
     QVERIFY(QFile::remove(customReport));
 
-    auto* openFolderButton = findButtonByText(reportList, QStringLiteral("Open Folder"));
+    auto* openFolderButton = reportList.findChild<QPushButton*>(kOpenFolderButtonObjectName);
     QVERIFY(openFolderButton);
 
-    QTest::mouseClick(openFolderButton, Qt::LeftButton);
+    openFolderButton->click();
 
     QTRY_COMPARE(controller.openFolderCalls, 1);
     QCOMPARE(controller.openedFolderPath, QDir::cleanPath(crashDir));

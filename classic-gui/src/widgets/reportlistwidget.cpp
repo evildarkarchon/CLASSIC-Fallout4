@@ -42,6 +42,10 @@ void ReportListWidget::setupUi()
         m_btnDelete = new QPushButton(QStringLiteral("Delete"));
         m_btnOpenFolder = new QPushButton(QStringLiteral("Open Folder"));
 
+        m_btnRefresh->setObjectName(QStringLiteral("reportListRefreshButton"));
+        m_btnDelete->setObjectName(QStringLiteral("reportListDeleteButton"));
+        m_btnOpenFolder->setObjectName(QStringLiteral("reportListOpenFolderButton"));
+
         btnLayout->addWidget(m_btnRefresh);
         btnLayout->addWidget(m_btnDelete);
         btnLayout->addWidget(m_btnOpenFolder);
