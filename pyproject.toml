@@ -139,6 +139,9 @@ exclude = [
     ".venv",
     "**/Release",
     "**/PySide6",
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
 ]
 ignore = [
     "**/_internal",
