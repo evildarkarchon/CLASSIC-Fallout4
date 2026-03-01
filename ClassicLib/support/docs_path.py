@@ -208,11 +208,14 @@ class DocumentsPathManager:
             logger.warning(f"Existing docs path is not accessible: {error_msg}")
             # Continue to auto-detection
 
-        # Find path based on platform
-        if platform.system() == "Windows":
-            self._find_windows_docs_path()
-        else:
-            self._find_linux_docs_path()
+        # Find path based on platform (best-effort; manual fallback handled below)
+        try:
+            if platform.system() == "Windows":
+                self._find_windows_docs_path()
+            else:
+                self._find_linux_docs_path()
+        except (FileNotFoundError, OSError, RuntimeError, TypeError, ValueError) as exc:
+            logger.warning(f"Auto-detected docs path lookup failed: {exc}")
 
         # Check if path was found successfully
         docs_path = yaml_settings(str, YAML.Game_Local, "Game_Info.Root_Folder_Docs")

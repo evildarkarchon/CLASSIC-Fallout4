@@ -2,6 +2,7 @@
 # ruff: noqa: ANN001, ANN002, ANN003, RUF100, ANN201, ANN204, ANN202, ARG001, PT011, ARG002
 
 import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -133,6 +134,37 @@ class TestPathDetection:
                         # Since _find_windows_docs_path doesn't set a valid path,
                         # it should call manual input method
                         assert mock_input.called
+
+    @patch("ClassicLib.io.yaml.classic_settings", return_value=None)
+    @patch("ClassicLib.io.yaml.yaml_settings", return_value=None)
+    @patch("ClassicLib.support.docs_path.msg_error")
+    @patch("ClassicLib.support.docs_path.msg_info")
+    @patch("builtins.input", side_effect=["C:/Valid/Path"])
+    @patch("platform.system", return_value="Windows")
+    def test_find_docs_path_windows_detection_exception_falls_back_to_manual(
+        self,
+        mock_platform: MagicMock,  # noqa: ARG002
+        mock_input: MagicMock,
+        mock_msg_info: MagicMock,  # noqa: ARG002
+        mock_msg_error: MagicMock,  # noqa: ARG002
+        mock_yaml: MagicMock,  # noqa: ARG002
+        mock_classic: MagicMock,  # noqa: ARG002
+    ) -> None:
+        """Test find_docs_path still falls back to manual input when Windows detection raises."""
+        manager = DocumentsPathManager(is_gui_mode=False)
+
+        # Patch ResourceLoader at source since DocsPath imports it locally
+        with patch("ClassicLib.support.resources.ResourceLoader") as mock_resource_loader:
+            mock_resource_loader.get_cached_docs_path.return_value = None
+            mock_resource_loader.save_path_to_cache.return_value = None
+
+            with patch("pathlib.Path.is_dir", return_value=True):  # noqa: SIM117
+                with patch.object(manager, "_update_game_setting") as mock_update:
+                    with patch.object(manager, "_find_windows_docs_path", side_effect=FileNotFoundError("Could not detect docs path")):
+                        manager.find_docs_path()
+
+                        assert mock_input.called
+                        mock_update.assert_called_once_with("Root_Folder_Docs", str(Path("C:/Valid/Path")))
 
     @patch("ClassicLib.support.docs_path.classic_path.DocsPathFinder")
     def test_find_windows_docs_path_success(self, mock_docs_finder: MagicMock) -> None:
