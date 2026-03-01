@@ -64,7 +64,7 @@ classic-scan = "classic_scan_game:main"
 [dependency-groups]
 dev = [
     "mypy>=1.12.0",
-    "ruff>=0.11.0",
+    "ruff>=0.15.4",
     "types-beautifulsoup4>=4.12.0.20240907",
     "types-regex>=2026.2.19.20260221",
     "types-requests>=2.32.0.20241016",
@@ -85,7 +85,7 @@ dev = [
     "python-memory-profiler>=0.4.4",
     "scipy>=1.16.3",
     "debugpy>=1.8.19",
-    "pytest-textual-snapshot>=1.0.0",
+    "pytest-textual-snapshot>=1.1.0",
     "vulture>=2.14",
     "basedpyright>=1.38.1",
 ]

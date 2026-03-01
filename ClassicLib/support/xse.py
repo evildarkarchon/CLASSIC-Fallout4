@@ -137,11 +137,11 @@ def xse_check_integrity() -> str:
     Returns a string compiled from all generated messages during the checking process, summarizing
     the integrity status of the XSE installation.
 
-    Raises:
-        TypeError: If error patterns from the settings configuration are not of type list.
-
     Returns:
         str: A summary of messages created during the XSE integrity check.
+
+    Raises:
+        TypeError: If error patterns from the settings configuration are not of type list.
 
     """
     logger.debug("- - - INITIATED XSE INTEGRITY CHECK")
@@ -659,12 +659,12 @@ def _get_scripts_folder_path() -> str:
     retrieved path is None, the function raises a ValueError indicating that the
     scripts folder path cannot be None.
 
+    Returns:
+        str: The path of the game's scripts folder.
+
     Raises:
         ValueError: If the game scripts folder path retrieved from the configuration
             is None.
-
-    Returns:
-        str: The path of the game's scripts folder.
 
     """
     game_folder_scripts: str | None = yaml_settings(str, YAML.Game_Local, "Game_Info.Game_Folder_Scripts")

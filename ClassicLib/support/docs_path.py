@@ -345,12 +345,12 @@ class DocumentsPathManager:
         Args:
             ini_name: The name of the INI file to check.
 
+        Returns:
+            A string containing the results of the INI file checks.
+
         Raises:
             TypeError: Raised if the `docs_name` attribute is not a string.
             TypeError: Raised if the `folder_docs` is not a string or is None.
-
-        Returns:
-            A string containing the results of the INI file checks.
 
         """
         message_list: list[str] = []

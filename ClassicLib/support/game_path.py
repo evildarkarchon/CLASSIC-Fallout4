@@ -160,11 +160,11 @@ class GamePathFinder:
     def _get_path_from_user_gui() -> Path:
         """Retrieve a file path from the user via a graphical user interface (GUI).
 
-        Raises:
-            RuntimeError: If the user cancels the file path selection dialog.
-
         Returns:
             Path: The file path selected by the user.
+
+        Raises:
+            RuntimeError: If the user cancels the file path selection dialog.
 
         """
         result = show_game_path_dialog_static()

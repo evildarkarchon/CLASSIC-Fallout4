@@ -18,12 +18,12 @@ class DocumentsChecker:
         document name and warns if the path includes specific conditions (e.g., the
         presence of 'OneDrive'). Errors are raised when expected types are not met.
 
-        Raises:
-            TypeError: If the document name or document warning is not a string.
-
         Returns:
             str: A concatenated message list containing warnings or an empty string if
             no warnings are applicable.
+
+        Raises:
+            TypeError: If the document name or document warning is not a string.
 
         """
         from ClassicLib.io.yaml import yaml_settings
