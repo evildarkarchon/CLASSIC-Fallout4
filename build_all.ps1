@@ -389,8 +389,6 @@ function Build-Spec {
 # Build all versions (TUI is now pure Rust, built separately)
 Build-Spec "CLASSIC.spec" "GUI version - Folder Distribution (CLASSIC.exe)"
 Build-Spec "CLASSIC-GUI-OneFile.spec" "GUI version - Single File (CLASSIC-GUI-OneFile.exe)"
-Build-Spec "CLASSIC-QML.spec" "QML GUI version - Single File (CLASSIC-QML-OneFile.exe)"
-Build-Spec "CLASSIC-QML-Dir.spec" "QML GUI version - Folder Distribution (CLASSIC-QML/CLASSIC-QML.exe)"
 Build-Spec "CLASSIC-CLI.spec" "CLI version (CLASSIC-CLI.exe)"
 
 # Optional test build
@@ -420,9 +418,7 @@ Write-Host ""
 $executables = @(
     @{Path = "dist\CLASSIC\CLASSIC.exe"; Type = "GUI (Folder)" },
     @{Path = "dist\CLASSIC-GUI-OneFile.exe"; Type = "GUI (Single File)" },
-    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" },
-    @{Path = "dist\CLASSIC-QML-OneFile.exe"; Type = "QML (Single File)" },
-    @{Path = "dist\CLASSIC-QML\CLASSIC-QML.exe"; Type = "QML (Folder)" }
+    @{Path = "dist\CLASSIC-CLI.exe"; Type = "CLI (Single)" }
 )
 
 if ($BuildTest) {
@@ -446,8 +442,6 @@ Write-Host ""
 Write-Host "Executables are located in the 'dist' directory:" -ForegroundColor Cyan
 Write-Host "  - GUI Folder: dist\CLASSIC\CLASSIC.exe (folder distribution - smaller)" -ForegroundColor White
 Write-Host "  - GUI Single: dist\CLASSIC-GUI-OneFile.exe (single file - portable)" -ForegroundColor White
-Write-Host "  - QML Folder: dist\CLASSIC-QML\CLASSIC-QML.exe (folder distribution)" -ForegroundColor White
-Write-Host "  - QML Single: dist\CLASSIC-QML-OneFile.exe (single file - portable)" -ForegroundColor White
 Write-Host "  - CLI: dist\CLASSIC-CLI.exe (single file)" -ForegroundColor White
 
 if ($BuildTest) {

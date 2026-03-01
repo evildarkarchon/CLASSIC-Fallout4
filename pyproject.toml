@@ -393,8 +393,6 @@ omit = [
     # Build and migration scripts (not part of runtime code)
     "migrate_to_uv.py",
     "pyinstaller_rust_helper.py",
-    # Experimental QML interface (not the primary interface)
-    "classic_interface_qml.py",
     # PySide6 generated files and internal modules
     "pyscript",
     "shibokensupport/*",
