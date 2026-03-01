@@ -225,6 +225,7 @@ ignore = [
     "RUF022",
     "RUF067",
     "D401",
+    "D420",
 ]
 
 extend-select = [
