@@ -6,6 +6,7 @@
 #include <QGridLayout>
 #include <QFileDialog>
 #include <QFile>
+#include <QFileInfo>
 #include <QDir>
 #include <QMessageBox>
 #include <QCoreApplication>
@@ -988,6 +989,14 @@ void MainWindow::checkFirstRunPaths()
         // If settings can't be read, fall through to path detection
     }
 
+    // Treat invalid non-directory paths as unresolved too.
+    if (!gamePath.isEmpty() && !QDir(gamePath).exists()) {
+        gamePath.clear();
+    }
+    if (!docsPath.isEmpty() && !QDir(docsPath).exists()) {
+        docsPath.clear();
+    }
+
     // Fallback: import detected paths from CLASSIC Fallout4 Local.yaml if
     // settings file does not contain them yet.
     bool importedFromLocal = false;
@@ -1072,6 +1081,14 @@ void MainWindow::checkFirstRunPaths()
         } catch (...) {
             // Keep going; manual prompt below remains fallback.
         }
+    }
+
+    // Re-validate detected/imported values before final need-check.
+    if (!gamePath.isEmpty() && !QDir(gamePath).exists()) {
+        gamePath.clear();
+    }
+    if (!docsPath.isEmpty() && !QDir(docsPath).exists()) {
+        docsPath.clear();
     }
 
     // Ask Rust whether path detection is needed
@@ -1291,6 +1308,55 @@ QString MainWindow::readCrashLogsDir() const
     return QDir::cleanPath(QDir::current().filePath(QStringLiteral("Crash Logs")));
 }
 
+bool MainWindow::loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const
+{
+    if (gamePathOut) {
+        gamePathOut->clear();
+    }
+    if (docsPathOut) {
+        docsPathOut->clear();
+    }
+
+    if (m_dataRoot.isEmpty()) {
+        return false;
+    }
+
+    QString gamePath;
+    QString docsPath;
+    const QString settingsPath = settingsFilePath(m_dataRoot);
+    try {
+        auto ops = classic::yaml::yaml_ops_new();
+        classic::yaml::yaml_ops_load_file(*ops,
+            std::string(settingsPath.toUtf8().constData()));
+
+        auto root = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Game Folder Path", "");
+        if (!root.empty()) {
+            gamePath = QDir::cleanPath(classic::toQString(root).trimmed());
+        }
+
+        auto docs = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.INI Folder Path", "");
+        if (!docs.empty()) {
+            docsPath = QDir::cleanPath(classic::toQString(docs).trimmed());
+        }
+    } catch (...) {
+        return false;
+    }
+
+    const bool gameValid = !gamePath.isEmpty() && QDir(gamePath).exists();
+    const bool docsValid = !docsPath.isEmpty() && QDir(docsPath).exists();
+
+    if (gamePathOut) {
+        *gamePathOut = gamePath;
+    }
+    if (docsPathOut) {
+        *docsPathOut = docsPath;
+    }
+
+    return gameValid && docsValid;
+}
+
 // ── Slot implementations ───────────────────────────────────────────
 
 void MainWindow::onBrowseStaging()
@@ -1446,6 +1512,19 @@ void MainWindow::onScanCrashLogs()
         return;
     }
 
+    if (m_fcxMode) {
+        QString gamePath;
+        QString docsPath;
+        if (!loadValidatedGameAndDocsPaths(&gamePath, &docsPath)) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("FCX Mode Requires Paths"),
+                QStringLiteral("FCX mode requires valid game and INI folder paths.\n\n"
+                               "Open Settings and configure both paths before scanning crash logs."));
+            return;
+        }
+    }
+
     m_btnScanCrashLogs->setEnabled(false);
     m_btnScanCrashLogs->setText(QStringLiteral("SCANNING..."));
     m_crashScanTotalLogs = 0;
@@ -1484,7 +1563,16 @@ void MainWindow::onScanGameFiles()
     QString docsPath;
     QString gameName = QStringLiteral("Fallout4");
 
-    QString settingsPath = settingsFilePath(m_dataRoot);
+    const QString settingsPath = settingsFilePath(m_dataRoot);
+    if (!loadValidatedGameAndDocsPaths(&gameRoot, &docsPath)) {
+        QMessageBox::warning(
+            this,
+            QStringLiteral("Missing Paths"),
+            QStringLiteral("Game folder and INI folder paths are required before running Scan Game Files.\n\n"
+                           "Open Settings and configure both paths."));
+        return;
+    }
+
     try {
         auto ops = classic::yaml::yaml_ops_new();
         classic::yaml::yaml_ops_load_file(*ops,
@@ -1493,33 +1581,26 @@ void MainWindow::onScanGameFiles()
         auto exePath = classic::yaml::yaml_ops_get_string(
             *ops, "CLASSIC_Settings.Game EXE Path", "");
         if (!exePath.empty()) {
-            gameExePath = classic::toQString(exePath);
-        }
-
-        auto root = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.Game Folder Path", "");
-        if (!root.empty()) {
-            gameRoot = classic::toQString(root);
-        }
-
-        auto docs = classic::yaml::yaml_ops_get_string(
-            *ops, "CLASSIC_Settings.INI Folder Path", "");
-        if (!docs.empty()) {
-            docsPath = classic::toQString(docs);
+            gameExePath = QDir::cleanPath(classic::toQString(exePath).trimmed());
         }
     } catch (const std::exception&) {
-        // Fall through -- paths may be empty
+        // Fall through -- default exe path below.
     }
 
-    if (gameRoot.isEmpty()) {
-        QMessageBox::warning(this, QStringLiteral("Error"),
-            QStringLiteral("Game folder path is not configured. "
-                           "Please set it in Settings."));
-        return;
+    if (!gameExePath.isEmpty()) {
+        const QFileInfo exeInfo(gameExePath);
+        if (!exeInfo.exists()) {
+            gameExePath.clear();
+        } else {
+            const QString exeParent = QDir::cleanPath(exeInfo.absolutePath());
+            if (exeParent.compare(gameRoot, Qt::CaseInsensitive) != 0) {
+                gameExePath.clear();
+            }
+        }
     }
 
     // If exe path is not set, construct a default from game root
-    if (gameExePath.isEmpty()) {
+    if (gameExePath.isEmpty() || !QFile::exists(gameExePath)) {
         gameExePath = gameRoot + QStringLiteral("/Fallout4.exe");
     }
 

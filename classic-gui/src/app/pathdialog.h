@@ -27,8 +27,11 @@ public:
 private slots:
     void onBrowseGamePath();
     void onBrowseDocsPath();
+    void validateAndAccept();
 
 private:
+    bool m_needsGamePath = false;
+    bool m_needsDocsPath = false;
     QLineEdit* m_editGamePath = nullptr;
     QLineEdit* m_editDocsPath = nullptr;
 };

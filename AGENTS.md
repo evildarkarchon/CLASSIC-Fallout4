@@ -96,6 +96,11 @@ cargo test -p classic-scanlog-core --manifest-path ClassicLib-rs/Cargo.toml     
 # C++ tests (Catch2 v3 via CTest) -- requires VS Dev Shell (use build script)
 # Recommended: use the build script with -Test flag (handles VS Dev Shell automatically):
 pwsh -ExecutionPolicy Bypass -File classic-cli/build_cli.ps1 -Test
+pwsh -ExecutionPolicy Bypass -File classic-gui/build_gui.ps1 -Test
+
+Policy for AI agents and contributors:
+Always run C++ tests via CTest (either directly with `ctest --test-dir ...` or through
+the build scripts above). Do not run C++ test binaries directly.
 
 # Manual approach (must run in a single PowerShell session with VS Dev Shell):
 pwsh -ExecutionPolicy Bypass -Command '

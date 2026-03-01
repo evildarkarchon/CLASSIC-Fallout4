@@ -10,6 +10,8 @@ private slots:
     void tab_bar_configuration_is_responsive_for_narrow_windows();
     void custom_folder_handlers_refresh_results_directories();
     void crash_scan_status_bar_tracks_scan_statistics();
+    void first_run_path_detection_treats_invalid_directories_as_unresolved();
+    void manual_path_dialog_validates_before_accepting();
 };
 
 void MainWindowGeometryTests::main_tab_minimum_geometry_constant_matches_default_layout()
@@ -106,6 +108,36 @@ void MainWindowGeometryTests::crash_scan_status_bar_tracks_scan_statistics()
              "Crash scan status text should include elapsed time statistics");
     QVERIFY2(sourceText.contains(QStringLiteral("progressCompletedEstimate")),
              "Crash scan status should derive scanned-log stats from streaming progress updates");
+}
+
+void MainWindowGeometryTests::first_run_path_detection_treats_invalid_directories_as_unresolved()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/mainwindow.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("QDir(gamePath).exists()")),
+             "First-run path detection should treat non-existing game directories as unresolved");
+    QVERIFY2(sourceText.contains(QStringLiteral("QDir(docsPath).exists()")),
+             "First-run path detection should treat non-existing docs directories as unresolved");
+}
+
+void MainWindowGeometryTests::manual_path_dialog_validates_before_accepting()
+{
+    const QString sourcePath = QStringLiteral(QT_TESTCASE_SOURCEDIR "/../src/app/pathdialog.cpp");
+    QFile sourceFile(sourcePath);
+    QVERIFY2(sourceFile.open(QIODevice::ReadOnly | QIODevice::Text),
+             qPrintable(QStringLiteral("Unable to read %1").arg(sourcePath)));
+
+    const QString sourceText = QString::fromUtf8(sourceFile.readAll());
+    QVERIFY2(sourceText.contains(QStringLiteral("validateAndAccept")),
+             "ManualPathDialog should route OK through validation before accepting");
+    QVERIFY2(sourceText.contains(QStringLiteral("check_restricted_path")),
+             "ManualPathDialog should reject restricted game paths");
+    QVERIFY2(sourceText.contains(QStringLiteral("QMessageBox::warning")),
+             "ManualPathDialog should show validation feedback when path checks fail");
 }
 
 QTEST_MAIN(MainWindowGeometryTests)

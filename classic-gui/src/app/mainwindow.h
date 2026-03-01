@@ -48,6 +48,7 @@ private:
     void restoreTabGeometry(int tabIndex);
     bool validateCustomScanFolder(const QString& path);
     QString readCrashLogsDir() const;
+    bool loadValidatedGameAndDocsPaths(QString* gamePathOut, QString* docsPathOut) const;
     void checkForUpdates(bool explicitCheck);
 
 private slots:

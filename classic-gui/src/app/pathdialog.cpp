@@ -5,11 +5,17 @@
 #include <QLabel>
 #include <QPushButton>
 #include <QFileDialog>
+#include <QDir>
+#include <QMessageBox>
+
+#include "classic_cxx_bridge/game.h"
 
 ManualPathDialog::ManualPathDialog(bool needsGamePath,
                                    bool needsDocsPath,
                                    QWidget* parent)
     : QDialog(parent)
+    , m_needsGamePath(needsGamePath)
+    , m_needsDocsPath(needsDocsPath)
 {
     setWindowTitle(QStringLiteral("CLASSIC - Path Setup"));
     setModal(true);
@@ -80,7 +86,7 @@ ManualPathDialog::ManualPathDialog(bool needsGamePath,
 
     auto* btnOk = new QPushButton(QStringLiteral("OK"));
     btnOk->setDefault(true);
-    connect(btnOk, &QPushButton::clicked, this, &QDialog::accept);
+    connect(btnOk, &QPushButton::clicked, this, &ManualPathDialog::validateAndAccept);
     btnRow->addWidget(btnOk);
 
     mainLayout->addLayout(btnRow);
@@ -116,4 +122,44 @@ void ManualPathDialog::onBrowseDocsPath()
     if (!dir.isEmpty()) {
         m_editDocsPath->setText(dir);
     }
+}
+
+void ManualPathDialog::validateAndAccept()
+{
+    if (m_needsGamePath) {
+        const QString gamePath = m_editGamePath ? m_editGamePath->text().trimmed() : QString();
+        if (gamePath.isEmpty() || !QDir(gamePath).exists()) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Invalid Game Folder"),
+                QStringLiteral("Please select a valid existing game folder path."));
+            return;
+        }
+
+        try {
+            if (classic::game::check_restricted_path(std::string(gamePath.toUtf8().constData()))) {
+                QMessageBox::warning(
+                    this,
+                    QStringLiteral("Invalid Game Folder"),
+                    QStringLiteral("The selected game folder is in a restricted Windows system location."
+                                   "\n\nPlease choose your actual game install folder."));
+                return;
+            }
+        } catch (...) {
+            // Non-fatal bridge failure: continue validation using directory existence checks.
+        }
+    }
+
+    if (m_needsDocsPath) {
+        const QString docsPath = m_editDocsPath ? m_editDocsPath->text().trimmed() : QString();
+        if (docsPath.isEmpty() || !QDir(docsPath).exists()) {
+            QMessageBox::warning(
+                this,
+                QStringLiteral("Invalid Documents / INI Folder"),
+                QStringLiteral("Please select a valid existing Documents / INI folder path."));
+            return;
+        }
+    }
+
+    accept();
 }

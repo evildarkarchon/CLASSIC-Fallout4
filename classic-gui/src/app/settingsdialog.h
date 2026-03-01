@@ -31,6 +31,8 @@ private:
     void resetToDefaults();
 
 private slots:
+    void onBrowseGameFolder();
+    void onResetGameFolder();
     void onBrowseIniFolder();
     void onResetIniFolder();
     void onAddFormIdDb();
@@ -53,6 +55,7 @@ private:
     QSpinBox* m_spinMaxConcurrentScans = nullptr;
 
     // Paths tab
+    QLineEdit* m_editGameFolder = nullptr;
     QLineEdit* m_editIniFolder = nullptr;
     QListWidget* m_listFormIdDbs = nullptr;
 

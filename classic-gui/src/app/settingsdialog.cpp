@@ -7,6 +7,9 @@
 #include <QFileDialog>
 #include <QApplication>
 #include <QMessageBox>
+#include <QDir>
+#include <QFile>
+#include <QFileInfo>
 
 #include "core/rust_qt_bridge.h"
 #include "core/signalhub.h"
@@ -143,6 +146,28 @@ void SettingsDialog::setupPathsTab(QTabWidget* tabs)
     layout->setContentsMargins(16, 16, 16, 16);
     layout->setSpacing(8);
 
+    // Game Folder section
+    {
+        auto* group = new QGroupBox(QStringLiteral("Game Folder"));
+        auto* groupLayout = new QHBoxLayout(group);
+
+        m_editGameFolder = new QLineEdit();
+        m_editGameFolder->setPlaceholderText(QStringLiteral("Path to game installation folder..."));
+        groupLayout->addWidget(m_editGameFolder);
+
+        auto* btnBrowse = new QPushButton(QStringLiteral("Browse"));
+        btnBrowse->setFixedWidth(80);
+        connect(btnBrowse, &QPushButton::clicked, this, &SettingsDialog::onBrowseGameFolder);
+        groupLayout->addWidget(btnBrowse);
+
+        auto* btnReset = new QPushButton(QStringLiteral("Reset"));
+        btnReset->setFixedWidth(60);
+        connect(btnReset, &QPushButton::clicked, this, &SettingsDialog::onResetGameFolder);
+        groupLayout->addWidget(btnReset);
+
+        layout->addWidget(group);
+    }
+
     // INI Folder section
     {
         auto* group = new QGroupBox(QStringLiteral("INI Folder"));
@@ -267,7 +292,13 @@ void SettingsDialog::loadSettings()
             if (ok) m_spinMaxConcurrentScans->setValue(val);
         }
 
-        // Paths - INI Folder
+        // Paths - Game Folder + INI Folder
+        auto gameFolder = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Game Folder Path", "");
+        if (!gameFolder.empty() && m_editGameFolder) {
+            m_editGameFolder->setText(classic::toQString(gameFolder));
+        }
+
         auto iniFolder = classic::yaml::yaml_ops_get_string(
             *ops, "CLASSIC_Settings.INI Folder Path", "");
         if (!iniFolder.empty()) {
@@ -328,7 +359,37 @@ void SettingsDialog::saveSettings()
             *ops, "CLASSIC_Settings.Max Concurrent Scans",
             static_cast<int64_t>(m_spinMaxConcurrentScans->value()));
 
-        // Paths - INI Folder
+        // Paths - Game Folder + INI Folder
+        auto gameText = m_editGameFolder ? QDir::cleanPath(m_editGameFolder->text().trimmed()) : QString();
+        classic::yaml::yaml_ops_set_string_setting(
+            *ops, "CLASSIC_Settings.Game Folder Path",
+            std::string(gameText.toUtf8().constData()));
+
+        auto gameExePath = classic::yaml::yaml_ops_get_string(
+            *ops, "CLASSIC_Settings.Game EXE Path", "");
+        QString exePath = gameExePath.empty()
+            ? QString()
+            : QDir::cleanPath(classic::toQString(gameExePath).trimmed());
+
+        bool shouldResetExePath = false;
+        if (!gameText.isEmpty()) {
+            if (exePath.isEmpty() || !QFile::exists(exePath)) {
+                shouldResetExePath = true;
+            } else {
+                const QString exeParent = QDir::cleanPath(QFileInfo(exePath).absolutePath());
+                if (exeParent.compare(gameText, Qt::CaseInsensitive) != 0) {
+                    shouldResetExePath = true;
+                }
+            }
+        }
+
+        if (shouldResetExePath) {
+            const QString defaultExe = QDir::cleanPath(gameText + QStringLiteral("/Fallout4.exe"));
+            classic::yaml::yaml_ops_set_string_setting(
+                *ops, "CLASSIC_Settings.Game EXE Path",
+                std::string(defaultExe.toUtf8().constData()));
+        }
+
         auto iniText = m_editIniFolder->text();
         classic::yaml::yaml_ops_set_string_setting(
             *ops, "CLASSIC_Settings.INI Folder Path",
@@ -379,6 +440,9 @@ void SettingsDialog::resetToDefaults()
     m_chkMoveUnsolvedLogs->setChecked(false);
     m_chkAutoSwitchAfterScan->setChecked(true);  // default is true
     m_spinMaxConcurrentScans->setValue(0);
+    if (m_editGameFolder) {
+        m_editGameFolder->clear();
+    }
     m_editIniFolder->clear();
     m_listFormIdDbs->clear();
     m_chkUpdateCheck->setChecked(true);  // default is true
@@ -386,6 +450,25 @@ void SettingsDialog::resetToDefaults()
 }
 
 // ── Slot implementations ───────────────────────────────────────────
+
+void SettingsDialog::onBrowseGameFolder()
+{
+    const QString initial = m_editGameFolder ? m_editGameFolder->text() : QString();
+    QString dir = QFileDialog::getExistingDirectory(
+        this,
+        QStringLiteral("Select Game Folder"),
+        initial);
+    if (!dir.isEmpty() && m_editGameFolder) {
+        m_editGameFolder->setText(dir);
+    }
+}
+
+void SettingsDialog::onResetGameFolder()
+{
+    if (m_editGameFolder) {
+        m_editGameFolder->clear();
+    }
+}
 
 void SettingsDialog::onBrowseIniFolder()
 {
