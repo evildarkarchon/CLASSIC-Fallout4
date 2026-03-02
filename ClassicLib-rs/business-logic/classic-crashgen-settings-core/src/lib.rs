@@ -94,8 +94,10 @@ impl ExpectedValue {
 
 /// Rule predicate tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Default)]
 pub enum Predicate {
     /// Always true.
+    #[default]
     Always,
     /// Any plugin in list is present.
     PluginAny(Vec<String>),
@@ -111,11 +113,6 @@ pub enum Predicate {
     Not(Box<Predicate>),
 }
 
-impl Default for Predicate {
-    fn default() -> Self {
-        Self::Always
-    }
-}
 
 /// Preflight rule action kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

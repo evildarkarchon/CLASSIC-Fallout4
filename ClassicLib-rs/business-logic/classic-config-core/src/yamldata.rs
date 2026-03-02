@@ -99,9 +99,7 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
     }
 
     fn parse_predicate(yaml: &Yaml) -> Option<Predicate> {
-        let Some(map) = yaml.as_hash() else {
-            return None;
-        };
+        let map = yaml.as_hash()?;
 
         if let Some(all_yaml) = map
             .iter()
