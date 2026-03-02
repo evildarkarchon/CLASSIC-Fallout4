@@ -122,7 +122,9 @@ class BA2Scanner:
 
         """
 
-    def scan_archives_batch(self, archive_paths: list[Path]) -> list[tuple[Path, BA2Issues]]:
+    def scan_archives_batch(
+        self, archive_paths: list[Path]
+    ) -> list[tuple[Path, BA2Issues]]:
         """Scan multiple BA2 archives in batch.
 
         Args:
@@ -267,7 +269,9 @@ class UnpackedScanner:
     def __init__(self) -> None:
         """Create a new UnpackedScanner instance."""
 
-    def scan_directory(self, root_path: Path, xse_scriptfiles: list[str]) -> UnpackedIssues:
+    def scan_directory(
+        self, root_path: Path, xse_scriptfiles: list[str]
+    ) -> UnpackedIssues:
         """Scan a directory for unpacked file issues.
 
         Args:
@@ -323,7 +327,9 @@ class LogProcessor:
 
     """
 
-    def __init__(self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> None:
+    def __init__(
+        self, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]
+    ) -> None:
         """Create a new LogProcessor instance.
 
         Args:
@@ -344,7 +350,12 @@ class LogProcessor:
 
         """
 
-def process_logs(log_dir: Path, catch_errors: list[str], ignore_files: list[str], ignore_errors: list[str]) -> str:
+def process_logs(
+    log_dir: Path,
+    catch_errors: list[str],
+    ignore_files: list[str],
+    ignore_errors: list[str],
+) -> str:
     """Provide convenience wrapper to process logs without creating processor instance.
 
     Args:
@@ -478,7 +489,12 @@ class CrashgenChecker:
 
     """
 
-    def __init__(self, plugins_path: Path, crashgen_name: str) -> None:
+    def __init__(
+        self,
+        plugins_path: Path,
+        crashgen_name: str,
+        settings_rules: dict[str, object] | None = None,
+    ) -> None:
         """Create a new CrashgenChecker instance.
 
         Args:
@@ -495,7 +511,11 @@ class CrashgenChecker:
 
         """
 
-def check_crashgen_config(plugins_path: Path, crashgen_name: str) -> tuple[str, list[TomlConfigIssue]]:
+def check_crashgen_config(
+    plugins_path: Path,
+    crashgen_name: str,
+    settings_rules: dict[str, object] | None = None,
+) -> tuple[str, list[TomlConfigIssue]]:
     """Provide convenience wrapper to check crashgen config without creating checker instance.
 
     Args:
@@ -527,7 +547,11 @@ class CrashgenCheckOrchestrator:
         """Create a new CrashgenCheckOrchestrator instance."""
 
     @staticmethod
-    def check(plugins_path: Path, crashgen_name: str) -> CrashgenReport:
+    def check(
+        plugins_path: Path,
+        crashgen_name: str,
+        settings_rules: dict[str, object] | None = None,
+    ) -> CrashgenReport:
         """Run full crashgen settings validation."""
 
     @staticmethod
@@ -538,7 +562,11 @@ class CrashgenCheckOrchestrator:
     def resolve_config_path(plugins_path: Path) -> Path | None:
         """Resolve crashgen TOML config path, if present."""
 
-def check_crashgen_settings(plugins_path: Path, crashgen_name: str) -> tuple[str, list[TomlConfigIssue]]:
+def check_crashgen_settings(
+    plugins_path: Path,
+    crashgen_name: str,
+    settings_rules: dict[str, object] | None = None,
+) -> tuple[str, list[TomlConfigIssue]]:
     """Convenience wrapper for crashgen settings validation."""
 
 # ============================================================================
@@ -568,7 +596,9 @@ class ModIniScanResult:
 class RustConfigFileCache:
     """Encoding-aware Rust config file cache."""
 
-    def __init__(self, game_root: Path, duplicate_whitelist: list[str] | None = ...) -> None:
+    def __init__(
+        self, game_root: Path, duplicate_whitelist: list[str] | None = ...
+    ) -> None:
         """Create a new RustConfigFileCache instance."""
 
     def contains(self, file_name_lower: str) -> bool:
@@ -586,7 +616,9 @@ class RustConfigFileCache:
     def get_int(self, file_name_lower: str, section: str, setting: str) -> int | None:
         """Get integer value."""
 
-    def get_float(self, file_name_lower: str, section: str, setting: str) -> float | None:
+    def get_float(
+        self, file_name_lower: str, section: str, setting: str
+    ) -> float | None:
         """Get float value."""
 
     def has_setting(self, file_name_lower: str, section: str, setting: str) -> bool:
@@ -643,7 +675,9 @@ class WryeBashParser:
     def format_report(issues: list[WryeIssue]) -> str:
         """Format structured issues as a report string."""
 
-def parse_wrye_report(html_content: str, wrye_warnings: dict[str, str] | None = ...) -> str:
+def parse_wrye_report(
+    html_content: str, wrye_warnings: dict[str, str] | None = ...
+) -> str:
     """Convenience wrapper to parse and format a Wrye report."""
 
 # ============================================================================
@@ -730,7 +764,12 @@ class XseChecker:
 
     """
 
-    def __init__(self, plugins_path: Path, is_vr_mode: bool = False, game_version: GameVersion = ...) -> None:
+    def __init__(
+        self,
+        plugins_path: Path,
+        is_vr_mode: bool = False,
+        game_version: GameVersion = ...,
+    ) -> None:
         """Create a new XseChecker instance.
 
         Args:
@@ -756,7 +795,9 @@ class XseChecker:
 
         """
 
-def check_xse_plugins(plugins_path: Path, is_vr_mode: bool, game_version: GameVersion) -> str:
+def check_xse_plugins(
+    plugins_path: Path, is_vr_mode: bool, game_version: GameVersion
+) -> str:
     """Provide convenience wrapper to validate XSE plugins without creating checker instance.
 
     Args:
@@ -922,7 +963,9 @@ class IntegrityConfig:
     including executable verification, INI validation, and version detection.
     """
 
-    def __init__(self, executable_path: Path, valid_exe_hashes: list[str], game_name: str) -> None:
+    def __init__(
+        self, executable_path: Path, valid_exe_hashes: list[str], game_name: str
+    ) -> None:
         """Create a new integrity check configuration.
 
         Args:
@@ -1085,6 +1128,7 @@ class GameScanConfig:
         log_catch_errors: list[str] | None = ...,
         log_exclude_files: list[str] | None = ...,
         log_exclude_errors: list[str] | None = ...,
+        crashgen_settings_rules: dict[str, object] | None = ...,
         game_target: str | None = ...,
     ) -> None:
         """Create a new game scan configuration."""
@@ -1158,13 +1202,17 @@ class SetupCheckResults:
 def run_setup_checks(config: SetupCheckConfig) -> SetupCheckResults:
     """Run combined setup checks."""
 
-def migrate_vr_setting(game_version: str | None = ..., legacy_vr_mode: bool | None = ...) -> str | None:
+def migrate_vr_setting(
+    game_version: str | None = ..., legacy_vr_mode: bool | None = ...
+) -> str | None:
     """Migrate legacy VR mode setting to Game Version value."""
 
 def resolve_effective_game_version(game_version: str | None = ...) -> str:
     """Resolve effective game version from raw setting."""
 
-def needs_path_detection(game_path: str | None = ..., docs_path: str | None = ...) -> tuple[bool, bool]:
+def needs_path_detection(
+    game_path: str | None = ..., docs_path: str | None = ...
+) -> tuple[bool, bool]:
     """Return whether game/docs paths require auto-detection."""
 
 # ============================================================================

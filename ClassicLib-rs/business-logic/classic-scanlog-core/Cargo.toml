@@ -23,6 +23,7 @@ mimalloc = { workspace = true, optional = true }
 classic-shared-core = { path = "../../foundation/classic-shared-core" }
 classic-yaml-core = { path = "../classic-yaml-core" }
 classic-config-core = { path = "../classic-config-core" }
+classic-crashgen-settings-core = { path = "../classic-crashgen-settings-core" }
 classic-file-io-core = { path = "../classic-file-io-core" }
 classic-database-core = { path = "../classic-database-core" }
 classic-version-registry-core = { path = "../classic-version-registry-core" }

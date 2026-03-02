@@ -13,6 +13,9 @@
 use crate::crashgen_registry::{CheckId, CrashgenEntry};
 use crate::error::Result;
 use crate::report::ReportFragment;
+use classic_crashgen_settings_core::{
+    ConfigLayout, EvaluationContext, OutcomeKind, RuleSeverity, evaluate_rules,
+};
 use log::warn;
 use std::collections::{HashMap, HashSet};
 
@@ -43,6 +46,134 @@ impl SettingsValidator {
             crashgen_name,
             entry,
         }
+    }
+
+    /// Run all settings checks, preferring YAML-defined rules when available.
+    pub fn scan_all_settings(
+        &self,
+        crashgen: &HashMap<String, String>,
+        xse_modules: &HashSet<String>,
+        crashgen_version: Option<(u32, u32, u32)>,
+        config_layout: ConfigLayout,
+    ) -> Result<Vec<ReportFragment>> {
+        if let Some(rules) = self.entry.settings_rules.as_ref() {
+            let context = EvaluationContext {
+                crashgen_name: self.crashgen_name.clone(),
+                display_section: self.entry.display_section.clone(),
+                installed_plugins: xse_modules.clone(),
+                settings: crashgen.clone(),
+                config_layout,
+                crashgen_version,
+            };
+            let evaluation = evaluate_rules(rules, &context);
+
+            let mut fragments = Vec::new();
+            for outcome in evaluation.outcomes {
+                let mut lines = Vec::new();
+                match outcome.kind {
+                    OutcomeKind::Issue => {
+                        lines.push(format!("# ❌ CAUTION : {} # \n", outcome.message));
+                        if let Some(fix) = outcome.fix {
+                            lines.push(format!(" FIX: {}\n\n-----\n", fix));
+                        } else {
+                            lines.push("\n-----\n".to_string());
+                        }
+                    }
+                    OutcomeKind::Notice => {
+                        let icon = if outcome.severity == RuleSeverity::Error {
+                            "❌"
+                        } else if outcome.severity == RuleSeverity::Warning {
+                            "⚠️"
+                        } else {
+                            "[!]"
+                        };
+                        lines.push(format!("# {} NOTICE : {} # \n", icon, outcome.message));
+                        if let Some(fix) = outcome.fix {
+                            lines.push(format!(" {}\n\n-----\n", fix));
+                        } else {
+                            lines.push("\n-----\n".to_string());
+                        }
+                    }
+                    OutcomeKind::Success => {
+                        lines.push(format!("✔️ {}\n\n-----\n", outcome.message));
+                    }
+                }
+                fragments.push(ReportFragment::from_lines(lines));
+            }
+
+            return Ok(fragments);
+        }
+
+        self.scan_all_settings_legacy(crashgen, xse_modules, crashgen_version)
+    }
+
+    fn scan_all_settings_legacy(
+        &self,
+        crashgen: &HashMap<String, String>,
+        xse_modules: &HashSet<String>,
+        crashgen_version: Option<(u32, u32, u32)>,
+    ) -> Result<Vec<ReportFragment>> {
+        let has_addictol = xse_modules.contains("addictol.dll");
+        let has_buffout = xse_modules.contains("buffout4.dll");
+        let mut settings_fragments = Vec::new();
+
+        if has_addictol {
+            if has_buffout {
+                settings_fragments.push(ReportFragment::from_lines(vec![
+                    format!(
+                        "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
+                        self.crashgen_name
+                    ),
+                    "  Running Addictol TOML checks scaffold instead of Buffout checks.\n\n-----\n"
+                        .to_string(),
+                ]));
+            }
+
+            let addictol_fragment = self.scan_addictol_settings_scaffold(crashgen)?;
+            if !addictol_fragment.is_empty() {
+                settings_fragments.push(addictol_fragment);
+            }
+            return Ok(settings_fragments);
+        }
+
+        let achievements_fragment =
+            self.scan_buffout_achievements_setting(xse_modules.clone(), crashgen)?;
+        if !achievements_fragment.is_empty() {
+            settings_fragments.push(achievements_fragment);
+        }
+
+        let has_xcell = [
+            "x-cell-fo4.dll",
+            "x-cell-og.dll",
+            "x-cell-ng2.dll",
+            "x-cell-ae.dll",
+        ]
+        .iter()
+        .any(|dll| xse_modules.contains(*dll));
+        let has_old_xcell = false;
+        let has_baka_scrapheap = xse_modules.contains("bakascrapheap.dll");
+        let memory_fragment = self.scan_buffout_memorymanagement_settings(
+            crashgen,
+            has_xcell,
+            has_old_xcell,
+            has_baka_scrapheap,
+        )?;
+        if !memory_fragment.is_empty() {
+            settings_fragments.push(memory_fragment);
+        }
+
+        let archive_fragment = self.scan_archivelimit_setting(crashgen, crashgen_version)?;
+        if !archive_fragment.is_empty() {
+            settings_fragments.push(archive_fragment);
+        }
+
+        let looksmenu_fragment =
+            self.scan_buffout_looksmenu_setting(crashgen, xse_modules.clone())?;
+        if !looksmenu_fragment.is_empty() {
+            settings_fragments.push(looksmenu_fragment);
+        }
+
+        Ok(settings_fragments)
     }
 
     /// Scan for Achievements mod conflicts.
@@ -417,6 +548,10 @@ impl SettingsValidator {
 mod tests {
     use super::*;
     use crate::crashgen_registry::{CheckId, CrashgenEntry};
+    use classic_crashgen_settings_core::{
+        CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, RuleMessages,
+        RuleSeverity, RuleTarget, TargetValueType,
+    };
 
     fn make_buffout_entry() -> CrashgenEntry {
         CrashgenEntry {
@@ -442,6 +577,7 @@ mod tests {
                 CheckId::ArchiveLimit,
                 CheckId::LooksMenu,
             ],
+            settings_rules: None,
         }
     }
 
@@ -450,6 +586,7 @@ mod tests {
             display_section: "[Patches]".to_string(),
             ignore_keys: HashSet::new(),
             checks: vec![],
+            settings_rules: None,
         }
     }
 
@@ -611,6 +748,7 @@ mod tests {
             display_section: "[Compatibility]".to_string(),
             ignore_keys: HashSet::new(),
             checks: vec![CheckId::LooksMenu],
+            settings_rules: None,
         };
         let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
 
@@ -633,6 +771,7 @@ mod tests {
             display_section: "[Compatibility]".to_string(),
             ignore_keys: HashSet::new(),
             checks: vec![CheckId::LooksMenu],
+            settings_rules: None,
         };
         let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
 
@@ -729,6 +868,51 @@ mod tests {
         assert!(
             lines.iter().any(|line| line.contains("scaffold")),
             "Scaffold notice should indicate scaffold mode"
+        );
+    }
+
+    #[test]
+    fn test_scan_all_settings_prefers_yaml_rules_when_present() {
+        let entry = CrashgenEntry {
+            display_section: "[Compatibility]".to_string(),
+            ignore_keys: HashSet::new(),
+            checks: vec![CheckId::Achievements],
+            settings_rules: Some(CrashgenSettingsRules {
+                version: 1,
+                preflight: vec![],
+                checks: vec![CheckRule {
+                    id: "achievements".to_string(),
+                    target: RuleTarget {
+                        section: "Patches".to_string(),
+                        key: "Achievements".to_string(),
+                        value_type: TargetValueType::Bool,
+                    },
+                    when: Predicate::Always,
+                    expect: ExpectedValue::Bool(false),
+                    messages: RuleMessages {
+                        fail: "Achievements should be disabled".to_string(),
+                        fix: Some("Set Achievements to FALSE".to_string()),
+                        pass: None,
+                    },
+                    severity: RuleSeverity::Warning,
+                }],
+            }),
+        };
+        let validator = SettingsValidator::new("Buffout 4".to_string(), entry);
+
+        let mut crashgen = HashMap::new();
+        crashgen.insert("Achievements".to_string(), "true".to_string());
+        let xse = HashSet::new();
+
+        let fragments = validator
+            .scan_all_settings(&crashgen, &xse, None, ConfigLayout::Unknown)
+            .unwrap();
+        assert!(!fragments.is_empty());
+        let lines = fragments[0].to_list();
+        assert!(
+            lines
+                .iter()
+                .any(|line| line.contains("Achievements should be disabled"))
         );
     }
 }

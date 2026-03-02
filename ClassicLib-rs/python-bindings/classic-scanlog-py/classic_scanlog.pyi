@@ -88,7 +88,9 @@ class FormIDAnalyzer:
 
         """
 
-    def analyze_batch(self, formids: list[str], plugins: dict[str, str]) -> list[tuple[str, str | None]]:
+    def analyze_batch(
+        self, formids: list[str], plugins: dict[str, str]
+    ) -> list[tuple[str, str | None]]:
         """Batch analyze FormIDs with plugin resolution.
 
         Args:
@@ -270,19 +272,27 @@ class LogParser:
     def parse_segments(self, lines: list[str]) -> list[list[str]]:
         """Parse log into segments using SIMD-optimized boundary detection."""
 
-    def parse_segments_parallel(self, lines: list[str], chunk_size: int | None = None) -> list[list[str]]:
+    def parse_segments_parallel(
+        self, lines: list[str], chunk_size: int | None = None
+    ) -> list[list[str]]:
         """Parse segments in parallel for large logs."""
 
     def find_patterns(self, lines: list[str]) -> list[tuple[int, str, str]]:
         """Find all pattern matches in parallel with caching."""
 
-    def find_patterns_chunked(self, lines: list[str], chunk_size: int | None = None) -> list[tuple[int, str, str]]:
+    def find_patterns_chunked(
+        self, lines: list[str], chunk_size: int | None = None
+    ) -> list[tuple[int, str, str]]:
         """Find patterns in parallel chunks for better performance."""
 
-    def extract_section(self, lines: list[str], start_marker: str, end_marker: str) -> list[str] | None:
+    def extract_section(
+        self, lines: list[str], start_marker: str, end_marker: str
+    ) -> list[str] | None:
         """Extract section from log."""
 
-    def extract_sections_batch(self, lines: list[str], markers: list[tuple[str, str]]) -> list[list[str] | None]:
+    def extract_sections_batch(
+        self, lines: list[str], markers: list[tuple[str, str]]
+    ) -> list[list[str] | None]:
         """Extract multiple sections batch."""
 
     def parse_crash_header(self, lines: list[str]) -> dict[str, str]:
@@ -294,7 +304,12 @@ class LogParser:
     def parse_all_sections(self, lines: list[str]) -> dict[str, list[str]]:
         """Parse and extract all important sections at once."""
 
-    def parse_complete(self, lines: list[str], segment_boundaries: list[tuple[str, str]], xse_acronym: str) -> ScanOutput:
+    def parse_complete(
+        self,
+        lines: list[str],
+        segment_boundaries: list[tuple[str, str]],
+        xse_acronym: str,
+    ) -> ScanOutput:
         """Optimized batch operation: complete log analysis in single FFI call.
 
         Returns:
@@ -458,7 +473,10 @@ class PluginAnalyzer:
         """
 
     def loadorder_scan_log(
-        self, segment_plugins: list[str], game_version: str | None = None, version_current: str | None = None
+        self,
+        segment_plugins: list[str],
+        game_version: str | None = None,
+        version_current: str | None = None,
     ) -> tuple[dict[str, str], bool, bool]:
         """Scan log for plugins and check limits.
 
@@ -478,7 +496,9 @@ class PluginAnalyzer:
 
         """
 
-    def check_plugin_limit(self, segment_plugins: list[str], game_version: str, version_current: str) -> tuple[bool, bool]:
+    def check_plugin_limit(
+        self, segment_plugins: list[str], game_version: str, version_current: str
+    ) -> tuple[bool, bool]:
         """Check plugin limit.
 
         Args:
@@ -491,7 +511,9 @@ class PluginAnalyzer:
 
         """
 
-    def plugin_match(self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]) -> list[str]:
+    def plugin_match(
+        self, segment_callstack_lower: list[str], crashlog_plugins_lower: set[str]
+    ) -> list[str]:
         """Match plugins found in crash call stack.
 
         Args:
@@ -525,7 +547,9 @@ class RecordScanner:
     pattern matching algorithms.
     """
 
-    def __init__(self, target_records: list[str], ignore_records: list[str], crashgen_name: str) -> None:
+    def __init__(
+        self, target_records: list[str], ignore_records: list[str], crashgen_name: str
+    ) -> None:
         """Create record scanner.
 
         Args:
@@ -535,7 +559,9 @@ class RecordScanner:
 
         """
 
-    def scan_named_records(self, segment_callstack: list[str]) -> tuple[list[str], list[str]]:
+    def scan_named_records(
+        self, segment_callstack: list[str]
+    ) -> tuple[list[str], list[str]]:
         """Scan named records from callstack segment.
 
         Scans the callstack segment for configured named records and returns
@@ -615,7 +641,10 @@ class Orchestrator:
         """
 
     def process_logs_parallel(
-        self, log_paths: list[str], max_concurrent: int = 10, progress_callback: Callable[[str], None] | None = None
+        self,
+        log_paths: list[str],
+        max_concurrent: int = 10,
+        progress_callback: Callable[[str], None] | None = None,
     ) -> list[AnalysisResult]:
         """Process multiple crash logs in parallel.
 
@@ -688,7 +717,9 @@ class Orchestrator:
 
         """
 
-    def attach_database(self, db_paths: list[str], game_table: str | None = None) -> None:
+    def attach_database(
+        self, db_paths: list[str], game_table: str | None = None
+    ) -> None:
         """Attach a database pool for FormID value lookups.
 
         Creates a DatabasePool from the given SQLite database file paths,
@@ -731,7 +762,9 @@ class Orchestrator:
 
         """
 
-    def write_reports_batch(self, reports: list[tuple[str, list[str], bool]]) -> list[str]:
+    def write_reports_batch(
+        self, reports: list[tuple[str, list[str], bool]]
+    ) -> list[str]:
         """Write batch reports to files.
 
         This operation writes multiple report files concurrently, generating
@@ -870,8 +903,12 @@ class AnalysisResult:
     report_lines: list[str]
     success: bool
     error: str | None
-    processing_time_us: int  # Processing time in microseconds (for sub-millisecond precision)
-    processing_time_ms: int  # Processing time in milliseconds (minimum 1ms for non-zero processing)
+    processing_time_us: (
+        int  # Processing time in microseconds (for sub-millisecond precision)
+    )
+    processing_time_ms: (
+        int  # Processing time in milliseconds (minimum 1ms for non-zero processing)
+    )
     plugin_count: int
     formid_count: int
     suspect_count: int
@@ -1140,7 +1177,9 @@ class ReportGenerator:
 
         """
 
-    def generate_error_section(self, main_error: str, crashgen_version: str, is_outdated: bool) -> ReportFragment:
+    def generate_error_section(
+        self, main_error: str, crashgen_version: str, is_outdated: bool
+    ) -> ReportFragment:
         """Generate error section.
 
         Args:
@@ -1308,7 +1347,9 @@ def validate_formids_batch(formids: list[str]) -> list[bool]:
 
     """
 
-def scan_records_batch(texts: list[list[str]], record_list: list[str], ignore_records: list[str]) -> list[list[str]]:
+def scan_records_batch(
+    texts: list[list[str]], record_list: list[str], ignore_records: list[str]
+) -> list[list[str]]:
     """Scan for records in multiple texts.
 
     Args:
@@ -1321,7 +1362,9 @@ def scan_records_batch(texts: list[list[str]], record_list: list[str], ignore_re
 
     """
 
-def contains_record(text: str, target_records: list[str], ignore_records: list[str]) -> bool:
+def contains_record(
+    text: str, target_records: list[str], ignore_records: list[str]
+) -> bool:
     """Check if text contains a specific record.
 
     Args:
@@ -1358,7 +1401,9 @@ def contains_plugin(text: str, plugin: str) -> bool:
 
     """
 
-def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> list[str]:
+def detect_mods_single(
+    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]
+) -> list[str]:
     """Detect mods using single-pass algorithm.
 
     Fast detection for simple mod identification.
@@ -1372,7 +1417,9 @@ def detect_mods_single(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
 
     """
 
-def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]) -> list[str]:
+def detect_mods_double(
+    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str]
+) -> list[str]:
     """Detect mods using double-pass algorithm.
 
     More accurate detection using two-stage matching for conflict detection.
@@ -1387,7 +1434,10 @@ def detect_mods_double(yaml_dict: dict[str, str], crashlog_plugins: dict[str, st
     """
 
 def detect_mods_important(
-    yaml_dict: dict[str, str], crashlog_plugins: dict[str, str], gpu_rival: str | None = None, xse_modules: set[str] = ...
+    yaml_dict: dict[str, str],
+    crashlog_plugins: dict[str, str],
+    gpu_rival: str | None = None,
+    xse_modules: set[str] = ...,
 ) -> list[str]:
     """Detect important mods (core mods, framework mods).
 
@@ -1404,7 +1454,9 @@ def detect_mods_important(
 
     """
 
-def detect_mods_batch(yaml_dict: dict[str, str], crashlog_plugins_list: list[dict[str, str]]) -> list[list[str]]:
+def detect_mods_batch(
+    yaml_dict: dict[str, str], crashlog_plugins_list: list[dict[str, str]]
+) -> list[list[str]]:
     """Detect mods in multiple crash logs (35x speedup).
 
     Parallel mod detection across multiple crash logs.
@@ -1431,7 +1483,11 @@ class SuspectScanner:
     - NOT: Negative pattern (excludes if matched)
     """
 
-    def __init__(self, suspects_error_list: dict[str, str], suspects_stack_list: dict[str, list[str]]) -> None:
+    def __init__(
+        self,
+        suspects_error_list: dict[str, str],
+        suspects_stack_list: dict[str, list[str]],
+    ) -> None:
         """Create suspect scanner.
 
         Args:
@@ -1440,7 +1496,9 @@ class SuspectScanner:
 
         """
 
-    def suspect_scan_mainerror(self, crashlog_mainerror: str, max_warn_length: int) -> tuple[list[str], bool]:
+    def suspect_scan_mainerror(
+        self, crashlog_mainerror: str, max_warn_length: int
+    ) -> tuple[list[str], bool]:
         """Scan main error for suspects.
 
         Args:
@@ -1452,7 +1510,12 @@ class SuspectScanner:
 
         """
 
-    def suspect_scan_stack(self, crashlog_mainerror: str, segment_callstack_intact: str, max_warn_length: int) -> tuple[list[str], bool]:
+    def suspect_scan_stack(
+        self,
+        crashlog_mainerror: str,
+        segment_callstack_intact: str,
+        max_warn_length: int,
+    ) -> tuple[list[str], bool]:
         """Scan call stack for suspects.
 
         Uses signal modifier logic to match patterns across
@@ -1468,7 +1531,9 @@ class SuspectScanner:
 
         """
 
-    def scan_suspects_batch(self, crash_logs: list[tuple[str, str]], max_warn_length: int) -> list[tuple[list[str], bool]]:
+    def scan_suspects_batch(
+        self, crash_logs: list[tuple[str, str]], max_warn_length: int
+    ) -> list[tuple[list[str], bool]]:
         """Batch scan multiple crash logs.
 
         Args:
@@ -1506,16 +1571,27 @@ class SettingsValidator:
     - LooksMenu settings
     """
 
-    def __init__(self, crashgen_name: str, crashgen_ignore: list[str]) -> None:
+    def __init__(self, crashgen_name: str, crashgen_entry: dict[str, Any]) -> None:
         """Create settings validator.
 
         Args:
             crashgen_name: Name of crash generator (e.g., "Buffout 4")
-            crashgen_ignore: List of settings to ignore during validation
+            crashgen_entry: Registry entry with display_section/ignore_keys/checks/settings_rules
 
         """
 
-    def scan_buffout_achievements_setting(self, xsemodules: set[str], crashgen: dict[str, str]) -> list[str]:
+    def scan_all_settings(
+        self,
+        crashgen: dict[str, str],
+        xsemodules: set[str],
+        crashgen_version: tuple[int, int, int] | None = None,
+        config_layout: str | None = None,
+    ) -> list[list[str]]:
+        """Run full settings scan, including YAML rules when present."""
+
+    def scan_buffout_achievements_setting(
+        self, xsemodules: set[str], crashgen: dict[str, str]
+    ) -> list[str]:
         """Scan Buffout achievements setting.
 
         Args:
@@ -1528,7 +1604,11 @@ class SettingsValidator:
         """
 
     def scan_buffout_memorymanagement_settings(
-        self, crashgen: dict[str, str], has_xcell: bool, has_old_xcell: bool, has_baka_scrapheap: bool
+        self,
+        crashgen: dict[str, str],
+        has_xcell: bool,
+        has_old_xcell: bool,
+        has_baka_scrapheap: bool,
     ) -> list[str]:
         """Scan Buffout memory management settings.
 
@@ -1543,7 +1623,9 @@ class SettingsValidator:
 
         """
 
-    def scan_archivelimit_setting(self, crashgen: dict[str, str], crashgen_version: Any = None) -> list[str]:
+    def scan_archivelimit_setting(
+        self, crashgen: dict[str, str], crashgen_version: Any = None
+    ) -> list[str]:
         """Scan archive limit setting.
 
         Args:
@@ -1555,7 +1637,9 @@ class SettingsValidator:
 
         """
 
-    def scan_buffout_looksmenu_setting(self, crashgen: dict[str, str], xsemodules: set[str]) -> list[str]:
+    def scan_buffout_looksmenu_setting(
+        self, crashgen: dict[str, str], xsemodules: set[str]
+    ) -> list[str]:
         """Scan Buffout LooksMenu setting.
 
         Args:

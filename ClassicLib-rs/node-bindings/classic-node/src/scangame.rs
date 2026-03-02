@@ -22,6 +22,8 @@ use classic_scangame_core::{
 };
 use napi::bindgen_prelude::*;
 
+use crate::crashgen_rules::{JsCrashgenSettingsRules, js_rules_to_core};
+
 /// Convert any Display error to a napi::Error
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
@@ -767,9 +769,17 @@ impl JsCrashgenChecker {
     /// @param pluginsPath - Path to the plugins directory (e.g., Data/F4SE/Plugins).
     /// @param crashgenName - Name of crash generator (e.g., "Buffout4").
     #[napi(constructor)]
-    pub fn new(plugins_path: String, crashgen_name: String) -> Self {
+    pub fn new(
+        plugins_path: String,
+        crashgen_name: String,
+        settings_rules: Option<JsCrashgenSettingsRules>,
+    ) -> Self {
         Self {
-            inner: CrashgenChecker::new(Path::new(&plugins_path), crashgen_name),
+            inner: CrashgenChecker::new_with_rules(
+                Path::new(&plugins_path),
+                crashgen_name,
+                js_rules_to_core(settings_rules),
+            ),
         }
     }
 
@@ -814,7 +824,17 @@ pub fn check_crashgen_config(
     plugins_path: String,
     crashgen_name: String,
 ) -> Result<JsCrashgenCheckResult> {
-    let mut checker = JsCrashgenChecker::new(plugins_path, crashgen_name);
+    let mut checker = JsCrashgenChecker::new(plugins_path, crashgen_name, None);
+    checker.check()
+}
+
+#[napi]
+pub fn check_crashgen_config_with_rules(
+    plugins_path: String,
+    crashgen_name: String,
+    settings_rules: Option<JsCrashgenSettingsRules>,
+) -> Result<JsCrashgenCheckResult> {
+    let mut checker = JsCrashgenChecker::new(plugins_path, crashgen_name, settings_rules);
     checker.check()
 }
 
@@ -1106,6 +1126,8 @@ pub struct JsGameScanConfig {
     pub game_version: String,
     /// Crashgen plugin name (e.g., "Buffout4").
     pub crashgen_name: String,
+    /// Optional crashgen settings rules loaded from YAML.
+    pub crashgen_settings_rules: Option<JsCrashgenSettingsRules>,
     /// Wrye Bash warning patterns.
     pub wrye_warnings: HashMap<String, String>,
     /// Log error catch patterns.
@@ -1134,6 +1156,7 @@ fn js_scan_config_to_core(
         is_vr: config.is_vr,
         game_version: parse_game_version(&config.game_version),
         crashgen_name: config.crashgen_name.clone(),
+        crashgen_settings_rules: js_rules_to_core(config.crashgen_settings_rules.clone()),
         wrye_warnings: config.wrye_warnings.clone(),
         log_catch_errors: config.log_catch_errors.clone(),
         log_exclude_files: config.log_exclude_files.clone(),
@@ -1289,11 +1312,52 @@ pub fn check_crashgen_full(
     plugins_path: String,
     crashgen_name: String,
 ) -> napi::Result<JsCrashgenReport> {
-    let report = classic_scangame_core::crashgen_orchestrator::CrashgenCheckOrchestrator::check(
-        Path::new(&plugins_path),
-        &crashgen_name,
-    )
-    .map_err(to_napi_err)?;
+    let report =
+        classic_scangame_core::crashgen_orchestrator::CrashgenCheckOrchestrator::check_with_rules(
+            Path::new(&plugins_path),
+            &crashgen_name,
+            None,
+        )
+        .map_err(to_napi_err)?;
+
+    Ok(JsCrashgenReport {
+        message: report.message,
+        issues: report
+            .issues
+            .into_iter()
+            .map(|i| JsTomlConfigIssue {
+                file_path: i.file_path.to_string_lossy().to_string(),
+                section: i.section,
+                setting: i.setting,
+                current_value: i.current_value,
+                recommended_value: i.recommended_value,
+                description: i.description,
+                severity: match i.severity {
+                    TomlIssueSeverity::Error => "Error".to_string(),
+                    TomlIssueSeverity::Warning => "Warning".to_string(),
+                    TomlIssueSeverity::Info => "Info".to_string(),
+                },
+            })
+            .collect(),
+        crashgen_name: report.crashgen_name,
+        config_path: report.config_path.map(|p| p.to_string_lossy().to_string()),
+        installed_plugins: report.installed_plugins,
+    })
+}
+
+#[napi]
+pub fn check_crashgen_full_with_rules(
+    plugins_path: String,
+    crashgen_name: String,
+    settings_rules: Option<JsCrashgenSettingsRules>,
+) -> napi::Result<JsCrashgenReport> {
+    let report =
+        classic_scangame_core::crashgen_orchestrator::CrashgenCheckOrchestrator::check_with_rules(
+            Path::new(&plugins_path),
+            &crashgen_name,
+            js_rules_to_core(settings_rules),
+        )
+        .map_err(to_napi_err)?;
 
     Ok(JsCrashgenReport {
         message: report.message,

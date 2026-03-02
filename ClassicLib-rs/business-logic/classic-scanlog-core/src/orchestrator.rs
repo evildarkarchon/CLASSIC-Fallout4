@@ -384,6 +384,7 @@ fn build_crashgen_registry(
             display_section: raw_entry.display_section.clone(),
             ignore_keys,
             checks,
+            settings_rules: raw_entry.settings_rules.clone(),
         };
 
         if name == "default" {
@@ -1186,102 +1187,18 @@ impl OrchestratorCore {
         };
 
         // Add settings validation section
-        if !crashgen_settings.is_empty() {
-            // If Addictol is detected in XSE modules, route settings validation to the
-            // Addictol scaffold path instead of Buffout checks.
-            // Some Addictol versions mask themselves as Buffout in the crash log header,
-            // so we detect via DLL presence rather than relying on the header.
-            let has_addictol = xse_modules_for_settings.contains("addictol.dll");
-            let has_buffout = xse_modules_for_settings.contains("buffout4.dll");
-            let mut settings_fragments = Vec::new();
-
-            if has_addictol {
-                if has_buffout {
-                    // Both present: warn about incompatibility
-                    settings_fragments.push(ReportFragment::from_lines(vec![
-                        format!(
-                            "# ⚠️ NOTICE : {} and Addictol are incompatible, remove one to avoid crashes. #\n",
-                            self.config.crashgen_name
-                        ),
-                        "  Running Addictol TOML checks scaffold instead of Buffout checks.\n\n-----\n"
-                            .to_string(),
-                    ]));
-                }
-
-                if let Ok(addictol_fragment) = self
-                    .settings_validator
-                    .scan_addictol_settings_scaffold(&crashgen_settings)
-                {
-                    if !addictol_fragment.is_empty() {
-                        settings_fragments.push(addictol_fragment);
-                    }
-                }
-            } else {
-                // Achievements check
-                if let Ok(achievements_fragment) =
-                    self.settings_validator.scan_buffout_achievements_setting(
-                        xse_modules_for_settings.clone(),
-                        &crashgen_settings,
-                    )
-                {
-                    if !achievements_fragment.is_empty() {
-                        settings_fragments.push(achievements_fragment);
-                    }
-                }
-
-                // Memory Manager check (check for X-Cell and Baka ScrapHeap)
-                let has_xcell = [
-                    "x-cell-fo4.dll",
-                    "x-cell-og.dll",
-                    "x-cell-ng2.dll",
-                    "x-cell-ae.dll",
-                ]
-                .iter()
-                .any(|dll| xse_modules_for_settings.contains(*dll));
-                let has_old_xcell = false; // Would need version check
-                let has_baka_scrapheap = xse_modules_for_settings.contains("bakascrapheap.dll");
-                if let Ok(memory_fragment) = self
-                    .settings_validator
-                    .scan_buffout_memorymanagement_settings(
-                        &crashgen_settings,
-                        has_xcell,
-                        has_old_xcell,
-                        has_baka_scrapheap,
-                    )
-                {
-                    if !memory_fragment.is_empty() {
-                        settings_fragments.push(memory_fragment);
-                    }
-                }
-
-                // ArchiveLimit check
-                if let Ok(archive_fragment) = self.settings_validator.scan_archivelimit_setting(
-                    &crashgen_settings,
-                    None, // Version parsing would go here
-                ) {
-                    if !archive_fragment.is_empty() {
-                        settings_fragments.push(archive_fragment);
-                    }
-                }
-
-                // LooksMenu check
-                if let Ok(looksmenu_fragment) =
-                    self.settings_validator.scan_buffout_looksmenu_setting(
-                        &crashgen_settings,
-                        xse_modules_for_settings.clone(),
-                    )
-                {
-                    if !looksmenu_fragment.is_empty() {
-                        settings_fragments.push(looksmenu_fragment);
-                    }
-                }
-            }
-
-            if !settings_fragments.is_empty() {
-                composer.add(report_gen.generate_settings_section_header());
-                for settings_fragment in settings_fragments {
-                    composer.add(settings_fragment);
-                }
+        if !crashgen_settings.is_empty()
+            && let Ok(settings_fragments) = self.settings_validator.scan_all_settings(
+                &crashgen_settings,
+                &xse_modules_for_settings,
+                None,
+                classic_crashgen_settings_core::ConfigLayout::Unknown,
+            )
+            && !settings_fragments.is_empty()
+        {
+            composer.add(report_gen.generate_settings_section_header());
+            for settings_fragment in settings_fragments {
+                composer.add(settings_fragment);
             }
         }
 
@@ -2134,6 +2051,8 @@ mod tests {
                 display_section: "[Compatibility]".to_string(),
                 ignore_keys: vec![],
                 checks: vec!["achievements".to_string()],
+                settings_rules_version: None,
+                settings_rules: None,
             },
         );
         yaml.crashgen_registry.insert(
@@ -2142,6 +2061,8 @@ mod tests {
                 display_section: String::new(),
                 ignore_keys: vec![],
                 checks: vec![],
+                settings_rules_version: None,
+                settings_rules: None,
             },
         );
 

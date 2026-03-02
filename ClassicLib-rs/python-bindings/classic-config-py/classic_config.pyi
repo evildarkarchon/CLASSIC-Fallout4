@@ -41,7 +41,9 @@ class YamlData:
     cached and shared across instances for performance.
     """
 
-    def __init__(self, yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -> None:
+    def __init__(
+        self, yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool
+    ) -> None:
         """Create a new YamlData instance by loading all YAML configuration files.
 
         Args:
@@ -183,12 +185,13 @@ class YamlData:
         """
 
     @property
-    def crashgen_registry(self) -> dict[str, dict[str, str | list[str]]]:
+    def crashgen_registry(self) -> dict[str, dict[str, Any]]:
         """Per-crashgen settings registry loaded from game YAML.
 
         Maps crashgen names (including ``"default"``) to entry dictionaries
         with keys ``display_section`` (str), ``ignore_keys`` (list[str]),
-        and ``checks`` (list[str]).
+        ``checks`` (list[str]), ``settings_rules_version`` (int|None), and
+        ``settings_rules`` (dict|None).
         """
 
     # Game root names
@@ -324,7 +327,9 @@ def clear_yaml_cache() -> None:
     Forces the next YamlData initialization to reload from disk.
     """
 
-def create_yamldata(yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool) -> YamlData:
+def create_yamldata(
+    yaml_dirs: Sequence[str | Path], game: str, vr_mode: bool
+) -> YamlData:
     """Create via factory create a YamlData instance.
 
     This is a convenience function that creates and returns a new YamlData instance.

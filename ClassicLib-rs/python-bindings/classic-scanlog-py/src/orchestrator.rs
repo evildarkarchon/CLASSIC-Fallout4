@@ -16,6 +16,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
+use crate::crashgen_rules::parse_settings_rules;
+
 fn parse_crashgen_registry_from_py(
     registry_any: &Bound<'_, PyAny>,
 ) -> HashMap<String, CrashgenEntryRaw> {
@@ -58,10 +60,24 @@ fn parse_crashgen_registry_from_py(
             .and_then(|v| v.extract::<Vec<String>>().ok())
             .unwrap_or_default();
 
+        let settings_rules_version = entry_dict
+            .get_item("settings_rules_version")
+            .ok()
+            .flatten()
+            .and_then(|v| v.extract::<u32>().ok());
+
+        let settings_rules = entry_dict
+            .get_item("settings_rules")
+            .ok()
+            .flatten()
+            .and_then(|v| parse_settings_rules(&v));
+
         let entry = CrashgenEntryRaw {
             display_section,
             ignore_keys,
             checks,
+            settings_rules_version,
+            settings_rules,
         };
 
         entries.insert(name, entry);

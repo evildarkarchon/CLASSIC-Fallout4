@@ -80,12 +80,115 @@
 //! ```
 
 use classic_config_core::{ConfigError, YamlDataCore};
+use classic_crashgen_settings_core::{
+    CheckRule, ExpectedValue, Predicate, PreflightRule, RuleSeverity, TargetValueType,
+};
 use classic_shared::{ResultExt, ToPyErr, define_exceptions, register_exceptions, without_gil};
 use classic_shared_core::get_runtime;
 use pyo3::exceptions::{PyIOError, PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
 use pyo3::types::{PyAny, PyDict, PyList, PySet};
 use std::path::PathBuf;
+
+fn severity_to_str(severity: RuleSeverity) -> &'static str {
+    match severity {
+        RuleSeverity::Info => "info",
+        RuleSeverity::Warning => "warning",
+        RuleSeverity::Error => "error",
+    }
+}
+
+fn predicate_to_pydict(py: Python<'_>, predicate: &Predicate) -> PyResult<Py<PyDict>> {
+    let out = PyDict::new(py);
+    match predicate {
+        Predicate::Always => {}
+        Predicate::PluginAny(plugins) => {
+            out.set_item("plugin_any", PyList::new(py, plugins)?)?;
+        }
+        Predicate::ConfigLayoutIs(layout) => {
+            let layout_str = match layout {
+                classic_crashgen_settings_core::ConfigLayout::Og => "og",
+                classic_crashgen_settings_core::ConfigLayout::Vr => "vr",
+                classic_crashgen_settings_core::ConfigLayout::Unknown => "unknown",
+            };
+            out.set_item("config_layout_is", layout_str)?;
+        }
+        Predicate::CrashgenVersionLt((a, b, c)) => {
+            out.set_item("crashgen_version_lt", format!("{a}.{b}.{c}"))?;
+        }
+        Predicate::All(items) => {
+            let mut py_items = Vec::with_capacity(items.len());
+            for item in items {
+                py_items.push(predicate_to_pydict(py, item)?);
+            }
+            out.set_item("all", PyList::new(py, &py_items)?)?;
+        }
+        Predicate::Any(items) => {
+            let mut py_items = Vec::with_capacity(items.len());
+            for item in items {
+                py_items.push(predicate_to_pydict(py, item)?);
+            }
+            out.set_item("any", PyList::new(py, &py_items)?)?;
+        }
+        Predicate::Not(item) => {
+            out.set_item("not", predicate_to_pydict(py, item)?)?;
+        }
+    }
+    Ok(out.unbind())
+}
+
+fn preflight_rule_to_pydict(py: Python<'_>, rule: &PreflightRule) -> PyResult<Py<PyDict>> {
+    let out = PyDict::new(py);
+    out.set_item("id", &rule.id)?;
+    out.set_item("when", predicate_to_pydict(py, &rule.when)?)?;
+    let action = PyDict::new(py);
+    let kind = match rule.action.kind {
+        classic_crashgen_settings_core::PreflightActionKind::NoticeAndSkipRemaining => {
+            "notice_and_skip_remaining"
+        }
+        classic_crashgen_settings_core::PreflightActionKind::Notice => "notice",
+        classic_crashgen_settings_core::PreflightActionKind::Issue => "issue",
+    };
+    action.set_item("kind", kind)?;
+    action.set_item("severity", severity_to_str(rule.action.severity))?;
+    action.set_item("message", &rule.action.message)?;
+    action.set_item("fix", &rule.action.fix)?;
+    out.set_item("action", action)?;
+    Ok(out.unbind())
+}
+
+fn check_rule_to_pydict(py: Python<'_>, rule: &CheckRule) -> PyResult<Py<PyDict>> {
+    let out = PyDict::new(py);
+    out.set_item("id", &rule.id)?;
+    let target = PyDict::new(py);
+    target.set_item("section", &rule.target.section)?;
+    target.set_item("key", &rule.target.key)?;
+    let value_type = match rule.target.value_type {
+        TargetValueType::Bool => "bool",
+        TargetValueType::Int => "int",
+        TargetValueType::String => "string",
+    };
+    target.set_item("value_type", value_type)?;
+    out.set_item("target", target)?;
+    out.set_item("when", predicate_to_pydict(py, &rule.when)?)?;
+
+    let expect = PyDict::new(py);
+    match &rule.expect {
+        ExpectedValue::Bool(v) => expect.set_item("equals", *v)?,
+        ExpectedValue::Int(v) => expect.set_item("equals", *v)?,
+        ExpectedValue::String(v) => expect.set_item("equals", v)?,
+    }
+    out.set_item("expect", expect)?;
+
+    let messages = PyDict::new(py);
+    messages.set_item("fail", &rule.messages.fail)?;
+    messages.set_item("fix", &rule.messages.fix)?;
+    messages.set_item("pass", &rule.messages.pass)?;
+    out.set_item("messages", messages)?;
+
+    out.set_item("severity", severity_to_str(rule.severity))?;
+    Ok(out.unbind())
+}
 
 // Define the standard 3-tier exception hierarchy using the shared macro
 define_exceptions!(
@@ -251,6 +354,26 @@ impl PyYamlData {
             entry_dict.set_item("ignore_keys", PyList::new(py, &ignore_keys)?)?;
 
             entry_dict.set_item("checks", PyList::new(py, &entry.checks)?)?;
+            entry_dict.set_item("settings_rules_version", entry.settings_rules_version)?;
+            if let Some(rules) = &entry.settings_rules {
+                let rules_dict = PyDict::new(py);
+                rules_dict.set_item("version", rules.version)?;
+
+                let mut preflight = Vec::with_capacity(rules.preflight.len());
+                for rule in &rules.preflight {
+                    preflight.push(preflight_rule_to_pydict(py, rule)?);
+                }
+                rules_dict.set_item("preflight", PyList::new(py, &preflight)?)?;
+
+                let mut checks = Vec::with_capacity(rules.checks.len());
+                for rule in &rules.checks {
+                    checks.push(check_rule_to_pydict(py, rule)?);
+                }
+                rules_dict.set_item("checks", PyList::new(py, &checks)?)?;
+                entry_dict.set_item("settings_rules", rules_dict)?;
+            } else {
+                entry_dict.set_item("settings_rules", py.None())?;
+            }
             registry.set_item(name, entry_dict)?;
         }
 

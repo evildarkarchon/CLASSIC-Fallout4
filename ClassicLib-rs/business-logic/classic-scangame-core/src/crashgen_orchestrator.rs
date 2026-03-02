@@ -23,6 +23,7 @@ use std::path::{Path, PathBuf};
 use thiserror::Error;
 
 use crate::toml::{CrashgenChecker, TomlConfigIssue};
+use classic_crashgen_settings_core::CrashgenSettingsRules;
 
 /// Errors that can occur during crash generator orchestration
 #[derive(Debug, Error)]
@@ -101,7 +102,17 @@ impl CrashgenCheckOrchestrator {
     ///
     /// A `CrashgenReport` containing the formatted message and any detected issues
     pub fn check(plugins_path: &Path, crashgen_name: &str) -> Result<CrashgenReport> {
-        let mut checker = CrashgenChecker::new(plugins_path, crashgen_name);
+        Self::check_with_rules(plugins_path, crashgen_name, None)
+    }
+
+    /// Run the full crash generator check with optional YAML-defined settings rules.
+    pub fn check_with_rules(
+        plugins_path: &Path,
+        crashgen_name: &str,
+        settings_rules: Option<CrashgenSettingsRules>,
+    ) -> Result<CrashgenReport> {
+        let mut checker =
+            CrashgenChecker::new_with_rules(plugins_path, crashgen_name, settings_rules);
 
         let config_path = checker.config_file().cloned();
         let installed_plugins = checker.installed_plugins().to_vec();

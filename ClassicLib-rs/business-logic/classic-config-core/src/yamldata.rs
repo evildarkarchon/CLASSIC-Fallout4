@@ -6,6 +6,10 @@
 //! 2. Parallel loading of multiple YAML files with Tokio
 //! 3. Efficient memory representation
 
+use classic_crashgen_settings_core::{
+    CheckRule, ConfigLayout, CrashgenSettingsRules, ExpectedValue, Predicate, PreflightAction,
+    PreflightActionKind, PreflightRule, RuleMessages, RuleSeverity, RuleTarget, TargetValueType,
+};
 use classic_yaml_core::YamlOperations;
 use indexmap::IndexMap;
 use std::collections::HashMap;
@@ -25,6 +29,10 @@ pub struct CrashgenEntryRaw {
     pub ignore_keys: Vec<String>,
     /// String names of named checks (e.g., `"achievements"`, `"memory_management"`).
     pub checks: Vec<String>,
+    /// Optional settings rules schema version.
+    pub settings_rules_version: Option<u32>,
+    /// Optional full settings rules block.
+    pub settings_rules: Option<CrashgenSettingsRules>,
 }
 
 /// Parse the `Crashgen_Registry` top-level key from a game YAML document.
@@ -74,6 +82,285 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
         }
     }
 
+    fn parse_version_field(entry_name: &str, field_yaml: &Yaml) -> Option<u32> {
+        match field_yaml {
+            Yaml::Integer(value) if *value >= 0 => Some(*value as u32),
+            Yaml::String(value) => value.trim().parse::<u32>().ok(),
+            Yaml::BadValue => None,
+            other => {
+                log::debug!(
+                    "Crashgen_Registry.{}.settings_rules_version is malformed (expected int/string): {:?}",
+                    entry_name,
+                    other
+                );
+                None
+            }
+        }
+    }
+
+    fn parse_predicate(yaml: &Yaml) -> Option<Predicate> {
+        let Some(map) = yaml.as_hash() else {
+            return None;
+        };
+
+        if let Some(all_yaml) = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("all")).then_some(v))
+        {
+            let items = all_yaml
+                .as_vec()?
+                .iter()
+                .filter_map(parse_predicate)
+                .collect::<Vec<_>>();
+            return Some(Predicate::All(items));
+        }
+
+        if let Some(any_yaml) = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("any")).then_some(v))
+        {
+            let items = any_yaml
+                .as_vec()?
+                .iter()
+                .filter_map(parse_predicate)
+                .collect::<Vec<_>>();
+            return Some(Predicate::Any(items));
+        }
+
+        if let Some(not_yaml) = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("not")).then_some(v))
+        {
+            return parse_predicate(not_yaml).map(|item| Predicate::Not(Box::new(item)));
+        }
+
+        if let Some(plugin_yaml) = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("plugin_any")).then_some(v))
+        {
+            let plugins = plugin_yaml
+                .as_vec()?
+                .iter()
+                .filter_map(Yaml::as_str)
+                .map(|value| value.to_lowercase())
+                .collect::<Vec<_>>();
+            return Some(Predicate::PluginAny(plugins));
+        }
+
+        if let Some(layout_yaml) = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("config_layout_is")).then_some(v))
+        {
+            return ConfigLayout::parse(layout_yaml.as_str()?).map(Predicate::ConfigLayoutIs);
+        }
+
+        if let Some(version_yaml) = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("crashgen_version_lt")).then_some(v))
+        {
+            let parts = version_yaml
+                .as_str()?
+                .split('.')
+                .map(|part| part.trim().parse::<u32>().ok())
+                .collect::<Vec<_>>();
+            if parts.len() == 3 {
+                return Some(Predicate::CrashgenVersionLt((
+                    parts[0]?, parts[1]?, parts[2]?,
+                )));
+            }
+        }
+
+        None
+    }
+
+    fn parse_severity(yaml: &Yaml, default: RuleSeverity) -> RuleSeverity {
+        yaml.as_str()
+            .and_then(RuleSeverity::parse)
+            .unwrap_or(default)
+    }
+
+    fn parse_preflight_rule(yaml: &Yaml) -> Option<PreflightRule> {
+        let map = yaml.as_hash()?;
+        let id = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("id")).then_some(v))?
+            .as_str()?
+            .to_string();
+
+        let when = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("when")).then_some(v))
+            .and_then(parse_predicate)
+            .unwrap_or(Predicate::Always);
+
+        let action_yaml = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("action")).then_some(v))?;
+        let action_map = action_yaml.as_hash()?;
+
+        let kind = action_map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("kind")).then_some(v))
+            .and_then(Yaml::as_str)
+            .and_then(PreflightActionKind::parse)
+            .unwrap_or(PreflightActionKind::Notice);
+
+        let severity = action_map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("severity")).then_some(v))
+            .map(|value| parse_severity(value, RuleSeverity::Info))
+            .unwrap_or(RuleSeverity::Info);
+
+        let message = action_map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("message")).then_some(v))?
+            .as_str()?
+            .to_string();
+
+        let fix = action_map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("fix")).then_some(v))
+            .and_then(Yaml::as_str)
+            .map(ToString::to_string);
+
+        Some(PreflightRule {
+            id,
+            when,
+            action: PreflightAction {
+                kind,
+                severity,
+                message,
+                fix,
+            },
+        })
+    }
+
+    fn parse_expected_value(expect_yaml: &Yaml) -> Option<ExpectedValue> {
+        let map = expect_yaml.as_hash()?;
+        let equals_yaml = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("equals")).then_some(v))?;
+        match equals_yaml {
+            Yaml::Boolean(value) => Some(ExpectedValue::Bool(*value)),
+            Yaml::Integer(value) => Some(ExpectedValue::Int(*value)),
+            Yaml::String(value) => Some(ExpectedValue::String(value.to_string())),
+            _ => None,
+        }
+    }
+
+    fn parse_check_rule(yaml: &Yaml) -> Option<CheckRule> {
+        let map = yaml.as_hash()?;
+        let id = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("id")).then_some(v))?
+            .as_str()?
+            .to_string();
+
+        let when = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("when")).then_some(v))
+            .and_then(parse_predicate)
+            .unwrap_or(Predicate::Always);
+
+        let target_map = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("target")).then_some(v))?
+            .as_hash()?;
+        let target = RuleTarget {
+            section: target_map
+                .iter()
+                .find_map(|(k, v)| (k.as_str() == Some("section")).then_some(v))?
+                .as_str()?
+                .to_string(),
+            key: target_map
+                .iter()
+                .find_map(|(k, v)| (k.as_str() == Some("key")).then_some(v))?
+                .as_str()?
+                .to_string(),
+            value_type: target_map
+                .iter()
+                .find_map(|(k, v)| (k.as_str() == Some("type")).then_some(v))
+                .and_then(Yaml::as_str)
+                .and_then(TargetValueType::parse)
+                .unwrap_or(TargetValueType::Bool),
+        };
+
+        let expect = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("expect")).then_some(v))
+            .and_then(parse_expected_value)?;
+
+        let messages_map = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("messages")).then_some(v))?
+            .as_hash()?;
+        let messages = RuleMessages {
+            fail: messages_map
+                .iter()
+                .find_map(|(k, v)| (k.as_str() == Some("fail")).then_some(v))?
+                .as_str()?
+                .to_string(),
+            fix: messages_map
+                .iter()
+                .find_map(|(k, v)| (k.as_str() == Some("fix")).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(ToString::to_string),
+            pass: messages_map
+                .iter()
+                .find_map(|(k, v)| (k.as_str() == Some("pass")).then_some(v))
+                .and_then(Yaml::as_str)
+                .map(ToString::to_string),
+        };
+
+        let severity = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("severity")).then_some(v))
+            .map(|value| parse_severity(value, RuleSeverity::Warning))
+            .unwrap_or(RuleSeverity::Warning);
+
+        Some(CheckRule {
+            id,
+            target,
+            when,
+            expect,
+            messages,
+            severity,
+        })
+    }
+
+    fn parse_settings_rules(entry_name: &str, field_yaml: &Yaml) -> Option<CrashgenSettingsRules> {
+        let Some(map) = field_yaml.as_hash() else {
+            if !matches!(field_yaml, Yaml::BadValue) {
+                log::debug!(
+                    "Crashgen_Registry.{}.settings_rules is malformed (expected mapping): {:?}",
+                    entry_name,
+                    field_yaml
+                );
+            }
+            return None;
+        };
+
+        let preflight = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("preflight")).then_some(v))
+            .and_then(Yaml::as_vec)
+            .map(|items| items.iter().filter_map(parse_preflight_rule).collect())
+            .unwrap_or_default();
+
+        let checks = map
+            .iter()
+            .find_map(|(k, v)| (k.as_str() == Some("checks")).then_some(v))
+            .and_then(Yaml::as_vec)
+            .map(|items| items.iter().filter_map(parse_check_rule).collect())
+            .unwrap_or_default();
+
+        Some(CrashgenSettingsRules {
+            version: 1,
+            preflight,
+            checks,
+        })
+    }
+
     for (name_yaml, entry_yaml) in registry_node {
         let Some(name) = name_yaml.as_str() else {
             log::debug!(
@@ -104,6 +391,9 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
 
         let ignore_keys = parse_string_list_field(name, "ignore_keys", &entry_yaml["ignore_keys"]);
         let checks = parse_string_list_field(name, "checks", &entry_yaml["checks"]);
+        let settings_rules_version =
+            parse_version_field(name, &entry_yaml["settings_rules_version"]);
+        let settings_rules = parse_settings_rules(name, &entry_yaml["settings_rules"]);
 
         result.insert(
             name.to_string(),
@@ -111,6 +401,8 @@ fn parse_crashgen_registry(game_data: &Yaml) -> HashMap<String, CrashgenEntryRaw
                 display_section,
                 ignore_keys,
                 checks,
+                settings_rules_version,
+                settings_rules,
             },
         );
     }
@@ -158,6 +450,8 @@ Crashgen_Registry:
             entry.checks,
             vec!["achievements".to_string(), "memory_management".to_string()]
         );
+        assert_eq!(entry.settings_rules_version, None);
+        assert!(entry.settings_rules.is_none());
     }
 
     #[test]
@@ -197,6 +491,7 @@ Crashgen_Registry:
 
         assert!(entry.ignore_keys.is_empty());
         assert!(entry.checks.is_empty());
+        assert!(entry.settings_rules.is_none());
     }
 
     #[test]
@@ -231,6 +526,53 @@ Crashgen_Registry:
             entry.checks,
             vec!["achievements".to_string(), "memory_management".to_string()]
         );
+        assert!(entry.settings_rules.is_none());
+    }
+
+    #[test]
+    fn test_parse_crashgen_registry_parses_settings_rules() {
+        let game_data = parse_yaml_document(
+            r#"
+Crashgen_Registry:
+  crash-og:
+    settings_rules_version: 1
+    settings_rules:
+      preflight:
+        - id: addictol_skip
+          when:
+            plugin_any: ["addictol.dll"]
+          action:
+            kind: notice_and_skip_remaining
+            severity: info
+            message: "skip"
+      checks:
+        - id: achievements
+          target:
+            section: "Patches"
+            key: "Achievements"
+            type: "bool"
+          when:
+            plugin_any: ["achievements.dll"]
+          expect:
+            equals: false
+          messages:
+            fail: "bad"
+            fix: "fix"
+            pass: "ok"
+          severity: warning
+"#,
+        );
+
+        let registry = parse_crashgen_registry(&game_data);
+        let entry = registry.get("crash-og").expect("missing crash-og entry");
+        assert_eq!(entry.settings_rules_version, Some(1));
+        let rules = entry
+            .settings_rules
+            .as_ref()
+            .expect("expected parsed settings rules");
+        assert_eq!(rules.preflight.len(), 1);
+        assert_eq!(rules.checks.len(), 1);
+        assert_eq!(rules.checks[0].target.key, "Achievements");
     }
 }
 

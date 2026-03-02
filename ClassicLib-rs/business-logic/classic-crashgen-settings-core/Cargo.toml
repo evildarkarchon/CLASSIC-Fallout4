@@ -1,0 +1,21 @@
+[package]
+name = "classic-crashgen-settings-core"
+version = "9.0.0"
+edition = "2024"
+rust-version = "1.85.0"
+authors = ["CLASSIC Development Team"]
+description = "Shared crashgen settings rule model and evaluator"
+repository = "https://github.com/evildarkarchon/CLASSIC-Fallout4"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+thiserror = { workspace = true }
+
+[lints.rust]
+deprecated = "deny"
+rust_2024_compatibility = "deny"
+unsafe_code = "deny"
+missing_docs = "warn"
+unused = "deny"

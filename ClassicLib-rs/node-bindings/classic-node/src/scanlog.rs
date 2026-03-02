@@ -13,9 +13,13 @@
 
 use classic_config_core::YamlDataCore;
 use classic_scanlog_core::OrchestratorCore;
+use classic_scanlog_core::crashgen_registry::{CheckId, CrashgenEntry, CrashgenRegistry};
 use classic_scanlog_core::orchestrator;
 use classic_scanlog_core::parser::LogParser;
 use classic_scanlog_core::segment_key;
+use std::collections::{HashMap, HashSet};
+
+use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js, js_rules_to_core};
 
 /// Convert any Display error to a napi::Error.
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
@@ -52,6 +56,8 @@ pub struct JsAnalysisConfig {
     pub fcx_mode: bool,
     /// Whether to simplify logs
     pub simplify_logs: bool,
+    /// Per-crashgen registry entries with optional settings rules.
+    pub crashgen_registry: Option<HashMap<String, JsCrashgenRegistryEntry>>,
 }
 
 /// Optional settings used when building analysis config from YAML content.
@@ -123,6 +129,7 @@ pub fn create_analysis_config(game: String, vr_mode: bool) -> JsAnalysisConfig {
         classic_version: "CLASSIC".to_string(),
         fcx_mode: false,
         simplify_logs: false,
+        crashgen_registry: Some(HashMap::new()),
     }
 }
 
@@ -148,7 +155,7 @@ fn build_core_config_from_yaml_content(
     game: String,
     vr_mode: bool,
     options: Option<JsAnalysisBuildOptions>,
-) -> napi::Result<orchestrator::AnalysisConfig> {
+) -> napi::Result<(orchestrator::AnalysisConfig, YamlDataCore)> {
     let (show_formid_values, fcx_mode, simplify_logs, remove_list) = resolve_build_options(options);
     let yaml = YamlDataCore::from_yaml_content(
         &main_content,
@@ -159,7 +166,7 @@ fn build_core_config_from_yaml_content(
     )
     .map_err(to_napi_err)?;
 
-    Ok(orchestrator::build_analysis_config_from_yaml(
+    let config = orchestrator::build_analysis_config_from_yaml(
         &yaml,
         &game,
         vr_mode,
@@ -167,7 +174,9 @@ fn build_core_config_from_yaml_content(
         fcx_mode,
         simplify_logs,
         remove_list,
-    ))
+    );
+
+    Ok((config, yaml))
 }
 
 /// Build an analysis config from raw YAML content (high-level config path).
@@ -180,7 +189,7 @@ pub fn create_analysis_config_from_yaml_content(
     vr_mode: bool,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisConfig> {
-    let core_config = build_core_config_from_yaml_content(
+    let (core_config, yaml) = build_core_config_from_yaml_content(
         main_content,
         game_content,
         ignore_content,
@@ -197,6 +206,23 @@ pub fn create_analysis_config_from_yaml_content(
         classic_version: core_config.classic_version,
         fcx_mode: core_config.fcx_mode,
         simplify_logs: core_config.simplify_logs,
+        crashgen_registry: Some(
+            yaml.crashgen_registry
+                .iter()
+                .map(|(name, entry)| {
+                    (
+                        name.clone(),
+                        JsCrashgenRegistryEntry {
+                            display_section: entry.display_section.clone(),
+                            ignore_keys: entry.ignore_keys.clone(),
+                            checks: entry.checks.clone(),
+                            settings_rules_version: entry.settings_rules_version,
+                            settings_rules: core_rules_to_js(entry.settings_rules.as_ref()),
+                        },
+                    )
+                })
+                .collect(),
+        ),
     })
 }
 
@@ -211,7 +237,7 @@ pub async fn process_log_with_yaml_content(
     vr_mode: bool,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<JsAnalysisResult> {
-    let core_config = build_core_config_from_yaml_content(
+    let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
         game_content,
         ignore_content,
@@ -248,7 +274,7 @@ pub async fn process_logs_batch_with_yaml_content(
     vr_mode: bool,
     options: Option<JsAnalysisBuildOptions>,
 ) -> napi::Result<Vec<JsAnalysisResult>> {
-    let core_config = build_core_config_from_yaml_content(
+    let (core_config, _) = build_core_config_from_yaml_content(
         main_content,
         game_content,
         ignore_content,
@@ -487,6 +513,30 @@ pub(crate) fn _js_config_to_core(config: &JsAnalysisConfig) -> orchestrator::Ana
     core_config.classic_version = config.classic_version.clone();
     core_config.fcx_mode = config.fcx_mode;
     core_config.simplify_logs = config.simplify_logs;
+
+    let mut entries: HashMap<String, CrashgenEntry> = HashMap::new();
+    let mut default_entry = CrashgenEntry::default_entry();
+    if let Some(registry) = &config.crashgen_registry {
+        for (name, entry) in registry {
+            let mapped = CrashgenEntry {
+                display_section: entry.display_section.clone(),
+                ignore_keys: entry.ignore_keys.iter().cloned().collect::<HashSet<_>>(),
+                checks: entry
+                    .checks
+                    .iter()
+                    .filter_map(|check| CheckId::parse(check))
+                    .collect(),
+                settings_rules: js_rules_to_core(entry.settings_rules.clone()),
+            };
+
+            if name == "default" {
+                default_entry = mapped;
+            } else {
+                entries.insert(name.clone(), mapped);
+            }
+        }
+    }
+    core_config.crashgen_registry = CrashgenRegistry::new(entries, default_entry);
     core_config
 }
 

@@ -11,6 +11,8 @@
 
 use std::collections::{HashMap, HashSet};
 
+use classic_crashgen_settings_core::CrashgenSettingsRules;
+
 /// Named check identifiers for crash generator settings validation.
 ///
 /// Each variant corresponds to one of the four named settings checks that
@@ -55,6 +57,8 @@ pub struct CrashgenEntry {
     pub ignore_keys: HashSet<String>,
     /// Named checks to run for this crashgen.
     pub checks: Vec<CheckId>,
+    /// Optional full settings rules block.
+    pub settings_rules: Option<CrashgenSettingsRules>,
 }
 
 impl CrashgenEntry {
@@ -66,6 +70,7 @@ impl CrashgenEntry {
             display_section: String::new(),
             ignore_keys: HashSet::new(),
             checks: Vec::new(),
+            settings_rules: None,
         }
     }
 }
@@ -145,6 +150,7 @@ mod tests {
                 CheckId::ArchiveLimit,
                 CheckId::LooksMenu,
             ],
+            settings_rules: None,
         }
     }
 
@@ -153,6 +159,7 @@ mod tests {
             display_section: "[Patches]".to_string(),
             ignore_keys: HashSet::new(),
             checks: vec![],
+            settings_rules: None,
         }
     }
 

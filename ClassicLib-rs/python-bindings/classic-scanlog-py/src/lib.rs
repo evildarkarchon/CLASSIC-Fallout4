@@ -92,6 +92,8 @@ define_exceptions!(
 );
 
 // Import all wrapper modules
+/// Crashgen settings rule parsing helpers for Python inputs.
+pub mod crashgen_rules;
 pub mod fcx_handler;
 pub mod formid;
 pub mod formid_analyzer;

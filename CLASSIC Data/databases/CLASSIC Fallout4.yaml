@@ -31,14 +31,181 @@ Crashgen_Registry:
       - memory_management
       - archive_limit
       - looksmenu
+    settings_rules_version: 1
+    settings_rules:
+      preflight:
+        - id: addictol_buffout_incompatible
+          when:
+            all:
+              - plugin_any: [addictol.dll]
+              - plugin_any: [buffout4.dll]
+          action:
+            kind: notice_and_skip_remaining
+            severity: warning
+            message: "{crashgen_name} and Addictol are incompatible, remove one to avoid crashes."
+            fix: "Skipping {crashgen_name} TOML settings checks."
+        - id: addictol_skip
+          when:
+            all:
+              - plugin_any: [addictol.dll]
+              - not: { plugin_any: [buffout4.dll] }
+          action:
+            kind: notice_and_skip_remaining
+            severity: info
+            message: "Addictol detected - skipping {crashgen_name} TOML settings checks."
+      checks:
+        - id: achievements_conflict
+          target:
+            section: Patches
+            key: Achievements
+            type: bool
+          when:
+            plugin_any: [achievements.dll, unlimitedsurvivalmode.dll, achievementsmodsenablerloader.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "The Achievements Mod and/or Unlimited Survival Mode is installed, but Achievements is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change Achievements to FALSE, this prevents conflicts with {crashgen_name}."
+            pass: "Achievements parameter is correctly configured in your {crashgen_name} settings!"
+          severity: warning
+        - id: memory_manager_xcell
+          target:
+            section: Patches
+            key: MemoryManager
+            type: bool
+          when:
+            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "X-Cell/Addictol is installed, but MemoryManager parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change MemoryManager to FALSE, this prevents conflicts with X-Cell/Addictol."
+            pass: "Memory Manager parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+          severity: warning
+        - id: havok_xcell
+          target:
+            section: Patches
+            key: HavokMemorySystem
+            type: bool
+          when:
+            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "X-Cell/Addictol is installed, but HavokMemorySystem parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change HavokMemorySystem to FALSE, this prevents conflicts with X-Cell/Addictol."
+            pass: "Havok Memory System parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+          severity: warning
+        - id: bstexture_xcell
+          target:
+            section: Patches
+            key: BSTextureStreamerLocalHeap
+            type: bool
+          when:
+            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "X-Cell/Addictol is installed, but BSTextureStreamerLocalHeap parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change BSTextureStreamerLocalHeap to FALSE, this prevents conflicts with X-Cell/Addictol."
+            pass: "BSTextureStreamerLocalHeap parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+          severity: warning
+        - id: scaleform_xcell
+          target:
+            section: Patches
+            key: ScaleformAllocator
+            type: bool
+          when:
+            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "X-Cell/Addictol is installed, but ScaleformAllocator parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change ScaleformAllocator to FALSE, this prevents conflicts with X-Cell/Addictol."
+            pass: "Scaleform Allocator parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+          severity: warning
+        - id: smallblock_xcell
+          target:
+            section: Patches
+            key: SmallBlockAllocator
+            type: bool
+          when:
+            plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "X-Cell/Addictol is installed, but SmallBlockAllocator parameter is set to TRUE"
+            fix: "Open {crashgen_name}'s TOML file and change SmallBlockAllocator to FALSE, this prevents conflicts with X-Cell/Addictol."
+            pass: "Small Block Allocator parameter is correctly configured for use with X-Cell/Addictol in your {crashgen_name} settings!"
+          severity: warning
+        - id: archive_limit
+          target:
+            section: Patches
+            key: ArchiveLimit
+            type: bool
+          when:
+            config_layout_is: og
+          expect:
+            equals: false
+          messages:
+            fail: "ArchiveLimit is set to TRUE, this setting is known to cause instability."
+            fix: "Open {crashgen_name}'s TOML file and change ArchiveLimit to FALSE."
+            pass: "ArchiveLimit parameter is correctly configured in your {crashgen_name} settings!"
+          severity: warning
+        - id: looksmenu_f4ee
+          target:
+            section: Compatibility
+            key: F4EE
+            type: bool
+          when:
+            plugin_any: [f4ee.dll]
+          expect:
+            equals: true
+          messages:
+            fail: "Looks Menu is installed, but F4EE parameter under {display_section} is set to FALSE"
+            fix: "Open {crashgen_name}'s TOML file and change F4EE to TRUE, this prevents bugs and crashes from Looks Menu."
+            pass: "F4EE (Looks Menu) parameter is correctly configured in your {crashgen_name} settings!"
+          severity: warning
+        - id: bakascrapheap_redundant
+          target:
+            section: Patches
+            key: MemoryManager
+            type: bool
+          when:
+            all:
+              - plugin_any: [bakascrapheap.dll]
+              - any:
+                  - plugin_any: [x-cell-fo4.dll, x-cell-og.dll, x-cell-ng2.dll, x-cell-ae.dll]
+                  - plugin_any: [addictol.dll]
+          expect:
+            equals: false
+          messages:
+            fail: "The Baka ScrapHeap Mod is installed, but is redundant with {crashgen_name}"
+            fix: "Uninstall the Baka ScrapHeap Mod, this prevents conflicts with {crashgen_name}."
+          severity: error
   "Addictol":
     display_section: "[Patches]"
     ignore_keys: []
     checks: []
+    settings_rules_version: 1
+    settings_rules:
+      preflight:
+        - id: addictol_scaffold_notice
+          when:
+            plugin_any: [addictol.dll]
+          action:
+            kind: notice
+            severity: info
+            message: "Addictol detected - using Addictol TOML checks scaffold (rules pending)."
+      checks: []
   default:
     display_section: ""
     ignore_keys: []
     checks: []
+    settings_rules_version: 1
+    settings_rules:
+      preflight: []
+      checks: []
 
 # =============== GAME FILES BACKUP ==============
 

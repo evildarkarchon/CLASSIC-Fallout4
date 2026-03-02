@@ -20,6 +20,8 @@ use napi::bindgen_prelude::*;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
+use crate::crashgen_rules::{JsCrashgenRegistryEntry, core_rules_to_js};
+
 /// Convert any Display error to a napi::Error
 fn to_napi_err(err: impl std::fmt::Display) -> napi::Error {
     napi::Error::from_reason(format!("{err}"))
@@ -135,6 +137,27 @@ impl YamlData {
     #[napi(getter)]
     pub fn crashgen_ignore(&self) -> Vec<String> {
         self.inner.crashgen_ignore.clone()
+    }
+
+    /// Crash generator registry with checks and optional settings rules.
+    #[napi(getter)]
+    pub fn crashgen_registry(&self) -> HashMap<String, JsCrashgenRegistryEntry> {
+        self.inner
+            .crashgen_registry
+            .iter()
+            .map(|(name, entry)| {
+                (
+                    name.clone(),
+                    JsCrashgenRegistryEntry {
+                        display_section: entry.display_section.clone(),
+                        ignore_keys: entry.ignore_keys.clone(),
+                        checks: entry.checks.clone(),
+                        settings_rules_version: entry.settings_rules_version,
+                        settings_rules: core_rules_to_js(entry.settings_rules.as_ref()),
+                    },
+                )
+            })
+            .collect()
     }
 
     // ========================================================================

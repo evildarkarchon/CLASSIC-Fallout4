@@ -57,6 +57,8 @@ pub mod ba2; // BA2 archive handling (Phase 3B) - IMPLEMENTED
 pub mod config; // Config.py duplicate detection (Phase 3B) - IMPLEMENTED
 pub mod config_cache; // ConfigFileCache (G-03) + ModIniScanner (G-04) - IMPLEMENTED
 pub mod crashgen_orchestrator; // CrashgenCheckOrchestrator (G-07) - IMPLEMENTED
+/// Crashgen settings rule parsing helpers for Python inputs.
+pub mod crashgen_rules;
 pub mod enb; // ENB detection (Phase 7) - IMPLEMENTED
 pub mod game_report; // ScanReportBuilder + ScanValidators (G-09/G-10) - IMPLEMENTED
 pub mod ini; // ScanModInis.py validation (Phase 3C) - IMPLEMENTED
