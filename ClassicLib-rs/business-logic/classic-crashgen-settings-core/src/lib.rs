@@ -93,8 +93,7 @@ impl ExpectedValue {
 }
 
 /// Rule predicate tree.
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub enum Predicate {
     /// Always true.
     #[default]
@@ -112,7 +111,6 @@ pub enum Predicate {
     /// Negation predicate.
     Not(Box<Predicate>),
 }
-
 
 /// Preflight rule action kind.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
